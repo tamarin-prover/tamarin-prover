@@ -1,0 +1,120 @@
+theory NeedImplicitUnpairing begin
+
+/* The following protocol and property illustrate why we require implicit
+ * unpairing to avoid non-termination for realistic protocols.
+
+protocol P {
+  1. I -> R: {'1', (ni, I)}pk(R)
+  2. I <- R: {'2', (ni, R)}pk(I)
+}
+
+property (of P)
+  I_sec_ni: secret(I, -, ni, {I,R})
+
+*/
+
+// Setup PKI.
+rule Register_ltk:
+  [ Fr(~sk)
+  , Fr(<'setup_ltk',$A,~sk>)
+  ] 
+  -->
+  [ !LTK($A, ~sk)
+  , !PK($A, pk(~sk))
+  ]
+
+// Allow long-term-key reveal
+rule Reveal_ltk:
+  [ !LTK($A, sk) ]
+  --[ Rev($A) ]->
+  [ Out(sk) ]
+
+// The adversary can logging deducible messages
+rule Deducible: [ Knows(m) ] --[ Deducible(m) ]-> []
+
+// The initiator starts a session to check the aliveness of the responder by
+// requiring him to return a nonce.
+rule Init_1:
+  [ Fr(~ni)
+  , !PK($R, pkR)
+  ]
+  --[ Secret(~ni, $I, $R) ]->
+  [ Init_1(~ni, $I, $R)
+  , Out(aenc{'1', <~ni, $I>}pkR) ]
+
+// We assume a typed model => responder can check that ni is a nonce
+rule Resp:
+  [ !LTK($R, skR)
+  , !PK($I, pkI)
+  , In(aenc{'1', <~ni, $I>}pk(skR)) ]
+  -->
+  [ Out(aenc{'2', <~ni, $R>}pkI) ]
+
+// To illustrate our point the nonce is returned in plain.
+rule Init_2:
+  [ Init_1(~ni, $I, $R)
+  , !LTK($I, skI)
+  , In(aenc{'2', <~ni, $R>}pk(skI)) ]
+  -->
+  []
+
+// Despite assuming typed model, we can only prove the
+// following lemma, if we have implicit unpairing.
+lemma Secret:
+  "All m I R #i #j. Secret(m, I, R)@i & Deducible(m)@j ==>
+    ( (Ex #r. Rev(I)@r) | (Ex #r. Rev(R)@r) )
+  "
+
+/*
+rule Send:
+  [ Fr(~ni)
+  ]
+  --[ Start(~ni, $I, $R) ]->
+  [ Out(< <~ni, $I>, $R>) ]
+
+rule Forward:
+  [ In(< <~ni, $I>, $R>) ]
+  -->
+  [ Out(< <~ni, $R>, $I>) ]
+
+rule Recv:
+  [ In(< <~ni, $R>, $I>) ]
+  --[ End(~ni, $I, $R) ]->
+  []
+
+*/
+
+/* 
+properties (of P)
+  auto: msc-typing
+
+  I_sec_ni: secret(I, -, ni, {I,R})
+
+
+The property 'I_sec_ni' is expanded as follows.
+
+  property (of P) I_sec_ni:
+    for all #0 the premises
+      "role( #0 ) = I"
+      "uncompromised( I#0, R#0 )"
+      "knows(~ni#0)"
+    imply "False"
+
+It cannot be proven when pairing is handled by appealing to the Chain rule due
+to the following problem.
+
+The proof must start with enumerating the sources of '~ni#0' as there are no
+other rules that apply. One case is that '~ni#0' is learned from decrypting
+'?ni#1' sent in the step 'R_2' of a thread #1 executing the responder role.
+This is impossible because thread #1 must receive his first message from thread
+#0, as the intruder cannot fake it due to only learning '?ni#1' after '(#1,
+R_2)' (i.e. faking this first message leads to a violation of the irreflexivity
+of the event ordering). However, without implicit unpairing, this fake case
+cannot be handled as the sources of '(?ni#1, I#1)' could also come from the
+second step of yet another thread '#2' executing the responder role. We do
+not have more information about thread '#2' than about '#1' and hence, our
+proof strategy will loop.
+
+*/
+
+end

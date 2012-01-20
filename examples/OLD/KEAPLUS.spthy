@@ -1,0 +1,122 @@
+theory KEAPLUS
+begin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+section{* The KEA+ Key-Exchange Protocol *}
+
+text{*
+*}
+
+rule Reveal_pk:
+  [ ] --> [ Send( pk(lts($m)) ) ]
+
+rule Reveal_lts:
+  [ Knows( m ) ] --> [ LTSR( m ), Send( lts(m) ) ]
+
+
+/* Protocol rules */
+
+
+rule reveal_pk:
+   [ ] --> [ Send('g'^sk(lts($X))) ]
+
+rule keaplus_I_1:
+   [ Fresh( ~ni ) ]
+   -->
+   [ keaplus_I_1( $I, $R, ~ni ), Send( <$I, 'g'^~ni >) ]
+
+rule keaplus_I_2:
+   [ keaplus_I_1( $I, $R, ~ni ), Knows( <$R, Gr> ) ]
+   -->
+   [ keaplus_I_2( $I, $R, ~ni, Gr ) ]
+
+rule keaplus_R_1:
+   [ Knows( <I, Gi> ) ] --> [ keaplus_R_1( I, $R, Gi ) ]
+
+rule keaplus_R_2:
+   [ keaplus_R_1( I, $R, Gi ), Fresh( ~nr ) ]
+   -->
+   [ keaplus_R_2( I, $R, Gi, ~nr ), Send( <$R, 'g'^~nr >) ]
+
+
+/* Session keys */
+
+
+rule SeKeyI:
+  [ keaplus_I_2( $I, $R, ~ni, Gr ) ]
+  -->
+  [ SeKeyI(h(Gr^sk(lts($I)), 'g'^sk(lts($R))^~ni, $I, $R ), <$I,$R,'g'^~ni,Gr> ) ]
+
+
+rule SeKeyR:
+  [ keaplus_R_2( I, $R, Gi, ~nr ) ]
+  -->
+  [ SeKeyR(h('g'^sk(lts(I))^~nr, Gi^sk(lts($R)),  I,  $R ), <I,$R,Gi,'g'^~nr> ) ]
+
+
+/*
+rule SeKey_compr: 
+   [ SeKey(k, params) ]
+   -->
+   [ SeKeyCompr(k, params), Send(k) ]
+*/
+
+subsection{* Secrecy Properties *}
+
+
+
+/*
+Security Model (Compromise Rules without premises)
+Filtering is done in the property conclusions (property violation ==> security model violation)
+*/
+
+	// needed to add rules
+ 
+/*
+lemma I_executable:
+  "not(v :> keaplus_I_2( $I, $R, ~ni, Gr ) )"
+
+lemma R_executable:
+  "not(v :> keaplus_R_2( I, $R, Gi, ~nr ) )"
+*/
+
+ 
+lemma I_secrecy_ephkeys:
+  "( v :> keaplus_I_2( $I, $R, ~ni, Gr ) & u :> Knows(~ni) )
+   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
+
+lemma R_secrecy_ephkeys:
+  "( v :> keaplus_R_2( I, $R, Gi, ~nr ) & u :> Knows(~nr) )
+   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
+
+ 
+lemma I_secrecy_key:
+  "vkey :> SeKeyI(k, <$I, $R, Gi, Gr>) & vk :> Knows(k)
+  ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
+
+lemma R_secrecy_key:
+  "vkey :> SeKeyR(k, <I, $R, Gi, Gr>) & vk :> Knows(k)
+  ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
+
+
+end

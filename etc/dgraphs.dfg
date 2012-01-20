@@ -1,0 +1,366 @@
+begin_problem(dgraphs).
+
+list_of_descriptions.
+name({* Derivation Graphs *}).
+author({* Benedikt Schmidt *}).
+status(satisfiable).
+description({* (Incomplete) axiomatization of derivation graphs. *}).
+end_of_list.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Signature
+list_of_symbols.
+  functions[(encA,2), (pair,2), (hash,1), (sk,1), (pk,1),
+            (Up,1), (Down,1), (Fresh,1), (Pub,1), (Send,1), (Knows,1),
+	    (Proto,2), (Null,0),
+            zero, succ ].
+  predicates[(Provides_1,2), (Provides_2,2), (Requires_1,2), (Requires_2,2),
+             (Edge_1_1,2), (Edge_2_1,2), (Edge_1_2,2), (Edge_2_2,2),
+             (Edge,2), (Provides,2), (Requires,2),
+	     (Path,2), (Chain_1,2), (Chain_2,2), (NotMsg,1), (NotPair,1)].
+  sorts[msg,fresh,pub,nat,nodeid,fact].
+end_of_list.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Sort declarations
+list_of_declarations.
+  subsort(fresh,msg).
+  subsort(pub,msg).
+
+  forall([msg(m),msg(k)], msg(encA(k,m))).
+  forall([msg(x),msg(y)], msg(pair(x,y))).
+  forall([msg(x)], msg(hash(x))).
+  forall([msg(x)], msg(sk(x))).
+  forall([msg(x)], msg(pk(x))).
+
+  forall([msg(x)], fact(Up(x))).
+  forall([msg(x)], fact(Down(x))).
+  forall([msg(x)], fact(Send(x))).
+  forall([msg(x)], fact(Knows(x))).
+
+  forall([fresh(x)], fact(Fresh(x))).
+  forall([pub(x)], fact(Pub(x))).
+
+  forall([nat(n),msg(x)], fact(Proto(n,x))).
+
+end_of_list.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Axiomatization of derivation graphs
+list_of_formulae(axioms).
+
+%%%%%%%%%%%%%%%
+% defined predicates
+% Edge
+formula(forall([x,y], equiv(Edge(x,y),
+                        or(Edge_1_1(x,y),Edge_1_2(x,y),
+			   Edge_2_1(x,y),Edge_2_2(x,y))))).
+
+% Provides
+formula(forall([v,f], implies(Provides(v,f),
+                        or(Provides_1(v,f),Provides_2(v,f))))).
+
+% Requires
+formula(forall([v,f], implies(Requires(v,f),
+                        or(Requires_1(v,f),Requires_2(v,f))))).
+
+% NotMsg
+formula(forall([f], equiv(NotMsg(f),
+                      and(forall([m], not(equal(f,Up(m)))),
+                          forall([m], not(equal(f,Down(m)))))))).
+
+% NotPair
+formula(forall([m], equiv(NotPair(m),
+                      forall([x,y], not(equal(m,pair(x,y))))))).
+
+% Path
+formula(forall([v1,v2], implies(Edge(v1,v2),Path(v1,v2)))).
+formula(forall([v1,v2,v3], implies(and(Path(v1,v2), Edge(v2,v3)), Path(v1,v3)))).
+
+% Chain
+formula(forall([v1,v2], implies(Chain_1(v1,v2),
+                          or(Edge_1_1(v1,v2),
+                             exists([v3], and(Edge_1_1(v1,v3), Chain_1(v3,v2))))))).
+formula(forall([v1,v2], implies(Chain_2(v1,v2),
+                          or(Edge_1_2(v1,v2),
+                             exists([v3], and(Edge_1_1(v1,v3), Chain_2(v3,v2))))))).
+
+
+%%%%%%%%%%%%%%%
+% Axioms for disequalities and injectiveness
+
+% All message constructors are injective
+formula(forall([x,y,u,v], implies(equal(pair(x,y),pair(u,v)),
+                              and(equal(x,u),equal(y,v))))).
+formula(forall([x,y,u,v], implies(equal(encA(x,y),encA(u,v)),
+                              and(equal(x,u),equal(y,v))))).
+formula(forall([x,u], implies(equal(hash(x),hash(u)), equal(x,u)))).
+formula(forall([x,u], implies(equal(sk(x),  sk(u)),   equal(x,u)))).
+formula(forall([x,u], implies(equal(pk(x),  pk(u)),   equal(x,u)))).
+
+% Message constructor ranges are disjoint
+formula(forall([x,y,u,v], not(equal(pair(x,y), encA(u,v))))).
+formula(forall([x,y,u],   not(equal(pair(x,y), hash(u))))).
+formula(forall([x,y,u],   not(equal(pair(x,y), sk(u))))).
+formula(forall([x,y,u],   not(equal(pair(x,y), pk(u))))).
+
+formula(forall([x,y,u],   not(equal(encA(x,y), hash(u))))).
+formula(forall([x,y,u],   not(equal(encA(x,y), sk(u))))).
+formula(forall([x,y,u],   not(equal(encA(x,y), pk(u))))).
+
+formula(forall([x,u],   not(equal(hash(x), sk(u))))).
+formula(forall([x,u],   not(equal(hash(x), pk(u))))).
+formula(forall([x,u],   not(equal(sk(x),   pk(u))))).
+
+% Fresh and public values are atomic
+formula(forall([fresh(x),u,v], not(equal(x,pair(u,v))))).
+formula(forall([fresh(x),u,v], not(equal(x,encA(u,v))))).
+formula(forall([fresh(x),u],   not(equal(x,hash(u))))).
+formula(forall([fresh(x),u],   not(equal(x,sk(u))))).
+formula(forall([fresh(x),u],   not(equal(x,pk(u))))).
+
+formula(forall([pub(x),u,v],   not(equal(x,encA(u,v))))).
+formula(forall([pub(x),u,v],   not(equal(x,pair(u,v))))).
+formula(forall([pub(x),u],     not(equal(x,hash(u))))).
+formula(forall([pub(x),u],     not(equal(x,sk(u))))).
+formula(forall([pub(x),u],     not(equal(x,pk(u))))).
+
+% Range of fresh and pub disjoint
+formula(forall([pub(x),fresh(u)], not(equal(x,u)))).
+
+% Fact functions are injective
+formula(forall([x,u],     implies(equal(Up(x),      Up(u)),      equal(x,u)))).
+formula(forall([x,u],     implies(equal(Down(x),    Down(u)),    equal(x,u)))).
+formula(forall([x,u],     implies(equal(Fresh(x),   Fresh(u)),   equal(x,u)))).
+formula(forall([x,u],     implies(equal(Pub(x),     Pub(u)),     equal(x,u)))).
+formula(forall([x,u],     implies(equal(Send(x),    Send(u)),    equal(x,u)))).
+formula(forall([x,u],     implies(equal(Knows(x),   Knows(u)),   equal(x,u)))).
+formula(forall([x,i,j,y], implies(equal(Proto(i,x), Proto(j,y)), and(equal(x,y),equal(i,j))))).
+
+formula(forall([x,y],   not(equal(Up(x), Down(x))))).
+formula(forall([x,y],   not(equal(Up(x), Fresh(x))))).
+formula(forall([x,y],   not(equal(Up(x), Pub(x))))).
+formula(forall([x,y],   not(equal(Up(x), Send(x))))).
+formula(forall([x,y],   not(equal(Up(x), Knows(x))))).
+formula(forall([i,f,m], not(equal(Up(m), Proto(i,f))))).
+
+formula(forall([x,y],   not(equal(Down(x), Fresh(x))))).
+formula(forall([x,y],   not(equal(Down(x), Pub(x))))).
+formula(forall([x,y],   not(equal(Down(x), Send(x))))).
+formula(forall([x,y],   not(equal(Down(x), Knows(x))))).
+formula(forall([i,f,m], not(equal(Down(m), Proto(i,f))))).
+
+formula(forall([x,y],   not(equal(Fresh(x), Pub(x))))).
+formula(forall([x,y],   not(equal(Fresh(x), Send(x))))).
+formula(forall([x,y],   not(equal(Fresh(x), Knows(x))))).
+formula(forall([i,f,m], not(equal(Fresh(m), Proto(i,f))))).
+
+formula(forall([x,y],   not(equal(Pub(x), Send(x))))).
+formula(forall([x,y],   not(equal(Pub(x), Knows(x))))).
+formula(forall([i,f,m], not(equal(Pub(m), Proto(i,f))))).
+
+formula(forall([x,y],   not(equal(Send(x), Knows(x))))).
+formula(forall([i,f,m], not(equal(Send(m), Proto(i,f))))).
+
+formula(forall([i,f,m], not(equal(Knows(m), Proto(i,f))))).
+
+%%%%%%%%%%%%%%%
+% Axioms
+
+
+% source exists
+formula(forall([v1,v2], implies(Edge(v1,v2),
+			        exists([fact(f)], Provides(v1,f))))).
+
+% target exists
+formula(forall([v1,v2], implies(Edge(v1,v2),
+			        exists([fact(f)], Provides(v2,f))))).
+
+% source equals target
+formula(forall([v1,v2,f1,f2],
+  implies(and(Edge_1_1(v1,v2), Provides_1(v1,f1), Requires_1(v2,f2)),
+          equal(f1,f2)))).
+formula(forall([v1,v2,f1,f2],
+  implies(and(Edge_1_2(v1,v2), Provides_1(v1,f1), Requires_2(v2,f2)),
+          equal(f1,f2)))).
+formula(forall([v1,v2,f1,f2],
+  implies(and(Edge_2_1(v1,v2), Provides_2(v1,f1), Requires_1(v2,f2)),
+          equal(f1,f2)))).
+formula(forall([v1,v2,f1,f2],
+  implies(and(Edge_2_2(v1,v2), Provides_2(v1,f1), Requires_2(v2,f2)),
+          equal(f1,f2)))).
+
+% provider unique
+formula(forall([v1,v2,v3],implies(and(Edge_1_1(v1,v3),Edge_1_1(v2,v3)),
+	                          equal(v1,v2)))).
+formula(forall([v1,v2,v3],implies(and(Edge_1_2(v1,v3),Edge_1_2(v2,v3)),
+	                          equal(v1,v2)))).
+formula(forall([v1,v2,v3],implies(and(Edge_2_1(v1,v3),Edge_2_1(v2,v3)),
+	                          equal(v1,v2)))).
+formula(forall([v1,v2,v3],implies(and(Edge_2_2(v1,v3),Edge_2_2(v2,v3)),
+	                          equal(v1,v2)))).
+
+formula(forall([v1,v2,v3],not(and(Edge_1_1(v1,v3),Edge_2_1(v2,v3))))).
+formula(forall([v1,v2,v3],not(and(Edge_1_2(v1,v3),Edge_2_2(v2,v3))))).
+
+% consumer unique (for everything but Up/Down)
+formula(forall([v1,v2,v3,f],implies(and(Edge_1_1(v1,v2),Edge_1_1(v1,v3),
+	                                Provides_1(v1,f), NotMsg(f)),
+	                            equal(v2,v3)))).
+formula(forall([v1,v2,v3,f],implies(and(Edge_1_2(v1,v2),Edge_1_2(v1,v3),
+	                                Provides_1(v1,f), NotMsg(f)),
+	                            equal(v2,v3)))).
+formula(forall([v1,v2,v3,f],implies(and(Edge_2_1(v1,v2),Edge_2_1(v1,v3),
+	                                Provides_2(v1,f), NotMsg(f)),
+	                            equal(v2,v3)))).
+formula(forall([v1,v2,v3,f],implies(and(Edge_2_2(v1,v2),Edge_2_2(v1,v3),
+	                                Provides_2(v1,f), NotMsg(f)),
+	                            equal(v2,v3)))).
+
+formula(forall([v1,v2,v3,f],not(and(Edge_1_1(v1,v2),Edge_1_2(v1,v3),
+	                            Provides_1(v1,f), NotMsg(f))))).
+formula(forall([v1,v2,v3,f],not(and(Edge_2_1(v1,v2),Edge_2_2(v1,v3),
+	                            Provides_2(v1,f), NotMsg(f))))).
+
+
+% fresh/pub/proto edge
+formula(forall([v1,f],
+  implies(and(Requires_1(v1,f), NotMsg(f), not(equal(Null,f))),
+	  exists([v2], or(Edge_1_1(v2,v1), Edge_2_1(v2,v1)))))).
+formula(forall([v1,f],
+  implies(and(Requires_2(v1,f), NotMsg(f), not(equal(Null,f))),
+	  exists([v2], or(Edge_1_2(v2,v1), Edge_2_2(v2,v1)))))).
+
+% up edge
+formula(forall([v1,m],
+  implies(Requires_1(v1,Up(m)), exists([v2], or(Edge_1_1(v2,v1)))))).
+formula(forall([v1,m],
+  implies(Requires_2(v1,Up(m)), exists([v2], or(Edge_1_2(v2,v1)))))).
+
+% down edge
+formula(forall([vmsg,m],
+  implies(Requires_1(vmsg,Down(m)),
+    exists([vlearn,vsend],
+      and(Edge_1_1(vsend,vlearn),
+          Chain_1(vlearn,vmsg),
+          Requires_1(vlearn,Send(m))))))).
+formula(forall([vmsg,m],
+  implies(Requires_2(vmsg,Down(m)),
+    exists([vlearn,vsend],
+      and(Edge_1_1(vsend,vlearn),
+          Chain_2(vlearn,vmsg),
+          Requires_1(vlearn,Send(m))))))).
+
+% invertible edge
+formula(forall([v1,x,y],
+  implies(Requires_1(v1,Up(pair(x,y))),
+    exists([v2], and(Edge_1_1(v2,v1), Provides_1(v2,Up(pair(x,y))), Provides_2(v2,Null),
+                     Requires_1(v2,Up(x)), Requires_2(v2, Up(y))))))).
+
+% msg unique
+formula(forall([m,v1,v2],
+          implies(and(Provides_1(v1,Up(m)), Provides_1(v2,Up(m)), NotPair(m)),
+	          equal(v1,v2)))).
+formula(forall([m,v1,v2],
+          implies(and(Provides_1(v1,Up(m)), Provides_1(v2,Down(m)), NotPair(m)),
+	          equal(v1,v2)))).
+formula(forall([m,v1,v2],
+          implies(and(Provides_1(v1,Down(m)), Provides_1(v2,Down(m)), NotPair(m)),
+	          equal(v1,v2)))).
+
+% fresh unique
+formula(forall([v1,v2,x],
+	implies(and(Provides_1(v1,Fresh(x)),Provides_1(v2,Fresh(x))),
+	  equal(v1,v2)))).
+
+% label functional
+formula(forall([v,f1,f2],
+          implies(and(Provides_1(v,f1),Provides_1(v,f2)), equal(f1,f2)))).
+formula(forall([v,f1,f2],
+          implies(and(Provides_2(v,f1),Provides_2(v,f2)), equal(f1,f2)))).
+formula(forall([v,f1,f2],
+          implies(and(Requires_1(v,f1),Requires_1(v,f2)), equal(f1,f2)))).
+formula(forall([v,f1,f2],
+          implies(and(Requires_2(v,f1),Requires_2(v,f2)), equal(f1,f2)))).
+
+% rule collection
+formula(forall([v,f],implies(Provides_1(v,f),
+
+% Learn
+or(exists([msg(x)],
+     and(Requires_1(v,Send(x)), Requires_1(v,Null),
+         Provides_1(v,Down(x)), Provides_2(v,Null))),
+% Send
+   exists([msg(x)],
+     and(Requires_1(v,Up(x)), Requires_1(v,Null),
+         Provides_1(v,Send(x)), Provides_2(v,Null))),
+% DownUp
+   exists([msg(x)],
+     and(Requires_1(v,Down(x)), Requires_1(v,Null),
+         Provides_1(v,Up(x)), Provides_2(v,Null))),
+% Fresh
+   exists([fresh(x)],
+     and(Requires_1(v,Null), Requires_1(v,Null),
+         Provides_1(v,Fresh(x)), Provides_2(v,Null))),
+% Pub
+   exists([pub(x)],
+     and(Requires_1(v,Null), Requires_1(v,Null),
+	 Provides_1(v,Pub(x)), Provides_2(v,Null))),
+% Pair
+   exists([msg(x),msg(y)],
+     and(Requires_1(v,Up(x)), Requires_1(v,Up(y)),
+         Provides_1(v,Up(pair(x,y))), Provides_2(v,Null))),
+% EncA
+   exists([msg(k), msg(m)],
+     and(Requires_1(v,Up(k)), Requires_1(v,Up(m)),
+         Provides_1(v,Up(encA(k,m))), Provides_2(v,Null))),
+% Hash
+   exists([msg(x)],
+     and(Requires_1(v,Up(x)), Requires_1(v,Null),
+         Provides_1(v,Up(hash(x))), Provides_2(v,Null))),
+% Sk
+   exists([msg(x)],
+     and(Requires_1(v,Up(x)), Requires_1(v,Null),
+         Provides_1(v,Up(sk(x))), Provides_2(v,Null))),
+% Pk
+   exists([msg(x)],
+     and(Requires_1(v,Up(x)), Requires_1(v,Null),
+         Provides_1(v,Up(pk(x))), Provides_2(v,Null))),
+% DecA
+   exists([msg(k), msg(m)],
+     and(Requires_1(v,Down(encA(pk(k),m))), Requires_1(v,Up(sk(k))),
+         Provides_1(v,Down(m)), Provides_2(v,Null))),
+
+% Fst
+   exists([msg(x), msg(y)],
+     and(Requires_1(v,Down(pair(x,y))), Requires_1(v,Null),
+         Provides_1(v,Down(x)), Provides_2(v,Null))),
+% Snd
+   exists([msg(x), msg(y)],
+     and(Requires_1(v,Down(pair(x,y))), Requires_1(v,Null),
+         Provides_1(v,Down(y)), Provides_2(v,Null)))%,
+
+% Send Pub
+% Send Fresh
+
+% Initial Knowledge
+%  exists([x,y],
+%	 and(Requires_1(v,Fresh(x)), Requires_1(v,Fresh(y)),
+%             Provides_1(v,Send(pair(y,encA(sk(y),x)))),
+%	     Provides_2(v,Proto(zero,pair(x,y)))))
+
+)))).
+
+end_of_list.
+
+list_of_formulae(conjectures).
+% this should hold because there are only 2 conclusions, so at
+% least two of these should be equal which is impossible.
+% Spass finds a proof, but it takes 6 seconds and this is a really
+% trivial problem.
+formula(forall([x,y,v1],
+  not(and(Provides(v1,Proto(zero,pair(x,y))),
+          Provides(v1,Knows(hash(y))), Provides(v1,Knows(pair(y,y))))))).
+end_of_list.
+
+end_problem.

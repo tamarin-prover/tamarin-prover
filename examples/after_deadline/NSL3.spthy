@@ -1,0 +1,107 @@
+theory NSL3
+begin
+
+section{* The Needham-Schroeder-Lowe Public-Key Protocol *}
+
+text{*
+  Modeled after Paulson's description in Isabelle/HOL/Auth/NS_Public.thy.
+
+  Notable differences:
+    
+    1. We are using explicit global constants for discerning the different
+       encryption instead of the implicit typing.
+*}
+
+enable default_rules
+
+anb-proto NSL3
+{
+  1. I -> R: encA{'1', ni, I    }pk(lts(R))
+
+     type assertions:
+         ni: ~x
+         I : $x
+
+  2. I <- R: encA{'2', ni, nr, R}pk(lts(I))
+      
+     type assertions:
+         nr: ~x
+
+  3. I -> R: encA{'3', nr       }pk(lts(R))
+}
+
+lemma I_ni_secrecy:
+  "vi :> NSL3_I_1( I, R, ni ) &
+   vk <: ni 
+   ==>
+   (Ex #vr. vr :> LTSR(I) & vr >+> vk) |
+   (Ex #vr. vr :> LTSR(R) & vr >+> vk)
+  "
+
+lemma R_nr_secrecy:
+  "vi :> NSL3_R_3( R, nr, I, ni ) &
+   vk <: nr 
+   ==>
+   (Ex #vr. vr :> LTSR(I) & vr >+> vk) |
+   (Ex #vr. vr :> LTSR(R) & vr >+> vk)
+  "
+
+// Note: the lemma with paths as above does not hold
+lemma R_ni_secrecy:
+  "vi :> NSL3_R_3( R, nr, I, ni ) &
+   vk <: ni 
+   ==>
+   (Ex #vr. vr :> LTSR(I)) |
+   (Ex #vr. vr :> LTSR(R))
+  "
+
+
+/*
+subsection{* Secrecy Properties *}
+
+properties (of ns_public) 
+  // type invariant inferred from the protocol specification
+  auto: msc-typing
+
+  I_ni_secrecy:   secret(I, -, ni,    {I,R}) 
+  R_nr_secrecy:   secret(R, -, nr,    {I,R}) 
+  I_nr_secrecy:   secret(I, 2, nr,    {I,R}) 
+  R_ni_secrecy:   secret(R, 3, ni,    {I,R}) 
+
+
+subsection{* Authentication Properties *}
+
+property (of ns_public) I_ni_synch:
+  premises
+    "role(1) = I"
+    "step(1, I_3)"
+    "uncompromised(I#1, R#1)"
+  imply a thread 2 such that
+    "  role(2) = R
+     & I#1  = I#2
+     & R#1  = R#2
+     & ni#1 = ni#2
+     & nr#1 = nr#2
+     &   St(1,I_1) < St(2,R_1) 
+       < St(2,R_2) < St(1,I_2) 
+       < St(1,I_3)"
+
+property (of ns_public) R_ni_synch:
+  premises
+    "role(1) = R"
+    "step(1, R_3)"
+    "uncompromised(I#1, R#1)"
+  imply a thread 2 such that
+    "  role(2) = I
+     & I#1  = I#2
+     & R#1  = R#2
+     & ni#1 = ni#2
+     & nr#1 = nr#2
+     &   St(2,I_1) < St(1,R_1) 
+       < St(1,R_2) < St(2,I_2) 
+       < St(2,I_3) < St(1,R_3)"
+
+*/
+
+end
+

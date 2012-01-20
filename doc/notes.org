@@ -1,0 +1,95 @@
+* Approach
+  We use multiset rewriting to define our OS.
+  The trace consists of all newly added events in a transition.
+
+  NOTE: We have to decide here if a fact that appears in the premises
+  and the conclusions of a rule is newly added. We choose YES here.
+  This means the rule P->C and P,f->C,f are not equivalent since they
+  produce different traces (are probably not equivalent anyways since
+  there might no additional fact f of state S = Pσ).
+
+  We want to verify something of the form:
+  ∀ tr ∈ Traces(protoRules). φ(tr)
+  
+  We use the notation ⊧^protoRules_traces φ for the above and say that the
+  formula is valid for protoRules.
+
+  Where φ is a first order formula built from atoms including
+  event(e) and e1 ↝ e2 which corresponds to G (e1 => P b) where
+  G is always and P is previously.
+
+  We prove that:
+ 
+  ∀ tr ∈ Traces(protoRules). φ(tr)
+  <=>
+  ∀ gr ∈ NormalizedGraphs(protoRules). φ(gr)
+ 
+  where the atoms are interpreted over (normalized) graphs.
+
+  We write 
+  event(e)
+  
+
+** Summary
+   Give semantics to formulas over traces.
+   Give semantics to formulas over (normalized) derivation graphs.
+   Show that validity coincides.
+
+   Show that first order validity implies our validity.
+
+* 
+Input:
+
+* Simple tasks:
+  1. extract recipe from graph:
+     start with non-deduction rules that have knowledge facts as inputs
+     display them in the html page
+     use them to prove chain property
+  2. compute variants of a rule and a formula.
+     DECIDE: Do I need a term type that represents both modulo AC and E?
+             Only for user input. Can then use abstraction by variables and
+	     equations modulo E.
+  3. Implemenent formulas:
+     data type
+     parsing
+     normalization
+     
+
+* Showblockers
+  How to be complete.
+  
+  How to find out we are realized? saturated under rules!?
+  How to spot redundant clauses?
+
+* Terminology
+
+  Structure S is *model* of theory T if every axiom of S is true in T.
+  Theory T is *axiomatization* of structure S if any statement φ is true
+  in S iff it is provable in T.
+
+  Incomplete axiomatization: see e.g. Robinson arithmetic (Peano - induction)
+
+* Pros and Cons of the FO approach
+  I can use meta-theory of first order logic to show soundness and completeness (w.r.t. to our
+  incomplete axiomatization of *finite* derivation DAGS).
+
+  I want to make my algorithm shallow (recipe extraction, lists, nats, ...).
+  I want to find Herbrand models.
+
+* Inequality Schemas
+  Clark - Negation as Failure (Logic Programming)
+
+  Stable semantics for Logic programming
+  = somewhat related to only considering Herbrand models
+  
+  What is the right way to handle existentials then?
+
+  See also Kenneth Kunen: Negation in Logic Programming
+
+  Clarks equality theory CET:
+  1. f(x1,...,xm) = f(y1,...,ym) → xi = yi  [if f is m-ary and 1 ≤ i ≤ m]
+  2. f(x1,...,xm) ≠ g(y1,...,yn)	    [if f is m-ary, g is n-ary and f ≠ g]
+  3. t≠x	                            [if x occurs in t and t≠x]
+
+  This allows us to use unification for "deciding equality"
+  

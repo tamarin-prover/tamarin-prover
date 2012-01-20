@@ -1,0 +1,125 @@
+theory CR_Paper
+begin
+
+section{* The Running Example of Our CSF 10 Paper *}
+
+
+/*
+anb-proto CR
+{
+  1. C -> S: encA{k}pk(lts(S))
+  2. C <- S: h(k)
+}
+*/
+
+// you can locally define flags
+#define R1
+
+// and test for the definedness
+#ifdef R1
+#ifdef L1
+rule Test:
+  [ Knows(<~x, ~y, y>) ] --[ Attack() ]-> [ Attack () ]
+#endif
+#endif
+
+
+#ifdef L1
+lemma test:
+  "not (Ex #i. Attack() @ i) "
+
+#endif
+
+
+/*
+// Public key infrastructure
+rule Register_pk:
+  [ Fresh(<'RegisterKey', $A>), Fresh(~ltk) ] 
+  --> 
+  [ !Ltk($A, sk(~ltk)), !Pk($A, pk(~ltk)) ]
+
+rule Get_pk:
+  [ !Pk(A, pk) ] 
+  --> 
+  [ Send(pk) ]
+
+rule Reveal_ltk:
+    [ !Ltk(A, ltk) ]
+  --[ LtkReveal(A) ]->
+    [ Send(ltk) ]
+
+// Intruder knowledge logging
+rule Known:
+    [ Knows(m) ]
+  --[ Knows(m) ]->
+    []
+*/
+
+/*
+// Equality checking: Does not work because no message variable
+// allowed in Fresh facts.
+rule Eq:
+    [ Fresh(<'Eq',x>) ] --> [ !Eq(x,x) ]
+
+// Protocol
+rule Init_1:
+  [ Fresh(~k), !Pk($C, pkC), !Pk($S, pkS) ]
+  -->
+  [ Init_1( $C, pkC, $S, pkS, ~k ), Send( encA{'1', $C, ~k}pkS ) ]
+
+rule Init_2:
+    [ Init_1( $C, pkC, $S, pkS, ~k )
+    , Knows( encA{'2', $S, ~k}pkC )
+    ]
+  --[ SessKeyI( $C, $S, ~k ) ]->
+    [] 
+
+rule Serv_1:
+    [ !Pk(C, pkC), !Pk($S, pkS), Knows( encA{'1', C, k}pkS ) ]
+  --[ SessKeyS( C, $S, k ) ]->
+    [ Send( encA{'2', $S, k}pkC ) ]
+*/
+
+/*
+rule Init_1:
+  [ Fresh(~k), !Ltk($C, ltkC), !Pk($S, pkS) ]
+  -->
+  [ Init_1( $C, ltkC, $S, ~k ), Send( encA{'1', $C, ~k}pkS ) ]
+
+rule Init_2:
+    [ Init_1( $C, ltkC, $S, ~k )
+    , Knows( m )
+    , !Eq( decA{m}ltkC, <'2', $S, ~k> )
+    ]
+  --[ SessKeyI( $C, $S, ~k ) ]->
+    [] 
+
+rule Serv_1:
+    [ !Ltk($S, ltkS), Knows( m ) ]
+    -->
+    [ 
+  --[ SessKeyS( $S, snd(snd(decA{m}ltkS)) ) ]->
+    [ Send( encA{'2', $S, snd(snd(decA{m}ltkS})) )     ]
+*/
+
+/*
+lemma Init_secrecy:
+  "not(
+     Ex S k #ii #ik.
+       SessKeyI(S, k) @ ii & 
+       Knows(k) @ ik 
+       &
+       (All #ir. not(LtkReveal(S) @ ir) | ik < ir)
+   )
+  "
+
+lemma Init_auth:
+  "SessKeyI(S, k) @ ii 
+   ==>
+   (Ex #ir. LtkReveal(S) @ ir & ik < vr) |
+   (Ex #is.  SessKeyS(S, k) @ is & is < ii)
+  "
+*/
+
+
+end

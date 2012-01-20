@@ -1,0 +1,104 @@
+theory Certificate_Revoke begin
+
+
+
+text{*
+  Author: Simon Meier <simon.meier@inf.ethz.ch>
+  Date:   2011 12 01
+
+  One model of the key mechnaism for certificate revocation.
+  For every certificate, we create a single fact denoting that
+  it has not yet been revoked. In every use of the certificate,
+  we check that this fact still exists.
+
+  The problem is that our induction invariants are still not strong enough to
+  reason about the multiplicity of facts. Here, the key argument is that the
+  NotRevoked(cert) fact can be removed at most once for every certificate
+  'cert'. Perhaps, we require global freshness nevertheless.
+
+  Perhaps there is a better way to model certificate revocation?
+*}
+
+unique_insts: A/1
+
+rule Start:
+    [ Fr(x) ]
+  --[ Start(x) ]->
+    [ A(x) ]
+
+rule Access:
+    [ A(x) ]
+  --[ Access(x) ]->
+    [ A(x) ]
+
+rule End:
+    [ A(x) ]
+  --[ End(x) ]->
+    []
+
+/* Using induction over traces seems to be not powerful enough. Even with the
+ability to refer to specific edges. When doing the proof of the final lemma on
+paper, severals invariants about the set of facts are used. Dependency graphs
+seem to be unsuitable for reasoning about the current state. They are "only"
+useful for reasoning about the history.
+*/
+
+/*
+lemma Edge_Invariant [reuse]:
+  "All A #i. Access(A) @ i ==> 
+    (
+      (All #r. Access(A) @ r ==>
+         ( (#r = #i)
+         | (Ex #j. Revoke(A) @ j & (i,0) >-> (j,0))
+         | (Ex #j. Access(A) @ j & (i,0) >-> (j,0))
+         )
+      )
+    & (All #r. Revoke(A) @ r ==>
+         ( (i < r)
+         & ( (i,0) >-> (r,0)
+           | (Ex #j. Access(A) @ j & (i,0) >-> (j,0))
+           )
+         )
+      )
+    )
+  "
+  /*
+  "All A #r. Revoke(A) @ r ==>
+    All #i. Access(A) @ i ==> 
+      (i < r)
+      & ( (i,0) >-> (r,0)
+        | (Ex #j. Access(A) @ j & (i,0) >-> (j,0))
+        )
+  "
+  */
+  /*
+  "All A #i. Access(A) @ i ==> 
+        (Ex #j. Revoke(A) @ j & (i,0) >-> (j,0))
+      | (Ex #j. Access(A) @ j & (i,0) >-> (j,0))
+      | (Ex #j. Start(A) @ j & (j,0) >-> (i,0))
+  "
+  */
+  /*
+  "All A #i. Access(A) @ i ==> 
+     ( ((Ex #r. Revoke(A) @ r) | (Ex #a. Access(A) @ a)) ==>
+        ( (Ex #j. Revoke(A) @ j & (i,0) >-> (j,0))
+        | (Ex #j. Access(A) @ j & (i,0) >-> (j,0))
+        ))
+  "
+  */
+*/
+
+lemma Access_charn [reuse]:
+  "All x #j. Access(x) @ j ==>
+    (Ex #i. Start(x) @ i & i < j)
+  "
+
+lemma End_charn [reuse]:
+  "All x #j. End(x) @ j ==>
+    ( (All #i. Start(x) @ i  ==> i < j)
+    & (All #i. Access(x) @ i ==> i < j)
+    & (All #i. End(x) @ i    ==> #i = #j)
+    )
+  "
+
+end

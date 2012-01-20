@@ -1,0 +1,237 @@
+TODO:
+[ ] use the variants methods to unify two terms modulo ACuDH
+[ ] use a Map for substitution
+[ ] try to use Set instead of List where it makes sense
+[ ] write a REPL
+
+DONE:
+[X] add counter for unifications and getMaudeStats
+[X] profile
+[X] kill forked Maude processes
+[X] write a AC-unification procedure
+[X] write a checker that gets a minimal and complete set of variants and _checks_
+    (1) if these are all variants
+    (2) if the set is complete
+    (3) if the set is minimal  
+    (1) seems to be easy, (2) seems to be the same algorithm than (3), but computationally harder.
+[X] write a parser for substitutions (in PrettyPrint syntax)
+[X] better show/read instances for terms and substitutions (for debugging)
+[X] try to save on substCompareVar comparisons (and thereby on
+    AC unifications)
+
+STATS:
+
+|---------------------------------------------------+--------------|
+| Version                                           | 894cc5784b4b |
+|---------------------------------------------------+--------------|
+| time ./narrow "mult(x1:Msg,x2:Msg)" 99 >/dev/null | 11.39 sec    |
+| number of AC unifications                         | 14428        |
+|                                                   |              |
+
+
+* NOTES
+
+*** Why do I need so many unifications?
+    12 rules, 47 variants, ~3 positions => already at 1700
+
+    50*50*2=5000 to check minimal
+    also have to unify with others to prune
+
+*** What does the package by Ramsdell implement?
+    Seems like it can "solve" one homogeneous linear Diophantine
+    equation.
+    We would prefer something that can handle _nonhomogeneous_
+    Diophantine equation _systems_.
+
+
+*** Var-Rep and Remove
+    [(1,x7*x8),(3,x6*x8),(5,a1),(4,~x2),(4,x6),(5,x7)]
+    Var-Rep on x4=x6, both do not occur in the original
+    problem, so I have both choices.
+    A)
+    Choose replacement on range, so x6|->x4:
+    [(1,x7*x8),(3,x4*x8),(5,a1),(4,~x2),(4,x6),(5,x7)]
+    Remove x6 does not occur anywhere anymore:
+    [(1,x7*x8),(3,x4*x8),(5,a1),(4,~x2),(5,x7)]
+    Var-Rep on x5=x7, both do not occur in orig problem.
+    A1)
+    Choose x7 since it is not on LHS:
+    [(1,x5*x8),(3,x4*x8),(5,a1),(4,~x2),(5,x7)]
+    Remove since x7 does not occur anymore
+    [(1,x5*x8),(3,x4*x8),(5,a1),(4,~x2)]
+    order x1 < x3 < x5 < x8 < x4 < x2
+    so replace first x4:
+    [(1,x5*x8),(3,~x2*x8),(5,a1),(4,~x2)]
+    now x5:
+    [(1,a1*x8),(3,~x2*x8),(5,a1),(4,~x2)]
+    get rid of 5 and 4, rename away from 1,2,3:
+    [(1,a1*x4),(3,~x5*x4),(x2,x5)]
+
+
+    [(1,x7*x8),(3,x6*x8),(5,a1),(4,~x2),(4,x6),(5,x7)]
+    Var-Rep on x4=x6, both do not occur in the original
+    problem, so I have both choices.
+    B)
+    Choose replacement x4|->x6:
+    [(1,x7*x8),(3,x6*x8),(5,a1),(6,~x2),(4,x6),(5,x7)]
+    Remove x6 does not occur anywhere anymore:
+    [(1,x7*x8),(3,x6*x8),(5,a1),(6,~x2),(5,x7)]
+    Var-Rep on x5=x7, both do not occur in orig problem.
+    B2)
+    Choose x7 since it is not on LHS:
+    [(1,x5*x8),(3,x4*x8),(5,a1),(4,~x2),(5,x7)]
+    Remove since x7 does not occur anymore
+    [(1,x5*x8),(3,x4*x8),(5,a1),(4,~x2)]
+    order x1 < x3 < x5 < x8 < x4 < x2
+    so replace first x4:
+    [(1,x5*x8),(3,~x2*x8),(5,a1),(4,~x2)]
+    now x5:
+    [(1,a1*x8),(3,~x2*x8),(5,a1),(4,~x2)]
+    get rid of 5 and 4, rename away from 1,2,3:
+    [(1,a1*x4),(3,~x5*x4),(x2,x5)]
+    
+
+produce topolical sort of graph http://en.wikipedia.org/wiki/Topological_sorting
+for nocycle check, then I can also directly produce the combined subst
+
+var-rep can make unsolved by {t1/x1,t2/x2}  ~>  {t1/x1,t2/x1} not in solved form anymore
+
+can try to choose in such a way as to prevent this sitch, e.g. by prefering to replace
+variables that only occur on the LHS.
+
+* Check if match and multiple equations instead of pairing would help
+* save on =_VAR^t checks by normalizing substs and just using normal equality
+  Examples:
+  {x10*~(x4*x5)*x8/x1,x5*x11*~(x12*x8)/x2}
+  {x10*~(x4*x5)*x8/x1,x5*x11*~(x6 *x8)/x2}
+rename x6 to x12
+
+  {x10*~(x4*x5)*x8/x1,x5*x11*~(x6*x8)/x2}
+  {x4*x5*~(x12*x7)/x1,x11*~(x10*x4)*x7/x2}
+
+normalize both substs
+
+DONE write a parser that parses such a term.
+DONE write a parser that parses such a subst.
+
+I need this now and later on for the variants.
+
+* nfSubst pruning sound? => YES NF is implemented right and compare subst and norm subst modulo AC to see if subst is in nf
+* got rid of all the EQ cases using the renaming
+* How to reduce the number of comparisons for <_Var^t  and >_Var^t
+
+GT (False,2,"{x6*x5*~(x4*x3)/x1,x4*~x5/x2}") < (False,2,"{x5*x5*~(x4*x3)/x1,x4*~x5/x2}")
+GT (False,2,"{x6*~x3/x1,x5*x3*~(x6*x4)/x2}") < (False,2,"{x5*~x3/x1,x3*x3*~(x5*x4)/x2}")
+GT (False,3,"{x5*~(x4*x3)/x1,x4*x3*~x5/x2}") < (False,3,"{x6*x5*~(x4*x3)/x1,x4*x3*~(x6*x5)/x2}")
+GT (False,3,"{x6*~(x4*x5*x3)/x1,x5*x4*~x6/x2}") < (False,3,"{x7*x6*~(x4*x5*x3)/x1,x5*x4*~(x7*x6)/x2}")
+GT (False,3,"{x7*~(x4*x5*x3)/x1,x5*x4*~(x7*x6)/x2}") < (False,3,"{x8*x7*~(x4*x5*x3)/x1,x5*x4*~(x7*x8*x6)/x2}")
+GT (True,1,"{x4*x3/x1,~x3/x2}") < (False,2,"{x4*~x3/x1,~x4/x2}")
+GT (True,1,"{x5*x4/x1,x3*~x4/x2}") < (False,2,"{x5*~x3/x1,x4*~x5/x2}")
+GT (True,1,"{x5*x4/x1,~(x4*x3)/x2}") < (False,2,"{x5*x5*x4/x1,~(x4*x5*x3)/x2}")
+GT (True,1,"{x5*~x3/x1,x4*x3/x2}") < (False,2,"{x5*~x3/x1,x3*~x4/x2}")
+GT (True,1,"{~(x4*x3)/x1,x5*x4/x2}") < (False,2,"{~(x4*x5*x3)/x1,x5*x5*x4/x2}")
+GT (True,1,"{~x3/x1,x4*x3/x2}") < (False,2,"{~x3/x1,x3*~x4/x2}")
+GT (True,2,"{x4*~x3/x1,x3*~x4/x2}") < (False,3,"{x5*~(x4*x3)/x1,x4*x3*~x5/x2}")
+GT (True,2,"{x5*x4*~x3/x1,x3*~x4/x2}") < (False,3,"{x6*x5*~(x4*x3)/x1,x4*x3*~x5/x2}")
+GT (True,2,"{x5*~(x4*x3)/x1,x4*~x5/x2}") < (False,3,"{x6*~(x4*x5*x3)/x1,x5*x4*~x6/x2}")
+GT (True,2,"{x5*~x3/x1,x3*~(x5*x4)/x2}") < (False,3,"{x6*~(x4*x3)/x1,x4*x3*~(x6*x5)/x2}")
+GT (True,2,"{x5*~x3/x1,x4*x3*~x5/x2}") < (False,3,"{x6*~(x4*x3)/x1,x4*x5*x3*~x6/x2}")
+GT (True,2,"{x6*x5*~(x4*x3)/x1,x4*~x5/x2}") < (False,3,"{x6*x6*x5*~(x4*x3)/x1,x4*~(x6*x5)/x2}")
+GT (True,2,"{x6*x5*~x3/x1,x3*~(x5*x4)/x2}") < (False,3,"{x6*x6*x5*~x3/x1,x3*~(x5*x6*x4)/x2}")
+GT (True,2,"{x6*x5*~x3/x1,x4*x3*~x5/x2}") < (False,3,"{x7*x6*~(x4*x3)/x1,x4*x5*x3*~x6/x2}")
+GT (True,2,"{x6*x5*~x3/x1,~(x5*x4)/x2}") < (False,3,"{x6*x6*x5*~x3/x1,~(x5*x6*x4)/x2}")
+GT (True,2,"{x6*~(x4*x3)/x1,x4*~(x6*x5)/x2}") < (False,3,"{x7*~(x4*x5*x3)/x1,x5*x4*~(x7*x6)/x2}")
+GT (True,2,"{x6*~(x4*x3)/x1,x5*x4*~x6/x2}") < (False,3,"{x6*~(x4*x5*x3)/x1,x5*x5*x4*~x6/x2}")
+GT (True,2,"{x6*~x3/x1,x5*x3*~(x6*x4)/x2}") < (False,3,"{x6*~(x4*x3)/x1,x4*x4*x3*~(x6*x5)/x2}")
+GT (True,2,"{x7*x6*~(x4*x3)/x1,x4*~(x6*x5)/x2}") < (False,3,"{x7*x7*x6*~(x4*x3)/x1,x4*~(x6*x7*x5)/x2}")
+GT (True,2,"{x7*~(x4*x3)/x1,x6*x4*~(x7*x5)/x2}") < (False,3,"{x7*~(x4*x5*x3)/x1,x5*x5*x4*~(x7*x6)/x2}")
+GT (True,2,"{~(x4*x3)/x1,x6*x4*~x5/x2}") < (False,3,"{~(x4*x5*x3)/x1,x5*x5*x4*~x6/x2}")
+LT (False,2,"{x6*x5*~x3/x1,~(x5*x4)/x2}") < (False,2,"{x5*x5*~x3/x1,~(x5*x4)/x2}")
+LT (False,2,"{x7*x6*~(x4*x3)/x1,x4*~(x6*x5)/x2}") < (False,2,"{x6*x6*~(x4*x3)/x1,x4*~(x6*x5)/x2}")
+LT (False,2,"{x7*~(x4*x3)/x1,x6*x4*~(x7*x5)/x2}") < (False,2,"{x6*~(x4*x3)/x1,x4*x4*~(x6*x5)/x2}")
+LT (False,2,"{~(x4*x3)/x1,x6*x4*~x5/x2}") < (False,2,"{~(x4*x3)/x1,x4*x4*~x5/x2}")
+LT (False,3,"{x6*x5*~(x4*x3)/x1,x4*x3*~x5/x2}") < (False,3,"{x6*x7*x5*~(x4*x3)/x1,x4*x3*~(x6*x5)/x2}")
+LT (False,3,"{x6*~(x4*x3)/x1,x4*x3*~(x6*x5)/x2}") < (False,3,"{x7*x6*~(x4*x3)/x1,x4*x3*~(x6*x7*x5)/x2}")
+LT (False,3,"{x6*~(x4*x3)/x1,x4*x4*x3*~(x6*x5)/x2}") < (False,3,"{x7*x6*~(x4*x3)/x1,x4*x4*x3*~(x6*x7*x5)/x2}")
+LT (False,3,"{x6*~(x4*x3)/x1,x4*x5*x3*~x6/x2}") < (False,3,"{x7*x6*~(x4*x3)/x1,x4*x5*x3*~(x7*x6)/x2}")
+LT (False,3,"{x6*~(x4*x5*x3)/x1,x5*x5*x4*~x6/x2}") < (False,3,"{x7*x6*~(x4*x5*x3)/x1,x5*x5*x4*~(x7*x6)/x2}")
+LT (False,3,"{x7*~(x4*x5*x3)/x1,x5*x5*x4*~(x7*x6)/x2}") < (False,3,"{x8*x7*~(x4*x5*x3)/x1,x5*x5*x4*~(x7*x8*x6)/x2}")
+LT (True,1,"{x3/x1,~x3/x2}") < (False,2,"{x4*x3/x1,~(x4*x3)/x2}")
+LT (True,1,"{x4*x3/x1,~x3/x2}") < (False,2,"{x4*x5*x3/x1,~(x4*x3)/x2}")
+LT (True,1,"{x4*x3/x1,~x3/x2}") < (False,2,"{x5*x4*~x3/x1,~x4/x2}")
+LT (True,1,"{x4*x3/x1,~x3/x2}") < (False,3,"{x5*x4*~x3/x1,~(x5*x4)/x2}")
+LT (True,1,"{x4*x3/x1,~x3/x2}") < (False,3,"{x5*x5*x4*~x3/x1,~(x5*x4)/x2}")
+LT (True,1,"{x4*~x3/x1,x3/x2}") < (False,2,"{x5*~(x4*x3)/x1,x4*x3/x2}")
+LT (True,1,"{x4/x1,x3*~x4/x2}") < (False,2,"{x5*x4/x1,x3*~(x5*x4)/x2}")
+LT (True,1,"{x4/x1,~(x4*x3)/x2}") < (False,2,"{x5*x4/x1,~(x4*x5*x3)/x2}")
+LT (True,1,"{x5*x4/x1,x3*~x4/x2}") < (False,2,"{x5*x6*x4/x1,x3*~(x5*x4)/x2}")
+LT (True,1,"{x5*x4/x1,x3*~x4/x2}") < (False,2,"{x6*x5*~x3/x1,x4*~x5/x2}")
+LT (True,1,"{x5*~x3/x1,x4*x3/x2}") < (False,2,"{x6*~(x4*x3)/x1,x4*x5*x3/x2}")
+LT (True,1,"{x5*~x3/x1,x4*x3/x2}") < (False,2,"{x6*~x3/x1,x5*x3*~x4/x2}")
+LT (True,1,"{~(x4*x3)/x1,x4/x2}") < (False,2,"{~(x4*x5*x3)/x1,x5*x4/x2}")
+LT (True,1,"{~x3/x1,x3/x2}") < (False,2,"{~(x4*x3)/x1,x4*x3/x2}")
+LT (True,1,"{~x3/x1,x4*x3/x2}") < (False,2,"{~(x4*x3)/x1,x4*x5*x3/x2}")
+LT (True,1,"{~x3/x1,x4*x3/x2}") < (False,2,"{~x3/x1,x5*x3*~x4/x2}")
+LT (True,1,"{~x3/x1,x4*x3/x2}") < (False,3,"{~(x4*x3)/x1,x4*x3*~x5/x2}")
+LT (True,1,"{~x3/x1,x4*x3/x2}") < (False,3,"{~(x4*x3)/x1,x4*x4*x3*~x5/x2}")
+LT (True,2,"{x4*~x3/x1,x3*~x4/x2}") < (False,3,"{x5*x4*~x3/x1,x3*~(x5*x4)/x2}")
+LT (True,2,"{x5*x4*~x3/x1,x3*~x4/x2}") < (False,3,"{x5*x6*x4*~x3/x1,x3*~(x5*x4)/x2}")
+LT (True,2,"{x5*~(x4*x3)/x1,x4*~x5/x2}") < (False,3,"{x6*x5*~(x4*x3)/x1,x4*~(x6*x5)/x2}")
+LT (True,2,"{x5*~x3/x1,x3*~(x5*x4)/x2}") < (False,3,"{x6*x5*~x3/x1,x3*~(x5*x6*x4)/x2}")
+LT (True,2,"{x5*~x3/x1,x4*x3*~x5/x2}") < (False,3,"{x6*x5*~x3/x1,x4*x3*~(x6*x5)/x2}")
+LT (True,2,"{x5*~x3/x1,~(x5*x4)/x2}") < (False,3,"{x6*x5*~x3/x1,~(x5*x6*x4)/x2}")
+LT (True,2,"{x6*x5*~x3/x1,x3*~(x5*x4)/x2}") < (False,3,"{x5*x5*~x3/x1,x3*~(x5*x4)/x2}")
+LT (True,2,"{x6*x5*~x3/x1,x4*x3*~x5/x2}") < (False,3,"{x6*x7*x5*~x3/x1,x4*x3*~(x6*x5)/x2}")
+LT (True,2,"{x6*x5*~x3/x1,x4*x3*~x5/x2}") < (False,3,"{x7*x8*x6*~(x4*x3)/x1,x4*x5*x3*~(x7*x6)/x2}")
+LT (True,2,"{x6*~(x4*x3)/x1,x4*~(x6*x5)/x2}") < (False,3,"{x7*x6*~(x4*x3)/x1,x4*~(x6*x7*x5)/x2}")
+LT (True,2,"{x6*~(x4*x3)/x1,x5*x4*~x6/x2}") < (False,3,"{x5*~(x4*x3)/x1,x4*x4*~x5/x2}")
+LT (True,2,"{x6*~(x4*x3)/x1,x5*x4*~x6/x2}") < (False,3,"{x6*x5*~(x4*x3)/x1,x4*x4*~(x6*x5)/x2}")
+LT (True,2,"{x6*~x3/x1,x5*x3*~(x6*x4)/x2}") < (False,3,"{x6*x5*~x3/x1,x3*x3*~(x5*x6*x4)/x2}")
+LT (True,2,"{x7*x6*~(x4*x3)/x1,x4*~(x6*x5)/x2}") < (False,3,"{x6*x6*~(x4*x3)/x1,x4*~(x6*x5)/x2}")
+LT (True,2,"{x7*~(x4*x3)/x1,x6*x4*~(x7*x5)/x2}") < (False,3,"{x6*~(x4*x3)/x1,x4*x4*~(x6*x5)/x2}")
+LT (True,2,"{x7*~(x4*x3)/x1,x6*x4*~(x7*x5)/x2}") < (False,3,"{x7*x6*~(x4*x3)/x1,x4*x4*~(x6*x7*x5)/x2}")
+LT (True,2,"{~(x4*x3)/x1,x4*~x5/x2}") < (False,3,"{~(x4*x5*x3)/x1,x5*x4*~x6/x2}")
+STATS:
+Maude has done 2786 unifications.
+
+
+First observation: If step(s1) > step(s2) then NOT s1 <_VAR s2.
+So we want to compare the variants with a bigger step number with variants with smaller step numbers first.
+But sorting the list does not help in this case since we either compare small with small or big with big.
+
+* Save on some comparisons by checking only for LT instead of getting LT,GT,EQ or Nothing
+
+  If we sort the list in the right way, then
+  s1,s2,..,si,..sn
+
+     s2,..,si,..sn 
+           I > or =
+           s1
+  nearly never happens. Only 
+     s2,..,si,..sn 
+           I <
+           s1
+
+  happens regularly. If we give up minimality, we can not check for s1 > si (GT) and s1 = s2 (EQ)
+  at all. If we don't want to do this, we can at least check GT and EQ later because then we prune
+  earlier and save us the GT and EQ for the case where we don't prune a variant using LT
+  This seems to require some bigger changes to code unless we can use lazyness in some clever way.
+* Proof Search
+** Data structure for symbolic derivation graphs
+   Operations:
+   - insertEdge :: SDG -> (Node,AssmIndex) -> (Node,GoalIndex) -> SDG
+   - insertNode :: SDG -> Node -> SDG
+   - checkCycle :: SDG -> Bool
+   - checkStateLinear :: SDG -> Bool
+   - openFactGoals :: SDG -> [(Node,AssmIndex)]
+   - specialize :: SDG -> Subst -> SDG
+
+** Rules
+   Message derivation:
+
+
+   Protocol:
+
+** Pruning Patterns
+
+** First Prototype

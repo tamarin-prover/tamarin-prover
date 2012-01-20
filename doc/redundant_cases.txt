@@ -1,0 +1,140 @@
+Problem:
+=======
+
+ ...
+——————————————         
+ Send('g'^na)          
+   |                KU(inv(na)*nb)
+   ————————————————————————–——————— EXP↓
+        'g'^nb
+
+and many other similar cases are redundant because the intruder
+could as well use
+
+
+
+—————————— PUB↑
+  KU('g')
+   |                KU(nb)
+  ————————————————————————–——————— EXP↑
+        'g'^nb
+
+because in all satisfying structures (dg,θ) for the above,
+he knows inp(nbθ) and we can always deduce 'g' with PUB
+and remove other instances that deduce it.
+[Here it would be nice to have stronger normal form conditions
+ that tell us that 'g' is always deduced with PUB↑. This is
+ not required for constraint solving since we never solve
+ pub messages anyways, but would simplify proofs of other
+ properties that might be required.]
+
+Required changes to the paper:
+======================================
+
+We define:
+nfactors(inv(t)) = t
+nfactors(t * s) = t ∪ s
+nfactors(t) = t
+We use this only for normalized terms, so no nested inv.
+
+PROD: product or inverse of product (see paper).
+
+1. (N5)
+      No KD_exp fact such that for corresponding rule instance:
+   
+      g^a,b --[]-> norm(g^(a*b)) = g^(norm(a*b))= g^c where
+  
+    (I) g deducible from previous sends
+   (II) c deducible from previous sends
+
+   More general: partial order on rule instances,
+   
+
+   Justification: Can establish N5 by modyfing a normalized (wrt. DG1-DG4)
+   dependency graph dg. The idea is to replace the EXP↓ withEXP↑ instead.
+   Case distinction:
+     
+     
+     The premise g can be concluded with Pub/One (if required)
+     or existing KU conclusion can be used because of (I).
+     => only Pub or One rule added, does not violate anything
+
+     For b, we perform a case distinction:
+       If b is in PROD, we up-know nfactors(c))
+       => we up-know nfactors(b) because of (II).
+          Do not add any rule, so no violations.
+     
+       If b is not in PROD, nfactors(b) = {b} or nfactors(b) = norm(inv(b)),
+       hence nfactors(c)) = {nfactors(b)} because of (II).
+       Therefore, c∈{b,norm(inv(b))} and c can be deduced or is already
+       up-known.
+       => Add at most an INV↑ instance to deduce c => no violations
+
+     We up-know g and c, we can use EXP↑ to deduce g^c. This is no violation
+     since c, which is the fact we have added, is not equal to g^c.
+     Note that deducing g^c with EXP↓ was not a violation.
+
+
+2. From (N5), we get the following constraint solving rule
+
+    i: KD_noexp(g^a), KU_f(b) –[]-> KD_exp(g^c)
+   ———————————————————————————————————————————–    
+      ⊥
+
+   Side condition has to capture (I) and (II).
+   (I')  Let t1,..,tk be the KU premises ≤ i,
+         then for all t ∈ inp(g,c), t:pub or t ∈ inp(t1,..,tk) ∪ {1}.
+
+
+We have to show that the constraint side conditions imply the side conditions
+of N5 for every satisfying structure (dg,θ).
+
+Note that (*) inp(c) ⊆ inp(c) ==> inp(cθ) ⊆ inp(bθ).
+
+(I') => (I)   Let inp(gθ) = {m1,..,ml}, then
+              {m1,..,ml} ⊆ inp(t1θ,..,tkθ) ∪ {1} ∪ PUB
+	        using (*) and  inp(g) ⊆ inp(t1,..,tk) ∪ {1} ∪ PUB 
+              since t1θ, .., tkθ known in dg, 1 and PUB uniquely deducible without dependencies,
+	      
+	      
+
+(II') => (II) inp(bθ) is known in dg
+              => inp(cθ) known in dg follows from (*) and inp(c) ⊆ inp(b)
+	      => cθ deducible in dg
+
+
+Model extraction would be nice because it would show that the rule is strong enough,
+but we can ignore this for now. Note that N5 is optional, i.e., we can establish
+N5 given an arbitrary dependency graph that satisfies N4. Therefore, we can apply
+this transformation to every extracted counterexample.
+
+
+
+
+Minimal Changes:
+
+N1: pairs, inverses, products, public names, 1 cannot be coerced.
+
+=> Harder to understand because you can use ↓-rules to deduce products, public names,
+   and 1, but you just cannot use these because coerce fails.
+   In the constraint solving, we never encounter such rule instances because they are not connected
+   to ISend and therefore not connected to protocol steps.
+   
+   Complicates proof of down-known ==> up-known. Have to prove the stronger result anyways
+   that these are never down-known because we would violate N4 otherwise.
+   So for example 1 up-known => not down-known because of N1 and N4.
+
+get rid of N2.
+
+new rule
+N4: If KD_exp(g^a) is deduced from g^b and and c with EXP↓,
+    then g and a are not both deducible from earlier sends.
+    
+CHECK: what happens with a chain that ends in a product? We can not prune it because we might
+       extract something!?
+       
+    
+   
+
+OLD
+================================================================================================

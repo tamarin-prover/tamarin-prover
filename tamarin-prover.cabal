@@ -1,0 +1,164 @@
+
+cabal-version:      >= 1.8
+build-type:         Simple
+name:               tamarin-prover
+version:            0.1.0
+license:            GPL
+license-file:       LICENSE
+category:           Theorem Provers
+author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
+                    Simon Meier <simon.meier@inf.ethz.ch>
+maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
+copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010
+synopsis:           Falsification and Unbounded Verification of
+                    Diffie-Hellman style protocols
+description:        Tool underlying our CSF'12 paper.
+homepage:           http://people.inf.ethz.ch/benschmi/POST2011/
+stability:          Beta
+
+
+--------------
+-- extra files
+--------------
+
+data-dir:           data
+data-files:
+  intruder_variants.spthy
+  img/*.ico
+  img/*.gif
+  img/*.png
+  js/*.js
+  css/*.css
+  css/smoothness/*.css
+  css/smoothness/images/*.png
+
+  LICENSE
+
+  examples/JKL_TS1_2004.spthy
+  examples/JKL_TS1_2008-KIFS.spthy
+  examples/JKL_TS1_2008.spthy
+  examples/JKL_TS2_2004-KIFS.spthy
+  examples/JKL_TS2_2004.spthy
+  examples/JKL_TS2_2008-KIFS.spthy
+  examples/JKL_TS2_2008.spthy
+
+  examples/KEA_plus_KCI.spthy
+  examples/KEA_plus_KCI_wPFS.spthy
+  examples/KEA_plus.spthy
+  examples/KEA_plus_wPFS.spthy
+
+  examples/NAXOS_broken_eCK_variant.spthy
+  examples/NAXOS_eCK_PFS.spthy
+  examples/NAXOS_eCK.spthy
+  examples/NAXOS_PFS_initiator_simplified.spthy
+
+  examples/UM_eCK_noKCI.spthy
+  examples/UM_eCK.spthy
+  examples/UM_wPFS.spthy
+
+extra-source-files:
+  .ghci
+  interactive-only-src/Paths_dh_proto_proof.hs
+  Makefile
+
+  README
+  CHANGES
+  AUTHORS
+
+
+--------------
+-- build flags
+--------------
+
+flag threaded
+    default: True
+    description: Build with support for multithreaded execution
+
+flag test-coverage
+    default: True
+    description: Build with test coverage support
+
+Flag build-tests
+  default:     False
+  description: Build unit test driver
+
+
+----------------------
+-- executables stanzas
+----------------------
+
+executable tamarin-prover
+    build-depends:
+        base              == 4.*
+      , array             == 0.3.*
+      , deepseq           == 1.1.*
+      , containers        >= 0.3   && < 0.4.2
+      , mtl               == 2.0.*
+      , cmdargs           == 0.6.* && >= 0.6.8
+      , filepath          >= 1.1   && < 1.3
+      , directory         >= 1.0   && < 1.2
+      , process           == 1.0.*
+      , parsec            == 3.1.*
+      , bytestring        == 0.9.*
+      , safe              >= 0.2  && < 0.4
+      , transformers      == 0.2.*
+      , fclabels          == 1.0.*
+      , uniplate          == 1.6.*
+      , syb               == 0.3.* && >= 0.3.3
+      , binary            == 0.5.*
+      , derive            == 2.5.*
+      , time              == 1.2.*
+      , threads           == 0.4.*
+      , http-types        == 0.6.*
+      , blaze-builder     == 0.3.*
+      , yesod-core        == 0.8.*
+      , yesod-json        == 0.1.*
+      , yesod-static      == 0.1.*
+      , yesod-form        == 0.1.*
+      , text              == 0.11.*
+      , wai               == 0.4.*
+      , hamlet            == 0.8.*
+      , warp              == 0.4.*
+      , aeson             == 0.3.*
+      , old-locale        == 1.0.*
+      , monad-control     == 0.2.*
+
+      , tamarin-prover-utils == 0.1.*
+      , tamarin-prover-term  == 0.1.*
+
+    if flag(threaded)
+        ghc-options:    -threaded
+
+    ghc-options:        -Wall -funbox-strict-fields -fwarn-tabs -rtsopts
+    main-is:            Main.hs
+    hs-source-dirs:     src
+
+    other-modules:
+
+      Theory.Pretty
+      Theory.Fact
+      Theory.Atom
+      Theory.Formula
+      Theory.Rule
+      Theory.IntruderRules
+      Theory.Proof.Guarded
+      Theory.Proof.Types
+      Theory.Proof.EquationStore
+      Theory.Proof.SolveGuarded
+      Theory.Proof.Sequent
+      Theory.Proof.Sequent.Dot
+      Theory.Proof.CaseDistinctions
+      Theory.Proof
+      Theory.RuleVariants
+      Theory.Signature
+      Theory
+      Theory.Parser
+      Theory.Wellformedness
+
+      Web.Settings
+      Web.Types
+      Web.Theory
+      Web.Hamlet
+      Web.Instances
+      Web.Handler
+      Web.Dispatch

@@ -1,0 +1,113 @@
+theory NS3
+begin
+
+section{* The Needham-Schroeder Public-Key Protocol *}
+
+text{*
+  Simple test by changing NS3 model but excluding R's identity from
+  second message.
+  Let's pray the automatically inferred state doesn't change because of
+  this.
+*}
+
+enable default_rules
+
+anb-proto NS3
+{
+  1. I ->   : encA{'1', ni, I    }pk(lts(R))
+     note Actor(I)
+       ->  R: encA{'1', ni, I    }pk(lts(R))
+     note Actor(R)
+     type assertions:
+         ni: ~x
+         I : $x
+
+
+  2. I <- R: encA{'2', ni, nr   }pk(lts(I))
+     type assertions:
+         nr: ~x
+
+  3. I -> R: encA{'3', nr       }pk(lts(R))
+}
+
+/*
+lemma I_ni_secrecy:
+  "vi :> NS3_I_1( I, R, ni ) &
+   vk <: ni 
+   ==>
+   (Ex #vr. vr :> LTSR(I) & vr >+> vk) |
+   (Ex #vr. vr :> LTSR(R) & vr >+> vk)
+  "
+*/
+
+/* This should yield exactly the Mitm attack. The third condition ensures
+   that compromised agents cannot be actors. This also ensures that R
+   is uncompromised since he is an actor. */
+lemma R_nr_secrecy:
+  "vi :> NS3_R_3( R, nr, I, ni ) &
+   vk <: Knows(nr)
+   ==>
+   (Ex #vr. vr :> LTSR(I)) |
+   (Ex #va #vl A. vl :> LTSR(A) & va :> Actor(A))
+  "
+
+/*
+// Note: the lemma with paths as above does not hold
+lemma R_ni_secrecy:
+  "vi :> NS3_R_3( R, nr, I, ni ) &
+   vk <: ni 
+   ==>
+   (Ex #vr. vr :> LTSR(I)) |
+   (Ex #vr. vr :> LTSR(R))
+  "
+*/
+
+/*
+subsection{* Secrecy Properties *}
+
+properties (of ns_public) 
+  // type invariant inferred from the protocol specification
+  auto: msc-typing
+
+  I_ni_secrecy:   secret(I, -, ni,    {I,R}) 
+  R_nr_secrecy:   secret(R, -, nr,    {I,R}) 
+  I_nr_secrecy:   secret(I, 2, nr,    {I,R}) 
+  R_ni_secrecy:   secret(R, 3, ni,    {I,R}) 
+
+
+subsection{* Authentication Properties *}
+
+property (of ns_public) I_ni_synch:
+  premises
+    "role(1) = I"
+    "step(1, I_3)"
+    "uncompromised(I#1, R#1)"
+  imply a thread 2 such that
+    "  role(2) = R
+     & I#1  = I#2
+     & R#1  = R#2
+     & ni#1 = ni#2
+     & nr#1 = nr#2
+     &   St(1,I_1) < St(2,R_1) 
+       < St(2,R_2) < St(1,I_2) 
+       < St(1,I_3)"
+
+property (of ns_public) R_ni_synch:
+  premises
+    "role(1) = R"
+    "step(1, R_3)"
+    "uncompromised(I#1, R#1)"
+  imply a thread 2 such that
+    "  role(2) = I
+     & I#1  = I#2
+     & R#1  = R#2
+     & ni#1 = ni#2
+     & nr#1 = nr#2
+     &   St(2,I_1) < St(1,R_1) 
+       < St(1,R_2) < St(2,I_2) 
+       < St(2,I_3) < St(1,R_3)"
+
+*/
+
+end
+

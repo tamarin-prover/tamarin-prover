@@ -1,0 +1,279 @@
+theory TLS 
+begin
+
+section{* TLS Handshake *}
+
+text{*
+  Modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy. Notable
+  differences are:
+
+    1. We use explicit global constants to differentiate between different
+       encryptions instead of implicit typing.
+
+    2. We model session keys directly as hashes of the relevant information.
+       Due to our support for composed keys, we do not need any custom
+       axiomatization as Paulson does.
+
+    3. We do not model the ClientResume, ServerResume, and Oops steps. They
+       are currently outside the scope of our modelling language.
+
+*}
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fresh(<'RegisterKey', $A>), Fr(~ltkA) ] 
+  --> 
+  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)) ]
+
+rule Get_pk:
+  [ !Pk(A, pk)    ] --[              ]-> [ Out(pk) ]
+
+rule Reveal_ltk:
+  [ !Ltk(A, ltkA) ] --[ RevLtk(A)    ]-> [ Out(ltkA) ]
+
+// Logging deducability
+rule Deducible:
+  [ In(x)         ] --[ Deducible(x) ]-> []
+
+// Protocol
+
+rule C_1:
+    [ Fr(~nc)
+    , Fr(~sid)
+    ]
+  --[]->
+    [ Out(
+        <$C, ~nc, ~sid, $pc>
+      )
+    , St_C_1($C, ~nc, ~sid, $pc)
+    ]
+
+rule S_1:
+    [ In( 
+        <$C, nc, sid, pc>
+      )
+    , Fr(~ns)
+    ]
+  --[]->
+    [ Out(
+        <$S, ~ns, sid, $ps>
+      )
+    , St_S_1($S, $C, sid, nc, pc, ~ns, $ps)
+    ]
+
+rule C_2:
+    [ St_C_1(C, nc, sid, pc)
+    , In(
+        <S, ns, sid, ps>
+      )
+    , Fr(~pms)
+    , !Pk(S, pkS)
+    , !Ltk(C, ltkC)
+    ]
+  --[]->
+    [ Out(
+        < aenc{ '31', ~pms }pkS
+        , sign{ '32', h('32', ns, S, ~pms) }ltkC
+        , senc{ '33', sid, h('PRF', ~pms, nc, ns), nc, pc, C, ns, ps, S}
+            h('clientKey', nc, ns, h('PRF', ~pms, nc, ns))
+        >
+      )
+    , St_C_2(S, C, sid, nc, pc, ns, ps, ~pms)
+    ]
+
+rule S_2:
+    [ St_S_1(S, C, sid, nc, pc, ns, ps)
+    , In(
+        < aenc{ '31', pms }pk(ltkS)
+        , signature
+        , senc{ '33', sid, h('PRF', pms, nc, ns), nc, pc, C, ns, ps, S}
+            h('clientKey', nc, ns, h('PRF', pms, nc, ns))
+        >
+      )
+    , !Pk(C, pkC)
+    , !Ltk(S, ltkS)
+    ]
+  --[]->
+    [ St_S_2
+        ( S, C, sid, nc, pc, ns, ps, pms
+        // prepare terms for equality check
+        , <'32', h('32', ns, S, pms)>
+        , verify{signature}pkC
+        )
+    ]
+
+rule S_3:
+    [ St_S_2
+        ( S, C, sid, nc, pc, ns, ps, pms
+        // perform equality check
+        , x1
+        , x1
+        )
+    ]
+  --[ SessionKeys
+        ( S, C
+        , h('serverKey', nc, ns, h('PRF', pms, nc, ns))
+        , h('clientKey', nc, ns, h('PRF', pms, nc, ns))
+        )
+    ]->
+    [ Out(
+        senc{ '4', sid, h('PRF', pms, nc, ns), nc, pc, C, ns, ps, S}
+          h('serverKey', nc, ns, h('PRF', pms, nc, ns))
+      )
+    ]
+
+rule C_3:
+    [ St_C_2(S, C, sid, nc, pc, ns, ps, pms)
+    , In(
+        senc{ '4', sid, h('PRF', pms, nc, ns), nc, pc, C, ns, ps, S}
+          h('serverKey', nc, ns, h('PRF', pms, nc, ns))
+      )
+    ]
+  --[ SessionKeys
+        ( S, C
+        , h('serverKey', nc, ns, h('PRF', pms, nc, ns))
+        , h('clientKey', nc, ns, h('PRF', pms, nc, ns))
+        )
+    ]->
+    []
+
+lemma server_key_secrecy:
+  "not(Ex S C keyS keyC #k #d.
+      SessionKeys(S, C, keyS, keyC) @ k 
+    & Deducible(keyS) @ d
+    & (All #r. RevLtk(S) @ r ==> F)
+    & (All #r. RevLtk(C) @ r ==> F)
+  )"
+
+lemma session_keys_reachable:
+  "not(Ex S C keyS keyC #k.
+      SessionKeys(S, C, keyS, keyC) @ k 
+  )"
+  
+/*
+
+protocol TLS {
+  1. C -> S: C, nc, sid, pc
+  2. C <- S: ns, sid, ps
+
+  // getting the server certificate from the certificate-authority
+  ca1. C -> CA: S
+  ca2.   <- CA: CA, sign{'cert', S, pk(S)}pk(CA)
+       C <-   : CA, sign{'cert', S, pkS  }pk(CA)
+
+  3. C ->  : { '31', pms                     }pkS ,
+             sign{ '32', h('32', ns, S, pms) }pk(C) ,
+             { '33', sid, h('PRF', pms, nc, ns),
+               nc, pc, C, ns, ps, S
+             } 
+             h('clientKey', nc, ns, h('PRF', pms, nc, ns))
+
+       -> S: { '31', pms                     }pk(S) ,
+             sign{ '32', h('32', ns, S, pms) }pk(C) ,
+             { '33', sid, h('PRF', pms, nc, ns),
+               nc, pc, C, ns, ps, S
+             } 
+             h('clientKey', nc, ns, h('PRF', pms, nc, ns))
+
+  4. C <- S: { '4', sid, h('PRF', pms, nc, ns),
+               nc, pc, C, ns, ps, S
+             } 
+             h('serverKey', nc, ns, h('PRF', pms, nc, ns))
+}
+
+text{* 
+We assume that all clients talk to uncompromised certificate authorities. 
+*}
+
+axiom (of TLS) uncompromised_CA:
+  premises
+    "role(1) = C"
+  imply
+    "uncompromised(CA#1)"
+
+
+subsection{* Secrecy Properties *}
+
+properties (of TLS)
+  C_pms_sec:  secret(C, -, pms,                   {S}) 
+  C_PRF_sec:  secret(C, -, h('PRF', pms, nc, ns), {S})
+  C_clientKey_sec:  
+    secret(C, -, h('clientKey', nc, ns, h('PRF', pms, nc, ns)), {S})
+  C_serverKey_sec:  
+    secret(C, -, h('serverKey', nc, ns, h('PRF', pms, nc, ns)), {S})
+
+  S_pms_sec:  secret(S, 4, pms,                   {C,S})
+  S_PRF_sec:  secret(S, 4, h('PRF', pms, nc, ns), {C,S})
+
+  S_clientKey_sec:  
+    secret(S, 4, h('clientKey', nc, ns, h('PRF', pms, nc, ns)), {C,S})
+  S_serverKey_sec:  
+    secret(S, 4, h('serverKey', nc, ns, h('PRF', pms, nc, ns)), {C,S})
+
+
+subsection{* Authentication Properties *}
+
+text{*
+  First, we prove two first send properties in order to simplify proof search
+  for the authentication properties.
+*}
+
+property (of TLS) nc_first_send:
+  premises
+    "role(1) = C"
+    "knows(nc#1)"
+  imply
+    "St(1, C_1) < Ln(nc#1)"
+
+property (of TLS) ns_first_send:
+  premises
+    "role(1) = S"
+    "knows(ns#1)"
+  imply
+    "St(1, S_2) < Ln(ns#1)"
+
+property (of TLS) C_ni_synch:
+  premises
+    "role(1) = C"
+    "step(1, C_4)"
+    "uncompromised(C#1,S#1)"
+  imply a thread 2 such that
+    "  role(2) = S
+    &  C#1  = C#2
+    &  S#1  = S#2
+    &  nc#1 = nc#2
+    &  ns#1 = ns#2
+    &  pc#1 = pc#2
+    &  ps#1 = ps#2
+    &  sid#1 = sid#2
+    &  pms#1 = pms#2
+    &    St(1, C_1) < St(2, S_1)
+       < St(2, S_2) < St(1, C_2)
+       < St(1, C_3) < St(2, S_3)
+       < St(2, S_4) < St(1, C_4)
+    "
+
+property (of TLS) S_ni_synch:
+  premises
+    "role(2) = S"
+    "step(2, S_4)"
+    "uncompromised(C#2,S#2)"
+  imply a thread 1 such that
+    "  role(1) = C
+    &  C#1  = C#2
+    &  S#1  = S#2
+    &  nc#1 = nc#2
+    &  ns#1 = ns#2
+    &  pc#1 = pc#2
+    &  ps#1 = ps#2
+    &  sid#1 = sid#2
+    &  pms#1 = pms#2
+    &    St(1, C_1) < St(2, S_1)
+       < St(2, S_2) < St(1, C_2)
+       < St(1, C_3) < St(2, S_3)
+       < St(2, S_4) 
+    "
+*/
+
+end
+

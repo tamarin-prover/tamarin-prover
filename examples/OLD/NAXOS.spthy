@@ -1,0 +1,148 @@
+theory NAXOS
+begin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+section{* The NAXOS Key-Exchange Protocol *}
+
+text{*
+*}
+
+rule Reveal_pk:
+  [ ] --> [ Send( pk(lts($m)) ) ]
+
+rule Reveal_lts:
+  [ Knows( m ) ] --> [ LTSR( m ), Send( lts(m) ) ]
+
+/* Protocol rules */
+
+
+rule reveal_pk:
+   [ ] --> [ Send('g'^sk(lts($X))) ]
+
+rule naxos_I_1:
+   [ Fresh( ~ni ) ]
+   -->
+   [ naxos_I_1( $I, $R, ~ni ), Send( <$I, 'g'^h(<sk(lts($I)), ~ni>) >) ]
+
+rule naxos_I_2:
+   [ naxos_I_1( $I, $R, ~ni ), Knows( <$R, Gr> ) ]
+   -->
+   [ naxos_I_2( $I, $R, ~ni, Gr ) ]
+
+rule naxos_R_1:
+   [ Knows( <I, Gi> ) ] --> [ naxos_R_1( I, $R, Gi ) ]
+
+rule naxos_R_2:
+   [ naxos_R_1( I, $R, Gi ), Fresh( ~nr ) ]
+   -->
+   [ naxos_R_2( I, $R, Gi, ~nr ), Send( <$R, 'g'^h(<sk(lts($R)), ~nr>) >) ]
+
+
+/* Session keys */
+
+
+rule SeKeyI:
+  [ naxos_I_2( $I, $R, ~ni, Gr ) ]
+  -->
+  [ SeKeyI(h(Gr^sk(lts($I)), 'g'^sk(lts($R))^h(<sk(lts($I)), ~ni>), Gr^h(<sk(lts($I)), ~ni>), $I,$R), <$I,$R,'g'^h(<sk(lts($I)), ~ni>),Gr> ) ]
+
+
+rule SeKeyR:
+  [ naxos_R_2( I, $R, Gi, ~nr ) ]
+  -->
+  [ SeKeyR(h('g'^sk(lts(I))^h(<sk(lts($R)), ~nr>), Gi^sk(lts($R)),  Gi^h(<sk(lts($R)), ~nr>), I, $R), <I,$R,Gi,'g'^h(<sk(lts($R)), ~nr>)> ) ]
+
+
+/*
+rule SeKey_compr: 
+   [ SeKey(k, params) ]
+   -->
+   [ SeKeyCompr(k, params), Send(k) ]
+*/
+
+subsection{* Secrecy Properties *}
+
+
+
+/*
+Security Model (Compromise Rules without premises)
+Filtering is done in the property conclusions (property violation ==> security model violation)
+*/
+
+	// needed to add rules
+ 
+/*
+lemma I_executable:
+  "not(v :> naxos_I_2( $I, $R, ~ni, Gr ) )"
+
+lemma R_executable:
+  "not(v :> naxos_R_2( I, $R, Gi, ~nr ) )"
+*/
+
+ 
+lemma I_secrecy_ephkeys:
+  "( v :> naxos_I_2( $I, $R, ~ni, Gr ) & u :> Knows(h(<sk(lts($I)), ~ni>)) )
+   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
+
+lemma R_secrecy_ephkeys:
+  "( v :> naxos_R_2( I, $R, Gi, ~nr ) & u :> Knows(h(<sk(lts($R)), ~nr>)) )
+   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
+
+ 
+lemma I_secrecy_key:
+  "vkey :> SeKeyI(k, <$I, $R, Gi, Gr>) & vk :> Knows(k)
+  ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
+
+lemma R_secrecy_key:
+  "vkey :> SeKeyR(k, <I, $R, Gi, Gr>) & vk :> Knows(k)
+  ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
+
+
+/*
+lemma I_niagree:
+  "v :> iso_I_3(I, ni, R, hkr) 
+   ==> 
+   ( Ex u hki nr. 
+       u :> iso_R_3(I, hki, R, nr) &
+       hki = 'g' ^ ni &
+       hkr = 'g' ^ nr
+   ) 
+   | 
+   ( Ex r. r :> LTSR(R) & r >+> v )"
+
+lemma session_key_consistency:
+  "v1 :> SeKey (k, params1) & v2 :> SeKey(k, params2)
+   ==>
+   (params1 = params2) |
+   (Ex R I hki hkr vr.
+     params1 = <I, R, hki, hkr> &
+     vr >+> v1 &
+     (vr :> LTSR(I) | vr :> LTSR(R))
+   )"
+   // I'm curious if we can prove this: it is quite strong due to its
+   // asymmetry.
+
+*/
+
+end

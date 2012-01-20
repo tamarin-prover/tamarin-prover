@@ -1,0 +1,3 @@
+:set -i../utils/src
+:set -isrc
+:set -Wall

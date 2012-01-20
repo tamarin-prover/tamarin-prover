@@ -1,0 +1,56 @@
+theory NAXOS
+begin
+
+section{* The NAXOS Key-Exchange Protocol *}
+
+/* Protocol rules */
+
+rule generate_ltk:
+   [ Fresh( <'RegisterKey',$A> ), Fresh(~lk) ] -->
+   [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Send( 'g'^~lk ) ]
+
+rule Init_1:
+   [ Fresh( ~ekI ), !Ltk( $A, ~lkI ) ]
+   -->
+   [ Init_1( ~ekI, $I, $R, ~lkI ), Send( 'g'^h(~lkI, ~ekI ) ) ]
+
+rule Init_2:
+   [ Init_1( ~ekI, $I, $R, ~lkI ), Knows( Y ), !Pk( $R,'g'^~lkR ) ]
+   --[Sessk( ~ekI, $I, $R, h( <Y^~lkI, ('g'^~lkR)^h(~lkI, ~ekI ), Y^h(~lkI, ~ekI ), $I, $R> ) ) ]->
+   [ Sessk( ~ekI, $I, $R, h( <Y^~lkI,  ('g'^~lkR)^h(~lkI, ~ekI ), Y^h(~lkI, ~ekI ), $I, $R> ) ) ]
+
+/* previous rule requires lemma that !Pk argument always has a certain form
+rule Init_2:
+   [ Init_1( ~ekI, $I, $R, ~lkI ), Knows( Y ), !Pk( $R,pkR ) ]
+   --[Sessk( ~ekI, $I, $R, h( <Y^~lkI, pkR^h(~lkI, ~ekI ), Y^h(~lkI, ~ekI ), $I, $R> ) ) ]->
+   [ Sessk( ~ekI, $I, $R, h( <Y^~lkI, pkR^h(~lkI, ~ekI ), Y^h(~lkI, ~ekI ), $I, $R> ) ) ]
+*/
+
+rule Resp_1:
+   [ Knows( X ), Fresh( ~ekR ), !Ltk(R, ~lkR) ]
+   -->
+   [ Send( 'g'^h(~lkR, ~ekR ) )  ]
+
+rule Sessk_reveal: 
+   [ Sessk(~tid, $I, $R, k) ]
+   --[ SesskRev(~tid) ]->
+   [ Send(k) ]
+
+rule Ltk_reveal:
+   [ !Ltk($A, k) ]
+   --[ LtkRev($A) ]->
+   [ Send(k) ]
+
+rule log_deducible:
+  [ Knows(x) ]
+  --[ Deducible(x) ]-> []
+
+/* Security properties */
+
+lemma Weak_perfect_forward_secrecy:
+  "not (Ex #i1 #i2 tid I R k. Sessk(tid, I, R, k) @ i1 & Deducible( k ) @ i2
+         & (All #i3. LtkRev(I) @ i3 ==> F)
+         & (All #i3. LtkRev(R) @ i3 ==> F)
+         & (All #i3. SesskRev(tid) @ i3 ==> F))"
+
+end

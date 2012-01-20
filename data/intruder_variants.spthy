@@ -1,0 +1,282 @@
+theory intruder_variants begin
+
+/* Fixed theory for normal adversary message deduction
+   according to our POST'12 submission
+
+   Authors: Benedikt Schmidt <beschmi@inf.ethz.ch>
+            Simon Meier <simon.meier@inf.ethz.ch>
+*/
+
+section{* Finite Variants of the Intruder Rules *}
+
+/**********************************************
+ Destruction rules for exponentiation
+***********************************************/
+
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^x3 ), KU( f_ , x4 ) ] --> [ KD( 'exp', x2^(x4*x3) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^x3 ), KU( f_, _x3 ) ] --> [ KD( 'exp', x2 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^_x3 ), KU( f_, x3 ) ] --> [ KD( 'exp', x2 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^_x3 ), KU( f_, _x4 ) ] --> [ KD( 'exp', x2^_((x4*x3)) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, x4 ) ] --> [ KD( 'exp', x2^x3 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x4*x3) ), KU( f_, _x3 ) ] --> [ KD( 'exp', x2^x4 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^_((x4*x3)) ), KU( f_, x3 ) ] --> [ KD( 'exp', x2^_x4 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^x3 ), KU( f_, (x4*_x3) ) ] --> [ KD( 'exp', x2^x4 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^x3 ), KU( f_, _((x4*x3)) ) ] --> [ KD( 'exp', x2^_x4 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^_x3 ), KU( f_, (x4*x3) ) ] --> [ KD( 'exp', x2^x4 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, _x5 ) ] --> [ KD( 'exp', x2^(x3*_((x5*x4))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^_x3 ), KU( f_, (x4*_x5) ) ] --> [ KD( 'exp', x2^(x4*_((x5*x3))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_((x5*x4))) ), KU( f_, x4 ) ] --> [ KD( 'exp', x2^(x3*_x5) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, (x5*x4) ) ] --> [ KD( 'exp', x2^(x5*x3) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x4*x3) ), KU( f_, (x5*_x3) ) ] --> [ KD( 'exp', x2^(x5*x4) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x4*x3) ), KU( f_, _((x5*x3)) ) ] --> [ KD( 'exp', x2^(x4*_x5) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^_((x4*x3)) ), KU( f_, (x5*x3) ) ] --> [ KD( 'exp', x2^(x5*_x4) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^x3 ), KU( f_, (x4*_((x5*x3))) ) ] --> [ KD( 'exp', x2^(x4*_x5) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, (x5*_x6) ) ]
+   -->
+   [ KD( 'exp', x2^((x5*x3)*_((x6*x4))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, (x4*_x3) ) ] --> [ KD( 'exp', x2 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, _((x5*x3)) ) ] --> [ KD( 'exp', x2^_((x5*x4)) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^_((x4*x3)) ), KU( f_, (x3*_x5) ) ] --> [ KD( 'exp', x2^_((x5*x4)) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_((x5*x4))) ), KU( f_, (x6*x4) ) ]
+   -->
+   [ KD( 'exp', x2^((x6*x3)*_x5) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x4*x3) ), KU( f_, (x5*_((x6*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^((x5*x4)*_x6) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_x5) ), KU( f_, (x5*_x3) ) ] --> [ KD( 'exp', x2^x4 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_((x5*x4))) ), KU( f_, (x4*_x3) ) ] --> [ KD( 'exp', x2^_x5 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, ((x5*x4)*_x3) ) ] --> [ KD( 'exp', x2^x5 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, (x4*_((x5*x3))) ) ] --> [ KD( 'exp', x2^_x5 ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_x5) ), KU( f_, _((x6*x3)) ) ]
+   -->
+   [ KD( 'exp', x2^(x4*_((x6*x5))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^_((x4*x3)) ), KU( f_, ((x5*x3)*_x6) ) ]
+   -->
+   [ KD( 'exp', x2^(x5*_((x6*x4))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_((x5*x4))) ), KU( f_, (x4*_x6) ) ]
+   -->
+   [ KD( 'exp', x2^(x3*_((x6*x5))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, (x5*_((x6*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^(x5*_((x6*x4))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_x4) ), KU( f_, ((x5*x4)*_((x6*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^(x5*_x6) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_((x6*x5))) ), KU( f_, (x5*_x3) ) ]
+   -->
+   [ KD( 'exp', x2^(x4*_x6) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_((x5*x4))) ), KU( f_, (x4*_((x6*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^_((x6*x5)) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_((x5*x4))) ), KU( f_, ((x6*x4)*_x3) ) ]
+   -->
+   [ KD( 'exp', x2^(x6*_x5) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_x5) ), KU( f_, (x5*_((x6*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^(x4*_x6) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_x5) ), KU( f_, ((x6*x5)*_x3) ) ]
+   -->
+   [ KD( 'exp', x2^(x6*x4) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_x5) ), KU( f_, (x6*_((x7*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^((x6*x4)*_((x7*x5))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_((x5*x4))) ), KU( f_, ((x6*x4)*_x7) ) ]
+   -->
+   [ KD( 'exp', x2^((x6*x3)*_((x7*x5))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_x5) ), KU( f_, ((x6*x5)*_((x7*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^((x6*x4)*_x7) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_((x6*x5))) ), KU( f_, ((x7*x5)*_x3) ) ]
+   -->
+   [ KD( 'exp', x2^((x7*x4)*_x6) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^(x3*_((x5*x4))) ), KU( f_, ((x6*x4)*_((x7*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^(x6*_((x7*x5))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_((x6*x5))) ), KU( f_, (x5*_((x7*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^(x4*_((x7*x6))) ) ]
+ 
+ rule (modulo AC) Exp:
+   [ KD( 'noexp', x2^((x4*x3)*_((x6*x5))) ), KU( f_, ((x7*x5)*_((x8*x3))) ) ]
+   -->
+   [ KD( 'exp', x2^((x7*x4)*_((x8*x6))) ) ]
+
+/**********************************************
+ Other destruction rules
+**********************************************/
+ 
+ rule (modulo AC) Inv:
+   [ KD( f_, _x1 ) ] --> [ KD( 'noexp', x1 ) ]
+
+/* This rule is redundant because it has a product conclusion
+  and is not an instance of Mult 
+ rule (modulo AC) Inv:
+   [ KU( f_, (x1*_x2) ) ] --> [ KU( 'noexp', (x2*_x1) ) ]
+*/
+
+ rule (modulo AC) snd:
+   [ KD( f_, <x1, x2> ) ] --> [ KD( 'noexp', x2 ) ]
+ 
+ rule (modulo AC) fst:
+   [ KD( f_, <x1, x2> ) ] --> [ KD( 'noexp', x1 ) ]
+ 
+ rule (modulo AC) adec:
+   [ KD( f1_, aenc{x3}pk(x2) ), KU( f2_, x2 ) ] --> [ KD( 'noexp', x3 ) ]
+ 
+ rule (modulo AC) sdec:
+   [ KD( f1_, senc{x3}x2 ), KU( f2_, x2 ) ] --> [ KD( 'noexp', x3 ) ]
+ 
+ rule (modulo AC) verify:
+   [ KD( f1_, sign{x3}x2 ), KU( f2_,  pk(x2) ) ] --> [ KD( 'noexp', x3 ) ]
+
+/**********************************************
+ Construction rules
+**********************************************/
+ 
+
+ rule (modulo AC) Exp:
+   [ KU( 'noexp', x ), KU( f_, x1 ) ] --> [ KU( 'exp', x^x1 ) ]
+
+/* implicit rule 
+ rule (modulo AC) Inv:
+   [ KU( f_, f_, x ) ] --> [ KU( 'noexp', _x ) ]
+*/ 
+
+ rule (modulo AC) Unit:
+   [ ] --> [ KU( 'noexp', 1 ) ]
+ 
+ rule (modulo AC) h:
+   [ KU( f_, x ) ] --> [ KU( 'noexp', h(x) ) ]
+
+/* 
+ rule (modulo AC) sk:
+   [ KU( f_, x ) ] --> [ KU( 'noexp', sk(x) ) ]
+*/
+
+ rule (modulo AC) pk:
+   [ KU( f_, x ) ] --> [ KU( 'noexp', pk(x) ) ]
+ 
+ rule (modulo AC) snd:
+   [ KU( f_, x ) ] --> [ KU( 'noexp', snd(x) ) ]
+ 
+ rule (modulo AC) fst:
+   [ KU( f_, x ) ] --> [ KU( 'noexp', fst(x) ) ]
+ 
+ rule (modulo AC) senc:
+   [ KU( f1_,x ), KU( f2_, x1 ) ] --> [ KU( 'noexp', senc{x}x1 ) ]
+ 
+ rule (modulo AC) aenc:
+   [ KU( f1_, x ), KU( f2_, x1 ) ] --> [ KU( 'noexp', aenc{x}x1 ) ]
+ 
+ rule (modulo AC) adec:
+   [ KU( f1_, x ), KU( f2_, x1 ) ] --> [ KU( 'noexp', adec(x1, x) ) ]
+ 
+ rule (modulo AC) sdec:
+   [ KU( f1_, x ), KU( f2_, x1 ) ] --> [ KU( 'noexp', sdec(x1, x) ) ]
+ 
+ rule (modulo AC) sign:
+   [ KU( f1_, x ), KU( f2_, x1 ) ] --> [ KU( 'noexp', sign{x}x1 ) ]
+ 
+ rule (modulo AC) verify:
+   [ KU( f1_, x ), KU( f2_, x1 ) ] --> [ KU( 'noexp', verify(x1, x) ) ]
+
+/* special intruder rules */
+
+rule (modulo AC) coerce:
+   [ KD( f_, x ) ] --> [ KU( f_, x ) ]
+
+rule (modulo AC) pub:
+   [ ] --> [ KU( f_, $x ) ]
+
+rule (modulo AC) gen_fresh:
+   [ Fresh( ~x ) ] --> [ KU( 'noexp', ~x ) ]
+
+
+end

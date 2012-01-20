@@ -1,0 +1,25 @@
+theory Example_for_POST_12
+begin
+
+section{* The Running Example of our POST 12 Paper *}
+
+rule Step1:
+  [ Fresh(~x), Fresh(~k) ] 
+  --> 
+  [ St(~x, ~k), Send(senc{~x}~k), Key(~k) ]
+
+rule Step2:
+  [ St(x, k), Knows(<x,x>) ] 
+  --[ Fin(x, k) ]-> 
+  [ ]
+
+rule Reveal_key:
+    [ Key(k) ]
+  --[ Rev(k) ]->
+    [ Send(k) ]
+
+lemma Characterize_Fin:
+  "not( Ex k S #i.  Fin(S, k) @ i )
+  "
+
+end

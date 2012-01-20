@@ -1,0 +1,51 @@
+- The makefile doesn't work (complains about some unit testing stuff)
+  but cabal configure/build etc. seems to
+  work.
+
+- graphviz/maude dependency not mentioned, at least maude missing leads
+  to ugly error:
+
+  neku:~/Backup/infsec_git-svn/projects/FOSSP/src/vnarrow$ dh-proto-proof examples/ISO_DH.spthy 
+  dh-proto-proof: fd:9: hGetChar: end of file
+
+- The javascript things aren't installed appropriately somehow.
+
+- When using -o, some stuff still goes to stderr ("solving goal ...")
+  while the case distinctions etc. go to the output file. It would be
+  nice to be able to have both in files when needed, or even in the same
+  file?
+
+- For Haskell lovers (my beatiful programming language helps me avoid
+  mistakes) the current input language is impressively error prone, and
+  complains about nothing, even when it clearly makes no sense. (I
+  commented out the 'let eki=' definitions in NAXOS and managed to get a
+  short security proof.)
+
+- During a proof, the variant unfolding may do renaming. So suppose I'm
+  trying to establish that the peer ($R) must have been compromised
+  before the end of the thread to establish a contradiction, and it gets
+  renamed to $R305, I might have lost it. 
+
+  Possible solutions: highlight / or retain names for variables in original
+  formula.
+
+
+
+Heuristics:
+
+0. Identify "special" names in initial formula,e.g.: 
+   - names that occur within sk/lts wrappers in the formula, in
+     particular in the conclusion (may be restrictions on long-term key
+     leakage).
+   - freshness contained in states in the premise. May be secret nonces,
+     which would be good.
+
+1. Chase sk/lts outer constructors when they appear, /especially/ when
+   they contain the special names from (0).
+
+2. Chase freshness from (1) when occurring as a 'plain' goal.
+
+3. Avoid EqSplit unless things from (0) occur in it. The more the
+better.
+
+

@@ -1,0 +1,45 @@
+
+Date Resolved   Date Posted   Who Issue
+                 2011/03/03    SM  Cleanup licencing (e.g., reference GPL-3
+                                   once in .cabal file)
+                
+2011/10/01  SM   2011/09/28    SM  Use precomputed cases for MsgEdges
+                                   Check for False being derived
+                
+                 2011/10/03    CC  If dh-proto-proof is invoked in the wrong
+	                           directory (e.g. examples) the intruder rules are not
+	                           loaded, but the user is not warned.
+                
+2011/10/03  SM   2011/10/03    CC  Case splits with more than 10 cases get
+                                   sorted in the wrong way, i.e., case_10 comes
+                                   before case_2 because of the lexicographic
+                                   ordering. Possible solution: prefix with the
+                                   appropriate amount of zeroes depending on the
+                                   number of cases (yielding, e.g., case_02) so
+                                   that the ordering works again.
+                
+                 2011/10/03    SM  WF checks for: *-restricted, protocol rules,
+                                   and properties.
+                
+                 2011/10/03    SM  Cas suggested to use a status-popup when a
+                                   branch is solved and the prover jumps to the
+                                   next open goal in the interface.
+
+                 2011/10/04    CC  The equation splits often yield many
+		                   cases and it would be interesting to be able to
+		                   quickly see which branch belongs to which equation.
+		                   I imagine annotation (just as is done now with some
+		                   other text):
+
+		                     case split_case_02 // x = y^z
+
+                 2011/10/26    SM  Switch fact notation to paper. 
+                                   Send ~> Out, Knows ~> In, Fresh ~> Fr
+
+                 2011/12/07    SM  fix: ==> is parsed as a left-associative op.
+
+                 2012/01/19    SM  incorporate licence according to
+                                   instructions at the end of LICENCE file
+
+                 2012/01/19    SM  Update link to homepage in all three cabal
+                                   files.

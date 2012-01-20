@@ -1,0 +1,12 @@
+
+Protocol analysis results where the prover got stuck
+
+./examples/PLAINDH.spthy.res
+
+Protocol analysis results where the prover did not get stuck
+
+./examples/UM.spthy.res
+./examples/KEAPLUS.spthy.res
+./examples/NAXOS.spthy.res
+./examples/SIGDH.spthy.res
+./examples/SIGDHNN.spthy.res

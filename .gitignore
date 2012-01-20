@@ -1,0 +1,16 @@
+dist
+cabal-dev
+testbed
+case-studies
+tamarin-prover-img
+
+*.hi
+*.o
+
+.hpc
+unit.tix
+
+narrow
+unit
+
+client_session_key.aes

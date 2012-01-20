@@ -1,0 +1,94 @@
+theory A_GDH_2
+begin
+
+section{* A-GDH.2 cliques protocol. Modeled after Kuesters CSF version,
+but now for unbounded sessions. *}
+
+// First some generic infrastructure
+// Symmetric long-term shared keys.
+rule setup_sym_key_norefl:
+ [ Fr(~k)
+ , Fr(<'setup_sym_key_norefl', $A, $B>)
+ , Fr(<'setup_sym_key_norefl', $B, $A>)
+ ]
+ -->
+ [ !LTK($A,$B,~k)
+ , !LTK($B,$A,~k)
+ ]
+
+// the above rule cannot be used to setup a key for talking to oneself, as then the two 'Fr' premises cannot be satisfied.
+// We remedy this using the following additional rule.
+rule setup_sym_key_refl:
+ [ Fr(~k)
+ , Fr(<'setup_sym_key_refl', $A>)
+ ]
+ -->
+ [ !LTK($A,$A,~k) ]
+
+// Long-term key reveal
+rule Ltk_reveal:
+   [ !LTK($A, $B, ~k) ]
+   --[ LtkRev($A), LtkRev($B) ]->
+   [ Out(~k) ]
+
+rule log_deducible:
+  [ In(x) ]
+  --[ Deducible(x) ]-> []
+
+// The protocol rules
+
+// Role A
+rule roleA1:
+  [ Fr(~ra) ]
+  -->
+  [ StepA($A,~ra), Out('g'^~ra) ]
+
+rule roleA2:
+  [ StepA($A,~ra), In(X), !LTK($A,$D,~kad) ]
+  --[ Claim(~ra,'A',$A,$B,$C,$D,'Secret',(X^~ra)^~kad) ]->
+  []
+
+// Role B
+rule roleB1:
+  [ In(Xa), In(Xb), Fr(~rb) ]
+  -->
+  [ StepB($B,~rb,Xa,Xb), Out(<Xa^~rb, Xb, Xb^~rb>) ]
+
+rule roleB2:
+  [ StepB($B,~rb,Xa,Xb), In(X), !LTK($B,$D,~kbd) ]
+  --[ Claim(~rb,'B',$A,$B,$C,$D,'Secret',(X^~rb)^~kbd) ]->
+  []
+
+// Role C
+rule roleC1:
+  [ In(Xa), In(Xb), In(Xc), Fr(~rc) ]
+  -->
+  [ StepC($C,~rc,Xa,Xb,Xc), Out(<Xa^~rc, Xb^~rc, Xc, Xc^~rc>) ]
+
+rule roleC2:
+  [ StepC($C,~rc,Xa,Xb,Xc), In(X), !LTK($C,$D,~kcd) ]
+  --[ Claim(~rc,'C',$A,$B,$C,$D,'Secret',(X^~rc)^~kcd) ]->
+  []
+
+// Role D
+// kad, kbd, kcd are symmetric shared long-term keys
+rule roleD:
+  [ In(Xa), In(Xb), In(Xc), In(Xd), Fr(~rd), 
+    !LTK($A,$D,~kad),
+    !LTK($B,$D,~kbd),
+    !LTK($C,$D,~kcd) ]
+  --[ Claim(~rd,'D',$A,$B,$C,$D,'Secret',Xd^~rd ) ]->
+  [ Out(<Xa^~kad, Xb^~kbd, Xc^~kcd>) ]
+
+/* Is the key secret? */
+lemma gk_secrecy:
+  "not (Ex #i1 #i2 R A B C D ttest k.
+      Claim(ttest, R, A,B,C,D, 'Secret', k) @ i1 & Deducible( k ) @ i2
+      & not( (Ex #i3. LtkRev(A) @ i3 )
+           | (Ex #i3. LtkRev(B) @ i3 )
+           | (Ex #i3. LtkRev(C) @ i3 )
+           | (Ex #i3. LtkRev(D) @ i3 )
+	)
+   )"
+
+end

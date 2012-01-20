@@ -1,0 +1,112 @@
+***(
+The informal journal-level description of this protocol is as follows:
+
+A --> B: pk(B,A ; N_A)
+B --> A: pk(A, N_A ; N_B ; B)
+A --> B: pk(B, N_B)
+
+where N_A and N_B are nonces, pk(x,y) means message y encripted using public 
+key x, and sk(x,y) means message y encripted using private key x. 
+Moreover, encription/decription have the following algebraic properties:
+
+  pk(K,sk(K,M)) = M .
+  sk(K,pk(K,M)) = M .
+)***
+
+fmod PROTOCOL-EXAMPLE-SYMBOLS is
+  --- Importing sorts Msg, Fresh, Public, and GhostData
+  protecting DEFINITION-PROTOCOL-RULES .
+  
+  ----------------------------------------------------------
+  --- Overwrite this module with the syntax of your protocol
+  --- Notes:
+  --- * Sort Msg and Fresh are special and imported
+  --- * Every sort must be a subsort of Msg
+  --- * No sort can be a supersort of Msg
+  ----------------------------------------------------------
+
+  --- Sort Information 
+  sorts Name Nonce Key .
+  subsort Name Nonce Key < Msg .
+  subsort Name < Key .
+  subsort Name < Public .
+
+  --- Encoding operators for public/private encryption
+  op pk : Key Msg -> Msg [frozen] .
+  op sk : Key Msg -> Msg [frozen] .
+
+  --- Nonce operator
+  op n : Name Fresh -> Nonce [frozen] .
+  
+  --- Principals
+  op a : -> Name . --- Alice
+  op b : -> Name . --- Bob
+  op i : -> Name . --- Intruder
+  
+ --- Associativity operator
+  op _;_ : Msg  Msg  -> Msg [gather (e E) frozen] .
+  
+endfm
+
+fmod PROTOCOL-EXAMPLE-ALGEBRAIC is
+  protecting PROTOCOL-EXAMPLE-SYMBOLS .
+  
+  ----------------------------------------------------------
+  --- Overwrite this module with the algebraic properties 
+  --- of your protocol
+  ----------------------------------------------------------
+
+  var Z : Msg .
+  var Ke : Key .
+  
+  *** Encryption/Decryption Cancellation
+  eq pk(Ke,sk(Ke,Z)) = Z [nonexec metadata "variant"] .
+  eq sk(Ke,pk(Ke,Z)) = Z [nonexec metadata "variant"] .
+
+endfm
+
+fmod PROTOCOL-SPECIFICATION is
+  protecting PROTOCOL-EXAMPLE-SYMBOLS .
+  protecting DEFINITION-PROTOCOL-RULES .
+  protecting DEFINITION-CONSTRAINTS-INPUT .
+
+  ----------------------------------------------------------
+  --- Overwrite this module with the strands 
+  --- of your protocol
+  ----------------------------------------------------------
+  
+  var Ke : Key .
+  vars X Y Z : Msg .
+  vars r r' : Fresh .
+  vars A B : Name .
+  vars N N1 N2 : Nonce .
+
+  eq STRANDS-DOLEVYAO
+   = :: nil :: [ nil | -(X), -(Y), +(X ; Y), nil ] &
+     :: nil :: [ nil | -(X ; Y), +(X), nil ] &
+     :: nil :: [ nil | -(X ; Y), +(Y), nil ] &
+     :: nil :: [ nil | -(X), +(sk(i,X)), nil ] & 
+     :: nil :: [ nil | -(X), +(pk(Ke,X)), nil ] &
+     :: nil :: [ nil | +(A), nil ] 
+  [nonexec] .
+
+  eq STRANDS-PROTOCOL
+   = :: r :: 
+     [ nil | +(pk(B,A ; n(A,r))), -(pk(A,n(A,r) ; N ; B)), +(pk(B, N)), nil ] &
+     :: r :: 
+     [ nil | -(pk(B,A ; N)), +(pk(A, N ; n(B,r) ; B)), -(pk(B,n(B,r))), nil ]
+  [nonexec] .
+
+  eq ATTACK-STATE(0)
+   = :: r :: 
+     [ nil, -(pk(b,a ; N)), +(pk(a, N ; n(b,r) ; b)), -(pk(b,n(b,r))) | nil ]
+     || n(b,r) inI, empty
+     || nil
+     || nil
+     || nil
+  [nonexec] .
+
+endfm
+
+--- THIS HAS TO BE THE LAST LOADED MODULE !!!!
+select MAUDE-NPA .

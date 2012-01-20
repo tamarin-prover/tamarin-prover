@@ -1,0 +1,81 @@
+theory SIGMA_Basic
+begin
+
+section{* The SIGMA-Baisc Key-Exchange Protocol *}
+
+text{*
+  H. Krawczyk, SIGMA: the `SIGn-and-MAc' Approach to Authenticated
+  Diffie-Hellman and its Use in the IKE Protocols, CRYPTO'03
+*}
+
+anb-proto SigmaB
+{
+  // syntactic message abbreviations
+  let hkiI = 'g'^ni    // half-key of initiator in initiator role
+      hkrR = 'g'^nr    // half-key of responder in responder role
+
+      kmI = h('km', hkrI ^ ni)  // MAC-key in the initiator role
+      kmR = h('km', hkiR ^ nr)  // MAC-key in the responder role
+
+  // message transfers
+  1. I ->  : I, hkiI
+       -> R: I, hkiR
+
+  2.   <- R: hkrR, R, encA{hkiR, hkrR}sk(R), h('mac', kmR, R)
+     I <-  : hkrI, R, encA{hkiI, hkrI}sk(R), h('mac', kmI, R)
+
+  3. I ->  : I, encA{hkrI, hkiI}sk(I), h('mac', kmI, I)
+       -> R: I, encA{hkrR, hkiR}sk(I), h('mac', kmR, I)
+
+}
+
+// add session key markers
+// add_concs iso_I_3: SeKey(hkr^~ni), <I, R, 'g'^~ni, hkr     > )
+// add_concs iso_R_3: SeKey(hki^~nr), <I, R, hki      ,'g'^~nr> )
+
+
+subsection{* Typing *}
+
+// TODO
+
+
+subsection{* Secrecy Properties *}
+
+// strategy: 
+//   1. prove unrestricted secrecy of random seeds
+//   2. prove message authentication for half-key provided 
+//      certificate was not compromised.
+//   3. prove PFS of DH value (half-key to the power of own seed)
+
+// Let's do this for the initiator
+
+lemma I_ni_secrecy:
+  "v :> SigmaB_I_1( I, R, ni ) & u :> ni ==> F"
+
+lemma R_nr_secrecy:
+  "v :> SigmaB_R_2( R, nr, I, hkiR ) & u :> nr ==> F"
+
+// This property might not be very helpful for the proof below, as it contains
+// non-node existentials in the conclusion
+lemma I_hkrI_auth:
+  " v :> SigmaB_I_2( I, R, ni, hkrI ) 
+    ==>
+    (Ex #u ~nr hkiR. 
+        u :> SigmaB_R_2( R, ~nr, I, hkiR)
+      & u >+> v
+      & hkrI = 'g'^~nr
+    )
+    |
+    (Ex #u. u :> LTSR(R) & u >+> v)
+  "
+
+lemma I_DH_pfs:
+  " v :> SigmaB_I_2( I, R, ni, hkrI ) &
+    u :> (hkrI ^ ni)
+    ==>
+    (Ex #w. w :> LTSR(R) & w >+> v)
+  "
+
+
+end
+

@@ -1,0 +1,204 @@
+***(
+The informal journal-level description of this protocol is as follows:
+
+A --> B: A ; B ; exp(g,N_A)
+B --> A: A ; B ; exp(g,N_A)
+A --> B: enc(exp(exp(g,N_B),N_A),secret(A,B))
+
+where N_A and N_B are nonces, exp(x,y) means x raised to y, enc(x,y) means
+message y encripted using key x, and secret(A,B) is a secret shared between
+A and B. Moreover, exponentiation and encription/decription have the following 
+algebraic properties:
+
+  exp(exp(X,Y),Z) = exp(X, Y * Z)
+  e(K,d(K,M)) = M .
+  d(K,e(K,M)) = M .
+
+where * is the xor operator, though no algebraic property is given, since 
+they are not necessary for this protocol. However, note that the property 
+for exponentiation is restricted below by using appopriate sorts
+in such a way that variable X can be only the generator g. This is necessary
+to have a finitary unification procedure based on narrowing.
+)***
+
+fmod PROTOCOL-EXAMPLE-SYMBOLS is
+  --- Importing sorts Msg, Fresh, Public
+  protecting DEFINITION-PROTOCOL-RULES .
+  
+  ----------------------------------------------------------
+  --- Overwrite this module with the syntax of your protocol
+  --- Notes:
+  --- * Sort Msg and Fresh are special and imported
+  --- * Every sort must be a subsort of Msg
+  --- * No sort can be a supersort of Msg
+  ----------------------------------------------------------
+
+  --- Sort Information 
+  sorts Name Nonce NeNonceSet Gen Exp Key GenvExp Secret .
+  subsort Gen Exp < GenvExp .
+  subsort Name NeNonceSet GenvExp Secret Key < Msg .
+  subsort Exp < Key .
+  subsort Name < Public . --- This is quite relevant and necessary
+  subsort Gen < Public . --- This is quite relevant and necessary
+
+  --- Secret
+  op sec : Name Fresh -> Secret [frozen] .
+
+  --- Nonce operator
+  op n : Name Fresh -> Nonce [frozen] .
+
+  --- Intruder
+  ops a b i : -> Name .
+
+  --- Encryption
+  op e : Key Msg -> Msg [frozen] .
+  op d : Key Msg -> Msg [frozen] .
+
+  --- Exp
+  op exp : GenvExp NeNonceSet -> Exp [frozen] .
+
+  --- Gen
+  op g : -> Gen .
+
+  --- NeNonceSet
+  subsort Nonce < NeNonceSet .
+  op _*_ : NeNonceSet NeNonceSet -> NeNonceSet [frozen assoc comm] .
+
+  --- Concatenation
+  op _;_ : Msg Msg -> Msg [frozen gather (e E)] .
+
+endfm
+
+fmod PROTOCOL-EXAMPLE-ALGEBRAIC is
+  protecting PROTOCOL-EXAMPLE-SYMBOLS .
+  
+  ----------------------------------------------------------
+  --- Overwrite this module with the algebraic properties 
+  --- of your protocol
+  ----------------------------------------------------------
+  
+  eq exp(exp(W:Gen,Y:NeNonceSet),Z:NeNonceSet) 
+   = exp(W:Gen, Y:NeNonceSet * Z:NeNonceSet) [metadata "variant"] .
+  eq e(K:Key,d(K:Key,M:Msg)) = M:Msg [metadata "variant"] .
+  eq d(K:Key,e(K:Key,M:Msg)) = M:Msg [metadata "variant"] .
+
+endfm
+
+fmod PROTOCOL-SPECIFICATION is
+  protecting PROTOCOL-EXAMPLE-SYMBOLS .
+  protecting DEFINITION-PROTOCOL-RULES .
+  protecting DEFINITION-CONSTRAINTS-INPUT .
+
+  ----------------------------------------------------------
+  --- Overwrite this module with the strands 
+  --- of your protocol
+  ----------------------------------------------------------
+  
+  vars NS1 NS2 NS3 NS : NeNonceSet .
+  var NA NB N : Nonce .
+  var GE : GenvExp .
+  var G : Gen .
+  vars A B : Name .
+  vars r r' r1 r2 r3 : Fresh .
+  var Ke : Key .
+  vars XE YE : Exp .
+  vars M M1 M2 : Msg .
+  var Sr : Secret .
+
+  eq STRANDS-DOLEVYAO = 
+     :: nil :: [ nil | -(M1 ; M2), +(M1), nil ] &
+     :: nil :: [ nil | -(M1 ; M2), +(M2), nil ] &
+     :: nil :: [ nil | -(M1), -(M2), +(M1 ; M2), nil ] &
+     :: nil :: [ nil | -(Ke), -(M), +(e(Ke,M)), nil ] &
+     :: nil :: [ nil | -(Ke), -(M), +(d(Ke,M)), nil ] &
+     :: nil :: [ nil | -(NS1), -(NS2), +(NS1 * NS2), nil ] &
+     :: nil :: [ nil | -(GE), -(NS), +(exp(GE,NS)), nil ] &
+     :: r ::   [ nil | +(n(i,r)), nil ] &
+     :: nil :: [ nil | +(g), nil ] &
+     :: nil :: [ nil | +(A), nil ]
+  [nonexec] .
+
+  eq STRANDS-PROTOCOL = 
+     :: r,r' :: 
+     [nil | +(A ; B ; exp(g,n(A,r))), 
+            -(A ; B ; XE), 
+            +(e(exp(XE,n(A,r)),sec(A,r'))), nil] &
+     :: r :: 
+     [nil | -(A ; B ; XE), 
+            +(A ; B ; exp(g,n(B,r))), 
+            -(e(exp(XE,n(B,r)),Sr)), nil]
+  [nonexec] .
+
+  eq EXTRA-GRAMMARS
+   = (grl empty => (NS * n(a,r)) inL . ;
+      grl empty => n(a,r) inL . ;
+      grl empty => (NS * n(b,r)) inL . ;
+      grl empty => n(b,r) inL .  
+      ! S2 )
+  [nonexec] .
+
+  eq ATTACK-STATE(0)
+   = :: r :: 
+     [nil, -(a ; b ; XE), 
+           +(a ; b ; exp(g,n(b,r))), 
+           -(e(exp(XE,n(b,r)),sec(a,r'))) | nil]
+     || empty
+     || nil
+     || nil
+     || never
+     *** Pattern for authentication
+     (:: R:FreshSet ::
+     [nil | +(a ; b ; XE), 
+            -(a ; b ; exp(g,n(b,r))), 
+            +(e(YE,sec(a,r'))), nil]
+      & S:StrandSet || K:IntruderKnowledge)
+  [nonexec] .
+
+  eq ATTACK-STATE(1)
+   = :: r :: 
+     [nil, -(a ; b ; XE), 
+           +(a ; b ; exp(g,n(b,r))), 
+           -(e(exp(XE,n(b,r)),sec(a,r'))) | nil]
+     || sec(a,r') inI
+     || nil
+     || nil
+     || nil
+  [nonexec] .
+
+  eq ATTACK-STATE(2)
+   = :: r :: 
+     [nil, -(a ; b ; XE), 
+           +(a ; b ; exp(g,n(b,r))), 
+           -(e(exp(XE,n(b,r)),sec(a,r'))) | nil]
+     || sec(a,r') inI
+     || nil
+     || nil
+     || never(
+     *** Avoid infinite useless path
+      (:: nil :: 
+      [ nil | -(exp(GE,NS1 * NS2)), -(NS3), 
+          +(exp(GE,NS1 * NS2 * NS3)), nil ] 
+      & S:StrandSet || K:IntruderKnowledge)
+     *** Pattern to avoid unreachable states
+     (:: nil :: 
+      [nil | -(exp(#1:Exp, N1:Nonce)), 
+             -(sec(A:Name, #2:Fresh)), 
+             +(e(exp(#1:Exp, N2:Nonce), sec(A:Name, #2:Fresh))), nil] 
+      & S:StrandSet || K:IntruderKnowledge)
+     *** Pattern to avoid unreachable states
+     (:: nil :: 
+      [nil | -(exp(#1:Exp, N1:Nonce)), 
+          -(e(exp(#1:Exp, N1:Nonce), S:Secret)), 
+          +(S:Secret), nil]
+      & S:StrandSet || K:IntruderKnowledge)
+     *** Pattern to avoid unreachable states
+     (S:StrandSet 
+      || (#4:Gen != #0:Gen), K:IntruderKnowledge)
+     )
+  [nonexec] .
+
+endfm
+
+--- THIS HAS TO BE THE LAST LOADED MODULE !!!!
+select MAUDE-NPA .
+

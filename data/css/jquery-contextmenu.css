@@ -1,0 +1,65 @@
+/* Generic context menu styles */
+
+ul#contextMenu {
+    display: none;
+}
+
+.contextMenu {
+    position: absolute;
+    width: 10em;
+    z-index: 99999;
+    border: solid 1px #CCC;
+    background: #EEE;
+    padding: 0;
+    margin: 0;
+    display: none;
+}
+
+.contextMenu LI {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.contextMenu A {
+    color: #333;
+    text-decoration: none;
+    display: block;
+    line-height: 1em;
+    height: 1em;
+    outline: none;
+    padding: 0.3em;
+    padding-left: 1.4em;
+}
+
+.contextMenu LI.hover A {
+    color: #FFF;
+    background-color: #3399FF;
+}
+
+.contextMenu LI.disabled A {
+    color: #AAA;
+    cursor: default;
+}
+
+.contextMenu LI.hover.disabled A {
+    background-color: transparent;
+}
+
+.contextMenu LI.separator {
+    border-top: solid 1px #CCC;
+}
+
+li.autoprove a {
+    background-image: url(/static/img/autoprove.png);
+    background-repeat: no-repeat;
+    background-position: 0.2em center;
+    background-size: 1em;
+}
+
+li.delstep a {
+    background-image: url(/static/img/delete.png);
+    background-repeat: no-repeat;
+    background-position: 0.2em center;
+    background-size: 1em;
+}

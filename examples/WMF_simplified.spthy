@@ -1,0 +1,114 @@
+theory WMF_simplified begin
+
+/*
+typing and other invariants
+---------------------------
+
+
+graph formulas:
+  p <<| msg          p requires the implicitly constructed message msg
+  p <| fact          p requires the fact
+
+
+  i << msg           node i with input 'msg'
+
+
+rule [ (Ex ~a. x = ~a) | (Ex #i. i << x) ]
+
+
+A --- {B,kAB}k(A,S) ---> S
+B <-- {A,kAB}k(S,B) ---- S
+*/
+
+
+rule register_ltk:
+  [ Fr(<'Register',$A,$B>), Fr(~lkAB) ]
+  --[RegisterLtk($A,$B,~lkAB)]->
+  [ !Ltk($A,$B,~lkAB) ]
+
+rule reveal_ltk1:
+  [ !Ltk(A,B,lkAB) ] --[ Rev(A) ]-> [ Out( lkAB ) ]
+
+rule reveal_ltk2:
+  [ !Ltk(A,B,lkAB) ] --[ Rev(B) ]-> [ Out( lkAB ) ]
+
+rule A:
+    [ Fr( ~kAB )
+    , Fr( ~timeA )
+    , !Ltk(A, S, lkAS) 
+    ]
+  --[ SessKeyA( A, $B, S, ~kAB ) 
+    , Sent_A(<A, $B, ~kAB, lkAS>)
+    ]->
+    [ Out( senc{A, $B, ~timeA, ~kAB}lkAS ) ]
+    // log: KeyAB(~kAB)
+
+rule S:
+    [ !Ltk(A, S, lkAS), !Ltk(B, S, lkBS)
+    , Fr(~timeS)
+    , In(senc{A, B, timeA, ~kAB}lkAS) 
+    ]
+  --[ SessKeyS( A, B, S, ~kAB) 
+    , Inst_S_kAB(~kAB, <A, B, ~kAB, lkAS>)
+    ]->
+    [ Out( senc{A, B, ~timeS, ~kAB}lkBS ) ]
+
+rule B:
+    [ !Ltk(B, S, lkBS), In(senc{A, B, timeS, kAB}lkBS) ]
+  --[ SessKeyB( A, B, S, kAB ) ]->
+    []
+
+rule log_deducible:
+  [ In(x) ]
+  --[ Deducible(x) ]-> []
+
+lemma (modulo E) Typing:
+  "not( Ex #i kAB m.
+      Inst_S_kAB(kAB, m) @ i 
+    & ((kAB --| i) ==> F)
+    & (All #j. Sent_A(m) @ j ==> F)
+  )"
+
+/*
+
+lemma (modulo E) Ltk_Secrecy:
+  "not( Ex #i A B lkAB #k. 
+      RegisterLtk(A,B,lkAB) @ i 
+    & Deducible(lkAB) @ k
+    & (All #r. Rev(A) @ r ==> F)
+    & (All #r. Rev(B) @ r ==> F)
+  )"
+
+lemma (modulo E) S_secrecy:
+  "not( Ex #i A B S kAB lkAB #k. 
+      SessKeyS(A,B,S,kAB) @ i 
+    & RegisterLtk(A,S,lkAB) @ k
+    & lkAB --| i
+    & (All #r. Rev(A) @ r ==> F)
+    & (All #r. Rev(S) @ r ==> F)
+  )"
+
+lemma (modulo E) S_auth:
+  "not( Ex #i A B S kAB. 
+      SessKeyS(A,B,S,kAB) @ i 
+    & (All #j. SessKeyA(A,B,S,kAB) @ j ==> F)
+    & (All #r. Rev(A) @ r              ==> F)
+    & (All #r. Rev(S) @ r              ==> F)
+  )"
+
+lemma (modulo E) A_key_secrecy:
+  "not( Ex #i A B S kAB #k. 
+      SessKeyA(A,B,S,kAB) @ i 
+    & Deducible(kAB) @k 
+    & (All #r. Rev(A) @ r ==> F)
+    & (All #r. Rev(B) @ r ==> F)
+    & (All #r. Rev(S) @ r ==> F)
+  )"
+
+
+
+// rule [ (Ex #r1 #r2. this << kAB & (LtkRev(A)@r1 | LtkRev(S)@r2)) | (Ex ~na. kAB = ~na) ]
+
+*/
+
+end

@@ -1,0 +1,306 @@
+dh-proto-proof examples/JKL_TS1_2004.spthy examples/JKL_TS1_2008.spthy examples/JKL_TS1_2008-KIFS.spthy examples/JKL_TS2_2004.spthy examples/JKL_TS2_2008.spthy examples/JKL_TS2_2004-KIFS.spthy examples/JKL_TS2_2008-KIFS.spthy examples/KEA_plus.spthy examples/NAXOS_broken_eCK_variant.spthy examples/NAXOS_eCK_PFS.spthy examples/NAXOS_eCK.spthy  examples/UM_eCK_noKCI.spthy examples/UM_eCK.spthy examples/UM_wPFS.spthy examples/NAXOS_PFS_initiator_simplified.spthy examples/NAXOS_wPFS_initiator_simplified.spthy --prove --stop-on-attack=dfs -Otestbed
+
+analyzing: examples/JKL_TS1_2004.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/JKL_TS1_2004.spthy
+
+  output:          testbed/JKL_TS1_2004_analyzed.spthy
+  processing time: 3.907236s
+  JKL2008_1_initiator_key: attack found (9 steps)
+  JKL2008_1_responder_key: attack found (9 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/JKL_TS1_2008.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/JKL_TS1_2008.spthy
+
+  output:          testbed/JKL_TS1_2008_analyzed.spthy
+  processing time: 4.517051s
+  JKL2008_1_initiator_key: complete proof (17 steps)
+  JKL2008_1_responder_key: complete proof (17 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/JKL_TS1_2008-KIFS.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/JKL_TS1_2008-KIFS.spthy
+
+  output:          testbed/JKL_TS1_2008-KIFS_analyzed.spthy
+  processing time: 6.438717s
+  JKL2008_2_initiator_key: attack found (14 steps)
+  JKL2008_2_responder_key: attack found (13 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/JKL_TS2_2004.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/JKL_TS2_2004.spthy
+
+  output:          testbed/JKL_TS2_2004_analyzed.spthy
+  processing time: 10.329849s
+  JKL2008_1_initiator_key: attack found (10 steps)
+  JKL2008_1_responder_key: attack found (10 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/JKL_TS2_2008.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/JKL_TS2_2008.spthy
+
+  output:          testbed/JKL_TS2_2008_analyzed.spthy
+  processing time: 11.874172s
+  JKL2008_1_initiator_key: complete proof (17 steps)
+  JKL2008_1_responder_key: complete proof (17 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/JKL_TS2_2004-KIFS.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/JKL_TS2_2004-KIFS.spthy
+
+  output:          testbed/JKL_TS2_2004-KIFS_analyzed.spthy
+  processing time: 11.391215s
+  JKL2008_2_initiator_key: attack found (10 steps)
+  JKL2008_2_responder_key: attack found (10 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/JKL_TS2_2008-KIFS.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/JKL_TS2_2008-KIFS.spthy
+
+  output:          testbed/JKL_TS2_2008-KIFS_analyzed.spthy
+  processing time: 17.675515s
+  JKL2008_2_initiator_key: complete proof (45 steps)
+  JKL2008_2_responder_key: complete proof (36 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/KEA_plus.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/KEA_plus.spthy
+
+  output:          testbed/KEA_plus_analyzed.spthy
+  processing time: 9.144047s
+  keaplus_initiator_key: complete proof (21 steps)
+  keaplus_responder_key: complete proof (21 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/NAXOS_broken_eCK_variant.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/NAXOS_broken_eCK_variant.spthy
+
+  output:          testbed/NAXOS_broken_eCK_variant_analyzed.spthy
+  processing time: 47.3878s
+  eCK_initiator_key: attack found (21 steps)
+  eCK_responder_key: attack found (14 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/NAXOS_eCK_PFS.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/NAXOS_eCK_PFS.spthy
+
+  output:          testbed/NAXOS_eCK_PFS_analyzed.spthy
+  processing time: 238.693949s
+  eCK_initiator_key: attack found (14 steps)
+  eCK_responder_key: attack found (14 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/NAXOS_eCK.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/NAXOS_eCK.spthy
+
+  output:          testbed/NAXOS_eCK_analyzed.spthy
+  processing time: 40.775371s
+  eCK_initiator_key: complete proof (69 steps)
+  eCK_responder_key: complete proof (65 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/UM_eCK_noKCI.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/UM_eCK_noKCI.spthy
+
+  output:          testbed/UM_eCK_noKCI_analyzed.spthy
+  processing time: 94.621471s
+  eCK_initiator_key: attack found (11 steps)
+  eCK_responder_key: attack found (11 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/UM_eCK.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/UM_eCK.spthy
+
+  output:          testbed/UM_eCK_analyzed.spthy
+  processing time: 95.096803s
+  eCK_initiator_key: attack found (11 steps)
+  eCK_responder_key: attack found (11 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/UM_wPFS.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/UM_wPFS.spthy
+
+  output:          testbed/UM_wPFS_analyzed.spthy
+  processing time: 15.037239s
+  wPFS_initiator_key: complete proof (57 steps)
+  wPFS_responder_key: complete proof (48 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/NAXOS_PFS_initiator_simplified.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/NAXOS_PFS_initiator_simplified.spthy
+
+  output:          testbed/NAXOS_PFS_initiator_simplified_analyzed.spthy
+  processing time: 31.855263s
+  eCK_initiator_key: attack found (13 steps)
+
+------------------------------------------------------------------------------
+
+analyzing: examples/NAXOS_wPFS_initiator_simplified.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/NAXOS_wPFS_initiator_simplified.spthy
+
+  output:          testbed/NAXOS_wPFS_initiator_simplified_analyzed.spthy
+  processing time: 7.640002s
+  eCK_initiator_key: complete proof (13 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/JKL_TS1_2004.spthy
+
+  output:          testbed/JKL_TS1_2004_analyzed.spthy
+  processing time: 3.907236s
+  JKL2008_1_initiator_key: attack found (9 steps)
+  JKL2008_1_responder_key: attack found (9 steps)
+
+analyzed: examples/JKL_TS1_2008.spthy
+
+  output:          testbed/JKL_TS1_2008_analyzed.spthy
+  processing time: 4.517051s
+  JKL2008_1_initiator_key: complete proof (17 steps)
+  JKL2008_1_responder_key: complete proof (17 steps)
+
+analyzed: examples/JKL_TS1_2008-KIFS.spthy
+
+  output:          testbed/JKL_TS1_2008-KIFS_analyzed.spthy
+  processing time: 6.438717s
+  JKL2008_2_initiator_key: attack found (14 steps)
+  JKL2008_2_responder_key: attack found (13 steps)
+
+analyzed: examples/JKL_TS2_2004.spthy
+
+  output:          testbed/JKL_TS2_2004_analyzed.spthy
+  processing time: 10.329849s
+  JKL2008_1_initiator_key: attack found (10 steps)
+  JKL2008_1_responder_key: attack found (10 steps)
+
+analyzed: examples/JKL_TS2_2008.spthy
+
+  output:          testbed/JKL_TS2_2008_analyzed.spthy
+  processing time: 11.874172s
+  JKL2008_1_initiator_key: complete proof (17 steps)
+  JKL2008_1_responder_key: complete proof (17 steps)
+
+analyzed: examples/JKL_TS2_2004-KIFS.spthy
+
+  output:          testbed/JKL_TS2_2004-KIFS_analyzed.spthy
+  processing time: 11.391215s
+  JKL2008_2_initiator_key: attack found (10 steps)
+  JKL2008_2_responder_key: attack found (10 steps)
+
+analyzed: examples/JKL_TS2_2008-KIFS.spthy
+
+  output:          testbed/JKL_TS2_2008-KIFS_analyzed.spthy
+  processing time: 17.675515s
+  JKL2008_2_initiator_key: complete proof (45 steps)
+  JKL2008_2_responder_key: complete proof (36 steps)
+
+analyzed: examples/KEA_plus.spthy
+
+  output:          testbed/KEA_plus_analyzed.spthy
+  processing time: 9.144047s
+  keaplus_initiator_key: complete proof (21 steps)
+  keaplus_responder_key: complete proof (21 steps)
+
+analyzed: examples/NAXOS_broken_eCK_variant.spthy
+
+  output:          testbed/NAXOS_broken_eCK_variant_analyzed.spthy
+  processing time: 47.3878s
+  eCK_initiator_key: attack found (21 steps)
+  eCK_responder_key: attack found (14 steps)
+
+analyzed: examples/NAXOS_eCK_PFS.spthy
+
+  output:          testbed/NAXOS_eCK_PFS_analyzed.spthy
+  processing time: 238.693949s
+  eCK_initiator_key: attack found (14 steps)
+  eCK_responder_key: attack found (14 steps)
+
+analyzed: examples/NAXOS_eCK.spthy
+
+  output:          testbed/NAXOS_eCK_analyzed.spthy
+  processing time: 40.775371s
+  eCK_initiator_key: complete proof (69 steps)
+  eCK_responder_key: complete proof (65 steps)
+
+analyzed: examples/UM_eCK_noKCI.spthy
+
+  output:          testbed/UM_eCK_noKCI_analyzed.spthy
+  processing time: 94.621471s
+  eCK_initiator_key: attack found (11 steps)
+  eCK_responder_key: attack found (11 steps)
+
+analyzed: examples/UM_eCK.spthy
+
+  output:          testbed/UM_eCK_analyzed.spthy
+  processing time: 95.096803s
+  eCK_initiator_key: attack found (11 steps)
+  eCK_responder_key: attack found (11 steps)
+
+analyzed: examples/UM_wPFS.spthy
+
+  output:          testbed/UM_wPFS_analyzed.spthy
+  processing time: 15.037239s
+  wPFS_initiator_key: complete proof (57 steps)
+  wPFS_responder_key: complete proof (48 steps)
+
+analyzed: examples/NAXOS_PFS_initiator_simplified.spthy
+
+  output:          testbed/NAXOS_PFS_initiator_simplified_analyzed.spthy
+  processing time: 31.855263s
+  eCK_initiator_key: attack found (13 steps)
+
+analyzed: examples/NAXOS_wPFS_initiator_simplified.spthy
+
+  output:          testbed/NAXOS_wPFS_initiator_simplified_analyzed.spthy
+  processing time: 7.640002s
+  eCK_initiator_key: complete proof (13 steps)
+
+==============================================================================

@@ -1,0 +1,72 @@
+name:               tamarin-prover-term
+
+cabal-version:      >= 1.8
+build-type:         Simple
+version:            0.1.0.0
+license:            GPL
+license-file:       LICENSE
+category:           Theorem Provers
+author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
+                    Simon Meier <simon.meier@inf.ethz.ch>
+maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
+copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010
+synopsis:           Term manipulation library for the tamarin prover.
+description:        Term manipulation infrastructure (matching, unification,
+                    narrowing, finite variants) for the tamarin prover.
+homepage:           http://people.inf.ethz.ch/benschmi/POST2011/
+stability:          Beta
+
+
+----------------------
+-- library stanzas
+----------------------
+
+library
+    build-depends:
+        base                 == 4.*
+      , mtl                  == 2.0.*
+      , containers           == 0.4.*
+      , dlist                == 0.5.*
+      , safe                 == 0.2.*
+      , split                == 0.1.*
+      , parsec               == 3.1.*
+      , syb                  >= 0.3.3   && < 0.4
+      , directory            == 1.1.*
+      , process              == 1.0.*
+      , deepseq              == 1.1.*
+                          
+      , tamarin-prover-utils == 0.1.*
+
+    hs-source-dirs: src
+
+    exposed-modules:
+      Term.Unification
+      Term.LTerm
+      Term.Subsumption
+      Term.Substitution
+
+      Term.Rewriting.Norm
+      Term.Rewriting.NormAC
+
+      Term.Narrowing.Variants
+      Term.Narrowing.Variants.Check
+      Term.Narrowing.Variants.Compute
+
+      Term.Builtin.Convenience
+      Term.Builtin.Rules
+      Term.Builtin.Signature
+
+      Term.Maude.Process
+      Term.Maude.Types
+
+    other-modules:
+      Term.Term
+      Term.Classes
+      Term.Positions
+
+      Term.Narrowing.Narrow
+
+      Term.Substitution.SubstVFree
+      Term.Substitution.SubstVFresh
+
+

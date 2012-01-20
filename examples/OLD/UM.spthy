@@ -1,0 +1,113 @@
+theory UM
+begin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+section{* The UM (Unified Model) Key-Exchange Protocol *}
+
+text{*
+	 Protocol 5.10 in Boyd and Mathuria (p. 158)
+*}
+
+rule Reveal_pk:
+  [ ] --> [ Send( pk(lts($m)) ) ]
+
+rule Reveal_lts:
+  [ Knows( m ) ] --> [ LTSR( m ), Send( lts(m) ) ]
+
+/* Protocol rules */
+
+
+rule reveal_pk:
+   [ ] --> [ Send('g'^sk(lts($X))) ]
+
+rule um_I_1:
+   [ Fresh( ~ni ) ]
+   -->
+   [ um_I_1( $I, $R, ~ni ), Send( <$I, 'g'^~ni >) ]
+
+rule um_I_2:
+   [ um_I_1( $I, $R, ~ni ), Knows( <$R, Gr> ) ]
+   -->
+   [ um_I_2( $I, $R, ~ni, Gr ) ]
+
+rule um_R_1:
+   [ Knows( <I, Gi> ) ] --> [ um_R_1( I, $R, Gi ) ]
+
+rule um_R_2:
+   [ um_R_1( I, $R, Gi ), Fresh( ~nr ) ]
+   -->
+   [ um_R_2( I, $R, Gi, ~nr ), Send( <$R, 'g'^~nr >) ]
+
+
+/* Session keys */
+
+
+rule SeKeyI:
+  [ um_I_2( $I, $R, ~ni, Gr ) ]
+  -->
+  [ SeKeyI(h(Gr^~ni, 'g'^sk(lts($R))^sk(lts($I)) ), <$I,$R,'g'^~ni,Gr> ) ]
+
+
+rule SeKeyR:
+  [ um_R_2( I, $R, Gi, ~nr ) ]
+  -->
+  [ SeKeyR(h(Gi^~nr, 'g'^sk(lts(I))^sk(lts($R))  ), <I,$R,Gi,'g'^~nr> ) ]
+
+
+subsection{* Secrecy Properties *}
+
+
+
+/*
+Security Model (Compromise Rules without premises)
+Filtering is done in the property conclusions (property violation ==> security model violation)
+*/
+
+	// needed to add rules
+ 
+/*
+lemma I_executable:
+  "not(v :> um_I_2( $I, $R, ~ni, Gr ) )"
+
+lemma R_executable:
+  "not(v :> um_R_2( I, $R, Gi, ~nr ) )"
+*/
+
+ 
+lemma I_secrecy_ephkeys:
+  "( v :> um_I_2( $I, $R, ~ni, Gr ) & u :> Knows(~ni) )
+   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
+
+lemma R_secrecy_ephkeys:
+  "( v :> um_R_2( I, $R, Gi, ~nr ) & u :> Knows(~nr) )
+   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
+
+ 
+lemma I_secrecy_key:
+  "vkey :> SeKeyI(k, <$I, $R, Gi, Gr>) & vk :> Knows(k)
+  ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
+
+lemma R_secrecy_key:
+  "vkey :> SeKeyR(k, <I, $R, Gi, Gr>) & vk :> Knows(k)
+  ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
+
+
+end

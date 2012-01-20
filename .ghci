@@ -1,0 +1,5 @@
+:set -iinteractive-only-src
+-- :set -ilib/term/src
+-- :set -ilib/utils/src
+:set -isrc
+:set -Wall
