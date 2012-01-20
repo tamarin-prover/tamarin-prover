@@ -60,7 +60,7 @@ saturateGuarded :: MonadFresh m
                    -- ^ return the new solved, unsolved, and equalities sets
 saturateGuarded hnd se0 = do
     (eqs, se) <- (`runStateT` se0) $ do
-        do existentials <- S.filter isExistential <$> getM sFormulas
+        do existentials <- S.filter isExGuarded <$> getM sFormulas
            newExs       <- mapM solveExistential $ S.toList existentials
            modM sFormulas       (S.union $ S.fromList newExs)
            modM sSolvedFormulas (S.union existentials)
@@ -113,7 +113,7 @@ saturateGuarded hnd se0 = do
 -- free variables.
 solveExistential :: MonadFresh m => LNGuarded -> m LNGuarded
 solveExistential gf0 = do
-  Just (_, gf) <- openExPrefix gf0
+  Just (_, gf) <- openExGuarded gf0
   return gf
 
 -- | @solveImplication se imp@ returns the list of guarded formulas that are

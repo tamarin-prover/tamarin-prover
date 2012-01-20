@@ -31,21 +31,16 @@ module Theory.Proof.Guarded (
 
   -- ** Induction
   , applyInduction
-  , negateDoublyGuarded
+  , negateGuarded
 
   -- ** Queries
   , isConjunction
   , isDisjunction
   , isAllGuarded
   , isExGuarded
-  , isExUnguarded
-  , isExistential
 
-  -- ** Quantifier handling
-  , openEx
-  , openExPrefix
-  , closeEx
-
+  -- ** Opening quantifiers
+  , openExGuarded
   , openAllGuarded
 
   -- ** Substitutions
@@ -86,20 +81,12 @@ import Control.Arrow
 data Guarded s c v = GAto  (Atom (VTerm c (BVar v)))
                    | GDisj (Disj (Guarded s c v))
                    | GConj (Conj (Guarded s c v))
-                   | GEx s (Guarded s c v)
                    | GGuarded Quantifier [s] [Atom (VTerm c (BVar v))] (Guarded s c v)
                     -- ^ Denotes @ALL xs. as => gf@ or @Ex xs. as & gf&
                     -- depending on the 'Quantifier'.
                     -- We assume that all bound variables xs occur in
                     -- f@i atoms in as.
                    deriving (Eq, Ord, Show)
-
-isExistential :: Guarded s c v -> Bool
-isExistential gf = isExGuarded gf || isExUnguarded gf
-
-isExUnguarded :: Guarded t t1 t2 -> Bool
-isExUnguarded (GEx _ _)  = True
-isExUnguarded _          = False
 
 isConjunction :: Guarded t t1 t2 -> Bool
 isConjunction (GConj _)  = True
@@ -125,17 +112,15 @@ isAllGuarded _                    = False
 foldGuarded :: (Atom (VTerm c (BVar v)) -> b)
             -> (Disj b -> b)
             -> (Conj b -> b)
-            -> (s -> b -> b)
             -> (Quantifier -> [s] -> [Atom (VTerm c (BVar v))] -> b -> b)
             -> Guarded s c v
             -> b
-foldGuarded fAto fDisj fConj fEx fGuarded =
+foldGuarded fAto fDisj fConj fGuarded =
   go
  where
   go (GAto a)                = fAto a
   go (GDisj disj)            = fDisj $ fmap go disj
   go (GConj conj)            = fConj $ fmap go conj
-  go (GEx s gf)              = fEx s (go gf)
   go (GGuarded qua ss as gf) = fGuarded qua ss as (go gf)
 
 -- | Fold a guarded formula with scope info.
@@ -144,17 +129,15 @@ foldGuarded fAto fDisj fConj fEx fGuarded =
 foldGuardedScope :: (Int -> Atom (VTerm c (BVar v)) -> b)
                  -> (Disj b -> b)
                  -> (Conj b -> b)
-                 -> (s -> b -> b)
                  -> (Quantifier -> [s] -> Int -> [Atom (VTerm c (BVar v))] -> b -> b)
                  -> Guarded s c v
                  -> b
-foldGuardedScope fAto fDisj fConj fEx fGuarded =
+foldGuardedScope fAto fDisj fConj fGuarded =
   go 0
  where
   go !i (GAto a)            = fAto i a
   go !i (GDisj disj)        = fDisj $ fmap (go i) disj
   go !i (GConj conj)        = fConj $ fmap (go i) conj
-  go !i (GEx s gf)          = fEx s (go (succ i) gf)
   go !i (GGuarded qua ss as gf) =
     fGuarded qua ss i' as (go i' gf)
    where
@@ -169,7 +152,7 @@ mapGuardedAtoms :: (Int -> Atom (VTerm c (BVar v))
                 -> Guarded s c v
                 -> Guarded s d w
 mapGuardedAtoms f = 
-    foldGuardedScope (\i a -> GAto $ f i a) GDisj GConj GEx
+    foldGuardedScope (\i a -> GAto $ f i a) GDisj GConj
                      (\qua ss i as gf -> GGuarded qua ss (map (f i) as) gf) 
 
 ------------------------------------------------------------------------------
@@ -177,14 +160,13 @@ mapGuardedAtoms f =
 ------------------------------------------------------------------------------
 
 instance Functor (Guarded s c) where
-    fmap f = foldGuarded (GAto . fmap (fmap (fmap (fmap f)))) GDisj GConj GEx
+    fmap f = foldGuarded (GAto . fmap (fmap (fmap (fmap f)))) GDisj GConj
                          (\qua ss as gf -> GGuarded qua ss (map (fmap (fmap (fmap (fmap f)))) as) gf)
 
 instance Foldable (Guarded s c) where
     foldMap f = foldGuarded (foldMap (foldMap (foldMap (foldMap f))))
                             (mconcat . getDisj)
                             (mconcat . getConj)
-                            (const id)
                             (\_qua _ss as b -> foldMap (foldMap (foldMap (foldMap (foldMap f)))) as `mappend` b)
 
 
@@ -192,7 +174,6 @@ instance Traversable (Guarded s c) where
     traverse f = foldGuarded (liftA GAto . traverse (traverse (traverse (traverse f))))
                              (liftA GDisj . sequenceA)
                              (liftA GConj . sequenceA)
-                             (\s -> liftA (GEx s))
                              (\qua ss as gf -> GGuarded qua ss <$> traverse (traverse (traverse (traverse (traverse f)))) as <*> gf)
 
 instance HasFrees (Guarded (String, LSort) c LVar) where
@@ -268,18 +249,6 @@ openGuarded (GGuarded qua vs as gf) = do
     subst xs  = zip [0..] (reverse xs)
 openGuarded _ = return Nothing
 
-
--- | @openAllGuarded gf@ returns @Just (vs,ats,gf')@ if @gf@ is a guarded
--- universal clause and @Nothing@ otherwise. In the first case, @vs@ is a list
--- of fresh variables, @ats@ is the antecedent, and @gf'@ is the succedent. In
--- both antecedent and succedent, the bound variables are replaced by @vs@.
-openAllGuarded :: (MonadFresh m)
-               => LGuarded c -> m (Maybe ([LVar],[Atom (VTerm c LVar)], LGuarded c))
-openAllGuarded = (fmap adapt) . openGuarded
-  where
-    adapt (Just (All, vs, as, gf)) = Just (vs, as, gf)
-    adapt _                        = Nothing
-
 -- | @closeGuarded vs ats gf@ is a smart constructor for @GGuarded@.
 closeGuarded :: Quantifier -> [LVar] -> [Atom (VTerm c LVar)] 
              -> LGuarded c -> LGuarded c
@@ -289,44 +258,30 @@ closeGuarded qua vs as gf = GGuarded qua vs' as' gf'
        s   = zip (reverse vs) [0..]
        vs' = map (lvarName &&& lvarSort) vs
 
--- | @openEx gf@ returns @Just (v,gf')@ if @gf@ is existentially quantified 
--- and @Nothing@ otherwise. In the first case, @v@ is a fresh variable and @gf'@ is
--- the body of @gf@ with the bound variable replaced by @v@.
-openEx :: (MonadFresh m) => LGuarded c -> m (Maybe (LVar, LGuarded c))
-openEx (GEx (n,s) gf) = do
-  x <- freshLVar n s
-  return $ Just (x, substBound [(0,x)] gf)
-openEx _          = return Nothing
+-- | @openAllGuarded gf@ returns @Just (vs,ats,gf')@ if @gf@ is a guarded
+-- all quantified trace formula and @Nothing@ otherwise. In the first case,
+-- @vs@ is a list of fresh variables, @ats@ is the antecedent, and @gf'@ is
+-- the succedent. In both antecedent and succedent, the bound variables are
+-- replaced by @vs@.
+openAllGuarded :: (MonadFresh m)
+               => LGuarded c -> m (Maybe ([LVar],[Atom (VTerm c LVar)], LGuarded c))
+openAllGuarded = (fmap adapt) . openGuarded
+  where
+    adapt (Just (All, vs, as, gf)) = Just (vs, as, gf)
+    adapt _                        = Nothing
 
--- | @openExPrefix gf@ returns @Just (vs,gf')@ if @gf@ is existentially
--- quantified and @Nothing@ otherwise. In the first case, @vs@ is a list of
--- fresh variables and @gf'@ is the body of @gf@ with the bound variable
--- replaced by @v@.
-openExPrefix :: (MonadFresh m, Eq c) 
+-- | @openExGuarded gf@ returns @Just (vs,gf')@ if @gf@ is a guarded
+-- existentially quantified trace formula and @Nothing@ otherwise. In the
+-- first case, @vs@ is a list of fresh variables and @gf'@ is the body of @gf@
+-- with the bound variable replaced by @v@.
+openExGuarded :: (MonadFresh m, Eq c) 
              => LGuarded c -> m (Maybe ([LVar], LGuarded c))
-openExPrefix (GGuarded Ex ss as gf0) = do
+openExGuarded (GGuarded Ex ss as gf0) = do
     xs <- mapM (uncurry freshLVar) ss
     return $ Just (xs, substBound (zip [0..] (reverse xs)) gf)
   where 
     gf = gconj (map GAto as ++ [gf0])
-
-openExPrefix gf0@(GEx _ _ ) = do
-  Just (x,gf) <- openEx gf0
-  Just <$>  go [x] gf
- where go xs gfo = do
-         m <- openEx gfo
-         case m of
-           Just (x',gfo') -> go (xs++[x']) gfo'
-           _              -> return (xs,gfo)
-openExPrefix _ = return Nothing
-
-
--- | @closeEx v gf@ is a smart constructor for Ex.
-closeEx :: LVar -> LGuarded c -> LGuarded c
-closeEx x gf = GEx s $ mapGuardedAtoms (\i a -> fmap (fmap (fmap (>>= subst i))) a) gf
- where subst i v | v == x    = Bound i
-                 | otherwise = Free v
-       s = (lvarName x, lvarSort x)
+openExGuarded _ = return Nothing
 
 
 ------------------------------------------------------------------------------
@@ -497,18 +452,17 @@ doublyGuarded :: Guarded s c v -> Bool
 doublyGuarded = either (const False) (const True) . satisfiedByEmptyTrace
 -}
 
--- | Negate a doubly guarded formula such that it remains doubly guarded.
-negateDoublyGuarded :: (Eq s, Eq c, Eq v) 
-                    => Guarded s c v -> Either String (Guarded s c v)
-negateDoublyGuarded = 
+-- | Negate a guarded formula.
+negateGuarded :: (Eq s, Eq c, Eq v) 
+              => Guarded s c v -> Guarded s c v
+negateGuarded = 
     go
   where
-    go (GGuarded All ss as gf) = gex  ss as <$> go gf
-    go (GGuarded Ex ss as gf)  = gall ss as <$> go gf
-    go (GAto ato)              = return $ gnot ato
-    go (GDisj disj)            = gconj <$> traverse go (getDisj disj)
-    go (GConj conj)            = gdisj <$> traverse go (getConj conj)
-    go (GEx _ _)               = throwError "unguarded existential quantifier"
+    go (GGuarded All ss as gf) = gex  ss as $ go gf
+    go (GGuarded Ex ss as gf)  = gall ss as $ go gf
+    go (GAto ato)              = gnot ato
+    go (GDisj disj)            = gconj $ map go (getDisj disj)
+    go (GConj conj)            = gdisj $ map go (getConj conj)
 
 
 -- | Checks if a doubly guarded formula is satisfied by the empty trace;
@@ -519,7 +473,6 @@ satisfiedByEmptyTrace =
     (\_ato -> throwError "atom outside the scope of a quantifier")
     (liftM or  . sequence . getDisj) 
     (liftM and . sequence . getConj)
-    (\_s _gf -> throwError "unguarded existential quantifier")
     (\qua _ss _as _gf -> return $ qua == All)  
     -- the empty trace always satisfies guarded all-quantification
     -- and always dissatisfies guarded ex-quantification
@@ -548,9 +501,6 @@ toInductionHypothesis =
     go (GAto ato)        = return $ gnot ato
     go (GDisj disj)      = gconj <$> traverse go (getDisj disj)
     go (GConj conj)      = gdisj <$> traverse go (getConj conj)
-    go (GEx _ _)         = throwError "unguarded existential quantifier"
-      
-
 
 -- | Try to prove the formula by applying induction over the trace.
 -- Returns @'Left' errMsg@ if this is not possible.
@@ -589,14 +539,6 @@ prettyGuarded f =
     pp (GConj (Conj xs)) = do
         ps <- mapM (\x -> opParens <$> pp x) xs
         return $ sep $ punctuate (operator_ " &") ps
-
-    pp gf0@(GEx _ _) = do
-      Just (xs, gf) <- openExPrefix gf0
-      d <- pp gf
-      return $ sep [ operator_ "Ex " <> ppVars xs <> operator_ "."
-                   , nest 1 d]
-      where
-        ppVars       = fsep . map (text . show)
 
     pp gf0@(GGuarded _ _ _ _) = do
       Just (qua, vs, atoms, gf) <- openGuarded gf0

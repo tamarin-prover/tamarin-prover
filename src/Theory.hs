@@ -491,7 +491,7 @@ closeTheory maudePath thy0 = do
         typAsms = do 
             LemmaItem lem <- items
             guard (TypingLemma `elem` get lAttributes lem)
-            let toGuarded = negateDoublyGuarded <=< fromFormulaNegate
+            let toGuarded = fmap negateGuarded . fromFormulaNegate
             case toGuarded <$> get lFormulaAC lem of
               Just (Right gf) -> return gf
               Just (Left err) -> error $ "closeTheory: " ++ err
