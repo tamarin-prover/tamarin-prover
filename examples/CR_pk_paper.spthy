@@ -62,7 +62,7 @@ lemma Typing [typing]:
   "All I m enc #i.
       IN_Serv_1(I, m, enc) @ i
       ==>
-    ( (Ex #o. OUT_Init_1(enc) @ o ==> o < i)
+    ( (Ex #o. OUT_Init_1(enc) @ o & o < i)
     | (m --| i)
     )
   "
