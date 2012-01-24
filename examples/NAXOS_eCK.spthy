@@ -81,26 +81,28 @@ lemma eCK_initiator_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
             SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
 
-            /* Not both longterm-key-reveal _and_ ephemeral-key-reveal of actor . */
-            & (All #i3 #i4. LtkRev( I ) @ i3 & EphkRev( ttest ) @ i4 ==> F)
+            /* Not both longterm-key-reveal _and_ ephemeral-key-reveal
+	     * for test thread. */
+            & not(Ex #i3 #i4. LtkRev( I ) @ i3 & EphkRev( ttest ) @ i4)
 
             /* No session-key-reveal of test thread. */
-            & (All #i3. SesskRev( ttest ) @ i3 ==> F)
+            & not(Ex #i3. SesskRev( ttest ) @ i3 )
 
-            /* No session-key-reveal of partner thread. */
-            & (All #i3 #i4 tpartner kpartner.
+            /* No session-key-reveal for matching session. */
+            & not(Ex #i3 #i4 tpartner kpartner.
                    SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i3
-		   & SesskRev( tpartner ) @ i4 ==> F)
+		   & SesskRev( tpartner ) @ i4 )
 
-            /* If there is a partner thread, then not long-term-key-reveal and ephemeral-key-reveal */
-            & (All #i4 #i5 #i6 tpartner kpartner.
-                  SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i4
-		  & LtkRev( R ) @ i5
-		  & EphkRev( tpartner ) @ i6 ==> F)
+            /* Not both long-term-key-reveal and ephemeral-key-reveal
+	     * for matching session */
+            & not(Ex #i3 #i4 #i5 tpartner kpartner.
+                  SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i3
+		  & LtkRev( R ) @ i4
+		  & EphkRev( tpartner ) @ i5 )
 
-	    /* If there is no partner thread, then there is no longterm-key-reveal for
-	       the intended partner.
-	       (We model eCK-wpfs, for eCK-pfs, add i1 < i3 to conclusion) */
+	    /* Longterm-key-reveal of partner only if there is a
+	     * matching session. */
+	    /* (We model eCK-wpfs, for eCK-pfs, add i1 < i3 to conclusion) */
             & (All #i3. LtkRev( R ) @ i3 ==>
 	          (Ex #i4 tpartner kpartner.
                       (* (i1 < i3) | *)
@@ -114,23 +116,23 @@ lemma eCK_responder_key:
             SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
 
             /* Not longterm-key-reveal _and_ ephemeral-key-reveal of actor . */
-            & (All #i3 #i4. LtkRev( R ) @ i3 & EphkRev( ttest ) @ i4 ==> F)
+            & not(Ex #i3 #i4. LtkRev( R ) @ i3 & EphkRev( ttest ) @ i4)
 
             /* Not session-key-reveal of test thread. */
-            & (All #i3. SesskRev( ttest ) @ i3 ==> F)
+            & not(Ex #i3. SesskRev( ttest ) @ i3 )
 
             /* Not session-key-reveal of partner thread. Note that we use SidI_2 here.
 	       A session key reveal can only happen after SidI_2 is logged anyways.
 	    */
-            & (All #i3 #i4 tpartner kpartner.
+            & not(Ex #i3 #i4 tpartner kpartner.
                    SidI_2( tpartner,I,R,hkI,hkR,kpartner ) @i3
-		   & SesskRev( tpartner ) @ i4 ==> F)
+		   & SesskRev( tpartner ) @ i4 )
 
             /* If there is a partner thread, then not long-term-key-reveal and ephemeral-key-reveal. */
-            & (All #i4 #i5 #i6 tpartner.
-                  SidI_1( tpartner,I,R,hkI ) @i4
-		  & LtkRev( I ) @ i5
-		  & EphkRev( tpartner ) @ i6 ==> F)
+            & not(Ex #i3 #i4 #i5 tpartner.
+                  SidI_1( tpartner,I,R,hkI ) @i3
+		  & LtkRev( I ) @ i4
+		  & EphkRev( tpartner ) @ i5 )
 
 	    /* If there is no partner thread, then there is no longterm-key-reveal for
 	       the intended partner.
