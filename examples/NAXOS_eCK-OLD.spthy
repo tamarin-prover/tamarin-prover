@@ -6,18 +6,18 @@ section{* The NAXOS Key-Exchange Protocol *}
 /* Protocol rules */
 
 rule generate_ltk:
-   [ Fresh( <'RegisterKey',$A> ), Fresh(~lkA) ] -->
-   [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
+   [ Fresh( <'RegisterKey',$A> ), Fresh(~lk) ] -->
+   [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Send( 'g'^~lk ) ]
 
 rule Init_1:
    [ Fresh( ~ekI ), !Ltk( $I, ~lkI ) ]
    --[ SidI_1(~ekI,$I,$R, 'g'^h(< ~lkI, ~ekI >)) ]->
    [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^h(< ~lkI, ~ekI >) ),
      !EphkI(~ekI),
-     Out( 'g'^h(< ~lkI, ~ekI >) ) ]
+     Send( 'g'^h(< ~lkI, ~ekI >) ) ]
 
 rule Init_2:
-   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]
+   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), Knows( Y ), !Pk( $R,'g'^~lkR ) ]
    --[SidI_2( ~ekI, $I, $R, hkI, Y,
        h( <Y^~lkI, ('g'^~lkR)^h(<~lkI, ~ekI>), Y^h(<~lkI, ~ekI>), $I, $R> ) ) ]->
    [ !SesskOfI( ~ekI, 
@@ -25,10 +25,10 @@ rule Init_2:
 
 
 rule Resp_1:
-   [ In( X ), Fresh( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
+   [ Knows( X ), Fresh( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
    --[ SidR_1( ~ekR, $I, $R, X, 'g'^h( < ~lkR, ~ekR > ),
        h(< ('g'^~lkI)^h(< ~lkR, ~ekR >) ,X^~lkR, X^h(< ~lkR, ~ekR >), $I, $R >) ) ]->
-   [ Out( 'g'^h(< ~lkR, ~ekR >) ),
+   [ Send( 'g'^h(< ~lkR, ~ekR >) ),
      !EphkR(~ekR),
      !SesskOfR( ~ekR, 
        h(< ('g'^~lkI)^h(< ~lkR, ~ekR >) ,X^~lkR, X^h(< ~lkR, ~ekR >), $I, $R >) ) ]
@@ -38,30 +38,30 @@ rule Resp_1:
 rule Sessk_revealI: 
    [ !SesskOfI(~tid, k) ]
    --[ SesskRev(~tid) ]->
-   [ Out(k) ]
+   [ Send(k) ]
 
 rule Sessk_revealR: 
    [ !SesskOfR(~tid, k) ]
    --[ SesskRev(~tid) ]->
-   [ Out(k) ]
+   [ Send(k) ]
 
 rule Ephk_revealI:
    [ !EphkI(~ekI) ]
    --[ EphkRev(~ekI) ]->
-   [ Out(~ekI) ]
+   [ Send(~ekI) ]
 
 rule Ephk_revealR: 
    [ !EphkR(~ekR) ]
    --[ EphkRev(~ekR) ]->
-   [ Out(~ekR) ]
+   [ Send(~ekR) ]
 
 rule Ltk_reveal:
    [ !Ltk($A, k) ]
    --[ LtkRev($A) ]->
-   [ Out(k) ]
+   [ Send(k) ]
 
 rule log_deducible:
-  [ In(x) ]
+  [ Knows(x) ]
   --[ Deducible(x) ]-> []
 
 /* Security properties */
