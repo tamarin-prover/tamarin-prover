@@ -378,7 +378,7 @@ saturateFormulas = do
 -- | Solve premise goals that can be solved directly by exploiting special
 -- properties of normalized derivation graphs.
 --
---  Solve K-up premises can just be connected to already derived knowledge.
+-- Solve K-up premises can just be connected to already derived knowledge.
 --
 solveSimpleUpK :: SeProof Bool
 solveSimpleUpK = do
@@ -395,7 +395,10 @@ solveSimpleUpK = do
     goals <- gets (map snd . openPremiseGoals)
     or <$> mapM (trySolve derived) goals
   where
+    -- FIXME: SM: Here we should also have the case of a PremiseG m goal.
+    -- This is the goal that should be solved with an edge.
     trySolve derived (PremUpKG p m) = case M.lookup m derived of
+        -- SM: The justification is wrong. PremUpKG denote split messages.
         -- @m@ is never a pair, inverse, or product since @inp m = [m]@
         Just (UpK, faConc, c) -> do
             insertMsgOrDirectEdge c faConc
@@ -413,6 +416,7 @@ solveSimpleUpK = do
             let Just faPrem = resolveNodePremFact p se
             case kFactView faPrem of
               Just (UpK, _ , m') | m == m' ->
+                  -- SM: This case should never be taken.
                   -- this implies @inp m' == [m']@
                   insertEdges [ (c, faConc, faPrem, p) ]
               _                            ->
@@ -791,6 +795,7 @@ solveRuleConstraints Nothing _ = return ()
 data Usefulness = Useful | Useless
   deriving (Show, Eq)
 
+-- FIXME: SM: Do we still support requires facts?
 -- | All open premises stemming both from labelled nodes and requires facts.
 openPremiseGoals :: Sequent -> [(Usefulness, Goal)]
 openPremiseGoals se = do
@@ -923,6 +928,8 @@ solvePremUpK rules p m = do
 
       _ -> error $ "solvePremUpK: unexpected fact: " ++ show faConc
 
+-- FIXME: SM: The comment seems wrong. 
+-- It is also used to solve a message premise where inp m == [m].
 -- | Solve a non-knowledge premise.
 solvePremise :: [RuleAC]       -- ^ All rules that don't derive a knowledge fact.
              -> NodePrem       -- ^ Premise to solve.
@@ -949,8 +956,6 @@ solvePremDnK rules p = do
     modM sNodes  (M.insert iLearn ruLearn)
     modM sChains (S.insert (Chain cLearn p))
     solvePremise rules pLearn premLearn
-
-
 
 -- | Solve a chain constraint.
 solveChain :: [RuleAC]        -- ^ All destruction rules.
@@ -979,6 +984,8 @@ solveChain rules ch@(Chain c p) = do
         return $ showRuleCaseName ru
      )
 
+-- FIXME: SM: check if we still support typing splits? If not then update
+-- comment.
 -- | Solve an equation or typing split.
 solveSplit :: SplitId -> SeProof String
 solveSplit x = do
@@ -1000,7 +1007,6 @@ solveDisjunction disj = do
     (i, gfm) <- disjunctionOfList $ zip [(1::Int)..] $ getDisj disj
     modM sFormulas (S.insert gfm)
     return $ "case_" ++ show i
-
 
 -- | @solveGoal rules goal@ enumerates all possible solutions how this goal
 -- could be solved in the context of the given @rules@.
