@@ -97,10 +97,10 @@ type FunSig = [NonACSym]
 pairSym, expSym, invSym, oneSym, zeroSym, emptySym :: NonACSym
 pairSym = ("pair",2)
 expSym  = ("exp",2)
-invSym  = ("inv",1)    -- The inverse in the groups of exponents.
-oneSym  = ("one", 0)   -- The one in the group of exponents.
-zeroSym = ("zero",0)   -- The zero for Xor.
-emptySym = ("empty",0) -- The empty multiset.
+invSym  = ("inv",1)    -- ^ The inverse in the groups of exponents.
+oneSym  = ("one", 0)   -- ^ The one in the group of exponents.
+zeroSym = ("zero",0)   -- ^ The zero for Xor.
+emptySym = ("empty",0) -- ^ The empty multiset.
 
 ----------------------------------------------------------------------
 -- Terms and Instances

@@ -61,11 +61,8 @@ import           Term.Maude.Types
                     pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig,
                     hashMaudeSig)
 
--- import qualified Debug.Trace as TR
-
-trace :: a -> b -> b
-trace _ e = e
-
+import           Debug.Trace.Ignore
+import qualified Debug.Trace as DT
 
 -- Unification modulo AC
 ----------------------------------------------------------------------
@@ -75,7 +72,7 @@ unifyLTermFactored :: (IsConst c , Show (Lit c LVar), Ord c)
                    => (c -> LSort)
                    -> [Equal (LTerm c)]
                    -> WithMaude (LSubst c, [SubstVFresh c LVar])
-unifyLTermFactored sortOf eqs = reader $ \h -> (\res -> trace (show ("unif", eqs, res)) res) $ do
+unifyLTermFactored sortOf eqs = reader $ \h -> (\res -> trace (unlines $ ["unifyLTerm: "++ show eqs, "result = "++  show res]) res) $ do
     solve h $ execRWST unif sortOf M.empty
   where
     unif = sequence [ unifyRaw t p | Equal t p <- eqs ]
@@ -119,7 +116,7 @@ matchLTerm :: (IsConst c , Show (Lit c LVar), Ord c)
            -> [Match (LTerm c)]
            -> WithMaude [Subst c LVar]
 matchLTerm sortOf eqs =
-    reader $ \h ->
+    reader $ \h -> (\res -> trace (unlines $ ["matchLTerm: "++ show eqs, "result = "++  show res]) res) $
         case runState (runErrorT match) M.empty of
           (Left NoMatch,_)    -> []
           (Left ACProblem, _) -> unsafePerformIO (UM.matchViaMaude h sortOf eqs)

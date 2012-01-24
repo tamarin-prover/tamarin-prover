@@ -28,10 +28,7 @@ import Control.Basics
 import Control.Monad.Reader
 import Data.List
 
--- import Debug.Trace
-
-trace :: a -> b -> b
-trace _ b = b
+import Debug.Trace.Ignore
 
 -- Variant Order
 ----------------------------------------------------------------------
@@ -88,7 +85,6 @@ variantsFrom :: LNTerm
 variantsFrom t substFrom0 = reader $ \hnd -> (\res -> trace (show ("variantsFrom", t, substFrom0, res)) res) $ sortednub $ do
     let substFrom = substFrom0 `freshToFreeAvoiding` t
     substTo0 <- (narrowSubsts =<<  (norm' (applyVTerm substFrom t))) `runReader` hnd
-    guard (trace (show ("AA", substTo0)) True)
     let substTo = restrictVFresh (frees t) $ composeVFresh substTo0 substFrom
     guard (nfSubstVFresh' substTo `runReader` hnd) -- prune substitutions that are not in normal-form
     return $ canonizeSubst substTo

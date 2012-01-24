@@ -17,10 +17,7 @@ import Control.Monad.Reader
 
 import Extension.Prelude
 
-import Debug.Trace
-
--- trace :: a -> b -> b
--- trace _ e = e
+import Debug.Trace.Ignore
 
 -- Narrowing
 ----------------------------------------------------------------------

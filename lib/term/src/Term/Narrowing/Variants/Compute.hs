@@ -28,10 +28,7 @@ import Control.Arrow
 import Control.Applicative
 import Control.Monad.Reader
 
-import Debug.Trace
-
---trace :: a -> b -> b
---trace _ e = e
+import Debug.Trace.Ignore
 
 ----------------------------------------------------------------------
 -- Variant Narrowing
