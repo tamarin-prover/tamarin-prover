@@ -95,13 +95,13 @@ lemma eCK_initiator_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
             SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
 
-            /* Not longterm-key-reveal _and_ ephemeral-key-reveal of actor . */
+            /* Not both longterm-key-reveal _and_ ephemeral-key-reveal of actor . */
             & (All #i3 #i4. LtkRev( I ) @ i3 & EphkRev( ttest ) @ i4 ==> F)
 
-            /* Not session-key-reveal of test thread. */
+            /* No session-key-reveal of test thread. */
             & (All #i3. SesskRev( ttest ) @ i3 ==> F)
 
-            /* Not session-key-reveal of partner thread. */
+            /* No session-key-reveal of partner thread. */
             & (All #i3 #i4 tpartner kpartner.
                    SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i3
 		   & SesskRev( tpartner ) @ i4 ==> F)
