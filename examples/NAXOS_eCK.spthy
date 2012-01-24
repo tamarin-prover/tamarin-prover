@@ -21,30 +21,29 @@ rule generate_ltk:
  * the first rule. For brevity, we omitted this from the description in
  * the paper because there the responder property is not specified. */
 
-/* TODO: hash_1 arguments are reversed wrt to the paper */
 rule Init_1:
    [ Fresh( ~ekI ), !Ltk( $I, ~lkI ) ]
-   --[ SidI_1(~ekI,$I,$R, 'g'^h(< '1', ~lkI, ~ekI >)) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^h(< '1', ~lkI, ~ekI >) ),
+   --[ SidI_1(~ekI,$I,$R, 'g'^h(< '1', ~ekI, ~lkI >)) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^h(< '1', ~ekI, ~lkI >) ),
      !Ephk(~ekI),
-     Out( 'g'^h(< '1', ~lkI, ~ekI >) ) ]
+     Out( 'g'^h(< '1', ~ekI, ~lkI >) ) ]
 
 rule Init_2:
    [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]
    --[SidI_2( ~ekI, $I, $R, hkI, Y,
-       h( < '2', Y^~lkI, ('g'^~lkR)^h(< '1', ~lkI, ~ekI>), Y^h(< '1', ~lkI, ~ekI>), $I, $R> ) ) ]->
+       h( < '2', Y^~lkI, ('g'^~lkR)^h(< '1', ~ekI, ~lkI>), Y^h(< '1', ~ekI, ~lkI>), $I, $R> ) ) ]->
    [ !Sessk( ~ekI, 
-       h(< '2', Y^~lkI, ('g'^~lkR)^h(< '1', ~lkI, ~ekI> ), Y^h(< '1', ~lkI, ~ekI >), $I, $R>) ) ]
+       h(< '2', Y^~lkI, ('g'^~lkR)^h(< '1', ~ekI, ~lkI> ), Y^h(< '1', ~ekI, ~lkI >), $I, $R>) ) ]
 
 /* Responder */
 rule Resp_1:
    [ In( X ), Fresh( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
    --[ SidR_1( ~ekR, $I, $R, X, 'g'^h( < '1', ~lkR, ~ekR > ),
-       h(< '2', ('g'^~lkI)^h(< '1', ~lkR, ~ekR >) ,X^~lkR, X^h(< '1', ~lkR, ~ekR >), $I, $R >) ) ]->
-   [ Out( 'g'^h(<'1', ~lkR, ~ekR >) ),
+       h(< '2', ('g'^~lkI)^h(< '1', ~ekR, ~lkR >) ,X^~lkR, X^h(< '1', ~ekR, ~lkR >), $I, $R >) ) ]->
+   [ Out( 'g'^h(<'1', ~ekR, ~lkR >) ),
      !Ephk(~ekR),
      !Sessk( ~ekR, 
-       h(< '2', ('g'^~lkI)^h(<'1', ~lkR, ~ekR >) ,X^~lkR, X^h(<'1', ~lkR, ~ekR >), $I, $R >) ) ]
+       h(< '2', ('g'^~lkI)^h(<'1', ~ekR, ~lkR >) ,X^~lkR, X^h(<'1', ~ekR, ~lkR >), $I, $R >) ) ]
 
 /* Key Reveals for the eCK model */
 rule Sessk_reveal: 
