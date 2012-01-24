@@ -51,15 +51,16 @@ rule Sessk_reveal:
    --[ SesskRev(~tid) ]->
    [ Out(k) ]
 
+rule Ltk_reveal:
+   [ !Ltk($A, lkA) ]
+   --[ LtkRev($A) ]->
+   [ Out(lkA) ]
+
 rule Ephk_reveal:
    [ !Ephk(~ekA) ]
    --[ EphkRev(~ekA) ]->
    [ Out(~ekA) ]
 
-rule Ltk_reveal:
-   [ !Ltk($A, k) ]
-   --[ LtkRev($A) ]->
-   [ Out(k) ]
 
 rule log_deducible:
   [ In(x) ]
