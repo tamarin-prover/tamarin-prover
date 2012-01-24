@@ -5,12 +5,24 @@ section{* The NAXOS Key-Exchange Protocol *}
 
 /* Protocol rules */
 
+/* In the description in the paper, we omitted the sorts. 
+ * In this description they are made explicit.
+ * '$A' is equivalent to 'A:pub'
+ * '~x' is equivalent to 'x:fresh'
+ */
+
 /* Generate long-term keypair */
 rule generate_ltk:
    [ Fresh( <'RegisterKey',$A> ), Fresh(~lkA) ] -->
    [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
 
 /* Initiator */
+/* To formulate the responder property, we also define a SidI action for
+ * the first rule. For brevity, we omitted this from the description in
+ * the paper because there the responder property is not specified. */
+
+/* TODO: hash_1 arguments are reversed wrt to the paper */
+/* TODO: conclusion here is EphkI/EphkR whereas in the paper just one type */
 rule Init_1:
    [ Fresh( ~ekI ), !Ltk( $I, ~lkI ) ]
    --[ SidI_1(~ekI,$I,$R, 'g'^h(< ~lkI, ~ekI >)) ]->
