@@ -491,7 +491,11 @@ execProofMethod ctxt method se =
 possibleProofMethods :: SignatureWithMaude -> Sequent -> [ProofMethod]
 possibleProofMethods sig se =
          ((Contradiction . Just) <$> contradictions sig se)
-     <|> [Induction, Simplify]
+     -- For now (12/01/22), we add induction after simplification to ensure
+     -- that the autoprover doesn't use induction. (Induction can only be
+     -- executed in a sequent that contains exactly one formula eligible for
+     -- induction.)
+     <|> [Simplify, Induction]
      <|> (SolveGoal <$> openGoals se)
 
 -- | @proveSequentDFS rules se@ tries to construct a proof that @se@ is valid
