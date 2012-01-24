@@ -396,26 +396,28 @@ solveSimpleUpK = do
     or <$> mapM (trySolve derived) goals
   where
     trySolve derived (PremUpKG p m) = case M.lookup m derived of
-      Just (UpK, faConc, c) -> do
-          se <- gets id
-          let Just faPrem = resolveNodePremFact p se
-          case kFactView faPrem of
-            Just (UpK, _ , m') | m == m' ->
-                -- this implies m' == inp m'
-                insertEdges [(c, faPrem, faConc, p)]
-            _                            ->
-                modM sMsgEdges (S.insert (MsgEdge c p))
-          return True
+        -- @m@ is never a pair, inverse, or product since @inp m = [m]@
+        Just (UpK, faConc, c) -> do
+            insertMsgOrDirectEdge c faConc
 
-      Just (DnK, faConc, c) -> do
-          se <- gets id
-          let Just faPrem = resolveNodePremFact p se
-          (j, (faPrem', faConc')) <- freshCoerceRuleNode
-          insertEdges [ (c,              faConc , faPrem', NodePrem (j,0))
-                      , (NodeConc (j,0), faConc', faPrem , p             ) ]
-          return True
+        -- @m@ is never a pair, inverse, or product since @inp m = m@
+        Just (DnK, faConc, c) -> do
+            (j, (faPrem', faConc')) <- freshCoerceRuleNode
+            insertEdges [ (c, faConc , faPrem', NodePrem (j,0)) ]
+            insertMsgOrDirectEdge (NodeConc (j,0)) faConc'
 
-      Nothing               -> return False
+        Nothing               -> return False
+      where
+        insertMsgOrDirectEdge c faConc = do
+            se <- gets id
+            let Just faPrem = resolveNodePremFact p se
+            case kFactView faPrem of
+              Just (UpK, _ , m') | m == m' ->
+                  -- this implies @inp m' == [m']@
+                  insertEdges [ (c, faConc, faPrem, p) ]
+              _                            ->
+                  modM sMsgEdges (S.insert (MsgEdge c p))
+            return True
 
     -- all other goals cannot be solved => the sequent doesn't change
     trySolve _ _ = return False
@@ -679,9 +681,10 @@ substSequent = do
     substPart sEdges
     substPart sMsgEdges
     substPart sChains
-    hnd <- getMaudeHandle
-    -- FIXME: Check if this is necessary, Eqstore might be already up-to-date
-    modM sEqStore =<< (applyEqStore hnd <$> getM sSubst)
+    -- REDUNDANT: The substitution is always fully applied to
+    --            the equation store
+    -- hnd <- getMaudeHandle
+    -- modM sEqStore =<< (applyEqStore hnd <$> getM sSubst)
     substPart sAtoms
     substPart sFormulas
     substPart sSolvedFormulas

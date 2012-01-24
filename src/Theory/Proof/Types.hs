@@ -250,25 +250,22 @@ type SplitId = Int
 --
 -- The semantics of an equation store
 -- > EqStore sigma_free
--- >         [ ([sigma_i1,..,sigma_ik_i], mtinfo_i) | i <- [1..l] ]
+-- >         [ [sigma_i1,..,sigma_ik_i] | i <- [1..l] ]
 -- where sigma_free = {t1/x1, .., tk/xk} is
 -- >    (x1 = t1 /\ .. /\ xk = tk)
 -- > /\_{i in [1..l]}
 -- >    ([|sigma_i1|] \/ .. \/ [|sigma_ik_1|] \/ [|mtinfo_i|]
 -- where @[|{t_1/x_1,..,t_l/x_l}|] = EX vars(t1,..,tl). x_1 = t1 /\ .. /\ x_l = t_l@.
--- and @[| Nothing |] = True@ and
--- @[| Just (nid, t) |] = EX v'. v' :> Msg(t) /\ v' >-+-> v@.
 -- Note that the 'LVar's in the range of a substitution are interpreted as
 -- fresh variables, i.e., different by construction from the x_i which are
 -- free variables.
 --
 -- The variables in the domain of the substitutions sigma_ij and all
 -- variables in sigma_free are free (usually globally existentially quantified).
--- We use Conj [] as a normal form to denote True and Conj [(Disj [], Nothing)]
+-- We use Conj [] as a normal form to denote True and Conj [Disj []]
 -- as a normal form to denote False.
 -- We say a variable @x@ is constrained by a disjunction if there is a substition
--- @s@ in the disjunction with @x `elem` dom s@. We say a disjunction is a typing
--- constraint when the disjunction contains an MsgBefore fact.
+-- @s@ in the disjunction with @x `elem` dom s@.
 data EqStore = EqStore {
       _eqsSubst :: LNSubst
     , _eqsConj  :: Conj (Disj (LNSubstVFresh))

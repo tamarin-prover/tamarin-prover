@@ -217,8 +217,8 @@ applyCaseDistinction hnd th prem goal =
         goalTh <- someInst $ get cdGoal th
         -- We only have to choose one matcher, as the theorem holds for all
         -- premises equal modulo AC.
-        subst <- disjunctionOfList $ take 1 $ (`runReader` hnd) $ 
-                 matchBigStepGoal goal goalTh
+        subst <- disjunctionOfList $ take 1 $ 
+                 matchBigStepGoal goal goalTh `runReader` hnd
         (names, (concTh, seTh)) <- someInst =<< 
             (disjunctionOfList $ getDisj $ get cdCases th)
 

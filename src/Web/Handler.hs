@@ -466,8 +466,8 @@ getNextTheoryPathR idx md path = withTheory idx $ \ti -> return $
     RepPlain $ toContent $ joinPath' $ renderPath $ next md (tiTheory ti) path
   where
     next "normal" = nextThyPath
-    next "smart" = nextSmartThyPath
-    next _ = const id
+    next "smart"  = nextSmartThyPath
+    next _        = const id
 
 -- | Get the 'prev' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.

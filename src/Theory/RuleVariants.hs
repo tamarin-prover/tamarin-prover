@@ -24,10 +24,7 @@ import Control.Applicative
 import qualified Data.Map as M
 import Data.Traversable (traverse)
 
--- import Debug.Trace
-
-trace :: a -> b -> b
-trace _ b = b
+import Debug.Trace.Ignore
 
 -- Variants of protocol rules
 ----------------------------------------------------------------------

@@ -15,7 +15,6 @@ module Theory.Proof.EquationStore (
   , addRuleVariants
   , splitAtPos
   , eqSplits
-  , applyEqStore
   , constrainedVarsPos
 
   , SplitStrategy(..)
@@ -29,13 +28,14 @@ import Term.Unification
 import Logic.Connectives
 import Theory.Proof.Types
 
--- import Term.Builtin.Convenience
--- import Debug.Trace
-
 import Control.Monad.Reader
 import Control.Monad.Fresh
 import Utils.Misc
 import Extension.Prelude
+
+-- import qualified Debug.Trace as DT
+
+import Debug.Trace.Ignore
 
 import Data.List
 import Data.Label hiding ( for )
@@ -47,8 +47,6 @@ import Control.Basics
 import Control.Monad.State hiding (get, modify)
 import qualified Control.Monad.State as MS
 
-trace :: a -> b -> b
-trace _ e = e
 
 -- Equation Store
 ----------------------------------------------------------------------
@@ -73,20 +71,66 @@ addEqs :: MonadFresh m => SplitStrategy -> MaudeHandle
                        -> [Equal LNTerm] -> EqStore -> m [EqStore]
 addEqs splitStrat hnd eqs0 eqStore =
     case unifyLNTermFactored eqs `runReader` hnd of
-      (_, [])         -> return [set eqsConj (Conj [falseDisj]) eqStore]
+      (_, [])         -> return [set eqsConj falseEqConstrConj eqStore]
       (subst, substs) ->
         case splitStrat of
           SplitLater ->
-            return $ [addDisj (modify eqsSubst (compose subst) eqStore) (Disj substs)]
+            return $ [addDisj (applyEqStore hnd subst eqStore) (Disj substs)]
           SplitNow -> 
             addEqsAC (modify eqsSubst (compose subst) eqStore)
               <$> simpDisjunction hnd (Disj substs)
   where
-    eqs = apply (get eqsSubst eqStore) eqs0
-    addEqsAC eqSt (sfree, Nothing) = [applyEqStore hnd sfree eqSt]
+    eqs = apply (get eqsSubst eqStore) $ trace (unlines ["addEqs: ", show eqs0]) $ eqs0
+    addEqsAC eqSt (sfree, Nothing)   = [applyEqStore hnd sfree eqSt]
     addEqsAC eqSt (sfree, Just disj) =
       fromMaybe (error "addEqsSplit: impossible, splitAtPos failed")
                 (splitAtPos (applyEqStore hnd sfree (addDisj eqSt (Disj disj))) 0)
+
+-- | Apply a substitution to an equation store and bring resulting equations into
+--   normal form again by using unification.
+applyEqStore :: MaudeHandle -> LNSubst -> EqStore -> EqStore
+applyEqStore hnd asubst eqStore
+    | dom asubst `intersect` varsRange asubst /= [] || trace (show ("applyEqStore", asubst, eqStore)) False
+    = error $ "applyS2EqStore: dom and vrange not disjoint for `"++show asubst++"'"
+    | otherwise
+    = modify eqsConj (fmap ((Disj . concatMap applyBound . getDisj))) $
+        set eqsSubst newsubst eqStore
+  where
+    newsubst = asubst `compose` get eqsSubst eqStore
+    applyBound s = map (restrictVFresh (varsRange newsubst ++ domVFresh s)) $ 
+        (`runReader` hnd) $ unifyLNTerm
+          [ Equal (apply newsubst (varTerm $ lv)) t
+          | let slist = substToListVFresh s,
+            -- variables in the range are fresh, so we have to rename
+            -- them away from all other variables in unification problem
+            -- NOTE: these variables never enter the global context
+            let ran = renameAvoiding (map snd slist)
+                                     (domVFresh s ++ varsRange newsubst),
+            (lv,t) <- zip (map fst slist) ran
+          ]
+
+{- NOTES for @applyEqStore tau@ to a fresh substitution sigma:
+[ FIXME: extend explanation to multiple unifiers ]
+Let dom(sigma) = x1,..,xk, vrange(sigma) = y1, .. yl, vrange(tau) = z1,..,zn
+Fresh substitution denotes formula
+  exists #y1, .., #yl. x1 = t1 /\ .. /\ xk = tk
+for variables #yi that do not clash with xi and zi [renameAwayFrom]
+and with vars(ti) `subsetOf` [#y1, .. #yl].
+We apply tau with vrange(tau) = z1,..,zn to the formula to obtain
+  exists ##y1, .., ##yl. tau(x1) = t1 /\ .. /\ tau(xk) = tk
+unification then yields a lemma
+  forall xi zi #yi.
+    tau(x1) = t1 /\ .. /\ tau(xk) = tk
+    <-> exists vars(s1,..sm). x1 = .. /\ z1 = .. /\ #y1 = ..
+So we have
+  exists #y1, .., #yl.
+    exists vars(s1,..sm). x1 = .. /\ z1 = .. /\ #y1 = ..
+<=>
+  exists vars(s1,..sm). x1 = .. /\ z1 = ..
+      /\  (exists #y1, .., #yl. #y1 = ..)
+<=> [restric]
+  exists vars(s1,..sm). x1 = .. /\ z1 = .. /\ True
+-}
 
 -- | Add the given rule variants.
 addRuleVariants :: (Disj (LNSubstVFresh)) -> EqStore -> EqStore
@@ -125,53 +169,6 @@ splitAtPos eqStore i
     conj = getConj $ get eqsConj eqStore
     disj = getDisj $ conj !! i
     conjNew d = Conj $ take i conj ++ [Disj [d]] ++ drop (i+1) conj
-
-
--- | Apply a substitution to an equation store and bring resulting equations into
---   normal form again by using unification.
---   FIXME: think about invariants: subst relative to equation store
-applyEqStore :: MaudeHandle -> LNSubst -> EqStore -> EqStore
-applyEqStore hnd subst eqStore
-    | dom subst `intersect` varsRange subst /= [] || trace (show ("applyEqStore", subst, eqStore)) False
-    = error $ "applyS2EqStore: dom and vrange not disjoint for `"++show subst++"'"
-    | otherwise
-    = modify eqsSubst (compose subst) $
-        modify eqsConj (fmap ((Disj . concatMap applyBound . getDisj))) $ eqStore
-  where
-    applyBound s = map (restrictVFresh (varsRange subst ++ domVFresh s)) $ 
-        (`runReader` hnd) $ unifyLNTerm
-          [ Equal (apply subst (Lit $ Var $ lv)) t
-          | let slist = substToListVFresh s,
-            -- variables in the range are fresh, so we have to rename
-            -- them away from all other vars in unification problem
-            -- NOTE: these variables never enter the global context
-            let ran = renameAvoiding (map snd slist)
-                                     (domVFresh s ++ varsRange subst),
-            (lv,t) <- zip (map fst slist) ran
-          ]
-
-{- NOTES for @applyEqStore tau@ to a fresh substitution sigma:
-[ FIXME: extend explanation to multiple unifiers ]
-Let dom(sigma) = x1,..,xk, vrange(sigma) = y1, .. yl, vrange(tau) = z1,..,zn
-Fresh substitution denotes formula
-  exists #y1, .., #yl. x1 = t1 /\ .. /\ xk = tk
-for variables #yi that do not clash with xi and zi [renameAwayFrom]
-and with vars(ti) `subsetOf` [#y1, .. #yl].
-We apply tau with vrange(tau) = z1,..,zn to the formula to obtain
-  exists ##y1, .., ##yl. tau(x1) = t1 /\ .. /\ tau(xk) = tk
-unification then yields a lemma
-  forall xi zi #yi.
-    tau(x1) = t1 /\ .. /\ tau(xk) = tk
-    <-> exists vars(s1,..sm). x1 = .. /\ z1 = .. /\ #y1 = ..
-So we have
-  exists #y1, .., #yl.
-    exists vars(s1,..sm). x1 = .. /\ z1 = .. /\ #y1 = ..
-<=>
-  exists vars(s1,..sm). x1 = .. /\ z1 = ..
-      /\  (exists #y1, .., #yl. #y1 = ..)
-<=> [restric]
-  exists vars(s1,..sm). x1 = .. /\ z1 = .. /\ True
--}
 
 -- Simplifying disjunctions
 ----------------------------------------------------------------------

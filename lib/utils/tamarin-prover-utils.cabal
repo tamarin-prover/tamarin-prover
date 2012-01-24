@@ -62,6 +62,8 @@ library
 
         System.Timing
 
+        Debug.Trace.Ignore
+
         Utils.Misc
 
     other-modules:
