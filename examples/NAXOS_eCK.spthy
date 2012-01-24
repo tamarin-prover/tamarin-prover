@@ -13,7 +13,7 @@ section{* The NAXOS Key-Exchange Protocol *}
 
 /* Generate long-term keypair */
 rule generate_ltk:
-   [ Fresh( <'RegisterKey',$A> ), Fresh(~lkA) ] -->
+   [ Fresh(~lkA) ] -->
    [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
 
 /* Initiator */
@@ -61,7 +61,7 @@ rule Ephk_reveal:
    --[ EphkRev(~ekA) ]->
    [ Out(~ekA) ]
 
-
+/* TODO: is the logging of all knowledge facts already enforced? */
 rule log_deducible:
   [ In(x) ]
   --[ Deducible(x) ]-> []
