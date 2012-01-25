@@ -8,6 +8,8 @@
 --
 -- Common types for reasoning about sequents: Graph part of a sequent,
 -- clauses, and equation store.
+--
+-- NOTE that sequents are what we call constraint systems in CSF'12 paper.
 module Theory.Proof.Types (
 
   -- * Graph part of a sequent
@@ -304,16 +306,30 @@ instance HasFrees EqStore where
 -- Goals
 ------------------------------------------------------------------------------
 
+-- | A 'Goal' denotes that a constraint reduction rule is applicable, which 
+-- might result in case splits. We either use a heuristic to decide what goal
+-- to solve next or leave the choice to user (in case of the interactive UI).
 data Goal = 
-       ActionG LVar LNFact       -- ^ Splitting over protocol rules
-     | PremiseG NodePrem LNFact  -- ^ Splitting over all rules
-     | PremDnKG NodePrem         -- ^ Chain and splitting over send concs
-     | PremUpKG NodePrem LNTerm  -- ^ Splitting over construction rules
-     | ChainG Chain              -- ^ Splitting over destruction rules
-     | SplitG SplitId            -- ^ Splitting over equalities
-     | DisjG (Disj LNGuarded)    -- ^ Splitting over a disjunction
-     | ImplG LNGuarded           -- ^ Consequent of a universally quantified
-                                 -- clause that could be added to the sequent.
+       ActionG LVar LNFact
+       -- ^ An action that must exist in the trace.
+     | PremiseG NodePrem LNFact
+       -- ^ A premise that must have an incoming direct edge.
+     | PremDnKG NodePrem
+       -- ^ A KD goal that must be solved using a destruction chain.
+     | PremUpKG NodePrem LNTerm
+       -- ^ A KU goal requiring a term built using pairing, inversion, or
+       -- multiplication. 'PremUpKG p m' denotes that premise 'p' requires
+       -- the term 'm' as in input to construct its actual term.
+     | ChainG Chain
+       -- A destruction chain that does not start from a message variable.
+     | SplitG SplitId
+       -- ^ A case split over equalities.
+     | DisjG (Disj LNGuarded)
+       -- ^ A case split over a disjunction.
+     | ImplG LNGuarded
+       -- ^ The consequent of a universally quantified clause that could be
+       -- added to the sequent. For debugging mode only; currently commented
+       -- out.
      deriving( Eq, Ord, Show )
 
 -- Instances

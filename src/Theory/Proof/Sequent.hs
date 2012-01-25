@@ -134,17 +134,6 @@ isForbiddenExp ru = maybe False id $ do
     sortOfTerm (Lit (Con n))  = sortOfName n
     sortOfTerm _              = LSortMsg
 
-{-
--- | True iff the sequent has a last node followed by a node with an action.
-hasNonLastNode :: Sequent -> Bool
-hasNonLastNode se =
-    any violation $ S.toList $ D.reachableSet lastNodes  (sRawLessRel se)
-  where
-    lastNodes   = sLastAtoms se
-    violation i = 
-        (not $ i `elem` lastNodes) &&
-        maybe False (not . null . get rActs) (M.lookup i $ get sNodes se)
--}
 
 -- | Compute all contradictions to unique fact instances.
 --
@@ -193,7 +182,6 @@ contradictorySequent sig se =
     eqsIsFalse (get sEqStore se)                  ||
     proveCyclic se                                ||
     hasNonNormalTerms sig se                      ||
-    -- hasNonLastNode se                             ||
     hasForbiddenExp se                            ||
     not (null (nonUniqueFactInstances sig se))
 
@@ -207,11 +195,13 @@ contradictorySequent sig se =
 -- applicable/was successful or not.
 type SeProof = StateT Sequent (FreshT (DisjT (Reader ProofContext)))
 
+-- | Run a proof step.
 runSeProof :: SeProof a -> ProofContext -> Sequent -> FreshState 
            -> Disj ((a, Sequent), FreshState)
 runSeProof m ctxt se fs = 
     Disj $ (`runReader` ctxt) $ runDisjT $ (`runFreshT` fs) $ runStateT m se
 
+-- | Run a proof step, returning only the updated states.
 execSeProof :: SeProof a -> ProofContext -> Sequent -> FreshState 
             -> [(Sequent, FreshState)]
 execSeProof m ctxt se fs = 
@@ -255,7 +245,7 @@ ruleNode i rules = do
             j <- freshLVar "vf" LSortNode
             modM sNodes (M.insert j (mkFreshRuleAC m))
             unless (isFreshVar m) $ do 
-                -- ensure correct sort for 'm'
+                -- 'm' must be of sort fresh
                 n <- varTerm <$> freshLVar "n" LSortFresh
                 solveTermEqs SplitNow [Equal m n]
             modM sEdges (S.insert $ Edge (NodeConc (j,0)) (NodePrem (i,v)))
@@ -271,7 +261,7 @@ ruleNode i rules = do
     mkFreshRuleAC m = Rule (ProtoInfo FreshRule) [] [freshFact m] []
 
 -- | Create a fresh node labelled with a fresh instance of one of the rules
--- and solve it's fresh conditions immediatly.
+-- and solve it's 'Fr' and 'In' facts immediatly.
 freshRuleNode :: [RuleAC] -> SeProof (NodeId, RuleACInst)
 freshRuleNode rules = do
     i <- freshLVar "vr" LSortNode
@@ -311,9 +301,9 @@ insertEdges edges = do
 
 -- | Repeatedly apply the following simplifications to the sequent:
 --
+--   - merge nodes with equal instances of Fresh rules
 --   - remove sequents that violate the sort constraints
 --   - merge nodes marked as the last node
---   - merge nodes with equal instances of Fresh rules
 --   - merge multiple rule labels of the same node
 --   - merge nodes with equal non-pair message conclusions
 --   - merge targets of multiple edges from a linear fact and
@@ -336,13 +326,17 @@ simplifySequent = do
       | otherwise        = do
           -- perform one simplification pass
           substSequent
+          -- exploit uniqueness of 'Fresh' rule instances
           c1 <- exploitFreshUnique
           when c1 (substNodes >> return ())
+          -- exploit that conclusions deriving the same message can be merged
+          -- except for merging coerce nodes with non-coerce nodes.
           c2 <- exploitUniqueMsgConcs
           when c2 (substNodes >> return ())
+          -- exploit the special properties of the last node
           c3 <- exploitLastNode
           when c3 (substNodes >> return ())
-          -- There may have been some change: propagate to edges
+
           c4 <- solveSimpleUpK
           substPart sEdges
           c5 <- exploitEdgeProps
@@ -397,38 +391,31 @@ solveSimpleUpK = do
         derived = M.fromList $ down ++ up
 
     goals <- gets (map snd . openPremiseGoals)
-    or <$> mapM (trySolve derived) goals
+    or <$> mapM (trySolveGoal derived) goals
   where
-    -- FIXME: SM: Here we should also have the case of a PremiseG m goal.
-    -- This is the goal that should be solved with an edge.
-    trySolve derived (PremUpKG p m) = case M.lookup m derived of
-        -- SM: The justification is wrong. PremUpKG denote split messages.
-        -- @m@ is never a pair, inverse, or product since @inp m = [m]@
-        Just (UpK, faConc, c) -> do
-            insertMsgOrDirectEdge c faConc
+    trySolveGoal derived (PremUpKG p m) = trySolveMessage derived m
+            (\c _ -> modM sMsgEdges (S.insert (MsgEdge c p)))
 
-        -- @m@ is never a pair, inverse, or product since @inp m = m@
+    trySolveGoal derived (PremiseG p faPrem) = case kFactView faPrem of
+        Just (UpK, _, m) -> trySolveMessage derived m
+            -- For premise goals we have 'inp m == [m]'. We must insert a
+            -- direct edge and ensure the equality wrt. an additional coerce
+            -- node.
+            (\c faConc -> insertEdges [(c, faConc, faPrem, p)])
+
+        _                -> return False
+    -- all other goals cannot be solved => the sequent doesn't change
+    trySolveGoal _ _ = return False
+    
+    trySolveMessage derived m solveWith = case M.lookup m derived of
+        Just (UpK, faConc, c) -> solveWith c faConc >> return True
         Just (DnK, faConc, c) -> do
             (j, (faPrem', faConc')) <- freshCoerceRuleNode
             insertEdges [ (c, faConc , faPrem', NodePrem (j,0)) ]
-            insertMsgOrDirectEdge (NodeConc (j,0)) faConc'
-
-        Nothing               -> return False
-      where
-        insertMsgOrDirectEdge c faConc = do
-            se <- gets id
-            let Just faPrem = resolveNodePremFact p se
-            case kFactView faPrem of
-              Just (UpK, _ , m') | m == m' ->
-                  -- SM: This case should never be taken.
-                  -- this implies @inp m' == [m']@
-                  insertEdges [ (c, faConc, faPrem, p) ]
-              _                            ->
-                  modM sMsgEdges (S.insert (MsgEdge c p))
+            _ <- solveWith (NodeConc (j,0)) faConc'
             return True
 
-    -- all other goals cannot be solved => the sequent doesn't change
-    trySolve _ _ = return False
+        Nothing               -> return False
 
 
 -- | Solve unique actions. Returns 'True' iff the sequent was changed.
@@ -450,7 +437,8 @@ solveUniqueActions = do
     or <$> mapM trySolve actionAtoms
 
 
--- | Exploit that up-premises must always be before the same down-premise.
+-- | Exploit that up-premises must always be deduced before the same
+-- down-premise.
 exploitUniqueMsgOrder :: SeProof ()
 exploitUniqueMsgOrder = do
     nodes     <- M.toList <$> getM sNodes
@@ -476,8 +464,10 @@ exploitUniqueMsgOrder = do
     modM sAtoms $ flip S.union $ S.fromList
                 $ M.elems $ M.intersectionWith mkLess concs prems
 
--- | Exploit that fresh nodes produces unique conclusions.
-exploitFreshUnique :: SeProof Bool -- ^ True, if a simplification step happened.
+-- | Exploit that instances of the 'Fresh' rule are unique.
+--
+-- Returns 'True' if a change was done.
+exploitFreshUnique :: SeProof Bool
 exploitFreshUnique = do
     -- gather fresh rule nodes and merge nodes with identical conclusions
     updates <- gets ( map merge
@@ -530,6 +520,10 @@ exploitEdgeProps = do
 
 
 -- | Merge nodes with equal non-pair msg conclusions.
+--
+-- PRE: There must not be any node in the sequent with a 'KU' conclusion
+-- deriving a pair, inversion, or multiplication. This is in invariant of
+-- our constraint solver.
 exploitUniqueMsgConcs :: SeProof Bool
 exploitUniqueMsgConcs = do
     nodes <- M.toList <$> getM sNodes
@@ -541,7 +535,9 @@ exploitUniqueMsgConcs = do
             Just (_, _, m) | isCoerceRule ru -> return $ Left  (m, node)
                            | otherwise       -> return $ Right (m, node)
 
+        -- coerce nodes can only be merged with themselves.
         (removals1, eqs1) = analyze coerce
+        -- all other nodes can be merged with each other.
         (removals2, eqs2) = analyze nonCoerce
         eqs               = eqs1 ++ eqs2
 
@@ -604,8 +600,8 @@ simplifyNegativeOrderings = do
 
 
 -- | Exploit that no node with a label can be after the last node. For
--- non-unifiable, nodes the ordering is introduced directly. For the
--- remaining, ones a disjunction is introduced.
+-- non-unifiable nodes the ordering is introduced directly. For the
+-- remaining ones a disjunction is introduced.
 --
 -- True is returned if some change was performed.
 exploitLastNode :: SeProof Bool
@@ -682,17 +678,14 @@ substNodes = do
     (modM sNodes . M.map . apply) =<< getM sSubst
     return changed
 
--- | Apply the current substitution of the equation store to the whole sequent.
+-- | Apply the current substitution of the equation store to the remainder of
+-- the sequent.
 substSequent :: SeProof ()
 substSequent = do
     _ <- substNodes
     substPart sEdges
     substPart sMsgEdges
     substPart sChains
-    -- REDUNDANT: The substitution is always fully applied to
-    --            the equation store
-    -- hnd <- getMaudeHandle
-    -- modM sEqStore =<< (applyEqStore hnd <$> getM sSubst)
     substPart sAtoms
     substPart sFormulas
     substPart sSolvedFormulas
@@ -799,7 +792,7 @@ solveRuleConstraints Nothing _ = return ()
 data Usefulness = Useful | Useless
   deriving (Show, Eq)
 
--- FIXME: SM: Do we still support requires facts?
+-- FIXME: SM: Remove support for requires facts.
 -- | All open premises stemming both from labelled nodes and requires facts.
 openPremiseGoals :: Sequent -> [(Usefulness, Goal)]
 openPremiseGoals se = do
@@ -884,7 +877,7 @@ openGoals se = delayUseless $ concat $
    , (Useful,) <$> openDisjunctionGoals se
    , (Useful,) <$> openChainGoals se
    , preferProtoFactGoals $ openPremiseGoals se
-   -- FIXME: Commented out as automatic saturation works again.
+   -- SM: Commented out as automatic saturation works again.
    -- , (Useful,) <$> openImplicationGoals se
    , (Useful,) <$> openSplitGoals se
    ]
@@ -908,13 +901,13 @@ solveAction rules (i, fa) = do
     modM sAtoms (S.delete (Action (varTerm i) fa))
     mayRu <- M.lookup i <$> getM sNodes
     showRuleCaseName <$> case mayRu of
-        Nothing -> do ru <- ruleNode i rules
-                      a  <- disjunctionOfList $ get rActs ru
-                      solveFactEqs SplitNow [Equal fa a]
+        Nothing -> do ru  <- ruleNode i rules
+                      act <- disjunctionOfList $ get rActs ru
+                      solveFactEqs SplitNow [Equal fa act]
                       return ru
         Just ru -> do unless (fa `elem` get rActs ru) $ do
-                        a <- disjunctionOfList $ get rActs ru
-                        solveFactEqs SplitNow [Equal fa a]
+                        act <- disjunctionOfList $ get rActs ru
+                        solveFactEqs SplitNow [Equal fa act]
                       return ru
 
 -- | Solve a K-up-knowledge premise.
@@ -932,10 +925,10 @@ solvePremUpK rules p m = do
 
       _ -> error $ "solvePremUpK: unexpected fact: " ++ show faConc
 
--- FIXME: SM: The comment seems wrong. 
--- It is also used to solve a message premise where inp m == [m].
--- | Solve a non-knowledge premise.
-solvePremise :: [RuleAC]       -- ^ All rules that don't derive a knowledge fact.
+-- | Solve a premise with a direct edge from a unifying conclusion.
+--
+-- Note that 'In' and 'Fr' facts are solved directly when adding a 'ruleNode'.
+solvePremise :: [RuleAC]       -- ^ All construction and protocol rules.
              -> NodePrem       -- ^ Premise to solve.
              -> LNFact         -- ^ Fact required at this premise.
              -> SeProof String -- ^ Case name to use
@@ -988,9 +981,7 @@ solveChain rules ch@(Chain c p) = do
         return $ showRuleCaseName ru
      )
 
--- FIXME: SM: check if we still support typing splits? If not then update
--- comment.
--- | Solve an equation or typing split.
+-- | Solve an equation split.
 solveSplit :: SplitId -> SeProof String
 solveSplit x = do
     split <- gets ((`splitAtPos` x) . get sEqStore)
@@ -1024,7 +1015,7 @@ solveGoal goal = do
       case goal of
         ActionG i fa   -> solveAction  (nonSilentRules rules) (i, fa) 
         PremiseG p fa  -> 
-            solvePremise (get crProtocol  rules ++ get crConstruct rules) p fa
+            solvePremise (get crProtocol rules ++ get crConstruct rules) p fa
         PremDnKG p     -> solvePremDnK (get crProtocol  rules) p
         PremUpKG p m   -> solvePremUpK (get crConstruct rules) p m
         ChainG ch      -> solveChain   (get crDestruct  rules) ch
