@@ -307,8 +307,6 @@ formulaFacts =
       id 
       (const mappend) (const $ const id)
   where
-    atomFacts (Provides _ fa) = [fa]
-    atomFacts (Requires _ fa) = [fa]
     atomFacts (Action _ fa)   = [fa]
     atomFacts (EqE _ _)       = mempty
     atomFacts (Less _ _)      = mempty
@@ -321,8 +319,6 @@ formulaTerms :: Formula s c v -> [VTerm c (BVar v)]
 formulaTerms = 
     foldFormula atomTerms (const mempty) id (const mappend) (const $ const id)
   where
-    atomTerms (Provides i fa) = i : factTerms fa
-    atomTerms (Requires i fa) = i : factTerms fa
     atomTerms (Action i fa)   = i : factTerms fa
     atomTerms (EqE t s)       = [t, s]
     atomTerms (Less i j)      = [i, j]

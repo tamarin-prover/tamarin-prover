@@ -47,9 +47,7 @@ import Control.Basics
 
 -- | @Atom@'s are the atoms of trace formulas parametrized over arbitrary
 -- terms. 
-data Atom t = Provides t (Fact t)
-            | Requires t (Fact t)
-            | Action   t (Fact t)
+data Atom t = Action   t (Fact t)
             | EqE  t t
             | Less t t
             | Last t
@@ -77,8 +75,6 @@ type BLAtom = Atom BLTerm
 ------------
 
 instance Functor Atom where
-    fmap f (Provides i fa) = Provides  (f i) (fmap f fa)
-    fmap f (Requires i fa) = Requires  (f i) (fmap f fa)
     fmap f (Action   i fa) = Action    (f i) (fmap f fa)
     fmap f (EqE l r)       = EqE       (f l) (f r)
     fmap f (Less v u)      = Less      (f v) (f u)
@@ -87,10 +83,6 @@ instance Functor Atom where
     fmap f (EdgeA x y)     = EdgeA     (first f x) (first f y)
 
 instance Foldable Atom where
-    foldMap f (Provides i fa) = 
-        f i `mappend` (foldMap f fa)
-    foldMap f (Requires i fa) = 
-        f i `mappend` (foldMap f fa)
     foldMap f (Action i fa)   = 
         f i `mappend` (foldMap f fa)
     foldMap f (EqE l r)       = f l `mappend` f r
@@ -100,10 +92,6 @@ instance Foldable Atom where
     foldMap f (EdgeA x y)     = f (fst x) `mappend` f (fst y)
 
 instance Traversable Atom where
-    traverse f (Provides i fa) = 
-        Provides <$> f i <*> traverse f fa
-    traverse f (Requires i fa) = 
-        Requires <$> f i <*> traverse f fa
     traverse f (Action i fa)   = 
         Action <$> f i <*> traverse f fa
     traverse f (EqE l r)       = EqE <$> f l <*> f r
@@ -118,8 +106,6 @@ instance HasFrees t => HasFrees (Atom t) where
     mapFrees  f = traverse (mapFrees f)
 
 instance Apply LNAtom where
-    apply subst (Provides i fact) = Provides (apply subst i) (apply subst fact)
-    apply subst (Requires i fact) = Requires (apply subst i) (apply subst fact)
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
@@ -146,8 +132,6 @@ instance Apply BLTerm where
         applyBLLit l                = Lit l
 
 instance Apply BLAtom where
-    apply subst (Provides i fact) = Provides (apply subst i) (apply subst fact)
-    apply subst (Requires i fact) = Requires (apply subst i) (apply subst fact)
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
@@ -162,10 +146,6 @@ instance Apply BLAtom where
 ------------------------------------------------------------------------------
 
 prettyNAtom :: (Show v, HighlightDocument d) => NAtom v -> d
-prettyNAtom (Requires v fa) = 
-    text (show v) <-> opRequires <-> prettyFact prettyNTerm fa
-prettyNAtom (Provides v fa) = 
-    text (show v) <-> opProvides <-> prettyFact prettyNTerm fa
 prettyNAtom (Action v fa) = 
     prettyFact prettyNTerm fa <-> opAction <-> text (show v) 
 prettyNAtom (EqE l r) =

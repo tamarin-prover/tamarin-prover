@@ -337,35 +337,35 @@ data Goal =
 
 instance HasFrees Goal where
     foldFrees f goal = case goal of
-        ActionG i fa   -> foldFrees f i `mappend` foldFrees f fa
-        PremiseG p fa  -> foldFrees f p `mappend` foldFrees f fa
-        PremDnKG p     -> foldFrees f p
-        PremUpKG p m   -> foldFrees f p `mappend` foldFrees f m
-        ChainG ch      -> foldFrees f ch
-        SplitG i       -> foldFrees f i
-        DisjG x        -> foldFrees f x
-        ImplG x        -> foldFrees f x
+        ActionG i fa  -> foldFrees f i `mappend` foldFrees f fa
+        PremiseG p fa -> foldFrees f p `mappend` foldFrees f fa
+        PremDnKG p    -> foldFrees f p
+        PremUpKG p m  -> foldFrees f p `mappend` foldFrees f m
+        ChainG ch     -> foldFrees f ch
+        SplitG i      -> foldFrees f i
+        DisjG x       -> foldFrees f x
+        ImplG x       -> foldFrees f x
 
     mapFrees f goal = case goal of
-        ActionG i fa   -> ActionG  <$> mapFrees f i <*> mapFrees f fa
-        PremiseG p fa  -> PremiseG <$> mapFrees f p <*> mapFrees f fa
-        PremDnKG p     -> PremDnKG <$> mapFrees f p
-        PremUpKG p m   -> PremUpKG <$> mapFrees f p <*> mapFrees f m
-        ChainG ch      -> ChainG   <$> mapFrees f ch
-        SplitG i       -> SplitG   <$> mapFrees f i
-        DisjG x        -> DisjG    <$> mapFrees f x
-        ImplG x        -> ImplG    <$> mapFrees f x
+        ActionG i fa  -> ActionG  <$> mapFrees f i <*> mapFrees f fa
+        PremiseG p fa -> PremiseG <$> mapFrees f p <*> mapFrees f fa
+        PremDnKG p    -> PremDnKG <$> mapFrees f p
+        PremUpKG p m  -> PremUpKG <$> mapFrees f p <*> mapFrees f m
+        ChainG ch     -> ChainG   <$> mapFrees f ch
+        SplitG i      -> SplitG   <$> mapFrees f i
+        DisjG x       -> DisjG    <$> mapFrees f x
+        ImplG x       -> ImplG    <$> mapFrees f x
 
 instance Apply Goal where
     apply subst goal = case goal of
-        ActionG i fa   -> ActionG  (apply subst i)     (apply subst fa)
-        PremiseG p fa  -> PremiseG (apply subst p)     (apply subst fa)
-        PremDnKG p     -> PremDnKG (apply subst p)    
-        PremUpKG p m   -> PremUpKG (apply subst p)     (apply subst m)
-        ChainG ch      -> ChainG   (apply subst ch)
-        SplitG i       -> SplitG   (apply subst i)
-        DisjG x        -> DisjG    (apply subst x)
-        ImplG x        -> ImplG    (apply subst x)
+        ActionG i fa  -> ActionG  (apply subst i)     (apply subst fa)
+        PremiseG p fa -> PremiseG (apply subst p)     (apply subst fa)
+        PremDnKG p    -> PremDnKG (apply subst p)
+        PremUpKG p m  -> PremUpKG (apply subst p)     (apply subst m)
+        ChainG ch     -> ChainG   (apply subst ch)
+        SplitG i      -> SplitG   (apply subst i)
+        DisjG x       -> DisjG    (apply subst x)
+        ImplG x       -> ImplG    (apply subst x)
 
 
 ------------------------------------------------------------------------------

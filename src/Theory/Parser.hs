@@ -532,23 +532,10 @@ nodeConc :: Parser NodeConc
 nodeConc = NodeConc <$> parens ((,) <$> nodevar <*> (kw COMMA *> integer))
 -}
 
--- | Parse the @:>@ provides operator.
-providesOp :: Parser ()
-providesOp = try (kw COLON *> kw GREATER)
-
--- | Parse the @<:@ requires operator.
-requiresOp :: Parser ()
-requiresOp = try (kw LESS *> kw COLON)
 
 -- | Parse the @\@@ requires operator.
 actionOp :: Parser ()
 actionOp = try (kw AT)
-
-{-
--- | Parse the @>+>@ path operator.
-pathOp :: Parser ()
-pathOp = try (kw GREATER <* kw PLUS <* kw GREATER)
--}
 
 -- | Parse the @<@ temporal less operator.
 edgeOp :: Parser ()
@@ -576,12 +563,10 @@ chainOp = kw TILDE *> kw TILDE *> kw TILDE *> kw GREATER
 goal :: Parser Goal
 goal = fail "SM: reimplement goal parsing" {- asum 
   [ splitGoal
-  , ProvidesGoal <$> seProvides 
   , premiseGoal
   , chainGoal
   ]
   where
-    seProvides = SeProvides <$> try (nodevar <* providesOp) <*> fact llit
     premiseGoal = try $ do
         v  <- nodevar
         i  <- brackets integer <* requiresOp
@@ -631,9 +616,7 @@ proofSkeleton =
 -- | Parse an atom with possibly bound logical variables.
 blatom :: Parser BLAtom
 blatom = (fmap (fmap (fmap Free))) <$> asum
-  [ Provides    <$> try (nodevarTerm <* providesOp) <*> (fact llit)  <?> "provides"
-  , Requires    <$> try (nodevarTerm <* requiresOp) <*> (fact llit)  <?> "requires"
-  , flip Action <$> try (fact llit <* actionOp) <*> nodevarTerm      <?> "action"
+  [ flip Action <$> try (fact llit <* actionOp) <*> nodevarTerm      <?> "action"
   , Less        <$> try (nodevarTerm <* lessOp)    <*> nodevarTerm   <?> "less"
   , DedBefore   <$> try (term llit <* dedBeforeOp) <*> nodevarTerm   <?> "deduced before"
   , EdgeA       <$> try (nodePrem <* edgeOp)       <*> nodeConc      <?> "edge"
