@@ -19,6 +19,7 @@ module Term.Term (
     , zeroSym
     , FunSig
 
+
     -- * Terms
     , Term (..)
 
@@ -29,6 +30,10 @@ module Term.Term (
     -- ** Smart constructors
     , listToTerm
 
+    -- ** Destrutors
+    , destPair
+    , destInv
+    
     -- * Terms with constants and variables
     , Lit(..)
     , VTerm
@@ -101,6 +106,20 @@ invSym  = ("inv",1)    -- ^ The inverse in the groups of exponents.
 oneSym  = ("one", 0)   -- ^ The one in the group of exponents.
 zeroSym = ("zero",0)   -- ^ The zero for Xor.
 emptySym = ("empty",0) -- ^ The empty multiset.
+
+-- | Destruct a top-level function application.
+{-# INLINE destFunApp #-}
+destFunApp :: FunSym -> Term a -> Maybe [Term a]
+destFunApp fsym (FApp fsym' args) | fsym == fsym' = Just args
+destFunApp _    _                                 = Nothing
+
+-- | Destruct a top-level pair.
+destPair :: Term a -> Maybe (Term a, Term a)
+destPair t = do [t1, t2] <- destFunApp (NonAC pairSym) t; return (t1, t2)
+
+-- | Destruct a top-level inverse in the group of exponents.
+destInv :: Term a -> Maybe (Term a)
+destInv t = do [t1] <- destFunApp (NonAC invSym) t; return t1
 
 ----------------------------------------------------------------------
 -- Terms and Instances

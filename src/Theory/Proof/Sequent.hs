@@ -790,7 +790,7 @@ solveRuleConstraints Nothing _ = return ()
 ------------------------------------------------------------------------------
 
 data Usefulness = Useful | Useless
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 -- FIXME: SM: Remove support for requires facts.
 -- | All open premises stemming both from labelled nodes and requires facts.
@@ -818,7 +818,6 @@ openPremiseGoals se = do
       _ | p `S.member` coveredPrems -> mzero
         | otherwise                 -> return . (Useful,) $ PremiseG p fa
   where
-
     coveredPrems     = S.fromList $ eTgt <$> S.toList (get sEdges se) <|>
                                     cTgt <$> S.toList (get sChains se)
 
@@ -830,26 +829,41 @@ openPremiseGoals se = do
           Just (UpK, _, m) -> return (p, m)
           _                -> []
 
-    markUseless _m _i = (Useful,)
-    {- FIXME: This heuristic is helpful in POST case studies. However, it
-     -        hampers experimentation. We should make it conditional.
-     -
+    existingDeps = sRawLessRel se
+
+    -- We use the following heuristic for marking KU-goals as useful (worth
+    -- solving now) or useless (to be delayed until no more useful goal
+    -- remain). We ignore all goals that do not contain a fresh variable
+    -- or where there exists a node, not after the premise or the last node,
+    -- providing an Out or KD conclusion that provides the message we are
+    -- looking for as a toplevel term.
+    --
+    -- If such a node exist, then solving the goal will result in at least one
+    -- case where we didn't make real progress except.
     markUseless m i
-        | containsFreshVars m && not (deducibleNoContr m i) = (Useful,)
-        | otherwise                                         = (Useless,)
+        | not (containsFreshVars m) || deducible = (,) Useless
+        | otherwise                              = (,) Useful
+        where
+          containsFreshVars = any ((LSortFresh ==) . lvarSort) . frees
 
-    containsFreshVars = any ((==LSortFresh) . lvarSort) . frees
+          toplevelTerms t@(destPair -> Just (t1, t2)) = 
+              t : toplevelTerms t1 ++ toplevelTerms t2
+          toplevelTerms t@(destInv -> Just t1) = t : toplevelTerms t1
+          toplevelTerms t = [t]
 
-    -- | deducible without immediate contradiction
-    deducibleNoContr m i = not (null newDeps || any (\d -> D.cyclic (d:otherDeps)) newDeps)
-      where newDeps = do
-                (j,ru) <- M.toList $ get sNodes se
-                let msgConcs = [ m' | Fact OutFact [m'] <- get rConcs ru] <|>
-                               [ m' | Just (DnK,_,m') <- kFactView <$> get rConcs ru]
-                guard (m `elem` msgConcs)
-                return (j,i)
-            otherDeps = sRawLessRel se
-    -}
+          deducible = or $ do
+              (j, ru) <- M.toList $ get sNodes se
+              -- We cannot deduce a message from a last node.
+              guard (Last (varTerm j) `S.notMember` get sAtoms se)
+              let derivedMsgs = concatMap toplevelTerms $
+                      [ t | Fact OutFact [t] <- get rConcs ru] <|>
+                      [ t | Just (DnK, _, t) <- kFactView <$> get rConcs ru]
+              -- m is deducible from j without an immediate contradiction
+              -- if it is a derived message of 'ru' and the dependency does
+              -- not make the graph cyclic.
+              return $ m `elem` derivedMsgs && 
+                       not (D.cyclic ((j, i) : existingDeps))
+
 
 -- | All open chain goals. These are all the chains that do not end in a
 -- message variable in the sequent because they are deleted upon solving.
@@ -887,11 +901,8 @@ openGoals se = delayUseless $ concat $
     preferProtoFactGoals goals =
         uncurry (++) $ partition isProtoFactGoal goals
 
-    delayUseless :: [(Usefulness, Goal)] -> [Goal]
-    delayUseless goals | null useful = map snd goals
-                       | otherwise   = map snd useful
+    delayUseless = map snd . sortOn fst
 
-      where useful = filter ((==Useful) . fst) goals
 
 -- | Solve an action goal.
 solveAction :: [RuleAC]       -- ^ All rules labelled with an action
