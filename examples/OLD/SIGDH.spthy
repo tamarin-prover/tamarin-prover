@@ -31,28 +31,28 @@ text{*
 
 
 rule reveal_pk:
-   [ ] --> [ Send('g'^sk(lts($X))) ]
+   [ ] --> [ Out('g'^sk(lts($X))) ]
 
 rule Reveal_lts:
-  [ Knows( m ) ] --> [ LTSR( m ), Send( lts(m) ) ]
+  [ In( m ) ] --> [ LTSR( m ), Out( lts(m) ) ]
 
 rule sigdh_I_1:
-   [ Fresh( ~ni ) ]
+   [ Fr( ~ni ) ]
    -->
-   [ sigdh_I_1( $I, $R, ~ni ), Send( <$I, sign{'1', 'g'^~ni, $R}sk(lts($I)) >) ]
+   [ sigdh_I_1( $I, $R, ~ni ), Out( <$I, sign{'1', 'g'^~ni, $R}sk(lts($I)) >) ]
 
 rule sigdh_I_2:
-   [ sigdh_I_1( $I, $R, ~ni ), Knows( <$R, sign{'2', Gr, $I}sk(lts($R)) > ) ]
+   [ sigdh_I_1( $I, $R, ~ni ), In( <$R, sign{'2', Gr, $I}sk(lts($R)) > ) ]
    -->
    [ sigdh_I_2( $I, $R, ~ni, Gr ) ]
 
 rule sigdh_R_1:
-   [ Knows( <I, sign{'1', Gi, $R}sk(lts(I)) > ) ] --> [ sigdh_R_1( I, $R, Gi ) ]
+   [ In( <I, sign{'1', Gi, $R}sk(lts(I)) > ) ] --> [ sigdh_R_1( I, $R, Gi ) ]
 
 rule sigdh_R_2:
-   [ sigdh_R_1( I, $R, Gi ), Fresh( ~nr ) ]
+   [ sigdh_R_1( I, $R, Gi ), Fr( ~nr ) ]
    -->
-   [ sigdh_R_2( I, $R, Gi, ~nr ), Send( <$R, sign{'2', 'g'^~nr, I }sk(lts($R)) >) ]
+   [ sigdh_R_2( I, $R, Gi, ~nr ), Out( <$R, sign{'2', 'g'^~nr, I }sk(lts($R)) >) ]
 
 
 /* Session keys */
@@ -90,20 +90,20 @@ lemma R_executable:
 
  
 lemma I_secrecy_ephkeys:
-  "( v :> sigdh_I_2( $I, $R, ~ni, Gr ) & u :> Knows(~ni) )
+  "( v :> sigdh_I_2( $I, $R, ~ni, Gr ) & u :> In(~ni) )
    ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
 
 lemma R_secrecy_ephkeys:
-  "( v :> sigdh_R_2( I, $R, Gi, ~nr ) & u :> Knows(~nr) )
+  "( v :> sigdh_R_2( I, $R, Gi, ~nr ) & u :> In(~nr) )
    ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
 
  
 lemma I_secrecy_key:
-  "vkey :> SeKeyI(k, <$I, $R, Gi, Gr>) & vk :> Knows(k)
+  "vkey :> SeKeyI(k, <$I, $R, Gi, Gr>) & vk :> In(k)
   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
 
 lemma R_secrecy_key:
-  "vkey :> SeKeyR(k, <I, $R, Gi, Gr>) & vk :> Knows(k)
+  "vkey :> SeKeyR(k, <I, $R, Gi, Gr>) & vk :> In(k)
   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
 
 

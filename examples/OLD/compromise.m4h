@@ -253,7 +253,7 @@ define(<!addAdversaryConclusions!>,<!
 rule SeKey_compr: 
    [ SeKey(k, params) ]
    -->
-   [ SeKeyCompr(k, params), Send(k) ]
+   [ SeKeyCompr(k, params), Out(k) ]
 !>)
 define(<!addAdversaryPremise!>,defn(<!aapSKR!>))
 !>)

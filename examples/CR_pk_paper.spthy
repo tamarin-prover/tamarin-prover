@@ -14,7 +14,7 @@ anb-proto CR
 
 // Public key infrastructure
 rule Register_pk:
-  [ Fresh(<'RegisterKey', $A>), Fresh(~ltk) ] 
+  [ Fr(~ltk) ] 
   --> 
   [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
 
@@ -28,16 +28,10 @@ rule Reveal_ltk:
   --[ LtkReveal(A) ]->
     [ Out(ltk) ]
 
-// Intruder knowledge logging
-rule Known:
-    [ In(m) ]
-  --[ In(m) ]->
-    []
-
 // Protocol
 
 rule Init_1:
-    [ Fresh(~k), !Pk($S, pkS) ]
+    [ Fr(~k), !Pk($S, pkS) ]
   --[ OUT_Init_1(aenc{'1', $I, ~k}pkS) ]->
     [ Init_1( $I, $S, ~k ), Out( aenc{'1', $I, ~k}pkS ) ]
 
@@ -82,7 +76,7 @@ lemma Init_secrecy:
   "not(
      Ex I S k #ii #ik.
          SessKeyI(I, S, k) @ ii
-       & In(k) @ ik 
+       & K(k) @ ik 
        & (All #ir. LtkReveal(I) @ ir ==> ik < ir)
        & (All #ir. LtkReveal(S) @ ir ==> ik < ir)
    )

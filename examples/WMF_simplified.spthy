@@ -22,7 +22,7 @@ B <-- {A,kAB}k(S,B) ---- S
 
 
 rule register_ltk:
-  [ Fr(<'Register',$A,$B>), Fr(~lkAB) ]
+  [ Fr(~lkAB) ]
   --[RegisterLtk($A,$B,~lkAB)]->
   [ !Ltk($A,$B,~lkAB) ]
 
@@ -58,9 +58,6 @@ rule B:
   --[ SessKeyB( A, B, S, kAB ) ]->
     []
 
-rule log_deducible:
-  [ In(x) ]
-  --[ Deducible(x) ]-> []
 
 lemma (modulo E) Typing:
   "not( Ex #i kAB m.
@@ -74,7 +71,7 @@ lemma (modulo E) Typing:
 lemma (modulo E) Ltk_Secrecy:
   "not( Ex #i A B lkAB #k. 
       RegisterLtk(A,B,lkAB) @ i 
-    & Deducible(lkAB) @ k
+    & K(lkAB) @ k
     & (All #r. Rev(A) @ r ==> F)
     & (All #r. Rev(B) @ r ==> F)
   )"
@@ -99,7 +96,7 @@ lemma (modulo E) S_auth:
 lemma (modulo E) A_key_secrecy:
   "not( Ex #i A B S kAB #k. 
       SessKeyA(A,B,S,kAB) @ i 
-    & Deducible(kAB) @k 
+    & K(kAB) @k 
     & (All #r. Rev(A) @ r ==> F)
     & (All #r. Rev(B) @ r ==> F)
     & (All #r. Rev(S) @ r ==> F)

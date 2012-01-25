@@ -69,15 +69,15 @@ lemma Device_Init_Use_Set [reuse]:
 
 // attackable
 lemma reachability_left:
-  "not( Ex x y #i #k.  Exclusive(x,y) @i & Deducible(x) @ k )"
+  "not( Ex x y #i #k.  Exclusive(x,y) @i & K(x) @ k )"
 
 // attackable
 lemma reachability_right:
-  "not( Ex x y #i #k.  Exclusive(x,y) @i & Deducible(y) @ k )"
+  "not( Ex x y #i #k.  Exclusive(x,y) @i & K(y) @ k )"
 
 lemma secrecy:
   "not(Ex x y #i #k1 #k2. 
-         Exclusive(x,y) @i & Deducible(x) @ k1 & Deducible(y) @ k2
+         Exclusive(x,y) @i & Deducible(x) @ k1 & K(y) @ k2
       )
   "
 

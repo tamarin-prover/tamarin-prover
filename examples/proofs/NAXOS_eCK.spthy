@@ -301,23 +301,23 @@ section{* Finite Variants of the Intruder Rules *}
    --> !KU( f_, $x )
  
  rule (modulo AC) gen_fresh:
-    Fresh( ~x ) --> !KU( 'noexp', ~x )
+    Fr( ~x ) --> !KU( 'noexp', ~x )
 
 section{* The NAXOS Key-Exchange Protocol *}
 
 rule (modulo E) generate_ltk:
-   Fresh( <'RegisterKey', $A> ), Fresh( ~lk )
+   Fr( <'RegisterKey', $A> ), Fr( ~lk )
   -->
-   !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Send( 'g'^~lk )
+   !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk )
 
 rule (modulo E) Init_1:
-   Fresh( ~ekI ), !Ltk( $I, ~lkI )
+   Fr( ~ekI ), !Ltk( $I, ~lkI )
   --[ SidI_1( ~ekI, $I, $R, 'g'^h(<~lkI, ~ekI>) ) ]->
    Init_1( ~ekI, $I, $R, ~lkI, 'g'^h(<~lkI, ~ekI>) ), !EphkI( ~ekI ),
-   Send( 'g'^h(<~lkI, ~ekI>) )
+   Out( 'g'^h(<~lkI, ~ekI>) )
 
 rule (modulo E) Init_2:
-   Init_1( ~ekI, $I, $R, ~lkI, hkI ), !Knows( Y ), !Pk( $R, 'g'^~lkR )
+   Init_1( ~ekI, $I, $R, ~lkI, hkI ), !In( Y ), !Pk( $R, 'g'^~lkR )
   --[
   SidI_2( ~ekI, $I, $R, hkI, Y,
           h(<Y^~lkI, 'g'^~lkR^h(<~lkI, ~ekI>), Y^h(<~lkI, ~ekI>), $I, $R>)
@@ -328,34 +328,34 @@ rule (modulo E) Init_2:
    )
 
 rule (modulo E) Resp_1:
-   !Knows( X ), Fresh( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI )
+   !In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI )
   --[
   SidR_1( ~ekR, $I, $R, X, 'g'^h(<~lkR, ~ekR>),
           h(<'g'^~lkI^h(<~lkR, ~ekR>), X^~lkR, X^h(<~lkR, ~ekR>), $I, $R>)
   )
   ]->
-   Send( 'g'^h(<~lkR, ~ekR>) ), !EphkR( ~ekR ),
+   Out( 'g'^h(<~lkR, ~ekR>) ), !EphkR( ~ekR ),
    !SesskOfR( ~ekR,
               h(<'g'^~lkI^h(<~lkR, ~ekR>), X^~lkR, X^h(<~lkR, ~ekR>), $I, $R>)
    )
 
 rule (modulo E) Sessk_revealI:
-   !SesskOfI( ~tid, k ) --[ SesskRev( ~tid ) ]-> Send( k )
+   !SesskOfI( ~tid, k ) --[ SesskRev( ~tid ) ]-> Out( k )
 
 rule (modulo E) Sessk_revealR:
-   !SesskOfR( ~tid, k ) --[ SesskRev( ~tid ) ]-> Send( k )
+   !SesskOfR( ~tid, k ) --[ SesskRev( ~tid ) ]-> Out( k )
 
 rule (modulo E) Ephk_revealI:
-   !EphkI( ~ekI ) --[ EphkRev( ~ekI ) ]-> Send( ~ekI )
+   !EphkI( ~ekI ) --[ EphkRev( ~ekI ) ]-> Out( ~ekI )
 
 rule (modulo E) Ephk_revealR:
-   !EphkR( ~ekR ) --[ EphkRev( ~ekR ) ]-> Send( ~ekR )
+   !EphkR( ~ekR ) --[ EphkRev( ~ekR ) ]-> Out( ~ekR )
 
 rule (modulo E) Ltk_reveal:
-   !Ltk( $A, k ) --[ LtkRev( $A ) ]-> Send( k )
+   !Ltk( $A, k ) --[ LtkRev( $A ) ]-> Out( k )
 
 rule (modulo E) log_deducible:
-   !Knows( x ) --[ Deducible( x ) ]->
+   !In( x ) --[ Deducible( x ) ]->
 
 lemma (modulo E) key_agreement_reachable:
   "not(Ex #i #i.1 ekI.2 ekR.3 I.4 R.5 k.6 hkI.7 hkR.8.

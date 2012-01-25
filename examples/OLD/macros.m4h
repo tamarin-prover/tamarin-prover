@@ -29,75 +29,75 @@ dnl Parameters: name, eki, ekr
 dnl
 define(<!basicDH!>,<!
 rule reveal_pk:
-   [ ] --> [ Send(PK($X)) ]
+   [ ] --> [ Out(PK($X)) ]
 
 rule $1_I_1:
-   [ Fresh( ~ni ) ]
+   [ Fr( ~ni ) ]
    -->
-   [ $1_I_1( $I, $R, ~ni ), Send( <$I, 'g'^$2 revealRNR(~ni)>) ]
+   [ $1_I_1( $I, $R, ~ni ), Out( <$I, 'g'^$2 revealRNR(~ni)>) ]
 
 rule $1_I_2:
-   [ $1_I_1( $I, $R, ~ni ), Knows( <$R, Gr> ) ]
+   [ $1_I_1( $I, $R, ~ni ), In( <$R, Gr> ) ]
    -->
    [ $1_I_2( $I, $R, ~ni, Gr ) ]
 
 rule $1_R_1:
-   [ Knows( <I, Gi> ) ] --> [ $1_R_1( I, $R, Gi ) ]
+   [ In( <I, Gi> ) ] --> [ $1_R_1( I, $R, Gi ) ]
 
 rule $1_R_2:
-   [ $1_R_1( I, $R, Gi ), Fresh( ~nr ) ]
+   [ $1_R_1( I, $R, Gi ), Fr( ~nr ) ]
    -->
-   [ $1_R_2( I, $R, Gi, ~nr ), Send( <$R, 'g'^$3 revealRNR(~nr)>) ]
+   [ $1_R_2( I, $R, Gi, ~nr ), Out( <$R, 'g'^$3 revealRNR(~nr)>) ]
 !>)
 dnl
 dnl Alternative: signed DH without names
 dnl
 define(<!sigDHnn!>,<!
 rule reveal_pk:
-   [ ] --> [ Send(PK($X)) ]
+   [ ] --> [ Out(PK($X)) ]
 
 rule $1_I_1:
-   [ Fresh( ~ni ) ]
+   [ Fr( ~ni ) ]
    -->
-   [ $1_I_1( $I, $R, ~ni ), Send( <$I, sign{'1', 'g'^$2}SK($I) revealRNR(~ni)>) ]
+   [ $1_I_1( $I, $R, ~ni ), Out( <$I, sign{'1', 'g'^$2}SK($I) revealRNR(~ni)>) ]
 
 rule $1_I_2:
-   [ $1_I_1( $I, $R, ~ni ), Knows( <$R, sign{'2', Gr}SK($R) > ) ]
+   [ $1_I_1( $I, $R, ~ni ), In( <$R, sign{'2', Gr}SK($R) > ) ]
    -->
    [ $1_I_2( $I, $R, ~ni, Gr ) ]
 
 rule $1_R_1:
-   [ Knows( <I, sign{'1', Gi}SK(I) > ) ] --> [ $1_R_1( I, $R, Gi ) ]
+   [ In( <I, sign{'1', Gi}SK(I) > ) ] --> [ $1_R_1( I, $R, Gi ) ]
 
 rule $1_R_2:
-   [ $1_R_1( I, $R, Gi ), Fresh( ~nr ) ]
+   [ $1_R_1( I, $R, Gi ), Fr( ~nr ) ]
    -->
-   [ $1_R_2( I, $R, Gi, ~nr ), Send( <$R, sign{'2', 'g'^$3}SK($R) revealRNR(~nr)>) ]
+   [ $1_R_2( I, $R, Gi, ~nr ), Out( <$R, sign{'2', 'g'^$3}SK($R) revealRNR(~nr)>) ]
 !>)
 dnl
 dnl Alternative 2: signed DH with names
 dnl
 define(<!sigDH!>,<!
 rule reveal_pk:
-   [ ] --> [ Send(PK($X)) ]
+   [ ] --> [ Out(PK($X)) ]
 
 rule $1_I_1:
-   [ Fresh( ~ni ) ]
+   [ Fr( ~ni ) ]
    -->
-   [ $1_I_1( $I, $R, ~ni ), Send( <$I, sign{'1', 'g'^$2, $R}SK($I) revealRNR(~ni)>) ]
+   [ $1_I_1( $I, $R, ~ni ), Out( <$I, sign{'1', 'g'^$2, $R}SK($I) revealRNR(~ni)>) ]
 
 rule $1_I_2:
-   [ $1_I_1( $I, $R, ~ni ), Knows( <$R, sign{'2', Gr, $I}SK($R) > ) ]
+   [ $1_I_1( $I, $R, ~ni ), In( <$R, sign{'2', Gr, $I}SK($R) > ) ]
    -->
    [ $1_I_2( $I, $R, ~ni, Gr ) ]
 
 rule $1_R_1:
-   [ Knows( <I, sign{'1', Gi, $R}SK(I) > ) ] --> [ $1_R_1( I, $R, Gi ) ]
+   [ In( <I, sign{'1', Gi, $R}SK(I) > ) ] --> [ $1_R_1( I, $R, Gi ) ]
 
 rule $1_R_2:
-   [ $1_R_1( I, $R, Gi ), Fresh( ~nr ) ]
+   [ $1_R_1( I, $R, Gi ), Fr( ~nr ) ]
    -->
-   [ $1_R_2( I, $R, Gi, ~nr ), Send( <$R, sign{'2', 'g'^$3, I }SK($R) revealRNR(~nr)>) ]
+   [ $1_R_2( I, $R, Gi, ~nr ), Out( <$R, sign{'2', 'g'^$3, I }SK($R) revealRNR(~nr)>) ]
 !>)
 dnl
 dnl Generic construction for session keys
@@ -167,11 +167,11 @@ dnl
 define(<!DHPSecrecy!>,<! 
 dnl
 lemma I_secrecy_$2:
-  "( v :> $1_I_2( $I, $R, ~ni, Gr ) & u :> Knows($3) )
+  "( v :> $1_I_2( $I, $R, ~ni, Gr ) & u :> In($3) )
    ==> SecModelViolation(v,$I,$R,'g'^~ni,Gr)"
 
 lemma R_secrecy_$2:
-  "( v :> $1_R_2( I, $R, Gi, ~nr ) & u :> Knows($4) )
+  "( v :> $1_R_2( I, $R, Gi, ~nr ) & u :> In($4) )
    ==> SecModelViolation(v,$R,I,Gi,'g'^~nr)"
 !>)
 dnl
@@ -182,11 +182,11 @@ dnl parameters: protocol name
 dnl
 define(<!DHPKeySecrecy!>,<! 
 lemma I_secrecy_key:
-  "vkey :> SeKeyI(k, <$I, $R, Gi, Gr>) & vk :> Knows(k)
+  "vkey :> SeKeyI(k, <$I, $R, Gi, Gr>) & vk :> In(k)
   ==> SecModelViolation(vkey,$I,$R,Gi,Gr)"
 
 lemma R_secrecy_key:
-  "vkey :> SeKeyR(k, <I, $R, Gi, Gr>) & vk :> Knows(k)
+  "vkey :> SeKeyR(k, <I, $R, Gi, Gr>) & vk :> In(k)
   ==> SecModelViolation(vkey,$R,I,Gi,Gr)"
 !>)
 

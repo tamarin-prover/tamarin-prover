@@ -14,10 +14,10 @@ text{*
 *}
 
 rule Reveal_pk:
-  [ ] --> [ Send( pk(lts($m)) ) ]
+  [ ] --> [ Out( pk(lts($m)) ) ]
 
 rule Reveal_lts:
-  [ Knows( m ) ] --> [ LTSR( m ), Send( lts(m) ) ]
+  [ In( m ) ] --> [ LTSR( m ), Out( lts(m) ) ]
 
 
 /* Protocol rules */
@@ -33,7 +33,7 @@ sessionkeyR(name, h(PK(I)^ekr, Gi^SK($R),  I,  $R ), eki, ekr)
 rule SeKey_compr: 
    [ SeKey(k, params) ]
    -->
-   [ SeKeyCompr(k, params), Send(k) ]
+   [ SeKeyCompr(k, params), Out(k) ]
 */
 
 subsection{* Secrecy Properties *}

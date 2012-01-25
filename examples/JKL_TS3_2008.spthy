@@ -12,29 +12,29 @@ section{* Jeong, Katz, Lee : TS3 (2008) *}
 /* Protocol rules */
 
 rule generate_ltk:
-   [ Fresh( <'RegisterKey',$A> ), Fresh(~lk) ] -->
-   [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Send( 'g'^~lk ) ]
+   [ Fr(~lk) ] -->
+   [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
 
 rule Init_1:
-   [ Fresh( ~ekI ), !Ltk( $I, ~lkI ), !Pk($R,'g'^~lkR) ]
+   [ Fr( ~ekI ), !Ltk( $I, ~lkI ), !Pk($R,'g'^~lkR) ]
    --[ SidI_1(~ekI,$I,$R, 'g'^~ekI ) ]->
    [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ),
      !EphkI(~ekI),
-     Send( < 'g'^~ekI, h( ('g'^~lkR)^~lkI,'1','2','g'^~ekI ) > ) ]
+     Out( < 'g'^~ekI, h( ('g'^~lkR)^~lkI,'1','2','g'^~ekI ) > ) ]
 
 rule Init_2:
    [ Init_1( ~ekI, $I, $R, ~lkI , hkI), !Pk($R,'g'^~lkR),
-     Knows( < Y, h(('g'^~lkI)^~lkR,'2','1',Y )>  ) ]
+     In( < Y, h(('g'^~lkI)^~lkR,'2','1',Y )>  ) ]
    --[SidI_2( ~ekI, $I, $R, hkI, Y,
        Y^~ekI ) ]->
    [ !SesskOfI( ~ekI, 
        Y^~ekI ) ]
 
 rule Resp_1:
-   [ Knows( < X, h( ('g'^~lkR)^~lkI,'1','2',X ) > ), Fresh( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
+   [ In( < X, h( ('g'^~lkR)^~lkI,'1','2',X ) > ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
    --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR ,
        X^~ekR ) ]->
-   [ Send( < 'g'^~ekR, h( ('g'^~lkI)^~lkR,'2','1','g'^~ekR ) > ),
+   [ Out( < 'g'^~ekR, h( ('g'^~lkI)^~lkR,'2','1','g'^~ekR ) > ),
      !EphkR(~ekR),
      !SesskOfR( ~ekR, 
        X^~ekR ) ]
@@ -45,31 +45,28 @@ rule Resp_1:
 rule Sessk_revealI: 
    [ !SesskOfI(~tid, k) ]
    --[ SesskRev(~tid) ]->
-   [ Send(k) ]
+   [ Out(k) ]
 
 rule Sessk_revealR: 
    [ !SesskOfR(~tid, k) ]
    --[ SesskRev(~tid) ]->
-   [ Send(k) ]
+   [ Out(k) ]
 
 rule Ephk_revealI:
    [ !EphkI(~ekI) ]
    --[ EphkRev(~ekI) ]->
-   [ Send(~ekI) ]
+   [ Out(~ekI) ]
 
 rule Ephk_revealR: 
    [ !EphkR(~ekR) ]
    --[ EphkRev(~ekR) ]->
-   [ Send(~ekR) ]
+   [ Out(~ekR) ]
 
 rule Ltk_reveal:
    [ !Ltk($A, k) ]
    --[ LtkRev($A) ]->
-   [ Send(k) ]
+   [ Out(k) ]
 
-rule log_deducible:
-  [ Knows(x) ]
-  --[ Deducible(x) ]-> []
 
 /* Security properties */
 
@@ -85,7 +82,7 @@ lemma key_agreement_reachable:
 */
 lemma JKL2008_1_initiator_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
+            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not ephemeral-key-reveal */
             & (All #i3 t. EphkRev( t ) @ i3 ==> F)
@@ -108,7 +105,7 @@ lemma JKL2008_1_initiator_key:
 */
 lemma JKL2008_1_responder_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
+            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not ephemeral-key-reveal */
             & (All #i3 t. EphkRev( t ) @ i3 ==> F)
@@ -132,7 +129,7 @@ lemma JKL2008_1_responder_key:
 */
 lemma JKL2008_2_initiator_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
+            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not ephemeral-key-reveal */
             & (All #i3 t. EphkRev( t ) @ i3 ==> F)
@@ -163,7 +160,7 @@ lemma JKL2008_2_initiator_key:
 */
 lemma JKL2008_2_responder_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
+            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not ephemeral-key-reveal */
             & (All #i3 t. EphkRev( t ) @ i3 ==> F)

@@ -16,25 +16,25 @@
 
 #define basicDH(name,eki,ekr)	\
 rule reveal_pk:	\
-   [ ] --> [ Send(PK($X)) ]	\
+   [ ] --> [ Out(PK($X)) ]	\
 	\
 rule name##_I_1:	\
-   [ Fresh( ~ni ) ]	\
+   [ Fr( ~ni ) ]	\
    -->	\
-   [ name##_I_1( $I, $R, ~ni ), Send( <$I, 'g'^eki >) ]	\
+   [ name##_I_1( $I, $R, ~ni ), Out( <$I, 'g'^eki >) ]	\
 	\
 rule name##_I_2:	\
-   [ name##_I_1( $I, $R, ~ni ), Knows( <$R, Gr> ) ]	\
+   [ name##_I_1( $I, $R, ~ni ), In( <$R, Gr> ) ]	\
    -->	\
    [ name##_I_2( $I, $R, ~ni, Gr ) ]	\
 	\
 rule name##_R_1:	\
-   [ Knows( <I, Gi> ) ] --> [ name##_R_1( I, $R, Gi ) ]	\
+   [ In( <I, Gi> ) ] --> [ name##_R_1( I, $R, Gi ) ]	\
 	\
 rule name##_R_2:	\
-   [ name##_R_1( I, $R, Gi ), Fresh( ~nr ) ]	\
+   [ name##_R_1( I, $R, Gi ), Fr( ~nr ) ]	\
    -->	\
-   [ name##_R_2( I, $R, Gi, ~nr ), Send( <$R, 'g'^ekr> ) ]
+   [ name##_R_2( I, $R, Gi, ~nr ), Out( <$R, 'g'^ekr> ) ]
 
 
 /* Generic construction for session keys */

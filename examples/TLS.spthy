@@ -21,7 +21,7 @@ text{*
 
 // Public key infrastructure
 rule Register_pk:
-  [ Fresh(<'RegisterKey', $A>), Fr(~ltkA) ] 
+  [ Fr(~ltkA) ] 
   --> 
   [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)) ]
 
@@ -31,9 +31,6 @@ rule Get_pk:
 rule Reveal_ltk:
   [ !Ltk(A, ltkA) ] --[ RevLtk(A)    ]-> [ Out(ltkA) ]
 
-// Logging deducability
-rule Deducible:
-  [ In(x)         ] --[ Deducible(x) ]-> []
 
 // Protocol
 
@@ -140,7 +137,7 @@ rule C_3:
 lemma server_key_secrecy:
   "not(Ex S C keyS keyC #k #d.
       SessionKeys(S, C, keyS, keyC) @ k 
-    & Deducible(keyS) @ d
+    & K(keyS) @ d
     & (All #r. RevLtk(S) @ r ==> F)
     & (All #r. RevLtk(C) @ r ==> F)
   )"

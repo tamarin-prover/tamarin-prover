@@ -1,7 +1,7 @@
 theory Test_FOL_prover begin
 
 lemma imp1:
-  "v :> Knows(<x, z*y>) ==> Ex u. u = v & Ex m1 m2. u :> Knows(<m1, m2>)"
+  "v :> In(<x, z*y>) ==> Ex u. u = v & Ex m1 m2. u :> In(<m1, m2>)"
 
 lemma cycle:
   "not(v >+> u & u >+> w & w >+> v)"

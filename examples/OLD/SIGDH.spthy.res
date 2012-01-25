@@ -207,58 +207,58 @@ section{* Finite Variants of the Intruder Rules *}
 section{* Protocol Rules *}
 
  rule (modulo E) Reveal_pk:
-   [ ] --> [ Send( pk(lts($m)) ) ]
+   [ ] --> [ Out( pk(lts($m)) ) ]
    /* has exactly the trivial AC variant */
 
  rule (modulo E) Reveal_lts:
-   [ Knows( m ) ] --> [ LTSR( m ), Send( lts(m) ) ]
+   [ In( m ) ] --> [ LTSR( m ), Out( lts(m) ) ]
    /* has exactly the trivial AC variant */
 
- rule (modulo E) Fresh:
-   [ ] --> [ Fresh( ~x ) ]
+ rule (modulo E) Fr:
+   [ ] --> [ Fr( ~x ) ]
    /* has exactly the trivial AC variant */
 
  rule (modulo E) Reveal_fresh:
-   [ Fresh( ~m ) ] --> [ Send( ~m ) ]
+   [ Fr( ~m ) ] --> [ Out( ~m ) ]
    /* has exactly the trivial AC variant */
 
- rule (modulo E) Knows:
-   [ m ] --> [ Knows( m ) ]
+ rule (modulo E) In:
+   [ m ] --> [ In( m ) ]
    /* has exactly the trivial AC variant */
 
  rule (modulo E) Learn:
-   [ Send( m ) ] --> [ m ]
+   [ Out( m ) ] --> [ m ]
    /* has exactly the trivial AC variant */
 
  rule (modulo E) reveal_pk:
-   [ ] --> [ Send( 'g'^sk(lts($X)) ) ]
+   [ ] --> [ Out( 'g'^sk(lts($X)) ) ]
    /* has exactly the trivial AC variant */
 
  rule (modulo E) sigdh_I_1:
-   [ Fresh( ~ni ) ]
+   [ Fr( ~ni ) ]
    -->
    [ sigdh_I_1( $I, $R, ~ni ),
-     Send( <$I, sign{<'1', 'g'^~ni, $R>}sk(lts($I))> ) ]
+     Out( <$I, sign{<'1', 'g'^~ni, $R>}sk(lts($I))> ) ]
    /* has exactly the trivial AC variant */
 
  rule (modulo E) sigdh_I_2:
    [ sigdh_I_1( $I, $R, ~ni ),
-     Knows( <$R, sign{<'2', Gr, $I>}sk(lts($R))> ) ]
+     In( <$R, sign{<'2', Gr, $I>}sk(lts($R))> ) ]
    -->
    [ sigdh_I_2( $I, $R, ~ni, Gr ) ]
    /* has exactly the trivial AC variant */
 
  rule (modulo E) sigdh_R_1:
-   [ Knows( <I, sign{<'1', Gi, $R>}sk(lts(I))> ) ]
+   [ In( <I, sign{<'1', Gi, $R>}sk(lts(I))> ) ]
    -->
    [ sigdh_R_1( I, $R, Gi ) ]
    /* has exactly the trivial AC variant */
 
  rule (modulo E) sigdh_R_2:
-   [ sigdh_R_1( I, $R, Gi ), Fresh( ~nr ) ]
+   [ sigdh_R_1( I, $R, Gi ), Fr( ~nr ) ]
    -->
    [ sigdh_R_2( I, $R, Gi, ~nr ),
-     Send( <$R, sign{<'2', 'g'^~nr, I>}sk(lts($R))> ) ]
+     Out( <$R, sign{<'2', 'g'^~nr, I>}sk(lts($R))> ) ]
    /* has exactly the trivial AC variant */
 
  rule (modulo E) SeKeyI:
@@ -342,11 +342,11 @@ section{* Typing Assertion Soundness Proofs *}
 section{* Security Properties *}
 
 lemma (modulo E) I_secrecy_ephkeys:
-  "((#v :> sigdh_I_2( $I, $R, ~ni, Gr )) & (#u :> Knows( ~ni ))) ==>
+  "((#v :> sigdh_I_2( $I, $R, ~ni, Gr )) & (#u :> In( ~ni ))) ==>
    (Ex #rN1 Agv2. (#rN1 :> LTSR( Agv2 )) & ((Agv2 = $I) | (Agv2 = $R)))"
 /* proof based on the same lemma modulo AC */
-solve( #u4 :> Knows( ~ni2 ) )
-  case Knows
+solve( #u4 :> In( ~ni2 ) )
+  case In
   solve( #v5 :> sigdh_I_2( $I, $R1, ~ni2, Gr3 ) )
     case sigdh_I_2
     solve( #v5 [0] <: sigdh_I_1( $I, $R1, ~ni2 ) )
@@ -357,11 +357,11 @@ solve( #u4 :> Knows( ~ni2 ) )
 qed
 
 lemma (modulo E) R_secrecy_ephkeys:
-  "((#v :> sigdh_R_2( I, $R, Gi, ~nr )) & (#u :> Knows( ~nr ))) ==>
+  "((#v :> sigdh_R_2( I, $R, Gi, ~nr )) & (#u :> In( ~nr ))) ==>
    (Ex #rN1 Agv2. (#rN1 :> LTSR( Agv2 )) & ((Agv2 = $R) | (Agv2 = I)))"
 /* proof based on the same lemma modulo AC */
-solve( #u4 :> Knows( ~nr1 ) )
-  case Knows
+solve( #u4 :> In( ~nr1 ) )
+  case In
   solve( #v5 :> sigdh_R_2( I3, $R, Gi2, ~nr1 ) )
     case sigdh_R_2
     by solve( #u4 [0] <: ~nr1 )
@@ -369,11 +369,11 @@ solve( #u4 :> Knows( ~nr1 ) )
 qed
 
 lemma (modulo E) I_secrecy_key:
-  "((#vkey :> SeKeyI( k, <$I, $R, Gi, Gr> )) & (#vk :> Knows( k ))) ==>
+  "((#vkey :> SeKeyI( k, <$I, $R, Gi, Gr> )) & (#vk :> In( k ))) ==>
    (Ex #rN1 Agv2. (#rN1 :> LTSR( Agv2 )) & ((Agv2 = $I) | (Agv2 = $R)))"
 /* proof based on the same lemma modulo AC */
-solve( #vk5 :> Knows( k4 ) )
-  case Knows
+solve( #vk5 :> In( k4 ) )
+  case In
   solve( #vkey6 :> SeKeyI( k4, <$I, $R1, Gi2, Gr3> ) )
     case SeKeyI
     solve( #vkey6 [0] <: sigdh_I_2( $I, $R1, ~ni12, Gr3 ) )
@@ -423,11 +423,11 @@ solve( #vk5 :> Knows( k4 ) )
 qed
 
 lemma (modulo E) R_secrecy_key:
-  "((#vkey :> SeKeyR( k, <I, $R, Gi, Gr> )) & (#vk :> Knows( k ))) ==>
+  "((#vkey :> SeKeyR( k, <I, $R, Gi, Gr> )) & (#vk :> In( k ))) ==>
    (Ex #rN1 Agv2. (#rN1 :> LTSR( Agv2 )) & ((Agv2 = $R) | (Agv2 = I)))"
 /* proof based on the same lemma modulo AC */
-solve( #vk5 :> Knows( k4 ) )
-  case Knows
+solve( #vk5 :> In( k4 ) )
+  case In
   solve( #vkey6 :> SeKeyR( k4, <I3, $R, Gi1, Gr2> ) )
     case SeKeyR
     solve( #vkey6 [0] <: sigdh_R_2( I3, $R, Gi1, ~nr12 ) )

@@ -7,6 +7,7 @@ of Protocols Based on TPM State Registers," csf, pp.66-80, 2011 IEEE 24th
 Computer Security Foundations Symposium, 2011.
 *}
 
+// TODO: Adapt this model to change in Fresh rule.
 
 // TPM PCR model
 rule PCR_Init:
@@ -122,8 +123,6 @@ rule CreateLockedKey:
     , Out(pk(~sk))
     ]
 
-// Deducability
-rule Deducible: [ In(x) ] --[ Deducible(x) ]-> []
 
 lemma types [typing]:
   " (All x #i. PCR_Read(x) @ i ==>
@@ -153,7 +152,7 @@ lemma PCR_Update_Unique [reuse]:
 */
 
 lemma reachable_Denied:
-  "not(Ex s #i #j #k. Secret(s) @ i & Denied(s) @ j & Deducible(s) @ k)"
+  "not(Ex s #i #j #k. Secret(s) @ i & Denied(s) @ j & K(s) @ k)"
 
 // lemma reachable_Denied:
   // "not(Ex s #i #j. Secret(s) @ i & Denied(s) @ j)"
@@ -183,8 +182,8 @@ lemma secrecy:
       (All t #e. Ineq(t,t) @ e ==> F)
     & (Ex s0 s1 #i #d0 #d1. 
           Secrets(s0, s1) @ i
-        & Deducible(s0) @ d0
-        & Deducible(s1) @ d1
+        & K(s0) @ d0
+        & K(s1) @ d1
       )
     )"
 

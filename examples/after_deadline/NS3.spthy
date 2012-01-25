@@ -45,7 +45,7 @@ lemma I_ni_secrecy:
    is uncompromised since he is an actor. */
 lemma R_nr_secrecy:
   "vi :> NS3_R_3( R, nr, I, ni ) &
-   vk <: Knows(nr)
+   vk <: In(nr)
    ==>
    (Ex #vr. vr :> LTSR(I)) |
    (Ex #va #vl A. vl :> LTSR(A) & va :> Actor(A))

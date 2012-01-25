@@ -80,9 +80,6 @@ rule RenewKey:
     , Out( sk )
     ]
 
-// logging deducible messages
-rule Deducible: [ In(x) ] --[ Deducible(x) ]-> []
-
 // Typing lemma.
 lemma types [typing]:
   "All sk #i. Revoked(sk) @ i ==>
@@ -106,8 +103,8 @@ while he's waiting for the key confirmation.
 // \S,H.
 // iknows(inv(PK)).PK in db(S,H,valid)
 // =>attack;
-lemma Knows_Honest_Key_imp_Revoked:
-  "All sk #i #d. HonestKey(sk) @ i & Deducible(sk) @ d ==>
+lemma In_Honest_Key_imp_Revoked:
+  "All sk #i #d. HonestKey(sk) @ i & K(sk) @ d ==>
       (Ex #r. Revoked(sk) @ r)
   "
 

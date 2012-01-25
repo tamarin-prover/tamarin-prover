@@ -45,7 +45,7 @@ rule SeKeyR:
 rule SeKey_compr: 
    [ SeKey(k, params) ]
    -->
-   [ SeKeyCompr(k, params), Send(k) ]
+   [ SeKeyCompr(k, params), Out(k) ]
 */
 
 subsection{* Secrecy Properties *}
@@ -81,11 +81,11 @@ lemma R_secrecy_key:
 
 /*
 lemma I_key_pfs:
-  "v :> iso_I_3(I, ni, R, hkr) & u :> Knows(hkr ^ fr(ni))
+  "v :> iso_I_3(I, ni, R, hkr) & u :> In(hkr ^ fr(ni))
    ==> Ex r. r :> LTSR(R) & r >+> v"
 
 lemma R_key_pfs:
-  "v :> iso_R_3(I, nr, R, hki) & u :> Knows(hki ^ fr(nr))
+  "v :> iso_R_3(I, nr, R, hki) & u :> In(hki ^ fr(nr))
    ==> Ex r. r :> LTSR(I) & r >+> v"
 
 lemma I_niagree:

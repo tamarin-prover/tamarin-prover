@@ -53,16 +53,16 @@ anb-proto KEP
 subsection{* Adversary Model *}
 
 rule Reveal_pk:
-  [ ] --> [ Send( pk(lts($m)) ) ]
+  [ ] --> [ Out( pk(lts($m)) ) ]
 
 /*
 rule Reveal_lts:
-  [ Knows( m ) ] --> [ LTSR( m ), Send( lts(m) ) ]
+  [ In( m ) ] --> [ LTSR( m ), Out( lts(m) ) ]
 
 rule SeKey_Reveal:
   [ SeKey(k, params) ] 
   --> 
-  [ SeKeyReveal(k, params), Send(k) ]
+  [ SeKeyReveal(k, params), Out(k) ]
 
   type assertions: k: h(x,y)
 */
@@ -71,7 +71,7 @@ subsection{* Security Properties *}
 
 lemma SeKey_secrecy:
   "key   :> SeKey(k, <role, I,R,ni,nr>) & 
-   knows :> Knows(k)
+   knows :> In(k)
    ==>
      (Ex #vr. vr :> LTSR(I))
    | (Ex #vr. vr :> LTSR(R))

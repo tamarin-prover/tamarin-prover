@@ -16,7 +16,6 @@ property (of P)
 // Setup PKI.
 rule Register_ltk:
   [ Fr(~sk)
-  , Fr(<'setup_ltk',$A,~sk>)
   ] 
   -->
   [ !LTK($A, ~sk)
@@ -28,9 +27,6 @@ rule Reveal_ltk:
   [ !LTK($A, sk) ]
   --[ Rev($A) ]->
   [ Out(sk) ]
-
-// The adversary can logging deducible messages
-rule Deducible: [ Knows(m) ] --[ Deducible(m) ]-> []
 
 // The initiator starts a session to check the aliveness of the responder by
 // requiring him to return a nonce.
@@ -61,12 +57,12 @@ rule Init_2:
 // Despite assuming typed model, we can only prove the
 // following lemma, if we have implicit unpairing.
 lemma Secret:
-  "All m I R #i #j. Secret(m, I, R)@i & Deducible(m)@j ==>
+  "All m I R #i #j. Secret(m, I, R)@i & K(m)@j ==>
     ( (Ex #r. Rev(I)@r) | (Ex #r. Rev(R)@r) )
   "
 
 /*
-rule Send:
+rule Out:
   [ Fr(~ni)
   ]
   --[ Start(~ni, $I, $R) ]->

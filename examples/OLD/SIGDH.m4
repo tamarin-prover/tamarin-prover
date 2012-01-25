@@ -14,10 +14,10 @@ text{*
 *}
 
 rule Reveal_pk:
-  [ ] --> [ Send( pk(lts($m)) ) ]
+  [ ] --> [ Out( pk(lts($m)) ) ]
 
 rule Reveal_lts:
-  [ Knows( m ) ] --> [ LTSR( m ), Send( lts(m) ) ]
+  [ In( m ) ] --> [ LTSR( m ), Out( lts(m) ) ]
 
 
 /* Protocol rules */

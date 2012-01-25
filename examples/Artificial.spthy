@@ -4,19 +4,19 @@ begin
 section{* The Running Example of our POST 12 Paper *}
 
 rule Step1:
-  [ Fresh(~x), Fresh(~k) ] 
+  [ Fr(~x), Fr(~k) ] 
   --> 
-  [ St(~x, ~k), Send(senc{~x}~k), Key(~k) ]
+  [ St(~x, ~k), Out(senc{~x}~k), Key(~k) ]
 
 rule Step2:
-  [ St(x, k), Knows(<x,x>) ] 
+  [ St(x, k), In(<x,x>) ] 
   --[ Fin(x, k) ]-> 
   [ ]
 
 rule Reveal_key:
     [ Key(k) ]
   --[ Rev(k) ]->
-    [ Send(k) ]
+    [ Out(k) ]
 
 lemma Characterize_Fin:
   "not( Ex k S #i.  Fin(S, k) @ i )

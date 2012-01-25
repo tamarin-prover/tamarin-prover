@@ -1,12 +1,12 @@
 theory test_lemma_variants begin
 
 
-hello: [] --> [ Knows( 'g'^m ) ]
+hello: [] --> [ In( 'g'^m ) ]
 
 
 
 lemma test1:
-  "m = n & v :> Knows( 'g'^m ) "
+  "m = n & v :> In( 'g'^m ) "
 
 
 

@@ -6,43 +6,43 @@ section{* The NAXOS Key-Exchange Protocol *}
 /* Protocol rules */
 
 rule generate_ltk:
-   [ Fresh( <'RegisterKey',$A> ), Fresh(~lk) ] -->
-   [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Send( 'g'^~lk ) ]
+   [ Fr( <'RegisterKey',$A> ), Fr(~lk) ] -->
+   [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
 
 rule Init_1:
-   [ Fresh( ~ekI ), !Ltk( $A, ~lkI ) ]
+   [ Fr( ~ekI ), !Ltk( $A, ~lkI ) ]
    -->
-   [ Init_1( ~ekI, $I, $R, ~lkI ), Send( 'g'^h(~lkI, ~ekI ) ) ]
+   [ Init_1( ~ekI, $I, $R, ~lkI ), Out( 'g'^h(~lkI, ~ekI ) ) ]
 
 rule Init_2:
-   [ Init_1( ~ekI, $I, $R, ~lkI ), Knows( Y ), !Pk( $R,'g'^~lkR ) ]
+   [ Init_1( ~ekI, $I, $R, ~lkI ), In( Y ), !Pk( $R,'g'^~lkR ) ]
    --[Sessk( ~ekI, $I, $R, h( <Y^~lkI, ('g'^~lkR)^h(~lkI, ~ekI ), Y^h(~lkI, ~ekI ), $I, $R> ) ) ]->
    [ Sessk( ~ekI, $I, $R, h( <Y^~lkI,  ('g'^~lkR)^h(~lkI, ~ekI ), Y^h(~lkI, ~ekI ), $I, $R> ) ) ]
 
 /* previous rule requires lemma that !Pk argument always has a certain form
 rule Init_2:
-   [ Init_1( ~ekI, $I, $R, ~lkI ), Knows( Y ), !Pk( $R,pkR ) ]
+   [ Init_1( ~ekI, $I, $R, ~lkI ), In( Y ), !Pk( $R,pkR ) ]
    --[Sessk( ~ekI, $I, $R, h( <Y^~lkI, pkR^h(~lkI, ~ekI ), Y^h(~lkI, ~ekI ), $I, $R> ) ) ]->
    [ Sessk( ~ekI, $I, $R, h( <Y^~lkI, pkR^h(~lkI, ~ekI ), Y^h(~lkI, ~ekI ), $I, $R> ) ) ]
 */
 
 rule Resp_1:
-   [ Knows( X ), Fresh( ~ekR ), !Ltk(R, ~lkR) ]
+   [ In( X ), Fr( ~ekR ), !Ltk(R, ~lkR) ]
    -->
-   [ Send( 'g'^h(~lkR, ~ekR ) )  ]
+   [ Out( 'g'^h(~lkR, ~ekR ) )  ]
 
 rule Sessk_reveal: 
    [ Sessk(~tid, $I, $R, k) ]
    --[ SesskRev(~tid) ]->
-   [ Send(k) ]
+   [ Out(k) ]
 
 rule Ltk_reveal:
    [ !Ltk($A, k) ]
    --[ LtkRev($A) ]->
-   [ Send(k) ]
+   [ Out(k) ]
 
 rule log_deducible:
-  [ Knows(x) ]
+  [ In(x) ]
   --[ Deducible(x) ]-> []
 
 /* Security properties */

@@ -13,7 +13,7 @@ section{* The NAXOS Key-Exchange Protocol *}
 
 /* Generate long-term keypair */
 rule generate_ltk:
-   [ Fresh(~lkA) ] -->
+   [ Fr(~lkA) ] -->
    [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
 
 /* Initiator */
@@ -22,7 +22,7 @@ rule generate_ltk:
  * the paper because there the responder property is not specified. */
 
 rule Init_1:
-   [ Fresh( ~ekI ), !Ltk( $I, ~lkI ) ]
+   [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
    --[ SidI_1(~ekI,$I,$R, 'g'^h(< '1', ~ekI, ~lkI >)) ]->
    [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^h(< '1', ~ekI, ~lkI >) ),
      !Ephk(~ekI),
@@ -37,7 +37,7 @@ rule Init_2:
 
 /* Responder */
 rule Resp_1:
-   [ In( X ), Fresh( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
+   [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
    --[ SidR_1( ~ekR, $I, $R, X, 'g'^h( < '1', ~lkR, ~ekR > ),
        h(< '2', ('g'^~lkI)^h(< '1', ~ekR, ~lkR >) ,X^~lkR, X^h(< '1', ~ekR, ~lkR >), $I, $R >) ) ]->
    [ Out( 'g'^h(<'1', ~ekR, ~lkR >) ),
@@ -61,10 +61,6 @@ rule Ephk_reveal:
    --[ EphkRev(~ekA) ]->
    [ Out(~ekA) ]
 
-/* TODO: is the logging of all knowledge facts already enforced? */
-rule log_deducible:
-  [ In(x) ]
-  --[ Deducible(x) ]-> []
 
 /* Security properties */
 
@@ -79,7 +75,7 @@ lemma key_agreement_reachable:
 */
 lemma eCK_initiator_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
+            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not both longterm-key-reveal _and_ ephemeral-key-reveal
 	     * for test thread. */
@@ -113,7 +109,7 @@ lemma eCK_initiator_key:
 */
 lemma eCK_responder_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
+            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not longterm-key-reveal _and_ ephemeral-key-reveal of actor . */
             & not(Ex #i3 #i4. LtkRev( R ) @ i3 & EphkRev( ttest ) @ i4)

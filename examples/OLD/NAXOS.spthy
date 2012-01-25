@@ -29,34 +29,34 @@ text{*
 *}
 
 rule Reveal_pk:
-  [ ] --> [ Send( pk(lts($m)) ) ]
+  [ ] --> [ Out( pk(lts($m)) ) ]
 
 rule Reveal_lts:
-  [ Knows( m ) ] --> [ LTSR( m ), Send( lts(m) ) ]
+  [ In( m ) ] --> [ LTSR( m ), Out( lts(m) ) ]
 
 /* Protocol rules */
 
 
 rule reveal_pk:
-   [ ] --> [ Send('g'^sk(lts($X))) ]
+   [ ] --> [ Out('g'^sk(lts($X))) ]
 
 rule naxos_I_1:
-   [ Fresh( ~ni ) ]
+   [ Fr( ~ni ) ]
    -->
-   [ naxos_I_1( $I, $R, ~ni ), Send( <$I, 'g'^h(<sk(lts($I)), ~ni>) >) ]
+   [ naxos_I_1( $I, $R, ~ni ), Out( <$I, 'g'^h(<sk(lts($I)), ~ni>) >) ]
 
 rule naxos_I_2:
-   [ naxos_I_1( $I, $R, ~ni ), Knows( <$R, Gr> ) ]
+   [ naxos_I_1( $I, $R, ~ni ), In( <$R, Gr> ) ]
    -->
    [ naxos_I_2( $I, $R, ~ni, Gr ) ]
 
 rule naxos_R_1:
-   [ Knows( <I, Gi> ) ] --> [ naxos_R_1( I, $R, Gi ) ]
+   [ In( <I, Gi> ) ] --> [ naxos_R_1( I, $R, Gi ) ]
 
 rule naxos_R_2:
-   [ naxos_R_1( I, $R, Gi ), Fresh( ~nr ) ]
+   [ naxos_R_1( I, $R, Gi ), Fr( ~nr ) ]
    -->
-   [ naxos_R_2( I, $R, Gi, ~nr ), Send( <$R, 'g'^h(<sk(lts($R)), ~nr>) >) ]
+   [ naxos_R_2( I, $R, Gi, ~nr ), Out( <$R, 'g'^h(<sk(lts($R)), ~nr>) >) ]
 
 
 /* Session keys */
@@ -78,7 +78,7 @@ rule SeKeyR:
 rule SeKey_compr: 
    [ SeKey(k, params) ]
    -->
-   [ SeKeyCompr(k, params), Send(k) ]
+   [ SeKeyCompr(k, params), Out(k) ]
 */
 
 subsection{* Secrecy Properties *}
@@ -102,20 +102,20 @@ lemma R_executable:
 
  
 lemma I_secrecy_ephkeys:
-  "( v :> naxos_I_2( $I, $R, ~ni, Gr ) & u :> Knows(h(<sk(lts($I)), ~ni>)) )
+  "( v :> naxos_I_2( $I, $R, ~ni, Gr ) & u :> In(h(<sk(lts($I)), ~ni>)) )
    ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
 
 lemma R_secrecy_ephkeys:
-  "( v :> naxos_R_2( I, $R, Gi, ~nr ) & u :> Knows(h(<sk(lts($R)), ~nr>)) )
+  "( v :> naxos_R_2( I, $R, Gi, ~nr ) & u :> In(h(<sk(lts($R)), ~nr>)) )
    ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
 
  
 lemma I_secrecy_key:
-  "vkey :> SeKeyI(k, <$I, $R, Gi, Gr>) & vk :> Knows(k)
+  "vkey :> SeKeyI(k, <$I, $R, Gi, Gr>) & vk :> In(k)
   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $I) | (Agv = $R)))) "
 
 lemma R_secrecy_key:
-  "vkey :> SeKeyR(k, <I, $R, Gi, Gr>) & vk :> Knows(k)
+  "vkey :> SeKeyR(k, <I, $R, Gi, Gr>) & vk :> In(k)
   ==>  (Ex #rN Agv. ( rN :> LTSR(Agv) & ((Agv = $R) | (Agv = I)))) "
 
 

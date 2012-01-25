@@ -7,6 +7,7 @@ of Protocols Based on TPM State Registers," csf, pp.66-80, 2011 IEEE 24th
 Computer Security Foundations Symposium, 2011.
 *}
 
+// TODO: Adapt this model to change in Fresh rule.
 
 
 // TPM PCR model

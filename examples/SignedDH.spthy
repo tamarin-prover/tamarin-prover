@@ -6,7 +6,7 @@ section{* The Signed Diffie-Hellman Protocol *}
 
 // Public key infrastructure
 rule Register_pk:
-  [ Fr(<'RegisterKey', $A>), Fr(~ltk) ] 
+  [ Fr(~ltk) ] 
   --> 
   [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
 
@@ -19,9 +19,6 @@ rule Reveal_ltk:
     [ !Ltk(A, ltk) ]
   --[ LtkReveal(A) ]->
     [ Out(ltk) ]
-
-// Intruder knowledge logging
-rule Deducible: [ In(m) ] --[ Deducible(m) ]-> []
 
 // Protocol
 rule Init_1:
@@ -52,7 +49,7 @@ rule Resp:
 lemma Perfect_Forward_Secrecy:
   "All I R sessKey #i #k. 
      SessionKey(I,R,sessKey) @ i &
-     Deducible(sessKey) @ k
+     K(sessKey) @ k
      ==>
      ( (Ex #r. LtkReveal(I) @ r & r < i)
      | (Ex #r. LtkReveal(R) @ r & r < i)

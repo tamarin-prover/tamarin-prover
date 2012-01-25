@@ -6,19 +6,19 @@ section{* The Running Example from of our Ascona'11 Talk *}
 enable default_rules
 
 rule CR_C_1:
-  [ Fresh( ~k ) ]
+  [ Fr( ~k ) ]
   -->
-  [ CR_C_1( $S, ~k ), Send( encA{~k}pk(lts($S)) ) ]
+  [ CR_C_1( $S, ~k ), Out( encA{~k}pk(lts($S)) ) ]
 
 rule CR_C_2:
-  [ CR_C_1( $S, ~k ), Knows( h(~k) ) ] 
+  [ CR_C_1( $S, ~k ), In( h(~k) ) ] 
   --> 
   [ CR_C_2( $S, ~k ) ]
 
 rule CR_S_1:
-  [ Knows( encA{k}pk(lts($S)) ) ] 
+  [ In( encA{k}pk(lts($S)) ) ] 
   --> 
-  [ CR_S_1( $S, k ), Send( h(k) ) ]
+  [ CR_S_1( $S, k ), Out( h(k) ) ]
 
 
 /*

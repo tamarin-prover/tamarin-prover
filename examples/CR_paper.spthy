@@ -19,7 +19,7 @@ anb-proto CR
 #ifdef R1
 #ifdef L1
 rule Test:
-  [ Knows(<~x, ~y, y>) ] --[ Attack() ]-> [ Attack () ]
+  [ In(<~x, ~y, y>) ] --[ Attack() ]-> [ Attack () ]
 #endif
 #endif
 
@@ -30,76 +30,70 @@ lemma test:
 
 #endif
 
+end
 
 /*
 // Public key infrastructure
 rule Register_pk:
-  [ Fresh(<'RegisterKey', $A>), Fresh(~ltk) ] 
+  [ Fr(~ltk) ] 
   --> 
   [ !Ltk($A, sk(~ltk)), !Pk($A, pk(~ltk)) ]
 
 rule Get_pk:
   [ !Pk(A, pk) ] 
   --> 
-  [ Send(pk) ]
+  [ Out(pk) ]
 
 rule Reveal_ltk:
     [ !Ltk(A, ltk) ]
   --[ LtkReveal(A) ]->
-    [ Send(ltk) ]
-
-// Intruder knowledge logging
-rule Known:
-    [ Knows(m) ]
-  --[ Knows(m) ]->
-    []
-*/
+    [ Out(ltk) ]
 
 /*
 // Equality checking: Does not work because no message variable
-// allowed in Fresh facts.
+// allowed in Fr facts.
 rule Eq:
-    [ Fresh(<'Eq',x>) ] --> [ !Eq(x,x) ]
+    [ Fr(<'Eq',x>) ] --> [ !Eq(x,x) ]
 
 // Protocol
 rule Init_1:
-  [ Fresh(~k), !Pk($C, pkC), !Pk($S, pkS) ]
+  [ Fr(~k), !Pk($C, pkC), !Pk($S, pkS) ]
   -->
-  [ Init_1( $C, pkC, $S, pkS, ~k ), Send( encA{'1', $C, ~k}pkS ) ]
+  [ Init_1( $C, pkC, $S, pkS, ~k ), Out( encA{'1', $C, ~k}pkS ) ]
 
 rule Init_2:
     [ Init_1( $C, pkC, $S, pkS, ~k )
-    , Knows( encA{'2', $S, ~k}pkC )
+    , In( encA{'2', $S, ~k}pkC )
     ]
   --[ SessKeyI( $C, $S, ~k ) ]->
     [] 
 
 rule Serv_1:
-    [ !Pk(C, pkC), !Pk($S, pkS), Knows( encA{'1', C, k}pkS ) ]
+    [ !Pk(C, pkC), !Pk($S, pkS), In( encA{'1', C, k}pkS ) ]
   --[ SessKeyS( C, $S, k ) ]->
-    [ Send( encA{'2', $S, k}pkC ) ]
+    [ Out( encA{'2', $S, k}pkC ) ]
 */
 
 /*
 rule Init_1:
-  [ Fresh(~k), !Ltk($C, ltkC), !Pk($S, pkS) ]
+  [ Fr(~k), !Ltk($C, ltkC), !Pk($S, pkS) ]
   -->
-  [ Init_1( $C, ltkC, $S, ~k ), Send( encA{'1', $C, ~k}pkS ) ]
+  [ Init_1( $C, ltkC, $S, ~k ), Out( encA{'1', $C, ~k}pkS ) ]
 
 rule Init_2:
     [ Init_1( $C, ltkC, $S, ~k )
-    , Knows( m )
+    , In( m )
     , !Eq( decA{m}ltkC, <'2', $S, ~k> )
     ]
   --[ SessKeyI( $C, $S, ~k ) ]->
     [] 
 
 rule Serv_1:
-    [ !Ltk($S, ltkS), Knows( m ) ]
+    [ !Ltk($S, ltkS), In( m ) ]
     -->
     [ 
   --[ SessKeyS( $S, snd(snd(decA{m}ltkS)) ) ]->
-    [ Send( encA{'2', $S, snd(snd(decA{m}ltkS})) )     ]
+    [ Out( encA{'2', $S, snd(snd(decA{m}ltkS})) )     ]
 */
 
 /*
@@ -107,7 +101,7 @@ lemma Init_secrecy:
   "not(
      Ex S k #ii #ik.
        SessKeyI(S, k) @ ii & 
-       Knows(k) @ ik 
+       K(k) @ ik 
        &
        (All #ir. not(LtkReveal(S) @ ir) | ik < ir)
    )

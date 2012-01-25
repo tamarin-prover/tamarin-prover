@@ -4,35 +4,35 @@ begin
 section{* Kasper's RF Distance Bounding Protocol from his Usenix Paper *}
 
 Prov1:
-  [ Pub( P ), Fresh( Np ) ]
+  [ Pub( P ), Fr( Np ) ]
   -->
   [ Prov1( P, Np )
-  , Send( sign{h(Np)}sk(lts(P)) ) ]
+  , Out( sign{h(Np)}sk(lts(P)) ) ]
 
 Verif1:
-  [ Pub( V ), Fresh( Nv ), Knows( sign{commit}sk(lts(P)) ) ]
+  [ Pub( V ), Fr( Nv ), In( sign{commit}sk(lts(P)) ) ]
   -->
   [ Verif1( V, P, Nv, commit )
   , Challenge( Nv )
-  , Send( Nv ) ]
+  , Out( Nv ) ]
 
 Prov2:
   [ Prov1( P, Np ), Challenge( Nv ) ]
   -->
-  [ Prov2( P, Np, Nv ), Response( Nv, Np ), Send( Np ) ]
+  [ Prov2( P, Np, Nv ), Response( Nv, Np ), Out( Np ) ]
 
 Verif2:
   [ Verif1( V, P, Nv, commit ), Response( Nv, Np )
   -->
-  [ Verif2( V, P, Nv, Np, commit ), Send( <Nv, Np> ) ]
+  [ Verif2( V, P, Nv, Np, commit ), Out( <Nv, Np> ) ]
 
 Prov3:
   [ Prov2( P, Np, Nv ), Pub(V) ]
   -->
-  [ Prov3( P, V, Np, Nv ), Send( sign{V, Np, Nv}sk(lts(P)) ) ]
+  [ Prov3( P, V, Np, Nv ), Out( sign{V, Np, Nv}sk(lts(P)) ) ]
 
 Verif3:
-  [ Verif2( V, P, Nv, Np, commit ), Knows( sign{V, Np, Nv}sk(lts(P)) ) ]
+  [ Verif2( V, P, Nv, Np, commit ), In( sign{V, Np, Nv}sk(lts(P)) ) ]
   -->
   [ Verif3( V, P, Nv, Np, commit ) ]
 
