@@ -242,27 +242,31 @@ ruleNode i rules = do
     (ru, mrconstrs) <- importRule =<< disjunctionOfList rules
     solveRuleConstraints mrconstrs i
     modM sNodes (M.insert i ru)
-    let freshs = do
+    let inFacts = do
+          (v, Fact InFact [m]) <- zip [0..] $ get rPrems ru
+          return $ do
+            j <- freshLVar "vf" LSortNode
+            ruKnows <- mkISendRuleAC m
+            modM sNodes (M.insert j ruKnows)
+            modM sEdges (S.insert $ Edge (NodeConc (j,0)) (NodePrem (i,v)))
+    let freshFacts = do
           (v, Fact FreshFact [m]) <- zip [0..] $ get rPrems ru
           return $ do
             j <- freshLVar "vf" LSortNode
             modM sNodes (M.insert j (mkFreshRuleAC m))
+            unless (isFreshVar m) $ do 
+                -- ensure correct sort for 'm'
+                n <- varTerm <$> freshLVar "n" LSortFresh
+                solveTermEqs SplitNow [Equal m n]
             modM sEdges (S.insert $ Edge (NodeConc (j,0)) (NodePrem (i,v)))
-    let knows = do
-          (v, Fact KnowsFact [m]) <- zip [0..] $ get rPrems ru
-          return $ do
-            j <- freshLVar "vf" LSortNode
-            ruKnows <- mkKnowsRuleAC m
-            modM sNodes (M.insert j ruKnows)
-            modM sEdges (S.insert $ Edge (NodeConc (j,0)) (NodePrem (i,v)))
-    -- solve all Fresh premises
-    sequence_ freshs
-    sequence_ knows
+    -- solve all Fr and In premises
+    sequence_ inFacts
+    sequence_ freshFacts
     return ru
   where
-    mkKnowsRuleAC m = do
+    mkISendRuleAC m = do
         faPrem <- kuFact Nothing m
-        return $ Rule (ProtoInfo KnowsRule) [faPrem] [knowsFact m] []
+        return $ Rule (ProtoInfo ISendRule) [faPrem] [inFact m] [kLogFact m]
 
     mkFreshRuleAC m = Rule (ProtoInfo FreshRule) [] [freshFact m] []
 
@@ -847,7 +851,7 @@ openPremiseGoals se = do
     deducibleNoContr m i = not (null newDeps || any (\d -> D.cyclic (d:otherDeps)) newDeps)
       where newDeps = do
                 (j,ru) <- M.toList $ get sNodes se
-                let msgConcs = [ m' | Fact SendFact [m'] <- get rConcs ru] <|>
+                let msgConcs = [ m' | Fact OutFact [m'] <- get rConcs ru] <|>
                                [ m' | Just (DnK,_,m') <- kFactView <$> get rConcs ru]
                 guard (m `elem` msgConcs)
                 return (j,i)
@@ -949,8 +953,8 @@ solvePremDnK rules p = do
     iLearn    <- freshLVar "vl" LSortNode
     mLearn    <- varTerm <$> freshLVar "t" LSortMsg
     concLearn <- kdFact (Just IsNoExp) mLearn
-    let premLearn = sendFact mLearn
-        ruLearn = Rule (ProtoInfo LearnRule) [premLearn] [concLearn] []
+    let premLearn = outFact mLearn
+        ruLearn = Rule (ProtoInfo IRecvRule) [premLearn] [concLearn] []
         cLearn = NodeConc (iLearn, 0)
         pLearn = NodePrem (iLearn, 0)
     modM sNodes  (M.insert iLearn ruLearn)

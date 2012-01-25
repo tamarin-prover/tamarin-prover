@@ -1,7 +1,7 @@
 theory intruder_variants begin
 
 /* Fixed theory for normal adversary message deduction
-   according to our POST'12 submission
+   according to our CSF'12 submission
 
    Authors: Benedikt Schmidt <beschmi@inf.ethz.ch>
             Simon Meier <simon.meier@inf.ethz.ch>
@@ -276,7 +276,9 @@ rule (modulo AC) pub:
    [ ] --> [ KU( f_, $x ) ]
 
 rule (modulo AC) gen_fresh:
-   [ Fresh( ~x ) ] --> [ KU( 'noexp', ~x ) ]
+   [ Fr( ~x ) ] --> [ KU( 'noexp', ~x ) ]
 
+rule (modulo AC) isend:
+   [ KU( f_, x) ] --[ K(x) ]-> [ In(x) ]
 
 end

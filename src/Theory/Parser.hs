@@ -368,15 +368,12 @@ fact lit =
                                      show (length ts) ++ " instead of arity one"
 
     mkProtoFact multi f = case map toUpper f of
-      "SEND"  -> singleTerm f sendFact 
-      "OUT"   -> singleTerm f sendFact 
-      "KNOWS" -> singleTerm f knowsFact
-      "IN"    -> singleTerm f knowsFact
-      "KU"    -> return . Fact KUFact
-      "KD"    -> return . Fact KDFact
-      "FRESH" -> singleTerm f freshFact
-      "FR"    -> singleTerm f freshFact
-      _       -> return . protoFact multi f
+      "OUT" -> singleTerm f outFact 
+      "IN"  -> singleTerm f inFact
+      "KU"  -> return . Fact KUFact
+      "KD"  -> return . Fact KDFact
+      "FR"  -> singleTerm f freshFact
+      _     -> return . protoFact multi f
 
 
 ------------------------------------------------------------------------------
@@ -412,27 +409,28 @@ typeAssertions = fmap TypingE $
 protoRule :: Parser (ProtoRuleE)
 protoRule = do
     name  <- try (string "rule" *> optional moduloE *> identifier <* kw COLON) 
-    -- FIXME: also parse --[ actions ]->
-    ps    <- list (fact llit) 
-    as    <- (pure [] <* kw LONGRIGHTARROW) <|>
-             (kw MINUS *> kw MINUS *> list (fact llit) <* kw RIGHTARROW)
-    cs    <- list (fact llit)
-    -- types <- typeAssertions
+    (ps,as,cs) <- genericRule
     return $ Rule (StandRule name) ps cs as
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
-intrRule = 
-    Rule <$> try (string "rule" *> moduloAC *> intrInfo <* kw COLON) 
-         <*> list (fact llit) 
-         <*> (kw LONGRIGHTARROW *> list (fact llit)) 
-         <*> pure []
+intrRule = do
+    info <- try (string "rule" *> moduloAC *> intrInfo <* kw COLON) 
+    (ps,as,cs) <- genericRule
+    return $ Rule info ps cs as
   where
     intrInfo = do
         name <- identifier
         if map toUpper name == "COERCE"
           then return $ CoerceRule
           else return $ IntrApp name
+
+genericRule :: Parser ([LNFact], [LNFact], [LNFact])
+genericRule = 
+    (,,) <$> list (fact llit) 
+         <*> ((pure [] <* kw LONGRIGHTARROW) <|>
+              (kw MINUS *> kw MINUS *> list (fact llit) <* kw RIGHTARROW))
+         <*> list (fact llit)
 
 {-
 -- | Add facts to a rule.

@@ -212,9 +212,8 @@ closeRuleCache typingAsms sig protoRules intrRulesAC =
     anyOf ps = partition (\x -> any ($ x) ps)
 
     (nonProto, proto) = 
-        anyOf [ isDestrRule, isConstrRule
-              , isFreshRule, isKnowsRule, isLearnRule] rulesAC
-    (spec, nonSpec)   = anyOf [isLearnRule, isKnowsRule, isFreshRule]  nonProto
+        anyOf [ isDestrRule, isConstrRule , isFreshRule, isIRecvRule] rulesAC
+    (spec, nonSpec)   = anyOf [isIRecvRule, isFreshRule]  nonProto
     (constr, destr)   = anyOf [isConstrRule] nonSpec
     -- FIXME: Learn, knows, fresh, etc. are special rules
 

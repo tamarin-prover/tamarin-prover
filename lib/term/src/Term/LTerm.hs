@@ -35,6 +35,7 @@ module Term.LTerm (
   , sortOfLTerm
   , sortOfLNTerm
   , isMsgVar
+  , isFreshVar
   , trivial
   , input
   
@@ -229,6 +230,11 @@ sortSuffix LSortMSet  = "mset"
 isMsgVar :: LNTerm -> Bool
 isMsgVar (Lit (Var v)) = (lvarSort v == LSortMsg)
 isMsgVar _             = False
+
+-- | Is a term a fresh variable?
+isFreshVar :: LNTerm -> Bool
+isFreshVar (Lit (Var v)) = (lvarSort v == LSortFresh)
+isFreshVar _             = False
 
 -- | The required components to construct the message.
 --   FIXME: Make inv/1 and pair/2 special?

@@ -8,24 +8,24 @@
 -- Wellformedness checks for intruder variants, protocol rules, and
 -- properties.
 --
--- The following checks should be performed (TODO: implement them):
+-- The following checks are/should be performed (implement all)
 --   
 --   [protocol rules] 
 --
 --     1. all facts are used with the same arity.
 --
---     2. fresh, pub, msg, snd, and knows facts are used with arity 1.
+--     2. fr, in, and out, facts are used with arity 1.
 --
---     3. fresh and pub facts contain exactly a single variable.
+--     3. fr facts are used with a variable of sort msg or sort fresh
 --
---     5. fresh facts of the same rule contain different variables.
+--     5. fresh facts of the same rule contain different variables. [TODO]
 --
---     4. no fresh, pub, msg, and knows  facts in conclusions.
+--     4. no fr, or in facts in conclusions.
 --
---     5. no send facts in premises.
+--     5. no out facts in premises.
 --
---     6. no protocol fact uses a reserved name => change parser to ensure
---        this and pretty printer to show this.
+--     6. no protocol fact uses a reserved name => 
+--        [TODO] change parser to ensure this and pretty printer to show this.
 --
 --   [security properties]
 --
@@ -192,7 +192,9 @@ unboundReport thy = do
 -- | Report on facts usage.
 factReports :: OpenTheory -> WfErrorReport
 factReports thy = concat
-    [reservedReport, specialFactsUsage, factUsage, inexistentActions]
+    [ reservedReport, freshFactArguments, specialFactsUsage
+    , factUsage, inexistentActions
+    ]
   where
     ruleFacts ru = 
       ( "rule " ++ quote (showRuleCaseName ru)
@@ -234,17 +236,25 @@ factReports thy = concat
             : map (nest 2) errs 
 
     reservedFactName (ppFa, info@(ProtoFact _ name _, _,_))
-      | map toLower name `elem` ["fresh","knows","ku","kd","send"] =
+      | map toLower name `elem` ["fr","ku","kd","out","in"] =
           return $ ppFa $-$ text ("show:" ++ show info)
     reservedFactName _ = Nothing
+
+    freshFactArguments = do
+       ru                      <- thyProtoRules thy
+       fa@(Fact FreshFact [m]) <- get rPrems ru
+       guard (not (isMsgVar m || isFreshVar m))
+       return $ (,) "Fr facts must only use a fresh- or a msg-variable" $
+           text ("rule " ++ quote (showRuleCaseName ru)) <->
+           text "fact:" <-> prettyLNFact fa
 
     -- Check for the usage of special facts at wrong positions
     specialFactsUsage = do
        ru <- thyProtoRules thy
        let lhs = [ fa | fa <- get rPrems ru
-                      , factTag fa `elem` [KUFact, KDFact, SendFact] ]
+                      , factTag fa `elem` [KUFact, KDFact, OutFact] ]
            rhs = [ fa | fa <- get rConcs ru
-                      , factTag fa `elem` [FreshFact, KUFact, KDFact, KnowsFact] ]
+                      , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
            check _   []  = mzero
            check msg fas = return $ (,) "special fact usage" $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
@@ -270,10 +280,11 @@ factReports thy = concat
 
 
     -- Check that every fact referenced in a formula is present as an action
-    -- of a protocol rule.
-    ruleActions = S.fromList $ do 
-        RuleItem ru <- get thyItems thy
-        factInfo <$> get rActs ru
+    -- of a protocol rule. We have to add the linear "K/1" fact, as the
+    -- WF-check cannot rely on a loaded intruder theory.
+    ruleActions = S.fromList $ ((factInfo (kLogFact undefined)) :) $
+        do RuleItem ru <- get thyItems thy
+           factInfo <$> get rActs ru
 
     inexistentActions = do
         LemmaItem (Lemma name fmE _ _ _) <- get thyItems thy

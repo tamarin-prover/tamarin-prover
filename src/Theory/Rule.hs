@@ -47,8 +47,8 @@ module Theory.Rule (
   , isDestrRule
   , isConstrRule
   , isFreshRule
-  , isLearnRule
-  , isKnowsRule
+  , isIRecvRule
+  , isISendRule
   , isCoerceRule
   , nfRule
   , isTrivialProtoRuleAC
@@ -198,8 +198,8 @@ instance (Apply p, Apply i) => Apply (RuleInfo p i) where
 data ProtoRuleName = 
        -- FIXME: Consider also moving them to intruder/model rules.
          FreshRule
-       | LearnRule
-       | KnowsRule
+       | IRecvRule
+       | ISendRule
        | StandRule String -- ^ Some standard protocol rule
        deriving( Eq, Ord, Show, Data, Typeable )
 
@@ -327,12 +327,12 @@ isFreshRule :: HasRuleName r => r -> Bool
 isFreshRule = (ProtoInfo FreshRule ==) . ruleName
 
 -- | True iff the rule is the special learn rule.
-isLearnRule :: HasRuleName r => r -> Bool
-isLearnRule = (ProtoInfo LearnRule ==) . ruleName
+isIRecvRule :: HasRuleName r => r -> Bool
+isIRecvRule = (ProtoInfo IRecvRule ==) . ruleName
 
 -- | True iff the rule is the special knows rule.
-isKnowsRule :: HasRuleName r => r -> Bool
-isKnowsRule = (ProtoInfo KnowsRule ==) . ruleName
+isISendRule :: HasRuleName r => r -> Bool
+isISendRule = (ProtoInfo ISendRule ==) . ruleName
 
 -- | True iff the rule is the special coerce rule.
 isCoerceRule :: HasRuleName r => r -> Bool
@@ -446,10 +446,10 @@ unifyRuleACInstEqs eqs
 prettyProtoRuleName :: Document d => ProtoRuleName -> d
 prettyProtoRuleName rn = text $ case rn of
     FreshRule  -> "Fresh"
-    LearnRule  -> "Learn"
-    KnowsRule  -> "Knows"
+    IRecvRule  -> "IRecv"
+    ISendRule  -> "ISend"
     StandRule n 
-      | n `elem` ["Fresh", "Learn", "Knows"] -> "_" ++ n
+      | n `elem` ["Fresh", "IRecv", "ISend"] -> "_" ++ n
       | "_" `isPrefixOf` n                   -> "_" ++ n
       | otherwise                            ->        n
 

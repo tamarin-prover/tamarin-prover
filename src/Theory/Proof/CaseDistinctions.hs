@@ -296,7 +296,7 @@ precomputeCaseDistinctions ctxt typAsms =
         ru <- joinNonSpecialRules rules
         fa <- absFact <$> (getProtoFact =<< (get rConcs ru ++ get rPrems ru))
         -- exclude facts handled specially by the prover
-        guard (not $ fst fa `elem` [SendFact, KnowsFact, FreshFact])
+        guard (not $ fst fa `elem` [OutFact, InFact, FreshFact])
         return fa
 
     absMsgFacts :: [LNTerm]

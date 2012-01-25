@@ -107,8 +107,8 @@ importRole prefix role =
     case runState (mapM importStep $ S.roleSteps role) (Nothing, [], []) of
       (rules, (_, _, ps)) -> (rules, ps)
   where
-    importStep (S.Send l pt) = mkRule l pt (const []) (return . sendFact)
-    importStep (S.Recv l pt) = mkRule l pt (return . knowsFact) (const [])
+    importStep (S.Send l pt) = mkRule l pt (const []) (return . outFact)
+    importStep (S.Recv l pt) = mkRule l pt (return . inFact) (const [])
     
     mkRule l pt prems concs = do
         (prevThreadFact, vs, ps) <- get
@@ -169,7 +169,7 @@ importEvent :: S.Event -> LFormulaImport (LVar, LFormula)
 importEvent (S.Learn m) = do
     vi <- freshLVar "l" LSortNode 
     mi <- importMessage m
-    return (vi, Ato (Provides (Free vi) (knowsFact mi)))
+    return (vi, Ato (Provides (Free vi) (inFact mi)))
 importEvent (S.Step _ _) = do
     error "importEvent: Step: not yet implemented"
     {-

@@ -273,7 +273,7 @@ nodeColorMap rules =
   where
     groupIdx ru | isDestrRule ru                   = 0
                 | isConstrRule ru                  = 2
-                | isFreshRule ru || isKnowsRule ru = 3
+                | isFreshRule ru || isISendRule ru = 3
                 | otherwise                        = 1
 
     -- groups of rules labeled with their index in the group
@@ -388,7 +388,7 @@ compressSequent :: Sequent -> Sequent
 compressSequent se = 
     foldl' (flip hideTransferNode) se $ 
     [ x | x@(_, ru) <- M.toList $ get sNodes se
-        , isFreshRule ru || isDestrRule ru || isConstrRule ru || isLearnRule ru || isKnowsRule ru ]
+        , isFreshRule ru || isDestrRule ru || isConstrRule ru || isIRecvRule ru || isISendRule ru ]
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
 -- transfer node; i.e., a node annotated with a rule with exactly one premise
