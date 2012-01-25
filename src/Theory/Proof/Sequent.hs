@@ -166,7 +166,7 @@ nonUniqueFactInstances sig se = do
 
         checkRule jRu    = any ((tag ==) . factTag) (get rPrems jRu) &&
                            k `S.member` D.reachableSet [j] less
-                 
+
     guard isCounterExample
     return (i, j, k) -- counter-example to unique fact instances
   where

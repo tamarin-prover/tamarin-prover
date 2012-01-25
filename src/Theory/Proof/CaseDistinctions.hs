@@ -32,7 +32,8 @@ module Theory.Proof.CaseDistinctions (
 
 import           Safe
 import           Prelude hiding ( (.), id )
-                 
+import           Debug.Trace
+
 import qualified Data.Set         as S
 import qualified Data.DAG.Simple  as D
 import           Data.Foldable (asum)
@@ -43,12 +44,12 @@ import           Control.Monad.Disj
 import           Control.Monad.Bind
 import           Control.Monad.Reader
 import           Control.Monad.State (gets)
-                 
+
 import           Text.Isar
-                 
+
 import           Extension.Prelude
 import           Extension.Data.Label
-                 
+
 import           Theory.Rule
 import           Theory.Proof.Sequent
 
@@ -150,14 +151,15 @@ solveAllSafeGoals
 solveAllSafeGoals nonLoopingFact ths = 
     solve []
   where
-    safeGoal _            (ChainG _)    = True
-    safeGoal _            (PremDnKG _)  = True
-    safeGoal _            (ActionG _ _) = True
-    safeGoal splitAllowed (DisjG _)     = splitAllowed
+    safeGoal _            (ChainG _)      = True
+    safeGoal _            (PremDnKG _)    = True
+    safeGoal _            (ActionG _ _)   = True
+    safeGoal splitAllowed (DisjG _)       = splitAllowed
     -- NOTE: Uncomment the line below to get more extensive case splitting
     -- for precomputed case distinctions.
     -- safeGoal splitAllowed (SplitG _ _) = splitAllowed
-    safeGoal _            _            = False
+    safeGoal _            (PremiseG _ fa) = nonLoopingFact fa
+    safeGoal _            _               = False
 
     nonLoopingGoal (PremiseG _ fa) = nonLoopingFact fa
     nonLoopingGoal _               = True
@@ -296,7 +298,7 @@ precomputeCaseDistinctions ctxt typAsms =
         -- exclude facts handled specially by the prover
         guard (not $ fst fa `elem` [SendFact, KnowsFact, FreshFact])
         return fa
-    
+
     absMsgFacts :: [LNTerm]
     absMsgFacts = asum $ sortednub $ 
       [ do return $ Lit $ Var (LVar "t" LSortFresh 1)
@@ -331,7 +333,8 @@ refineWithTypingAsms typAsms ctxt cases0 =
 -- distinctions.
 saturationLoopBreakers :: ProofContext -> (LNFact -> Bool)
 saturationLoopBreakers ctxt =
-    \fa -> absFact fa `S.notMember` loopBreakers absProtoFactRel
+    trace (" loop breakers: " ++ show (loopBreakers absProtoFactRel)) $
+      \fa -> absFact fa `S.notMember` loopBreakers absProtoFactRel
   where
     rules = get pcRules ctxt
     -- detect cycles on abstracted protocol facts; i.e.,  (tag, arity) facts
