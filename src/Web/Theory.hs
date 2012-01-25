@@ -275,7 +275,7 @@ htmlCaseDistinction kind (j, th) =
                                , text " / named ", doubleQuotes (text name) ]
       , refDotPath (TheoryCaseDist kind j i)
       , withTag "p" [] $ ppPrem <-> text "provided by conclusion" <-> prettyNodeConc conc
-      , wrapP $ prettySequent se
+      , wrapP $ prettyNonGraphSequent se
       ]
       where
         name = intercalate "_" names
