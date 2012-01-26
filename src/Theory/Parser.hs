@@ -35,21 +35,6 @@ import           Theory.Lexer
                    , alexGetPos, alexMonadScan
                    )
 
-{-
-import Scyther.Theory.Parser 
-         ( kw, list,
-           -- commaSep1,
-           parens,
-           -- braced,
-           singleQuoted, doubleQuoted,
-           string,
-           -- genFunApp, funApp,
-           identifier, Keyword(..), parseFile,
-           strings, scanString, integer
-         )
-import qualified Scyther.Theory.Parser  as S
--}
-
 import Text.Isar (render)
 
 import Theory
@@ -307,20 +292,38 @@ llit = asum
     , varTerm    <$> msgvar
     ]
 
+-- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
+-- if the operator is not known.
+lookupNonACArity :: String -> Parser Int
+lookupNonACArity op =
+    case lookup op (funSigForMaudeSig allMaudeSig) of
+        Nothing -> fail $ "unknown operator `" ++ op ++ "'"
+        Just k  -> return k
+
 -- | Parse an n-ary operator application for arbitrary n.
 naryOpApp :: Parser (Term l) -> Parser (Term l)
 naryOpApp lit = do
     op <- identifier
-    ts <- parens (sepBy (multterm lit) (kw COMMA))
-    return $ FApp (NonAC (op, length ts)) ts
+    k  <- lookupNonACArity op
+    ts <- parens $ if k == 1
+                     then return <$> tupleterm lit
+                     else sepBy (multterm lit) (kw COMMA)
+    let k' = length ts
+    when (k /= k') $
+        fail $ "operator `" ++ op ++"' has arity " ++ show k ++
+               ", but here it is used with arity " ++ show k'
+    return $ FApp (NonAC (op, k')) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Parser (Term l) -> Parser (Term l)
 binaryAlgApp lit = do
-    i <- identifier
+    op <- identifier
+    k <- lookupNonACArity op
     arg1 <- kw LBRACE *> tupleterm lit <* kw RBRACE
     arg2 <- term lit
-    return $ FApp (NonAC (i,2)) [arg1, arg2]
+    when (k /= 2) $ fail $ 
+      "only operators of arity 2 can be written using the `op{t1}t2' notation"
+    return $ FApp (NonAC (op, 2)) [arg1, arg2]
 
 -- | Parse a term.
 term :: Parser (Term l) -> Parser (Term l)
