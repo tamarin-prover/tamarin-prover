@@ -67,7 +67,7 @@ applyMethodAtPath :: ClosedTheory -> String -> ProofPath
 applyMethodAtPath thy lemmaName proofPath i = do
     lemma <- lookupLemma lemmaName thy
     subProof <- get lProof lemma `atPath` proofPath
-    methods <- applicableProofMethodsSorted thy <$> psInfo (root subProof)
+    methods <- applicableProofMethods thy <$> psInfo (root subProof)
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPath thy lemmaName proofPath 
       (oneStepProver method `mappend` 
@@ -245,7 +245,7 @@ subProofSnippet thy mkProofPath mkPrfMethodPath prf =
       (mkPrfMethodPath i) ["proof-method"] (prettyProofMethod m)
 
     nCases   = show $ M.size $ children prf
-    proofMethods = map prettyPM . zip [1..] . applicableProofMethodsSorted thy
+    proofMethods = map prettyPM . zip [1..] . applicableProofMethods thy
     subCases = concatMap refSubCase $ M.toList $ children prf 
     refSubCase (name, prf') = 
         [ withTag "h4" [] (text "Case" <-> text name)

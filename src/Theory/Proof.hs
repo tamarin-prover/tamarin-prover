@@ -445,10 +445,9 @@ execProofMethod ctxt method se =
              error $ "execMethod: unexpected number of sequents: " ++ show (length ses) ++
                      render (nest 2 $ vcat $ map ((text "" $-$) . prettySequent) ses)
 
-    -- solve the given goal, if it is implied by the sequent
+    -- solve the given goal
+    -- PRE: Goal must be valid in this sequent.
     execSolveGoal goal = do
-        -- guard (goal `isGoal` se)
-        -- FIXME: Check that this really is a goal of the sequent.
         return $ makeCaseNames $ map fst $ getDisj $ 
             runSeProof solver ctxt se (avoid se)
       where
@@ -686,7 +685,6 @@ prettyContradiction contra = case contra of
     Cyclic                    -> text "cyclic"
     IncompatibleEqs           -> text "incompatible equalities"
     NonNormalTerms            -> text "non-normal terms"
-    -- NonLastNode            -> text "node after last"
     ForbiddenExp              -> text "non-normal exponentiation instance"
     NonUniqueFactInstance cex -> text $ "non-unique facts" ++ show cex
     FormulasFalse             -> text "from formulas"

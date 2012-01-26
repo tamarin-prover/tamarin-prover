@@ -62,7 +62,6 @@ module Theory (
   , ProofSkeleton
   , proveTheory
   , applicableProofMethods
-  , applicableProofMethodsSorted
 
   -- ** Lemma references
   , lookupLemmaProof
@@ -87,7 +86,6 @@ import           Prelude hiding ( (.), id )
 import           Data.Maybe
 import           Data.Monoid (Sum(..))
 import qualified Data.Set as S
-import qualified Data.Map as M
 import           Data.List
 import           Data.Foldable (Foldable, foldMap)
 import           Data.Traversable (Traversable, traverse)
@@ -97,7 +95,6 @@ import           Control.Category
 import qualified Control.Monad.State as MS
 
 import           Extension.Data.Label 
-import           Extension.Prelude
 
 import           Text.Isar
                  
@@ -514,18 +511,6 @@ applicableProofMethods thy se = do
     return m
   where
     ctxt = getProofContext (get sCaseDistKind se) thy
-
-
--- | A list of proof methods that could be applied to the given sequent
--- sorted in the same order as auto would use.
-applicableProofMethodsSorted :: ClosedTheory -> Sequent -> [ProofMethod]
-applicableProofMethodsSorted thy se = map fst $ sortOn measure $ do
-    m <- possibleProofMethods (get pcSignature ctxt) se
-    (m,) <$> maybe [] return (execProofMethod ctxt m se)
-  where
-    measure (_m,a) = M.size a
-    ctxt           = getProofContext (get sCaseDistKind se) thy
-
 
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.

@@ -11,6 +11,9 @@ Portability :  non-portable
 
 {-# LANGUAGE MultiParamTypeClasses, OverloadedStrings, TemplateHaskell, TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+-- FIXME: See how we can get rid of the Template Haskell induced warning, such
+-- that we have the warning again for our code.
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module Web.Dispatch 
   ( withWebUI 
