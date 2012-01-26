@@ -137,7 +137,8 @@ sortsClashCheck info t = case clashesOn removeSort id $ frees t of
 ruleSortsReport :: OpenTheory -> WfErrorReport
 ruleSortsReport thy = do
     ru <- thyProtoRules thy
-    sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++ " clashing sorts:") ru
+    sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++ 
+                     " clashing sorts, casings, or multiplicities:") ru
 
 -- | Report on fresh names.
 freshNamesReport :: OpenTheory -> WfErrorReport
