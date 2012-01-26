@@ -80,7 +80,7 @@ hashMaudeSig      = emptyMaudeSig { funSig = hashFunSig,    rrules = [] }
 -- | Maude signatures with all builtin symbols.
 allMaudeSig :: MaudeSig
 allMaudeSig = mconcat
-    [ dhMaudeSig, xorMaudeSig, msetMaudeSig
+    [ dhMaudeSig -- , xorMaudeSig, msetMaudeSig
     , pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, hashMaudeSig ]
 
 -- | @rrulesForMaudeSig msig@ returns all rewriting rules including the rules
