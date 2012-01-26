@@ -62,7 +62,7 @@ import           Term.Maude.Types
                     hashMaudeSig)
 
 import           Debug.Trace.Ignore
-import qualified Debug.Trace as DT
+-- import qualified Debug.Trace as DT
 
 -- Unification modulo AC
 ----------------------------------------------------------------------

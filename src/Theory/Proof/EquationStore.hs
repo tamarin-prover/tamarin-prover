@@ -208,11 +208,12 @@ simp1 hnd = do
     b2 <- simpRemoveRenamings
     b3 <- simpEmptyDisj
     b4 <- foreachDisj hnd simpSingleton
-    b5 <- foreachDisj hnd simpIdentify
-    b6 <- foreachDisj hnd simpAbstractFun
-    b7 <- foreachDisj hnd simpAbstractName
+    b5 <- foreachDisj hnd simpAbstractSortedVar
+    b6 <- foreachDisj hnd simpIdentify
+    b7 <- foreachDisj hnd simpAbstractFun
+    b8 <- foreachDisj hnd simpAbstractName
     s' <- MS.get
-    (trace (show ("simp:", [b1, b2, b3, b4, b5, b6, b7], s, s'))) $ return $ (or [b1, b2, b3, b4, b5, b6, b7])
+    (trace (show ("simp:", [b1, b2, b3, b4, b5, b6, b7, b8], s, s'))) $ return $ (or [b1, b2, b3, b4, b5, b6, b7, b8])
 
 -- | Remove variable renamings in fresh substitutions.
 simpRemoveRenamings :: MonadFresh m => StateT EqStore m Bool
@@ -294,12 +295,11 @@ simpAbstractFun (Disj (subst:others)) = case commonOperators of
         newMappings (a:as)  = [(fv1, a),  (fv2, FApp o as)]
 
 
--- | If all substitutions @si@ map a variable @v@ to terms with the same
---   outermost function symbol @f@, then they all contain the common factor
---   @{v |-> f(x1,..,xk)}@ for fresh variables xi and we can replace
---   @x |-> ..@ by @{x1 |-> ti1, x2 |-> ti2, ..}@ in all substitutions @si@.
+-- | If all substitutions @si@ map a variable @v@ to the same name @n@,
+--   then they all contain the common factor 
+--   @{v |-> n}@ and we can remove @{v -> n} from all substitutions @si@
 simpAbstractName :: MonadFresh m => Disj LNSubstVFresh
-                             -> m (Maybe (Maybe LNSubst, [Disj LNSubstVFresh]))
+                                 -> m (Maybe (Maybe LNSubst, [Disj LNSubstVFresh]))
 simpAbstractName (Disj [])             = return Nothing
 simpAbstractName (Disj (subst:others)) = case commonNames of
     []           -> return Nothing
@@ -311,8 +311,35 @@ simpAbstractName (Disj (subst:others)) = case commonNames of
     commonNames = do
         (v, c@(Lit (Con _))) <- substToListVFresh subst
         let images = map (\s -> imageOfVFresh s v) others
-        guard (length others == length [ () | Just c' <- images, c' == c])
+        guard (length images == length [ () | Just c' <- images, c' == c])
         return (v, c)
+
+-- | If all substitutions @si@ map a variable @v@ to variables @xi@ of the same
+--   sort @s@ then they all contain the common factor 
+--   @{v |-> y}@ for a fresh variable of sort @s@
+--   and we can replace @{v -> xi}@ by @{y -> xi} in all substitutions @si@
+simpAbstractSortedVar :: MonadFresh m => Disj LNSubstVFresh
+                                      -> m (Maybe (Maybe LNSubst, [Disj LNSubstVFresh]))
+simpAbstractSortedVar (Disj [])             = return Nothing
+simpAbstractSortedVar (Disj (subst:others)) = case commonSortedVar of
+    []            -> return Nothing
+    (v, s, lvs):_ -> do
+        fv <- freshLVar (lvarName v) s
+        return $ Just (Just $ substFromList [(v, varTerm fv)]
+                      , [Disj (zipWith (replaceMapping v fv) lvs (subst:others))])
+  where
+    commonSortedVar = do
+        (v, (Lit (Var lx))) <- substToListVFresh subst
+        guard (sortCompare (lvarSort v)  (lvarSort lx) == Just GT)
+        let images = map (\s -> imageOfVFresh s v) others
+            -- FIXME: could be generalized to choose topsort s of all images if s < sortOf v
+            --        could also be generalized to terms of a given sort
+            goodImages = [ ly | Just (Lit (Var ly)) <- images, lvarSort lx == lvarSort ly]
+        guard (length images == length goodImages)
+        return (v, lvarSort lx, (lx:goodImages))
+    replaceMapping v fv lv sigma =
+        substFromListVFresh $ (filter ((/=v) . fst) $ substToListVFresh sigma) ++ [(fv, varTerm lv)]
+
 
 
 -- | If all substitutions @si@ map two variables @x@ and @y@ to identical terms @ti@,
