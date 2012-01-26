@@ -292,8 +292,8 @@ theoryLoadFlags =
   [ flagNone ["prove"] (addEmptyArg "addProofs")
       "Try to prove lemmas (implies --variants)"
 
-  , flagOpt "dfs" ["stop-on-attack"] (updateArg "stopOnAttack") "DFS|BFS"
-      "Method to stop proof search if an attack is found"
+  , flagOpt "dfs" ["stop-on-attack"] (updateArg "stopOnAttack") "DFS|BFS|NONE"
+      "Method to stop proof search if an attack is found (default DFS)"
 
   , flagOpt "5" ["bound", "b"]   (updateArg "bound") "INT"
       "Bound the depth of the proofs"
@@ -388,10 +388,11 @@ closeThy as =
        | otherwise     = mempty
        where 
          cutAttack = mapProverProof $ case map toLower <$> stopOnAttack of
-           Nothing    -> id
-           Just "dfs" -> cutOnAttackDFS
-           Just "bfs" -> cutOnAttackBFS
-           Just other -> error $ "unknown stop-on-attack method: " ++ other
+           Nothing     -> cutOnAttackDFS
+           Just "dfs"  -> cutOnAttackDFS
+           Just "none" -> id
+           Just "bfs"  -> cutOnAttackBFS
+           Just other  -> error $ "unknown stop-on-attack method: " ++ other
        
 ------------------------------------------------------------------------------
 -- Tool paths (shared between interactive and batch mode)
