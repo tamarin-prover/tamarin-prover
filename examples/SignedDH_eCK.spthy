@@ -5,26 +5,26 @@ section{* The Signed Diffie-Hellman Protocol in the eCK model *}
 
 // Public key infrastructure
 rule Register_pk:
-  [ Fr(<'RegisterKey', $A>), Fr(~ltk) ] 
+  [ Fr(~ltk) ] 
   --> 
-  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk) ]
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk(~ltk)) ]
 
 // Protocol
 /* Initiator */
 rule Init_1:
   [ Fr(~ekI), !Ltk($I, ltkI) ]
-  --[ SidI_1(~eki, $I, $R, hk) ]->
-  [ Init_1( ~eki, $I, $R, ~ekI, 'g' ^ ~eki )
+  // TODO: Fix variable namings! --[ SidI_1(~ekI, $I, $R, hk) ]->
+  [ Init_1( ~ekI, $I, $R, ~ekI, 'g' ^ ~ekI )
   , !Ephk(~ekI)
-  , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', h(< $I, $R,'g' ^ ~ekI >) }ltkI> ) ]
+  , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', h($I, $R,'g' ^ ~ekI) }ltkI> ) ]
 
 rule Init_2:
-    [ Init_1( ~eki, $I, $R, ~ekI, hkI )
+    [ Init_1( ~ekI, $I, $R, ~ekI, hkI )
     , !Pk($R, pk(ltkR))
-    , In( <$R, $I, Y, sign{'2', h(< $R, $I, Y >) }ltkR> ) 
+    , In( <$R, $I, Y, sign{'2', h($R, $I, Y) }ltkR> ) 
     ]
-  --[ SidI_2(~eki, $I, $R, hki, Y, Y ^ ~eki ) ]->
-    [ !Sessk(~eki, Y ^ ~ekI) ]
+  --[ SidI_2(~ekI, $I, $R, hkI, Y, Y ^ ~eki ) ]->
+    [ !Sessk(~ekI, Y ^ ~ekI) ]
 
 /* Responder */
 rule Resp:
@@ -55,15 +55,12 @@ rule Ephk_reveal:
    --[ EphkRev(~ekA) ]->
    [ Out(~ekA) ]
 
-// Intruder knowledge logging
-rule Deducible: [ In(m) ] --[ Deducible(m) ]-> []
-
 /* An attack is valid in eCK if the session key of the test session is deduced and
    the test session is clean.
 */
 lemma eCK_initiator_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
+            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not both longterm-key-reveal _and_ ephemeral-key-reveal
 	     * for test thread. */
@@ -97,7 +94,7 @@ lemma eCK_initiator_key:
 */
 lemma eCK_responder_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & Deducible( k ) @ i2
+            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not longterm-key-reveal _and_ ephemeral-key-reveal of actor . */
             & not(Ex #i3 #i4. LtkRev( R ) @ i3 & EphkRev( ttest ) @ i4)
@@ -132,7 +129,7 @@ end
 lemma Perfect_Forward_Secrecy_I:
   "All ttest I R hki hkr sessKey #i #k. 
      SidI_2(ttest, I,R, hki, hkr, sessKey) @ i &
-     Deducible(sessKey) @ k
+     K(sessKey) @ k
      ==>
      ( (Ex #r. LtkReveal(I) @ r & r < i)
      | (Ex #r. LtkReveal(R) @ r & r < i)
@@ -143,7 +140,7 @@ end
 lemma Perfect_Forward_Secrecy_R:
   "All ttest I R hki hkr sessKey #i #k. 
      SidR_1(ttest, I,R, hki, hkr, sessKey) @ i &
-     Deducible(sessKey) @ k
+     K(sessKey) @ k
      ==>
      ( (Ex #r. LtkReveal(I) @ r & r < i)
      | (Ex #r. LtkReveal(R) @ r & r < i)
