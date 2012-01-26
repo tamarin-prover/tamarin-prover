@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP,MagicHash #-}
 {-# LINE 1 "src/Theory/Lexer.x" #-}
 
-{-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-unused-matches -fno-warn-unused-binds -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-unused-matches -fno-warn-unused-binds -fno-warn-missing-signatures -fno-warn-lazy-unlifted-bindings #-}
 module Theory.Lexer where
 
 

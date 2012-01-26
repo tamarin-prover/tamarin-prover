@@ -1,8 +1,11 @@
 {
-{-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-unused-matches -fno-warn-unused-binds -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-unused-matches -fno-warn-unused-binds -fno-warn-missing-signatures -fno-warn-lazy-unlifted-bindings #-}
 module Theory.Lexer where
 
+-- This file works only with Alex < 3.0. In the long-term, we plan to switch
+-- to a lexer-less approach, i.e., relying completely on parsec.
 }
+
 
 $digit = [0-9]
 $letter = [a-zA-Z]
