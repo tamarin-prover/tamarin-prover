@@ -461,7 +461,7 @@ translate as
       summaries <- mapM processThy $ inFiles
       putStrLn $ ""
       putStrLn $ replicate 78 '='
-      putStrLn $ "summary of summaries:"
+      putStrLn $ "summary of processed files:"
       putStrLn $ ""
       putStrLn $ renderDoc $ Isar.vcat $ intersperse (Isar.text "") summaries
       putStrLn $ ""
@@ -507,31 +507,33 @@ translate as
       where
         out :: (a -> Isar.Doc) -> (a -> Isar.Doc) -> IO a -> IO Isar.Doc
         out summaryDoc fullDoc load
-          | dryRun    = do
-              putStrLn =<< (renderDoc <$> fullDoc <$> load)
-              return $ Isar.emptyDoc
+          | dryRun    = writeWithSummary putStrLn "<no file written>"
           | otherwise = do
               putStrLn $ ""
               putStrLn $ "analyzing: " ++ inFile
               putStrLn $ ""
               let outFile = mkOutPath inFile
-              (thySummary, t) <- timed $ do
-                  thy <- load
-                  writeFile outFile $ renderDoc $ fullDoc thy
-                  return $ summaryDoc thy
-              let summary = Isar.vcat
-                    [ Isar.text $ "analyzed: " ++ inFile
-                    , Isar.text $ ""
-                    , Isar.text $ "  output:          " ++ outFile
-                    , Isar.text $ "  processing time: " ++ show t
-                    , Isar.text $ ""
-                    , Isar.nest 2 thySummary
-                    ]
+              summary <- writeWithSummary (writeFile outFile) outFile
               putStrLn $ replicate 78 '-'
               putStrLn $ renderDoc summary
               putStrLn $ ""
               putStrLn $ replicate 78 '-'
               return summary
+          where
+            writeWithSummary :: (String -> IO ()) -> FilePath -> IO Isar.Doc
+            writeWithSummary io outName = do
+              (thySummary, t) <- timed $ do
+                  thy <- load
+                  io $ renderDoc $ fullDoc thy
+                  return $ summaryDoc thy
+              return $ Isar.vcat
+                  [ Isar.text $ "analyzed: " ++ inFile
+                  , Isar.text $ ""
+                  , Isar.text $ "  output:          " ++ outName
+                  , Isar.text $ "  processing time: " ++ show t
+                  , Isar.text $ ""
+                  , Isar.nest 2 thySummary
+                  ]
 
     {- TO BE REACTIVATED once infrastructure from interactive mode can be used
 
