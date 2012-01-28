@@ -695,7 +695,7 @@ prettyContradiction contra = case contra of
 
 prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
-    Attack               -> keyword_ "SOLVED (possible attack?)"
+    Attack               -> keyword_ "SOLVED (trace found)"
     Induction            -> keyword_ "induction"
     Sorry reason         -> fsep [keyword_ "sorry", lineComment_ reason]
     SolveGoal goal       -> hsep [keyword_ "solve(", prettyGoal goal, keyword_ ")"]
