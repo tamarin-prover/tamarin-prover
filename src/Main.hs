@@ -458,7 +458,7 @@ translate as
   | otherwise    = do
       ensureMaude as
       putStrLn $ ""
-      summaries <- mapM processThy $ inFiles
+      summaries <- mapM processThy inFiles
       putStrLn $ ""
       putStrLn $ replicate 78 '='
       putStrLn $ "summary of processed files:"
@@ -497,7 +497,7 @@ translate as
     ------------------------------
 
     processThy :: FilePath -> IO (Isar.Doc)
-    processThy inFile  
+    processThy inFile
       -- | argExists "html" as = 
       --     generateHtml inFile =<< loadClosedThy as inFile
       | argExists "parseOnly" as =
@@ -506,19 +506,28 @@ translate as
           out prettyClosedSummary   prettyClosedTheory (loadClosedThy as inFile)
       where
         out :: (a -> Isar.Doc) -> (a -> Isar.Doc) -> IO a -> IO Isar.Doc
-        out summaryDoc fullDoc load
-          | dryRun    = writeWithSummary putStrLn "<no file written>"
-          | otherwise = do
-              putStrLn $ ""
-              putStrLn $ "analyzing: " ++ inFile
-              putStrLn $ ""
-              let outFile = mkOutPath inFile
-              summary <- writeWithSummary (writeFile outFile) outFile
-              putStrLn $ replicate 78 '-'
-              putStrLn $ renderDoc summary
-              putStrLn $ ""
-              putStrLn $ replicate 78 '-'
-              return summary
+        out summaryDoc fullDoc load = do
+          res <- try $
+            if dryRun 
+              then do writeWithSummary putStrLn "<no file written>"
+              else do
+                putStrLn $ ""
+                putStrLn $ "analyzing: " ++ inFile
+                putStrLn $ ""
+                let outFile = mkOutPath inFile
+                summary <- writeWithSummary (writeFile outFile) outFile
+                putStrLn $ replicate 78 '-'
+                putStrLn $ renderDoc summary
+                putStrLn $ ""
+                putStrLn $ replicate 78 '-'
+                return summary
+          case res of
+            Right x -> return x
+            Left x  -> return $ Isar.vcat $ map Isar.text
+                [ "failed to analyze: " ++ inFile
+                , ""
+                , "  exception:       " ++ show (x :: IOException)
+                ]
           where
             writeWithSummary :: (String -> IO ()) -> FilePath -> IO Isar.Doc
             writeWithSummary io outName = do
