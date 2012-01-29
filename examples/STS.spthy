@@ -31,7 +31,8 @@ rule Init_2:
     [ Init_1( $I, $R, ltkI, ~ekI )
     , !Pk($R, pk(ltkR))
     , In( <$R, $I, Y, sign{'1', h(< 'g'^~ekI, Y >) }ltkR> ) ]
-  --[ SessionKey($I,$R, h(Y ^ ~ekI)) ]->
+  --[ SessionKey(~ekI,$I,$R, h(Y ^ ~ekI)), 
+      AcceptedI(~ekI,$I,$R,'g'^~ekI,Y) ]->
     [ Out( <$I, $R, sign{'2', h(< 'g' ^ ~ekI, Y >) }ltkI> ) ]
 
 rule Resp_1:
@@ -46,18 +47,55 @@ rule Resp_1:
 rule Resp_2:
     [ Resp_1( $I, $R, ltkI, ltkR, ~ekR, X )
     , In( <$I, $R, X, sign{'2', h(< X, 'g'^~ekR >) }ltkI> ) ]
-  --[ SessionKey($I,$R, h(X ^ ~ekR) ) ]->
+  --[ SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ),
+      AcceptedR(~ekR,$I,$R,X,'g'^~ekR) ]->
     []
 
-lemma Perfect_Forward_Secrecy:
-  "All I R sessKey #i #k. 
-     SessionKey(I,R,sessKey) @ i &
+rule Sessionkey_Reveal:
+    [ SessionKey(~tid, $I,$R,k) ]
+  --[ SesskRev(~tid,k) ]->
+    [ Out(k) ]
+
+lemma KI_Perfect_Forward_Secrecy_I:
+  "not (Ex ttest I R sessKey #i #k hki hkr.
+     AcceptedI(ttest,I,R,hki,hkr) @ i &
+     SessionKey(ttest,I,R,sessKey) @ i &
      K(sessKey) @ k
-     ==>
-     ( (Ex #r. LtkReveal(I) @ r & r < i)
-     | (Ex #r. LtkReveal(R) @ r & r < i)
+     &
+     // No session key reveal of test
+     not (Ex #i3. SesskRev(ttest, sessKey) @ i3)
+     &
+     // No session key reveal of partner
+     not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner, kpartner) @ i3
+       & AcceptedR(tpartner,I,R,hki,hkr) @ i4
+     )
+     &
+     not (Ex #r. LtkReveal(I) @ r & r < i)
+     & 
+     not (Ex #r. LtkReveal(R) @ r & r < i)
      )
   "
+
+lemma KI_Perfect_Forward_Secrecy_R:
+  "not (Ex ttest I R sessKey #i #k hki hkr.
+     AcceptedR(ttest,I,R,hki,hkr) @ i &
+     SessionKey(ttest,I,R,sessKey) @ i &
+     K(sessKey) @ k
+     &
+     // No session key reveal of test
+     not (Ex #i3. SesskRev(ttest, sessKey) @ i3)
+     &
+     // No session key reveal of partner
+     not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner, kpartner) @ i3
+       & AcceptedI(tpartner,I,R,hki,hkr) @ i4
+     )
+     &
+     not (Ex #r. LtkReveal(I) @ r & r < i)
+     & 
+     not (Ex #r. LtkReveal(R) @ r & r < i)
+     )
+  "
+
 
 
 end
