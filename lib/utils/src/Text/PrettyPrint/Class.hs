@@ -40,12 +40,13 @@ module Text.PrettyPrint.Class (
 
 import Prelude
 import qualified Text.PrettyPrint.HughesPJ as P
+import Control.DeepSeq
 
 infixl 6 <> 
 infixl 6 <->
 infixl 5 $$, $-$, $--$
 
-class Document d where
+class NFData d => Document d where
   char :: Char -> d
   text :: String -> d
   zeroWidthText :: String -> d
@@ -63,6 +64,9 @@ class Document d where
   fcat  :: [d] -> d
   nest  :: Int -> d -> d
   caseEmptyDoc :: d -> d -> d -> d
+
+instance NFData P.Doc where
+  rnf = rnf . P.render
 
 instance Document P.Doc where
   char = P.char

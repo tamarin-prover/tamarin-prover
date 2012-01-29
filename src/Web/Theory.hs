@@ -774,3 +774,4 @@ copyTemplate templateFile targetDir = do
     mapM_ copy files
 
 -}
+

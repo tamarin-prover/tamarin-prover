@@ -89,8 +89,11 @@ import qualified Data.Set as S
 import           Data.List
 import           Data.Foldable (Foldable, foldMap)
 import           Data.Traversable (Traversable, traverse)
+import           Data.DeriveTH
                  
 import           Control.Basics
+import           Control.Parallel.Strategies
+import           Control.DeepSeq
 import           Control.Category
 import qualified Control.Monad.State as MS
 
@@ -476,8 +479,8 @@ closeTheory maudePath thy0 = do
         -- Maude / Signature handle
         hnd = sigmMaudeHandle sig
 
-        -- close all theory items
-        items = closeTheoryItem <$> get thyItems thy0
+        -- close all theory items: in parallel
+        items = (closeTheoryItem <$> get thyItems thy0) `using` parList rdeepseq
         closeTheoryItem = foldTheoryItem 
             (RuleItem . closeProtoRule hnd) 
             (LemmaItem . ensureFormulaAC . fmap skeletonToIncrementalProof)
@@ -618,7 +621,7 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     , nest 1 $ ppSig $ get thySignature thy
     , ppCache $ get thyCache thy 
     ] ++
-    map ppItem (get thyItems thy) ++
+    parMap rdeepseq ppItem (get thyItems thy) ++
     [ kwEnd ]
   where
     ppItem = foldTheoryItem 
@@ -734,3 +737,24 @@ prettyClosedSummary thy =
                  parens (integer siz <-> text "steps")
 
     proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
+
+-- Instances: FIXME: Sort them into the right files
+--------------------------------------------------
+
+instance (Ord l, NFData l, NFData a) => NFData (LTree l a) where
+  rnf (LNode r m) = rnf r `seq` rnf  m
+
+$( derive makeNFData ''TheoryItem)
+$( derive makeNFData ''LemmaAttribute)
+$( derive makeNFData ''Lemma)
+$( derive makeNFData ''ClosedRuleCache)
+$( derive makeNFData ''Theory)
+$( derive makeNFData ''ProofMethod)
+$( derive makeNFData ''Contradiction)
+$( derive makeNFData ''ProofStep)
+
+$( derive makeNFData ''CaseDistinction)
+$( derive makeNFData ''ClassifiedRules)
+$( derive makeNFData ''ClosedProtoRule)
+$( derive makeNFData ''BigStepGoal)
+$( derive makeNFData ''ProtoRuleACInfo)

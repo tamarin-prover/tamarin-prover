@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeOperators, StandaloneDeriving, DeriveDataTypeable, TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -144,9 +145,11 @@ import qualified Data.DAG.Simple  as D
 import Data.Monoid (Monoid(..))
 import Data.Generics
 import Data.Label
+import Data.DeriveTH
 
 import Control.Category
 import Control.Basics
+import Control.DeepSeq
 
 import Text.Isar
 
@@ -794,3 +797,46 @@ instance Apply BigStepGoal where
     apply subst (PremiseBigStep fa) = PremiseBigStep (apply subst fa)
     apply subst (MessageBigStep m)  = MessageBigStep (apply subst m)
 
+-- NFData
+---------
+
+$( derive makeNFData ''Formula)
+$( derive makeNFData ''Connective)
+$( derive makeNFData ''Quantifier)
+
+
+$( derive makeNFData ''Term )
+$( derive makeNFData ''Lit)
+$( derive makeNFData ''FunSym)
+$( derive makeNFData ''ACSym)
+$( derive makeNFData ''LSort)
+$( derive makeNFData ''LVar)
+$( derive makeNFData ''BVar)
+
+instance (NFData c, NFData v, Ord v) => NFData (Subst c v) where
+  rnf (Subst m) = rnf m
+
+instance (NFData c, NFData v, Ord v) => NFData (SubstVFresh c v) where
+  rnf (SubstVFresh m) = rnf m
+
+$( derive makeNFData ''Fact)
+$( derive makeNFData ''Name)
+$( derive makeNFData ''NameTag)
+$( derive makeNFData ''NameId)
+$( derive makeNFData ''Rule)
+$( derive makeNFData ''Goal)
+$( derive makeNFData ''Conj)
+$( derive makeNFData ''Disj)
+$( derive makeNFData ''Chain)
+$( derive makeNFData ''MsgEdge)
+$( derive makeNFData ''Edge)
+$( derive makeNFData ''NodePrem)
+$( derive makeNFData ''NodeConc)
+$( derive makeNFData ''RuleInfo)
+$( derive makeNFData ''IntrRuleACInfo)
+$( derive makeNFData ''ProtoRuleName)
+$( derive makeNFData ''Atom)
+$( derive makeNFData ''Guarded)
+$( derive makeNFData ''EqStore)
+$( derive makeNFData ''CaseDistKind)
+$( derive makeNFData ''Sequent)

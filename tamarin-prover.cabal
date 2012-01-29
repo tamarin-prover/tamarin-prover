@@ -122,6 +122,7 @@ executable tamarin-prover
       , aeson             == 0.3.*
       , old-locale        == 1.0.*
       , monad-control     == 0.2.*
+      , parallel          == 3.2.*
 
       , tamarin-prover-utils == 0.1.*
       , tamarin-prover-term  == 0.1.*

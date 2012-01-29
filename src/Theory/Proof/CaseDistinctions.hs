@@ -44,6 +44,7 @@ import           Control.Monad.Disj
 import           Control.Monad.Bind
 import           Control.Monad.Reader
 import           Control.Monad.State (gets)
+import           Control.Parallel.Strategies
 
 import           Text.Isar
 
@@ -240,10 +241,21 @@ applyCaseDistinction hnd th prem goal =
 saturateCaseDistinctions 
     :: ProofContext -> [CaseDistinction] -> [CaseDistinction]
 saturateCaseDistinctions ctxt = 
-    go False []
+    go
   where
     nonLoopingFact = saturationLoopBreakers ctxt
 
+    go ths =
+        if any or (changes `using` parList rdeepseq)
+          then go ths'
+          else ths'
+      where
+        (changes, ths') = unzip $ map (refineCaseDistinction ctxt solver) ths
+        noSplitThs = filter ((<= 1) . length . getDisj . get cdCases) ths
+        solver     = do names <- solveAllSafeGoals nonLoopingFact noSplitThs
+                        return (not $ null names, names)
+
+{-
     go changed done []
       | changed   = go False [] (reverse done)
       | otherwise = reverse done
@@ -255,7 +267,7 @@ saturateCaseDistinctions ctxt =
         (changes, th') = refineCaseDistinction ctxt solver th
         noSplitThs     = 
             filter ((<= 1) . length . getDisj . get cdCases) (done ++ ths)
-
+-}
 
 -- | Precompute a saturated set of case distinctions.
 precomputeCaseDistinctions 

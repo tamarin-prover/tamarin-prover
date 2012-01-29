@@ -35,6 +35,7 @@ import Data.Traversable (sequenceA)
 import Control.Arrow (first)
 import Control.Applicative
 import Control.Monad.Identity
+import Control.DeepSeq
 
 import Text.PrettyPrint.Class
 import Text.PrettyPrint.Highlight
@@ -93,6 +94,9 @@ newtype HtmlDoc d = HtmlDoc { getHtmlDoc :: d }
 -- layout.
 htmlDoc :: d -> HtmlDoc d
 htmlDoc = HtmlDoc
+
+instance NFData d => NFData (HtmlDoc d) where
+    rnf = rnf . getHtmlDoc
 
 instance Document d => Document (HtmlDoc d) where
     char          = HtmlDoc . text . escapeHtmlEntities . return
@@ -173,6 +177,9 @@ noHtmlDoc = NoHtmlDoc . Identity
 -- | Extract the wrapped document.
 getNoHtmlDoc :: NoHtmlDoc d -> d
 getNoHtmlDoc = runIdentity . unNoHtmlDoc
+
+instance NFData d => NFData (NoHtmlDoc d) where
+    rnf = rnf . getNoHtmlDoc
 
 instance Document d => Document (NoHtmlDoc d) where
   char = pure . char
