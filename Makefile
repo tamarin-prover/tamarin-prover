@@ -51,29 +51,42 @@ cabal-dev:
 ## Developer specific targets (some out of date)
 ###############################################################################
 
+# These case studies are located in data/examples/ or examples/
+JKL1=JKL_TS1_2004.spthy JKL_TS1_2008.spthy JKL_TS1_2008-KIFS.spthy
+JKL2=JKL_TS2_2004.spthy JKL_TS2_2008.spthy JKL_TS2_2004-KIFS.spthy JKL_TS2_2008-KIFS.spthy
 
-JKL1=data/examples/JKL_TS1_2004.spthy data/examples/JKL_TS1_2008.spthy data/examples/JKL_TS1_2008-KIFS.spthy
-JKL2=data/examples/JKL_TS2_2004.spthy data/examples/JKL_TS2_2008.spthy data/examples/JKL_TS2_2004-KIFS.spthy data/examples/JKL_TS2_2008-KIFS.spthy
+KEA=KEA_plus.spthy KEA_plus_KCI.spthy KEA_plus_wPFS.spthy KEA_plus_KCI_wPFS.spthy KEA_plus_KCI_onepk.spthy
 
-KEA=data/examples/KEA_plus.spthy data/examples/KEA_plus_KCI.spthy data/examples/KEA_plus_wPFS.spthy data/examples/KEA_plus_KCI_wPFS.spthy
+NAXOS=NAXOS_broken_eCK_variant.spthy NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy 
+NAXOS_SIMPLIFIED=NAXOS_PFS_initiator_simplified.spthy 
 
-NAXOS=data/examples/NAXOS_broken_eCK_variant.spthy data/examples/NAXOS_eCK_PFS.spthy data/examples/NAXOS_eCK.spthy 
-NAXOS_SIMPLIFIED=data/examples/NAXOS_PFS_initiator_simplified.spthy 
+UM=UM_eCK_noKCI.spthy UM_eCK.spthy UM_wPFS.spthy
 
-UM=data/examples/UM_eCK_noKCI.spthy data/examples/UM_eCK.spthy data/examples/UM_wPFS.spthy
+SDH=SignedDH.spthy SignedDH_eCK.spthy
 
-SDH=data/examples/SignedDH.spthy data/examples/SignedDH_eCK.spthy
+STS=STS.spthy STS-mod.spthy
 
-STS=data/examples/STS.spthy data/examples/STS-mod.spthy
-
+TMPRES=case-studies/temp-analysis.spthy
+TMPOUT=case-studies/temp-output.spthy
 
 CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(NAXOS_SIMPLIFIED) $(STS) $(SDH)
+CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(CASE_STUDIES)))
 
 # case studies
-case-studies:	$(CASE_STUDIES)
-	mkdir -p case-studies
-	tamarin-prover $(CASE_STUDIES) --prove --stop-on-attack=dfs -Ocase-studies | tee casestudies.txt
+case-studies:	$(CS_TARGETS)
+	grep "complete proof\|attack found\|processing time" case-studies/*.spthy
 
+# individual case studies
+case-studies/%_analyzed.spthy:	data/examples/%.spthy
+	mkdir -p case-studies
+	tamarin-prover $< --prove --stop-on-attack=dfs -o$(TMPRES) >$(TMPOUT)
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	echo "\n/* Output" >>$(TMPRES)
+	cat $(TMPOUT) >>$(TMPRES)
+	echo "*/" >>$(TMPRES)
+	mv $(TMPRES) $@
+	\rm -f $(TMPOUT)
 
 # outdated targets
 
