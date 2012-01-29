@@ -37,7 +37,7 @@ dev-install:
 	cabal-dev configure && cabal-dev build
 	
 dev-run:
-	./dist/build/dh-proto-proof/dh-proto-proof interactive examples/TPM
+	./dist/build/tamarin-prover/tamarin-prover interactive examples/TPM
 
 # TODO: Implement 'dev-clean' target
 
@@ -62,12 +62,17 @@ NAXOS_SIMPLIFIED=data/examples/NAXOS_PFS_initiator_simplified.spthy
 
 UM=data/examples/UM_eCK_noKCI.spthy data/examples/UM_eCK.spthy data/examples/UM_wPFS.spthy
 
-CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(NAXOS_SIMPLIFIED)
+SDH=data/examples/SignedDH.spthy data/examples/SignedDH_eCK.spthy
 
-# case studies from POST'12 paper
+STS=data/examples/STS.spthy data/examples/STS-mod.spthy
+
+
+CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(NAXOS_SIMPLIFIED) $(STS) $(SDH)
+
+# case studies
 case-studies:	$(CASE_STUDIES)
 	mkdir -p case-studies
-	dh-proto-proof $(CASE_STUDIES) --prove --stop-on-attack=dfs -Ocase-studies
+	tamarin-prover $(CASE_STUDIES) --prove --stop-on-attack=dfs -Ocase-studies | tee casestudies.txt
 
 
 # outdated targets
@@ -79,10 +84,10 @@ web:
 	runghc -isrc -Wall -iinteractive-only-src Main interactive examples --autosave --loadstate --debug
 
 webc: comp
-	./dh-proto-proof interactive --autosave --loadstate --debug --datadir=data/ examples/
+	./tamarin-prover interactive --autosave --loadstate --debug --datadir=data/ examples/
 
 comp:
-	ghc --make Main -isrc -iinteractive-only-src/ -o dh-proto-proof
+	ghc --make Main -isrc -iinteractive-only-src/ -o tamarin-prover
 
 opt:
 	ghc -fforce-recomp -isrc -main-is Narrow.main --make -O2 -Wall -o narrow src/Narrow.hs
@@ -125,4 +130,4 @@ depgraph:
 ctags:
 	ghc -e :ctags src/Main.hs
 
-.PHONY: unit opt all mult coverage proofa haddock 
+.PHONY: unit opt all mult coverage proofa haddock case-studies
