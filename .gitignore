@@ -2,6 +2,7 @@ dist
 cabal-dev
 testbed
 case-studies
+case-studies-sequential
 tamarin-prover-img
 
 *.hi
