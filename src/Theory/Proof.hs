@@ -64,6 +64,9 @@ module Theory.Proof (
 
   , showProofStatus
 
+  -- ** Parallel Strategy for exploring a proof
+  , parLTreeDFS
+
   -- * Convenience exports
   , module Theory.Proof.CaseDistinctions
 ) where
@@ -84,6 +87,7 @@ import           Debug.Trace
                  
 import           Control.Basics
 import qualified Control.Monad.State   as S
+import           Control.Parallel.Strategies
 
 import           Text.Isar
                  
@@ -135,6 +139,16 @@ instance Foldable (LTree l) where
 instance Traversable (LTree l) where
     traverse f (LNode x cs) = LNode <$> f x <*> traverse (traverse f) cs
 
+-- | A parallel evaluation strategy well-suited for DFS traversal: As soon as
+-- a node is forced it sparks off the computation of the number of case-maps
+-- of all its children. This way most of the data is already evaulated, when
+-- the actual DFS traversal visits it.
+--
+-- NOT used for now. It sometimes required too much memory.
+parLTreeDFS :: Strategy (LTree l a)
+parLTreeDFS (LNode x0 cs0) = do
+    cs0' <- (`parTraversable` cs0) $ \(LNode x cs) -> LNode x <$> rseq cs
+    return $ LNode x0 (M.map (runEval . parLTreeDFS) cs0')
 
 ------------------------------------------------------------------------------
 -- Utility: Merging maps
@@ -361,7 +375,7 @@ cutOnAttackDFS prf =
       Nothing  -> prf
   where
     isAttack Attack = True
-    isAttack _           = False
+    isAttack _      = False
     extractAttack []     p                             = p
     extractAttack (p:ps) (LNode (ProofStep info x) cs) =
       LNode (ProofStep info x) (M.fromList [(label, extractAttack ps subprf)])
@@ -376,9 +390,12 @@ cutOnAttackDFS prf =
       | isAttack info = Right pos
       | i>0           = case rights lowerAttacks of
                           x:_ -> Right x
-                          [] -> Left $ and (lefts lowerAttacks)
+                          []  -> Left $ and (lefts lowerAttacks)
       | otherwise     = Left False
-     where lowerAttacks = zipWith (\c k -> goFind (pred i) (pos++[k]) c) (map snd . M.toAscList $ cs) [(0::Int)..]
+     where 
+      lowerAttacks = 
+        zipWith (\c k -> goFind (pred i) (pos++[k]) c) 
+          (map snd . M.toAscList $ cs) [(0::Int)..]
 
 
 -- | Search for attacks in a BFS manner.
@@ -499,11 +516,11 @@ possibleProofMethods sig se =
 
 -- | @proveSequentDFS rules se@ tries to construct a proof that @se@ is valid
 -- using a depth-first-search strategy to resolve the non-determinism wrt. what
--- goal to solve next.  This proof may contain 'Sorry' steps, if the prover is
--- stuck. It can also be of infinite depth, if the proof strategy loops.
+-- goal to solve next.  This proof can be of infinite depth, if the proof
+-- strategy loops. Children at the same level are evaluated in parallel.
 proveSequentDFS :: ProofContext -> Sequent -> Proof Sequent
-proveSequentDFS ctxt = 
-    prove
+proveSequentDFS ctxt se0 = 
+    prove se0 -- `using` parLTreeDFS
   where
     prove se =
         LNode (ProofStep method se) (M.map prove cases)
@@ -628,6 +645,7 @@ boundProver b p = Prover $ \rules se prf ->
 -- find one by itself.
 autoProver :: Prover
 autoProver = Prover $ \rules se _ -> 
+    -- evaluate cases in parallel
     return $ fmap (fmap Just) $ proveSequentDFS rules se
 
 -- | Apply a prover only to a sub-proof, fails if the subproof doesn't exist.
