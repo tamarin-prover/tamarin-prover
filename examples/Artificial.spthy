@@ -1,7 +1,5 @@
-theory Example_for_POST_12
+theory Example_for_CSF_12
 begin
-
-section{* The Running Example of our POST 12 Paper *}
 
 rule Step1:
   [ Fr(~x), Fr(~k) ] 
