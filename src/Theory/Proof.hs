@@ -219,7 +219,7 @@ contradictions sig se = asum
 -- | Sound transformations of sequents.
 data ProofMethod = 
     Sorry String                         -- ^ Proof was not completed 
-  | Attack                          -- ^ An attack was fond
+  | Attack                               -- ^ An attack was fond
   | Simplify                             -- ^ A simplification step.
   | SolveGoal Goal                       -- ^ A goal was solved.
   | Contradiction (Maybe Contradiction)  
@@ -365,37 +365,24 @@ proofStepStatus (ProofStep Attack _)    = AttackFound
 proofStepStatus (ProofStep (Sorry _) _) = IncompleteProof
 proofStepStatus (ProofStep _ _)         = CompleteProof
 
--- | @stopProofOnAttack prf@ replace all other subproofs by 'Sorry' steps when
---   the first attack is found.
+-- | @cutOnAttackDFS prf@ remove all other cases if attack is found.
 -- FIXME: Probably holds onto the whole proof tree. Use iterative deepening.
 cutOnAttackDFS :: Proof a -> Proof a
 cutOnAttackDFS prf =
-    case findAttack (1::Int) of
-      Just pos -> extractAttack pos prf
-      Nothing  -> prf
+    case findAttacks (insertPaths prf) of
+      path:_ -> extractAttack path prf
+      _      -> prf
   where
-    isAttack Attack = True
-    isAttack _      = False
-    extractAttack []     p                             = p
-    extractAttack (p:ps) (LNode (ProofStep info x) cs) =
-      LNode (ProofStep info x) (M.fromList [(label, extractAttack ps subprf)])
-     where (label, subprf) = (M.toAscList cs) !! p
-    -- @findAttack i@ returns Nothing if there is no attack, and the shortest
-    -- and leftmost position that is an attack otherwise.
-    findAttack i = case goFind i [] prf of
-                     Right pos -> Just pos
-                     Left False -> findAttack (i+1)
-                     Left True -> Nothing
-    goFind i pos (LNode (ProofStep info _) cs)
-      | isAttack info = Right pos
-      | i>0           = case rights lowerAttacks of
-                          x:_ -> Right x
-                          []  -> Left $ and (lefts lowerAttacks)
-      | otherwise     = Left False
-     where 
-      lowerAttacks = 
-        zipWith (\c k -> goFind (pred i) (pos++[k]) c) 
-          (map snd . M.toAscList $ cs) [(0::Int)..]
+    findAttacks (LNode (ProofStep i (_,path)) cs) =
+        (if i == Attack then [path] else []) ++
+        (concatMap findAttacks (M.elems cs))
+
+    extractAttack []         p               = p
+    extractAttack (label:ps) (LNode pstep m) = case M.lookup label m of
+        Just subprf ->
+          LNode pstep (M.fromList [(label, extractAttack ps subprf)])
+        Nothing     ->
+          error "Theory.Proof.cutOnAttackDFS: impossible, extractAttack failed, invalid path"
 
 
 -- | Search for attacks in a BFS manner.
