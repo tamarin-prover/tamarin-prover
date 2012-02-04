@@ -9,7 +9,8 @@ section{* The KEA+ Protocol *}
 /* Protocol rules */
 
 rule generate_ltk:
-   [ Fr(<'Register',$A>), Fr(~lk) ] -->
+   [ Fr(~lk) ] 
+   --[ RegKey($A) ]->
    [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
 
 rule Init_1:
@@ -95,6 +96,9 @@ lemma keaplus_initiator_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
             SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
+	    /* Each agent can register at most one public key */
+            & (All A #i #j. (RegKey(A)@i & RegKey(A)@j) ==> (i = j))
+
             /* No ephemeral-key-reveal of test thread */
             & (All #i3. EphkRev( ttest ) @ i3 ==> F)
 
@@ -121,6 +125,9 @@ lemma keaplus_initiator_key:
 lemma keaplus_responder_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
             SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
+
+	    /* Each agent can register at most one public key */
+            & (All #i3 #i4 A. (RegKey(A)@i3 & RegKey(A)@i4) ==> i3 = i4)
 
             /* Not ephemeral-key-reveal of test thread. */
             & (All #i3. EphkRev( ttest ) @ i3 ==> F)
