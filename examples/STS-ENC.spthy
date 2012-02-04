@@ -1,7 +1,7 @@
-theory STS
+theory STS_ENC
 begin
 
-section{* The Station-To-Station Protocol *}
+section{* The Station-To-Station Protocol (ENC version) *}
 
 
 // Public key infrastructure
@@ -30,10 +30,16 @@ rule Init_1:
 rule Init_2:
     [ Init_1( $I, $R, ~ltkI, ~ekI )
     , !Pk($R, pk(~ltkR))
-    , In( <$R, $I, Y, sign{'1', h(< 'g'^~ekI, Y >) }~ltkR> ) ]
+    , In( <$R, $I, Y, senc{
+          sign{h(< Y, 'g'^~ekI >) }~ltkR
+	}(Y^~ekI)
+      > ) ]
   --[ SessionKey(~ekI,$I,$R, h(Y ^ ~ekI)), 
       AcceptedI(~ekI,$I,$R,'g'^~ekI,Y) ]->
-    [ Out( <$I, $R, sign{'2', h(< 'g' ^ ~ekI, Y >) }~ltkI> ) ]
+    [ Out( <$I, $R, senc{
+          sign{h(< 'g' ^ ~ekI, Y >) }~ltkI
+	}(Y^~ekI)
+      > ) ]
 
 rule Resp_1:
     [ !Pk($I, pk(~ltkI))
@@ -42,11 +48,17 @@ rule Resp_1:
     , In( <$I, $R, X > ) ]
   -->
     [ Resp_1( $I, $R, ~ltkI, ~ltkR, ~ekR, X )
-    , Out( <$R, $I, 'g' ^ ~ekR, sign{'1', h(< X, 'g' ^ ~ekR >) }~ltkR > ) ]
+    , Out( <$R, $I, 'g' ^ ~ekR, senc{
+          sign{h(< 'g' ^ ~ekR, X >) }~ltkR
+        }(X^~ekR)
+      > ) ]
 
 rule Resp_2:
     [ Resp_1( $I, $R, ~ltkI, ~ltkR, ~ekR, X )
-    , In( <$I, $R, X, sign{'2', h(< X, 'g'^~ekR >) }~ltkI> ) ]
+    , In( <$I, $R, senc{
+          sign{h(< X, 'g'^~ekR >) }~ltkI
+	}(X^~ekR)
+      > ) ]
   --[ SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ),
       AcceptedR(~ekR,$I,$R,X,'g'^~ekR) ]->
     []
