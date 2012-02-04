@@ -125,25 +125,3 @@ lemma eCK_responder_key:
                        SidI_1( tpartner,I,R,hkI ) @i4)))"
 
 end
-
-lemma Perfect_Forward_Secrecy_I:
-  "All ttest I R hki hkr sessKey #i #k. 
-     SidI_2(ttest, I,R, hki, hkr, sessKey) @ i &
-     K(sessKey) @ k
-     ==>
-     ( (Ex #r. LtkReveal(I) @ r & r < i)
-     | (Ex #r. LtkReveal(R) @ r & r < i)
-     )
-  "
-end
-
-lemma Perfect_Forward_Secrecy_R:
-  "All ttest I R hki hkr sessKey #i #k. 
-     SidR_1(ttest, I,R, hki, hkr, sessKey) @ i &
-     K(sessKey) @ k
-     ==>
-     ( (Ex #r. LtkReveal(I) @ r & r < i)
-     | (Ex #r. LtkReveal(R) @ r & r < i)
-     )
-  "
-end
