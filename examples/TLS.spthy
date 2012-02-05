@@ -17,22 +17,38 @@ text{*
     3. We do not model the ClientResume, ServerResume, and Oops steps. They
        are currently outside the scope of our modelling language.
 
+
 *}
 
 // Public key infrastructure
 rule Register_pk:
   [ Fr(~ltkA) ] 
   --> 
-  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)) ]
-
-rule Get_pk:
-  [ !Pk(A, pk)    ] --[              ]-> [ Out(pk) ]
+  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
 rule Reveal_ltk:
   [ !Ltk(A, ltkA) ] --[ RevLtk(A)    ]-> [ Out(ltkA) ]
 
 
-// Protocol
+/* We formalize the following signature based TLS handshake.
+
+  protocol TLS {
+    1. C -> S: C, nc, sid, pc
+    2. C <- S: ns, sid, ps
+
+    3. C -> S: { '31', pms                     }pk(S) ,
+               sign{ '32', h('32', ns, S, pms) }pk(C) ,
+               { '33', sid, h('PRF', pms, nc, ns),
+                 nc, pc, C, ns, ps, S
+               } 
+               h('clientKey', nc, ns, h('PRF', pms, nc, ns))
+
+    4. C <- S: { '4', sid, h('PRF', pms, nc, ns),
+                 nc, pc, C, ns, ps, S
+               } 
+               h('serverKey', nc, ns, h('PRF', pms, nc, ns))
+  }
+*/
 
 rule C_1:
     [ Fr(~nc)
@@ -90,24 +106,9 @@ rule S_2:
     , !Pk(C, pkC)
     , !Ltk(S, ltkS)
     ]
-  --[]->
-    [ St_S_2
-        ( S, C, sid, nc, pc, ns, ps, pms
-        // prepare terms for equality check
-        , <'32', h('32', ns, S, pms)>
-        , verify{signature}pkC
-        )
-    ]
-
-rule S_3:
-    [ St_S_2
-        ( S, C, sid, nc, pc, ns, ps, pms
-        // perform equality check
-        , x1
-        , x1
-        )
-    ]
-  --[ SessionKeys
+    /* Explicit equality check, enforced as part of the property. */
+  --[ Eq(verify{signature}pkC, <'32', h('32', ns, S, pms)>)
+    , SessionKeys
         ( S, C
         , h('serverKey', nc, ns, h('PRF', pms, nc, ns))
         , h('clientKey', nc, ns, h('PRF', pms, nc, ns))
@@ -134,49 +135,43 @@ rule C_3:
     ]->
     []
 
-lemma server_key_secrecy:
-  "not(Ex S C keyS keyC #k #d.
-      SessionKeys(S, C, keyS, keyC) @ k 
-    & K(keyS) @ d
-    & (All #r. RevLtk(S) @ r ==> F)
-    & (All #r. RevLtk(C) @ r ==> F)
-  )"
+lemma session_key_secrecy:
+  " /* If all equality checks succeeded */
+    (All x y #i. Eq(x,y) @ i ==> x = y)
+  ==>
+    /* then there is no attack */ 
+    (not( 
+         /* It cannot be that */
+         Ex S C keyS keyC #k.
+           /* somebody claims to have setup session keys, */
+           SessionKeys(S, C, keyS, keyC) @ k 
+           /* but the adversary knows one of them */
+         & ( (Ex #i. K(keyS) @ i) 
+           | (Ex #i. K(keyC) @ i)
+           )
+           /* without having performed a long-term key reveal. */
+         & not (Ex #r. RevLtk(S) @ r)
+         & not (Ex #r. RevLtk(C) @ r)
+    )   )"
 
-lemma session_keys_reachable:
-  "not(Ex S C keyS keyC #k.
-      SessionKeys(S, C, keyS, keyC) @ k 
-  )"
-  
+/* This lemma must NOT have a proof, as otherwise our model would be not
+   executable */
+lemma session_key_setup_possible:
+  " /* If all equality checks succeeded */
+    (All x y #i. Eq(x,y) @ i ==> x = y)
+  ==>
+    /* then there is no trace */ 
+    (not( 
+         /* It cannot be that */
+         Ex S C keyS keyC #k.
+           /* somebody claims to have setup session keys, */
+           SessionKeys(S, C, keyS, keyC) @ k 
+           /* without having performed a long-term key reveal. */
+         & not (Ex #r. RevLtk(S) @ r)
+         & not (Ex #r. RevLtk(C) @ r)
+    )   )"
+
 /*
-
-protocol TLS {
-  1. C -> S: C, nc, sid, pc
-  2. C <- S: ns, sid, ps
-
-  // getting the server certificate from the certificate-authority
-  ca1. C -> CA: S
-  ca2.   <- CA: CA, sign{'cert', S, pk(S)}pk(CA)
-       C <-   : CA, sign{'cert', S, pkS  }pk(CA)
-
-  3. C ->  : { '31', pms                     }pkS ,
-             sign{ '32', h('32', ns, S, pms) }pk(C) ,
-             { '33', sid, h('PRF', pms, nc, ns),
-               nc, pc, C, ns, ps, S
-             } 
-             h('clientKey', nc, ns, h('PRF', pms, nc, ns))
-
-       -> S: { '31', pms                     }pk(S) ,
-             sign{ '32', h('32', ns, S, pms) }pk(C) ,
-             { '33', sid, h('PRF', pms, nc, ns),
-               nc, pc, C, ns, ps, S
-             } 
-             h('clientKey', nc, ns, h('PRF', pms, nc, ns))
-
-  4. C <- S: { '4', sid, h('PRF', pms, nc, ns),
-               nc, pc, C, ns, ps, S
-             } 
-             h('serverKey', nc, ns, h('PRF', pms, nc, ns))
-}
 
 text{* 
 We assume that all clients talk to uncompromised certificate authorities. 
