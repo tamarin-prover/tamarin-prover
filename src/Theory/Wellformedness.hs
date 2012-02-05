@@ -355,9 +355,16 @@ formulaReports thy = do
     -- check that only bound variables and public names are used
     checkTerms header fm
       | null offenders = []
-      | otherwise      = return $ fsep $
-          (text $ header ++ "uses terms of the wrong form:") :
-          (punctuate comma $ map (nest 2 . text . quote . show) offenders)
+      | otherwise      = return $ 
+          (fsep $
+            (text $ header ++ " uses terms of the wrong form:") :
+            (punctuate comma $ map (nest 2 . text . quote . show) offenders)
+          ) $--$
+          wrappedText 
+            "The only allowed terms are public names and bound node and message\
+            \ variables. If you encounter free message variables, then you might\
+            \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
+            \ this is unambiguous"
       where
         offenders = filter (not . allowed) $ formulaTerms fm
         allowed (Lit (Var (Bound _)))        = True
