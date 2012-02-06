@@ -127,6 +127,13 @@ executable tamarin-prover
       , tamarin-prover-utils == 0.1.*
       , tamarin-prover-term  == 0.1.*
 
+    -- extra deps to get it building on GHC 7.0.3 without --solver=modular
+    if impl(ghc <= 7.2)
+      build-depends:
+          template-haskell == 2.5.*
+        , data-default     == 0.2.*
+        , wai-extra        == 0.4.3
+
     if flag(threaded)
         ghc-options:    -threaded
 
