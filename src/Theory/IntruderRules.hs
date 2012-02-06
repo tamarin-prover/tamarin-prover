@@ -99,7 +99,7 @@ destructionRules (StRule lhs@(FApp (NonAC (f,_)) _) (RhsPosition pos)) =
         irule = if (t' /= rhs && rhs `notElem` uprems')
                  then (`evalFresh` avoid ([rhs,t']++uprems')) $ do
                      dfact <- kdFact Nothing t'
-                     ufacts <- mapM (kdFact Nothing) uprems'
+                     ufacts <- mapM (kuFact Nothing) uprems'
                      concfact <- kdFact Nothing rhs
                      return [ Rule (IntrApp f) (dfact:ufacts) [concfact] [] ]
                  else []
