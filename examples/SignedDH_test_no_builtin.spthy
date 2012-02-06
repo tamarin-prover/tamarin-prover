@@ -1,0 +1,67 @@
+theory SignedDH
+begin
+
+section{* The Signed Diffie-Hellman Protocol *}
+
+builtin: diffie-hellman
+
+functions: verify/3, sign/2, pk/1, true/0
+
+equations: verify(sign(m,sk), m, pk(sk)) = true
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltk) ] 
+  --> 
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+
+rule Get_pk:
+  [ !Pk(A, pk) ] 
+  --> 
+  [ Out(pk) ]
+
+rule Reveal_ltk:
+    [ !Ltk(A, ltk) ]
+  --[ LtkReveal(A) ]->
+    [ Out(ltk) ]
+
+// Protocol
+rule Init_1:
+  [ Fr(~ekI), !Ltk($I, ltkI) ]
+  -->
+  [ Init_1( $I, $R, ~ekI )
+  , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', $I, $R,'g' ^ ~ekI }ltkI> ) ]
+
+rule Init_2:
+    [ Init_1( $I, $R, ~ekI )
+    , !Pk($R, pkR)
+    , In( <$R, $I, Y, SIG> ) 
+    ]
+  --[ SessionKey($I,$R, Y ^ ~ekI), Eq(verify(SIG, <'2', $R, $I, Y>, pkR), true) ]->
+    []
+
+rule Resp:
+    [ !Pk($I, pk(ltkI))
+    , !Ltk($R, ltkR)
+    , Fr(~ekR)
+    , In( <$I, $R, X, sign{'1', $I, $R, X }ltkI> ) 
+    ]
+  --[ SessionKey($I,$R, X ^ ~ekR) ]->
+    [
+      Out( <$R, $I, 'g' ^ ~ekR, sign{'2', $R, $I, 'g' ^ ~ekR }ltkR> ) 
+    ]
+
+lemma Perfect_Forward_Secrecy:
+  "(All #i x y. Eq(x,y)@i ==> x = y)
+   ==>
+   All I R sessKey #i #k. 
+     SessionKey(I,R,sessKey) @ i &
+     K(sessKey) @ k
+     ==>
+     ( (Ex #r. LtkReveal(I) @ r & r < i)
+     | (Ex #r. LtkReveal(R) @ r & r < i)
+     )
+  "
+
+
+end
