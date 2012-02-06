@@ -22,6 +22,7 @@ import           Data.Label
 import qualified Data.Set                                 as S
 import qualified Data.Map                                 as M
 import           Data.Monoid
+import           Data.Maybe
 
 import           Control.Monad
 import           Control.Applicative hiding (empty, many, optional)
@@ -244,11 +245,8 @@ ident       := <a-zA-Z> (<a-zA-Z0-9-_)
 -- | Parse an identifier possibly indexed with a number.
 indexedIdentifier :: Parser (String, Int)
 indexedIdentifier =
-    extractIndex <$> identifier 
-  where
-    extractIndex v = case span isDigit $ reverse v of
-      ([],  v') -> (reverse v', 0                 )
-      (idx, v') -> (reverse v', read $ reverse idx)
+    -- FIXME: It might be confusing that 'x.0' and 'x' denote the same variable
+    (\s mi -> (s, fromMaybe 0 mi)) <$> identifier <*> optionMaybe (try (kw DOT *> integer))
 
 -- | Parse a logical variable with the given sorts allowed.
 sortedLVar :: [LSort] -> Parser LVar
@@ -349,6 +347,7 @@ term lit = asum
            | (sym,0) <- funSigForMaudeSig maudeSig ]
 
 -- | A left-associative sequence of exponentations.
+--   FIXME: only accept if diffie-hellman enabled (see also mult and inv)
 expterm :: Parser (Term l) -> Parser (Term l)
 expterm lit = chainl1 (term lit) ((\a b -> FApp (NonAC expSym) [a,b]) <$ kw HAT)
 

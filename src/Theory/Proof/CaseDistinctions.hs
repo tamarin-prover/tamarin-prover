@@ -316,7 +316,7 @@ precomputeCaseDistinctions ctxt typAsms =
       [ do return $ Lit $ Var (LVar "t" LSortFresh 1)
 
       , [ FApp (NonAC (s,k)) $ nMsgVars k
-        | (s,k) <- funSigForMaudeSig  . mhMaudeSig . sigmMaudeHandle . get pcSignature $ ctxt
+        | (s,k) <- funSigForMaudeSig  . mhMaudeSig . get sigmMaudeHandle . get pcSignature $ ctxt
         ,  s `notElem` [ "inv", "pair" ] ]
       ] 
 

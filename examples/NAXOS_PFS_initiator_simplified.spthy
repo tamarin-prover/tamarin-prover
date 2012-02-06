@@ -1,6 +1,8 @@
 theory NAXOS_PFS_initiator_simplified
 begin
 
+builtin: hashing, diffie-hellman
+
 section{* The NAXOS Key-Exchange Protocol *}
 
 /* Protocol rules */

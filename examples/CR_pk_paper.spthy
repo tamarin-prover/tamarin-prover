@@ -3,6 +3,8 @@ begin
 
 section{* The Running Example of Our CSF 10 Paper *}
 
+builtin: asymmetric-encryption
+
 
 /*
 anb-proto CR

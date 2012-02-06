@@ -1,6 +1,8 @@
 theory NAXOS_broken_eCK_variant 
 begin
 
+builtin: hashing, diffie-hellman
+
 section{* The NAXOS Key-Exchange Protocol *}
 
 /* Protocol rules */

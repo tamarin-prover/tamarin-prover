@@ -1,6 +1,8 @@
 theory TLS 
 begin
 
+builtin: hashing, symmetric-encryption, asymmetric-encryption, signing
+
 section{* TLS Handshake *}
 
 text{*
@@ -107,7 +109,7 @@ rule S_2:
     , !Ltk(S, ltkS)
     ]
     /* Explicit equality check, enforced as part of the property. */
-  --[ Eq(verify{signature}pkC, <'32', h('32', ns, S, pms)>)
+  --[ Eq(verify(signature, <'32', h('32', ns, S, pms)>, pkC), true )
     , SessionKeys
         ( S, C
         , h('serverKey', nc, ns, h('PRF', pms, nc, ns))

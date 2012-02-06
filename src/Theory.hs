@@ -393,7 +393,7 @@ defaultOpenTheory = Theory "default" emptySignaturePure [] []
 -- unification for computing the variants.
 dhIntruderTheory :: MaudeHandle -> OpenTheory
 dhIntruderTheory hnd =
-    Theory "intruder_variants" emptySignaturePure
+    Theory "intruder_variants" (emptySignaturePure { _sigMaudeInfo = dhMaudeSig })
            (dhIntruderRules `runReader` hnd) []
 
 -- | Open a theory by dropping the closed world assumption and values whose
@@ -479,7 +479,7 @@ closeTheory maudePath thy0 = do
         addSorrys = checkAndExtendProver (sorryProver "not yet proven")
 
         -- Maude / Signature handle
-        hnd = sigmMaudeHandle sig
+        hnd = get sigmMaudeHandle sig
 
         -- close all theory items: in parallel
         items = (closeTheoryItem <$> get thyItems thy0) `using` parList rdeepseq
@@ -716,13 +716,13 @@ prettyClosedProtoRule cru =
 -- | Pretty print an open theory.
 prettyOpenTheory :: HighlightDocument d => OpenTheory -> d
 prettyOpenTheory = 
-    prettyTheory prettySignature 
+    prettyTheory prettySignaturePure
                  prettyIntrVariantsSection prettyOpenProtoRule prettyProof
 
 -- | Pretty print a closed theory.
 prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
 prettyClosedTheory = 
-    prettyTheory (prettySignature)
+    prettyTheory prettySignatureWithMaude
                  (prettyIntrVariantsSection . intruderRules . get crcRules) 
                  prettyClosedProtoRule
                  prettyIncrementalProof

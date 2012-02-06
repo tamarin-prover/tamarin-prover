@@ -1,6 +1,6 @@
 theory intruder_variants begin
 
- unique_insts:
+ builtin: diffie-hellman
 
 section{* Finite Variants of the Intruder Rules *}
 

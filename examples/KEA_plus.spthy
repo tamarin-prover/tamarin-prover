@@ -1,6 +1,8 @@
 theory KEA_plus
 begin
 
+builtin: hashing, diffie-hellman
+
 section{* The KEA+ Protocol *}
 /* From: 
  * Security Analysis of KEA Authenticated Key Exchange Protocol

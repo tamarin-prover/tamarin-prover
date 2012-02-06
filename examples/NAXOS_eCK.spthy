@@ -1,6 +1,8 @@
 theory NAXOS_eCK
 begin
 
+builtin: diffie-hellman, hashing
+
 section{* The NAXOS Key-Exchange Protocol *}
 
 /* Protocol rules */

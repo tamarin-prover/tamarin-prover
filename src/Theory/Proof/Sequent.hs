@@ -103,7 +103,7 @@ sequentFromFormula kind f =
 -- components of sequent.
 hasNonNormalTerms :: SignatureWithMaude -> Sequent -> Bool
 hasNonNormalTerms sig se =
-    any (not . (`runReader` (sigmMaudeHandle sig)) . nfRule) . M.elems . get sNodes $ se
+    any (not . (`runReader` (get sigmMaudeHandle sig)) . nfRule) . M.elems . get sNodes $ se
 
 -- | True if there is no @EXP-down@ rule that should be replaced by an
 -- @EXP-up@ rule.
@@ -147,7 +147,7 @@ nonUniqueFactInstances :: SignatureWithMaude -> Sequent
 nonUniqueFactInstances sig se = do
     Edge c@(NodeConc (i, _)) (NodePrem (k, _)) <- S.toList $ get sEdges se
     let tag = factTag (nodeConcFact c se)
-    guard (tag `S.member` sigmUniqueInsts sig)
+    guard (tag `S.member` get sigmUniqueInsts sig)
     j <- S.toList $ D.reachableSet [i] less
 
     let isCounterExample = (j /= i) && (j /= k) && 
@@ -209,7 +209,7 @@ execSeProof m ctxt se fs =
 
 -- | Retrieve the 'MaudeHandle' from the 'ProofContext'.
 getMaudeHandle :: SeProof MaudeHandle
-getMaudeHandle = sigmMaudeHandle <$> askM pcSignature
+getMaudeHandle = get sigmMaudeHandle <$> askM pcSignature
 
 -- | Import a rule with fresh variables.
 importRule :: MonadFresh m

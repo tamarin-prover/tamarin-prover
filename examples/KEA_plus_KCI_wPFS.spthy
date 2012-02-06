@@ -1,6 +1,8 @@
 theory KEA_plus_KCI_wPFS
 begin
 
+builtin: hashing, diffie-hellman
+
 section{* The KEA+ Protocol *}
 /* From: 
  * Security Analysis of KEA Authenticated Key Exchange Protocol

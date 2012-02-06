@@ -437,7 +437,7 @@ execProofMethod ctxt method se =
         | otherwise                                       -> Just M.empty
   where
     -- Maude handle / signature to use
-    hnd = sigmMaudeHandle $ get pcSignature ctxt
+    hnd = get sigmMaudeHandle $ get pcSignature ctxt
 
     -- expect only one or no subcase in the given case distinction
     singleCase check m = 

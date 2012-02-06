@@ -1,6 +1,8 @@
 theory SignedDH_eCK
 begin
 
+builtin: diffie-hellman, signing
+
 section{* The Signed Diffie-Hellman Protocol in the eCK model *}
 
 // Public key infrastructure
@@ -16,12 +18,12 @@ rule Init_1:
   --[ SidI_1(~ekI, $I, $R, 'g'^~ekI) ]->
     [ Init_1( ~ekI, $I, $R, ~ekI, 'g' ^ ~ekI )
     , !Ephk(~ekI)
-    , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', h($I, $R,'g' ^ ~ekI) }ltkI> ) ]
+    , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', $I, $R,'g' ^ ~ekI }ltkI> ) ]
 
 rule Init_2:
     [ Init_1( ~ekI, $I, $R, ~ekI, hkI )
     , !Pk($R, pk(ltkR))
-    , In( <$R, $I, Y, sign{'2', h($R, $I, Y) }ltkR> ) 
+    , In( <$R, $I, Y, sign{'2', $R, $I, Y }ltkR> ) 
     ]
   --[ SidI_2(~ekI, $I, $R, hkI, Y, Y ^ ~ekI ) ]->
     [ !Sessk(~ekI, Y ^ ~ekI) ]
@@ -31,12 +33,12 @@ rule Resp:
     [ !Pk($I, pk(ltkI))
     , !Ltk($R, ltkR)
     , Fr(~ekR)
-    , In( <$I, $R, X, sign{'1', h(< $I, $R, X >) }ltkI> ) 
+    , In( <$I, $R, X, sign{'1', $I, $R, X }ltkI> ) 
     ]
   --[ SidR_1(~ekR, $I, $R, X, 'g' ^ ~ekR, X ^ ~ekR) ]->
     [ !Ephk(~ekR)
     , !Sessk(~ekR, X ^ ~ekR)
-    , Out( <$R, $I, 'g' ^ ~ekR, sign{'2', h(< $R, $I, 'g' ^ ~ekR >) }ltkR> ) 
+    , Out( <$R, $I, 'g' ^ ~ekR, sign{'2', $R, $I, 'g' ^ ~ekR }ltkR> ) 
     ]
 
 /* Key Reveals for the eCK model */

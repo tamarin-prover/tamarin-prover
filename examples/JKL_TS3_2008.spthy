@@ -1,6 +1,8 @@
 theory JKL_TS3_2008
 begin
 
+builtin: hashing, diffie-hellman
+
 section{* Jeong, Katz, Lee : TS3 (2008) *}
 /*
  * From:

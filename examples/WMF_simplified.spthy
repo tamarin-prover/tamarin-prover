@@ -1,5 +1,7 @@
 theory WMF_simplified begin
 
+builtin: symmetric-encryption
+
 /*
 typing and other invariants
 ---------------------------

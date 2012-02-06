@@ -1,6 +1,8 @@
 theory Example_for_CSF_12
 begin
 
+builtin: symmetric-encryption
+
 rule Step1:
   [ Fr(~x), Fr(~k) ] 
   --> 

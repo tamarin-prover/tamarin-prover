@@ -15,7 +15,7 @@
 module Theory.Signature (
 
   -- * Signature type
-    Signature
+    Signature(..)
   
   -- ** Pure signatures
   , SignaturePure
@@ -31,7 +31,8 @@ module Theory.Signature (
   , sigmMaudeHandle
 
   -- ** Pretty-printing
-  , prettySignature
+  , prettySignaturePure
+  , prettySignatureWithMaude
 
   ) where
 
@@ -134,12 +135,12 @@ type SignatureWithMaude = Signature MaudeHandle
 
 
 -- | Access the facts that are declared as globally fresh.
-sigmUniqueInsts :: SignatureWithMaude -> S.Set FactTag
-sigmUniqueInsts = L.get sigUniqueInsts
+sigmUniqueInsts :: SignatureWithMaude L.:-> S.Set FactTag
+sigmUniqueInsts = sigUniqueInsts
 
 -- | Access the maude handle in a signature.
-sigmMaudeHandle :: SignatureWithMaude -> MaudeHandle
-sigmMaudeHandle = L.get sigMaudeInfo
+sigmMaudeHandle :: SignatureWithMaude L.:-> MaudeHandle
+sigmMaudeHandle = sigMaudeInfo
 
 -- | Ensure that maude is running and configured with the current signature.
 toSignatureWithMaude :: FilePath            -- ^ Path to Maude executable.
@@ -202,13 +203,27 @@ instance NFData SignatureWithMaude where
 -- Pretty-printing
 ------------------------------------------------------------------------------
 
--- | Pretty-print a signature.
-prettySignature :: HighlightDocument d => Signature a -> d
-prettySignature sig = foldr ($--$) emptyDoc $ map combine  
-  [ ("unique_insts",  ppGFresh $ S.toList $ _sigUniqueInsts sig)
-  ]
+-- | Pretty-print a signature with maude.
+prettySignaturePure :: HighlightDocument d => SignaturePure -> d
+prettySignaturePure sig = foldr ($--$) emptyDoc $ map combine $
+       [ ("unique_insts",  ppGFresh $ uniqueInsts) | not $ null uniqueInsts ]
+       -- FIXME: Print Maude signature completely, this is only used for
+       -- intruder-variants for now.
+       ++ [ ("builtin", text "diffie-hellman" ) | enableDH . L.get sigpMaudeSig $ sig ]
   where
+    uniqueInsts = S.toList $ L.get sigpUniqueInsts sig
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
     ppGFresh = fsep . punctuate comma . map (text . showFactTagArity)
     
+-- | Pretty-print a pure signature.
+prettySignatureWithMaude :: HighlightDocument d => SignatureWithMaude -> d
+prettySignatureWithMaude sig = foldr ($--$) emptyDoc $ map combine $
+    -- FIXME: Print Maude signature completely, this is only used for
+    -- intruder-variants for now.
+    [ ("unique_insts",  ppGFresh $ uniqueInsts) | not $ null uniqueInsts ]
+    ++ [ ("builtin", text "diffie-hellman" ) | enableDH . mhMaudeSig . L.get sigmMaudeHandle $ sig ]
+  where
+    uniqueInsts = S.toList $ L.get sigmUniqueInsts sig
+    combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
+    ppGFresh = fsep . punctuate comma . map (text . showFactTagArity)
 

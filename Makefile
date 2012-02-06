@@ -64,7 +64,8 @@ UM=UM_eCK_noKCI.spthy UM_eCK.spthy UM_wPFS.spthy
 
 SDH=SignedDH.spthy SignedDH_eCK.spthy
 
-STS=STS.spthy STS-mod.spthy
+STS=
+#STS-ENC.spthy
 
 TMPRES=case-studies/temp-analysis.spthy
 TMPOUT=case-studies/temp-output.spthy
