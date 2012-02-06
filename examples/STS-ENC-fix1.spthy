@@ -1,6 +1,8 @@
 theory STS_ENC_FIX1
 begin
 
+builtin: hashing, diffie-hellman, signing, symmetric-encryption
+
 section{* The Station-To-Station Protocol (ENC version) *}
 // Fix 1: A "sends" cert in step 1
 
@@ -34,13 +36,13 @@ rule Init_2:
     [ Init_1( $I, $R, ~ltkI, ~ekI )
     , !Pk($R, pk(~ltkR))
     , In( <$R, $I, Y, senc{
-          sign{h(< Y, 'g'^~ekI >) }~ltkR
+          sign{ Y, 'g'^~ekI }~ltkR
 	}(Y^~ekI)
       > ) ]
   --[ SessionKey(~ekI,$I,$R, h(Y ^ ~ekI)), 
       AcceptedI(~ekI,$I,$R,'g'^~ekI,Y) ]->
     [ Out( <$I, $R, senc{
-          sign{h(< 'g' ^ ~ekI, Y >) }~ltkI
+          sign{ 'g' ^ ~ekI, Y }~ltkI
 	}(Y^~ekI)
       > ) ]
 
@@ -52,14 +54,14 @@ rule Resp_1:
   -->
     [ Resp_1( $I, $R, ~ltkR, ~ekR, X )
     , Out( <$R, $I, 'g' ^ ~ekR, senc{
-          sign{h(< 'g' ^ ~ekR, X >) }~ltkR
+          sign{ 'g' ^ ~ekR, X }~ltkR
         }(X^~ekR)
       > ) ]
 
 rule Resp_2:
     [ Resp_1( $I, $R, ~ltkR, ~ekR, X )
     , In( <$I, $R, senc{
-          sign{h(< X, 'g'^~ekR >) }~ltkI
+          sign{ X, 'g'^~ekR }~ltkI
 	}(X^~ekR)
       > ) ]
   --[ SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ),

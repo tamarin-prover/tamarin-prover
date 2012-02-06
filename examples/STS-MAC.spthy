@@ -1,6 +1,10 @@
 theory STS_MAC
 begin
 
+builtin: diffie-hellman, hashing, signing
+
+functions: mac/2
+
 section{* The Station-To-Station Protocol (MAC version) *}
 
 
@@ -29,18 +33,18 @@ rule Init_2:
     [ Init_1( $I, $R, ~ltkI, ~ekI )
     , !Pk($R, pk(~ltkR))
     , In( <$R, $I, Y, 
-          sign{h(< Y, 'g'^~ekI >) }~ltkR,
-        h(<Y^~ekI,
-          sign{h(< Y, 'g'^~ekI >) }~ltkR
-	>)
+          sign{ Y, 'g'^~ekI }~ltkR,
+        mac(Y^~ekI,
+            sign{ Y, 'g'^~ekI }~ltkR
+	)
       > ) ]
   --[ SessionKey(~ekI,$I,$R, h(Y ^ ~ekI)), 
       AcceptedI(~ekI,$I,$R,'g'^~ekI,Y) ]->
     [ Out( <$I, $R, 
-          sign{h(< 'g' ^ ~ekI, Y >) }~ltkI,
-	h(<Y^~ekI,
-          sign{h(< 'g' ^ ~ekI, Y >) }~ltkI
-	>)
+          sign{ 'g' ^ ~ekI, Y }~ltkI,
+	mac( Y^~ekI,
+             sign{ 'g' ^ ~ekI, Y }~ltkI
+	)
       > ) ]
 
 rule Resp_1:
@@ -50,20 +54,20 @@ rule Resp_1:
   -->
     [ Resp_1( $I, $R, ~ltkR, ~ekR, X )
     , Out( <$R, $I, 'g' ^ ~ekR,
-          sign{h(< 'g' ^ ~ekR, X >) }~ltkR,
-	h(<X^~ekR,
-          sign{h(< 'g' ^ ~ekR, X >) }~ltkR
-        >)
+          sign{ 'g' ^ ~ekR, X }~ltkR,
+	  mac( X^~ekR,
+             sign{ 'g' ^ ~ekR, X }~ltkR
+          )
       > ) ]
 
 rule Resp_2:
     [ !Pk($I, pk(~ltkI))
     , Resp_1( $I, $R, ~ltkR, ~ekR, X )
     , In( <$I, $R, 
-          sign{h(< X, 'g'^~ekR >) }~ltkI,
-	h(<X^~ekR,
-          sign{h(< X, 'g'^~ekR >) }~ltkI
-	>)
+          sign{ X, 'g'^~ekR }~ltkI,
+  	  mac(X^~ekR,
+              sign{ X, 'g'^~ekR }~ltkI
+	  )
       > ) ]
   --[ SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ),
       AcceptedR(~ekR,$I,$R,X,'g'^~ekR) ]->

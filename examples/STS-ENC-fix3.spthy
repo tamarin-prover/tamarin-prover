@@ -1,6 +1,8 @@
 theory STS_ENC_FIX3
 begin
 
+builtin: hashing, diffie-hellman, signing, symmetric-encryption
+
 section{* The Station-To-Station Protocol (ENC version) *}
 // Fix with flow numbers and identities
 
@@ -34,13 +36,13 @@ rule Init_2:
     [ Init_1( $I, $R, ~ltkI, ~ekI )
     , !Pk($R, pk(~ltkR))
     , In( <$R, $I, Y, senc{
-          sign{h(<'1',$I,$R, Y, 'g'^~ekI >) }~ltkR
+          sign{ '1',$I,$R, Y, 'g'^~ekI }~ltkR
 	}(Y^~ekI)
       > ) ]
   --[ SessionKey(~ekI,$I,$R, h(Y ^ ~ekI)), 
       AcceptedI(~ekI,$I,$R,'g'^~ekI,Y) ]->
     [ Out( <$I, $R, senc{
-          sign{h(<'2',$I,$R, 'g' ^ ~ekI, Y >) }~ltkI
+          sign{ '2',$I,$R, 'g' ^ ~ekI, Y }~ltkI
 	}(Y^~ekI)
       > ) ]
 
@@ -51,7 +53,7 @@ rule Resp_1:
   -->
     [ Resp_1( $I, $R, ~ltkR, ~ekR, X )
     , Out( <$R, $I, 'g' ^ ~ekR, senc{
-          sign{h(<'1',$I,$R, 'g' ^ ~ekR, X >) }~ltkR
+          sign{ '1',$I,$R, 'g' ^ ~ekR, X }~ltkR
         }(X^~ekR)
       > ) ]
 
@@ -59,7 +61,7 @@ rule Resp_2:
     [ !Pk($I, pk(~ltkI))
     , Resp_1( $I, $R, ~ltkR, ~ekR, X )
     , In( <$I, $R, senc{
-          sign{h(<'2',$I,$R, X, 'g'^~ekR >) }~ltkI
+          sign{ '2',$I,$R, X, 'g'^~ekR }~ltkI
 	}(X^~ekR)
       > ) ]
   --[ SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ),
