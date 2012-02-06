@@ -45,7 +45,9 @@ rule Init_2:
 	mac( Y^~ekI,
              sign{ 'g' ^ ~ekI, Y }~ltkI
 	)
-      > ) ]
+      > ),
+      !SessionKey(~ekI,$I,$R, h(Y ^ ~ekI))
+    ]
 
 rule Resp_1:
     [ !Ltk($R, ~ltkR)
@@ -71,10 +73,10 @@ rule Resp_2:
       > ) ]
   --[ SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ),
       AcceptedR(~ekR,$I,$R,X,'g'^~ekR) ]->
-    []
+    [ !SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ) ]
 
 rule Sessionkey_Reveal:
-    [ SessionKey(~tid, $I,$R,k) ]
+    [ !SessionKey(~tid, $I,$R,k) ]
   --[ SesskRev(~tid,k) ]->
     [ Out(k) ]
 
