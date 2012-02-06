@@ -42,6 +42,8 @@ library
     exposed-modules:
       Term.Unification
       Term.LTerm
+      Term.Positions
+      Term.SubtermRule
       Term.Subsumption
       Term.Substitution
 
@@ -62,11 +64,8 @@ library
     other-modules:
       Term.Term
       Term.Classes
-      Term.Positions
 
       Term.Narrowing.Narrow
 
       Term.Substitution.SubstVFree
       Term.Substitution.SubstVFresh
-
-

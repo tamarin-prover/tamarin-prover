@@ -21,6 +21,7 @@ import           Data.Foldable (asum)
 import           Data.Label
 import qualified Data.Set                                 as S
 import qualified Data.Map                                 as M
+import           Data.Monoid
 
 import           Control.Monad
 import           Control.Applicative hiding (empty, many, optional)
@@ -34,6 +35,7 @@ import           Theory.Lexer
                    ( Keyword(..), TextType(..), runAlex, AlexPosn(..)
                    , alexGetPos, alexMonadScan
                    )
+import           Term.SubtermRule
 
 import Text.Isar (render)
 
@@ -71,7 +73,7 @@ scanString filename s =
 ---------
 
 -- | A parser for a stream of tokens.
-type Parser a = Parsec [Token] () a
+type Parser a = Parsec [Token] MaudeSig a
 
 -- | Parse a token based on the acceptance condition
 token :: (Keyword -> Maybe a) -> Parser a
@@ -162,7 +164,7 @@ formalComment =
 parseFile :: Parser a -> FilePath -> IO a
 parseFile parser f = do
   s <- readFile f
-  case runParser parser () f (scanString f s) of
+  case runParser parser minimalMaudeSig f (scanString f s) of
     Right p -> return p
     Left err -> error $ show err
 
@@ -175,7 +177,7 @@ parseOpenTheory flags = parseFile (theory flags)
 -- TODO: This function seems to parse a string, not a file from a file path?
 parseProofMethod :: FilePath -> Either ParseError ProofMethod
 parseProofMethod = 
-    runParser proofMethod () dummySource . scanString dummySource
+    runParser proofMethod minimalMaudeSig dummySource . scanString dummySource
   where 
     dummySource = "<interactive>"
 
@@ -191,7 +193,7 @@ parseLemma = parseFromString lemma
 -- | Run a given parser on a given string.
 parseFromString :: Parser a -> String -> Either ParseError a
 parseFromString parser =
-    runParser parser () dummySource . scanString dummySource
+    runParser parser minimalMaudeSig dummySource . scanString dummySource
   where
     dummySource = "<interactive>"
 
@@ -295,8 +297,9 @@ llit = asum
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
 lookupNonACArity :: String -> Parser Int
-lookupNonACArity op =
-    case lookup op (funSigForMaudeSig allMaudeSig) of
+lookupNonACArity op = do
+    maudeSig <- getState
+    case lookup op (funSigForMaudeSig maudeSig) of
         Nothing -> fail $ "unknown operator `" ++ op ++ "'"
         Just k  -> return k
 
@@ -333,12 +336,17 @@ term lit = asum
     , kw UNDERSCORE  *> (FApp (NonAC invSym) . return <$> term lit)
     , string "1" *> pure (FApp (NonAC oneSym) [])
     , application <?> "function application"
+    , nullaryApp
     , lit  
     ]
     <?> "term"
   where
     application = asum $ map (try . ($ lit)) [naryOpApp, binaryAlgApp]
     pairing = kw LESS *> tupleterm lit <* kw GREATER
+    nullaryApp = do
+      maudeSig <- getState
+      asum [ try (string sym) *> pure (FApp (NonAC (sym,0)) [])
+           | (sym,0) <- funSigForMaudeSig maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Parser (Term l) -> Parser (Term l)
@@ -708,6 +716,47 @@ globallyFresh =
     factSymbol = 
         ProtoFact Linear <$> identifier <*> (kw SLASH *> integer)
 
+builtin :: Parser ()
+builtin =
+    string "builtin" *> kw COLON *> sepBy1 builtinTheory (kw COMMA) *> pure ()
+  where
+    extendSig msig = modifyState (`mappend` msig)
+    builtinTheory = asum
+      [ try (string "diffie"     *> kw MINUS *> string "hellman")
+          *> extendSig dhMaudeSig
+      , try (string "symmetric"  *> kw MINUS *> string "encryption")
+          *> extendSig symEncMaudeSig
+      , try (string "asymmetric" *> kw MINUS *> string "encryption")
+          *> extendSig asymEncMaudeSig
+      , try (string "signing")
+          *> extendSig signatureMaudeSig
+      , string "hashing"
+          *> extendSig hashMaudeSig
+      ]
+
+functions :: Parser ()
+functions =
+    string "functions" *> kw COLON *> sepBy1 functionSymbol (kw COMMA) *> pure ()
+  where
+    functionSymbol = do
+        funsym <- (,) <$> identifier <*> (kw SLASH *> integer)
+        sig <- getState
+        if (fst funsym `elem` map fst (funSig sig))
+            then fail $ "duplicate function symbol: " ++ show funsym
+            else setState (sig `mappend` emptyMaudeSig {funSig = [funsym]})
+
+equations :: Parser ()
+equations =
+    string "equations" *> kw COLON *> sepBy1 equation (kw COMMA) *> pure ()
+  where
+    equation = do
+        rrule <- RRule <$> term llit <*> (kw EQUAL *> term llit)
+        case rRuleToStRule rrule of
+          Just str ->
+              modifyState (`mappend` emptyMaudeSig {stRules = [str]})
+          Nothing  ->
+              fail $ "Not a subterm rule: " ++ show rrule
+
 ------------------------------------------------------------------------------
 -- Parsing Theories
 ------------------------------------------------------------------------------
@@ -728,6 +777,15 @@ theory flags0 = do
       [ do fresh <- globallyFresh
            addItems flags $ 
                modify (sigpUniqueInsts . thySignature) (S.union fresh) thy
+      , do builtin
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+      , do functions
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+      , do equations
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
       , do thy' <- liftedAddLemma thy =<< lemma

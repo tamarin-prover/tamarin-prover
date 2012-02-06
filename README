@@ -95,10 +95,41 @@ See the help information output when calling 'dh-proto-proof' without any
 flags for more information.
 
 
+
+4. Built-in Equational theories
+===============================
+
+There are several built-in equational theories which can be activated
+for a given theory file by including:
+
+> builtin: theoryname
+
+The following theories are supported as builtins:
+
+diffie-hellman:
+  functions: _ ^ _, inv(_), _*_
+  equations: see paper
+
+hashing:
+  functions: h(_)
+  no equations
+
+signing:
+  functions: sign(_,_), verify(_,_,_), pk(_), true
+  equations: verify(sign(m,sk), m, pk(sk)) = true
+
+symmetric-encryption:
+  functions: senc(_,_), sdec(_,_)
+  equations: sdec(senc(m,k),k) = m
+
+asymmetric-encryption:
+  functions: aenc(_,_), adec(_,_), pk(_)
+  equations: adec(aenc(m, pk(sk)), sk) = m
+
+
 ***
 * Happy Proving :-)
 *
 * In case of questions do not hesistate to contact the authors
 * simon.meier@inf.ethz.ch  or  benedikt.schmidt@inf.ethz.ch
 ***
-

@@ -21,6 +21,7 @@ module Term.Builtin.Rules (
 ) where
 
 import Term.LTerm
+import Term.SubtermRule
 import Term.Builtin.Signature
 import Term.Builtin.Convenience
 
@@ -59,12 +60,10 @@ msetRules = [ s1 # empty `RRule` s1 ]
 
 
 -- | The rewriting rules for standard subterm operators that are builtin.
-pairRules, symEncRules, asymEncRules, signatureRules :: [RRule LNTerm]
+pairRules, symEncRules, asymEncRules, signatureRules :: [StRule]
 pairRules      =
-    [ fstC (pair (x1,x2)) `RRule` x1
-    , sndC (pair (x1,x2)) `RRule` x2 ]
-symEncRules    = [ sdec (senc (x1,x2), x2) `RRule` x1 ]
-asymEncRules   = [ adec (aenc (x1, pk x2), x2) `RRule` x1 ]
-signatureRules =
-    [ verify (sign (x1,x2), pk x2) `RRule` x1
-    , extract (sign (x1,x2)) `RRule` x1 ]
+    [ fstC (pair (x1,x2)) `StRule` (RhsPosition [0,0])
+    , sndC (pair (x1,x2)) `StRule` (RhsPosition [0,1]) ]
+symEncRules    = [ sdec (senc (x1,x2), x2)     `StRule` (RhsPosition [0,0]) ]
+asymEncRules   = [ adec (aenc (x1, pk x2), x2) `StRule` (RhsPosition [0,0]) ]
+signatureRules = [ verify (sign (x1,x2), x1, pk x2) `StRule` (RhsGround trueC) ]

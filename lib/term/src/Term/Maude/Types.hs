@@ -13,8 +13,10 @@ import Term.Term
 import Term.LTerm
 import Term.Builtin.Rules
 import Term.Substitution
+import Term.SubtermRule
 
 import Utils.Misc
+import Extension.Prelude
 import Control.Monad.Fresh
 import Control.Monad.Bind
 
@@ -50,8 +52,9 @@ data MaudeSig = MaudeSig
     , enableXor  :: Bool
     , enableMSet :: Bool
     , funSig     :: FunSig  -- ^ function signature not including the function symbols for DH, Xor, MSet
-    , rrules     :: [RRule LNTerm]
+    , stRules    :: [StRule]
     }
+    deriving (Ord, Show, Eq)
 
 -- | The empty maude signature.
 emptyMaudeSig :: MaudeSig
@@ -59,8 +62,9 @@ emptyMaudeSig = MaudeSig False False False [] []
 
 -- | A monoid instance to combine maude signatures.
 instance Monoid MaudeSig where
-    (MaudeSig dh xor mset funsig rrules) `mappend` (MaudeSig dh' xor' mset' funsig' rrules') =
-        MaudeSig (dh || dh') (xor || xor')  (mset || mset')  (funsig ++ funsig')  (rrules ++ rrules')
+    (MaudeSig dh xor mset funsig stRules) `mappend` (MaudeSig dh' xor' mset' funsig' stRules') =
+        MaudeSig (dh || dh') (xor || xor')  (mset || mset')
+                 (sortednub $ funsig ++ funsig')  (sortednub $ stRules ++ stRules')
     mempty = emptyMaudeSig
 
 -- | Maude signatures for the AC symbols.
@@ -71,28 +75,32 @@ msetMaudeSig = emptyMaudeSig { enableMSet = True }
 
 -- | Maude signatures for the default subterm symbols.
 pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, hashMaudeSig :: MaudeSig
-pairMaudeSig      = emptyMaudeSig { funSig = pairFunSig,      rrules = pairRules   }
-symEncMaudeSig    = emptyMaudeSig { funSig = symEncFunSig,    rrules = symEncRules }
-asymEncMaudeSig   = emptyMaudeSig { funSig = asymEncFunSig,   rrules = asymEncRules }
-signatureMaudeSig = emptyMaudeSig { funSig = signatureFunSig, rrules = signatureRules }
-hashMaudeSig      = emptyMaudeSig { funSig = hashFunSig,    rrules = [] }
+pairMaudeSig      = emptyMaudeSig { funSig = pairFunSig,      stRules = pairRules   }
+symEncMaudeSig    = emptyMaudeSig { funSig = symEncFunSig,    stRules = symEncRules }
+asymEncMaudeSig   = emptyMaudeSig { funSig = asymEncFunSig,   stRules = asymEncRules }
+signatureMaudeSig = emptyMaudeSig { funSig = signatureFunSig, stRules = signatureRules }
+hashMaudeSig      = emptyMaudeSig { funSig = hashFunSig,      stRules = [] }
+
+-- | The minimal maude signature.
+minimalMaudeSig :: MaudeSig
+minimalMaudeSig = pairMaudeSig
 
 -- | Maude signatures with all builtin symbols.
 allMaudeSig :: MaudeSig
 allMaudeSig = mconcat
-    [ dhMaudeSig -- , xorMaudeSig, msetMaudeSig
+    [ dhMaudeSig, xorMaudeSig, msetMaudeSig
     , pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, hashMaudeSig ]
 
 -- | @rrulesForMaudeSig msig@ returns all rewriting rules including the rules
 --   for xor, dh, and multiset.
 rrulesForMaudeSig :: MaudeSig -> [RRule LNTerm]
-rrulesForMaudeSig (MaudeSig {enableXor, enableDH, enableMSet, rrules}) =
-    rrules
+rrulesForMaudeSig (MaudeSig {enableXor, enableDH, enableMSet, stRules}) =
+    map stRuleToRRule stRules
     ++ (if enableDH   then dhRules   else [])
     ++ (if enableXor  then xorRules  else [])
     ++ (if enableMSet then msetRules else [])
 
--- | @rrulesForMaudeSig msig@ returns all non-AC function symbols including the
+-- | @funSigForMaudeSig msig@ returns all non-AC function symbols including the
 --   function symbols for xor, dh, and multiset.
 funSigForMaudeSig :: MaudeSig -> FunSig
 funSigForMaudeSig (MaudeSig {enableXor, enableDH, enableMSet, funSig}) =
@@ -174,7 +182,7 @@ msubstToLSubstVFresh :: (Ord c, Show (Lit c LVar), Show c)
 msubstToLSubstVFresh bindings substMaude
   | not $ null [i | (_,t) <- substMaude, MaudeVar _ i <- lits t] =
       error $ "msubstToLSubstVFresh: nonfresh variables in `"++show substMaude++"'"
-  | otherwise = substFromListVFresh slist
+  | otherwise = removeRenamings $ substFromListVFresh slist
  where
   slist = runBackConversion (traverse translate substMaude) bindings
   -- try to keep variable name for xi -> xj mappings
@@ -221,11 +229,19 @@ ppMSort LSortMsg   = "Msg"
 ppMSort LSortNode  = "Node"
 ppMSort LSortMSet  = "MSet"
 
+-- | Used to prevent clashes with predefined Maude function symbols
+--   like @true@
+funsymPrefix :: String
+funsymPrefix = "tamX"
 
-ppMACSym :: ACSym -> String
-ppMACSym Mult = "mult"
-ppMACSym MUn  = "mun"
-ppMACSym Xor  = "xor"
+-- | Pretty print an AC symbol for Maude.
+ppMaudeACSym :: ACSym -> String
+ppMaudeACSym o =
+    funsymPrefix
+    ++ case o of
+           Mult -> "mult"
+           MUn  -> "mun"
+           Xor  -> "xor"
 
 -- | @ppMaude t@ pretty prints the term @t@ for Maude.
 ppMaude :: Term MaudeLit -> String
@@ -236,16 +252,16 @@ ppMaude (Lit (MaudeConst i LSortMsg))   = "c("++ show i ++")"
 ppMaude (Lit (MaudeConst i LSortNode))  = "n("++ show i ++")"
 ppMaude (Lit (MaudeConst i LSortMSet))  = "m("++ show i ++")"
 ppMaude (Lit (FreshVar _ _))            = error "ppMaude: FreshVar not allowed"
-ppMaude (FApp (NonAC (fsym,_)) [])      = fsym
+ppMaude (FApp (NonAC (fsym,_)) [])      = funsymPrefix++fsym
 ppMaude (FApp (NonAC (fsym,_)) as)      =
-    fsym++"("++(intercalate "," (map ppMaude as))++")"
+    funsymPrefix++fsym++"("++(intercalate "," (map ppMaude as))++")"
 ppMaude (FApp (AC op) as)               =
-    ppMACSym op ++ "("++(intercalate "," (map ppMaude as))++")"
+    ppMaudeACSym op ++ "("++(intercalate "," (map ppMaude as))++")"
 ppMaude (FApp List as)                  =
-    "list(" ++ ppList as ++ ")"
+    funsymPrefix++"list(" ++ ppList as ++ ")"
   where
-    ppList []     = "nil"
-    ppList (x:xs) = "cons(" ++ ppMaude x ++ "," ++ ppList xs ++ ")"
+    ppList []     = funsymPrefix++"nil"
+    ppList (x:xs) = funsymPrefix++"cons(" ++ ppMaude x ++ "," ++ ppList xs ++ ")"
 
 -- Parser for Maude output
 ------------------------------------------------------------------------
@@ -307,11 +323,11 @@ expr =  fixup <$> p
                  <|> (string "n(" *> pure LSortNode)
                  <|> (string "m(" *> pure LSortMSet)
 
-    parseACSym =  try (string "mult(") *> return Mult
-              <|> (string "mun(")  *> return MUn
-              <|> (string "xor(")  *> return Xor
+    parseACSym =  try (string (ppMaudeACSym Mult++"(")) *> return Mult
+              <|> try (string (ppMaudeACSym MUn++"("))  *> return MUn
+              <|> (string (ppMaudeACSym Xor++"("))  *> return Xor
 
-    parseFreeSym = many1 (oneOf (['a' .. 'z']++['A'..'Z']))
+    parseFreeSym = string funsymPrefix *> many1 (oneOf (['a' .. 'z']++['A'..'Z']))
  
     fixup t@(Lit _)                     = t
     fixup (FApp (NonAC ("list",1)) [a]) = FApp List (collect a)

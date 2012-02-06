@@ -100,11 +100,11 @@ type FunSig = [NonACSym]
 -- | These symbols are builtin and require special handling in the parser
 --   or elsewhere.
 pairSym, expSym, invSym, oneSym, zeroSym, emptySym :: NonACSym
-pairSym = ("pair",2)
-expSym  = ("exp",2)
-invSym  = ("inv",1)    -- ^ The inverse in the groups of exponents.
-oneSym  = ("one", 0)   -- ^ The one in the group of exponents.
-zeroSym = ("zero",0)   -- ^ The zero for Xor.
+pairSym  = ("pair",2)
+expSym   = ("exp",2)
+invSym   = ("inv",1)    -- ^ The inverse in the groups of exponents.
+oneSym   = ("one", 0)   -- ^ The one in the group of exponents.
+zeroSym  = ("zero",0)   -- ^ The zero for Xor.
 emptySym = ("empty",0) -- ^ The empty multiset.
 
 -- | Destruct a top-level function application.
@@ -324,6 +324,7 @@ instance Applicative Match where
 
 -- |  A rewrite rule.
 data RRule a = RRule a a
+    deriving (Show, Ord, Eq)
 
 instance Functor RRule where
     fmap f (RRule lhs rhs) = RRule (f lhs) (f rhs) 

@@ -65,8 +65,8 @@ theory msig@(MaudeSig {enableDH, enableXor, enableMSet, funSig}) = unlines $
           , "  subsort Msg < MSet ."
           , "  subsort MSet < TOP ."
           , "  op m : Nat -> MSet ."
-          , "  op mun : MSet MSet -> MSet [comm assoc] ."
-          , "  op empty : -> MSet ."
+          , "  op "++funsymPrefix++"mun : MSet MSet -> MSet [comm assoc] ."
+          , "  op "++funsymPrefix++"empty : -> MSet ."
           ]
      else [ "  sort Pub Fresh Msg Node TOP ."])
     ++
@@ -81,22 +81,22 @@ theory msig@(MaudeSig {enableDH, enableXor, enableMSet, funSig}) = unlines $
     , "  op n : Nat -> Node ."
     -- used for encoding App List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
-    , "  op list : TOP -> TOP ."
-    , "  op cons : TOP TOP -> TOP ."
-    , "  op nil  : -> TOP ." ]
+    , "  op "++funsymPrefix++"list : TOP -> TOP ."
+    , "  op "++funsymPrefix++"cons : TOP TOP -> TOP ."
+    , "  op "++funsymPrefix++"nil  : -> TOP ." ]
     ++
     (if enableDH
        then
-       [ "  op one : -> Msg ."
-       , "  op exp : Msg Msg -> Msg ."
-       , "  op mult : Msg Msg -> Msg [comm assoc] ."
-       , "  op inv : Msg -> Msg ." ]
+       [ "  op "++funsymPrefix++"one : -> Msg ."
+       , "  op "++funsymPrefix++"exp : Msg Msg -> Msg ."
+       , "  op "++funsymPrefix++"mult : Msg Msg -> Msg [comm assoc] ."
+       , "  op "++funsymPrefix++"inv : Msg -> Msg ." ]
        else [])
     ++
     (if enableXor
        then
-       [ "  op zero : -> Msg ."
-       , "  op xor : Msg Msg -> Msg [comm assoc] ."]
+       [ "  op "++funsymPrefix++"zero : -> Msg ."
+       , "  op "++funsymPrefix++"xor : Msg Msg -> Msg [comm assoc] ."]
        else [])
     ++
     map theoryFunSym funSig
@@ -106,9 +106,9 @@ theory msig@(MaudeSig {enableDH, enableXor, enableMSet, funSig}) = unlines $
     [ "endfm" ]
   where
     theoryFunSym (s,ar) =
-        "  op " ++ s ++" : " ++(concat $ replicate ar "Msg ")++" -> Msg ."
+        "  op " ++ funsymPrefix ++ s ++" : " ++(concat $ replicate ar "Msg ")++" -> Msg ."
     theoryRule (l `RRule` r) =
-        "  eq " ++ ppMaude lm ++" = " ++ppMaude rm++" ."
+        "  eq " ++ ppMaude lm ++" = " ++ ppMaude rm ++" ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
                         `evalFresh` nothingUsed
 

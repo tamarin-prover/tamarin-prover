@@ -805,6 +805,7 @@ $( derive makeNFData ''Connective)
 $( derive makeNFData ''Quantifier)
 
 
+{-
 $( derive makeNFData ''Term )
 $( derive makeNFData ''Lit)
 $( derive makeNFData ''FunSym)
@@ -812,6 +813,7 @@ $( derive makeNFData ''ACSym)
 $( derive makeNFData ''LSort)
 $( derive makeNFData ''LVar)
 $( derive makeNFData ''BVar)
+-}
 
 instance (NFData c, NFData v, Ord v) => NFData (Subst c v) where
   rnf (Subst m) = rnf m
@@ -820,9 +822,9 @@ instance (NFData c, NFData v, Ord v) => NFData (SubstVFresh c v) where
   rnf (SubstVFresh m) = rnf m
 
 $( derive makeNFData ''Fact)
-$( derive makeNFData ''Name)
-$( derive makeNFData ''NameTag)
-$( derive makeNFData ''NameId)
+-- $( derive makeNFData ''Name)
+-- $( derive makeNFData ''NameTag)
+-- $( derive makeNFData ''NameId)
 $( derive makeNFData ''Rule)
 $( derive makeNFData ''Goal)
 $( derive makeNFData ''Conj)

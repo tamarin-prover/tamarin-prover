@@ -38,7 +38,7 @@ module Theory (
   -- ** Open theories
   , OpenTheory
   , defaultOpenTheory
-  , defaultIntruderTheory
+  , dhIntruderTheory
   , addProtoRule
   , addIntrRuleACs
 
@@ -78,6 +78,7 @@ module Theory (
 
   -- * Convenience exports
   , module Theory.Proof
+  , module Theory.IntruderRules
   
   ) where
 
@@ -96,6 +97,7 @@ import           Control.Parallel.Strategies
 import           Control.DeepSeq
 import           Control.Category
 import qualified Control.Monad.State as MS
+import           Control.Monad.Reader
 
 import           Extension.Data.Label 
 
@@ -104,7 +106,7 @@ import           Text.Isar
 import           Theory.Pretty
 import           Theory.Rule
 import           Theory.RuleVariants
--- import           Theory.IntruderRules
+import           Theory.IntruderRules
 import           Theory.Proof
 
 
@@ -389,9 +391,10 @@ defaultOpenTheory = Theory "default" emptySignaturePure [] []
 
 -- | The default intruder theory; uses Maude to perform AC
 -- unification for computing the variants.
-defaultIntruderTheory :: OpenTheory
-defaultIntruderTheory = error "IMPLEMENT"
---    Theory "intruder_variants" emptySignaturePure subtermIntruderRules []
+dhIntruderTheory :: MaudeHandle -> OpenTheory
+dhIntruderTheory hnd =
+    Theory "intruder_variants" emptySignaturePure
+           (dhIntruderRules `runReader` hnd) []
 
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness dependens on it.
@@ -471,8 +474,7 @@ closeTheory :: FilePath         -- ^ Path to the Maude executable.
             -> OpenTheory
             -> IO ClosedTheory
 closeTheory maudePath thy0 = do
-    -- FIXME: use the right Maude sig
-    sig <- toSignatureWithMaude maudePath allMaudeSig $ get thySignature thy0
+    sig <- toSignatureWithMaude maudePath $ get thySignature thy0
     let cache     = closeRuleCache typAsms sig rules $ get thyCache thy0
         addSorrys = checkAndExtendProver (sorryProver "not yet proven")
 

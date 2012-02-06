@@ -19,7 +19,7 @@ import Test.HUnit
 import Control.Monad.Reader
 
 testEqual :: (Eq a, Show a) => String -> a -> a -> Test
-testEqual t a b = TestLabel t $ TestCase $ assertEqual t a b
+testEqual t a b = TestLabel t $ TestCase $ assertEqual t b a
 
 testTrue :: String -> Bool -> Test
 testTrue t a = TestLabel t $ TestCase $ assertBool t a
@@ -240,11 +240,12 @@ testsVariant hnd =
                                 , [(lx1, x1 *:  inv(p1 *: x2))]
                                 ])
 
-      , testEqual "c" (computeVariantsCheck (listToTerm [x1, x2, x1  +:  x2]) `runReader` hnd)
-                      (toSubsts [ []
+      , testEqual "c" (sort $ computeVariantsCheck (listToTerm [x1, x2, x1  +:  x2]) `runReader` hnd)
+                      (sort $ toSubsts
+                                [ []
                                 , [(lx1, x1), (lx2,x1) ]
-                                , [(lx2,zero), (lx1,x1)]
-                                , [(lx1,zero), (lx2,x1)]
+                                , [(lx2,zero)]
+                                , [(lx1,zero)]
                                 , [(lx2, x1 +: x2), (lx1, x2)]
                                 , [(lx1, x1 +: x2), (lx2, x2)]
                                 , [(lx1, x2 +: x3), (lx2, x1 +: x3)]

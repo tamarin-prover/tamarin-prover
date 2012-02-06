@@ -9,6 +9,8 @@
 -- Main module for the tamarin prover.
 module Main where
 
+import           Prelude hiding (id, (.))
+
 import Data.List
 import Data.Maybe
 import Data.Version (showVersion)
@@ -17,6 +19,7 @@ import Data.Char (isSpace, toLower)
 import Data.Label
 
 import Control.Basics
+import Control.Category
 import Control.Exception as E
 
 import System.Console.CmdArgs.Explicit
@@ -125,8 +128,8 @@ addEmptyArg a = addArg a ""
 -- | Main mode.
 mainMode :: Mode [(String,String)]
 mainMode = 
-    translateMode { modeGroupModes = toGroup [interactiveMode] }
-    -- translateMode { modeGroupModes = toGroup [intruderMode, interactiveMode] }
+    -- translateMode { modeGroupModes = toGroup [interactiveMode] }
+    translateMode { modeGroupModes = toGroup [intruderMode, interactiveMode] }
   where 
 
     defaultMode name help = Mode
@@ -171,16 +174,15 @@ mainMode =
           }
       }
 
-    {-
+
     intruderMode =
       ( defaultMode "intruder" 
-          "Compute and cache the variants of the intruder rules."
+          "Compute the variants of the intruder rules for DH."
       )
       { modeArgs = Nothing 
       , modeCheck = updateArg "mode" "intruder"
       , modeGroupFlags = toGroup outputFlags
-      }        
-    -}
+      }
 
     outputFlags = 
       [ flagOpt "" ["output","o"] (updateArg "outFile") "FILE" "Output file"
@@ -234,7 +236,7 @@ main =
   where
     selectMode as = case findArg "mode" as of
         Just "translate"   -> translate as
-        -- Just "intruder"    -> intruderVariants as
+        Just "intruder"    -> intruderVariants as
         Just "interactive" -> interactive as
         Just m           -> error $ "main: unknown mode '" ++ m ++ "'"
         Nothing          -> error $ "main: no mode given"
@@ -250,22 +252,19 @@ renderDoc = Isar.renderStyle (Isar.style { Isar.lineLength = lineWidth })
 -- Intruder variants mode execution
 ------------------------------------------------------------------------------
 
-{-
 intruderVariants :: Arguments -> IO ()
 intruderVariants as = do
+    ensureMaude as
+    hnd <- startMaude (maudePath as) dhMaudeSig
+    let thy       = dhIntruderTheory hnd
+        thyString = renderDoc $ prettyOpenTheory thy
     putStrLn thyString
-    writeThy
+    writeThy thyString
   where
-    -- theory construction
-    ----------------------
-
-    thy = defaultIntruderTheory
-    thyString = renderDoc $ prettyOpenTheory thy
-
     -- output generation
     --------------------
 
-    writeThy = case optOutPath of
+    writeThy thyString = case optOutPath of
       Just outPath -> writeFile outPath thyString
       Nothing      -> return ()
     
@@ -280,8 +279,8 @@ intruderVariants as = do
          return $ outDir </> defaultIntrVariantsPath 
 
 defaultIntrVariantsPath :: FilePath
-defaultIntrVariantsPath = "intruder_variants.spthy"
--}
+defaultIntrVariantsPath = "intruder_variants_dh.spthy"
+
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -298,8 +297,8 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"]   (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  -- , flagOpt "" ["intruder","i"] (updateArg "intruderVariants") "FILE"
-  --     "Cached intruder rules to use"
+  --, flagOpt "" ["intruder","i"] (updateArg "intruderVariants") "FILE"
+  --    "Cached intruder rules to use"
 
   , flagOpt "" ["defines","D"] (updateArg "defines") "STRING"
       "Defined flags for pseudo-preprocessor."
@@ -350,15 +349,19 @@ loadGenericThy loader as =
     -- intruder variants
     --------------------
     tryAddIntrVariants :: OpenTheory -> IO OpenTheory
-    tryAddIntrVariants thy = do
-      variantsFile <- getDataFileName "intruder_variants.spthy"
-      ifM (doesFileExist variantsFile)
-          (do intrVariants <- 
-                  get thyCache <$> parseOpenTheory (defines as) variantsFile
-              return $ addIntrRuleACs intrVariants thy
-          )
-          (error $ "could not find intruder message deduction theory '" 
-                     ++ variantsFile ++ "'")
+    tryAddIntrVariants thy0 = do
+      let msig = get (sigpMaudeSig . thySignature) thy0
+          thy  = addIntrRuleACs (subtermIntruderRules msig ++ specialIntruderRules) thy0
+      if (enableDH msig) then
+         do variantsFile <- getDataFileName "intruder_variants_dh.spthy"
+            ifM (doesFileExist variantsFile)
+                (do intrVariants <- 
+                        get thyCache <$> parseOpenTheory (defines as) variantsFile
+                    return $ addIntrRuleACs intrVariants thy
+                )
+                (error $ "could not find intruder message deduction theory '" 
+                           ++ variantsFile ++ "'")
+         else return thy
 
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory

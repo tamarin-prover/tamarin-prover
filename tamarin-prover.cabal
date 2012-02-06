@@ -23,7 +23,7 @@ stability:          Beta
 
 data-dir:           data
 data-files:
-  intruder_variants.spthy
+  intruder_variants_dh.spthy
   img/*.ico
   img/*.gif
   img/*.png

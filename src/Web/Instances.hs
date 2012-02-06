@@ -26,6 +26,7 @@ import Data.Set ()
 import Data.Map ()
 import Control.DeepSeq
 
+{-
 $( derive makeBinary ''Term )
 $( derive makeBinary ''Lit)
 $( derive makeBinary ''ACSym)
@@ -33,7 +34,7 @@ $( derive makeBinary ''FunSym)
 $( derive makeBinary ''LSort)
 $( derive makeBinary ''LVar)
 $( derive makeBinary ''BVar)
-
+-}
 instance (Binary c, Binary v, Ord v) => Binary (Subst c v) where
   put (Subst m) = put m
   get = Subst <$> get
@@ -43,9 +44,9 @@ instance (Binary c, Binary v, Ord v) => Binary (SubstVFresh c v) where
   get = SubstVFresh <$> get
 
 $( derive makeBinary ''Fact)
-$( derive makeBinary ''Name)
-$( derive makeBinary ''NameTag)
-$( derive makeBinary ''NameId)
+-- $( derive makeBinary ''Name)
+-- $( derive makeBinary ''NameTag)
+-- $( derive makeBinary ''NameId)
 $( derive makeBinary ''Rule)
 $( derive makeBinary ''Goal)
 $( derive makeBinary ''Conj)

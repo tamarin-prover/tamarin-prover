@@ -87,7 +87,7 @@ variantsFrom t substFrom0 = reader $ \hnd -> (\res -> trace (show ("variantsFrom
     substTo0 <- (narrowSubsts =<<  (norm' (applyVTerm substFrom t))) `runReader` hnd
     let substTo = restrictVFresh (frees t) $ composeVFresh substTo0 substFrom
     guard (nfSubstVFresh' substTo `runReader` hnd) -- prune substitutions that are not in normal-form
-    return $ canonizeSubst substTo
+    return $ canonizeSubst $ removeRenamings $ substTo
 
 -- | @isMaximalIn s substs t@ returns @True@ if @s@ is minimal in substs wrt.
 --   <_Var^t, i.e., the function returns @True@ if there is no s'

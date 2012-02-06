@@ -14,21 +14,26 @@ import Term.LTerm
 ----------------------------------------------------------------------
 
 -- | Binary builtin non-ac function symbols.
-sdecSym, sencSym, adecSym, aencSym, signSym, verifySym :: NonACSym
+sdecSym, sencSym, adecSym, aencSym, signSym :: NonACSym
 sdecSym   = ("sdec",2)
 sencSym   = ("senc",2)
 adecSym   = ("adec",2)
 aencSym   = ("aenc",2)
 signSym   = ("sign",2)
-verifySym = ("verify",2)
 
--- | Uinary builtin non-ac function symbols.
-fstSym, sndSym, pkSym, extractSym, hashSym :: NonACSym
+verifySym :: NonACSym
+verifySym = ("verify",3)
+
+-- | Unary builtin non-ac function symbols.
+fstSym, sndSym, pkSym, hashSym :: NonACSym
 fstSym     = ("fst",1)
 sndSym     = ("snd",1)
 pkSym      = ("pk",1)
-extractSym = ("extract",1)
 hashSym    = ("h",1)
+
+-- | Nullary builtin non-ac function symbols.
+trueSym :: NonACSym
+trueSym = ("true",0)
 
 -- Builtin signatures
 ----------------------------------------------------------------------
@@ -59,7 +64,7 @@ asymEncFunSig = [ adecSym, aencSym, pkSym ]
 
 -- | The signature for cryptographic signatures.
 signatureFunSig :: FunSig
-signatureFunSig = [ signSym, verifySym, extractSym ]
+signatureFunSig = [ signSym, verifySym, trueSym, pkSym ]
 
 -- | The signature for hashing.
 hashFunSig :: FunSig

@@ -296,8 +296,8 @@ showFactTag :: FactTag -> String
 showFactTag tag = case tag of
     KUFact            -> "!KU"
     KDFact            -> "!KD"
-    InFact         -> "In"
-    OutFact          -> "Out"
+    InFact            -> "In"
+    OutFact           -> "Out"
     FreshFact         -> "Fr"
     (ProtoFact m n _) -> multi m ++ n
   where

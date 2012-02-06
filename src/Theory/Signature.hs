@@ -21,6 +21,7 @@ module Theory.Signature (
   , SignaturePure
   , emptySignaturePure
   , sigpUniqueInsts
+  , sigpMaudeSig
 
   -- ** Using Maude to handle operations relative to a 'Signature'
   , SignatureWithMaude
@@ -42,6 +43,7 @@ import           Control.DeepSeq
 
 import           Theory.Pretty
 import           Theory.Fact
+import           Term.SubtermRule
 
 import           Data.DeriveTH
 import           Data.Binary
@@ -52,15 +54,41 @@ import           System.IO.Unsafe (unsafePerformIO)
 data Signature a = Signature
        { _sigUniqueInsts :: S.Set FactTag
          -- ^ Fact symbols that are assumed to have unique instances.
-       , _sigMaudeHandle  :: a
+       , _sigMaudeInfo  :: a
        }
 
 $(L.mkLabels [''Signature])
 
 $(derive makeBinary ''FactTag)
+$(derive makeBinary ''MaudeSig)
+$(derive makeBinary ''StRhs)
+$(derive makeBinary ''Term )
+$(derive makeBinary ''Lit)
+$(derive makeBinary ''ACSym)
+$(derive makeBinary ''FunSym)
+$(derive makeBinary ''LSort)
+$(derive makeBinary ''LVar)
+$(derive makeBinary ''BVar)
+$(derive makeBinary ''NameTag)
+$(derive makeBinary ''NameId)
+$(derive makeBinary ''Name)
+$(derive makeBinary ''StRule)
 $(derive makeBinary ''Multiplicity)
 
 $(derive makeNFData ''FactTag)
+$(derive makeNFData ''Term)
+$(derive makeNFData ''NameTag)
+$(derive makeNFData ''NameId)
+$(derive makeNFData ''Name)
+$(derive makeNFData ''Lit)
+$(derive makeNFData ''ACSym)
+$(derive makeNFData ''FunSym)
+$(derive makeNFData ''LSort)
+$(derive makeNFData ''LVar)
+$(derive makeNFData ''BVar)
+$(derive makeNFData ''MaudeSig)
+$(derive makeNFData ''StRhs)
+$(derive makeNFData ''StRule)
 $(derive makeNFData ''Multiplicity)
 
 ------------------------------------------------------------------------------
@@ -68,15 +96,19 @@ $(derive makeNFData ''Multiplicity)
 ------------------------------------------------------------------------------
 
 -- | A 'Signature' without an associated Maude process.
-type SignaturePure = Signature ()
+type SignaturePure = Signature MaudeSig
 
 -- | Access the globally fresh field.
 sigpUniqueInsts :: SignaturePure L.:-> S.Set FactTag
 sigpUniqueInsts = sigUniqueInsts
 
+-- | Access the maude signature.
+sigpMaudeSig:: SignaturePure L.:-> MaudeSig
+sigpMaudeSig = sigMaudeInfo
+
 -- | The empty pure signature.
 emptySignaturePure :: SignaturePure
-emptySignaturePure = Signature S.empty ()
+emptySignaturePure = Signature S.empty emptyMaudeSig
 
 -- Instances
 ------------
@@ -87,7 +119,8 @@ deriving instance Show     SignaturePure
 
 instance Binary SignaturePure where
     put sig = put (L.get sigUniqueInsts sig)
-    get     = Signature <$> get <*> pure ()
+              >> put (L.get sigMaudeInfo sig)
+    get     = Signature <$> get <*> get
 
 instance NFData SignaturePure where
   rnf (Signature x y) = rnf x `seq` rnf y
@@ -106,21 +139,20 @@ sigmUniqueInsts = L.get sigUniqueInsts
 
 -- | Access the maude handle in a signature.
 sigmMaudeHandle :: SignatureWithMaude -> MaudeHandle
-sigmMaudeHandle = L.get sigMaudeHandle
+sigmMaudeHandle = L.get sigMaudeInfo
 
 -- | Ensure that maude is running and configured with the current signature.
 toSignatureWithMaude :: FilePath            -- ^ Path to Maude executable.
-                     -> MaudeSig
                      -> SignaturePure
                      -> IO (SignatureWithMaude)
-toSignatureWithMaude maudePath maudeSig sig = do
-    hnd <- startMaude maudePath maudeSig
-    return $ sig { _sigMaudeHandle = hnd }
+toSignatureWithMaude maudePath sig = do
+    hnd <- startMaude maudePath (L.get sigMaudeInfo sig)
+    return $ sig { _sigMaudeInfo = hnd }
 
 
 -- | The pure signature of a 'SignatureWithMaude'.
 toSignaturePure :: SignatureWithMaude -> SignaturePure
-toSignaturePure sig = sig { _sigMaudeHandle = () }
+toSignaturePure sig = sig { _sigMaudeInfo = mhMaudeSig $ L.get sigMaudeInfo sig }
 
 {- TODO: There should be a finalizer in place such that as soon as the
    MaudeHandle is garbage collected, the appropriate command is sent to Maude
@@ -157,11 +189,11 @@ instance Show SignatureWithMaude where
   show = show . toSignaturePure
 
 instance Binary SignatureWithMaude where
-    put (Signature x maude) = do
+    put sig@(Signature _ maude) = do
         put (mhFilePath maude)
-        put x
+        put (toSignaturePure sig)
     -- FIXME: reload the right signature
-    get = unsafePerformIO <$> (toSignatureWithMaude <$> get <*> pure allMaudeSig <*> get)
+    get = unsafePerformIO <$> (toSignatureWithMaude <$> get <*> get)
 
 instance NFData SignatureWithMaude where
   rnf (Signature x _maude) = rnf x

@@ -22,6 +22,7 @@ module Term.Unification (
   -- * Maude signatures
   , MaudeSig(..)
   , emptyMaudeSig
+  , minimalMaudeSig
   , dhMaudeSig
   , xorMaudeSig
   , msetMaudeSig
@@ -59,7 +60,7 @@ import           Term.Maude.Types
                    (MaudeSig(..), emptyMaudeSig, allMaudeSig, rrulesForMaudeSig,
                     funSigForMaudeSig, dhMaudeSig, xorMaudeSig, msetMaudeSig,
                     pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig,
-                    hashMaudeSig)
+                    hashMaudeSig, minimalMaudeSig)
 
 import           Debug.Trace.Ignore
 -- import qualified Debug.Trace as DT
@@ -99,6 +100,7 @@ unifyLTerm sortOf eqs = flattenUnif <$> unifyLTermFactored sortOf eqs
 
 -- | @unifyLNTerm eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
 unifyLNTerm :: [Equal LNTerm] -> WithMaude [SubstVFresh Name LVar]
+-- unifyLNTerm eqs = reader $ \hnd -> (\res -> DT.trace (show ("unify", res, eqs)) res) $ unifyLTerm sortOfName eqs `runReader` hnd
 unifyLNTerm = unifyLTerm sortOfName
 
 
@@ -162,8 +164,9 @@ unifyRaw l0 r0 = do
        (FApp List largs, FApp List rargs) ->
            guard (length largs == length rargs)
            >> sequence_ (zipWith unifyRaw largs rargs)
-       -- NOTE: We assume here that terms of the form mult(t) =AC t never occur.
-       (FApp (AC _) _, FApp (AC _) _) -> tell [Equal l r]  -- delay unification
+       -- NOTE: We assume here that terms of the form mult(t) never occur.
+       (FApp (AC lacsym) _, FApp (AC racsym) _) ->
+           guard (lacsym == racsym) >> tell [Equal l r]  -- delay unification
 
        -- all unifiable pairs of term constructors have been enumerated
        _                      -> mzero -- no unifier

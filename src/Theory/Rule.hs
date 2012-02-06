@@ -471,15 +471,16 @@ prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
                 -> Rule i -> d
 prettyNamedRule prefix ppInfo ru =
     prefix <-> prettyRuleName ru <> colon $-$
-    nest 2 (sep [ nest 1 $ ppFacts rPrems
+    nest 2 (sep [ nest 1 $ ppFactsList rPrems
                 , if null (get rActs ru) 
                     then operator_ "-->"
                     else fsep [operator_ "--[", ppFacts rActs, operator_ "]->"]
-                , nest 1 $ ppFacts rConcs]) $--$
+                , nest 1 $ ppFactsList rConcs]) $--$
     nest 2 (ppInfo $ get rInfo ru)
   where
-    ppList pp    = fsep . punctuate comma . map pp
-    ppFacts proj = ppList prettyLNFact $ get proj ru
+    ppList pp        = fsep . punctuate comma . map pp
+    ppFacts proj     = ppList prettyLNFact $ get proj ru
+    ppFactsList proj = fsep [operator_ "[", ppFacts proj, operator_ "]"]
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
 prettyProtoRuleACInfo i =

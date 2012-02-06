@@ -46,20 +46,24 @@ inv e = appFree invSym [e]
 pair :: (Term a,Term a) -> Term a
 pair (x,y) = appFree pairSym [x, y]
 
-expo, adec, aenc, sdec, senc, sign, verify :: (Term a,Term a) -> Term a
+expo, adec, aenc, sdec, senc, sign :: (Term a,Term a) -> Term a
 expo (b,e)   = appFree expSym [b,e]
 adec (a,b)   = appFree adecSym [a,b]
 aenc (a,b)   = appFree aencSym [a,b]
 sdec (a,b)   = appFree sdecSym [a,b]
 senc (a,b)   = appFree sencSym [a,b]
 sign (a,b)   = appFree signSym [a,b]
-verify (a,b) = appFree verifySym [a,b]
 
-pk, fstC, sndC, extract :: Term a -> Term a
+verify :: (Term a,Term a,Term a) -> Term a
+verify (a,b,c) = appFree verifySym [a,b,c]
+
+pk, fstC, sndC :: Term a -> Term a
 pk a = appFree pkSym [a]
 fstC a = appFree fstSym [a]
 sndC a = appFree sndSym [a]
-extract a = appFree extractSym [a]
+
+trueC :: Term a
+trueC = appFree trueSym []
 
 var :: String -> Int -> LNTerm
 var s i = varTerm $ LVar s LSortMsg i
