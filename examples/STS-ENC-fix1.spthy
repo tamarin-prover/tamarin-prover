@@ -1,10 +1,8 @@
-theory STS_ENC
+theory STS_ENC_FIX1
 begin
 
-builtin: hashing, diffie-hellman, signing, symmetric-encryption
-
 section{* The Station-To-Station Protocol (ENC version) *}
-
+// Fix 1: A "sends" cert in step 1
 
 // Public key infrastructure
 /**
@@ -12,8 +10,13 @@ section{* The Station-To-Station Protocol (ENC version) *}
  */
 rule Register_pk:
   [ Fr(~ltk) ] 
-  --[ LtkSet($A, ~ltk), Corrupt($Eve) ]-> 
-  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), !Pk($Eve, pk(~ltk)), Out(pk(~ltk)) ]
+  --[ LtkSet($A, ~ltk) ]-> 
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), !Pk('Eve', pk(~ltk)) ]
+
+rule Get_pk:
+  [ !Pk($A, k) ] 
+  --> 
+  [ Out(k) ]
 
 rule Reveal_ltk:
     [ !Ltk($A, ~ltk) ]
@@ -31,32 +34,32 @@ rule Init_2:
     [ Init_1( $I, $R, ~ltkI, ~ekI )
     , !Pk($R, pk(~ltkR))
     , In( <$R, $I, Y, senc{
-          sign{ Y, 'g'^~ekI }~ltkR
+          sign{h(< Y, 'g'^~ekI >) }~ltkR
 	}(Y^~ekI)
       > ) ]
   --[ SessionKey(~ekI,$I,$R, h(Y ^ ~ekI)), 
       AcceptedI(~ekI,$I,$R,'g'^~ekI,Y) ]->
     [ Out( <$I, $R, senc{
-          sign{ 'g' ^ ~ekI, Y }~ltkI
+          sign{h(< 'g' ^ ~ekI, Y >) }~ltkI
 	}(Y^~ekI)
       > ) ]
 
 rule Resp_1:
     [ !Ltk($R, ~ltkR)
+    , !Pk($I, pk(~ltkI))
     , Fr(~ekR)
     , In( <$I, $R, X > ) ]
   -->
     [ Resp_1( $I, $R, ~ltkR, ~ekR, X )
     , Out( <$R, $I, 'g' ^ ~ekR, senc{
-          sign{ 'g' ^ ~ekR, X }~ltkR
+          sign{h(< 'g' ^ ~ekR, X >) }~ltkR
         }(X^~ekR)
       > ) ]
 
 rule Resp_2:
-    [ !Pk($I, pk(~ltkI))
-    , Resp_1( $I, $R, ~ltkR, ~ekR, X )
+    [ Resp_1( $I, $R, ~ltkR, ~ekR, X )
     , In( <$I, $R, senc{
-          sign{ X, 'g'^~ekR }~ltkI
+          sign{h(< X, 'g'^~ekR >) }~ltkI
 	}(X^~ekR)
       > ) ]
   --[ SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ),
@@ -72,16 +75,18 @@ lemma KI_Perfect_Forward_Secrecy_I:
   "not (Ex ttest I R sessKey #i1 #i2 #k hki hkr.
      AcceptedI(ttest,I,R,hki,hkr) @ i1 &
      SessionKey(ttest,I,R,sessKey) @ i2 &
-     K(sessKey) @ k &
+     K(sessKey) @ k
+     &
      // No session key reveal of test
-     not (Ex #i3. SesskRev(ttest, sessKey) @ i3) &
+     not (Ex #i3. SesskRev(ttest, sessKey) @ i3)
+     &
      // No session key reveal of partner
      not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner, kpartner) @ i3
-          & AcceptedR(tpartner,I,R,hki,hkr) @ i4
-         ) &
-     not (Ex #i3. Corrupt(I) @ i3 & i3 < i1) &
-     not (Ex #i3. Corrupt(R) @ i3 & i3 < i1) &
-     not (Ex #r #s ltk. LtkSet(I,ltk) @ s & LtkReveal(ltk) @ r & r < i1) & 
+       & AcceptedR(tpartner,I,R,hki,hkr) @ i4
+     )
+     &
+     not (Ex #r #s ltk. LtkSet(I,ltk) @ s & LtkReveal(ltk) @ r & r < i1)
+     & 
      not (Ex #r #s ltk. LtkSet(R,ltk) @ s & LtkReveal(ltk) @ r & r < i1)
      )
   "
@@ -90,16 +95,18 @@ lemma KI_Perfect_Forward_Secrecy_R:
   "not (Ex ttest I R sessKey #i1 #i2 #k hki hkr.
      AcceptedR(ttest,I,R,hki,hkr) @ i1 &
      SessionKey(ttest,I,R,sessKey) @ i2 &
-     K(sessKey) @ k &
+     K(sessKey) @ k
+     &
      // No session key reveal of test
-     not (Ex #i3. SesskRev(ttest, sessKey) @ i3) &
+     not (Ex #i3. SesskRev(ttest, sessKey) @ i3)
+     &
      // No session key reveal of partner
      not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner, kpartner) @ i3
-          & AcceptedI(tpartner,I,R,hki,hkr) @ i4
-         ) &
-     not (Ex #r. Corrupt(I) @ r & r < i1) &
-     not (Ex #r. Corrupt(R) @ r & r < i1) &
-     not (Ex #r #s ltk. LtkSet(I,ltk) @ s & LtkReveal(ltk) @ r & r < i1) & 
+       & AcceptedI(tpartner,I,R,hki,hkr) @ i4
+     )
+     &
+     not (Ex #r #s ltk. LtkSet(I,ltk) @ s & LtkReveal(ltk) @ r & r < i1)
+     & 
      not (Ex #r #s ltk. LtkSet(R,ltk) @ s & LtkReveal(ltk) @ r & r < i1)
      )
   "

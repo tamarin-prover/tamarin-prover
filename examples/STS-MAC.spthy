@@ -1,9 +1,7 @@
-theory STS_ENC
+theory STS_MAC
 begin
 
-builtin: hashing, diffie-hellman, signing, symmetric-encryption
-
-section{* The Station-To-Station Protocol (ENC version) *}
+section{* The Station-To-Station Protocol (MAC version) *}
 
 
 // Public key infrastructure
@@ -12,8 +10,8 @@ section{* The Station-To-Station Protocol (ENC version) *}
  */
 rule Register_pk:
   [ Fr(~ltk) ] 
-  --[ LtkSet($A, ~ltk), Corrupt($Eve) ]-> 
-  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), !Pk($Eve, pk(~ltk)), Out(pk(~ltk)) ]
+  --[ LtkSet($A, ~ltk), Corrupt($E) ]-> 
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), !Pk($E, pk(~ltk)), Out(pk(~ltk)) ]
 
 rule Reveal_ltk:
     [ !Ltk($A, ~ltk) ]
@@ -30,15 +28,19 @@ rule Init_1:
 rule Init_2:
     [ Init_1( $I, $R, ~ltkI, ~ekI )
     , !Pk($R, pk(~ltkR))
-    , In( <$R, $I, Y, senc{
-          sign{ Y, 'g'^~ekI }~ltkR
-	}(Y^~ekI)
+    , In( <$R, $I, Y, 
+          sign{h(< Y, 'g'^~ekI >) }~ltkR,
+        h(<Y^~ekI,
+          sign{h(< Y, 'g'^~ekI >) }~ltkR
+	>)
       > ) ]
   --[ SessionKey(~ekI,$I,$R, h(Y ^ ~ekI)), 
       AcceptedI(~ekI,$I,$R,'g'^~ekI,Y) ]->
-    [ Out( <$I, $R, senc{
-          sign{ 'g' ^ ~ekI, Y }~ltkI
-	}(Y^~ekI)
+    [ Out( <$I, $R, 
+          sign{h(< 'g' ^ ~ekI, Y >) }~ltkI,
+	h(<Y^~ekI,
+          sign{h(< 'g' ^ ~ekI, Y >) }~ltkI
+	>)
       > ) ]
 
 rule Resp_1:
@@ -47,17 +49,21 @@ rule Resp_1:
     , In( <$I, $R, X > ) ]
   -->
     [ Resp_1( $I, $R, ~ltkR, ~ekR, X )
-    , Out( <$R, $I, 'g' ^ ~ekR, senc{
-          sign{ 'g' ^ ~ekR, X }~ltkR
-        }(X^~ekR)
+    , Out( <$R, $I, 'g' ^ ~ekR,
+          sign{h(< 'g' ^ ~ekR, X >) }~ltkR,
+	h(<X^~ekR,
+          sign{h(< 'g' ^ ~ekR, X >) }~ltkR
+        >)
       > ) ]
 
 rule Resp_2:
     [ !Pk($I, pk(~ltkI))
     , Resp_1( $I, $R, ~ltkR, ~ekR, X )
-    , In( <$I, $R, senc{
-          sign{ X, 'g'^~ekR }~ltkI
-	}(X^~ekR)
+    , In( <$I, $R, 
+          sign{h(< X, 'g'^~ekR >) }~ltkI,
+	h(<X^~ekR,
+          sign{h(< X, 'g'^~ekR >) }~ltkI
+	>)
       > ) ]
   --[ SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ),
       AcceptedR(~ekR,$I,$R,X,'g'^~ekR) ]->
@@ -69,9 +75,9 @@ rule Sessionkey_Reveal:
     [ Out(k) ]
 
 lemma KI_Perfect_Forward_Secrecy_I:
-  "not (Ex ttest I R sessKey #i1 #i2 #k hki hkr.
+  "not (Ex ttest I R sessKey #i1 #k hki hkr.
      AcceptedI(ttest,I,R,hki,hkr) @ i1 &
-     SessionKey(ttest,I,R,sessKey) @ i2 &
+     SessionKey(ttest,I,R,sessKey) @ i1 &
      K(sessKey) @ k &
      // No session key reveal of test
      not (Ex #i3. SesskRev(ttest, sessKey) @ i3) &
@@ -87,9 +93,9 @@ lemma KI_Perfect_Forward_Secrecy_I:
   "
 
 lemma KI_Perfect_Forward_Secrecy_R:
-  "not (Ex ttest I R sessKey #i1 #i2 #k hki hkr.
+  "not (Ex ttest I R sessKey #i1 #k hki hkr.
      AcceptedR(ttest,I,R,hki,hkr) @ i1 &
-     SessionKey(ttest,I,R,sessKey) @ i2 &
+     SessionKey(ttest,I,R,sessKey) @ i1 &
      K(sessKey) @ k &
      // No session key reveal of test
      not (Ex #i3. SesskRev(ttest, sessKey) @ i3) &
