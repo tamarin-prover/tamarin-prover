@@ -367,15 +367,20 @@ proofStepStatus (ProofStep _ _)         = CompleteProof
 
 -- | @cutOnAttackDFS prf@ remove all other cases if attack is found.
 -- FIXME: Probably holds onto the whole proof tree. Use iterative deepening.
-cutOnAttackDFS :: Proof a -> Proof a
+cutOnAttackDFS :: Proof (Maybe Sequent) -> Proof (Maybe Sequent)
 cutOnAttackDFS prf =
-    case findAttacks (insertPaths prf) of
-      path:_ -> extractAttack path prf
-      _      -> prf
+    case getFirst $ findAttacks $ insertPaths prf of
+      Nothing   -> prf
+      Just path -> extractAttack path prf
   where
-    findAttacks (LNode (ProofStep i (_,path)) cs) =
-        (if i == Attack then [path] else []) ++
-        (concatMap findAttacks (M.elems cs))
+    findAttacks (LNode (ProofStep Attack (_,path)) _) = First (Just path)
+    findAttacks (LNode _ cs) = foldMap findAttacks $ M.elems cs
+        {- The following "optimization" didn't work out in practice.
+        foldMap findAttacks preferred `mappend` foldMap findAttacks delayed
+      where
+        (preferred, delayed) = parPartition prefer $ M.elems cs
+        prefer = maybe False (S.null . get sChains) . fst . psInfo . root
+        -}
 
     extractAttack []         p               = p
     extractAttack (label:ps) (LNode pstep m) = case M.lookup label m of
@@ -383,7 +388,6 @@ cutOnAttackDFS prf =
           LNode pstep (M.fromList [(label, extractAttack ps subprf)])
         Nothing     ->
           error "Theory.Proof.cutOnAttackDFS: impossible, extractAttack failed, invalid path"
-
 
 -- | Search for attacks in a BFS manner.
 cutOnAttackBFS :: Proof a -> Proof a
