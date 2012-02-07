@@ -47,10 +47,6 @@ cabal-dev:
 	# force install with 'native' flag of blaze-textual
 	cabal-dev install blaze-textual -fnative --reinstall
 
-###############################################################################
-## Developer specific targets (some out of date)
-###############################################################################
-
 # These case studies are located in data/examples/ or examples/
 JKL1=JKL_TS1_2004.spthy JKL_TS1_2008.spthy JKL_TS1_2008-KIFS.spthy
 JKL2=JKL_TS2_2004.spthy JKL_TS2_2008.spthy JKL_TS2_2004-KIFS.spthy JKL_TS2_2008-KIFS.spthy
@@ -88,6 +84,10 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 	echo "*/" >>$(TMPRES)
 	mv $(TMPRES) $@
 	\rm -f $(TMPOUT)
+
+###############################################################################
+## Developer specific targets (some out of date)
+###############################################################################
 
 # outdated targets
 
