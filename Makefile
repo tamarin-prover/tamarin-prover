@@ -60,8 +60,7 @@ UM=UM_eCK_noKCI.spthy UM_eCK.spthy UM_wPFS.spthy
 
 SDH=SignedDH.spthy SignedDH_eCK.spthy
 
-STS=
-#STS-ENC.spthy
+STS=STS-MAC.spthy STS-MAC-fix1.spthy STS-MAC-fix2.spthy
 
 TMPRES=case-studies/temp-analysis.spthy
 TMPOUT=case-studies/temp-output.spthy
