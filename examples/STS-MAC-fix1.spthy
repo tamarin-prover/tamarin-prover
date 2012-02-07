@@ -21,7 +21,7 @@ rule Register_pk_normal:
 rule Register_pk_evil:
   [ In(ltk) ] 
   --[ LtkSet($E, ltk), Corrupt($E) ]-> 
-  [ !Ltk($E, ltk), !Pk($E, pk(~ltk)), Out(pk(~ltk)) ]
+  [ !Ltk($E, ltk), !Pk($E, pk(ltk)), Out(pk(ltk)) ]
 
 //rule Reveal_ltk:
 //    [ !Ltk($A, ~ltk) ]
