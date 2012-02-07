@@ -38,7 +38,7 @@ syn match spthyLAtom	        "="
 syn match spthyLAtom	        "@"
 syn match spthyLAtom	        "<"
 
-syn keyword spthyConstr         aenc sdec senc sdec sign verify
+syn keyword spthyConstr         aenc sdec senc sdec sign verify hashing signing
 syn match spthyConstr           "\<h("he=e-1
 syn match spthyConstr           "\<sk("he=e-1
 syn match spthyConstr           "\<pk("he=e-1
@@ -47,8 +47,11 @@ syn match spthyConstr           "\<pb("he=e-1
 syn match spthyConstr           "\<lts("he=e-1
 syn match spthyConstr           "*"
 syn match spthyConstr           "\^"
+syn match spthyConstr           "\<diffie-hellman"
+syn match spthyConstr           "\<symmetric-encryption"
+syn match spthyConstr           "\<asymmetric-encryption"
 
-syn keyword spthyDecl           lemma assert protocol property properties let theory begin end subsection section text note
+syn keyword spthyDecl           lemma assert functions builtin protocol property properties let theory begin end subsection section text note
 syn match spthyDecl             "\<enable"
 syn match spthyDecl             "\<rule"
 syn match spthyDecl             "\<assertions"
