@@ -11,16 +11,15 @@ section{* The Station-To-Station Protocol (MAC version, fixed with names and tag
 // Public key infrastructure
 /**
  * The !Pk facts can be regarded as certificates
+ *
+ * Here we model that the adversary might (and in fact always does)
+ * re-registers the public keys as his own, i.e., he claims a copy of
+ * the public key for the corrupt name E.
  */
 rule Register_pk_clone:
   [ Fr(~ltk) ] 
   --[ LtkSet($A, ~ltk), Corrupt($E) ]-> 
   [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), !Pk($E, pk(~ltk)), Out(pk(~ltk)) ]
-
-//rule Reveal_ltk:
-//    [ !Ltk($A, ~ltk) ]
-//  --[ LtkReveal(~ltk) ]->
-//    [ Out(~ltk) ]
 
 // Protocol
 rule Init_1:
@@ -38,8 +37,7 @@ rule Init_2:
             sign{ '1', $I, $R, Y, 'g'^~ekI }~ltkR
 	)
       > ) ]
-  --[ SessionKey(~ekI,$I,$R, h(Y ^ ~ekI)), 
-      AcceptedI(~ekI,$I,$R,'g'^~ekI,Y) ]->
+  --[ AcceptedI(~ekI,$I,$R,'g'^~ekI,Y, h(Y ^ ~ekI) ) ]->
     [ Out( <$I, $R, 
           sign{ '2', $I, $R, 'g' ^ ~ekI, Y }~ltkI,
 	mac( Y^~ekI,
@@ -71,48 +69,41 @@ rule Resp_2:
               sign{ '2', $I, $R, X, 'g'^~ekR }~ltkI
 	  )
       > ) ]
-  --[ SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ),
-      AcceptedR(~ekR,$I,$R,X,'g'^~ekR) ]->
+  --[ AcceptedR(~ekR,$I,$R,X,'g'^~ekR, h(X ^ ~ekR) ) ]->
     [ !SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ) ]
 
 rule Sessionkey_Reveal:
     [ !SessionKey(~tid, $I,$R,k) ]
-  --[ SesskRev(~tid,k) ]->
+  --[ SesskRev(~tid) ]->
     [ Out(k) ]
 
 lemma KI_Perfect_Forward_Secrecy_I:
   "not (Ex ttest I R sessKey #i1 #k hki hkr.
-     AcceptedI(ttest,I,R,hki,hkr) @ i1 &
-     SessionKey(ttest,I,R,sessKey) @ i1 &
+     AcceptedI(ttest,I,R,hki,hkr,sessKey) @ i1 &
+     not (Ex #r. Corrupt(I) @ r) &
+     not (Ex #r. Corrupt(R) @ r) &
      K(sessKey) @ k &
      // No session key reveal of test
-     not (Ex #i3. SesskRev(ttest, sessKey) @ i3) &
+     not (Ex #i3. SesskRev(ttest) @ i3) &
      // No session key reveal of partner
-     not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner, kpartner) @ i3
-          & AcceptedR(tpartner,I,R,hki,hkr) @ i4
-         ) &
-     not (Ex #i3. Corrupt(I) @ i3 & i3 < i1) &
-     not (Ex #i3. Corrupt(R) @ i3 & i3 < i1) //&
-     //not (Ex #r #s ltk. LtkSet(I,ltk) @ s & LtkReveal(ltk) @ r & r < i1) & 
-     //not (Ex #r #s ltk. LtkSet(R,ltk) @ s & LtkReveal(ltk) @ r & r < i1)
+     not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner) @ i3
+          & AcceptedR(tpartner,I,R,hki,hkr,kpartner) @ i4
+         )
      )
   "
 
 lemma KI_Perfect_Forward_Secrecy_R:
   "not (Ex ttest I R sessKey #i1 #k hki hkr.
-     AcceptedR(ttest,I,R,hki,hkr) @ i1 &
-     SessionKey(ttest,I,R,sessKey) @ i1 &
+     AcceptedR(ttest,I,R,hki,hkr,sessKey) @ i1 &
+     not (Ex #r. Corrupt(I) @ r) &
+     not (Ex #r. Corrupt(R) @ r) &
      K(sessKey) @ k &
      // No session key reveal of test
-     not (Ex #i3. SesskRev(ttest, sessKey) @ i3) &
+     not (Ex #i3. SesskRev(ttest) @ i3) &
      // No session key reveal of partner
-     not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner, kpartner) @ i3
-          & AcceptedI(tpartner,I,R,hki,hkr) @ i4
-         ) &
-     not (Ex #r. Corrupt(I) @ r & r < i1) &
-     not (Ex #r. Corrupt(R) @ r & r < i1) //&
-     //not (Ex #r #s ltk. LtkSet(I,ltk) @ s & LtkReveal(ltk) @ r & r < i1) & 
-     //not (Ex #r #s ltk. LtkSet(R,ltk) @ s & LtkReveal(ltk) @ r & r < i1)
+     not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner) @ i3
+          & AcceptedI(tpartner,I,R,hki,hkr,kpartner) @ i4
+         ) 
      )
   "
 
