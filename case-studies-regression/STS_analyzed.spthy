@@ -1,0 +1,721 @@
+theory STS begin
+
+ unique_insts:
+
+section{* Finite Variants of the Intruder Rules *}
+
+ rule (modulo AC) isend:
+    !KU( f_, x ) --[ K( x ) ]-> In( x )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^x.3 ), !KU( f_, x.4 ) --> !KD( 'exp', x.2^(x.4*x.3) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^x.3 ), !KU( f_, inv(x.3) ) --> !KD( 'exp', x.2 )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^inv(x.3) ), !KU( f_, x.3 ) --> !KD( 'exp', x.2 )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^inv(x.3) ), !KU( f_, inv(x.4) )
+   -->
+    !KD( 'exp', x.2^inv((x.4*x.3)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, x.4 )
+   -->
+    !KD( 'exp', x.2^x.3 )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.4*x.3) ), !KU( f_, inv(x.3) )
+   -->
+    !KD( 'exp', x.2^x.4 )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^inv((x.4*x.3)) ), !KU( f_, x.3 )
+   -->
+    !KD( 'exp', x.2^inv(x.4) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^x.3 ), !KU( f_, (x.4*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2^x.4 )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^x.3 ), !KU( f_, inv((x.4*x.3)) )
+   -->
+    !KD( 'exp', x.2^inv(x.4) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^inv(x.3) ), !KU( f_, (x.4*x.3) )
+   -->
+    !KD( 'exp', x.2^x.4 )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, inv(x.5) )
+   -->
+    !KD( 'exp', x.2^(x.3*inv((x.5*x.4))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^inv(x.3) ), !KU( f_, (x.4*inv(x.5)) )
+   -->
+    !KD( 'exp', x.2^(x.4*inv((x.5*x.3))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv((x.5*x.4))) ), !KU( f_, x.4 )
+   -->
+    !KD( 'exp', x.2^(x.3*inv(x.5)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, (x.5*x.4) )
+   -->
+    !KD( 'exp', x.2^(x.5*x.3) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.4*x.3) ), !KU( f_, (x.5*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2^(x.5*x.4) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.4*x.3) ), !KU( f_, inv((x.5*x.3)) )
+   -->
+    !KD( 'exp', x.2^(x.4*inv(x.5)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^inv((x.4*x.3)) ), !KU( f_, (x.5*x.3) )
+   -->
+    !KD( 'exp', x.2^(x.5*inv(x.4)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^x.3 ), !KU( f_, (x.4*inv((x.5*x.3))) )
+   -->
+    !KD( 'exp', x.2^(x.4*inv(x.5)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, (x.5*inv(x.6)) )
+   -->
+    !KD( 'exp', x.2^((x.5*x.3)*inv((x.6*x.4))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, (x.4*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2 )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, inv((x.5*x.3)) )
+   -->
+    !KD( 'exp', x.2^inv((x.5*x.4)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^inv((x.4*x.3)) ), !KU( f_, (x.3*inv(x.5)) )
+   -->
+    !KD( 'exp', x.2^inv((x.5*x.4)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv((x.5*x.4))) ), !KU( f_, (x.6*x.4) )
+   -->
+    !KD( 'exp', x.2^((x.6*x.3)*inv(x.5)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.4*x.3) ), !KU( f_, (x.5*inv((x.6*x.3))) )
+   -->
+    !KD( 'exp', x.2^((x.5*x.4)*inv(x.6)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv(x.5)) ), !KU( f_, (x.5*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2^x.4 )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv((x.5*x.4))) ), !KU( f_, (x.4*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2^inv(x.5) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, ((x.5*x.4)*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2^x.5 )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, (x.4*inv((x.5*x.3))) )
+   -->
+    !KD( 'exp', x.2^inv(x.5) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv(x.5)) ), !KU( f_, inv((x.6*x.3)) )
+   -->
+    !KD( 'exp', x.2^(x.4*inv((x.6*x.5))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^inv((x.4*x.3)) ), !KU( f_, ((x.5*x.3)*inv(x.6)) )
+   -->
+    !KD( 'exp', x.2^(x.5*inv((x.6*x.4))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv((x.5*x.4))) ), !KU( f_, (x.4*inv(x.6)) )
+   -->
+    !KD( 'exp', x.2^(x.3*inv((x.6*x.5))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, (x.5*inv((x.6*x.3))) )
+   -->
+    !KD( 'exp', x.2^(x.5*inv((x.6*x.4))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv(x.4)) ), !KU( f_, ((x.5*x.4)*inv((x.6*x.3))) )
+   -->
+    !KD( 'exp', x.2^(x.5*inv(x.6)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv((x.6*x.5))) ), !KU( f_, (x.5*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2^(x.4*inv(x.6)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv((x.5*x.4))) ), !KU( f_, (x.4*inv((x.6*x.3))) )
+   -->
+    !KD( 'exp', x.2^inv((x.6*x.5)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv((x.5*x.4))) ), !KU( f_, ((x.6*x.4)*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2^(x.6*inv(x.5)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv(x.5)) ), !KU( f_, (x.5*inv((x.6*x.3))) )
+   -->
+    !KD( 'exp', x.2^(x.4*inv(x.6)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv(x.5)) ), !KU( f_, ((x.6*x.5)*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2^(x.6*x.4) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv(x.5)) ), !KU( f_, (x.6*inv((x.7*x.3))) )
+   -->
+    !KD( 'exp', x.2^((x.6*x.4)*inv((x.7*x.5))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv((x.5*x.4))) ), !KU( f_, ((x.6*x.4)*inv(x.7)) )
+   -->
+    !KD( 'exp', x.2^((x.6*x.3)*inv((x.7*x.5))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv(x.5)) ),
+    !KU( f_, ((x.6*x.5)*inv((x.7*x.3))) )
+   -->
+    !KD( 'exp', x.2^((x.6*x.4)*inv(x.7)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv((x.6*x.5))) ),
+    !KU( f_, ((x.7*x.5)*inv(x.3)) )
+   -->
+    !KD( 'exp', x.2^((x.7*x.4)*inv(x.6)) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^(x.3*inv((x.5*x.4))) ),
+    !KU( f_, ((x.6*x.4)*inv((x.7*x.3))) )
+   -->
+    !KD( 'exp', x.2^(x.6*inv((x.7*x.5))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv((x.6*x.5))) ),
+    !KU( f_, (x.5*inv((x.7*x.3))) )
+   -->
+    !KD( 'exp', x.2^(x.4*inv((x.7*x.6))) )
+ 
+ rule (modulo AC) Exp:
+    !KD( 'noexp', x.2^((x.4*x.3)*inv((x.6*x.5))) ),
+    !KU( f_, ((x.7*x.5)*inv((x.8*x.3))) )
+   -->
+    !KD( 'exp', x.2^((x.7*x.4)*inv((x.8*x.6))) )
+ 
+ rule (modulo AC) Inv:
+    !KD( f_, inv(x.1) ) --> !KD( 'noexp', x.1 )
+ 
+ rule (modulo AC) snd:
+    !KD( f_, <x.1, x.2> ) --> !KD( 'noexp', x.2 )
+ 
+ rule (modulo AC) fst:
+    !KD( f_, <x.1, x.2> ) --> !KD( 'noexp', x.1 )
+ 
+ rule (modulo AC) adec:
+    !KD( f1_, aenc(x.3, pk(x.2)) ), !KU( f2_, x.2 ) --> !KD( 'noexp', x.3 )
+ 
+ rule (modulo AC) sdec:
+    !KD( f1_, senc(x.3, x.2) ), !KU( f2_, x.2 ) --> !KD( 'noexp', x.3 )
+ 
+ rule (modulo AC) verify:
+    !KD( f1_, sign(x.3, x.2) ), !KU( f2_, pk(x.2) ) --> !KD( 'noexp', x.3 )
+ 
+ rule (modulo AC) Exp:
+    !KU( 'noexp', x ), !KU( f_, x.1 ) --> !KU( 'exp', x^x.1 )
+ 
+ rule (modulo AC) Unit:
+   --> !KU( 'noexp', one() )
+ 
+ rule (modulo AC) h:
+    !KU( f_, x ) --> !KU( 'noexp', h(x) )
+ 
+ rule (modulo AC) pk:
+    !KU( f_, x ) --> !KU( 'noexp', pk(x) )
+ 
+ rule (modulo AC) snd:
+    !KU( f_, x ) --> !KU( 'noexp', snd(x) )
+ 
+ rule (modulo AC) fst:
+    !KU( f_, x ) --> !KU( 'noexp', fst(x) )
+ 
+ rule (modulo AC) senc:
+    !KU( f1_, x ), !KU( f2_, x.1 ) --> !KU( 'noexp', senc(x, x.1) )
+ 
+ rule (modulo AC) aenc:
+    !KU( f1_, x ), !KU( f2_, x.1 ) --> !KU( 'noexp', aenc(x, x.1) )
+ 
+ rule (modulo AC) adec:
+    !KU( f1_, x ), !KU( f2_, x.1 ) --> !KU( 'noexp', adec(x.1, x) )
+ 
+ rule (modulo AC) sdec:
+    !KU( f1_, x ), !KU( f2_, x.1 ) --> !KU( 'noexp', sdec(x.1, x) )
+ 
+ rule (modulo AC) sign:
+    !KU( f1_, x ), !KU( f2_, x.1 ) --> !KU( 'noexp', sign(x, x.1) )
+ 
+ rule (modulo AC) verify:
+    !KU( f1_, x ), !KU( f2_, x.1 ) --> !KU( 'noexp', verify(x.1, x) )
+ 
+ rule (modulo AC) coerce:
+    !KD( f_, x ) --> !KU( f_, x )
+ 
+ rule (modulo AC) pub:
+   --> !KU( f_, $x )
+ 
+ rule (modulo AC) gen_fresh:
+    Fr( ~x ) --> !KU( 'noexp', ~x )
+
+section{* The Station-To-Station Protocol *}
+
+rule (modulo E) Register_pk:
+   Fr( ~ltk ) --> !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) )
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Get_pk:
+   !Pk( A, pk ) --> Out( pk )
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   !Ltk( A, ltk ) --[ LtkReveal( A ) ]-> Out( ltk )
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   Fr( ~ekI ), !Ltk( $I, ltkI )
+  -->
+   Init_1( $I, $R, ltkI, ~ekI ), Out( <$I, $R, 'g'^~ekI> )
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_2:
+   Init_1( $I, $R, ltkI, ~ekI ), !Pk( $R, pk(ltkR) ),
+   In( <$R, $I, Y, sign(<'1', h(<'g'^~ekI, Y>)>, ltkR)> )
+  --[
+  SessionKey( ~ekI, $I, $R, h(Y^~ekI) ),
+  AcceptedI( ~ekI, $I, $R, 'g'^~ekI, Y )
+  ]->
+   Out( <$I, $R, sign(<'2', h(<'g'^~ekI, Y>)>, ltkI)> )
+  /*
+  rule (modulo AC) Init_2:
+     Init_1( $I.3, $R.4, ltkI.5, ~ekI ), !Pk( $R.4, pk(x.6) ),
+     In( <$R.4, $I.3, Y.1, sign(<'1', h(<'g'^~ekI, Y.1>)>, x.6)> )
+    --[
+    SessionKey( ~ekI, $I.3, $R.4, h(x.2) ),
+    AcceptedI( ~ekI, $I.3, $R.4, 'g'^~ekI, Y.1 )
+    ]->
+     Out( <$I.3, $R.4, sign(<'2', h(<'g'^~ekI, Y.1>)>, ltkI.5)> )
+  
+    variants (modulo AC)
+    1. ~ekI  = ~ekI.47
+       Y.1   = Y.48
+       x.2   = Y.48^~ekI.47
+    
+    2. ~ekI  = ~ekI.47
+       Y.1   = x.48^inv(~ekI.47)
+       x.2   = x.48
+    
+    3. ~ekI  = ~ekI.48
+       Y.1   = x.49^x.50
+       x.2   = x.49^(~ekI.48*x.50)
+    
+    4. ~ekI  = ~ekI.48
+       Y.1   = x.49^inv((~ekI.48*x.50))
+       x.2   = x.49^inv(x.50)
+    
+    5. ~ekI  = ~ekI.48
+       Y.1   = x.49^(x.50*inv(~ekI.48))
+       x.2   = x.49^x.50
+    
+    6. ~ekI  = ~ekI.49
+       Y.1   = x.50^(x.51*inv((~ekI.49*x.52)))
+       x.2   = x.50^(x.51*inv(x.52))
+  */
+
+rule (modulo E) Resp_1:
+   !Pk( $I, pk(ltkI) ), !Ltk( $R, ltkR ), Fr( ~ekR ), In( <$I, $R, X> )
+  -->
+   Resp_1( $I, $R, ltkI, ltkR, ~ekR, X ),
+   Out( <$R, $I, 'g'^~ekR, sign(<'1', h(<X, 'g'^~ekR>)>, ltkR)> )
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Resp_2:
+   Resp_1( $I, $R, ltkI, ltkR, ~ekR, X ),
+   In( <$I, $R, X, sign(<'2', h(<X, 'g'^~ekR>)>, ltkI)> )
+  --[
+  SessionKey( ~ekR, $I, $R, h(X^~ekR) ),
+  AcceptedR( ~ekR, $I, $R, X, 'g'^~ekR )
+  ]->
+  /*
+  rule (modulo AC) Resp_2:
+     Resp_1( $I.3, $R.4, ltkI.5, ltkR.6, ~ekR, X.1 ),
+     In( <$I.3, $R.4, X.1, sign(<'2', h(<X.1, 'g'^~ekR>)>, ltkI.5)> )
+    --[
+    SessionKey( ~ekR, $I.3, $R.4, h(x.2) ),
+    AcceptedR( ~ekR, $I.3, $R.4, X.1, 'g'^~ekR )
+    ]->
+  
+    variants (modulo AC)
+    1. ~ekR  = ~ekR.34
+       X.1   = X.35
+       x.2   = X.35^~ekR.34
+    
+    2. ~ekR  = ~ekR.34
+       X.1   = x.35^inv(~ekR.34)
+       x.2   = x.35
+    
+    3. ~ekR  = ~ekR.35
+       X.1   = x.36^x.37
+       x.2   = x.36^(~ekR.35*x.37)
+    
+    4. ~ekR  = ~ekR.35
+       X.1   = x.36^inv((~ekR.35*x.37))
+       x.2   = x.36^inv(x.37)
+    
+    5. ~ekR  = ~ekR.35
+       X.1   = x.36^(x.37*inv(~ekR.35))
+       x.2   = x.36^x.37
+    
+    6. ~ekR  = ~ekR.36
+       X.1   = x.37^(x.38*inv((~ekR.36*x.39)))
+       x.2   = x.37^(x.38*inv(x.39))
+  */
+
+rule (modulo E) Sessionkey_Reveal:
+   SessionKey( ~tid, $I, $R, k ) --[ SesskRev( ~tid, k ) ]-> Out( k )
+  /* has exactly the trivial AC variant */
+
+lemma (modulo E) KI_Perfect_Forward_Secrecy_I:
+  "not(Ex ttest I.1 R.2 sessKey.3 #i.4 #k.5 hki.6 hkr.7.
+        ((((((AcceptedI( ttest, I.1, R.2, hki.6, hkr.7 ) @ #i.4) &
+             (SessionKey( ttest, I.1, R.2, sessKey.3 ) @ #i.4)) &
+            (K( sessKey.3 ) @ #k.5)) &
+           (not(Ex #i.8. SesskRev( ttest, sessKey.3 ) @ #i.8))) &
+          (not(Ex #i.9 #i.10 tpartner.11 kpartner.12.
+                (SesskRev( tpartner.11, kpartner.12 ) @ #i.9) &
+                (AcceptedR( tpartner.11, I.1, R.2, hki.6, hkr.7 ) @ #i.10)))) &
+         (not(Ex #r.13. (LtkReveal( I.1 ) @ #r.13) & (#r.13 < #i.4)))) &
+        (not(Ex #r.14. (LtkReveal( R.2 ) @ #r.14) & (#r.14 < #i.4))))"
+/* proof based on the same lemma modulo AC */
+/*
+doubly-guarded formula characterizing all attacks:
+"Ex ttest I.1 R.2 sessKey.3 #i.4 #k.5 hki.6 hkr.7.
+  (AcceptedI( ttest, I.1, R.2, hki.6, hkr.7 ) @ #i.4) &
+  (SessionKey( ttest, I.1, R.2, sessKey.3 ) @ #i.4) &
+  (K( sessKey.3 ) @ #k.5)
+ &
+  (All #i.8. (SesskRev( ttest, sessKey.3 ) @ #i.8) ==> F) &
+  (All #i.9 #i.10 tpartner.11 kpartner.12.
+    (SesskRev( tpartner.11, kpartner.12 ) @ #i.9) &
+    (AcceptedR( tpartner.11, I.1, R.2, hki.6, hkr.7 ) @ #i.10)
+   ==>
+    F) &
+  (All #r.13. (LtkReveal( I.1 ) @ #r.13) ==> All. (#r.13 < #i.4) ==> F) &
+  (All #r.14. (LtkReveal( R.2 ) @ #r.14) ==> All. (#r.14 < #i.4) ==> F)"
+*/
+/*
+proof by induction possible over the formula:
+"(Ex ttest I.1 R.2 sessKey.3 #i.4 #k.5 hki.6 hkr.7.
+   (AcceptedI( ttest, I.1, R.2, hki.6, hkr.7 ) @ #i.4) &
+   (SessionKey( ttest, I.1, R.2, sessKey.3 ) @ #i.4) &
+   (K( sessKey.3 ) @ #k.5)
+  &
+   (All #i.8. (SesskRev( ttest, sessKey.3 ) @ #i.8) ==> F) &
+   (All #i.9 #i.10 tpartner.11 kpartner.12.
+     (SesskRev( tpartner.11, kpartner.12 ) @ #i.9) &
+     (AcceptedR( tpartner.11, I.1, R.2, hki.6, hkr.7 ) @ #i.10)
+    ==>
+     F) &
+   (All #r.13. (LtkReveal( I.1 ) @ #r.13) ==> All. (#r.13 < #i.4) ==> F) &
+   (All #r.14. (LtkReveal( R.2 ) @ #r.14) ==> All. (#r.14 < #i.4) ==> F)) &
+ (All ttest.15 I.16 R.17 sessKey.18 #i.19 #k.20 hki.21 hkr.22.
+   (AcceptedI( ttest.15, I.16, R.17, hki.21, hkr.22 ) @ #i.19) &
+   (SessionKey( ttest.15, I.16, R.17, sessKey.18 ) @ #i.19) &
+   (K( sessKey.18 ) @ #k.20)
+  ==>
+   (Last(#k.20)) |
+   (Last(#i.19)) |
+   (Ex #i.23.
+     (SesskRev( ttest.15, sessKey.18 ) @ #i.23)
+    &
+     All. (Last(#i.23)) ==> F) |
+   (Ex #i.24 #i.25 tpartner.26 kpartner.27.
+     (SesskRev( tpartner.26, kpartner.27 ) @ #i.24) &
+     (AcceptedR( tpartner.26, I.16, R.17, hki.21, hkr.22 ) @ #i.25)
+    &
+     (All. (Last(#i.25)) ==> F) & (All. (Last(#i.24)) ==> F)) |
+   (Ex #r.28.
+     (LtkReveal( I.16 ) @ #r.28)
+    &
+     (All. (Last(#r.28)) ==> F) & (Ex. (#r.28 < #i.19) & T)) |
+   (Ex #r.29.
+     (LtkReveal( R.17 ) @ #r.29)
+    &
+     (All. (Last(#r.29)) ==> F) & (Ex. (#r.29 < #i.19) & T)))"
+*/
+simplify
+solve( SessionKey( ~ekI.8, $I.11, $R.12, sessKey.3 ) @ #i.4 )
+  case Init_2
+  solve( (#i.4, 0)[Init_1( $I.11, $R.12, ltkI.13, ~ekI.8 )] )
+    case Init_1
+    solve( (#i.4, 1)[!Pk( $R.12, pk(x.14) )] )
+      case Register_pk
+      solve( KU((#vf.15, 0), sign(<'1', h(<'g'^~ekI.8, hkr.7>)>, ~ltk.36)) )
+        case Resp_1
+        solve( splitEqs(1) )
+          case split_case_1
+          solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekI.79*~ekR.80)) )] )
+            case h
+            solve( (#vr.83, 0)[!KU( f_.84, 'g'^(~ekI.79*~ekR.80) )] )
+              case Exp
+              by solve( KU((#vr.89, 1), ~ekI.79) )
+            next
+              case Init_1
+              by solve( (#vr.100, 1)[!KU( f_.101, ~ekR.119 )] )
+            next
+              case Resp_1
+              by solve( (#vr.105, 1)[!KU( f_.106, ~ekI.130 )] )
+            qed
+          qed
+        next
+          case split_case_2
+          by contradiction // non-normal terms
+        qed
+      next
+        case sign
+        solve( (#vr.42, 1)[!KU( f2_.44, ~ltk.36 )] )
+          case Reveal_ltk
+          by contradiction // cyclic
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma (modulo E) KI_Perfect_Forward_Secrecy_R:
+  "not(Ex ttest I.1 R.2 sessKey.3 #i.4 #k.5 hki.6 hkr.7.
+        ((((((AcceptedR( ttest, I.1, R.2, hki.6, hkr.7 ) @ #i.4) &
+             (SessionKey( ttest, I.1, R.2, sessKey.3 ) @ #i.4)) &
+            (K( sessKey.3 ) @ #k.5)) &
+           (not(Ex #i.8. SesskRev( ttest, sessKey.3 ) @ #i.8))) &
+          (not(Ex #i.9 #i.10 tpartner.11 kpartner.12.
+                (SesskRev( tpartner.11, kpartner.12 ) @ #i.9) &
+                (AcceptedI( tpartner.11, I.1, R.2, hki.6, hkr.7 ) @ #i.10)))) &
+         (not(Ex #r.13. (LtkReveal( I.1 ) @ #r.13) & (#r.13 < #i.4)))) &
+        (not(Ex #r.14. (LtkReveal( R.2 ) @ #r.14) & (#r.14 < #i.4))))"
+/* proof based on the same lemma modulo AC */
+/*
+doubly-guarded formula characterizing all attacks:
+"Ex ttest I.1 R.2 sessKey.3 #i.4 #k.5 hki.6 hkr.7.
+  (AcceptedR( ttest, I.1, R.2, hki.6, hkr.7 ) @ #i.4) &
+  (SessionKey( ttest, I.1, R.2, sessKey.3 ) @ #i.4) &
+  (K( sessKey.3 ) @ #k.5)
+ &
+  (All #i.8. (SesskRev( ttest, sessKey.3 ) @ #i.8) ==> F) &
+  (All #i.9 #i.10 tpartner.11 kpartner.12.
+    (SesskRev( tpartner.11, kpartner.12 ) @ #i.9) &
+    (AcceptedI( tpartner.11, I.1, R.2, hki.6, hkr.7 ) @ #i.10)
+   ==>
+    F) &
+  (All #r.13. (LtkReveal( I.1 ) @ #r.13) ==> All. (#r.13 < #i.4) ==> F) &
+  (All #r.14. (LtkReveal( R.2 ) @ #r.14) ==> All. (#r.14 < #i.4) ==> F)"
+*/
+/*
+proof by induction possible over the formula:
+"(Ex ttest I.1 R.2 sessKey.3 #i.4 #k.5 hki.6 hkr.7.
+   (AcceptedR( ttest, I.1, R.2, hki.6, hkr.7 ) @ #i.4) &
+   (SessionKey( ttest, I.1, R.2, sessKey.3 ) @ #i.4) &
+   (K( sessKey.3 ) @ #k.5)
+  &
+   (All #i.8. (SesskRev( ttest, sessKey.3 ) @ #i.8) ==> F) &
+   (All #i.9 #i.10 tpartner.11 kpartner.12.
+     (SesskRev( tpartner.11, kpartner.12 ) @ #i.9) &
+     (AcceptedI( tpartner.11, I.1, R.2, hki.6, hkr.7 ) @ #i.10)
+    ==>
+     F) &
+   (All #r.13. (LtkReveal( I.1 ) @ #r.13) ==> All. (#r.13 < #i.4) ==> F) &
+   (All #r.14. (LtkReveal( R.2 ) @ #r.14) ==> All. (#r.14 < #i.4) ==> F)) &
+ (All ttest.15 I.16 R.17 sessKey.18 #i.19 #k.20 hki.21 hkr.22.
+   (AcceptedR( ttest.15, I.16, R.17, hki.21, hkr.22 ) @ #i.19) &
+   (SessionKey( ttest.15, I.16, R.17, sessKey.18 ) @ #i.19) &
+   (K( sessKey.18 ) @ #k.20)
+  ==>
+   (Last(#k.20)) |
+   (Last(#i.19)) |
+   (Ex #i.23.
+     (SesskRev( ttest.15, sessKey.18 ) @ #i.23)
+    &
+     All. (Last(#i.23)) ==> F) |
+   (Ex #i.24 #i.25 tpartner.26 kpartner.27.
+     (SesskRev( tpartner.26, kpartner.27 ) @ #i.24) &
+     (AcceptedI( tpartner.26, I.16, R.17, hki.21, hkr.22 ) @ #i.25)
+    &
+     (All. (Last(#i.25)) ==> F) & (All. (Last(#i.24)) ==> F)) |
+   (Ex #r.28.
+     (LtkReveal( I.16 ) @ #r.28)
+    &
+     (All. (Last(#r.28)) ==> F) & (Ex. (#r.28 < #i.19) & T)) |
+   (Ex #r.29.
+     (LtkReveal( R.17 ) @ #r.29)
+    &
+     (All. (Last(#r.29)) ==> F) & (Ex. (#r.29 < #i.19) & T)))"
+*/
+simplify
+solve( SessionKey( ~ekR.8, $I.11, $R.12, sessKey.3 ) @ #i.4 )
+  case Resp_2
+  solve( (#i.4, 0)[Resp_1( $I.11, $R.12, ltkI.13, ltkR.14, ~ekR.8, hki.6
+                   )] )
+    case Resp_1
+    solve( KU((#vf.15, 0), sign(<'2', h(<hki.6, 'g'^~ekR.8>)>, ~ltk.27)) )
+      case Init_2
+      solve( KU((#vf.56, 0), sign(<'1', h(<'g'^~ekI.47, 'g'^~ekR.8>)>,
+                                  ~ltk.54)) )
+        case Resp_1
+        solve( splitEqs(1) )
+          case split_case_1
+          solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekR.125*~ekI.126)) )] )
+            case h
+            solve( (#vr.129, 0)[!KU( f_.130, 'g'^(~ekR.125*~ekI.126) )] )
+              case Exp
+              by solve( KU((#vr.135, 1), ~ekR.125) )
+            next
+              case Init_1
+              by solve( (#vr.146, 1)[!KU( f_.147, ~ekR.164 )] )
+            next
+              case Resp_1
+              by solve( (#vr.151, 1)[!KU( f_.152, ~ekI.177 )] )
+            qed
+          qed
+        next
+          case split_case_2
+          by contradiction // non-normal terms
+        qed
+      next
+        case sign
+        solve( (#vr.90, 1)[!KU( f2_.92, ~ltk.54 )] )
+          case Reveal_ltk
+          solve( KU((#vr.90, 0), h(<'g'^~ekI.47, 'g'^~ekR.8>)) )
+            case Init_2
+            by contradiction // cyclic
+          next
+            case Resp_1
+            solve( (#vr.126, 1)[!KU( f2_.127, pk(~ltk.29) )] )
+              case Get_pk
+              solve( splitEqs(1) )
+                case split_case_1
+                solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekR.169*~ekI.170)) )] )
+                  case h
+                  solve( (#vr.173, 0)[!KU( f_.174, 'g'^(~ekR.169*~ekI.170) )] )
+                    case Exp
+                    by solve( KU((#vr.179, 1), ~ekR.169) )
+                  next
+                    case Init_1
+                    by solve( (#vr.190, 1)[!KU( f_.191, ~ekR.208 )] )
+                  next
+                    case Resp_1
+                    by solve( (#vr.195, 1)[!KU( f_.196, ~ekI.221 )] )
+                  qed
+                qed
+              next
+                case split_case_2
+                by contradiction // non-normal terms
+              qed
+            next
+              case pk
+              solve( (#vr.157, 0)[!KU( f_.158, ~ltk.29 )] )
+                case Reveal_ltk
+                by contradiction // cyclic
+              qed
+            qed
+          next
+            case h
+            solve( splitEqs(1) )
+              case split_case_1
+              solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekR.114*~ekI.115)) )] )
+                case h
+                solve( (#vr.118, 0)[!KU( f_.119, 'g'^(~ekR.114*~ekI.115) )] )
+                  case Exp
+                  by solve( KU((#vr.124, 1), ~ekR.114) )
+                next
+                  case Init_1
+                  by solve( (#vr.135, 1)[!KU( f_.136, ~ekR.153 )] )
+                next
+                  case Resp_1
+                  by solve( (#vr.140, 1)[!KU( f_.141, ~ekI.166 )] )
+                qed
+              qed
+            next
+              case split_case_2
+              by contradiction // non-normal terms
+            qed
+          qed
+        qed
+      qed
+    next
+      case sign
+      solve( (#vr.46, 1)[!KU( f2_.48, ~ltk.27 )] )
+        case Reveal_ltk
+        by contradiction // cyclic
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.6. OK.
+
+
+analyzing: data/examples/STS.spthy
+
+------------------------------------------------------------------------------
+analyzed: data/examples/STS.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 7.499011s
+  KI_Perfect_Forward_Secrecy_I: complete proof (14 steps)
+  KI_Perfect_Forward_Secrecy_R: complete proof (34 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of processed files:
+
+analyzed: data/examples/STS.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 7.499011s
+  KI_Perfect_Forward_Secrecy_I: complete proof (14 steps)
+  KI_Perfect_Forward_Secrecy_R: complete proof (34 steps)
+
+==============================================================================
+*/
