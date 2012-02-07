@@ -1,5 +1,4 @@
 {-# LANGUAGE TypeOperators, StandaloneDeriving, DeriveDataTypeable, TemplateHaskell #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -134,32 +133,34 @@ module Theory.Proof.Types (
   , module Theory.Proof.Guarded
   ) where
 
-import Prelude hiding ( (.), id )
+import           Prelude hiding ( (.), id )
 
-import Safe
+import           Safe
 
-import Data.Maybe (mapMaybe, fromMaybe)
+import           Data.Maybe (mapMaybe, fromMaybe)
 import qualified Data.Set         as S
 import qualified Data.Map         as M
 import qualified Data.DAG.Simple  as D
-import Data.Monoid (Monoid(..))
-import Data.Generics
-import Data.Label
-import Data.DeriveTH
+import           Data.Monoid (Monoid(..))
+import           Data.Generics
+import qualified Data.Label                 as L
+import           Data.Label                 hiding (get)
+import           Data.DeriveTH
+import           Data.Binary
 
-import Control.Category
-import Control.Basics
-import Control.DeepSeq
+import           Control.DeepSeq
+import           Control.Category
+import           Control.Basics
 
-import Text.Isar
+import           Text.Isar
 
-import Logic.Connectives
+import           Logic.Connectives
 
-import Theory.Pretty
-import Theory.Rule
-import Theory.Proof.Guarded
-import Theory.Formula
-import Theory.Signature
+import           Theory.Pretty
+import           Theory.Rule
+import           Theory.Proof.Guarded
+import           Theory.Formula
+import           Theory.Signature
 
 ------------------------------------------------------------------------------
 -- Graph part of a sequent                                                  --
@@ -285,7 +286,7 @@ emptyEqStore = EqStore emptySubst (Conj [])
 
 -- | @True@ iff the 'EqStore' is contradictory.
 eqsIsFalse :: EqStore -> Bool
-eqsIsFalse = (== falseEqConstrConj) . get eqsConj
+eqsIsFalse = (== falseEqConstrConj) . L.get eqsConj
 
 -- | The false typing conjunction.
 falseEqConstrConj :: Conj (Disj (LNSubstVFresh))
@@ -425,8 +426,8 @@ emptySequent = Sequent
 -- | All actions that hold in a sequent.
 sActions :: Sequent -> [(NodeId, LNFact)]
 sActions se = 
-    sActionAtoms se <|> do (i, ru) <- M.toList $ get sNodes se
-                           (,) i <$> get rActs ru
+    sActionAtoms se <|> do (i, ru) <- M.toList $ L.get sNodes se
+                           (,) i <$> L.get rActs ru
 
 -- | The less-relation.
 sLessAtoms :: Sequent -> [(NodeId, NodeId)]
@@ -444,7 +445,7 @@ sDedBeforeAtoms :: Sequent -> [(LNTerm, NodeId)]
     (accessor aLess, accessor aAction, accessor aLast, accessor aDedBefore)
   where
     accessor :: (LNAtom -> Maybe a) -> Sequent -> [a]
-    accessor f = mapMaybe f . S.toList . get sAtoms
+    accessor f = mapMaybe f . S.toList . L.get sAtoms
 
     malformed ato = error $ "malformed atom in sequent: " ++ show ato
 
@@ -471,9 +472,9 @@ sRawLessRel :: Sequent -> [(NodeId,NodeId)]
 sRawLessRel se =
     sLessAtoms se ++
     map (nodeConcNode *** nodePremNode)
-      ([ (from, to) | Edge from to <- S.toList $ get sEdges se ] ++
-       [ (from, to) | MsgEdge from to <- S.toList $ get sMsgEdges se ] ++
-       [ (from, to) | Chain from to <- S.toList $ get sChains se ])
+      ([ (from, to) | Edge from to <- S.toList $ L.get sEdges se ] ++
+       [ (from, to) | MsgEdge from to <- S.toList $ L.get sMsgEdges se ] ++
+       [ (from, to) | Chain from to <- S.toList $ L.get sChains se ])
 
 -- | 'sRawGreaterRel' is the inverse of 'sRawLessRel'. 
 sRawGreaterRel :: Sequent -> [(NodeId,NodeId)]
@@ -500,8 +501,8 @@ deducibleBefore se =
       where
         startNodes = 
             [ j | (t', j) <- sDedBeforeAtoms se, t == t' ] ++
-            do (j, ru) <- M.toList $ get sNodes se
-               fa <- get rPrems ru
+            do (j, ru) <- M.toList $ L.get sNodes se
+               fa <- L.get rPrems ru
                case kFactView fa of
                  Just (_, _, m) | t `elem` input m -> return j
                  _                                 -> []
@@ -542,7 +543,7 @@ instance HasFrees Sequent where
 -- it is present in the sequent.
 nodeRule :: NodeId -> Sequent -> RuleACInst
 nodeRule v se = 
-    fromMaybe errMsg $ M.lookup v $ get sNodes se
+    fromMaybe errMsg $ M.lookup v $ L.get sNodes se
   where
     errMsg = error $ 
         "nodeRule: node '" ++ show v ++ "' does not exist in sequent\n" ++
@@ -553,7 +554,7 @@ nodeRule v se =
 -- sequent @se@ under the assumption that premise @prem@ is a a premise in
 -- @se@.
 nodePremFact :: NodePrem -> Sequent -> LNFact
-nodePremFact (NodePrem (v, i)) se = get (rPrem i) $ nodeRule v se
+nodePremFact (NodePrem (v, i)) se = L.get (rPrem i) $ nodeRule v se
 
 -- | @nodePremNode prem@ is the node that this premise is referring to.
 nodePremNode :: NodePrem -> NodeId
@@ -562,7 +563,7 @@ nodePremNode (NodePrem (v, _)) = v
 -- | All facts associated to this node premise.
 resolveNodePremFact :: NodePrem -> Sequent -> Maybe LNFact
 resolveNodePremFact (NodePrem (v, i)) se = 
-    (`atMay` i) =<< get rPrems <$> M.lookup v (get sNodes se)
+    (`atMay` i) =<< L.get rPrems <$> M.lookup v (L.get sNodes se)
 
 {-
 -- | All msg fact premises required by the sequent for the given node premise.
@@ -573,7 +574,7 @@ resolveNodePremMsg prem = msgFactTerm <=< resolveNodePremFact prem
 -- | The fact associated with this node conclusion, if there is one.
 resolveNodeConcFact :: NodeConc -> Sequent -> Maybe LNFact
 resolveNodeConcFact (NodeConc (v, i)) se = 
-    (`atMay` i) =<< get rConcs <$> M.lookup v (get sNodes se)
+    (`atMay` i) =<< L.get rConcs <$> M.lookup v (L.get sNodes se)
 
 {-
 -- | The msg fact provided by the sequent for the given node conclusion
@@ -585,7 +586,7 @@ resolveNodeConcMsg conc = msgFactTerm <=< resolveNodeConcFact conc
 -- rule associated with node @v@ under the assumption that @v@ is labeled with
 -- a rule that has an @i@-th conclusion.
 nodeConcFact :: NodeConc -> Sequent -> LNFact
-nodeConcFact (NodeConc (v, i)) = get (rConc i) . nodeRule v
+nodeConcFact (NodeConc (v, i)) = L.get (rConc i) . nodeRule v
 
 -- | 'nodeConcNode' @c@ compute the node-id of the node conclusion @c@.
 nodeConcNode :: NodeConc -> NodeId
@@ -640,10 +641,10 @@ prettyChain (Chain c p) =
 prettySequent :: HighlightDocument d => Sequent -> d
 prettySequent se = vcat $ 
     map combine
-      [ ("nodes",     vcat $ map prettyNode $ M.toList $ get sNodes se)
-      , ("edges",     commasep $ map prettyEdge $ S.toList $ get sEdges se)
-      , ("msg-edges", commasep $ map prettyMsgEdge $ S.toList $ get sMsgEdges se)
-      , ("chains",    commasep $ map prettyChain $ S.toList $ get sChains se)
+      [ ("nodes",     vcat $ map prettyNode $ M.toList $ L.get sNodes se)
+      , ("edges",     commasep $ map prettyEdge $ S.toList $ L.get sEdges se)
+      , ("msg-edges", commasep $ map prettyMsgEdge $ S.toList $ L.get sMsgEdges se)
+      , ("chains",    commasep $ map prettyChain $ S.toList $ L.get sChains se)
       ]
     ++ [prettyNonGraphSequent se]
   where
@@ -654,12 +655,12 @@ prettySequent se = vcat $
 -- clauses.
 prettyNonGraphSequent :: HighlightDocument d => Sequent -> d
 prettyNonGraphSequent se = foldr ($--$) emptyDoc $ map combine  
-  [ ("atoms",           ppAtoms $ S.toList $ get sAtoms se)
-  , ("allowed cases",   text $ show $ get sCaseDistKind se)
-  , ("formulas",        foldr ($--$) emptyDoc $ map prettyGuarded $ S.toList $ get sFormulas se)
-  , ("equations",       prettyEqStore $ get sEqStore se)
-  , ("solved formulas", foldr ($--$) emptyDoc $ map prettyGuarded $ S.toList $ get sSolvedFormulas se)
-  , ("lemmas",          foldr ($--$) emptyDoc $ map prettyGuarded $ S.toList $ get sLemmas se)
+  [ ("atoms",           ppAtoms $ S.toList $ L.get sAtoms se)
+  , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
+  , ("formulas",        foldr ($--$) emptyDoc $ map prettyGuarded $ S.toList $ L.get sFormulas se)
+  , ("equations",       prettyEqStore $ L.get sEqStore se)
+  , ("solved formulas", foldr ($--$) emptyDoc $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
+  , ("lemmas",          foldr ($--$) emptyDoc $ map prettyGuarded $ S.toList $ L.get sLemmas se)
   ]
   where
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
@@ -737,7 +738,7 @@ joinAllRules (ClassifiedRules a b c d) = a ++ b ++ c ++ d
 
 -- | Extract all non-silent rules.
 nonSilentRules :: ClassifiedRules -> [RuleAC]
-nonSilentRules = filter (not . null . get rActs) . get crProtocol
+nonSilentRules = filter (not . null . L.get rActs) . L.get crProtocol
 
 
 ------------------------------------------------------------------------------
@@ -776,11 +777,11 @@ $(mkLabels [''ProofContext, ''CaseDistinction])
 
 instance HasFrees CaseDistinction where
     foldFrees f th = 
-        foldFrees f (get cdGoal th)   `mappend` 
-        foldFrees f (get cdCases th)
+        foldFrees f (L.get cdGoal th)   `mappend` 
+        foldFrees f (L.get cdCases th)
 
-    mapFrees f th = CaseDistinction <$> mapFrees f (get cdGoal th)
-                                    <*> mapFrees f (get cdCases th)
+    mapFrees f th = CaseDistinction <$> mapFrees f (L.get cdGoal th)
+                                    <*> mapFrees f (L.get cdCases th)
 
 
 -- Instances
@@ -800,45 +801,28 @@ instance Apply BigStepGoal where
 -- NFData
 ---------
 
-$( derive makeNFData ''Formula)
-$( derive makeNFData ''Connective)
-$( derive makeNFData ''Quantifier)
+$( derive makeBinary ''Goal)
+$( derive makeBinary ''Chain)
+$( derive makeBinary ''MsgEdge)
+$( derive makeBinary ''Edge)
+$( derive makeBinary ''NodePrem)
+$( derive makeBinary ''NodeConc)
+$( derive makeBinary ''EqStore)
+$( derive makeBinary ''CaseDistKind)
+$( derive makeBinary ''Sequent)
+$( derive makeBinary ''BigStepGoal)
+$( derive makeBinary ''CaseDistinction)
+$( derive makeBinary ''ClassifiedRules)
 
-
-{-
-$( derive makeNFData ''Term )
-$( derive makeNFData ''Lit)
-$( derive makeNFData ''FunSym)
-$( derive makeNFData ''ACSym)
-$( derive makeNFData ''LSort)
-$( derive makeNFData ''LVar)
-$( derive makeNFData ''BVar)
--}
-
-instance (NFData c, NFData v, Ord v) => NFData (Subst c v) where
-  rnf (Subst m) = rnf m
-
-instance (NFData c, NFData v, Ord v) => NFData (SubstVFresh c v) where
-  rnf (SubstVFresh m) = rnf m
-
-$( derive makeNFData ''Fact)
--- $( derive makeNFData ''Name)
--- $( derive makeNFData ''NameTag)
--- $( derive makeNFData ''NameId)
-$( derive makeNFData ''Rule)
 $( derive makeNFData ''Goal)
-$( derive makeNFData ''Conj)
-$( derive makeNFData ''Disj)
 $( derive makeNFData ''Chain)
 $( derive makeNFData ''MsgEdge)
 $( derive makeNFData ''Edge)
 $( derive makeNFData ''NodePrem)
 $( derive makeNFData ''NodeConc)
-$( derive makeNFData ''RuleInfo)
-$( derive makeNFData ''IntrRuleACInfo)
-$( derive makeNFData ''ProtoRuleName)
-$( derive makeNFData ''Atom)
-$( derive makeNFData ''Guarded)
 $( derive makeNFData ''EqStore)
 $( derive makeNFData ''CaseDistKind)
 $( derive makeNFData ''Sequent)
+$( derive makeNFData ''BigStepGoal)
+$( derive makeNFData ''CaseDistinction)
+$( derive makeNFData ''ClassifiedRules)

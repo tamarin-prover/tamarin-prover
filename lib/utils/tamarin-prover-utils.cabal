@@ -36,6 +36,7 @@ library
       , syb               >= 0.3.3   && < 0.4
       , pretty            == 1.1.*
       , time              == 1.2.*
+      , binary            == 0.5.*
 
     hs-source-dirs: src
 

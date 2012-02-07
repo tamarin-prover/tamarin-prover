@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, DeriveDataTypeable #-}
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -64,13 +64,16 @@ module Theory.Fact (
 
   ) where
 
-import Data.Foldable (Foldable(..))
-import Data.Traversable (Traversable(..))
-import Data.Generics 
-import Data.Maybe (isJust)
-
 import Control.Basics
 import Control.Monad.Fresh
+import Control.DeepSeq
+
+import Data.DeriveTH
+import Data.Foldable (Foldable(..))
+import Data.Traversable (Traversable(..))
+import Data.Binary
+import Data.Generics 
+import Data.Maybe (isJust)
 
 import Term.Unification
 
@@ -323,3 +326,14 @@ prettyNFact = prettyFact prettyNTerm
 -- | Pretty print a 'LFact'.
 prettyLNFact :: Document d => LNFact -> d
 prettyLNFact fa = prettyFact prettyNTerm fa
+
+-- derived instances
+--------------------
+
+$( derive makeBinary ''Multiplicity)
+$( derive makeBinary ''FactTag)
+$( derive makeBinary ''Fact)
+
+$( derive makeNFData ''Multiplicity)
+$( derive makeNFData ''FactTag)
+$( derive makeNFData ''Fact)

@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
-{-# LANGUAGE FlexibleContexts, TupleSections, NamedFieldPuns #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, TupleSections, NamedFieldPuns #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -17,11 +17,14 @@ import Term.SubtermRule
 
 import Utils.Misc
 import Extension.Prelude
+
 import Control.Monad.Fresh
 import Control.Monad.Bind
-
-import Text.ParserCombinators.Parsec hiding (many, optional, (<|>))
 import Control.Applicative
+import Control.DeepSeq
+
+import Data.DeriveTH
+import Data.Binary
 import Data.Traversable
 import Data.List
 import Data.Monoid
@@ -29,6 +32,8 @@ import Data.List.Split hiding (sepBy, oneOf)
 import Data.Maybe
 import qualified Data.Map as M
 import Data.Map ( Map )
+
+import Text.ParserCombinators.Parsec hiding (many, optional, (<|>))
 
 -- Maude Terms
 ----------------------------------------------------------------------
@@ -351,3 +356,12 @@ parseReduceSolution s = case lines s of
     (psort <|> (string "TOP" *> pure LSortPub))
       -- FIXME: clean up, we use TOP for lists
     string ":" *> space *> expr
+
+
+-- derived instances
+--------------------
+
+$(derive makeBinary ''MaudeSig)
+$(derive makeNFData ''MaudeSig)
+
+

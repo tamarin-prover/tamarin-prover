@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, DeriveDataTypeable #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -66,10 +66,13 @@ import qualified Data.DList as D
 import Data.Monoid
 import Data.Foldable (Foldable, foldMap)
 import Data.Traversable 
-import Control.Basics
-
 import Data.Typeable
 import Data.Generics
+import Data.DeriveTH
+import Data.Binary
+
+import Control.DeepSeq
+import Control.Basics
 
 import Extension.Prelude
 
@@ -97,6 +100,8 @@ data FunSym = NonAC NonACSym  -- ^ a non-AC function function symbol of a given 
 -- | Function signatures.
 type FunSig = [NonACSym]
 
+
+
 -- | These symbols are builtin and require special handling in the parser
 --   or elsewhere.
 pairSym, expSym, invSym, oneSym, zeroSym, emptySym :: NonACSym
@@ -122,7 +127,7 @@ destInv :: Term a -> Maybe (Term a)
 destInv t = do [t1] <- destFunApp (NonAC invSym) t; return t1
 
 ----------------------------------------------------------------------
--- Terms and Instances
+-- Terms
 ----------------------------------------------------------------------
 
 -- | A term in T(Sigma,a).
@@ -130,21 +135,22 @@ data Term a = Lit a                 -- ^ atomic terms (constants, variables, ..)
             | FApp FunSym [Term a]  -- ^ function applications
   deriving (Eq, Ord, Typeable, Data )
 
+
+-- Instances
+------------
+
 instance Functor Term where
     {-# INLINE fmap #-}
     fmap f = foldTerm (Lit . f) FApp
-
 
 instance Foldable Term where
     {-# INLINE foldMap #-}
     foldMap f = foldTerm f (const mconcat)
 
-
 instance Traversable Term where
     {-# INLINE traverse #-}
     traverse f (Lit x) = Lit <$> f x
     traverse f (FApp   fsym  as)  = FApp  fsym <$> traverse (traverse f) as
-
 
 instance Applicative Term where
     {-# INLINE pure #-}
@@ -152,13 +158,11 @@ instance Applicative Term where
     {-# INLINE (<*>) #-}
     f <*> a = a >>= (\x -> fmap ($ x) f)
 
-
 instance Monad Term where
     {-# INLINE return #-}
     return = Lit
     {-# INLINE (>>=) #-}
     m >>= f = foldTerm f FApp m
-
 
 instance Show a => Show (Term a) where
     show (Lit l)                  = show l
@@ -166,6 +170,8 @@ instance Show a => Show (Term a) where
     show (FApp   (NonAC (s,_)) as) = s++"("++(intercalate "," (map show as))++")"
     show (FApp   List as)          = "LIST"++"("++(intercalate "," (map show as))++")"
     show (FApp   (AC o) as)        = show o++"("++(intercalate "," (map show as))++")"
+
+
 
 -- | The fold function for @Term a@.
 {-# INLINE foldTerm #-}
@@ -373,3 +379,18 @@ prettyTerm ppLit = ppTerm
 
     ppFun f ts =
         text (f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
+
+-- Derived instances
+--------------------
+
+$( derive makeNFData ''FunSym)
+$( derive makeNFData ''ACSym)
+$( derive makeNFData ''Term )
+$( derive makeNFData ''Lit)
+
+$( derive makeBinary ''FunSym)
+$( derive makeBinary ''ACSym)
+$( derive makeBinary ''Term )
+$( derive makeBinary ''Lit)
+
+

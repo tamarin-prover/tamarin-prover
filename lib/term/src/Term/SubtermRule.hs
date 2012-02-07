@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, DeriveDataTypeable #-}
 -- |
 -- Copyright   : (c) 2011, 2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -12,6 +12,11 @@ module Term.SubtermRule (
     , rRuleToStRule
     , stRuleToRRule
     ) where
+
+import Control.DeepSeq
+
+import Data.DeriveTH
+import Data.Binary
 
 import Term.LTerm
 import Term.Positions
@@ -51,3 +56,12 @@ test:
 xorRules == map (stRuleToRRule . fromJust .  rRuleToStRule) xorRules
 
 -}
+
+-- derived instances
+--------------------
+
+$(derive makeBinary ''StRhs)
+$(derive makeBinary ''StRule)
+
+$(derive makeNFData ''StRhs)
+$(derive makeNFData ''StRule)

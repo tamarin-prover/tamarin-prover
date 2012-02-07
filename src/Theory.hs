@@ -91,15 +91,17 @@ import           Data.List
 import           Data.Foldable (Foldable, foldMap)
 import           Data.Traversable (Traversable, traverse)
 import           Data.DeriveTH
+import           Data.Binary
                  
 import           Control.Basics
 import           Control.Parallel.Strategies
 import           Control.DeepSeq
 import           Control.Category
-import qualified Control.Monad.State as MS
+import qualified Control.Monad.State     as MS
 import           Control.Monad.Reader
 
-import           Extension.Data.Label 
+import qualified Extension.Data.Label    as L
+import           Extension.Data.Label    hiding (get)
 
 import           Text.Isar
                  
@@ -166,7 +168,7 @@ data ClosedRuleCache = ClosedRuleCache
 $(mkLabels [''ClosedProtoRule, ''ClosedRuleCache])
 
 instance HasRuleName ClosedProtoRule where
-    ruleName = ruleName . get cprRuleE
+    ruleName = ruleName . L.get cprRuleE
 
 
 -- Relation between open and closed rule sets
@@ -180,11 +182,11 @@ intruderRules rules = do
 
 -- | Open a rule cache. Variants and precomputed case distinctions are dropped.
 openRuleCache :: ClosedRuleCache -> OpenRuleCache
-openRuleCache = intruderRules . get crcRules
+openRuleCache = intruderRules . L.get crcRules
 
 -- | Open a protocol rule; i.e., drop variants and proof annotations.
 openProtoRule :: ClosedProtoRule -> OpenProtoRule
-openProtoRule = get cprRuleE
+openProtoRule = L.get cprRuleE
 
 -- | Close a protocol rule; i.e., compute AC variant and typing assertion
 -- soundness sequent, if required.
@@ -208,8 +210,8 @@ closeRuleCache typingAsms sig protoRules intrRulesAC =
         refineWithTypingAsms typingAsms ctxt0 untypedCaseDists
 
     -- classifying the rules
-    rulesAC = (fmap IntrInfo                    <$> intrRulesAC) <|> 
-              ((fmap ProtoInfo . get cprRuleAC) <$> protoRules)
+    rulesAC = (fmap IntrInfo                      <$> intrRulesAC) <|> 
+              ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
 
     anyOf ps = partition (\x -> any ($ x) ps)
 
@@ -259,7 +261,7 @@ instance Functor Lemma where
     fmap f (Lemma n fE fAC atts prf) = Lemma n fE fAC atts (f prf)
 
 instance Foldable Lemma where
-    foldMap f = f . get lProof
+    foldMap f = f . L.get lProof
 
 instance Traversable Lemma where
     traverse f (Lemma n fE fAC atts prf) = Lemma n fE fAC atts <$> f prf
@@ -279,7 +281,7 @@ skeletonLemma name atts fmE = Lemma name fmE Nothing atts
 -- | The case-distinction kind allowed for a lemma
 lemmaCaseDistKind :: Lemma p -> CaseDistKind
 lemmaCaseDistKind lem
-  | TypingLemma `elem` get lAttributes lem = UntypedCaseDist
+  | TypingLemma `elem` L.get lAttributes lem = UntypedCaseDist
   | otherwise                              = TypedCaseDist
    
 
@@ -344,16 +346,16 @@ mapTheoryItem f g = foldTheoryItem (RuleItem . f) (LemmaItem . fmap g) TextItem
 
 -- | All rules of a theory.
 theoryRules :: Theory sig c r p -> [r]
-theoryRules = foldTheoryItem return (const []) (const []) <=< get thyItems
+theoryRules = foldTheoryItem return (const []) (const []) <=< L.get thyItems
 
 -- | All lemmas of a theory.
 theoryLemmas :: Theory sig c r p -> [Lemma p]
-theoryLemmas = foldTheoryItem (const []) return (const []) <=< get thyItems
+theoryLemmas = foldTheoryItem (const []) return (const []) <=< L.get thyItems
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
 addLemma :: Lemma p -> Theory sig c r p -> Maybe (Theory sig c r p)
 addLemma l thy = do
-    guard (isNothing $ lookupLemma (get lName l) thy)
+    guard (isNothing $ lookupLemma (L.get lName l) thy)
     return $ modify thyItems (++ [LemmaItem l]) thy
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
@@ -363,11 +365,11 @@ removeLemma lemmaName thy = do
     return $ modify thyItems (concatMap fItem) thy
   where
     fItem   = foldTheoryItem (return . RuleItem) check (return . TextItem)
-    check l = do guard (get lName l /= lemmaName); return (LemmaItem l)
+    check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
 
 -- | Find the lemma with the given name.
 lookupLemma :: String -> Theory sig c r p -> Maybe (Lemma p)
-lookupLemma name = find ((name ==) . get lName) . theoryLemmas
+lookupLemma name = find ((name ==) . L.get lName) . theoryLemmas
 
 -- | Add a comment to the theory.
 addComment :: Doc -> Theory sig c r p -> Theory sig c r p
@@ -406,14 +408,14 @@ openTheory  (Theory n sig c items) =
 -- | Find the open protocol rule with the given name.
 lookupOpenProtoRule :: ProtoRuleName -> OpenTheory -> Maybe OpenProtoRule
 lookupOpenProtoRule name = 
-    find ((name ==) . get rInfo) . theoryRules
+    find ((name ==) . L.get rInfo) . theoryRules
 
 -- | Add a new protocol rules. Fails, if a protocol rule with the same name
 -- exists.
 addProtoRule :: ProtoRuleE -> OpenTheory -> Maybe OpenTheory
 addProtoRule ruE thy = do
     guard (maybe True ((ruE ==)) $ 
-        lookupOpenProtoRule (get rInfo ruE) thy)
+        lookupOpenProtoRule (L.get rInfo ruE) thy)
     return $ modify thyItems (++ [RuleItem ruE]) thy
 
 -- | Add intruder proof rules.
@@ -434,7 +436,7 @@ getLemmas = theoryLemmas
 
 -- | The variants of the intruder rules.
 getIntrVariants :: ClosedTheory -> [IntrRuleAC]
-getIntrVariants = intruderRules . get (crcRules . thyCache)
+getIntrVariants = intruderRules . L.get (crcRules . thyCache)
 
 -- | All protocol rules modulo E.
 getProtoRuleEs :: ClosedTheory -> [ProtoRuleE]
@@ -443,21 +445,21 @@ getProtoRuleEs = map openProtoRule . theoryRules
 -- | Get the proof context for a lemma of the closed theory.
 getProofContext :: CaseDistKind -> ClosedTheory -> ProofContext
 getProofContext kind thy = ProofContext
-    ( get thySignature          thy)
-    ( get (crcRules . thyCache) thy)
-    ( get (cases . thyCache)    thy)
+    ( L.get thySignature          thy)
+    ( L.get (crcRules . thyCache) thy)
+    ( L.get (cases . thyCache)    thy)
   where
     cases = case kind of UntypedCaseDist -> crcUntypedCaseDists
                          TypedCaseDist   -> crcTypedCaseDists
 
 -- | The classified set of rules modulo AC in this theory.
 getClassifiedRules :: ClosedTheory -> ClassifiedRules
-getClassifiedRules = get (crcRules . thyCache)
+getClassifiedRules = L.get (crcRules . thyCache)
 
 -- | The precomputed case distinctions.
 getCaseDistinction :: CaseDistKind -> ClosedTheory -> [CaseDistinction]
-getCaseDistinction UntypedCaseDist = get (crcUntypedCaseDists . thyCache)
-getCaseDistinction TypedCaseDist   = get (crcTypedCaseDists . thyCache)
+getCaseDistinction UntypedCaseDist = L.get (crcUntypedCaseDists . thyCache)
+getCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists . thyCache)
 
 
 -- construction
@@ -474,15 +476,15 @@ closeTheory :: FilePath         -- ^ Path to the Maude executable.
             -> OpenTheory
             -> IO ClosedTheory
 closeTheory maudePath thy0 = do
-    sig <- toSignatureWithMaude maudePath $ get thySignature thy0
-    let cache     = closeRuleCache typAsms sig rules $ get thyCache thy0
+    sig <- toSignatureWithMaude maudePath $ L.get thySignature thy0
+    let cache     = closeRuleCache typAsms sig rules $ L.get thyCache thy0
         addSorrys = checkAndExtendProver (sorryProver "not yet proven")
 
         -- Maude / Signature handle
-        hnd = get sigmMaudeHandle sig
+        hnd = L.get sigmMaudeHandle sig
 
         -- close all theory items: in parallel
-        items = (closeTheoryItem <$> get thyItems thy0) `using` parList rdeepseq
+        items = (closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq
         closeTheoryItem = foldTheoryItem 
             (RuleItem . closeProtoRule hnd) 
             (LemmaItem . ensureFormulaAC . fmap skeletonToIncrementalProof)
@@ -491,9 +493,9 @@ closeTheory maudePath thy0 = do
         -- extract typing lemmas
         typAsms = do 
             LemmaItem lem <- items
-            guard (TypingLemma `elem` get lAttributes lem)
+            guard (TypingLemma `elem` L.get lAttributes lem)
             let toGuarded = fmap negateGuarded . fromFormulaNegate
-            case toGuarded <$> get lFormulaAC lem of
+            case toGuarded <$> L.get lFormulaAC lem of
               Just (Right gf) -> return gf
               Just (Left err) -> error $ "closeTheory: " ++ err
               _               -> mzero
@@ -502,7 +504,7 @@ closeTheory maudePath thy0 = do
         rules    = theoryRules (Theory errClose errClose errClose items)
         errClose = error "closeTheory"
 
-    return $ proveTheory addSorrys $ Theory (get thyName thy0) sig cache items
+    return $ proveTheory addSorrys $ Theory (L.get thyName thy0) sig cache items
 
 
 -- Applying provers
@@ -511,11 +513,11 @@ closeTheory maudePath thy0 = do
 -- | A list of proof methods that could be applied to the given sequent.
 applicableProofMethods :: ClosedTheory -> Sequent -> [ProofMethod]
 applicableProofMethods thy se = do
-    m <- possibleProofMethods (get pcSignature ctxt) se
+    m <- possibleProofMethods (L.get pcSignature ctxt) se
     guard (isJust $ execProofMethod ctxt m se)
     return m
   where
-    ctxt = getProofContext (get sCaseDistKind se) thy
+    ctxt = getProofContext (L.get sCaseDistKind se) thy
 
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.
@@ -534,7 +536,7 @@ proveTheory prover thy =
       where
         l       = ensureFormulaAC l0
         kind    = lemmaCaseDistKind l
-        se      = formulaToSequent kind preItems $ fromJust $ get lFormulaAC l
+        se      = formulaToSequent kind preItems $ fromJust $ L.get lFormulaAC l
         ctxt    = getProofContext kind thy
         add prf = fromMaybe prf $ runProver prover ctxt se prf
 
@@ -548,15 +550,15 @@ addLemmasToSequent :: [TheoryItem r p] -> Sequent -> Sequent
 addLemmasToSequent items se = 
     modify sLemmas (S.union gfs) se 
   where
-    gfs = S.fromList $ gatherReusableLemmas (get sCaseDistKind se) items
+    gfs = S.fromList $ gatherReusableLemmas (L.get sCaseDistKind se) items
 
 -- | Gather reusable lemmas to be added to a sequent.
 gatherReusableLemmas :: CaseDistKind -> [TheoryItem r p] -> [LNGuarded]
 gatherReusableLemmas kind items = do
     LemmaItem lem <- items
     guard $ lemmaCaseDistKind lem <= kind && 
-            ReuseLemma `elem` get lAttributes lem
-    Just (Right gf) <- [fromFormula <$> get lFormulaAC lem]
+            ReuseLemma `elem` L.get lAttributes lem
+    Just (Right gf) <- [fromFormula <$> L.get lFormulaAC lem]
     return gf
 
 -- | Ensure that the AC variant of a formula is present.
@@ -566,7 +568,7 @@ ensureFormulaAC l =
   where
     -- FIXME: AC-variant of formula is formula itself.
     --        This is ensured by well-formed check (not implemented yet).
-    fmAC = fromMaybe (get lFormulaE l) $ get lFormulaAC l
+    fmAC = fromMaybe (L.get lFormulaE l) $ L.get lFormulaAC l
 
 
 ------------------------------------------------------------------------------
@@ -578,7 +580,7 @@ type LemmaRef = String
 
 -- | Resolve a path in a theory. 
 lookupLemmaProof :: LemmaRef -> ClosedTheory -> Maybe IncrementalProof
-lookupLemmaProof name thy = get lProof <$> lookupLemma name thy
+lookupLemmaProof name thy = L.get lProof <$> lookupLemma name thy
 
 -- | Modify the proof at the given lemma ref, if there is one. Fails if the
 -- path is not present or if the prover fails.
@@ -586,14 +588,14 @@ modifyLemmaProof :: Prover -> LemmaRef -> ClosedTheory -> Maybe ClosedTheory
 modifyLemmaProof prover name thy = 
     modA thyItems changeItems thy
   where
-    findLemma (LemmaItem lem) = name == get lName lem
+    findLemma (LemmaItem lem) = name == L.get lName lem
     findLemma _               = False
 
     change preItems (LemmaItem l0) = do
          let l1   = ensureFormulaAC l0
              kind = lemmaCaseDistKind l1
              ctxt = getProofContext kind thy
-         se <- formulaToSequent kind preItems <$> get lFormulaAC l1
+         se <- formulaToSequent kind preItems <$> L.get lFormulaAC l1
          l2 <- modA lProof (runProver prover ctxt se) l1
          return $ LemmaItem l2
     change _ _ = error "LemmaProof: change: impossible"
@@ -619,11 +621,11 @@ prettyTheory :: HighlightDocument d
              => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d)
              -> Theory sig c r p -> d
 prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
-    [ kwTheoryHeader $ get thyName thy
-    , nest 1 $ ppSig $ get thySignature thy
-    , ppCache $ get thyCache thy 
+    [ kwTheoryHeader $ L.get thyName thy
+    , nest 1 $ ppSig $ L.get thySignature thy
+    , ppCache $ L.get thyCache thy 
     ] ++
-    parMap rdeepseq ppItem (get thyItems thy) ++
+    parMap rdeepseq ppItem (L.get thyItems thy) ++
     [ kwEnd ]
   where
     ppItem = foldTheoryItem 
@@ -631,9 +633,9 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
 
 -- | Pretty print the lemma name together with its attributes.
 prettyLemmaName :: HighlightDocument d => Lemma p -> d
-prettyLemmaName l = case get lAttributes l of
-      [] -> text (get lName l)
-      as -> text (get lName l) <->
+prettyLemmaName l = case L.get lAttributes l of
+      [] -> text (L.get lName l)
+      as -> text (L.get lName l) <->
             (brackets $ fsep $ punctuate comma $ map prettyLemmaAttribute as)
   where
     prettyLemmaAttribute TypingLemma = text "typing"
@@ -643,18 +645,18 @@ prettyLemmaName l = case get lAttributes l of
 prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d
 prettyLemma ppPrf l =
     kwLemmaModulo "E" <-> prettyLemmaName l <> colon $-$ 
-    (nest 2 $ doubleQuotes $ prettyFormulaE $ get lFormulaE l)
+    (nest 2 $ doubleQuotes $ prettyFormulaE $ L.get lFormulaE l)
     $-$
-    maybe emptyDoc ppFormulaAC (get lFormulaAC l)
+    maybe emptyDoc ppFormulaAC (L.get lFormulaAC l)
     $-$
-    maybe emptyDoc ppFormulaACGuarded (get lFormulaAC l)
+    maybe emptyDoc ppFormulaACGuarded (L.get lFormulaAC l)
     $-$
-    maybe emptyDoc ppFormulaACInduction (get lFormulaAC l)
+    maybe emptyDoc ppFormulaACInduction (L.get lFormulaAC l)
     $-$
-    ppPrf (get lProof l)
+    ppPrf (L.get lProof l)
   where
     ppFormulaAC fmAC
-      | fmAC == get lFormulaE l = multiComment_ ["proof based on the same lemma modulo AC"]
+      | fmAC == L.get lFormulaE l = multiComment_ ["proof based on the same lemma modulo AC"]
       | otherwise               =
           multiComment
               ( text "proof based on the following equivalent lemma modulo AC:" $-$
@@ -706,8 +708,8 @@ prettyIncrementalProof = prettyProofWith ppStep (const id)
 -- | Pretty print an closed rule together with its assertion soundness proof.
 prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d
 prettyClosedProtoRule cru =
-    (prettyProtoRuleE  $ get cprRuleE cru) $-$ 
-    (nest 2 $ ppRuleAC $ get cprRuleAC cru)
+    (prettyProtoRuleE  $ L.get cprRuleE cru) $-$ 
+    (nest 2 $ ppRuleAC $ L.get cprRuleAC cru)
   where
     ppRuleAC ru
       | isTrivialProtoRuleAC ru = multiComment_ ["has exactly the trivial AC variant"]
@@ -723,7 +725,7 @@ prettyOpenTheory =
 prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
 prettyClosedTheory = 
     prettyTheory prettySignatureWithMaude
-                 (prettyIntrVariantsSection . intruderRules . get crcRules) 
+                 (prettyIntrVariantsSection . intruderRules . L.get crcRules) 
                  prettyClosedProtoRule
                  prettyIncrementalProof
 
@@ -732,9 +734,9 @@ prettyClosedSummary thy =
     vcat lemmaSummaries
   where
     lemmaSummaries = do
-        LemmaItem lem  <- get thyItems thy
-        let (status, Sum siz) = foldProof proofStepSummary $ get lProof lem
-        return $ text (get lName lem) <> colon <-> 
+        LemmaItem lem  <- L.get thyItems thy
+        let (status, Sum siz) = foldProof proofStepSummary $ L.get lProof lem
+        return $ text (L.get lName lem) <> colon <-> 
                  text (showProofStatus status) <->
                  parens (integer siz <-> text "steps")
 
@@ -743,20 +745,17 @@ prettyClosedSummary thy =
 -- Instances: FIXME: Sort them into the right files
 --------------------------------------------------
 
-instance (Ord l, NFData l, NFData a) => NFData (LTree l a) where
-  rnf (LNode r m) = rnf r `seq` rnf  m
+$( derive makeBinary ''TheoryItem)
+$( derive makeBinary ''LemmaAttribute)
+$( derive makeBinary ''Lemma)
+$( derive makeBinary ''ClosedProtoRule)
+$( derive makeBinary ''ClosedRuleCache)
+$( derive makeBinary ''Theory)
 
 $( derive makeNFData ''TheoryItem)
 $( derive makeNFData ''LemmaAttribute)
 $( derive makeNFData ''Lemma)
+$( derive makeNFData ''ClosedProtoRule)
 $( derive makeNFData ''ClosedRuleCache)
 $( derive makeNFData ''Theory)
-$( derive makeNFData ''ProofMethod)
-$( derive makeNFData ''Contradiction)
-$( derive makeNFData ''ProofStep)
 
-$( derive makeNFData ''CaseDistinction)
-$( derive makeNFData ''ClassifiedRules)
-$( derive makeNFData ''ClosedProtoRule)
-$( derive makeNFData ''BigStepGoal)
-$( derive makeNFData ''ProtoRuleACInfo)

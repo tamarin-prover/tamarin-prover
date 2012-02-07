@@ -1,4 +1,15 @@
-{-# LANGUAGE TupleSections, TypeSynonymInstances, GADTs,FlexibleContexts,EmptyDataDecls,StandaloneDeriving, DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, DeriveFunctor, ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections
+           , TypeSynonymInstances
+           , GADTs
+           , FlexibleContexts
+           , EmptyDataDecls
+           , StandaloneDeriving
+           , DeriveDataTypeable
+           , FlexibleInstances
+           , MultiParamTypeClasses
+           , GeneralizedNewtypeDeriving
+           , ScopedTypeVariables
+ #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -52,6 +63,7 @@ import Text.PrettyPrint.Highlight
 
 import Control.Applicative
 import Control.Monad.Fresh
+import Control.DeepSeq
 
 import Extension.Prelude
 
@@ -65,6 +77,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.List
 import Data.Traversable hiding ( mapM )
+import Data.Binary
 
 ----------------------------------------------------------------------
 -- Substitutions
@@ -74,14 +87,17 @@ import Data.Traversable hiding ( mapM )
 --   @c@ denotes the type of constants and @v@ the type of variables.
 --   Fresh substitutions cannot be applied directly, they have to be converted
 --   to free substitutions in a certain context (MonadFresh).
-data SubstVFresh c v = SubstVFresh { svMap :: Map v (VTerm c v) }
-  deriving ( Eq, Ord )
+newtype SubstVFresh c v = SubstVFresh { svMap :: Map v (VTerm c v) }
+  deriving ( Eq, Ord, NFData, Binary )
 
 -- | Fresh substitution with logical variables
 type LSubstVFresh c = SubstVFresh c LVar
 
 -- | Fresh substitution with logical variables and names
 type LNSubstVFresh = SubstVFresh Name LVar
+
+-- Instances
+------------
 
 -- Smart constructors for substitutions
 ----------------------------------------------------------------------

@@ -56,12 +56,15 @@ module Theory.Proof.Guarded (
 
 import Control.Applicative
 import Control.Monad.Error
+import Control.DeepSeq
 
 import Data.Traversable hiding ( mapM, sequence )
 import Data.List
 import Data.Monoid   (mappend, mconcat)
 import Data.Foldable (Foldable(..), foldMap)
 import Data.Either   (partitionEithers)
+import Data.DeriveTH
+import Data.Binary
 
 
 import Theory.Rule
@@ -550,3 +553,10 @@ prettyGuarded f =
                    , nest 1 dsucc]
       where
         ppVars       = fsep . map (text . show)
+
+
+-- Derived instances
+--------------------
+
+$( derive makeBinary ''Guarded)
+$( derive makeNFData ''Guarded)

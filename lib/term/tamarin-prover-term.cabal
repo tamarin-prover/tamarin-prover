@@ -34,6 +34,8 @@ library
       , directory            == 1.1.*
       , process              == 1.0.*
       , deepseq              == 1.1.*
+      , binary               == 0.5.*
+      , derive               == 2.5.*
                           
       , tamarin-prover-utils == 0.1.*
 

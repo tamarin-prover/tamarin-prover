@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, TypeSynonymInstances, GADTs,FlexibleContexts,EmptyDataDecls,StandaloneDeriving, DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, DeriveFunctor, ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections, GeneralizedNewtypeDeriving, TypeSynonymInstances, GADTs,FlexibleContexts,EmptyDataDecls,StandaloneDeriving, DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, DeriveFunctor, ScopedTypeVariables #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -63,7 +63,10 @@ import Data.Map ( Map )
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.List
+import Data.Binary
+
 import Control.Applicative
+import Control.DeepSeq
 
 ----------------------------------------------------------------------
 -- Substitutions
@@ -71,14 +74,15 @@ import Control.Applicative
 
 -- | We use the data type @Subst c v@ of substitutions. @c@ is the type of constants
 --   and @v@ the type of variables.
-data Subst c v = Subst { sMap :: Map v (VTerm c v) }
-    deriving ( Eq, Ord )
+newtype Subst c v = Subst { sMap :: Map v (VTerm c v) }
+    deriving ( Eq, Ord, NFData, Binary )
 
 -- | A substitution for logical variables.
 type LSubst c = Subst c LVar
 
 -- | A substitution with names and logical variables.
 type LNSubst = Subst Name LVar
+
 
 -- Application
 ----------------------------------------------------------------------

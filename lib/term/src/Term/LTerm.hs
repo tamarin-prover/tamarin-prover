@@ -1,4 +1,6 @@
-{-# LANGUAGE FlexibleContexts,FlexibleInstances,TypeSynonymInstances,MultiParamTypeClasses,DeriveDataTypeable,StandaloneDeriving #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, DeriveDataTypeable, StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell, GeneralizedNewtypeDeriving #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -75,6 +77,9 @@ import Text.Isar
 import Control.Applicative
 import Control.Monad.Fresh
 import Control.Monad.Bind
+import Control.DeepSeq
+
+import Data.DeriveTH
 import qualified Data.Set   as S
 import qualified Data.Map as M
 
@@ -83,6 +88,7 @@ import Data.Generics hiding (GT)
 import qualified Data.DList as D
 import Data.Traversable
 import Data.Monoid
+import Data.Binary
 import Data.Foldable hiding (concatMap, elem)
 
 import Extension.Prelude
@@ -97,7 +103,7 @@ import Logic.Connectives
 
 -- | Type safety for names.
 newtype NameId = NameId { getNameId :: String }
-    deriving( Eq, Ord, Typeable, Data )
+    deriving( Eq, Ord, Typeable, Data, NFData, Binary )
 
 -- | Tags for names.
 data NameTag = FreshName | PubName
@@ -509,3 +515,19 @@ prettyNTerm = prettyTerm (text . show)
 -- | Pretty print an @LTerm@.
 prettyLNTerm :: Document d => LNTerm -> d
 prettyLNTerm = prettyNTerm
+
+
+-- derived instances
+--------------------
+
+$( derive makeBinary ''NameTag)
+$( derive makeBinary ''Name)
+$( derive makeBinary ''LSort)
+$( derive makeBinary ''LVar)
+$( derive makeBinary ''BVar)
+
+$( derive makeNFData ''NameTag)
+$( derive makeNFData ''Name)
+$( derive makeNFData ''LSort)
+$( derive makeNFData ''LVar)
+$( derive makeNFData ''BVar)

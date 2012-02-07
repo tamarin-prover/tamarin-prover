@@ -82,12 +82,17 @@ import qualified Data.Set               as S
 import           Data.Monoid
 import           Data.Foldable (Foldable, foldMap, asum)
 import           Data.Traversable
-import           Data.Label
+import qualified Data.Label             as L
+import           Data.Label             hiding (get)
+import           Data.DeriveTH
+import           Data.Binary
+
 import           Debug.Trace
                  
 import           Control.Basics
-import qualified Control.Monad.State   as S
+import qualified Control.Monad.State    as S
 import           Control.Parallel.Strategies
+import           Control.DeepSeq
 
 import           Text.Isar
                  
@@ -203,7 +208,7 @@ contradictions sig se = asum
     [ guard (proveCyclic se)                *> pure Cyclic
     , guard (hasNonNormalTerms sig se)      *> pure NonNormalTerms
     , guard (hasForbiddenExp se)            *> pure ForbiddenExp
-    , guard (eqsIsFalse $ get sEqStore se)  *> pure IncompatibleEqs
+    , guard (eqsIsFalse $ L.get sEqStore se)  *> pure IncompatibleEqs
     , guard (formulasFalse se)              *> pure FormulasFalse
     -- , guard (hasNonLastNode se)             *> pure NonLastNode
     -- , maybe [] (pure . uncurry SuperfluousLearn) $ findSuperfluousLearn se
@@ -379,7 +384,7 @@ cutOnAttackDFS prf =
         foldMap findAttacks preferred `mappend` foldMap findAttacks delayed
       where
         (preferred, delayed) = parPartition prefer $ M.elems cs
-        prefer = maybe False (S.null . get sChains) . fst . psInfo . root
+        prefer = maybe False (S.null . L.get sChains) . fst . psInfo . root
         -}
 
     extractAttack []         p               = p
@@ -437,11 +442,11 @@ execProofMethod ctxt method se =
       Simplify             -> singleCase (/=) simplifySequent
       Induction            -> execInduction
       Contradiction _  
-        | null (contradictions (get pcSignature ctxt) se) -> Nothing
+        | null (contradictions (L.get pcSignature ctxt) se) -> Nothing
         | otherwise                                       -> Just M.empty
   where
     -- Maude handle / signature to use
-    hnd = get sigmMaudeHandle $ get pcSignature ctxt
+    hnd = L.get sigmMaudeHandle $ L.get pcSignature ctxt
 
     -- expect only one or no subcase in the given case distinction
     singleCase check m = 
@@ -459,7 +464,7 @@ execProofMethod ctxt method se =
         return $ makeCaseNames $ map fst $ getDisj $ 
             runSeProof solver ctxt se (avoid se)
       where
-        ths    = get pcCaseDists ctxt
+        ths    = L.get pcCaseDists ctxt
         solver = do name <- maybe (solveGoal goal) 
                                   (fmap $ concat . intersperse "_")
                                   (solveWithCaseDistinction hnd ths goal)
@@ -481,7 +486,7 @@ execProofMethod ctxt method se =
     -- a single formula.
     execInduction
       | se == se0 =
-          case S.toList $ get sFormulas se of
+          case S.toList $ L.get sFormulas se of
             [gf] -> case applyInduction gf of
               Right gf' -> Just $ M.singleton "induction" $ 
                               set sFormulas (S.singleton gf') se
@@ -490,9 +495,9 @@ execProofMethod ctxt method se =
 
       | otherwise = Nothing
       where
-        se0 = set sFormulas (get sFormulas se) $ 
-              set sLemmas (get sLemmas se)  $
-              emptySequent (get sCaseDistKind se) 
+        se0 = set sFormulas (L.get sFormulas se) $ 
+              set sLemmas (L.get sLemmas se)  $
+              emptySequent (L.get sCaseDistKind se) 
 
 -- | A list of possibly applicable proof methods.
 possibleProofMethods :: SignatureWithMaude -> Sequent -> [ProofMethod]
@@ -518,7 +523,7 @@ proveSequentDFS ctxt se0 =
       where
         (method, cases) = 
             headDef (Attack, M.empty) $ do
-                m <- possibleProofMethods (get pcSignature ctxt) se 
+                m <- possibleProofMethods (L.get pcSignature ctxt) se 
                 (m,) <$> maybe mzero return (execProofMethod ctxt m se)
 
 
@@ -556,7 +561,7 @@ checkProof :: ProofContext
            -> Proof (Maybe a, Maybe Sequent)
 checkProof ctxt prover se (LNode (ProofStep method info) cs) =
     fromMaybe (node method (M.map noSequentPrf cs)) $ headMay $ do
-        method' <- method : possibleProofMethods (get pcSignature ctxt) se
+        method' <- method : possibleProofMethods (L.get pcSignature ctxt) se
         guard (method `eqModuloFreshness` method')
         cases <- maybe mzero return $ execProofMethod ctxt method' se
         return $ node method' $ checkChildren cases
@@ -681,7 +686,7 @@ contradictionAndClauseProver = Prover $ \ctxt se prf ->
     runProver 
         (firstProver $ map oneStepProver $ 
             (Contradiction . Just <$> 
-                contradictions (get pcSignature ctxt) se))
+                contradictions (L.get pcSignature ctxt) se))
         ctxt se prf
 
 
@@ -745,3 +750,24 @@ showProofStatus :: ProofStatus -> String
 showProofStatus AttackFound     = "attack found"
 showProofStatus IncompleteProof = "incomplete proof"
 showProofStatus CompleteProof   = "complete proof"
+
+
+-- Derived instances
+--------------------
+
+$( derive makeBinary ''Contradiction)
+$( derive makeBinary ''ProofMethod)
+$( derive makeBinary ''ProofStep)
+$( derive makeBinary ''ProofStatus)
+
+$( derive makeNFData ''Contradiction)
+$( derive makeNFData ''ProofMethod)
+$( derive makeNFData ''ProofStep)
+$( derive makeNFData ''ProofStatus)
+
+instance (Ord l, NFData l, NFData a) => NFData (LTree l a) where
+  rnf (LNode r m) = rnf r `seq` rnf  m
+
+instance (Ord l, Binary l, Binary a) => Binary (LTree l a) where
+  put (LNode r m) = put r >> put m
+  get = LNode <$> get <*> get

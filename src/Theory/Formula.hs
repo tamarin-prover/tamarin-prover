@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleContexts, BangPatterns, StandaloneDeriving #-}
-{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, TypeSynonymInstances #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -53,7 +53,10 @@ import Data.Monoid hiding (All)
 import Data.Foldable (Foldable, foldMap)
 import Data.Traversable
 import Data.Generics
+import Data.DeriveTH
+import Data.Binary
 
+import Control.DeepSeq
 import Control.Basics
 import Control.Monad.Fresh
 
@@ -300,3 +303,15 @@ prettyFormulaAC = prettyLNFormula
 prettyLNFormula :: HighlightDocument d => LNFormula -> d
 prettyLNFormula fm = 
   prettyLFormula prettyNAtom fm `evalFreshAvoiding` fm
+
+
+-- Derived instances
+--------------------
+
+$( derive makeBinary ''Connective)
+$( derive makeBinary ''Quantifier)
+$( derive makeBinary ''Formula)
+
+$( derive makeNFData ''Connective)
+$( derive makeNFData ''Quantifier)
+$( derive makeNFData ''Formula)

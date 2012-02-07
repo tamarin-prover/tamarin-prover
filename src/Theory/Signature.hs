@@ -1,7 +1,6 @@
 {-# LANGUAGE TemplateHaskell, DeriveDataTypeable, DeriveFunctor #-}
 {-# LANGUAGE StandaloneDeriving, TypeSynonymInstances #-}
 {-# LANGUAGE TypeOperators,FlexibleInstances #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -44,9 +43,7 @@ import           Control.DeepSeq
 
 import           Theory.Pretty
 import           Theory.Fact
-import           Term.SubtermRule
 
-import           Data.DeriveTH
 import           Data.Binary
 
 import           System.IO.Unsafe (unsafePerformIO)
@@ -60,37 +57,6 @@ data Signature a = Signature
 
 $(L.mkLabels [''Signature])
 
-$(derive makeBinary ''FactTag)
-$(derive makeBinary ''MaudeSig)
-$(derive makeBinary ''StRhs)
-$(derive makeBinary ''Term )
-$(derive makeBinary ''Lit)
-$(derive makeBinary ''ACSym)
-$(derive makeBinary ''FunSym)
-$(derive makeBinary ''LSort)
-$(derive makeBinary ''LVar)
-$(derive makeBinary ''BVar)
-$(derive makeBinary ''NameTag)
-$(derive makeBinary ''NameId)
-$(derive makeBinary ''Name)
-$(derive makeBinary ''StRule)
-$(derive makeBinary ''Multiplicity)
-
-$(derive makeNFData ''FactTag)
-$(derive makeNFData ''Term)
-$(derive makeNFData ''NameTag)
-$(derive makeNFData ''NameId)
-$(derive makeNFData ''Name)
-$(derive makeNFData ''Lit)
-$(derive makeNFData ''ACSym)
-$(derive makeNFData ''FunSym)
-$(derive makeNFData ''LSort)
-$(derive makeNFData ''LVar)
-$(derive makeNFData ''BVar)
-$(derive makeNFData ''MaudeSig)
-$(derive makeNFData ''StRhs)
-$(derive makeNFData ''StRule)
-$(derive makeNFData ''Multiplicity)
 
 ------------------------------------------------------------------------------
 -- Pure Signatures

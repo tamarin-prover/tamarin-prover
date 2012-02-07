@@ -86,13 +86,17 @@ import           Data.List
 import           Data.Monoid
 import           Data.Foldable (foldMap)
 import           Data.Generics 
+import           Data.DeriveTH
+import           Data.Binary
 
+import           Control.DeepSeq
 import           Control.Category
 import           Control.Basics
 import           Control.Monad.Bind
 import           Control.Monad.Reader
 
-import           Extension.Data.Label
+import           Extension.Data.Label hiding (get)
+import qualified Extension.Data.Label as L
 import           Logic.Connectives
 
 import           Theory.Fact
@@ -117,11 +121,11 @@ $(mkLabels [''Rule])
 
 -- | @lookupPrem i ru@ returns the @i@-th premise of rule @ru@, if possible.
 lookupPrem :: Int -> Rule i -> Maybe LNFact
-lookupPrem i = (`atMay` i) . get rPrems
+lookupPrem i = (`atMay` i) . L.get rPrems
 
 -- | @lookupConc i ru@ returns the @i@-th conclusion of rule @ru@, if possible.
 lookupConc :: Int -> Rule i -> Maybe LNFact
-lookupConc i = (`atMay` i) . get rConcs
+lookupConc i = (`atMay` i) . L.get rConcs
 
 -- | @rPrem i@ is a lens for the @i@-th premise of a rule.
 rPrem :: Int -> (Rule i :-> LNFact)
@@ -292,19 +296,19 @@ class HasRuleName t where
   ruleName :: t -> RuleInfo ProtoRuleName IntrRuleACInfo
 
 instance HasRuleName ProtoRuleE where
-  ruleName = ProtoInfo . get rInfo
+  ruleName = ProtoInfo . L.get rInfo
 
 instance HasRuleName RuleAC where
-  ruleName = ruleInfo (ProtoInfo . pracName) IntrInfo . get rInfo
+  ruleName = ruleInfo (ProtoInfo . pracName) IntrInfo . L.get rInfo
 
 instance HasRuleName ProtoRuleAC where
-  ruleName = ProtoInfo . pracName . get rInfo
+  ruleName = ProtoInfo . pracName . L.get rInfo
 
 instance HasRuleName IntrRuleAC where
-  ruleName = IntrInfo . get rInfo
+  ruleName = IntrInfo . L.get rInfo
 
 instance HasRuleName RuleACInst where
-  ruleName = get rInfo
+  ruleName = L.get rInfo
 
 
 -- Queries
@@ -312,13 +316,13 @@ instance HasRuleName RuleACInst where
 
 -- | True iff the rule is a destruction rule.
 isDestrRule :: Rule r -> Bool
-isDestrRule ru = case kFactView <$> get rConcs ru of
+isDestrRule ru = case kFactView <$> L.get rConcs ru of
     [Just (DnK, _, _)] -> True
     _                  -> False
 
 -- | True iff the rule is a construction rule.
 isConstrRule :: Rule r -> Bool
-isConstrRule ru = case kFactView <$> get rConcs ru of
+isConstrRule ru = case kFactView <$> L.get rConcs ru of
     [Just (UpK, _, _)] -> True
     _                  -> False
 
@@ -343,7 +347,8 @@ nfRule :: Rule i -> WithMaude Bool
 nfRule (Rule _ ps cs as) = reader $ \hnd ->
     all (nfFactList hnd) [ps, cs, as]
   where
-    nfFactList hnd xs = getAll $ foldMap (foldMap (All . (\t -> nf' t `runReader` hnd))) xs
+    nfFactList hnd xs = 
+        getAll $ foldMap (foldMap (All . (\t -> nf' t `runReader` hnd))) xs
 
 -- | True if the protocol rule has no variants.
 isTrivialProtoRuleAC :: ProtoRuleAC -> Bool
@@ -382,13 +387,13 @@ unifyRuleACInstEqs eqs
   | otherwise         = return []
   where
     unifiable (Equal ru1 ru2) = 
-         get rInfo ru1            == get rInfo ru2
-      && length (get rPrems ru1) == length (get rPrems ru2)
-      && length (get rConcs ru1) == length (get rConcs ru2)
+         L.get rInfo ru1            == L.get rInfo ru2
+      && length (L.get rPrems ru1) == length (L.get rPrems ru2)
+      && length (L.get rConcs ru1) == length (L.get rConcs ru2)
 
     ruleEqs (Equal ru1 ru2) = 
-        zipWith Equal (get rPrems ru1) (get rPrems ru2) ++ 
-        zipWith Equal (get rConcs ru1) (get rConcs ru2)
+        zipWith Equal (L.get rPrems ru1) (L.get rPrems ru2) ++ 
+        zipWith Equal (L.get rConcs ru1) (L.get rConcs ru2)
 
 
 
@@ -472,14 +477,14 @@ prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
 prettyNamedRule prefix ppInfo ru =
     prefix <-> prettyRuleName ru <> colon $-$
     nest 2 (sep [ nest 1 $ ppFactsList rPrems
-                , if null (get rActs ru) 
+                , if null (L.get rActs ru) 
                     then operator_ "-->"
                     else fsep [operator_ "--[", ppFacts rActs, operator_ "]->"]
                 , nest 1 $ ppFactsList rConcs]) $--$
-    nest 2 (ppInfo $ get rInfo ru)
+    nest 2 (ppInfo $ L.get rInfo ru)
   where
     ppList pp        = fsep . punctuate comma . map pp
-    ppFacts proj     = ppList prettyLNFact $ get proj ru
+    ppFacts proj     = ppList prettyLNFact $ L.get proj ru
     ppFactsList proj = fsep [operator_ "[", ppFacts proj, operator_ "]"]
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
@@ -505,3 +510,18 @@ prettyProtoRuleAC = prettyNamedRule (kwRuleModulo "AC") prettyProtoRuleACInfo
 
 prettyRuleACInst :: HighlightDocument d => RuleACInst -> d
 prettyRuleACInst = prettyNamedRule (kwInstanceModulo "AC") (const emptyDoc)
+
+-- derived instances
+--------------------
+
+$( derive makeBinary ''Rule)
+$( derive makeBinary ''ProtoRuleName)
+$( derive makeBinary ''ProtoRuleACInfo)
+$( derive makeBinary ''RuleInfo)
+$( derive makeBinary ''IntrRuleACInfo)
+
+$( derive makeNFData ''Rule)
+$( derive makeNFData ''ProtoRuleName)
+$( derive makeNFData ''ProtoRuleACInfo)
+$( derive makeNFData ''RuleInfo)
+$( derive makeNFData ''IntrRuleACInfo)

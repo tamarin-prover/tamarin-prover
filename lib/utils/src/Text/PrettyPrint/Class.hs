@@ -1,5 +1,6 @@
 -- | 'Document' class allowing to have different interpretations of the
 -- HughesPJ pretty-printing combinators.
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Text.PrettyPrint.Class (
         P.Doc
      ,  Document(..)

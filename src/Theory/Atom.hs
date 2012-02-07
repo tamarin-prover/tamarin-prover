@@ -4,6 +4,7 @@
            , FlexibleInstances
            , DeriveDataTypeable
            , TupleSections
+           , TemplateHaskell
   #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
@@ -38,8 +39,11 @@ import Data.Monoid   (mappend)
 import Data.Foldable (Foldable, foldMap)
 import Data.Traversable 
 import Data.Generics
+import Data.DeriveTH
+import Data.Binary
 
 import Control.Basics
+import Control.DeepSeq
 
 ------------------------------------------------------------------------------
 -- Atoms
@@ -156,3 +160,9 @@ prettyNAtom (Last i)   = operator_ "Last" <> parens (text (show i))
 prettyNAtom (DedBefore t i) = text (show t) <-> opDedBefore <-> text (show i)
 prettyNAtom (EdgeA x y) = text (show x) <-> opEdge <-> text (show y)
 
+
+-- derived instances
+--------------------
+
+$( derive makeNFData ''Atom)
+$( derive makeBinary ''Atom)
