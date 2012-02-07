@@ -12,11 +12,6 @@ section{* The Station-To-Station Protocol (MAC version, fixed with names and tag
 /**
  * The !Pk facts can be regarded as certificates
  */
-rule Register_pk_normal:
-  [ Fr(~ltk) ] 
-  --[ LtkSet($A, ~ltk), Corrupt($E) ]-> 
-  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), !Pk($E, pk(~ltk)), Out(pk(~ltk)) ]
-
 rule Register_pk_clone:
   [ Fr(~ltk) ] 
   --[ LtkSet($A, ~ltk), Corrupt($E) ]-> 
