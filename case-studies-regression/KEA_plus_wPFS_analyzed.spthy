@@ -841,7 +841,7 @@ analyzing: data/examples/KEA_plus_wPFS.spthy
 analyzed: data/examples/KEA_plus_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.668026s
+  processing time: 4.188188s
   keaplus_initiator_key: complete proof (41 steps)
   keaplus_responder_key: attack found (11 steps)
 
@@ -853,7 +853,7 @@ summary of processed files:
 analyzed: data/examples/KEA_plus_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.668026s
+  processing time: 4.188188s
   keaplus_initiator_key: complete proof (41 steps)
   keaplus_responder_key: attack found (11 steps)
 

@@ -584,7 +584,7 @@ analyzing: data/examples/JKL_TS1_2008.spthy
 analyzed: data/examples/JKL_TS1_2008.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.447835s
+  processing time: 1.425464s
   JKL2008_1_initiator_key: complete proof (15 steps)
   JKL2008_1_responder_key: complete proof (15 steps)
 
@@ -596,7 +596,7 @@ summary of processed files:
 analyzed: data/examples/JKL_TS1_2008.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.447835s
+  processing time: 1.425464s
   JKL2008_1_initiator_key: complete proof (15 steps)
   JKL2008_1_responder_key: complete proof (15 steps)
 

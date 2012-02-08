@@ -1286,7 +1286,7 @@ analyzing: data/examples/NAXOS_eCK.spthy
 analyzed: data/examples/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.882005s
+  processing time: 12.571959s
   eCK_initiator_key: complete proof (76 steps)
   eCK_responder_key: complete proof (72 steps)
 
@@ -1298,7 +1298,7 @@ summary of processed files:
 analyzed: data/examples/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.882005s
+  processing time: 12.571959s
   eCK_initiator_key: complete proof (76 steps)
   eCK_responder_key: complete proof (72 steps)
 

@@ -919,7 +919,7 @@ analyzing: data/examples/UM_wPFS.spthy
 analyzed: data/examples/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.79727s
+  processing time: 4.012823s
   wPFS_initiator_key: complete proof (52 steps)
   wPFS_responder_key: complete proof (43 steps)
 
@@ -931,7 +931,7 @@ summary of processed files:
 analyzed: data/examples/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.79727s
+  processing time: 4.012823s
   wPFS_initiator_key: complete proof (52 steps)
   wPFS_responder_key: complete proof (43 steps)
 

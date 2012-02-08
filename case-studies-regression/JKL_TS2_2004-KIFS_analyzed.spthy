@@ -716,7 +716,7 @@ analyzing: data/examples/JKL_TS2_2004-KIFS.spthy
 analyzed: data/examples/JKL_TS2_2004-KIFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.321615s
+  processing time: 2.349187s
   JKL2008_2_initiator_key: attack found (8 steps)
   JKL2008_2_responder_key: attack found (8 steps)
 
@@ -728,7 +728,7 @@ summary of processed files:
 analyzed: data/examples/JKL_TS2_2004-KIFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.321615s
+  processing time: 2.349187s
   JKL2008_2_initiator_key: attack found (8 steps)
   JKL2008_2_responder_key: attack found (8 steps)
 

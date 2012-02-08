@@ -532,7 +532,7 @@ analyzing: data/examples/JKL_TS1_2004.spthy
 analyzed: data/examples/JKL_TS1_2004.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.281749s
+  processing time: 1.370051s
   JKL2008_1_initiator_key: attack found (7 steps)
   JKL2008_1_responder_key: attack found (7 steps)
 
@@ -544,7 +544,7 @@ summary of processed files:
 analyzed: data/examples/JKL_TS1_2004.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.281749s
+  processing time: 1.370051s
   JKL2008_1_initiator_key: attack found (7 steps)
   JKL2008_1_responder_key: attack found (7 steps)
 

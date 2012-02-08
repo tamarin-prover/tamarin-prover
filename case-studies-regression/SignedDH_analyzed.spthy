@@ -554,7 +554,7 @@ analyzing: data/examples/SignedDH.spthy
 analyzed: data/examples/SignedDH.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.174642s
+  processing time: 4.302291s
   Perfect_Forward_Secrecy: complete proof (27 steps)
 
 ------------------------------------------------------------------------------
@@ -565,7 +565,7 @@ summary of processed files:
 analyzed: data/examples/SignedDH.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.174642s
+  processing time: 4.302291s
   Perfect_Forward_Secrecy: complete proof (27 steps)
 
 ==============================================================================

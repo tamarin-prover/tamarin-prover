@@ -532,7 +532,7 @@ analyzing: data/examples/NAXOS_PFS_initiator_simplified.spthy
 analyzed: data/examples/NAXOS_PFS_initiator_simplified.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.599111s
+  processing time: 2.699119s
   eCK_initiator_key: attack found (11 steps)
 
 ------------------------------------------------------------------------------
@@ -543,7 +543,7 @@ summary of processed files:
 analyzed: data/examples/NAXOS_PFS_initiator_simplified.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.599111s
+  processing time: 2.699119s
   eCK_initiator_key: attack found (11 steps)
 
 ==============================================================================
