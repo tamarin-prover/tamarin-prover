@@ -5,6 +5,20 @@ builtin: hashing, diffie-hellman
 
 section{* The Unified Model (UM) Key-Exchange Protocol *}
 
+/* 
+ * The UM protocol is described in
+ *
+ * "Authenticated {Diffe-Hellman} Key Agreement Protocols"
+ * Blake-Wilson, Simon and Menezes, Alfred
+ * Selected Areas in Cryptography, LNCS 1556, 1999
+ *
+ * The (w)PFS property is described in
+ *
+ * "HMQV: A High-Performance Secure Diffie-Hellman Protocol"
+ * H. Krawczyk
+ * CRYPTO 2005, LNCS 3621, 2005
+ */
+
 /* Protocol rules */
 
 rule generate_ltk:

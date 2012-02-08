@@ -5,6 +5,13 @@ builtin: diffie-hellman, signing
 
 section{* The Signed Diffie-Hellman Protocol in the eCK model *}
 
+ * The eCK model is described in:
+ *
+ * "Stronger Security of Authenticated Key Exchange"
+ * B.A. LaMacchia and K. Lauter and A. Mityagin
+ * ProvSec, LNCS 4784, 2007
+ */
+
 // Public key infrastructure
 rule Register_pk:
     [ Fr(~ltk) ] 

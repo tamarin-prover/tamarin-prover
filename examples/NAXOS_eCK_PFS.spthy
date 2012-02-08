@@ -5,6 +5,14 @@ builtin: diffie-hellman, hashing
 
 section{* The NAXOS Key-Exchange Protocol *}
 
+/*
+ * From:
+ *
+ * "Stronger Security of Authenticated Key Exchange"
+ * B.A. LaMacchia and K. Lauter and A. Mityagin
+ * ProvSec, LNCS 4784, 2007
+ */
+
 /* Protocol rules */
 
 /* In the description in the paper, we omitted the sorts. 

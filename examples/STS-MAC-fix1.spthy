@@ -7,6 +7,13 @@ functions: mac/2
 
 section{* The Station-To-Station Protocol (MAC version, fix UKS attack with proof-of-possession of exponent) *}
 
+/*
+ * From:
+ *
+ * "Unknown Key-Share Attacks on the Station-to-Station (STS) Protocol"
+ * Blake-Wilson, Simon and Menezes, Alfred
+ * PKC '99, Springer, 1999
+ */
 
 // Public key infrastructure
 /**
