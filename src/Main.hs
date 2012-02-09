@@ -229,12 +229,11 @@ errHelpExit msg = do
       csf12Path = examplePath </> "csf12" </> "*.spthy"
       csf12Cmd  = programName ++ " " ++ csf12Path ++ " --prove -Ocase-studies +RTS -N -RTS"
       separator = putStrLn $ replicate shortLineWidth '-'
+      putPath info path = putStrLn info >> putStrLn ("  " ++ path ++ "\n")
   separator
-  putStrLn $ "For example protocol models see: " ++ examplePath
-  putStrLn $ "Their syntax is explained in:    " ++ tutorialPath
-  putStrLn $ ""
-  putStrLn $ "To run all case-studies from our CSF'12 paper, use"
-  putStrLn $ "  " ++ csf12Cmd
+  putPath "For example protocol models see" examplePath
+  putPath "Their syntax is explained in"    tutorialPath
+  putPath "To run all case-studies from our CSF'12 paper, use" csf12Cmd
   separator
   exitFailure
   where

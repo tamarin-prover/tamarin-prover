@@ -11,7 +11,7 @@ section{* TLS Handshake *}
  * Date: 	January 2012
  * Source:	Modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy.
  *
- * Status: 	working
+ * Status: 	working (25 seconds on an i7 Quad-Core CPU with +RTS -N)
  */
 
 text{*
@@ -24,10 +24,6 @@ text{*
     2. We model session keys directly as hashes of the relevant information.
        Due to our support for composed keys, we do not need any custom
        axiomatization as Paulson does.
-
-    3. We do not model the ClientResume, ServerResume, and Oops steps. They
-       are currently outside the scope of our modelling language.
-
 
 *}
 
@@ -146,6 +142,13 @@ rule C_3:
     ]->
     []
 
+
+/* TODO: Also model session-key reveals and adapt security properties. */
+
+
+/* Session key secrecy from the perspecitive of both the server and the client
+ * for both the key of the server and the key of the client. Note that this
+ * lemma thus captures four security properties at once. */
 lemma session_key_secrecy:
   " /* If all equality checks succeeded */
     (All x y #i. Eq(x,y) @ i ==> x = y)
@@ -165,8 +168,8 @@ lemma session_key_secrecy:
          & not (Ex #r. RevLtk(C) @ r)
     )   )"
 
-/* This lemma must NOT have a proof, as otherwise our model would be not
-   executable */
+/* Consistency check: this lemma must NOT have a proof,
+ * as otherwise no session-keys could be setup between honest agents. */
 lemma session_key_setup_possible:
   " /* If all equality checks succeeded */
     (All x y #i. Eq(x,y) @ i ==> x = y)
@@ -182,101 +185,6 @@ lemma session_key_setup_possible:
          & not (Ex #r. RevLtk(C) @ r)
     )   )"
 
-/*
-
-text{* 
-We assume that all clients talk to uncompromised certificate authorities. 
-*}
-
-axiom (of TLS) uncompromised_CA:
-  premises
-    "role(1) = C"
-  imply
-    "uncompromised(CA#1)"
-
-
-subsection{* Secrecy Properties *}
-
-properties (of TLS)
-  C_pms_sec:  secret(C, -, pms,                   {S}) 
-  C_PRF_sec:  secret(C, -, h('PRF', pms, nc, ns), {S})
-  C_clientKey_sec:  
-    secret(C, -, h('clientKey', nc, ns, h('PRF', pms, nc, ns)), {S})
-  C_serverKey_sec:  
-    secret(C, -, h('serverKey', nc, ns, h('PRF', pms, nc, ns)), {S})
-
-  S_pms_sec:  secret(S, 4, pms,                   {C,S})
-  S_PRF_sec:  secret(S, 4, h('PRF', pms, nc, ns), {C,S})
-
-  S_clientKey_sec:  
-    secret(S, 4, h('clientKey', nc, ns, h('PRF', pms, nc, ns)), {C,S})
-  S_serverKey_sec:  
-    secret(S, 4, h('serverKey', nc, ns, h('PRF', pms, nc, ns)), {C,S})
-
-
-subsection{* Authentication Properties *}
-
-text{*
-  First, we prove two first send properties in order to simplify proof search
-  for the authentication properties.
-*}
-
-property (of TLS) nc_first_send:
-  premises
-    "role(1) = C"
-    "knows(nc#1)"
-  imply
-    "St(1, C_1) < Ln(nc#1)"
-
-property (of TLS) ns_first_send:
-  premises
-    "role(1) = S"
-    "knows(ns#1)"
-  imply
-    "St(1, S_2) < Ln(ns#1)"
-
-property (of TLS) C_ni_synch:
-  premises
-    "role(1) = C"
-    "step(1, C_4)"
-    "uncompromised(C#1,S#1)"
-  imply a thread 2 such that
-    "  role(2) = S
-    &  C#1  = C#2
-    &  S#1  = S#2
-    &  nc#1 = nc#2
-    &  ns#1 = ns#2
-    &  pc#1 = pc#2
-    &  ps#1 = ps#2
-    &  sid#1 = sid#2
-    &  pms#1 = pms#2
-    &    St(1, C_1) < St(2, S_1)
-       < St(2, S_2) < St(1, C_2)
-       < St(1, C_3) < St(2, S_3)
-       < St(2, S_4) < St(1, C_4)
-    "
-
-property (of TLS) S_ni_synch:
-  premises
-    "role(2) = S"
-    "step(2, S_4)"
-    "uncompromised(C#2,S#2)"
-  imply a thread 1 such that
-    "  role(1) = C
-    &  C#1  = C#2
-    &  S#1  = S#2
-    &  nc#1 = nc#2
-    &  ns#1 = ns#2
-    &  pc#1 = pc#2
-    &  ps#1 = ps#2
-    &  sid#1 = sid#2
-    &  pms#1 = pms#2
-    &    St(1, C_1) < St(2, S_1)
-       < St(2, S_2) < St(1, C_2)
-       < St(1, C_3) < St(2, S_3)
-       < St(2, S_4) 
-    "
-*/
 
 end
 
