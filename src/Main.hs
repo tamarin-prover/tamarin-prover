@@ -56,8 +56,9 @@ programName :: String
 programName = "tamarin-prover"
 
 -- | Version string
-versionStr :: String
-versionStr = unlines
+versionStr :: FilePath -- ^ Path to LICENCE file.
+           -> String
+versionStr licencePath = unlines
   [ concat
     [ programName
     , " "
@@ -66,7 +67,8 @@ versionStr = unlines
     ]
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"
-  , "are welcome to redistribute it according to its LICENCE."
+  , "are welcome to redistribute it according to its LICENCE, see"
+  , "'" ++ licencePath ++ "'."
   ]
 
 -- | Line width to use.
@@ -80,7 +82,7 @@ shortLineWidth = 78
 -- | Version string with HTML markup.
 htmlVersionStr :: String
 htmlVersionStr = concat
-    [ link "http://people.inf.ethz.ch/meiersi/espl" programName
+    [ link "http://www.infsec.ethz.ch/research/software#TAMARIN" programName
     , " "
     , showVersion version
     , ", &copy; "
@@ -115,11 +117,12 @@ addArg a v = ((a,v):)
 
 withArguments :: Mode Arguments -> (Arguments -> IO ()) -> IO ()
 withArguments argMode io = do
-    processArgs argMode >>= run
+    licencePath <- getDataFileName "LICENCE"
+    processArgs argMode >>= run licencePath
   where
-    run as
+    run licencePath as
       | argExists "help"    as = print $ helpText HelpFormatAll argMode
-      | argExists "version" as = putStrLn versionStr
+      | argExists "version" as = putStrLn $ versionStr licencePath
       | otherwise              = io as
 
 updateArg :: String -> String -> Arguments -> Either a Arguments

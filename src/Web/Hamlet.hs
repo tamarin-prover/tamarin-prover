@@ -197,7 +197,7 @@ headerTpl :: (HamletValue h, HamletUrl h ~ WebUIRoute)
 headerTpl info = [HAMLET|
     <div #header-info>
       Running \
-      <a href="http://people.inf.ethz.ch/meiersi/espl">tamarin prover</a>
+      <a href="http://www.infsec.ethz.ch/research/software#TAMARIN">tamarin prover</a>
       \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
@@ -305,9 +305,9 @@ introTpl = [HAMLET|
     <p>
       You are running the\
       <strong>
-        <a href="http://people.inf.ethz.ch/meiersi/espl">tamarin prover</a>
+        <a href="http://www.infsec.ethz.ch/research/software#TAMARIN">tamarin prover</a>
       </strong>
-      \ version #{showVersion version} in interactive mode.
+      \ version #{showVersion version} in interactive mode.<br>
       \ &copy;&nbsp;2010&nbsp;-&nbsp;2012 \
       <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a>
       , <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>
