@@ -33,6 +33,7 @@ data-files:
   css/smoothness/images/*.png
 
   LICENSE
+  AUTHORS
 
   examples/JKL_TS1_2004.spthy
   examples/JKL_TS1_2008-KIFS.spthy
@@ -67,11 +68,9 @@ data-files:
 extra-source-files:
   .ghci
   interactive-only-src/Paths_tamarin_prover.hs
-  Makefile
 
   README
   CHANGES
-  AUTHORS
 
 
 --------------
@@ -135,7 +134,8 @@ executable tamarin-prover
       , tamarin-prover-utils == 0.1.*
       , tamarin-prover-term  == 0.1.*
 
-    -- extra deps to get it building on GHC 7.0.3 without --solver=modular
+    -- extra deps to get it building on GHC 7.0.3 without the new modular
+    --solver of cabal-install, activated with flag --solver=modular
     if impl(ghc <= 7.2)
       build-depends:
           template-haskell == 2.5.*
@@ -150,7 +150,6 @@ executable tamarin-prover
     hs-source-dirs:     src
 
     other-modules:
-
       Theory.Pretty
       Theory.Fact
       Theory.Atom
