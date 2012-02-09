@@ -37,13 +37,13 @@ data-files:
 
   examples/KEA_plus_KI_KCI.spthy
   examples/KEA_plus_KI_KCI_wPFS.spthy
-  examples/KEA_plus_eCK.spthy	
+  examples/KEA_plus_eCK.spthy
 
   examples/NAXOS_eCK_PFS.spthy
   examples/NAXOS_eCK.spthy
 
   examples/UM_eCK.spthy
-  examples/UM_eCK_noKCI.spthy		
+  examples/UM_eCK_noKCI.spthy
   examples/UM_PFS.spthy
   examples/UM_wPFS.spthy
   examples/UM_PFS.spthy
@@ -51,9 +51,9 @@ data-files:
   examples/SignedDH_PFS.spthy
   examples/SignedDH_eCK.spthy
 
-  examples/STS-MAC.spthy
-  examples/STS-MAC-fix1.spthy
-  examples/STS-MAC-fix2.spthy
+  examples/csf12/STS-MAC.spthy
+  examples/csf12/STS-MAC-fix1.spthy
+  examples/csf12/STS-MAC-fix2.spthy
 
   examples/JKL_TS1_2004-KI.spthy
   examples/JKL_TS1_2008-KI_wPFS.spthy

@@ -73,6 +73,9 @@ versionStr = unlines
 lineWidth :: Int
 lineWidth = 110
 
+shortLineWidth :: Int
+shortLineWidth = 78
+
 {-
 -- | Version string with HTML markup.
 htmlVersionStr :: String
@@ -224,8 +227,8 @@ errHelpExit msg = do
   examplePath  <- getDataFileName "examples"
   let tutorialPath = examplePath </> "Tutorial.spthy"
       csf12Path = examplePath </> "csf12" </> "*.spthy"
-      csf12Cmd  = programName ++ " " ++ csf12Path ++ " --prove +RTS -N -RTS"
-      separator = putStrLn $ replicate 65 '-'
+      csf12Cmd  = programName ++ " " ++ csf12Path ++ " --prove -Ocase-studies +RTS -N -RTS"
+      separator = putStrLn $ replicate shortLineWidth '-'
   separator
   putStrLn $ "For example protocol models see: " ++ examplePath
   putStrLn $ "Their syntax is explained in:    " ++ tutorialPath
@@ -482,12 +485,12 @@ translate as
       putStrLn $ ""
       summaries <- mapM processThy inFiles
       putStrLn $ ""
-      putStrLn $ replicate 78 '='
+      putStrLn $ replicate shortLineWidth '='
       putStrLn $ "summary of processed files:"
       putStrLn $ ""
       putStrLn $ renderDoc $ Isar.vcat $ intersperse (Isar.text "") summaries
       putStrLn $ ""
-      putStrLn $ replicate 78 '='
+      putStrLn $ replicate shortLineWidth '='
   where
     -- handles to arguments
     -----------------------
@@ -538,10 +541,10 @@ translate as
                 putStrLn $ ""
                 let outFile = mkOutPath inFile
                 summary <- writeWithSummary (writeFile outFile) outFile
-                putStrLn $ replicate 78 '-'
+                putStrLn $ replicate shortLineWidth '-'
                 putStrLn $ renderDoc summary
                 putStrLn $ ""
-                putStrLn $ replicate 78 '-'
+                putStrLn $ replicate shortLineWidth '-'
                 return summary
           case res of
             Right x -> return x
