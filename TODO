@@ -6,7 +6,7 @@ Date Resolved   Date Posted   Who Issue
 2011/10/01  SM   2011/09/28    SM  Use precomputed cases for MsgEdges
                                    Check for False being derived
                 
-                 2011/10/03    CC  If dh-proto-proof is invoked in the wrong
+2012/01/01  SM   2011/10/03    CC  If dh-proto-proof is invoked in the wrong
 	                           directory (e.g. examples) the intruder rules are not
 	                           loaded, but the user is not warned.
                 
@@ -18,7 +18,7 @@ Date Resolved   Date Posted   Who Issue
                                    number of cases (yielding, e.g., case_02) so
                                    that the ordering works again.
                 
-                 2011/10/03    SM  WF checks for: *-restricted, protocol rules,
+2012/01/01  SM   2011/10/03    SM  WF checks for: *-restricted, protocol rules, 
                                    and properties.
                 
                  2011/10/03    SM  Cas suggested to use a status-popup when a
@@ -33,7 +33,7 @@ Date Resolved   Date Posted   Who Issue
 
 		                     case split_case_02 // x = y^z
 
-                 2011/10/26    SM  Switch fact notation to paper. 
+2012/01/01  SM   2011/10/26    SM  Switch fact notation to paper. 
                                    Send ~> Out, Knows ~> In, Fresh ~> Fr
 
                  2011/12/07    SM  fix: ==> is parsed as a left-associative op.
@@ -43,3 +43,17 @@ Date Resolved   Date Posted   Who Issue
 
                  2012/01/19    SM  Update link to homepage in all three cabal
                                    files.
+
+                 2012/02/08    SM  Make release ready
+                                   - Remove intruder_variants.spthy if possible
+                                   - Add exactly case studies to data files
+                                   - Write tutorial.spthy and integrate it
+                                     with the help message.
+                                   - Make case studies easily executable.
+
+                2012/02/08     SM  Normalize graph numberings as good as
+                                   possible.
+
+                2012/02/08     SM  Implement satisfiable/valid.
+
+                                   

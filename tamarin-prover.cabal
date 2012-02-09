@@ -41,8 +41,11 @@ data-files:
   examples/JKL_TS2_2004.spthy
   examples/JKL_TS2_2008-KIFS.spthy
   examples/JKL_TS2_2008.spthy
+  examples/JKL_TS3_2004.spthy
+  examples/JKL_TS3_2008.spthy
 
   examples/KEA_plus_KCI.spthy
+  examples/KEA_plus_KCI_onepk.spthy
   examples/KEA_plus_KCI_wPFS.spthy
   examples/KEA_plus.spthy
   examples/KEA_plus_wPFS.spthy
@@ -52,13 +55,18 @@ data-files:
   examples/NAXOS_eCK.spthy
   examples/NAXOS_PFS_initiator_simplified.spthy
 
+  examples/STS-MAC-fix1.spthy
+  examples/STS-MAC-fix2.spthy
+  examples/STS-MAC.spthy
+
   examples/UM_eCK_noKCI.spthy
   examples/UM_eCK.spthy
   examples/UM_wPFS.spthy
+  examples/UM_PFS.spthy
 
 extra-source-files:
   .ghci
-  interactive-only-src/Paths_dh_proto_proof.hs
+  interactive-only-src/Paths_tamarin_prover.hs
   Makefile
 
   README

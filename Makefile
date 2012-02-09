@@ -29,7 +29,10 @@ force-install:
 #
 #
 #
-
+source-dists:
+	cd lib/utils; cabal sdist
+	cd lib/term; cabal sdist
+	cabal sdist
 
 
 # requires the cabal-dev tool. Install it using the 'cabal-dev'

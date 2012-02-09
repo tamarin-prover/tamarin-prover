@@ -1,16 +1,14 @@
 ======================================================================
-README for the dh-proto-proof security protocol verification tool
+README for the tamarin-prover for security protocol verification
 ======================================================================
 
 Author: Simon Meier <simon.meier@inf.ethz.ch>
 
-Creation Date: 19/10/2011
+Creation Date: 8/02/2012
 
 
 1. Introduction
 ===============
-
-  Preliminary README file for the reviewers of POST'12.
 
   The tool is written in Haskell and provides two usage modes as described
   below.
@@ -50,7 +48,7 @@ Creation Date: 19/10/2011
       available from http://hackage.haskell.org/platform/
 
 
-2.1 Installing dh-proto-proof
+2.1 Installing tamarin-prover
 ----------------------------
 
   You need a working Haskell environment that provides GHC 7 and the 'cabal
@@ -66,33 +64,27 @@ Creation Date: 19/10/2011
   in the root directory of this source code package. This will use the
   Haskell's deployment tool 'cabal-install' to download all missing libraries
   from Hackage, the central Haskell library repository and install the
-  'dh-proto-proof' executable in the default installation location of
+  'tamarin-prover' executable in the default installation location of
   cabal-install. The installation location is printed at the end of the build
   process. Note that this may take a long time due to the large number of
   dependencies of the built-in webserver used to serve the interactive mode.
 
 
-  Note that currently no check on the dependcies 'maude' and 'dot' is done.
-  If 'dh-proto-proof' is not working as expected, these tools might not be on
-  your PATH.
-
-
-
 3. Usage
 ========
 
-dh-proto-proof can be used in two modes: 
+the tamarin-prover can be used in two modes: 
 
   (1) a batch mode where it just tries to parse the given file (and if called
-      with --prove) to prove the contained lemmas.
+      with --prove) to prove their specified lemmas.
 
   (2) an interactive mode, which runs a webserver that allows to construct
       and explore security proofs interactively.
       This mode has to be run with an argument that specifies directory
       containing the protocol models to be investigated. 
 
-See the help information output when calling 'dh-proto-proof' without any
-flags for more information.
+See the help message output when calling 'tamarin-prover' without any flags
+for more information.
 
 
 
