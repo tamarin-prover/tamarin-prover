@@ -37,15 +37,15 @@ data-files:
 
   examples/KEA_plus_KI_KCI.spthy
   examples/KEA_plus_KI_KCI_wPFS.spthy
-  examples/KEA_plus_eCK.spthy		-- Not included in case studies because attack trivial
+  examples/KEA_plus_eCK.spthy	
 
   examples/NAXOS_broken_eCK_variant.spthy
   examples/NAXOS_eCK_PFS.spthy
   examples/NAXOS_eCK.spthy
   examples/NAXOS_PFS_initiator_simplified.spthy
 
-  examples/UM_eCK.spthy			-- Not included in case studies because attack trivial
-  examples/UM_eCK_noKCI.spthy		-- Not included in case studies because attack trivial
+  examples/UM_eCK.spthy
+  examples/UM_eCK_noKCI.spthy		
   examples/UM_PFS.spthy
   examples/UM_wPFS.spthy
   examples/UM_PFS.spthy
@@ -57,15 +57,15 @@ data-files:
   examples/STS-MAC-fix1.spthy
   examples/STS-MAC-fix2.spthy
 
-  examples/JKL_TS1_2004.spthy
-  examples/JKL_TS1_2008-KIFS.spthy
-  examples/JKL_TS1_2008.spthy
-  examples/JKL_TS2_2004-KIFS.spthy
-  examples/JKL_TS2_2004.spthy
-  examples/JKL_TS2_2008-KIFS.spthy
-  examples/JKL_TS2_2008.spthy
-  examples/JKL_TS3_2004.spthy
-  examples/JKL_TS3_2008.spthy
+  examples/JKL_TS1_2004-KI.spthy
+  examples/JKL_TS1_2008-KI_wPFS.spthy
+  examples/JKL_TS1_2008-KI.spthy
+  examples/JKL_TS2_2004-KI_wPFS.spthy
+  examples/JKL_TS2_2004-KI.spthy
+  examples/JKL_TS2_2008-KI_wPFS.spthy
+  examples/JKL_TS2_2008-KI.spthy
+  examples/JKL_TS3_2004-KI.spthy
+  examples/JKL_TS3_2008-KI.spthy
 
 extra-source-files:
   .ghci
