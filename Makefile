@@ -61,11 +61,9 @@ SDH=SignedDH_PFS.spthy SignedDH_eCK.spthy
 
 STS=STS-MAC.spthy STS-MAC-fix1.spthy STS-MAC-fix2.spthy
 
-# Done until here
-
-JKL1=JKL_TS1_2004.spthy JKL_TS1_2008.spthy JKL_TS1_2008-KIFS.spthy
-JKL2=JKL_TS2_2004.spthy JKL_TS2_2008.spthy JKL_TS2_2004-KIFS.spthy JKL_TS2_2008-KIFS.spthy
-JKL3=JKL_TS3_2004.spthy JKL_TS3_2008.spthy
+JKL1=JKL_TS1_2004-KI.spthy JKL_TS1_2008-KI.spthy
+JKL2=JKL_TS2_2004-KI_wPFS.spthy JKL_TS2_2008-KI_wPFS.spthy
+JKL3=JKL_TS3_2004-KI_wPFS.spthy JKL_TS3_2008-KI_wPFS.spthy
 
 TMPRES=case-studies/temp-analysis.spthy
 TMPOUT=case-studies/temp-output.spthy
