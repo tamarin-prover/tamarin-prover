@@ -77,8 +77,8 @@ data-files:
   examples/csf12/JKL_TS2_2004-KI.spthy
   examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
   examples/csf12/JKL_TS2_2008-KI.spthy
-  examples/csf12/JKL_TS3_2004-KI_wPFS.spthy
-  examples/csf12/JKL_TS3_2008-KI_wPFS.spthy
+  examples/csf12/JKL_TS3_2004-KI_wPFS.spthy-nonterm
+  examples/csf12/JKL_TS3_2008-KI_wPFS.spthy-nonterm
 
 extra-source-files:
   .ghci
