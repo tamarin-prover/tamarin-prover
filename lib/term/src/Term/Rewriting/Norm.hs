@@ -1,8 +1,13 @@
 {-# LANGUAGE PatternGuards, FlexibleContexts #-}
-
--- | This module implements normalization with respect to DH u AC using class
---   rewriting and an ad-hoc function that uses the @TermAC@ representation
---   of terms modulo AC. 
+-- |
+-- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- License     : GPL v3 (see LICENSE)
+-- 
+-- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
+--
+-- This module implements normalization with respect to DH u AC using class
+-- rewriting and an ad-hoc function that uses the @TermAC@ representation of
+-- terms modulo AC. 
 module Term.Rewriting.Norm (
     norm
   , norm'

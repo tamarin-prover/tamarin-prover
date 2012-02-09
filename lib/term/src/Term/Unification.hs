@@ -1,4 +1,11 @@
 {-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving #-}
+-- |
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
+-- License     : GPL v3 (see LICENSE)
+-- 
+-- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
+--
+-- AC unification based on maude and free unification.
 module Term.Unification (
   -- * Unification modulo AC
     unifyLTerm
