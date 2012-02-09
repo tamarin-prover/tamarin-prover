@@ -1,7 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 -- remove the two benign defaults
 
--- | A simple color module for handling RGB and HSV representations of colors.
+-- |
+-- Copyright   : (c) 2010 Simon Meier
+-- License     : GPL v3 (see LICENSE)
+-- 
+-- Maintainer  : Simon Meier <iridcode@gmail.com>
+--
+-- A simple color module for handling RGB and HSV representations of colors.
 module Data.Color (
   -- * Datatypes
     RGB(..)

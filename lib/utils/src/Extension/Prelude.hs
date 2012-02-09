@@ -1,4 +1,11 @@
--- Functions that could/should have made it into the Prelude or one of the base libraries
+-- |
+-- Copyright   : (c) 2010, 2011 Simon Meier
+-- License     : GPL v3 (see LICENSE)
+-- 
+-- Maintainer  : Simon Meier <iridcode@gmail.com>
+--
+-- Functions that could/should have made it into the Prelude or one of the
+-- base libraries
 module Extension.Prelude where
 
 import Data.Maybe

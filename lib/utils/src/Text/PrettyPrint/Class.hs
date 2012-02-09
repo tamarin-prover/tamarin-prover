@@ -1,4 +1,10 @@
--- | 'Document' class allowing to have different interpretations of the
+-- |
+-- Copyright   : (c) 2011 Simon Meier
+-- License     : GPL v3 (see LICENSE)
+-- 
+-- Maintainer  : Simon Meier <iridcode@gmail.com>
+--
+-- 'Document' class allowing to have different interpretations of the
 -- HughesPJ pretty-printing combinators.
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Text.PrettyPrint.Class (

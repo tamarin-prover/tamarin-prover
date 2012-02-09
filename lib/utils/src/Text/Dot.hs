@@ -1,6 +1,6 @@
 -- |
 -- Module: Text.Dot
--- Copyright: Andy Gill
+-- Copyright: Andy Gill, Simon Meier (extension to record syntax)
 -- License: BSD3
 --
 -- Maintainer: Andy Gill <andygill@ku.edu>

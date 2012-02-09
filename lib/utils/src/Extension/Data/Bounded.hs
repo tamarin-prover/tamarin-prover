@@ -3,7 +3,6 @@
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
--- Portability : GHC only
 --
 -- Monoids for bounded types.
 module Extension.Data.Bounded (

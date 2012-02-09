@@ -1,4 +1,11 @@
--- | Generating Isabelle/ISAR theory files using 'Text.PrettyPrint'.
+-- |
+-- Copyright   : (c) 2011 Simon Meier
+-- License     : GPL v3 (see LICENSE)
+-- 
+-- Maintainer  : Simon Meier <iridcode@gmail.com>
+-- Portability : portable
+--
+-- Generating Isabelle/ISAR theory files using 'Text.PrettyPrint'.
 module Text.Isar (
     -- * ISAR Output
     Isar(..)
