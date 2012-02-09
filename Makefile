@@ -54,7 +54,7 @@ cabal-dev:
 JKL1=JKL_TS1_2004.spthy JKL_TS1_2008.spthy JKL_TS1_2008-KIFS.spthy
 JKL2=JKL_TS2_2004.spthy JKL_TS2_2008.spthy JKL_TS2_2004-KIFS.spthy JKL_TS2_2008-KIFS.spthy
 
-KEA=KEA_plus.spthy KEA_plus_KCI.spthy KEA_plus_wPFS.spthy KEA_plus_KCI_wPFS.spthy KEA_plus_KCI_onepk.spthy
+KEA=KEA_plus_KCI.spthy KEA_plus_eCK.spthy
 
 NAXOS=NAXOS_broken_eCK_variant.spthy NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy 
 NAXOS_SIMPLIFIED=NAXOS_PFS_initiator_simplified.spthy 

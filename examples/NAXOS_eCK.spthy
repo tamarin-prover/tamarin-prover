@@ -11,6 +11,7 @@ section{* NAXOS *}
  * Date: 	January 2012
  * Source:	"Stronger Security of Authenticated Key Exchange"
  * 		LaMacchia, Lauter, Mityagin, 2007
+ * Property: 	eCK security
  *
  * Status: 	working
  */

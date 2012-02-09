@@ -46,10 +46,7 @@ data-files:
   examples/JKL_TS3_2008.spthy
 
   examples/KEA_plus_KCI.spthy
-  examples/KEA_plus_KCI_onepk.spthy
-  examples/KEA_plus_KCI_wPFS.spthy
-  examples/KEA_plus.spthy
-  examples/KEA_plus_wPFS.spthy
+  examples/KEA_plus_hwPFS.spthy
 
   examples/NAXOS_broken_eCK_variant.spthy
   examples/NAXOS_eCK_PFS.spthy

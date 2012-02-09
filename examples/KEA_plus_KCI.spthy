@@ -10,6 +10,7 @@ section{* KEA+ *}
  * Date: 	January 2012
  * Source:	"Security Analysis of KEA Authenticated Key Exchange Protocol"
  * 		Lauter, Mityagin, 2006
+ * Property:	KI, KCI
  *
  * Status: 	working
  */
@@ -17,7 +18,8 @@ section{* KEA+ *}
 /* Protocol rules */
 
 rule generate_ltk:
-   [ Fr(~lk) ] -->
+   [ Fr(~lk) ] 
+   --[ RegKey($A) ]->
    [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
 
 rule Init_1:
@@ -100,7 +102,11 @@ lemma key_agreement_reachable:
    the test session is clean.
 */
 lemma keaplus_initiator_key:
-  "not (Ex #i1 #i2 ttest I R k hkI hkR.
+  " /* If every agent registered at most one public key */
+    (All A #i #j. RegKey(A)@i & RegKey(A)@j ==> (#i = #j))
+  ==>
+    /* then there is not attack */
+    (not(Ex #i1 #i2 ttest I R k hkI hkR.
             SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* No ephemeral-key-reveal of test thread */
@@ -112,50 +118,54 @@ lemma keaplus_initiator_key:
             /* Not ephemeral-key-reveal of partner thread. */
             & (All #i3 #i4 tpartner kpartner.
                    SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i3
-		   & EphkRev( tpartner ) @ i4 ==> F)
+                 & EphkRev( tpartner ) @ i4 ==> F)
 
             /* Not session-key-reveal of partner thread. */
             & (All #i3 #i4 tpartner kpartner.
                    SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i3
-		   & SesskRev( tpartner ) @ i4 ==> F)
+                 & SesskRev( tpartner ) @ i4 ==> F)
 
             /* Not longterm-key-reveal of intended peer. */
             & (All #i3. LtkRev( R ) @ i3 ==> F)
-    )"
+    )   )"
 
 /* An attack is valid in the security notion if the session key of the test session is deduced and
    the test session is clean.
 */
 lemma keaplus_responder_key:
-  "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
+  " /* If every agent registered at most one public key */
+    (All A #i #j. RegKey(A)@i & RegKey(A)@j ==> (#i = #j))
+  ==>
+    /* then there is not attack */
+    (not (Ex #i1 #i2 ttest I R k hkI hkR.
+              SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
-            /* Not ephemeral-key-reveal of test thread. */
-            & (All #i3. EphkRev( ttest ) @ i3 ==> F)
+              /* Not ephemeral-key-reveal of test thread. */
+              & (All #i3. EphkRev( ttest ) @ i3 ==> F)
 
-            /* Not session-key-reveal of test thread. */
-            & (All #i3. SesskRev( ttest ) @ i3 ==> F)
+              /* Not session-key-reveal of test thread. */
+              & (All #i3. SesskRev( ttest ) @ i3 ==> F)
 
-            /* Not ephemeral-key-reveal of partner thread. */
-	    /* Note we distinguish explicitly between an incomplete
-	     * and complete partner thread case.
-	     */
-            & (All #i3 #i4 tpartner lki.
-                   SidI_1( tpartner,I,R,lki ) @i3
-		   & EphkRev( tpartner ) @ i4 ==> F) 
-            & (All #i3 #i4 tpartner kpartner.
-                   SidI_2( tpartner,I,R,hkI,hkR,kpartner ) @i3
-		   & EphkRev( tpartner ) @ i4 ==> F)
+              /* Not ephemeral-key-reveal of partner thread. */
+              /* Note we distinguish explicitly between an incomplete
+               * and complete partner thread case.
+               */
+              & (All #i3 #i4 tpartner lki.
+                     SidI_1( tpartner,I,R,lki ) @i3
+                     & EphkRev( tpartner ) @ i4 ==> F) 
+              & (All #i3 #i4 tpartner kpartner.
+                     SidI_2( tpartner,I,R,hkI,hkR,kpartner ) @i3
+                     & EphkRev( tpartner ) @ i4 ==> F)
 
-            /* Not session-key-reveal of partner thread. Note that we use SidI_2 here.
-	       A session key reveal can only happen after SidI_2 is logged anyways.
-	    */
-            & (All #i3 #i4 tpartner kpartner.
-                   SidI_2( tpartner,I,R,hkI,hkR,kpartner ) @i3
-		   & SesskRev( tpartner ) @ i4 ==> F)
+              /* Not session-key-reveal of partner thread. Note that we use SidI_2 here.
+                 A session key reveal can only happen after SidI_2 is logged anyways.
+              */
+              & (All #i3 #i4 tpartner kpartner.
+                     SidI_2( tpartner,I,R,hkI,hkR,kpartner ) @i3
+                     & SesskRev( tpartner ) @ i4 ==> F)
 
-            /* Not longterm-key-reveal of intended peer. */
-            & (All #i3. LtkRev( I ) @ i3 ==> F)
-    )"
+              /* Not longterm-key-reveal of intended peer. */
+              & (All #i3. LtkRev( I ) @ i3 ==> F)
+    )   )"
 
 end
