@@ -201,8 +201,6 @@ headerTpl info = [HAMLET|
       \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
-      $if localTheory (tiOrigin info)
-        <a class=save-link href=@{SaveTheoryR idx}>Save</a>
       <a class=plain-link href=@{DownloadTheoryR idx filename}>Download</a>
       <ul #navigation>
         <li><a href="#">Actions</a>
@@ -221,8 +219,14 @@ headerTpl info = [HAMLET|
     idx = tiIndex info
     filename = get thyName (tiTheory info) ++ ".spthy"
 
+    {- use this snipped to reactivate saving local theories
     localTheory (Local _) = True
     localTheory _         = False
+
+      $if localTheory (tiOrigin info)
+        <a class=save-link href=@{SaveTheoryR idx}>Save</a>
+
+    -}
 
 -- | Template for proof state (tree) frame.
 proofStateTpl :: (HamletValue h, HamletUrl h ~ WebUIRoute)
