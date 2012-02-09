@@ -56,7 +56,13 @@ Date Resolved   Date Posted   Who Issue
                 2012/02/08     SM  Normalize graph numberings as good as
                                    possible.
 
+                                   Better attack visualization: put into box
+                                   when prefix of fact the same and connected
+                                   by an edge, then this is the same thread.
+
                 2012/02/08     SM  Implement satisfiable/valid.
 
                 2012/02/09     SM  Allow selecting the 'dot' tool for
                                    interactive mode.
+
+
