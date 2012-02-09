@@ -58,7 +58,7 @@ programName = "tamarin-prover"
 -- | Version string
 versionStr :: FilePath -- ^ Path to LICENCE file.
            -> String
-versionStr licencePath = unlines
+versionStr licensePath = unlines
   [ concat
     [ programName
     , " "
@@ -67,8 +67,8 @@ versionStr licencePath = unlines
     ]
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"
-  , "are welcome to redistribute it according to its LICENCE, see"
-  , "'" ++ licencePath ++ "'."
+  , "are welcome to redistribute it according to its LICENSE, see"
+  , "'" ++ licensePath ++ "'."
   ]
 
 -- | Line width to use.
@@ -117,12 +117,12 @@ addArg a v = ((a,v):)
 
 withArguments :: Mode Arguments -> (Arguments -> IO ()) -> IO ()
 withArguments argMode io = do
-    licencePath <- getDataFileName "LICENCE"
-    processArgs argMode >>= run licencePath
+    licensePath <- getDataFileName "LICENSE"
+    processArgs argMode >>= run licensePath
   where
-    run licencePath as
+    run licensePath as
       | argExists "help"    as = print $ helpText HelpFormatAll argMode
-      | argExists "version" as = putStrLn $ versionStr licencePath
+      | argExists "version" as = putStrLn $ versionStr licensePath
       | otherwise              = io as
 
 updateArg :: String -> String -> Arguments -> Either a Arguments
@@ -435,12 +435,13 @@ interactive as = case findArg "workDir" as of
     Nothing       -> errHelpExit "no working directory specified"
     Just workDir0 -> do
       -- determine working directory
-      wdIsDir  <- doesDirectoryExist workDir0
       wdIsFile <- doesFileExist workDir0
-      if (wdIsDir || wdIsFile)
+      let workDir | wdIsFile  = takeDirectory workDir0
+                  | otherwise = workDir0
+      wdIsDir  <- doesDirectoryExist workDir
+      if wdIsDir
         then do
-          let workDir | wdIsDir   = workDir0
-                      | otherwise = takeDirectory workDir0
+          -- process theories
           ensureGraphVizDot as
           ensureMaude as
           putStrLn ""
@@ -456,7 +457,7 @@ interactive as = case findArg "workDir" as of
             (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
             (argExists "debug" as) (Just dataDir) (Warp.run port)
         
-        else errHelpExit $ "directory '" ++ workDir0 ++ "' does not exist."
+        else errHelpExit $ "directory '" ++ workDir ++ "' does not exist."
   where
     -- Datadir argument
     readDataDir =
