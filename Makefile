@@ -51,24 +51,26 @@ cabal-dev:
 	cabal-dev install blaze-textual -fnative --reinstall
 
 # These case studies are located in data/examples/ or examples/
-JKL1=JKL_TS1_2004.spthy JKL_TS1_2008.spthy JKL_TS1_2008-KIFS.spthy
-JKL2=JKL_TS2_2004.spthy JKL_TS2_2008.spthy JKL_TS2_2004-KIFS.spthy JKL_TS2_2008-KIFS.spthy
+KEA=KEA_plus_KI_KCI.spthy KEA_plus_KI_KCI_wPFS.spthy
 
-KEA=KEA_plus_KCI.spthy KEA_plus_eCK.spthy
+NAXOS=NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy 
 
-NAXOS=NAXOS_broken_eCK_variant.spthy NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy 
-NAXOS_SIMPLIFIED=NAXOS_PFS_initiator_simplified.spthy 
+UM=UM_wPFS.spthy UM_PFS.spthy
 
-UM=UM_eCK_noKCI.spthy UM_eCK.spthy UM_wPFS.spthy UM_PFS.spthy
-
-SDH=SignedDH.spthy SignedDH_eCK.spthy
+SDH=SignedDH_PFS.spthy SignedDH_eCK.spthy
 
 STS=STS-MAC.spthy STS-MAC-fix1.spthy STS-MAC-fix2.spthy
+
+# Done until here
+
+JKL1=JKL_TS1_2004.spthy JKL_TS1_2008.spthy JKL_TS1_2008-KIFS.spthy
+JKL2=JKL_TS2_2004.spthy JKL_TS2_2008.spthy JKL_TS2_2004-KIFS.spthy JKL_TS2_2008-KIFS.spthy
+JKL3=JKL_TS3_2004.spthy JKL_TS3_2008.spthy
 
 TMPRES=case-studies/temp-analysis.spthy
 TMPOUT=case-studies/temp-output.spthy
 
-CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(NAXOS_SIMPLIFIED) $(STS) $(SDH)
+CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(STS) $(SDH)
 CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(CASE_STUDIES)))
 
 # case studies

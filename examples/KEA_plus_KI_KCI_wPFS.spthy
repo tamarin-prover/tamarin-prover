@@ -1,0 +1,155 @@
+theory KEA_plus_wPFS
+begin
+
+builtin: hashing, diffie-hellman
+
+section{* KEA+ *}
+/*
+ * Protocol:	KEA+
+ * Modeler: 	Cas Cremers
+ * Date: 	January 2012
+ * Source:	"Security Analysis of KEA Authenticated Key Exchange Protocol"
+ * 		Lauter, Mityagin, 2006
+ * Property:	KI, KCI, wPFS
+ *
+ * Status: 	working
+ */
+
+/* Protocol rules */
+
+rule generate_ltk:
+   [ Fr(~lk) ] -->
+   [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
+
+rule Init_1:
+   [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
+   --[ SidI_1(~ekI,$I,$R, 'g'^~ekI ) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ),
+     !Ephk(~ekI),
+     Out( 'g'^~ekI ) ]
+
+rule Init_2:
+   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]
+   --[SidI_2( ~ekI, $I, $R, hkI, Y,
+       h( <Y^~lkI, ('g'^~lkR)^~ekI, $I, $R > ) ) ]->
+   [ !Sessk( ~ekI, 
+       h( <Y^~lkI, ('g'^~lkR)^~ekI, $I, $R > ) ) ]
+
+
+rule Resp_1:
+   [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
+   --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR ,
+       h( <('g'^~lkI)^~ekR, X^~lkR, $I, $R > ) ) ]->
+   [ Out( 'g'^~ekR ),
+     !Ephk(~ekR),
+     !Sessk( ~ekR, 
+       h( <('g'^~lkI)^~ekR, X^~lkR, $I, $R > ) ) ]
+
+rule Sessk_reveal: 
+   [ !Sessk(~tid, k) ]
+   --[ SesskRev(~tid) ]->
+   [ Out(k) ]
+
+rule Ephk_reveal:
+   [ !Ephk(~ekI) ]
+   --[ EphkRev(~ekI) ]->
+   [ Out(~ekI) ]
+
+rule Ltk_reveal:
+   [ !Ltk($A, k) ]
+   --[ LtkRev($A) ]->
+   [ Out(k) ]
+
+
+/* Security properties */
+
+/*
+lemma key_agreement_reachable:
+  "not (Ex #i1 #i2 ekI ekR I R k hkI hkR.
+          SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2)"
+*/
+
+/* Security notion.
+ *
+ * We model the security property in the KEA+ paper except that we model
+ * "real" weak Perfect Forward Secrecy. 
+ *
+ * The original KEA PFS notion is a weakened notion of wPFS, in which the
+ * adversary can learn A or B's key after the test thread ends, but not
+ * both. 
+ *
+ * Below we model real wPFS in combination with KCI resilience.
+ */
+
+/* An attack is valid in the security notion if the session key of the test session is deduced and
+   the test session is clean.
+*/
+lemma keaplus_initiator_key:
+  "not (Ex #i1 #i2 ttest I R k hkI hkR.
+            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
+
+            /* No ephemeral-key-reveal of test thread */
+            & (All #i3. EphkRev( ttest ) @ i3 ==> F)
+
+            /* Not session-key-reveal of test thread. */
+            & (All #i3. SesskRev( ttest ) @ i3 ==> F)
+
+            /* Not ephemeral-key-reveal of partner thread. */
+            & (All #i3 #i4 tpartner kpartner.
+                   SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i3
+		   & EphkRev( tpartner ) @ i4 ==> F)
+
+            /* Not session-key-reveal of partner thread. */
+            & (All #i3 #i4 tpartner kpartner.
+                   SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i3
+		   & SesskRev( tpartner ) @ i4 ==> F)
+
+	    /* If there is no partner thread, then there is no longterm-key-reveal for
+	       the intended partner. */
+            & (All #i3. LtkRev( R ) @ i3 ==>
+	          (i1 < i3) 
+	          & (Ex #i4 tpartner kpartner.
+                      SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i4))
+    )"
+
+/* An attack is valid in the security notion if the session key of the test session is deduced and
+   the test session is clean.
+*/
+lemma keaplus_responder_key:
+  "not (Ex #i1 #i2 ttest I R k hkI hkR.
+            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
+
+            /* Not ephemeral-key-reveal of test thread. */
+            & (All #i3. EphkRev( ttest ) @ i3 ==> F)
+
+            /* Not session-key-reveal of test thread. */
+            & (All #i3. SesskRev( ttest ) @ i3 ==> F)
+
+            /* Not ephemeral-key-reveal of partner thread. */
+	    /* Note we distinguish explicitly between an incomplete
+	     * and complete partner thread case.
+	     */
+            & (All #i3 #i4 tpartner lki.
+                   SidI_1( tpartner,I,R,lki ) @i3
+		   & EphkRev( tpartner ) @ i4 ==> F) 
+            & (All #i3 #i4 tpartner kpartner.
+                   SidI_2( tpartner,I,R,hkI,hkR,kpartner ) @i3
+		   & EphkRev( tpartner ) @ i4 ==> F)
+
+            /* Not session-key-reveal of partner thread. Note that we use SidI_2 here.
+	       A session key reveal can only happen after SidI_2 is logged anyways.
+	    */
+            & (All #i3 #i4 tpartner kpartner.
+                   SidI_2( tpartner,I,R,hkI,hkR,kpartner ) @i3
+		   & SesskRev( tpartner ) @ i4 ==> F)
+
+	    /* If there is no partner thread, then there is no longterm-key-reveal for
+	       the intended partner.
+	       */
+            & (All #i3. LtkRev( I ) @ i3 ==>
+	          (i1 < i3)
+	          & (Ex #i4 tpartner.
+                       SidI_1( tpartner,I,R,hkI ) @i4))
+    )"
+
+end
