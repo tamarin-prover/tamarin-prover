@@ -316,14 +316,14 @@ rule (modulo E) generate_ltk:
 rule (modulo E) Init_1:
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
   --[ SidI_1( ~ekI, $I, $R, ~ekI ) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), !EphkI( ~ekI ), Out( ~ekI ) ]
+   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), !Ephk( ~ekI ), Out( ~ekI ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Init_2:
    [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
   --[ SidI_2( ~ekI, $I, $R, ~ekI, Y, h(<$I, $R, ~ekI, Y, 'g'^~lkR^~lkI>) )
   ]->
-   [ !SesskOfI( ~ekI, h(<$I, $R, ~ekI, Y, 'g'^~lkR^~lkI>) ) ]
+   [ !Sessk( ~ekI, h(<$I, $R, ~ekI, Y, 'g'^~lkR^~lkI>) ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Resp_1:
@@ -331,25 +331,17 @@ rule (modulo E) Resp_1:
   --[ SidR_1( ~ekR, $I, $R, X, ~ekR, h(<$I, $R, X, ~ekR, 'g'^~lkI^~lkR>) )
   ]->
    [
-   Out( ~ekR ), !EphkR( ~ekR ),
-   !SesskOfR( ~ekR, h(<$I, $R, X, ~ekR, 'g'^~lkI^~lkR>) )
+   Out( ~ekR ), !Ephk( ~ekR ),
+   !Sessk( ~ekR, h(<$I, $R, X, ~ekR, 'g'^~lkI^~lkR>) )
    ]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Sessk_revealI:
-   [ !SesskOfI( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Sessk_revealR:
-   [ !SesskOfR( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealI:
-   [ !EphkI( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealR:
-   [ !EphkR( ~ekR ) ] --[ EphkRev( ~ekR ) ]-> [ Out( ~ekR ) ]
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Ltk_reveal:
@@ -427,16 +419,16 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.9, $R.10, ~lkI.11, ~ekI.8 )] )
     solve( (#i2.1, 0)[!KU( f_.16,
                            h(<$I.9, $R.10, ~ekI.8, hkR.7, 'g'^(~lkI.11*~lkR.13)>)
                       )] )
-      case Sessk_revealI_case_1
+      case Sessk_reveal_case_1
       by contradiction // from formulas
     next
-      case Sessk_revealI_case_2
+      case Sessk_reveal_case_2
       by contradiction // from formulas
     next
-      case Sessk_revealR_case_1
+      case Sessk_reveal_case_3
       by contradiction // from formulas
     next
-      case Sessk_revealR_case_2
+      case Sessk_reveal_case_4
       by contradiction // from formulas
     next
       case h
@@ -534,16 +526,16 @@ solve( (#i1, 2)[!Ltk( $R.10, ~lkR.11 )] )
     solve( (#i2.1, 0)[!KU( f_.17,
                            h(<$I.12, $R.10, hkI.6, ~ekR.9, 'g'^(~lkR.11*~lkI.13)>)
                       )] )
-      case Sessk_revealI_case_1
+      case Sessk_reveal_case_1
       by contradiction // from formulas
     next
-      case Sessk_revealI_case_2
+      case Sessk_reveal_case_2
       by contradiction // from formulas
     next
-      case Sessk_revealR_case_1
+      case Sessk_reveal_case_3
       by contradiction // from formulas
     next
-      case Sessk_revealR_case_2
+      case Sessk_reveal_case_4
       by contradiction // from formulas
     next
       case h
@@ -578,13 +570,13 @@ maude tool: 'maude'
  checking version: 2.6. OK.
 
 
-analyzing: data/examples/JKL_TS1_2008.spthy
+analyzing: data/examples/JKL_TS1_2008-KI.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/JKL_TS1_2008.spthy
+analyzed: data/examples/JKL_TS1_2008-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.471267s
+  processing time: 1.284524s
   JKL2008_1_initiator_key: complete proof (15 steps)
   JKL2008_1_responder_key: complete proof (15 steps)
 
@@ -593,10 +585,10 @@ analyzed: data/examples/JKL_TS1_2008.spthy
 ==============================================================================
 summary of processed files:
 
-analyzed: data/examples/JKL_TS1_2008.spthy
+analyzed: data/examples/JKL_TS1_2008-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.471267s
+  processing time: 1.284524s
   JKL2008_1_initiator_key: complete proof (15 steps)
   JKL2008_1_responder_key: complete proof (15 steps)
 

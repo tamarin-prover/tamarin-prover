@@ -721,7 +721,7 @@ analyzing: data/examples/UM_eCK.spthy
 analyzed: data/examples/UM_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.056598s
+  processing time: 2.141717s
   eCK_initiator_key: attack found (9 steps)
   eCK_responder_key: attack found (9 steps)
 
@@ -733,7 +733,7 @@ summary of processed files:
 analyzed: data/examples/UM_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.056598s
+  processing time: 2.141717s
   eCK_initiator_key: attack found (9 steps)
   eCK_responder_key: attack found (9 steps)
 

@@ -736,7 +736,7 @@ analyzing: data/examples/SignedDH_eCK.spthy
 analyzed: data/examples/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.622552s
+  processing time: 5.209594s
   eCK_initiator_key: attack found (12 steps)
   eCK_responder_key: attack found (8 steps)
 
@@ -748,7 +748,7 @@ summary of processed files:
 analyzed: data/examples/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.622552s
+  processing time: 5.209594s
   eCK_initiator_key: attack found (12 steps)
   eCK_responder_key: attack found (8 steps)
 

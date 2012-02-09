@@ -723,7 +723,7 @@ analyzing: data/examples/STS-MAC.spthy
 analyzed: data/examples/STS-MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 43.738161s
+  processing time: 42.031467s
   KI_Perfect_Forward_Secrecy_I: attack found (17 steps)
   KI_Perfect_Forward_Secrecy_R: attack found (15 steps)
 
@@ -735,7 +735,7 @@ summary of processed files:
 analyzed: data/examples/STS-MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 43.738161s
+  processing time: 42.031467s
   KI_Perfect_Forward_Secrecy_I: attack found (17 steps)
   KI_Perfect_Forward_Secrecy_R: attack found (15 steps)
 

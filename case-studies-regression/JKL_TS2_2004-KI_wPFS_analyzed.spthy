@@ -1,4 +1,4 @@
-theory JKL_TS1_2008 begin
+theory JKL_TS2_2004 begin
 
  builtin: diffie-hellman
 
@@ -307,7 +307,7 @@ section{* Finite Variants of the Intruder Rules *}
  rule (modulo AC) inv:
     [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', inv(x) ) ]
 
-section{* Jeong, Katz, Lee : TS1 (2008) *}
+section{* Jeong, Katz, Lee : TS2 (2004) *}
 
 rule (modulo E) generate_ltk:
    [ Fr( ~lk ) ] --> [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
@@ -315,58 +315,135 @@ rule (modulo E) generate_ltk:
 
 rule (modulo E) Init_1:
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
-  --[ SidI_1( ~ekI, $I, $R, ~ekI ) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), !EphkI( ~ekI ), Out( ~ekI ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Init_2:
-   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
-  --[ SidI_2( ~ekI, $I, $R, ~ekI, Y, h(<$I, $R, ~ekI, Y, 'g'^~lkR^~lkI>) )
-  ]->
-   [ !SesskOfI( ~ekI, h(<$I, $R, ~ekI, Y, 'g'^~lkR^~lkI>) ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Resp_1:
-   [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
-  --[ SidR_1( ~ekR, $I, $R, X, ~ekR, h(<$I, $R, X, ~ekR, 'g'^~lkI^~lkR>) )
-  ]->
-   [
-   Out( ~ekR ), !EphkR( ~ekR ),
-   !SesskOfR( ~ekR, h(<$I, $R, X, ~ekR, 'g'^~lkI^~lkR>) )
+  --[ SidI_1( ~ekI, $I, $R, 'g'^~ekI ) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ), !Ephk( ~ekI ), Out( 'g'^~ekI )
    ]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Sessk_revealI:
-   [ !SesskOfI( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+rule (modulo E) Init_2:
+   [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
+  --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<hkI, Y, Y^~ekI, 'g'^~lkR^~lkI>) )
+  ]->
+   [ !Sessk( ~ekI, h(<hkI, Y, Y^~ekI, 'g'^~lkR^~lkI>) ) ]
+  /*
+  rule (modulo AC) Init_2:
+     [
+     Init_1( ~ekI, $I.3, $R.4, ~lkI.5, hkI.6 ), In( Y.1 ),
+     !Pk( $R.4, 'g'^~x.7 )
+     ]
+    --[
+    SidI_2( ~ekI, $I.3, $R.4, hkI.6, Y.1,
+            h(<hkI.6, Y.1, x.2, 'g'^(~lkI.5*~x.7)>)
+    )
+    ]->
+     [ !Sessk( ~ekI, h(<hkI.6, Y.1, x.2, 'g'^(~lkI.5*~x.7)>) ) ]
+  
+    variants (modulo AC)
+    1. ~ekI  = ~ekI.29
+       Y.1   = Y.30
+       x.2   = Y.30^~ekI.29
+    
+    2. ~ekI  = ~ekI.29
+       Y.1   = x.31^inv(~ekI.29)
+       x.2   = x.31
+    
+    3. ~ekI  = ~ekI.30
+       Y.1   = x.32^x.33
+       x.2   = x.32^(~ekI.30*x.33)
+    
+    4. ~ekI  = ~ekI.30
+       Y.1   = x.32^inv((~ekI.30*x.33))
+       x.2   = x.32^inv(x.33)
+    
+    5. ~ekI  = ~ekI.30
+       Y.1   = x.32^(x.33*inv(~ekI.30))
+       x.2   = x.32^x.33
+    
+    6. ~ekI  = ~ekI.31
+       Y.1   = x.33^(x.34*inv((~ekI.31*x.35)))
+       x.2   = x.33^(x.34*inv(x.35))
+  */
+
+rule (modulo E) Resp_1:
+   [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
+  --[
+  SidR_1( ~ekR, $I, $R, X, 'g'^~ekR,
+          h(<X, 'g'^~ekR, X^~ekR, 'g'^~lkI^~lkR>)
+  )
+  ]->
+   [
+   Out( 'g'^~ekR ), !Ephk( ~ekR ),
+   !Sessk( ~ekR, h(<X, 'g'^~ekR, X^~ekR, 'g'^~lkI^~lkR>) )
+   ]
+  /*
+  rule (modulo AC) Resp_1:
+     [ In( X.1 ), Fr( ~ekR ), !Ltk( $R.3, ~lkR.4 ), !Pk( $I.5, 'g'^~x.6 ) ]
+    --[
+    SidR_1( ~ekR, $I.5, $R.3, X.1, 'g'^~ekR,
+            h(<X.1, 'g'^~ekR, x.2, 'g'^(~lkR.4*~x.6)>)
+    )
+    ]->
+     [
+     Out( 'g'^~ekR ), !Ephk( ~ekR ),
+     !Sessk( ~ekR, h(<X.1, 'g'^~ekR, x.2, 'g'^(~lkR.4*~x.6)>) )
+     ]
+  
+    variants (modulo AC)
+    1. ~ekR  = ~ekR.34
+       X.1   = X.35
+       x.2   = X.35^~ekR.34
+    
+    2. ~ekR  = ~ekR.34
+       X.1   = x.36^inv(~ekR.34)
+       x.2   = x.36
+    
+    3. ~ekR  = ~ekR.35
+       X.1   = x.37^x.38
+       x.2   = x.37^(~ekR.35*x.38)
+    
+    4. ~ekR  = ~ekR.35
+       X.1   = x.37^inv((~ekR.35*x.38))
+       x.2   = x.37^inv(x.38)
+    
+    5. ~ekR  = ~ekR.35
+       X.1   = x.37^(x.38*inv(~ekR.35))
+       x.2   = x.37^x.38
+    
+    6. ~ekR  = ~ekR.36
+       X.1   = x.38^(x.39*inv((~ekR.36*x.40)))
+       x.2   = x.38^(x.39*inv(x.40))
+  */
+
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Sessk_revealR:
-   [ !SesskOfR( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealI:
-   [ !EphkI( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealR:
-   [ !EphkR( ~ekR ) ] --[ EphkRev( ~ekR ) ]-> [ Out( ~ekR ) ]
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Ltk_reveal:
    [ !Ltk( $A, k ) ] --[ LtkRev( $A ) ]-> [ Out( k ) ]
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) JKL2008_1_initiator_key:
+lemma (modulo E) JKL2008_2_initiator_key:
   "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-        (((((SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-            (K( k.5 ) @ #i2.1)) &
-           (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> (F))) &
-          (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> (F))) &
-         (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> (F))) &
-        (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-          ((SidR_1( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-           (SesskRev( tpartner.15 ) @ #i4.14)) ==>
-          (F)))"
+        ((((((SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
+             (K( k.5 ) @ #i2.1)) &
+            (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> (F))) &
+           (All #i3.10. (SesskRev( ttest.2 ) @ #i3.10) ==> (F))) &
+          (All #i3.11 #i4.12 tpartner.13 kpartner.14.
+            ((SidR_1( tpartner.13, I.3, R.4, hkI.6, hkR.7, kpartner.14 ) @ #i3.11) &
+             (SesskRev( tpartner.13 ) @ #i4.12)) ==>
+            (F))) &
+         (All #i3.15.
+           (LtkRev( I.3 ) @ #i3.15) ==>
+           (Ex #i4.16 tpartner.17 kpartner.18.
+             SidR_1( tpartner.17, I.3, R.4, hkI.6, hkR.7, kpartner.18 ) @ #i4.16))) &
+        (All #i3.19.
+          (LtkRev( R.4 ) @ #i3.19) ==>
+          (Ex #i4.20 tpartner.21 kpartner.22.
+            SidR_1( tpartner.21, I.3, R.4, hkI.6, hkR.7, kpartner.22 ) @ #i4.20)))"
 /* proof based on the same lemma modulo AC */
 /*
 doubly-guarded formula characterizing all attacks:
@@ -375,13 +452,26 @@ doubly-guarded formula characterizing all attacks:
   (K( k.5 ) @ #i2.1)
  &
   (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-  (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-  (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-  (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-    (SidR_1( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-    (SesskRev( tpartner.15 ) @ #i4.14)
+  (All #i3.10. (SesskRev( ttest.2 ) @ #i3.10) ==> F) &
+  (All #i3.11 #i4.12 tpartner.13 kpartner.14.
+    (SidR_1( tpartner.13, I.3, R.4, hkI.6, hkR.7, kpartner.14 ) @ #i3.11) &
+    (SesskRev( tpartner.13 ) @ #i4.12)
    ==>
-    F)"
+    F) &
+  (All #i3.15.
+    (LtkRev( I.3 ) @ #i3.15)
+   ==>
+    Ex #i4.16 tpartner.17 kpartner.18.
+     (SidR_1( tpartner.17, I.3, R.4, hkI.6, hkR.7, kpartner.18 ) @ #i4.16)
+    &
+     T) &
+  (All #i3.19.
+    (LtkRev( R.4 ) @ #i3.19)
+   ==>
+    Ex #i4.20 tpartner.21 kpartner.22.
+     (SidR_1( tpartner.21, I.3, R.4, hkI.6, hkR.7, kpartner.22 ) @ #i4.20)
+    &
+     T)"
 */
 /*
 proof by induction possible over the formula:
@@ -390,90 +480,104 @@ proof by induction possible over the formula:
    (K( k.5 ) @ #i2.1)
   &
    (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-   (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-   (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-   (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-     (SidR_1( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-     (SesskRev( tpartner.15 ) @ #i4.14)
+   (All #i3.10. (SesskRev( ttest.2 ) @ #i3.10) ==> F) &
+   (All #i3.11 #i4.12 tpartner.13 kpartner.14.
+     (SidR_1( tpartner.13, I.3, R.4, hkI.6, hkR.7, kpartner.14 ) @ #i3.11) &
+     (SesskRev( tpartner.13 ) @ #i4.12)
     ==>
-     F)) &
- (All #i1.17 #i2.18 ttest.19 I.20 R.21 k.22 hkI.23 hkR.24.
-   (SidI_2( ttest.19, I.20, R.21, hkI.23, hkR.24, k.22 ) @ #i1.17) &
-   (K( k.22 ) @ #i2.18)
+     F) &
+   (All #i3.15.
+     (LtkRev( I.3 ) @ #i3.15)
+    ==>
+     Ex #i4.16 tpartner.17 kpartner.18.
+      (SidR_1( tpartner.17, I.3, R.4, hkI.6, hkR.7, kpartner.18 ) @ #i4.16)
+     &
+      T) &
+   (All #i3.19.
+     (LtkRev( R.4 ) @ #i3.19)
+    ==>
+     Ex #i4.20 tpartner.21 kpartner.22.
+      (SidR_1( tpartner.21, I.3, R.4, hkI.6, hkR.7, kpartner.22 ) @ #i4.20)
+     &
+      T)) &
+ (All #i1.23 #i2.24 ttest.25 I.26 R.27 k.28 hkI.29 hkR.30.
+   (SidI_2( ttest.25, I.26, R.27, hkI.29, hkR.30, k.28 ) @ #i1.23) &
+   (K( k.28 ) @ #i2.24)
   ==>
-   (Last(#i2.18)) |
-   (Last(#i1.17)) |
-   (Ex #i3.25 t.26.
-     (EphkRev( t.26 ) @ #i3.25)
+   (Last(#i2.24)) |
+   (Last(#i1.23)) |
+   (Ex #i3.31 t.32.
+     (EphkRev( t.32 ) @ #i3.31)
     &
-     All. (Last(#i3.25)) ==> F) |
-   (Ex #i3.27 a.28. (LtkRev( a.28 ) @ #i3.27) & All. (Last(#i3.27)) ==> F) |
-   (Ex #i3.29.
-     (SesskRev( ttest.19 ) @ #i3.29)
+     All. (Last(#i3.31)) ==> F) |
+   (Ex #i3.33.
+     (SesskRev( ttest.25 ) @ #i3.33)
     &
-     All. (Last(#i3.29)) ==> F) |
-   (Ex #i3.30 #i4.31 tpartner.32 kpartner.33.
-     (SidR_1( tpartner.32, I.20, R.21, hkI.23, hkR.24, kpartner.33
-      ) @ #i3.30) &
-     (SesskRev( tpartner.32 ) @ #i4.31)
+     All. (Last(#i3.33)) ==> F) |
+   (Ex #i3.34 #i4.35 tpartner.36 kpartner.37.
+     (SidR_1( tpartner.36, I.26, R.27, hkI.29, hkR.30, kpartner.37
+      ) @ #i3.34) &
+     (SesskRev( tpartner.36 ) @ #i4.35)
     &
-     (All. (Last(#i4.31)) ==> F) & (All. (Last(#i3.30)) ==> F)))"
+     (All. (Last(#i4.35)) ==> F) & (All. (Last(#i3.34)) ==> F)) |
+   (Ex #i3.38.
+     (LtkRev( I.26 ) @ #i3.38)
+    &
+     (All. (Last(#i3.38)) ==> F) &
+     (All #i4.39 tpartner.40 kpartner.41.
+       (SidR_1( tpartner.40, I.26, R.27, hkI.29, hkR.30, kpartner.41 ) @ #i4.39)
+      ==>
+       Last(#i4.39))) |
+   (Ex #i3.42.
+     (LtkRev( R.27 ) @ #i3.42)
+    &
+     (All. (Last(#i3.42)) ==> F) &
+     (All #i4.43 tpartner.44 kpartner.45.
+       (SidR_1( tpartner.44, I.26, R.27, hkI.29, hkR.30, kpartner.45 ) @ #i4.43)
+      ==>
+       Last(#i4.43))))"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.8, $I.9, $R.10, ~lkI.11, ~ekI.8 )] )
+solve( (#i1, 0)[Init_1( ~ekI.8, $I.11, $R.12, ~lkI.13, hkI.6 )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.10, 'g'^~lkR.13 )] )
+  solve( (#i1, 2)[!Pk( $R.12, 'g'^~x.15 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.16,
-                           h(<$I.9, $R.10, ~ekI.8, hkR.7, 'g'^(~lkI.11*~lkR.13)>)
+    solve( (#i2.1, 0)[!KU( f_.18,
+                           h(<'g'^~ekI.8, hkR.7, x.10, 'g'^(~lkI.13*~x.15)>)
                       )] )
-      case Sessk_revealI_case_1
-      by contradiction // from formulas
-    next
-      case Sessk_revealI_case_2
-      by contradiction // from formulas
-    next
-      case Sessk_revealR_case_1
-      by contradiction // from formulas
-    next
-      case Sessk_revealR_case_2
-      by contradiction // from formulas
-    next
-      case h
-      solve( KU((#vr.41, 0), 'g'^(~lkI.11*~lkR.13)) )
-        case exp
-        solve( KU((#vr.47, 1), ~lkI.11) )
-          case Ltk_reveal
-          by contradiction // from formulas
-        qed
-      next
-        case generate_ltk_case_1
-        solve( (#vr.54, 1)[!KU( f_.55, ~lkR.63 )] )
-          case Ltk_reveal
-          by contradiction // from formulas
-        qed
-      next
-        case generate_ltk_case_2
-        solve( (#vr.54, 1)[!KU( f_.55, ~lkI.62 )] )
-          case Ltk_reveal
-          by contradiction // from formulas
+      case Sessk_reveal_case_3
+      solve( splitEqs(1) )
+        case split
+        solve( (#vf.16, 0)[!KU( f_.17, 'g'^~tid.75 )] )
+          case Resp_1
+          solve( (#vf.54, 0)[!KU( f_.55, 'g'^~ekI.74 )] )
+            case Init_1
+            SOLVED (trace found)
+          qed
         qed
       qed
     qed
   qed
 qed
 
-lemma (modulo E) JKL2008_1_responder_key:
+lemma (modulo E) JKL2008_2_responder_key:
   "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-        (((((SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-            (K( k.5 ) @ #i2.1)) &
-           (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> (F))) &
-          (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> (F))) &
-         (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> (F))) &
-        (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-          ((SidI_2( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-           (SesskRev( tpartner.15 ) @ #i4.14)) ==>
-          (F)))"
+        ((((((SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
+             (K( k.5 ) @ #i2.1)) &
+            (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> (F))) &
+           (All #i3.10. (SesskRev( ttest.2 ) @ #i3.10) ==> (F))) &
+          (All #i3.11 #i4.12 tpartner.13 kpartner.14.
+            ((SidI_2( tpartner.13, I.3, R.4, hkI.6, hkR.7, kpartner.14 ) @ #i3.11) &
+             (SesskRev( tpartner.13 ) @ #i4.12)) ==>
+            (F))) &
+         (All #i3.15.
+           (LtkRev( I.3 ) @ #i3.15) ==>
+           (Ex #i4.16 tpartner.17.
+             SidI_1( tpartner.17, I.3, R.4, hkI.6 ) @ #i4.16))) &
+        (All #i3.18.
+          (LtkRev( R.4 ) @ #i3.18) ==>
+          (Ex #i4.19 tpartner.20.
+            SidI_1( tpartner.20, I.3, R.4, hkI.6 ) @ #i4.19)))"
 /* proof based on the same lemma modulo AC */
 /*
 doubly-guarded formula characterizing all attacks:
@@ -482,13 +586,26 @@ doubly-guarded formula characterizing all attacks:
   (K( k.5 ) @ #i2.1)
  &
   (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-  (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-  (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-  (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-    (SidI_2( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-    (SesskRev( tpartner.15 ) @ #i4.14)
+  (All #i3.10. (SesskRev( ttest.2 ) @ #i3.10) ==> F) &
+  (All #i3.11 #i4.12 tpartner.13 kpartner.14.
+    (SidI_2( tpartner.13, I.3, R.4, hkI.6, hkR.7, kpartner.14 ) @ #i3.11) &
+    (SesskRev( tpartner.13 ) @ #i4.12)
    ==>
-    F)"
+    F) &
+  (All #i3.15.
+    (LtkRev( I.3 ) @ #i3.15)
+   ==>
+    Ex #i4.16 tpartner.17.
+     (SidI_1( tpartner.17, I.3, R.4, hkI.6 ) @ #i4.16)
+    &
+     T) &
+  (All #i3.18.
+    (LtkRev( R.4 ) @ #i3.18)
+   ==>
+    Ex #i4.19 tpartner.20.
+     (SidI_1( tpartner.20, I.3, R.4, hkI.6 ) @ #i4.19)
+    &
+     T)"
 */
 /*
 proof by induction possible over the formula:
@@ -497,73 +614,80 @@ proof by induction possible over the formula:
    (K( k.5 ) @ #i2.1)
   &
    (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-   (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-   (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-   (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-     (SidI_2( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-     (SesskRev( tpartner.15 ) @ #i4.14)
+   (All #i3.10. (SesskRev( ttest.2 ) @ #i3.10) ==> F) &
+   (All #i3.11 #i4.12 tpartner.13 kpartner.14.
+     (SidI_2( tpartner.13, I.3, R.4, hkI.6, hkR.7, kpartner.14 ) @ #i3.11) &
+     (SesskRev( tpartner.13 ) @ #i4.12)
     ==>
-     F)) &
- (All #i1.17 #i2.18 ttest.19 I.20 R.21 k.22 hkI.23 hkR.24.
-   (SidR_1( ttest.19, I.20, R.21, hkI.23, hkR.24, k.22 ) @ #i1.17) &
-   (K( k.22 ) @ #i2.18)
+     F) &
+   (All #i3.15.
+     (LtkRev( I.3 ) @ #i3.15)
+    ==>
+     Ex #i4.16 tpartner.17.
+      (SidI_1( tpartner.17, I.3, R.4, hkI.6 ) @ #i4.16)
+     &
+      T) &
+   (All #i3.18.
+     (LtkRev( R.4 ) @ #i3.18)
+    ==>
+     Ex #i4.19 tpartner.20.
+      (SidI_1( tpartner.20, I.3, R.4, hkI.6 ) @ #i4.19)
+     &
+      T)) &
+ (All #i1.21 #i2.22 ttest.23 I.24 R.25 k.26 hkI.27 hkR.28.
+   (SidR_1( ttest.23, I.24, R.25, hkI.27, hkR.28, k.26 ) @ #i1.21) &
+   (K( k.26 ) @ #i2.22)
   ==>
-   (Last(#i2.18)) |
-   (Last(#i1.17)) |
-   (Ex #i3.25 t.26.
-     (EphkRev( t.26 ) @ #i3.25)
-    &
-     All. (Last(#i3.25)) ==> F) |
-   (Ex #i3.27 a.28. (LtkRev( a.28 ) @ #i3.27) & All. (Last(#i3.27)) ==> F) |
-   (Ex #i3.29.
-     (SesskRev( ttest.19 ) @ #i3.29)
+   (Last(#i2.22)) |
+   (Last(#i1.21)) |
+   (Ex #i3.29 t.30.
+     (EphkRev( t.30 ) @ #i3.29)
     &
      All. (Last(#i3.29)) ==> F) |
-   (Ex #i3.30 #i4.31 tpartner.32 kpartner.33.
-     (SidI_2( tpartner.32, I.20, R.21, hkI.23, hkR.24, kpartner.33
-      ) @ #i3.30) &
-     (SesskRev( tpartner.32 ) @ #i4.31)
+   (Ex #i3.31.
+     (SesskRev( ttest.23 ) @ #i3.31)
     &
-     (All. (Last(#i4.31)) ==> F) & (All. (Last(#i3.30)) ==> F)))"
+     All. (Last(#i3.31)) ==> F) |
+   (Ex #i3.32 #i4.33 tpartner.34 kpartner.35.
+     (SidI_2( tpartner.34, I.24, R.25, hkI.27, hkR.28, kpartner.35
+      ) @ #i3.32) &
+     (SesskRev( tpartner.34 ) @ #i4.33)
+    &
+     (All. (Last(#i4.33)) ==> F) & (All. (Last(#i3.32)) ==> F)) |
+   (Ex #i3.36.
+     (LtkRev( I.24 ) @ #i3.36)
+    &
+     (All. (Last(#i3.36)) ==> F) &
+     (All #i4.37 tpartner.38.
+       (SidI_1( tpartner.38, I.24, R.25, hkI.27 ) @ #i4.37)
+      ==>
+       Last(#i4.37))) |
+   (Ex #i3.39.
+     (LtkRev( R.25 ) @ #i3.39)
+    &
+     (All. (Last(#i3.39)) ==> F) &
+     (All #i4.40 tpartner.41.
+       (SidI_1( tpartner.41, I.24, R.25, hkI.27 ) @ #i4.40)
+      ==>
+       Last(#i4.40))))"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.10, ~lkR.11 )] )
+solve( (#i1, 2)[!Ltk( $R.11, ~lkR.12 )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.12, 'g'^~lkI.13 )] )
+  solve( (#i1, 3)[!Pk( $I.13, 'g'^~x.14 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.17,
-                           h(<$I.12, $R.10, hkI.6, ~ekR.9, 'g'^(~lkR.11*~lkI.13)>)
+    solve( (#i2.1, 0)[!KU( f_.18,
+                           h(<hkI.6, 'g'^~ekR.8, x.10, 'g'^(~lkR.12*~x.14)>)
                       )] )
-      case Sessk_revealI_case_1
-      by contradiction // from formulas
-    next
-      case Sessk_revealI_case_2
-      by contradiction // from formulas
-    next
-      case Sessk_revealR_case_1
-      by contradiction // from formulas
-    next
-      case Sessk_revealR_case_2
-      by contradiction // from formulas
-    next
-      case h
-      solve( KU((#vr.33, 0), 'g'^(~lkR.11*~lkI.13)) )
-        case exp
-        solve( KU((#vr.39, 1), ~lkR.11) )
-          case Ltk_reveal
-          by contradiction // from formulas
-        qed
-      next
-        case generate_ltk_case_1
-        solve( (#vr.46, 1)[!KU( f_.47, ~lkI.55 )] )
-          case Ltk_reveal
-          by contradiction // from formulas
-        qed
-      next
-        case generate_ltk_case_2
-        solve( (#vr.46, 1)[!KU( f_.47, ~lkR.54 )] )
-          case Ltk_reveal
-          by contradiction // from formulas
+      case Sessk_reveal_case_1
+      solve( splitEqs(1) )
+        case split
+        solve( (#vf.15, 0)[!KU( f_.16, 'g'^~tid.72 )] )
+          case Init_1
+          solve( (#vf.45, 0)[!KU( f_.46, 'g'^~ekR.71 )] )
+            case Resp_1
+            SOLVED (trace found)
+          qed
         qed
       qed
     qed
@@ -578,27 +702,27 @@ maude tool: 'maude'
  checking version: 2.6. OK.
 
 
-analyzing: data/examples/JKL_TS1_2008.spthy
+analyzing: data/examples/JKL_TS2_2004-KI_wPFS.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/JKL_TS1_2008.spthy
+analyzed: data/examples/JKL_TS2_2004-KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.471267s
-  JKL2008_1_initiator_key: complete proof (15 steps)
-  JKL2008_1_responder_key: complete proof (15 steps)
+  processing time: 2.30061s
+  JKL2008_2_initiator_key: attack found (8 steps)
+  JKL2008_2_responder_key: attack found (8 steps)
 
 ------------------------------------------------------------------------------
 
 ==============================================================================
 summary of processed files:
 
-analyzed: data/examples/JKL_TS1_2008.spthy
+analyzed: data/examples/JKL_TS2_2004-KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.471267s
-  JKL2008_1_initiator_key: complete proof (15 steps)
-  JKL2008_1_responder_key: complete proof (15 steps)
+  processing time: 2.30061s
+  JKL2008_2_initiator_key: attack found (8 steps)
+  JKL2008_2_responder_key: attack found (8 steps)
 
 ==============================================================================
 */

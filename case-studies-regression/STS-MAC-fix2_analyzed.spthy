@@ -2030,7 +2030,7 @@ analyzing: data/examples/STS-MAC-fix2.spthy
 analyzed: data/examples/STS-MAC-fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 44.423587s
+  processing time: 40.777921s
   KI_Perfect_Forward_Secrecy_I: complete proof (159 steps)
   KI_Perfect_Forward_Secrecy_R: complete proof (251 steps)
 
@@ -2042,7 +2042,7 @@ summary of processed files:
 analyzed: data/examples/STS-MAC-fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 44.423587s
+  processing time: 40.777921s
   KI_Perfect_Forward_Secrecy_I: complete proof (159 steps)
   KI_Perfect_Forward_Secrecy_R: complete proof (251 steps)
 

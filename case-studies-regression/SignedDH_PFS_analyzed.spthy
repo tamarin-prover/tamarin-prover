@@ -1,4 +1,4 @@
-theory JKL_TS1_2004 begin
+theory SignedDH begin
 
  builtin: diffie-hellman
 
@@ -283,14 +283,25 @@ section{* Finite Variants of the Intruder Rules *}
  rule (modulo AC) fst:
     [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', fst(x) ) ]
  
- rule (modulo AC) h:
-    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', h(x) ) ]
- 
  rule (modulo AC) pair:
     [ !KU( f_.2, x ), !KU( f_.3, x.1 ) ] --> [ !KU( 'noexp', <x, x.1> ) ]
  
+ rule (modulo AC) pk:
+    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', pk(x) ) ]
+ 
+ rule (modulo AC) sign:
+    [ !KU( f_.2, x ), !KU( f_.3, x.1 ) ] --> [ !KU( 'noexp', sign(x, x.1) ) ]
+ 
  rule (modulo AC) snd:
     [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', snd(x) ) ]
+ 
+ rule (modulo AC) true:
+    [ ] --> [ !KU( 'noexp', true() ) ]
+ 
+ rule (modulo AC) verify:
+    [ !KU( f_.3, x ), !KU( f_.4, x.1 ), !KU( f_.5, x.2 ) ]
+   -->
+    [ !KU( 'noexp', verify(x, x.1, x.2) ) ]
  
  rule (modulo AC) coerce:
     [ !KD( f_, x ) ] --> [ !KU( f_, x ) ]
@@ -307,211 +318,222 @@ section{* Finite Variants of the Intruder Rules *}
  rule (modulo AC) inv:
     [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', inv(x) ) ]
 
-section{* Jeong, Katz, Lee : TS1 (2004) *}
+section{* The Signed Diffie-Hellman Protocol *}
 
-rule (modulo E) generate_ltk:
-   [ Fr( ~lk ) ] --> [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Get_pk:
+   [ !Pk( A, pk ) ] --> [ Out( pk ) ]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltk ) ] --[ LtkReveal( A ) ]-> [ Out( ltk ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Init_1:
-   [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
-  --[ SidI_1( ~ekI, $I, $R, ~ekI ) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), !EphkI( ~ekI ), Out( ~ekI ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Init_2:
-   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
-  --[ SidI_2( ~ekI, $I, $R, ~ekI, Y, h(<~ekI, Y, 'g'^~lkR^~lkI>) ) ]->
-   [ !SesskOfI( ~ekI, h(<~ekI, Y, 'g'^~lkR^~lkI>) ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Resp_1:
-   [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
-  --[ SidR_1( ~ekR, $I, $R, X, ~ekR, h(<X, ~ekR, 'g'^~lkI^~lkR>) ) ]->
+   [ Fr( ~ekI ), !Ltk( $I, ltkI ) ]
+  -->
    [
-   Out( ~ekR ), !EphkR( ~ekR ),
-   !SesskOfR( ~ekR, h(<X, ~ekR, 'g'^~lkI^~lkR>) )
+   Init_1( $I, $R, ~ekI ),
+   Out( <$I, $R, 'g'^~ekI, sign(<'1', $I, $R, 'g'^~ekI>, ltkI)> )
    ]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Sessk_revealI:
-   [ !SesskOfI( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
-  /* has exactly the trivial AC variant */
+rule (modulo E) Init_2:
+   [
+   Init_1( $I, $R, ~ekI ), !Pk( $R, pk(ltkR) ),
+   In( <$R, $I, Y, sign(<'2', $R, $I, Y>, ltkR)> )
+   ]
+  --[ SessionKey( $I, $R, Y^~ekI ) ]->
+   [ ]
+  /*
+  rule (modulo AC) Init_2:
+     [
+     Init_1( $I.3, $R.4, ~ekI ), !Pk( $R.4, pk(x.5) ),
+     In( <$R.4, $I.3, x.2, sign(<'2', $R.4, $I.3, x.2>, x.5)> )
+     ]
+    --[ SessionKey( $I.3, $R.4, z.1 ) ]->
+     [ ]
+  
+    variants (modulo AC)
+    1. ~ekI  = ~ekI.29
+       z.1   = z.30
+       x.2   = z.30^inv(~ekI.29)
+    
+    2. ~ekI  = ~ekI.29
+       z.1   = x.30^~ekI.29
+       x.2   = x.30
+    
+    3. ~ekI  = ~ekI.30
+       z.1   = x.31^x.32
+       x.2   = x.31^(x.32*inv(~ekI.30))
+    
+    4. ~ekI  = ~ekI.30
+       z.1   = x.31^inv(x.32)
+       x.2   = x.31^inv((~ekI.30*x.32))
+    
+    5. ~ekI  = ~ekI.30
+       z.1   = x.31^(~ekI.30*x.32)
+       x.2   = x.31^x.32
+    
+    6. ~ekI  = ~ekI.31
+       z.1   = x.32^(x.33*inv(x.34))
+       x.2   = x.32^(x.33*inv((~ekI.31*x.34)))
+  */
 
-rule (modulo E) Sessk_revealR:
-   [ !SesskOfR( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
-  /* has exactly the trivial AC variant */
+rule (modulo E) Resp:
+   [
+   !Pk( $I, pk(ltkI) ), !Ltk( $R, ltkR ), Fr( ~ekR ),
+   In( <$I, $R, X, sign(<'1', $I, $R, X>, ltkI)> )
+   ]
+  --[ SessionKey( $I, $R, X^~ekR ) ]->
+   [ Out( <$R, $I, 'g'^~ekR, sign(<'2', $R, $I, 'g'^~ekR>, ltkR)> ) ]
+  /*
+  rule (modulo AC) Resp:
+     [
+     !Pk( $I.3, pk(x.4) ), !Ltk( $R.5, ltkR.6 ), Fr( ~ekR ),
+     In( <$I.3, $R.5, x.2, sign(<'1', $I.3, $R.5, x.2>, x.4)> )
+     ]
+    --[ SessionKey( $I.3, $R.5, z.1 ) ]->
+     [
+     Out( <$R.5, $I.3, 'g'^~ekR, sign(<'2', $R.5, $I.3, 'g'^~ekR>, ltkR.6)> )
+     ]
+  
+    variants (modulo AC)
+    1. ~ekR  = ~ekR.49
+       z.1   = z.50
+       x.2   = z.50^inv(~ekR.49)
+    
+    2. ~ekR  = ~ekR.49
+       z.1   = x.50^~ekR.49
+       x.2   = x.50
+    
+    3. ~ekR  = ~ekR.50
+       z.1   = x.51^x.52
+       x.2   = x.51^(x.52*inv(~ekR.50))
+    
+    4. ~ekR  = ~ekR.50
+       z.1   = x.51^inv(x.52)
+       x.2   = x.51^inv((~ekR.50*x.52))
+    
+    5. ~ekR  = ~ekR.50
+       z.1   = x.51^(~ekR.50*x.52)
+       x.2   = x.51^x.52
+    
+    6. ~ekR  = ~ekR.51
+       z.1   = x.52^(x.53*inv(x.54))
+       x.2   = x.52^(x.53*inv((~ekR.51*x.54)))
+  */
 
-rule (modulo E) Ephk_revealI:
-   [ !EphkI( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealR:
-   [ !EphkR( ~ekR ) ] --[ EphkRev( ~ekR ) ]-> [ Out( ~ekR ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ltk_reveal:
-   [ !Ltk( $A, k ) ] --[ LtkRev( $A ) ]-> [ Out( k ) ]
-  /* has exactly the trivial AC variant */
-
-lemma (modulo E) JKL2008_1_initiator_key:
-  "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-        (((((SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-            (K( k.5 ) @ #i2.1)) &
-           (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> (F))) &
-          (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> (F))) &
-         (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> (F))) &
-        (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-          ((SidR_1( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-           (SesskRev( tpartner.15 ) @ #i4.14)) ==>
-          (F)))"
+lemma (modulo E) Perfect_Forward_Secrecy:
+  "All I R.1 sessKey.2 #i.3 #k.4.
+    ((SessionKey( I, R.1, sessKey.2 ) @ #i.3) & (K( sessKey.2 ) @ #k.4)) ==>
+    ((Ex #r.5. (LtkReveal( I ) @ #r.5) & (#r.5 < #i.3)) |
+     (Ex #r.6. (LtkReveal( R.1 ) @ #r.6) & (#r.6 < #i.3)))"
 /* proof based on the same lemma modulo AC */
 /*
 doubly-guarded formula characterizing all attacks:
-"Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-  (SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-  (K( k.5 ) @ #i2.1)
+"Ex I R.1 sessKey.2 #i.3 #k.4.
+  (SessionKey( I, R.1, sessKey.2 ) @ #i.3) & (K( sessKey.2 ) @ #k.4)
  &
-  (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-  (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-  (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-  (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-    (SidR_1( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-    (SesskRev( tpartner.15 ) @ #i4.14)
-   ==>
-    F)"
+  (All #r.5. (LtkReveal( I ) @ #r.5) ==> All. (#r.5 < #i.3) ==> F) &
+  (All #r.6. (LtkReveal( R.1 ) @ #r.6) ==> All. (#r.6 < #i.3) ==> F)"
 */
 /*
 proof by induction possible over the formula:
-"(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-   (SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-   (K( k.5 ) @ #i2.1)
+"(Ex I R.1 sessKey.2 #i.3 #k.4.
+   (SessionKey( I, R.1, sessKey.2 ) @ #i.3) & (K( sessKey.2 ) @ #k.4)
   &
-   (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-   (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-   (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-   (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-     (SidR_1( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-     (SesskRev( tpartner.15 ) @ #i4.14)
-    ==>
-     F)) &
- (All #i1.17 #i2.18 ttest.19 I.20 R.21 k.22 hkI.23 hkR.24.
-   (SidI_2( ttest.19, I.20, R.21, hkI.23, hkR.24, k.22 ) @ #i1.17) &
-   (K( k.22 ) @ #i2.18)
+   (All #r.5. (LtkReveal( I ) @ #r.5) ==> All. (#r.5 < #i.3) ==> F) &
+   (All #r.6. (LtkReveal( R.1 ) @ #r.6) ==> All. (#r.6 < #i.3) ==> F)) &
+ (All I.7 R.8 sessKey.9 #i.10 #k.11.
+   (SessionKey( I.7, R.8, sessKey.9 ) @ #i.10) & (K( sessKey.9 ) @ #k.11)
   ==>
-   (Last(#i2.18)) |
-   (Last(#i1.17)) |
-   (Ex #i3.25 t.26.
-     (EphkRev( t.26 ) @ #i3.25)
+   (Last(#k.11)) |
+   (Last(#i.10)) |
+   (Ex #r.12.
+     (LtkReveal( I.7 ) @ #r.12)
     &
-     All. (Last(#i3.25)) ==> F) |
-   (Ex #i3.27 a.28. (LtkRev( a.28 ) @ #i3.27) & All. (Last(#i3.27)) ==> F) |
-   (Ex #i3.29.
-     (SesskRev( ttest.19 ) @ #i3.29)
+     (All. (Last(#r.12)) ==> F) & (Ex. (#r.12 < #i.10) & T)) |
+   (Ex #r.13.
+     (LtkReveal( R.8 ) @ #r.13)
     &
-     All. (Last(#i3.29)) ==> F) |
-   (Ex #i3.30 #i4.31 tpartner.32 kpartner.33.
-     (SidR_1( tpartner.32, I.20, R.21, hkI.23, hkR.24, kpartner.33
-      ) @ #i3.30) &
-     (SesskRev( tpartner.32 ) @ #i4.31)
-    &
-     (All. (Last(#i4.31)) ==> F) & (All. (Last(#i3.30)) ==> F)))"
+     (All. (Last(#r.13)) ==> F) & (Ex. (#r.13 < #i.10) & T)))"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.8, $I.9, $R.10, ~lkI.11, ~ekI.8 )] )
-  case Init_1
-  solve( (#i1, 2)[!Pk( $R.10, 'g'^~lkR.13 )] )
-    case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.16, h(<~ekI.8, hkR.7, 'g'^(~lkI.11*~lkR.13)>)
-                      )] )
-      case Sessk_revealR_case_1
-      solve( (#vf.14, 0)[!KU( f_.15, ~tid.43 )] )
-        case Resp_1
-        solve( (#vf.51, 0)[!KU( f_.52, ~ekI.8 )] )
+solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
+  case Init_2
+  solve( (#i.3, 0)[Init_1( $I.10, $R.11, ~ekI.7 )] )
+    case Init_1
+    solve( (#i.3, 1)[!Pk( $R.11, pk(x.12) )] )
+      case Register_pk
+      solve( KU((#vf.13, 0), sign(<'2', $R.11, $I.10, x.9>, ~ltk.31)) )
+        case Resp
+        solve( KU((#vf.47, 0), sign(<'1', $I.10, $R.11, x.45>, ~ltk.44)) )
           case Init_1
-          SOLVED (trace found)
+          solve( splitEqs(1) )
+            case split_case_1
+            solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.113*~ekR.114) )] )
+              case Init_1
+              by solve( (#vr.132, 1)[!KU( f_.133, ~ekR.155 )] )
+            next
+              case Resp
+              by solve( (#vr.137, 1)[!KU( f_.138, ~ekI.163 )] )
+            next
+              case exp
+              by solve( KU((#vr.118, 1), ~ekI.113) )
+            qed
+          next
+            case split_case_2
+            by contradiction // non-normal terms
+          qed
+        next
+          case sign
+          solve( (#vr.81, 1)[!KU( f_.83, ~ltk.44 )] )
+            case Reveal_ltk
+            by contradiction // cyclic
+          qed
+        qed
+      next
+        case sign
+        solve( (#vr.37, 1)[!KU( f_.39, ~ltk.31 )] )
+          case Reveal_ltk
+          by contradiction // cyclic
         qed
       qed
     qed
   qed
-qed
-
-lemma (modulo E) JKL2008_1_responder_key:
-  "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-        (((((SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-            (K( k.5 ) @ #i2.1)) &
-           (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> (F))) &
-          (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> (F))) &
-         (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> (F))) &
-        (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-          ((SidI_2( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-           (SesskRev( tpartner.15 ) @ #i4.14)) ==>
-          (F)))"
-/* proof based on the same lemma modulo AC */
-/*
-doubly-guarded formula characterizing all attacks:
-"Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-  (SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-  (K( k.5 ) @ #i2.1)
- &
-  (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-  (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-  (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-  (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-    (SidI_2( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-    (SesskRev( tpartner.15 ) @ #i4.14)
-   ==>
-    F)"
-*/
-/*
-proof by induction possible over the formula:
-"(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-   (SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-   (K( k.5 ) @ #i2.1)
-  &
-   (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-   (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-   (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-   (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-     (SidI_2( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-     (SesskRev( tpartner.15 ) @ #i4.14)
-    ==>
-     F)) &
- (All #i1.17 #i2.18 ttest.19 I.20 R.21 k.22 hkI.23 hkR.24.
-   (SidR_1( ttest.19, I.20, R.21, hkI.23, hkR.24, k.22 ) @ #i1.17) &
-   (K( k.22 ) @ #i2.18)
-  ==>
-   (Last(#i2.18)) |
-   (Last(#i1.17)) |
-   (Ex #i3.25 t.26.
-     (EphkRev( t.26 ) @ #i3.25)
-    &
-     All. (Last(#i3.25)) ==> F) |
-   (Ex #i3.27 a.28. (LtkRev( a.28 ) @ #i3.27) & All. (Last(#i3.27)) ==> F) |
-   (Ex #i3.29.
-     (SesskRev( ttest.19 ) @ #i3.29)
-    &
-     All. (Last(#i3.29)) ==> F) |
-   (Ex #i3.30 #i4.31 tpartner.32 kpartner.33.
-     (SidI_2( tpartner.32, I.20, R.21, hkI.23, hkR.24, kpartner.33
-      ) @ #i3.30) &
-     (SesskRev( tpartner.32 ) @ #i4.31)
-    &
-     (All. (Last(#i4.31)) ==> F) & (All. (Last(#i3.30)) ==> F)))"
-*/
-simplify
-solve( (#i1, 2)[!Ltk( $R.10, ~lkR.11 )] )
-  case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.12, 'g'^~lkI.13 )] )
-    case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.17, h(<hkI.6, ~ekR.9, 'g'^(~lkR.11*~lkI.13)>)
-                      )] )
-      case Sessk_revealI_case_1
-      solve( (#vf.14, 0)[!KU( f_.15, ~tid.34 )] )
+next
+  case Resp
+  solve( (#i.3, 0)[!Pk( $I.10, pk(x.11) )] )
+    case Register_pk
+    solve( (#i.3, 1)[!Ltk( $R.12, ltkR.13 )] )
+      case Register_pk
+      solve( KU((#vf.14, 0), sign(<'1', $I.10, $R.12, x.9>, ~ltk.20)) )
         case Init_1
-        solve( (#vf.43, 0)[!KU( f_.44, ~ekR.9 )] )
-          case Resp_1
-          SOLVED (trace found)
+        solve( splitEqs(1) )
+          case split_case_1
+          solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.64*~ekI.65) )] )
+            case Init_1
+            by solve( (#vr.83, 1)[!KU( f_.84, ~ekR.105 )] )
+          next
+            case Resp
+            by solve( (#vr.88, 1)[!KU( f_.89, ~ekI.115 )] )
+          next
+            case exp
+            by solve( KU((#vr.69, 1), ~ekR.64) )
+          qed
+        next
+          case split_case_2
+          by contradiction // non-normal terms
+        qed
+      next
+        case sign
+        solve( (#vr.32, 1)[!KU( f_.34, ~ltk.20 )] )
+          case Reveal_ltk
+          by contradiction // cyclic
         qed
       qed
     qed
@@ -526,27 +548,25 @@ maude tool: 'maude'
  checking version: 2.6. OK.
 
 
-analyzing: data/examples/JKL_TS1_2004.spthy
+analyzing: data/examples/SignedDH_PFS.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/JKL_TS1_2004.spthy
+analyzed: data/examples/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.280996s
-  JKL2008_1_initiator_key: attack found (7 steps)
-  JKL2008_1_responder_key: attack found (7 steps)
+  processing time: 4.104149s
+  Perfect_Forward_Secrecy: complete proof (27 steps)
 
 ------------------------------------------------------------------------------
 
 ==============================================================================
 summary of processed files:
 
-analyzed: data/examples/JKL_TS1_2004.spthy
+analyzed: data/examples/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.280996s
-  JKL2008_1_initiator_key: attack found (7 steps)
-  JKL2008_1_responder_key: attack found (7 steps)
+  processing time: 4.104149s
+  Perfect_Forward_Secrecy: complete proof (27 steps)
 
 ==============================================================================
 */

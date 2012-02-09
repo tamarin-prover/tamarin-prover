@@ -307,7 +307,7 @@ section{* Finite Variants of the Intruder Rules *}
  rule (modulo AC) inv:
     [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', inv(x) ) ]
 
-section{* The KEA+ Protocol *}
+section{* KEA+ *}
 
 rule (modulo E) generate_ltk:
    [ Fr( ~lk ) ] --> [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
@@ -316,7 +316,7 @@ rule (modulo E) generate_ltk:
 rule (modulo E) Init_1:
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
   --[ SidI_1( ~ekI, $I, $R, 'g'^~ekI ) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ), !EphkI( ~ekI ), Out( 'g'^~ekI )
+   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ), !Ephk( ~ekI ), Out( 'g'^~ekI )
    ]
   /* has exactly the trivial AC variant */
 
@@ -324,7 +324,7 @@ rule (modulo E) Init_2:
    [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
   --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<Y^~lkI, 'g'^~lkR^~ekI, $I, $R>) )
   ]->
-   [ !SesskOfI( ~ekI, h(<Y^~lkI, 'g'^~lkR^~ekI, $I, $R>) ) ]
+   [ !Sessk( ~ekI, h(<Y^~lkI, 'g'^~lkR^~ekI, $I, $R>) ) ]
   /*
   rule (modulo AC) Init_2:
      [
@@ -336,7 +336,7 @@ rule (modulo E) Init_2:
             h(<x.2, 'g'^(~ekI.3*~x.7), $I.4, $R.5>)
     )
     ]->
-     [ !SesskOfI( ~ekI.3, h(<x.2, 'g'^(~ekI.3*~x.7), $I.4, $R.5>) ) ]
+     [ !Sessk( ~ekI.3, h(<x.2, 'g'^(~ekI.3*~x.7), $I.4, $R.5>) ) ]
   
     variants (modulo AC)
     1. ~lkI  = ~lkI.31
@@ -370,8 +370,8 @@ rule (modulo E) Resp_1:
   SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<'g'^~lkI^~ekR, X^~lkR, $I, $R>) )
   ]->
    [
-   Out( 'g'^~ekR ), !EphkR( ~ekR ),
-   !SesskOfR( ~ekR, h(<'g'^~lkI^~ekR, X^~lkR, $I, $R>) )
+   Out( 'g'^~ekR ), !Ephk( ~ekR ),
+   !Sessk( ~ekR, h(<'g'^~lkI^~ekR, X^~lkR, $I, $R>) )
    ]
   /*
   rule (modulo AC) Resp_1:
@@ -382,8 +382,8 @@ rule (modulo E) Resp_1:
     )
     ]->
      [
-     Out( 'g'^~ekR.3 ), !EphkR( ~ekR.3 ),
-     !SesskOfR( ~ekR.3, h(<'g'^(~ekR.3*~x.6), x.2, $I.5, $R.4>) )
+     Out( 'g'^~ekR.3 ), !Ephk( ~ekR.3 ),
+     !Sessk( ~ekR.3, h(<'g'^(~ekR.3*~x.6), x.2, $I.5, $R.4>) )
      ]
   
     variants (modulo AC)
@@ -412,20 +412,12 @@ rule (modulo E) Resp_1:
        x.2   = x.36^(x.37*inv(x.38))
   */
 
-rule (modulo E) Sessk_revealI:
-   [ !SesskOfI( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Sessk_revealR:
-   [ !SesskOfR( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealI:
-   [ !EphkI( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealR:
-   [ !EphkR( ~ekR ) ] --[ EphkRev( ~ekR ) ]-> [ Out( ~ekR ) ]
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Ltk_reveal:
@@ -434,24 +426,23 @@ rule (modulo E) Ltk_reveal:
 
 lemma (modulo E) keaplus_initiator_key:
   "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-        (((((((SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-              (K( k.5 ) @ #i2.1)) &
-             (All #i3.8. (EphkRev( ttest.2 ) @ #i3.8) ==> (F))) &
-            (All #i3.9. (SesskRev( ttest.2 ) @ #i3.9) ==> (F))) &
-           (All #i3.10 #i4.11 tpartner.12 kpartner.13.
-             ((SidR_1( tpartner.12, I.3, R.4, hkI.6, hkR.7, kpartner.13 ) @ #i3.10) &
-              (EphkRev( tpartner.12 ) @ #i4.11)) ==>
-             (F))) &
-          (All #i3.14 #i4.15 tpartner.16 kpartner.17.
-            ((SidR_1( tpartner.16, I.3, R.4, hkI.6, hkR.7, kpartner.17 ) @ #i3.14) &
-             (SesskRev( tpartner.16 ) @ #i4.15)) ==>
+        ((((((SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
+             (K( k.5 ) @ #i2.1)) &
+            (All #i3.8. (EphkRev( ttest.2 ) @ #i3.8) ==> (F))) &
+           (All #i3.9. (SesskRev( ttest.2 ) @ #i3.9) ==> (F))) &
+          (All #i3.10 #i4.11 tpartner.12 kpartner.13.
+            ((SidR_1( tpartner.12, I.3, R.4, hkI.6, hkR.7, kpartner.13 ) @ #i3.10) &
+             (EphkRev( tpartner.12 ) @ #i4.11)) ==>
             (F))) &
-         (All #i3.18.
-           (LtkRev( R.4 ) @ #i3.18) ==>
-           ((#i1 < #i3.18) &
-            (Ex #i4.19 tpartner.20 kpartner.21.
-              SidR_1( tpartner.20, I.3, R.4, hkI.6, hkR.7, kpartner.21 ) @ #i4.19)))) &
-        (All #i3.22. (LtkRev( I.3 ) @ #i3.22) ==> (F)))"
+         (All #i3.14 #i4.15 tpartner.16 kpartner.17.
+           ((SidR_1( tpartner.16, I.3, R.4, hkI.6, hkR.7, kpartner.17 ) @ #i3.14) &
+            (SesskRev( tpartner.16 ) @ #i4.15)) ==>
+           (F))) &
+        (All #i3.18.
+          (LtkRev( R.4 ) @ #i3.18) ==>
+          ((#i1 < #i3.18) &
+           (Ex #i4.19 tpartner.20 kpartner.21.
+             SidR_1( tpartner.20, I.3, R.4, hkI.6, hkR.7, kpartner.21 ) @ #i4.19))))"
 /* proof based on the same lemma modulo AC */
 /*
 doubly-guarded formula characterizing all attacks:
@@ -478,8 +469,7 @@ doubly-guarded formula characterizing all attacks:
     (Ex #i4.19 tpartner.20 kpartner.21.
       (SidR_1( tpartner.20, I.3, R.4, hkI.6, hkR.7, kpartner.21 ) @ #i4.19)
      &
-      T)) &
-  (All #i3.22. (LtkRev( I.3 ) @ #i3.22) ==> F)"
+      T))"
 */
 /*
 proof by induction possible over the formula:
@@ -506,42 +496,40 @@ proof by induction possible over the formula:
      (Ex #i4.19 tpartner.20 kpartner.21.
        (SidR_1( tpartner.20, I.3, R.4, hkI.6, hkR.7, kpartner.21 ) @ #i4.19)
       &
-       T)) &
-   (All #i3.22. (LtkRev( I.3 ) @ #i3.22) ==> F)) &
- (All #i1.23 #i2.24 ttest.25 I.26 R.27 k.28 hkI.29 hkR.30.
-   (SidI_2( ttest.25, I.26, R.27, hkI.29, hkR.30, k.28 ) @ #i1.23) &
-   (K( k.28 ) @ #i2.24)
+       T))) &
+ (All #i1.22 #i2.23 ttest.24 I.25 R.26 k.27 hkI.28 hkR.29.
+   (SidI_2( ttest.24, I.25, R.26, hkI.28, hkR.29, k.27 ) @ #i1.22) &
+   (K( k.27 ) @ #i2.23)
   ==>
-   (Last(#i2.24)) |
-   (Last(#i1.23)) |
-   (Ex #i3.31. (EphkRev( ttest.25 ) @ #i3.31) & All. (Last(#i3.31)) ==> F) |
-   (Ex #i3.32.
-     (SesskRev( ttest.25 ) @ #i3.32)
+   (Last(#i2.23)) |
+   (Last(#i1.22)) |
+   (Ex #i3.30. (EphkRev( ttest.24 ) @ #i3.30) & All. (Last(#i3.30)) ==> F) |
+   (Ex #i3.31.
+     (SesskRev( ttest.24 ) @ #i3.31)
     &
-     All. (Last(#i3.32)) ==> F) |
-   (Ex #i3.33 #i4.34 tpartner.35 kpartner.36.
-     (SidR_1( tpartner.35, I.26, R.27, hkI.29, hkR.30, kpartner.36
-      ) @ #i3.33) &
-     (EphkRev( tpartner.35 ) @ #i4.34)
+     All. (Last(#i3.31)) ==> F) |
+   (Ex #i3.32 #i4.33 tpartner.34 kpartner.35.
+     (SidR_1( tpartner.34, I.25, R.26, hkI.28, hkR.29, kpartner.35
+      ) @ #i3.32) &
+     (EphkRev( tpartner.34 ) @ #i4.33)
     &
-     (All. (Last(#i4.34)) ==> F) & (All. (Last(#i3.33)) ==> F)) |
-   (Ex #i3.37 #i4.38 tpartner.39 kpartner.40.
-     (SidR_1( tpartner.39, I.26, R.27, hkI.29, hkR.30, kpartner.40
-      ) @ #i3.37) &
-     (SesskRev( tpartner.39 ) @ #i4.38)
+     (All. (Last(#i4.33)) ==> F) & (All. (Last(#i3.32)) ==> F)) |
+   (Ex #i3.36 #i4.37 tpartner.38 kpartner.39.
+     (SidR_1( tpartner.38, I.25, R.26, hkI.28, hkR.29, kpartner.39
+      ) @ #i3.36) &
+     (SesskRev( tpartner.38 ) @ #i4.37)
     &
-     (All. (Last(#i4.38)) ==> F) & (All. (Last(#i3.37)) ==> F)) |
-   (Ex #i3.41.
-     (LtkRev( R.27 ) @ #i3.41)
+     (All. (Last(#i4.37)) ==> F) & (All. (Last(#i3.36)) ==> F)) |
+   (Ex #i3.40.
+     (LtkRev( R.26 ) @ #i3.40)
     &
-     (All. (Last(#i3.41)) ==> F) &
-     ((#i1.23 = #i3.41) |
-      (#i3.41 < #i1.23) |
-      (All #i4.42 tpartner.43 kpartner.44.
-        (SidR_1( tpartner.43, I.26, R.27, hkI.29, hkR.30, kpartner.44 ) @ #i4.42)
+     (All. (Last(#i3.40)) ==> F) &
+     ((#i1.22 = #i3.40) |
+      (#i3.40 < #i1.22) |
+      (All #i4.41 tpartner.42 kpartner.43.
+        (SidR_1( tpartner.42, I.25, R.26, hkI.28, hkR.29, kpartner.43 ) @ #i4.41)
        ==>
-        Last(#i4.42)))) |
-   (Ex #i3.45. (LtkRev( I.26 ) @ #i3.45) & All. (Last(#i3.45)) ==> F))"
+        Last(#i4.41)))))"
 */
 simplify
 solve( (#i1, 0)[Init_1( ~ekI.11, $I.12, $R.13, ~lkI.8, hkI.6 )] )
@@ -551,114 +539,27 @@ solve( (#i1, 0)[Init_1( ~ekI.11, $I.12, $R.13, ~lkI.8, hkI.6 )] )
     solve( (#i2.1, 0)[!KU( f_.18,
                            h(<x.10, 'g'^(~ekI.11*~x.15), $I.12, $R.13>)
                       )] )
-      case Sessk_revealI
-      by contradiction // from formulas
-    next
-      case Sessk_revealR
+      case Sessk_reveal_case_2
       solve( splitEqs(1) )
-        case split_case_1
-        solve( splitEqs(1) )
-          case split_case_1
-          by contradiction // from formulas
-        next
-          case split_case_2
-          solve( (#vf.54, 0)[!KU( f_.55, 'g'^(~ekI.76*~x.77*inv(~lkR.78)) )] )
-            case Init_1
-            by solve( KU((#vr.91, 1), ~lkR.78) )
-          next
-            case exp
-            solve( KU((#vr.82, 1), ~ekI.76) )
-              case Ephk_revealI
-              by contradiction // from formulas
-            qed
-          next
-            case generate_ltk
-            by solve( KU((#vr.89, 1), ~lkR.78) )
-          qed
-        next
-          case split_case_3
-          by contradiction // non-normal terms
-        qed
-      next
         case split_case_2
         solve( (#vf.16, 0)[!KU( f_.17, 'g'^(~tid.75*~x.76*inv(~lkI.74)) )] )
           case Resp_1
           solve( KU((#vr.94, 1), ~lkI.74) )
             case Ltk_reveal
-            by contradiction // from formulas
-          qed
-        next
-          case exp
-          solve( KU((#vr.80, 1), ~lkI.74) )
-            case Ltk_reveal
-            by contradiction // from formulas
-          qed
-        next
-          case generate_ltk
-          solve( KU((#vr.87, 1), ~lkI.74) )
-            case Ltk_reveal
-            by contradiction // from formulas
-          qed
-        qed
-      next
-        case split_case_3
-        by contradiction // non-normal terms
-      qed
-    next
-      case h
-      solve( KU((#vr.43, 0), 'g'^(~ekI.11*~x.15)) )
-        case Init_1
-        solve( (#vr.58, 1)[!KU( f_.59, ~x.71 )] )
-          case Ltk_reveal
-          solve( (#i4.86, 2)[!Ltk( $R.13, ~lkR.89 )] )
-            case generate_ltk
-            solve( (#i4.86, 3)[!Pk( $I.12, 'g'^~x.95 )] )
-              case generate_ltk
+            solve( KU((#vr.94, 1), ~x.89) )
+              case Ltk_reveal
               solve( splitEqs(1) )
                 case split_case_1
                 solve( splitEqs(1) )
-                  case split_case_1
-                  solve( KU((#vr.43, 0), 'g'^(~lkI.120*~ekR.121)) )
-                    case Resp_1
-                    solve( (#vr.139, 1)[!KU( f_.140, ~lkI.155 )] )
-                      case Ltk_reveal
-                      by contradiction // from formulas
-                    qed
-                  next
-                    case exp
-                    solve( KU((#vr.125, 1), ~lkI.120) )
-                      case Ltk_reveal
-                      by contradiction // from formulas
-                    qed
-                  next
-                    case generate_ltk
-                    solve( (#vr.132, 1)[!KU( f_.133, ~ekR.141 )] )
-                      case Ephk_revealR
-                      by contradiction // from formulas
-                    qed
+                  case split
+                  solve( (#vf.54, 0)[!KU( f_.55, 'g'^~ekI.144 )] )
+                    case Init_1
+                    SOLVED (trace found)
                   qed
-                next
-                  case split_case_2
-                  by contradiction // non-normal terms
                 qed
-              next
-                case split_case_2
-                by contradiction // non-normal terms
               qed
             qed
           qed
-        qed
-      next
-        case exp
-        solve( KU((#vr.49, 1), ~ekI.11) )
-          case Ephk_revealI
-          by contradiction // from formulas
-        qed
-      next
-        case generate_ltk
-        solve( (#vr.56, 1)[!KU( f_.57, ~ekI.64 )] )
-          case Ephk_revealI
-          by contradiction // from formulas
         qed
       qed
     qed
@@ -667,28 +568,27 @@ qed
 
 lemma (modulo E) keaplus_responder_key:
   "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-        ((((((((SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-               (K( k.5 ) @ #i2.1)) &
-              (All #i3.8. (EphkRev( ttest.2 ) @ #i3.8) ==> (F))) &
-             (All #i3.9. (SesskRev( ttest.2 ) @ #i3.9) ==> (F))) &
-            (All #i3.10 #i4.11 tpartner.12 lki.13.
-              ((SidI_1( tpartner.12, I.3, R.4, lki.13 ) @ #i3.10) &
-               (EphkRev( tpartner.12 ) @ #i4.11)) ==>
-              (F))) &
-           (All #i3.14 #i4.15 tpartner.16 kpartner.17.
-             ((SidI_2( tpartner.16, I.3, R.4, hkI.6, hkR.7, kpartner.17 ) @ #i3.14) &
-              (EphkRev( tpartner.16 ) @ #i4.15)) ==>
+        (((((((SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
+              (K( k.5 ) @ #i2.1)) &
+             (All #i3.8. (EphkRev( ttest.2 ) @ #i3.8) ==> (F))) &
+            (All #i3.9. (SesskRev( ttest.2 ) @ #i3.9) ==> (F))) &
+           (All #i3.10 #i4.11 tpartner.12 lki.13.
+             ((SidI_1( tpartner.12, I.3, R.4, lki.13 ) @ #i3.10) &
+              (EphkRev( tpartner.12 ) @ #i4.11)) ==>
              (F))) &
-          (All #i3.18 #i4.19 tpartner.20 kpartner.21.
-            ((SidI_2( tpartner.20, I.3, R.4, hkI.6, hkR.7, kpartner.21 ) @ #i3.18) &
-             (SesskRev( tpartner.20 ) @ #i4.19)) ==>
+          (All #i3.14 #i4.15 tpartner.16 kpartner.17.
+            ((SidI_2( tpartner.16, I.3, R.4, hkI.6, hkR.7, kpartner.17 ) @ #i3.14) &
+             (EphkRev( tpartner.16 ) @ #i4.15)) ==>
             (F))) &
-         (All #i3.22.
-           (LtkRev( I.3 ) @ #i3.22) ==>
-           ((#i1 < #i3.22) &
-            (Ex #i4.23 tpartner.24.
-              SidI_1( tpartner.24, I.3, R.4, hkI.6 ) @ #i4.23)))) &
-        (All #i3.25. (LtkRev( R.4 ) @ #i3.25) ==> (F)))"
+         (All #i3.18 #i4.19 tpartner.20 kpartner.21.
+           ((SidI_2( tpartner.20, I.3, R.4, hkI.6, hkR.7, kpartner.21 ) @ #i3.18) &
+            (SesskRev( tpartner.20 ) @ #i4.19)) ==>
+           (F))) &
+        (All #i3.22.
+          (LtkRev( I.3 ) @ #i3.22) ==>
+          ((#i1 < #i3.22) &
+           (Ex #i4.23 tpartner.24.
+             SidI_1( tpartner.24, I.3, R.4, hkI.6 ) @ #i4.23))))"
 /* proof based on the same lemma modulo AC */
 /*
 doubly-guarded formula characterizing all attacks:
@@ -720,8 +620,7 @@ doubly-guarded formula characterizing all attacks:
     (Ex #i4.23 tpartner.24.
       (SidI_1( tpartner.24, I.3, R.4, hkI.6 ) @ #i4.23)
      &
-      T)) &
-  (All #i3.25. (LtkRev( R.4 ) @ #i3.25) ==> F)"
+      T))"
 */
 /*
 proof by induction possible over the formula:
@@ -753,47 +652,45 @@ proof by induction possible over the formula:
      (Ex #i4.23 tpartner.24.
        (SidI_1( tpartner.24, I.3, R.4, hkI.6 ) @ #i4.23)
       &
-       T)) &
-   (All #i3.25. (LtkRev( R.4 ) @ #i3.25) ==> F)) &
- (All #i1.26 #i2.27 ttest.28 I.29 R.30 k.31 hkI.32 hkR.33.
-   (SidR_1( ttest.28, I.29, R.30, hkI.32, hkR.33, k.31 ) @ #i1.26) &
-   (K( k.31 ) @ #i2.27)
+       T))) &
+ (All #i1.25 #i2.26 ttest.27 I.28 R.29 k.30 hkI.31 hkR.32.
+   (SidR_1( ttest.27, I.28, R.29, hkI.31, hkR.32, k.30 ) @ #i1.25) &
+   (K( k.30 ) @ #i2.26)
   ==>
-   (Last(#i2.27)) |
-   (Last(#i1.26)) |
-   (Ex #i3.34. (EphkRev( ttest.28 ) @ #i3.34) & All. (Last(#i3.34)) ==> F) |
-   (Ex #i3.35.
-     (SesskRev( ttest.28 ) @ #i3.35)
+   (Last(#i2.26)) |
+   (Last(#i1.25)) |
+   (Ex #i3.33. (EphkRev( ttest.27 ) @ #i3.33) & All. (Last(#i3.33)) ==> F) |
+   (Ex #i3.34.
+     (SesskRev( ttest.27 ) @ #i3.34)
     &
-     All. (Last(#i3.35)) ==> F) |
-   (Ex #i3.36 #i4.37 tpartner.38 lki.39.
-     (SidI_1( tpartner.38, I.29, R.30, lki.39 ) @ #i3.36) &
-     (EphkRev( tpartner.38 ) @ #i4.37)
+     All. (Last(#i3.34)) ==> F) |
+   (Ex #i3.35 #i4.36 tpartner.37 lki.38.
+     (SidI_1( tpartner.37, I.28, R.29, lki.38 ) @ #i3.35) &
+     (EphkRev( tpartner.37 ) @ #i4.36)
     &
-     (All. (Last(#i4.37)) ==> F) & (All. (Last(#i3.36)) ==> F)) |
-   (Ex #i3.40 #i4.41 tpartner.42 kpartner.43.
-     (SidI_2( tpartner.42, I.29, R.30, hkI.32, hkR.33, kpartner.43
-      ) @ #i3.40) &
-     (EphkRev( tpartner.42 ) @ #i4.41)
+     (All. (Last(#i4.36)) ==> F) & (All. (Last(#i3.35)) ==> F)) |
+   (Ex #i3.39 #i4.40 tpartner.41 kpartner.42.
+     (SidI_2( tpartner.41, I.28, R.29, hkI.31, hkR.32, kpartner.42
+      ) @ #i3.39) &
+     (EphkRev( tpartner.41 ) @ #i4.40)
     &
-     (All. (Last(#i4.41)) ==> F) & (All. (Last(#i3.40)) ==> F)) |
-   (Ex #i3.44 #i4.45 tpartner.46 kpartner.47.
-     (SidI_2( tpartner.46, I.29, R.30, hkI.32, hkR.33, kpartner.47
-      ) @ #i3.44) &
-     (SesskRev( tpartner.46 ) @ #i4.45)
+     (All. (Last(#i4.40)) ==> F) & (All. (Last(#i3.39)) ==> F)) |
+   (Ex #i3.43 #i4.44 tpartner.45 kpartner.46.
+     (SidI_2( tpartner.45, I.28, R.29, hkI.31, hkR.32, kpartner.46
+      ) @ #i3.43) &
+     (SesskRev( tpartner.45 ) @ #i4.44)
     &
-     (All. (Last(#i4.45)) ==> F) & (All. (Last(#i3.44)) ==> F)) |
-   (Ex #i3.48.
-     (LtkRev( I.29 ) @ #i3.48)
+     (All. (Last(#i4.44)) ==> F) & (All. (Last(#i3.43)) ==> F)) |
+   (Ex #i3.47.
+     (LtkRev( I.28 ) @ #i3.47)
     &
-     (All. (Last(#i3.48)) ==> F) &
-     ((#i1.26 = #i3.48) |
-      (#i3.48 < #i1.26) |
-      (All #i4.49 tpartner.50.
-        (SidI_1( tpartner.50, I.29, R.30, hkI.32 ) @ #i4.49)
+     (All. (Last(#i3.47)) ==> F) &
+     ((#i1.25 = #i3.47) |
+      (#i3.47 < #i1.25) |
+      (All #i4.48 tpartner.49.
+        (SidI_1( tpartner.49, I.28, R.29, hkI.31 ) @ #i4.48)
        ==>
-        Last(#i4.49)))) |
-   (Ex #i3.51. (LtkRev( R.30 ) @ #i3.51) & All. (Last(#i3.51)) ==> F))"
+        Last(#i4.48)))))"
 */
 simplify
 solve( (#i1, 2)[!Ltk( $R.12, ~lkR.8 )] )
@@ -803,7 +700,7 @@ solve( (#i1, 2)[!Ltk( $R.12, ~lkR.8 )] )
     solve( (#i2.1, 0)[!KU( f_.18,
                            h(<'g'^(~ekR.11*~x.14), x.10, $I.13, $R.12>)
                       )] )
-      case Sessk_revealI
+      case Sessk_reveal_case_1
       solve( splitEqs(1) )
         case split_case_1
         solve( splitEqs(1) )
@@ -835,14 +732,14 @@ maude tool: 'maude'
  checking version: 2.6. OK.
 
 
-analyzing: data/examples/KEA_plus_wPFS.spthy
+analyzing: data/examples/KEA_plus_KI_KCI_wPFS.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/KEA_plus_wPFS.spthy
+analyzed: data/examples/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.320263s
-  keaplus_initiator_key: complete proof (41 steps)
+  processing time: 2.750183s
+  keaplus_initiator_key: attack found (12 steps)
   keaplus_responder_key: attack found (11 steps)
 
 ------------------------------------------------------------------------------
@@ -850,11 +747,11 @@ analyzed: data/examples/KEA_plus_wPFS.spthy
 ==============================================================================
 summary of processed files:
 
-analyzed: data/examples/KEA_plus_wPFS.spthy
+analyzed: data/examples/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.320263s
-  keaplus_initiator_key: complete proof (41 steps)
+  processing time: 2.750183s
+  keaplus_initiator_key: attack found (12 steps)
   keaplus_responder_key: attack found (11 steps)
 
 ==============================================================================

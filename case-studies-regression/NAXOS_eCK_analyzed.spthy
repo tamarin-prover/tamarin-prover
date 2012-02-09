@@ -307,7 +307,7 @@ section{* Finite Variants of the Intruder Rules *}
  rule (modulo AC) inv:
     [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', inv(x) ) ]
 
-section{* The NAXOS Key-Exchange Protocol *}
+section{* NAXOS *}
 
 rule (modulo E) generate_ltk:
    [ Fr( ~lkA ) ]
@@ -1286,7 +1286,7 @@ analyzing: data/examples/NAXOS_eCK.spthy
 analyzed: data/examples/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 12.571959s
+  processing time: 10.242116s
   eCK_initiator_key: complete proof (76 steps)
   eCK_responder_key: complete proof (72 steps)
 
@@ -1298,7 +1298,7 @@ summary of processed files:
 analyzed: data/examples/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 12.571959s
+  processing time: 10.242116s
   eCK_initiator_key: complete proof (76 steps)
   eCK_responder_key: complete proof (72 steps)
 

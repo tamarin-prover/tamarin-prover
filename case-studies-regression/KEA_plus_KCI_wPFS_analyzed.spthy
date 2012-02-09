@@ -774,7 +774,7 @@ analyzing: data/examples/KEA_plus_KCI_wPFS.spthy
 analyzed: data/examples/KEA_plus_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.034713s
+  processing time: 2.812558s
   keaplus_initiator_key: attack found (12 steps)
   keaplus_responder_key: attack found (11 steps)
 
@@ -786,7 +786,7 @@ summary of processed files:
 analyzed: data/examples/KEA_plus_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.034713s
+  processing time: 2.812558s
   keaplus_initiator_key: attack found (12 steps)
   keaplus_responder_key: attack found (11 steps)
 

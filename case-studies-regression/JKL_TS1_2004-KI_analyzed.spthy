@@ -1,4 +1,4 @@
-theory JKL_TS1_2008 begin
+theory JKL_TS1_2004 begin
 
  builtin: diffie-hellman
 
@@ -307,7 +307,7 @@ section{* Finite Variants of the Intruder Rules *}
  rule (modulo AC) inv:
     [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', inv(x) ) ]
 
-section{* Jeong, Katz, Lee : TS1 (2008) *}
+section{* Jeong, Katz, Lee : TS1 (2004) *}
 
 rule (modulo E) generate_ltk:
    [ Fr( ~lk ) ] --> [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
@@ -316,40 +316,28 @@ rule (modulo E) generate_ltk:
 rule (modulo E) Init_1:
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
   --[ SidI_1( ~ekI, $I, $R, ~ekI ) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), !EphkI( ~ekI ), Out( ~ekI ) ]
+   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), !Ephk( ~ekI ), Out( ~ekI ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Init_2:
    [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
-  --[ SidI_2( ~ekI, $I, $R, ~ekI, Y, h(<$I, $R, ~ekI, Y, 'g'^~lkR^~lkI>) )
-  ]->
-   [ !SesskOfI( ~ekI, h(<$I, $R, ~ekI, Y, 'g'^~lkR^~lkI>) ) ]
+  --[ SidI_2( ~ekI, $I, $R, ~ekI, Y, h(<~ekI, Y, 'g'^~lkR^~lkI>) ) ]->
+   [ !Sessk( ~ekI, h(<~ekI, Y, 'g'^~lkR^~lkI>) ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Resp_1:
    [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
-  --[ SidR_1( ~ekR, $I, $R, X, ~ekR, h(<$I, $R, X, ~ekR, 'g'^~lkI^~lkR>) )
-  ]->
-   [
-   Out( ~ekR ), !EphkR( ~ekR ),
-   !SesskOfR( ~ekR, h(<$I, $R, X, ~ekR, 'g'^~lkI^~lkR>) )
+  --[ SidR_1( ~ekR, $I, $R, X, ~ekR, h(<X, ~ekR, 'g'^~lkI^~lkR>) ) ]->
+   [ Out( ~ekR ), !Ephk( ~ekR ), !Sessk( ~ekR, h(<X, ~ekR, 'g'^~lkI^~lkR>) )
    ]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Sessk_revealI:
-   [ !SesskOfI( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Sessk_revealR:
-   [ !SesskOfR( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealI:
-   [ !EphkI( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealR:
-   [ !EphkR( ~ekR ) ] --[ EphkRev( ~ekR ) ]-> [ Out( ~ekR ) ]
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Ltk_reveal:
@@ -424,39 +412,14 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.9, $R.10, ~lkI.11, ~ekI.8 )] )
   case Init_1
   solve( (#i1, 2)[!Pk( $R.10, 'g'^~lkR.13 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.16,
-                           h(<$I.9, $R.10, ~ekI.8, hkR.7, 'g'^(~lkI.11*~lkR.13)>)
+    solve( (#i2.1, 0)[!KU( f_.16, h(<~ekI.8, hkR.7, 'g'^(~lkI.11*~lkR.13)>)
                       )] )
-      case Sessk_revealI_case_1
-      by contradiction // from formulas
-    next
-      case Sessk_revealI_case_2
-      by contradiction // from formulas
-    next
-      case Sessk_revealR_case_1
-      by contradiction // from formulas
-    next
-      case Sessk_revealR_case_2
-      by contradiction // from formulas
-    next
-      case h
-      solve( KU((#vr.41, 0), 'g'^(~lkI.11*~lkR.13)) )
-        case exp
-        solve( KU((#vr.47, 1), ~lkI.11) )
-          case Ltk_reveal
-          by contradiction // from formulas
-        qed
-      next
-        case generate_ltk_case_1
-        solve( (#vr.54, 1)[!KU( f_.55, ~lkR.63 )] )
-          case Ltk_reveal
-          by contradiction // from formulas
-        qed
-      next
-        case generate_ltk_case_2
-        solve( (#vr.54, 1)[!KU( f_.55, ~lkI.62 )] )
-          case Ltk_reveal
-          by contradiction // from formulas
+      case Sessk_reveal_case_3
+      solve( (#vf.14, 0)[!KU( f_.15, ~tid.43 )] )
+        case Resp_1
+        solve( (#vf.51, 0)[!KU( f_.52, ~ekI.8 )] )
+          case Init_1
+          SOLVED (trace found)
         qed
       qed
     qed
@@ -531,39 +494,14 @@ solve( (#i1, 2)[!Ltk( $R.10, ~lkR.11 )] )
   case generate_ltk
   solve( (#i1, 3)[!Pk( $I.12, 'g'^~lkI.13 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.17,
-                           h(<$I.12, $R.10, hkI.6, ~ekR.9, 'g'^(~lkR.11*~lkI.13)>)
+    solve( (#i2.1, 0)[!KU( f_.17, h(<hkI.6, ~ekR.9, 'g'^(~lkR.11*~lkI.13)>)
                       )] )
-      case Sessk_revealI_case_1
-      by contradiction // from formulas
-    next
-      case Sessk_revealI_case_2
-      by contradiction // from formulas
-    next
-      case Sessk_revealR_case_1
-      by contradiction // from formulas
-    next
-      case Sessk_revealR_case_2
-      by contradiction // from formulas
-    next
-      case h
-      solve( KU((#vr.33, 0), 'g'^(~lkR.11*~lkI.13)) )
-        case exp
-        solve( KU((#vr.39, 1), ~lkR.11) )
-          case Ltk_reveal
-          by contradiction // from formulas
-        qed
-      next
-        case generate_ltk_case_1
-        solve( (#vr.46, 1)[!KU( f_.47, ~lkI.55 )] )
-          case Ltk_reveal
-          by contradiction // from formulas
-        qed
-      next
-        case generate_ltk_case_2
-        solve( (#vr.46, 1)[!KU( f_.47, ~lkR.54 )] )
-          case Ltk_reveal
-          by contradiction // from formulas
+      case Sessk_reveal_case_1
+      solve( (#vf.14, 0)[!KU( f_.15, ~tid.34 )] )
+        case Init_1
+        solve( (#vf.43, 0)[!KU( f_.44, ~ekR.9 )] )
+          case Resp_1
+          SOLVED (trace found)
         qed
       qed
     qed
@@ -578,27 +516,27 @@ maude tool: 'maude'
  checking version: 2.6. OK.
 
 
-analyzing: data/examples/JKL_TS1_2008.spthy
+analyzing: data/examples/JKL_TS1_2004-KI.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/JKL_TS1_2008.spthy
+analyzed: data/examples/JKL_TS1_2004-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.471267s
-  JKL2008_1_initiator_key: complete proof (15 steps)
-  JKL2008_1_responder_key: complete proof (15 steps)
+  processing time: 1.203649s
+  JKL2008_1_initiator_key: attack found (7 steps)
+  JKL2008_1_responder_key: attack found (7 steps)
 
 ------------------------------------------------------------------------------
 
 ==============================================================================
 summary of processed files:
 
-analyzed: data/examples/JKL_TS1_2008.spthy
+analyzed: data/examples/JKL_TS1_2004-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.471267s
-  JKL2008_1_initiator_key: complete proof (15 steps)
-  JKL2008_1_responder_key: complete proof (15 steps)
+  processing time: 1.203649s
+  JKL2008_1_initiator_key: attack found (7 steps)
+  JKL2008_1_responder_key: attack found (7 steps)
 
 ==============================================================================
 */

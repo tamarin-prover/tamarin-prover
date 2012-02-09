@@ -316,14 +316,14 @@ rule (modulo E) generate_ltk:
 rule (modulo E) Init_1:
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
   --[ SidI_1( ~ekI, $I, $R, 'g'^~ekI ) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ), !EphkI( ~ekI ), Out( 'g'^~ekI )
+   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ), !Ephk( ~ekI ), Out( 'g'^~ekI )
    ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Init_2:
    [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
   --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<Y^~ekI, 'g'^~lkR^~lkI>) ) ]->
-   [ !SesskOfI( ~ekI, h(<Y^~ekI, 'g'^~lkR^~lkI>) ) ]
+   [ !Sessk( ~ekI, h(<Y^~ekI, 'g'^~lkR^~lkI>) ) ]
   /*
   rule (modulo AC) Init_2:
      [
@@ -332,7 +332,7 @@ rule (modulo E) Init_2:
      ]
     --[ SidI_2( ~ekI, $I.3, $R.4, hkI.6, Y.1, h(<x.2, 'g'^(~lkI.5*~x.7)>) )
     ]->
-     [ !SesskOfI( ~ekI, h(<x.2, 'g'^(~lkI.5*~x.7)>) ) ]
+     [ !Sessk( ~ekI, h(<x.2, 'g'^(~lkI.5*~x.7)>) ) ]
   
     variants (modulo AC)
     1. ~ekI  = ~ekI.25
@@ -364,8 +364,8 @@ rule (modulo E) Resp_1:
    [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
   --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<X^~ekR, 'g'^~lkI^~lkR>) ) ]->
    [
-   Out( 'g'^~ekR ), !EphkR( ~ekR ),
-   !SesskOfR( ~ekR, h(<X^~ekR, 'g'^~lkI^~lkR>) )
+   Out( 'g'^~ekR ), !Ephk( ~ekR ),
+   !Sessk( ~ekR, h(<X^~ekR, 'g'^~lkI^~lkR>) )
    ]
   /*
   rule (modulo AC) Resp_1:
@@ -374,8 +374,8 @@ rule (modulo E) Resp_1:
     SidR_1( ~ekR, $I.5, $R.3, X.1, 'g'^~ekR, h(<x.2, 'g'^(~lkR.4*~x.6)>) )
     ]->
      [
-     Out( 'g'^~ekR ), !EphkR( ~ekR ),
-     !SesskOfR( ~ekR, h(<x.2, 'g'^(~lkR.4*~x.6)>) )
+     Out( 'g'^~ekR ), !Ephk( ~ekR ),
+     !Sessk( ~ekR, h(<x.2, 'g'^(~lkR.4*~x.6)>) )
      ]
   
     variants (modulo AC)
@@ -404,20 +404,12 @@ rule (modulo E) Resp_1:
        x.2   = x.31^(x.32*inv(x.33))
   */
 
-rule (modulo E) Sessk_revealI:
-   [ !SesskOfI( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Sessk_revealR:
-   [ !SesskOfR( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealI:
-   [ !EphkI( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Ephk_revealR:
-   [ !EphkR( ~ekR ) ] --[ EphkRev( ~ekR ) ]-> [ Out( ~ekR ) ]
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Ltk_reveal:
@@ -531,16 +523,16 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.11, $R.12, ~lkI.13, hkI.6 )] )
   solve( (#i1, 2)[!Pk( $R.12, 'g'^~x.15 )] )
     case generate_ltk
     solve( (#i2.1, 0)[!KU( f_.18, h(<x.10, 'g'^(~lkI.13*~x.15)>) )] )
-      case Sessk_revealI_case_1
+      case Sessk_reveal_case_1
       by contradiction // from formulas
     next
-      case Sessk_revealI_case_2
+      case Sessk_reveal_case_2
       by contradiction // from formulas
     next
-      case Sessk_revealR_case_1
+      case Sessk_reveal_case_3
       by contradiction // from formulas
     next
-      case Sessk_revealR_case_2
+      case Sessk_reveal_case_4
       by contradiction // from formulas
     next
       case h
@@ -561,19 +553,19 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.11, $R.12, ~lkI.13, hkI.6 )] )
                     solve( KU((#vr.43, 0), 'g'^(~ekI.112*~ekR.113)) )
                       case Init_1
                       solve( (#vr.126, 1)[!KU( f_.127, ~ekR.139 )] )
-                        case Ephk_revealR
+                        case Ephk_reveal
                         by contradiction // from formulas
                       qed
                     next
                       case Resp_1
                       solve( (#vr.131, 1)[!KU( f_.132, ~ekI.147 )] )
-                        case Ephk_revealI
+                        case Ephk_reveal
                         by contradiction // from formulas
                       qed
                     next
                       case exp
                       solve( KU((#vr.117, 1), ~ekI.112) )
-                        case Ephk_revealI
+                        case Ephk_reveal
                         by contradiction // from formulas
                       qed
                     qed
@@ -604,19 +596,19 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.11, $R.12, ~lkI.13, hkI.6 )] )
                   solve( KU((#vr.43, 0), 'g'^(~ekI.111*~ekR.112)) )
                     case Init_1
                     solve( (#vr.125, 1)[!KU( f_.126, ~ekR.138 )] )
-                      case Ephk_revealR
+                      case Ephk_reveal
                       by contradiction // from formulas
                     qed
                   next
                     case Resp_1
                     solve( (#vr.130, 1)[!KU( f_.131, ~ekI.146 )] )
-                      case Ephk_revealI
+                      case Ephk_reveal
                       by contradiction // from formulas
                     qed
                   next
                     case exp
                     solve( KU((#vr.116, 1), ~ekI.111) )
-                      case Ephk_revealI
+                      case Ephk_reveal
                       by contradiction // from formulas
                     qed
                   qed
@@ -646,19 +638,19 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.11, $R.12, ~lkI.13, hkI.6 )] )
                   solve( KU((#vr.43, 0), 'g'^(~ekI.111*~ekR.112)) )
                     case Init_1
                     solve( (#vr.125, 1)[!KU( f_.126, ~ekR.138 )] )
-                      case Ephk_revealR
+                      case Ephk_reveal
                       by contradiction // from formulas
                     qed
                   next
                     case Resp_1
                     solve( (#vr.130, 1)[!KU( f_.131, ~ekI.146 )] )
-                      case Ephk_revealI
+                      case Ephk_reveal
                       by contradiction // from formulas
                     qed
                   next
                     case exp
                     solve( KU((#vr.116, 1), ~ekI.111) )
-                      case Ephk_revealI
+                      case Ephk_reveal
                       by contradiction // from formulas
                     qed
                   qed
@@ -785,16 +777,16 @@ solve( (#i1, 2)[!Ltk( $R.11, ~lkR.12 )] )
   solve( (#i1, 3)[!Pk( $I.13, 'g'^~x.14 )] )
     case generate_ltk
     solve( (#i2.1, 0)[!KU( f_.18, h(<x.10, 'g'^(~lkR.12*~x.14)>) )] )
-      case Sessk_revealI_case_1
+      case Sessk_reveal_case_1
       by contradiction // from formulas
     next
-      case Sessk_revealI_case_2
+      case Sessk_reveal_case_2
       by contradiction // from formulas
     next
-      case Sessk_revealR_case_1
+      case Sessk_reveal_case_3
       by contradiction // from formulas
     next
-      case Sessk_revealR_case_2
+      case Sessk_reveal_case_4
       by contradiction // from formulas
     next
       case h
@@ -811,19 +803,19 @@ solve( (#i1, 2)[!Ltk( $R.11, ~lkR.12 )] )
                 solve( KU((#vr.34, 0), 'g'^(~ekR.87*~ekI.88)) )
                   case Init_1
                   solve( (#vr.101, 1)[!KU( f_.102, ~ekR.113 )] )
-                    case Ephk_revealR
+                    case Ephk_reveal
                     by contradiction // from formulas
                   qed
                 next
                   case Resp_1
                   solve( (#vr.106, 1)[!KU( f_.107, ~ekI.123 )] )
-                    case Ephk_revealI
+                    case Ephk_reveal
                     by contradiction // from formulas
                   qed
                 next
                   case exp
                   solve( KU((#vr.92, 1), ~ekR.87) )
-                    case Ephk_revealR
+                    case Ephk_reveal
                     by contradiction // from formulas
                   qed
                 qed
@@ -845,19 +837,19 @@ solve( (#i1, 2)[!Ltk( $R.11, ~lkR.12 )] )
               solve( KU((#vr.34, 0), 'g'^(~ekR.86*~ekI.87)) )
                 case Init_1
                 solve( (#vr.100, 1)[!KU( f_.101, ~ekR.112 )] )
-                  case Ephk_revealR
+                  case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case Resp_1
                 solve( (#vr.105, 1)[!KU( f_.106, ~ekI.122 )] )
-                  case Ephk_revealI
+                  case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case exp
                 solve( KU((#vr.91, 1), ~ekR.86) )
-                  case Ephk_revealR
+                  case Ephk_reveal
                   by contradiction // from formulas
                 qed
               qed
@@ -878,19 +870,19 @@ solve( (#i1, 2)[!Ltk( $R.11, ~lkR.12 )] )
               solve( KU((#vr.34, 0), 'g'^(~ekR.86*~ekI.87)) )
                 case Init_1
                 solve( (#vr.100, 1)[!KU( f_.101, ~ekR.112 )] )
-                  case Ephk_revealR
+                  case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case Resp_1
                 solve( (#vr.105, 1)[!KU( f_.106, ~ekI.122 )] )
-                  case Ephk_revealI
+                  case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case exp
                 solve( KU((#vr.91, 1), ~ekR.86) )
-                  case Ephk_revealR
+                  case Ephk_reveal
                   by contradiction // from formulas
                 qed
               qed
@@ -919,7 +911,7 @@ analyzing: data/examples/UM_wPFS.spthy
 analyzed: data/examples/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.012823s
+  processing time: 3.409851s
   wPFS_initiator_key: complete proof (52 steps)
   wPFS_responder_key: complete proof (43 steps)
 
@@ -931,7 +923,7 @@ summary of processed files:
 analyzed: data/examples/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.012823s
+  processing time: 3.409851s
   wPFS_initiator_key: complete proof (52 steps)
   wPFS_responder_key: complete proof (43 steps)
 

@@ -817,7 +817,7 @@ analyzing: data/examples/KEA_plus.spthy
 analyzed: data/examples/KEA_plus.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.415313s
+  processing time: 3.686649s
   keaplus_initiator_key: complete proof (31 steps)
   keaplus_responder_key: complete proof (31 steps)
 
@@ -829,7 +829,7 @@ summary of processed files:
 analyzed: data/examples/KEA_plus.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.415313s
+  processing time: 3.686649s
   keaplus_initiator_key: complete proof (31 steps)
   keaplus_responder_key: complete proof (31 steps)
 

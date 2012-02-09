@@ -899,7 +899,7 @@ analyzing: data/examples/NAXOS_broken_eCK_variant.spthy
 analyzed: data/examples/NAXOS_broken_eCK_variant.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.066822s
+  processing time: 6.536123s
   eCK_initiator_key: attack found (17 steps)
   eCK_responder_key: attack found (14 steps)
 
@@ -911,7 +911,7 @@ summary of processed files:
 analyzed: data/examples/NAXOS_broken_eCK_variant.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.066822s
+  processing time: 6.536123s
   eCK_initiator_key: attack found (17 steps)
   eCK_responder_key: attack found (14 steps)
 
