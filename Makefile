@@ -56,7 +56,7 @@ KEA=KEA_plus.spthy KEA_plus_KCI.spthy KEA_plus_wPFS.spthy KEA_plus_KCI_wPFS.spth
 NAXOS=NAXOS_broken_eCK_variant.spthy NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy 
 NAXOS_SIMPLIFIED=NAXOS_PFS_initiator_simplified.spthy 
 
-UM=UM_eCK_noKCI.spthy UM_eCK.spthy UM_wPFS.spthy
+UM=UM_eCK_noKCI.spthy UM_eCK.spthy UM_wPFS.spthy UM_PFS.spthy
 
 SDH=SignedDH.spthy SignedDH_eCK.spthy
 
