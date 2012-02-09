@@ -121,7 +121,7 @@ loadTheories thDir thLoader = do
     thPaths <- filter (".spthy" `isSuffixOf`) <$> getDirectoryContents thDir
     theories <- catMaybes <$> mapM loadThy (zip [1..] (map (thDir </>) thPaths))
     putStrLn ""
-    putStrLn "Finished loading theories...server ready."
+    putStrLn "Finished loading theories ... server ready."
     return $ M.fromList theories
   where
     -- Create image directory

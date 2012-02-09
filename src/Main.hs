@@ -129,7 +129,7 @@ addEmptyArg a = addArg a ""
 mainMode :: Mode [(String,String)]
 mainMode = 
     -- translateMode { modeGroupModes = toGroup [interactiveMode] }
-    translateMode { modeGroupModes = toGroup [intruderMode, interactiveMode] }
+    translateMode { modeGroupModes = toGroup [interactiveMode, intruderMode] }
   where 
 
     defaultMode name help = Mode
@@ -146,7 +146,7 @@ mainMode =
 
     translateMode =
       ( defaultMode programName 
-          "Parse, translate, and prove security protocols that use modular exponentation."
+          "Batch mode for analyzing security protocols using DH-exponentiation."
       )
       { modeCheck      = updateArg "mode" "translate"
       , modeArgs       = Just $ flagArg (updateArg "inFile") "FILES"
@@ -156,11 +156,11 @@ mainMode =
               -- [ flagNone ["html"] (addEmptyArg "html")
               --     "generate HTML visualization of proofs"
 
-              [ flagNone ["no-compress"] (addEmptyArg "noCompress")
-                  "Do not use compressed sequent visualization"
+              -- [ flagNone ["no-compress"] (addEmptyArg "noCompress")
+                  -- "Do not use compressed sequent visualization"
 
-              , flagNone ["parse-only"] (addEmptyArg "parseOnly")
-                  "Just parse the input file and pretty print it as-is"
+              [ flagNone ["parse-only"] (addEmptyArg "parseOnly")
+                  "Parse the input file and pretty-print it as-is"
               ] ++
               outputFlags ++
               toolFlags 
@@ -177,7 +177,7 @@ mainMode =
 
     intruderMode =
       ( defaultMode "intruder" 
-          "Compute the variants of the intruder rules for DH."
+          "Compute the variants of the intruder rules for DH-exponentiation."
       )
       { modeArgs = Nothing 
       , modeCheck = updateArg "mode" "intruder"
@@ -190,25 +190,26 @@ mainMode =
       ]
 
     toolFlags = 
-      [ flagOpt "dot" ["with-dot"] (updateArg "withDot") "FILE" "Path to GraphViz 'dot' tool"
-      , flagOpt "maude" ["with-maude"] (updateArg "withMaude") "FILE"  "Path to 'maude' rewriting tool"
+      -- [ flagOpt "dot" ["with-dot"] (updateArg "withDot") "FILE" "Path to GraphViz 'dot' tool"
+      [ flagOpt "maude" ["with-maude"] (updateArg "withMaude") "FILE"  "Path to 'maude' rewriting tool"
       ]
 
     interactiveFlags =
       [ flagOpt "" ["port","p"] (updateArg "port") "PORT" "Port to listen on"
-      , flagOpt "" ["datadir"]  (updateArg "datadir") "DATADIR" "Directory with data"
+      -- , flagOpt "" ["datadir"]  (updateArg "datadir") "DATADIR" "Directory with data"
       , flagNone ["debug"] (addEmptyArg "debug") "Show server debugging output"
-      , flagNone ["autosave"] (addEmptyArg "autosave") "Automatically save proof state"
-      , flagNone ["loadstate"] (addEmptyArg "loadstate") "Load proof state if present"
+      -- , flagNone ["autosave"] (addEmptyArg "autosave") "Automatically save proof state"
+      -- , flagNone ["loadstate"] (addEmptyArg "loadstate") "Load proof state if present"
       ] ++
-      theoryLoadFlags
+      theoryLoadFlags ++
+      toolFlags
 
     interactiveMode =
       ( defaultMode "interactive"
-          "Start a server and edit theories interactively."
+          "Start a web-server for interactively constructing the security proofs."
       )
-      { modeArgs = Just $ flagArg (updateArg "workDir") "WORKDIR"
-      , modeCheck = updateArg "mode" "interactive"
+      { modeArgs       = Just $ flagArg (updateArg "workDir") "WORKDIR"
+      , modeCheck      = updateArg "mode" "interactive"
       , modeGroupFlags = toGroup interactiveFlags
       }
 
@@ -220,10 +221,20 @@ errHelpExit msg = do
   putStrLn $ ""
   putStrLn $ showText (Wrap lineWidth) 
            $ helpText HelpFormatDefault mainMode
+  examplePath  <- getDataFileName "examples"
+  let tutorialPath = examplePath </> "Tutorial.spthy"
+      csf12Path = examplePath </> "csf12" </> "*.spthy"
+      csf12Cmd  = programName ++ " " ++ csf12Path ++ " --prove +RTS -N -RTS"
+      separator = putStrLn $ replicate 65 '-'
+  separator
+  putStrLn $ "For example protocol models see: " ++ examplePath
+  putStrLn $ "Their syntax is explained in:    " ++ tutorialPath
   putStrLn $ ""
-  examplePath <- getDataFileName "examples"
-  putStrLn $ "for example protocol models see: " ++ examplePath
+  putStrLn $ "To run all case-studies from our CSF'12 paper, use"
+  putStrLn $ "  " ++ csf12Cmd
+  separator
   exitFailure
+  where
 
 ------------------------------------------------------------------------------
 -- Main mode execution
@@ -289,19 +300,19 @@ defaultIntrVariantsPath = "intruder_variants_dh.spthy"
 theoryLoadFlags :: [Flag Arguments]
 theoryLoadFlags = 
   [ flagNone ["prove"] (addEmptyArg "addProofs")
-      "Try to prove lemmas (implies --variants)"
+      "Attempt to prove all security properties"
 
   , flagOpt "dfs" ["stop-on-attack"] (updateArg "stopOnAttack") "DFS|BFS|NONE"
-      "Method to stop proof search if an attack is found (default DFS)"
+      "How to search for attacks (default DFS)"
 
-  , flagOpt "5" ["bound", "b"]   (updateArg "bound") "INT"
-      "Bound the depth of the proofs"
+  -- , flagOpt "5" ["bound", "b"]   (updateArg "bound") "INT"
+      -- "Bound the depth of the proofs"
 
   --, flagOpt "" ["intruder","i"] (updateArg "intruderVariants") "FILE"
   --    "Cached intruder rules to use"
 
   , flagOpt "" ["defines","D"] (updateArg "defines") "STRING"
-      "Defined flags for pseudo-preprocessor."
+      "Define flags for pseudo-preprocessor."
   ]
 
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
@@ -415,25 +426,33 @@ dotPath = fromMaybe "dot" . findArg "withDot"
 
 -- | Prove lemmas interactively.
 interactive :: Arguments -> IO ()
-interactive as
-  | null workDir = errHelpExit "no working directory specified"
-  | otherwise    = do
-      ensureGraphVizDot as
-      ensureMaude as
-      putStrLn ""
-      port <- readPort
-      dataDir <- readDataDir
-      putStrLn $ intercalate "\n"
-        [ "The server is running on localhost with port " ++ show port
-        , "Browse to http://localhost:" ++ show port ++ " in order to begin." ]
-      withWebUI (head workDir) (argExists "loadstate" as) (argExists "autosave" as)
-        (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
-        (argExists "debug" as) (Just dataDir) (Warp.run port)
+interactive as = case findArg "workDir" as of
+    Nothing       -> errHelpExit "no working directory specified"
+    Just workDir0 -> do
+      -- determine working directory
+      wdIsDir  <- doesDirectoryExist workDir0
+      wdIsFile <- doesFileExist workDir0
+      if (wdIsDir || wdIsFile)
+        then do
+          let workDir | wdIsDir   = workDir0
+                      | otherwise = takeDirectory workDir0
+          ensureGraphVizDot as
+          ensureMaude as
+          putStrLn ""
+          port <- readPort
+          dataDir <- readDataDir
+          putStrLn $ intercalate "\n"
+            [ "The server is starting up on localhost with port " ++ show port ++ "."
+            , "Browse to http://localhost:" ++ show port ++ " once the server is ready."
+            , ""
+            , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
+            ]
+          withWebUI workDir (argExists "loadstate" as) (argExists "autosave" as)
+            (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
+            (argExists "debug" as) (Just dataDir) (Warp.run port)
+        
+        else errHelpExit $ "directory '" ++ workDir0 ++ "' does not exist."
   where
-    -- Handles to arguments
-    -----------------------
-    workDir = findArg "workDir" as
-
     -- Datadir argument
     readDataDir =
       case findArg "datadir" as of
