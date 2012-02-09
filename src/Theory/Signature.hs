@@ -2,7 +2,7 @@
 {-# LANGUAGE StandaloneDeriving, TypeSynonymInstances #-}
 {-# LANGUAGE TypeOperators,FlexibleInstances #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Simon Meier <iridcode@gmail.com>

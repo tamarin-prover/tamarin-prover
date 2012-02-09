@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 -- |
--- Copyright   : (c) 2010, 2011 Simon Meier
+-- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Simon Meier <iridcode@gmail.com>

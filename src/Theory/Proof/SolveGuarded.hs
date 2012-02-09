@@ -1,4 +1,13 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleInstances, TemplateHaskell, StandaloneDeriving, TypeSynonymInstances #-}
+-- |
+-- Copyright   : (c) 2011, 2012 Benedikt Schmidt & Simon Meier
+-- License     : GPL v3 (see LICENSE)
+-- 
+-- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
+-- Portability : GHC only
+--
+-- Ensuring consistency of a constraint system (sequent) with guarded trace
+-- formulas.
 module Theory.Proof.SolveGuarded (
     saturateGuarded
   , openDisjunctionGoals

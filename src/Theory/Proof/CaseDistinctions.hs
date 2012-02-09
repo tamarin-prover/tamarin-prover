@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell, TypeSynonymInstances, FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving #-}
 -- |
--- Copyright   : (c) 2011 Simon Meier
+-- Copyright   : (c) 2011,2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Simon Meier <iridcode@gmail.com>

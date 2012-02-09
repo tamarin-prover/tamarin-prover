@@ -1,7 +1,7 @@
 {- |
 Module      :  Web.Instances
 Description :  Binary instances for making the server state persistent.
-Copyright   :  (c) 2011 Benedikt Schmidt
+Copyright   :  (c) 2011, 2012 Benedikt Schmidt & Simon Meier
 License     :  GPL-3
 
 Stability   :  experimental

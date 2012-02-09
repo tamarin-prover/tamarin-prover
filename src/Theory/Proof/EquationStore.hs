@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeOperators, TemplateHaskell, DeriveDataTypeable, ScopedTypeVariables, TupleSections #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>

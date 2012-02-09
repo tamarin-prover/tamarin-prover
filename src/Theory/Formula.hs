@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleContexts, BangPatterns, StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, TypeSynonymInstances #-}
 -- |
--- Copyright   : (c) 2010, 2011 Simon Meier & Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
