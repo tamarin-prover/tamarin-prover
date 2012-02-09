@@ -1,17 +1,21 @@
 theory A_GDH_2
 begin
 
-section{* A-GDH.2 cliques protocol. Modeled after Kuesters CSF version,
-but now for unbounded sessions. *}
+section{* A-GDH.2 cliques *}
+
+/*
+ * Protocol:	A-GDH.2 cliques
+ * Modeler: 	Cas Cremers
+ * Date: 	January 2012
+ * Source:	Modeled after Kuesters and Truderung, CSF 2009, but intended to cover unbounded sessions.
+ *
+ * Status: 	incomplete model
+ */
 
 // First some generic infrastructure
 // Symmetric long-term shared keys.
 rule setup_sym_key_norefl:
- [ Fr(~k)
- // , Fr(<'setup_sym_key_norefl', $A, $B>)  // TODO: Use formulas to ensure
-                                            // uniqueness
- // , Fr(<'setup_sym_key_norefl', $B, $A>)
- ]
+ [ Fr(~k) ]
  -->
  [ !LTK($A,$B,~k)
  , !LTK($B,$A,~k)

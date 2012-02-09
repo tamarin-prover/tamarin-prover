@@ -3,6 +3,12 @@ theory WMF_simplified begin
 builtin: symmetric-encryption
 
 /*
+ * Protocol:	WMF (simplified)
+ * Modeler: 	Simon Meier
+ * Date: 	January 2012
+ */
+
+/*
 typing and other invariants
 ---------------------------
 

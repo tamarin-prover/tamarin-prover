@@ -5,11 +5,15 @@ builtin: diffie-hellman, signing
 
 section{* The Signed Diffie-Hellman Protocol in the eCK model *}
 
- * The eCK model is described in:
+/*
+ * Protocol:	Signed Diffie-Hellman
+ * Modeler: 	Simon Meier, Benedikt Schmidt
+ * Date: 	January 2012
+ * Property:	eCK model
+ * 		"Stronger Security of Authenticated Key Exchange"
+ * 		LaMacchia, Lauter, Mityagin, 2007
  *
- * "Stronger Security of Authenticated Key Exchange"
- * B.A. LaMacchia and K. Lauter and A. Mityagin
- * ProvSec, LNCS 4784, 2007
+ * Status: 	working
  */
 
 // Public key infrastructure

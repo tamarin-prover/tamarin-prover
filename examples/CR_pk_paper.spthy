@@ -3,8 +3,15 @@ begin
 
 section{* The Running Example of Our CSF 10 Paper *}
 
-builtin: asymmetric-encryption
+/*
+ * Protocol:	Example
+ * Modeler: 	Simon Meier, Benedikt Schmidt
+ * Date: 	June 2011
+ *
+ * Status: 	working
+ */
 
+builtin: asymmetric-encryption
 
 /*
 anb-proto CR

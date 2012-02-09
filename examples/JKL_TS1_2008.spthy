@@ -5,10 +5,16 @@ builtin: hashing, diffie-hellman
 
 section{* Jeong, Katz, Lee : TS1 (2008) *}
 /*
- * From:
- * One-Round Protocols for Two-Party Authenticated Key Exchange
+ * Protocol:	JKL-TS1-2008
+ * Modeler: 	Cas Cremers
+ * Date: 	January 2012
+ * Source:	"One-Round Protocols for Two-Party Authenticated Key Exchange"
+ * 		Jeong, Katz, Lee, 2008
+ *		Note: Although the paper title is the same as the 2004
+ *		original, the updated version from 2008 includes
+ *		modified protocols and security models.
  *
- * Version from January 15, 2008
+ * Status: 	working
  */
 
 /* Protocol rules */

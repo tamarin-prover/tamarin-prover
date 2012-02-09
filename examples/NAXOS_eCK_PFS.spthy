@@ -3,14 +3,16 @@ begin
 
 builtin: diffie-hellman, hashing
 
-section{* The NAXOS Key-Exchange Protocol *}
+section{* NAXOS *}
 
 /*
- * From:
+ * Protocol:	NAXOS
+ * Modeler: 	Cas Cremers, Benedikt Schmidt
+ * Date: 	January 2012
+ * Source:	"Stronger Security of Authenticated Key Exchange"
+ * 		LaMacchia, Lauter, Mityagin, 2007
  *
- * "Stronger Security of Authenticated Key Exchange"
- * B.A. LaMacchia and K. Lauter and A. Mityagin
- * ProvSec, LNCS 4784, 2007
+ * Status: 	working
  */
 
 /* Protocol rules */

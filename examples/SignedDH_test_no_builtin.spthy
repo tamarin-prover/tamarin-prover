@@ -3,6 +3,14 @@ begin
 
 section{* The Signed Diffie-Hellman Protocol *}
 
+/*
+ * Protocol:	Signed Diffie-Hellman
+ * Modeler: 	Simon Meier, Benedikt Schmidt
+ * Date: 	January 2012
+ *
+ * Status: 	working
+ */
+
 builtin: diffie-hellman
 
 functions: verify/3, sign/2, pk/1, true/0

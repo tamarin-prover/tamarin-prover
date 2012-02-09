@@ -8,11 +8,14 @@ functions: mac/2
 section{* The Station-To-Station Protocol (MAC version, fix UKS attack with proof-of-possession of exponent) *}
 
 /*
- * From:
+ * Protocol:	Station-To-Station, MAC variant: fix with CA Proof-of-Possession check
+ * Modeler: 	Cas Cremers
+ * Date: 	January 2012
+ * Source:	"Unknown Key-Share Attacks on the Station-to-Station (STS) Protocol"
+ *		Blake-Wilson, Simon and Menezes, Alfred
+ * 		PKC '99, Springer, 1999
  *
- * "Unknown Key-Share Attacks on the Station-to-Station (STS) Protocol"
- * Blake-Wilson, Simon and Menezes, Alfred
- * PKC '99, Springer, 1999
+ * Status: 	working
  */
 
 // Public key infrastructure

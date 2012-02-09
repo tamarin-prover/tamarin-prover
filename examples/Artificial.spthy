@@ -1,6 +1,14 @@
 theory Example_for_CSF_12
 begin
 
+/*
+ * Protocol:	Example
+ * Modeler: 	Simon Meier, Benedikt Schmidt
+ * Date: 	January 2012
+ *
+ * Status: 	working
+ */
+
 builtin: symmetric-encryption
 
 rule Step1:

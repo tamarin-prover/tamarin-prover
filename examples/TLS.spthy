@@ -5,6 +5,15 @@ builtin: hashing, symmetric-encryption, asymmetric-encryption, signing
 
 section{* TLS Handshake *}
 
+/*
+ * Protocol:	TLS Handshake
+ * Modeler: 	Simon Meier
+ * Date: 	January 2012
+ * Source:	Modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy.
+ *
+ * Status: 	working
+ */
+
 text{*
   Modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy. Notable
   differences are:

@@ -4,9 +4,15 @@ begin
 builtin: hashing, diffie-hellman
 
 section{* The KEA+ Protocol *}
-/* From: 
- * Security Analysis of KEA Authenticated Key Exchange Protocol
- * Lauter, Mityagin, 2006 */
+/*
+ * Protocol:	KEA+
+ * Modeler: 	Cas Cremers
+ * Date: 	January 2012
+ * Source:	"Security Analysis of KEA Authenticated Key Exchange Protocol"
+ * 		Lauter, Mityagin, 2006
+ *
+ * Status: 	working
+ */
 
 /* Protocol rules */
 

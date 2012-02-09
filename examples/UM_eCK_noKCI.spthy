@@ -5,6 +5,17 @@ builtin: hashing, diffie-hellman
 
 section{* The Unified Model (UM) Key-Exchange Protocol *}
 
+/*
+ * Protocol:	Unified Model (UM)
+ * Modeler: 	Cas Cremers
+ * Date: 	January 2012
+ * Source:	"Authenticated Diffie-Hellman Key Agreement Protocols"
+ * 		Simon Blake-Wilson and Alfred Menezes
+ * 		LNCS 1556, 1999
+ *
+ * Status: 	working
+ */
+
 /* Protocol rules */
 
 rule generate_ltk:
