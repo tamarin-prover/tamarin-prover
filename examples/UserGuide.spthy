@@ -1,23 +1,36 @@
-theory CR_Paper
+/*
+
+Protocol:	Tutorial
+Modeler: 	Simon Meier, Benedikt Schmidt
+Date: 	        February 2012
+
+
+Introduction
+============
+
+This tutorial assumes that you have a copy of our CSF'12 paper on "Automated
+Analysis of Diffie-Hellman Protocols and Advanced Security Properties". Drop
+us a mail, if you would like to receive a copy.
+
+The input files for the tamarin prover have the extension .spthy, which is
+short for 'security protocol theory'. A security protocol theory specifies
+
+  1. the signature and equational theory to use for the message algebra,
+  2. the set of set of multiset rewriting rules modeling the protocol and
+     the adversary capabilties, and
+  3. the guarded trace properties whose validity for this set of multiset
+     rewriting rules we want to check.
+
+We explain each of these parts where they occur in the following security
+protocol theory. As you probably noticed comments are C-style: we use /*  */
+for delimitiing multi-line comments and // for line-comments.
+
+Every security protocol theory starts with the following header.
+*/
+
+theory UserGuide
 begin
 
-section{* The Running Example of Our CSF 10 Paper *}
-
-/*
- * Protocol:	Example
- * Modeler: 	Simon Meier, Benedikt Schmidt
- * Date: 	June 2011
- *
- * Status: 	working
- */
-
-/*
-anb-proto CR
-{
-  1. C -> S: encA{k}pk(lts(S))
-  2. C <- S: h(k)
-}
-*/
 
 // you can locally define flags
 #define R1
