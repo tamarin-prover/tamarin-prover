@@ -28,6 +28,8 @@ import           Control.Monad
 import           Control.Applicative hiding (empty, many, optional)
 import           Control.Category
 
+import           Extension.Prelude
+
 import           Text.Parsec.Pos
 import           Text.Parsec hiding (token, (<|>), string )
 import qualified Text.Parsec as P
@@ -347,7 +349,6 @@ term lit = asum
            | (sym,0) <- funSigForMaudeSig maudeSig ]
 
 -- | A left-associative sequence of exponentations.
---   FIXME: only accept if diffie-hellman enabled (see also mult and inv)
 expterm :: Parser (Term l) -> Parser (Term l)
 expterm lit = chainl1 (term lit) ((\a b -> FApp (NonAC expSym) [a,b]) <$ kw HAT)
 
@@ -358,7 +359,8 @@ multterm lit = chainl1 (expterm lit) ((\a b -> FApp (AC Mult) [a,b]) <$ kw STAR)
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Parser (Term l) -> Parser (Term l)
-tupleterm lit = chainr1 (multterm lit) ((\a b -> FApp (NonAC pairSym) [a,b])<$ kw COMMA)
+tupleterm lit = chainr1 pterm ((\a b -> FApp (NonAC pairSym) [a,b])<$ kw COMMA)
+  where pterm = ifM (enableDH <$> getState) (multterm lit) (term lit)
 
 -- | Parse a fact.
 fact :: Parser (Term l) -> Parser (Fact (Term l))
