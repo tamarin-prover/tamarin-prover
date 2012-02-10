@@ -1,0 +1,157 @@
+theory DJB
+begin
+
+builtin: diffie-hellman, hashing, symmetric-encryption
+
+section{* DJB challenge protocol *}
+
+/*
+ * Protocol:	DJB challenge protocol
+ * Modeler: 	Cas Cremers
+ * Date: 	January 2012
+ *
+ * Status: 	?
+ */
+
+/*
+Here's the protocol I actually have in mind. Notation:
+
+  * c is the long-term client secret;
+  * s is the long-term server secret;
+  * c' is a short-term client secret for this session;
+  * s' is a short-term server secret for this session;
+  * [m]_xy means m encrypted and authenticated using a hash of g^xy
+    as a secret key and using a fresh nonce.
+
+Nonces are separated between different protocol elements, but this is
+omitted from the notation. The protocol has three steps:
+
+  (1) Client sends to server: g^c',[0]_sc'.
+  (2) Server sends to client: [g^s',cookie]_sc'.
+  (3) Client sends to server: g^c',cookie,[g^c,[g^c']_sc]_s'c'.
+
+After that it's supposed to be safe to send any number of messages m as
+[m]_c's'. You can of course think of this as a key-exchange protocol
+where the key is g^c's'.
+
+I realize, and don't care, that subsequent revelation (or guessing) of
+c' or s' allows an attacker to decrypt messages without c and without s.
+I do care about forward secrecy---the effect of subsequent revelation of
+the long-term keys after the short-term keys c' and s' have been erased.
+In particular, revealing s allows the attacker to decrypt [0]_sc' and
+[g^s',cookie]_sc', obtaining 0 and g^s' and the cookie, but doesn't
+allow the attacker to decrypt [g^c,[g^c']_sc]_s'c' or other messages.
+
+I also care about secrecy, including forward secrecy, including active
+forward secrecy, of the client identity g^c. The attacker---even given s
+after c' and s' have been erased---can't figure out g^c, can't verify a
+claim for g^c, and can't even verify a claim for c. "Active" means that
+the attacker doesn't do better by modifying messages.
+
+The authentication of [g^s',cookie]_sc' convinces the client that the
+server is live (the possessor of s has seen g^c') and vouches for g^s'.
+The authentication of [g^c,[g^c']_sc]_s'c' convinces the server that the
+client is live. The authentication of [g^c']_sc convinces the server
+that the client vouches for g^c'. The cookie and the repetition of g^c'
+let the server avoid keeping state before step 3, the moment that the
+server knows who the client is.
+*/
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltk) ] 
+  -->
+  [ !Ltk($A, ~ltk), !Pk($A, 'g'^~ltk), Out('g'^~ltk) ]
+
+// Protocol
+rule Init_1:
+  [ Fr(~ekI), !Ltk($I, ~ltkI), !Pk($R, pkR) ]
+  -->
+  [ Init_1( $I, $R, ~ltkI, ~ekI, pkR )
+  , Out( <$I, $R, 'g' ^ ~ekI, senc{ '0' }(pkR^~ekI)> ) ]
+
+rule Init_2:
+  [ Init_1( $I, $R, ~ltkI, ~ekI, pkR )
+  , In( <$R, $I, senc{ < Y, cookie > }(pkR^~ekI) > ) ]
+  --[ AcceptedI(~ekI, $I, $R, 'g'^~ekI, Y, Y^~ekI) ]->
+  [ !SessionKey(~ekI, $I, $R, Y^~ekI )
+  , Out( <$I, $R, 'g' ^ ~ekI, cookie, 
+    senc{ 'g'^~ltkI, 
+      senc{ 'g'^~ekI }(pkR^~ltkI) }(Y^~ekI) >) ]
+
+// In this model the client keeps state, maybe that's not the correct model
+rule Resp_1:
+  [ !Ltk($R, ~ltkR)
+  , Fr(~ekR)
+  , Fr(~cookie)
+  , !Pk($I, pkI)
+  , In( <$I, $R, X, senc{ '0' }(X^~ltkR) > ) ]
+  -->
+  [ Resp_1( $I, $R, ~ltkR, ~ekR, X, pkI, ~cookie )
+  , Out( <$R, $I, senc{ < 'g'^~ekR, ~cookie > }(X^~ltkR) > ) ]
+
+rule Resp_2:
+  [ Resp_1( $I, $R, ~ltkR, ~ekR, X, pkI, ~cookie )
+  , In( <$I, $R, X, ~cookie, 
+    senc{ pkI, senc{ X }(pkI^~ltkR) }(X^~ekR) >) ]
+  --[ AcceptedR(~ekR, $I, $R, X, 'g'^~ekR, X^~ekR) ]->
+  [ !SessionKey(~ekR, $I, $R, X^~ekR) ]
+
+rule Ltk_reveal:
+   [ !Ltk($A, k) ]
+   --[ LtkRev($A) ]->
+   [ Out(k) ]
+
+rule Sessionkey_Reveal:
+    [ !SessionKey(~tid, $I,$R,k) ]
+  --[ SesskRev(~tid) ]->
+    [ Out(k) ]
+
+lemma KI_Perfect_Forward_Secrecy_I:
+  "not (Ex ttest I R sessKey #i1 #k hki hkr.
+     AcceptedI(ttest,I,R,hki,hkr,sessKey) @ i1 &
+     not (Ex #r. LtkRev(I) @ r & r < i1) &
+     not (Ex #r. LtkRev(R) @ r & r < i1) &
+     K(sessKey) @ k &
+     // No session key reveal of test
+     not (Ex #i3. SesskRev(ttest) @ i3) &
+     // No session key reveal of partner
+     not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner) @ i3
+          & AcceptedR(tpartner,I,R,hki,hkr,kpartner) @ i4
+         ) 
+     )
+  "
+
+lemma KI_Perfect_Forward_Secrecy_R:
+  "not (Ex ttest I R sessKey #i1 #k hki hkr.
+     AcceptedR(ttest,I,R,hki,hkr,sessKey) @ i1 &
+     not (Ex #r. LtkRev(I) @ r & r < i1) &
+     not (Ex #r. LtkRev(R) @ r & r < i1) &
+     K(sessKey) @ k &
+     // No session key reveal of test
+     not (Ex #i3. SesskRev(ttest) @ i3) &
+     // No session key reveal of partner
+     not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner) @ i3
+          & AcceptedI(tpartner,I,R,hki,hkr,kpartner) @ i4
+         ) 
+     )
+  "
+lemma Reachable_I:
+  "not (Ex ttest I R sessKey #i1 hki hkr.
+     not (Ex #r. LtkRev(I) @ r & r < i1) &
+     not (Ex #r. LtkRev(R) @ r & r < i1) &
+     AcceptedI(ttest,I,R,hki,hkr,sessKey) @ i1 
+     )
+  "
+
+lemma Reachable_R:
+  "not (Ex ttest I R sessKey #i1 hki hkr.
+     AcceptedR(ttest,I,R,hki,hkr,sessKey) @ i1 &
+     not (Ex #r. LtkRev(I) @ r & r < i1) &
+     not (Ex #r. LtkRev(R) @ r & r < i1) 
+     )
+  "
+
+
+
+end
