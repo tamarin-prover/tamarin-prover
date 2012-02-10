@@ -237,7 +237,7 @@ errHelpExit msg = do
   separator
   putPath "For example protocol models see" examplePath
   putPath "Their syntax is explained in"    userGuidePath
-  putPath "To run all case-studies from our CSF'12 paper, use" csf12Cmd
+  putPath "To run all case-studies from our CSF'12 submission, use" csf12Cmd
   putPath "To construct their security proofs interactively, use" csf12Cmd'
   putStrLn 
     "Note that the +RTS -N -RTS flags instruct the Haskell runtime system to\n\
