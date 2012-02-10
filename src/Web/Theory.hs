@@ -306,7 +306,7 @@ messageSnippet thy = vcat
     [ ppSection "Signature"           [prettySignatureWithMaude (get thySignature thy)]
     , ppSection "Construction Rules"  (ppRules crConstruct)
     , ppSection "Destruction Rules"   (ppRules crDestruct)
-    , ppSection "Special Rules"       (ppRules crSpecial)
+--    , ppSection "Special Rules"       (ppRules crSpecial)
     ]
   where
     ppRules l = map prettyRuleAC $ get l $ getClassifiedRules thy
