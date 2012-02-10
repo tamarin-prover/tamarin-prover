@@ -1,7 +1,8 @@
 /*
+User guide to the tamarin prover for security protocol analysis
+===============================================================
 
-Protocol:	User Guide
-Modeler: 	Simon Meier, Benedikt Schmidt
+Authors: 	Simon Meier, Benedikt Schmidt
 Date: 	        February 2012
 
 
@@ -348,67 +349,89 @@ lemma Client_auth:
     )
   "
 
-
 /*
-lemma Init_auth:
-  "SessKeyI(S, k) @ ii 
-   ==>
-   (Ex #ir. LtkReveal(S) @ ir & ik < vr) |
-   (Ex #is.  SessKeyS(S, k) @ is & is < ii)
+  You can verify them by calling
+
+    tamarin-prover --prove UserGuide.spthy
+
+  This will first output some logging from the constraint solver and then the
+  UserGuide security protocol theory with the lemmas and their attached
+  (dis)proofs.
+
+  Finding attacks is very useful, to check that a security property is not
+  trivial due to too strong preconditions. The following property must not be
+  provable, as otherwise there would be no possibility to setup a session key
+  with a honest sever.
 
 */
 
-lemma Client_session_key_setup_possible:
-  // there is no trace
-  "not(
-     Ex S k #i.
-       SessKeyC(S, k) @ #i &       // client setup session key 'k' with 'S'
-       not(Ex #r. LtkReveal(S) @ r)
-   )
+// Must not be provable!
+lemma Client_session_key_honest_setup_possible:
+  " (All x y #i. Eq(x,y) @ i ==> x = y)
+  ==>
+    not(
+      Ex S k #i.
+        SessKeyC(S, k) @ #i
+      & not(Ex #r. LtkReveal(S) @ r) 
+    )
   "
 
+/* As you cann see from the output of 
+
+    tamarin-prover --prove UserGuide.spthy
+
+  It finds an "attack" on this property, as expected. To characterize all
+  possible attacks use
+
+    tamarin-prover --prove --stop-on-attack=NONE UserGuide.spthy
+
+  You can see from the output that there is exactly one way to setup a session
+  key with an honest server.
 
 
-/*
-rule Init_1:
-  [ Fr(~k), !Ltk($C, ltkC), !Pk($S, pkS) ]
-  -->
-  [ Init_1( $C, ltkC, $S, ~k ), Out( encA{'1', $C, ~k}pkS ) ]
+Interactive proof visualization and construction
+------------------------------------------------
 
-rule Init_2:
-    [ Init_1( $C, ltkC, $S, ~k )
-    , In( m )
-    , !Eq( decA{m}ltkC, <'2', $S, ~k> )
-    ]
-  --[ SessKeyI( $C, $S, ~k ) ]->
-    [] 
+Just call 
 
-rule Serv_1:
-    [ !Ltk($S, ltkS), In( m ) ]
-    -->
-    [ 
-  --[ SessKeyS( $S, snd(snd(decA{m}ltkS)) ) ]->
-    [ Out( encA{'2', $S, snd(snd(decA{m}ltkS})) )     ]
+  tamarin-prover interactive UserGuide.spthy
+
+This will start a web-server that loads all security protocol theories in the
+same directory as UserGuide.spthy. Point your browser to
+
+  http://localhost:3001
+
+and explore the the UserGuide theory interactively by clicking on the
+'UserGuide' entry in the table of loaded theories. You can prove a lemma
+interactively by clicking on the available proof methods (corresponding to
+applications of constraint reduction rules) or by calling the 'autoprover' by
+right-clicking on a node in the theory overview.
+
+
+Conclusion
+----------
+
+The case studies from our CSF'12 submission should now be readable. Recall
+that you can find them in the directory listed at the bottom of the help
+message, when calling 'tamarin-prover' without any arguments. If you have
+further questions, please do not hesitate to contact either
+
+  Benedikt Schmidt    benedikt.schmidt@inf.ethz.ch 
+  Simon Meier         simon.meier@inf.ethz.ch.
+
+Note that our CSF'12 submission does not explain how we compose multiple
+constraint reduction into a precomputed case distinction. It also does not
+explain how we delay splitting on the different variants of multiset rewriting
+rules. We will report on this in an upcoming technical report. This report
+will also explain the support for proving loop invariants by induction, as it
+is already supported by this version of 'tamarin'.
+
+
+BTW, every security protocol theory must be delimited with 'end'.
+
+             (-: HAPPY PROVING :-)
 */
-
-/*
-lemma Init_secrecy:
-  "not(
-     Ex S k #ii #ik.
-       SessKeyI(S, k) @ ii & 
-       K(k) @ ik 
-       &
-       (All #ir. not(LtkReveal(S) @ ir) | ik < ir)
-   )
-  "
-
-lemma Init_auth:
-  "SessKeyI(S, k) @ ii 
-   ==>
-   (Ex #ir. LtkReveal(S) @ ir & ik < vr) |
-   (Ex #is.  SessKeyS(S, k) @ is & is < ii)
-  "
-*/
-
 
 end
+
+
