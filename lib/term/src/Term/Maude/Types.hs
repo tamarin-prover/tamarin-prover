@@ -351,7 +351,7 @@ expr =  fixup <$> p
 parseReduceSolution :: String -> Either ParseError MTerm
 parseReduceSolution s = case lines s of
     [_,_,_,res] -> parse pReduceSolution "" res
-    _           -> fail ("parseReduceSolution: invalid Maude output: " ++ s)
+    _           -> fail ("parseReduceSolution: invalid Maude output: `" ++ s ++ "'")
  where
   pReduceSolution = do
     string "result" <* space

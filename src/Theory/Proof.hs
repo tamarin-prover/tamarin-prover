@@ -73,7 +73,6 @@ module Theory.Proof (
 
 import           Safe
 import           Data.Maybe
-import           Data.Either
 import           Data.List
 import           Data.Ord (comparing)
 import           Data.Function (on)

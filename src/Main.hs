@@ -230,13 +230,18 @@ errHelpExit msg = do
   examplePath  <- getDataFileName "examples"
   let userGuidePath = examplePath </> "UserGuide.spthy"
       csf12Path = examplePath </> "csf12" </> "*.spthy"
-      csf12Cmd  = programName ++ " " ++ csf12Path ++ " --prove -Ocase-studies +RTS -N -RTS"
+      csf12Cmd  = programName ++ " --prove -Ocase-studies +RTS -N -RTS " ++ csf12Path 
+      csf12Cmd' = programName ++ " --interactive +RTS -N -RTS " ++ csf12Path 
       separator = putStrLn $ replicate shortLineWidth '-'
       putPath info path = putStrLn info >> putStrLn ("  " ++ path ++ "\n")
   separator
   putPath "For example protocol models see" examplePath
   putPath "Their syntax is explained in"    userGuidePath
   putPath "To run all case-studies from our CSF'12 paper, use" csf12Cmd
+  putPath "To construct their security proofs interactively, use" csf12Cmd'
+  putStrLn 
+    "Note that the +RTS -N -RTS flags instruct the Haskell runtime system to\n\
+    \use as many cores as your system has. This speeds-up some of the computations."
   separator
   exitFailure
   where

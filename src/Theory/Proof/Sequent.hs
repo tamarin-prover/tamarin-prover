@@ -24,7 +24,6 @@ module Theory.Proof.Sequent (
   , solveGoal
 
   -- ** Equalitiy solving
-  , SplitStrategy(..)
   , solveSubstEqs
 
   -- ** Conjunction with other sequents
