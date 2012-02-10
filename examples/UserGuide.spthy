@@ -68,11 +68,11 @@ theory UserGuide
 begin
 
 /*
-Obivously, you can replace 'UserGuide' with any name you like to give your
+Obviously, you can replace 'UserGuide' with any name you like to give your
 theory. After 'begin', you can declare function symbols, equations that they
 must satisfy, multiset rewriting rules, and lemmas specifying security
 properties. Moreover, you can also insert formal comments, to structure your
-theory. We give examples of each of these elements while modelling the
+theory. We give examples of each of these elements while modeling the
 a simple protocol. 
 
 In this protocol a client C generates a fresh symmetric key 'k', encrypts it
@@ -88,7 +88,7 @@ guarantees. We can prove that from the perspective of the client, the freshly
 generated key is secret provided that the server is uncompromised.
 
 We model this protocol in three steps. First, we declare the function symbols
-and the equations defining them. Then, we introduce muliset rewriting rules
+and the equations defining them. Then, we introduce multiset rewriting rules
 modeling a public key infrastructure (PKI) and the protocol. Finally, we state
 the expected security properties.
 
@@ -98,7 +98,7 @@ Function Signature and Equational Theory
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring 
-  a binary fuction 'aenc' denoting a call to the encryption algorithm,
+  a binary function 'aenc' denoting a call to the encryption algorithm,
   a binary function 'adec' denoting a call to the decryption algorithm, and
   a unary function 'pk' denoting a call to the algorithm computing a public
   key from a private key.
@@ -178,7 +178,7 @@ rule Register_pk:
      ~x  denotes  x:fresh
      $x  denotes  x:pub
      #i  denotes  i:temp
-     i   dentoes  i:msg
+     i   denotes  i:msg
 
      'c' denotes a public name 'c \in PN'; i.e., a fixed, global constant
    
@@ -217,7 +217,7 @@ rule Reveal_ltk:
 
 /*
 
-Modelling the protocol
+Modeling the protocol
 ----------------------
 
 Recall that we want to model the following protocol.
@@ -261,7 +261,7 @@ rule Serv_1:
     [ Out( h(snd(adec(request, ~ltkS))) ) ]    // Return the hash of the
                                                // decrypted request.
 
-/* Above, we model all applications of cryptographic algorithms explicitely.
+/* Above, we model all applications of cryptographic algorithms explicitly.
    Call 'tamarin-prover UserGuide.spthy' to inspect the finite variants of the
    Serv_1 rule, which list all possible interactions of the destructors used.
    In our proof search, we will consider all these interactions.
@@ -310,10 +310,10 @@ For existentially quantified variables, one has to check that they all occur in
 an action constraint right after the quantifier and that the toplevel inside
 the quantifier is a conjunction.
 Note also that currently the precedence of the logical connectives is not
-specified. We therefore recommend to use parantheses, when in doubt.
+specified. We therefore recommend to use parentheses, when in doubt.
 
 
-The followig two properties should be self-explanatory.
+The following two properties should be self-explanatory.
 */
 
 lemma Client_session_key_secrecy:
@@ -376,7 +376,7 @@ lemma Client_session_key_honest_setup_possible:
     )
   "
 
-/* As you cann see from the output of 
+/* As you can see from the output of 
 
     tamarin-prover --prove UserGuide.spthy
 
