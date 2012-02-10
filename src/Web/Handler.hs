@@ -18,6 +18,7 @@ module Web.Handler
   , getRootR
   , postRootR
   , getTheorySourceR
+  , getTheoryMessageDeductionR
   , getTheoryVariantsR
   , getTheoryPathMR
   , getTheoryPathDR
@@ -368,6 +369,12 @@ getTheorySourceR idx = withTheory idx $ \ti ->
 -- | Show variants (pretty-printed closed theory).
 getTheoryVariantsR :: TheoryIdx -> Handler RepPlain
 getTheoryVariantsR idx = withTheory idx $ \ti ->
+  return $ RepPlain $ toContent $ prettyRender ti
+  where prettyRender = render . prettyClosedTheory . tiTheory
+
+-- | Show variants (pretty-printed closed theory).
+getTheoryMessageDeductionR :: TheoryIdx -> Handler RepPlain
+getTheoryMessageDeductionR idx = withTheory idx $ \ti ->
   return $ RepPlain $ toContent $ prettyRender ti
   where prettyRender = render . prettyClosedTheory . tiTheory
 

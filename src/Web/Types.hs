@@ -167,12 +167,14 @@ data TheoryPath
   | TheoryProof String ProofPath        -- ^ Proof path within proof for given lemma
   | TheoryMethod String ProofPath Int   -- ^ Apply the proof method to proof path
   | TheoryRules                         -- ^ Theory rules
+  | TheoryMessage                       -- ^ Theory message deduction
   deriving (Eq, Show, Read)
 
 -- | Render a theory path to a list of strings.
 renderPath :: TheoryPath -> [String]
 renderPath TheoryMain = ["main"]
 renderPath TheoryRules = ["rules"]
+renderPath TheoryMessage = ["message"]
 renderPath (TheoryLemma name) = ["lemma", name]
 renderPath (TheoryIntrVar i) = ["variant", show i]
 renderPath (TheoryCaseDist k i j) = ["cases", show k, show i, show j]
@@ -185,6 +187,7 @@ parsePath []     = Nothing
 parsePath (x:xs) = case x of
   "main"    -> Just TheoryMain
   "rules"   -> Just TheoryRules
+  "message" -> Just TheoryMessage
   "lemma"   -> parseLemma xs
   "cases"   -> parseCases xs
   "variant" -> parseVariant xs
@@ -256,6 +259,7 @@ mkYesodData "WebUI" [PARSE_ROUTES|
 /thy/#Int/overview OverviewR GET
 /thy/#Int/source TheorySourceR GET
 /thy/#Int/variants TheoryVariantsR GET
+/thy/#Int/message TheoryMessageDeductionR GET
 /thy/#Int/main/MP(TheoryPath) TheoryPathMR GET
 /thy/#Int/debug/MP(TheoryPath) TheoryPathDR GET
 /thy/#Int/graph/MP(TheoryPath) TheoryGraphR GET

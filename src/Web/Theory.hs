@@ -177,6 +177,8 @@ theoryIndex :: HtmlDocument d => ClosedTheory -> d
 theoryIndex thy = foldr1 ($-$)
     [ kwTheoryHeader $ get thyName thy
     , text ""
+    , messageLink
+    , text ""
     , ruleLink
     , text ""
     , reqCasesLink "Untyped case distinctions" UntypedCaseDist
@@ -193,7 +195,7 @@ theoryIndex thy = foldr1 ($-$)
 
     lemmas         = map lemmaIndex' (getLemmas thy)
     rules          = getClassifiedRules thy
-    rulesInfo      = parens $ int $ length $ joinAllRules rules
+    rulesInfo      = parens $ int $ length $ get crProtocol rules
     casesInfo kind =
         parens $ nCases <> comma <-> text chainInfo
       where 
@@ -205,6 +207,7 @@ theoryIndex thy = foldr1 ($-$)
          
     bold                = withTag "strong" [] . text
     overview n info p   = linkToPath p [] (bold n <-> info)
+    messageLink         = overview "Message theory" (text "") TheoryMessage
     ruleLink            = overview "Rewriting rules" rulesInfo TheoryRules
     reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
 
@@ -289,9 +292,6 @@ reqCasesSnippet kind thy = vcat $
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
 rulesSnippet thy = vcat
     [ ppRules "Protocol Rules"      crProtocol
-    , ppRules "Construction Rules"  crConstruct
-    , ppRules "Destruction Rules"   crDestruct
-    , ppRules "Special Rules"       crSpecial
     ] 
   where
     rules = getClassifiedRules thy
@@ -299,6 +299,21 @@ rulesSnippet thy = vcat
       withTag "h2" [] (text header) $$ withTag "p"
         [("class","monospace rules")]
         (vcat (intersperse (text "") $ map prettyRuleAC $ get l rules))
+
+-- | Build the Html document showing the message theory.
+messageSnippet :: HtmlDocument d => ClosedTheory -> d
+messageSnippet thy = vcat
+    [ ppSection "Signature"           [prettySignatureWithMaude (get thySignature thy)]
+    , ppSection "Construction Rules"  (ppRules crConstruct)
+    , ppSection "Destruction Rules"   (ppRules crDestruct)
+    , ppSection "Special Rules"       (ppRules crSpecial)
+    ]
+  where
+    ppRules l = map prettyRuleAC $ get l $ getClassifiedRules thy
+    ppSection header s =
+      withTag "h2" [] (text header) $$ withTag "p"
+        [("class","monospace rules")]
+        (vcat (intersperse (text "") $ s))
 
 -- | Render the item in the given theory given by the supplied path.
 htmlThyPath :: HtmlDocument d
@@ -308,6 +323,7 @@ htmlThyPath :: HtmlDocument d
 htmlThyPath thy path = go path
   where
     go TheoryRules               = rulesSnippet thy
+    go TheoryMessage             = messageSnippet thy
     go (TheoryCaseDist kind _ _) = reqCasesSnippet kind thy
     go (TheoryProof l p)         = fromMaybe
                                      (text "No such lemma or proof path.")
@@ -385,6 +401,7 @@ titleThyPath :: ClosedTheory -> TheoryPath -> String
 titleThyPath thy path = go path
   where
     go TheoryRules                          = "Rewriting rules"
+    go TheoryMessage                        = "Message theory"
     go (TheoryCaseDist UntypedCaseDist _ _) = "Untyped case distinctions"
     go (TheoryCaseDist TypedCaseDist _ _)   = "Typed case distinctions"
     go (TheoryLemma l)                      = "Lemma: " ++ l
@@ -417,7 +434,8 @@ resolveProofPath thy lemmaName path = do
 nextThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextThyPath thy = go
   where
-    go TheoryMain                           = TheoryRules
+    go TheoryMain                           = TheoryMessage
+    go TheoryMessage                        = TheoryRules
     go TheoryRules                          = TheoryCaseDist UntypedCaseDist 0 0
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryCaseDist TypedCaseDist 0 0
     go (TheoryCaseDist TypedCaseDist _ _)   = fromMaybe TheoryMain firstLemma
@@ -442,7 +460,8 @@ nextThyPath thy = go
 prevThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 prevThyPath thy = go
   where
-    go TheoryRules                          = TheoryMain
+    go TheoryMessage                        = TheoryMain
+    go TheoryRules                          = TheoryMessage
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryRules
     go (TheoryCaseDist TypedCaseDist _ _)   = TheoryCaseDist UntypedCaseDist 0 0
     go (TheoryLemma l)
@@ -470,7 +489,8 @@ prevThyPath thy = go
 nextSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextSmartThyPath thy = go
   where
-    go TheoryMain                           = TheoryRules
+    go TheoryMain                           = TheoryMessage
+    go TheoryMessage                        = TheoryRules
     go TheoryRules                          = TheoryCaseDist UntypedCaseDist 0 0
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryCaseDist TypedCaseDist 0 0
     go (TheoryCaseDist TypedCaseDist   _ _) = fromMaybe TheoryMain firstLemma
@@ -498,7 +518,8 @@ nextSmartThyPath thy = go
 prevSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 prevSmartThyPath thy = go
   where
-    go TheoryRules = TheoryMain
+    go TheoryMessage                        = TheoryMain
+    go TheoryRules                          = TheoryMessage
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryRules
     go (TheoryCaseDist TypedCaseDist   _ _) = TheoryCaseDist UntypedCaseDist 0 0
     go (TheoryLemma l)
