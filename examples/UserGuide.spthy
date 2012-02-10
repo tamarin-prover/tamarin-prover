@@ -1,16 +1,16 @@
 /*
 
-Protocol:	Tutorial
+Protocol:	User Guide
 Modeler: 	Simon Meier, Benedikt Schmidt
 Date: 	        February 2012
 
 
 Introduction
-============
+------------
 
-This tutorial assumes that you have a copy of our CSF'12 paper on "Automated
-Analysis of Diffie-Hellman Protocols and Advanced Security Properties". Drop
-us a mail, if you would like to receive a copy.
+This user guide assumes that you have a copy of our CSF'12 submission on
+"Automated Analysis of Diffie-Hellman Protocols and Advanced Security
+Properties". Drop us a mail, if you would like to receive a copy.
 
 The input files for the tamarin prover have the extension .spthy, which is
 short for 'security protocol theory'. A security protocol theory specifies
@@ -22,77 +22,352 @@ short for 'security protocol theory'. A security protocol theory specifies
      rewriting rules we want to check.
 
 We explain each of these parts where they occur in the following security
-protocol theory. As you probably noticed comments are C-style: we use /*  */
-for delimiting multi-line comments and // for line-comments.
+protocol theory. Before we start, a few notes on the syntax.
+As you probably noticed, comments are C-style. All identifiers are
+case-sensitive. The parser is layout-insensitive, i.e., your are free to use
+whitespace as it suits you. For people using the 'vim' text-editor, we provide
+syntax highlighting files. We explain how to install them, before we explain
+how to model a simple example protocol.
 
-Every security protocol theory starts with the following header.
+
+Installing the vim syntax highlighting files
+--------------------------------------------
+
+As you've probably noticed, calling 'tamarin-prover' without any arguments
+yields in informative help-message listing all available flags and the paths
+to the installed example protocol files. We call the directory above the
+example files the DATA_PATH. The examples are found at
+
+  DATA_PATH/examples
+
+and the 'vim' syntax highlighting files are found at
+
+  DATA_PATH/etc/
+
+To install them, copy
+
+  DATA_PATH/etc/filepath.vim
+
+to the ~/.vim directory and copy
+
+  DATA_PATH/etc/spthy.vim
+
+to the ~/.vim/syntax directory. If one of these directories does not exist,
+then just create it.
+
+
+
+Modeling a security protocol
+----------------------------
+
+Every security protocol theory starts with a header of the following form.
 */
 
 theory UserGuide
 begin
 
+/*
+Obivously, you can replace 'UserGuide' with any name you like to give your
+theory. After 'begin', you can declare function symbols, equations that they
+must satisfy, multiset rewriting rules, and lemmas specifying security
+properties. Moreover, you can also insert formal comments, to structure your
+theory. We give examples of each of these elements while modelling the
+a simple protocol. 
 
-// you can locally define flags
-#define R1
+In this protocol a client C generates a fresh symmetric key 'k', encrypts it
+with the public key of a server 'S' and sends it to 'S'. The server confirms
+the receipt of the key by sending back its hash to the client. In
+Alice-and-Bob notation the protocol would read as follows.
 
-// and test for the definedness
-#ifdef R1
-#ifdef L1
-rule Test:
-  [ In(<~x, ~y, y>) ] --[ Attack() ]-> [ Attack () ]
-#endif
-#endif
+  C -> S: aenc{k}pk(S)
+  S <- C: h(k)
+
+This protocol is artificial and it satisfies only very weak security
+guarantees. We can prove that from the perspective of the client, the freshly
+generated key is secret provided that the server is uncompromised.
+
+We model this protocol in three steps. First, we declare the function symbols
+and the equations defining them. Then, we introduce muliset rewriting rules
+modeling a public key infrastructure (PKI) and the protocol. Finally, we state
+the expected security properties.
 
 
-#ifdef L1
-lemma test:
-  "not (Ex #i. Attack() @ i) "
+Function Signature and Equational Theory
+----------------------------------------
 
-#endif
+We model hashing using the unary function 'h'.
+We model asymmetric encryption by declaring 
+  a binary fuction 'aenc' denoting a call to the encryption algorithm,
+  a binary function 'adec' denoting a call to the decryption algorithm, and
+  a unary function 'pk' dentoing a call to the algorithm computing a public
+  key from a private key.
+*/
 
-end
+functions: h/1, aenc/2, adec/2, pk/1
+equations: adec(aenc(m, pk(k)), k) = m
 
 /*
-// Public key infrastructure
+The above equation then models the interaction between calls to these three
+algorithms. All these equations must be subterm-convergent rewriting rules,
+when read from left to right. This means that the right-hand-side must be a
+subterm of the left-hand-side or a nullary function symbol.
+
+Certain equational theories are used very often when modelling cryptographic
+messages. We therefore provide builtin definitions for them. The above theory
+could also be enabled using the declaration
+
+  builtin: hashing, asymmetric-encryption
+
+We support the following builtin theories:
+ 
+  diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
+  hashing
+
+Apart from 'diffie-hellman', all of these theories are subterm-convergent and
+can therefore also be declared directly, as above. You can inspect their
+definitions by uncommenting the following two line-comments and calling
+
+  tamarin-prover UserGuide.spthy
+
+*/
+
+// builtin: diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
+//          hashing
+
+/*
+The call 'tamarin-prover UserGuide.spthy' parses the UserGuide.spthy file,
+computes the variants of the multiset rewriting rules and checks their
+wellformedness (explained below), and pretty-prints the theory. The
+declaration of the signature and the equations can be found at the top of the
+pretty-printed theory.
+
+Proving all lemmas contained in the theory would be as simple as adding the
+flag '--prove' to the call; i.e.,
+
+  tamarin-prover UserGuide.spthy --prove
+
+However, let's not go there yet. We first have to model the PKI and our
+protocol.
+
+Modeling the Public Key Infrastructure
+--------------------------------------
+*/
+
+// Registering a public key
 rule Register_pk:
   [ Fr(~ltk) ] 
   --> 
-  [ !Ltk($A, sk(~ltk)), !Pk($A, pk(~ltk)) ]
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+
+/* The above rule models registering a public key. It makes use of the
+   following syntax.
+   
+   Facts always start with an upper-case letter. They are declared implicitly.
+   If their name is prefixed with an exclamation mark '!', then they are
+   persistent. Otherwise, they are linear. Note that you must every fact name
+   consistently; i.e., you must always use it with the same arity, casing, and
+   multiplicity. Otherwise, the tamarin prover complains that the theory is
+   not wellformed.
+
+   The 'Fr' fact is a builtin fact. It denotes a freshly generated fresh name.
+   See the paper for details.
+
+   We denote the sort of variables using prefixes:
+
+     ~x  denotes  x:fresh
+     $x  denotes  x:pub
+     #i  denotes  i:temp
+     i   dentoes  i:msg
+
+     'c' denotes a public name 'c \in PN'; i.e., a fixed, global constant
+   
+   Thus, the above rule can be read as follows. First, freshly generate a
+   fresh name 'ltk', the new private key and nondeterministically choose a
+   public name 'A', the agent for which we are generating the key-pair.
+   Then, generate the persistent fact !Ltk($A, ~ltk), which denotes the
+   association between agent 'A' and its private key 'ltk, and generate the
+   persisten fact !Pk($A, pk(~ltk)), which denotes the association between the
+   agent 'A' and its public key 'pk(~ltk)'.
+
+   We allow the adversary retrieve any public key using the following rule.
+   Intuitively, it just reads a public-key database entry and sends the public
+   key to the network using the builtin fact 'Out' denoting a message sent to
+   the network. See our paper for more information.
+*/
 
 rule Get_pk:
   [ !Pk(A, pk) ] 
   --> 
   [ Out(pk) ]
 
+/*
+   We model dynamic compromise of long-term private keys using the following
+   rule. Intuitively, it reads a private-key database entry and sends it to
+   the adversary. This rule has an observable 'LtkReveal' action stating that
+   the long-term key of agent 'A' was compromised. We will use this action in
+   the security property below to determine which agents are compromised.
+*/
+
 rule Reveal_ltk:
     [ !Ltk(A, ltk) ]
   --[ LtkReveal(A) ]->
     [ Out(ltk) ]
 
-/*
-// Equality checking: Does not work because no message variable
-// allowed in Fr facts.
-rule Eq:
-    [ Fr(<'Eq',x>) ] --> [ !Eq(x,x) ]
 
-// Protocol
-rule Init_1:
-  [ Fr(~k), !Pk($C, pkC), !Pk($S, pkS) ]
+/*
+
+Modelling the protocol
+----------------------
+
+Recall that we want to model the following protocol.
+
+  C -> S: aenc{k}pk(S)
+  S <- C: h(k)
+
+We model it use the following three rules.
+*/
+
+// Start a new thread executing the client role, choosing the server
+// non-deterministically.
+rule Client_1:
+    [ Fr(~k)         // choose fresh key
+    , !Pk($S, pkS)   // lookup public-key of server
+    ]
   -->
-  [ Init_1( $C, pkC, $S, pkS, ~k ), Out( encA{'1', $C, ~k}pkS ) ]
+    [ Client_1( $S, ~k )       // Store server and key for next step of thread
+    , Out( aenc{'1', ~k}pkS )  // Send the encrypted session key to the server
+                               // We add the tag '1' to the request to allow
+                               // the server to check whether the decryption
+                               // was successful.
+    ]
 
 rule Init_2:
-    [ Init_1( $C, pkC, $S, pkS, ~k )
-    , In( encA{'2', $S, ~k}pkC )
+    [ Client_1(S, k)   // Retrieve server and session key from previous step
+    , In( h(k) )       // Receive hashed session key from network
     ]
-  --[ SessKeyI( $C, $S, ~k ) ]->
-    [] 
+  --[ SessKeyC( S, k ) ]-> // State that the session key 'k'
+    []                     // was setup with server 'S'
 
+// A server thread answering in one-step to a session-key setup request from
+// some client.
 rule Serv_1:
-    [ !Pk(C, pkC), !Pk($S, pkS), In( encA{'1', C, k}pkS ) ]
-  --[ SessKeyS( C, $S, k ) ]->
-    [ Out( encA{'2', $S, k}pkC ) ]
+    [ !Ltk($S, ~ltkS)                          // lookup the private-key
+    , In( request )                            // receive a request
+    ]
+  --[ Eq(fst(adec(request, ~ltkS)), '1')
+    , AnswerRequest($S, snd(adec(request, ~ltkS)))   // Explanation below
+    ]->  
+    [ Out( h(snd(adec(request, ~ltkS))) ) ]    // Return the hash of the
+                                               // decrypted request.
+
+/* Above, we model all applications of cryptographic algorithms explicitely.
+   Call 'tamarin-prover UserGuide.spthy' to inspect the finite variants of the
+   Serv_1 rule, which list all possible interactions of the destructors used.
+   In our proof search, we will consider all these interactions.
+
+   We also model that the server explicitly checks that the first component of
+   the request is equal to '1'. We  model this by logging the claimed equality
+   and then adapting the security property such that it only considers traces
+   where all 'Eq' actions occur with two equal arguments. Note that 'Eq' is NO
+   builtin fact. Guarded trace properties are strong enough to formalize this
+   requirement without builtin support.
+
+   We log the session-key setup requests received by servers to allow
+   formalizing the authentication property for the client.
+
+
+Modeling the security properties
+--------------------------------
+
+The syntax for specifying security properties uses
+
+  All      for universal quantification, temporal variables are prefixed with #
+  Ex       for existential quantification, temporal variables are prefixed with #
+  ==>      for implication
+  &        for conjunction
+  |        for disjunction
+  not      for  negation
+           
+  f @ i    for action constraints, the sort prefix for the temporal variable 'i'
+           is optional
+           
+  i < j    for temporal ordering, the sort prefix for the temporal variable 'i'
+           is optional
+
+  #i = #j  for an equality between temporal variables 'i' and 'j'
+  x = y    for an equality between message variables 'x' and 'y'
+
+Note that apart from public names (delimited using single-quotes), no terms
+may occur in guarded trace properties. Moreover, all variables must be
+guarded. The error message for an unguarded variable is currently not very
+good. 
+
+For universally quantified variables, one has to check that they all occur in
+an action constraint right after the quantifier and that the toplevel inside
+the quantifier is an implication.
+For existentially quantified variables, one has to check that they all occur in
+an action constraint right after the quantifier and that the toplevel inside
+the quantifier is a conjunction.
+Note also that currently the precedence of the logical connectives is not
+specified. We therefore recommend to use parantheses, when in doubt.
+
+
+The followig two properties should be self-explanatory.
 */
+
+lemma Client_session_key_secrecy:
+  "  /* For all traces, where all equality checks succeed, */
+    (All x y #i. Eq(x,y) @ i ==> x = y)
+  ==>
+    /* it cannot be that a  */
+    not(
+      Ex S k #i #j.
+        /* client setup a session key 'k' with a server'S' */
+        SessKeyC(S, k) @ #i
+        /* and the adversary knows 'k' */
+      & K(k) @ #j
+        /* without having performed a long-term key reveal on 'S'. */
+      & not(Ex #r. LtkReveal(S) @ r) 
+    )
+  "
+
+
+lemma Client_auth:
+  " /* For all traces, where all equality checks succeed, */
+    (All x y #i. Eq(x,y) @ i ==> x = y)
+  ==>
+    /* for all session keys 'k' setup by clients with a server 'S' */
+    ( All S k #i.  SessKeyC(S, k) @ #i
+       ==>
+         /* there is a server that answered the request */
+       ( (Ex #a. AnswerRequest(S, k) @ a)
+         /* or the intruder performed a long-term key reveal on 'S'
+            before the key was setup. */
+       | (Ex #r. LtkReveal(S) @ r & r < i)
+       )
+    )
+  "
+
+
+/*
+lemma Init_auth:
+  "SessKeyI(S, k) @ ii 
+   ==>
+   (Ex #ir. LtkReveal(S) @ ir & ik < vr) |
+   (Ex #is.  SessKeyS(S, k) @ is & is < ii)
+
+*/
+
+lemma Client_session_key_setup_possible:
+  // there is no trace
+  "not(
+     Ex S k #i.
+       SessKeyC(S, k) @ #i &       // client setup session key 'k' with 'S'
+       not(Ex #r. LtkReveal(S) @ r)
+   )
+  "
+
+
 
 /*
 rule Init_1:
