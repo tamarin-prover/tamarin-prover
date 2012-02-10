@@ -34,7 +34,7 @@ Installing the vim syntax highlighting files
 --------------------------------------------
 
 As you've probably noticed, calling 'tamarin-prover' without any arguments
-yields in informative help-message listing all available flags and the paths
+yields an informative help-message listing all available flags and the paths
 to the installed example protocol files. We call the directory above the
 example files the DATA_PATH. The examples are found at
 
@@ -99,7 +99,7 @@ We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring 
   a binary fuction 'aenc' denoting a call to the encryption algorithm,
   a binary function 'adec' denoting a call to the decryption algorithm, and
-  a unary function 'pk' dentoing a call to the algorithm computing a public
+  a unary function 'pk' denoting a call to the algorithm computing a public
   key from a private key.
 */
 
@@ -112,7 +112,7 @@ algorithms. All these equations must be subterm-convergent rewriting rules,
 when read from left to right. This means that the right-hand-side must be a
 subterm of the left-hand-side or a nullary function symbol.
 
-Certain equational theories are used very often when modelling cryptographic
+Certain equational theories are used very often when modeling cryptographic
 messages. We therefore provide builtin definitions for them. The above theory
 could also be enabled using the declaration
 
@@ -164,10 +164,10 @@ rule Register_pk:
    
    Facts always start with an upper-case letter. They are declared implicitly.
    If their name is prefixed with an exclamation mark '!', then they are
-   persistent. Otherwise, they are linear. Note that you must every fact name
-   consistently; i.e., you must always use it with the same arity, casing, and
-   multiplicity. Otherwise, the tamarin prover complains that the theory is
-   not wellformed.
+   persistent. Otherwise, they are linear. Note that you must use every fact
+   name consistently; i.e., you must always use it with the same arity, casing,
+   and multiplicity. Otherwise, the tamarin prover complains that the theory
+   is not wellformed.
 
    The 'Fr' fact is a builtin fact. It denotes a freshly generated fresh name.
    See the paper for details.
@@ -186,10 +186,10 @@ rule Register_pk:
    public name 'A', the agent for which we are generating the key-pair.
    Then, generate the persistent fact !Ltk($A, ~ltk), which denotes the
    association between agent 'A' and its private key 'ltk, and generate the
-   persisten fact !Pk($A, pk(~ltk)), which denotes the association between the
+   persistent fact !Pk($A, pk(~ltk)), which denotes the association between the
    agent 'A' and its public key 'pk(~ltk)'.
 
-   We allow the adversary retrieve any public key using the following rule.
+   We allow the adversary to retrieve any public key using the following rule.
    Intuitively, it just reads a public-key database entry and sends the public
    key to the network using the builtin fact 'Out' denoting a message sent to
    the network. See our paper for more information.
