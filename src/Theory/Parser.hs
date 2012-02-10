@@ -742,9 +742,12 @@ functions =
     functionSymbol = do
         funsym <- (,) <$> identifier <*> (kw SLASH *> integer)
         sig <- getState
-        if (fst funsym `elem` map fst (funSig sig))
-            then fail $ "duplicate function symbol: " ++ show funsym
-            else setState (sig `mappend` emptyMaudeSig {funSig = [funsym]})
+        case lookup (fst funsym) (funSig sig) of
+          Just k | k /= snd funsym ->
+            fail $ "conflicting arities " ++ 
+                   show k ++ " and " ++ show (snd funsym) ++ 
+                   " for `" ++ fst funsym
+          _ -> setState (sig `mappend` emptyMaudeSig {funSig = [funsym]})
 
 equations :: Parser ()
 equations =

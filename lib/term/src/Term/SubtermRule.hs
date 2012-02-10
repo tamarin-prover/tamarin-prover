@@ -11,6 +11,9 @@ module Term.SubtermRule (
     , StRule(..)
     , rRuleToStRule
     , stRuleToRRule
+
+    -- * Pretty Printing
+    , prettyStRule
     ) where
 
 import Control.DeepSeq
@@ -20,6 +23,7 @@ import Data.Binary
 
 import Term.LTerm
 import Term.Positions
+import Text.PrettyPrint.Highlight
 
 -- | The righthand-side of a subterm rewrite rule.
 --   Does not enforce that the term for RhsGround must be ground.
@@ -56,6 +60,16 @@ test:
 xorRules == map (stRuleToRRule . fromJust .  rRuleToStRule) xorRules
 
 -}
+
+------------------------------------------------------------------------------
+-- Pretty Printing
+------------------------------------------------------------------------------
+
+-- | Pretty print an 'StRule'
+prettyStRule :: HighlightDocument d => StRule -> d
+prettyStRule r = case stRuleToRRule r of
+  (lhs `RRule` rhs) -> sep [ nest 2 $ prettyLNTerm lhs
+                           , text "= " <> prettyLNTerm rhs ]
 
 -- derived instances
 --------------------

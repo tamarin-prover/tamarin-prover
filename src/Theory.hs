@@ -622,7 +622,8 @@ prettyTheory :: HighlightDocument d
              -> Theory sig c r p -> d
 prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     [ kwTheoryHeader $ L.get thyName thy
-    , nest 1 $ ppSig $ L.get thySignature thy
+    , lineComment_ "Function signature and definition of the equational theory E"
+    , ppSig $ L.get thySignature thy
     , ppCache $ L.get thyCache thy 
     ] ++
     parMap rdeepseq ppItem (L.get thyItems thy) ++
@@ -650,8 +651,8 @@ prettyLemma ppPrf l =
     maybe emptyDoc ppFormulaAC (L.get lFormulaAC l)
     $-$
     maybe emptyDoc ppFormulaACGuarded (L.get lFormulaAC l)
-    $-$
-    maybe emptyDoc ppFormulaACInduction (L.get lFormulaAC l)
+    -- $-$
+    -- maybe emptyDoc ppFormulaACInduction (L.get lFormulaAC l)
     $-$
     ppPrf (L.get lProof l)
   where
@@ -666,9 +667,10 @@ prettyLemma ppPrf l =
         Left err -> multiComment_ 
             ["conversion to doubly-guarded formula failed:", err]
         Right gf -> multiComment
-            ( text "doubly-guarded formula characterizing all attacks:" $-$
+            ( text "guarded formula characterizing all attacks:" $-$
               doubleQuotes (prettyGuarded gf) )
 
+    {-
     ppFormulaACInduction fmAC = case fmInd of
         Left err -> multiComment_ 
             ["formula cannot be proven by induction:", err]
@@ -677,9 +679,8 @@ prettyLemma ppPrf l =
               doubleQuotes (prettyGuarded gf) )
       where
         fmInd = applyInduction =<< fromFormulaNegate fmAC
-
-
-
+    -}
+{-
 -- | Pretty-print a non-empty bunch of intruder rules.
 prettyIntruderVariants :: HighlightDocument d => [IntrRuleAC] -> d
 prettyIntruderVariants [] = multiComment $ vsep
@@ -693,6 +694,7 @@ prettyIntrVariantsSection :: HighlightDocument d => [IntrRuleAC] -> d
 prettyIntrVariantsSection rules = 
     prettyFormalComment "section" " Finite Variants of the Intruder Rules " $--$
     nest 1 (prettyIntruderVariants rules)
+-}
 
 -- | Pretty print an open rule together with its assertion soundness proof.
 prettyOpenProtoRule :: HighlightDocument d => OpenProtoRule -> d
@@ -719,13 +721,15 @@ prettyClosedProtoRule cru =
 prettyOpenTheory :: HighlightDocument d => OpenTheory -> d
 prettyOpenTheory = 
     prettyTheory prettySignaturePure
-                 prettyIntrVariantsSection prettyOpenProtoRule prettyProof
+                 (const emptyDoc) prettyOpenProtoRule prettyProof
+                 -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
 
 -- | Pretty print a closed theory.
 prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
 prettyClosedTheory = 
     prettyTheory prettySignatureWithMaude
-                 (prettyIntrVariantsSection . intruderRules . L.get crcRules) 
+                 (const emptyDoc)
+                 -- (prettyIntrVariantsSection . intruderRules . L.get crcRules) 
                  prettyClosedProtoRule
                  prettyIncrementalProof
 

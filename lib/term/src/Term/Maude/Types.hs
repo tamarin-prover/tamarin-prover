@@ -25,6 +25,7 @@ import Control.DeepSeq
 
 import Data.DeriveTH
 import Data.Binary
+import Data.Foldable (asum)
 import Data.Traversable
 import Data.List
 import Data.Monoid
@@ -34,6 +35,7 @@ import qualified Data.Map as M
 import Data.Map ( Map )
 
 import Text.ParserCombinators.Parsec hiding (many, optional, (<|>))
+import qualified Text.PrettyPrint.Highlight as P
 
 -- Maude Terms
 ----------------------------------------------------------------------
@@ -356,6 +358,31 @@ parseReduceSolution s = case lines s of
     (psort <|> (string "TOP" *> pure LSortPub))
       -- FIXME: clean up, we use TOP for lists
     string ":" *> space *> expr
+
+------------------------------------------------------------------------------
+-- Pretty Printing
+------------------------------------------------------------------------------
+
+prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
+prettyMaudeSig sig = P.vcat
+    [ ppNonEmptyList' "builtin:"   P.text      builtIns
+    , ppNonEmptyList' "functions:" ppFunSymb $ funSig sig
+    , ppNonEmptyList  
+        (\ds -> P.sep (P.text "equations:" : map (P.nest 2) ds))
+        prettyStRule $ stRules sig
+    ]
+  where
+    ppNonEmptyList' name     = ppNonEmptyList ((P.text name P.<->) . P.fsep)
+    ppNonEmptyList _   _  [] = P.emptyDoc
+    ppNonEmptyList hdr pp xs = hdr $ P.punctuate P.comma $ map pp xs
+
+    builtIns = asum $ map (\(f, x) -> guard (f sig) *> pure x)
+      [ (enableDH,   "diffie-hellman")
+      , (enableXor,  "xor")
+      , (enableMSet, "multiset")
+      ]
+
+    ppFunSymb (f,k) = P.text $ f ++ "/" ++ show k
 
 
 -- derived instances

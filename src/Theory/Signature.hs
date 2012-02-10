@@ -43,6 +43,7 @@ import           Control.DeepSeq
 
 import           Theory.Pretty
 import           Theory.Fact
+import           Term.Maude.Types
 
 import           Data.Binary
 
@@ -183,11 +184,11 @@ prettySignaturePure sig = foldr ($--$) emptyDoc $ map combine $
     
 -- | Pretty-print a pure signature.
 prettySignatureWithMaude :: HighlightDocument d => SignatureWithMaude -> d
-prettySignatureWithMaude sig = foldr ($--$) emptyDoc $ map combine $
-    -- FIXME: Print Maude signature completely, this is only used for
-    -- intruder-variants for now.
-    [ ("unique_insts",  ppGFresh $ uniqueInsts) | not $ null uniqueInsts ]
-    ++ [ ("builtin", text "diffie-hellman" ) | enableDH . mhMaudeSig . L.get sigmMaudeHandle $ sig ]
+prettySignatureWithMaude sig = foldr ($--$) emptyDoc $
+    (map combine
+        [ ("unique_insts",  ppGFresh $ uniqueInsts) | not $ null uniqueInsts ]
+    ) ++
+    [ prettyMaudeSig $ mhMaudeSig $ L.get sigmMaudeHandle sig ]
   where
     uniqueInsts = S.toList $ L.get sigmUniqueInsts sig
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]

@@ -63,6 +63,8 @@ Date Resolved   Date Posted   Who Issue
                                    when prefix of fact the same and connected
                                    by an edge, then this is the same thread.
 
+                2012/02/09     SM  Add a theory info node for signature and E.
+
                 2012/02/08     SM  Implement satisfiable/valid.
 
                 2012/02/09     SM  Allow selecting the 'dot' tool for
