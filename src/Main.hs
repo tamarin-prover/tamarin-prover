@@ -231,7 +231,7 @@ errHelpExit msg = do
   let userGuidePath = examplePath </> "UserGuide.spthy"
       csf12Path = examplePath </> "csf12" </> "*.spthy"
       csf12Cmd  = programName ++ " --prove -Ocase-studies +RTS -N -RTS " ++ csf12Path 
-      csf12Cmd' = programName ++ " --interactive +RTS -N -RTS " ++ csf12Path 
+      csf12Cmd' = programName ++ " interactive +RTS -N -RTS " ++ csf12Path 
       separator = putStrLn $ replicate shortLineWidth '-'
       putPath info path = putStrLn info >> putStrLn ("  " ++ path ++ "\n")
   separator
@@ -286,7 +286,7 @@ intruderVariants as = do
     --------------------
 
     writeThy thyString = case optOutPath of
-      Just outPath -> writeFile outPath thyString
+      Just outPath -> writeFileWithDirs outPath thyString
       Nothing      -> return ()
     
     -- Output file name, if output is desired.
@@ -548,7 +548,7 @@ translate as
                 putStrLn $ "analyzing: " ++ inFile
                 putStrLn $ ""
                 let outFile = mkOutPath inFile
-                summary <- writeWithSummary (writeFile outFile) outFile
+                summary <- writeWithSummary (writeFileWithDirs outFile) outFile
                 putStrLn $ replicate shortLineWidth '-'
                 putStrLn $ renderDoc summary
                 putStrLn $ ""
@@ -607,6 +607,12 @@ translate as
 ------------------------------------------------------------------------------
 -- Utility functions
 ------------------------------------------------------------------------------
+
+-- | Write a file and ensure that its containing directory exists.
+writeFileWithDirs :: FilePath -> String -> IO ()
+writeFileWithDirs file output = do
+    createDirectoryIfMissing True (takeDirectory file)
+    writeFile file output
 
 -- | Get the string constituting the command line.
 getCommandLine :: IO String

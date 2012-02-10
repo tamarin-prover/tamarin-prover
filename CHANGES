@@ -1,1 +1,6 @@
-* 0.1.0 First public release
+* 0.1.1.0 Bug-fix release
+  
+  - fixed: automatically create output directory, if it does not exist
+  - fixed: wrong flags given in help message for starting interactive mode
+
+* 0.1.0.0 First public release
