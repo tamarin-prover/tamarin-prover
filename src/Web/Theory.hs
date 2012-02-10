@@ -208,7 +208,7 @@ theoryIndex thy = foldr1 ($-$)
     bold                = withTag "strong" [] . text
     overview n info p   = linkToPath p [] (bold n <-> info)
     messageLink         = overview "Message theory" (text "") TheoryMessage
-    ruleLink            = overview "Rewriting rules" rulesInfo TheoryRules
+    ruleLink            = overview "Multiset rewriting rules" rulesInfo TheoryRules
     reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
 
 {-
@@ -291,7 +291,7 @@ reqCasesSnippet kind thy = vcat $
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
 rulesSnippet thy = vcat
-    [ ppRules "Protocol Rules"      crProtocol
+    [ ppRules "Multiset Rewriting Rules"      crProtocol
     ] 
   where
     rules = getClassifiedRules thy

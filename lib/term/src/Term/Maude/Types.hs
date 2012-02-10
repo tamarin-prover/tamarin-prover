@@ -368,11 +368,11 @@ prettyMaudeSig sig = P.vcat
     [ ppNonEmptyList' "builtin:"   P.text      builtIns
     , ppNonEmptyList' "functions:" ppFunSymb $ funSig sig
     , ppNonEmptyList  
-        (\ds -> P.sep (P.text "equations:" : map (P.nest 2) ds))
+        (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyStRule $ stRules sig
     ]
   where
-    ppNonEmptyList' name     = ppNonEmptyList ((P.text name P.<->) . P.fsep)
+    ppNonEmptyList' name     = ppNonEmptyList ((P.keyword_ name P.<->) . P.fsep)
     ppNonEmptyList _   _  [] = P.emptyDoc
     ppNonEmptyList hdr pp xs = hdr $ P.punctuate P.comma $ map pp xs
 

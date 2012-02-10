@@ -69,7 +69,7 @@ xorRules == map (stRuleToRRule . fromJust .  rRuleToStRule) xorRules
 prettyStRule :: HighlightDocument d => StRule -> d
 prettyStRule r = case stRuleToRRule r of
   (lhs `RRule` rhs) -> sep [ nest 2 $ prettyLNTerm lhs
-                           , text "= " <> prettyLNTerm rhs ]
+                           , operator_ "=" <-> prettyLNTerm rhs ]
 
 -- derived instances
 --------------------
