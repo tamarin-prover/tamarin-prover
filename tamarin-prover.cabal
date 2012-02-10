@@ -1,4 +1,3 @@
-
 cabal-version:      >= 1.8
 build-type:         Simple
 name:               tamarin-prover
@@ -9,12 +8,36 @@ category:           Theorem Provers
 author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
                     Simon Meier <simon.meier@inf.ethz.ch>
 maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
-copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010
-synopsis:           Falsification and Unbounded Verification of
-                    Diffie-Hellman style protocols
-description:        Tool underlying our CSF'12 paper.
-homepage:           http://people.inf.ethz.ch/benschmi/POST2011/
-stability:          Beta
+copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2012
+synopsis:           The tamarin prover for security protocol analysis.
+description:        
+
+    The @tamarin@ prover is a tool for the analysis of security protocols. It
+    implements a constraint solving algorithm that supports both falsification
+    and verification of security protocols with respect to an unbounded number
+    of sessions. The underlying security protocol model uses multiset
+    rewriting to specify protocols and adversary capabilities, a guarded
+    fragment of first-order logic to specify security properties, and
+    equational theories to model the algebraic properties of cryptographic
+    operators.
+    .
+    The paper describing the theory underlying the @tamarin@ prover is
+    currently under submission to CSF 2012. Drop us (simon.meier\@inf.ethz.ch
+    or benedikt.schmidt\@inf.ethz.ch) a mail, if you would like to obtain a
+    copy of the paper.
+    .
+    The @tamarin@ prover supports both a batch analysis mode and the
+    interactive construction of security proofs using a GUI. Example protocols
+    and the user guide are installed together with the prover. Just call the
+    @tamarin-prover@ executable without any arguments to get more information.
+    .
+    The @tamarin@ prover uses maude (<http://maude.cs.uiuc.edu/>) as a
+    unification backend and GraphViz (<http://www.graphviz.org/>) to visualize
+    constraint systems. Detailed instructions for installing the `tamarin`
+    prover are given here:
+    <http://www.infsec.ethz.ch/research/software#TAMARIN>
+
+homepage:           http://www.infsec.ethz.ch/research/software#TAMARIN
 
 
 --------------

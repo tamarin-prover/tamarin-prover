@@ -102,15 +102,19 @@ type FunSig = [NonACSym]
 
 
 
--- | These symbols are builtin and require special handling in the parser
---   or elsewhere.
 pairSym, expSym, invSym, oneSym, zeroSym, emptySym :: NonACSym
+-- | Pairing.
 pairSym  = ("pair",2)
+-- | Exponentiation.
 expSym   = ("exp",2)
-invSym   = ("inv",1)    -- ^ The inverse in the groups of exponents.
-oneSym   = ("one", 0)   -- ^ The one in the group of exponents.
-zeroSym  = ("zero",0)   -- ^ The zero for Xor.
-emptySym = ("empty",0) -- ^ The empty multiset.
+-- | The inverse in the groups of exponents.
+invSym   = ("inv",1) 
+-- | The one in the group of exponents.
+oneSym   = ("one", 0)
+-- | The zero for Xor.
+zeroSym  = ("zero",0)
+-- | The empty multiset.
+emptySym = ("empty",0)
 
 -- | Destruct a top-level function application.
 {-# INLINE destFunApp #-}

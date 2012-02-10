@@ -45,13 +45,16 @@ Date Resolved   Date Posted   Who Issue
                                    files.
 
                  2012/02/08    SM  Make release ready
-                                   - Remove intruder_variants.spthy if possible
-                                   - Add exactly case studies to data files
+                                   OK. Remove intruder_variants.spthy if possible
+                                   OK. Add exactly case studies to data files
                                    - Write tutorial.spthy and integrate it
                                      with the help message.
-                                   - Make case studies easily executable.
-                                   - Put CSF'12 case studies into csf12 dir
-                                   - Test analyzing all case studies
+                                   OK. Make case studies easily executable.
+                                   OK. Put CSF'12 case studies into csf12 dir
+                                   OK. Test analyzing all case studies
+                                   - Pretty-print signature
+                                   OK. Write library description.
+                                   - Update README.
 
                 2012/02/08     SM  Normalize graph numberings as good as
                                    possible.
