@@ -12,6 +12,7 @@ module Theory.Parser (
   , parseOpenTheoryString
   , parseProofMethod
   , parseLemma
+  , parseIntruderRulesDH
   ) where
 
 import           Prelude hiding (id, (.))
@@ -175,6 +176,10 @@ parseFile parser f = do
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath -> IO OpenTheory
 parseOpenTheory flags = parseFile (theory flags)
+
+-- | Parse DH intruder rules.
+parseIntruderRulesDH :: FilePath -> IO [IntrRuleAC]
+parseIntruderRulesDH = parseFile (setState dhMaudeSig >> many intrRule)
 
 -- | Parse a security protocol theory file.
 -- TODO: This function seems to parse a string, not a file from a file path?

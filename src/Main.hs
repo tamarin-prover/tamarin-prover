@@ -21,6 +21,7 @@ import Data.Label
 import Control.Basics
 import Control.Category
 import Control.Exception as E
+import Control.Monad.Reader
 
 import System.Console.CmdArgs.Explicit
 import System.Console.CmdArgs.Text
@@ -277,16 +278,16 @@ intruderVariants :: Arguments -> IO ()
 intruderVariants as = do
     ensureMaude as
     hnd <- startMaude (maudePath as) dhMaudeSig
-    let thy       = dhIntruderTheory hnd
-        thyString = renderDoc $ prettyOpenTheory thy
-    putStrLn thyString
-    writeThy thyString
+    let rules       = dhIntruderRules `runReader` hnd
+        rulesString = renderDoc $ prettyIntruderVariants rules
+    putStrLn rulesString
+    writeRules rulesString
   where
     -- output generation
     --------------------
 
-    writeThy thyString = case optOutPath of
-      Just outPath -> writeFileWithDirs outPath thyString
+    writeRules rulesString = case optOutPath of
+      Just outPath -> writeFileWithDirs outPath rulesString
       Nothing      -> return ()
     
     -- Output file name, if output is desired.
@@ -376,8 +377,7 @@ loadGenericThy loader as =
       if (enableDH msig) then
          do variantsFile <- getDataFileName "intruder_variants_dh.spthy"
             ifM (doesFileExist variantsFile)
-                (do intrVariants <- 
-                        get thyCache <$> parseOpenTheory (defines as) variantsFile
+                (do intrVariants <- parseIntruderRulesDH variantsFile
                     return $ addIntrRuleACs intrVariants thy
                 )
                 (error $ "could not find intruder message deduction theory '" 

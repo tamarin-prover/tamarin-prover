@@ -38,7 +38,6 @@ module Theory (
   -- ** Open theories
   , OpenTheory
   , defaultOpenTheory
-  , dhIntruderTheory
   , addProtoRule
   , addIntrRuleACs
 
@@ -75,6 +74,8 @@ module Theory (
   , prettyOpenTheory
 
   , prettyClosedSummary
+
+  , prettyIntruderVariants
 
   -- * Convenience exports
   , module Theory.Proof
@@ -391,13 +392,6 @@ addFormalComment c = modify thyItems (++ [TextItem c])
 defaultOpenTheory :: OpenTheory
 defaultOpenTheory = Theory "default" emptySignaturePure [] []
 
--- | The default intruder theory; uses Maude to perform AC
--- unification for computing the variants.
-dhIntruderTheory :: MaudeHandle -> OpenTheory
-dhIntruderTheory hnd =
-    Theory "intruder_variants" (emptySignaturePure { _sigMaudeInfo = dhMaudeSig })
-           (dhIntruderRules `runReader` hnd) []
-
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness dependens on it.
 openTheory :: ClosedTheory -> OpenTheory
@@ -680,15 +674,12 @@ prettyLemma ppPrf l =
       where
         fmInd = applyInduction =<< fromFormulaNegate fmAC
     -}
-{-
+
 -- | Pretty-print a non-empty bunch of intruder rules.
 prettyIntruderVariants :: HighlightDocument d => [IntrRuleAC] -> d
-prettyIntruderVariants [] = multiComment $ vsep
-    [ text "No intruder variants found. You can generate and cache them using the command"
-    , nest 2 (text "tamarin-prover intruder -O")
-    ]
 prettyIntruderVariants vs = vcat . intersperse (text "") $ map prettyIntrRuleAC vs
 
+{-
 -- | Pretty-print the intruder variants section.
 prettyIntrVariantsSection :: HighlightDocument d => [IntrRuleAC] -> d
 prettyIntrVariantsSection rules = 
