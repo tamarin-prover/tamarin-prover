@@ -5,6 +5,9 @@ builtin: diffie-hellman
 
 functions: kdf/1
 
+// Enable this equation to find a small-subgroup (for <1>) attack.
+// equations: exp(1,x) = 1
+
 section{* The MTI/C0 protocol *}
 
 /*
