@@ -137,7 +137,7 @@ constructionRules fSig =
     createRule s k = (`evalFresh` nothingUsed) $ do
         vars     <- map varTerm <$> (sequence $ replicate k (freshLVar "x" LSortMsg))
         pfacts   <- mapM (kuFact Nothing) vars
-        concfact <- kuFact (Just IsNoExp) (FApp (NonAC (s,k)) vars)
+        concfact <- kuFact (Just CanExp) (FApp (NonAC (s,k)) vars)
         return $ Rule (IntrApp s) pfacts [concfact] []
 
 dropExpTag :: Fact a -> Fact a
@@ -151,45 +151,44 @@ dropExpTag t                    = t
 
 dhIntruderRules :: WithMaude [IntrRuleAC]
 dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
-    [expRule True, invRule True]
-    ++ concatMap (variants hnd) [expRule False, invRule False]
+    [expRule kuFact, invRule kuFact]
+    ++ concatMap (variantsIntruder hnd) [expRule kdFact, invRule kdFact]
   where
-    expRule isConstr = (`evalFresh` nothingUsed) $ do
+    expRule kudFact = (`evalFresh` nothingUsed) $ do
         b        <- varTerm <$> freshLVar "x" LSortMsg
         e        <- varTerm <$> freshLVar "x" LSortMsg
-        bfact    <- fact isConstr (Just IsNoExp) b
+        bfact    <- kudFact (Just CanExp) b
         efact    <- kuFact Nothing e
-        concfact <- fact isConstr (Just IsExp) (FApp (NonAC ("exp",2)) [b, e])
+        concfact <- kudFact (Just CannotExp) (FApp (NonAC expSym) [b, e])
         return $ Rule (IntrApp "exp") [bfact, efact] [concfact] []
 
-    invRule isConstr = (`evalFresh` nothingUsed) $ do
+    invRule kudFact = (`evalFresh` nothingUsed) $ do
         x        <- varTerm <$> freshLVar "x" LSortMsg
-        bfact    <- fact isConstr Nothing x
-        concfact <- fact isConstr (Just IsNoExp) (FApp (NonAC invSym) [x])
+        bfact    <- kudFact Nothing x
+        concfact <- kudFact (Just CanExp) (FApp (NonAC invSym) [x])
         return $ Rule (IntrApp "inv") [bfact] [concfact] []
 
-    fact True  = kuFact
-    fact False = kdFact
 
-    variants hnd ru = do
-        let concTerms = concatMap factTerms
-                                  (get rPrems ru++get rConcs ru++get rActs ru)
-        fsigma <- computeVariants (listToTerm concTerms) `runReader` hnd
-        let sigma     = freshToFree fsigma `evalFreshAvoiding` concTerms
-            ruvariant = normRule' (apply sigma ru) `runReader` hnd
-        guard (frees (get rConcs ruvariant) /= [] &&
-               -- ground terms are already deducible by applying construction rules
-               ruvariant /= ru &&
-               -- this is a construction rule
-               (map dropExpTag (get rConcs ruvariant))
-               \\ (map dropExpTag (get rPrems ruvariant)) /= []
-               -- The conclusion is included in the premises
-              )
+variantsIntruder :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
+variantsIntruder hnd ru = do
+    let concTerms = concatMap factTerms
+                              (get rPrems ru++get rConcs ru++get rActs ru)
+    fsigma <- computeVariants (listToTerm concTerms) `runReader` hnd
+    let sigma     = freshToFree fsigma `evalFreshAvoiding` concTerms
+        ruvariant = normRule' (apply sigma ru) `runReader` hnd
+    guard (frees (get rConcs ruvariant) /= [] &&
+           -- ground terms are already deducible by applying construction rules
+           ruvariant /= ru &&
+           -- this is a construction rule
+           (map dropExpTag (get rConcs ruvariant))
+           \\ (map dropExpTag (get rPrems ruvariant)) /= []
+           -- The conclusion is included in the premises
+           )
 
-        case concatMap factTerms $ get rConcs ruvariant of
-            [_, FApp (AC Mult) _] ->
-                fail "Rules with product conclusion are redundant"
-            _                     -> return ruvariant
+    case concatMap factTerms $ get rConcs ruvariant of
+        [_, FApp (AC Mult) _] ->
+            fail "Rules with product conclusion are redundant"
+        _                     -> return ruvariant
 
 
 normRule' :: IntrRuleAC -> WithMaude IntrRuleAC

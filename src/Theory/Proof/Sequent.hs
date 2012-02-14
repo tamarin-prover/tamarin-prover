@@ -123,7 +123,7 @@ isForbiddenExp ru = maybe False id $ do
     [_,p2] <- return $ get rPrems ru
     [conc] <- return $ get rConcs ru
     (UpK, _,          b)       <- kFactView p2
-    (DnK, Just IsExp, FApp (NonAC ("exp",2)) [g,c]) <- kFactView conc
+    (DnK, Just CannotExp, FApp (NonAC ("exp",2)) [g,c]) <- kFactView conc
 
     -- g should be public and the required inputs for c already required by b
     guard (sortOfTerm g == LSortPub && (input c \\ input b == []))
@@ -955,7 +955,7 @@ solvePremDnK :: [RuleAC] -- ^ All rules that derive a send fact.
 solvePremDnK rules p = do
     iLearn    <- freshLVar "vl" LSortNode
     mLearn    <- varTerm <$> freshLVar "t" LSortMsg
-    concLearn <- kdFact (Just IsNoExp) mLearn
+    concLearn <- kdFact (Just CanExp) mLearn
     let premLearn = outFact mLearn
         ruLearn = Rule (ProtoInfo IRecvRule) [premLearn] [concLearn] []
         cLearn = NodeConc (iLearn, 0)

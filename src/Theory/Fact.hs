@@ -133,18 +133,18 @@ instance Apply t => Apply (Fact t) where
 ------------------
 
 -- | Message fact exponentation tag.
-data ExpTag = IsExp | IsNoExp
+data ExpTag = CannotExp | CanExp
             deriving( Eq, Ord, Show)
 
 -- | Exponentiation-symbol to term.
 expTagToTerm :: ExpTag -> LNTerm
-expTagToTerm IsExp   = Lit (Con (Name PubName (NameId ("exp"))))
-expTagToTerm IsNoExp = Lit (Con (Name PubName (NameId ("noexp"))))
+expTagToTerm CannotExp   = Lit (Con (Name PubName (NameId ("noexp"))))
+expTagToTerm CanExp      = Lit (Con (Name PubName (NameId ("exp"))))
 
 -- | Term to exponentiation-symbol.
 termToExpTag :: LNTerm -> Maybe ExpTag
-termToExpTag (Lit (Con (Name PubName (NameId ("exp")))))   = return IsExp
-termToExpTag (Lit (Con (Name PubName (NameId ("noexp"))))) = return IsNoExp
+termToExpTag (Lit (Con (Name PubName (NameId ("noexp"))))) = return CannotExp
+termToExpTag (Lit (Con (Name PubName (NameId ("exp")))))   = return CanExp
 termToExpTag _                                             = mzero
 
 
