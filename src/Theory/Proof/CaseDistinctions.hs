@@ -317,7 +317,7 @@ precomputeCaseDistinctions ctxt typAsms =
 
       , [ FApp (NonAC (s,k)) $ nMsgVars k
         | (s,k) <- funSigForMaudeSig  . mhMaudeSig . get sigmMaudeHandle . get pcSignature $ ctxt
-        ,  s `notElem` [ "inv", "pair" ] ]
+        ,  s `notElem` [ "inv", "pair" ], k > 0 ]
       ] 
 
 -- | Refine a set of case distinction by exploiting additional typing
