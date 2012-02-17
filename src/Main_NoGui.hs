@@ -1,18 +1,16 @@
-{-# LANGUAGE CPP #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
+-- Portability : GHC only
 --
 -- Main module for the tamarin prover without a GUI
-module Main where
+module Main_NoGui where
 
-#ifdef NO_GUI
-import qualified Main_NoGui as M
-#else
-import qualified Main_Full as M
-#endif
+import Main.Console         (defaultMain)
+import Main.Mode.Batch      (batchMode)
+import Main.Mode.Intruder   (intruderMode)
 
 main :: IO ()
-main = M.main
+main = defaultMain batchMode [intruderMode]

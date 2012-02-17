@@ -99,7 +99,6 @@ import           Control.Parallel.Strategies
 import           Control.DeepSeq
 import           Control.Category
 import qualified Control.Monad.State     as MS
-import           Control.Monad.Reader
 
 import qualified Extension.Data.Label    as L
 import           Extension.Data.Label    hiding (get)

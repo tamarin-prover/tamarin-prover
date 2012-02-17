@@ -34,6 +34,19 @@ source-dists:
 	cd lib/term; cabal sdist
 	cabal sdist
 
+# For profiling, we use the cabal-dev tool and do not build the GUI. This
+# simplifies installing all required libraries with profiling support enabled.
+# The locally installed executable can then be called as follows
+#
+#   ./cabal-dev/bin/tamarin-prover +RTS -p -RTS
+#
+# to generate the profiling report
+#
+#   tamarin-prover.prof
+#
+# in the working directory.
+profiling-install:
+	cabal-dev install -fno-gui --force-reinstalls --enable-library-profiling --enable-executable-profiling ./lib/term ./lib/utils ./
 
 # requires the cabal-dev tool. Install it using the 'cabal-dev'
 dev-install:
@@ -131,12 +144,6 @@ coverage:
 	open coverage/hpc_index.html
 	hpc report unit
 
-prof:
-	ghc -fforce-recomp -main-is Narrow.main --make -prof -auto-all -Wall -o narrow -isrc src/Narrow.hs
-
-proofa:
-	ghc -fforce-recomp -main-is ProofAssistant.main --make -Wall -o proofa -isrc src/ProofAssistant.hs
-
 haddock:
 	cabal haddock --executables
 
@@ -146,4 +153,4 @@ depgraph:
 ctags:
 	ghc -e :ctags src/Main.hs
 
-.PHONY: unit opt all mult coverage proofa haddock case-studies
+.PHONY: unit opt all mult coverage haddock case-studies

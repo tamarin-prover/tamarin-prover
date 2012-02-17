@@ -77,3 +77,5 @@ Date Resolved   Date Posted   Who Issue
                                      - tell equation store about what terms
                                        must be in normal form and use this
                                        information to simplify the equations.
+
+                2012/02/19     SM  Fix broken intruder variants computation.
