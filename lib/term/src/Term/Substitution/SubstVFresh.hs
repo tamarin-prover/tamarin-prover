@@ -71,7 +71,6 @@ import Logic.Connectives
 
 import Utils.Misc
 
-import Data.Maybe
 import Data.Map ( Map )
 import qualified Data.Map as M
 import qualified Data.Set as S

@@ -31,8 +31,6 @@ import Extension.Prelude
 -- import Utils.Misc
 
 import Data.List
-import Data.Ord
-import Data.Maybe
 import Control.Basics
 
 ----------------------------------------------------------------------

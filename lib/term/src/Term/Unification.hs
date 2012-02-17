@@ -52,7 +52,6 @@ import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.Error
 import           Control.Monad.State
-import           Data.List
 import qualified Data.Map as M
 import           Data.Map (Map)
 
