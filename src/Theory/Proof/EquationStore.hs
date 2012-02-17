@@ -70,8 +70,8 @@ eqSplits eqs =
 
 -- | Returns the number of cases for a given split.
 splitCasenum :: EqStore -> SplitId -> Int
-splitCasenum eqs sid = case atMay (getConj . get eqsConj $ eqs) of
-    Just disj -> getDisj . length $ disj
+splitCasenum eqs sid = case atMay (getConj . get eqsConj $ eqs) sid of
+    Just disj -> length . getDisj $ disj
     Nothing   -> error "splitCasenum: invalid split id"
 
 -- | Add a list of term equalities to the equation store.
