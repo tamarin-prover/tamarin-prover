@@ -39,6 +39,13 @@ module Theory.Proof.Types (
 
   -- * Goals
   , Goal(..)
+  , isActionGoal
+  , isPremiseGoal
+  , isPremDnKGoal
+  , isPremUpKGoal
+  , isChainGoal
+  , isSplitGoal
+  , isDisjGoal
 
   -- * Keeping track of typing
   , CaseDistKind(..)
@@ -335,6 +342,39 @@ data Goal =
        -- added to the sequent. For debugging mode only; currently commented
        -- out.
      deriving( Eq, Ord, Show )
+
+-- Indicators
+-------------
+
+isActionGoal :: Goal -> Bool
+isActionGoal (ActionG _ _) = True
+isActionGoal _             = False
+
+isPremiseGoal :: Goal -> Bool
+isPremiseGoal (PremiseG _ _) = True
+isPremiseGoal _              = False
+
+isPremDnKGoal :: Goal -> Bool
+isPremDnKGoal (PremDnKG _) = True
+isPremDnKGoal _            = False
+
+isPremUpKGoal :: Goal -> Bool
+isPremUpKGoal (PremUpKG _ _) = True
+isPremUpKGoal _              = False
+
+isChainGoal :: Goal -> Bool
+isChainGoal (ChainG _) = True
+isChainGoal _          = False
+
+isSplitGoal :: Goal -> Bool
+isSplitGoal (SplitG _) = True
+isSplitGoal _          = False
+
+isDisjGoal :: Goal -> Bool
+isDisjGoal (DisjG _) = True
+isDisjGoal _         = False
+
+
 
 -- Instances
 ------------
