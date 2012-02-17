@@ -831,7 +831,7 @@ openPremiseGoals se = do
     existingDeps = sRawLessRel se
 
     -- We use the following heuristic for marking KU-goals as useful (worth
-    -- solving now) or useless (to be delayed until no more useful goal
+    -- solving now) or useless (to be delayed until no more useful goals
     -- remain). We ignore all goals that do not contain a fresh variable
     -- or where there exists a node, not after the premise or the last node,
     -- providing an Out or KD conclusion that provides the message we are
