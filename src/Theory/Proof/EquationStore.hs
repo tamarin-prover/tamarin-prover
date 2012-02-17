@@ -15,6 +15,7 @@ module Theory.Proof.EquationStore (
   , addRuleVariants
   , splitAtPos
   , eqSplits
+  , splitCasenum
   , constrainedVarsPos
 
   , SplitStrategy(..)
@@ -40,6 +41,7 @@ import Debug.Trace.Ignore
 import Data.List
 import Data.Label hiding ( for )
 import Data.Maybe
+import Safe
 import Data.Monoid
 import Data.Traversable hiding ( mapM )
 import qualified Data.Foldable as F
@@ -60,9 +62,17 @@ data SplitStrategy = SplitNow | SplitLater
 -- Dealing with equations
 ----------------------------------------------------------------------
 
--- | Returns the list of all @SplitId@s corresponding equation disjunctions.
+-- | Returns the list of all @SplitId@s corresponding to equation
+-- sorted by the size of the disjunctions.
 eqSplits :: EqStore -> [SplitId]
-eqSplits eqs = [0.. length (getConj . get eqsConj $ eqs) -1 ]
+eqSplits eqs =
+    map fst . sortOn snd $ zip [0..] (map (length . getDisj) . getConj . get eqsConj $ eqs)
+
+-- | Returns the number of cases for a given split.
+splitCasenum :: EqStore -> SplitId -> Int
+splitCasenum eqs sid = case atMay (getConj . get eqsConj $ eqs) of
+    Just disj -> getDisj . length $ disj
+    Nothing   -> error "splitCasenum: invalid split id"
 
 -- | Add a list of term equalities to the equation store.
 --   Returns the resulting equation store(s) depending
