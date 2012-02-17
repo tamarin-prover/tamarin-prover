@@ -70,4 +70,10 @@ Date Resolved   Date Posted   Who Issue
                 2012/02/09     SM  Allow selecting the 'dot' tool for
                                    interactive mode.
 
-
+                2012/02/09     SM  Easy simplifications:
+                                     - remove disprovable top-level atoms in
+                                       disjunctions, like we do in the
+                                       equation store.
+                                     - tell equation store about what terms
+                                       must be in normal form and use this
+                                       information to simplify the equations.
