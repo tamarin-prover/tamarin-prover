@@ -454,8 +454,9 @@ execProofMethod ctxt method se =
           [se'] | check se se' -> return $ M.singleton "" se'
                 | otherwise    -> mzero
           ses                  -> 
-             error $ "execMethod: unexpected number of sequents: " ++ show (length ses) ++
-                     render (nest 2 $ vcat $ map ((text "" $-$) . prettySequent) ses)
+               return $ M.fromList (zip (map show [(1::Int)..]) ses)
+--             error $ "execMethod: unexpected number of sequents: " ++ show (length ses) ++
+--                     render (nest 2 $ vcat $ map ((text "" $-$) . prettySequent) ses)
 
     -- solve the given goal
     -- PRE: Goal must be valid in this sequent.
