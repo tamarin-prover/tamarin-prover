@@ -49,7 +49,7 @@ module Term.LTerm (
   , frees
   , someInst
   , rename
-  , eqModuloFreshness
+  , eqModuloFreshnessNoAC
   , maximumVarIdx
   , avoid
   , evalFreshAvoiding
@@ -376,14 +376,16 @@ rename :: (MonadFresh m, HasFrees a) => a -> m a
 rename x = evalBindT (someInst x) noBindings
 
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
--- renaming of indices of free variables.
-eqModuloFreshness :: (HasFrees a, Eq a) => a -> a -> Bool
-eqModuloFreshness t1 = 
+-- renaming of indices of free variables. Note that the normal form is not
+-- unique with respect to AC symbols.
+eqModuloFreshnessNoAC :: (HasFrees a, Eq a) => a -> a -> Bool
+eqModuloFreshnessNoAC t1 = 
      -- this formulation shares normalisation of t1 among further calls to
      -- different t2.
     (normIndices t1 ==) . normIndices 
   where
-    normIndices = (`evalFresh` nothingUsed) . rename
+    normIndices = (`evalFresh` nothingUsed) . (`evalBindT` noBindings) .
+                  mapFrees (\x -> importBinding (`LVar` lvarSort x) x "")
 
 -- | The maximum index of all free variables.
 maximumVarIdx :: HasFrees t => t -> Int

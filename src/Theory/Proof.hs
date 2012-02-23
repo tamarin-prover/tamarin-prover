@@ -562,7 +562,10 @@ checkProof :: ProofContext
 checkProof ctxt prover se (LNode (ProofStep method info) cs) =
     fromMaybe (node method (M.map noSequentPrf cs)) $ headMay $ do
         method' <- method : possibleProofMethods (L.get pcSignature ctxt) se
-        guard (method `eqModuloFreshness` method')
+        -- FIXME: eqModuloFreshness is too strict currently as it doesn't
+        -- rename variables to a canonical representative. Moreover, it screws
+        -- up if there are AC symbols involved.
+        guard (method `eqModuloFreshnessNoAC` method')
         cases <- maybe mzero return $ execProofMethod ctxt method' se
         return $ node method' $ checkChildren cases
         
@@ -578,6 +581,7 @@ checkProof ctxt prover se (LNode (ProofStep method info) cs) =
       where
         unhandledCase = mapProofInfo ((,) Nothing) . prover
         
+
 
 ------------------------------------------------------------------------------
 -- Provers: the interface to the outside world.

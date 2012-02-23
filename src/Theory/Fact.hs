@@ -274,7 +274,6 @@ type LNFact = Fact LNTerm
 -- | Unify a list of @LFact@ equalities.
 unifyLNFactEqs :: [Equal LNFact] -> WithMaude [LNSubstVFresh]
 unifyLNFactEqs eqs 
-  -- TODO: Check if the arity of the facts is also checked.
   | all (evalEqual . fmap factTag) eqs = 
       unifyLNTerm (map (fmap (listToTerm . factTerms)) eqs)
   | otherwise = return []
