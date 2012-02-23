@@ -40,6 +40,7 @@ module Theory (
   , defaultOpenTheory
   , addProtoRule
   , addIntrRuleACs
+  , applyPartialEvaluation
 
   -- ** Closed theories
   , ClosedTheory
@@ -99,6 +100,7 @@ import           Control.Parallel.Strategies
 import           Control.DeepSeq
 import           Control.Category
 import qualified Control.Monad.State     as MS
+import           Control.Monad.Reader
 
 import qualified Extension.Data.Label    as L
 import           Extension.Data.Label    hiding (get)
@@ -110,6 +112,7 @@ import           Theory.Rule
 import           Theory.RuleVariants
 import           Theory.IntruderRules
 import           Theory.Proof
+import           Theory.AbstractInterpretation
 
 
 ------------------------------------------------------------------------------
@@ -470,35 +473,75 @@ closeTheory :: FilePath         -- ^ Path to the Maude executable.
             -> IO ClosedTheory
 closeTheory maudePath thy0 = do
     sig <- toSignatureWithMaude maudePath $ L.get thySignature thy0
-    let cache     = closeRuleCache typAsms sig rules $ L.get thyCache thy0
-        addSorrys = checkAndExtendProver (sorryProver "not yet proven")
+    return $ closeTheoryWithMaude sig thy0
 
-        -- Maude / Signature handle
-        hnd = L.get sigmMaudeHandle sig
+-- | Close a theory given a maude signature. This signature must be valid for
+-- the given theory.
+closeTheoryWithMaude :: SignatureWithMaude -> OpenTheory -> ClosedTheory
+closeTheoryWithMaude sig thy0 = do
+    proveTheory addSorrys $ Theory (L.get thyName thy0) sig cache items
+  where
+    cache     = closeRuleCache typAsms sig rules $ L.get thyCache thy0
+    addSorrys = checkAndExtendProver (sorryProver "not yet proven")
 
-        -- close all theory items: in parallel
-        items = (closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq
-        closeTheoryItem = foldTheoryItem 
-            (RuleItem . closeProtoRule hnd) 
-            (LemmaItem . ensureFormulaAC . fmap skeletonToIncrementalProof)
-            TextItem
+    -- Maude / Signature handle
+    hnd = L.get sigmMaudeHandle sig
 
-        -- extract typing lemmas
-        typAsms = do 
-            LemmaItem lem <- items
-            guard (TypingLemma `elem` L.get lAttributes lem)
-            let toGuarded = fmap negateGuarded . fromFormulaNegate
-            case toGuarded <$> L.get lFormulaAC lem of
-              Just (Right gf) -> return gf
-              Just (Left err) -> error $ "closeTheory: " ++ err
-              _               -> mzero
+    -- close all theory items: in parallel
+    items = (closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq
+    closeTheoryItem = foldTheoryItem 
+        (RuleItem . closeProtoRule hnd) 
+        (LemmaItem . ensureFormulaAC . fmap skeletonToIncrementalProof)
+        TextItem
 
-        -- extract protocol rules
-        rules    = theoryRules (Theory errClose errClose errClose items)
-        errClose = error "closeTheory"
+    -- extract typing lemmas
+    typAsms = do 
+        LemmaItem lem <- items
+        guard (TypingLemma `elem` L.get lAttributes lem)
+        let toGuarded = fmap negateGuarded . fromFormulaNegate
+        case toGuarded <$> L.get lFormulaAC lem of
+          Just (Right gf) -> return gf
+          Just (Left err) -> error $ "closeTheory: " ++ err
+          _               -> mzero
 
-    return $ proveTheory addSorrys $ Theory (L.get thyName thy0) sig cache items
+    -- extract protocol rules
+    rules    = theoryRules (Theory errClose errClose errClose items)
+    errClose = error "closeTheory"
 
+
+-- Partial evaluation / abstract interpretation
+-----------------------------------------------
+
+-- | Apply partial evaluation.
+applyPartialEvaluation :: EvaluationStyle -> ClosedTheory -> ClosedTheory
+applyPartialEvaluation evalStyle thy0 =
+    closeTheoryWithMaude sig $
+    L.modify thyItems replaceProtoRules (openTheory thy0)
+  where
+    sig          = L.get thySignature thy0
+    ruEs         = getProtoRuleEs thy0
+    (st', ruEs') = (`runReader` L.get sigmMaudeHandle sig) $ 
+                   partialEvaluation evalStyle ruEs
+
+    replaceProtoRules [] = []
+    replaceProtoRules (item:items)
+      | isRuleItem item  = 
+          [ TextItem ("text", render ppAbsState)
+              
+          ] ++ map RuleItem ruEs' ++ filter (not . isRuleItem) items
+      | otherwise        = item : replaceProtoRules items
+
+    isRuleItem (RuleItem _) = True
+    isRuleItem _            = False
+
+    ppAbsState = 
+      (text $ " the abstract state after partial evaluation" 
+              ++ " contains " ++ show (S.size st') ++ " facts:") $--$
+      (numbered' $ map prettyLNFact $ S.toList st') $--$
+      (text $ "This abstract state results in " ++ show (length ruEs') ++ 
+              " refined multiset rewriting rules.\n" ++
+              "Note that the original number of multiset rewriting rules was "
+              ++ show (length ruEs) ++ ".\n\n")
 
 -- Applying provers
 -------------------
@@ -716,12 +759,18 @@ prettyOpenTheory =
 
 -- | Pretty print a closed theory.
 prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
-prettyClosedTheory = 
+prettyClosedTheory thy = 
     prettyTheory prettySignatureWithMaude
                  (const emptyDoc)
                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules) 
                  prettyClosedProtoRule
                  prettyIncrementalProof
+                 thy
+    -- $--$
+    -- (multiComment $ 
+      -- let ruEs = getProtoRuleEs thy
+      -- in prettyAbstractState ruEs $ absInterpretation ruEs
+    -- )
 
 prettyClosedSummary :: Document d => ClosedTheory -> d
 prettyClosedSummary thy =

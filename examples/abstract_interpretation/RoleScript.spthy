@@ -52,15 +52,6 @@ rule Eval_precv:
   -->
   [ Eval( rest ) ]
 
-rule Eval_precv:
-  [ Eval( pseq( precv( m )
-              , rest )
-        )
-  , In(m)
-  ]
-  -->
-  [ Eval( rest ) ]
-
 rule Eval_psecret:
   [ Eval( pseq( psecret(A,B,s)
               , rest )
@@ -110,10 +101,10 @@ rule Role_I:
        , pseq( pgetPk($R, pkR)
        , pseq( psend( aenc{'1', $I, ni}pkR )
        , pseq( pgetSk($I, skI)
-       , pseq( precv( aenc{'2', $R, ni, nr}pk(skI) )
-       , pseq( psend( aenc{'3', nr}pkR )
+       , pseq( precv( aenc{'2', $R, ni, ~nr}pk(skI) )
+       , pseq( psend( aenc{'3', ~nr}pkR )
        , pseq( psecret( $I, $R, ni )
-       , pseq( psecret( $I, $R, nr )
+       , pseq( psecret( $I, $R, ~nr )
        , pzero
        ))))))))
      )
@@ -123,12 +114,12 @@ rule Role_R:
   [] -->
   [ Eval(
          pseq( pgetSk($R, skR)
-       , pseq( precv( aenc{'1', I, ni}pk(skR) )
+       , pseq( precv( aenc{'1', I, ~ni}pk(skR) )
        , pseq( pgen(nr)
        , pseq( pgetPk(I, pkI)
-       , pseq( psend( aenc{'2', $R, ni, nr}pk(pkI) )
+       , pseq( psend( aenc{'2', $R, ~ni, nr}pkI )
        , pseq( precv( aenc{'3', nr}pk(skR) )
-       , pseq( psecret( I, $R, ni )
+       , pseq( psecret( I, $R, ~ni )
        , pseq( psecret( I, $R, nr )
        , pzero
        ))))))))
@@ -142,8 +133,41 @@ lemma secrecy:
           )
   "
 
+/* Abstract interpretation outline:
 
+Abstraction:
+  Only keep terms whose outermost function symbol is an NonAC function symbol
+  starting with 'p'. The remaining terms are consistently abstracted with
+  variables of the same sort.
 
+  Note that the abstraction must make sure that facts that are
+  alpha-equivalent are syntactically equal. Thus, we must replace every
+  variable with a fresh variable, always starting with an empty fresh state.
+
+State:
+  Set of abstracted facts
+
+Refine rule instances:
+  Every state defines a set of refined rule instances. 
+  Provided that the state covers all possible states that may occur during the
+  protocol execution,
+  the refined rule instances cover all rule instances that may occur during
+  the protocol execution.
+
+  The refined rule instances are computed by
+  taking a fresh instance of a rule
+  For every premise go through every fresh instance of a fact in the state
+  Try all unifiers.
+  For all successful unifications, add the rule substituted with the unifier.
+
+Transition:
+  Take all refined rule instances and abstract their conclusions
+  and add these abstracted conclusion to the abstract state.
+
+Output:
+  Final state and for each rule the refined set.
+
+*/
 
 
 
