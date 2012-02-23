@@ -1,0 +1,186 @@
+theory RoleScript begin
+/* Author: Simon Meier
+   Date:   2012/02/22
+
+   WIP of using abstract interpretation to pre-compile role scripts into
+   customized multiset rewriting rules.
+*/
+
+functions:
+    pseq/2
+  , pzero/0
+  , pgen/1
+  , psend/1
+  , precv/1
+  , pclaim/1
+  , psecret/3
+  , pgetPk/2
+  , pgetSk/2
+
+
+builtin: asymmetric-encryption
+
+
+section{* The interpreter *}
+
+
+rule Eval_pgen:
+  [ Eval( pseq( pgen( n )
+              , rest )
+        )
+  , Fr(n)
+  ]
+  -->
+  [ Eval( rest ) ]
+
+rule Eval_psend:
+  [ Eval( pseq( psend( m )
+              , rest )
+        )
+  ]
+  -->
+  [ Eval( rest )
+  , Out(m)
+  ]
+
+rule Eval_precv:
+  [ Eval( pseq( precv( m )
+              , rest )
+        )
+  , In(m)
+  ]
+  -->
+  [ Eval( rest ) ]
+
+rule Eval_precv:
+  [ Eval( pseq( precv( m )
+              , rest )
+        )
+  , In(m)
+  ]
+  -->
+  [ Eval( rest ) ]
+
+rule Eval_psecret:
+  [ Eval( pseq( psecret(A,B,s)
+              , rest )
+        )
+  ]
+  --[ Secret(A,B,s) ]->
+  [ Eval( rest ) ]
+
+rule Eval_pgetPk:
+  [ Eval( pseq( pgetPk(A,pkA)
+              , rest )
+        )
+  , !Pk(A,pkA)
+  ]
+  -->
+  [ Eval( rest ) ]
+
+rule Eval_pgetSk:
+  [ Eval( pseq( pgetSk(A,skA)
+              , rest )
+        )
+  , !Ltk(A,skA)
+  ]
+  -->
+  [ Eval( rest ) ]
+
+
+section{* PKI *}
+
+rule Register_Key:
+  [ Fr(~sk) ]
+  -->
+  [ !Ltk($A, ~sk), !Pk($A, pk(~sk)), Out(pk(~sk)) ]
+
+rule Reveal_Ltk:
+    [ !Ltk(A, sk) ]
+  --[ LtkRev(A) ]->
+    [ Out(sk) ]
+
+
+section{* The NSL protocol *}
+
+rule Role_I:
+  [] -->
+  [ Eval(
+         pseq( pgen(ni)
+       , pseq( pgetPk($R, pkR)
+       , pseq( psend( aenc{'1', $I, ni}pkR )
+       , pseq( pgetSk($I, skI)
+       , pseq( precv( aenc{'2', $R, ni, nr}pk(skI) )
+       , pseq( psend( aenc{'3', nr}pkR )
+       , pseq( psecret( $I, $R, ni )
+       , pseq( psecret( $I, $R, nr )
+       , pzero
+       ))))))))
+     )
+  ]
+
+rule Role_R:
+  [] -->
+  [ Eval(
+         pseq( pgetSk($R, skR)
+       , pseq( precv( aenc{'1', I, ni}pk(skR) )
+       , pseq( pgen(nr)
+       , pseq( pgetPk(I, pkI)
+       , pseq( psend( aenc{'2', $R, ni, nr}pk(pkI) )
+       , pseq( precv( aenc{'3', nr}pk(skR) )
+       , pseq( psecret( I, $R, ni )
+       , pseq( psecret( I, $R, nr )
+       , pzero
+       ))))))))
+     )
+  ]
+
+lemma secrecy:
+  "All I R s #j #k. Secret(I,R,s)@j & K(s)@k
+      ==> ( (Ex #r. LtkRev(I) @ r)
+          | (Ex #r. LtkRev(R) @ r)
+          )
+  "
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+rule Eval_pclaim:
+  [ Eval( pseq( pclaim( t )
+              , rest )
+        )
+  ]
+  --[ Claim(t) ]->
+  [ Eval( rest ) ]
+*/
+
+/*
+rule Eval_prepeat:
+  [ Eval( pseq( prepeat( body )
+              , rest )
+        )
+  ]
+  --[ Claim(t) ]->
+  [ Eval( body )
+  , Eval( pseq( prepeat( body )
+              , pzero )
+        )
+  , Eval( rest )
+  ]
+*/
+
+
+
+end
