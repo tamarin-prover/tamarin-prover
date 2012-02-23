@@ -79,3 +79,10 @@ Date Resolved   Date Posted   Who Issue
                                        information to simplify the equations.
 
                 2012/02/19     SM  Fix broken intruder variants computation.
+
+                2012/02/22     SM  Cleanup built-in rules: there should be one
+                                   precise location that we get them from.
+                                   currently, this seems to be spread over
+                                   quite some code. For sure: fix
+                                   AbstractInterpretation to refer to
+                                   built-in rules.
