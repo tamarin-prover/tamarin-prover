@@ -1,3 +1,5 @@
+  - fixed: intruder rule generation
+
 * 0.1.1.0 Bug-fix release
   
   - fixed: automatically create output directory, if it does not exist
