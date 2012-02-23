@@ -86,3 +86,8 @@ Date Resolved   Date Posted   Who Issue
                                    quite some code. For sure: fix
                                    AbstractInterpretation to refer to
                                    built-in rules.
+
+                2012/02/23     SM  Once we switched to the github repository
+                                   make sure that --version also reports a
+                                   uniquely identifiable commit. This
+                                   simplifies debugging greatly.
