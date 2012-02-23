@@ -64,6 +64,8 @@ class MonadState (Bindings k v) m => MonadBind k v m where
 
 instance Monad m => MonadBind k v (StateT (Bindings k v) m) where
 
+instance MonadBind k v m => MonadBind k v (FreshT m) where
+
 ------------------------------------------------------------------------------
 -- Type synonym for the StateT monad transformer
 ------------------------------------------------------------------------------

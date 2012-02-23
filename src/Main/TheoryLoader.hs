@@ -41,6 +41,7 @@ import           Extension.Prelude
 import           Theory
 import           Theory.Parser
 import           Theory.Wellformedness
+import           Theory.AbstractInterpretation (EvaluationStyle(..))
 
 import           Main.Console
 import           Main.Environment
@@ -72,6 +73,10 @@ theoryLoadFlags =
   --, flagOpt "" ["intruder","i"] (updateArg "intruderVariants") "FILE"
   --    "Cached intruder rules to use"
 
+  , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
+      "SUMMARY|VERBOSE"
+      "Partially evaluate multiset rewriting system"
+
   , flagOpt "" ["defines","D"] (updateArg "defines") "STRING"
       "Define flags for pseudo-preprocessor."
   ]
@@ -87,7 +92,11 @@ loadClosedWfThy as file = do
     thy <- loadOpen file
     case checkWellformedness thy of
       []     -> close thy
-      report -> error $ renderDoc $ prettyWfErrorReport report
+      report -> do 
+          putStrLn $ "WARNING: ignoring the following errors"
+          putStrLn $ renderDoc $ prettyWfErrorReport report
+          close thy
+      -- report -> error $ renderDoc $ prettyWfErrorReport report
   where
     (loadOpen, close) = loadThy as
 
@@ -137,7 +146,11 @@ loadGenericThy loader as =
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
 closeThy as = 
-    fmap (proveTheory prover) . closeTheory (maudePath as) . wfCheck 
+      fmap (proveTheory prover . partialEvaluation) 
+    . closeTheory (maudePath as)
+    -- FIXME: wf-check is at the wrong position here. Needs to be more
+    -- fine-grained.
+    . wfCheck 
   where
     -- handles to relevant arguments
     --------------------------------
@@ -146,6 +159,13 @@ closeThy as =
 
     stopOnAttack :: Maybe String
     stopOnAttack = findArg "stopOnAttack" as
+
+    -- apply partial application
+    ----------------------------
+    partialEvaluation = case map toLower <$> findArg "partialEvaluation" as of
+      Just "verbose" -> applyPartialEvaluation Tracing
+      Just _         -> applyPartialEvaluation Summary
+      _              -> id
 
     -- wellformedness check
     -----------------------

@@ -91,6 +91,10 @@ instance MonadReader r m => MonadReader r (FreshT m) where
     ask       = lift ask
     local f m = FreshT $ local f $ unFreshT m
 
+instance MonadState s m => MonadState s (FreshT m) where
+    get   = lift get
+    put s = lift $ put s
+
 ------------------------------------------------------------------------------
 -- Fresh monad
 ------------------------------------------------------------------------------
