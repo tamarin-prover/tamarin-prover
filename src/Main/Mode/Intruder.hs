@@ -48,7 +48,7 @@ intruderMode = tamarinMode
 -- | Compute the intruder variants.
 run :: TamarinMode -> Arguments -> IO ()
 run _thisMode as = do
-    ensureMaude as
+    _ <- ensureMaude as
     hnd <- startMaude (maudePath as) dhMaudeSig
     let rules       = dhIntruderRules `runReader` hnd
         rulesString = renderDoc $ prettyIntruderVariants rules

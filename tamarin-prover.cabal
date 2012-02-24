@@ -166,6 +166,7 @@ executable tamarin-prover
       , derive            == 2.5.*
       , time              == 1.2.*
       , parallel          == 3.2.*
+      , HUnit             == 1.2.*
 
       , tamarin-prover-utils == 0.3.*
       , tamarin-prover-term  == 0.3.*

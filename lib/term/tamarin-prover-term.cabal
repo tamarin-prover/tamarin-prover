@@ -47,8 +47,11 @@ library
       , deepseq              == 1.1.*
       , binary               == 0.5.*
       , derive               == 2.5.*
+
+      , HUnit                == 1.2.*
                           
       , tamarin-prover-utils == 0.3.*
+
 
     hs-source-dirs: src
 
@@ -73,6 +76,8 @@ library
 
       Term.Maude.Process
       Term.Maude.Types
+
+      Term.UnitTests
 
     other-modules:
       Term.Term

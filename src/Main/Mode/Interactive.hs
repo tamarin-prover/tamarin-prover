@@ -70,8 +70,8 @@ run thisMode as = case findArg "workDir" as of
       if wdIsDir
         then do
           -- process theories
-          ensureGraphVizDot as
-          ensureMaude as
+          _ <- ensureGraphVizDot as
+          _ <- ensureMaude as
           putStrLn ""
           port <- readPort
           dataDir <- readDataDir

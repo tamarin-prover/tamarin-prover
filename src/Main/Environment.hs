@@ -80,20 +80,21 @@ commandLine prog args = concat $ intersperse " " $ prog : args
 
 -- | Test if a process is executable and check its response. This is used to
 -- determine the versions and capabilities of tools that we depend on.
-testProcess :: (String -> String -> Either String String) 
+testProcess :: (String -> String -> Either String String, String)
                               -- ^ Analysis of stdout, stderr. Use 'Left' to report error.
             -> String         -- ^ Test description to display.
             -> FilePath       -- ^ Process to start
             -> [String]       -- ^ Arguments
             -> String         -- ^ Stdin
             -> IO Bool        -- ^ True, if test was successful
-testProcess check testName prog args inp = do
+testProcess (check, defaultMsg) testName prog args inp = do
     putStr testName
     hFlush stdout
     handle handler $ do
         (exitCode, out, err) <- readProcessWithExitCode prog args inp
         let errMsg reason = do
                 putStrLn reason
+                putStrLn $ "Detailed results from testing '" ++ prog ++ "'"
                 putStrLn $ " command: " ++ commandLine prog args
                 putStrLn $ " stdin:   " ++ inp
                 putStrLn $ " stdout:  " ++ out
@@ -101,7 +102,8 @@ testProcess check testName prog args inp = do
                 return False
 
         case exitCode of
-            ExitFailure code -> errMsg $ "failed with exit code " ++ show code
+            ExitFailure code -> errMsg $ 
+              "failed with exit code " ++ show code ++ "\n\n" ++ defaultMsg
             ExitSuccess      -> 
               case check out err of
                 Left msg     -> errMsg msg
@@ -115,11 +117,10 @@ testProcess check testName prog args inp = do
                    return False
 
 -- | Ensure a suitable version of the Graphviz dot tool is installed.
-ensureGraphVizDot :: Arguments -> IO ()
+ensureGraphVizDot :: Arguments -> IO Bool
 ensureGraphVizDot as = do
     putStrLn $ "GraphViz tool: '" ++ dot ++ "'"
-    success <- testProcess check " checking version: " dot ["-V"] ""
-    unless success $ putStrLn errMsg
+    testProcess (check, errMsg) " checking version: " dot ["-V"] ""
   where
     dot = dotPath as
     check _ err
@@ -135,11 +136,10 @@ ensureGraphVizDot as = do
       ]
 
 -- | Ensure a suitable version of Maude is installed.
-ensureMaude :: Arguments -> IO ()
+ensureMaude :: Arguments -> IO Bool
 ensureMaude as = do
     putStrLn $ "maude tool: '" ++ maude ++ "'"
-    success <- testProcess check " checking version: " maude ["--version"] ""
-    unless success $ putStrLn $ errMsg "tool not found / does not work"
+    testProcess (check, errMsg') " checking version: " maude ["--version"] ""
   where
     maude = maudePath as
     check out _ 
@@ -147,6 +147,7 @@ ensureMaude as = do
       | otherwise                           = Left  $ errMsg $
           " 'maude --version' returned wrong verison '" ++ out ++ "'"
 
+    errMsg' = errMsg $ "'" ++ maude ++ "' executable not found / does not work"
     errMsg reason = unlines
           [ "WARNING:"
           , ""

@@ -67,7 +67,7 @@ run :: TamarinMode -> Arguments -> IO ()
 run thisMode as 
   | null inFiles = helpAndExit thisMode (Just "no input files given")
   | otherwise    = do
-      ensureMaude as
+      _ <- ensureMaude as
       putStrLn $ ""
       summaries <- mapM processThy $ inFiles
       putStrLn $ ""

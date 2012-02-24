@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 -- |
 -- Copyright   : (c) 2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -6,7 +7,7 @@
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Unit tests for the functions dealing with term algebra and related notions.
-module Term.UnitTests where
+module Term.UnitTests (main) where
 
 import Term.Substitution
 import Term.Subsumption
