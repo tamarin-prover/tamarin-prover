@@ -54,7 +54,7 @@ run _thisMode as = do
     let successGraphVizDot = True
 #endif
     nextTopic "Testing the unification infrastructure"
-    Counts _ _ termErrs termFails <- TestTerm.main
+    Counts _ _ termErrs termFails <- TestTerm.main (maudePath as)
     let successTerm = termErrs == 0 && termFails == 0
         success = and [successMaude, successGraphVizDot, successTerm]
 

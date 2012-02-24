@@ -276,9 +276,11 @@ testsSimple _hnd =
     TestLabel "Tests for simple functions" $ TestList
       [ testTrue "" (size [bigTerm] > 0) ]
 
-main :: IO Counts
-main = do
-    mhnd <- startMaude "maude" allMaudeSig
+-- | Execute all unification infrastructure unit tests.
+main :: FilePath -- ^ Path to maude executable.
+     -> IO Counts
+main maudePath = do
+    mhnd <- startMaude maudePath allMaudeSig
     runTestTT $ TestList [ testsVariant mhnd
                          , tcompare mhnd
                          , testsSubs mhnd
