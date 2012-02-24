@@ -37,7 +37,6 @@ intruderMode = tamarinMode
   where
     setupFlags defaultMode = defaultMode
       { modeArgs       = ([], Nothing )  -- no positional argumants
-      , modeCheck      = updateArg "mode" "intruder"
       , modeGroupFlags = Group outputFlags [] [("About", [helpFlag])]
       }
 
