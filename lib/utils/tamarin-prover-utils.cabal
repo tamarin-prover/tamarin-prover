@@ -38,11 +38,12 @@ library
       , bytestring        == 0.9.*
       , SHA               == 1.4.*
       , parsec            == 3.1.*
-      , deepseq           == 1.1.*
+      , deepseq           == 1.2.*
       , syb               >= 0.3.3   && < 0.4
       , pretty            == 1.1.*
       , time              == 1.2.*
       , binary            == 0.5.*
+      , dlist             == 0.5.*
 
     hs-source-dirs: src
 
