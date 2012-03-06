@@ -78,7 +78,7 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
             getHint _             = "z"
 
     makeRule (ps, cs, as) subst freshSubsts0 =
-        Rule (ProtoRuleACInfo ri (Disj freshSubsts)) prems concs acts
+        Rule (ProtoRuleACInfo ri (Disj freshSubsts) []) prems concs acts
       where prems = apply subst ps
             concs = apply subst cs
             acts  = apply subst as

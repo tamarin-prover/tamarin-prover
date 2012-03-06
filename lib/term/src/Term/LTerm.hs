@@ -458,6 +458,10 @@ instance HasFrees Int where
     foldFrees  _ = const mempty
     mapFrees   _ = pure
 
+instance HasFrees Bool where
+    foldFrees  _ = const mempty
+    mapFrees   _ = pure
+
 instance HasFrees Char where
     foldFrees  _ = const mempty
     mapFrees   _ = pure

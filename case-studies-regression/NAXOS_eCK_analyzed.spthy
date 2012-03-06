@@ -1,311 +1,10 @@
 theory NAXOS_eCK begin
 
- builtin: diffie-hellman
+// Function signature and definition of the equational theory E
 
-section{* Finite Variants of the Intruder Rules *}
-
- rule (modulo AC) isend:
-    [ !KU( f_, x ) ] --[ K( x ) ]-> [ In( x ) ]
- 
- rule (modulo AC) fst:
-    [ !KD( f_.3, <x.1, x.2> ) ] --> [ !KD( f_.4, x.1 ) ]
- 
- rule (modulo AC) snd:
-    [ !KD( f_.3, <x.1, x.2> ) ] --> [ !KD( f_.4, x.2 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^x.4 ), !KU( f_.2, x.1 ) ]
-   -->
-    [ !KD( 'exp', x.3^(x.1*x.4) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^x.3 ), !KU( f_.2, inv(x.3) ) ]
-   -->
-    [ !KD( 'exp', x.4 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^inv(x.3) ), !KU( f_.2, x.3 ) ]
-   -->
-    [ !KD( 'exp', x.4 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^inv(x.5) ), !KU( f_.2, inv(x.3) ) ]
-   -->
-    [ !KD( 'exp', x.4^inv((x.3*x.5)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^inv((x.3*x.5)) ), !KU( f_.2, x.3 ) ]
-   -->
-    [ !KD( 'exp', x.4^inv(x.5) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^(x.3*x.5) ), !KU( f_.2, inv(x.3) ) ]
-   -->
-    [ !KD( 'exp', x.4^x.5 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^(x.5*inv(x.3)) ), !KU( f_.2, x.3 ) ]
-   -->
-    [ !KD( 'exp', x.4^x.5 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^x.4 ), !KU( f_.2, inv((x.4*x.5)) ) ]
-   -->
-    [ !KD( 'exp', x.3^inv(x.5) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^x.4 ), !KU( f_.2, (x.5*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.3^x.5 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^inv(x.4) ), !KU( f_.2, (x.3*x.4) ) ]
-   -->
-    [ !KD( 'exp', x.5^x.3 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^(x.5*inv(x.6)) ), !KU( f_.2, inv(x.3) ) ]
-   -->
-    [ !KD( 'exp', x.4^(x.5*inv((x.3*x.6))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^inv(x.4) ), !KU( f_.2, (x.5*inv(x.6)) ) ]
-   -->
-    [ !KD( 'exp', x.3^(x.5*inv((x.4*x.6))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^(x.5*inv((x.3*x.6))) ), !KU( f_.2, x.3 ) ]
-   -->
-    [ !KD( 'exp', x.4^(x.5*inv(x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^inv((x.4*x.6)) ), !KU( f_.2, (x.3*x.4) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.3*inv(x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*x.6) ), !KU( f_.2, inv((x.3*x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.6*inv(x.3)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*x.6) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.3*x.6) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.6*inv(x.4)) ), !KU( f_.2, (x.3*x.4) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.3*x.6) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^x.4 ), !KU( f_.2, (x.5*inv((x.4*x.6))) ) ]
-   -->
-    [ !KD( 'exp', x.3^(x.5*inv(x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.6*inv(x.7)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^((x.3*x.6)*inv((x.4*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*inv(x.3)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*inv(x.6)) ), !KU( f_.2, inv((x.3*x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^inv((x.3*x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^inv((x.3*x.6)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^inv((x.4*x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.6*inv((x.4*x.7))) ), !KU( f_.2, (x.3*x.4) ) ]
-   -->
-    [ !KD( 'exp', x.5^((x.3*x.6)*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^(x.4*x.5) ), !KU( f_.2, (x.6*inv((x.5*x.7))) ) ]
-   -->
-    [ !KD( 'exp', x.3^((x.4*x.6)*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^((x.4*x.6)*inv(x.3)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^x.6 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.6^(x.5*inv(x.4)) ), !KU( f_.2, ((x.3*x.4)*inv(x.5)) ) ]
-   -->
-    [ !KD( 'exp', x.6^x.3 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^((x.4*x.6)*inv(x.7)) ), !KU( f_.2, inv((x.3*x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.6*inv((x.3*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.6^inv((x.4*x.7)) ), !KU( f_.2, ((x.3*x.4)*inv(x.5)) ) ]
-   -->
-    [ !KD( 'exp', x.6^(x.3*inv((x.5*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*inv((x.3*x.6))) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^inv(x.6) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^(x.4*inv(x.5)) ), !KU( f_.2, (x.5*inv((x.4*x.6))) ) ]
-   -->
-    [ !KD( 'exp', x.3^inv(x.6) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^(x.4*inv(x.5)) ), !KU( f_.2, (x.6*inv((x.4*x.7))) ) ]
-   -->
-    [ !KD( 'exp', x.3^(x.6*inv((x.5*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv(x.4)) ),
-    !KU( f_.2, ((x.3*x.4)*inv(x.5)) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^(x.3*x.7) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.6*inv((x.3*x.7))) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.6*inv((x.4*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.3^(x.4*inv(x.5)) ),
-    !KU( f_.2, ((x.5*x.6)*inv((x.4*x.7))) )
-    ]
-   -->
-    [ !KD( 'exp', x.3^(x.6*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.5^((x.4*x.6)*inv((x.3*x.7))) ),
-    !KU( f_.2, (x.3*inv(x.4)) )
-    ]
-   -->
-    [ !KD( 'exp', x.5^(x.6*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^(x.5*inv((x.4*x.7))) ),
-    !KU( f_.2, ((x.3*x.4)*inv(x.5)) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^(x.3*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv(x.3)) ),
-    !KU( f_.2, (x.3*inv((x.4*x.5))) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^(x.7*inv(x.4)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv(x.8)) ),
-    !KU( f_.2, (x.3*inv((x.4*x.5))) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^((x.3*x.7)*inv((x.4*x.8))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^(x.7*inv((x.4*x.8))) ),
-    !KU( f_.2, ((x.3*x.4)*inv(x.5)) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^((x.3*x.7)*inv((x.5*x.8))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^(x.5*inv((x.3*x.7))) ),
-    !KU( f_.2, (x.3*inv((x.4*x.5))) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^inv((x.4*x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.3^((x.4*x.5)*inv(x.6)) ),
-    !KU( f_.2, ((x.6*x.7)*inv((x.5*x.8))) )
-    ]
-   -->
-    [ !KD( 'exp', x.3^((x.4*x.7)*inv(x.8)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv((x.4*x.8))) ),
-    !KU( f_.2, ((x.3*x.4)*inv(x.5)) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^((x.3*x.7)*inv(x.8)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.7^(x.6*inv((x.4*x.8))) ),
-    !KU( f_.2, ((x.3*x.4)*inv((x.5*x.6))) )
-    ]
-   -->
-    [ !KD( 'exp', x.7^(x.3*inv((x.5*x.8))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv((x.3*x.8))) ),
-    !KU( f_.2, (x.3*inv((x.4*x.5))) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^(x.7*inv((x.4*x.8))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.7^((x.6*x.8)*inv((x.4*x.9))) ),
-    !KU( f_.2, ((x.3*x.4)*inv((x.5*x.6))) )
-    ]
-   -->
-    [ !KD( 'exp', x.7^((x.3*x.8)*inv((x.5*x.9))) ) ]
- 
- rule (modulo AC) inv:
-    [ !KD( f_.1, inv(x.2) ) ] --> [ !KD( 'noexp', x.2 ) ]
- 
- rule (modulo AC) fst:
-    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', fst(x) ) ]
- 
- rule (modulo AC) h:
-    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', h(x) ) ]
- 
- rule (modulo AC) pair:
-    [ !KU( f_.2, x ), !KU( f_.3, x.1 ) ] --> [ !KU( 'noexp', <x, x.1> ) ]
- 
- rule (modulo AC) snd:
-    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', snd(x) ) ]
- 
- rule (modulo AC) coerce:
-    [ !KD( f_, x ) ] --> [ !KU( f_, x ) ]
- 
- rule (modulo AC) pub:
-    [ ] --> [ !KU( f_, $x ) ]
- 
- rule (modulo AC) fresh:
-    [ Fr( ~x ) ] --> [ !KU( f_, ~x ) ]
- 
- rule (modulo AC) exp:
-    [ !KU( 'noexp', x ), !KU( f_.2, x.1 ) ] --> [ !KU( 'exp', x^x.1 ) ]
- 
- rule (modulo AC) inv:
-    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', inv(x) ) ]
+builtin: diffie-hellman
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 section{* NAXOS *}
 
@@ -313,6 +12,7 @@ rule (modulo E) generate_ltk:
    [ Fr( ~lkA ) ]
   -->
    [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
+
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Init_1:
@@ -322,6 +22,7 @@ rule (modulo E) Init_1:
    Init_1( ~ekI, $I, $R, ~lkI, 'g'^h(<'1', ~ekI, ~lkI>) ), !Ephk( ~ekI ),
    Out( 'g'^h(<'1', ~ekI, ~lkI>) )
    ]
+
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Init_2:
@@ -338,6 +39,7 @@ rule (modulo E) Init_2:
               $I, $R>)
    )
    ]
+
   /*
   rule (modulo AC) Init_2:
      [
@@ -470,6 +172,7 @@ rule (modulo E) Resp_1:
               $I, $R>)
    )
    ]
+
   /*
   rule (modulo AC) Resp_1:
      [ In( X.2 ), Fr( ~ekR ), !Ltk( $R.5, ~lkR.1 ), !Pk( $I.6, 'g'^~x.7 ) ]
@@ -587,14 +290,17 @@ rule (modulo E) Resp_1:
 
 rule (modulo E) Sessk_reveal:
    [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Ltk_reveal:
    [ !Ltk( $A, lkA ) ] --[ LtkRev( $A ) ]-> [ Out( lkA ) ]
+
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Ephk_reveal:
    [ !Ephk( ~ekA ) ] --[ EphkRev( ~ekA ) ]-> [ Out( ~ekA ) ]
+
   /* has exactly the trivial AC variant */
 
 lemma (modulo E) eCK_initiator_key:
@@ -617,7 +323,7 @@ lemma (modulo E) eCK_initiator_key:
             SidR_1( ekR.22, I.3, R.4, hkI.6, hkR.7, kpartner.23 ) @ #i4.21)))"
 /* proof based on the same lemma modulo AC */
 /*
-doubly-guarded formula characterizing all attacks:
+guarded formula characterizing all attacks:
 "Ex #i1 #i2.1 ekI.2 I.3 R.4 k.5 hkI.6 hkR.7.
   (SidI_2( ekI.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)
  &
@@ -645,67 +351,6 @@ doubly-guarded formula characterizing all attacks:
     &
      T)"
 */
-/*
-proof by induction possible over the formula:
-"(Ex #i1 #i2.1 ekI.2 I.3 R.4 k.5 hkI.6 hkR.7.
-   (SidI_2( ekI.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)
-  &
-   (All #i3.8 #i4.9.
-     (LtkRev( I.3 ) @ #i3.8) & (EphkRev( ekI.2 ) @ #i4.9)
-    ==>
-     F) &
-   (All #i3.10. (SesskRev( ekI.2 ) @ #i3.10) ==> F) &
-   (All #i3.11 #i4.12 ekR.13 kpartner.14.
-     (SidR_1( ekR.13, I.3, R.4, hkI.6, hkR.7, kpartner.14 ) @ #i3.11) &
-     (SesskRev( ekR.13 ) @ #i4.12)
-    ==>
-     F) &
-   (All #i3.15 #i4.16 #i5.17 ekR.18 kpartner.19.
-     (SidR_1( ekR.18, I.3, R.4, hkI.6, hkR.7, kpartner.19 ) @ #i3.15) &
-     (LtkRev( R.4 ) @ #i4.16) &
-     (EphkRev( ekR.18 ) @ #i5.17)
-    ==>
-     F) &
-   (All #i3.20.
-     (LtkRev( R.4 ) @ #i3.20)
-    ==>
-     Ex #i4.21 ekR.22 kpartner.23.
-      (SidR_1( ekR.22, I.3, R.4, hkI.6, hkR.7, kpartner.23 ) @ #i4.21)
-     &
-      T)) &
- (All #i1.24 #i2.25 ekI.26 I.27 R.28 k.29 hkI.30 hkR.31.
-   (SidI_2( ekI.26, I.27, R.28, hkI.30, hkR.31, k.29 ) @ #i1.24) &
-   (K( k.29 ) @ #i2.25)
-  ==>
-   (Last(#i2.25)) |
-   (Last(#i1.24)) |
-   (Ex #i3.32 #i4.33.
-     (LtkRev( I.27 ) @ #i3.32) & (EphkRev( ekI.26 ) @ #i4.33)
-    &
-     (All. (Last(#i4.33)) ==> F) & (All. (Last(#i3.32)) ==> F)) |
-   (Ex #i3.34. (SesskRev( ekI.26 ) @ #i3.34) & All. (Last(#i3.34)) ==> F) |
-   (Ex #i3.35 #i4.36 ekR.37 kpartner.38.
-     (SidR_1( ekR.37, I.27, R.28, hkI.30, hkR.31, kpartner.38 ) @ #i3.35) &
-     (SesskRev( ekR.37 ) @ #i4.36)
-    &
-     (All. (Last(#i4.36)) ==> F) & (All. (Last(#i3.35)) ==> F)) |
-   (Ex #i3.39 #i4.40 #i5.41 ekR.42 kpartner.43.
-     (SidR_1( ekR.42, I.27, R.28, hkI.30, hkR.31, kpartner.43 ) @ #i3.39) &
-     (LtkRev( R.28 ) @ #i4.40) &
-     (EphkRev( ekR.42 ) @ #i5.41)
-    &
-     (All. (Last(#i5.41)) ==> F) &
-     (All. (Last(#i4.40)) ==> F) &
-     (All. (Last(#i3.39)) ==> F)) |
-   (Ex #i3.44.
-     (LtkRev( R.28 ) @ #i3.44)
-    &
-     (All. (Last(#i3.44)) ==> F) &
-     (All #i4.45 ekR.46 kpartner.47.
-       (SidR_1( ekR.46, I.27, R.28, hkI.30, hkR.31, kpartner.47 ) @ #i4.45)
-      ==>
-       Last(#i4.45))))"
-*/
 simplify
 solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
   case Init_1
@@ -713,7 +358,7 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
     case generate_ltk
     solve( (#i2.1, 0)[!KU( f_.19,
                            h(<'2', x.11, 'g'^(~x.16*h(<'1', ~ekI.8, ~lkI.9>)), x.12, $I.13, $R.14>)
-                      )] )
+                      )] /* may loop */ )
       case Sessk_reveal_case_1
       by contradiction // from formulas
     next
@@ -725,11 +370,11 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
         case split_case_2
         solve( (#vf.17, 0)[!KU( f_.18,
                                 'g'^(~x.16*h(<'1', ~tid.83, ~lkI.81>)*inv(~lkI.81))
-                           )] )
+                           )] /* may loop */ )
           case Resp_1
           solve( (#vf.56, 0)[!KU( f_.57,
                                   'g'^(~x.111*h(<'1', ~ekI.80, ~lkI.133>)*inv(~lkI.133))
-                             )] )
+                             )] /* may loop */ )
             case Init_1
             by solve( KU((#vr.117, 1), ~x.159) )
           next
@@ -743,7 +388,7 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
           case exp
           solve( (#vf.56, 0)[!KU( f_.57,
                                   'g'^(~x.16*h(<'1', ~ekI.80, ~lkI.81>)*inv(~lkI.81))
-                             )] )
+                             )] /* may loop */ )
             case Init_1
             by solve( KU((#vr.102, 1), ~x.129) )
           next
@@ -757,7 +402,7 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
           case generate_ltk
           solve( (#vf.56, 0)[!KU( f_.57,
                                   'g'^(~x.116*h(<'1', ~ekI.80, ~lkI.117>)*inv(~lkI.117))
-                             )] )
+                             )] /* may loop */ )
             case Init_1
             by solve( KU((#vr.109, 1), ~lkI.144) )
           next
@@ -773,7 +418,7 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
       case h
       solve( KU((#vr.44, 0), 'g'^(~x.16*h(<'1', ~ekI.8, ~lkI.9>))) )
         case Init_1
-        solve( (#vr.59, 1)[!KU( f_.60, ~x.72 )] )
+        solve( (#vr.59, 1)[!KU( f_.60, ~x.72 )] /* may loop */ )
           case Ltk_reveal
           solve( (#i4.87, 2)[!Ltk( $R.14, ~lkR.91 )] )
             case generate_ltk
@@ -785,12 +430,13 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
                   case split_case_1
                   solve( KU((#vr.44, 0), 'g'^(~lkI.129*h(<'1', ~ekR.130, ~lkR.131>))) )
                     case Resp_1
-                    solve( (#vr.150, 1)[!KU( f_.151, ~lkI.165 )] )
+                    solve( (#vr.150, 1)[!KU( f_.151, ~lkI.165 )] /* may loop */ )
                       case Ltk_reveal
                       solve( KU((#vr.44, 0), 'g'^(h(<'1', ~ekI.128, ~lkI.165>)*
                                                   h(<'1', ~ekR.166, ~lkR.167>))) )
                         case Init_1
-                        solve( (#vr.197, 1)[!KU( f_.198, h(<'1', ~ekR.217, ~lkR.218>) )] )
+                        solve( (#vr.197, 1)[!KU( f_.198, h(<'1', ~ekR.217, ~lkR.218>)
+                                            )] /* may loop */ )
                           case h
                           solve( KU((#vr.221, 0), ~ekR.217) )
                             case Ephk_reveal
@@ -799,7 +445,8 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
                         qed
                       next
                         case Resp_1
-                        solve( (#vr.203, 1)[!KU( f_.204, h(<'1', ~ekI.225, ~lkI.226>) )] )
+                        solve( (#vr.203, 1)[!KU( f_.204, h(<'1', ~ekI.225, ~lkI.226>)
+                                            )] /* may loop */ )
                           case h
                           solve( KU((#vr.231, 0), ~ekI.225) )
                             case Ephk_reveal
@@ -825,7 +472,8 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
                     solve( KU((#vr.44, 0), 'g'^(h(<'1', ~ekI.128, ~lkI.129>)*
                                                 h(<'1', ~ekR.130, ~lkR.131>))) )
                       case Init_1
-                      solve( (#vr.151, 1)[!KU( f_.152, h(<'1', ~ekR.171, ~lkR.172>) )] )
+                      solve( (#vr.151, 1)[!KU( f_.152, h(<'1', ~ekR.171, ~lkR.172>)
+                                          )] /* may loop */ )
                         case h
                         solve( KU((#vr.135, 1), ~lkI.170) )
                           case Ltk_reveal
@@ -837,7 +485,8 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
                       qed
                     next
                       case Resp_1
-                      solve( (#vr.157, 1)[!KU( f_.158, h(<'1', ~ekI.179, ~lkI.180>) )] )
+                      solve( (#vr.157, 1)[!KU( f_.158, h(<'1', ~ekI.179, ~lkI.180>)
+                                          )] /* may loop */ )
                         case h
                         solve( KU((#vr.135, 1), ~lkI.180) )
                           case Ltk_reveal
@@ -868,7 +517,8 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
                     qed
                   next
                     case generate_ltk
-                    solve( (#vr.142, 1)[!KU( f_.143, h(<'1', ~ekR.150, ~lkR.151>) )] )
+                    solve( (#vr.142, 1)[!KU( f_.143, h(<'1', ~ekR.150, ~lkR.151>)
+                                        )] /* may loop */ )
                       case h
                       solve( KU((#vr.44, 0), 'g'^(h(<'1', ~ekI.128, ~lkI.149>)*
                                                   h(<'1', ~ekR.150, ~lkR.151>))) )
@@ -879,7 +529,8 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
                         qed
                       next
                         case Resp_1
-                        solve( (#vr.175, 1)[!KU( f_.176, h(<'1', ~ekI.197, ~lkI.198>) )] )
+                        solve( (#vr.175, 1)[!KU( f_.176, h(<'1', ~ekI.197, ~lkI.198>)
+                                            )] /* may loop */ )
                           case h
                           solve( KU((#vr.154, 0), ~ekR.199) )
                             case Ephk_reveal
@@ -929,7 +580,8 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
         qed
       next
         case generate_ltk
-        solve( (#vr.57, 1)[!KU( f_.58, h(<'1', ~ekI.64, ~lkI.65>) )] )
+        solve( (#vr.57, 1)[!KU( f_.58, h(<'1', ~ekI.64, ~lkI.65>)
+                           )] /* may loop */ )
           case h
           solve( KU((#vr.69, 0), ~ekI.64) )
             case Ephk_reveal
@@ -963,7 +615,7 @@ lemma (modulo E) eCK_responder_key:
           (Ex #i4.20 ekI.21. SidI_1( ekI.21, I.3, R.4, hkI.6 ) @ #i4.20)))"
 /* proof based on the same lemma modulo AC */
 /*
-doubly-guarded formula characterizing all attacks:
+guarded formula characterizing all attacks:
 "Ex #i1 #i2.1 ekR.2 I.3 R.4 k.5 hkI.6 hkR.7.
   (SidR_1( ekR.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)
  &
@@ -988,64 +640,6 @@ doubly-guarded formula characterizing all attacks:
    ==>
     Ex #i4.20 ekI.21. (SidI_1( ekI.21, I.3, R.4, hkI.6 ) @ #i4.20) & T)"
 */
-/*
-proof by induction possible over the formula:
-"(Ex #i1 #i2.1 ekR.2 I.3 R.4 k.5 hkI.6 hkR.7.
-   (SidR_1( ekR.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)
-  &
-   (All #i3.8 #i4.9.
-     (LtkRev( R.4 ) @ #i3.8) & (EphkRev( ekR.2 ) @ #i4.9)
-    ==>
-     F) &
-   (All #i3.10. (SesskRev( ekR.2 ) @ #i3.10) ==> F) &
-   (All #i3.11 #i4.12 ekI.13 kpartner.14.
-     (SidI_2( ekI.13, I.3, R.4, hkI.6, hkR.7, kpartner.14 ) @ #i3.11) &
-     (SesskRev( ekI.13 ) @ #i4.12)
-    ==>
-     F) &
-   (All #i3.15 #i4.16 #i5.17 ekI.18.
-     (SidI_1( ekI.18, I.3, R.4, hkI.6 ) @ #i3.15) &
-     (LtkRev( I.3 ) @ #i4.16) &
-     (EphkRev( ekI.18 ) @ #i5.17)
-    ==>
-     F) &
-   (All #i3.19.
-     (LtkRev( I.3 ) @ #i3.19)
-    ==>
-     Ex #i4.20 ekI.21. (SidI_1( ekI.21, I.3, R.4, hkI.6 ) @ #i4.20) & T)) &
- (All #i1.22 #i2.23 ekR.24 I.25 R.26 k.27 hkI.28 hkR.29.
-   (SidR_1( ekR.24, I.25, R.26, hkI.28, hkR.29, k.27 ) @ #i1.22) &
-   (K( k.27 ) @ #i2.23)
-  ==>
-   (Last(#i2.23)) |
-   (Last(#i1.22)) |
-   (Ex #i3.30 #i4.31.
-     (LtkRev( R.26 ) @ #i3.30) & (EphkRev( ekR.24 ) @ #i4.31)
-    &
-     (All. (Last(#i4.31)) ==> F) & (All. (Last(#i3.30)) ==> F)) |
-   (Ex #i3.32. (SesskRev( ekR.24 ) @ #i3.32) & All. (Last(#i3.32)) ==> F) |
-   (Ex #i3.33 #i4.34 ekI.35 kpartner.36.
-     (SidI_2( ekI.35, I.25, R.26, hkI.28, hkR.29, kpartner.36 ) @ #i3.33) &
-     (SesskRev( ekI.35 ) @ #i4.34)
-    &
-     (All. (Last(#i4.34)) ==> F) & (All. (Last(#i3.33)) ==> F)) |
-   (Ex #i3.37 #i4.38 #i5.39 ekI.40.
-     (SidI_1( ekI.40, I.25, R.26, hkI.28 ) @ #i3.37) &
-     (LtkRev( I.25 ) @ #i4.38) &
-     (EphkRev( ekI.40 ) @ #i5.39)
-    &
-     (All. (Last(#i5.39)) ==> F) &
-     (All. (Last(#i4.38)) ==> F) &
-     (All. (Last(#i3.37)) ==> F)) |
-   (Ex #i3.41.
-     (LtkRev( I.25 ) @ #i3.41)
-    &
-     (All. (Last(#i3.41)) ==> F) &
-     (All #i4.42 ekI.43.
-       (SidI_1( ekI.43, I.25, R.26, hkI.28 ) @ #i4.42)
-      ==>
-       Last(#i4.42))))"
-*/
 simplify
 solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
   case generate_ltk
@@ -1053,7 +647,7 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
     case generate_ltk
     solve( (#i2.1, 0)[!KU( f_.19,
                            h(<'2', 'g'^(~x.15*h(<'1', ~ekR.8, ~lkR.9>)), x.11, x.12, $I.14, $R.13>)
-                      )] )
+                      )] /* may loop */ )
       case Sessk_reveal_case_1
       solve( splitEqs(1) )
         case split_case_1
@@ -1062,11 +656,11 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
         case split_case_2
         solve( (#vf.16, 0)[!KU( f_.17,
                                 'g'^(~x.15*h(<'1', ~tid.80, ~lkR.78>)*inv(~lkR.78))
-                           )] )
+                           )] /* may loop */ )
           case Init_1
           solve( (#vf.47, 0)[!KU( f_.48,
                                   'g'^(~x.119*h(<'1', ~ekR.77, ~lkR.120>)*inv(~lkR.120))
-                             )] )
+                             )] /* may loop */ )
             case Resp_1
             by solve( KU((#vr.108, 1), ~x.134) )
           next
@@ -1080,7 +674,7 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
           case exp
           solve( (#vf.47, 0)[!KU( f_.48,
                                   'g'^(~x.15*h(<'1', ~ekR.77, ~lkR.78>)*inv(~lkR.78))
-                             )] )
+                             )] /* may loop */ )
             case Resp_1
             by solve( KU((#vr.99, 1), ~x.115) )
           next
@@ -1094,7 +688,7 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
           case generate_ltk
           solve( (#vf.47, 0)[!KU( f_.48,
                                   'g'^(~x.113*h(<'1', ~ekR.77, ~lkR.114>)*inv(~lkR.114))
-                             )] )
+                             )] /* may loop */ )
             case Resp_1
             by solve( KU((#vr.106, 1), ~lkR.151) )
           next
@@ -1113,7 +707,7 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
       case h
       solve( KU((#vr.35, 0), 'g'^(~x.15*h(<'1', ~ekR.8, ~lkR.9>))) )
         case Resp_1
-        solve( (#vr.56, 1)[!KU( f_.57, ~x.50 )] )
+        solve( (#vr.56, 1)[!KU( f_.57, ~x.50 )] /* may loop */ )
           case Ltk_reveal
           solve( (#i4.88, 1)[!Ltk( $I.14, ~lkI.92 )] )
             case generate_ltk
@@ -1121,12 +715,13 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
               case split_case_1
               solve( KU((#vr.35, 0), 'g'^(~lkR.106*h(<'1', ~ekI.107, ~lkI.108>))) )
                 case Init_1
-                solve( (#vr.121, 1)[!KU( f_.122, ~lkR.132 )] )
+                solve( (#vr.121, 1)[!KU( f_.122, ~lkR.132 )] /* may loop */ )
                   case Ltk_reveal
                   solve( KU((#vr.35, 0), 'g'^(h(<'1', ~ekR.105, ~lkR.132>)*
                                               h(<'1', ~ekI.133, ~lkI.134>))) )
                     case Init_1
-                    solve( (#vr.164, 1)[!KU( f_.165, h(<'1', ~ekR.182, ~lkR.183>) )] )
+                    solve( (#vr.164, 1)[!KU( f_.165, h(<'1', ~ekR.182, ~lkR.183>)
+                                        )] /* may loop */ )
                       case h
                       solve( KU((#vr.188, 0), ~ekR.182) )
                         case Ephk_reveal
@@ -1135,7 +730,8 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
                     qed
                   next
                     case Resp_1
-                    solve( (#vr.170, 1)[!KU( f_.171, h(<'1', ~ekI.194, ~lkI.195>) )] )
+                    solve( (#vr.170, 1)[!KU( f_.171, h(<'1', ~ekI.194, ~lkI.195>)
+                                        )] /* may loop */ )
                       case h
                       solve( KU((#vr.198, 0), ~ekI.194) )
                         case Ephk_reveal
@@ -1161,7 +757,8 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
                 solve( KU((#vr.35, 0), 'g'^(h(<'1', ~ekR.105, ~lkR.106>)*
                                             h(<'1', ~ekI.107, ~lkI.108>))) )
                   case Init_1
-                  solve( (#vr.128, 1)[!KU( f_.129, h(<'1', ~ekR.146, ~lkR.147>) )] )
+                  solve( (#vr.128, 1)[!KU( f_.129, h(<'1', ~ekR.146, ~lkR.147>)
+                                      )] /* may loop */ )
                     case h
                     solve( KU((#vr.112, 1), ~lkR.147) )
                       case Ltk_reveal
@@ -1176,7 +773,8 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
                   qed
                 next
                   case Resp_1
-                  solve( (#vr.134, 1)[!KU( f_.135, h(<'1', ~ekI.158, ~lkI.159>) )] )
+                  solve( (#vr.134, 1)[!KU( f_.135, h(<'1', ~ekI.158, ~lkI.159>)
+                                      )] /* may loop */ )
                     case h
                     solve( KU((#vr.112, 1), ~lkR.157) )
                       case Ltk_reveal
@@ -1204,12 +802,14 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
                 qed
               next
                 case generate_ltk
-                solve( (#vr.119, 1)[!KU( f_.120, h(<'1', ~ekI.127, ~lkI.128>) )] )
+                solve( (#vr.119, 1)[!KU( f_.120, h(<'1', ~ekI.127, ~lkI.128>)
+                                    )] /* may loop */ )
                   case h
                   solve( KU((#vr.35, 0), 'g'^(h(<'1', ~ekR.105, ~lkR.126>)*
                                               h(<'1', ~ekI.127, ~lkI.128>))) )
                     case Init_1
-                    solve( (#vr.146, 1)[!KU( f_.147, h(<'1', ~ekR.164, ~lkR.165>) )] )
+                    solve( (#vr.146, 1)[!KU( f_.147, h(<'1', ~ekR.164, ~lkR.165>)
+                                        )] /* may loop */ )
                       case h
                       solve( KU((#vr.131, 0), ~ekI.166) )
                         case Ephk_reveal
@@ -1257,7 +857,8 @@ solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
         qed
       next
         case generate_ltk
-        solve( (#vr.48, 1)[!KU( f_.49, h(<'1', ~ekR.55, ~lkR.56>) )] )
+        solve( (#vr.48, 1)[!KU( f_.49, h(<'1', ~ekR.55, ~lkR.56>)
+                           )] /* may loop */ )
           case h
           solve( KU((#vr.60, 0), ~ekR.55) )
             case Ephk_reveal
@@ -1280,25 +881,25 @@ maude tool: 'maude'
  checking version: 2.6. OK.
 
 
-analyzing: data/examples/NAXOS_eCK.spthy
+analyzing: data/examples/csf12/NAXOS_eCK.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/NAXOS_eCK.spthy
+analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.242116s
+  processing time: 10.273184s
   eCK_initiator_key: complete proof (76 steps)
   eCK_responder_key: complete proof (72 steps)
 
 ------------------------------------------------------------------------------
 
 ==============================================================================
-summary of processed files:
+summary of summaries:
 
-analyzed: data/examples/NAXOS_eCK.spthy
+analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.242116s
+  processing time: 10.273184s
   eCK_initiator_key: complete proof (76 steps)
   eCK_responder_key: complete proof (72 steps)
 

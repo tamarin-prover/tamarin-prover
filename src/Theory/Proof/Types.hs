@@ -14,8 +14,8 @@ module Theory.Proof.Types (
 
   -- * Graph part of a sequent
     NodeId
-  , NodePrem(..)
-  , NodeConc(..)
+  , NodePrem
+  , NodeConc
   , Edge(..)
   , MsgEdge(..)
   , Chain(..)
@@ -142,8 +142,6 @@ module Theory.Proof.Types (
 
 import           Prelude hiding ( (.), id )
 
-import           Safe
-
 import           Data.Maybe (mapMaybe, fromMaybe)
 import qualified Data.Set         as S
 import qualified Data.Map         as M
@@ -177,13 +175,11 @@ import           Theory.Signature
 -- rules modulo AC. We identify these nodes using 'NodeId's.
 type NodeId = LVar
 
--- | A premise (index) of a node.
-newtype NodePrem = NodePrem { getNodePrem :: (NodeId, Int) }
-   deriving( Eq, Ord, Show, Data, Typeable )
+-- | A premise of a node.
+type NodePrem = (NodeId, PremIdx)
 
--- | A conclusion (index) of a node.
-newtype NodeConc = NodeConc { getNodeConc :: (NodeId, Int) }
-  deriving( Eq, Ord, Show, Data, Typeable )
+-- | A conclusion of a node.
+type NodeConc = (NodeId, ConcIdx)
 
 -- | A labeled edge in a derivation graph.
 data Edge = Edge {
@@ -210,12 +206,6 @@ data Chain = Chain {
 -- Instances
 ------------
 
-instance Apply NodePrem where
-    apply subst = NodePrem . first (apply subst) . getNodePrem
-
-instance Apply NodeConc where
-    apply subst = NodeConc . first (apply subst) . getNodeConc
-
 instance Apply Edge where
     apply subst (Edge from to) = Edge (apply subst from) (apply subst to)
 
@@ -224,16 +214,6 @@ instance Apply MsgEdge where
 
 instance Apply Chain where
     apply subst (Chain from to) = Chain (apply subst from) (apply subst to)
-
-instance HasFrees NodePrem where
-    foldFrees f = foldFrees f . fst . getNodePrem
-    mapFrees f (NodePrem (v, i)) = 
-        NodePrem <$> ((,) <$> mapFrees f v <*> pure i)
-
-instance HasFrees NodeConc where
-    foldFrees f = foldFrees f . fst . getNodeConc
-    mapFrees f (NodeConc (v, i)) = 
-        NodeConc <$> ((,) <$> mapFrees f v <*> pure i)
 
 instance HasFrees Edge where
     foldFrees f (Edge x y) = foldFrees f x `mappend` foldFrees f y
@@ -323,8 +303,11 @@ instance HasFrees EqStore where
 data Goal = 
        ActionG LVar LNFact
        -- ^ An action that must exist in the trace.
-     | PremiseG NodePrem LNFact
-       -- ^ A premise that must have an incoming direct edge.
+     | PremiseG NodePrem LNFact Bool
+       -- ^ A premise that must have an incoming direct edge. The 'Bool'
+       -- argument is 'True' if this premise is marked as a loop-breaker;
+       -- i.e., if care must be taken to avoid solving such a premise too
+       -- often.
      | PremDnKG NodePrem
        -- ^ A KD goal that must be solved using a destruction chain.
      | PremUpKG NodePrem LNTerm
@@ -351,8 +334,8 @@ isActionGoal (ActionG _ _) = True
 isActionGoal _             = False
 
 isPremiseGoal :: Goal -> Bool
-isPremiseGoal (PremiseG _ _) = True
-isPremiseGoal _              = False
+isPremiseGoal (PremiseG _ _ _) = True
+isPremiseGoal _                = False
 
 isPremDnKGoal :: Goal -> Bool
 isPremDnKGoal (PremDnKG _) = True
@@ -381,35 +364,35 @@ isDisjGoal _         = False
 
 instance HasFrees Goal where
     foldFrees f goal = case goal of
-        ActionG i fa  -> foldFrees f i `mappend` foldFrees f fa
-        PremiseG p fa -> foldFrees f p `mappend` foldFrees f fa
-        PremDnKG p    -> foldFrees f p
-        PremUpKG p m  -> foldFrees f p `mappend` foldFrees f m
-        ChainG ch     -> foldFrees f ch
-        SplitG i      -> foldFrees f i
-        DisjG x       -> foldFrees f x
-        ImplG x       -> foldFrees f x
+        ActionG i fa          -> foldFrees f i `mappend` foldFrees f fa
+        PremiseG p fa mayLoop -> foldFrees f p `mappend` foldFrees f fa `mappend` foldFrees f mayLoop
+        PremDnKG p            -> foldFrees f p
+        PremUpKG p m          -> foldFrees f p `mappend` foldFrees f m
+        ChainG ch             -> foldFrees f ch
+        SplitG i              -> foldFrees f i
+        DisjG x               -> foldFrees f x
+        ImplG x               -> foldFrees f x
 
     mapFrees f goal = case goal of
-        ActionG i fa  -> ActionG  <$> mapFrees f i <*> mapFrees f fa
-        PremiseG p fa -> PremiseG <$> mapFrees f p <*> mapFrees f fa
-        PremDnKG p    -> PremDnKG <$> mapFrees f p
-        PremUpKG p m  -> PremUpKG <$> mapFrees f p <*> mapFrees f m
-        ChainG ch     -> ChainG   <$> mapFrees f ch
-        SplitG i      -> SplitG   <$> mapFrees f i
-        DisjG x       -> DisjG    <$> mapFrees f x
-        ImplG x       -> ImplG    <$> mapFrees f x
+        ActionG i fa          -> ActionG  <$> mapFrees f i <*> mapFrees f fa
+        PremiseG p fa mayLoop -> PremiseG <$> mapFrees f p <*> mapFrees f fa <*> mapFrees f mayLoop
+        PremDnKG p            -> PremDnKG <$> mapFrees f p
+        PremUpKG p m          -> PremUpKG <$> mapFrees f p <*> mapFrees f m
+        ChainG ch             -> ChainG   <$> mapFrees f ch
+        SplitG i              -> SplitG   <$> mapFrees f i
+        DisjG x               -> DisjG    <$> mapFrees f x
+        ImplG x               -> ImplG    <$> mapFrees f x
 
 instance Apply Goal where
     apply subst goal = case goal of
-        ActionG i fa  -> ActionG  (apply subst i)     (apply subst fa)
-        PremiseG p fa -> PremiseG (apply subst p)     (apply subst fa)
-        PremDnKG p    -> PremDnKG (apply subst p)
-        PremUpKG p m  -> PremUpKG (apply subst p)     (apply subst m)
-        ChainG ch     -> ChainG   (apply subst ch)
-        SplitG i      -> SplitG   (apply subst i)
-        DisjG x       -> DisjG    (apply subst x)
-        ImplG x       -> ImplG    (apply subst x)
+        ActionG i fa          -> ActionG  (apply subst i)     (apply subst fa)
+        PremiseG p fa mayLoop -> PremiseG (apply subst p)     (apply subst fa) (apply subst mayLoop)
+        PremDnKG p            -> PremDnKG (apply subst p)
+        PremUpKG p m          -> PremUpKG (apply subst p)     (apply subst m)
+        ChainG ch             -> ChainG   (apply subst ch)
+        SplitG i              -> SplitG   (apply subst i)
+        DisjG x               -> DisjG    (apply subst x)
+        ImplG x               -> ImplG    (apply subst x)
 
 
 ------------------------------------------------------------------------------
@@ -594,16 +577,15 @@ nodeRule v se =
 -- sequent @se@ under the assumption that premise @prem@ is a a premise in
 -- @se@.
 nodePremFact :: NodePrem -> Sequent -> LNFact
-nodePremFact (NodePrem (v, i)) se = L.get (rPrem i) $ nodeRule v se
+nodePremFact (v, i) se = L.get (rPrem i) $ nodeRule v se
 
 -- | @nodePremNode prem@ is the node that this premise is referring to.
 nodePremNode :: NodePrem -> NodeId
-nodePremNode (NodePrem (v, _)) = v
+nodePremNode = fst
 
 -- | All facts associated to this node premise.
 resolveNodePremFact :: NodePrem -> Sequent -> Maybe LNFact
-resolveNodePremFact (NodePrem (v, i)) se = 
-    (`atMay` i) =<< L.get rPrems <$> M.lookup v (L.get sNodes se)
+resolveNodePremFact (v, i) se = lookupPrem i =<< M.lookup v (L.get sNodes se)
 
 {-
 -- | All msg fact premises required by the sequent for the given node premise.
@@ -613,8 +595,7 @@ resolveNodePremMsg prem = msgFactTerm <=< resolveNodePremFact prem
     
 -- | The fact associated with this node conclusion, if there is one.
 resolveNodeConcFact :: NodeConc -> Sequent -> Maybe LNFact
-resolveNodeConcFact (NodeConc (v, i)) se = 
-    (`atMay` i) =<< L.get rConcs <$> M.lookup v (L.get sNodes se)
+resolveNodeConcFact (v, i) se = lookupConc i =<< M.lookup v (L.get sNodes se)
 
 {-
 -- | The msg fact provided by the sequent for the given node conclusion
@@ -626,11 +607,11 @@ resolveNodeConcMsg conc = msgFactTerm <=< resolveNodeConcFact conc
 -- rule associated with node @v@ under the assumption that @v@ is labeled with
 -- a rule that has an @i@-th conclusion.
 nodeConcFact :: NodeConc -> Sequent -> LNFact
-nodeConcFact (NodeConc (v, i)) = L.get (rConc i) . nodeRule v
+nodeConcFact (v, i) = L.get (rConc i) . nodeRule v
 
 -- | 'nodeConcNode' @c@ compute the node-id of the node conclusion @c@.
 nodeConcNode :: NodeConc -> NodeId
-nodeConcNode = fst . getNodeConc
+nodeConcNode = fst 
 
 -- | Label to access the free substitution of the equation store.
 sSubst :: Sequent :-> LNSubst
@@ -656,11 +637,11 @@ prettyNode (v,ru) = prettyNodeId v <> colon <-> prettyRuleACInst ru
 
 -- | Pretty print a node conclusion.
 prettyNodeConc :: HighlightDocument d => NodeConc -> d
-prettyNodeConc (NodeConc (v, i)) = parens (prettyNodeId v <> comma <-> int i)
+prettyNodeConc (v, ConcIdx i) = parens (prettyNodeId v <> comma <-> int i)
 
 -- | Pretty print a node premise.
 prettyNodePrem :: HighlightDocument d => NodePrem -> d
-prettyNodePrem (NodePrem (v, i)) = parens (prettyNodeId v <> comma <-> int i)
+prettyNodePrem (v, PremIdx i) = parens (prettyNodeId v <> comma <-> int i)
 
 -- | Pretty print a edge as @src >-i--j-> tgt@.
 prettyEdge :: HighlightDocument d => Edge -> d
@@ -727,11 +708,13 @@ prettyEqStore eqs@(EqStore subst (Conj disjs)) = vcat $
         
 -- | Pretty print a goal.
 prettyGoal :: HighlightDocument d => Goal -> d
-prettyGoal (ActionG i fa)     = prettyNAtom (Action (varTerm i) fa)
-prettyGoal (ChainG ch)        = prettyChain ch
-prettyGoal (PremiseG p fa)    = prettyNodePrem p <> brackets (prettyLNFact fa)
-prettyGoal (PremDnKG p)       = text "KD" <> parens (prettyNodePrem p)
-prettyGoal (ImplG gf)         = 
+prettyGoal (ActionG i fa)          = prettyNAtom (Action (varTerm i) fa)
+prettyGoal (ChainG ch)             = prettyChain ch
+prettyGoal (PremiseG p fa mayLoop) =
+    prettyNodePrem p <> brackets (prettyLNFact fa) <->
+    (if mayLoop then comment_ "/* may loop */" else emptyDoc)
+prettyGoal (PremDnKG p)            = text "KD" <> parens (prettyNodePrem p)
+prettyGoal (ImplG gf)              =
     (text "Consequent" <>) $ nest 1 $ parens $ prettyGuarded gf
 prettyGoal (DisjG (Disj gfs)) = (text "Disj" <>) $ fsep $
     punctuate (operator_ " |") (map (nest 1 . parens . prettyGuarded) gfs)
@@ -845,8 +828,6 @@ $( derive makeBinary ''Goal)
 $( derive makeBinary ''Chain)
 $( derive makeBinary ''MsgEdge)
 $( derive makeBinary ''Edge)
-$( derive makeBinary ''NodePrem)
-$( derive makeBinary ''NodeConc)
 $( derive makeBinary ''EqStore)
 $( derive makeBinary ''CaseDistKind)
 $( derive makeBinary ''Sequent)
@@ -858,8 +839,6 @@ $( derive makeNFData ''Goal)
 $( derive makeNFData ''Chain)
 $( derive makeNFData ''MsgEdge)
 $( derive makeNFData ''Edge)
-$( derive makeNFData ''NodePrem)
-$( derive makeNFData ''NodeConc)
 $( derive makeNFData ''EqStore)
 $( derive makeNFData ''CaseDistKind)
 $( derive makeNFData ''Sequent)

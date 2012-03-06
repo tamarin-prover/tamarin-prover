@@ -96,7 +96,7 @@ saturateGuarded hnd se0 = do
                 | not (s ==# t) -> return $ Just $ Equal s t
                 | otherwise     -> return Nothing
               EdgeA (Lit (Var i), v) (Lit (Var j), u) -> do
-                modM sEdges $ S.insert $ Edge (NodeConc (i,v)) (NodePrem (j,u))
+                modM sEdges $ S.insert $ Edge (i, v) (j, u)
                 return Nothing
               EdgeA _ _ ->
                 error $ "saturateGuarded: ill-formed edge atom: " ++ show ato
@@ -170,7 +170,7 @@ satisfyingSubsts hnd se gf0 =
         DedBefore t (Lit (Var i)) -> t `dedBefore` i
         Less (Lit (Var i))    (Lit (Var j))     -> i `hapBefore` j
         EdgeA (Lit (Var i), v) (Lit (Var j), u) -> 
-            Edge (NodeConc (i, v)) (NodePrem (j, u)) `S.member` get sEdges se
+            Edge (i, v) (j, u) `S.member` get sEdges se
         -- play it safe and sound: all other atoms don't hold
         _                         -> False
 

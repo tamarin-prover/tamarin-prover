@@ -32,10 +32,8 @@ module Theory.Proof.CaseDistinctions (
 
 import           Safe
 import           Prelude hiding ( (.), id )
-import           Debug.Trace
 
 import qualified Data.Set         as S
-import qualified Data.DAG.Simple  as D
 import           Data.Foldable (asum)
 
 import           Control.Basics
@@ -97,11 +95,11 @@ initialCaseDistinction ctxt typAsms goal =
     cases = fmap polish $ runSeProof instantiate ctxt se0 (avoid (goal, se0))
     instantiate = do
         i <- freshLVar "i" LSortNode
-        let p   = NodePrem (i, 0)
+        let p   = (i, PremIdx 0)
             err = error . ("requiresCasesThm: no or too many edges: " ++)
         case goal of
             PremiseBigStep fa -> do
-                name <- solveGoal (PremiseG p fa)
+                name <- solveGoal (PremiseG p fa False)
                 edges <- getM sEdges
                 case filter ((p ==) . eTgt) (S.toList edges) of
                   [e] -> do modM sEdges (S.delete e)
@@ -144,26 +142,22 @@ refineCaseDistinction ctxt proofStep th =
 -- repeatedly simplifying the proof state. 
 --
 -- Returns the names of the steps applied.
-solveAllSafeGoals 
-    :: (LNFact -> Bool) -- ^ True, if this fact may be refined further.
-                        -- Required for loop-breaking.
-    -> [CaseDistinction] 
-    -> SeProof [String]
-solveAllSafeGoals nonLoopingFact ths = 
+solveAllSafeGoals :: [CaseDistinction] -> SeProof [String]
+solveAllSafeGoals ths = 
     solve []
   where
-    safeGoal _            (ChainG _)      = True
-    safeGoal _            (PremDnKG _)    = True
-    safeGoal _            (ActionG _ _)   = True
-    safeGoal splitAllowed (DisjG _)       = splitAllowed
+    safeGoal _            (ChainG _)              = True
+    safeGoal _            (PremDnKG _)            = True
+    safeGoal _            (ActionG _ _)           = True
+    safeGoal splitAllowed (DisjG _)               = splitAllowed
     -- NOTE: Uncomment the line below to get more extensive case splitting
     -- for precomputed case distinctions.
     -- safeGoal splitAllowed (SplitG _ _) = splitAllowed
-    safeGoal _            (PremiseG _ fa) = nonLoopingFact fa
-    safeGoal _            _               = False
+    safeGoal _            (PremiseG _ fa mayLoop) = not (mayLoop || isKFact fa)
+    safeGoal _            _                       = False
 
-    nonLoopingGoal (PremiseG _ fa) = nonLoopingFact fa
-    nonLoopingGoal _               = True
+    nonLoopingGoal (PremiseG _ _ mayLoop) = not mayLoop
+    nonLoopingGoal _                      = True
 
     solve caseNames = do
         simplifySequent
@@ -195,9 +189,9 @@ solveWithCaseDistinction :: MaudeHandle
                          -> Goal
                          -> Maybe (SeProof [String])
 solveWithCaseDistinction hnd ths goal0 = case goal0 of 
-    PremiseG p fa -> applyTo p (PremiseBigStep fa)
-    PremUpKG p m  -> applyTo p (MessageBigStep m)
-    _             -> mzero
+    PremiseG p fa _mayLoop -> applyTo p (PremiseBigStep fa)
+    PremUpKG p m           -> applyTo p (MessageBigStep m)
+    _                      -> mzero
   where
     applyTo p goal = asum [ applyCaseDistinction hnd th p goal | th <- ths ]
 
@@ -243,8 +237,6 @@ saturateCaseDistinctions
 saturateCaseDistinctions ctxt = 
     go
   where
-    nonLoopingFact = saturationLoopBreakers ctxt
-
     go ths =
         if any or (changes `using` parList rdeepseq)
           then go ths'
@@ -252,7 +244,7 @@ saturateCaseDistinctions ctxt =
       where
         (changes, ths') = unzip $ map (refineCaseDistinction ctxt solver) ths
         noSplitThs = filter ((<= 1) . length . getDisj . get cdCases) ths
-        solver     = do names <- solveAllSafeGoals nonLoopingFact noSplitThs
+        solver     = do names <- solveAllSafeGoals noSplitThs
                         return (not $ null names, names)
 
 {-
@@ -337,47 +329,6 @@ refineWithTypingAsms typAsms ctxt cases0 =
         modify sFormulas (S.union (S.fromList typAsms)) $
         set sCaseDistKind TypedCaseDist                 $ se
     removeFormulas = set sFormulas S.empty . set sSolvedFormulas S.empty
-
--- Loop-breaker computation
----------------------------
-
--- | Compute the loop-breakers for saturating the pre-computated case
--- distinctions.
-saturationLoopBreakers :: ProofContext -> (LNFact -> Bool)
-saturationLoopBreakers ctxt =
-    trace (" loop breakers: " ++ show (loopBreakers absProtoFactRel)) $
-      \fa -> absFact fa `S.notMember` loopBreakers absProtoFactRel
-  where
-    rules = get pcRules ctxt
-    -- detect cycles on abstracted protocol facts; i.e.,  (tag, arity) facts
-    absFact (Fact tag ts) = (tag, length ts)
-
-    absProtoFactRel = sortednub $ do
-        ru <- joinNonSpecialRules rules
-        conc <- absFact <$> get rConcs ru
-        prem <- absFact <$> get rPrems ru
-        return (conc, prem)
-
-
--- | Given a relation compute a set of loop-breakers; i.e., a feedback vertex
--- set (<http://en.wikipedia.org/wiki/Feedback_vertex_set>). No guarantee for
--- minimality is made. The current algorithm only removes self-loops and hopes
--- that this is sufficient. We should implement something along the lines of
--- Ann Becker, Dan Geiger, Optimization of Pearl's method of conditioning and
--- greedy-like approximation algorithms for the vertex feedback set problem,
--- Artificial Intelligence, Volume 83, Issue 1, May 1996, Pages 167-188, ISSN
--- 0004-3702, 10.1016/0004-3702(95)00004-6.
--- <http://www.sciencedirect.com/science/article/pii/0004370295000046>.
-loopBreakers :: Ord a => [(a,a)] -> S.Set a
-loopBreakers rel
-  | D.cyclic rel' = 
-       error "loopBreakers: trivial loop-breaker computation failed.\
-             \The relation is still cyclic."
-  | otherwise = breakers
-  where
-    breakers = S.fromList [ x | (x, y) <- rel, x == y ]
-    rel'     = [ r | r@(x, y) <- rel
-                   , x `S.notMember` breakers, y `S.notMember` breakers]
 
 ------------------------------------------------------------------------------
 -- Pretty-printing

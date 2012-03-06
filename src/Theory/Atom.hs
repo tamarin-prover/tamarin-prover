@@ -32,7 +32,7 @@ module Theory.Atom(
 where
 
 import Term.Rewriting.NormAC
-import Theory.Fact
+import Theory.Rule
 import Theory.Pretty
 
 import Data.Monoid   (mappend)
@@ -56,7 +56,7 @@ data Atom t = Action   t (Fact t)
             | Less t t
             | Last t
             | DedBefore t t
-            | EdgeA (t, Int) (t, Int)
+            | EdgeA (t, ConcIdx) (t, PremIdx)
             deriving( Eq, Ord, Show, Data, Typeable )
 
 -- | @LAtom@ are the atoms we actually use in graph formulas input by the user.

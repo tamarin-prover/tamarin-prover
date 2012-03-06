@@ -231,6 +231,12 @@ instance Apply Char where
 instance Apply Int where
     apply _ = id
 
+instance Apply Bool where
+    apply _ = id
+
+instance (Apply a, Apply b) => Apply (a, b) where
+    apply subst (x,y) = (apply subst x, apply subst y)
+
 instance Apply a => Apply [a] where
     apply subst = fmap (apply subst)
 

@@ -76,6 +76,13 @@ cyclic rel =
         parents' = S.insert x parents
 
 
+-- TODO: Consider implementing something along the lines of Ann Becker, Dan
+-- Geiger, Optimization of Pearl's method of conditioning and greedy-like
+-- approximation algorithms for the vertex feedback set problem, Artificial
+-- Intelligence, Volume 83, Issue 1, May 1996, Pages 167-188, ISSN 0004-3702,
+-- 10.1016/0004-3702(95)00004-6.
+-- <http://www.sciencedirect.com/science/article/pii/0004370295000046>.
+
 -- | Compute a minimal set of loop-breakers using a greedy DFS strategy. A set
 -- of loop-breakers is a set of nodes such that removing them ensures the
 -- acyclicity of the relation. It is minimal, if no node can be removed from

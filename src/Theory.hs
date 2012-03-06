@@ -109,6 +109,7 @@ import           Text.Isar
                  
 import           Theory.Pretty
 import           Theory.Rule
+import           Theory.RuleSet
 import           Theory.RuleVariants
 import           Theory.IntruderRules
 import           Theory.Proof
@@ -156,7 +157,7 @@ data ClosedProtoRule = ClosedProtoRule
        { _cprRuleE  :: ProtoRuleE             -- original rule modulo E
        , _cprRuleAC :: ProtoRuleAC            -- variant modulo AC
        }
-       deriving( Show )
+       deriving( Eq, Ord, Show )
 
 type OpenRuleCache = [IntrRuleAC]
 
@@ -252,7 +253,7 @@ data Lemma p = Lemma
        , _lAttributes :: [LemmaAttribute]
        , _lProof      :: p
        }
-       deriving( Show )
+       deriving( Eq, Ord, Show )
 
 $(mkLabels [''Lemma])
 
@@ -300,7 +301,7 @@ data TheoryItem r p =
        RuleItem r
      | LemmaItem (Lemma p)
      | TextItem FormalComment
-     deriving( Show, Functor )
+     deriving( Show, Eq, Ord, Functor )
 
 
 -- | A theory contains a single set of rewriting rules modeling a protocol
@@ -488,11 +489,12 @@ closeTheoryWithMaude sig thy0 = do
     hnd = L.get sigmMaudeHandle sig
 
     -- close all theory items: in parallel
-    items = (closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq
+    (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
+       ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
     closeTheoryItem = foldTheoryItem 
-        (RuleItem . closeProtoRule hnd) 
-        (LemmaItem . ensureFormulaAC . fmap skeletonToIncrementalProof)
-        TextItem
+       (RuleItem . closeProtoRule hnd) 
+       (LemmaItem . ensureFormulaAC . fmap skeletonToIncrementalProof)
+       TextItem
 
     -- extract typing lemmas
     typAsms = do 
@@ -505,8 +507,23 @@ closeTheoryWithMaude sig thy0 = do
           _               -> mzero
 
     -- extract protocol rules
-    rules    = theoryRules (Theory errClose errClose errClose items)
+    rules = theoryRules (Theory errClose errClose errClose items)
     errClose = error "closeTheory"
+
+    addSolvingLoopBreakers = useAutoLoopBreakersAC
+        (liftToItem $ enumPrems . L.get cprRuleAC)
+        (liftToItem $ enumConcs . L.get cprRuleAC)
+        (liftToItem $ getDisj . L.get (pracVariants . rInfo . cprRuleAC))
+        addBreakers
+      where
+        liftToItem f (RuleItem ru) = f ru
+        liftToItem _ _             = []
+
+        addBreakers bs (RuleItem ru) = 
+            RuleItem (L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
+        addBreakers _  item = item
+
+
 
 
 -- Partial evaluation / abstract interpretation
@@ -743,12 +760,13 @@ prettyIncrementalProof = prettyProofWith ppStep (const id)
 -- | Pretty print an closed rule together with its assertion soundness proof.
 prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d
 prettyClosedProtoRule cru =
-    (prettyProtoRuleE  $ L.get cprRuleE cru) $-$ 
-    (nest 2 $ ppRuleAC $ L.get cprRuleAC cru)
+    (prettyProtoRuleE  $ L.get cprRuleE cru) $--$
+    (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
   where
-    ppRuleAC ru
-      | isTrivialProtoRuleAC ru = multiComment_ ["has exactly the trivial AC variant"]
-      | otherwise               = multiComment $ prettyProtoRuleAC ru
+    ruAC = L.get cprRuleAC cru
+    ppRuleAC
+      | isTrivialProtoRuleAC ruAC = multiComment_ ["has exactly the trivial AC variant"]
+      | otherwise                 = multiComment $ prettyProtoRuleAC ruAC
 
 -- | Pretty print an open theory.
 prettyOpenTheory :: HighlightDocument d => OpenTheory -> d
