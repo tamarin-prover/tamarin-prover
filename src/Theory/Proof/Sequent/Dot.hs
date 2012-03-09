@@ -34,7 +34,7 @@ import Text.Isar hiding (style)
 import Theory.Rule
 import Theory.Proof.Sequent
 
-type NodeColorMap = M.Map (RuleInfo ProtoRuleName IntrRuleACInfo) (HSV Double)
+type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (HSV Double)
 type SeDot = ReaderT (Sequent, NodeColorMap) (StateT DotState D.Dot)
 
 -- | State to avoid multiple drawing of the same entity.
@@ -104,16 +104,16 @@ dotNode v = dotOnce dsNodes v $ do
               nodeColor = maybe "white" (rgbToHex . lighter) color
           dot (label ru) [("fillcolor", nodeColor),("style","filled")] $ \vId -> do
               premIds <- mapM dotPrem
-                           [ NodePrem (v,i) | (i,_) <- zip [0..] $ get rPrems ru ]
-              concIds <- mapM (dotConc . NodeConc) 
-                           [ (v,i) | (i,_) <- zip [0..] $ get rConcs ru ]
+                           [ (v,i) | (i,_) <- enumPrems ru ]
+              concIds <- mapM dotConc 
+                           [ (v,i) | (i,_) <- enumConcs ru ]
               sequence_ [ dotIntraRuleEdge premId vId | premId <- premIds ]
               sequence_ [ dotIntraRuleEdge vId concId | concId <- concIds ]
   where
     label ru = " : " ++ render nameAndActs
       where
         nameAndActs = 
-            ruleInfo prettyProtoRuleName prettyIntrRuleACInfo (get rInfo ru) <->
+            ruleInfo (prettyProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru) <->
             brackets (vcat $ punctuate comma $ map prettyLNFact $ get rActs ru)
 
 -- | An edge from a rule node to its premises or conclusions.
@@ -155,13 +155,13 @@ dotTrySingleEdge sel x dot = do
 
 -- | Premises.
 dotPrem :: NodePrem -> SeDot D.NodeId
-dotPrem prem@(NodePrem (v,i)) = 
+dotPrem prem@(v, i) = 
     dotOnce dsPrems prem $ dotTrySingleEdge snd prem $ do
         nodes <- asks (get sNodes . fst)
         let ppPrem = show prem -- FIXME: Use better pretty printing here
             (label, moreStyle) = fromMaybe (ppPrem, []) $ do
                 ru <- M.lookup v nodes
-                fa <- get rPrems ru `atMay` i
+                fa <- lookupPrem i ru
                 return ( render $ prettyLNFact fa
                        , factNodeStyle fa
                        )
@@ -173,7 +173,7 @@ dotPrem prem@(NodePrem (v,i)) =
 -- | Conclusions.
 dotConc :: NodeConc -> SeDot D.NodeId
 dotConc = 
-    dotNodeWithIndex dsConcs fst rConcs getNodeConc "trapezium"    
+    dotNodeWithIndex dsConcs fst rConcs (id *** getConcIdx) "trapezium"    
   where
     dotNodeWithIndex stateSel edgeSel ruleSel unwrap shape x0 = 
         dotOnce stateSel x0 $ dotTrySingleEdge edgeSel x0 $ do
@@ -204,12 +204,12 @@ dotSequentLoose se =
             return (from, to)
         sequence_ $ do
             (v, ru) <- M.toList $ get sNodes se
-            (i, _)  <- zip [0..] $ get rConcs ru
-            return (dotConc (NodeConc (v, i)))
+            (i, _)  <- enumConcs ru
+            return (dotConc (v, i))
         sequence_ $ do
             (v, ru) <- M.toList $ get sNodes se
-            (i, _)  <- zip [0..] $ get rPrems ru
-            return (dotPrem (NodePrem (v,i)))
+            (i, _)  <- enumPrems ru
+            return (dotPrem (v,i))
         mapM_ dotNode     $ M.keys   $ get sNodes    se
         mapM_ dotEdge     $ S.toList $ get sEdges    se
         mapM_ dotChain    $ S.toList $ get sChains   se
@@ -304,18 +304,18 @@ dotNodeCompact v = dotOnce dsNodes v $ do
               nodeColor = maybe "white" (rgbToHex . lighter) color
               attrs     = [("fillcolor", nodeColor),("style","filled")]
           (_, ids) <- liftDot $ D.record (mkRecord ru) attrs
-          let prems = [ (NodePrem (v, i), nid) | (Just (Left i),  nid) <- ids ]
-              concs = [ (NodeConc (v, i), nid) | (Just (Right i), nid) <- ids ]
+          let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
+              concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
           modM dsPrems $ M.union $ M.fromList prems
           modM dsConcs $ M.union $ M.fromList concs
           return $ fromJust $ lookup Nothing ids
   where
     mkRecord ru = D.vcat $ map D.hcat $ filter (not . null)
       [ [ D.portField (Just (Left i)) (render (prettyLNFact p))
-        | (i, p) <- zip [(0::Int)..] $ get rPrems ru ]
+        | (i, p) <- enumPrems ru ]
       , [ D.portField Nothing (show v ++ " : " ++ showRuleCaseName ru ++ acts) ]
       , [ D.portField (Just (Right i)) (render (prettyLNFact c))
-        | (i, c) <- zip [(0::Int)..] $ get rConcs ru ]
+        | (i, c) <- enumConcs ru ]
       ]
       where
         acts = (" " ++) $ render $

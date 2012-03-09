@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DeriveDataTypeable, TupleSections, TypeOperators, FlexibleInstances, FlexibleContexts, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, GeneralizedNewtypeDeriving, DeriveDataTypeable, TupleSections, TypeOperators, FlexibleInstances, FlexibleContexts, TypeSynonymInstances #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -11,6 +11,8 @@
 module Theory.Rule (
   -- * General Rules
     Rule(..)
+  , PremIdx(..)
+  , ConcIdx(..)
 
   -- ** Accessors
   , rInfo
@@ -19,9 +21,10 @@ module Theory.Rule (
   , rActs
   , rPrem
   , rConc
-  , rAct
   , lookupPrem
   , lookupConc
+  , enumPrems
+  , enumConcs
 
   -- ** Genereal protocol and intruder rules
   , RuleInfo(..)
@@ -30,6 +33,12 @@ module Theory.Rule (
   -- * Protocol Rule Information
   , ProtoRuleName(..)
   , ProtoRuleACInfo(..)
+  , pracName
+  , pracVariants
+  , pracLoopBreakers
+  , ProtoRuleACInstInfo(..)
+  , praciName
+  , praciLoopBreakers
   , RuleACConstrs
 
   -- * Intruder Rule Information
@@ -72,6 +81,7 @@ module Theory.Rule (
   , prettyIntrRuleAC
   , prettyIntrRuleACInfo
   , prettyRuleAC
+  , prettyLoopBreakers
   , prettyRuleACInst
 
   -- * Convenience exports
@@ -119,25 +129,37 @@ data Rule i = Rule {
 
 $(mkLabels [''Rule])
 
+-- | An index of a premise. The first premise has index '0'.
+newtype PremIdx = PremIdx { getPremIdx :: Int }
+  deriving( Eq, Ord, Show, Enum, Data, Typeable, Binary, NFData )
+
+-- | An index of a conclusion. The first conclusion has index '0'.
+newtype ConcIdx = ConcIdx { getConcIdx :: Int }
+  deriving( Eq, Ord, Show, Enum, Data, Typeable, Binary, NFData )
+
 -- | @lookupPrem i ru@ returns the @i@-th premise of rule @ru@, if possible.
-lookupPrem :: Int -> Rule i -> Maybe LNFact
-lookupPrem i = (`atMay` i) . L.get rPrems
+lookupPrem :: PremIdx -> Rule i -> Maybe LNFact
+lookupPrem i = (`atMay` getPremIdx i) . L.get rPrems
 
 -- | @lookupConc i ru@ returns the @i@-th conclusion of rule @ru@, if possible.
-lookupConc :: Int -> Rule i -> Maybe LNFact
-lookupConc i = (`atMay` i) . L.get rConcs
+lookupConc :: ConcIdx -> Rule i -> Maybe LNFact
+lookupConc i = (`atMay` getConcIdx i) . L.get rConcs
 
 -- | @rPrem i@ is a lens for the @i@-th premise of a rule.
-rPrem :: Int -> (Rule i :-> LNFact)
-rPrem i = nthL i . rPrems
+rPrem :: PremIdx -> (Rule i :-> LNFact)
+rPrem i = nthL (getPremIdx i) . rPrems
 
 -- | @rConc i@ is a lens for the @i@-th conclusion of a rule.
-rConc :: Int -> (Rule i :-> LNFact)
-rConc i = nthL i . rConcs
+rConc :: ConcIdx -> (Rule i :-> LNFact)
+rConc i = nthL (getConcIdx i) . rConcs
 
--- | @rAct i@ is a lens for the @i@-th action of a rule.
-rAct :: Int -> (Rule i :-> LNFact)
-rAct i = nthL i . rActs
+-- | Enumerate all premises of a rule.
+enumPrems :: Rule i -> [(PremIdx, LNFact)]
+enumPrems = zip [(PremIdx 0)..] . L.get rPrems
+
+-- | Enumerate all conclusions of a rule.
+enumConcs :: Rule i -> [(ConcIdx, LNFact)]
+enumConcs = zip [(ConcIdx 0)..] . L.get rConcs
 
 -- Instances
 ------------
@@ -212,10 +234,21 @@ data ProtoRuleName =
 -- instantiations of the free variables of the rule. The typing is interpreted
 -- modulo AC; i.e., its variants were also built.
 data ProtoRuleACInfo = ProtoRuleACInfo
-       { pracName     :: ProtoRuleName
-       , pracVariants :: Disj (LNSubstVFresh)
+       { _pracName         :: ProtoRuleName
+       , _pracVariants     :: Disj (LNSubstVFresh)
+       , _pracLoopBreakers :: [PremIdx]
        }
        deriving( Eq, Ord, Show )
+
+-- | Information for instances of protocol rules modulo AC.
+data ProtoRuleACInstInfo = ProtoRuleACInstInfo
+       { _praciName         :: ProtoRuleName
+       , _praciLoopBreakers :: [PremIdx]
+       }
+       deriving( Eq, Ord, Show )
+
+
+$(mkLabels [''ProtoRuleACInfo, ''ProtoRuleACInstInfo])
 
 
 -- Instances
@@ -228,13 +261,37 @@ instance HasFrees ProtoRuleName where
     foldFrees  _ = const mempty
     mapFrees   _ = pure
 
+instance Apply PremIdx where
+    apply _ = id
+
+instance HasFrees PremIdx where
+    foldFrees  _ = const mempty
+    mapFrees   _ = pure
+
+instance Apply ConcIdx where
+    apply _ = id
+
+instance HasFrees ConcIdx where
+    foldFrees  _ = const mempty
+    mapFrees   _ = pure
 
 instance HasFrees ProtoRuleACInfo where
-    foldFrees f (ProtoRuleACInfo na vari) =
+    foldFrees f (ProtoRuleACInfo na vari breakers) =
         foldFrees f na `mappend` foldFrees f vari
+                       `mappend` foldFrees f breakers
     
-    mapFrees f (ProtoRuleACInfo na vari) = 
-        ProtoRuleACInfo na <$> mapFrees f vari
+    mapFrees f (ProtoRuleACInfo na vari breakers) = 
+        ProtoRuleACInfo na <$> mapFrees f vari <*> mapFrees f breakers
+
+instance Apply ProtoRuleACInstInfo where
+    apply _ = id
+
+instance HasFrees ProtoRuleACInstInfo where
+    foldFrees f (ProtoRuleACInstInfo na breakers) =
+        foldFrees f na `mappend` foldFrees f breakers
+    
+    mapFrees f (ProtoRuleACInstInfo na breakers) = 
+        ProtoRuleACInstInfo na <$> mapFrees f breakers
 
 
 ------------------------------------------------------------------------------
@@ -286,7 +343,7 @@ type RuleAC      = Rule (RuleInfo ProtoRuleACInfo IntrRuleACInfo)
 -- | A rule instance module AC is either a protocol rule or an intruder rule.
 -- The info identifies the corresponding rule modulo AC that the instance was
 -- derived from.
-type RuleACInst  = Rule (RuleInfo ProtoRuleName IntrRuleACInfo)
+type RuleACInst  = Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo)
 
 -- Accessing the rule name
 --------------------------
@@ -299,16 +356,16 @@ instance HasRuleName ProtoRuleE where
   ruleName = ProtoInfo . L.get rInfo
 
 instance HasRuleName RuleAC where
-  ruleName = ruleInfo (ProtoInfo . pracName) IntrInfo . L.get rInfo
+  ruleName = ruleInfo (ProtoInfo . L.get pracName) IntrInfo . L.get rInfo
 
 instance HasRuleName ProtoRuleAC where
-  ruleName = ProtoInfo . pracName . L.get rInfo
+  ruleName = ProtoInfo . L.get (pracName . rInfo)
 
 instance HasRuleName IntrRuleAC where
   ruleName = IntrInfo . L.get rInfo
 
 instance HasRuleName RuleACInst where
-  ruleName = L.get rInfo
+  ruleName = ruleInfo (ProtoInfo . L.get praciName) IntrInfo . L.get rInfo
 
 
 -- Queries
@@ -353,7 +410,7 @@ nfRule (Rule _ ps cs as) = reader $ \hnd ->
 -- | True if the protocol rule has no variants.
 isTrivialProtoRuleAC :: ProtoRuleAC -> Bool
 isTrivialProtoRuleAC (Rule info _ _ _) =
-    pracVariants info == Disj [emptySubstVFresh]
+    L.get pracVariants info == Disj [emptySubstVFresh]
 
 
 -- Construction
@@ -370,9 +427,11 @@ someRuleACInst =
     (`evalBindT` noBindings) . fmap extractInsts . someInst
   where
     extractInsts (Rule (ProtoInfo i) ps cs as) = 
-      ( Rule (ProtoInfo (pracName i)) ps cs as
-      , Just (pracVariants i)
+      ( Rule (ProtoInfo i') ps cs as
+      , Just (L.get pracVariants i)
       )
+      where
+        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
     extractInsts (Rule (IntrInfo i) ps cs as) = 
       ( Rule (IntrInfo i) ps cs as, Nothing )
 
@@ -489,10 +548,19 @@ prettyNamedRule prefix ppInfo ru =
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
 prettyProtoRuleACInfo i =
-    (ppVariants $ pracVariants i)
+    (ppVariants $ L.get pracVariants i) $-$
+    prettyLoopBreakers i
   where
     ppVariants (Disj [subst]) | subst == emptySubstVFresh = emptyDoc
     ppVariants substs = kwVariantsModulo "AC" $-$ prettyDisjLNSubstsVFresh substs
+
+prettyLoopBreakers :: HighlightDocument d => ProtoRuleACInfo -> d
+prettyLoopBreakers i = case breakers of
+    []  -> emptyDoc
+    [_] -> lineComment_ $ "loop breaker: "  ++ show breakers
+    _   -> lineComment_ $ "loop breakers: " ++ show breakers
+  where
+    breakers = getPremIdx <$> L.get pracLoopBreakers i
 
 prettyProtoRuleE :: HighlightDocument d => ProtoRuleE -> d
 prettyProtoRuleE = prettyNamedRule (kwRuleModulo "E") (const emptyDoc)
@@ -517,11 +585,13 @@ prettyRuleACInst = prettyNamedRule (kwInstanceModulo "AC") (const emptyDoc)
 $( derive makeBinary ''Rule)
 $( derive makeBinary ''ProtoRuleName)
 $( derive makeBinary ''ProtoRuleACInfo)
+$( derive makeBinary ''ProtoRuleACInstInfo)
 $( derive makeBinary ''RuleInfo)
 $( derive makeBinary ''IntrRuleACInfo)
 
 $( derive makeNFData ''Rule)
 $( derive makeNFData ''ProtoRuleName)
 $( derive makeNFData ''ProtoRuleACInfo)
+$( derive makeNFData ''ProtoRuleACInstInfo)
 $( derive makeNFData ''RuleInfo)
 $( derive makeNFData ''IntrRuleACInfo)

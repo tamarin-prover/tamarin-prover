@@ -44,7 +44,7 @@ library
       , syb                  >= 0.3.3   && < 0.4
       , directory            == 1.1.*
       , process              == 1.0.*
-      , deepseq              == 1.1.*
+      , deepseq              == 1.2.*
       , binary               == 0.5.*
       , derive               == 2.5.*
 

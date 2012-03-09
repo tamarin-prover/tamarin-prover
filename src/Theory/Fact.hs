@@ -51,6 +51,7 @@ module Theory.Fact (
   , LFact
   , LNFact
   , unifyLNFactEqs
+  , unifiableLNFacts
   , matchLNFact
 
   -- * Pretty-Printing
@@ -277,6 +278,10 @@ unifyLNFactEqs eqs
   | all (evalEqual . fmap factTag) eqs = 
       unifyLNTerm (map (fmap (listToTerm . factTerms)) eqs)
   | otherwise = return []
+
+-- | 'True' iff the two facts are unifiable.
+unifiableLNFacts :: LNFact -> LNFact -> WithMaude Bool
+unifiableLNFacts fa1 fa2 = (not . null) <$> unifyLNFactEqs [Equal fa1 fa2]
  
 -- | @matchLFact t p@ is a complete set of AC matchers for the term fact @t@
 -- and the pattern fact @p@.

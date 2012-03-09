@@ -1,335 +1,29 @@
 theory SignedDH begin
 
- builtin: diffie-hellman
+// Function signature and definition of the equational theory E
 
-section{* Finite Variants of the Intruder Rules *}
-
- rule (modulo AC) isend:
-    [ !KU( f_, x ) ] --[ K( x ) ]-> [ In( x ) ]
- 
- rule (modulo AC) fst:
-    [ !KD( f_.3, <x.1, x.2> ) ] --> [ !KD( f_.4, x.1 ) ]
- 
- rule (modulo AC) snd:
-    [ !KD( f_.3, <x.1, x.2> ) ] --> [ !KD( f_.4, x.2 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^x.4 ), !KU( f_.2, x.1 ) ]
-   -->
-    [ !KD( 'exp', x.3^(x.1*x.4) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^x.3 ), !KU( f_.2, inv(x.3) ) ]
-   -->
-    [ !KD( 'exp', x.4 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^inv(x.3) ), !KU( f_.2, x.3 ) ]
-   -->
-    [ !KD( 'exp', x.4 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^inv(x.5) ), !KU( f_.2, inv(x.3) ) ]
-   -->
-    [ !KD( 'exp', x.4^inv((x.3*x.5)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^inv((x.3*x.5)) ), !KU( f_.2, x.3 ) ]
-   -->
-    [ !KD( 'exp', x.4^inv(x.5) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^(x.3*x.5) ), !KU( f_.2, inv(x.3) ) ]
-   -->
-    [ !KD( 'exp', x.4^x.5 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^(x.5*inv(x.3)) ), !KU( f_.2, x.3 ) ]
-   -->
-    [ !KD( 'exp', x.4^x.5 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^x.4 ), !KU( f_.2, inv((x.4*x.5)) ) ]
-   -->
-    [ !KD( 'exp', x.3^inv(x.5) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^x.4 ), !KU( f_.2, (x.5*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.3^x.5 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^inv(x.4) ), !KU( f_.2, (x.3*x.4) ) ]
-   -->
-    [ !KD( 'exp', x.5^x.3 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^(x.5*inv(x.6)) ), !KU( f_.2, inv(x.3) ) ]
-   -->
-    [ !KD( 'exp', x.4^(x.5*inv((x.3*x.6))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^inv(x.4) ), !KU( f_.2, (x.5*inv(x.6)) ) ]
-   -->
-    [ !KD( 'exp', x.3^(x.5*inv((x.4*x.6))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.4^(x.5*inv((x.3*x.6))) ), !KU( f_.2, x.3 ) ]
-   -->
-    [ !KD( 'exp', x.4^(x.5*inv(x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^inv((x.4*x.6)) ), !KU( f_.2, (x.3*x.4) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.3*inv(x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*x.6) ), !KU( f_.2, inv((x.3*x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.6*inv(x.3)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*x.6) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.3*x.6) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.6*inv(x.4)) ), !KU( f_.2, (x.3*x.4) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.3*x.6) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^x.4 ), !KU( f_.2, (x.5*inv((x.4*x.6))) ) ]
-   -->
-    [ !KD( 'exp', x.3^(x.5*inv(x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.6*inv(x.7)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^((x.3*x.6)*inv((x.4*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*inv(x.3)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*inv(x.6)) ), !KU( f_.2, inv((x.3*x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^inv((x.3*x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^inv((x.3*x.6)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^inv((x.4*x.6)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.6*inv((x.4*x.7))) ), !KU( f_.2, (x.3*x.4) ) ]
-   -->
-    [ !KD( 'exp', x.5^((x.3*x.6)*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^(x.4*x.5) ), !KU( f_.2, (x.6*inv((x.5*x.7))) ) ]
-   -->
-    [ !KD( 'exp', x.3^((x.4*x.6)*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^((x.4*x.6)*inv(x.3)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^x.6 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.6^(x.5*inv(x.4)) ), !KU( f_.2, ((x.3*x.4)*inv(x.5)) ) ]
-   -->
-    [ !KD( 'exp', x.6^x.3 ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^((x.4*x.6)*inv(x.7)) ), !KU( f_.2, inv((x.3*x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.6*inv((x.3*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.6^inv((x.4*x.7)) ), !KU( f_.2, ((x.3*x.4)*inv(x.5)) ) ]
-   -->
-    [ !KD( 'exp', x.6^(x.3*inv((x.5*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.4*inv((x.3*x.6))) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^inv(x.6) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^(x.4*inv(x.5)) ), !KU( f_.2, (x.5*inv((x.4*x.6))) ) ]
-   -->
-    [ !KD( 'exp', x.3^inv(x.6) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.3^(x.4*inv(x.5)) ), !KU( f_.2, (x.6*inv((x.4*x.7))) ) ]
-   -->
-    [ !KD( 'exp', x.3^(x.6*inv((x.5*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv(x.4)) ),
-    !KU( f_.2, ((x.3*x.4)*inv(x.5)) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^(x.3*x.7) ) ]
- 
- rule (modulo AC) exp:
-    [ !KD( 'noexp', x.5^(x.6*inv((x.3*x.7))) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
-   -->
-    [ !KD( 'exp', x.5^(x.6*inv((x.4*x.7))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.3^(x.4*inv(x.5)) ),
-    !KU( f_.2, ((x.5*x.6)*inv((x.4*x.7))) )
-    ]
-   -->
-    [ !KD( 'exp', x.3^(x.6*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.5^((x.4*x.6)*inv((x.3*x.7))) ),
-    !KU( f_.2, (x.3*inv(x.4)) )
-    ]
-   -->
-    [ !KD( 'exp', x.5^(x.6*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^(x.5*inv((x.4*x.7))) ),
-    !KU( f_.2, ((x.3*x.4)*inv(x.5)) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^(x.3*inv(x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv(x.3)) ),
-    !KU( f_.2, (x.3*inv((x.4*x.5))) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^(x.7*inv(x.4)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv(x.8)) ),
-    !KU( f_.2, (x.3*inv((x.4*x.5))) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^((x.3*x.7)*inv((x.4*x.8))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^(x.7*inv((x.4*x.8))) ),
-    !KU( f_.2, ((x.3*x.4)*inv(x.5)) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^((x.3*x.7)*inv((x.5*x.8))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^(x.5*inv((x.3*x.7))) ),
-    !KU( f_.2, (x.3*inv((x.4*x.5))) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^inv((x.4*x.7)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.3^((x.4*x.5)*inv(x.6)) ),
-    !KU( f_.2, ((x.6*x.7)*inv((x.5*x.8))) )
-    ]
-   -->
-    [ !KD( 'exp', x.3^((x.4*x.7)*inv(x.8)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv((x.4*x.8))) ),
-    !KU( f_.2, ((x.3*x.4)*inv(x.5)) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^((x.3*x.7)*inv(x.8)) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.7^(x.6*inv((x.4*x.8))) ),
-    !KU( f_.2, ((x.3*x.4)*inv((x.5*x.6))) )
-    ]
-   -->
-    [ !KD( 'exp', x.7^(x.3*inv((x.5*x.8))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.6^((x.5*x.7)*inv((x.3*x.8))) ),
-    !KU( f_.2, (x.3*inv((x.4*x.5))) )
-    ]
-   -->
-    [ !KD( 'exp', x.6^(x.7*inv((x.4*x.8))) ) ]
- 
- rule (modulo AC) exp:
-    [
-    !KD( 'noexp', x.7^((x.6*x.8)*inv((x.4*x.9))) ),
-    !KU( f_.2, ((x.3*x.4)*inv((x.5*x.6))) )
-    ]
-   -->
-    [ !KD( 'exp', x.7^((x.3*x.8)*inv((x.5*x.9))) ) ]
- 
- rule (modulo AC) inv:
-    [ !KD( f_.1, inv(x.2) ) ] --> [ !KD( 'noexp', x.2 ) ]
- 
- rule (modulo AC) fst:
-    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', fst(x) ) ]
- 
- rule (modulo AC) pair:
-    [ !KU( f_.2, x ), !KU( f_.3, x.1 ) ] --> [ !KU( 'noexp', <x, x.1> ) ]
- 
- rule (modulo AC) pk:
-    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', pk(x) ) ]
- 
- rule (modulo AC) sign:
-    [ !KU( f_.2, x ), !KU( f_.3, x.1 ) ] --> [ !KU( 'noexp', sign(x, x.1) ) ]
- 
- rule (modulo AC) snd:
-    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', snd(x) ) ]
- 
- rule (modulo AC) true:
-    [ ] --> [ !KU( 'noexp', true() ) ]
- 
- rule (modulo AC) verify:
-    [ !KU( f_.3, x ), !KU( f_.4, x.1 ), !KU( f_.5, x.2 ) ]
-   -->
-    [ !KU( 'noexp', verify(x, x.1, x.2) ) ]
- 
- rule (modulo AC) coerce:
-    [ !KD( f_, x ) ] --> [ !KU( f_, x ) ]
- 
- rule (modulo AC) pub:
-    [ ] --> [ !KU( f_, $x ) ]
- 
- rule (modulo AC) fresh:
-    [ Fr( ~x ) ] --> [ !KU( f_, ~x ) ]
- 
- rule (modulo AC) exp:
-    [ !KU( 'noexp', x ), !KU( f_.2, x.1 ) ] --> [ !KU( 'exp', x^x.1 ) ]
- 
- rule (modulo AC) inv:
-    [ !KU( f_.1, x ) ] --> [ !KU( 'noexp', inv(x) ) ]
+builtin: diffie-hellman
+functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true()
 
 section{* The Signed Diffie-Hellman Protocol *}
 
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
+
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Get_pk:
    [ !Pk( A, pk ) ] --> [ Out( pk ) ]
+
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Reveal_ltk:
    [ !Ltk( A, ltk ) ] --[ LtkReveal( A ) ]-> [ Out( ltk ) ]
+
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Init_1:
@@ -339,6 +33,7 @@ rule (modulo E) Init_1:
    Init_1( $I, $R, ~ekI ),
    Out( <$I, $R, 'g'^~ekI, sign(<'1', $I, $R, 'g'^~ekI>, ltkI)> )
    ]
+
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Init_2:
@@ -348,6 +43,7 @@ rule (modulo E) Init_2:
    ]
   --[ SessionKey( $I, $R, Y^~ekI ) ]->
    [ ]
+
   /*
   rule (modulo AC) Init_2:
      [
@@ -390,6 +86,7 @@ rule (modulo E) Resp:
    ]
   --[ SessionKey( $I, $R, X^~ekR ) ]->
    [ Out( <$R, $I, 'g'^~ekR, sign(<'2', $R, $I, 'g'^~ekR>, ltkR)> ) ]
+
   /*
   rule (modulo AC) Resp:
      [
@@ -434,33 +131,12 @@ lemma (modulo E) Perfect_Forward_Secrecy:
      (Ex #r.6. (LtkReveal( R.1 ) @ #r.6) & (#r.6 < #i.3)))"
 /* proof based on the same lemma modulo AC */
 /*
-doubly-guarded formula characterizing all attacks:
+guarded formula characterizing all attacks:
 "Ex I R.1 sessKey.2 #i.3 #k.4.
   (SessionKey( I, R.1, sessKey.2 ) @ #i.3) & (K( sessKey.2 ) @ #k.4)
  &
   (All #r.5. (LtkReveal( I ) @ #r.5) ==> All. (#r.5 < #i.3) ==> F) &
   (All #r.6. (LtkReveal( R.1 ) @ #r.6) ==> All. (#r.6 < #i.3) ==> F)"
-*/
-/*
-proof by induction possible over the formula:
-"(Ex I R.1 sessKey.2 #i.3 #k.4.
-   (SessionKey( I, R.1, sessKey.2 ) @ #i.3) & (K( sessKey.2 ) @ #k.4)
-  &
-   (All #r.5. (LtkReveal( I ) @ #r.5) ==> All. (#r.5 < #i.3) ==> F) &
-   (All #r.6. (LtkReveal( R.1 ) @ #r.6) ==> All. (#r.6 < #i.3) ==> F)) &
- (All I.7 R.8 sessKey.9 #i.10 #k.11.
-   (SessionKey( I.7, R.8, sessKey.9 ) @ #i.10) & (K( sessKey.9 ) @ #k.11)
-  ==>
-   (Last(#k.11)) |
-   (Last(#i.10)) |
-   (Ex #r.12.
-     (LtkReveal( I.7 ) @ #r.12)
-    &
-     (All. (Last(#r.12)) ==> F) & (Ex. (#r.12 < #i.10) & T)) |
-   (Ex #r.13.
-     (LtkReveal( R.8 ) @ #r.13)
-    &
-     (All. (Last(#r.13)) ==> F) & (Ex. (#r.13 < #i.10) & T)))"
 */
 simplify
 solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
@@ -475,12 +151,12 @@ solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
           case Init_1
           solve( splitEqs(1) )
             case split_case_1
-            solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.113*~ekR.114) )] )
+            solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.113*~ekR.114) )] /* may loop */ )
               case Init_1
-              by solve( (#vr.132, 1)[!KU( f_.133, ~ekR.155 )] )
+              by solve( (#vr.132, 1)[!KU( f_.133, ~ekR.155 )] /* may loop */ )
             next
               case Resp
-              by solve( (#vr.137, 1)[!KU( f_.138, ~ekI.163 )] )
+              by solve( (#vr.137, 1)[!KU( f_.138, ~ekI.163 )] /* may loop */ )
             next
               case exp
               by solve( KU((#vr.118, 1), ~ekI.113) )
@@ -491,14 +167,14 @@ solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
           qed
         next
           case sign
-          solve( (#vr.81, 1)[!KU( f_.83, ~ltk.44 )] )
+          solve( (#vr.81, 1)[!KU( f_.83, ~ltk.44 )] /* may loop */ )
             case Reveal_ltk
             by contradiction // cyclic
           qed
         qed
       next
         case sign
-        solve( (#vr.37, 1)[!KU( f_.39, ~ltk.31 )] )
+        solve( (#vr.37, 1)[!KU( f_.39, ~ltk.31 )] /* may loop */ )
           case Reveal_ltk
           by contradiction // cyclic
         qed
@@ -515,12 +191,12 @@ next
         case Init_1
         solve( splitEqs(1) )
           case split_case_1
-          solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.64*~ekI.65) )] )
+          solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.64*~ekI.65) )] /* may loop */ )
             case Init_1
-            by solve( (#vr.83, 1)[!KU( f_.84, ~ekR.105 )] )
+            by solve( (#vr.83, 1)[!KU( f_.84, ~ekR.105 )] /* may loop */ )
           next
             case Resp
-            by solve( (#vr.88, 1)[!KU( f_.89, ~ekI.115 )] )
+            by solve( (#vr.88, 1)[!KU( f_.89, ~ekI.115 )] /* may loop */ )
           next
             case exp
             by solve( KU((#vr.69, 1), ~ekR.64) )
@@ -531,7 +207,7 @@ next
         qed
       next
         case sign
-        solve( (#vr.32, 1)[!KU( f_.34, ~ltk.20 )] )
+        solve( (#vr.32, 1)[!KU( f_.34, ~ltk.20 )] /* may loop */ )
           case Reveal_ltk
           by contradiction // cyclic
         qed
@@ -548,24 +224,24 @@ maude tool: 'maude'
  checking version: 2.6. OK.
 
 
-analyzing: data/examples/SignedDH_PFS.spthy
+analyzing: data/examples/csf12/SignedDH_PFS.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/SignedDH_PFS.spthy
+analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.104149s
+  processing time: 3.398243s
   Perfect_Forward_Secrecy: complete proof (27 steps)
 
 ------------------------------------------------------------------------------
 
 ==============================================================================
-summary of processed files:
+summary of summaries:
 
-analyzed: data/examples/SignedDH_PFS.spthy
+analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.104149s
+  processing time: 3.398243s
   Perfect_Forward_Secrecy: complete proof (27 steps)
 
 ==============================================================================

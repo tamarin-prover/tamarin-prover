@@ -636,14 +636,16 @@ blatom = (fmap (fmap (fmap Free))) <$> asum
   [ flip Action <$> try (fact llit <* actionOp) <*> nodevarTerm      <?> "action"
   , Less        <$> try (nodevarTerm <* lessOp)    <*> nodevarTerm   <?> "less"
   , DedBefore   <$> try (term llit <* dedBeforeOp) <*> nodevarTerm   <?> "deduced before"
-  , EdgeA       <$> try (nodePrem <* edgeOp)       <*> nodeConc      <?> "edge"
+  , EdgeA       <$> try (nodeConc <* edgeOp)       <*> nodePrem      <?> "edge"
   , EqE         <$> try (multterm llit <* equalOp) <*> multterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* equalOp)  <*> nodevarTerm   <?> "node equality"
   ]
   where 
     nodevarTerm = (Lit . Var) <$> nodevar
-    nodePrem = parens ((,) <$> (nodevarTerm <* kw COMMA) <*> integer)
-    nodeConc = nodePrem
+    nodePrem = annNode PremIdx
+    nodeConc = annNode ConcIdx
+    annNode mkAnn = parens ((,) <$> (nodevarTerm <* kw COMMA) 
+                                <*> (mkAnn <$> integer))
 
 -- | Parse an atom of a formula.
 fatom :: Parser (LFormula Name)

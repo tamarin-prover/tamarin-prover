@@ -144,7 +144,7 @@ isForbiddenExp ru = maybe False id $ do
 nonUniqueFactInstances :: SignatureWithMaude -> Sequent 
                        -> [(NodeId, NodeId, NodeId)]
 nonUniqueFactInstances sig se = do
-    Edge c@(NodeConc (i, _)) (NodePrem (k, _)) <- S.toList $ get sEdges se
+    Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
     let tag = factTag (nodeConcFact c se)
     guard (tag `S.member` get sigmUniqueInsts sig)
     j <- S.toList $ D.reachableSet [i] less
@@ -219,7 +219,7 @@ importRule ru = someRuleACInst ru `evalBindT` noBindings
 -- | @proveLinearConc se (v,i)@ tries to prove that the @i@-th conclusion of node
 -- @v@ is a linear fact.
 proveLinearConc :: Sequent -> NodeConc -> Bool
-proveLinearConc se (NodeConc (v,i)) =
+proveLinearConc se (v,i) =
     maybe False (isLinearFact . (get (rConc i))) $ M.lookup v $ get sNodes se
 
 -- | Create a node labelled with a fresh instance of one of the rules and solve
@@ -232,14 +232,14 @@ ruleNode i rules = do
     solveRuleConstraints mrconstrs i
     modM sNodes (M.insert i ru)
     let inFacts = do
-          (v, Fact InFact [m]) <- zip [0..] $ get rPrems ru
+          (v, Fact InFact [m]) <- enumPrems ru
           return $ do
             j <- freshLVar "vf" LSortNode
             ruKnows <- mkISendRuleAC m
             modM sNodes (M.insert j ruKnows)
-            modM sEdges (S.insert $ Edge (NodeConc (j,0)) (NodePrem (i,v)))
+            modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i, v))
     let freshFacts = do
-          (v, Fact FreshFact [m]) <- zip [0..] $ get rPrems ru
+          (v, Fact FreshFact [m]) <- enumPrems ru
           return $ do
             j <- freshLVar "vf" LSortNode
             modM sNodes (M.insert j (mkFreshRuleAC m))
@@ -247,7 +247,7 @@ ruleNode i rules = do
                 -- 'm' must be of sort fresh
                 n <- varTerm <$> freshLVar "n" LSortFresh
                 solveTermEqs SplitNow [Equal m n]
-            modM sEdges (S.insert $ Edge (NodeConc (j,0)) (NodePrem (i,v)))
+            modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i,v))
     -- solve all Fr and In premises
     sequence_ inFacts
     sequence_ freshFacts
@@ -255,9 +255,11 @@ ruleNode i rules = do
   where
     mkISendRuleAC m = do
         faPrem <- kuFact Nothing m
-        return $ Rule (ProtoInfo ISendRule) [faPrem] [inFact m] [kLogFact m]
+        return $ Rule (ProtoInfo (ProtoRuleACInstInfo ISendRule []) )
+                      [faPrem] [inFact m] [kLogFact m]
 
-    mkFreshRuleAC m = Rule (ProtoInfo FreshRule) [] [freshFact m] []
+    mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule []))
+                           [] [freshFact m] []
 
 -- | Create a fresh node labelled with a fresh instance of one of the rules
 -- and solve it's 'Fr' and 'In' facts immediatly.
@@ -284,8 +286,8 @@ freshRuleConc :: [RuleAC]
               -> SeProof (RuleACInst, NodeConc, LNFact)
 freshRuleConc rules = do
     (i, ru) <- freshRuleNode rules
-    (v, fa) <- disjunctionOfList $ zip [0..] $ get rConcs ru
-    return (ru, NodeConc (i,v), fa)
+    (v, fa) <- disjunctionOfList $ enumConcs ru
+    return (ru, (i, v), fa)
 
 -- | Insert the edges and ensure the equality between the facts
 -- at either end of the edge.
@@ -382,10 +384,10 @@ solveSimpleUpK = do
     nodes <- M.toList <$> getM sNodes
     let (down, up) = partitionEithers $ do
             (i, ru)   <- nodes
-            (v, fa)   <- zip [0..] $ get rConcs ru
+            (v, fa)   <- enumConcs ru
             (d, _, m) <- maybe mzero return $ kFactView fa
             let tag = case d of UpK -> Right; DnK -> Left
-            return $ tag (m, (d, fa, NodeConc (i, v)))
+            return $ tag (m, (d, fa, (i, v)))
         -- retain the up-entry if there are duplicates
         derived = M.fromList $ down ++ up
 
@@ -395,7 +397,7 @@ solveSimpleUpK = do
     trySolveGoal derived (PremUpKG p m) = trySolveMessage derived m
             (\c _ -> modM sMsgEdges (S.insert (MsgEdge c p)))
 
-    trySolveGoal derived (PremiseG p faPrem) = case kFactView faPrem of
+    trySolveGoal derived (PremiseG p faPrem _mayLoop) = case kFactView faPrem of
         Just (UpK, _, m) -> trySolveMessage derived m
             -- For premise goals we have 'inp m == [m]'. We must insert a
             -- direct edge and ensure the equality wrt. an additional coerce
@@ -410,8 +412,8 @@ solveSimpleUpK = do
         Just (UpK, faConc, c) -> solveWith c faConc >> return True
         Just (DnK, faConc, c) -> do
             (j, (faPrem', faConc')) <- freshCoerceRuleNode
-            insertEdges [ (c, faConc , faPrem', NodePrem (j,0)) ]
-            _ <- solveWith (NodeConc (j,0)) faConc'
+            insertEdges [ (c, faConc , faPrem', (j, PremIdx 0)) ]
+            _ <- solveWith (j, ConcIdx 0) faConc'
             return True
 
         Nothing               -> return False
@@ -470,7 +472,7 @@ exploitFreshUnique :: SeProof Bool
 exploitFreshUnique = do
     -- gather fresh rule nodes and merge nodes with identical conclusions
     updates <- gets ( map merge
-                    . groupSortOn (get (rConc 0) . snd)
+                    . groupSortOn (get (rConc (ConcIdx 0)) . snd)
                     . filter (isFreshRule . snd)
                     . M.toList
                     . get sNodes
@@ -495,27 +497,25 @@ exploitFreshUnique = do
 exploitEdgeProps :: SeProof Bool -- True, if a simplification step happened.
 exploitEdgeProps = do
     se <- gets id
-    let edges  = [ (getNodeConc src, getNodePrem prem)
-                 | Edge src prem <- S.toList (get sEdges se) ]
-        rawEqs = mergeEqs fst snd edges ++
-                 mergeEqs snd fst (filter (proveLinearConc se . NodeConc . fst) edges)
-    -- check if there are changes to be applied
-    if all null rawEqs
-      then do return False
-      else do
-        let eqs = concat rawEqs
-        -- all indices of merged premises and conclusions must be equal
-        contradictoryIf (not $ and [snd l == snd r | Equal l r <- eqs])
-        -- nodes must be equal
-        solveNodeIdEqs $ map (fmap fst) eqs
-        return True
+    let edges = S.toList (get sEdges se)
+    (||) <$> mergeNodes eSrc eTgt edges
+         <*> mergeNodes eTgt eSrc (filter (proveLinearConc se . eSrc) edges)
   where
-    mergeEqs :: Ord c => (a -> b) -> (a -> c) -> [a] -> [[Equal b]]
-    mergeEqs what on = map (merge what) . groupSortOn on
+    -- merge the nodes on the 'mergeEnd' for edges that are equal on the
+    -- 'compareEnd'
+    mergeNodes mergeEnd compareEnd edges
+      | null eqs  = return False
+      | otherwise = do
+            -- all indices of merged premises and conclusions must be equal
+            contradictoryIf (not $ and [snd l == snd r | Equal l r <- eqs])
+            -- nodes must be equal
+            solveNodeIdEqs $ map (fmap fst) eqs
+            return True
+      where
+        eqs = concatMap (merge mergeEnd) $ groupSortOn compareEnd edges
 
-    merge :: (a -> b) -> [a] -> [Equal b]
-    merge _    []            = error "exploitEdgeProps: impossible"
-    merge proj (keep:remove) = map (Equal (proj keep) . proj) remove
+        merge _    []            = error "exploitEdgeProps: impossible"
+        merge proj (keep:remove) = map (Equal (proj keep) . proj) remove
 
 
 -- | Merge nodes with equal non-pair msg conclusions.
@@ -796,14 +796,15 @@ data Usefulness = Useful | Useless
 openPremiseGoals :: Sequent -> [(Usefulness, Goal)]
 openPremiseGoals se = do
     (i, ru) <- oneOfMap $ get sNodes se
-    (u, fa) <- zip [0..] $ get rPrems ru
-    let p = NodePrem (i, u)
+    (u, fa) <- enumPrems ru
+    let p = (i, u)
+        breakers = ruleInfo (get praciLoopBreakers) (const []) $ get rInfo ru
     case fa of
       -- up-K facts
       (kFactView -> Just (UpK, _, m))  -> case input m of
           [m'] | m == m' -> do
             guard (not (trivial m') && (p, m') `S.notMember` coveredMsgPrems)
-            return $ markUseless m' i $ PremiseG p fa
+            return $ markUseless m' i $ PremiseG p fa True
           m's            -> do
             m' <- sortednub m's
             guard (not (trivial m') && (p, m') `S.notMember` coveredMsgPrems)
@@ -815,7 +816,8 @@ openPremiseGoals se = do
         | otherwise                 -> return . (Useful,)  $ PremDnKG p
       -- all other facts
       _ | p `S.member` coveredPrems -> mzero
-        | otherwise                 -> return . (Useful,) $ PremiseG p fa
+        | u `elem` breakers         -> return . (Useless,) $ PremiseG p fa True
+        | otherwise                 -> return . (Useful,) $  PremiseG p fa False
   where
     coveredPrems     = S.fromList $ eTgt <$> S.toList (get sEdges se) <|>
                                     cTgt <$> S.toList (get sChains se)
@@ -895,10 +897,8 @@ openGoals se = delayUseless $ concat $
    , (Useful,) <$> openSplitGoals se
    ]
   where
-    isProtoFactGoal (_, PremiseG _ _) = True
-    isProtoFactGoal _                 = False
     preferProtoFactGoals goals =
-        uncurry (++) $ partition isProtoFactGoal goals
+        uncurry (++) $ partition (isPremiseGoal . snd) goals
 
     delayUseless = map snd . sortOn fst
 
@@ -957,9 +957,10 @@ solvePremDnK rules p = do
     mLearn    <- varTerm <$> freshLVar "t" LSortMsg
     concLearn <- kdFact (Just CanExp) mLearn
     let premLearn = outFact mLearn
-        ruLearn = Rule (ProtoInfo IRecvRule) [premLearn] [concLearn] []
-        cLearn = NodeConc (iLearn, 0)
-        pLearn = NodePrem (iLearn, 0)
+        ruLearn = Rule (ProtoInfo (ProtoRuleACInstInfo IRecvRule [])) 
+                       [premLearn] [concLearn] []
+        cLearn = (iLearn, ConcIdx 0)
+        pLearn = (iLearn, PremIdx 0)
     modM sNodes  (M.insert iLearn ruLearn)
     modM sChains (S.insert (Chain cLearn p))
     solvePremise rules pLearn premLearn
@@ -984,10 +985,10 @@ solveChain rules ch@(Chain c p) = do
      `disjunction`
      do -- extend it with one step
         (i, ru)     <- freshRuleNode rules
-        (v, faPrem) <- disjunctionOfList $ zip [0..] $ get rPrems ru
+        (v, faPrem) <- disjunctionOfList $ enumPrems ru
         solveFactEqs SplitNow [(Equal faPrem faConc)]
-        modM sEdges (S.insert (Edge c (NodePrem (i,v))))
-        modM sChains (S.insert (Chain (NodeConc (i,0)) p))
+        modM sEdges (S.insert (Edge c (i, v)))
+        modM sChains (S.insert (Chain (i, ConcIdx 0) p))
         return $ showRuleCaseName ru
      )
 
@@ -1024,7 +1025,7 @@ solveGoal goal = do
     trace ("   solving goal: " ++ render (prettyGoal goal)) $
       case goal of
         ActionG i fa   -> solveAction  (nonSilentRules rules) (i, fa) 
-        PremiseG p fa  -> 
+        PremiseG p fa _mayLoop -> 
             solvePremise (get crProtocol rules ++ get crConstruct rules) p fa
         PremDnKG p     -> solvePremDnK (get crProtocol  rules) p
         PremUpKG p m   -> solvePremUpK (get crConstruct rules) p m
