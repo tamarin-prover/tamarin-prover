@@ -3,7 +3,9 @@ theory RFID_Simple begin
 text{* Running example from StatVerif paper *}
 
 // Declare RFID/1 fact as globally fresh...for testing purposes.
-globally_fresh: RFID/1
+unique_insts: RFID/1
+
+builtin: asymmetric-encryption
 
 // RFID Memory Cell model
 

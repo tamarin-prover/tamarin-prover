@@ -7,19 +7,18 @@ of Protocols Based on TPM State Registers," csf, pp.66-80, 2011 IEEE 24th
 Computer Security Foundations Symposium, 2011.
 *}
 
-// TODO: Adapt this model to change in Fresh rule.
-
+builtin: hashing, asymmetric-encryption, signing
 
 // TPM PCR model
 rule PCR_Init:
-    [ Fr('PCRInit')   // initialization happens at most once
-    , Fr(~aik)        // Authentication identity key
+    [ Fr(~aik)          // Authentication identity key
     ]
   --[ PCR_Init('pcr0',~aik)
+    , UniqueInit()      // For removing traces that have multiple initializations
     ]->
-    [ PCR('pcr0')            // the initial PCR value is 'pcr0'
-    , !AIK(~aik)             // the auth. id. key is persistent
-    , Out(pk(~aik))          // publish the public key of the auth. id. key
+    [ PCR('pcr0')       // the initial PCR value is 'pcr0'
+    , !AIK(~aik)        // the auth. id. key is persistent
+    , Out(pk(~aik))     // publish the public key of the auth. id. key
     ]
 
 
@@ -76,9 +75,8 @@ rule Alice_Init:
 
 // Keytable
 rule MkKey:
-    [ Fr(<'MkKey',$a>)  // register at most one key per public constant
-    , Fr(~ska)
-    ]
+    // Fr(<'MkKey',$a>)  // register at most one key per public constant
+    [ Fr(~ska) ]
     -->
     [ !KeyTable(h('pcr0',$a), ~ska) ]
 
@@ -91,16 +89,21 @@ lemma types [typing]:
   "
 
 lemma Unbind_PCR_Value [reuse]:
-    "All x sk m #i.
+    "(All #i #j. UniqueInit() @ j & UniqueInit() @ i ==> #i = #j)
+     ==>
+     (All x sk m #i.
         PCR_Unbind(x, sk, m) @ i
         ==>
         ( (Ex aik #j.     PCR_Init(x, aik) @ j  )
         | (Ex y xPrev #j. PCR_Extend(xPrev,y,x) @ j)
         )
+     )
     "
 
 lemma secrecy:
-  "not(
+  "(All #i #j. UniqueInit() @ j & UniqueInit() @ i ==> #i = #j)
+   ==>
+   not(
       (All t #e. Ineq(t,t) @ e ==> F)
     & (Ex s0 s1 #i #d0 #d1. 
           Secrets(s0, s1) @ i

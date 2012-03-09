@@ -3,7 +3,9 @@ theory GM_Contract begin
 text{* Case study from StatVerif paper *}
 
 
+// TODO: Implement contract signing protocol
 
+/*
 
 // RFID Memory Cell model
 
@@ -92,5 +94,6 @@ lemma secrecy:
 lemma Alice_before_to_bob:
   "All sk #i #j. Device_Use(sk) @ i & ToBob(sk) @ j ==> i < j"
 
+*/
 
 end

@@ -38,13 +38,15 @@ iknows(pair(M1,M2)) => iknows(M1).iknows(M2);
 iknows(M1).iknows(M2) => iknows(pair(M1,M2));
 */
 
+builtin: signing
+
 // The non-deterministic choice between the rules SetupHonestKey and
 // SetupDishonestKey determines whether an agent is honest or not.
 
 // \H,S. =[PK]=>iknows(PK).PK in ring(H).PK in db(S,H,valid);
 rule SetupHonestKey:
     [ Fr(~sk)
-    , Fr(<'RegKey',$A>)  // every agent can setup at most one key
+    // , Fr(<'RegKey',$A>)  // every agent can setup at most one key
     ]
   --[ HonestKey(~sk) ]->
     [ Out(pk(~sk)), ClientKey($A, ~sk), ServerDB($A, ~sk) ]
@@ -52,7 +54,7 @@ rule SetupHonestKey:
 // \S,DU. =[PK]=>iknows(PK).iknows(inv(PK)).PK in db(S,DU,valid);
 rule SetupDishonestKey:
     [ In(sk)
-    , Fr(<'RegKey',$A>)  // every agent can setup at most one key
+    // , Fr(<'RegKey',$A>)  // every agent can setup at most one key
     ]
   -->
     [ ServerDB($A, sk) ]
