@@ -41,6 +41,7 @@ module Term.Unification (
   , allMaudeSig
   , rrulesForMaudeSig
   , funSigForMaudeSig
+  , irreducibleFunSig
 
 
   -- * Convenience exports
@@ -66,7 +67,7 @@ import           Term.Maude.Types
                    (MaudeSig(..), emptyMaudeSig, allMaudeSig, rrulesForMaudeSig,
                     funSigForMaudeSig, dhMaudeSig, xorMaudeSig, msetMaudeSig,
                     pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig,
-                    hashMaudeSig, minimalMaudeSig)
+                    hashMaudeSig, minimalMaudeSig, irreducibleFunSig)
 
 import           Debug.Trace.Ignore
 -- import qualified Debug.Trace as DT

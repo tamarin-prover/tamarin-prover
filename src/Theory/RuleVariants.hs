@@ -72,7 +72,11 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
         (,,) <$> mapM abstrFact prems0
              <*> mapM abstrFact concs0
              <*> mapM abstrFact acts0
+
+    irreducible = irreducibleFunSig (mhMaudeSig hnd)
     abstrFact = traverse abstrTerm
+    abstrTerm (FApp (NonAC o) args) | o `elem` irreducible =
+        FApp (NonAC o) <$> mapM abstrTerm args
     abstrTerm t = varTerm <$> importBinding (`LVar` sortOfLNTerm t) t (getHint t)
       where getHint (Lit (Var v)) = lvarName v
             getHint _             = "z"

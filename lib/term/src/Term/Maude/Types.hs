@@ -116,6 +116,14 @@ funSigForMaudeSig (MaudeSig {enableXor, enableDH, enableMSet, funSig}) =
     ++ (if enableXor  then xorFunSig  else [])
     ++ (if enableMSet then msetFunSig else [])
 
+-- | @irreducibleFunSig msig@ return all irreducible function
+-- symbols in a maude signature, i.e., those that do not
+-- appear outermost in a rewrite rule.
+irreducibleFunSig :: MaudeSig -> FunSig
+irreducibleFunSig msig = funSigForMaudeSig msig \\ reducible
+  where reducible = [ o | StRule (FApp (NonAC o) _) _ <- stRules msig ]
+                    ++ [ invSym, expSym ]
+
 -- Convert between MTerms and LNTerms
 ------------------------------------------------------------------------
 
