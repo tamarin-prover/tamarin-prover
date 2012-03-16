@@ -197,7 +197,7 @@ solveWithCaseDistinction hnd ths goal0 = case goal0 of
 
 -- | Apply a precomputed case distinction theorem to a required fact.
 applyCaseDistinction :: MaudeHandle
-                     -> CaseDistinction   -- ^ Case distinction theorem.
+                     -> CaseDistinction    -- ^ Case distinction theorem.
                      -> NodePrem           -- ^ Premise
                      -> BigStepGoal        -- ^ Required goal
                      -> Maybe (SeProof [String])
