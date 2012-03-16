@@ -887,21 +887,50 @@ openActionGoals se = uncurry ActionG <$> sActionAtoms se
 -- | All open goals (non-deterministic choices of possible proof steps) in the
 -- sequent.
 openGoals :: Sequent -> [Goal]
-openGoals se = delayUseless $ concat $
+openGoals se = delayUseless $ sortDecisionTree solveFirst $ concat $
    [ (Useful,) <$> openActionGoals se
    , (Useful,) <$> openDisjunctionGoals se
    , (Useful,) <$> openChainGoals se
-   , preferProtoFactGoals $ openPremiseGoals se
+   , openPremiseGoals se
    -- SM: Commented out as automatic saturation works again.
    -- , (Useful,) <$> openImplicationGoals se
    , (Useful,) <$> openSplitGoals se
    ]
   where
-    preferProtoFactGoals goals =
-        uncurry (++) $ partition (isPremiseGoal . snd) goals
+    solveFirst = map (. snd)
+        [ isActionGoal, isProtoFactGoal
+        , isDisjGoal, isChainGoal, isFreshKnowsGoal
+        , isSplitGoalSmall, isDoubleExpGoal ]
+
+    isProtoFactGoal (PremiseG _ (Fact KUFact _) _) = False
+    isProtoFactGoal (PremiseG _ _               _) = True
+    isProtoFactGoal _                              = False
+
+    msgPremise (PremiseG _ (Fact KUFact [_, m]) _) = Just m
+    msgPremise (PremUpKG _ m)                      = Just m
+    msgPremise _                                   = Nothing
+
+    isFreshKnowsGoal goal = case msgPremise goal of
+        Just (Lit (Var lv)) | lvarSort lv == LSortFresh -> True
+        _                                              -> False
+
+    isDoubleExpGoal goal = case msgPremise goal of
+        Just (FApp (NonAC ("exp",2)) [_, FApp (AC Mult) _]) -> True
+        _                                                   -> False
+
+    isSplitGoalSmall (SplitG sid) = splitCasenum (get sEqStore se) sid < 3
+    isSplitGoalSmall _            = False
 
     delayUseless = map snd . sortOn fst
 
+
+-- | @sortDecisionTree xs ps@ returns a reordering of @xs@
+-- such that the sublist satisfying @ps!!0@ occurs first,
+-- then the sublist satisfying @ps!!1@, and so on.
+sortDecisionTree :: [a -> Bool] -> [a] -> [a]
+sortDecisionTree []     xs = xs
+sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
+  where (sat, nonsat) = partition p xs
 
 -- | Solve an action goal.
 solveAction :: [RuleAC]       -- ^ All rules labelled with an action
