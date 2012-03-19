@@ -46,7 +46,6 @@ import Control.Monad.Bind
 
 import System.Process
 import System.IO
-import System.Directory
 
 import Utils.Misc
 
@@ -147,49 +146,43 @@ data MaudeProcess = MP {
     , unifCount  :: !Int
     , matchCount :: !Int
     , normCount  :: !Int
-    , mFile      :: String
     }
 
 -- | @startMaude@ starts a new instance of Maude and returns a Handle to it.
 startMaude :: FilePath -> MaudeSig -> IO MaudeHandle 
 startMaude maudePath maudeSig = do
-    -- create theory file for maude
-    tempDir <- getTemporaryDirectory
-    (tempFile, tempH) <- openTempFile tempDir "theory.maude"
-    hPutStr tempH (theory maudeSig)
-    hClose tempH
-    -- start maude
-    mv <- newMVar =<< startMaudeProcess maudePath tempFile
-    -- Add a finalizer to the MVar that stops maude and removes the theory
-    -- file.
+    mv <- newMVar =<< startMaudeProcess maudePath maudeSig
+    -- Add a finalizer to the MVar that stops maude.
     addMVarFinalizer mv $ withMVar mv $ \mp -> do
         terminateProcess (mProc mp) <* waitForProcess (mProc mp)
-        removeFile (mFile mp)
     -- return the maude handle
     return (MaudeHandle maudePath maudeSig mv)
 
 -- | Start a Maude process.
 startMaudeProcess :: FilePath -- ^ Path to Maude
-                  -> FilePath -- ^ Path to Maude theory file
+                  -> MaudeSig
                   -> IO (MaudeProcess)
-startMaudeProcess maudePath maudeTheoryFile = do
+startMaudeProcess maudePath maudeSig = do
     (hin,hout,herr,hproc) <- runInteractiveCommand maudeCmd
     _ <- getToDelim hout
-    return (MP hin hout herr hproc 0 0 0 maudeTheoryFile)
+    -- input the maude theory
+    hPutStr hin (theory maudeSig)
+    hFlush  hin
+    _ <- getToDelim hout
+    return (MP hin hout herr hproc 0 0 0)
   where 
     maudeCmd
       | dEBUGMAUDE = "sh -c \"tee /tmp/maude.input | " 
                      ++ maudePath ++ " -no-tecla -no-banner -no-wrap -batch "
-                     ++ maudeTheoryFile ++ "\" | tee /tmp/maude.output"
+                     ++ "\" | tee /tmp/maude.output"
       | otherwise  = 
           maudePath ++ " -no-tecla -no-banner -no-wrap -batch " 
-                    ++ maudeTheoryFile
 
 -- | Restart the Maude process on this handle.
 restartMaude :: MaudeHandle -> IO ()
-restartMaude (MaudeHandle maudePath _ mv) = modifyMVar_ mv $ \mp -> do
+restartMaude (MaudeHandle maudePath maudeSig mv) = modifyMVar_ mv $ \mp -> do
     terminateProcess (mProc mp) <* waitForProcess (mProc mp)
-    startMaudeProcess maudePath (mFile mp)
+    startMaudeProcess maudePath maudeSig
 
 -- | @getToDelim ih@ reads input from @ih@ until @mDelim@ is encountered.
 --   It returns the string read up to (not including) mDelim.
