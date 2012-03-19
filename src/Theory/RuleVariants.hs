@@ -55,7 +55,7 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
           [] -> error $ "variantsProtoRule: rule has no variants `"++show ru++"'"
           _  -> do
               -- x <- return (emptySubst, Just substs) -- 
-              x <- simpDisjunction hnd (Disj substs)
+              x <- simpDisjunction hnd (const False) (Disj substs)
               case trace (show ("SIMP",abstractedTerms,
                                 "abstr", abstrPsCsAs,
                                 "substs", substs,

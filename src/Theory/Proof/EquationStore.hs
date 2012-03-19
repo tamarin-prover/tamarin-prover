@@ -88,7 +88,7 @@ addEqs splitStrat hnd eqs0 eqStore =
             return $ [addDisj (applyEqStore hnd subst eqStore) (Disj substs)]
           SplitNow -> 
             addEqsAC (modify eqsSubst (compose subst) eqStore)
-              <$> simpDisjunction hnd (Disj substs)
+              <$> simpDisjunction hnd (const False) (Disj substs)
   where
     eqs = apply (get eqsSubst eqStore) $ trace (unlines ["addEqs: ", show eqs0]) $ eqs0
     addEqsAC eqSt (sfree, Nothing)   = [applyEqStore hnd sfree eqSt]
@@ -187,10 +187,11 @@ splitAtPos eqStore i
 --   names for variables from the underlying 'MonadFresh'.
 simpDisjunction :: MonadFresh m
                 => MaudeHandle
+                -> (LNSubstVFresh -> Bool)
                 -> Disj (LNSubstVFresh)
                 -> m (LNSubst, Maybe [LNSubstVFresh])
-simpDisjunction hnd disj0 = do
-    eqStore' <- simp hnd eqStore
+simpDisjunction hnd isContr disj0 = do
+    eqStore' <- simp hnd isContr eqStore
     return (get eqsSubst eqStore', wrap $ get eqsConj eqStore')
   where
     eqStore = set eqsConj (Conj [disj0]) $ emptyEqStore
@@ -204,17 +205,17 @@ simpDisjunction hnd disj0 = do
 ----------------------------------------------------------------------
 
 -- | @simp eqStore@ simplifies the equation store.
-simp :: MonadFresh m => MaudeHandle -> EqStore -> m EqStore
-simp hnd eqStore = (`execStateT` (trace (show ("eqStore", eqStore)) eqStore)) $ whileTrue (simp1 hnd)
+simp :: MonadFresh m => MaudeHandle -> (LNSubstVFresh -> Bool) -> EqStore -> m EqStore
+simp hnd isContr eqStore = (`execStateT` (trace (show ("eqStore", eqStore)) eqStore)) $ whileTrue (simp1 hnd isContr)
 
 
 -- | @simp1@ tries to execute one simplification step
 --   for the equation store. It returns @True@ if
 --   the equation store was modified.
-simp1 :: MonadFresh m => MaudeHandle -> StateT EqStore m Bool
-simp1 hnd = do
+simp1 :: MonadFresh m => MaudeHandle -> (LNSubstVFresh -> Bool) -> StateT EqStore m Bool
+simp1 hnd isContr = do
     s <- MS.get
-    b1 <- simpMinimize
+    b1 <- simpMinimize isContr
     b2 <- simpRemoveRenamings
     b3 <- simpEmptyDisj
     b4 <- foreachDisj hnd simpSingleton
@@ -378,8 +379,8 @@ simpIdentify (Disj (subst:others)) = case equalImgPairs of
         imageOfVFresh s v == imageOfVFresh s v' && isJust (imageOfVFresh s v)
     removeMappings vs s = restrictVFresh (domVFresh s \\ vs) s
 
--- | Traverse disjunctions without msgBefore fact in conjunction and
---   execute @f@ until it returns @Just (mfreeSubst, disjs)@.
+-- | Traverse disjunctions and execute @f@ until it returns
+--   @Just (mfreeSubst, disjs)@.
 --   Then the @disjs@ is inserted at the current position, if @mfreeSubst@ is
 --   @Just freesubst@, then it is applied to the equation store. @True@ is
 --   returned if any modifications took place.
@@ -407,12 +408,16 @@ foreachDisj hnd f = do
 
 -- | Simplify by removing substitutions that occur twice in a disjunct.
 --   We could generalize this function by using AC-equality or subsumption.
-simpMinimize :: MonadFresh m => StateT EqStore m Bool
-simpMinimize = do
+simpMinimize :: MonadFresh m => (LNSubstVFresh -> Bool) -> StateT EqStore m Bool
+simpMinimize isContr = do
     eqs <- MS.get
-    let eqs' = modify eqsConj (fmap (Disj . sortednub . getDisj)) eqs
+    let eqs' = modify eqsConj (fmap (Disj . minimize . getDisj)) eqs
     MS.put eqs'
     return (eqs /= eqs')
+  where minimize substs
+            | emptySubstVFresh `elem` substs = [emptySubstVFresh]
+            | otherwise                      = sortednub (filter (not . isContr) substs)
+
 
 {-
 

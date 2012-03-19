@@ -75,6 +75,8 @@ import           Theory.Proof.SolveGuarded
 import           Theory.Proof.Types
 import           Theory.Proof.EquationStore
 
+import           Term.Rewriting.Norm (nf', maybeNotNfSubterms)
+
 ------------------------------------------------------------------------------
 -- Sequents
 ------------------------------------------------------------------------------
@@ -95,14 +97,28 @@ sequentFromFormula kind f =
 -- Graph reasoning
 ------------------------------------------------------------------------------
 
--- | True iff there are terms in the sequent that are not in normal form wrt.
+-- | True iff there are terms in the node constraints that are not in normal form wrt.
 -- to 'Term.Rewriting.Norm.norm' (DH/AC).
---
--- FIXME: Might also want to check clauses, equation store, and other
--- components of sequent.
 hasNonNormalTerms :: SignatureWithMaude -> Sequent -> Bool
 hasNonNormalTerms sig se =
-    any (not . (`runReader` (get sigmMaudeHandle sig)) . nfRule) . M.elems . get sNodes $ se
+    any (not . (`runReader` hnd) . nf') (maybeNonNormalTerms hnd se)
+  where hnd = get sigmMaudeHandle sig
+
+-- | Returns all (sub)terms of node constraints that may be not in normal form.
+maybeNonNormalTerms :: MaudeHandle -> Sequent -> [LNTerm]
+maybeNonNormalTerms hnd se = 
+    sortednub . concatMap getTerms . M.elems . get sNodes $ se
+  where getTerms (Rule _ ps cs as) = do
+          f <- ps++cs++as
+          t <- factTerms f
+          maybeNotNfSubterms (mhMaudeSig hnd) t
+
+substCreatesNonNormalTerms :: MaudeHandle -> Sequent -> LNSubstVFresh -> Bool
+substCreatesNonNormalTerms hnd se =
+    \subst -> any (not . nfApply subst) terms
+  where terms = maybeNonNormalTerms hnd se
+        nfApply subst t =  t == t' || nf' t' `runReader` hnd
+          where t' = apply (freshToFreeAvoiding subst t) t
 
 -- | True if there is no @EXP-down@ rule that should be replaced by an
 -- @EXP-up@ rule.
@@ -737,7 +753,8 @@ noContradictoryEqStore =
 solveTermEqs :: SplitStrategy -> [Equal LNTerm] -> SeProof ()
 solveTermEqs splitStrat eqs = do
     hnd <- getMaudeHandle
-    setM sEqStore =<< simp hnd
+    se <- gets id
+    setM sEqStore =<< simp hnd (substCreatesNonNormalTerms hnd se)
                   =<< disjunctionOfList
                   =<< addEqs splitStrat hnd eqs
                   =<< getM sEqStore
@@ -778,8 +795,9 @@ solveListEqs solver eqs = do
 solveRuleConstraints :: Maybe RuleACConstrs -> NodeId -> SeProof ()
 solveRuleConstraints (Just eqConstr) _v = do
     hnd <- getMaudeHandle
+    se <- gets id
     setM sEqStore
-        =<< (simp hnd . addRuleVariants eqConstr)
+        =<< (simp hnd (substCreatesNonNormalTerms hnd se) . addRuleVariants eqConstr)
         =<< getM sEqStore
     noContradictoryEqStore
 solveRuleConstraints Nothing _ = return ()
@@ -1028,7 +1046,8 @@ solveSplit x = do
     let errMsg = error "solveSplit: split of equations on unconstrained variable!"
     store  <- maybe errMsg disjunctionOfList split
     hnd    <- getMaudeHandle
-    store' <- simp hnd store
+    se <- gets id
+    store' <- simp hnd (substCreatesNonNormalTerms hnd se) store
     contradictoryIf (eqsIsFalse store')
     sEqStore =: store'
     return "split"
