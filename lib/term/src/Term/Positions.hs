@@ -17,7 +17,7 @@ import Safe
 type Position = [Int]
 
 -- | @t >* p@ returns the subterm of term @t@ at position @p@.
---   The standard standard notation for @t >* p@ is @t|_p@.
+--   The standard notation for @t >* p@ is @t|_p@.
 (>*) :: Term a -> Position -> Term a
 t              >* [] = t
 (FApp _ as)    >* (i:ps) = case atMay as i of

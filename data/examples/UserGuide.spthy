@@ -19,8 +19,8 @@ short for 'security protocol theory'. A security protocol theory specifies
   1. the signature and equational theory to use for the message algebra,
   2. the set of set of multiset rewriting rules modeling the protocol and
      the adversary capabilities, and
-  3. the guarded trace properties whose validity for this set of multiset
-     rewriting rules we want to check.
+  3. the guarded trace properties whose validity we wish to check for this
+     set of multiset rewriting rules.
 
 We explain each of these parts where they occur in the following security
 protocol theory. Before we start, a few notes on the syntax.
@@ -35,9 +35,9 @@ Installing the vim syntax highlighting files
 --------------------------------------------
 
 As you've probably noticed, calling 'tamarin-prover' without any arguments
-yields an informative help-message listing all available flags and the paths
-to the installed example protocol files. We call the directory above the
-example files the DATA_PATH. The examples are found at
+yields a help-message listing all available flags and the paths to the
+installed example protocol files. We call the directory above the example
+files the DATA_PATH. The examples are found at
 
   DATA_PATH/examples
 
@@ -75,13 +75,13 @@ properties. Moreover, you can also insert formal comments, to structure your
 theory. We give examples of each of these elements while modeling the
 a simple protocol. 
 
-In this protocol a client C generates a fresh symmetric key 'k', encrypts it
+In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
 with the public key of a server 'S' and sends it to 'S'. The server confirms
 the receipt of the key by sending back its hash to the client. In
 Alice-and-Bob notation the protocol would read as follows.
 
   C -> S: aenc{k}pk(S)
-  S <- C: h(k)
+  C <- S: h(k)
 
 This protocol is artificial and it satisfies only very weak security
 guarantees. We can prove that from the perspective of the client, the freshly
@@ -98,9 +98,9 @@ Function Signature and Equational Theory
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring 
-  a binary function 'aenc' denoting a call to the encryption algorithm,
-  a binary function 'adec' denoting a call to the decryption algorithm, and
-  a unary function 'pk' denoting a call to the algorithm computing a public
+  a binary function 'aenc' denoting the encryption algorithm,
+  a binary function 'adec' denoting the decryption algorithm, and
+  a unary function 'pk' denoting the algorithm computing a public
   key from a private key.
 */
 
@@ -108,10 +108,11 @@ functions: h/1, aenc/2, adec/2, pk/1
 equations: adec(aenc(m, pk(k)), k) = m
 
 /*
-The above equation then models the interaction between calls to these three
-algorithms. All these equations must be subterm-convergent rewriting rules,
-when read from left to right. This means that the right-hand-side must be a
-subterm of the left-hand-side or a nullary function symbol.
+The above equation models the interaction between calls to these three
+algorithms. All such user-specified  equations must be subterm-convergent
+rewriting rules, when oriented from left to right. This means that the
+right-hand-side must be a subterm of the left-hand-side or a nullary
+function symbol.
 
 Certain equational theories are used very often when modeling cryptographic
 messages. We therefore provide builtin definitions for them. The above theory
@@ -124,6 +125,8 @@ We support the following builtin theories:
   diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
   hashing
 
+Note that the theory for hashing only introduces the function symbol 'h/1'
+and contains no equations.
 Apart from 'diffie-hellman', all of these theories are subterm-convergent and
 can therefore also be declared directly, as above. You can inspect their
 definitions by uncommenting the following two line-comments and calling
@@ -142,7 +145,7 @@ wellformedness (explained below), and pretty-prints the theory. The
 declaration of the signature and the equations can be found at the top of the
 pretty-printed theory.
 
-Proving all lemmas contained in the theory would be as simple as adding the
+Proving all lemmas contained in the theory is as simple as adding the
 flag '--prove' to the call; i.e.,
 
   tamarin-prover UserGuide.spthy --prove
@@ -163,7 +166,7 @@ rule Register_pk:
 /* The above rule models registering a public key. It makes use of the
    following syntax.
    
-   Facts always start with an upper-case letter. They are declared implicitly.
+   Facts always start with an upper-case letter and do not have to declared.
    If their name is prefixed with an exclamation mark '!', then they are
    persistent. Otherwise, they are linear. Note that you must use every fact
    name consistently; i.e., you must always use it with the same arity, casing,
@@ -202,7 +205,7 @@ rule Get_pk:
   [ Out(pk) ]
 
 /*
-   We model dynamic compromise of long-term private keys using the following
+   We model the dynamic compromise of long-term private keys using the following
    rule. Intuitively, it reads a private-key database entry and sends it to
    the adversary. This rule has an observable 'LtkReveal' action stating that
    the long-term key of agent 'A' was compromised. We will use this action in
@@ -223,7 +226,7 @@ Modeling the protocol
 Recall that we want to model the following protocol.
 
   C -> S: aenc{k}pk(S)
-  S <- C: h(k)
+  C <- S: h(k)
 
 We model it use the following three rules.
 */
@@ -292,8 +295,8 @@ The syntax for specifying security properties uses
   f @ i    for action constraints, the sort prefix for the temporal variable 'i'
            is optional
            
-  i < j    for temporal ordering, the sort prefix for the temporal variable 'i'
-           is optional
+  i < j    for temporal ordering, the sort prefix for the temporal variables 'i'
+           adn 'j' is optional
 
   #i = #j  for an equality between temporal variables 'i' and 'j'
   x = y    for an equality between message variables 'x' and 'y'
@@ -304,11 +307,11 @@ guarded. The error message for an unguarded variable is currently not very
 good. 
 
 For universally quantified variables, one has to check that they all occur in
-an action constraint right after the quantifier and that the toplevel inside
-the quantifier is an implication.
+an action constraint right after the quantifier and that the outermost logical operator
+inside the quantifier is an implication.
 For existentially quantified variables, one has to check that they all occur in
-an action constraint right after the quantifier and that the toplevel inside
-the quantifier is a conjunction.
+an action constraint right after the quantifier and that the outermost logical
+operator inside the quantifier is a conjunction.
 Note also that currently the precedence of the logical connectives is not
 specified. We therefore recommend to use parentheses, when in doubt.
 
@@ -420,7 +423,7 @@ further questions, please do not hesitate to contact either
   Simon Meier         simon.meier@inf.ethz.ch.
 
 Note that our CSF'12 submission does not explain how we compose multiple
-constraint reduction into a precomputed case distinction. It also does not
+constraint reductions into a precomputed case distinction. It also does not
 explain how we delay splitting on the different variants of multiset rewriting
 rules. We will report on this in an upcoming technical report. This report
 will also explain the support for proving loop invariants by induction, as it
@@ -433,5 +436,3 @@ BTW, every security protocol theory must be delimited with 'end'.
 */
 
 end
-
-
