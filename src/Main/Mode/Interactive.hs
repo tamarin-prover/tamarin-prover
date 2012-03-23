@@ -17,7 +17,6 @@ import           Control.Basics
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 import           System.Directory (doesFileExist, doesDirectoryExist)
-import           System.IO
 
 import           Web.Dispatch
 import qualified Web.Settings

@@ -11,10 +11,7 @@ module Main.Mode.Test (
     testMode
   ) where
 
-import           Data.List
-import           Data.Maybe
 import           System.Console.CmdArgs.Explicit as CmdArgs
-import           System.IO
 import           System.Exit
 import           Test.HUnit (Counts(..))
 

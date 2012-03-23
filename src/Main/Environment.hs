@@ -13,7 +13,6 @@ import           Data.List
 import           Data.Char (isSpace, toLower)
 import           Data.Maybe (fromMaybe)
 
-import           Control.Monad
 import           Control.Exception as E
 
 import           System.Console.CmdArgs.Explicit

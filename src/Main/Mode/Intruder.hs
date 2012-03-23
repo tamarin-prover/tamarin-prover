@@ -11,14 +11,11 @@ module Main.Mode.Intruder (
     intruderMode
   ) where
 
-import Data.Maybe
-
 import Control.Basics
 import Control.Monad.Reader
 
 import System.Console.CmdArgs.Explicit as CmdArgs
 import System.FilePath
-import System.IO
 
 import Theory
 

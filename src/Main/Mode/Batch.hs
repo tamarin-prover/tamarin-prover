@@ -16,7 +16,6 @@ import           Data.Maybe
 import           Control.Basics
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
-import           System.IO
 import           System.Timing (timed)
 
 import qualified Text.Isar as Isar
