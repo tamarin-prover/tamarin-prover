@@ -309,74 +309,74 @@ lookupNonACArity op = do
         Just k  -> return k
 
 -- | Parse an n-ary operator application for arbitrary n.
-naryOpApp :: Parser (Term l) -> Parser (Term l)
-naryOpApp lit = do
+naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
+naryOpApp plit = do
     op <- identifier
     k  <- lookupNonACArity op
     ts <- parens $ if k == 1
-                     then return <$> tupleterm lit
-                     else sepBy (multterm lit) (kw COMMA)
+                     then return <$> tupleterm plit
+                     else sepBy (multterm plit) (kw COMMA)
     let k' = length ts
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
-    return $ FApp (NonAC (op, k')) ts
+    return $ fApp (NonAC (op, k')) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
-binaryAlgApp :: Parser (Term l) -> Parser (Term l)
-binaryAlgApp lit = do
+binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
+binaryAlgApp plit = do
     op <- identifier
     k <- lookupNonACArity op
-    arg1 <- kw LBRACE *> tupleterm lit <* kw RBRACE
-    arg2 <- term lit
+    arg1 <- kw LBRACE *> tupleterm plit <* kw RBRACE
+    arg2 <- term plit
     when (k /= 2) $ fail $ 
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ FApp (NonAC (op, 2)) [arg1, arg2]
+    return $ fApp (NonAC (op, 2)) [arg1, arg2]
 
 -- | Parse a term.
-term :: Parser (Term l) -> Parser (Term l)
-term lit = asum
+term :: Ord l => Parser (Term l) -> Parser (Term l)
+term plit = asum
     [ pairing       <?> "pairs"
-    , parens (multterm lit)
-    , kw UNDERSCORE  *> (FApp (NonAC invSym) . return <$> term lit)
-    , string "1" *> pure (FApp (NonAC oneSym) [])
+    , parens (multterm plit)
+    , kw UNDERSCORE  *> (fApp (NonAC invSym) . return <$> term plit)
+    , string "1" *> pure (fApp (NonAC oneSym) [])
     , application <?> "function application"
     , nullaryApp
-    , lit  
+    , plit  
     ]
     <?> "term"
   where
-    application = asum $ map (try . ($ lit)) [naryOpApp, binaryAlgApp]
-    pairing = kw LESS *> tupleterm lit <* kw GREATER
+    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp]
+    pairing = kw LESS *> tupleterm plit <* kw GREATER
     nullaryApp = do
       maudeSig <- getState
-      asum [ try (string sym) *> pure (FApp (NonAC (sym,0)) [])
+      asum [ try (string sym) *> pure (fApp (NonAC (sym,0)) [])
            | (sym,0) <- funSigForMaudeSig maudeSig ]
 
 -- | A left-associative sequence of exponentations.
-expterm :: Parser (Term l) -> Parser (Term l)
-expterm lit = chainl1 (term lit) ((\a b -> FApp (NonAC expSym) [a,b]) <$ kw HAT)
+expterm :: Ord l => Parser (Term l) -> Parser (Term l)
+expterm plit = chainl1 (term plit) ((\a b -> fApp (NonAC expSym) [a,b]) <$ kw HAT)
 
 -- | A left-associative sequence of multiplications.
-multterm :: Parser (Term l) -> Parser (Term l)
-multterm lit = chainl1 (expterm lit) ((\a b -> FApp (AC Mult) [a,b]) <$ kw STAR)
+multterm :: Ord l => Parser (Term l) -> Parser (Term l)
+multterm plit = chainl1 (expterm plit) ((\a b -> fApp (AC Mult) [a,b]) <$ kw STAR)
   -- FIXME: parse as n-ary multiplication
 
 -- | A right-associative sequence of tuples.
-tupleterm :: Parser (Term l) -> Parser (Term l)
-tupleterm lit = chainr1 pterm ((\a b -> FApp (NonAC pairSym) [a,b])<$ kw COMMA)
-  where pterm = ifM (enableDH <$> getState) (multterm lit) (term lit)
+tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
+tupleterm plit = chainr1 pterm ((\a b -> fApp (NonAC pairSym) [a,b])<$ kw COMMA)
+  where pterm = ifM (enableDH <$> getState) (multterm plit) (term plit)
 
 -- | Parse a fact.
-fact :: Parser (Term l) -> Parser (Fact (Term l))
-fact lit = 
+fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
+fact plit = 
     do multi <- option Linear (kw BANG *> pure Persistent)
        i     <- identifier
        case i of
          []                -> fail "empty identifier"
          (c:_) | isUpper c -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
-       ts    <- parens (sepBy (multterm lit) (kw COMMA))
+       ts    <- parens (sepBy (multterm plit) (kw COMMA))
        mkProtoFact multi i ts
     <?> "protocol fact"
   where
@@ -632,7 +632,7 @@ proofSkeleton =
 
 -- | Parse an atom with possibly bound logical variables.
 blatom :: Parser BLAtom
-blatom = (fmap (fmap (fmap Free))) <$> asum
+blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ flip Action <$> try (fact llit <* actionOp) <*> nodevarTerm      <?> "action"
   , Less        <$> try (nodevarTerm <* lessOp)    <*> nodevarTerm   <?> "less"
   , DedBefore   <$> try (term llit <* dedBeforeOp) <*> nodevarTerm   <?> "deduced before"
@@ -641,7 +641,7 @@ blatom = (fmap (fmap (fmap Free))) <$> asum
   , EqE         <$>     (nodevarTerm  <* equalOp)  <*> nodevarTerm   <?> "node equality"
   ]
   where 
-    nodevarTerm = (Lit . Var) <$> nodevar
+    nodevarTerm = (lit . Var) <$> nodevar
     nodePrem = annNode PremIdx
     nodeConc = annNode ConcIdx
     annNode mkAnn = parens ((,) <$> (nodevarTerm <* kw COMMA) 

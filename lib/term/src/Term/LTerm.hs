@@ -1,6 +1,8 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, TypeSynonymInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, DeriveDataTypeable, StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TemplateHaskell, GeneralizedNewtypeDeriving, ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -44,6 +46,7 @@ module Term.LTerm (
   -- ** Manging Free LVars
   
   , HasFrees(..)
+  , MonotoneFunction(..)
   , occurs
   , freesList
   , frees
@@ -67,10 +70,11 @@ module Term.LTerm (
   , prettyLNTerm
 
   -- * Convenience exports
-  , module Term.Term
+  , module Term.VTerm
 ) where
 
-import Term.Term
+import Term.VTerm
+import Term.Rewriting.Definitions
 
 import Text.Isar
 
@@ -134,11 +138,11 @@ instance Show NameId where
 
 -- | @freshTerm f@ represents the fresh name @f@.
 freshTerm :: String -> NTerm v
-freshTerm = Lit . Con . Name FreshName . NameId
+freshTerm = lit . Con . Name FreshName . NameId
 
 -- | @pubTerm f@ represents the pub name @f@.
 pubTerm :: String -> NTerm v
-pubTerm = Lit . Con . Name PubName . NameId
+pubTerm = lit . Con . Name PubName . NameId
 
 -- | Return 'LSort' for given 'Name'.
 sortOfName :: Name -> LSort
@@ -185,11 +189,11 @@ freshLVar n s = LVar n s <$> freshIdent n
 
 -- | Returns the most precise sort of an 'LTerm'.
 sortOfLTerm :: (c -> LSort) -> LTerm c -> LSort
-sortOfLTerm sortOfConst (Lit (Con c))                 = sortOfConst c
-sortOfLTerm _           (Lit (Var (LVar _ s _)))      = s
-sortOfLTerm _           (FApp (NonAC ("empty",0)) []) = LSortMSet
-sortOfLTerm _           (FApp (AC MUn) _)             = LSortMSet
-sortOfLTerm _           _                             = LSortMsg
+sortOfLTerm sortOfConst (viewTerm -> Lit (Con c))                 = sortOfConst c
+sortOfLTerm _           (viewTerm -> Lit (Var (LVar _ s _)))      = s
+sortOfLTerm _           (viewTerm -> FApp (NonAC ("empty",0)) []) = LSortMSet
+sortOfLTerm _           (viewTerm -> FApp (AC MUn) _)             = LSortMSet
+sortOfLTerm _           _                                         = LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.
 sortOfLNTerm :: LNTerm -> LSort
@@ -234,31 +238,31 @@ sortSuffix LSortMSet  = "mset"
 
 -- | Is a term a message variable?
 isMsgVar :: LNTerm -> Bool
-isMsgVar (Lit (Var v)) = (lvarSort v == LSortMsg)
-isMsgVar _             = False
+isMsgVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortMsg)
+isMsgVar _                         = False
 
 -- | Is a term a fresh variable?
 isFreshVar :: LNTerm -> Bool
-isFreshVar (Lit (Var v)) = (lvarSort v == LSortFresh)
-isFreshVar _             = False
+isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
+isFreshVar _                         = False
 
 -- | The required components to construct the message.
 --   FIXME: Make inv/1 and pair/2 special?
 input :: LNTerm -> [LNTerm]
-input (FApp (AC Mult) ts)                                     = concatMap input ts
-input (FApp (NonAC sym)  ts) | sym `elem` [ invSym, pairSym ] = concatMap input ts
-input t                                                       = [t]
+input (viewTerm -> FApp (AC Mult) ts)                                     = concatMap input ts
+input (viewTerm -> FApp (NonAC sym)  ts) | sym `elem` [ invSym, pairSym ] = concatMap input ts
+input t                                                                   = [t]
 
 -- | Is a message trivial; i.e., can for sure be instantiated with something
 -- known to the intruder?
 trivial :: LNTerm -> Bool
-trivial (FApp _ [])                  = True
-trivial (Lit (Con (Name PubName _))) = True
-trivial (Lit (Var v))                = case lvarSort v of
-                                         LSortPub -> True
-                                         LSortMsg -> True
-                                         _        -> False
-trivial _                            = False
+trivial (viewTerm -> FApp _ [])                  = True
+trivial (viewTerm -> Lit (Con (Name PubName _))) = True
+trivial (viewTerm -> Lit (Var v))                = case lvarSort v of
+                                                     LSortPub -> True
+                                                     LSortMsg -> True
+                                                     _        -> False
+trivial _                                        = False
 
 
 -- BVar: Bound variables
@@ -332,6 +336,8 @@ instance IsVar LVar where
 -- Managing bound and free LVars
 ------------------------------------------------------------------------------
 
+data MonotoneFunction f = Monotone (LVar -> f LVar ) | Arbitrary (LVar -> f LVar )
+
 -- | @HasFree t@ denotes that the type @t@ has free @LVar@ variables. They can
 -- be collected using 'foldFrees' and mapped in the context of an applicative
 -- functor using 'mapFrees'. 
@@ -345,8 +351,7 @@ instance IsVar LVar where
 --
 class HasFrees t where
     foldFrees  :: Monoid m      => (LVar -> m      ) -> t -> m
-    mapFrees   :: Applicative f => (LVar -> f LVar ) -> t -> f t
-
+    mapFrees   :: Applicative f => MonotoneFunction f -> t -> f t
 
 -- | @v `occurs` t@ iff variable @v@ occurs as a free variable in @t@.
 occurs :: HasFrees t => LVar -> t -> Bool
@@ -369,7 +374,7 @@ frees = sortednub . freesList
 -- binding is not yet determined by the caller are replaced with fresh
 -- variables.
 someInst :: (MonadFresh m, MonadBind LVar LVar m, HasFrees t) => t -> m t
-someInst = mapFrees (\x -> importBinding (`LVar` lvarSort x) x (lvarName x))
+someInst = mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x (lvarName x))
 
 -- | @rename t@ replaces all variables in @t@ with fresh variables
 rename :: (MonadFresh m, HasFrees a) => a -> m a
@@ -385,7 +390,7 @@ eqModuloFreshnessNoAC t1 =
     (normIndices t1 ==) . normIndices 
   where
     normIndices = (`evalFresh` nothingUsed) . (`evalBindT` noBindings) .
-                  mapFrees (\x -> importBinding (`LVar` lvarSort x) x "")
+                  mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x "")
 
 -- | The maximum index of all free variables.
 maximumVarIdx :: HasFrees t => t -> Int
@@ -417,7 +422,8 @@ s `renameAvoiding` t = rename s `evalFreshAvoiding` t
 
 instance HasFrees LVar where
     foldFrees = id
-    mapFrees  = id
+    mapFrees  (Arbitrary f) = f
+    mapFrees  (Monotone f)  = f
     
 instance HasFrees v => HasFrees (Lit c v) where
     foldFrees f (Var x) = foldFrees f x
@@ -433,9 +439,11 @@ instance HasFrees v => HasFrees (BVar v) where
     mapFrees _ b@(Bound _) = pure b
     mapFrees f   (Free v)  = Free <$> mapFrees f v
 
-instance HasFrees l => HasFrees (Term l) where
+instance (HasFrees l, Ord l) => HasFrees (Term l) where
     foldFrees  f = foldMap (foldFrees f)
-    mapFrees   f = traverse (mapFrees f)
+    mapFrees   f (viewTerm -> Lit l)    = lit <$> mapFrees f l
+    mapFrees   f@(Arbitrary _) (viewTerm -> FApp o l) = fApp o <$> mapFrees f l
+    mapFrees   f@(Monotone _)  (viewTerm -> FApp o l) = unsafefApp o <$> mapFrees f l
 
 instance HasFrees a => HasFrees (Equal a) where
     foldFrees f = foldMap (foldFrees f)

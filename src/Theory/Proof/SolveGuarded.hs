@@ -1,4 +1,7 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, TemplateHaskell, StandaloneDeriving, TypeSynonymInstances #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, TemplateHaskell #-}
+{-# LANGUAGE StandaloneDeriving, TypeSynonymInstances, ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2011, 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -20,8 +23,6 @@ module Theory.Proof.SolveGuarded (
 import           Theory.Proof.Guarded
 import           Theory.Atom
 import           Term.LTerm
-
-import           Term.Rewriting.NormAC
 
 import           Theory.Proof.Types
 
@@ -93,9 +94,9 @@ saturateGuarded hnd se0 = do
             modM sSolvedFormulas (S.insert fm)
             case bvarToLVar ato of
               EqE s t -- only add non-trivial equalities
-                | not (s ==# t) -> return $ Just $ Equal s t
+                | not (s == t) -> return $ Just $ Equal s t
                 | otherwise     -> return Nothing
-              EdgeA (Lit (Var i), v) (Lit (Var j), u) -> do
+              EdgeA (viewTerm -> Lit (Var i), v) (viewTerm -> Lit (Var j), u) -> do
                 modM sEdges $ S.insert $ Edge (i, v) (j, u)
                 return Nothing
               EdgeA _ _ ->
@@ -164,15 +165,15 @@ satisfyingSubsts hnd se gf0 =
     hapBefore = happensBefore se
 
     atomHolds subst ato = case unskolemizeTerm . applySkTerm subst <$> ato of
-        Action _ _                -> True     -- correct by construction
-        EqE t s                   -> t ==# s  -- compare terms modulo AC
-        Last i                    -> Last i `S.member` get sAtoms se
-        DedBefore t (Lit (Var i)) -> t `dedBefore` i
-        Less (Lit (Var i))    (Lit (Var j))     -> i `hapBefore` j
-        EdgeA (Lit (Var i), v) (Lit (Var j), u) -> 
+        Action _ _                                               -> True     -- correct by construction
+        EqE t s                                                  -> t == s   -- compare terms modulo AC
+        Last i                                                   -> Last i `S.member` get sAtoms se
+        DedBefore t (viewTerm -> Lit (Var i))                    -> t `dedBefore` i
+        Less (viewTerm -> Lit (Var i)) (viewTerm -> Lit (Var j)) -> i `hapBefore` j
+        EdgeA (viewTerm -> Lit (Var i), v) (viewTerm -> Lit (Var j), u) -> 
             Edge (i, v) (j, u) `S.member` get sEdges se
         -- play it safe and sound: all other atoms don't hold
-        _                         -> False
+        _                                                        -> False
 
 
 -- Find open goals
@@ -200,7 +201,7 @@ openImplicationGoals hnd se = do
 -------------------------------------------------- skolemizeTerm :: VTerm Name LVar -> SkTerm
 
 skolemizeTerm :: LNTerm -> SkTerm
-skolemizeTerm = fmap conv
+skolemizeTerm = fmapTerm conv
  where
   conv :: Lit Name LVar -> Lit SkConst LVar
   conv (Var v) = Con (SkConst v)
@@ -216,7 +217,7 @@ skolemizeGuarded :: LNGuarded -> SkGuarded
 skolemizeGuarded = mapGuardedAtoms (const skolemizeAtom)
 
 unskolemizeTerm :: SkTerm -> VTerm Name LVar
-unskolemizeTerm t = fmap conv t
+unskolemizeTerm t = fmapTerm conv t
  where
   conv :: Lit SkConst LVar -> Lit Name LVar
   conv (Con (SkConst x)) = Var x
@@ -238,7 +239,7 @@ applySkAction subst (t,f) = (applySkTerm subst t, applySkFact subst f)
 ----------------------------------------------
 
 skolemizeBTerm :: VTerm Name BLVar -> BSkTerm
-skolemizeBTerm = fmap conv
+skolemizeBTerm = fmapTerm conv
  where
   conv :: Lit Name BLVar -> Lit SkConst BLVar
   conv (Var (Free x))  = Con (SkConst x)
@@ -246,7 +247,7 @@ skolemizeBTerm = fmap conv
   conv (Con n)         = Con (SkName n)
 
 unskolemizeBTerm :: BSkTerm -> VTerm Name BLVar
-unskolemizeBTerm t = fmap conv t
+unskolemizeBTerm t = fmapTerm conv t
  where
   conv :: Lit SkConst BLVar -> Lit Name BLVar
   conv (Con (SkConst x)) = Var (Free x)
@@ -262,12 +263,14 @@ unskolemizeLNGuarded :: SkGuarded -> LNGuarded
 unskolemizeLNGuarded = mapGuardedAtoms (const unskolemizeBLAtom)
 
 applyBSkTerm :: SkSubst -> VTerm SkConst BLVar -> VTerm SkConst BLVar
-applyBSkTerm subst t = (>>= applyBLLit) t
+applyBSkTerm subst t = go t
       where
+        go (viewTerm -> Lit l)     = applyBLLit l
+        go (viewTerm -> FApp o as) = fApp o (map go as)
         applyBLLit :: Lit SkConst BLVar -> VTerm SkConst BLVar
         applyBLLit l@(Var (Free v)) =
-            maybe (Lit l) (fmap (fmap Free)) (imageOf subst v)
-        applyBLLit l                = Lit l
+            maybe (lit l) (fmapTerm (fmap Free)) (imageOf subst v)
+        applyBLLit l                = lit l
 
 applyBSkAtom :: SkSubst -> Atom (VTerm SkConst BLVar) -> Atom (VTerm SkConst BLVar)
 applyBSkAtom subst = fmap (applyBSkTerm subst)

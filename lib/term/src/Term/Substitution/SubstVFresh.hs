@@ -127,12 +127,12 @@ mapRangeVFresh f subst = SubstVFresh $ M.map f (svMap subst)
 
 -- | @extendWithRenaming vs s@ extends the substitution @s@ with renamings (with
 --   fresh variables) for the variables in @vs@ that are not already in @dom s@.
-extendWithRenaming :: Show (Lit c LVar)
+extendWithRenaming :: (Ord c, Show (Lit c LVar))
                    => [LVar] -> SubstVFresh c LVar -> SubstVFresh c LVar
 extendWithRenaming vs0 s =
     substFromListVFresh $
       substToListVFresh s ++ substToListVFresh (renameFreshAvoiding s2 (varsRangeVFresh s))
-  where s2 = substFromListVFresh [(v, Lit (Var v)) | v <- vs ]
+  where s2 = substFromListVFresh [(v, lit (Var v)) | v <- vs ]
         vs = vs0 \\ domVFresh s
 
 
@@ -156,7 +156,7 @@ varsRangeVFresh = sortednub . concatMap varsVTerm . rangeVFresh
 --   substitution is just renamed by the substitution.
 isRenamedVar :: LVar -> LSubstVFresh c -> Bool
 isRenamedVar lv subst =
-    case imageOfVFresh subst lv of
+    case viewTerm <$> imageOfVFresh subst lv of
       Just (Lit (Var lv')) | lvarSort lv == lvarSort lv' ->
           lv' `notElem` (concatMap varsVTerm $ [ t | (v,t) <- substToListVFresh subst, v /= lv ])
       _ -> False
@@ -182,13 +182,13 @@ substToListVFresh = M.toList . svMap
 -- | @renameFresh s@  renames the fresh variables in @s@ using fresh variables.
 --   This function can be used to prevent overshadowing which might
 --   make output hard to read.
-renameFresh :: MonadFresh m => SubstVFresh c LVar -> m (SubstVFresh c LVar)
+renameFresh :: (Ord c, MonadFresh m) => SubstVFresh c LVar -> m (SubstVFresh c LVar)
 renameFresh subst = substFromListVFresh . zip (map fst slist) <$> rename (map snd slist)
   where slist = substToListVFresh subst
 
 -- | @renameFreshAvoiding s t@ renames the fresh variables in the range of @s@ away from
 --   variables that are free in @t@. This is an internal function.
-renameFreshAvoiding :: HasFrees t => LSubstVFresh c -> t -> SubstVFresh c LVar
+renameFreshAvoiding :: (Ord c, HasFrees t) => LSubstVFresh c -> t -> SubstVFresh c LVar
 renameFreshAvoiding s t = renameFresh s `evalFreshAvoiding` t
 
 -- | @removeRenamings s@ removes all renamings (see 'isRenamedVar') from @s@.
@@ -241,4 +241,4 @@ prettyDisjLNSubstsVFresh (Disj substs) =
   where 
     ppConj = vcat . map prettyEq . substToListVFresh
     prettyEq (a,b) = 
-      prettyNTerm (Lit (Var a)) $$ nest (6::Int) (text "=" <-> prettyNTerm b)
+      prettyNTerm (lit (Var a)) $$ nest (6::Int) (text "=" <-> prettyNTerm b)

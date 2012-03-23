@@ -1,5 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, TupleSections, NamedFieldPuns #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, TupleSections #-}
+{-# LANGUAGE ViewPatterns, NamedFieldPuns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -26,7 +29,7 @@ import Control.DeepSeq
 import Data.DeriveTH
 import Data.Binary
 import Data.Foldable (asum)
-import Data.Traversable
+import Data.Traversable hiding (mapM)
 import Data.List
 import Data.Monoid
 import Data.List.Split hiding (sepBy, oneOf)
@@ -121,7 +124,7 @@ funSigForMaudeSig (MaudeSig {enableXor, enableDH, enableMSet, funSig}) =
 -- appear outermost in a rewrite rule.
 irreducibleFunSig :: MaudeSig -> FunSig
 irreducibleFunSig msig = funSigForMaudeSig msig \\ reducible
-  where reducible = [ o | StRule (FApp (NonAC o) _) _ <- stRules msig ]
+  where reducible = [ o | StRule (viewTerm -> FApp (NonAC o) _) _ <- stRules msig ]
                     ++ [ invSym, expSym ]
 
 -- Convert between MTerms and LNTerms
@@ -139,8 +142,10 @@ lTermToMTerm :: (MonadBind (Lit c LVar) MaudeLit m, MonadFresh m, Show (Lit c LV
              -> VTerm c LVar -- ^ The term to translate.
              -> m MTerm
 lTermToMTerm sortOf =
-  traverse exportLit
+  go
  where
+  go (viewTerm -> Lit l) = lit <$> exportLit l
+  go (viewTerm -> FApp o as) = fApp o <$> mapM go as
   exportLit a@(Var lv) =
     importBinding (\_ i -> MaudeVar i (lvarSort lv)) a "x"
   exportLit a@(Con n) = importBinding (\_ i -> MaudeConst i (sortOf n)) a "a"
@@ -155,8 +160,10 @@ mTermToLNTerm :: (MonadBind MaudeLit (Lit c LVar) m, MonadFresh m, Show (Lit c L
              -> MTerm  -- ^ The maude term to convert.
              -> m (VTerm c LVar)
 mTermToLNTerm nameHint =
-  traverse importLit
+  go
  where
+  go (viewTerm -> Lit l) = lit <$> importLit l
+  go (viewTerm -> FApp o as) = fApp o <$> mapM go as
   importLit a@(MaudeVar _ lsort) = importBinding (\n i -> Var (LVar n lsort i)) a nameHint
   importLit a@(FreshVar _ lsort) = importBinding (\n i -> Var (LVar n lsort i)) a nameHint
   importLit a = fromMaybe (error $ "fromMTerm: unknown constant `" ++ show a ++ "'") <$>
@@ -260,19 +267,19 @@ ppMaudeACSym o =
 
 -- | @ppMaude t@ pretty prints the term @t@ for Maude.
 ppMaude :: Term MaudeLit -> String
-ppMaude (Lit (MaudeVar i lsort))  = "x"++ show i ++":"++ppMSort lsort
-ppMaude (Lit (MaudeConst i LSortFresh)) = "f("++ show i ++")"
-ppMaude (Lit (MaudeConst i LSortPub))   = "p("++ show i ++")"
-ppMaude (Lit (MaudeConst i LSortMsg))   = "c("++ show i ++")"
-ppMaude (Lit (MaudeConst i LSortNode))  = "n("++ show i ++")"
-ppMaude (Lit (MaudeConst i LSortMSet))  = "m("++ show i ++")"
-ppMaude (Lit (FreshVar _ _))            = error "ppMaude: FreshVar not allowed"
-ppMaude (FApp (NonAC (fsym,_)) [])      = funsymPrefix++fsym
-ppMaude (FApp (NonAC (fsym,_)) as)      =
+ppMaude (viewTerm -> Lit (MaudeVar i lsort))  = "x"++ show i ++":"++ppMSort lsort
+ppMaude (viewTerm -> Lit (MaudeConst i LSortFresh)) = "f("++ show i ++")"
+ppMaude (viewTerm -> Lit (MaudeConst i LSortPub))   = "p("++ show i ++")"
+ppMaude (viewTerm -> Lit (MaudeConst i LSortMsg))   = "c("++ show i ++")"
+ppMaude (viewTerm -> Lit (MaudeConst i LSortNode))  = "n("++ show i ++")"
+ppMaude (viewTerm -> Lit (MaudeConst i LSortMSet))  = "m("++ show i ++")"
+ppMaude (viewTerm -> Lit (FreshVar _ _))            = error "ppMaude: FreshVar not allowed"
+ppMaude (viewTerm -> FApp (NonAC (fsym,_)) [])      = funsymPrefix++fsym
+ppMaude (viewTerm -> FApp (NonAC (fsym,_)) as)      =
     funsymPrefix++fsym++"("++(intercalate "," (map ppMaude as))++")"
-ppMaude (FApp (AC op) as)               =
+ppMaude (viewTerm -> FApp (AC op) as)               =
     ppMaudeACSym op ++ "("++(intercalate "," (map ppMaude as))++")"
-ppMaude (FApp List as)                  =
+ppMaude (viewTerm -> FApp List as)                  =
     funsymPrefix++"list(" ++ ppList as ++ ")"
   where
     ppList []     = funsymPrefix++"nil"
@@ -318,19 +325,19 @@ psort =  string "Pub"   *> return LSortPub
 expr :: GenParser Char st MTerm
 expr =  fixup <$> p
   where
-    p = Lit <$> ( flip MaudeConst <$> try parseConstSym <*> pNat <* string ")")
-     <|> Lit <$> (MaudeVar <$> (try (string "x" *> pNat <* string ":")) <*> psort)
-     <|> Lit <$> (FreshVar <$> (string "#" *> pNat <* string ":") <*> psort)
+    p =  lit <$> ( flip MaudeConst <$> try parseConstSym <*> pNat <* string ")")
+     <|> lit <$> (MaudeVar <$> (try (string "x" *> pNat <* string ":")) <*> psort)
+     <|> lit <$> (FreshVar <$> (string "#" *> pNat <* string ":") <*> psort)
      <|> do op <- try parseACSym
             args <- sepBy expr commaWS
             char ')'
-            return $ FApp (AC op) args
+            return $ fApp (AC op) args
      <|> do fsym <- try (parseFreeSym <* string "(")
             args <- sepBy expr commaWS
             string ")"
-            return $ FApp (NonAC (fsym, length args)) args
+            return $ fAppNonAC (fsym, length args) args
      <|> do fsym <- parseFreeSym
-            return $ FApp (NonAC (fsym, 0)) []
+            return $ fAppNonAC (fsym, 0) []
 
     parseConstSym =  (string "f(" *> pure LSortFresh)
                  <|> (string "p(" *> pure LSortPub)
@@ -344,16 +351,16 @@ expr =  fixup <$> p
 
     parseFreeSym = string funsymPrefix *> many1 (oneOf (['a' .. 'z']++['A'..'Z']))
  
-    fixup t@(Lit _)                     = t
-    fixup (FApp (NonAC ("list",1)) [a]) = FApp List (collect a)
+    fixup t@(viewTerm -> Lit _)                     = t
+    fixup (viewTerm -> FApp (NonAC ("list",1)) [a]) = fAppList (collect a)
       where
-        collect (FApp (NonAC ("cons",2)) [x,xs]) = fixup x:collect xs
-        collect (FApp (NonAC ("nil",0))   [])    = []
+        collect (viewTerm -> FApp (NonAC ("cons",2)) [x,xs]) = fixup x:collect xs
+        collect (viewTerm -> FApp (NonAC ("nil",0))   [])    = []
         collect t                                =
           error $"MTerm.expr: fixup failed, Maude returned invalid term, "++show t
-    fixup (FApp (NonAC ("list",_)) _)   =
+    fixup (viewTerm -> FApp (NonAC ("list",_)) _)   =
         error "MTerm.expr: fixup failed, Maude returned invalid term, list not unary"
-    fixup (FApp x ts)                   = FApp x $ map fixup ts
+    fixup (viewTerm -> FApp x ts)                   = fApp x $ map fixup ts
 
 -- | @parseSolution l@ parses a single solution returned by Maude.
 parseReduceSolution :: String -> Either ParseError MTerm

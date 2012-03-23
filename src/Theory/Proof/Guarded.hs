@@ -163,9 +163,11 @@ mapGuardedAtoms f =
 -- Instances
 ------------------------------------------------------------------------------
 
+{-
 instance Functor (Guarded s c) where
-    fmap f = foldGuarded (GAto . fmap (fmap (fmap (fmap f)))) GDisj GConj
-                         (\qua ss as gf -> GGuarded qua ss (map (fmap (fmap (fmap (fmap f)))) as) gf)
+    fmap f = foldGuarded (GAto . fmap (fmapTerm (fmap (fmap f)))) GDisj GConj
+                         (\qua ss as gf -> GGuarded qua ss (map (fmap (fmapTerm (fmap (fmap f)))) as) gf)
+-}
 
 instance Foldable (Guarded s c) where
     foldMap f = foldGuarded (foldMap (foldMap (foldMap (foldMap f))))
@@ -173,16 +175,16 @@ instance Foldable (Guarded s c) where
                             (mconcat . getConj)
                             (\_qua _ss as b -> foldMap (foldMap (foldMap (foldMap (foldMap f)))) as `mappend` b)
 
+traverseGuarded :: (Applicative f, Ord c, Ord v, Ord a)
+                => (a -> f v) -> Guarded s c a -> f (Guarded s c v)
+traverseGuarded f = foldGuarded (liftA GAto . traverse (traverseTerm (traverse (traverse f))))
+                                (liftA GDisj . sequenceA)
+                                (liftA GConj . sequenceA)
+                                (\qua ss as gf -> GGuarded qua ss <$> traverse (traverse (traverseTerm (traverse (traverse f)))) as <*> gf)
 
-instance Traversable (Guarded s c) where
-    traverse f = foldGuarded (liftA GAto . traverse (traverse (traverse (traverse f))))
-                             (liftA GDisj . sequenceA)
-                             (liftA GConj . sequenceA)
-                             (\qua ss as gf -> GGuarded qua ss <$> traverse (traverse (traverse (traverse (traverse f)))) as <*> gf)
-
-instance HasFrees (Guarded (String, LSort) c LVar) where
-    foldFrees  f = foldMap  (foldFrees  f)
-    mapFrees   f = traverse (mapFrees   f)
+instance Ord c => HasFrees (Guarded (String, LSort) c LVar) where
+    foldFrees f = foldMap  (foldFrees f)
+    mapFrees  f = traverseGuarded (mapFrees f)
 
 
 -- FIXME: remove name hints for variables for saturation?
@@ -194,8 +196,8 @@ type LGuarded c = Guarded (String, LSort) c LVar
 
 -- | @substBoundAtom s a@ substitutes each occurence of a bound variables @i@
 -- in @dom(s)@ with the corresponding free variable @x=s(i)@ in the atom @a@.
-substBoundAtom :: [(Int,LVar)] -> Atom (VTerm c (BVar LVar)) -> Atom (VTerm c (BVar LVar))
-substBoundAtom s = fmap (fmap (fmap subst))
+substBoundAtom :: Ord c => [(Int,LVar)] -> Atom (VTerm c (BVar LVar)) -> Atom (VTerm c (BVar LVar))
+substBoundAtom s = fmap (fmapTerm (fmap subst))
  where subst bv@(Bound i') = case lookup i' s of
                                Just x -> Free x
                                Nothing -> bv
@@ -204,15 +206,16 @@ substBoundAtom s = fmap (fmap (fmap subst))
 -- | @substBound s gf@ substitutes each occurence of a bound
 -- variable @i@ in @dom(s)@ with the corresponding free variable
 -- @s(i)=x@ in all atoms in @gf@.
-substBound :: [(Int,LVar)] -> LGuarded c -> LGuarded c
+substBound :: Ord c => [(Int,LVar)] -> LGuarded c -> LGuarded c
 substBound s = mapGuardedAtoms (\j a -> substBoundAtom [(i+j,v) | (i,v) <- s] a)
 
 
 -- | @substFreeAtom s a@ substitutes each occurence of a free variables @v@
 -- in @dom(s)@ with the bound variables @i=s(v)@ in the atom @a@.
-substFreeAtom :: [(LVar,Int)] 
+substFreeAtom :: Ord c
+              => [(LVar,Int)] 
               -> Atom (VTerm c (BVar LVar)) -> Atom (VTerm c (BVar LVar))
-substFreeAtom s = fmap (fmap (fmap subst))
+substFreeAtom s = fmap (fmapTerm (fmap subst))
  where subst fv@(Free x) = case lookup x s of
                                Just i -> Bound i
                                Nothing -> fv
@@ -221,14 +224,14 @@ substFreeAtom s = fmap (fmap (fmap subst))
 -- | @substFreeAtom s gf@ substitutes each occurence of a free variables
 -- @v in dom(s)@ with the correpsonding bound variables @i=s(v)@
 -- in all atoms in  @gf@.
-substFree :: [(LVar,Int)] -> LGuarded c -> LGuarded c
+substFree :: Ord c => [(LVar,Int)] -> LGuarded c -> LGuarded c
 substFree s = mapGuardedAtoms (\j a -> substFreeAtom [(v,i+j) | (v,i) <- s] a)
 
 -- | Assuming that there are no more bound variables left in an atom of a
 -- formula, convert it to an atom with free variables only.
-bvarToLVar :: Atom (VTerm c (BVar LVar)) -> Atom (VTerm c LVar)
+bvarToLVar :: Ord c => Atom (VTerm c (BVar LVar)) -> Atom (VTerm c LVar)
 bvarToLVar = 
-    fmap (fmap (fmap (foldBVar boundError id)))
+    fmap (fmapTerm (fmap (foldBVar boundError id)))
   where
     boundError v = error $ "bvarToLVar: left-over bound variable '" 
                            ++ show v ++ "'"
@@ -242,7 +245,7 @@ bvarToLVar =
 -- @vs@ is a list of fresh variables, @ats@ is the antecedent, and @gf'@ is the
 -- succedent. In both antecedent and succedent, the bound variables are
 -- replaced by @vs@.
-openGuarded :: (MonadFresh m)
+openGuarded :: (Ord c, MonadFresh m)
             => LGuarded c -> m (Maybe (Quantifier, [LVar], [Atom (VTerm c LVar)], LGuarded c))
 openGuarded (GGuarded qua vs as gf) = do
     xs <- mapM (\(n,s) -> freshLVar n s) vs
@@ -254,10 +257,10 @@ openGuarded (GGuarded qua vs as gf) = do
 openGuarded _ = return Nothing
 
 -- | @closeGuarded vs ats gf@ is a smart constructor for @GGuarded@.
-closeGuarded :: Quantifier -> [LVar] -> [Atom (VTerm c LVar)] 
+closeGuarded :: Ord c => Quantifier -> [LVar] -> [Atom (VTerm c LVar)] 
              -> LGuarded c -> LGuarded c
 closeGuarded qua vs as gf = GGuarded qua vs' as' gf'
- where as' = map (substFreeAtom s . fmap (fmap (fmap Free))) as
+ where as' = map (substFreeAtom s . fmap (fmapTerm (fmap Free))) as
        gf' = substFree s gf
        s   = zip (reverse vs) [0..]
        vs' = map (lvarName &&& lvarSort) vs
@@ -267,7 +270,7 @@ closeGuarded qua vs as gf = GGuarded qua vs' as' gf'
 -- @vs@ is a list of fresh variables, @ats@ is the antecedent, and @gf'@ is
 -- the succedent. In both antecedent and succedent, the bound variables are
 -- replaced by @vs@.
-openAllGuarded :: (MonadFresh m)
+openAllGuarded :: (Ord c, MonadFresh m)
                => LGuarded c -> m (Maybe ([LVar],[Atom (VTerm c LVar)], LGuarded c))
 openAllGuarded = (fmap adapt) . openGuarded
   where
@@ -278,7 +281,7 @@ openAllGuarded = (fmap adapt) . openGuarded
 -- existentially quantified trace formula and @Nothing@ otherwise. In the
 -- first case, @vs@ is a list of fresh variables and @gf'@ is the body of @gf@
 -- with the bound variable replaced by @v@.
-openExGuarded :: (MonadFresh m, Eq c) 
+openExGuarded :: (MonadFresh m, Eq c, Ord c) 
              => LGuarded c -> m (Maybe ([LVar], LGuarded c))
 openExGuarded (GGuarded Ex ss as gf0) = do
     xs <- mapM (uncurry freshLVar) ss
@@ -546,7 +549,7 @@ prettyGuarded f =
 
     pp gf0@(GGuarded _ _ _ _) = do
       Just (qua, vs, atoms, gf) <- openGuarded gf0
-      dante <- pp (GConj (Conj (map (GAto . fmap (fmap (fmap Free))) atoms)))
+      dante <- pp (GConj (Conj (map (GAto . fmap (fmapTerm (fmap Free))) atoms)))
       dsucc <- pp gf
       return $ sep [ operator_ (show qua) <-> ppVars vs <> operator_ "."
                    , nest 1 dante

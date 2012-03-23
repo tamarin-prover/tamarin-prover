@@ -13,7 +13,6 @@ import Term.Substitution
 import Term.Subsumption
 import Term.Builtin.Convenience
 import Term.Unification
-import Term.Rewriting.NormAC
 import Term.Rewriting.Norm
 import Term.Narrowing.Variants
 import Term.Positions
@@ -50,7 +49,7 @@ testsMatching hnd = TestLabel "Tests for Matching" $
     t2 = expo (inv(pair(f1,f2)), f3 # (inv f2) # f2 # x1 # f5 # f2)
 
 propMatchSound :: MaudeHandle -> LNTerm -> LNTerm -> Bool
-propMatchSound mhnd t1 p = all (\s -> applyVTerm s t1 ==# applyVTerm s p) substs
+propMatchSound mhnd t1 p = all (\s -> applyVTerm s t1 == applyVTerm s p) substs
   where substs = matchLNTerm [t1 `MatchWith` p] `runReader` mhnd
 
 
@@ -76,7 +75,7 @@ testsUnify mhnd = TestLabel "Tests for Unify" $
 
 propUnifySound :: MaudeHandle -> LNTerm -> LNTerm -> Bool
 propUnifySound hnd t1 t2 = all (\s -> let s' = freshToFreeAvoiding s [t1,t2]in
-                                  applyVTerm s' t1 ==# applyVTerm s' t2) substs
+                                  applyVTerm s' t1 == applyVTerm s' t2) substs
   where
     substs = unifyLNTerm [Equal t1 t2] `runReader` hnd
 
@@ -175,13 +174,13 @@ testsNorm hnd = TestLabel "Tests for normalization" $ TestList
     , tcn (one::LNTerm) one
     , tcn x6 (expo(expo(x6,inv x3),x3))
     
-    , testEqual "a" (normAC (p3 *: (p1 *: p2))) (mult [p1, p2, p3])
-    , testEqual "b" (normAC (p3 *: (p1 *: inv p3))) (mult [p1, p3, inv p3])
-    , testEqual "c" (normAC ((p1 *: p2) *: p3)) (mult [p1, p2, p3])
-    , testEqual "d" (normAC t1) (mult [p1, p2, p3, p4])
-    , testEqual "e" (normAC ((p1 # p2) *: p3)) (p3 *: (p1 # p2))
-    , testEqual "f" (normAC (p3 *: (p1 # p2))) (p3 *: (p1 # p2))
-    , testEqual "g" (normAC ((p3 *: p4) *: (p1 # p2))) (mult [p3, p4, p1 # p2])
+--    , testEqual "a" (normAC (p3 *: (p1 *: p2))) (mult [p1, p2, p3])
+--    , testEqual "b" (normAC (p3 *: (p1 *: inv p3))) (mult [p1, p3, inv p3])
+--    , testEqual "c" (normAC ((p1 *: p2) *: p3)) (mult [p1, p2, p3])
+--    , testEqual "d" (normAC t1) (mult [p1, p2, p3, p4])
+--    , testEqual "e" (normAC ((p1 # p2) *: p3)) (p3 *: (p1 # p2))
+--    , testEqual "f" (normAC (p3 *: (p1 # p2))) (p3 *: (p1 # p2))
+--    , testEqual "g" (normAC ((p3 *: p4) *: (p1 # p2))) (mult [p3, p4, p1 # p2])
     ]
   where
     tcn e1 e2 = testEqual ("norm "++ppLTerm e2) e1 (norm' e2 `runReader` hnd)
@@ -195,8 +194,8 @@ testsTerm :: Test
 testsTerm = TestLabel "Tests for Terms" $ TestList
     [ uncurry (testEqual "Terms: propSubtermReplace") (propSubtermReplace bigTerm [1,0]) ]
 
-propSubtermReplace :: Term a -> Position -> (Term a, Term a)
-propSubtermReplace t p = (t,(t >=* (t >* p,p)))
+propSubtermReplace :: Ord a => Term a -> Position -> (Term a, Term a)
+propSubtermReplace t p = (t,(t `replacePos` (t `atPos` p,p)))
 
 bigTerm :: LNTerm
 bigTerm = pair(pk(x1),

@@ -33,6 +33,6 @@ narrowSubsts t = reader $ \hnd -> sortednub $ do
     let rules0 = rrulesForMaudeSig $ mhMaudeSig hnd
     (l `RRule` _r) <- renameAvoiding rules0 t
     p <- positionsNonVar t
-    subst <- unifyLNTerm [Equal (t >* p) l] `runReader` hnd
-    guard (trace ("narrowSubsts"++ (show ((t >* p), l, restrictVFresh (frees t) subst))) True)
+    subst <- unifyLNTerm [Equal (t `atPos` p) l] `runReader` hnd
+    guard (trace ("narrowSubsts"++ (show ((t `atPos` p), l, restrictVFresh (frees t) subst))) True)
     return $ restrictVFresh (frees t) subst

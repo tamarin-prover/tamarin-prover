@@ -5,8 +5,11 @@
            , DeriveDataTypeable
            , TupleSections
            , TemplateHaskell
+           , ViewPatterns
   #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2011, 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -31,7 +34,7 @@ module Theory.Atom(
   )
 where
 
-import Term.Rewriting.NormAC
+-- import Term.Rewriting.NormAC
 import Theory.Rule
 import Theory.Pretty
 
@@ -122,18 +125,18 @@ instance Apply BLVar where
     apply _     x@(Bound _) = x
     apply subst x@(Free  v) = maybe x extractVar $ imageOf subst v
       where
-        extractVar (Lit (Var v')) = Free v'
-        extractVar t                     = 
+        extractVar (viewTerm -> Lit (Var v')) = Free v'
+        extractVar _t                     = 
           error $ "apply (BLVar): variable '" ++ show v ++ 
-                  "' substituted with term '" ++ show t ++ "'"
+                  "' substituted with term '" -- ++ show _t ++ "'"
 
 instance Apply BLTerm where
-    apply subst = normAC . (>>= applyBLLit)
+    apply subst = (`bindTerm` applyBLLit)
       where
         applyBLLit :: Lit Name BLVar -> BLTerm
         applyBLLit l@(Var (Free v)) = 
-            maybe (Lit l) (fmap (fmap Free)) (imageOf subst v)
-        applyBLLit l                = Lit l
+            maybe (lit l) (fmapTerm (fmap Free)) (imageOf subst v)
+        applyBLLit l                = lit l
 
 instance Apply BLAtom where
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)

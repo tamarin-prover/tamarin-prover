@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -368,9 +369,9 @@ formulaReports thy = do
             \ this is unambiguous"
       where
         offenders = filter (not . allowed) $ formulaTerms fm
-        allowed (Lit (Var (Bound _)))        = True
-        allowed (Lit (Con (Name PubName _))) = True
-        allowed _                            = False
+        allowed (viewTerm -> Lit (Var (Bound _)))        = True
+        allowed (viewTerm -> Lit (Con (Name PubName _))) = True
+        allowed _                                        = False
 
     -- check that the formula can be converted to a guarded formula
     checkGuarded header fm = case fromFormulaNegate fm of

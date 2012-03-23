@@ -305,9 +305,9 @@ precomputeCaseDistinctions ctxt typAsms =
 
     absMsgFacts :: [LNTerm]
     absMsgFacts = asum $ sortednub $ 
-      [ do return $ Lit $ Var (LVar "t" LSortFresh 1)
+      [ do return $ lit $ Var (LVar "t" LSortFresh 1)
 
-      , [ FApp (NonAC (s,k)) $ nMsgVars k
+      , [ fAppNonAC (s,k) $ nMsgVars k
         | (s,k) <- funSigForMaudeSig  . mhMaudeSig . get sigmMaudeHandle . get pcSignature $ ctxt
         ,  s `notElem` [ "inv", "pair" ], k > 0 ]
       ] 

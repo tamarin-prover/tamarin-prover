@@ -1,4 +1,6 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -84,14 +86,14 @@ specialIntruderRules =
 ------------------------------------------------------------------------------
 
 destructionRules :: StRule -> [IntrRuleAC]
-destructionRules (StRule lhs@(FApp (NonAC (f,_)) _) (RhsPosition pos)) =
+destructionRules (StRule lhs@(viewTerm -> FApp (NonAC (f,_)) _) (RhsPosition pos)) =
     go [] lhs pos
   where
-    rhs = lhs >* pos
-    go _ _ [] = []
+    rhs = lhs `atPos` pos
+    go _      _                       []     = []
     -- term already in premises
-    go _ (FApp _ _) (_:[]) = []
-    go uprems (FApp _ as) (i:p) =
+    go _      (viewTerm -> FApp _ _)  (_:[]) = []
+    go uprems (viewTerm -> FApp _ as) (i:p)  =
         irule ++ go uprems' t' p
       where
         uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
@@ -103,7 +105,7 @@ destructionRules (StRule lhs@(FApp (NonAC (f,_)) _) (RhsPosition pos)) =
                      concfact <- kdFact Nothing rhs
                      return [ Rule (IntrApp f) (dfact:ufacts) [concfact] [] ]
                  else []
-    go _ (Lit _) (_:_) =
+    go _      (viewTerm -> Lit _)     (_:_)  =
         error "IntruderRules.destructionRules: impossible, position invalid"
 
 destructionRules _ = []
@@ -137,7 +139,7 @@ constructionRules fSig =
     createRule s k = (`evalFresh` nothingUsed) $ do
         vars     <- map varTerm <$> (sequence $ replicate k (freshLVar "x" LSortMsg))
         pfacts   <- mapM (kuFact Nothing) vars
-        concfact <- kuFact (Just CanExp) (FApp (NonAC (s,k)) vars)
+        concfact <- kuFact (Just CanExp) (fApp (NonAC (s,k)) vars)
         return $ Rule (IntrApp s) pfacts [concfact] []
 
 dropExpTag :: Fact a -> Fact a
@@ -159,13 +161,13 @@ dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
         e        <- varTerm <$> freshLVar "x" LSortMsg
         bfact    <- kudFact (Just CanExp) b
         efact    <- kuFact Nothing e
-        concfact <- kudFact (Just CannotExp) (FApp (NonAC expSym) [b, e])
+        concfact <- kudFact (Just CannotExp) (fApp (NonAC expSym) [b, e])
         return $ Rule (IntrApp "exp") [bfact, efact] [concfact] []
 
     invRule kudFact = (`evalFresh` nothingUsed) $ do
         x        <- varTerm <$> freshLVar "x" LSortMsg
         bfact    <- kudFact Nothing x
-        concfact <- kudFact (Just CanExp) (FApp (NonAC invSym) [x])
+        concfact <- kudFact (Just CanExp) (fApp (NonAC invSym) [x])
         return $ Rule (IntrApp "inv") [bfact] [concfact] []
 
 
@@ -186,7 +188,7 @@ variantsIntruder hnd ru = do
            )
 
     case concatMap factTerms $ get rConcs ruvariant of
-        [_, FApp (AC Mult) _] ->
+        [_, viewTerm -> FApp (AC Mult) _] ->
             fail "Rules with product conclusion are redundant"
         _                     -> return ruvariant
 

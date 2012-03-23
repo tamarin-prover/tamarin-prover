@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, ViewPatterns #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -46,6 +46,7 @@ module Term.Unification (
 
   -- * Convenience exports
   , module Term.Substitution
+  , module Term.Rewriting.Definitions
 ) where
 
 import           Control.Applicative
@@ -58,7 +59,7 @@ import           Data.Map (Map)
 
 import           System.IO.Unsafe (unsafePerformIO)
 
-import           Term.Rewriting.NormAC ( (==#) )
+import           Term.Rewriting.Definitions
 import           Term.Substitution
 import qualified Term.Maude.Process as UM
 import           Term.Maude.Process
@@ -152,7 +153,7 @@ unifyRaw l0 r0 = do
     r <- gets ((`applyVTerm` r0) . substFromMap)
     guard (trace (show ("unifyRaw", mappings, l ,r)) True)
     case (l, r) of
-       (Lit (Var vl), Lit (Var vr))
+       (viewTerm -> Lit (Var vl), viewTerm -> Lit (Var vr))
          | vl == vr  -> return ()
          | otherwise -> case (lvarSort vl, lvarSort vr) of
              (sl, sr) | sl == sr                 -> if vl < vr then elim vr l 
@@ -162,17 +163,17 @@ unifyRaw l0 r0 = do
              -- elimating the right-hand variable with the left-hand side.
              _                                     -> elim vr l
 
-       (Lit (Var vl),  _            ) -> elim vl r
-       (_,             Lit (Var vr) ) -> elim vr l
-       (Lit (Con cl),  Lit (Con cr) ) -> guard (cl == cr)
-       (FApp (NonAC lfsym) largs, FApp (NonAC rfsym) rargs) ->
+       (viewTerm -> Lit (Var vl),  _            ) -> elim vl r
+       (_,             viewTerm -> Lit (Var vr) ) -> elim vr l
+       (viewTerm -> Lit (Con cl),  viewTerm -> Lit (Con cr) ) -> guard (cl == cr)
+       (viewTerm -> FApp (NonAC lfsym) largs, viewTerm -> FApp (NonAC rfsym) rargs) ->
            guard (lfsym == rfsym && length largs == length rargs)
            >> sequence_ (zipWith unifyRaw largs rargs)
-       (FApp List largs, FApp List rargs) ->
+       (viewTerm -> FApp List largs, viewTerm -> FApp List rargs) ->
            guard (length largs == length rargs)
            >> sequence_ (zipWith unifyRaw largs rargs)
        -- NOTE: We assume here that terms of the form mult(t) never occur.
-       (FApp (AC lacsym) _, FApp (AC racsym) _) ->
+       (viewTerm -> FApp (AC lacsym) _, viewTerm -> FApp (AC racsym) _) ->
            guard (lacsym == racsym) >> tell [Equal l r]  -- delay unification
 
        -- all unifiable pairs of term constructors have been enumerated
@@ -202,23 +203,23 @@ matchRaw sortOf t p = do
     mappings <- get
     guard (trace (show (mappings,t,p)) True)
     case (t, p) of
-      (_, Lit (Var vp)) ->
+      (_, viewTerm -> Lit (Var vp)) ->
           case M.lookup vp mappings of
               Nothing             -> do
                 unless (sortGeqLTerm sortOf vp t) $
                     throwError NoMatch
                 modify (M.insert vp t)
-              Just tp | t ==# tp  -> return ()
+              Just tp | t == tp  -> return ()
                       | otherwise -> throwError NoMatch
 
-      (Lit (Con ct),  Lit (Con cp)) -> guard (ct == cp)
-      (FApp (NonAC tfsym) targs, FApp (NonAC pfsym) pargs) ->
+      (viewTerm -> Lit (Con ct),  viewTerm -> Lit (Con cp)) -> guard (ct == cp)
+      (viewTerm -> FApp (NonAC tfsym) targs, viewTerm -> FApp (NonAC pfsym) pargs) ->
            guard (tfsym == pfsym && length targs == length pargs)
            >> sequence_ (zipWith (matchRaw sortOf) targs pargs)
-      (FApp List targs, FApp List pargs) ->
+      (viewTerm -> FApp List targs, viewTerm -> FApp List pargs) ->
            guard (length targs == length pargs)
            >> sequence_ (zipWith (matchRaw sortOf) targs pargs)
-      (FApp (AC _) _, FApp (AC _) _) -> throwError ACProblem
+      (viewTerm -> FApp (AC _) _, viewTerm -> FApp (AC _) _) -> throwError ACProblem
 
       -- all matchable pairs of term constructors have been enumerated
       _                      -> throwError NoMatch

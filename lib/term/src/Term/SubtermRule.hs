@@ -1,4 +1,6 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, DeriveDataTypeable, ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2011, 2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -14,6 +16,7 @@ module Term.SubtermRule (
 
     -- * Pretty Printing
     , prettyStRule
+    , module Term.Rewriting.Definitions
     ) where
 
 import Control.DeepSeq
@@ -23,6 +26,7 @@ import Data.Binary
 
 import Term.LTerm
 import Term.Positions
+import Term.Rewriting.Definitions
 import Text.PrettyPrint.Highlight
 
 -- | The righthand-side of a subterm rewrite rule.
@@ -44,15 +48,15 @@ rRuleToStRule (lhs `RRule` rhs)
                         []       -> Nothing
   where
     findSubterm t rpos | t == rhs  = [rpos]
-    findSubterm (FApp _ args) rpos =
+    findSubterm (viewTerm -> FApp _ args) rpos =
         concat $ zipWith (\t i -> findSubterm t (i:rpos)) args [0..]
-    findSubterm (Lit _)         _  = []
+    findSubterm (viewTerm -> Lit _)         _  = []
 
 -- | Convert a subterm rewrite rule to a rewrite rule.
 stRuleToRRule :: StRule -> RRule LNTerm
 stRuleToRRule (StRule lhs rhs) = case rhs of
                                      RhsGround t   -> lhs `RRule` t
-                                     RhsPosition p -> lhs `RRule` (lhs >* p)
+                                     RhsPosition p -> lhs `RRule` (lhs `atPos` p)
 
 {-
 

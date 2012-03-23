@@ -1,4 +1,6 @@
-{-# LANGUAGE GADTs, FlexibleContexts #-}
+{-# LANGUAGE GADTs, FlexibleContexts, ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -24,13 +26,11 @@ module Term.Subsumption (
 import Term.Term
 import Term.LTerm
 import Term.Unification
-import Term.Rewriting.NormAC
 import Term.Positions
 
 import Extension.Prelude
 -- import Utils.Misc
 
-import Data.List
 import Control.Basics
 
 ----------------------------------------------------------------------
@@ -88,7 +88,7 @@ factorSubstViaVFresh vs s1_0 s2 = do
 -- | Returns a substitution that is equivalent modulo renaming to the given substitution.
 canonizeSubst :: LNSubstVFresh -> LNSubstVFresh
 canonizeSubst subst =
-    mapRangeVFresh (normAC . applyVTerm renaming) subst
+    mapRangeVFresh (applyVTerm renaming) subst
   where
     vrangeSorted = sortOn (varOccurences subst) (varsRangeVFresh subst)
     renaming = substFromList $
@@ -100,11 +100,11 @@ canonizeSubst subst =
 --   terms that are equal modulo AC since the flattened term representation
 --   is used.
 varOccurences :: LNSubstVFresh -> LVar  -> [[Position]]
-varOccurences subst v = map (sort . go [] . normAC) $ rangeVFresh subst
+varOccurences subst v = map (go []) $ rangeVFresh subst
   where
-    go pos (Lit (Var v')) | v == v' = [pos]
+    go pos (viewTerm -> Lit (Var v')) | v == v' = [pos]
                           | otherwise = []
-    go _   (Lit (Con _))  = []
-    go pos (FApp (AC _) as) = concatMap (go (0:pos)) as
-    go pos (FApp _ as) =
+    go _   (viewTerm -> Lit (Con _))  = []
+    go pos (viewTerm -> FApp (AC _) as) = concatMap (go (0:pos)) as
+    go pos (viewTerm -> FApp _ as) =
         concat (zipWith (\i -> go (i:pos)) [0 .. ] as)

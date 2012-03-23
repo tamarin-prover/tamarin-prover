@@ -30,8 +30,6 @@ import Term.Substitution.SubstVFresh
 import Extension.Prelude
 
 import Control.Monad.Bind
-
-import Data.Traversable hiding (mapM)
 import Control.Applicative
 
 
@@ -59,14 +57,13 @@ freshToFree subst = (`evalBindT` noBindings) $ do
           -- import oldvar ~> newvar mappings first, keep namehint from oldvar
     substFromList <$> mapM convertMapping slist
   where
-    convertMapping (lv,t) = (lv,) <$> traverse importLit t
+    convertMapping (lv,t) = (lv,) <$> mapFrees (Arbitrary importVar) t
       where
-        importLit (Con c) = return (Con c)
-        importLit (Var v) =
-            Var <$> importBinding (\s i -> LVar s (lvarSort v) i) v (namehint v)
-        namehint v = case t of
+        importVar v = importBinding (\s i -> LVar s (lvarSort v) i) v (namehint v)
+        namehint v  = case viewTerm t of
             Lit (Var _) -> lvarName lv -- keep name of oldvar
             _           -> lvarName v
+
 
 -- | @freshToFreeSimpAvoiding s t@ converts all fresh variables in the range of
 --   @s@ to free variables avoiding free variables in @t@.

@@ -1,4 +1,5 @@
-{-# LANGUAGE TypeOperators, TemplateHaskell, DeriveDataTypeable, ScopedTypeVariables, TupleSections #-}
+{-# LANGUAGE TypeOperators, TemplateHaskell, DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables, TupleSections, ViewPatterns #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -273,22 +274,22 @@ simpAbstractFun (Disj (subst:others)) = case commonOperators of
     (v, o, argss@(args:_)):_ | all ((==length args) . length) argss -> do
         fvars <- mapM (\_ -> freshLVar "x" LSortMsg) args
         let substs' = zipWith (abstractAll v fvars) (subst:others) argss
-            fsubst  = substFromList [(v, FApp o (map varTerm fvars))]
+            fsubst  = substFromList [(v, fApp o (map varTerm fvars))]
         return $ Just (Just $ fsubst, [Disj substs'])
     -- abstract first two arguments
     (v, o@(AC _), argss):_ -> do
         fv1 <- freshLVar "x" LSortMsg
         fv2 <- freshLVar "x" LSortMsg
         let substs' = zipWith (abstractTwo o v fv1 fv2) (subst:others) argss
-            fsubst  = substFromList [(v, FApp o (map varTerm [fv1,fv2]))]
+            fsubst  = substFromList [(v, fApp o (map varTerm [fv1,fv2]))]
         return $ Just (Just $ fsubst, [Disj substs'])
     (_, _ ,_):_ ->
       error "simpAbstract: impossible, invalid arities or List operator encountered."
   where
     commonOperators = do
-        (v, FApp o args) <- substToListVFresh subst
+        (v, viewTerm -> FApp o args) <- substToListVFresh subst
         let images = map (\s -> imageOfVFresh s v) others
-            argss  = [ args' | Just (FApp o' args') <- images, o' == o ]
+            argss  = [ args' | Just (viewTerm -> FApp o' args') <- images, o' == o ]
         guard (length argss == length others)
         return (v, o, args:argss)
 
@@ -303,7 +304,7 @@ simpAbstractFun (Disj (subst:others)) = case commonOperators of
         newMappings [a1,a2] = [(fv1, a1), (fv2, a2)]
         -- here we always abstract from left to right and do not
         -- take advantage of the AC property of o
-        newMappings (a:as)  = [(fv1, a),  (fv2, FApp o as)]
+        newMappings (a:as)  = [(fv1, a),  (fv2, fApp o as)]
 
 
 -- | If all substitutions @si@ map a variable @v@ to the same name @n@,
@@ -320,7 +321,7 @@ simpAbstractName (Disj (subst:others)) = case commonNames of
         
   where
     commonNames = do
-        (v, c@(Lit (Con _))) <- substToListVFresh subst
+        (v, c@(viewTerm -> Lit (Con _))) <- substToListVFresh subst
         let images = map (\s -> imageOfVFresh s v) others
         guard (length images == length [ () | Just c' <- images, c' == c])
         return (v, c)
@@ -340,12 +341,12 @@ simpAbstractSortedVar (Disj (subst:others)) = case commonSortedVar of
                       , [Disj (zipWith (replaceMapping v fv) lvs (subst:others))])
   where
     commonSortedVar = do
-        (v, (Lit (Var lx))) <- substToListVFresh subst
+        (v, (viewTerm -> Lit (Var lx))) <- substToListVFresh subst
         guard (sortCompare (lvarSort v)  (lvarSort lx) == Just GT)
         let images = map (\s -> imageOfVFresh s v) others
             -- FIXME: could be generalized to choose topsort s of all images if s < sortOf v
             --        could also be generalized to terms of a given sort
-            goodImages = [ ly | Just (Lit (Var ly)) <- images, lvarSort lx == lvarSort ly]
+            goodImages = [ ly | Just (viewTerm -> Lit (Var ly)) <- images, lvarSort lx == lvarSort ly]
         guard (length images == length goodImages)
         return (v, lvarSort lx, (lx:goodImages))
     replaceMapping v fv lv sigma =

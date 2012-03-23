@@ -1,5 +1,8 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, BangPatterns, StandaloneDeriving #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, BangPatterns #-}
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE ViewPatterns, StandaloneDeriving #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -127,19 +130,26 @@ foldFormulaScope fAto fTF fNot fConn fQua =
 -- Instances
 ------------
 
-
+{-
 instance Functor (Formula s c) where
     fmap f = foldFormula (Ato . fmap (fmap (fmap (fmap f)))) TF Not Conn Qua
+-}
 
 instance Foldable (Formula s c) where
     foldMap f = foldFormula (foldMap (foldMap (foldMap (foldMap f)))) mempty id 
                             (const mappend) (const $ const id)
 
+traverseFormula :: (Ord v, Ord c, Ord v', Applicative f)
+                => (v -> f v') -> Formula s c v -> f (Formula s c v')
+traverseFormula f = foldFormula (liftA Ato . traverse (traverseTerm (traverse (traverse f))))
+                                (pure . TF) (liftA Not)
+                                (liftA2 . Conn) ((liftA .) . Qua)
+{-
 instance Traversable (Formula a s) where
-    traverse f = foldFormula (liftA Ato . traverse (traverse (traverse (traverse f))))
+    traverse f = foldFormula (liftA Ato . traverseAtom (traverseTerm  (traverseLit (traverseBVar f))))
                              (pure . TF) (liftA Not)
                              (liftA2 . Conn) ((liftA .) . Qua)
-
+-}
 
 -- Abbreviations
 ----------------
@@ -181,12 +191,12 @@ mapAtoms f = foldFormulaScope (\i a -> Ato $ f i a) TF Not Conn Qua
 
 -- | @openFormula f@ returns @Just (v,Q,f')@ if @f = Q v. f'@ modulo
 -- alpha renaming and @Nothing otherwise@. @v@ is always chosen to be fresh.
-openFormula :: (MonadFresh m)
+openFormula :: (MonadFresh m, Ord c)
             => LFormula c -> Maybe (Quantifier, m (LVar, LFormula c))
 openFormula (Qua qua (n,s) fm) = 
     Just ( qua
          , do x <- freshLVar n s
-              return $ (x, mapAtoms (\i a -> fmap (fmap (subst x i)) a) fm)
+              return $ (x, mapAtoms (\i a -> fmap (mapLits (subst x i)) a) fm)
          )
   where
     subst x i (Var (Bound i')) | i == i' = Var $ Free x
@@ -194,11 +204,14 @@ openFormula (Qua qua (n,s) fm) =
 
 openFormula _ = Nothing
 
+mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
+mapLits f (viewTerm -> Lit l) = lit . f $ l
+mapLits f (viewTerm -> FApp o as) = fApp o (map (mapLits f) as)
 
 -- | @openFormulaPrefix f@ returns @Just (vs,Q,f')@ if @f = Q v_1 .. v_k. f'@
 -- modulo alpha renaming and @Nothing otherwise@. @vs@ is always chosen to be
 -- fresh.
-openFormulaPrefix :: (MonadFresh m)
+openFormulaPrefix :: (MonadFresh m, Ord c)
                   => LFormula c -> m ([LVar], Quantifier, LFormula c)
 openFormulaPrefix f0 = case openFormula f0 of
     Nothing        -> error $ "openFormulaPrefix: no outermost quantifier"
@@ -222,7 +235,7 @@ deriving instance Ord      LNFormula
 
 instance HasFrees LNFormula where
     foldFrees  f = foldMap  (foldFrees  f)
-    mapFrees   f = traverse (mapFrees   f)
+    mapFrees   f = traverseFormula (mapFrees   f)
 
 instance Apply LNFormula where
     apply subst = mapAtoms (const $ apply subst)
@@ -235,19 +248,19 @@ type FormulaE  = LFormula Name
 type FormulaAC = LFormula Name
 
 -- | Introduce a bound variable for a free variable.
-quantify :: Eq v => v -> Formula s c v -> Formula s c v
+quantify :: (Ord c, Ord v, Eq v) => v -> Formula s c v -> Formula s c v
 quantify x =
-    mapAtoms (\i a -> fmap (fmap (fmap (>>= (subst i)))) a)
+    mapAtoms (\i a -> fmap (mapLits (fmap (>>= subst i))) a)
   where
     subst i v | v == x    = Bound i
               | otherwise = Free v
 
 -- | Create a universal quantification with a sort hint for the bound variable.
-forall :: Eq v => s -> v -> Formula s c v -> Formula s c v
+forall :: (Ord c, Ord v, Eq v) => s -> v -> Formula s c v -> Formula s c v
 forall hint x = Qua All hint . quantify x
 
 -- | Create a existential quantification with a sort hint for the bound variable.
-exists :: Eq v => s -> v -> Formula s c v -> Formula s c v
+exists :: (Ord c, Ord v, Eq v) => s -> v -> Formula s c v -> Formula s c v
 exists hint x = Qua Ex hint . quantify x
 
 ------------------------------------------------------------------------------
@@ -255,7 +268,7 @@ exists hint x = Qua Ex hint . quantify x
 ------------------------------------------------------------------------------
 
 -- | Pretty print a formula.
-prettyLFormula :: (HighlightDocument d, MonadFresh m) 
+prettyLFormula :: (HighlightDocument d, MonadFresh m, Ord c) 
               => (Atom (VTerm c LVar) -> d)  -- ^ Function for pretty printing atoms
               -> LFormula c -- ^ Formula to pretty print.
               -> m d              -- ^ Pretty printed formula.
@@ -265,7 +278,7 @@ prettyLFormula ppAtom =
     extractFree (Free v)  = v
     extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
 
-    pp (Ato a)    = return $ ppAtom (fmap (fmap (fmap extractFree)) a)
+    pp (Ato a)    = return $ ppAtom (fmap (mapLits (fmap extractFree)) a)
     pp (TF True)  = return $ operator_ "T"                    -- "⊤" 
     pp (TF False) = return $ operator_ "F"                    -- "⊥" 
 

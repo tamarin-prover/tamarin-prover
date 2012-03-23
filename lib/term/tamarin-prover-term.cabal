@@ -57,14 +57,15 @@ library
 
     exposed-modules:
       Term.Unification
+      Term.VTerm
       Term.LTerm
       Term.Positions
       Term.SubtermRule
       Term.Subsumption
       Term.Substitution
 
+      Term.Rewriting.Definitions
       Term.Rewriting.Norm
-      Term.Rewriting.NormAC
 
       Term.Narrowing.Variants
       Term.Narrowing.Variants.Check

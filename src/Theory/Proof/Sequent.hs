@@ -139,15 +139,15 @@ isForbiddenExp ru = maybe False id $ do
     [_,p2] <- return $ get rPrems ru
     [conc] <- return $ get rConcs ru
     (UpK, _,          b)       <- kFactView p2
-    (DnK, Just CannotExp, FApp (NonAC ("exp",2)) [g,c]) <- kFactView conc
+    (DnK, Just CannotExp, viewTerm -> FApp (NonAC ("exp",2)) [g,c]) <- kFactView conc
 
     -- g should be public and the required inputs for c already required by b
     guard (sortOfTerm g == LSortPub && (input c \\ input b == []))
     return True
   where
-    sortOfTerm (Lit (Var lv)) = lvarSort lv
-    sortOfTerm (Lit (Con n))  = sortOfName n
-    sortOfTerm _              = LSortMsg
+    sortOfTerm (viewTerm -> Lit (Var lv)) = lvarSort lv
+    sortOfTerm (viewTerm -> Lit (Con n))  = sortOfName n
+    sortOfTerm _                          = LSortMsg
 
 
 -- | Compute all contradictions to unique fact instances.
@@ -609,8 +609,8 @@ simplifyNegativeOrderings = do
               else modM sAtoms $ S.insert $ bvarToLVar $ Less j0 i0
           Nothing -> []
   where
-    nodeFromTerm (Lit (Var (Free v))) | lvarSort v == LSortNode = v
-    nodeFromTerm t                                              = error $
+    nodeFromTerm (viewTerm -> Lit (Var (Free v))) | lvarSort v == LSortNode = v
+    nodeFromTerm t                                                          = error $
         "expected free node variable, but got '" ++ show t ++ "'"
 
 
@@ -652,8 +652,8 @@ exploitLastNode = do
     mkEq i j        = Equal (varTerm i) (varTerm j)
     mkOrdDisj i0 j0 = gdisj $ [GAto (EqE i j), GAto (Less i j)]
       where
-        i = Lit $ Var $ Free i0
-        j = Lit $ Var $ Free j0
+        i = lit $ Var $ Free i0
+        j = lit $ Var $ Free j0
 
 -- | @setNodes nodes@ normalizes the @nodes@ such that node ids are unique and
 -- then updates the @sNodes@ field of the proof state to the corresponding map.
@@ -929,12 +929,12 @@ openGoals se = delayUseless $ sortDecisionTree solveFirst $ concat $
     msgPremise _                                   = Nothing
 
     isFreshKnowsGoal goal = case msgPremise goal of
-        Just (Lit (Var lv)) | lvarSort lv == LSortFresh -> True
+        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
         _                                              -> False
 
     isDoubleExpGoal goal = case msgPremise goal of
-        Just (FApp (NonAC ("exp",2)) [_, FApp (AC Mult) _]) -> True
-        _                                                   -> False
+        Just (viewTerm -> FApp (NonAC ("exp",2)) [_, viewTerm -> FApp (AC Mult) _]) -> True
+        _                                                                           -> False
 
     isSplitGoalSmall (SplitG sid) = splitCasenum (get sEqStore se) sid < 3
     isSplitGoalSmall _            = False
@@ -1026,8 +1026,8 @@ solveChain rules ch@(Chain c p) = do
         let m = case kFactView faConc of
                   Just (DnK, _, m') -> m'
                   _                 -> error $ "solveChain: impossible"
-            caseName (FApp o _) = show o
-            caseName t          = show t
+            caseName (viewTerm -> FApp o _) = show o
+            caseName t                      = show t
         return $ caseName m 
      `disjunction`
      do -- extend it with one step

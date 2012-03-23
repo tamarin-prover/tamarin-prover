@@ -15,55 +15,52 @@ import Term.Builtin.Signature
 -- Shorter syntax for Term constructors
 ----------------------------------------------------------------------
 
-(*:) :: Term a -> Term a -> Term a
-b *: e = FApp (AC Mult) [b,e]
-(#) :: Term a -> Term a -> Term a
-b # e  = FApp (AC MUn) [b,e]
-(+:) :: Term a -> Term a -> Term a
-b +: e = FApp (AC Xor) [b,e]
+(*:) :: Ord a => Term a -> Term a -> Term a
+b *: e = fApp (AC Mult) [b,e]
+(#) :: Ord a => Term a -> Term a -> Term a
+b # e  = fApp (AC MUn) [b,e]
+(+:) :: Ord a => Term a -> Term a -> Term a
+b +: e = fApp (AC Xor) [b,e]
 
 
-mult :: [Term a] -> Term a
-mult ts = FApp (AC Mult) ts
+mult :: Ord a => [Term a] -> Term a
+mult ts = fApp (AC Mult) ts
 
-union :: [Term a] -> Term a
-union ts = FApp (AC MUn) ts
+union :: Ord a => [Term a] -> Term a
+union ts = fApp (AC MUn) ts
 
-xor :: [Term a] ->  Term a
-xor ts = FApp (AC Xor) ts
+xor :: Ord a => [Term a] ->  Term a
+xor ts = fApp (AC Xor) ts
 
-appFree :: NonACSym -> [Term a] -> Term a
-appFree s ts = FApp (NonAC s) ts
+one, zero, empty :: Ord a => Term a
+one   = fAppNonAC oneSym []
+zero  = fAppNonAC zeroSym []
+empty = fAppNonAC emptySym []
 
-one, zero, empty :: Term a
-one   = appFree oneSym []
-zero  = appFree zeroSym []
-empty = appFree emptySym []
+inv :: Ord a => Term a -> Term a
+inv e = fAppNonAC invSym [e]
 
-inv :: Term a -> Term a
-inv e = appFree invSym [e]
+pair :: Ord a => (Term a,Term a) -> Term a
+pair (x,y) = fAppNonAC pairSym [x, y]
 
-pair :: (Term a,Term a) -> Term a
-pair (x,y) = appFree pairSym [x, y]
+expo, adec, aenc, sdec, senc, sign :: Ord a => (Term a,Term a) -> Term a
+expo (b,e)   = fAppNonAC expSym [b,e]
+adec (a,b)   = fAppNonAC adecSym [a,b]
+aenc (a,b)   = fAppNonAC aencSym [a,b]
+sdec (a,b)   = fAppNonAC sdecSym [a,b]
+senc (a,b)   = fAppNonAC sencSym [a,b]
+sign (a,b)   = fAppNonAC signSym [a,b]
 
-expo, adec, aenc, sdec, senc, sign :: (Term a,Term a) -> Term a
-expo (b,e)   = appFree expSym [b,e]
-adec (a,b)   = appFree adecSym [a,b]
-aenc (a,b)   = appFree aencSym [a,b]
-sdec (a,b)   = appFree sdecSym [a,b]
-senc (a,b)   = appFree sencSym [a,b]
-sign (a,b)   = appFree signSym [a,b]
+verify :: Ord a => (Term a,Term a,Term a) -> Term a
+verify (a,b,c) = fAppNonAC verifySym [a,b,c]
 
-verify :: (Term a,Term a,Term a) -> Term a
-verify (a,b,c) = appFree verifySym [a,b,c]
+pk, fstC, sndC :: Ord a => Term a -> Term a
+pk a = fAppNonAC pkSym [a]
+fstC a = fAppNonAC fstSym [a]
+sndC a = fAppNonAC sndSym [a]
 
-pk, fstC, sndC :: Term a -> Term a
-pk a = appFree pkSym [a]
-fstC a = appFree fstSym [a]
-sndC a = appFree sndSym [a]
-
-trueC :: Term a
-trueC = appFree trueSym []
+trueC :: Ord a => Term a
+trueC = fAppNonAC trueSym []
 
 var :: String -> Int -> LNTerm
 var s i = varTerm $ LVar s LSortMsg i
@@ -171,15 +168,15 @@ lv8 = LVar "v8" LSortMsg 0
 lv9 = LVar "v9" LSortMsg 0
 
 v1,v2,v3,v4,v5,v6,v7,v8,v9 :: LNTerm
-v1 = Lit $ Var $ lv1
-v2 = Lit $ Var $ lv2
-v3 = Lit $ Var $ lv3
-v4 = Lit $ Var $ lv4
-v5 = Lit $ Var $ lv5
-v6 = Lit $ Var $ lv6
-v7 = Lit $ Var $ lv7
-v8 = Lit $ Var $ lv8
-v9 = Lit $ Var $ lv9
+v1 = lit $ Var $ lv1
+v2 = lit $ Var $ lv2
+v3 = lit $ Var $ lv3
+v4 = lit $ Var $ lv4
+v5 = lit $ Var $ lv5
+v6 = lit $ Var $ lv6
+v7 = lit $ Var $ lv7
+v8 = lit $ Var $ lv8
+v9 = lit $ Var $ lv9
 
 li1,li2,li3,li4,li5,li6,li7,li8,li9 :: LVar
 li1 = LVar "i1" LSortNode 0
@@ -193,15 +190,15 @@ li8 = LVar "i8" LSortNode 0
 li9 = LVar "i9" LSortNode 0
 
 i1,i2,i3,i4,i5,i6,i7,i8,i9 :: LNTerm
-i1 = Lit $ Var $ li1
-i2 = Lit $ Var $ li2
-i3 = Lit $ Var $ li3
-i4 = Lit $ Var $ li4
-i5 = Lit $ Var $ li5
-i6 = Lit $ Var $ li6
-i7 = Lit $ Var $ li7
-i8 = Lit $ Var $ li8
-i9 = Lit $ Var $ li9
+i1 = lit $ Var $ li1
+i2 = lit $ Var $ li2
+i3 = lit $ Var $ li3
+i4 = lit $ Var $ li4
+i5 = lit $ Var $ li5
+i6 = lit $ Var $ li6
+i7 = lit $ Var $ li7
+i8 = lit $ Var $ li8
+i9 = lit $ Var $ li9
 
 ls1,ls2,ls3,ls4,ls5,ls6,ls7,ls8,ls9 :: LVar
 ls1 = LVar "s1" LSortMSet 0
@@ -215,12 +212,12 @@ ls8 = LVar "s8" LSortMSet 0
 ls9 = LVar "s9" LSortMSet 0
 
 s1,s2,s3,s4,s5,s6,s7,s8,s9 :: LNTerm
-s1 = Lit $ Var $ ls1
-s2 = Lit $ Var $ ls2
-s3 = Lit $ Var $ ls3
-s4 = Lit $ Var $ ls4
-s5 = Lit $ Var $ ls5
-s6 = Lit $ Var $ ls6
-s7 = Lit $ Var $ ls7
-s8 = Lit $ Var $ ls8
-s9 = Lit $ Var $ ls9
+s1 = lit $ Var $ ls1
+s2 = lit $ Var $ ls2
+s3 = lit $ Var $ ls3
+s4 = lit $ Var $ ls4
+s5 = lit $ Var $ ls5
+s6 = lit $ Var $ ls6
+s7 = lit $ Var $ ls7
+s8 = lit $ Var $ ls8
+s9 = lit $ Var $ ls9

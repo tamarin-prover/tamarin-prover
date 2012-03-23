@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, DeriveDataTypeable #-}
+{-# LANGUAGE ViewPatterns #-}
 -- |
 -- Copyright   : (c) 2011, 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -139,13 +140,13 @@ data ExpTag = CannotExp | CanExp
 
 -- | Exponentiation-symbol to term.
 expTagToTerm :: ExpTag -> LNTerm
-expTagToTerm CannotExp   = Lit (Con (Name PubName (NameId ("noexp"))))
-expTagToTerm CanExp      = Lit (Con (Name PubName (NameId ("exp"))))
+expTagToTerm CannotExp   = lit (Con (Name PubName (NameId ("noexp"))))
+expTagToTerm CanExp      = lit (Con (Name PubName (NameId ("exp"))))
 
 -- | Term to exponentiation-symbol.
 termToExpTag :: LNTerm -> Maybe ExpTag
-termToExpTag (Lit (Con (Name PubName (NameId ("noexp"))))) = return CannotExp
-termToExpTag (Lit (Con (Name PubName (NameId ("exp")))))   = return CanExp
+termToExpTag (viewTerm -> Lit (Con (Name PubName (NameId ("noexp"))))) = return CannotExp
+termToExpTag (viewTerm -> Lit (Con (Name PubName (NameId ("exp")))))   = return CanExp
 termToExpTag _                                             = mzero
 
 

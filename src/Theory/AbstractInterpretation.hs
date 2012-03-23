@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns, ViewPatterns #-}
 -- |
 -- Copyright   : (c) 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -125,15 +125,13 @@ partialEvaluation evalStyle ruEs = reader $ \hnd ->
       where
         evalAbstraction = (`evalBind` noBindings) . (`evalFreshT` nothingUsed)
 
-        absTerm t = case t of 
+        absTerm t = case viewTerm t of 
           Lit (Con _)                   -> pure t
           FApp (sym@(NonAC (_f,_k))) ts  
-                                        -> FApp sym <$> traverse absTerm ts
+                                        -> fApp sym <$> traverse absTerm ts
           -- | "p" `isPrefixOf` f        -> FApp sym <$> traverse absTerm ts
           _                             -> importBinding mkVar t (varName t)
           where
             mkVar name idx        = varTerm (LVar name (sortOfLNTerm t) idx)
-            varName (Lit (Var v)) = lvarName v
-            varName _             = "z"
-
-
+            varName (viewTerm -> Lit (Var v)) = lvarName v
+            varName _                         = "z"

@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeOperators, StandaloneDeriving, DeriveDataTypeable, TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, ViewPatterns #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -472,19 +473,19 @@ sDedBeforeAtoms :: Sequent -> [(LNTerm, NodeId)]
 
     malformed ato = error $ "malformed atom in sequent: " ++ show ato
 
-    aLess (Less (Lit (Var from)) (Lit (Var to))) = Just (from, to)
+    aLess (Less (viewTerm -> Lit (Var from)) (viewTerm -> Lit (Var to))) = Just (from, to)
     aLess ato@(Less _ _)                         = malformed ato
     aLess _                                      = Nothing
 
-    aAction (Action (Lit (Var i)) fa) = Just (i, fa)
+    aAction (Action (viewTerm -> Lit (Var i)) fa) = Just (i, fa)
     aAction ato@(Action _ _)          = malformed ato
     aAction _                         = Nothing
 
-    aLast (Last (Lit (Var i))) = Just i
+    aLast (Last (viewTerm -> Lit (Var i))) = Just i
     aLast ato@(Last _)         = malformed ato
     aLast _                    = Nothing
 
-    aDedBefore (DedBefore t (Lit (Var i))) = Just (t, i)
+    aDedBefore (DedBefore t (viewTerm -> Lit (Var i))) = Just (t, i)
     aDedBefore ato@(DedBefore _ _)         = malformed ato
     aDedBefore _                           = Nothing
 
@@ -704,7 +705,7 @@ prettyEqStore eqs@(EqStore subst (Conj disjs)) = vcat $
         conjs = map ppConj substs
         ppConj = vcat . map prettyEq . substToListVFresh
         prettyEq (a,b) = 
-          prettyNTerm (Lit (Var a)) $$ nest (6::Int) (opEqual <-> prettyNTerm b)
+          prettyNTerm (lit (Var a)) $$ nest (6::Int) (opEqual <-> prettyNTerm b)
         
 -- | Pretty print a goal.
 prettyGoal :: HighlightDocument d => Goal -> d

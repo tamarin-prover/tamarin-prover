@@ -1,4 +1,7 @@
-{-# LANGUAGE PatternGuards, FlexibleContexts, ExplicitForAll, ScopedTypeVariables #-}
+{-# LANGUAGE PatternGuards, FlexibleContexts, ExplicitForAll #-}
+{-# LANGUAGE ScopedTypeVariables, ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -11,7 +14,6 @@
 module Term.Rewriting.Norm (
 --    norm
    norm'
---   , nf
   , nf'
   , nfSubstVFresh'
   , normSubstVFresh'
@@ -20,7 +22,6 @@ module Term.Rewriting.Norm (
 
 import Term.Term
 import Term.LTerm
-import Term.Rewriting.NormAC
 import Term.Substitution
 import Term.Maude.Types
 import Term.Maude.Process
@@ -42,50 +43,51 @@ import System.IO.Unsafe (unsafePerformIO)
 -- | @norm t@ normalizes the term @t@ using Maude.
 norm :: (Show (Lit c LVar), Ord c, IsConst c)
      => (c -> LSort) -> LTerm c -> WithMaude (LTerm c)
-norm _      t@(Lit _) = return t
-norm sortOf t         = reader $ \hnd -> normAC $ unsafePerformIO $ normViaMaude hnd sortOf t
+norm _      t@(viewTerm -> Lit _) = return t
+norm sortOf t         = reader $ \hnd -> unsafePerformIO $ normViaMaude hnd sortOf t
 
 -- | @norm' t@ normalizes the term @t@ using Maude.
 norm' :: LNTerm -> WithMaude LNTerm
 norm' = norm sortOfName
 
+
 -- | @nf t@ returns @True@ if the term @t@ is in normal form.
-nf :: forall c. (Show (Lit c LVar), Ord c, IsConst c)
+nfViaHaskell :: forall c. (Show (Lit c LVar), Ord c, IsConst c)
    => (c -> LSort) -> LTerm c -> WithMaude Bool
-nf sortOf t0 = reader $ \hnd -> check hnd
+nfViaHaskell sortOf t0 = reader $ \hnd -> check hnd
   where
     check hnd = go t0
       where
         -- AC operator must have more than one arguments
-        go t@(FApp (AC _) ts) | length ts < 2
+        go t@(viewTerm -> FApp (AC _) ts) | length ts < 2
           = error $ "nf': unexpected AC operator with less than two arguments: `"++ show t++"'"
 
         -- irreducible function symbols
-        go (FApp (NonAC o) ts) | o `elem` irreducible                    = all go ts
+        go (viewTerm -> FApp (NonAC o) ts) | o `elem` irreducible                    = all go ts
 
         -- exponentiation
-        go (FApp (NonAC o1) [ FApp (NonAC o2) _, _])
+        go (viewTerm -> FApp (NonAC o1) [ viewTerm -> FApp (NonAC o2) _, _])
           | dh && o1 == expSym && o2 == expSym                           = False
-        go (FApp (NonAC o1) [ _, FApp (NonAC o2) []])
+        go (viewTerm -> FApp (NonAC o1) [ _, viewTerm -> FApp (NonAC o2) []])
           | dh && o1 == expSym && o2 == oneSym                           = False
-        go (FApp (NonAC o1) [(FApp (NonAC o2) _)])
+        go (viewTerm -> FApp (NonAC o1) [(viewTerm -> FApp (NonAC o2) _)])
           | dh && o1 == invSym && o2 == invSym                           = False
-        go (FApp (NonAC o1) [(FApp (AC Mult) ts)])
+        go (viewTerm -> FApp (NonAC o1) [(viewTerm -> FApp (AC Mult) ts)])
           | dh && o1 == invSym && any isInv ts                           = False
 
         -- subterm rules
-        go t@(FApp (NonAC _) _) | any (struleApplicable t) strules       = False
+        go t@(viewTerm -> FApp (NonAC _) _) | any (struleApplicable t) strules       = False
 
         -- multiplication
-        go (FApp (AC Mult) ts)
+        go (viewTerm -> FApp (AC Mult) ts)
           | one `elem` ts || any isMult ts || invalidMult ts             = False
 
         -- xor
-        go (FApp (AC Xor) ts)
+        go (viewTerm -> FApp (AC Xor) ts)
           | zero `elem` ts || any isXor ts || not (noDuplicates ts)      = False
 
-        go (FApp _ ts)                                                   = all go ts
-        go (Lit _ )                                                      = True
+        go (viewTerm -> FApp _ ts)                                                   = all go ts
+        go (viewTerm -> Lit _ )                                                      = True
 
         struleApplicable t (StRule lhs rhs) =
             case matchLTerm sortOf [t `MatchWith` toLTerm lhs] `runReader` hnd of
@@ -97,35 +99,34 @@ nf sortOf t0 = reader $ \hnd -> check hnd
 
         invalidMult ts = case partition isInv ts of
             ([],_)           -> False
-            ([ FApp _oinv [ FApp (AC Mult) ifactors ] ], factors) ->
+            ([ viewTerm -> FApp _oinv [ viewTerm -> FApp (AC Mult) ifactors ] ], factors) ->
                 (ifactors \\ factors /= ifactors)
                 || (factors \\ ifactors /= factors)
-            ([ FApp _oinv [t] ], factors) -> t `elem` factors
+            ([ viewTerm -> FApp _oinv [t] ], factors) -> t `elem` factors
             (_:_:_, _)       -> True
             _ -> False
 
-        isMult (FApp (AC Mult) _) = True
+        isMult (viewTerm -> FApp (AC Mult) _) = True
         isMult _                  = False
 
-        isXor (FApp (AC Xor) _) = True
+        isXor (viewTerm -> FApp (AC Xor) _) = True
         isXor _                 = False
 
-        isInv  (FApp (NonAC o) _) | o == invSym = True
+        isInv  (viewTerm -> FApp (NonAC o) _) | o == invSym = True
         isInv  _                                = False
 
         toLTerm :: LNTerm -> LTerm c
-        toLTerm (FApp o ts)   = FApp o (map toLTerm ts)
-        toLTerm (Lit (Var v)) = Lit (Var v)
-        toLTerm t@(Lit _)       = error $ "toLTerm: impossible, unexpected constant in `"
-                                          ++show t++"'"
+        toLTerm (viewTerm -> FApp o ts)   = unsafefApp o (map toLTerm ts)
+        toLTerm (viewTerm -> Lit (Var v)) = lit (Var v)
+        toLTerm t@(viewTerm -> Lit _)       = error $ "toLTerm: impossible, unexpected constant in `"
+                                              ++show t++"'"
 
         msig        = mhMaudeSig hnd
         strules     = stRules msig
         irreducible = irreducibleFunSig msig
         dh          = enableDH msig
-        one         = FApp (NonAC oneSym) []
-        zero        = FApp (NonAC zeroSym) []
-
+        one         = fApp (NonAC oneSym) []
+        zero        = fApp (NonAC zeroSym) []
 
 -- | @nf' t@ returns @True@ if the term @t@ is in normal form.
 nf' :: LNTerm -> WithMaude Bool
@@ -134,18 +135,23 @@ nf' = nf sortOfName
 -- | @nfViaMaude t@ returns @True@ if the term @t@ is in normal form.
 nfViaMaude :: (Show (Lit c LVar), Ord c, IsConst c)
            => (c -> LSort) -> LTerm c -> WithMaude Bool
-nfViaMaude sortOf t = (t ==#) <$> norm sortOf t
+nfViaMaude sortOf t = (t ==) <$> norm sortOf t
+
 
 -- | @nfCompare t@ performs normal-form checks using maude and the haskell function
 --   and fails if the results differ.
 _nfCompare :: (Show (Lit c LVar), Ord c, IsConst c)
            => (c -> LSort) -> LTerm c -> WithMaude Bool
 _nfCompare sortOf t0 = reader $ \hnd ->
-    case ((nfViaMaude sortOf t0) `runReader` hnd, (nfViaMaude sortOf t0) `runReader` hnd) of
+    case ((nfViaMaude sortOf t0) `runReader` hnd, (nfViaHaskell sortOf t0) `runReader` hnd) of
         (x, y) | x == y -> x
         (x, y) ->
           error $ "nfCompare: Maude disagrees with haskell nf: "++ show t0
                   ++" maude: " ++ show x ++ "haskell: "++show y
+
+nf :: (Show (Lit c LVar), Ord c, IsConst c)
+   => (c -> LSort) -> LTerm c -> WithMaude Bool
+nf = nfViaHaskell
 
 
 -- Normalization 
@@ -170,6 +176,6 @@ normSubstVFresh' s = reader $ \hnd -> mapRangeVFresh (\t -> norm' t `runReader` 
 maybeNotNfSubterms :: MaudeSig -> LNTerm -> [LNTerm]
 maybeNotNfSubterms msig t0 = go t0
   where irreducible = irreducibleFunSig msig
-        go (Lit _)                                    = []
-        go (FApp (NonAC o) as) | o `elem` irreducible = concatMap go as
-        go t                                          = [t]
+        go (viewTerm -> Lit _)                                    = []
+        go (viewTerm -> FApp (NonAC o) as) | o `elem` irreducible = concatMap go as
+        go t                                                      = [t]

@@ -1,4 +1,7 @@
-{-# LANGUAGE TupleSections, GeneralizedNewtypeDeriving, TypeSynonymInstances, GADTs,FlexibleContexts,EmptyDataDecls,StandaloneDeriving, DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, DeriveFunctor, ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ViewPatterns, TypeSynonymInstances, FlexibleContexts #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+  -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -51,7 +54,8 @@ module Term.Substitution.SubstVFree (
 
 
 import Term.LTerm
-import Term.Rewriting.NormAC
+import Term.Rewriting.Definitions
+-- import Term.Rewriting.NormAC
 import Text.PrettyPrint.Highlight
 import Logic.Connectives
 
@@ -89,14 +93,14 @@ type LNSubst = Subst Name LVar
 
 -- | @applyLit subst l@ applies the substitution @subst@ to the literal @l@.
 applyLit :: IsVar v => Subst c v -> Lit c v -> VTerm c v
-applyLit subst v@(Var i)  = fromMaybe (Lit v) $ M.lookup i (sMap subst)
-applyLit _     c@(Con _)  = Lit c
+applyLit subst v@(Var i)  = fromMaybe (lit v) $ M.lookup i (sMap subst)
+applyLit _     c@(Con _)  = lit c
 
 
 
 -- | @applyTermVFree subst t@ applies the substitution @subst@ to the term @t@.
-applyVTerm :: (IsConst c, IsVar v) => Subst c v -> VTerm c v -> VTerm c v
-applyVTerm subst = (>>= applyLit subst)
+applyVTerm :: (IsConst c, IsVar v, Ord c) => Subst c v -> VTerm c v -> VTerm c v
+applyVTerm subst = (`bindTerm` applyLit subst)
 
 
 -- Construction
@@ -107,8 +111,8 @@ substFromList :: IsVar v => [(v, VTerm c v)] -> Subst c v
 substFromList xs  =
     Subst (M.fromList [ (v,t) | (v,t) <- xs, not (t `equalToVar` v) ])
   where
-    equalToVar (Lit (Var v')) v = v == v'
-    equalToVar _              _ = False
+    equalToVar (viewTerm -> Lit (Var v')) v = v == v'
+    equalToVar _                          _ = False
 
 -- | Convert a map to a substitution. The @x/x@ mappings are removed.
 -- FIXME: implement directly, use substFromMap for substFromList.
@@ -151,8 +155,8 @@ mapRange :: (IsConst c, IsVar v, IsConst c2)
 mapRange f subst@(Subst _) =
     Subst $ M.mapMaybeWithKey (\i t -> filterRefl i (f t)) (sMap subst)
   where
-    filterRefl i (Lit (Var j)) | i == j = Nothing
-    filterRefl _ t                      = Just t
+    filterRefl i (viewTerm -> Lit (Var j)) | i == j = Nothing
+    filterRefl _ t                                  = Just t
 
 
 -- Queries
@@ -203,7 +207,7 @@ instance Sized (Subst c v) where
 -- Instances
 ------------
 
-instance HasFrees (LSubst c) where
+instance Ord c => HasFrees (LSubst c) where
     foldFrees  f = foldFrees f . sMap
     mapFrees   f = (substFromList <$>) . mapFrees   f . substToList
 
@@ -214,13 +218,13 @@ class Apply t where
 instance Apply LVar where
     apply subst x = maybe x extractVar $ imageOf subst x
       where
-        extractVar (Lit (Var x')) = x'
+        extractVar (viewTerm -> Lit (Var x')) = x'
         extractVar t              = 
           error $ "apply (LVar): variable '" ++ show x ++ 
                   "' substituted with term '" ++ show t ++ "'"
 
 instance Apply LNTerm where
-    apply subst = normAC . applyVTerm subst
+    apply subst = applyVTerm subst
 
 instance Apply () where
     apply _ = id

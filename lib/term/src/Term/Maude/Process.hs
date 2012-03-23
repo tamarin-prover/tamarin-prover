@@ -35,6 +35,7 @@ import Term.Term
 import Term.LTerm
 import Term.Maude.Types
 import Term.Substitution
+import Term.Rewriting.Definitions
 
 import Control.Applicative
 import Control.Monad.Reader

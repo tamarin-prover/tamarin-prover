@@ -1,4 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, StandaloneDeriving, TypeSynonymInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, StandaloneDeriving #-}
+{-# LANGUAGE TypeSynonymInstances, ViewPatterns, ScopedTypeVariables #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -75,11 +76,13 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
 
     irreducible = irreducibleFunSig (mhMaudeSig hnd)
     abstrFact = traverse abstrTerm
-    abstrTerm (FApp (NonAC o) args) | o `elem` irreducible =
-        FApp (NonAC o) <$> mapM abstrTerm args
-    abstrTerm t = varTerm <$> importBinding (`LVar` sortOfLNTerm t) t (getHint t)
-      where getHint (Lit (Var v)) = lvarName v
-            getHint _             = "z"
+    abstrTerm (viewTerm -> FApp (NonAC o) args) | o `elem` irreducible =
+        fAppNonAC o <$> mapM abstrTerm args
+    abstrTerm t = do
+        at :: LNTerm <- varTerm <$> importBinding (`LVar` sortOfLNTerm t) t (getHint t)
+        return at
+      where getHint (viewTerm -> Lit (Var v)) = lvarName v
+            getHint _                         = "z"
 
     makeRule (ps, cs, as) subst freshSubsts0 =
         Rule (ProtoRuleACInfo ri (Disj freshSubsts) []) prems concs acts
