@@ -1,0 +1,24 @@
+theory MinimalWrap
+begin
+
+builtin: symmetric-encryption
+
+rule NewKey: 
+	[ Fr(~key),Fr(~h) ] --[Create(~h,~key), Step()]-> [ !Store(~h,~key), Out(~h) ]
+
+rule Wrap:
+	[!Store(h1,~k1),!Store(h2,~k2),In(<h1,h2>)] --[Wrap(~k1,~k2), Step()]-> [Out(senc(~k1,~k2))]
+
+lemma key_secret:
+	"  not(Ex #i #j h k. Create(h,k) @ i & K(k) @ j) "
+
+/* In this property, Step() @ j & k  --| j formalizes that k is always secret.
+   Removing the Step() @ j would result in a formula that is not guarded.
+*/
+lemma cannot_obtain_key:
+	"  not(Ex #i #j h k.   Create(h,k) @ i & Step() @ j & k  --| j)
+         & not(Ex #i #j k1 k2. Wrap(k1,k2) @ i & Step() @ j & k1 --| j)
+         & not(Ex #i #j k1 k2. Wrap(k1,k2) @ i & Step() @ j & k2 --| j)"
+
+
+end
