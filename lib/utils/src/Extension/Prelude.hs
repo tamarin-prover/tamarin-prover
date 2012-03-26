@@ -21,7 +21,6 @@ import Control.Basics
 import System.IO
 
 
-
 -- Bool --
 ----------
 
@@ -43,12 +42,47 @@ unique (x:xs) = x `notElem` xs && unique xs
 
 -- | Sort list and remove duplicates. O(n*log n)
 sortednub :: Ord a => [a] -> [a]
-sortednub = map head . group . sort
+sortednub = sortednubBy compare
+
+-- | Sort a list according to a user-defined comparison function and remove
+-- duplicates.
+sortednubBy :: (a -> a -> Ordering) -> [a] -> [a]
+sortednubBy cmp = 
+    -- Adapted from GHC's Data.List module
+    -- Copyright:  (c) The University of Glasgow 2001
+    mergeAll . sequences
+  where
+    sequences (a:xs@(b:xs')) = case a `cmp` b of
+      GT -> descending b [a] xs'
+      EQ -> sequences xs
+      LT -> ascending b (a:) xs
+    sequences xs = [xs]
+
+    descending a as (b:bs)
+      | a `cmp` b == GT = descending b (a:as) bs
+    descending a as bs  = (a:as): sequences bs
+
+    ascending a as (b:bs)
+      | a `cmp` b == LT = ascending b (\ys -> as (a:ys)) bs
+    ascending a as bs   = as [a] : sequences bs
+
+    mergeAll [x] = x
+    mergeAll xs  = mergeAll (mergePairs xs)
+
+    mergePairs (a:b:xs) = merge a b: mergePairs xs
+    mergePairs xs       = xs
+
+    merge []         bs         = bs
+    merge as         []         = as
+    merge as@(a:as') bs@(b:bs') = case a `cmp` b of
+      GT -> b : merge as  bs'
+      EQ ->     merge as bs'  -- equal elements are dropped
+      LT -> a : merge as' bs
 
 -- | //O(n*log n).// Sort list and remove duplicates with respect to a
 -- projection. 
 sortednubOn :: Ord b => (a -> b) -> [a] -> [a]
-sortednubOn proj = map head . groupOn proj . sortOn proj
+sortednubOn proj = sortednubBy (comparing proj)
 
 -- | Keep only the first element of elements having the same projected value
 nubOn :: Eq b => (a -> b) -> [a] -> [a]
