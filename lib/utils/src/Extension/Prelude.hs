@@ -36,16 +36,19 @@ singleton :: a -> [a]
 singleton x = [x]
 
 -- | check whether the given list contains no duplicates
+{-# INLINABLE unique #-}
 unique :: Eq a => [a] -> Bool
 unique [] = True
 unique (x:xs) = x `notElem` xs && unique xs
 
 -- | Sort list and remove duplicates. O(n*log n)
+{-# INLINE sortednub #-}
 sortednub :: Ord a => [a] -> [a]
 sortednub = sortednubBy compare
 
 -- | Sort a list according to a user-defined comparison function and remove
 -- duplicates.
+{-# INLINABLE sortednubBy #-}
 sortednubBy :: (a -> a -> Ordering) -> [a] -> [a]
 sortednubBy cmp = 
     -- Adapted from GHC's Data.List module
@@ -81,6 +84,7 @@ sortednubBy cmp =
 
 -- | //O(n*log n).// Sort list and remove duplicates with respect to a
 -- projection. 
+{-# INLINE sortednubOn #-}
 sortednubOn :: Ord b => (a -> b) -> [a] -> [a]
 sortednubOn proj = sortednubBy (comparing proj)
 
