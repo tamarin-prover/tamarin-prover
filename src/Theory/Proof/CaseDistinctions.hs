@@ -39,7 +39,7 @@ import           Data.Foldable (asum)
 import           Control.Basics
 import           Control.Category
 import           Control.Monad.Disj
-import           Control.Monad.Bind
+-- import           Control.Monad.Bind
 import           Control.Monad.Reader
 import           Control.Monad.State (gets)
 import           Control.Parallel.Strategies
@@ -204,20 +204,19 @@ applyCaseDistinction :: MaudeHandle
 applyCaseDistinction hnd th prem goal =
     case (`runReader` hnd) $ matchBigStepGoal goal (get cdGoal th) of
       [] -> Nothing
-      _  -> Just $ do (names, subst, seTh) <- instTheorem `evalBindT` noBindings
+      _  -> Just $ do (names, subst, seTh) <- instTheorem
                       solveSubstEqs SplitNow subst
                       conjoinSequent seTh
                       return names
   where
-    instTheorem :: BindT LVar LVar SeProof ([String], LNSubst, Sequent)
+    instTheorem :: SeProof ([String], LNSubst, Sequent)
     instTheorem = do
-        goalTh <- someInst $ get cdGoal th
+        instTh <- rename th
         -- We only have to choose one matcher, as the theorem holds for all
         -- premises equal modulo AC.
         subst <- disjunctionOfList $ take 1 $ 
-                 matchBigStepGoal goal goalTh `runReader` hnd
-        (names, (concTh, seTh)) <- someInst =<< 
-            (disjunctionOfList $ getDisj $ get cdCases th)
+                 matchBigStepGoal goal (get cdGoal instTh) `runReader` hnd
+        (names, (concTh, seTh)) <- disjunctionOfList $ getDisj $ get cdCases instTh
 
         let seTh' = case goal of
               PremiseBigStep _ -> 

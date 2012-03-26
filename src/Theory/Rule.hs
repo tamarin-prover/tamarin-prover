@@ -424,7 +424,7 @@ someRuleACInst :: MonadFresh m
                => RuleAC 
                -> m (RuleACInst, Maybe RuleACConstrs)
 someRuleACInst = 
-    (`evalBindT` noBindings) . fmap extractInsts . someInst
+    fmap extractInsts . rename
   where
     extractInsts (Rule (ProtoInfo i) ps cs as) = 
       ( Rule (ProtoInfo i') ps cs as

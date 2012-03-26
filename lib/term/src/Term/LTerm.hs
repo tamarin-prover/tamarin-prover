@@ -82,6 +82,7 @@ import Control.Applicative
 import Control.Monad.Fresh
 import Control.Monad.Bind
 import Control.DeepSeq
+import Control.Monad.Identity
 
 import Data.DeriveTH
 import qualified Data.Set   as S
@@ -185,7 +186,7 @@ type LNTerm = VTerm Name LVar
 
 -- | @freshLVar v@ represents a fresh logical variable with name @v@.
 freshLVar :: MonadFresh m => String -> LSort -> m LVar
-freshLVar n s = LVar n s <$> freshIdent n
+freshLVar n s = LVar n s <$> freshIdents 1
 
 -- | Returns the most precise sort of an 'LTerm'.
 sortOfLTerm :: (c -> LSort) -> LTerm c -> LSort
@@ -378,7 +379,12 @@ someInst = mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x (lvar
 
 -- | @rename t@ replaces all variables in @t@ with fresh variables
 rename :: (MonadFresh m, HasFrees a) => a -> m a
-rename x = evalBindT (someInst x) noBindings
+rename x = do
+    maxVarIdx <- freshIdents (avoid x)
+    return . runIdentity . mapFrees (Monotone $ incVar maxVarIdx) $ x
+  where
+    incVar maxVarIdx (LVar n so i) = pure $ LVar n so (i+maxVarIdx)
+
 
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
 -- renaming of indices of free variables. Note that the normal form is not

@@ -30,7 +30,7 @@ module Control.Monad.Trans.Fresh (
   -- * Fresh name generation
   , FreshState
   , nothingUsed
-  , freshIdent
+  , freshIdents
 
   ) where
 
@@ -71,13 +71,13 @@ evalFreshT (FreshT m) used = evalStateT m used
 execFreshT :: Monad m => FreshT m a -> FreshState -> m FreshState
 execFreshT (FreshT m) used = execStateT m used
 
--- | Get a fresh identifier.
-freshIdent :: Monad m 
-           => String        -- ^ Desired name.
-           -> FreshT m Int  -- ^ Fresh identifier for this name.
-freshIdent _ = do
+-- | Get 'k' fresh identifiers.
+freshIdents :: Monad m
+            => Int           -- ^ number of desired identifiers
+            -> FreshT m Int  -- ^ The first fresh identifier.
+freshIdents k = do
     i <- FreshT get
-    FreshT $ put $ succ i
+    FreshT $ put $ i + k
     return i
 
 -- Instances

@@ -117,8 +117,10 @@ substCreatesNonNormalTerms :: MaudeHandle -> Sequent -> LNSubstVFresh -> Bool
 substCreatesNonNormalTerms hnd se =
     \subst -> any (not . nfApply subst) terms
   where terms = maybeNonNormalTerms hnd se
-        nfApply subst t =  t == t' || nf' t' `runReader` hnd
-          where t' = apply (freshToFreeAvoiding subst t) t
+        nfApply subst0 t = t == t'  || nf' t' `runReader` hnd
+          where tvars = freesList t
+                subst = restrictVFresh tvars subst0
+                t'  = apply (freshToFreeAvoidingFast subst tvars) t
 
 -- | True if there is no @EXP-down@ rule that should be replaced by an
 -- @EXP-up@ rule.
@@ -245,7 +247,7 @@ proveLinearConc se (v,i) =
 ruleNode :: NodeId -> [RuleAC] -> SeProof RuleACInst
 ruleNode i rules = do
     (ru, mrconstrs) <- importRule =<< disjunctionOfList rules
-    solveRuleConstraints mrconstrs i
+    solveRuleConstraints mrconstrs
     modM sNodes (M.insert i ru)
     let inFacts = do
           (v, Fact InFact [m]) <- enumPrems ru
@@ -792,15 +794,15 @@ solveListEqs solver eqs = do
 
 
 -- | Solve the constraints associated with a rule with the given vertex.
-solveRuleConstraints :: Maybe RuleACConstrs -> NodeId -> SeProof ()
-solveRuleConstraints (Just eqConstr) _v = do
+solveRuleConstraints :: Maybe RuleACConstrs -> SeProof ()
+solveRuleConstraints (Just eqConstr) = do
     hnd <- getMaudeHandle
     se <- gets id
     setM sEqStore
         =<< (simp hnd (substCreatesNonNormalTerms hnd se) . addRuleVariants eqConstr)
         =<< getM sEqStore
     noContradictoryEqStore
-solveRuleConstraints Nothing _ = return ()
+solveRuleConstraints Nothing = return ()
 
 ------------------------------------------------------------------------------
 -- Extracting and solving goals

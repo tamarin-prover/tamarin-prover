@@ -18,16 +18,16 @@ import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Writer
 
-import qualified Control.Monad.Trans.Fresh as Fresh (FreshT, freshIdent)
+import qualified Control.Monad.Trans.Fresh as Fresh (FreshT, freshIdents)
 
 -- Added 'Applicative' until base states this hierarchy
 class (Applicative m, Monad m) => MonadFresh m where
-    freshIdent :: String -- ^ Desired name.
-               -> m Int  -- ^ Fresh identifier.
+    freshIdents :: Int    -- ^ Number of desired fresh identifiers.
+                -> m Int  -- ^ The first Fresh identifier.
 
 
 instance (Functor m, Monad m) => MonadFresh (Fresh.FreshT m) where
-    freshIdent = Fresh.freshIdent
+    freshIdents = Fresh.freshIdents
 
 
 ----------------------------------------------------------------------------
@@ -36,13 +36,13 @@ instance (Functor m, Monad m) => MonadFresh (Fresh.FreshT m) where
 -- TODO: Add remaining ones
 
 instance MonadFresh m => MonadFresh (MaybeT m) where
-    freshIdent = lift . freshIdent
+    freshIdents = lift . freshIdents
 
 instance MonadFresh m => MonadFresh (StateT s m) where
-    freshIdent = lift . freshIdent
+    freshIdents = lift . freshIdents
 
 instance MonadFresh m => MonadFresh (ReaderT r m) where
-    freshIdent = lift . freshIdent
+    freshIdents = lift . freshIdents
 
 instance (Monoid w, MonadFresh m) => MonadFresh (WriterT w m) where
-    freshIdent = lift . freshIdent
+    freshIdents = lift . freshIdents

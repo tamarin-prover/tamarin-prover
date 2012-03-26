@@ -76,7 +76,7 @@ interpretAbstractly unifyFactEqs initState addFact stateFacts rus =
                 fa <- stateFacts st
                 guard (factTag prem == factTag fa)
                 -- we compute a list of 'FreshT []' actions for the outer msum
-                return (Equal prem <$> evalBindT (someInst fa) noBindings)
+                return (Equal prem <$> rename fa)
             subst <- msum $ freshToFree <$> unifyFactEqs eqs
             return $ apply subst ru
 

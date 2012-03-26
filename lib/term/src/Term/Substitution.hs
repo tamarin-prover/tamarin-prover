@@ -1,4 +1,6 @@
-{-# LANGUAGE TupleSections, TypeSynonymInstances, GADTs,FlexibleContexts,EmptyDataDecls,StandaloneDeriving, DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, DeriveFunctor, ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections, TypeSynonymInstances, GADTs,FlexibleContexts,EmptyDataDecls #-}
+{-# LANGUAGE StandaloneDeriving, DeriveDataTypeable, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, DeriveFunctor, ScopedTypeVariables #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -14,6 +16,7 @@ module Term.Substitution (
   -- ** Conversion between fresh and free
   , freshToFree
   , freshToFreeAvoiding
+  , freshToFreeAvoidingFast
 
   , freeToFreshRaw
 
@@ -30,8 +33,7 @@ import Term.Substitution.SubstVFresh
 import Extension.Prelude
 
 import Control.Monad.Bind
-import Control.Applicative
-
+import Control.Basics
 
 -- Composition of VFresh and VFresh substitutions
 ----------------------------------------------------------------------
@@ -65,10 +67,22 @@ freshToFree subst = (`evalBindT` noBindings) $ do
             _           -> lvarName v
 
 
--- | @freshToFreeSimpAvoiding s t@ converts all fresh variables in the range of
---   @s@ to free variables avoiding free variables in @t@.
+-- | @freshToFreeAvoiding s t@ converts all fresh variables in the range of
+--   @s@ to free variables avoiding free variables in @t@. This function tries
+--   to reuse variable names from the domain of the substitution if possible.
 freshToFreeAvoiding :: (HasFrees t, IsConst c) => SubstVFresh c LVar -> t -> Subst c LVar
 freshToFreeAvoiding s t = freshToFree s `evalFreshAvoiding` t
+
+
+-- | @freshToFreeAvoidingFast s t@ converts all fresh variables in the range of
+--   @s@ to free variables avoiding free variables in @t@. This function does
+--   not try to reuse variable names from the domain of the substitution.
+freshToFreeAvoidingFast :: HasFrees t => LNSubstVFresh -> t -> LNSubst
+freshToFreeAvoidingFast s t =
+    substFromList . renameMappings . substToListVFresh $ s
+  where
+    renameMappings l = zip (map fst l) (rename (map snd l) `evalFreshAvoiding` t)
+
 
 -- | @freeToFreshRaw s@ considers all variables in the range of @s@ as fresh.
 freeToFreshRaw :: Subst c LVar -> SubstVFresh c LVar
