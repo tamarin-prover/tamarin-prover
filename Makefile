@@ -23,9 +23,10 @@ force-install:
 
 force-install-ghc-7.0.4:
 	cabal install -wghc-7.0.4 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term ./
-#
+
 force-install-ghc-7.4.1:
 	cabal install -wghc-7.4.1 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term ./
+
 #
 #
 # ###########################################################################
