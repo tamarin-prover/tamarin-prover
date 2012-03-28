@@ -31,6 +31,7 @@ module Text.PrettyPrint.Html (
 
 import Data.Char (isSpace)
 import Data.Traversable (sequenceA)
+import Data.Monoid
 
 import Control.Arrow (first)
 import Control.Applicative
@@ -89,6 +90,7 @@ attribute (key,value) = " " ++ key ++ "=\"" ++ escapeHtmlEntities value ++ "\""
 
 -- | A 'Document' transformer that adds proper HTML escaping.
 newtype HtmlDoc d = HtmlDoc { getHtmlDoc :: d }
+    deriving( Monoid )
 
 -- | Wrap a document such that HTML markup can be added without disturbing the
 -- layout.
@@ -102,9 +104,7 @@ instance Document d => Document (HtmlDoc d) where
     char          = HtmlDoc . text . escapeHtmlEntities . return
     text          = HtmlDoc . text . escapeHtmlEntities 
     zeroWidthText = HtmlDoc . zeroWidthText . escapeHtmlEntities
-    emptyDoc      = HtmlDoc emptyDoc
 
-    HtmlDoc d1 <>  HtmlDoc d2 = HtmlDoc $ d1 <> d2
     HtmlDoc d1 <-> HtmlDoc d2 = HtmlDoc $ d1 <-> d2
     hcat = HtmlDoc . hcat . map getHtmlDoc
     hsep = HtmlDoc . hsep . map getHtmlDoc
@@ -170,6 +170,7 @@ postprocessHtmlDoc =
 newtype NoHtmlDoc d = NoHtmlDoc { unNoHtmlDoc :: Identity d }
   deriving( Functor, Applicative )
 
+
 -- | Wrap a document such that all 'HtmlDocument' specific methods are ignored.
 noHtmlDoc :: d -> NoHtmlDoc d
 noHtmlDoc = NoHtmlDoc . Identity
@@ -181,12 +182,14 @@ getNoHtmlDoc = runIdentity . unNoHtmlDoc
 instance NFData d => NFData (NoHtmlDoc d) where
     rnf = rnf . getNoHtmlDoc
 
+instance Monoid d => Monoid (NoHtmlDoc d) where
+  mempty = pure mempty
+  mappend = liftA2 mappend
+
 instance Document d => Document (NoHtmlDoc d) where
   char = pure . char
   text = pure . text
   zeroWidthText = pure . zeroWidthText
-  emptyDoc = pure emptyDoc
-  (<>)  = liftA2 (<>)
   (<->) = liftA2 (<->)
   hcat  = liftA hcat . sequenceA
   hsep  = liftA hsep . sequenceA

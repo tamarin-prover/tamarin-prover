@@ -1,6 +1,8 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, TypeSynonymInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, DeriveDataTypeable, StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell, GeneralizedNewtypeDeriving, ViewPatterns #-}
+{-# LANGUAGE 
+      CPP, FlexibleContexts, FlexibleInstances, TypeSynonymInstances,
+      MultiParamTypeClasses, DeriveDataTypeable, StandaloneDeriving,
+      TemplateHaskell, GeneralizedNewtypeDeriving, ViewPatterns
+  #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |
@@ -173,7 +175,12 @@ data LSort = LSortPub   -- ^ Arbitrary public names.
 data LVar = LVar 
      { lvarName :: String
      , lvarSort :: !LSort
+-- Work around GHC bug #5976
+#if __GLASGOW_HASKELL__ < 704
      , lvarIdx  :: {-# UNPACK #-} !Int 
+#else
+     , lvarIdx  :: !Int 
+#endif
      }
      deriving( Typeable, Data )
 

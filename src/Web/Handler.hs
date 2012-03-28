@@ -10,44 +10,47 @@ Portability :  non-portable
 -}
 
 {-# LANGUAGE
-    OverloadedStrings, QuasiQuotes, TypeFamilies, 
+    OverloadedStrings, QuasiQuotes, TypeFamilies, FlexibleContexts,
     RankNTypes, TemplateHaskell, CPP #-}
 
 module Web.Handler
   ( getOverviewR
   , getRootR
-  , postRootR
+  -- , postRootR
   , getTheorySourceR
   , getTheoryMessageDeductionR
   , getTheoryVariantsR
   , getTheoryPathMR
-  , getTheoryPathDR
+  -- , getTheoryPathDR
   , getTheoryGraphR
   , getAutoProverR
   , getDeleteStepR
-  , getKillThreadR
+  -- , getKillThreadR
   , getNextTheoryPathR
   , getPrevTheoryPathR
   , getSaveTheoryR
   , getDownloadTheoryR
-  , getEditTheoryR
-  , postEditTheoryR
-  , getEditPathR
-  , postEditPathR
+  -- , getEditTheoryR
+  -- , postEditTheoryR
+  -- , getEditPathR
+  -- , postEditPathR
   , getUnloadTheoryR
-  , getThreadsR
+  -- , getThreadsR
   )
 where
 
 import Theory (
     ClosedTheory,
-    lName, thyName, 
-    lookupLemma, addLemma, removeLemma,
+    thyName, 
+    -- lName,
+    -- lookupLemma, addLemma, 
+    removeLemma,
     openTheory, 
     mapProverProof, sorryProver, autoProver, cutOnAttackDFS,
-    prettyProof, prettyLemma, prettyClosedTheory, prettyOpenTheory 
+    prettyClosedTheory, prettyOpenTheory 
+    -- prettyProof, prettyLemma, prettyClosedTheory, prettyOpenTheory 
   )
-import Theory.Parser
+-- import Theory.Parser
 import Theory.Proof.Sequent.Dot
 import Web.Types
 import Web.Hamlet
@@ -58,30 +61,31 @@ import Text.PrettyPrint.Html
 
 import Yesod.Core
 import Yesod.Json()
-import Yesod.Form
-import Text.Hamlet
+-- import Yesod.Form
+-- import Text.Hamlet
 
 import Data.Maybe
 import Data.Aeson
-import Data.Aeson.Encode (fromValue)
 import Data.Label
-import Data.Traversable (traverse)
+-- import Data.Traversable (traverse)
 
 import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Traversable as Tr
-import qualified Data.ByteString.Lazy.Char8 as BS
-import Data.Text.Encoding
+-- import qualified Data.ByteString.Lazy.Char8 as BS
+-- import Data.Text.Encoding
 import qualified Blaze.ByteString.Builder   as B
-import Network.HTTP.Types ( urlDecode )
+-- import Network.HTTP.Types ( urlDecode )
+import Text.Blaze.Html5 (toHtml)
 
 import Control.Monad
 import Control.Monad.IO.Class
-import Control.Monad.IO.Control
+-- import Control.Monad.IO.Control
+import Control.Monad.Trans.Control
 import Control.Applicative
 import Control.Concurrent
 import Control.DeepSeq
-import qualified Control.Exception.Control as E
+import qualified Control.Exception.Lifted as E
 import Control.Exception.Base
 import qualified Control.Concurrent.Thread as Thread ( forkIO )
 import Data.Time.LocalTime
@@ -105,9 +109,9 @@ import Debug.Trace (trace)
 
 -- | Store theory map in file if option enabled.
 storeTheory :: WebUI
-               -> TheoryInfo
-               -> TheoryIdx
-               -> IO ()
+            -> TheoryInfo
+            -> TheoryIdx
+            -> IO ()
 storeTheory yesod thy idx =
     when (autosaveProofstate yesod) $ do
       let f = workDir yesod++"/"++autosaveSubdir++"/"++show idx++".img"
@@ -115,19 +119,16 @@ storeTheory yesod thy idx =
       renameFile (f++".tmp") f
 
 -- | Load a theory given an index.
-getTheory :: MonadIO m
-           => TheoryIdx
-           -> GenericHandler m (Maybe TheoryInfo)
+getTheory :: TheoryIdx -> Handler (Maybe TheoryInfo)
 getTheory idx = do
     yesod <- getYesod
     liftIO $ withMVar (theoryVar yesod) $ return . M.lookup idx
 
 -- | Store a theory, return index.
-putTheory :: MonadIO m
-           => Maybe TheoryInfo     -- ^ Index of parent theory
-           -> Maybe TheoryOrigin   -- ^ Origin of this theory
-           -> ClosedTheory         -- ^ The new closed theory
-           -> GenericHandler m TheoryIdx
+putTheory :: Maybe TheoryInfo     -- ^ Index of parent theory
+          -> Maybe TheoryOrigin   -- ^ Origin of this theory
+          -> ClosedTheory         -- ^ The new closed theory
+          -> Handler TheoryIdx
 putTheory parent origin thy = do
     yesod <- getYesod
     liftIO $ modifyMVar (theoryVar yesod) $ \theories -> do
@@ -141,7 +142,7 @@ putTheory parent origin thy = do
       return (M.insert idx newThy theories, idx)
 
 -- | Delete theory.
-delTheory :: MonadIO m => TheoryIdx -> GenericHandler m ()
+delTheory :: TheoryIdx -> Handler ()
 delTheory idx = do
     yesod <- getYesod
     liftIO $ modifyMVar_ (theoryVar yesod) $ \theories -> do
@@ -150,17 +151,16 @@ delTheory idx = do
       return theories'
 
 -- | Get a map of all stored theories.
-getTheories :: MonadIO m => GenericHandler m TheoryMap
+getTheories :: Handler TheoryMap
 getTheories = do
     yesod <- getYesod
     liftIO $ withMVar (theoryVar yesod) return
 
 
 -- | Modify a theory in the map of theories.
-adjTheory :: MonadIO m
-          => TheoryIdx
+adjTheory :: TheoryIdx
           -> (TheoryInfo -> TheoryInfo)
-          -> GenericHandler m ()
+          -> Handler ()
 adjTheory idx f = do
     yesod <- getYesod
     liftIO $ modifyMVar_ (theoryVar yesod) $ \theories ->
@@ -177,10 +177,9 @@ dtrace yesod msg | debug yesod = trace msg
                  | otherwise   = id
 
 -- | Register a thread for killing.
-putThread :: MonadControlIO m
-          => T.Text                      -- ^ Request path
+putThread :: T.Text                      -- ^ Request path
           -> ThreadId                    -- ^ Thread ID
-          -> GenericHandler m ()
+          -> Handler ()
 putThread str tid = do
     yesod <- getYesod
     liftIO $ dtrace yesod msg $
@@ -189,9 +188,8 @@ putThread str tid = do
     msg = "Registering thread: " ++ T.unpack str
 
 -- | Unregister a thread for killing.
-delThread :: MonadControlIO m
-          => T.Text       -- ^ Request path
-          -> GenericHandler m ()
+delThread :: T.Text       -- ^ Request path
+          -> Handler ()
 delThread str = do
     yesod <- getYesod
     liftIO $ dtrace yesod msg $
@@ -199,10 +197,11 @@ delThread str = do
   where
     msg = "Deleting thread: " ++ T.unpack str
 
+{-
 -- | Get a thread for the given request URL.
-getThread :: MonadIO m
-          => T.Text       -- ^ Request path
-          -> GenericHandler m (Maybe ThreadId)
+-- getThread :: MonadIO m
+--           => T.Text       -- ^ Request path
+--           -> GenericHandler m (Maybe ThreadId)
 getThread str = do
     yesod <- getYesod
     liftIO $ dtrace yesod msg $
@@ -211,30 +210,29 @@ getThread str = do
     msg = "Retrieving thread id of: " ++ T.unpack str
 
 -- | Get the map of all threads.
-getThreads :: MonadIO m
-           => GenericHandler m [T.Text]
+-- getThreads :: MonadIO m
+--            => GenericHandler m [T.Text]
 getThreads = do
     yesod <- getYesod
     liftIO $ withMVar (threadVar yesod) (return . M.keys)
-
+-}
 
 ------------------------------------------------------------------------------
 -- Helper functions
 ------------------------------------------------------------------------------
 
 -- | Print exceptions, if they happen.
-traceExceptions :: MonadControlIO m => String -> m a -> m a
+traceExceptions :: MonadBaseControl IO m => String -> m a -> m a
 traceExceptions info = 
     E.handle handler
   where
-    handler :: MonadControlIO m => E.SomeException -> m a
+    handler :: MonadBaseControl IO m => E.SomeException -> m a
     handler e =
-      trace (info ++ ": exception `" ++ show e ++ "'") $ 
-          liftIO $ E.throw e
+      trace (info ++ ": exception `" ++ show e ++ "'") $ E.throwIO e
 
 -- | Helper functions for generating JSON reponses.
-jsonResp :: Monad m => JsonResponse -> GenericHandler m RepJson
-jsonResp = return . RepJson . toContent . fromValue . responseToJson
+jsonResp :: JsonResponse -> GHandler m WebUI RepJson
+jsonResp = return . RepJson . toContent . responseToJson
 
 responseToJson :: JsonResponse -> Value
 responseToJson = go
@@ -251,9 +249,9 @@ responseToJson = go
     contentToJson _ = error "Unsupported content format in json response!"
 
 -- | Fully evaluate a value in a thread that can be canceled.
-evalInThread :: (NFData a, MonadControlIO m)
+evalInThread :: NFData a
              => IO a
-             -> GenericHandler m (Either SomeException a)
+             -> Handler (Either SomeException a)
 evalInThread io = do
     renderF <- getUrlRender
     maybeRoute <- getCurrentRoute
@@ -271,40 +269,41 @@ evalInThread io = do
 
 -- | Evaluate a handler with a given theory specified by the index,
 -- return notFound if theory does not exist.
-withTheory :: MonadIO m
-           => TheoryIdx
-           -> (TheoryInfo -> GenericHandler m a)
-           -> GenericHandler m a
+withTheory :: TheoryIdx
+           -> (TheoryInfo -> Handler a)
+           -> Handler a
 withTheory idx handler = do
   maybeThy <- getTheory idx
   case maybeThy of
     Just ti -> handler ti
     Nothing -> notFound
 
+{-
 -- | Run a form and provide a JSON response.
-formHandler :: (HamletValue h, HamletUrl h ~ WebUIRoute, h ~ Widget ())
-            => T.Text                              -- ^ The form title
-            -> Form WebUI WebUI a                  -- ^ The formlet to run
-            -> (Widget () -> Enctype -> Html -> h) -- ^ Template to render form with
-            -> (a -> GenericHandler IO RepJson)    -- ^ Function to call on success
-            -> Handler RepJson
+-- formHandler :: (HamletValue h, HamletUrl h ~ WebUIRoute, h ~ Widget ())
+--             => T.Text                              -- ^ The form title
+--             -> Form WebUI WebUI a                  -- ^ The formlet to run
+--             -> (Widget () -> Enctype -> Html -> h) -- ^ Template to render form with
+--             -> (a -> GenericHandler IO RepJson)    -- ^ Function to call on success
+--             -> Handler RepJson
 formHandler title formlet template success = do
-    (result, widget, enctype, nonce) <- runFormPost formlet
+    -- (result, widget, enctype, nonce) <- runFormPost formlet
+    ((result, widget), enctype) <- runFormPost formlet
     case result of
       FormMissing -> do
-        RepHtml content <- ajaxLayout (template widget enctype nonce)
+        RepHtml content <- ajaxLayout (template widget enctype)
         jsonResp $ JsonHtml title content
       FormFailure _ -> jsonResp $ JsonAlert
         "Missing fields in form. Please fill out all required fields."
-      FormSuccess ret -> liftIOHandler (success ret)
+      FormSuccess ret -> lift (success ret)
+-}
 
 
 -- | Modify a theory, redirect if successful.
-modifyTheory :: (MonadControlIO m, Functor m)
-             => TheoryInfo                                -- ^ Theory to modify
+modifyTheory :: TheoryInfo                                -- ^ Theory to modify
              -> (ClosedTheory -> IO (Maybe ClosedTheory)) -- ^ Function to apply
              -> JsonResponse                              -- ^ Response on failure
-             -> GenericHandler m Value
+             -> Handler Value
 modifyTheory ti f errResponse = do
     -- res <- evalInThread (liftIO $ f (tiTheory ti))
     res <- evalInThread (liftIO $ f (tiTheory ti))
@@ -326,8 +325,13 @@ modifyTheory ti f errResponse = do
 -- | The root handler lists all theories by default,
 -- or load a new theory if the corresponding form was submitted.
 getRootR :: Handler RepHtml
-getRootR = postRootR
+getRootR = do
+    theories <- getTheories
+    defaultLayout $ do
+      setTitle "Welcome to the tamarin prover"
+      addWidget (rootTpl theories)
 
+{-
 postRootR :: Handler RepHtml
 postRootR = do
     (result, widget, enctype, nonce) <- runFormPost submitForm
@@ -349,7 +353,7 @@ postRootR = do
   where
     submitForm = fieldsToDivs $ fileField $ FormFieldSettings
       "Select file:" "Select file" Nothing Nothing
-
+-}
 
 -- | Show overview over theory (framed layout).
 getOverviewR :: TheoryIdx -> Handler RepHtml
@@ -383,9 +387,9 @@ getTheoryMessageDeductionR idx = withTheory idx $ \ti ->
 getTheoryPathMR :: TheoryIdx
                 -> TheoryPath
                 -> Handler RepJson
-getTheoryPathMR idx path = liftIOHandler $ do
+getTheoryPathMR idx path = do
     jsonValue <- withTheory idx (go path)
-    return $ RepJson $ toContent $ fromValue jsonValue
+    return $ RepJson $ toContent jsonValue
   where
     --
     -- Handle method paths by trying to solve the given goal/method
@@ -402,13 +406,13 @@ getTheoryPathMR idx path = liftIOHandler $ do
       let html = T.pack $ renderHtmlDoc $ htmlThyPath (tiTheory ti) path
       return $ responseToJson (JsonHtml title (toContent html))
 
-
+{-
 -- | Show a given path within a theory (debug view).
 getTheoryPathDR :: TheoryIdx -> TheoryPath -> Handler RepHtml
 getTheoryPathDR idx path = withTheory idx $ \ti -> ajaxLayout $ do
-  let maybeDebug = htmlThyDbgPath (tiTheory ti) path
-  let maybeWidget = wrapHtmlDoc <$> maybeDebug
-  addWidget [HAMLET|
+  -- let maybeDebug = htmlThyDbgPath (tiTheory ti) path
+  -- let maybeWidget = wrapHtmlDoc <$> maybeDebug
+  return [hamlet|
     <h2>Theory information</h2>
     <ul>
       <li>Index = #{show (tiIndex ti)}
@@ -419,10 +423,14 @@ getTheoryPathDR idx path = withTheory idx $ \ti -> ajaxLayout $ do
       <li>PrevPath = #{show (prevThyPath (tiTheory ti) path)}
       <li>NextSmartPath = #{show (nextSmartThyPath (tiTheory ti) path)}
       <li>PrevSmartPath = #{show (prevSmartThyPath (tiTheory ti) path)}
+  |]
+    {-
     $if isJust maybeWidget
       <h2>Current sequent</h2><br>
       \^{fromJust maybeWidget}
   |]
+  -}
+-}
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphR :: TheoryIdx -> TheoryPath -> Handler ()
@@ -443,9 +451,10 @@ getTheoryGraphR idx path = withTheory idx $ \ti -> do
     compression True = compressSequent
     compression False = id
 
+{-
 -- | Kill a thread (aka 'cancel request').
 getKillThreadR :: Handler RepPlain
-getKillThreadR = liftIOHandler $ do
+getKillThreadR = lift $ do
     maybeKey <- lookupGetParam "path"
     case maybeKey of
       Just key0 -> do
@@ -462,6 +471,7 @@ getKillThreadR = liftIOHandler $ do
         Nothing  -> trace ("Killing failed: "++ T.unpack k) $ return ()
         Just tid -> trace ("Killing: " ++ T.unpack k)
                           (liftIO $ killThread tid)
+-}
 
 -- | Get the 'next' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
@@ -486,6 +496,7 @@ getPrevTheoryPathR idx md path = withTheory idx $ \ti -> return $
     prev "smart" = prevSmartThyPath
     prev _ = const id
 
+{-
 -- | Get the edit theory page.
 getEditTheoryR :: TheoryIdx -> Handler RepJson
 getEditTheoryR = postEditTheoryR
@@ -503,13 +514,14 @@ postEditTheoryR idx = withTheory idx $ \ti -> formHandler
         jsonResp . JsonRedirect =<<
           getUrlRender <*> pure (OverviewR newIdx)
   where
-    theoryFormlet ti = fieldsToDivs $ textareaField
-      (FormFieldSettings
+    -- theoryFormlet ti = fieldsToDivs $ textareaField
+    theoryFormlet ti = textareaField
+      (FieldSettings
         ("Edit theory source: " `T.append` name ti)
         (toHtml $ name ti) Nothing Nothing)
       (Just $ Textarea $ T.pack $ render $ prettyClosedTheory $ tiTheory ti)
 
-    exHandler :: MonadControlIO m => E.SomeException -> GenericHandler m RepJson
+    exHandler :: MonadBaseControl IO m => E.SomeException -> GHandler m RepJson
     exHandler err = jsonResp $ JsonAlert $ T.unlines
       [ "Unable to load theory due to parse error!"
       , "Parser returned the message:"
@@ -517,7 +529,9 @@ postEditTheoryR idx = withTheory idx $ \ti -> formHandler
 
     name = T.pack . get thyName . tiTheory
     theoryFormTpl = formTpl (EditTheoryR idx) "Load as new theory" 
+-}
 
+{-
 -- | Get the add lemma page.
 getEditPathR :: TheoryIdx -> TheoryPath -> Handler RepJson
 getEditPathR = postEditPathR
@@ -556,8 +570,9 @@ postEditPathR idx (TheoryLemma lemmaName) = withTheory idx $ \ti -> do
     action (Just l) = "Edit lemma " ++ get lName l
     action Nothing = "Add new lemma"
 
-    formlet lemma = fieldsToDivs $ textareaField
-      (FormFieldSettings
+    -- formlet lemma = fieldsToDivs $ textareaField
+    formlet lemma = textareaField
+      (FieldSettings
         (T.pack $ action lemma)
         (toHtml $ action lemma)
         Nothing Nothing)
@@ -567,13 +582,14 @@ postEditPathR idx (TheoryLemma lemmaName) = withTheory idx $ \ti -> do
 
 postEditPathR _ _ =
   jsonResp $ JsonAlert $ "Editing for this path is not implemented!"
+-}
 
 
 -- | Run the autoprover on a given proof path.
 getAutoProverR :: TheoryIdx -> TheoryPath -> Handler RepJson
-getAutoProverR idx path = liftIOHandler $ do
+getAutoProverR idx path = do
     jsonValue <- withTheory idx (go path)
-    return $ RepJson $ toContent $ fromValue jsonValue
+    return $ RepJson $ toContent jsonValue
   where
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
       (\thy -> 
@@ -585,9 +601,9 @@ getAutoProverR idx path = liftIOHandler $ do
 
 -- | Delete a given proof step.
 getDeleteStepR :: TheoryIdx -> TheoryPath -> Handler RepJson
-getDeleteStepR idx path = liftIOHandler $ do
+getDeleteStepR idx path = do
     jsonValue <- withTheory idx (go path)
-    return $ RepJson $ toContent $ fromValue jsonValue
+    return $ RepJson $ toContent jsonValue
   where
     go (TheoryLemma lemma) ti = modifyTheory ti
       (return . removeLemma lemma)
@@ -638,8 +654,9 @@ getDownloadTheoryR idx _ = do
 getUnloadTheoryR :: TheoryIdx -> Handler RepPlain
 getUnloadTheoryR idx = do
     delTheory idx 
-    redirect RedirectPermanent RootR
+    redirect RootR
 
+{-
 -- | Show a list of all currently running threads.
 getThreadsR :: Handler RepHtml
 getThreadsR = do
@@ -647,3 +664,4 @@ getThreadsR = do
     defaultLayout $ do
       setTitle "Registered threads"
       addWidget (threadsTpl threads)
+-}

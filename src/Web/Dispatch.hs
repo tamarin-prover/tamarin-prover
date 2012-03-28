@@ -26,7 +26,7 @@ import Web.Handler
 import Web.Settings
 
 import Yesod.Core
-import Yesod.Helpers.Static
+import Yesod.Static
 import Network.Wai
 
 import qualified Data.Map as M
@@ -47,6 +47,7 @@ import System.FilePath
 import System.Directory
 
 -- | Create YesodDispatch instance for the interface.
+-- mkYesodDispatch "WebUI" resourcesWebUI
 mkYesodDispatch "WebUI" resourcesWebUI
 
 -- | Static route for favicon file.
@@ -55,7 +56,7 @@ faviconRoute = StaticRoute ["img", "favicon.ico"] []
 
 -- | Favicon handler function (favicon.ico).
 getFaviconR :: Handler ()
-getFaviconR = redirect RedirectPermanent (StaticR faviconRoute)
+getFaviconR = redirect (StaticR faviconRoute)
 
 -- | Robots file handler function (robots.txt).
 getRobotsR :: Handler RepPlain
@@ -69,20 +70,21 @@ withWebUI :: FilePath                        -- ^ Working directory.
           -> (String -> IO ClosedTheory)     -- ^ Theory loader (from string).
           -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
-          -> Maybe FilePath                  -- ^ Path to static content directory
+          -> FilePath                        -- ^ Path to static content directory
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
 withWebUI thDir loadState autosave thLoader thParser thCloser debug' stPath f = do
     thy    <- getTheos
     thrVar <- newMVar M.empty
     thyVar <- newMVar thy
+    st     <- static stPath
     when autosave $ createDirectoryIfMissing False autosaveDir
     (`E.finally` shutdownThreads thrVar) $
       f =<< toWaiApp WebUI
         { workDir            = thDir 
         , parseThy           = liftIO . thParser
         , closeThy           = thCloser
-        , getStatic          = static $ fromMaybe defaultStaticDir stPath
+        , getStatic          = st
         , theoryVar          = thyVar
         , threadVar          = thrVar
         , autosaveProofstate = autosave

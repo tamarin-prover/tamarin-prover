@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Copyright   : (c) 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -6,7 +8,6 @@
 --
 -- 'Document' class allowing to have different interpretations of the
 -- HughesPJ pretty-printing combinators.
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Text.PrettyPrint.Class (
         P.Doc
      ,  Document(..)
@@ -18,6 +19,8 @@ module Text.PrettyPrint.Class (
      ,  P.Mode(..)
 
      , ($--$)
+     , emptyDoc
+     , (<>)
      , semi 
      , colon
      , comma
@@ -48,17 +51,31 @@ module Text.PrettyPrint.Class (
 import Prelude
 import qualified Text.PrettyPrint.HughesPJ as P
 import Control.DeepSeq
+import Data.Monoid
 
-infixl 6 <> 
-infixl 6 <->
+infixr 6 <->
 infixl 5 $$, $-$, $--$
 
-class NFData d => Document d where
+-- infixl 6 <> 
+
+#if __GLASGOW_HASKELL__ < 704
+
+infixr 6 <>
+
+-- | An infix synonym for 'mappend'.
+(<>) :: Monoid m => m -> m -> m
+(<>) = mappend
+{-# INLINE (<>) #-}
+
+#endif
+
+-- emptyDoc = P.empty
+-- (<>)  = (P.<>)
+
+class (Monoid d, NFData d) => Document d where
   char :: Char -> d
   text :: String -> d
   zeroWidthText :: String -> d
-  emptyDoc :: d
-  (<>)  :: d -> d -> d
   (<->) :: d -> d -> d
   hcat  :: [d] -> d
   hsep  :: [d] -> d
@@ -72,27 +89,9 @@ class NFData d => Document d where
   nest  :: Int -> d -> d
   caseEmptyDoc :: d -> d -> d -> d
 
-instance NFData P.Doc where
-  rnf = rnf . P.render
-
-instance Document P.Doc where
-  char = P.char
-  text = P.text
-  zeroWidthText = P.zeroWidthText
-  emptyDoc = P.empty
-  (<>)  = (P.<>)
-  (<->) = (P.<+>)
-  hcat  = P.hcat
-  hsep  = P.hsep
-  ($$)  = (P.$$)
-  ($-$) = (P.$+$)
-  vcat  = P.vcat
-  sep   = P.sep
-  cat   = P.cat
-  fsep  = P.fsep
-  fcat  = P.fcat
-  nest  = P.nest
-  caseEmptyDoc yes no d = if P.isEmpty d then yes else no
+-- | The empty document.
+emptyDoc :: Document d => d
+emptyDoc = mempty
 
 -- | Vertical concatentation of two documents with an empty line in between.
 ($--$) :: Document d => d -> d -> d
@@ -145,3 +144,29 @@ punctuate p (d:ds) = go d ds
                    where
                      go d' [] = [d']
                      go d' (e:es) = (d' <> p) : go e es
+
+
+------------------------------------------------------------------------------
+-- The 'Document' instance for 'Text.PrettyPrint.Doc'
+------------------------------------------------------------------------------
+
+instance NFData P.Doc where
+  rnf = rnf . P.render
+
+instance Document P.Doc where
+  char = P.char
+  text = P.text
+  zeroWidthText = P.zeroWidthText
+  (<->) = (P.<+>)
+  hcat  = P.hcat
+  hsep  = P.hsep
+  ($$)  = (P.$$)
+  ($-$) = (P.$+$)
+  vcat  = P.vcat
+  sep   = P.sep
+  cat   = P.cat
+  fsep  = P.fsep
+  fcat  = P.fcat
+  nest  = P.nest
+  caseEmptyDoc yes no d = if P.isEmpty d then yes else no
+

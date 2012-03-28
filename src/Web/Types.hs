@@ -16,7 +16,7 @@ Portability :  non-portable
 
 module Web.Types
   ( WebUI(..)
-  , WebUIRoute (..)
+  , Route (..)
   , resourcesWebUI
   , TheoryInfo(..)
   , TheoryPath(..)
@@ -28,9 +28,9 @@ module Web.Types
   , TheoryIdx
   , TheoryMap
   , ThreadMap
-  , GenericHandler
+  -- , GenericHandler
   , Handler
-  , GenericWidget
+  -- , GenericWidget
   , Widget
   ) 
 where
@@ -38,7 +38,7 @@ where
 import Theory
 
 import Yesod.Core
-import Yesod.Helpers.Static
+import Yesod.Static
 
 import Text.Hamlet
 import Text.Printf
@@ -55,7 +55,7 @@ import Control.Concurrent
 import qualified Data.Map as M
 import qualified Data.Text as T
 
-import Control.Monad.IO.Class
+-- import Control.Monad.IO.Class
 import Control.Applicative
 
 ------------------------------------------------------------------------------
@@ -63,12 +63,12 @@ import Control.Applicative
 ------------------------------------------------------------------------------
 
 -- | Type synonym for a generic handler inside our site.
-type GenericHandler m = GGHandler WebUI WebUI m
-type Handler a = GHandler WebUI WebUI a
+-- type GenericHandler m = GHandler WebUI WebUI m
+-- type Handler a = GHandler WebUI WebUI a
 
 -- | Type synonym for a generic widget inside our site.
-type GenericWidget m = GGWidget WebUI (GenericHandler m)
-type Widget a = GWidget WebUI WebUI a
+-- type GenericWidget m = GWidget WebUI (GenericHandler m)
+-- type Widget a = GWidget WebUI WebUI a
 
 -- | Type synonym representing a numeric index for a theory.
 type TheoryIdx = Int
@@ -87,7 +87,8 @@ data WebUI = WebUI
     -- ^ Settings for static file serving.
   , workDir     :: FilePath
     -- ^ The working directory (for storing/loading theories).
-  , parseThy    :: MonadIO m => String -> GenericHandler m ClosedTheory
+  -- , parseThy    :: MonadIO m => String -> GenericHandler m ClosedTheory
+  , parseThy    :: String -> IO ClosedTheory
     -- ^ Parse a closed theory according to command-line arguments.
   , closeThy    :: OpenTheory -> IO ClosedTheory
     -- ^ Close an open theory according to command-line arguments.
@@ -254,41 +255,41 @@ joinPath' = intercalate "/" . map escape
 -- Note that handlers ending in R are general handlers,
 -- whereas handlers ending in MR are for the main view
 -- and the ones ending in DR are for the debug view.
-mkYesodData "WebUI" [PARSE_ROUTES|
-/ RootR GET POST
-/thy/#Int/overview OverviewR GET
-/thy/#Int/source TheorySourceR GET
-/thy/#Int/variants TheoryVariantsR GET
-/thy/#Int/message TheoryMessageDeductionR GET
-/thy/#Int/main/MP(TheoryPath) TheoryPathMR GET
-/thy/#Int/debug/MP(TheoryPath) TheoryPathDR GET
-/thy/#Int/graph/MP(TheoryPath) TheoryGraphR GET
-/thy/#Int/autoprove/MP(TheoryPath) AutoProverR GET
-/thy/#Int/next/#String/MP(TheoryPath) NextTheoryPathR GET
-/thy/#Int/prev/#String/MP(TheoryPath) PrevTheoryPathR GET
-/thy/#Int/save SaveTheoryR GET
-/thy/#Int/download/#String DownloadTheoryR GET
-/thy/#Int/edit/source EditTheoryR GET POST
-/thy/#Int/edit/path/MP(TheoryPath) EditPathR GET POST
-/thy/#Int/del/path/MP(TheoryPath) DeleteStepR GET
-/thy/#Int/unload UnloadTheoryR GET
-/kill KillThreadR GET
-/threads ThreadsR GET
-/robots.txt RobotsR GET
-/favicon.ico FaviconR GET
-/static StaticR Static getStatic
+mkYesodData "WebUI" [parseRoutes|
+/                                     RootR                   GET -- POST
+/thy/#Int/overview                    OverviewR               GET
+/thy/#Int/source                      TheorySourceR           GET
+-- /thy/#Int/variants                    TheoryVariantsR         GET
+/thy/#Int/message                     TheoryMessageDeductionR GET
+/thy/#Int/main/MP(TheoryPath)         TheoryPathMR            GET
+-- /thy/#Int/debug/MP(TheoryPath)        TheoryPathDR            GET
+/thy/#Int/graph/MP(TheoryPath)        TheoryGraphR            GET
+/thy/#Int/autoprove/MP(TheoryPath)    AutoProverR             GET
+/thy/#Int/next/#String/MP(TheoryPath) NextTheoryPathR         GET
+/thy/#Int/prev/#String/MP(TheoryPath) PrevTheoryPathR         GET
+-- /thy/#Int/save                        SaveTheoryR             GET
+/thy/#Int/download/#String            DownloadTheoryR         GET
+-- /thy/#Int/edit/source                 EditTheoryR             GET POST
+-- /thy/#Int/edit/path/MP(TheoryPath)    EditPathR               GET POST
+/thy/#Int/del/path/MP(TheoryPath)     DeleteStepR             GET
+/thy/#Int/unload                      UnloadTheoryR           GET
+-- /kill                                 KillThreadR             GET
+-- /threads                              ThreadsR                GET
+/robots.txt                           RobotsR                 GET
+/favicon.ico                          FaviconR                GET
+/static                               StaticR                 Static getStatic
 |]
 
 -- | MultiPiece instance for TheoryPath.
-instance MultiPiece TheoryPath where
-  toMultiPiece = map T.pack . renderPath
-  fromMultiPiece = parsePath . map T.unpack
+instance PathMultiPiece TheoryPath where
+  toPathMultiPiece   = map T.pack . renderPath
+  fromPathMultiPiece = parsePath . map T.unpack
 
 -- Instance of the Yesod typeclass.
 instance Yesod WebUI where
   -- | The approot. We can leave this empty because the
   -- application is always served from the root of the server.
-  approot _ = T.empty
+  approot = ApprootStatic T.empty
 
   -- | The default layout for rendering.
   defaultLayout = defaultLayout'
@@ -306,9 +307,11 @@ instance Yesod WebUI where
 -- | Our application's default layout template.
 -- Note: We define the default layout here even tough it doesn't really
 -- belong in the "types" module in order to avoid mutually recursive modules.
-defaultLayout' :: (Yesod master, Route master ~ WebUIRoute) 
-               => GWidget sub master ()      -- ^ Widget to embed in layout
-               -> GHandler sub master RepHtml
+-- defaultLayout' :: (Yesod master, Route master ~ WebUIRoute) 
+--                => GWidget sub master ()      -- ^ Widget to embed in layout
+--                -> GHandler sub master RepHtml
+defaultLayout' :: Yesod master =>
+                  GWidget sub master () -> GHandler sub master RepHtml
 defaultLayout' w = do
   page <- widgetToPageContent w
   message <- getMessage

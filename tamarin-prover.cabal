@@ -128,7 +128,7 @@ flag test-coverage
     default: True
     description: Build with test coverage support
 
-Flag build-tests
+flag build-tests
   default:     False
   description: Build unit test driver
 
@@ -146,25 +146,50 @@ executable tamarin-prover
     hs-source-dirs:    src
     main-is:           Main.hs
 
+    if flag(no-gui)
+      cpp-options: -DNO_GUI
+
+    if !flag(no-gui)
+      -- To help the top-down solver we put the more difficult to solve yesod
+      -- dependencies up front.
+      build-depends:
+          bytestring        == 0.9.*
+        , blaze-html        == 0.4.*
+        , http-types        == 0.6.*
+        , blaze-builder     == 0.3.*
+        , yesod-core        == 0.10.*
+        , yesod-json        == 0.3.*
+        , yesod-static      == 0.10.*
+        -- , yesod-form        == 0.4.*   -- required once we reactivate editing
+        , text              == 0.11.*
+        , wai               == 1.1.*
+        , hamlet            == 0.10.*
+        , warp              == 1.1.*
+        , aeson             == 0.6.*
+        , old-locale        == 1.0.*
+        , monad-control     == 0.3.*
+        , lifted-base
+        , threads           == 0.4.*
+
     build-depends:
         base              == 4.*
-      , array             == 0.3.*
-      , deepseq           == 1.2.*
+      , deepseq           == 1.3.*
+      , array             >= 0.3   && < 0.5
       , containers        >= 0.4.2 && < 0.5
       , mtl               == 2.0.*
       , cmdargs           == 0.9.*
-      , filepath          >= 1.1   && < 1.3
+      , filepath          >= 1.1   && < 1.4
       , directory         >= 1.0   && < 1.2
-      , process           == 1.0.*
+      , process           == 1.1.*
       , parsec            == 3.1.*
       , safe              >= 0.2  && < 0.4
       , transformers      == 0.2.*
-      , fclabels          == 1.0.*
+      , fclabels          == 1.1.*
       , uniplate          == 1.6.*
       , syb               == 0.3.* && >= 0.3.3
       , binary            == 0.5.*
       , derive            == 2.5.*
-      , time              == 1.2.*
+      , time              >= 1.2   && < 1.5
       , parallel          == 3.2.*
       , HUnit             == 1.2.*
 
@@ -213,33 +238,3 @@ executable tamarin-prover
       Web.Handler
       Web.Dispatch
 
-  if flag(no-gui)
-    cpp-options: -DNO_GUI
-
-  if !flag(no-gui)
-
-    build-depends:
-        bytestring        == 0.9.*
-      , http-types        == 0.6.*
-      , blaze-builder     == 0.3.*
-      , yesod-core        == 0.8.*
-      , yesod-json        == 0.1.*
-      , yesod-static      == 0.1.*
-      , yesod-form        == 0.1.*
-      , text              == 0.11.*
-      , wai               == 0.4.*
-      , hamlet            == 0.8.*
-      , warp              == 0.4.*
-      , aeson             == 0.3.*
-      , old-locale        == 1.0.*
-      , monad-control     == 0.2.*
-      , threads           == 0.4.*
-
-    -- extra deps to get it building on GHC 7.0.3 without the new modular
-    --solver of cabal-install, activated with flag --solver=modular
-    if impl(ghc <= 7.2)
-
-      build-depends:
-          template-haskell == 2.5.*
-        , data-default     == 0.2.*
-        , wai-extra        == 0.4.3

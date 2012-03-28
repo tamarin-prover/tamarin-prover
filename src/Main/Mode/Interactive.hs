@@ -82,7 +82,7 @@ run thisMode as = case findArg "workDir" as of
             ]
           withWebUI workDir (argExists "loadstate" as) (argExists "autosave" as)
             (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
-            (argExists "debug" as) (Just dataDir) (Warp.run port)
+            (argExists "debug" as) dataDir (Warp.run port)
         
         else helpAndExit thisMode
                (Just $ "directory '" ++ workDir ++ "' does not exist.")
