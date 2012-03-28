@@ -1,5 +1,6 @@
 {-# LANGUAGE TupleSections, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ViewPatterns, TypeSynonymInstances, FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |
