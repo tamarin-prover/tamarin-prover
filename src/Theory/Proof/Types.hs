@@ -111,7 +111,8 @@ module Theory.Proof.Types (
   , pcSignature
   , pcRules
   , pcCaseDists
-
+  , pcCaseDistKind
+  , pcUseInduction
 
   -- ** Classified rules
   , ClassifiedRules(..)
@@ -127,7 +128,6 @@ module Theory.Proof.Types (
   -- ** Big-step case distinctions
   -- | See the module "Theory.Proof.CaseDistinction" for ways
   -- to construct case distinctions.
-  , BigStepGoal(..)
   , CaseDistinction(..)
   
   , cdGoal
@@ -762,22 +762,18 @@ joinAllRules (ClassifiedRules a b c d) = a ++ b ++ c ++ d
 
 -- | Extract all non-silent rules.
 nonSilentRules :: ClassifiedRules -> [RuleAC]
-nonSilentRules = filter (not . null . L.get rActs) . L.get crProtocol
+nonSilentRules rules = 
+    filter (not . null . L.get rActs) $ 
+    L.get crProtocol rules ++ L.get crConstruct rules
 
 
 ------------------------------------------------------------------------------
 -- Proof Context
 ------------------------------------------------------------------------------
 
--- | A goal for a big step case distinction.
-data BigStepGoal = 
-       PremiseBigStep LNFact
-     | MessageBigStep LNTerm
-     deriving( Eq, Ord, Show )
-
 -- | A big-step case distinction.
 data CaseDistinction = CaseDistinction
-     { _cdGoal     :: BigStepGoal   -- start goal of case distinction
+     { _cdGoal     :: LNFact   -- start goal of case distinction
        -- disjunction of named sequents with premise being solved; each name
        -- being the path of proof steps required to arrive at these cases
      , _cdCases    :: Disj ([String], (NodeConc, Sequent))
@@ -787,9 +783,11 @@ data CaseDistinction = CaseDistinction
 -- | A proof context contains the globally fresh facts, classified rewrite
 -- rules and the corresponding precomputed premise case distinction theorems.
 data ProofContext = ProofContext 
-       { _pcSignature  :: SignatureWithMaude
-       , _pcRules      :: ClassifiedRules
-       , _pcCaseDists  :: [CaseDistinction]
+       { _pcSignature    :: SignatureWithMaude
+       , _pcRules        :: ClassifiedRules
+       , _pcCaseDistKind :: CaseDistKind
+       , _pcCaseDists    :: [CaseDistinction]
+       , _pcUseInduction :: Bool
        }
        deriving( Eq, Ord, Show )
 
@@ -808,20 +806,6 @@ instance HasFrees CaseDistinction where
                                     <*> mapFrees f (L.get cdCases th)
 
 
--- Instances
-------------
-
-instance HasFrees BigStepGoal where
-    foldFrees f (PremiseBigStep fa) = foldFrees f fa
-    foldFrees f (MessageBigStep m)  = foldFrees f m
-
-    mapFrees f (PremiseBigStep fa) = PremiseBigStep <$> mapFrees f fa
-    mapFrees f (MessageBigStep m)  = MessageBigStep <$> mapFrees f m
-
-instance Apply BigStepGoal where
-    apply subst (PremiseBigStep fa) = PremiseBigStep (apply subst fa)
-    apply subst (MessageBigStep m)  = MessageBigStep (apply subst m)
-
 -- NFData
 ---------
 
@@ -832,7 +816,6 @@ $( derive makeBinary ''Edge)
 $( derive makeBinary ''EqStore)
 $( derive makeBinary ''CaseDistKind)
 $( derive makeBinary ''Sequent)
-$( derive makeBinary ''BigStepGoal)
 $( derive makeBinary ''CaseDistinction)
 $( derive makeBinary ''ClassifiedRules)
 
@@ -843,6 +826,5 @@ $( derive makeNFData ''Edge)
 $( derive makeNFData ''EqStore)
 $( derive makeNFData ''CaseDistKind)
 $( derive makeNFData ''Sequent)
-$( derive makeNFData ''BigStepGoal)
 $( derive makeNFData ''CaseDistinction)
 $( derive makeNFData ''ClassifiedRules)

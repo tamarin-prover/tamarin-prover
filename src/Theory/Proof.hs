@@ -500,14 +500,12 @@ execProofMethod ctxt method se =
               emptySequent (L.get sCaseDistKind se) 
 
 -- | A list of possibly applicable proof methods.
-possibleProofMethods :: SignatureWithMaude -> Sequent -> [ProofMethod]
-possibleProofMethods sig se =
-         ((Contradiction . Just) <$> contradictions sig se)
-     -- For now (12/01/22), we add induction after simplification to ensure
-     -- that the autoprover doesn't use induction. (Induction can only be
-     -- executed in a sequent that contains exactly one formula eligible for
-     -- induction.)
-     <|> [Simplify, Induction]
+possibleProofMethods :: ProofContext -> Sequent -> [ProofMethod]
+possibleProofMethods ctxt se =
+         ((Contradiction . Just) <$> contradictions (L.get pcSignature ctxt) se)
+     <|> (if L.get pcUseInduction ctxt
+            then [Induction, Simplify]
+            else [Simplify, Induction])
      <|> (SolveGoal <$> openGoals se)
 
 -- | @proveSequentDFS rules se@ tries to construct a proof that @se@ is valid
@@ -523,7 +521,7 @@ proveSequentDFS ctxt se0 =
       where
         (method, cases) = 
             headDef (Attack, M.empty) $ do
-                m <- possibleProofMethods (L.get pcSignature ctxt) se 
+                m <- possibleProofMethods ctxt se 
                 (m,) <$> maybe mzero return (execProofMethod ctxt m se)
 
 
@@ -561,7 +559,7 @@ checkProof :: ProofContext
            -> Proof (Maybe a, Maybe Sequent)
 checkProof ctxt prover se (LNode (ProofStep method info) cs) =
     fromMaybe (node method (M.map noSequentPrf cs)) $ headMay $ do
-        method' <- method : possibleProofMethods (L.get pcSignature ctxt) se
+        method' <- method : possibleProofMethods ctxt se
         -- FIXME: eqModuloFreshness is too strict currently as it doesn't
         -- rename variables to a canonical representative. Moreover, it screws
         -- up if there are AC symbols involved.

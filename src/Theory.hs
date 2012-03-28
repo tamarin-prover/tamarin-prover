@@ -207,7 +207,7 @@ closeRuleCache :: [LNGuarded]        -- ^ Typing lemmas.
 closeRuleCache typingAsms sig protoRules intrRulesAC = 
     ClosedRuleCache classifiedRules untypedCaseDists typedCaseDists
   where
-    ctxt0 = ProofContext sig classifiedRules []
+    ctxt0 = ProofContext sig classifiedRules UntypedCaseDist [] False {- No induction -}
     -- precomputing the case distinctions
     untypedCaseDists = precomputeCaseDistinctions ctxt0 [] 
     typedCaseDists   = 
@@ -242,6 +242,7 @@ closeRuleCache typingAsms sig protoRules intrRulesAC =
 data LemmaAttribute = 
          TypingLemma
        | ReuseLemma
+       | InvariantLemma
        deriving( Eq, Ord, Show )
 
 -- | A lemma describes a property that holds in the context of a theory
@@ -286,7 +287,7 @@ skeletonLemma name atts fmE = Lemma name fmE Nothing atts
 lemmaCaseDistKind :: Lemma p -> CaseDistKind
 lemmaCaseDistKind lem
   | TypingLemma `elem` L.get lAttributes lem = UntypedCaseDist
-  | otherwise                              = TypedCaseDist
+  | otherwise                                = TypedCaseDist
    
 
 ------------------------------------------------------------------------------
@@ -440,14 +441,18 @@ getProtoRuleEs :: ClosedTheory -> [ProtoRuleE]
 getProtoRuleEs = map openProtoRule . theoryRules 
 
 -- | Get the proof context for a lemma of the closed theory.
-getProofContext :: CaseDistKind -> ClosedTheory -> ProofContext
-getProofContext kind thy = ProofContext
+getProofContext :: Lemma a -> ClosedTheory -> ProofContext
+getProofContext l thy = ProofContext
     ( L.get thySignature          thy)
     ( L.get (crcRules . thyCache) thy)
+    kind
     ( L.get (cases . thyCache)    thy)
+    useIndu
   where
-    cases = case kind of UntypedCaseDist -> crcUntypedCaseDists
-                         TypedCaseDist   -> crcTypedCaseDists
+    kind    = lemmaCaseDistKind l
+    useIndu = any (`elem` [TypingLemma, InvariantLemma]) (L.get lAttributes l)
+    cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
+                           TypedCaseDist   -> crcTypedCaseDists
 
 -- | The classified set of rules modulo AC in this theory.
 getClassifiedRules :: ClosedTheory -> ClassifiedRules
@@ -564,13 +569,11 @@ applyPartialEvaluation evalStyle thy0 =
 -------------------
 
 -- | A list of proof methods that could be applied to the given sequent.
-applicableProofMethods :: ClosedTheory -> Sequent -> [ProofMethod]
-applicableProofMethods thy se = do
-    m <- possibleProofMethods (L.get pcSignature ctxt) se
+applicableProofMethods :: ProofContext -> Sequent -> [ProofMethod]
+applicableProofMethods ctxt se = do
+    m <- possibleProofMethods ctxt se
     guard (isJust $ execProofMethod ctxt m se)
     return m
-  where
-    ctxt = getProofContext (L.get sCaseDistKind se) thy
 
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.
@@ -588,15 +591,14 @@ proveTheory prover thy =
         modify lProof add l
       where
         l       = ensureFormulaAC l0
-        kind    = lemmaCaseDistKind l
-        se      = formulaToSequent kind preItems $ fromJust $ L.get lFormulaAC l
-        ctxt    = getProofContext kind thy
+        ctxt    = getProofContext l thy 
+        se      = formulaToSequent ctxt preItems $ fromJust $ L.get lFormulaAC l
         add prf = fromMaybe prf $ runProver prover ctxt se prf
 
 -- | Convert a formula modulo AC to a sequent.
-formulaToSequent :: CaseDistKind -> [TheoryItem r p] -> FormulaAC -> Sequent
-formulaToSequent kind lems = 
-    addLemmasToSequent lems . sequentFromFormula kind
+formulaToSequent :: ProofContext -> [TheoryItem r p] -> FormulaAC -> Sequent
+formulaToSequent ctxt lems = 
+    addLemmasToSequent lems . sequentFromFormula (L.get pcCaseDistKind ctxt)
 
 -- | Add the lemmas that have an associated AC variant to this sequent.
 addLemmasToSequent :: [TheoryItem r p] -> Sequent -> Sequent
@@ -646,9 +648,8 @@ modifyLemmaProof prover name thy =
 
     change preItems (LemmaItem l0) = do
          let l1   = ensureFormulaAC l0
-             kind = lemmaCaseDistKind l1
-             ctxt = getProofContext kind thy
-         se <- formulaToSequent kind preItems <$> L.get lFormulaAC l1
+             ctxt = getProofContext l1 thy
+         se <- formulaToSequent ctxt preItems <$> L.get lFormulaAC l1
          l2 <- modA lProof (runProver prover ctxt se) l1
          return $ LemmaItem l2
     change _ _ = error "LemmaProof: change: impossible"
@@ -692,8 +693,9 @@ prettyLemmaName l = case L.get lAttributes l of
       as -> text (L.get lName l) <->
             (brackets $ fsep $ punctuate comma $ map prettyLemmaAttribute as)
   where
-    prettyLemmaAttribute TypingLemma = text "typing"
-    prettyLemmaAttribute ReuseLemma  = text "reuse"
+    prettyLemmaAttribute TypingLemma    = text "typing"
+    prettyLemmaAttribute ReuseLemma     = text "reuse"
+    prettyLemmaAttribute InvariantLemma = text "invariant"
 
 -- | Pretty print a lemma.
 prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d

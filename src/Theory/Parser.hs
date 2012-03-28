@@ -389,6 +389,7 @@ fact plit =
       "IN"  -> singleTerm f inFact
       "KU"  -> return . Fact KUFact
       "KD"  -> return . Fact KDFact
+      "DED" -> return . Fact DedFact
       "FR"  -> singleTerm f freshFact
       _     -> return . protoFact multi f
 
@@ -700,8 +701,9 @@ iff = do
 -- | Parse a lemma attribute.
 lemmaAttribute :: Parser LemmaAttribute
 lemmaAttribute = asum
-  [ string "typing" *> pure TypingLemma
-  , string "reuse"  *> pure ReuseLemma
+  [ string "typing"    *> pure TypingLemma
+  , string "reuse"     *> pure ReuseLemma
+  , string "invariant" *> pure InvariantLemma
   ]
 
 -- | Parse a lemma.

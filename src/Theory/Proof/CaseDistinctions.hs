@@ -1,6 +1,7 @@
-{-# LANGUAGE DeriveDataTypeable, TupleSections, TypeOperators #-}
-{-# LANGUAGE TemplateHaskell, TypeSynonymInstances, FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable, TupleSections, TypeOperators,
+             TemplateHaskell, TypeSynonymInstances, FlexibleInstances,
+             FlexibleContexts, GeneralizedNewtypeDeriving, ViewPatterns
+  #-}
 -- |
 -- Copyright   : (c) 2011,2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -44,29 +45,13 @@ import           Control.Monad.Reader
 import           Control.Monad.State (gets)
 import           Control.Parallel.Strategies
 
-import           Text.Isar
+import           Text.PrettyPrint.Highlight
 
 import           Extension.Prelude
 import           Extension.Data.Label
 
 import           Theory.Rule
 import           Theory.Proof.Sequent
-
-
--- | AC-Matching for big-step goals. MessageBigSteps can be matched
--- to the corresponding K-up facts.
-matchBigStepGoal :: BigStepGoal -- ^ Term.
-                 -> BigStepGoal -- ^ Pattern.
-                 -> WithMaude [LNSubst]
-matchBigStepGoal (PremiseBigStep faTerm) (PremiseBigStep faPat) =
-    matchLNFact faTerm faPat
-matchBigStepGoal (MessageBigStep mTerm) (MessageBigStep mPat) =
-    matchLNTerm [mTerm `MatchWith` mPat]
-matchBigStepGoal (MessageBigStep mTerm) (PremiseBigStep faPat) =
-    case kFactView faPat of
-      Just (UpK, _, mPat) -> matchLNTerm [mTerm `MatchWith` mPat]
-      _                   -> return []
-matchBigStepGoal _ _ = return []
 
 
 ------------------------------------------------------------------------------
@@ -86,35 +71,23 @@ unsolvedChainConstraints =
 -- given typing assumptions are justified.
 initialCaseDistinction :: ProofContext 
                        -> [LNGuarded] -- ^ Typing assumptions.
-                       -> BigStepGoal -> CaseDistinction
-initialCaseDistinction ctxt typAsms goal =
-    CaseDistinction goal cases
+                       -> LNFact -> CaseDistinction
+initialCaseDistinction ctxt typAsms goalFa =
+    CaseDistinction goalFa cases
   where
     polish (((name, prem), se), _) = ([name], (prem, se))
     se0   = set sFormulas (S.fromList typAsms) (emptySequent UntypedCaseDist)
-    cases = fmap polish $ runSeProof instantiate ctxt se0 (avoid (goal, se0))
+    cases = fmap polish $ runSeProof instantiate ctxt se0 (avoid (goalFa, se0))
     instantiate = do
         i <- freshLVar "i" LSortNode
         let p   = (i, PremIdx 0)
             err = error . ("requiresCasesThm: no or too many edges: " ++)
-        case goal of
-            PremiseBigStep fa -> do
-                name <- solveGoal (PremiseG p fa False)
-                edges <- getM sEdges
-                case filter ((p ==) . eTgt) (S.toList edges) of
-                  [e] -> do modM sEdges (S.delete e)
-                            return (name, eSrc e)
-                  es  -> err $ show es
-
-            -- FIXME: Probably this code is not required.
-            MessageBigStep m  -> do
-                name <- solveGoal (PremUpKG p m)
-                edges <- getM sMsgEdges
-                case filter ((p ==) . meTgt) (S.toList edges) of
-                  [e] -> do modM sMsgEdges (S.delete e)
-                            return (name, meSrc e)
-                  es  -> err $ show es
-
+        name <- solveGoal (PremiseG p goalFa False)
+        edges <- getM sEdges
+        case filter ((p ==) . eTgt) (S.toList edges) of
+          [e] -> do modM sEdges (S.delete e)
+                    return (name, eSrc e)
+          es  -> err $ show es
 
 -- | Refine a source case distinction by applying the additional proof step.
 refineCaseDistinction 
@@ -182,26 +155,60 @@ solveAllSafeGoals ths =
           Nothing   -> return $ caseNames
           Just step -> solve . (caseNames ++) =<< step
 
--- | Try to solve a premise goal using the first precomputed case distinction
--- with a matching premise.
+
+------------------------------------------------------------------------------
+-- Applying precomputed case distinctions
+------------------------------------------------------------------------------
+
+-- | A goal for a big step case distinction.
+data BigStepGoal = 
+       PremiseBigStep NodePrem LNFact Bool
+     | MessageBigStep (Either NodeId NodePrem) LNTerm
+       -- ^ Left means solving a deduction action, Right a node premise.
+     deriving( Eq, Ord, Show )
+
+-- | Convert a standard goal to a big-step goal.
+toBigStepGoal :: Goal -> Maybe BigStepGoal
+toBigStepGoal goal = case goal of
+    PremiseG p fa mayLoop             -> return $ PremiseBigStep p fa mayLoop
+    PremUpKG p m                      -> return $ MessageBigStep (Right p) m
+    ActionG i (dedFactView -> Just m) -> return $ MessageBigStep (Left i)  m
+    _                                 -> mzero
+
+fromBigStepGoal :: BigStepGoal -> Goal
+fromBigStepGoal goal = case goal of
+    PremiseBigStep p fa mayLoop -> PremiseG p fa mayLoop
+    MessageBigStep (Left i)  m  -> ActionG i (dedLogFact m)
+    MessageBigStep (Right p) m  -> PremUpKG p m
+
+
+-- | AC-Matching for big-step goals. MessageBigSteps can be matched
+-- to the corresponding K-up facts.
+matchBigStepGoal :: BigStepGoal -- ^ Term.
+                 -> LNFact      -- ^ Pattern.
+                 -> WithMaude [LNSubst]
+matchBigStepGoal (PremiseBigStep _ faTerm _) faPat = matchLNFact faTerm faPat
+matchBigStepGoal (MessageBigStep _ mTerm)    faPat =
+    case kFactView faPat of
+      Just (UpK, _, mPat) -> matchLNTerm [mTerm `MatchWith` mPat]
+      _                   -> return []
+
+-- | Try to solve a premise goal or 'Ded' action using the first precomputed
+-- case distinction with a matching premise.
 solveWithCaseDistinction :: MaudeHandle
                          -> [CaseDistinction] 
                          -> Goal
                          -> Maybe (SeProof [String])
-solveWithCaseDistinction hnd ths goal0 = case goal0 of 
-    PremiseG p fa _mayLoop -> applyTo p (PremiseBigStep fa)
-    PremUpKG p m           -> applyTo p (MessageBigStep m)
-    _                      -> mzero
-  where
-    applyTo p goal = asum [ applyCaseDistinction hnd th p goal | th <- ths ]
+solveWithCaseDistinction hnd ths goal0 = do
+    goal <- toBigStepGoal goal0
+    asum [ applyCaseDistinction hnd th goal | th <- ths ]
 
 -- | Apply a precomputed case distinction theorem to a required fact.
 applyCaseDistinction :: MaudeHandle
                      -> CaseDistinction    -- ^ Case distinction theorem.
-                     -> NodePrem           -- ^ Premise
                      -> BigStepGoal        -- ^ Required goal
                      -> Maybe (SeProof [String])
-applyCaseDistinction hnd th prem goal =
+applyCaseDistinction hnd th goal =
     case (`runReader` hnd) $ matchBigStepGoal goal (get cdGoal th) of
       [] -> Nothing
       _  -> Just $ do (names, subst, seTh) <- instTheorem
@@ -218,11 +225,15 @@ applyCaseDistinction hnd th prem goal =
                  matchBigStepGoal goal (get cdGoal instTh) `runReader` hnd
         (names, (concTh, seTh)) <- disjunctionOfList $ getDisj $ get cdCases instTh
 
-        let seTh' = case goal of
-              PremiseBigStep _ -> 
-                  modify sEdges (S.insert (Edge concTh prem)) seTh
-              MessageBigStep _ -> 
-                  modify sMsgEdges (S.insert (MsgEdge concTh prem)) seTh
+        seTh' <- case goal of
+            PremiseBigStep prem _ _ -> 
+                return $ modify sEdges (S.insert (Edge concTh prem)) seTh
+            MessageBigStep (Right prem) _ -> 
+                return $ modify sMsgEdges (S.insert (MsgEdge concTh prem)) seTh
+            MessageBigStep (Left i) m -> do
+                -- remove solved atom
+                modM sAtoms (S.delete (Action (varTerm i) (dedLogFact m)))
+                return seTh
 
         -- solving the matcher equalities and 
         -- conjoining the sequent will be done later
@@ -287,11 +298,11 @@ precomputeCaseDistinctions ctxt typAsms =
 
     nMsgVars n = [ varTerm (LVar "t" LSortMsg i) | i <- [1..n] ]
 
-    someProtoGoal :: (FactTag, Int) -> BigStepGoal
-    someProtoGoal (tag, arity) = PremiseBigStep $ Fact tag (nMsgVars arity)
+    someProtoGoal :: (FactTag, Int) -> LNFact
+    someProtoGoal (tag, arity) = Fact tag (nMsgVars arity)
 
-    someKUGoal :: LNTerm -> BigStepGoal
-    someKUGoal m = PremiseBigStep (Fact KUFact [varTerm (LVar "f_" LSortMsg 0), m])
+    someKUGoal :: LNTerm -> LNFact
+    someKUGoal m = Fact KUFact [varTerm (LVar "f_" LSortMsg 0), m]
 
     -- FIXME: Also use facts from proof context.
     rules = get pcRules ctxt
@@ -333,6 +344,7 @@ refineWithTypingAsms typAsms ctxt cases0 =
 -- Pretty-printing
 ------------------------------------------------------------------------------
 
-prettyBigStepGoal :: Document d => BigStepGoal -> d
-prettyBigStepGoal (PremiseBigStep fa) = prettyLNFact fa
-prettyBigStepGoal (MessageBigStep m)  = prettyLNTerm m
+prettyBigStepGoal :: HighlightDocument d => BigStepGoal -> d
+prettyBigStepGoal = prettyGoal . fromBigStepGoal
+
+

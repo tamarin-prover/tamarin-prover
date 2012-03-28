@@ -67,7 +67,8 @@ applyMethodAtPath :: ClosedTheory -> String -> ProofPath
 applyMethodAtPath thy lemmaName proofPath i = do
     lemma <- lookupLemma lemmaName thy
     subProof <- get lProof lemma `atPath` proofPath
-    methods <- applicableProofMethods thy <$> psInfo (root subProof)
+    let ctxt = getProofContext lemma thy
+    methods <- applicableProofMethods ctxt <$> psInfo (root subProof)
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPath thy lemmaName proofPath 
       (oneStepProver method `mappend` 
@@ -224,12 +225,12 @@ sequentSnippet se path = refDotPath path $-$ preformatted Nothing (prettySequent
 -- | A snippet that explains a sub-proof by displaying its proof state, the
 -- open-goals, and the new cases.
 subProofSnippet :: HtmlDocument d
-                => ClosedTheory              -- ^ The theory context.
+                => ProofContext              -- ^ The proof context.
                 -> (ProofPath -> TheoryPath) -- ^ Relative proof adressing
                 -> (Int -> TheoryPath)       -- ^ Relative proof method addressing
                 -> IncrementalProof          -- ^ The sub-proof.
                 -> d
-subProofSnippet thy mkProofPath mkPrfMethodPath prf = 
+subProofSnippet ctxt mkProofPath mkPrfMethodPath prf = 
     case psInfo $ root prf of
       Nothing -> text $ "no annotated sequent / " ++ nCases ++ " sub-case(s)"
       Just se -> vcat $
@@ -248,7 +249,7 @@ subProofSnippet thy mkProofPath mkPrfMethodPath prf =
       (mkPrfMethodPath i) ["proof-method"] (prettyProofMethod m)
 
     nCases   = show $ M.size $ children prf
-    proofMethods = map prettyPM . zip [1..] . applicableProofMethods thy
+    proofMethods = map prettyPM . zip [1..] . applicableProofMethods ctxt
     subCases = concatMap refSubCase $ M.toList $ children prf 
     refSubCase (name, prf') = 
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -268,7 +269,7 @@ htmlCaseDistinction kind (j, th) =
     cases    = concatMap ppCase $ zip [1..] $ getDisj $ get cdCases th
     wrapP    = withTag "p" [("class","monospace cases")]
     nCases   = int $ length $ getDisj $ get cdCases th
-    ppPrem   = nest 2 $ doubleQuotes $ prettyBigStepGoal $ get cdGoal th
+    ppPrem   = nest 2 $ doubleQuotes $ prettyLNFact $ get cdGoal th
     ppHeader = hsep 
       [ text "Sources of" <-> ppPrem
       , parens $ nCases <-> text "cases"
@@ -325,12 +326,12 @@ htmlThyPath thy path = go path
     go TheoryRules               = rulesSnippet thy
     go TheoryMessage             = messageSnippet thy
     go (TheoryCaseDist kind _ _) = reqCasesSnippet kind thy
-    go (TheoryProof l p)         = fromMaybe
-                                     (text "No such lemma or proof path.")
-                                     (subProofSnippet thy
-                                       (mkProofPath l p)
-                                       (TheoryMethod l p)
-                                     <$> resolveProofPath thy l p)
+    go (TheoryProof l p)         = 
+        fromMaybe (text "No such lemma or proof path.") $ do
+           lemma <- lookupLemma l thy
+           let ctxt = getProofContext lemma thy
+           subProofSnippet ctxt (mkProofPath l p) (TheoryMethod l p)
+             <$> resolveProofPath thy l p
     go (TheoryLemma _)      = text "Implement theory item pretty printing!"
     go _                    = text "Unhandled theory path. This is a bug."
 

@@ -869,7 +869,7 @@ openPremiseGoals se = do
 
           toplevelTerms t@(destPair -> Just (t1, t2)) = 
               t : toplevelTerms t1 ++ toplevelTerms t2
-          toplevelTerms t@(destInv -> Just t1) = t : toplevelTerms t1
+          toplevelTerms t@(destInverse -> Just t1) = t : toplevelTerms t1
           toplevelTerms t = [t]
 
           deducible = or $ do
@@ -901,8 +901,16 @@ openSplitGoals :: Sequent -> [Goal]
 openSplitGoals se = SplitG <$> eqSplits (get sEqStore se)
 
 -- | All open action goals.
+--
+-- FIXME: Only `Ded` goals that are guaranteed to be a non-pair,
+-- non-inversion, and non-product are considered open. This is wrong with
+-- respect to our definition of a solved form of the constraint system.
 openActionGoals :: Sequent -> [Goal]
-openActionGoals se = uncurry ActionG <$> sActionAtoms se
+openActionGoals se = do
+    (i, fa) <- sActionAtoms se
+    case dedFactView fa of
+        Just m | isPair m || isMsgVar m || isProduct m || isInverse m -> mzero
+        _ -> return $ ActionG i fa
 
 -- | All open goals (non-deterministic choices of possible proof steps) in the
 -- sequent.
@@ -932,7 +940,7 @@ openGoals se = delayUseless $ sortDecisionTree solveFirst $ concat $
 
     isFreshKnowsGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
-        _                                              -> False
+        _                                                           -> False
 
     isDoubleExpGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp (NonAC ("exp",2)) [_, viewTerm -> FApp (AC Mult) _]) -> True
@@ -953,6 +961,10 @@ sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
   where (sat, nonsat) = partition p xs
 
 -- | Solve an action goal.
+--
+-- PRE: If the action is a 'Ded' fact, then its argument must not be
+-- instantiatable to a pair, inversion, or a product.
+--
 solveAction :: [RuleAC]       -- ^ All rules labelled with an action
             -> (LVar, LNFact) -- ^ The action we are looking for.
             -> SeProof String -- ^ Sensible case name.
@@ -960,10 +972,15 @@ solveAction rules (i, fa) = do
     modM sAtoms (S.delete (Action (varTerm i) fa))
     mayRu <- M.lookup i <$> getM sNodes
     showRuleCaseName <$> case mayRu of
-        Nothing -> do ru  <- ruleNode i rules
-                      act <- disjunctionOfList $ get rActs ru
-                      solveFactEqs SplitNow [Equal fa act]
-                      return ru
+        Nothing -> do -- case dedFactView fa of
+            -- Just m  -> do -- 'Ded' facts are dealt with specially.
+                -- solvePremUpK 
+            -- Nothing -> do 
+                ru  <- ruleNode i rules
+                act <- disjunctionOfList $ get rActs ru
+                solveFactEqs SplitNow [Equal fa act]
+                return ru
+
         Just ru -> do unless (fa `elem` get rActs ru) $ do
                         act <- disjunctionOfList $ get rActs ru
                         solveFactEqs SplitNow [Equal fa act]

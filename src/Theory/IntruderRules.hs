@@ -61,19 +61,19 @@ specialIntruderRules =
     [ Rule CoerceRule
           [Fact KDFact [f_var, x_var]]
           [Fact KUFact [f_var,x_var]]
-          []
+          [dedLogFact x_var]
     , Rule (IntrApp "pub")
           []
           [Fact KUFact [f_var,x_pub_var]]
-          [] 
+          [dedLogFact x_pub_var] 
     , Rule (IntrApp "fresh")
           [Fact FreshFact [x_fresh_var]]
           [Fact KUFact [f_var,x_fresh_var]]
-          []
+          [dedLogFact x_fresh_var]
     , Rule (IntrApp "isend")
           [Fact KUFact [f_var, x_var]]
           [Fact InFact [x_var]]
-          [protoFact Linear "K" [x_var]]
+          [kLogFact x_var]
     ]
   where
     f_var       = varTerm (LVar "f_" LSortMsg   0)
@@ -139,8 +139,9 @@ constructionRules fSig =
     createRule s k = (`evalFresh` nothingUsed) $ do
         vars     <- map varTerm <$> (sequence $ replicate k (freshLVar "x" LSortMsg))
         pfacts   <- mapM (kuFact Nothing) vars
-        concfact <- kuFact (Just CanExp) (fApp (NonAC (s,k)) vars)
-        return $ Rule (IntrApp s) pfacts [concfact] []
+        let m = fApp (NonAC (s,k)) vars
+        concfact <- kuFact (Just CanExp) m
+        return $ Rule (IntrApp s) pfacts [concfact] [dedLogFact m]
 
 dropExpTag :: Fact a -> Fact a
 dropExpTag (Fact KUFact [_e,m]) = Fact KUFact [m]

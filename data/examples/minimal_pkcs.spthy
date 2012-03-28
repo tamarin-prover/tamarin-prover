@@ -4,21 +4,25 @@ begin
 builtin: symmetric-encryption
 
 rule NewKey: 
-	[ Fr(~key),Fr(~h) ] --[Create(~h,~key), Step()]-> [ !Store(~h,~key), Out(~h) ]
+  [ Fr(~h), Fr(~key) ] 
+  --[Create(~h,~key)]-> 
+  [ !Store(~h,~key), Out(~h) ]
 
 rule Wrap:
-	[!Store(h1,~k1),!Store(h2,~k2),In(<h1,h2>)] --[Wrap(~k1,~k2), Step()]-> [Out(senc(~k1,~k2))]
+  [ !Store(h1,~k1), !Store(h2,~k2), In(<h1,h2>)] 
+  --[Wrap(~k1,~k2)]->
+  [ Out(senc(~k1,~k2)) ]
 
-lemma key_secret:
-	"  not(Ex #i #j h k. Create(h,k) @ i & K(k) @ j) "
-
-/* In this property, Step() @ j & k  --| j formalizes that k is always secret.
-   Removing the Step() @ j would result in a formula that is not guarded.
-*/
-lemma cannot_obtain_key:
-	"  not(Ex #i #j h k.   Create(h,k) @ i & Step() @ j & k  --| j)
-         & not(Ex #i #j k1 k2. Wrap(k1,k2) @ i & Step() @ j & k1 --| j)
-         & not(Ex #i #j k1 k2. Wrap(k1,k2) @ i & Step() @ j & k2 --| j)"
+/* The 'reuse' attribute marks this property such that it should be used in
+ * proof of later theorems. This is what we'd like to do with such a property
+ * which proves that no created key can be deduced by the adversary. The
+ * 'invariant' attribute denotes that this property must is an inductive
+ * invariant of normal dependency graphs. Better names are up for dips ;-)
+ *
+ * Tamarin can prove this property automatically.
+ */
+lemma Created_key_secret [reuse, invariant]:
+  "not(Ex #i #j h k. Create(h, k) @ i & Ded(k) @ j) "
 
 
 end

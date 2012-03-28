@@ -285,9 +285,9 @@ factReports thy = concat
     -- Check that every fact referenced in a formula is present as an action
     -- of a protocol rule. We have to add the linear "K/1" fact, as the
     -- WF-check cannot rely on a loaded intruder theory.
-    ruleActions = S.fromList $ ((factInfo (kLogFact undefined)) :) $
-        do RuleItem ru <- get thyItems thy
-           factInfo <$> get rActs ru
+    ruleActions = S.fromList $ map factInfo $ 
+        kLogFact undefined : dedLogFact undefined :
+        (do RuleItem ru <- get thyItems thy; get rActs ru)
 
     inexistentActions = do
         LemmaItem (Lemma name fmE _ _ _) <- get thyItems thy
