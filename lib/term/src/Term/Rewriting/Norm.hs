@@ -1,6 +1,5 @@
 {-# LANGUAGE PatternGuards, FlexibleContexts, ExplicitForAll #-}
 {-# LANGUAGE ScopedTypeVariables, ViewPatterns #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
@@ -73,21 +72,23 @@ nfViaHaskell sortOf t0 = reader $ \hnd -> check hnd
         go (viewTerm -> FApp (NonAC o1) [(viewTerm -> FApp (NonAC o2) _)])
           | dh && o1 == invSym && o2 == invSym                           = False
         go (viewTerm -> FApp (NonAC o1) [(viewTerm -> FApp (AC Mult) ts)])
-          | dh && o1 == invSym && any isInv ts                           = False
+          | dh && o1 == invSym && any isInverse ts                       = False
 
         -- subterm rules
         go t@(viewTerm -> FApp (NonAC _) _) | any (struleApplicable t) strules       = False
 
         -- multiplication
         go (viewTerm -> FApp (AC Mult) ts)
-          | one `elem` ts || any isMult ts || invalidMult ts             = False
+          | one `elem` ts || any isProduct ts || invalidMult ts          = False
 
         -- xor
         go (viewTerm -> FApp (AC Xor) ts)
           | zero `elem` ts || any isXor ts || not (noDuplicates ts)      = False
 
-        go (viewTerm -> FApp _ ts)                                                   = all go ts
-        go (viewTerm -> Lit _ )                                                      = True
+        go (viewTerm -> FApp _ ts)                                       = all go ts
+        go (viewTerm -> Lit _ )                                          = True
+
+        go _impossible = error "nfViaHaskell: impossible"
 
         struleApplicable t (StRule lhs rhs) =
             case matchLTerm sortOf [t `MatchWith` toLTerm lhs] `runReader` hnd of
@@ -97,7 +98,7 @@ nfViaHaskell sortOf t0 = reader $ \hnd -> check hnd
                        RhsGround   s -> not (t == toLTerm s)
                            -- reducible, but RHS might be already equal to t
 
-        invalidMult ts = case partition isInv ts of
+        invalidMult ts = case partition isInverse ts of
             ([],_)           -> False
             ([ viewTerm -> FApp _oinv [ viewTerm -> FApp (AC Mult) ifactors ] ], factors) ->
                 (ifactors \\ factors /= ifactors)
@@ -106,20 +107,12 @@ nfViaHaskell sortOf t0 = reader $ \hnd -> check hnd
             (_:_:_, _)       -> True
             _ -> False
 
-        isMult (viewTerm -> FApp (AC Mult) _) = True
-        isMult _                  = False
-
-        isXor (viewTerm -> FApp (AC Xor) _) = True
-        isXor _                 = False
-
-        isInv  (viewTerm -> FApp (NonAC o) _) | o == invSym = True
-        isInv  _                                = False
-
         toLTerm :: LNTerm -> LTerm c
-        toLTerm (viewTerm -> FApp o ts)   = unsafefApp o (map toLTerm ts)
-        toLTerm (viewTerm -> Lit (Var v)) = lit (Var v)
-        toLTerm t@(viewTerm -> Lit _)       = error $ "toLTerm: impossible, unexpected constant in `"
-                                              ++show t++"'"
+        toLTerm t = case viewTerm t of
+            FApp o ts   -> unsafefApp o (map toLTerm ts)
+            Lit (Var v) -> lit (Var v)
+            Lit _       -> error $ "toLTerm: impossible, unexpected constant in `"
+                                                ++show t++"'"
 
         msig        = mhMaudeSig hnd
         strules     = stRules msig

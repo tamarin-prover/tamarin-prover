@@ -40,9 +40,16 @@ module Term.Term (
     , unsafefApp
     , listToTerm
 
-    -- ** Destrutors
+    -- ** Destructors and classifiers
     , destPair
-    , destInv
+    , destInverse
+    , destProduct
+    , destXor
+
+    , isPair
+    , isInverse
+    , isProduct
+    , isXor
 
     , module Term.Classes
     ) where
@@ -55,6 +62,7 @@ import Data.Typeable
 import Data.Generics
 import Data.DeriveTH
 import Data.Binary
+import Data.Maybe (isJust)
 
 import Control.DeepSeq
 import Control.Basics
@@ -103,7 +111,8 @@ emptySym = ("empty",0)
 -- Terms
 ----------------------------------------------------------------------
 
--- | A term in T(Sigma,a).
+-- | A term in T(Sigma,a). Its constructors are kept abstract. Use 'viewTerm'
+-- to inspect it.
 data Term a = LIT a                 -- ^ atomic terms (constants, variables, ..)
             | FAPP FunSym [Term a]  -- ^ function applications
   deriving (Eq, Ord, Typeable, Data )
@@ -112,15 +121,41 @@ data Term a = LIT a                 -- ^ atomic terms (constants, variables, ..)
 {-# INLINE destFunApp #-}
 destFunApp :: FunSym -> Term a -> Maybe [Term a]
 destFunApp fsym (FAPP fsym' args) | fsym == fsym' = Just args
-destFunApp _    _                                = Nothing
+destFunApp _    _                                 = Nothing
 
 -- | Destruct a top-level pair.
 destPair :: Term a -> Maybe (Term a, Term a)
 destPair t = do [t1, t2] <- destFunApp (NonAC pairSym) t; return (t1, t2)
 
 -- | Destruct a top-level inverse in the group of exponents.
-destInv :: Term a -> Maybe (Term a)
-destInv t = do [t1] <- destFunApp (NonAC invSym) t; return t1
+destInverse :: Term a -> Maybe (Term a)
+destInverse t = do [t1] <- destFunApp (NonAC invSym) t; return t1
+
+-- | Destruct a top-level product.
+destProduct :: Term a -> Maybe [Term a]
+destProduct (FAPP (AC Mult) ts) = return ts
+destProduct _                   = Nothing
+
+-- | Destruct a top-level product.
+destXor :: Term a -> Maybe [Term a]
+destXor (FAPP (AC Xor) ts) = return ts
+destXor _                  = Nothing
+
+-- | 'True' iff the term is a well-formed pair.
+isPair :: Term a -> Bool
+isPair = isJust . destPair
+
+-- | 'True' iff the term is a well-formed inverse.
+isInverse :: Term a -> Bool
+isInverse = isJust . destInverse
+
+-- | 'True' iff the term is a well-formed product.
+isProduct :: Term a -> Bool
+isProduct = isJust . destProduct
+
+-- | 'True' iff the term is a well-formed xor'ing.
+isXor :: Term a -> Bool
+isXor = isJust . destXor
 
 data TermView a = Lit a
                 | FApp FunSym [Term a]
@@ -140,7 +175,7 @@ fApp o@(AC _) as  =
     FAPP o (sort (o_as ++ non_o_as))
   where
     isOTerm (FAPP o' _) | o' == o = True
-    isOTerm _                                 = False
+    isOTerm _                     = False
     (o_as0, non_o_as) = partition isOTerm as
     o_as              = [ a | FAPP _ ts <- o_as0, a <- ts ]
 fApp o ts = FAPP o ts
