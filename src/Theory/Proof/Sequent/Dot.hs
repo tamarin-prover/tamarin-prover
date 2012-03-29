@@ -340,7 +340,9 @@ dotSequentCompact se =
     dotEdge (Edge src tgt)  = do
         let check p = maybe False p (resolveNodePremFact tgt se) ||
                       maybe False p (resolveNodeConcFact src se)
-            attrs | check isProtoFact = [("style","bold"),("weight","10.0")]
+            attrs | check isProtoFact = 
+                      [("style","bold"),("weight","10.0")] ++
+                      (guard (check isPersistentFact) >> [("color","gray50")])
                   | check isKFact     = [("color","orangered2")]
                   | otherwise         = [("color","gray30")]
         dotGenEdge attrs src tgt
