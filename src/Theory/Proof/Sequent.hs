@@ -273,7 +273,7 @@ ruleNode i rules = do
   where
     mkISendRuleAC m = do
         faPrem <- kuFact Nothing m
-        return $ Rule (ProtoInfo (ProtoRuleACInstInfo ISendRule []) )
+        return $ Rule (IntrInfo (ISendRule))
                       [faPrem] [inFact m] [kLogFact m]
 
     mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule []))
@@ -1024,8 +1024,7 @@ solvePremDnK rules p = do
     mLearn    <- varTerm <$> freshLVar "t" LSortMsg
     concLearn <- kdFact (Just CanExp) mLearn
     let premLearn = outFact mLearn
-        ruLearn = Rule (ProtoInfo (ProtoRuleACInstInfo IRecvRule [])) 
-                       [premLearn] [concLearn] []
+        ruLearn = Rule (IntrInfo IRecvRule) [premLearn] [concLearn] []
         cLearn = (iLearn, ConcIdx 0)
         pLearn = (iLearn, PremIdx 0)
     modM sNodes  (M.insert iLearn ruLearn)

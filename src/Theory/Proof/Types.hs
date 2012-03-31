@@ -120,9 +120,7 @@ module Theory.Proof.Types (
   , crConstruct
   , crDestruct
   , crProtocol
-  , crSpecial
   , joinAllRules
-  , joinNonSpecialRules
   , nonSilentRules
 
   -- ** Big-step case distinctions
@@ -740,8 +738,6 @@ data ClassifiedRules = ClassifiedRules
      { _crProtocol      :: [RuleAC] -- all protocol rules
      , _crDestruct      :: [RuleAC] -- destruction rules
      , _crConstruct     :: [RuleAC] -- construction rules
-     , _crSpecial       :: [RuleAC] -- rules that are handled by other means
-                                     -- than unification.
      }
      deriving( Eq, Ord, Show )
 
@@ -749,22 +745,16 @@ $(mkLabels [''ClassifiedRules])
 
 -- | The empty proof rule set.
 emptyClassifiedRules :: ClassifiedRules
-emptyClassifiedRules = ClassifiedRules [] [] [] []
-
--- | @joinNonSpecialRules rules@ computes the union of all non-special @rules@.
-joinNonSpecialRules :: ClassifiedRules -> [RuleAC]
-joinNonSpecialRules (ClassifiedRules a b c _) = a ++ b ++ c
+emptyClassifiedRules = ClassifiedRules [] [] []
 
 -- | @joinAllRules rules@ computes the union of all rules classified in
 -- @rules@.
 joinAllRules :: ClassifiedRules -> [RuleAC]
-joinAllRules (ClassifiedRules a b c d) = a ++ b ++ c ++ d
+joinAllRules (ClassifiedRules a b c) = a ++ b ++ c
 
 -- | Extract all non-silent rules.
 nonSilentRules :: ClassifiedRules -> [RuleAC]
-nonSilentRules rules = 
-    filter (not . null . L.get rActs) $ 
-    L.get crProtocol rules ++ L.get crConstruct rules
+nonSilentRules = filter (not . null . L.get rActs) . joinAllRules
 
 
 ------------------------------------------------------------------------------

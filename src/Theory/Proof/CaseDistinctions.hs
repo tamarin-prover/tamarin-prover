@@ -307,7 +307,7 @@ precomputeCaseDistinctions ctxt typAsms =
     -- FIXME: Also use facts from proof context.
     rules = get pcRules ctxt
     absProtoFacts = sortednub $ do
-        ru <- joinNonSpecialRules rules
+        ru <- joinAllRules rules
         fa <- absFact <$> (getProtoFact =<< (get rConcs ru ++ get rPrems ru))
         -- exclude facts handled specially by the prover
         guard (not $ fst fa `elem` [OutFact, InFact, FreshFact])

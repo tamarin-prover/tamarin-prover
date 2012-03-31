@@ -438,9 +438,10 @@ intrRule = do
   where
     intrInfo = do
         name <- identifier
-        if map toUpper name == "COERCE"
-          then return $ CoerceRule
-          else return $ IntrApp name
+        case name of
+          'c':cname -> return $ ConstrRule cname
+          'd':dname -> return $ DestrRule dname
+          _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
 genericRule :: Parser ([LNFact], [LNFact], [LNFact])
 genericRule = 

@@ -15,20 +15,22 @@ module Theory.IntruderRules (
 --  , xorIntruderRules -- there are no multiset intruder rules
   ) where
 
-import Theory.Rule
+import Control.Monad.Fresh
+import Control.Basics
+import Control.Monad.Reader
+
+import Data.List
+
+import Extension.Data.Label
+
+import Utils.Misc
+
 import Term.SubtermRule
 import Term.Positions
 import Term.Rewriting.Norm
 import Term.Narrowing.Variants.Compute
 
-import Utils.Misc
-
-import Control.Monad.Fresh
-import Data.List
-import Control.Basics
-import Extension.Data.Label
-
-import Control.Monad.Reader
+import Theory.Rule
 
 
 
@@ -62,18 +64,22 @@ specialIntruderRules =
           [Fact KDFact [f_var, x_var]]
           [Fact KUFact [f_var,x_var]]
           [dedLogFact x_var]
-    , Rule (IntrApp "pub")
+    , Rule PubConstrRule
           []
           [Fact KUFact [f_var,x_pub_var]]
           [dedLogFact x_pub_var] 
-    , Rule (IntrApp "fresh")
+    , Rule FreshConstrRule
           [Fact FreshFact [x_fresh_var]]
           [Fact KUFact [f_var,x_fresh_var]]
           [dedLogFact x_fresh_var]
-    , Rule (IntrApp "isend")
+    , Rule ISendRule
           [Fact KUFact [f_var, x_var]]
           [Fact InFact [x_var]]
           [kLogFact x_var]
+    , Rule IRecvRule
+          [Fact OutFact [x_var]]
+          [Fact KDFact [expTagToTerm CanExp, x_var]]
+          []
     ]
   where
     f_var       = varTerm (LVar "f_" LSortMsg   0)
@@ -103,7 +109,7 @@ destructionRules (StRule lhs@(viewTerm -> FApp (NonAC (f,_)) _) (RhsPosition pos
                      dfact <- kdFact Nothing t'
                      ufacts <- mapM (kuFact Nothing) uprems'
                      concfact <- kdFact Nothing rhs
-                     return [ Rule (IntrApp f) (dfact:ufacts) [concfact] [] ]
+                     return [ Rule (DestrRule f) (dfact:ufacts) [concfact] [] ]
                  else []
     go _      (viewTerm -> Lit _)     (_:_)  =
         error "IntruderRules.destructionRules: impossible, position invalid"
@@ -141,7 +147,7 @@ constructionRules fSig =
         pfacts   <- mapM (kuFact Nothing) vars
         let m = fApp (NonAC (s,k)) vars
         concfact <- kuFact (Just CanExp) m
-        return $ Rule (IntrApp s) pfacts [concfact] [dedLogFact m]
+        return $ Rule (ConstrRule s) pfacts [concfact] [dedLogFact m]
 
 dropExpTag :: Fact a -> Fact a
 dropExpTag (Fact KUFact [_e,m]) = Fact KUFact [m]
@@ -154,22 +160,29 @@ dropExpTag t                    = t
 
 dhIntruderRules :: WithMaude [IntrRuleAC]
 dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
-    [expRule kuFact, invRule kuFact]
-    ++ concatMap (variantsIntruder hnd) [expRule kdFact, invRule kdFact]
+    [ expRule ConstrRule kuFact (return . dedLogFact) 
+    , invRule ConstrRule kuFact (return . dedLogFact)
+    ] ++ 
+    concatMap (variantsIntruder hnd) 
+      [ expRule DestrRule kdFact (const [])
+      , invRule DestrRule kdFact (const [])
+      ]
   where
-    expRule kudFact = (`evalFresh` nothingUsed) $ do
+    expRule mkInfo kudFact mkAction = (`evalFresh` nothingUsed) $ do
         b        <- varTerm <$> freshLVar "x" LSortMsg
         e        <- varTerm <$> freshLVar "x" LSortMsg
         bfact    <- kudFact (Just CanExp) b
         efact    <- kuFact Nothing e
-        concfact <- kudFact (Just CannotExp) (fAppExp (b, e))
-        return $ Rule (IntrApp "exp") [bfact, efact] [concfact] []
+        let conc = fAppExp (b, e)
+        concfact <- kudFact (Just CannotExp) conc
+        return $ Rule (mkInfo "exp") [bfact, efact] [concfact] (mkAction conc)
 
-    invRule kudFact = (`evalFresh` nothingUsed) $ do
+    invRule mkInfo kudFact mkAction = (`evalFresh` nothingUsed) $ do
         x        <- varTerm <$> freshLVar "x" LSortMsg
         bfact    <- kudFact Nothing x
-        concfact <- kudFact (Just CanExp) (fAppInv x)
-        return $ Rule (IntrApp "inv") [bfact] [concfact] []
+        let conc = fAppInv x
+        concfact <- kudFact (Just CanExp) conc
+        return $ Rule (mkInfo "inv") [bfact] [concfact] (mkAction conc)
 
 
 variantsIntruder :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]

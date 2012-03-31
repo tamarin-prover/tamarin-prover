@@ -1,220 +1,220 @@
-rule (modulo AC) exp:
+rule (modulo AC) cexp:
    [ !KU( 'exp', x ), !KU( f_.2, x.1 ) ]
-   --[ Ded(x^x.1) ]->
+  --[ Ded( x^x.1 ) ]->
    [ !KU( 'noexp', x^x.1 ) ]
 
-rule (modulo AC) inv:
-   [ !KU( f_.1, x ) ] --[ Ded(inv(x)) ]-> [ !KU( 'exp', inv(x) ) ]
+rule (modulo AC) cinv:
+   [ !KU( f_.1, x ) ] --[ Ded( inv(x) ) ]-> [ !KU( 'exp', inv(x) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^x.4 ), !KU( f_.2, x.1 ) ]
   -->
    [ !KD( 'noexp', x.3^(x.1*x.4) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.4^x.3 ), !KU( f_.2, inv(x.3) ) ]
   -->
    [ !KD( 'noexp', x.4 ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.4^inv(x.3) ), !KU( f_.2, x.3 ) ]
   -->
    [ !KD( 'noexp', x.4 ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.4^inv(x.5) ), !KU( f_.2, inv(x.3) ) ]
   -->
    [ !KD( 'noexp', x.4^inv((x.3*x.5)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.4^inv((x.3*x.5)) ), !KU( f_.2, x.3 ) ]
   -->
    [ !KD( 'noexp', x.4^inv(x.5) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.4^(x.3*x.5) ), !KU( f_.2, inv(x.3) ) ]
   -->
    [ !KD( 'noexp', x.4^x.5 ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.4^(x.5*inv(x.3)) ), !KU( f_.2, x.3 ) ]
   -->
    [ !KD( 'noexp', x.4^x.5 ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^x.4 ), !KU( f_.2, inv((x.4*x.5)) ) ]
   -->
    [ !KD( 'noexp', x.3^inv(x.5) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^x.4 ), !KU( f_.2, (x.5*inv(x.4)) ) ]
   -->
    [ !KD( 'noexp', x.3^x.5 ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^inv(x.4) ), !KU( f_.2, (x.3*x.4) ) ]
   -->
    [ !KD( 'noexp', x.5^x.3 ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.4^(x.5*inv(x.6)) ), !KU( f_.2, inv(x.3) ) ]
   -->
    [ !KD( 'noexp', x.4^(x.5*inv((x.3*x.6))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^inv(x.4) ), !KU( f_.2, (x.5*inv(x.6)) ) ]
   -->
    [ !KD( 'noexp', x.3^(x.5*inv((x.4*x.6))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.4^(x.5*inv((x.3*x.6))) ), !KU( f_.2, x.3 ) ]
   -->
    [ !KD( 'noexp', x.4^(x.5*inv(x.6)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^inv((x.4*x.6)) ), !KU( f_.2, (x.3*x.4) ) ]
   -->
    [ !KD( 'noexp', x.5^(x.3*inv(x.6)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.4*x.6) ), !KU( f_.2, inv((x.3*x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5^(x.6*inv(x.3)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.4*x.6) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5^(x.3*x.6) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.6*inv(x.4)) ), !KU( f_.2, (x.3*x.4) ) ]
   -->
    [ !KD( 'noexp', x.5^(x.3*x.6) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^x.4 ), !KU( f_.2, (x.5*inv((x.4*x.6))) ) ]
   -->
    [ !KD( 'noexp', x.3^(x.5*inv(x.6)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.6*inv(x.7)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5^(x.3*x.6*inv((x.4*x.7))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.4*inv(x.3)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5 ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.4*inv(x.6)) ), !KU( f_.2, inv((x.3*x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5^inv((x.3*x.6)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^inv((x.3*x.6)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5^inv((x.4*x.6)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.6*inv((x.4*x.7))) ), !KU( f_.2, (x.3*x.4) ) ]
   -->
    [ !KD( 'noexp', x.5^(x.3*x.6*inv(x.7)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^(x.4*x.5) ), !KU( f_.2, (x.6*inv((x.5*x.7))) ) ]
   -->
    [ !KD( 'noexp', x.3^(x.4*x.6*inv(x.7)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.4*x.6*inv(x.3)) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5^x.6 ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.6^(x.5*inv(x.4)) ), !KU( f_.2, (x.3*x.4*inv(x.5)) ) ]
   -->
    [ !KD( 'noexp', x.6^x.3 ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.4*x.6*inv(x.7)) ), !KU( f_.2, inv((x.3*x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5^(x.6*inv((x.3*x.7))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.6^inv((x.4*x.7)) ), !KU( f_.2, (x.3*x.4*inv(x.5)) ) ]
   -->
    [ !KD( 'noexp', x.6^(x.3*inv((x.5*x.7))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.4*inv((x.3*x.6))) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5^inv(x.6) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^(x.4*inv(x.5)) ), !KU( f_.2, (x.5*inv((x.4*x.6))) ) ]
   -->
    [ !KD( 'noexp', x.3^inv(x.6) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^(x.4*inv(x.5)) ), !KU( f_.2, (x.6*inv((x.4*x.7))) ) ]
   -->
    [ !KD( 'noexp', x.3^(x.6*inv((x.5*x.7))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.6^(x.5*x.7*inv(x.4)) ), !KU( f_.2, (x.3*x.4*inv(x.5)) ) ]
   -->
    [ !KD( 'noexp', x.6^(x.3*x.7) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.6*inv((x.3*x.7))) ), !KU( f_.2, (x.3*inv(x.4)) ) ]
   -->
    [ !KD( 'noexp', x.5^(x.6*inv((x.4*x.7))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^(x.4*inv(x.5)) ), !KU( f_.2, (x.5*x.6*inv((x.4*x.7))) )
    ]
   -->
    [ !KD( 'noexp', x.3^(x.6*inv(x.7)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.5^(x.4*x.6*inv((x.3*x.7))) ), !KU( f_.2, (x.3*inv(x.4)) )
    ]
   -->
    [ !KD( 'noexp', x.5^(x.6*inv(x.7)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.6^(x.5*inv((x.4*x.7))) ), !KU( f_.2, (x.3*x.4*inv(x.5)) )
    ]
   -->
    [ !KD( 'noexp', x.6^(x.3*inv(x.7)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.6^(x.5*x.7*inv(x.3)) ), !KU( f_.2, (x.3*inv((x.4*x.5))) )
    ]
   -->
    [ !KD( 'noexp', x.6^(x.7*inv(x.4)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.6^(x.5*x.7*inv(x.8)) ), !KU( f_.2, (x.3*inv((x.4*x.5))) )
    ]
   -->
    [ !KD( 'noexp', x.6^(x.3*x.7*inv((x.4*x.8))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [ !KD( 'exp', x.6^(x.7*inv((x.4*x.8))) ), !KU( f_.2, (x.3*x.4*inv(x.5)) )
    ]
   -->
    [ !KD( 'noexp', x.6^(x.3*x.7*inv((x.5*x.8))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [
    !KD( 'exp', x.6^(x.5*inv((x.3*x.7))) ), !KU( f_.2, (x.3*inv((x.4*x.5))) )
    ]
   -->
    [ !KD( 'noexp', x.6^inv((x.4*x.7)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [
    !KD( 'exp', x.3^(x.4*x.5*inv(x.6)) ),
    !KU( f_.2, (x.6*x.7*inv((x.5*x.8))) )
@@ -222,7 +222,7 @@ rule (modulo AC) exp:
   -->
    [ !KD( 'noexp', x.3^(x.4*x.7*inv(x.8)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [
    !KD( 'exp', x.6^(x.5*x.7*inv((x.4*x.8))) ),
    !KU( f_.2, (x.3*x.4*inv(x.5)) )
@@ -230,7 +230,7 @@ rule (modulo AC) exp:
   -->
    [ !KD( 'noexp', x.6^(x.3*x.7*inv(x.8)) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [
    !KD( 'exp', x.7^(x.6*inv((x.4*x.8))) ),
    !KU( f_.2, (x.3*x.4*inv((x.5*x.6))) )
@@ -238,7 +238,7 @@ rule (modulo AC) exp:
   -->
    [ !KD( 'noexp', x.7^(x.3*inv((x.5*x.8))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [
    !KD( 'exp', x.6^(x.5*x.7*inv((x.3*x.8))) ),
    !KU( f_.2, (x.3*inv((x.4*x.5))) )
@@ -246,7 +246,7 @@ rule (modulo AC) exp:
   -->
    [ !KD( 'noexp', x.6^(x.7*inv((x.4*x.8))) ) ]
 
-rule (modulo AC) exp:
+rule (modulo AC) dexp:
    [
    !KD( 'exp', x.7^(x.6*x.8*inv((x.4*x.9))) ),
    !KU( f_.2, (x.3*x.4*inv((x.5*x.6))) )
@@ -254,5 +254,5 @@ rule (modulo AC) exp:
   -->
    [ !KD( 'noexp', x.7^(x.3*x.8*inv((x.5*x.9))) ) ]
 
-rule (modulo AC) inv:
+rule (modulo AC) dinv:
    [ !KD( f_.1, inv(x.2) ) ] --> [ !KD( 'exp', x.2 ) ]

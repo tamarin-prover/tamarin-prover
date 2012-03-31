@@ -219,18 +219,14 @@ closeRuleCache typingAsms sig protoRules intrRulesAC =
 
     anyOf ps = partition (\x -> any ($ x) ps)
 
-    (nonProto, proto) = 
-        anyOf [ isDestrRule, isConstrRule , isFreshRule, isIRecvRule] rulesAC
-    (spec, nonSpec)   = anyOf [isIRecvRule, isFreshRule]  nonProto
-    (constr, destr)   = anyOf [isConstrRule] nonSpec
-    -- FIXME: Learn, knows, fresh, etc. are special rules
+    (nonProto, proto) = anyOf [isDestrRule, isConstrRule] rulesAC
+    (constr, destr)   = anyOf [isConstrRule] nonProto
 
     -- and sort them into ClassifiedRules datastructure for later use in proofs
     classifiedRules = ClassifiedRules
       { _crConstruct  = constr
       , _crDestruct   = destr
       , _crProtocol   = proto
-      , _crSpecial    = spec
       }
 
 

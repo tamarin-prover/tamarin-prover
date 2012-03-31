@@ -222,10 +222,7 @@ instance (Apply p, Apply i) => Apply (RuleInfo p i) where
 -- | A name of a protocol rule is either one of the special reserved rules or
 -- some standard rule.
 data ProtoRuleName = 
-       -- FIXME: Consider also moving them to intruder/model rules.
          FreshRule
-       | IRecvRule
-       | ISendRule
        | StandRule String -- ^ Some standard protocol rule
        deriving( Eq, Ord, Show, Data, Typeable )
 
@@ -299,7 +296,14 @@ instance HasFrees ProtoRuleACInstInfo where
 ------------------------------------------------------------------------------
 
 -- | An intruder rule modulo AC is described by its name.
-data IntrRuleACInfo = IntrApp String | CoerceRule
+data IntrRuleACInfo = 
+    ConstrRule String
+  | DestrRule String
+  | CoerceRule
+  | IRecvRule
+  | ISendRule
+  | PubConstrRule
+  | FreshConstrRule
   deriving( Ord, Eq, Show, Data, Typeable )
 
 -- | An intruder rule modulo AC.
@@ -372,16 +376,19 @@ instance HasRuleName RuleACInst where
 ----------
 
 -- | True iff the rule is a destruction rule.
-isDestrRule :: Rule r -> Bool
-isDestrRule ru = case kFactView <$> L.get rConcs ru of
-    [Just (DnK, _, _)] -> True
-    _                  -> False
+isDestrRule :: HasRuleName r => r -> Bool
+isDestrRule ru = case ruleName ru of
+  IntrInfo (DestrRule _) -> True
+  _                      -> False
 
 -- | True iff the rule is a construction rule.
-isConstrRule :: Rule r -> Bool
-isConstrRule ru = case kFactView <$> L.get rConcs ru of
-    [Just (UpK, _, _)] -> True
-    _                  -> False
+isConstrRule :: HasRuleName r => r -> Bool
+isConstrRule ru = case ruleName ru of
+  IntrInfo (ConstrRule _)  -> True
+  IntrInfo FreshConstrRule -> True
+  IntrInfo PubConstrRule   -> True
+  IntrInfo CoerceRule      -> True
+  _                        -> False
 
 -- | True iff the rule is the special fresh rule.
 isFreshRule :: HasRuleName r => r -> Bool
@@ -389,11 +396,11 @@ isFreshRule = (ProtoInfo FreshRule ==) . ruleName
 
 -- | True iff the rule is the special learn rule.
 isIRecvRule :: HasRuleName r => r -> Bool
-isIRecvRule = (ProtoInfo IRecvRule ==) . ruleName
+isIRecvRule = (IntrInfo IRecvRule ==) . ruleName
 
 -- | True iff the rule is the special knows rule.
 isISendRule :: HasRuleName r => r -> Bool
-isISendRule = (ProtoInfo ISendRule ==) . ruleName
+isISendRule = (IntrInfo ISendRule ==) . ruleName
 
 -- | True iff the rule is the special coerce rule.
 isCoerceRule :: HasRuleName r => r -> Bool
@@ -507,15 +514,19 @@ unifyRuleACInstEqs eqs
 -- Pretty-Printing
 ------------------------------------------------------------------------------
 
+-- | Prefix the name if it is equal to a reserved name.
+prefixIfReserved :: String -> String
+prefixIfReserved n
+  | n `elem` reserved  = "_" ++ n
+  | "_" `isPrefixOf` n = "_" ++ n
+  | otherwise          = n
+  where
+    reserved = ["Fresh", "irecv", "isend", "coerce", "fresh", "pub"]
+
 prettyProtoRuleName :: Document d => ProtoRuleName -> d
 prettyProtoRuleName rn = text $ case rn of
-    FreshRule  -> "Fresh"
-    IRecvRule  -> "IRecv"
-    ISendRule  -> "ISend"
-    StandRule n 
-      | n `elem` ["Fresh", "IRecv", "ISend"] -> "_" ++ n
-      | "_" `isPrefixOf` n                   -> "_" ++ n
-      | otherwise                            ->        n
+    FreshRule   -> "Fresh"
+    StandRule n -> prefixIfReserved n
 
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
@@ -526,8 +537,14 @@ showRuleCaseName =
     render . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
 prettyIntrRuleACInfo :: Document d => IntrRuleACInfo -> d
-prettyIntrRuleACInfo (IntrApp name) = text $ name
-prettyIntrRuleACInfo CoerceRule     = text "coerce"
+prettyIntrRuleACInfo rn = text $ case rn of 
+    IRecvRule       -> "irecv"
+    ISendRule       -> "isend"
+    CoerceRule      -> "coerce"
+    FreshConstrRule -> "fresh"
+    PubConstrRule   -> "pub"
+    ConstrRule name -> prefixIfReserved ('c' : name)
+    DestrRule name  -> prefixIfReserved ('d' : name)
 
 prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
                 => d           -- ^ Prefix.
