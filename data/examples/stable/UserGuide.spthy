@@ -245,7 +245,7 @@ rule Client_1:
                                // was successful.
     ]
 
-rule Init_2:
+rule Client_2:
     [ Client_1(S, k)   // Retrieve server and session key from previous step
     , In( h(k) )       // Receive hashed session key from network
     ]
