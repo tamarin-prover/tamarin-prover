@@ -82,11 +82,13 @@ addEqs :: MonadFresh m => SplitStrategy -> MaudeHandle
                        -> [Equal LNTerm] -> EqStore -> m [EqStore]
 addEqs splitStrat hnd eqs0 eqStore =
     case unifyLNTermFactored eqs `runReader` hnd of
-      (_, [])         -> return [set eqsConj falseEqConstrConj eqStore]
+      (_, [])         -> return [ set eqsConj falseEqConstrConj eqStore ]
+      (subst, [ substFresh ]) | substFresh == emptySubstVFresh ->
+        return [ applyEqStore hnd subst eqStore ]
       (subst, substs) ->
         case splitStrat of
           SplitLater ->
-            return $ [addDisj (applyEqStore hnd subst eqStore) (Disj substs)]
+            return [ addDisj (applyEqStore hnd subst eqStore) (Disj substs) ]
           SplitNow -> 
             addEqsAC (modify eqsSubst (compose subst) eqStore)
               <$> simpDisjunction hnd (const False) (Disj substs)
@@ -110,7 +112,7 @@ applyEqStore hnd asubst eqStore
     newsubst = asubst `compose` get eqsSubst eqStore
     applyBound s = map (restrictVFresh (varsRange newsubst ++ domVFresh s)) $ 
         (`runReader` hnd) $ unifyLNTerm
-          [ Equal (apply newsubst (varTerm $ lv)) t
+          [ Equal (apply newsubst (varTerm lv)) t
           | let slist = substToListVFresh s,
             -- variables in the range are fresh, so we have to rename
             -- them away from all other variables in unification problem
@@ -216,16 +218,18 @@ simp hnd isContr eqStore = (`execStateT` (trace (show ("eqStore", eqStore)) eqSt
 simp1 :: MonadFresh m => MaudeHandle -> (LNSubstVFresh -> Bool) -> StateT EqStore m Bool
 simp1 hnd isContr = do
     s <- MS.get
-    b1 <- simpMinimize isContr
-    b2 <- simpRemoveRenamings
-    b3 <- simpEmptyDisj
-    b4 <- foreachDisj hnd simpSingleton
-    b5 <- foreachDisj hnd simpAbstractSortedVar
-    b6 <- foreachDisj hnd simpIdentify
-    b7 <- foreachDisj hnd simpAbstractFun
-    b8 <- foreachDisj hnd simpAbstractName
-    s' <- MS.get
-    (trace (show ("simp:", [b1, b2, b3, b4, b5, b6, b7, b8], s, s'))) $ return $ (or [b1, b2, b3, b4, b5, b6, b7, b8])
+    if eqsIsFalse s
+        then return False
+        else do
+          b1 <- simpMinimize isContr
+          b2 <- simpRemoveRenamings
+          b3 <- simpEmptyDisj
+          b4 <- foreachDisj hnd simpSingleton
+          b5 <- foreachDisj hnd simpAbstractSortedVar
+          b6 <- foreachDisj hnd simpIdentify
+          b7 <- foreachDisj hnd simpAbstractFun
+          b8 <- foreachDisj hnd simpAbstractName
+          (trace (show ("simp:", [b1, b2, b3, b4, b5, b6, b7, b8]))) $ return $ (or [b1, b2, b3, b4, b5, b6, b7, b8])
 
 -- | Remove variable renamings in fresh substitutions.
 simpRemoveRenamings :: MonadFresh m => StateT EqStore m Bool

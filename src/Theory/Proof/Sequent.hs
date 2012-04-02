@@ -799,7 +799,8 @@ solveRuleConstraints (Just eqConstr) = do
     hnd <- getMaudeHandle
     se <- gets id
     setM sEqStore
-        =<< (simp hnd (substCreatesNonNormalTerms hnd se) . addRuleVariants eqConstr)
+        -- do not use expensive substCreatesNonNormalTerms here
+        =<< (simp hnd (const False) . addRuleVariants eqConstr)
         =<< getM sEqStore
     noContradictoryEqStore
 solveRuleConstraints Nothing = return ()
