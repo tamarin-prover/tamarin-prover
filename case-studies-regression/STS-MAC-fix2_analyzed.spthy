@@ -47,43 +47,49 @@ rule (modulo E) Init_2:
   /*
   rule (modulo AC) Init_2:
      [
-     Init_1( $I.3, $R.4, ~ltkI.5, ~ekI ), !Pk( $R.4, pk(~x.6) ),
-     In( <$R.4, $I.3, Y.1, sign(<'1', $I.3, $R.4, Y.1, 'g'^~ekI>, ~x.6), 
-          mac(x.2, sign(<'1', $I.3, $R.4, Y.1, 'g'^~ekI>, ~x.6))>
+     Init_1( $I.1, $R.2, ~ltkI.4, ~ekI.3 ), !Pk( $R.2, pk(~ltkR.5) ),
+     In( <$R.2, $I.1, Y.6, sign(<'1', $I.1, $R.2, Y.6, 'g'^~ekI.3>, ~ltkR.5), 
+          mac(z.9, sign(<'1', $I.1, $R.2, Y.6, 'g'^~ekI.3>, ~ltkR.5))>
      )
      ]
-    --[ AcceptedI( ~ekI, $I.3, $R.4, 'g'^~ekI, Y.1, h(x.2) ) ]->
+    --[ AcceptedI( ~ekI.3, $I.1, $R.2, 'g'^~ekI.3, Y.6, h(z.9) ) ]->
      [
-     Out( <$I.3, $R.4, sign(<'2', $I.3, $R.4, 'g'^~ekI, Y.1>, ~ltkI.5), 
-           mac(x.2, sign(<'2', $I.3, $R.4, 'g'^~ekI, Y.1>, ~ltkI.5))>
+     Out( <$I.1, $R.2, sign(<'2', $I.1, $R.2, 'g'^~ekI.3, Y.6>, ~ltkI.4), 
+           mac(z.9, sign(<'2', $I.1, $R.2, 'g'^~ekI.3, Y.6>, ~ltkI.4))>
      ),
-     !SessionKey( ~ekI, $I.3, $R.4, h(x.2) )
+     !SessionKey( ~ekI.3, $I.1, $R.2, h(z.9) )
      ]
   
     variants (modulo AC)
-    1. ~ekI  = ~ekI.106
-       Y.1   = Y.107
-       x.2   = Y.107^~ekI.106
+    1. ~ekI.3
+             = ~ekI.103
+       Y.6   = Y.104
+       z.9   = Y.104^~ekI.103
     
-    2. ~ekI  = ~ekI.106
-       Y.1   = x.107^inv(~ekI.106)
-       x.2   = x.107
+    2. ~ekI.3
+             = ~ekI.103
+       Y.6   = z.104^inv(~ekI.103)
+       z.9   = z.104
     
-    3. ~ekI  = ~ekI.107
-       Y.1   = x.108^x.109
-       x.2   = x.108^(~ekI.107*x.109)
+    3. ~ekI.3
+             = ~ekI.109
+       Y.6   = x.110^x.111
+       z.9   = x.110^(~ekI.109*x.111)
     
-    4. ~ekI  = ~ekI.107
-       Y.1   = x.108^inv((~ekI.107*x.109))
-       x.2   = x.108^inv(x.109)
+    4. ~ekI.3
+             = ~ekI.109
+       Y.6   = x.110^inv((~ekI.109*x.111))
+       z.9   = x.110^inv(x.111)
     
-    5. ~ekI  = ~ekI.107
-       Y.1   = x.108^(x.109*inv(~ekI.107))
-       x.2   = x.108^x.109
+    5. ~ekI.3
+             = ~ekI.109
+       Y.6   = x.110^(x.111*inv(~ekI.109))
+       z.9   = x.110^x.111
     
-    6. ~ekI  = ~ekI.108
-       Y.1   = x.109^(x.110*inv((~ekI.108*x.111)))
-       x.2   = x.109^(x.110*inv(x.111))
+    6. ~ekI.3
+             = ~ekI.115
+       Y.6   = x.116^(x.117*inv((~ekI.115*x.118)))
+       z.9   = x.116^(x.117*inv(x.118))
   */
 
 rule (modulo E) Resp_1:
@@ -98,40 +104,46 @@ rule (modulo E) Resp_1:
 
   /*
   rule (modulo AC) Resp_1:
-     [ !Ltk( $R.3, ~ltkR.4 ), Fr( ~ekR ), In( <$I.5, $R.3, X.1> ) ]
+     [ !Ltk( $R.2, ~ltkR.4 ), Fr( ~ekR.3 ), In( <$I.1, $R.2, X.5> ) ]
     -->
      [
-     Resp_1( $I.5, $R.3, ~ltkR.4, ~ekR, X.1 ),
-     Out( <$R.3, $I.5, 'g'^~ekR, 
-           sign(<'1', $I.5, $R.3, 'g'^~ekR, X.1>, ~ltkR.4), 
-           mac(x.2, sign(<'1', $I.5, $R.3, 'g'^~ekR, X.1>, ~ltkR.4))>
+     Resp_1( $I.1, $R.2, ~ltkR.4, ~ekR.3, X.5 ),
+     Out( <$R.2, $I.1, 'g'^~ekR.3, 
+           sign(<'1', $I.1, $R.2, 'g'^~ekR.3, X.5>, ~ltkR.4), 
+           mac(z.8, sign(<'1', $I.1, $R.2, 'g'^~ekR.3, X.5>, ~ltkR.4))>
      )
      ]
   
     variants (modulo AC)
-    1. ~ekR  = ~ekR.63
-       X.1   = X.64
-       x.2   = X.64^~ekR.63
+    1. ~ekR.3
+             = ~ekR.77
+       X.5   = X.78
+       z.8   = X.78^~ekR.77
     
-    2. ~ekR  = ~ekR.63
-       X.1   = x.64^inv(~ekR.63)
-       x.2   = x.64
+    2. ~ekR.3
+             = ~ekR.77
+       X.5   = z.78^inv(~ekR.77)
+       z.8   = z.78
     
-    3. ~ekR  = ~ekR.64
-       X.1   = x.65^x.66
-       x.2   = x.65^(~ekR.64*x.66)
+    3. ~ekR.3
+             = ~ekR.82
+       X.5   = x.83^x.84
+       z.8   = x.83^(~ekR.82*x.84)
     
-    4. ~ekR  = ~ekR.64
-       X.1   = x.65^inv((~ekR.64*x.66))
-       x.2   = x.65^inv(x.66)
+    4. ~ekR.3
+             = ~ekR.82
+       X.5   = x.83^inv((~ekR.82*x.84))
+       z.8   = x.83^inv(x.84)
     
-    5. ~ekR  = ~ekR.64
-       X.1   = x.65^(x.66*inv(~ekR.64))
-       x.2   = x.65^x.66
+    5. ~ekR.3
+             = ~ekR.82
+       X.5   = x.83^(x.84*inv(~ekR.82))
+       z.8   = x.83^x.84
     
-    6. ~ekR  = ~ekR.65
-       X.1   = x.66^(x.67*inv((~ekR.65*x.68)))
-       x.2   = x.66^(x.67*inv(x.68))
+    6. ~ekR.3
+             = ~ekR.87
+       X.5   = x.88^(x.89*inv((~ekR.87*x.90)))
+       z.8   = x.88^(x.89*inv(x.90))
   */
 
 rule (modulo E) Resp_2:
@@ -147,38 +159,44 @@ rule (modulo E) Resp_2:
   /*
   rule (modulo AC) Resp_2:
      [
-     !Pk( $I.3, pk(~x.4) ), Resp_1( $I.3, $R.5, ~ltkR.6, ~ekR, X.1 ),
-     In( <$I.3, $R.5, sign(<'2', $I.3, $R.5, X.1, 'g'^~ekR>, ~x.4), 
-          mac(x.2, sign(<'2', $I.3, $R.5, X.1, 'g'^~ekR>, ~x.4))>
+     !Pk( $I.1, pk(~ltkI.4) ), Resp_1( $I.1, $R.2, ~ltkR.5, ~ekR.3, X.6 ),
+     In( <$I.1, $R.2, sign(<'2', $I.1, $R.2, X.6, 'g'^~ekR.3>, ~ltkI.4), 
+          mac(z.9, sign(<'2', $I.1, $R.2, X.6, 'g'^~ekR.3>, ~ltkI.4))>
      )
      ]
-    --[ AcceptedR( ~ekR, $I.3, $R.5, X.1, 'g'^~ekR, h(x.2) ) ]->
-     [ !SessionKey( ~ekR, $I.3, $R.5, h(x.2) ) ]
+    --[ AcceptedR( ~ekR.3, $I.1, $R.2, X.6, 'g'^~ekR.3, h(z.9) ) ]->
+     [ !SessionKey( ~ekR.3, $I.1, $R.2, h(z.9) ) ]
   
     variants (modulo AC)
-    1. ~ekR  = ~ekR.61
-       X.1   = X.62
-       x.2   = X.62^~ekR.61
+    1. ~ekR.3
+             = ~ekR.84
+       X.6   = X.85
+       z.9   = X.85^~ekR.84
     
-    2. ~ekR  = ~ekR.61
-       X.1   = x.62^inv(~ekR.61)
-       x.2   = x.62
+    2. ~ekR.3
+             = ~ekR.84
+       X.6   = z.85^inv(~ekR.84)
+       z.9   = z.85
     
-    3. ~ekR  = ~ekR.62
-       X.1   = x.63^x.64
-       x.2   = x.63^(~ekR.62*x.64)
+    3. ~ekR.3
+             = ~ekR.89
+       X.6   = x.90^x.91
+       z.9   = x.90^(~ekR.89*x.91)
     
-    4. ~ekR  = ~ekR.62
-       X.1   = x.63^inv((~ekR.62*x.64))
-       x.2   = x.63^inv(x.64)
+    4. ~ekR.3
+             = ~ekR.89
+       X.6   = x.90^inv((~ekR.89*x.91))
+       z.9   = x.90^inv(x.91)
     
-    5. ~ekR  = ~ekR.62
-       X.1   = x.63^(x.64*inv(~ekR.62))
-       x.2   = x.63^x.64
+    5. ~ekR.3
+             = ~ekR.89
+       X.6   = x.90^(x.91*inv(~ekR.89))
+       z.9   = x.90^x.91
     
-    6. ~ekR  = ~ekR.63
-       X.1   = x.64^(x.65*inv((~ekR.63*x.66)))
-       x.2   = x.64^(x.65*inv(x.66))
+    6. ~ekR.3
+             = ~ekR.94
+       X.6   = x.95^(x.96*inv((~ekR.94*x.97)))
+       z.9   = x.95^(x.96*inv(x.97))
   */
 
 rule (modulo E) Sessionkey_Reveal:
@@ -214,550 +232,142 @@ guarded formula characterizing all attacks:
     F)"
 */
 simplify
-solve( (#i1.4, 0)[Init_1( $I.11, $R.12, ~ltkI.13, ~ekI.8 )] )
+solve( (#i1.4, 0)[Init_1( $I.9, $R.10, ~ltkI.12, ~ekI.11 )] )
   case Init_1
-  solve( (#i1.4, 1)[!Pk( $R.12, pk(~x.14) )] )
+  solve( (#i1.4, 1)[!Pk( $R.10, pk(~ltkR.13) )] )
     case Register_pk_clone_case_1
-    solve( KU((#vf.15, 0), mac(x.10,
-                               sign(<'1', $I.11, $R.12, hkr.7, 'g'^~ekI.8>, ~x.14))) )
+    solve( KU((#vf.18, 0), mac(z.17,
+                               sign(<'1', $I.9, $R.10, hkr.7, 'g'^~ekI.11>, ~ltkR.13))) )
       case Resp_1
-      solve( splitEqs(1) )
-        case split
-        solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekI.86*~ekR.87)) )] /* may loop */ )
-          case Sessionkey_Reveal_case_1
-          solve( KU((#vf.100, 0), mac('g'^(~ekI.86*~ekR.87),
-                                      sign(<'1', $I.94, $R.95, x.126^x.127, 'g'^~tid.93>, ~x.98))) )
-            case Resp_1
-            solve( splitEqs(1) )
-              case split
-              by contradiction // from formulas
-            qed
-          next
-            case mac
-            solve( (#vr.131, 0)[!KU( f_.132, 'g'^(~ekI.86*~ekR.87)
-                                )] /* may loop */ )
-              case Init_1
-              solve( (#vr.131, 1)[!KU( f_.133,
-                                       sign(<'1', $I.94, $R.95, x.126^x.127, 'g'^~tid.93>, ~x.98)
-                                  )] /* may loop */ )
-                case Resp_1
-                by solve( (#vr.151, 1)[!KU( f_.152, ~ekR.172 )] /* may loop */ )
-              next
-                case sign
-                by solve( (#vr.151, 1)[!KU( f_.152, ~ekR.172 )] /* may loop */ )
-              qed
-            next
-              case Resp_1
-              solve( (#vr.131, 1)[!KU( f_.133,
-                                       sign(<'1', $I.94, $R.95, x.126^x.127, 'g'^~tid.93>, ~x.98)
-                                  )] /* may loop */ )
-                case Resp_1
-                by solve( (#vr.157, 1)[!KU( f_.158, ~ekI.180 )] /* may loop */ )
-              next
-                case sign
-                by solve( (#vr.157, 1)[!KU( f_.158, ~ekI.180 )] /* may loop */ )
-              qed
-            next
-              case exp
-              solve( (#vr.131, 1)[!KU( f_.133,
-                                       sign(<'1', $I.94, $R.95, x.126^x.127, 'g'^~tid.93>, ~x.98)
-                                  )] /* may loop */ )
-                case Resp_1
-                by solve( KU((#vr.139, 1), ~ekI.86) )
-              next
-                case sign
-                by solve( (#vr.146, 1)[!KU( f_.148, ~x.98 )] /* may loop */ )
-              qed
-            qed
+      solve( (#k.5, 0)[!KU( f_.20, h('g'^(~ekI.117*~ekR.118))
+                       )] /* may loop */ )
+        case Sessionkey_Reveal_case_1
+        solve( KU((#vf.144, 0), mac('g'^(~ekI.117*~ekR.118),
+                                    sign(<'1', $I.129, $R.130, x.171^x.172, 'g'^~tid.131>, ~ltkR.139))) )
+          case Resp_1
+          solve( splitEqs(1) )
+            case split
+            by contradiction // from formulas
           qed
         next
-          case Sessionkey_Reveal_case_2
-          solve( KU((#vf.100, 0), mac('g'^(~ekI.86*~ekR.87),
-                                      sign(<'1', $I.94, $R.95, x.126^x.127, 'g'^~tid.93>, ~x.98))) )
-            case Resp_1
-            by solve( splitEqs(1) )
-          next
-            case mac
-            solve( (#vr.131, 0)[!KU( f_.132, 'g'^(~ekI.86*~ekR.87)
-                                )] /* may loop */ )
-              case Init_1
-              solve( (#vr.131, 1)[!KU( f_.133,
-                                       sign(<'1', $I.94, $R.95, x.126^x.127, 'g'^~tid.93>, ~x.98)
-                                  )] /* may loop */ )
-                case Resp_1
-                by solve( (#vr.151, 1)[!KU( f_.152, ~ekR.172 )] /* may loop */ )
-              next
-                case sign
-                by solve( (#vr.151, 1)[!KU( f_.152, ~ekR.172 )] /* may loop */ )
-              qed
-            next
-              case Resp_1
-              solve( (#vr.131, 1)[!KU( f_.133,
-                                       sign(<'1', $I.94, $R.95, x.126^x.127, 'g'^~tid.93>, ~x.98)
-                                  )] /* may loop */ )
-                case Resp_1
-                by solve( (#vr.157, 1)[!KU( f_.158, ~ekI.180 )] /* may loop */ )
-              next
-                case sign
-                by solve( (#vr.157, 1)[!KU( f_.158, ~ekI.180 )] /* may loop */ )
-              qed
-            next
-              case exp
-              solve( (#vr.131, 1)[!KU( f_.133,
-                                       sign(<'1', $I.94, $R.95, x.126^x.127, 'g'^~tid.93>, ~x.98)
-                                  )] /* may loop */ )
-                case Resp_1
-                by solve( KU((#vr.139, 1), ~ekI.86) )
-              next
-                case sign
-                by solve( (#vr.146, 1)[!KU( f_.148, ~x.98 )] /* may loop */ )
-              qed
-            qed
-          qed
-        next
-          case Sessionkey_Reveal_case_3
-          solve( KU((#vf.100, 0), mac('g'^(~ekI.86*~ekR.87),
-                                      sign(<'2', $I.94, $R.95, x.130^x.131, 'g'^~tid.93>, ~x.97))) )
-            case Init_2_case_1
-            solve( KU((#vf.144, 0), mac('g'^(~ekI.86*~ekR.87),
-                                        sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143))) )
-              case Resp_1
-              solve( splitEqs(1) )
-                case split
-                by contradiction // from formulas
-              qed
-            next
-              case mac
-              solve( (#vr.186, 0)[!KU( f_.187, 'g'^(~ekI.86*~ekR.87)
-                                  )] /* may loop */ )
-                case Init_1
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.206, 1)[!KU( f_.207, ~ekR.227 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.206, 1)[!KU( f_.207, ~ekR.227 )] /* may loop */ )
-                qed
-              next
-                case Resp_1
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.212, 1)[!KU( f_.213, ~ekI.235 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.212, 1)[!KU( f_.213, ~ekI.235 )] /* may loop */ )
-                qed
-              next
-                case exp
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( KU((#vr.194, 1), ~ekI.86) )
-                next
-                  case sign
-                  by solve( (#vr.201, 1)[!KU( f_.203, ~x.143 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case Init_2_case_2
-            solve( KU((#vf.144, 0), mac('g'^(~ekI.86*~ekR.87),
-                                        sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143))) )
-              case Resp_1
-              by solve( splitEqs(1) )
-            next
-              case mac
-              solve( (#vr.186, 0)[!KU( f_.187, 'g'^(~ekI.86*~ekR.87)
-                                  )] /* may loop */ )
-                case Init_1
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.206, 1)[!KU( f_.207, ~ekR.227 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.206, 1)[!KU( f_.207, ~ekR.227 )] /* may loop */ )
-                qed
-              next
-                case Resp_1
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.212, 1)[!KU( f_.213, ~ekI.235 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.212, 1)[!KU( f_.213, ~ekI.235 )] /* may loop */ )
-                qed
-              next
-                case exp
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( KU((#vr.194, 1), ~ekI.86) )
-                next
-                  case sign
-                  by solve( (#vr.201, 1)[!KU( f_.203, ~x.143 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case mac
-            solve( (#vr.135, 0)[!KU( f_.136, 'g'^(~ekI.86*~ekR.87)
-                                )] /* may loop */ )
-              case Init_1
-              solve( (#vr.135, 1)[!KU( f_.137,
-                                       sign(<'2', $I.94, $R.95, x.130^x.131, 'g'^~tid.93>, ~x.97)
-                                  )] /* may loop */ )
-                case Init_2_case_1
-                by solve( (#vr.155, 1)[!KU( f_.156, ~ekR.176 )] /* may loop */ )
-              next
-                case Init_2_case_2
-                by solve( (#vr.155, 1)[!KU( f_.156, ~ekR.176 )] /* may loop */ )
-              next
-                case sign
-                by solve( (#vr.155, 1)[!KU( f_.156, ~ekR.176 )] /* may loop */ )
-              qed
-            next
-              case Resp_1
-              solve( (#vr.135, 1)[!KU( f_.137,
-                                       sign(<'2', $I.94, $R.95, x.130^x.131, 'g'^~tid.93>, ~x.97)
-                                  )] /* may loop */ )
-                case Init_2_case_1
-                by solve( (#vr.161, 1)[!KU( f_.162, ~ekI.184 )] /* may loop */ )
-              next
-                case Init_2_case_2
-                by solve( (#vr.161, 1)[!KU( f_.162, ~ekI.184 )] /* may loop */ )
-              next
-                case sign
-                by solve( (#vr.161, 1)[!KU( f_.162, ~ekI.184 )] /* may loop */ )
-              qed
-            next
-              case exp
-              solve( (#vr.135, 1)[!KU( f_.137,
-                                       sign(<'2', $I.94, $R.95, x.130^x.131, 'g'^~tid.93>, ~x.97)
-                                  )] /* may loop */ )
-                case Init_2_case_1
-                by solve( KU((#vr.143, 1), ~ekI.86) )
-              next
-                case Init_2_case_2
-                by solve( KU((#vr.143, 1), ~ekI.86) )
-              next
-                case sign
-                by solve( (#vr.150, 1)[!KU( f_.152, ~x.97 )] /* may loop */ )
-              qed
-            qed
-          qed
-        next
-          case Sessionkey_Reveal_case_4
-          solve( KU((#vf.100, 0), mac('g'^(~ekI.86*~ekR.87),
-                                      sign(<'2', $I.94, $R.95, x.130^x.131, 'g'^~tid.93>, ~x.97))) )
-            case Init_2_case_1
-            solve( KU((#vf.144, 0), mac('g'^(~ekI.86*~ekR.87),
-                                        sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143))) )
-              case Resp_1
-              solve( splitEqs(1) )
-                case split
-                by contradiction // from formulas
-              qed
-            next
-              case mac
-              solve( (#vr.186, 0)[!KU( f_.187, 'g'^(~ekI.86*~ekR.87)
-                                  )] /* may loop */ )
-                case Init_1
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.206, 1)[!KU( f_.207, ~ekR.227 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.206, 1)[!KU( f_.207, ~ekR.227 )] /* may loop */ )
-                qed
-              next
-                case Resp_1
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.212, 1)[!KU( f_.213, ~ekI.235 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.212, 1)[!KU( f_.213, ~ekI.235 )] /* may loop */ )
-                qed
-              next
-                case exp
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( KU((#vr.194, 1), ~ekI.86) )
-                next
-                  case sign
-                  by solve( (#vr.201, 1)[!KU( f_.203, ~x.143 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case Init_2_case_2
-            solve( KU((#vf.144, 0), mac('g'^(~ekI.86*~ekR.87),
-                                        sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143))) )
-              case Resp_1
-              by solve( splitEqs(1) )
-            next
-              case mac
-              solve( (#vr.186, 0)[!KU( f_.187, 'g'^(~ekI.86*~ekR.87)
-                                  )] /* may loop */ )
-                case Init_1
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.206, 1)[!KU( f_.207, ~ekR.227 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.206, 1)[!KU( f_.207, ~ekR.227 )] /* may loop */ )
-                qed
-              next
-                case Resp_1
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.212, 1)[!KU( f_.213, ~ekI.235 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.212, 1)[!KU( f_.213, ~ekI.235 )] /* may loop */ )
-                qed
-              next
-                case exp
-                solve( (#vr.186, 1)[!KU( f_.188,
-                                         sign(<'1', $I.94, $R.95, 'g'^~tid.93, 'g'^~ekI.138>, ~x.143)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( KU((#vr.194, 1), ~ekI.86) )
-                next
-                  case sign
-                  by solve( (#vr.201, 1)[!KU( f_.203, ~x.143 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case mac
-            solve( (#vr.135, 0)[!KU( f_.136, 'g'^(~ekI.86*~ekR.87)
-                                )] /* may loop */ )
-              case Init_1
-              solve( (#vr.135, 1)[!KU( f_.137,
-                                       sign(<'2', $I.94, $R.95, x.130^x.131, 'g'^~tid.93>, ~x.97)
-                                  )] /* may loop */ )
-                case Init_2_case_1
-                by solve( (#vr.155, 1)[!KU( f_.156, ~ekR.176 )] /* may loop */ )
-              next
-                case Init_2_case_2
-                by solve( (#vr.155, 1)[!KU( f_.156, ~ekR.176 )] /* may loop */ )
-              next
-                case sign
-                by solve( (#vr.155, 1)[!KU( f_.156, ~ekR.176 )] /* may loop */ )
-              qed
-            next
-              case Resp_1
-              solve( (#vr.135, 1)[!KU( f_.137,
-                                       sign(<'2', $I.94, $R.95, x.130^x.131, 'g'^~tid.93>, ~x.97)
-                                  )] /* may loop */ )
-                case Init_2_case_1
-                by solve( (#vr.161, 1)[!KU( f_.162, ~ekI.184 )] /* may loop */ )
-              next
-                case Init_2_case_2
-                by solve( (#vr.161, 1)[!KU( f_.162, ~ekI.184 )] /* may loop */ )
-              next
-                case sign
-                by solve( (#vr.161, 1)[!KU( f_.162, ~ekI.184 )] /* may loop */ )
-              qed
-            next
-              case exp
-              solve( (#vr.135, 1)[!KU( f_.137,
-                                       sign(<'2', $I.94, $R.95, x.130^x.131, 'g'^~tid.93>, ~x.97)
-                                  )] /* may loop */ )
-                case Init_2_case_1
-                by solve( KU((#vr.143, 1), ~ekI.86) )
-              next
-                case Init_2_case_2
-                by solve( KU((#vr.143, 1), ~ekI.86) )
-              next
-                case sign
-                by solve( (#vr.150, 1)[!KU( f_.152, ~x.97 )] /* may loop */ )
-              qed
-            qed
-          qed
-        next
-          case h
-          solve( (#vr.90, 0)[!KU( f_.91, 'g'^(~ekI.86*~ekR.87) )] /* may loop */ )
+          case cmac
+          solve( (#vr.177, 0)[!KU( f_.180, 'g'^(~ekI.117*~ekR.118)
+                              )] /* may loop */ )
             case Init_1
-            by solve( (#vr.108, 1)[!KU( f_.109, ~ekR.129 )] /* may loop */ )
+            by solve( (#vr.219, 1)[!KU( f_.222, ~ekR.237 )] /* may loop */ )
           next
             case Resp_1
-            by solve( (#vr.114, 1)[!KU( f_.115, ~ekI.137 )] /* may loop */ )
+            by solve( (#vr.229, 1)[!KU( f_.232, ~ekI.236 )] /* may loop */ )
           next
-            case exp
-            by solve( KU((#vr.96, 1), ~ekI.86) )
+            case cexp
+            by solve( KU((#vr.186, 1), ~ekI.117) )
           qed
+        qed
+      next
+        case Sessionkey_Reveal_case_2
+        solve( KU((#vf.144, 0), mac('g'^(~ekI.117*~ekR.118),
+                                    sign(<'1', $I.129, $R.130, x.171^x.172, 'g'^~tid.131>, ~ltkR.139))) )
+          case Resp_1
+          by solve( splitEqs(1) )
+        next
+          case cmac
+          solve( (#vr.177, 0)[!KU( f_.180, 'g'^(~ekI.117*~ekR.118)
+                              )] /* may loop */ )
+            case Init_1
+            by solve( (#vr.219, 1)[!KU( f_.222, ~ekR.237 )] /* may loop */ )
+          next
+            case Resp_1
+            by solve( (#vr.229, 1)[!KU( f_.232, ~ekI.236 )] /* may loop */ )
+          next
+            case cexp
+            by solve( KU((#vr.186, 1), ~ekI.117) )
+          qed
+        qed
+      next
+        case Sessionkey_Reveal_case_3
+        solve( KU((#vf.144, 0), mac('g'^(~ekI.117*~ekR.118),
+                                    sign(<'2', $I.129, $R.130, x.171^x.172, 'g'^~tid.131>, ~ltkI.138))) )
+          case Init_2_case_1
+          solve( splitEqs(1) )
+            case split
+            by contradiction // from formulas
+          qed
+        next
+          case Init_2_case_2
+          by solve( splitEqs(1) )
+        next
+          case cmac
+          solve( (#vr.177, 0)[!KU( f_.180, 'g'^(~ekI.117*~ekR.118)
+                              )] /* may loop */ )
+            case Init_1
+            by solve( (#vr.219, 1)[!KU( f_.222, ~ekR.237 )] /* may loop */ )
+          next
+            case Resp_1
+            by solve( (#vr.229, 1)[!KU( f_.232, ~ekI.236 )] /* may loop */ )
+          next
+            case cexp
+            by solve( KU((#vr.186, 1), ~ekI.117) )
+          qed
+        qed
+      next
+        case Sessionkey_Reveal_case_4
+        solve( KU((#vf.144, 0), mac('g'^(~ekI.117*~ekR.118),
+                                    sign(<'2', $I.129, $R.130, x.171^x.172, 'g'^~tid.131>, ~ltkI.138))) )
+          case Init_2_case_1
+          solve( splitEqs(1) )
+            case split
+            by contradiction // from formulas
+          qed
+        next
+          case Init_2_case_2
+          by solve( splitEqs(1) )
+        next
+          case cmac
+          solve( (#vr.177, 0)[!KU( f_.180, 'g'^(~ekI.117*~ekR.118)
+                              )] /* may loop */ )
+            case Init_1
+            by solve( (#vr.219, 1)[!KU( f_.222, ~ekR.237 )] /* may loop */ )
+          next
+            case Resp_1
+            by solve( (#vr.229, 1)[!KU( f_.232, ~ekI.236 )] /* may loop */ )
+          next
+            case cexp
+            by solve( KU((#vr.186, 1), ~ekI.117) )
+          qed
+        qed
+      next
+        case ch
+        solve( (#vr.122, 0)[!KU( f_.124, 'g'^(~ekI.117*~ekR.118)
+                            )] /* may loop */ )
+          case Init_1
+          by solve( (#vr.162, 1)[!KU( f_.165, ~ekR.180 )] /* may loop */ )
+        next
+          case Resp_1
+          by solve( (#vr.172, 1)[!KU( f_.175, ~ekI.179 )] /* may loop */ )
+        next
+          case cexp
+          by solve( KU((#vr.129, 1), ~ekI.117) )
         qed
       qed
     next
-      case mac
-      solve( (#vr.44, 1)[!KU( f_.46,
-                              sign(<'1', $I.11, $R.12, hkr.7, 'g'^~ekI.8>, ~x.14)
-                         )] /* may loop */ )
+      case cmac
+      solve( KU((#vf.18, 0), sign(<'1', $I.9, $R.10, hkr.7, 'g'^~ekI.11>,
+                                  ~ltkR.13)) )
         case Resp_1
-        solve( splitEqs(1) )
-          case split_case_1
-          solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekI.96*~ekR.97)) )] /* may loop */ )
-            case Sessionkey_Reveal_case_1
-            solve( (#vr.44, 0)[!KU( f_.45, 'g'^(~ekI.96*~ekR.97) )] /* may loop */ )
-              case Init_1
-              by solve( (#vr.153, 1)[!KU( f_.154, ~ekR.174 )] /* may loop */ )
-            next
-              case Resp_1
-              by solve( (#vr.159, 1)[!KU( f_.160, ~ekI.182 )] /* may loop */ )
-            next
-              case exp
-              solve( KU((#vf.110, 0), mac('g'^(~ekI.96*~ekR.97),
-                                          sign(<'1', $I.104, $R.105, x.136^x.137, 'g'^~tid.103>, ~x.108))) )
-                case Resp_1
-                by solve( KU((#vr.141, 1), ~ekI.96) )
-              next
-                case mac
-                solve( (#vr.148, 1)[!KU( f_.150,
-                                         sign(<'1', $I.104, $R.105, x.136^x.137, 'g'^~tid.103>, ~x.108)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( KU((#vr.141, 1), ~ekI.96) )
-                next
-                  case sign
-                  by solve( (#vr.156, 1)[!KU( f_.158, ~x.108 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case Sessionkey_Reveal_case_2
-            solve( (#vr.44, 0)[!KU( f_.45, 'g'^(~ekI.96*~ekR.97) )] /* may loop */ )
-              case Init_1
-              by solve( (#vr.153, 1)[!KU( f_.154, ~ekR.174 )] /* may loop */ )
-            next
-              case Resp_1
-              by solve( (#vr.159, 1)[!KU( f_.160, ~ekI.182 )] /* may loop */ )
-            next
-              case exp
-              solve( KU((#vf.110, 0), mac('g'^(~ekI.96*~ekR.97),
-                                          sign(<'1', $I.104, $R.105, x.136^x.137, 'g'^~tid.103>, ~x.108))) )
-                case Resp_1
-                by solve( KU((#vr.141, 1), ~ekI.96) )
-              next
-                case mac
-                solve( (#vr.148, 1)[!KU( f_.150,
-                                         sign(<'1', $I.104, $R.105, x.136^x.137, 'g'^~tid.103>, ~x.108)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( KU((#vr.141, 1), ~ekI.96) )
-                next
-                  case sign
-                  by solve( (#vr.156, 1)[!KU( f_.158, ~x.108 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case Sessionkey_Reveal_case_3
-            solve( (#vr.44, 0)[!KU( f_.45, 'g'^(~ekI.96*~ekR.97) )] /* may loop */ )
-              case Init_1
-              by solve( (#vr.157, 1)[!KU( f_.158, ~ekR.178 )] /* may loop */ )
-            next
-              case Resp_1
-              by solve( (#vr.163, 1)[!KU( f_.164, ~ekI.186 )] /* may loop */ )
-            next
-              case exp
-              solve( KU((#vf.110, 0), mac('g'^(~ekI.96*~ekR.97),
-                                          sign(<'2', $I.104, $R.105, x.140^x.141, 'g'^~tid.103>, ~x.107))) )
-                case Init_2_case_1
-                by solve( KU((#vr.145, 1), ~ekI.96) )
-              next
-                case Init_2_case_2
-                by solve( KU((#vr.145, 1), ~ekI.96) )
-              next
-                case mac
-                solve( (#vr.152, 1)[!KU( f_.154,
-                                         sign(<'2', $I.104, $R.105, x.140^x.141, 'g'^~tid.103>, ~x.107)
-                                    )] /* may loop */ )
-                  case Init_2_case_1
-                  by solve( KU((#vr.145, 1), ~ekI.96) )
-                next
-                  case Init_2_case_2
-                  by solve( KU((#vr.145, 1), ~ekI.96) )
-                next
-                  case sign
-                  by solve( (#vr.160, 1)[!KU( f_.162, ~x.107 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case Sessionkey_Reveal_case_4
-            solve( (#vr.44, 0)[!KU( f_.45, 'g'^(~ekI.96*~ekR.97) )] /* may loop */ )
-              case Init_1
-              by solve( (#vr.157, 1)[!KU( f_.158, ~ekR.178 )] /* may loop */ )
-            next
-              case Resp_1
-              by solve( (#vr.163, 1)[!KU( f_.164, ~ekI.186 )] /* may loop */ )
-            next
-              case exp
-              solve( KU((#vf.110, 0), mac('g'^(~ekI.96*~ekR.97),
-                                          sign(<'2', $I.104, $R.105, x.140^x.141, 'g'^~tid.103>, ~x.107))) )
-                case Init_2_case_1
-                by solve( KU((#vr.145, 1), ~ekI.96) )
-              next
-                case Init_2_case_2
-                by solve( KU((#vr.145, 1), ~ekI.96) )
-              next
-                case mac
-                solve( (#vr.152, 1)[!KU( f_.154,
-                                         sign(<'2', $I.104, $R.105, x.140^x.141, 'g'^~tid.103>, ~x.107)
-                                    )] /* may loop */ )
-                  case Init_2_case_1
-                  by solve( KU((#vr.145, 1), ~ekI.96) )
-                next
-                  case Init_2_case_2
-                  by solve( KU((#vr.145, 1), ~ekI.96) )
-                next
-                  case sign
-                  by solve( (#vr.160, 1)[!KU( f_.162, ~x.107 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case h
-            solve( (#vr.44, 0)[!KU( f_.45, 'g'^(~ekI.96*~ekR.97) )] /* may loop */ )
-              case Init_1
-              by solve( (#vr.118, 1)[!KU( f_.119, ~ekR.139 )] /* may loop */ )
-            next
-              case Resp_1
-              by solve( (#vr.124, 1)[!KU( f_.125, ~ekI.147 )] /* may loop */ )
-            next
-              case exp
-              by solve( KU((#vr.106, 1), ~ekI.96) )
-            qed
-          qed
+        solve( (#vr.56, 0)[!KU( f_.59, 'g'^(~ekI.132*~ekR.133)
+                           )] /* may loop */ )
+          case Init_1
+          by solve( (#vr.171, 1)[!KU( f_.174, ~ekR.189 )] /* may loop */ )
         next
-          case split_case_2
-          by contradiction // non-normal terms
+          case Resp_1
+          by solve( (#vr.181, 1)[!KU( f_.184, ~ekI.188 )] /* may loop */ )
+        next
+          case cexp
+          by solve( KU((#vr.138, 1), ~ekI.132) )
         qed
       next
-        case sign
-        by solve( (#vr.52, 1)[!KU( f_.54, ~x.14 )] /* may loop */ )
+        case csign
+        by solve( (#vr.65, 1)[!KU( f_.69, ~ltkR.13 )] /* may loop */ )
       qed
     qed
   next
@@ -794,880 +404,213 @@ guarded formula characterizing all attacks:
     F)"
 */
 simplify
-solve( (#i1.4, 0)[!Pk( $I.11, pk(~x.12) )] )
+solve( (#i1.4, 0)[!Pk( $I.9, pk(~ltkI.12) )] )
   case Register_pk_clone_case_1
-  solve( (#i1.4, 1)[Resp_1( $I.11, $R.13, ~ltkR.14, ~ekR.8, hki.6 )] )
+  solve( (#i1.4, 1)[Resp_1( $I.9, $R.10, ~ltkR.13, ~ekR.11, hki.6 )] )
     case Resp_1
-    solve( KU((#vf.15, 0), mac(x.10,
-                               sign(<'2', $I.11, $R.13, hki.6, 'g'^~ekR.8>, ~x.12))) )
+    solve( KU((#vf.18, 0), mac(z.17,
+                               sign(<'2', $I.9, $R.10, hki.6, 'g'^~ekR.11>, ~ltkI.12))) )
       case Init_2_case_1
-      solve( KU((#vf.58, 0), mac(x.95^x.96,
-                                 sign(<'1', $I.11, $R.13, 'g'^~ekR.8, 'g'^~ekI.52>, ~x.57))) )
-        case Resp_1
-        solve( splitEqs(1) )
-          case split
-          solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekR.142*~ekI.143))
-                           )] /* may loop */ )
-            case Sessionkey_Reveal_case_1
-            solve( KU((#vf.156, 0), mac('g'^(~ekR.142*~ekI.143),
-                                        sign(<'1', $I.150, $R.151, x.182^x.183, 'g'^~tid.149>, ~x.154))) )
-              case Resp_1
-              solve( splitEqs(1) )
-                case split
-                by contradiction // from formulas
-              qed
-            next
-              case mac
-              solve( (#vr.187, 0)[!KU( f_.188, 'g'^(~ekR.142*~ekI.143)
-                                  )] /* may loop */ )
-                case Init_1
-                solve( (#vr.187, 1)[!KU( f_.189,
-                                         sign(<'1', $I.150, $R.151, x.182^x.183, 'g'^~tid.149>, ~x.154)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.207, 1)[!KU( f_.208, ~ekR.227 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.207, 1)[!KU( f_.208, ~ekR.227 )] /* may loop */ )
-                qed
-              next
-                case Resp_1
-                solve( (#vr.187, 1)[!KU( f_.189,
-                                         sign(<'1', $I.150, $R.151, x.182^x.183, 'g'^~tid.149>, ~x.154)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.213, 1)[!KU( f_.214, ~ekI.237 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.213, 1)[!KU( f_.214, ~ekI.237 )] /* may loop */ )
-                qed
-              next
-                case exp
-                solve( (#vr.187, 1)[!KU( f_.189,
-                                         sign(<'1', $I.150, $R.151, x.182^x.183, 'g'^~tid.149>, ~x.154)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( KU((#vr.195, 1), ~ekR.142) )
-                next
-                  case sign
-                  by solve( (#vr.202, 1)[!KU( f_.204, ~x.154 )] /* may loop */ )
-                qed
-              qed
+      solve( (#k.5, 0)[!KU( f_.20, h('g'^(~ekR.128*~ekI.129))
+                       )] /* may loop */ )
+        case Sessionkey_Reveal_case_1
+        solve( KU((#vf.79, 0), mac('g'^(~ekR.128*~ekI.129),
+                                   sign(<'1', $I.9, $R.10, 'g'^~ekR.128, 'g'^~ekI.129>, ~ltkR.74))) )
+          case Resp_1
+          solve( KU((#vf.155, 0), mac('g'^(~ekR.128*~ekI.129),
+                                      sign(<'1', $I.140, $R.141, 'g'^x.183, 'g'^~tid.142>, ~ltkR.150))) )
+            case Resp_1
+            solve( splitEqs(1) )
+              case split
+              by contradiction // from formulas
             qed
           next
-            case Sessionkey_Reveal_case_2
-            solve( KU((#vf.156, 0), mac('g'^(~ekR.142*~ekI.143),
-                                        sign(<'1', $I.150, $R.151, x.182^x.183, 'g'^~tid.149>, ~x.154))) )
-              case Resp_1
-              by solve( splitEqs(1) )
-            next
-              case mac
-              solve( (#vr.187, 0)[!KU( f_.188, 'g'^(~ekR.142*~ekI.143)
-                                  )] /* may loop */ )
-                case Init_1
-                solve( (#vr.187, 1)[!KU( f_.189,
-                                         sign(<'1', $I.150, $R.151, x.182^x.183, 'g'^~tid.149>, ~x.154)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.207, 1)[!KU( f_.208, ~ekR.227 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.207, 1)[!KU( f_.208, ~ekR.227 )] /* may loop */ )
-                qed
-              next
-                case Resp_1
-                solve( (#vr.187, 1)[!KU( f_.189,
-                                         sign(<'1', $I.150, $R.151, x.182^x.183, 'g'^~tid.149>, ~x.154)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( (#vr.213, 1)[!KU( f_.214, ~ekI.237 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.213, 1)[!KU( f_.214, ~ekI.237 )] /* may loop */ )
-                qed
-              next
-                case exp
-                solve( (#vr.187, 1)[!KU( f_.189,
-                                         sign(<'1', $I.150, $R.151, x.182^x.183, 'g'^~tid.149>, ~x.154)
-                                    )] /* may loop */ )
-                  case Resp_1
-                  by solve( KU((#vr.195, 1), ~ekR.142) )
-                next
-                  case sign
-                  by solve( (#vr.202, 1)[!KU( f_.204, ~x.154 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case Sessionkey_Reveal_case_3
-            solve( KU((#vf.156, 0), mac('g'^(~ekR.142*~ekI.143),
-                                        sign(<'2', $I.150, $R.151, x.186^x.187, 'g'^~tid.149>, ~x.153))) )
-              case Init_2_case_1
-              solve( KU((#vf.200, 0), mac('g'^(~ekR.142*~ekI.143),
-                                          sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199))) )
-                case Resp_1
-                solve( splitEqs(1) )
-                  case split
-                  by contradiction // from formulas
-                qed
-              next
-                case mac
-                solve( (#vr.242, 0)[!KU( f_.243, 'g'^(~ekR.142*~ekI.143)
-                                    )] /* may loop */ )
-                  case Init_1
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( (#vr.262, 1)[!KU( f_.263, ~ekR.282 )] /* may loop */ )
-                  next
-                    case sign
-                    by solve( (#vr.262, 1)[!KU( f_.263, ~ekR.282 )] /* may loop */ )
-                  qed
-                next
-                  case Resp_1
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( (#vr.268, 1)[!KU( f_.269, ~ekI.292 )] /* may loop */ )
-                  next
-                    case sign
-                    by solve( (#vr.268, 1)[!KU( f_.269, ~ekI.292 )] /* may loop */ )
-                  qed
-                next
-                  case exp
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( KU((#vr.250, 1), ~ekR.142) )
-                  next
-                    case sign
-                    by solve( (#vr.257, 1)[!KU( f_.259, ~x.199 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case Init_2_case_2
-              solve( KU((#vf.200, 0), mac('g'^(~ekR.142*~ekI.143),
-                                          sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199))) )
-                case Resp_1
-                by solve( splitEqs(1) )
-              next
-                case mac
-                solve( (#vr.242, 0)[!KU( f_.243, 'g'^(~ekR.142*~ekI.143)
-                                    )] /* may loop */ )
-                  case Init_1
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( (#vr.262, 1)[!KU( f_.263, ~ekR.282 )] /* may loop */ )
-                  next
-                    case sign
-                    by solve( (#vr.262, 1)[!KU( f_.263, ~ekR.282 )] /* may loop */ )
-                  qed
-                next
-                  case Resp_1
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( (#vr.268, 1)[!KU( f_.269, ~ekI.292 )] /* may loop */ )
-                  next
-                    case sign
-                    by solve( (#vr.268, 1)[!KU( f_.269, ~ekI.292 )] /* may loop */ )
-                  qed
-                next
-                  case exp
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( KU((#vr.250, 1), ~ekR.142) )
-                  next
-                    case sign
-                    by solve( (#vr.257, 1)[!KU( f_.259, ~x.199 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case mac
-              solve( (#vr.191, 0)[!KU( f_.192, 'g'^(~ekR.142*~ekI.143)
-                                  )] /* may loop */ )
-                case Init_1
-                solve( (#vr.191, 1)[!KU( f_.193,
-                                         sign(<'2', $I.150, $R.151, x.186^x.187, 'g'^~tid.149>, ~x.153)
-                                    )] /* may loop */ )
-                  case Init_2_case_1
-                  by solve( (#vr.211, 1)[!KU( f_.212, ~ekR.231 )] /* may loop */ )
-                next
-                  case Init_2_case_2
-                  by solve( (#vr.211, 1)[!KU( f_.212, ~ekR.231 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.211, 1)[!KU( f_.212, ~ekR.231 )] /* may loop */ )
-                qed
-              next
-                case Resp_1
-                solve( (#vr.191, 1)[!KU( f_.193,
-                                         sign(<'2', $I.150, $R.151, x.186^x.187, 'g'^~tid.149>, ~x.153)
-                                    )] /* may loop */ )
-                  case Init_2_case_1
-                  by solve( (#vr.217, 1)[!KU( f_.218, ~ekI.241 )] /* may loop */ )
-                next
-                  case Init_2_case_2
-                  by solve( (#vr.217, 1)[!KU( f_.218, ~ekI.241 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.217, 1)[!KU( f_.218, ~ekI.241 )] /* may loop */ )
-                qed
-              next
-                case exp
-                solve( (#vr.191, 1)[!KU( f_.193,
-                                         sign(<'2', $I.150, $R.151, x.186^x.187, 'g'^~tid.149>, ~x.153)
-                                    )] /* may loop */ )
-                  case Init_2_case_1
-                  by solve( KU((#vr.199, 1), ~ekR.142) )
-                next
-                  case Init_2_case_2
-                  by solve( KU((#vr.199, 1), ~ekR.142) )
-                next
-                  case sign
-                  by solve( (#vr.206, 1)[!KU( f_.208, ~x.153 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case Sessionkey_Reveal_case_4
-            solve( KU((#vf.156, 0), mac('g'^(~ekR.142*~ekI.143),
-                                        sign(<'2', $I.150, $R.151, x.186^x.187, 'g'^~tid.149>, ~x.153))) )
-              case Init_2_case_1
-              solve( KU((#vf.200, 0), mac('g'^(~ekR.142*~ekI.143),
-                                          sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199))) )
-                case Resp_1
-                by solve( splitEqs(1) )
-              next
-                case mac
-                solve( (#vr.242, 0)[!KU( f_.243, 'g'^(~ekR.142*~ekI.143)
-                                    )] /* may loop */ )
-                  case Init_1
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( (#vr.262, 1)[!KU( f_.263, ~ekR.282 )] /* may loop */ )
-                  next
-                    case sign
-                    by solve( (#vr.262, 1)[!KU( f_.263, ~ekR.282 )] /* may loop */ )
-                  qed
-                next
-                  case Resp_1
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( (#vr.268, 1)[!KU( f_.269, ~ekI.292 )] /* may loop */ )
-                  next
-                    case sign
-                    by solve( (#vr.268, 1)[!KU( f_.269, ~ekI.292 )] /* may loop */ )
-                  qed
-                next
-                  case exp
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( KU((#vr.250, 1), ~ekR.142) )
-                  next
-                    case sign
-                    by solve( (#vr.257, 1)[!KU( f_.259, ~x.199 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case Init_2_case_2
-              solve( KU((#vf.200, 0), mac('g'^(~ekR.142*~ekI.143),
-                                          sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199))) )
-                case Resp_1
-                by solve( splitEqs(1) )
-              next
-                case mac
-                solve( (#vr.242, 0)[!KU( f_.243, 'g'^(~ekR.142*~ekI.143)
-                                    )] /* may loop */ )
-                  case Init_1
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( (#vr.262, 1)[!KU( f_.263, ~ekR.282 )] /* may loop */ )
-                  next
-                    case sign
-                    by solve( (#vr.262, 1)[!KU( f_.263, ~ekR.282 )] /* may loop */ )
-                  qed
-                next
-                  case Resp_1
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( (#vr.268, 1)[!KU( f_.269, ~ekI.292 )] /* may loop */ )
-                  next
-                    case sign
-                    by solve( (#vr.268, 1)[!KU( f_.269, ~ekI.292 )] /* may loop */ )
-                  qed
-                next
-                  case exp
-                  solve( (#vr.242, 1)[!KU( f_.244,
-                                           sign(<'1', $I.150, $R.151, 'g'^~tid.149, 'g'^~ekI.194>, ~x.199)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( KU((#vr.250, 1), ~ekR.142) )
-                  next
-                    case sign
-                    by solve( (#vr.257, 1)[!KU( f_.259, ~x.199 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case mac
-              solve( (#vr.191, 0)[!KU( f_.192, 'g'^(~ekR.142*~ekI.143)
-                                  )] /* may loop */ )
-                case Init_1
-                solve( (#vr.191, 1)[!KU( f_.193,
-                                         sign(<'2', $I.150, $R.151, x.186^x.187, 'g'^~tid.149>, ~x.153)
-                                    )] /* may loop */ )
-                  case Init_2_case_1
-                  by solve( (#vr.211, 1)[!KU( f_.212, ~ekR.231 )] /* may loop */ )
-                next
-                  case Init_2_case_2
-                  by solve( (#vr.211, 1)[!KU( f_.212, ~ekR.231 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.211, 1)[!KU( f_.212, ~ekR.231 )] /* may loop */ )
-                qed
-              next
-                case Resp_1
-                solve( (#vr.191, 1)[!KU( f_.193,
-                                         sign(<'2', $I.150, $R.151, x.186^x.187, 'g'^~tid.149>, ~x.153)
-                                    )] /* may loop */ )
-                  case Init_2_case_1
-                  by solve( (#vr.217, 1)[!KU( f_.218, ~ekI.241 )] /* may loop */ )
-                next
-                  case Init_2_case_2
-                  by solve( (#vr.217, 1)[!KU( f_.218, ~ekI.241 )] /* may loop */ )
-                next
-                  case sign
-                  by solve( (#vr.217, 1)[!KU( f_.218, ~ekI.241 )] /* may loop */ )
-                qed
-              next
-                case exp
-                solve( (#vr.191, 1)[!KU( f_.193,
-                                         sign(<'2', $I.150, $R.151, x.186^x.187, 'g'^~tid.149>, ~x.153)
-                                    )] /* may loop */ )
-                  case Init_2_case_1
-                  by solve( KU((#vr.199, 1), ~ekR.142) )
-                next
-                  case Init_2_case_2
-                  by solve( KU((#vr.199, 1), ~ekR.142) )
-                next
-                  case sign
-                  by solve( (#vr.206, 1)[!KU( f_.208, ~x.153 )] /* may loop */ )
-                qed
-              qed
-            qed
-          next
-            case h
-            solve( (#vr.146, 0)[!KU( f_.147, 'g'^(~ekR.142*~ekI.143)
+            case cmac
+            solve( (#vr.242, 0)[!KU( f_.245, 'g'^(~ekR.128*~ekI.129)
                                 )] /* may loop */ )
               case Init_1
-              by solve( (#vr.164, 1)[!KU( f_.165, ~ekR.184 )] /* may loop */ )
+              by solve( (#vr.284, 1)[!KU( f_.287, ~ekR.301 )] /* may loop */ )
             next
               case Resp_1
-              by solve( (#vr.170, 1)[!KU( f_.171, ~ekI.194 )] /* may loop */ )
+              by solve( (#vr.294, 1)[!KU( f_.297, ~ekI.302 )] /* may loop */ )
             next
-              case exp
-              by solve( KU((#vr.152, 1), ~ekR.142) )
-            qed
-          qed
-        qed
-      next
-        case mac
-        solve( (#vr.102, 1)[!KU( f_.104,
-                                 sign(<'1', $I.11, $R.13, 'g'^~ekR.8, 'g'^~ekI.52>, ~x.57)
-                            )] /* may loop */ )
-          case Resp_1
-          solve( splitEqs(1) )
-            case split
-            solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekR.152*~ekI.153))
-                             )] /* may loop */ )
-              case Sessionkey_Reveal_case_1
-              solve( (#vr.102, 0)[!KU( f_.103, 'g'^(~ekR.152*~ekI.153)
-                                  )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.209, 1)[!KU( f_.210, ~ekR.229 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.215, 1)[!KU( f_.216, ~ekI.239 )] /* may loop */ )
-              next
-                case exp
-                solve( KU((#vf.166, 0), mac('g'^(~ekR.152*~ekI.153),
-                                            sign(<'1', $I.160, $R.161, x.192^x.193, 'g'^~tid.159>, ~x.164))) )
-                  case Resp_1
-                  by solve( KU((#vr.197, 1), ~ekR.152) )
-                next
-                  case mac
-                  solve( (#vr.204, 1)[!KU( f_.206,
-                                           sign(<'1', $I.160, $R.161, x.192^x.193, 'g'^~tid.159>, ~x.164)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( KU((#vr.197, 1), ~ekR.152) )
-                  next
-                    case sign
-                    by solve( (#vr.212, 1)[!KU( f_.214, ~x.164 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case Sessionkey_Reveal_case_2
-              solve( (#vr.102, 0)[!KU( f_.103, 'g'^(~ekR.152*~ekI.153)
-                                  )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.209, 1)[!KU( f_.210, ~ekR.229 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.215, 1)[!KU( f_.216, ~ekI.239 )] /* may loop */ )
-              next
-                case exp
-                solve( KU((#vf.166, 0), mac('g'^(~ekR.152*~ekI.153),
-                                            sign(<'1', $I.160, $R.161, x.192^x.193, 'g'^~tid.159>, ~x.164))) )
-                  case Resp_1
-                  by solve( KU((#vr.197, 1), ~ekR.152) )
-                next
-                  case mac
-                  solve( (#vr.204, 1)[!KU( f_.206,
-                                           sign(<'1', $I.160, $R.161, x.192^x.193, 'g'^~tid.159>, ~x.164)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( KU((#vr.197, 1), ~ekR.152) )
-                  next
-                    case sign
-                    by solve( (#vr.212, 1)[!KU( f_.214, ~x.164 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case Sessionkey_Reveal_case_3
-              solve( (#vr.102, 0)[!KU( f_.103, 'g'^(~ekR.152*~ekI.153)
-                                  )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.213, 1)[!KU( f_.214, ~ekR.233 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.219, 1)[!KU( f_.220, ~ekI.243 )] /* may loop */ )
-              next
-                case exp
-                solve( KU((#vf.166, 0), mac('g'^(~ekR.152*~ekI.153),
-                                            sign(<'2', $I.160, $R.161, x.196^x.197, 'g'^~tid.159>, ~x.163))) )
-                  case Init_2_case_1
-                  by solve( KU((#vr.201, 1), ~ekR.152) )
-                next
-                  case Init_2_case_2
-                  by solve( KU((#vr.201, 1), ~ekR.152) )
-                next
-                  case mac
-                  solve( (#vr.208, 1)[!KU( f_.210,
-                                           sign(<'2', $I.160, $R.161, x.196^x.197, 'g'^~tid.159>, ~x.163)
-                                      )] /* may loop */ )
-                    case Init_2_case_1
-                    by solve( KU((#vr.201, 1), ~ekR.152) )
-                  next
-                    case Init_2_case_2
-                    by solve( KU((#vr.201, 1), ~ekR.152) )
-                  next
-                    case sign
-                    by solve( (#vr.216, 1)[!KU( f_.218, ~x.163 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case Sessionkey_Reveal_case_4
-              solve( (#vr.102, 0)[!KU( f_.103, 'g'^(~ekR.152*~ekI.153)
-                                  )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.213, 1)[!KU( f_.214, ~ekR.233 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.219, 1)[!KU( f_.220, ~ekI.243 )] /* may loop */ )
-              next
-                case exp
-                solve( KU((#vf.166, 0), mac('g'^(~ekR.152*~ekI.153),
-                                            sign(<'2', $I.160, $R.161, x.196^x.197, 'g'^~tid.159>, ~x.163))) )
-                  case Init_2_case_1
-                  by solve( KU((#vr.201, 1), ~ekR.152) )
-                next
-                  case Init_2_case_2
-                  by solve( KU((#vr.201, 1), ~ekR.152) )
-                next
-                  case mac
-                  solve( (#vr.208, 1)[!KU( f_.210,
-                                           sign(<'2', $I.160, $R.161, x.196^x.197, 'g'^~tid.159>, ~x.163)
-                                      )] /* may loop */ )
-                    case Init_2_case_1
-                    by solve( KU((#vr.201, 1), ~ekR.152) )
-                  next
-                    case Init_2_case_2
-                    by solve( KU((#vr.201, 1), ~ekR.152) )
-                  next
-                    case sign
-                    by solve( (#vr.216, 1)[!KU( f_.218, ~x.163 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case h
-              solve( (#vr.102, 0)[!KU( f_.103, 'g'^(~ekR.152*~ekI.153)
-                                  )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.174, 1)[!KU( f_.175, ~ekR.194 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.180, 1)[!KU( f_.181, ~ekI.204 )] /* may loop */ )
-              next
-                case exp
-                by solve( KU((#vr.162, 1), ~ekR.152) )
-              qed
+              case cexp
+              by solve( KU((#vr.251, 1), ~ekR.128) )
             qed
           qed
         next
-          case sign
-          by solve( (#vr.110, 1)[!KU( f_.112, ~x.57 )] /* may loop */ )
+          case cmac
+          solve( (#vr.188, 0)[!KU( f_.191, 'g'^(~ekR.128*~ekI.129)
+                              )] /* may loop */ )
+            case Init_1
+            by solve( (#vr.230, 1)[!KU( f_.233, ~ekR.247 )] /* may loop */ )
+          next
+            case Resp_1
+            by solve( (#vr.240, 1)[!KU( f_.243, ~ekI.248 )] /* may loop */ )
+          next
+            case cexp
+            by solve( KU((#vr.197, 1), ~ekR.128) )
+          qed
+        qed
+      next
+        case Sessionkey_Reveal_case_2
+        solve( KU((#vf.79, 0), mac('g'^(~ekR.128*~ekI.129),
+                                   sign(<'1', $I.9, $R.10, 'g'^~ekR.128, 'g'^~ekI.129>, ~ltkR.74))) )
+          case Resp_1
+          solve( KU((#vf.155, 0), mac('g'^(~ekR.128*~ekI.129),
+                                      sign(<'1', $I.140, $R.141, 'g'^x.183, 'g'^~tid.142>, ~ltkR.150))) )
+            case Resp_1
+            by solve( splitEqs(1) )
+          next
+            case cmac
+            solve( (#vr.242, 0)[!KU( f_.245, 'g'^(~ekR.128*~ekI.129)
+                                )] /* may loop */ )
+              case Init_1
+              by solve( (#vr.284, 1)[!KU( f_.287, ~ekR.301 )] /* may loop */ )
+            next
+              case Resp_1
+              by solve( (#vr.294, 1)[!KU( f_.297, ~ekI.302 )] /* may loop */ )
+            next
+              case cexp
+              by solve( KU((#vr.251, 1), ~ekR.128) )
+            qed
+          qed
+        next
+          case cmac
+          solve( (#vr.188, 0)[!KU( f_.191, 'g'^(~ekR.128*~ekI.129)
+                              )] /* may loop */ )
+            case Init_1
+            by solve( (#vr.230, 1)[!KU( f_.233, ~ekR.247 )] /* may loop */ )
+          next
+            case Resp_1
+            by solve( (#vr.240, 1)[!KU( f_.243, ~ekI.248 )] /* may loop */ )
+          next
+            case cexp
+            by solve( KU((#vr.197, 1), ~ekR.128) )
+          qed
+        qed
+      next
+        case Sessionkey_Reveal_case_3
+        solve( KU((#vf.79, 0), mac('g'^(~ekR.128*~ekI.129),
+                                   sign(<'1', $I.9, $R.10, 'g'^~ekR.128, 'g'^~ekI.129>, ~ltkR.74))) )
+          case Resp_1
+          solve( KU((#vf.155, 0), mac('g'^(~ekR.128*~ekI.129),
+                                      sign(<'2', $I.140, $R.141, 'g'^x.183, 'g'^~tid.142>, ~ltkI.149))) )
+            case Init_2_case_1
+            solve( splitEqs(1) )
+              case split
+              by contradiction // from formulas
+            qed
+          next
+            case Init_2_case_2
+            by solve( splitEqs(1) )
+          next
+            case cmac
+            solve( (#vr.242, 0)[!KU( f_.245, 'g'^(~ekR.128*~ekI.129)
+                                )] /* may loop */ )
+              case Init_1
+              by solve( (#vr.284, 1)[!KU( f_.287, ~ekR.301 )] /* may loop */ )
+            next
+              case Resp_1
+              by solve( (#vr.294, 1)[!KU( f_.297, ~ekI.302 )] /* may loop */ )
+            next
+              case cexp
+              by solve( KU((#vr.251, 1), ~ekR.128) )
+            qed
+          qed
+        next
+          case cmac
+          solve( (#vr.188, 0)[!KU( f_.191, 'g'^(~ekR.128*~ekI.129)
+                              )] /* may loop */ )
+            case Init_1
+            by solve( (#vr.230, 1)[!KU( f_.233, ~ekR.247 )] /* may loop */ )
+          next
+            case Resp_1
+            by solve( (#vr.240, 1)[!KU( f_.243, ~ekI.248 )] /* may loop */ )
+          next
+            case cexp
+            by solve( KU((#vr.197, 1), ~ekR.128) )
+          qed
+        qed
+      next
+        case Sessionkey_Reveal_case_4
+        solve( KU((#vf.79, 0), mac('g'^(~ekR.128*~ekI.129),
+                                   sign(<'1', $I.9, $R.10, 'g'^~ekR.128, 'g'^~ekI.129>, ~ltkR.74))) )
+          case Resp_1
+          solve( KU((#vf.155, 0), mac('g'^(~ekR.128*~ekI.129),
+                                      sign(<'2', $I.140, $R.141, 'g'^x.183, 'g'^~tid.142>, ~ltkI.149))) )
+            case Init_2_case_1
+            by solve( splitEqs(1) )
+          next
+            case Init_2_case_2
+            by solve( splitEqs(1) )
+          next
+            case cmac
+            solve( (#vr.242, 0)[!KU( f_.245, 'g'^(~ekR.128*~ekI.129)
+                                )] /* may loop */ )
+              case Init_1
+              by solve( (#vr.284, 1)[!KU( f_.287, ~ekR.301 )] /* may loop */ )
+            next
+              case Resp_1
+              by solve( (#vr.294, 1)[!KU( f_.297, ~ekI.302 )] /* may loop */ )
+            next
+              case cexp
+              by solve( KU((#vr.251, 1), ~ekR.128) )
+            qed
+          qed
+        next
+          case cmac
+          solve( (#vr.188, 0)[!KU( f_.191, 'g'^(~ekR.128*~ekI.129)
+                              )] /* may loop */ )
+            case Init_1
+            by solve( (#vr.230, 1)[!KU( f_.233, ~ekR.247 )] /* may loop */ )
+          next
+            case Resp_1
+            by solve( (#vr.240, 1)[!KU( f_.243, ~ekI.248 )] /* may loop */ )
+          next
+            case cexp
+            by solve( KU((#vr.197, 1), ~ekR.128) )
+          qed
+        qed
+      next
+        case ch
+        solve( (#vr.133, 0)[!KU( f_.135, 'g'^(~ekR.128*~ekI.129)
+                            )] /* may loop */ )
+          case Init_1
+          by solve( (#vr.173, 1)[!KU( f_.176, ~ekR.190 )] /* may loop */ )
+        next
+          case Resp_1
+          by solve( (#vr.183, 1)[!KU( f_.186, ~ekI.191 )] /* may loop */ )
+        next
+          case cexp
+          by solve( KU((#vr.140, 1), ~ekR.128) )
         qed
       qed
     next
       case Init_2_case_2
       by contradiction // from formulas
     next
-      case mac
-      solve( (#vr.49, 1)[!KU( f_.51,
-                              sign(<'2', $I.11, $R.13, hki.6, 'g'^~ekR.8>, ~x.12)
-                         )] /* may loop */ )
+      case cmac
+      solve( KU((#vf.18, 0), sign(<'2', $I.9, $R.10, hki.6, 'g'^~ekR.11>,
+                                  ~ltkI.12)) )
         case Init_2_case_1
-        solve( KU((#vf.67, 0), mac(x.107^x.108,
-                                   sign(<'1', $I.11, $R.13, 'g'^~ekR.8, 'g'^~ekI.60>, ~x.66))) )
-          case Resp_1
-          solve( splitEqs(1) )
-            case split_case_1
-            solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekR.152*~ekI.153))
-                             )] /* may loop */ )
-              case Sessionkey_Reveal_case_1
-              solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.152*~ekI.153)
-                                 )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.209, 1)[!KU( f_.210, ~ekR.229 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.215, 1)[!KU( f_.216, ~ekI.239 )] /* may loop */ )
-              next
-                case exp
-                solve( KU((#vf.166, 0), mac('g'^(~ekR.152*~ekI.153),
-                                            sign(<'1', $I.160, $R.161, x.192^x.193, 'g'^~tid.159>, ~x.164))) )
-                  case Resp_1
-                  by solve( KU((#vr.197, 1), ~ekR.152) )
-                next
-                  case mac
-                  solve( (#vr.204, 1)[!KU( f_.206,
-                                           sign(<'1', $I.160, $R.161, x.192^x.193, 'g'^~tid.159>, ~x.164)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( KU((#vr.197, 1), ~ekR.152) )
-                  next
-                    case sign
-                    by solve( (#vr.212, 1)[!KU( f_.214, ~x.164 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case Sessionkey_Reveal_case_2
-              solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.152*~ekI.153)
-                                 )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.209, 1)[!KU( f_.210, ~ekR.229 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.215, 1)[!KU( f_.216, ~ekI.239 )] /* may loop */ )
-              next
-                case exp
-                solve( KU((#vf.166, 0), mac('g'^(~ekR.152*~ekI.153),
-                                            sign(<'1', $I.160, $R.161, x.192^x.193, 'g'^~tid.159>, ~x.164))) )
-                  case Resp_1
-                  by solve( KU((#vr.197, 1), ~ekR.152) )
-                next
-                  case mac
-                  solve( (#vr.204, 1)[!KU( f_.206,
-                                           sign(<'1', $I.160, $R.161, x.192^x.193, 'g'^~tid.159>, ~x.164)
-                                      )] /* may loop */ )
-                    case Resp_1
-                    by solve( KU((#vr.197, 1), ~ekR.152) )
-                  next
-                    case sign
-                    by solve( (#vr.212, 1)[!KU( f_.214, ~x.164 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case Sessionkey_Reveal_case_3
-              solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.152*~ekI.153)
-                                 )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.213, 1)[!KU( f_.214, ~ekR.233 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.219, 1)[!KU( f_.220, ~ekI.243 )] /* may loop */ )
-              next
-                case exp
-                solve( KU((#vf.166, 0), mac('g'^(~ekR.152*~ekI.153),
-                                            sign(<'2', $I.160, $R.161, x.196^x.197, 'g'^~tid.159>, ~x.163))) )
-                  case Init_2_case_1
-                  by solve( KU((#vr.201, 1), ~ekR.152) )
-                next
-                  case Init_2_case_2
-                  by solve( KU((#vr.201, 1), ~ekR.152) )
-                next
-                  case mac
-                  solve( (#vr.208, 1)[!KU( f_.210,
-                                           sign(<'2', $I.160, $R.161, x.196^x.197, 'g'^~tid.159>, ~x.163)
-                                      )] /* may loop */ )
-                    case Init_2_case_1
-                    by solve( KU((#vr.201, 1), ~ekR.152) )
-                  next
-                    case Init_2_case_2
-                    by solve( KU((#vr.201, 1), ~ekR.152) )
-                  next
-                    case sign
-                    by solve( (#vr.216, 1)[!KU( f_.218, ~x.163 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case Sessionkey_Reveal_case_4
-              solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.152*~ekI.153)
-                                 )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.213, 1)[!KU( f_.214, ~ekR.233 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.219, 1)[!KU( f_.220, ~ekI.243 )] /* may loop */ )
-              next
-                case exp
-                solve( KU((#vf.166, 0), mac('g'^(~ekR.152*~ekI.153),
-                                            sign(<'2', $I.160, $R.161, x.196^x.197, 'g'^~tid.159>, ~x.163))) )
-                  case Init_2_case_1
-                  by solve( KU((#vr.201, 1), ~ekR.152) )
-                next
-                  case Init_2_case_2
-                  by solve( KU((#vr.201, 1), ~ekR.152) )
-                next
-                  case mac
-                  solve( (#vr.208, 1)[!KU( f_.210,
-                                           sign(<'2', $I.160, $R.161, x.196^x.197, 'g'^~tid.159>, ~x.163)
-                                      )] /* may loop */ )
-                    case Init_2_case_1
-                    by solve( KU((#vr.201, 1), ~ekR.152) )
-                  next
-                    case Init_2_case_2
-                    by solve( KU((#vr.201, 1), ~ekR.152) )
-                  next
-                    case sign
-                    by solve( (#vr.216, 1)[!KU( f_.218, ~x.163 )] /* may loop */ )
-                  qed
-                qed
-              qed
-            next
-              case h
-              solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.152*~ekI.153)
-                                 )] /* may loop */ )
-                case Init_1
-                by solve( (#vr.174, 1)[!KU( f_.175, ~ekR.194 )] /* may loop */ )
-              next
-                case Resp_1
-                by solve( (#vr.180, 1)[!KU( f_.181, ~ekI.204 )] /* may loop */ )
-              next
-                case exp
-                by solve( KU((#vr.162, 1), ~ekR.152) )
-              qed
-            qed
-          next
-            case split_case_2
-            by contradiction // non-normal terms
-          qed
+        solve( (#vr.61, 0)[!KU( f_.64, 'g'^(~ekR.143*~ekI.144)
+                           )] /* may loop */ )
+          case Init_1
+          by solve( (#vr.182, 1)[!KU( f_.185, ~ekR.199 )] /* may loop */ )
         next
-          case mac
-          solve( (#vr.112, 1)[!KU( f_.114,
-                                   sign(<'1', $I.11, $R.13, 'g'^~ekR.8, 'g'^~ekI.60>, ~x.66)
-                              )] /* may loop */ )
-            case Resp_1
-            solve( splitEqs(1) )
-              case split_case_1
-              solve( (#k.5, 0)[!KU( f_.17, h('g'^(~ekR.162*~ekI.163))
-                               )] /* may loop */ )
-                case Sessionkey_Reveal_case_1
-                solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.162*~ekI.163)
-                                   )] /* may loop */ )
-                  case Init_1
-                  by solve( (#vr.219, 1)[!KU( f_.220, ~ekR.239 )] /* may loop */ )
-                next
-                  case Resp_1
-                  by solve( (#vr.225, 1)[!KU( f_.226, ~ekI.249 )] /* may loop */ )
-                next
-                  case exp
-                  solve( KU((#vf.176, 0), mac('g'^(~ekR.162*~ekI.163),
-                                              sign(<'1', $I.170, $R.171, x.202^x.203, 'g'^~tid.169>,
-                                                   ~x.174))) )
-                    case Resp_1
-                    by solve( KU((#vr.207, 1), ~ekR.162) )
-                  next
-                    case mac
-                    solve( (#vr.214, 1)[!KU( f_.216,
-                                             sign(<'1', $I.170, $R.171, x.202^x.203, 'g'^~tid.169>, ~x.174)
-                                        )] /* may loop */ )
-                      case Resp_1
-                      by solve( KU((#vr.207, 1), ~ekR.162) )
-                    next
-                      case sign
-                      by solve( (#vr.222, 1)[!KU( f_.224, ~x.174 )] /* may loop */ )
-                    qed
-                  qed
-                qed
-              next
-                case Sessionkey_Reveal_case_2
-                solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.162*~ekI.163)
-                                   )] /* may loop */ )
-                  case Init_1
-                  by solve( (#vr.219, 1)[!KU( f_.220, ~ekR.239 )] /* may loop */ )
-                next
-                  case Resp_1
-                  by solve( (#vr.225, 1)[!KU( f_.226, ~ekI.249 )] /* may loop */ )
-                next
-                  case exp
-                  solve( KU((#vf.176, 0), mac('g'^(~ekR.162*~ekI.163),
-                                              sign(<'1', $I.170, $R.171, x.202^x.203, 'g'^~tid.169>,
-                                                   ~x.174))) )
-                    case Resp_1
-                    by solve( KU((#vr.207, 1), ~ekR.162) )
-                  next
-                    case mac
-                    solve( (#vr.214, 1)[!KU( f_.216,
-                                             sign(<'1', $I.170, $R.171, x.202^x.203, 'g'^~tid.169>, ~x.174)
-                                        )] /* may loop */ )
-                      case Resp_1
-                      by solve( KU((#vr.207, 1), ~ekR.162) )
-                    next
-                      case sign
-                      by solve( (#vr.222, 1)[!KU( f_.224, ~x.174 )] /* may loop */ )
-                    qed
-                  qed
-                qed
-              next
-                case Sessionkey_Reveal_case_3
-                solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.162*~ekI.163)
-                                   )] /* may loop */ )
-                  case Init_1
-                  by solve( (#vr.223, 1)[!KU( f_.224, ~ekR.243 )] /* may loop */ )
-                next
-                  case Resp_1
-                  by solve( (#vr.229, 1)[!KU( f_.230, ~ekI.253 )] /* may loop */ )
-                next
-                  case exp
-                  solve( KU((#vf.176, 0), mac('g'^(~ekR.162*~ekI.163),
-                                              sign(<'2', $I.170, $R.171, x.206^x.207, 'g'^~tid.169>,
-                                                   ~x.173))) )
-                    case Init_2_case_1
-                    by solve( KU((#vr.211, 1), ~ekR.162) )
-                  next
-                    case Init_2_case_2
-                    by solve( KU((#vr.211, 1), ~ekR.162) )
-                  next
-                    case mac
-                    solve( (#vr.218, 1)[!KU( f_.220,
-                                             sign(<'2', $I.170, $R.171, x.206^x.207, 'g'^~tid.169>, ~x.173)
-                                        )] /* may loop */ )
-                      case Init_2_case_1
-                      by solve( KU((#vr.211, 1), ~ekR.162) )
-                    next
-                      case Init_2_case_2
-                      by solve( KU((#vr.211, 1), ~ekR.162) )
-                    next
-                      case sign
-                      by solve( (#vr.226, 1)[!KU( f_.228, ~x.173 )] /* may loop */ )
-                    qed
-                  qed
-                qed
-              next
-                case Sessionkey_Reveal_case_4
-                solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.162*~ekI.163)
-                                   )] /* may loop */ )
-                  case Init_1
-                  by solve( (#vr.223, 1)[!KU( f_.224, ~ekR.243 )] /* may loop */ )
-                next
-                  case Resp_1
-                  by solve( (#vr.229, 1)[!KU( f_.230, ~ekI.253 )] /* may loop */ )
-                next
-                  case exp
-                  solve( KU((#vf.176, 0), mac('g'^(~ekR.162*~ekI.163),
-                                              sign(<'2', $I.170, $R.171, x.206^x.207, 'g'^~tid.169>,
-                                                   ~x.173))) )
-                    case Init_2_case_1
-                    by solve( KU((#vr.211, 1), ~ekR.162) )
-                  next
-                    case Init_2_case_2
-                    by solve( KU((#vr.211, 1), ~ekR.162) )
-                  next
-                    case mac
-                    solve( (#vr.218, 1)[!KU( f_.220,
-                                             sign(<'2', $I.170, $R.171, x.206^x.207, 'g'^~tid.169>, ~x.173)
-                                        )] /* may loop */ )
-                      case Init_2_case_1
-                      by solve( KU((#vr.211, 1), ~ekR.162) )
-                    next
-                      case Init_2_case_2
-                      by solve( KU((#vr.211, 1), ~ekR.162) )
-                    next
-                      case sign
-                      by solve( (#vr.226, 1)[!KU( f_.228, ~x.173 )] /* may loop */ )
-                    qed
-                  qed
-                qed
-              next
-                case h
-                solve( (#vr.49, 0)[!KU( f_.50, 'g'^(~ekR.162*~ekI.163)
-                                   )] /* may loop */ )
-                  case Init_1
-                  by solve( (#vr.184, 1)[!KU( f_.185, ~ekR.204 )] /* may loop */ )
-                next
-                  case Resp_1
-                  by solve( (#vr.190, 1)[!KU( f_.191, ~ekI.214 )] /* may loop */ )
-                next
-                  case exp
-                  by solve( KU((#vr.172, 1), ~ekR.162) )
-                qed
-              qed
-            next
-              case split_case_2
-              by contradiction // non-normal terms
-            qed
-          next
-            case sign
-            by solve( (#vr.120, 1)[!KU( f_.122, ~x.66 )] /* may loop */ )
-          qed
+          case Resp_1
+          by solve( (#vr.192, 1)[!KU( f_.195, ~ekI.200 )] /* may loop */ )
+        next
+          case cexp
+          by solve( KU((#vr.149, 1), ~ekR.143) )
         qed
       next
         case Init_2_case_2
         by contradiction // from formulas
       next
-        case sign
-        by solve( (#vr.57, 1)[!KU( f_.59, ~x.12 )] /* may loop */ )
+        case csign
+        by solve( (#vr.70, 1)[!KU( f_.74, ~ltkI.12 )] /* may loop */ )
       qed
     qed
   qed
@@ -1690,9 +633,9 @@ analyzing: data/examples/csf12/STS-MAC-fix2.spthy
 analyzed: data/examples/csf12/STS-MAC-fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 38.568867s
-  KI_Perfect_Forward_Secrecy_I: complete proof (159 steps)
-  KI_Perfect_Forward_Secrecy_R: complete proof (251 steps)
+  processing time: 3.214962s
+  KI_Perfect_Forward_Secrecy_I: complete proof (45 steps)
+  KI_Perfect_Forward_Secrecy_R: complete proof (66 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1702,9 +645,9 @@ summary of summaries:
 analyzed: data/examples/csf12/STS-MAC-fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 38.568867s
-  KI_Perfect_Forward_Secrecy_I: complete proof (159 steps)
-  KI_Perfect_Forward_Secrecy_R: complete proof (251 steps)
+  processing time: 3.214962s
+  KI_Perfect_Forward_Secrecy_I: complete proof (45 steps)
+  KI_Perfect_Forward_Secrecy_R: complete proof (66 steps)
 
 ==============================================================================
 */

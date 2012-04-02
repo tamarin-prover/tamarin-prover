@@ -78,16 +78,16 @@ guarded formula characterizing all attacks:
     F)"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.8, $I.9, $R.10, ~lkI.11, ~ekI.8 )] )
+solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.17, ~ekI.11 )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.10, 'g'^~lkR.13 )] )
+  solve( (#i1, 2)[!Pk( $R.10, 'g'^~lkR.18 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.16, h(<~ekI.8, hkR.7, 'g'^(~lkI.11*~lkR.13)>)
+    solve( (#i2.1, 0)[!KU( f_.21, h(<~ekI.11, hkR.7, 'g'^(~lkI.17*~lkR.18)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_3
-      solve( (#vf.14, 0)[!KU( f_.15, ~tid.43 )] /* may loop */ )
+      solve( (#vf.19, 0)[!KU( f_.20, ~tid.64 )] /* may loop */ )
         case Resp_1
-        solve( (#vf.51, 0)[!KU( f_.52, ~ekI.8 )] /* may loop */ )
+        solve( (#vf.78, 0)[!KU( f_.79, ~ekI.11 )] /* may loop */ )
           case Init_1
           SOLVED (trace found)
         qed
@@ -124,16 +124,16 @@ guarded formula characterizing all attacks:
     F)"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.10, ~lkR.11 )] )
+solve( (#i1, 2)[!Ltk( $R.10, ~lkR.17 )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.12, 'g'^~lkI.13 )] )
+  solve( (#i1, 3)[!Pk( $I.9, 'g'^~lkI.18 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.17, h(<hkI.6, ~ekR.9, 'g'^(~lkR.11*~lkI.13)>)
+    solve( (#i2.1, 0)[!KU( f_.22, h(<hkI.6, ~ekR.11, 'g'^(~lkR.17*~lkI.18)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_1
-      solve( (#vf.14, 0)[!KU( f_.15, ~tid.34 )] /* may loop */ )
+      solve( (#vf.19, 0)[!KU( f_.20, ~tid.55 )] /* may loop */ )
         case Init_1
-        solve( (#vf.43, 0)[!KU( f_.44, ~ekR.9 )] /* may loop */ )
+        solve( (#vf.69, 0)[!KU( f_.70, ~ekR.11 )] /* may loop */ )
           case Resp_1
           SOLVED (trace found)
         qed
@@ -156,7 +156,7 @@ analyzing: data/examples/csf12/JKL_TS1_2004-KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2004-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.957359s
+  processing time: 0.494415s
   JKL2008_1_initiator_key: attack found (7 steps)
   JKL2008_1_responder_key: attack found (7 steps)
 
@@ -168,7 +168,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2004-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.957359s
+  processing time: 0.494415s
   JKL2008_1_initiator_key: attack found (7 steps)
   JKL2008_1_responder_key: attack found (7 steps)
 

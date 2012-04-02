@@ -30,40 +30,46 @@ rule (modulo E) Init_2:
   /*
   rule (modulo AC) Init_2:
      [
-     Init_1( ~ekI, $I.3, $R.4, ~lkI.5, hkI.6 ), In( Y.1 ),
-     !Pk( $R.4, 'g'^~x.7 )
+     Init_1( ~ekI.3, $I.1, $R.2, ~lkI.4, hkI.7 ), In( Y.6 ),
+     !Pk( $R.2, 'g'^~x.13 )
      ]
     --[
-    SidI_2( ~ekI, $I.3, $R.4, hkI.6, Y.1,
-            h(<hkI.6, Y.1, x.2, 'g'^(~lkI.5*~x.7)>)
+    SidI_2( ~ekI.3, $I.1, $R.2, hkI.7, Y.6,
+            h(<hkI.7, Y.6, z.9, 'g'^(~lkI.4*~x.13)>)
     )
     ]->
-     [ !Sessk( ~ekI, h(<hkI.6, Y.1, x.2, 'g'^(~lkI.5*~x.7)>) ) ]
+     [ !Sessk( ~ekI.3, h(<hkI.7, Y.6, z.9, 'g'^(~lkI.4*~x.13)>) ) ]
   
     variants (modulo AC)
-    1. ~ekI  = ~ekI.29
-       Y.1   = Y.30
-       x.2   = Y.30^~ekI.29
+    1. ~ekI.3
+             = ~ekI.220
+       Y.6   = Y.221
+       z.9   = Y.221^~ekI.220
     
-    2. ~ekI  = ~ekI.29
-       Y.1   = x.31^inv(~ekI.29)
-       x.2   = x.31
+    2. ~ekI.3
+             = ~ekI.221
+       Y.6   = z.222^inv(~ekI.221)
+       z.9   = z.222
     
-    3. ~ekI  = ~ekI.30
-       Y.1   = x.32^x.33
-       x.2   = x.32^(~ekI.30*x.33)
+    3. ~ekI.3
+             = ~ekI.231
+       Y.6   = x.233^x.234
+       z.9   = x.233^(~ekI.231*x.234)
     
-    4. ~ekI  = ~ekI.30
-       Y.1   = x.32^inv((~ekI.30*x.33))
-       x.2   = x.32^inv(x.33)
+    4. ~ekI.3
+             = ~ekI.231
+       Y.6   = x.233^inv((~ekI.231*x.234))
+       z.9   = x.233^inv(x.234)
     
-    5. ~ekI  = ~ekI.30
-       Y.1   = x.32^(x.33*inv(~ekI.30))
-       x.2   = x.32^x.33
+    5. ~ekI.3
+             = ~ekI.231
+       Y.6   = x.233^(x.234*inv(~ekI.231))
+       z.9   = x.233^x.234
     
-    6. ~ekI  = ~ekI.31
-       Y.1   = x.33^(x.34*inv((~ekI.31*x.35)))
-       x.2   = x.33^(x.34*inv(x.35))
+    6. ~ekI.3
+             = ~ekI.241
+       Y.6   = x.243^(x.244*inv((~ekI.241*x.245)))
+       z.9   = x.243^(x.244*inv(x.245))
   */
 
 rule (modulo E) Resp_1:
@@ -80,41 +86,47 @@ rule (modulo E) Resp_1:
 
   /*
   rule (modulo AC) Resp_1:
-     [ In( X.1 ), Fr( ~ekR ), !Ltk( $R.3, ~lkR.4 ), !Pk( $I.5, 'g'^~x.6 ) ]
+     [ In( X.6 ), Fr( ~ekR.3 ), !Ltk( $R.2, ~lkR.5 ), !Pk( $I.1, 'g'^~x.13 ) ]
     --[
-    SidR_1( ~ekR, $I.5, $R.3, X.1, 'g'^~ekR,
-            h(<X.1, 'g'^~ekR, x.2, 'g'^(~lkR.4*~x.6)>)
+    SidR_1( ~ekR.3, $I.1, $R.2, X.6, 'g'^~ekR.3,
+            h(<X.6, 'g'^~ekR.3, z.9, 'g'^(~lkR.5*~x.13)>)
     )
     ]->
      [
-     Out( 'g'^~ekR ), !Ephk( ~ekR ),
-     !Sessk( ~ekR, h(<X.1, 'g'^~ekR, x.2, 'g'^(~lkR.4*~x.6)>) )
+     Out( 'g'^~ekR.3 ), !Ephk( ~ekR.3 ),
+     !Sessk( ~ekR.3, h(<X.6, 'g'^~ekR.3, z.9, 'g'^(~lkR.5*~x.13)>) )
      ]
   
     variants (modulo AC)
-    1. ~ekR  = ~ekR.34
-       X.1   = X.35
-       x.2   = X.35^~ekR.34
+    1. ~ekR.3
+             = ~ekR.323
+       X.6   = X.324
+       z.9   = X.324^~ekR.323
     
-    2. ~ekR  = ~ekR.34
-       X.1   = x.36^inv(~ekR.34)
-       x.2   = x.36
+    2. ~ekR.3
+             = ~ekR.323
+       X.6   = z.324^inv(~ekR.323)
+       z.9   = z.324
     
-    3. ~ekR  = ~ekR.35
-       X.1   = x.37^x.38
-       x.2   = x.37^(~ekR.35*x.38)
+    3. ~ekR.3
+             = ~ekR.337
+       X.6   = x.339^x.340
+       z.9   = x.339^(~ekR.337*x.340)
     
-    4. ~ekR  = ~ekR.35
-       X.1   = x.37^inv((~ekR.35*x.38))
-       x.2   = x.37^inv(x.38)
+    4. ~ekR.3
+             = ~ekR.337
+       X.6   = x.339^inv((~ekR.337*x.340))
+       z.9   = x.339^inv(x.340)
     
-    5. ~ekR  = ~ekR.35
-       X.1   = x.37^(x.38*inv(~ekR.35))
-       x.2   = x.37^x.38
+    5. ~ekR.3
+             = ~ekR.337
+       X.6   = x.339^(x.340*inv(~ekR.337))
+       z.9   = x.339^x.340
     
-    6. ~ekR  = ~ekR.36
-       X.1   = x.38^(x.39*inv((~ekR.36*x.40)))
-       x.2   = x.38^(x.39*inv(x.40))
+    6. ~ekR.3
+             = ~ekR.351
+       X.6   = x.353^(x.354*inv((~ekR.351*x.355)))
+       z.9   = x.353^(x.354*inv(x.355))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -180,22 +192,19 @@ guarded formula characterizing all attacks:
      T)"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.8, $I.11, $R.12, ~lkI.13, hkI.6 )] )
+solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.12, 'g'^~x.15 )] )
+  solve( (#i1, 2)[!Pk( $R.10, 'g'^~x.21 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.18,
-                           h(<'g'^~ekI.8, hkR.7, x.10, 'g'^(~lkI.13*~x.15)>)
+    solve( (#i2.1, 0)[!KU( f_.24,
+                           h(<'g'^~ekI.11, hkR.7, z.17, 'g'^(~lkI.12*~x.21)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_3
-      solve( splitEqs(1) )
-        case split
-        solve( (#vf.16, 0)[!KU( f_.17, 'g'^~tid.75 )] /* may loop */ )
-          case Resp_1
-          solve( (#vf.54, 0)[!KU( f_.55, 'g'^~ekI.74 )] /* may loop */ )
-            case Init_1
-            SOLVED (trace found)
-          qed
+      solve( (#vf.22, 0)[!KU( f_.23, 'g'^~tid.116 )] /* may loop */ )
+        case Resp_1
+        solve( (#vf.86, 0)[!KU( f_.87, 'g'^~ekI.115 )] /* may loop */ )
+          case Init_1
+          SOLVED (trace found)
         qed
       qed
     qed
@@ -250,22 +259,19 @@ guarded formula characterizing all attacks:
      T)"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.11, ~lkR.12 )] )
+solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.13, 'g'^~x.14 )] )
+  solve( (#i1, 3)[!Pk( $I.9, 'g'^~x.21 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.18,
-                           h(<hkI.6, 'g'^~ekR.8, x.10, 'g'^(~lkR.12*~x.14)>)
+    solve( (#i2.1, 0)[!KU( f_.25,
+                           h(<hkI.6, 'g'^~ekR.11, z.17, 'g'^(~lkR.13*~x.21)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_1
-      solve( splitEqs(1) )
-        case split
-        solve( (#vf.15, 0)[!KU( f_.16, 'g'^~tid.72 )] /* may loop */ )
-          case Init_1
-          solve( (#vf.45, 0)[!KU( f_.46, 'g'^~ekR.71 )] /* may loop */ )
-            case Resp_1
-            SOLVED (trace found)
-          qed
+      solve( (#vf.22, 0)[!KU( f_.23, 'g'^~tid.105 )] /* may loop */ )
+        case Init_1
+        solve( (#vf.75, 0)[!KU( f_.76, 'g'^~ekR.104 )] /* may loop */ )
+          case Resp_1
+          SOLVED (trace found)
         qed
       qed
     qed
@@ -286,9 +292,9 @@ analyzing: data/examples/csf12/JKL_TS2_2004-KI_wPFS.spthy
 analyzed: data/examples/csf12/JKL_TS2_2004-KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.860509s
-  JKL2008_2_initiator_key: attack found (8 steps)
-  JKL2008_2_responder_key: attack found (8 steps)
+  processing time: 0.642615s
+  JKL2008_2_initiator_key: attack found (7 steps)
+  JKL2008_2_responder_key: attack found (7 steps)
 
 ------------------------------------------------------------------------------
 
@@ -298,9 +304,9 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS2_2004-KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.860509s
-  JKL2008_2_initiator_key: attack found (8 steps)
-  JKL2008_2_responder_key: attack found (8 steps)
+  processing time: 0.642615s
+  JKL2008_2_initiator_key: attack found (7 steps)
+  JKL2008_2_responder_key: attack found (7 steps)
 
 ==============================================================================
 */

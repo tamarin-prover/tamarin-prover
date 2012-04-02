@@ -43,118 +43,132 @@ rule (modulo E) Init_2:
   /*
   rule (modulo AC) Init_2:
      [
-     Init_1( ~ekI, $I.5, $R.6, ~lkI.1, hkI.7 ), In( Y.2 ),
-     !Pk( $R.6, 'g'^~x.8 )
+     Init_1( ~ekI.3, $I.1, $R.2, ~lkI.4, hkI.7 ), In( Y.6 ),
+     !Pk( $R.2, 'g'^~x.15 )
      ]
     --[
-    SidI_2( ~ekI, $I.5, $R.6, hkI.7, Y.2,
-            h(<'2', x.3, 'g'^(~x.8*h(<'1', ~ekI, ~lkI.1>)), x.4, $I.5, $R.6>)
+    SidI_2( ~ekI.3, $I.1, $R.2, hkI.7, Y.6,
+            h(<'2', z.10, 'g'^(~x.15*h(<'1', ~ekI.3, ~lkI.4>)), z.12, $I.1, $R.2>)
     )
     ]->
      [
-     !Sessk( ~ekI,
-             h(<'2', x.3, 'g'^(~x.8*h(<'1', ~ekI, ~lkI.1>)), x.4, $I.5, $R.6>)
+     !Sessk( ~ekI.3,
+             h(<'2', z.10, 'g'^(~x.15*h(<'1', ~ekI.3, ~lkI.4>)), z.12, $I.1, $R.2>)
      )
      ]
   
     variants (modulo AC)
-     1. ~ekI  = ~ekI.41
-        ~lkI.1
-              = ~lkI.42
-        Y.2   = Y.43
-        x.3   = Y.43^~lkI.42
-        x.4   = Y.43^h(<'1', ~ekI.41, ~lkI.42>)
+     1. ~ekI.3
+              = ~ekI.446
+        ~lkI.4
+              = ~lkI.447
+        Y.6   = Y.448
+        z.10  = Y.448^~lkI.447
+        z.12  = Y.448^h(<'1', ~ekI.446, ~lkI.447>)
     
-     2. ~ekI  = ~ekI.41
-        ~lkI.1
-              = ~lkI.42
-        Y.2   = x.43^inv(~lkI.42)
-        x.3   = x.43
-        x.4   = x.43^(h(<'1', ~ekI.41, ~lkI.42>)*inv(~lkI.42))
+     2. ~ekI.3
+              = ~ekI.447
+        ~lkI.4
+              = ~lkI.448
+        Y.6   = z.449^inv(~lkI.448)
+        z.10  = z.449
+        z.12  = z.449^(h(<'1', ~ekI.447, ~lkI.448>)*inv(~lkI.448))
     
-     3. ~ekI  = ~ekI.41
-        ~lkI.1
-              = ~lkI.42
-        Y.2   = x.43^inv(h(<'1', ~ekI.41, ~lkI.42>))
-        x.3   = x.43^(~lkI.42*inv(h(<'1', ~ekI.41, ~lkI.42>)))
-        x.4   = x.43
+     3. ~ekI.3
+              = ~ekI.447
+        ~lkI.4
+              = ~lkI.448
+        Y.6   = z.449^inv(h(<'1', ~ekI.447, ~lkI.448>))
+        z.10  = z.449^(~lkI.448*inv(h(<'1', ~ekI.447, ~lkI.448>)))
+        z.12  = z.449
     
-     4. ~ekI  = ~ekI.41
-        ~lkI.1
-              = ~lkI.42
-        Y.2   = x.43^inv((~lkI.42*h(<'1', ~ekI.41, ~lkI.42>)))
-        x.3   = x.43^inv(h(<'1', ~ekI.41, ~lkI.42>))
-        x.4   = x.43^inv(~lkI.42)
+     4. ~ekI.3
+              = ~ekI.448
+        ~lkI.4
+              = ~lkI.449
+        Y.6   = x.450^inv((~lkI.449*h(<'1', ~ekI.448, ~lkI.449>)))
+        z.10  = x.450^inv(h(<'1', ~ekI.448, ~lkI.449>))
+        z.12  = x.450^inv(~lkI.449)
     
-     5. ~ekI  = ~ekI.42
-        ~lkI.1
-              = ~lkI.43
-        Y.2   = x.44^x.45
-        x.3   = x.44^(~lkI.43*x.45)
-        x.4   = x.44^(x.45*h(<'1', ~ekI.42, ~lkI.43>))
+     5. ~ekI.3
+              = ~ekI.465
+        ~lkI.4
+              = ~lkI.466
+        Y.6   = x.467^x.468
+        z.10  = x.467^(~lkI.466*x.468)
+        z.12  = x.467^(x.468*h(<'1', ~ekI.465, ~lkI.466>))
     
-     6. ~ekI  = ~ekI.42
-        ~lkI.1
-              = ~lkI.43
-        Y.2   = x.44^inv((~lkI.43*x.45))
-        x.3   = x.44^inv(x.45)
-        x.4   = x.44^(h(<'1', ~ekI.42, ~lkI.43>)*inv((~lkI.43*x.45)))
+     6. ~ekI.3
+              = ~ekI.465
+        ~lkI.4
+              = ~lkI.466
+        Y.6   = x.467^inv((~lkI.466*x.468))
+        z.10  = x.467^inv(x.468)
+        z.12  = x.467^(h(<'1', ~ekI.465, ~lkI.466>)*inv((~lkI.466*x.468)))
     
-     7. ~ekI  = ~ekI.42
-        ~lkI.1
-              = ~lkI.43
-        Y.2   = x.44^inv((~lkI.43*x.45*h(<'1', ~ekI.42, ~lkI.43>)))
-        x.3   = x.44^inv((x.45*h(<'1', ~ekI.42, ~lkI.43>)))
-        x.4   = x.44^inv((~lkI.43*x.45))
+     7. ~ekI.3
+              = ~ekI.465
+        ~lkI.4
+              = ~lkI.466
+        Y.6   = x.467^inv((~lkI.466*x.468*h(<'1', ~ekI.465, ~lkI.466>)))
+        z.10  = x.467^inv((x.468*h(<'1', ~ekI.465, ~lkI.466>)))
+        z.12  = x.467^inv((~lkI.466*x.468))
     
-     8. ~ekI  = ~ekI.42
-        ~lkI.1
-              = ~lkI.43
-        Y.2   = x.44^inv((x.45*h(<'1', ~ekI.42, ~lkI.43>)))
-        x.3   = x.44^(~lkI.43*inv((x.45*h(<'1', ~ekI.42, ~lkI.43>))))
-        x.4   = x.44^inv(x.45)
+     8. ~ekI.3
+              = ~ekI.465
+        ~lkI.4
+              = ~lkI.466
+        Y.6   = x.467^inv((x.468*h(<'1', ~ekI.465, ~lkI.466>)))
+        z.10  = x.467^(~lkI.466*inv((x.468*h(<'1', ~ekI.465, ~lkI.466>))))
+        z.12  = x.467^inv(x.468)
     
-     9. ~ekI  = ~ekI.42
-        ~lkI.1
-              = ~lkI.43
-        Y.2   = x.44^(x.45*inv(~lkI.43))
-        x.3   = x.44^x.45
-        x.4   = x.44^(x.45*h(<'1', ~ekI.42, ~lkI.43>)*inv(~lkI.43))
+     9. ~ekI.3
+              = ~ekI.465
+        ~lkI.4
+              = ~lkI.466
+        Y.6   = x.467^(x.468*inv(~lkI.466))
+        z.10  = x.467^x.468
+        z.12  = x.467^(x.468*h(<'1', ~ekI.465, ~lkI.466>)*inv(~lkI.466))
     
-    10. ~ekI  = ~ekI.42
-        ~lkI.1
-              = ~lkI.43
-        Y.2   = x.44^(x.45*inv(h(<'1', ~ekI.42, ~lkI.43>)))
-        x.3   = x.44^(~lkI.43*x.45*inv(h(<'1', ~ekI.42, ~lkI.43>)))
-        x.4   = x.44^x.45
+    10. ~ekI.3
+              = ~ekI.465
+        ~lkI.4
+              = ~lkI.466
+        Y.6   = x.467^(x.468*inv(h(<'1', ~ekI.465, ~lkI.466>)))
+        z.10  = x.467^(~lkI.466*x.468*inv(h(<'1', ~ekI.465, ~lkI.466>)))
+        z.12  = x.467^x.468
     
-    11. ~ekI  = ~ekI.42
-        ~lkI.1
-              = ~lkI.43
-        Y.2   = x.44^(x.45*inv((~lkI.43*h(<'1', ~ekI.42, ~lkI.43>))))
-        x.3   = x.44^(x.45*inv(h(<'1', ~ekI.42, ~lkI.43>)))
-        x.4   = x.44^(x.45*inv(~lkI.43))
+    11. ~ekI.3
+              = ~ekI.465
+        ~lkI.4
+              = ~lkI.466
+        Y.6   = x.467^(x.468*inv((~lkI.466*h(<'1', ~ekI.465, ~lkI.466>))))
+        z.10  = x.467^(x.468*inv(h(<'1', ~ekI.465, ~lkI.466>)))
+        z.12  = x.467^(x.468*inv(~lkI.466))
     
-    12. ~ekI  = ~ekI.43
-        ~lkI.1
-              = ~lkI.44
-        Y.2   = x.45^(x.46*inv((~lkI.44*x.47)))
-        x.3   = x.45^(x.46*inv(x.47))
-        x.4   = x.45^(x.46*h(<'1', ~ekI.43, ~lkI.44>)*inv((~lkI.44*x.47)))
+    12. ~ekI.3
+              = ~ekI.482
+        ~lkI.4
+              = ~lkI.483
+        Y.6   = x.484^(x.485*inv((~lkI.483*x.486)))
+        z.10  = x.484^(x.485*inv(x.486))
+        z.12  = x.484^(x.485*h(<'1', ~ekI.482, ~lkI.483>)*inv((~lkI.483*x.486)))
     
-    13. ~ekI  = ~ekI.43
-        ~lkI.1
-              = ~lkI.44
-        Y.2   = x.45^(x.46*inv((~lkI.44*x.47*h(<'1', ~ekI.43, ~lkI.44>))))
-        x.3   = x.45^(x.46*inv((x.47*h(<'1', ~ekI.43, ~lkI.44>))))
-        x.4   = x.45^(x.46*inv((~lkI.44*x.47)))
+    13. ~ekI.3
+              = ~ekI.482
+        ~lkI.4
+              = ~lkI.483
+        Y.6   = x.484^(x.485*inv((~lkI.483*x.486*h(<'1', ~ekI.482, ~lkI.483>))))
+        z.10  = x.484^(x.485*inv((x.486*h(<'1', ~ekI.482, ~lkI.483>))))
+        z.12  = x.484^(x.485*inv((~lkI.483*x.486)))
     
-    14. ~ekI  = ~ekI.43
-        ~lkI.1
-              = ~lkI.44
-        Y.2   = x.45^(x.46*inv((x.47*h(<'1', ~ekI.43, ~lkI.44>))))
-        x.3   = x.45^(~lkI.44*x.46*inv((x.47*h(<'1', ~ekI.43, ~lkI.44>))))
-        x.4   = x.45^(x.46*inv(x.47))
+    14. ~ekI.3
+              = ~ekI.482
+        ~lkI.4
+              = ~lkI.483
+        Y.6   = x.484^(x.485*inv((x.486*h(<'1', ~ekI.482, ~lkI.483>))))
+        z.10  = x.484^(~lkI.483*x.485*inv((x.486*h(<'1', ~ekI.482, ~lkI.483>))))
+        z.12  = x.484^(x.485*inv(x.486))
   */
 
 rule (modulo E) Resp_1:
@@ -175,117 +189,131 @@ rule (modulo E) Resp_1:
 
   /*
   rule (modulo AC) Resp_1:
-     [ In( X.2 ), Fr( ~ekR ), !Ltk( $R.5, ~lkR.1 ), !Pk( $I.6, 'g'^~x.7 ) ]
+     [ In( X.6 ), Fr( ~ekR.3 ), !Ltk( $R.2, ~lkR.5 ), !Pk( $I.1, 'g'^~x.15 ) ]
     --[
-    SidR_1( ~ekR, $I.6, $R.5, X.2, 'g'^h(<'1', ~ekR, ~lkR.1>),
-            h(<'2', 'g'^(~x.7*h(<'1', ~ekR, ~lkR.1>)), x.3, x.4, $I.6, $R.5>)
+    SidR_1( ~ekR.3, $I.1, $R.2, X.6, 'g'^h(<'1', ~ekR.3, ~lkR.5>),
+            h(<'2', 'g'^(~x.15*h(<'1', ~ekR.3, ~lkR.5>)), z.11, z.12, $I.1, $R.2>)
     )
     ]->
      [
-     Out( 'g'^h(<'1', ~ekR, ~lkR.1>) ), !Ephk( ~ekR ),
-     !Sessk( ~ekR,
-             h(<'2', 'g'^(~x.7*h(<'1', ~ekR, ~lkR.1>)), x.3, x.4, $I.6, $R.5>)
+     Out( 'g'^h(<'1', ~ekR.3, ~lkR.5>) ), !Ephk( ~ekR.3 ),
+     !Sessk( ~ekR.3,
+             h(<'2', 'g'^(~x.15*h(<'1', ~ekR.3, ~lkR.5>)), z.11, z.12, $I.1, $R.2>)
      )
      ]
   
     variants (modulo AC)
-     1. ~ekR  = ~ekR.50
-        ~lkR.1
-              = ~lkR.51
-        X.2   = X.52
-        x.3   = X.52^~lkR.51
-        x.4   = X.52^h(<'1', ~ekR.50, ~lkR.51>)
+     1. ~ekR.3
+              = ~ekR.824
+        ~lkR.5
+              = ~lkR.825
+        X.6   = X.826
+        z.11  = X.826^~lkR.825
+        z.12  = X.826^h(<'1', ~ekR.824, ~lkR.825>)
     
-     2. ~ekR  = ~ekR.50
-        ~lkR.1
-              = ~lkR.51
-        X.2   = x.52^inv(~lkR.51)
-        x.3   = x.52
-        x.4   = x.52^(h(<'1', ~ekR.50, ~lkR.51>)*inv(~lkR.51))
+     2. ~ekR.3
+              = ~ekR.824
+        ~lkR.5
+              = ~lkR.825
+        X.6   = z.826^inv(~lkR.825)
+        z.11  = z.826
+        z.12  = z.826^(h(<'1', ~ekR.824, ~lkR.825>)*inv(~lkR.825))
     
-     3. ~ekR  = ~ekR.50
-        ~lkR.1
-              = ~lkR.51
-        X.2   = x.52^inv(h(<'1', ~ekR.50, ~lkR.51>))
-        x.3   = x.52^(~lkR.51*inv(h(<'1', ~ekR.50, ~lkR.51>)))
-        x.4   = x.52
+     3. ~ekR.3
+              = ~ekR.824
+        ~lkR.5
+              = ~lkR.825
+        X.6   = z.826^inv(h(<'1', ~ekR.824, ~lkR.825>))
+        z.11  = z.826^(~lkR.825*inv(h(<'1', ~ekR.824, ~lkR.825>)))
+        z.12  = z.826
     
-     4. ~ekR  = ~ekR.50
-        ~lkR.1
-              = ~lkR.51
-        X.2   = x.52^inv((~lkR.51*h(<'1', ~ekR.50, ~lkR.51>)))
-        x.3   = x.52^inv(h(<'1', ~ekR.50, ~lkR.51>))
-        x.4   = x.52^inv(~lkR.51)
+     4. ~ekR.3
+              = ~ekR.825
+        ~lkR.5
+              = ~lkR.826
+        X.6   = x.827^inv((~lkR.826*h(<'1', ~ekR.825, ~lkR.826>)))
+        z.11  = x.827^inv(h(<'1', ~ekR.825, ~lkR.826>))
+        z.12  = x.827^inv(~lkR.826)
     
-     5. ~ekR  = ~ekR.51
-        ~lkR.1
-              = ~lkR.52
-        X.2   = x.53^x.54
-        x.3   = x.53^(~lkR.52*x.54)
-        x.4   = x.53^(x.54*h(<'1', ~ekR.51, ~lkR.52>))
+     5. ~ekR.3
+              = ~ekR.852
+        ~lkR.5
+              = ~lkR.853
+        X.6   = x.854^x.855
+        z.11  = x.854^(~lkR.853*x.855)
+        z.12  = x.854^(x.855*h(<'1', ~ekR.852, ~lkR.853>))
     
-     6. ~ekR  = ~ekR.51
-        ~lkR.1
-              = ~lkR.52
-        X.2   = x.53^inv((~lkR.52*x.54))
-        x.3   = x.53^inv(x.54)
-        x.4   = x.53^(h(<'1', ~ekR.51, ~lkR.52>)*inv((~lkR.52*x.54)))
+     6. ~ekR.3
+              = ~ekR.852
+        ~lkR.5
+              = ~lkR.853
+        X.6   = x.854^inv((~lkR.853*x.855))
+        z.11  = x.854^inv(x.855)
+        z.12  = x.854^(h(<'1', ~ekR.852, ~lkR.853>)*inv((~lkR.853*x.855)))
     
-     7. ~ekR  = ~ekR.51
-        ~lkR.1
-              = ~lkR.52
-        X.2   = x.53^inv((~lkR.52*x.54*h(<'1', ~ekR.51, ~lkR.52>)))
-        x.3   = x.53^inv((x.54*h(<'1', ~ekR.51, ~lkR.52>)))
-        x.4   = x.53^inv((~lkR.52*x.54))
+     7. ~ekR.3
+              = ~ekR.852
+        ~lkR.5
+              = ~lkR.853
+        X.6   = x.854^inv((~lkR.853*x.855*h(<'1', ~ekR.852, ~lkR.853>)))
+        z.11  = x.854^inv((x.855*h(<'1', ~ekR.852, ~lkR.853>)))
+        z.12  = x.854^inv((~lkR.853*x.855))
     
-     8. ~ekR  = ~ekR.51
-        ~lkR.1
-              = ~lkR.52
-        X.2   = x.53^inv((x.54*h(<'1', ~ekR.51, ~lkR.52>)))
-        x.3   = x.53^(~lkR.52*inv((x.54*h(<'1', ~ekR.51, ~lkR.52>))))
-        x.4   = x.53^inv(x.54)
+     8. ~ekR.3
+              = ~ekR.852
+        ~lkR.5
+              = ~lkR.853
+        X.6   = x.854^inv((x.855*h(<'1', ~ekR.852, ~lkR.853>)))
+        z.11  = x.854^(~lkR.853*inv((x.855*h(<'1', ~ekR.852, ~lkR.853>))))
+        z.12  = x.854^inv(x.855)
     
-     9. ~ekR  = ~ekR.51
-        ~lkR.1
-              = ~lkR.52
-        X.2   = x.53^(x.54*inv(~lkR.52))
-        x.3   = x.53^x.54
-        x.4   = x.53^(x.54*h(<'1', ~ekR.51, ~lkR.52>)*inv(~lkR.52))
+     9. ~ekR.3
+              = ~ekR.852
+        ~lkR.5
+              = ~lkR.853
+        X.6   = x.854^(x.855*inv(~lkR.853))
+        z.11  = x.854^x.855
+        z.12  = x.854^(x.855*h(<'1', ~ekR.852, ~lkR.853>)*inv(~lkR.853))
     
-    10. ~ekR  = ~ekR.51
-        ~lkR.1
-              = ~lkR.52
-        X.2   = x.53^(x.54*inv(h(<'1', ~ekR.51, ~lkR.52>)))
-        x.3   = x.53^(~lkR.52*x.54*inv(h(<'1', ~ekR.51, ~lkR.52>)))
-        x.4   = x.53^x.54
+    10. ~ekR.3
+              = ~ekR.852
+        ~lkR.5
+              = ~lkR.853
+        X.6   = x.854^(x.855*inv(h(<'1', ~ekR.852, ~lkR.853>)))
+        z.11  = x.854^(~lkR.853*x.855*inv(h(<'1', ~ekR.852, ~lkR.853>)))
+        z.12  = x.854^x.855
     
-    11. ~ekR  = ~ekR.51
-        ~lkR.1
-              = ~lkR.52
-        X.2   = x.53^(x.54*inv((~lkR.52*h(<'1', ~ekR.51, ~lkR.52>))))
-        x.3   = x.53^(x.54*inv(h(<'1', ~ekR.51, ~lkR.52>)))
-        x.4   = x.53^(x.54*inv(~lkR.52))
+    11. ~ekR.3
+              = ~ekR.852
+        ~lkR.5
+              = ~lkR.853
+        X.6   = x.854^(x.855*inv((~lkR.853*h(<'1', ~ekR.852, ~lkR.853>))))
+        z.11  = x.854^(x.855*inv(h(<'1', ~ekR.852, ~lkR.853>)))
+        z.12  = x.854^(x.855*inv(~lkR.853))
     
-    12. ~ekR  = ~ekR.52
-        ~lkR.1
-              = ~lkR.53
-        X.2   = x.54^(x.55*inv((~lkR.53*x.56)))
-        x.3   = x.54^(x.55*inv(x.56))
-        x.4   = x.54^(x.55*h(<'1', ~ekR.52, ~lkR.53>)*inv((~lkR.53*x.56)))
+    12. ~ekR.3
+              = ~ekR.879
+        ~lkR.5
+              = ~lkR.880
+        X.6   = x.881^(x.882*inv((~lkR.880*x.883)))
+        z.11  = x.881^(x.882*inv(x.883))
+        z.12  = x.881^(x.882*h(<'1', ~ekR.879, ~lkR.880>)*inv((~lkR.880*x.883)))
     
-    13. ~ekR  = ~ekR.52
-        ~lkR.1
-              = ~lkR.53
-        X.2   = x.54^(x.55*inv((~lkR.53*x.56*h(<'1', ~ekR.52, ~lkR.53>))))
-        x.3   = x.54^(x.55*inv((x.56*h(<'1', ~ekR.52, ~lkR.53>))))
-        x.4   = x.54^(x.55*inv((~lkR.53*x.56)))
+    13. ~ekR.3
+              = ~ekR.879
+        ~lkR.5
+              = ~lkR.880
+        X.6   = x.881^(x.882*inv((~lkR.880*x.883*h(<'1', ~ekR.879, ~lkR.880>))))
+        z.11  = x.881^(x.882*inv((x.883*h(<'1', ~ekR.879, ~lkR.880>))))
+        z.12  = x.881^(x.882*inv((~lkR.880*x.883)))
     
-    14. ~ekR  = ~ekR.52
-        ~lkR.1
-              = ~lkR.53
-        X.2   = x.54^(x.55*inv((x.56*h(<'1', ~ekR.52, ~lkR.53>))))
-        x.3   = x.54^(~lkR.53*x.55*inv((x.56*h(<'1', ~ekR.52, ~lkR.53>))))
-        x.4   = x.54^(x.55*inv(x.56))
+    14. ~ekR.3
+              = ~ekR.879
+        ~lkR.5
+              = ~lkR.880
+        X.6   = x.881^(x.882*inv((x.883*h(<'1', ~ekR.879, ~lkR.880>))))
+        z.11  = x.881^(~lkR.880*x.882*inv((x.883*h(<'1', ~ekR.879, ~lkR.880>))))
+        z.12  = x.881^(x.882*inv(x.883))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -354,33 +382,33 @@ guarded formula characterizing all attacks:
       T))"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.8, $I.13, $R.14, ~lkI.9, hkI.6 )] )
+solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.14, 'g'^~x.16 )] )
+  solve( (#i1, 2)[!Pk( $R.10, 'g'^~x.23 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.19,
-                           h(<'2', x.11, 'g'^(~x.16*h(<'1', ~ekI.8, ~lkI.9>)), x.12, $I.13, $R.14>)
+    solve( (#i2.1, 0)[!KU( f_.26,
+                           h(<'2', z.18, 'g'^(~x.23*h(<'1', ~ekI.11, ~lkI.12>)), z.20, $I.9, $R.10>)
                       )] /* may loop */ )
-      case h
-      solve( KU((#vr.44, 0), 'g'^(~x.16*h(<'1', ~ekI.8, ~lkI.9>))) )
+      case ch
+      solve( KU((#vr.65, 0), 'g'^(~x.23*h(<'1', ~ekI.11, ~lkI.12>))) )
         case Init_1
-        solve( (#vr.59, 1)[!KU( f_.60, ~x.72 )] /* may loop */ )
+        solve( (#vr.95, 1)[!KU( f_.98, ~x.120 )] /* may loop */ )
           case Ltk_reveal
-          solve( Disj(#i1 < #vr.77) |
-                     (Ex #i4.72 ekR.73 kpartner.74.
-                       (SidR_1( ekR.73, $I.13, $R.14, 'g'^h(<'1', ~ekI.70, ~lkI.71>), hkR.7,
-                                kpartner.74
-                        ) @ #i4.72)
+          solve( Disj(#i1 < #vr.129) |
+                     (Ex #i4.120 ekR.121 kpartner.122.
+                       (SidR_1( ekR.121, $I.9, $R.10, 'g'^h(<'1', ~ekI.118, ~lkI.119>), hkR.7,
+                                kpartner.122
+                        ) @ #i4.120)
                       &
                        T) )
             case case_1
             solve( splitEqs(1) )
               case split_case_01
-              solve( KU((#vr.44, 0), hkR.87^~lkI.89) )
-                case exp
-                solve( (#vr.93, 1)[!KU( f_.94, ~lkI.89 )] /* may loop */ )
+              solve( KU((#vr.65, 0), hkR.140^~lkI.142) )
+                case cexp
+                solve( (#vr.147, 1)[!KU( f_.150, ~lkI.142 )] /* may loop */ )
                   case Ltk_reveal
-                  solve( KU((#vr.44, 0), hkR.87^h(<'1', ~ekI.88, ~lkI.89>)) )
+                  solve( KU((#vr.65, 0), hkR.140^h(<'1', ~ekI.141, ~lkI.142>)) )
                     case Init_1
                     SOLVED (trace found)
                   qed
@@ -441,31 +469,28 @@ guarded formula characterizing all attacks:
     (Ex #i4.20 ekI.21. (SidI_1( ekI.21, I.3, R.4, hkI.6 ) @ #i4.20) & T))"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.13, ~lkR.9 )] )
+solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.14, 'g'^~x.15 )] )
+  solve( (#i1, 3)[!Pk( $I.9, 'g'^~x.23 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.19,
-                           h(<'2', 'g'^(~x.15*h(<'1', ~ekR.8, ~lkR.9>)), x.11, x.12, $I.14, $R.13>)
+    solve( (#i2.1, 0)[!KU( f_.27,
+                           h(<'2', 'g'^(~x.23*h(<'1', ~ekR.11, ~lkR.13>)), z.19, z.20, $I.9, $R.10>)
                       )] /* may loop */ )
-      case h
-      solve( KU((#vr.35, 0), 'g'^(~x.15*h(<'1', ~ekR.8, ~lkR.9>))) )
+      case ch
+      solve( KU((#vr.53, 0), 'g'^(~x.23*h(<'1', ~ekR.11, ~lkR.13>))) )
         case Resp_1
-        solve( (#vr.56, 1)[!KU( f_.57, ~x.50 )] /* may loop */ )
+        solve( (#vr.100, 1)[!KU( f_.103, ~x.82 )] /* may loop */ )
           case Ltk_reveal
-          solve( Disj(#i1 < #vr.78) |
-                     (Ex #i4.15 ekI.16.
-                       (SidI_1( ekI.16, $I.14, $R.13, hkI.6 ) @ #i4.15)
-                      &
-                       T) )
+          solve( Disj(#i1 < #vr.117) |
+                     (Ex #i4.11 ekI.12. (SidI_1( ekI.12, $I.9, $R.10, hkI.6 ) @ #i4.11) & T) )
             case case_1
             solve( splitEqs(1) )
               case split_case_01
-              solve( KU((#vr.35, 0), hkI.88^~lkR.90) )
-                case exp
-                solve( (#vr.94, 1)[!KU( f_.95, ~lkR.90 )] /* may loop */ )
+              solve( KU((#vr.53, 0), hkI.128^~lkR.130) )
+                case cexp
+                solve( (#vr.135, 1)[!KU( f_.138, ~lkR.130 )] /* may loop */ )
                   case Ltk_reveal
-                  solve( KU((#vr.35, 0), hkI.88^h(<'1', ~ekR.89, ~lkR.90>)) )
+                  solve( KU((#vr.53, 0), hkI.128^h(<'1', ~ekR.129, ~lkR.130>)) )
                     case Resp_1
                     SOLVED (trace found)
                   qed
@@ -493,7 +518,7 @@ analyzing: data/examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.21549s
+  processing time: 2.887036s
   eCK_initiator_key: attack found (12 steps)
   eCK_responder_key: attack found (12 steps)
 
@@ -505,7 +530,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.21549s
+  processing time: 2.887036s
   eCK_initiator_key: attack found (12 steps)
   eCK_responder_key: attack found (12 steps)
 

@@ -82,12 +82,12 @@ guarded formula characterizing all attacks:
     F)"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.8, $I.9, $R.10, ~lkI.11, ~ekI.8 )] )
+solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.17, ~ekI.11 )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.10, 'g'^~lkR.13 )] )
+  solve( (#i1, 2)[!Pk( $R.10, 'g'^~lkR.18 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.16,
-                           h(<$I.9, $R.10, ~ekI.8, hkR.7, 'g'^(~lkI.11*~lkR.13)>)
+    solve( (#i2.1, 0)[!KU( f_.21,
+                           h(<$I.9, $R.10, ~ekI.11, hkR.7, 'g'^(~lkI.17*~lkR.18)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_1
       by contradiction // from formulas
@@ -101,22 +101,22 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.9, $R.10, ~lkI.11, ~ekI.8 )] )
       case Sessk_reveal_case_4
       by contradiction // from formulas
     next
-      case h
-      solve( KU((#vr.41, 0), 'g'^(~lkI.11*~lkR.13)) )
-        case exp
-        solve( KU((#vr.47, 1), ~lkI.11) )
+      case ch
+      solve( KU((#vr.57, 0), 'g'^(~lkI.17*~lkR.18)) )
+        case cexp
+        solve( KU((#vr.64, 1), ~lkI.17) )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_1
-        solve( (#vr.54, 1)[!KU( f_.55, ~lkR.63 )] /* may loop */ )
+        solve( (#vr.77, 1)[!KU( f_.80, ~lkR.85 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_2
-        solve( (#vr.54, 1)[!KU( f_.55, ~lkI.62 )] /* may loop */ )
+        solve( (#vr.77, 1)[!KU( f_.80, ~lkI.84 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
@@ -153,12 +153,12 @@ guarded formula characterizing all attacks:
     F)"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.10, ~lkR.11 )] )
+solve( (#i1, 2)[!Ltk( $R.10, ~lkR.17 )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.12, 'g'^~lkI.13 )] )
+  solve( (#i1, 3)[!Pk( $I.9, 'g'^~lkI.18 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.17,
-                           h(<$I.12, $R.10, hkI.6, ~ekR.9, 'g'^(~lkR.11*~lkI.13)>)
+    solve( (#i2.1, 0)[!KU( f_.22,
+                           h(<$I.9, $R.10, hkI.6, ~ekR.11, 'g'^(~lkR.17*~lkI.18)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_1
       by contradiction // from formulas
@@ -172,22 +172,22 @@ solve( (#i1, 2)[!Ltk( $R.10, ~lkR.11 )] )
       case Sessk_reveal_case_4
       by contradiction // from formulas
     next
-      case h
-      solve( KU((#vr.33, 0), 'g'^(~lkR.11*~lkI.13)) )
-        case exp
-        solve( KU((#vr.39, 1), ~lkR.11) )
+      case ch
+      solve( KU((#vr.48, 0), 'g'^(~lkR.17*~lkI.18)) )
+        case cexp
+        solve( KU((#vr.55, 1), ~lkR.17) )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_1
-        solve( (#vr.46, 1)[!KU( f_.47, ~lkI.55 )] /* may loop */ )
+        solve( (#vr.68, 1)[!KU( f_.71, ~lkI.76 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_2
-        solve( (#vr.46, 1)[!KU( f_.47, ~lkR.54 )] /* may loop */ )
+        solve( (#vr.68, 1)[!KU( f_.71, ~lkR.75 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
@@ -210,7 +210,7 @@ analyzing: data/examples/csf12/JKL_TS1_2008-KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2008-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.994502s
+  processing time: 0.478073s
   JKL2008_1_initiator_key: complete proof (15 steps)
   JKL2008_1_responder_key: complete proof (15 steps)
 
@@ -222,7 +222,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2008-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.994502s
+  processing time: 0.478073s
   JKL2008_1_initiator_key: complete proof (15 steps)
   JKL2008_1_responder_key: complete proof (15 steps)
 
