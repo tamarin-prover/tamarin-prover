@@ -66,8 +66,8 @@ data-files:
   etc/filetype.vim
 
   -- example files
-  examples/UserGuide.spthy
-  examples/TLS.spthy
+  examples/stable/UserGuide.spthy
+  examples/stable/TLS.spthy
   -- examples/Typing_Invariant_Example.spthy
 
   -- CSF'12 case studies
