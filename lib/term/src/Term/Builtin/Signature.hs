@@ -25,9 +25,7 @@ verifySym :: NonACSym
 verifySym = ("verify",3)
 
 -- | Unary builtin non-ac function symbols.
-fstSym, sndSym, pkSym, hashSym :: NonACSym
-fstSym     = ("fst",1)
-sndSym     = ("snd",1)
+pkSym, hashSym :: NonACSym
 pkSym      = ("pk",1)
 hashSym    = ("h",1)
 
@@ -37,22 +35,6 @@ trueSym = ("true",0)
 
 -- Builtin signatures
 ----------------------------------------------------------------------
-
--- | The signature for the non-AC Diffie-Hellman function symbols.
-dhFunSig :: FunSig
-dhFunSig = [ expSym, oneSym, invSym ]
-
--- | The signature for the non-AC Xor function symbols.
-xorFunSig :: FunSig
-xorFunSig = [ zeroSym ]
-
--- | The signature for then non-AC multiset function symbols.
-msetFunSig :: FunSig
-msetFunSig = [ emptySym ]
-
--- | The signature for pairs.
-pairFunSig :: FunSig
-pairFunSig = [ pairSym, fstSym, sndSym ]
 
 -- | The signature for symmetric encryption.
 symEncFunSig :: FunSig

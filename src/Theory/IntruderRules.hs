@@ -162,13 +162,13 @@ dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
         e        <- varTerm <$> freshLVar "x" LSortMsg
         bfact    <- kudFact (Just CanExp) b
         efact    <- kuFact Nothing e
-        concfact <- kudFact (Just CannotExp) (fApp (NonAC expSym) [b, e])
+        concfact <- kudFact (Just CannotExp) (fAppExp (b, e))
         return $ Rule (IntrApp "exp") [bfact, efact] [concfact] []
 
     invRule kudFact = (`evalFresh` nothingUsed) $ do
         x        <- varTerm <$> freshLVar "x" LSortMsg
         bfact    <- kudFact Nothing x
-        concfact <- kudFact (Just CanExp) (fApp (NonAC invSym) [x])
+        concfact <- kudFact (Just CanExp) (fAppInv x)
         return $ Rule (IntrApp "inv") [bfact] [concfact] []
 
 
@@ -176,7 +176,7 @@ variantsIntruder :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
 variantsIntruder hnd ru = do
     let concTerms = concatMap factTerms
                               (get rPrems ru++get rConcs ru++get rActs ru)
-    fsigma <- computeVariants (listToTerm concTerms) `runReader` hnd
+    fsigma <- computeVariants (fAppList concTerms) `runReader` hnd
     let sigma     = freshToFree fsigma `evalFreshAvoiding` concTerms
         ruvariant = normRule' (apply sigma ru) `runReader` hnd
     guard (frees (get rConcs ruvariant) /= [] &&

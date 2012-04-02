@@ -282,7 +282,7 @@ matchCmd eqs =
   where
     -- FIXME: slow
     (t1s,t2s) = unzip [ (a,b) | Equal a b <- eqs ]
-    ppTerms = ppMaude . listToTerm
+    ppTerms = ppMaude . fAppList
 
 -- | @matchViaMaude (t, p)@ computes a complete set of AC matchers of the term
 -- @t@ to the pattern @p@ via Maude.

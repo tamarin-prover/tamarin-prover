@@ -320,7 +320,7 @@ naryOpApp plit = do
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
-    return $ fApp (NonAC (op, k')) ts
+    return $ fAppNonAC (op, k') ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -331,15 +331,14 @@ binaryAlgApp plit = do
     arg2 <- term plit
     when (k /= 2) $ fail $ 
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fApp (NonAC (op, 2)) [arg1, arg2]
+    return $ fAppNonAC (op, 2) [arg1, arg2]
 
 -- | Parse a term.
 term :: Ord l => Parser (Term l) -> Parser (Term l)
 term plit = asum
     [ pairing       <?> "pairs"
     , parens (multterm plit)
-    , kw UNDERSCORE  *> (fApp (NonAC invSym) . return <$> term plit)
-    , string "1" *> pure (fApp (NonAC oneSym) [])
+    , string "1" *> pure fAppOne
     , application <?> "function application"
     , nullaryApp
     , plit  
@@ -355,16 +354,16 @@ term plit = asum
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Parser (Term l) -> Parser (Term l)
-expterm plit = chainl1 (term plit) ((\a b -> fApp (NonAC expSym) [a,b]) <$ kw HAT)
+expterm plit = chainl1 (term plit) ((\a b -> fAppExp (a,b)) <$ kw HAT)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Parser (Term l) -> Parser (Term l)
-multterm plit = chainl1 (expterm plit) ((\a b -> fApp (AC Mult) [a,b]) <$ kw STAR)
+multterm plit = chainl1 (expterm plit) ((\a b -> fAppMult [a,b]) <$ kw STAR)
   -- FIXME: parse as n-ary multiplication
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
-tupleterm plit = chainr1 pterm ((\a b -> fApp (NonAC pairSym) [a,b])<$ kw COMMA)
+tupleterm plit = chainr1 pterm ((\a b -> fAppPair (a,b))<$ kw COMMA)
   where pterm = ifM (enableDH <$> getState) (multterm plit) (term plit)
 
 -- | Parse a fact.

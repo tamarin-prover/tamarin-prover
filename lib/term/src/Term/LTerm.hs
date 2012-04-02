@@ -196,12 +196,13 @@ freshLVar :: MonadFresh m => String -> LSort -> m LVar
 freshLVar n s = LVar n s <$> freshIdents 1
 
 -- | Returns the most precise sort of an 'LTerm'.
-sortOfLTerm :: (c -> LSort) -> LTerm c -> LSort
-sortOfLTerm sortOfConst (viewTerm -> Lit (Con c))                 = sortOfConst c
-sortOfLTerm _           (viewTerm -> Lit (Var (LVar _ s _)))      = s
-sortOfLTerm _           (viewTerm -> FApp (NonAC ("empty",0)) []) = LSortMSet
-sortOfLTerm _           (viewTerm -> FApp (AC MUn) _)             = LSortMSet
-sortOfLTerm _           _                                         = LSortMsg
+sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
+sortOfLTerm sortOfConst t = case viewTerm2 t of
+    Lit2 (Con c)  -> sortOfConst c
+    Lit2 (Var lv) -> lvarSort lv
+    Empty         -> LSortMSet
+    FUnion _      -> LSortMSet
+    _             -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.
 sortOfLNTerm :: LNTerm -> LSort
@@ -255,11 +256,11 @@ isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
 isFreshVar _                         = False
 
 -- | The required components to construct the message.
---   FIXME: Make inv/1 and pair/2 special?
 input :: LNTerm -> [LNTerm]
-input (viewTerm -> FApp (AC Mult) ts)                                     = concatMap input ts
-input (viewTerm -> FApp (NonAC sym)  ts) | sym `elem` [ invSym, pairSym ] = concatMap input ts
-input t                                                                   = [t]
+input (viewTerm2 -> FMult ts)    = concatMap input ts
+input (viewTerm2 -> FInv t1)     = input t1
+input (viewTerm2 -> FPair t1 t2) = input t1 ++ input t2
+input t                          = [t]
 
 -- | Is a message trivial; i.e., can for sure be instantiated with something
 -- known to the intruder?

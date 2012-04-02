@@ -46,7 +46,7 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
         let eqsAbstr         = map swap (M.toList bindings)
             abstractedTerms  = map snd eqsAbstr
             abstractionSubst = substFromList eqsAbstr
-            variantSubsts    = computeVariants (listToTerm abstractedTerms) `runReader` hnd
+            variantSubsts    = computeVariants (fAppList abstractedTerms) `runReader` hnd
             substs           = [ restrictVFresh (frees abstrPsCsAs) $
                                    removeRenamings $ ((`runReader` hnd) . normSubstVFresh')  $
                                    composeVFresh vsubst abstractionSubst

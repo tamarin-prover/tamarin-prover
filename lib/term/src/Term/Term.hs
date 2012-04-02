@@ -11,19 +11,19 @@ module Term.Term (
       FunSym(..)
     , ACSym(..)
     , NonACSym
-    , expSym
-    , pairSym
-    , invSym
-    , oneSym
-    , emptySym
-    , zeroSym
     , FunSig
-
+    , dhFunSig
+    , xorFunSig
+    , msetFunSig
+    , pairFunSig
+    , dhReducibleFunSig
 
     -- * Terms
     , Term
     , TermView (..)
     , viewTerm
+    , TermView2 (..)
+    , viewTerm2
 
     , traverseTerm
     , fmapTerm
@@ -38,18 +38,32 @@ module Term.Term (
     , fAppNonAC
     , fAppList
     , unsafefApp
-    , listToTerm
+
+    , fAppMult
+    , fAppOne
+    , fAppExp
+    , fAppInv
+    , fAppXor
+    , fAppZero
+    , fAppUnion
+    , fAppEmpty
+    , fAppPair
+    , fAppFst
+    , fAppSnd
+
 
     -- ** Destructors and classifiers
     , destPair
     , destInverse
     , destProduct
     , destXor
+    , destUnion
 
     , isPair
     , isInverse
     , isProduct
     , isXor
+    , isUnion
 
     , module Term.Classes
     ) where
@@ -76,7 +90,7 @@ import Term.Classes
 ----------------------------------------------------------------------
 
 -- | AC function symbols.
-data ACSym = MUn | Xor | Mult
+data ACSym = Union | Xor | Mult
   deriving (Eq, Ord, Typeable, Data, Show)
 
 -- | non-AC function symbols
@@ -93,7 +107,7 @@ type FunSig = [NonACSym]
 
 
 
-pairSym, expSym, invSym, oneSym, zeroSym, emptySym :: NonACSym
+pairSym, expSym, invSym, oneSym, zeroSym, emptySym, fstSym, sndSym :: NonACSym
 -- | Pairing.
 pairSym  = ("pair",2)
 -- | Exponentiation.
@@ -106,13 +120,38 @@ oneSym   = ("one", 0)
 zeroSym  = ("zero",0)
 -- | The empty multiset.
 emptySym = ("empty",0)
+-- | Projection of first component of pair. Only required for pairFunSig.
+fstSym     = ("fst",1)
+-- | Projection of second component of pair. Only required for pairFunSig.
+sndSym     = ("snd",1)
+
+
+-- | The signature for the non-AC Diffie-Hellman function symbols.
+dhFunSig :: FunSig
+dhFunSig = [ expSym, oneSym, invSym ]
+
+-- | The signature for the non-AC Xor function symbols.
+xorFunSig :: FunSig
+xorFunSig = [ zeroSym ]
+
+-- | The signature for then non-AC multiset function symbols.
+msetFunSig :: FunSig
+msetFunSig = [ emptySym ]
+
+-- | The signature for pairing.
+pairFunSig :: FunSig
+pairFunSig = [ pairSym, fstSym, sndSym ]
+
+-- | Reducible non-AC symbols for DH.
+dhReducibleFunSig :: FunSig
+dhReducibleFunSig = [ expSym, invSym ]
 
 ----------------------------------------------------------------------
 -- Terms
 ----------------------------------------------------------------------
 
 -- | A term in T(Sigma,a). Its constructors are kept abstract. Use 'viewTerm'
--- to inspect it.
+-- or 'viewTerm2' to inspect it.
 data Term a = LIT a                 -- ^ atomic terms (constants, variables, ..)
             | FAPP FunSym [Term a]  -- ^ function applications
   deriving (Eq, Ord, Typeable, Data )
@@ -141,6 +180,11 @@ destXor :: Term a -> Maybe [Term a]
 destXor (FAPP (AC Xor) ts) = return ts
 destXor _                  = Nothing
 
+-- | Destruct a top-level multiset union.
+destUnion :: Term a -> Maybe [Term a]
+destUnion (FAPP (AC Union) ts) = return ts
+destUnion _                    = Nothing
+
 -- | 'True' iff the term is a well-formed pair.
 isPair :: Term a -> Bool
 isPair = isJust . destPair
@@ -157,11 +201,17 @@ isProduct = isJust . destProduct
 isXor :: Term a -> Bool
 isXor = isJust . destXor
 
+-- | 'True' iff the term is a well-formed xor'ing.
+isUnion :: Term a -> Bool
+isUnion = isJust . destXor
+
+-- | View on terms that corresponds to representation.
 data TermView a = Lit a
                 | FApp FunSym [Term a]
   deriving (Show, Eq, Ord)
 
 {-# INLINE viewTerm #-}
+-- | Return the 'TermView' of the given term.
 viewTerm :: Term a -> TermView a
 viewTerm (LIT l) = Lit l
 viewTerm (FAPP sym ts) = FApp sym ts
@@ -180,18 +230,21 @@ fApp o@(AC _) as  =
     o_as              = [ a | FAPP _ ts <- o_as0, a <- ts ]
 fApp o ts = FAPP o ts
 
+-- | Smart constructor for AC terms.
 fAppAC :: Ord a => ACSym -> [Term a] -> Term a
 fAppAC acsym = fApp (AC acsym)
 
+-- | Smart constructor for non-AC terms.
 {-# INLINE fAppNonAC #-}
 fAppNonAC :: NonACSym -> [Term a] -> Term a
 fAppNonAC nacsym = FAPP (NonAC nacsym)
 
+-- | Smart constructor for list terms.
 {-# INLINE fAppList #-}
 fAppList :: [Term a] -> Term a
 fAppList = FAPP List
 
--- | @lit l@ create a term from the literal @l@.
+-- | @lit l@ creates a term from the literal @l@.
 {-# INLINE lit #-}
 lit :: a -> Term a
 lit l = LIT l
@@ -200,6 +253,66 @@ lit l = LIT l
 --   caller has to ensure that the resulting term is in AC-normal-form.
 unsafefApp :: FunSym -> [Term a] -> Term a
 unsafefApp fsym as = FAPP fsym as
+
+
+-- | View on terms that distinguishes function application of builtin symbols like exp.
+data TermView2 a = FExp (Term a) (Term a) | FInv (Term a) | FMult [Term a] | One
+                 | FXor [Term a] | Zero
+                 | FUnion [Term a] | Empty
+                 | FPair (Term a) (Term a)
+                 | FAppNonAC NonACSym [Term a]
+                 | FList [Term a]
+                 | Lit2 a
+  deriving (Show, Eq, Ord)
+
+-- | Returns the 'TermView2' of the given term.
+viewTerm2 :: Show a => Term a -> TermView2 a
+viewTerm2 (LIT l) = Lit2 l
+viewTerm2 (FAPP List ts) = FList ts
+viewTerm2 t@(FAPP (AC o) ts)
+  | length ts < 2 = error $ "viewTerm2: malformed term `"++show t++"'"
+  | otherwise     = (acSymToConstr o) ts
+  where
+    acSymToConstr Mult  = FMult
+    acSymToConstr Xor   = FXor
+    acSymToConstr Union = FUnion
+viewTerm2 t@(FAPP (NonAC o) ts) = case ts of
+    [ t1, t2 ] | o == expSym    -> FExp  t1 t2
+    [ t1, t2 ] | o == pairSym   -> FPair t1 t2
+    [ t1 ]     | o == invSym    -> FInv  t1
+    []         | o == oneSym    -> One
+    []         | o == zeroSym   -> Zero
+    []         | o == emptySym  -> Empty
+    _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"
+    _                           -> FAppNonAC o ts
+  where
+    -- special symbols
+    ssyms = [ expSym, pairSym, invSym, oneSym, zeroSym, emptySym ]
+
+
+-- | Smart constructors for mult, union, and xor.
+fAppMult, fAppUnion, fAppXor :: Ord a => [Term a] -> Term a
+fAppMult ts  = fApp (AC Mult)  ts
+fAppUnion ts = fApp (AC Union) ts
+fAppXor ts   = fApp (AC Xor)   ts
+
+-- | Smart constructors for one, zero, and empty.
+fAppOne, fAppZero, fAppEmpty :: Term a
+fAppOne   = fAppNonAC oneSym   []
+fAppZero  = fAppNonAC zeroSym  []
+fAppEmpty = fAppNonAC emptySym []
+
+-- | Smart constructors for pair and exp.
+fAppPair, fAppExp :: (Term a, Term a) -> Term a
+fAppPair (x,y) = fAppNonAC pairSym [x, y]
+fAppExp  (b,e) = fAppNonAC expSym  [b, e]
+
+-- | Smart constructors for inv, fst, and snd.
+fAppInv, fAppFst, fAppSnd :: Term a -> Term a
+fAppInv e = fAppNonAC invSym [e]
+fAppFst a = fAppNonAC fstSym [a]
+fAppSnd a = fAppNonAC sndSym [a]
+
 
 -- Instances
 ------------
@@ -246,19 +359,6 @@ instance Sized a => Sized (Term a) where
 lits :: Ord a => Term a -> [a]
 lits = foldMap return
 
--- | @listToTerm ts@ returns a term that represents @ts@.
-listToTerm :: [Term a] -> Term a
-listToTerm ts = FAPP List ts
-
-----------------------------------------------------------------------
--- Positions
-----------------------------------------------------------------------
-
--- | Takes flattened AC operators into account, i.e., @*[t1,t2,..,tk]@ is
--- interpreted as @t1*(t2*(..(tk-1*tk)..)@.
--- atPos :: Term a -> Term a
-
-
 ----------------------------------------------------------------------
 -- Pretty printing
 ----------------------------------------------------------------------
@@ -275,9 +375,9 @@ prettyTerm ppLit = ppTerm
         FAPP (NonAC (f,_))      ts      -> ppFun f ts
         FAPP List               ts      -> ppFun "LIST" ts
 
-    ppACOp Mult = "*"
-    ppACOp MUn  = "#"
-    ppACOp Xor  = "+"
+    ppACOp Mult  = "*"
+    ppACOp Union = "#"
+    ppACOp Xor   = "+"
 
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) . 
@@ -299,5 +399,3 @@ $( derive makeNFData ''Term )
 $( derive makeBinary ''FunSym)
 $( derive makeBinary ''ACSym)
 $( derive makeBinary ''Term )
-
-

@@ -297,7 +297,7 @@ type LNFact = Fact LNTerm
 unifyLNFactEqs :: [Equal LNFact] -> WithMaude [LNSubstVFresh]
 unifyLNFactEqs eqs 
   | all (evalEqual . fmap factTag) eqs = 
-      unifyLNTerm (map (fmap (listToTerm . factTerms)) eqs)
+      unifyLNTerm (map (fmap (fAppList . factTerms)) eqs)
   | otherwise = return []
 
 -- | 'True' iff the two facts are unifiable.

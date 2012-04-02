@@ -46,6 +46,10 @@ dhRules =
     , inv x1 *: (inv x2 *: x3) `RRule` (inv (x1 *: x2) *: x3)
     , inv (x1 *: x2) *: (x2 *: x3) `RRule` (inv x1 *: x3)
     ]
+  where
+    expo = fAppExp
+    inv  = fAppInv
+    one  = fAppOne
 
 -- | The rewriting rules for Xor.
 xorRules :: [RRule LNTerm]
@@ -53,17 +57,19 @@ xorRules =
     [ x1 +: x1 `RRule` zero
     , x1 +: zero `RRule` x1
     , x1 +: (x1 +: x2) `RRule` x2 ]
+  where
+    zero = fAppZero
 
 -- | The rewriting rules for multisets.
 msetRules :: [RRule LNTerm]
-msetRules = [ s1 # empty `RRule` s1 ]
+msetRules = [ s1 # fAppEmpty `RRule` s1 ]
 
 
 -- | The rewriting rules for standard subterm operators that are builtin.
 pairRules, symEncRules, asymEncRules, signatureRules :: [StRule]
 pairRules      =
-    [ fstC (pair (x1,x2)) `StRule` (RhsPosition [0,0])
-    , sndC (pair (x1,x2)) `StRule` (RhsPosition [0,1]) ]
+    [ fAppFst (fAppPair (x1,x2)) `StRule` (RhsPosition [0,0])
+    , fAppSnd (fAppPair (x1,x2)) `StRule` (RhsPosition [0,1]) ]
 symEncRules    = [ sdec (senc (x1,x2), x2)     `StRule` (RhsPosition [0,0]) ]
 asymEncRules   = [ adec (aenc (x1, pk x2), x2) `StRule` (RhsPosition [0,0]) ]
 signatureRules = [ verify (sign (x1,x2), x1, pk x2) `StRule` (RhsGround trueC) ]

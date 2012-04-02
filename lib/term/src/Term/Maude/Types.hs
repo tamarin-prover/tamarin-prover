@@ -72,9 +72,9 @@ emptyMaudeSig = MaudeSig False False False [] []
 
 -- | A monoid instance to combine maude signatures.
 instance Monoid MaudeSig where
-    (MaudeSig dh xor mset funsig stRules) `mappend` (MaudeSig dh' xor' mset' funsig' stRules') =
-        MaudeSig (dh || dh') (xor || xor')  (mset || mset')
-                 (sortednub $ funsig ++ funsig')  (sortednub $ stRules ++ stRules')
+    (MaudeSig dh1 xor1 mset1 funsig1 stRules1) `mappend` (MaudeSig dh2 xor2 mset2 funsig2 stRules2) =
+        MaudeSig (dh1 || dh2) (xor1 || xor2)  (mset1 || mset2)
+                 (sortednub $ funsig1 ++ funsig2)  (sortednub $ stRules1 ++ stRules2)
     mempty = emptyMaudeSig
 
 -- | Maude signatures for the AC symbols.
@@ -119,13 +119,13 @@ funSigForMaudeSig (MaudeSig {enableXor, enableDH, enableMSet, funSig}) =
     ++ (if enableXor  then xorFunSig  else [])
     ++ (if enableMSet then msetFunSig else [])
 
--- | @irreducibleFunSig msig@ return all irreducible function
+-- | @irreducibleFunSig msig@ returns all irreducible non-AC function
 -- symbols in a maude signature, i.e., those that do not
 -- appear outermost in a rewrite rule.
 irreducibleFunSig :: MaudeSig -> FunSig
 irreducibleFunSig msig = funSigForMaudeSig msig \\ reducible
   where reducible = [ o | StRule (viewTerm -> FApp (NonAC o) _) _ <- stRules msig ]
-                    ++ [ invSym, expSym ]
+                    ++ dhReducibleFunSig
 
 -- Convert between MTerms and LNTerms
 ------------------------------------------------------------------------
@@ -261,9 +261,9 @@ ppMaudeACSym :: ACSym -> String
 ppMaudeACSym o =
     funsymPrefix
     ++ case o of
-           Mult -> "mult"
-           MUn  -> "mun"
-           Xor  -> "xor"
+           Mult  -> "mult"
+           Union -> "mun"
+           Xor   -> "xor"
 
 -- | @ppMaude t@ pretty prints the term @t@ for Maude.
 ppMaude :: Term MaudeLit -> String
@@ -345,9 +345,9 @@ expr =  fixup <$> p
                  <|> (string "n(" *> pure LSortNode)
                  <|> (string "m(" *> pure LSortMSet)
 
-    parseACSym =  try (string (ppMaudeACSym Mult++"(")) *> return Mult
-              <|> try (string (ppMaudeACSym MUn++"("))  *> return MUn
-              <|> (string (ppMaudeACSym Xor++"("))  *> return Xor
+    parseACSym =  try (string (ppMaudeACSym Mult++"("))  *> return Mult
+              <|> try (string (ppMaudeACSym Union++"(")) *> return Union
+              <|> (string (ppMaudeACSym Xor++"("))       *> return Xor
 
     parseFreeSym = string funsymPrefix *> many1 (oneOf (['a' .. 'z']++['A'..'Z']))
  

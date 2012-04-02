@@ -277,7 +277,7 @@ factReports thy = concat
                           ": " ++ showInfo info)
                     $-$ nest 2 ppFa
       where
-        showInfo (tag, k, mult) = show $ (showFactTag tag, k, mult)
+        showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ showFactTag tag
 

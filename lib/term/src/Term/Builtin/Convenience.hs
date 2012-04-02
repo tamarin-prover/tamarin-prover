@@ -16,35 +16,13 @@ import Term.Builtin.Signature
 ----------------------------------------------------------------------
 
 (*:) :: Ord a => Term a -> Term a -> Term a
-b *: e = fApp (AC Mult) [b,e]
+b *: e = fAppMult [b,e]
 (#) :: Ord a => Term a -> Term a -> Term a
-b # e  = fApp (AC MUn) [b,e]
+b # e  = fAppUnion [b,e]
 (+:) :: Ord a => Term a -> Term a -> Term a
-b +: e = fApp (AC Xor) [b,e]
+b +: e = fAppXor [b,e]
 
-
-mult :: Ord a => [Term a] -> Term a
-mult ts = fApp (AC Mult) ts
-
-union :: Ord a => [Term a] -> Term a
-union ts = fApp (AC MUn) ts
-
-xor :: Ord a => [Term a] ->  Term a
-xor ts = fApp (AC Xor) ts
-
-one, zero, empty :: Ord a => Term a
-one   = fAppNonAC oneSym []
-zero  = fAppNonAC zeroSym []
-empty = fAppNonAC emptySym []
-
-inv :: Ord a => Term a -> Term a
-inv e = fAppNonAC invSym [e]
-
-pair :: Ord a => (Term a,Term a) -> Term a
-pair (x,y) = fAppNonAC pairSym [x, y]
-
-expo, adec, aenc, sdec, senc, sign :: Ord a => (Term a,Term a) -> Term a
-expo (b,e)   = fAppNonAC expSym [b,e]
+adec, aenc, sdec, senc, sign :: Ord a => (Term a,Term a) -> Term a
 adec (a,b)   = fAppNonAC adecSym [a,b]
 aenc (a,b)   = fAppNonAC aencSym [a,b]
 sdec (a,b)   = fAppNonAC sdecSym [a,b]
@@ -54,10 +32,8 @@ sign (a,b)   = fAppNonAC signSym [a,b]
 verify :: Ord a => (Term a,Term a,Term a) -> Term a
 verify (a,b,c) = fAppNonAC verifySym [a,b,c]
 
-pk, fstC, sndC :: Ord a => Term a -> Term a
+pk :: Ord a => Term a -> Term a
 pk a = fAppNonAC pkSym [a]
-fstC a = fAppNonAC fstSym [a]
-sndC a = fAppNonAC sndSym [a]
 
 trueC :: Ord a => Term a
 trueC = fAppNonAC trueSym []

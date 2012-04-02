@@ -247,7 +247,7 @@ testsVariant hnd =
                                 , [(lx1, x1 *:  inv(p1 *: x2))]
                                 ])
 
-      , testEqual "c" (sort $ computeVariantsCheck (listToTerm [x1, x2, x1  +:  x2]) `runReader` hnd)
+      , testEqual "c" (sort $ computeVariantsCheck (fAppList [x1, x2, x1  +:  x2]) `runReader` hnd)
                       (sort $ toSubsts
                                 [ []
                                 , [(lx1, x1), (lx2,x1) ]
@@ -258,10 +258,10 @@ testsVariant hnd =
                                 , [(lx1, x2 +: x3), (lx2, x1 +: x3)]
                                 ])
 
-      , testEqual "d" (computeVariantsCheck (listToTerm [s1, s2, s1  #  s2]) `runReader` hnd)
+      , testEqual "d" (computeVariantsCheck (fAppList [s1, s2, s1  #  s2]) `runReader` hnd)
                       (toSubsts [ []
-                                , [(ls1, empty)]
-                                , [(ls2, empty) ] ])
+                                , [(ls1, emptyMSet)]
+                                , [(ls2, emptyMSet) ] ])
 
       , testTrue "e" $ not (checkComplete (sdec(x1, p1)) (toSubsts [[]]) `runReader` hnd)
       , testTrue "f" $ (checkComplete (sdec(x1, p1)) (toSubsts [[], [(lx1, senc(x1,p1))]])
@@ -331,7 +331,7 @@ ts2'' :: LNSubst
 ts2'' = substFromList [(lx1, x5), (lx2, xor [x5, x6]) ]
 
 tterm :: LNTerm
-tterm = listToTerm [x1, x2, (x1 +: x2)]
+tterm = fAppList [x1, x2, (x1 +: x2)]
 
 {-
 
@@ -342,3 +342,23 @@ should be matchable if next matchable also
 runTest $ matchLNTerm [ pair(xor [x5,x6],xor [x4,x5,x6]) `MatchWith` pair(x5,xor [x5,x6]) ]
 
 -}
+
+-- convenience abbreviations
+----------------------------------------------------------------------------------
+
+pair, expo :: (Term a, Term a) -> Term a
+expo = fAppExp
+pair = fAppPair
+
+inv :: Term a -> Term a
+inv = fAppInv
+
+xor, union, mult :: Ord a => [Term a] -> Term a
+xor   = fAppXor
+union = fAppUnion
+mult  = fAppMult
+
+one, zero, emptyMSet :: Term a
+one       = fAppOne
+zero      = fAppZero
+emptyMSet = fAppEmpty
