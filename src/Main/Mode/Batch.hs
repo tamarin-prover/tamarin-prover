@@ -22,6 +22,7 @@ import qualified Text.Isar as Isar
 
 import           Theory
 
+import           Main.Utils
 import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
@@ -127,7 +128,7 @@ run thisMode as
               let outFile = mkOutPath inFile
               (thySummary, t) <- timed $ do
                   thy <- load
-                  writeFile outFile $ renderDoc $ fullDoc thy
+                  writeFileWithDirs outFile $ renderDoc $ fullDoc thy
                   return $ summaryDoc thy
               let summary = Isar.vcat
                     [ Isar.text $ "analyzed: " ++ inFile
