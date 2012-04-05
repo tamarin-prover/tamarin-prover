@@ -73,7 +73,8 @@ applyMethodAtPath thy lemmaName proofPath i = do
     applyProverAtPath thy lemmaName proofPath 
       (oneStepProver method `mappend` 
        replaceSorryProver (oneStepProver Simplify) `mappend`
-       replaceSorryProver (contradictionAndClauseProver)
+       replaceSorryProver (contradictionAndClauseProver) `mappend`
+       replaceSorryProver (oneStepProver Attack)
       )
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
