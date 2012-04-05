@@ -35,11 +35,13 @@ rule generate_ltk:
  * the paper because there the responder property is not specified. */
 
 rule Init_1:
+  let hki = 'g'^h(< '1', ~ekI, ~lkI >) 
+  in
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
-   --[ SidI_1(~ekI,$I,$R, 'g'^h(< '1', ~ekI, ~lkI >)) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^h(< '1', ~ekI, ~lkI >) ),
+   --[ SidI_1(~ekI,$I,$R, hki ) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI, hki ),
      !Ephk(~ekI),
-     Out( 'g'^h(< '1', ~ekI, ~lkI >) ) ]
+     Out( hki ) ]
 
 rule Init_2:
    [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]

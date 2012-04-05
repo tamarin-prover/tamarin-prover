@@ -40,6 +40,7 @@ import           Theory.Lexer
                    , alexGetPos, alexMonadScan
                    )
 import           Term.SubtermRule
+import           Term.Substitution
 
 import Text.Isar (render)
 
@@ -114,12 +115,16 @@ doubleQuoted = betweenKWs DQUOTE DQUOTE
 -- | Parse an identifier as a string
 identifier :: Parser String
 identifier = token extract
-  where extract (IDENT name) = Just $ name
-        extract _            = Nothing
+  where extract (IDENT name) 
+         -- don't allow certain reserved words as identifiers
+         | not (name `elem` ["in","let","rule"]) = Just name
+        extract _                                = Nothing
 
--- | Parse a fixed string which could be an identifier.
+-- | Parse an identifier as a string
 string :: String -> Parser ()
-string cs = (try $ do { i <- identifier; guard (i == cs) }) <?> ('`' : cs ++ "'")
+string cs = token extract
+  where extract (IDENT name) | cs == name = Just ()
+        extract _                         = Nothing
 
 -- | Parse a sequence of fixed strings.
 strings :: [String] -> Parser ()
@@ -426,8 +431,17 @@ typeAssertions = fmap TypingE $
 protoRule :: Parser (ProtoRuleE)
 protoRule = do
     name  <- try (string "rule" *> optional moduloE *> identifier <* kw COLON) 
+    subst <- option emptySubst letBlock
     (ps,as,cs) <- genericRule
-    return $ Rule (StandRule name) ps cs as
+    return $ apply subst $ Rule (StandRule name) ps cs as
+
+-- | Parse a let block with bottom-up application semantics.
+letBlock :: Parser LNSubst
+letBlock = do
+    toSubst <$> (string "let" *> many1 definition <* string "in")
+  where
+    toSubst = foldr1 compose . map (substFromList . return)
+    definition = (,) <$> (sortedLVar [LSortMsg] <* kw EQUAL) <*> multterm llit
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
