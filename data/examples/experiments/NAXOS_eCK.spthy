@@ -3,9 +3,6 @@ begin
 
 builtin: diffie-hellman, hashing
 
-functions: H1/1
-functions: H2/1
-
 section{* NAXOS *}
 
 /*
@@ -41,7 +38,7 @@ rule generate_ltk:
  * the paper because there the responder property is not specified. */
 
 rule Init_1:
-  let exI = H1(< ~ekI, ~lkI >)
+  let exI = h(<'1', ~ekI, ~lkI >)
       hkI = 'g'^exI
   in
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
@@ -52,8 +49,8 @@ rule Init_1:
 
 rule Init_2:
   let pkR    = 'g'^~lkR
-      exI    = H1(< ~ekI, ~lkI >)
-      seskey = H2(< Y^~lkI, (pkR)^exI, Y^exI, $I, $R >) 
+      exI    = h(<'1', ~ekI, ~lkI >)
+      seskey = h(<'2', Y^~lkI, (pkR)^exI, Y^exI, $I, $R >) 
   in
    [   Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R, pkR ) ]
    --[ SidI_2( ~ekI, $I, $R, hkI, Y, seskey) ]->
@@ -62,9 +59,9 @@ rule Init_2:
 /* Responder */
 rule Resp_1:
   let pkI    = 'g'^~lkI
-      exR    = H1(< ~ekR, ~lkR >)
+      exR    = h(<'1', ~ekR, ~lkR >)
       hkr    = 'g'^exR
-      seskey = H2(< (pkI)^exR, X^~lkR, X^exR, $I, $R >) 
+      seskey = h(<'2', (pkI)^exR, X^~lkR, X^exR, $I, $R >) 
   in
    [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, pkI) ]
    --[ SidR_1( ~ekR, $I, $R, X, hkr, seskey) ]->
