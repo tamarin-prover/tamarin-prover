@@ -1,0 +1,170 @@
+theory KAS2_eCK_PFS
+begin
+
+builtin: diffie-hellman, hashing, asymmetric-encryption
+
+section{* KAS2 *}
+
+/*
+ * Protocol:	KAS2
+ * Modeler: 	Cas Cremers
+ * Date: 	April 2012
+ * Source:	"A Generic Variant of NISTS's KAS2 Key Agreement * Protocol"
+ * 		Chatterjee, Menezes, Ustaoglu, 2011
+ *
+ * Status: 	drafting
+ *
+ * Notes:	CC: Gave up on the model for now until a 'let' is
+ * 		implemented. This is too cumbersome.
+ */
+
+/* Protocol rules */
+
+/* Generate long-term keypair */
+rule Register_pk:
+  [ Fr(~ltkA) ] 
+  --> 
+  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+
+/* Initiator */
+rule Init_1:
+   [ Fr( ~m1 ), !Ltk( $I, ~lkI ), !Pk($R,pkR) ]
+   --[ SidI_1(~m1,$I,$R,
+       aenc{ ~m1 }pkR
+   ) ]->
+   [ Init_1( ~m1, $I, $R, ~m1, 
+       aenc{ ~m1 }pkR
+     ),
+     !Ephk(~m1),
+     Out( 
+       aenc{ ~m1 }pkR
+     )
+   ]
+
+rule Resp_1:
+   [ Fr( ~m2 ), In( c1 ), !Ltk( $R, ~lkR ), !PK($I,pkI) ]
+   --[ SidR_1(~m2,$I,$R, ~m2, c1) ]->
+   [ Resp_1(~m2, $I, $R, c1, 
+       aenc{ ~m2 }pkI
+     ),
+     !Ephk(~m2),
+     Out(
+       aenc{ ~m2 }pkI
+     , h(< 'MAC', h(<'KDF', adec(c1,~lkR), ~m2, $I, $R, c1, aenc{ ~m2 }pkI >) >)
+     )
+   ]
+
+rule Init_2:
+   [ Init_1( ~m1, $I, $R, ~m1, c1 )
+   , In(
+       c2
+     , h(< 'MAC', h(<'KDF', ~m1, adec(c2,~lkI), $I, $R, c1, c2 >) >)
+   ]
+   --[ SidI_1(~m1, $I, $R, ~m1, 
+       
+
+
+/* Responder */
+rule Resp_1:
+   [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
+   --[ SidR_1( ~ekR, $I, $R, X, 'g'^h( < '1', ~ekR, ~lkR > ),
+       h(< '2', ('g'^~lkI)^h(< '1', ~ekR, ~lkR >) ,X^~lkR, X^h(< '1', ~ekR, ~lkR >), $I, $R >) ) ]->
+   [ Out( 'g'^h(<'1', ~ekR, ~lkR >) ),
+     !Ephk(~ekR),
+     !Sessk( ~ekR, 
+       h(< '2', ('g'^~lkI)^h(<'1', ~ekR, ~lkR >) ,X^~lkR, X^h(<'1', ~ekR, ~lkR >), $I, $R >) ) ]
+
+/* Key Reveals for the eCK model */
+rule Sessk_reveal: 
+   [ !Sessk(~tid, k) ]
+   --[ SesskRev(~tid) ]->
+   [ Out(k) ]
+
+rule Ltk_reveal:
+   [ !Ltk($A, lkA) ]
+   --[ LtkRev($A) ]->
+   [ Out(lkA) ]
+
+rule Ephk_reveal:
+   [ !Ephk(~ekA) ]
+   --[ EphkRev(~ekA) ]->
+   [ Out(~ekA) ]
+
+
+/* Security properties */
+
+/*
+lemma key_agreement_reachable:
+  "not (Ex #i1 #i2 ekI ekR I R k hkI hkR.
+          SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2)"
+*/
+
+/* An attack is valid in eCK if the session key of the test session is deduced and
+   the test session is clean.
+*/
+lemma eCK_initiator_key:
+  "not (Ex #i1 #i2 ekI I R k hkI hkR.
+            SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
+
+            /* Not both longterm-key-reveal _and_ ephemeral-key-reveal
+	     * for test thread. */
+            & not(Ex #i3 #i4. LtkRev( I ) @ i3 & EphkRev( ekI ) @ i4)
+
+            /* No session-key-reveal of test thread. */
+            & not(Ex #i3. SesskRev( ekI ) @ i3 )
+
+            /* No session-key-reveal for matching session. */
+            & not(Ex #i3 #i4 ekR kpartner.
+                   SidR_1( ekR,I,R,hkI,hkR,kpartner ) @i3
+		   & SesskRev( ekR ) @ i4 )
+
+            /* Not both long-term-key-reveal and ephemeral-key-reveal
+	     * for matching session */
+            & not(Ex #i3 #i4 #i5 ekR kpartner.
+                  SidR_1( ekR,I,R,hkI,hkR,kpartner ) @i3
+		  & LtkRev( R ) @ i4
+		  & EphkRev( ekR ) @ i5 )
+
+	    /* If there is a longterm key reveal, then it must occur after the initiator is finished
+               or there must be a matching session
+            */
+            & (All #i3. LtkRev( R ) @ i3 ==> 
+                  (i1 < i3)
+	          |  (Ex #i4 ekR kpartner.
+                        SidR_1( ekR,I,R,hkI,hkR,kpartner ) @i4)))"
+
+/* An attack is valid in eCK if the session key of the test session is deduced and
+   the test session is clean.
+*/
+lemma eCK_responder_key:
+  "not (Ex #i1 #i2 ekR I R k hkI hkR.
+            SidR_1(ekR, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
+
+            /* Not longterm-key-reveal _and_ ephemeral-key-reveal of actor . */
+            & not(Ex #i3 #i4. LtkRev( R ) @ i3 & EphkRev( ekR ) @ i4)
+
+            /* Not session-key-reveal of test thread. */
+            & not(Ex #i3. SesskRev( ekR ) @ i3 )
+
+            /* Not session-key-reveal of partner thread. Note that we use SidI_2 here.
+	       A session key reveal can only happen after SidI_2 is logged anyways.
+	    */
+            & not(Ex #i3 #i4 ekI kpartner.
+                   SidI_2( ekI,I,R,hkI,hkR,kpartner ) @i3
+		   & SesskRev( ekI ) @ i4 )
+
+            /* If there is a partner thread, then not long-term-key-reveal and ephemeral-key-reveal. */
+            & not(Ex #i3 #i4 #i5 ekI.
+                  SidI_1( ekI,I,R,hkI ) @i3
+		  & LtkRev( I ) @ i4
+		  & EphkRev( ekI ) @ i5 )
+
+	    /* If there is a longterm key reveal, then it must occur after the responder is finished
+               or there must be a matching session.
+	    */
+            & (All #i3. LtkRev( I ) @ i3 ==>
+                  (i1 < i3)
+	          |  (Ex #i4 ekI.
+                         SidI_1( ekI,I,R,hkI ) @i4)))"
+
+end
