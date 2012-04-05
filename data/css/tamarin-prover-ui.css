@@ -70,6 +70,20 @@ img.icon {
     height: 1em;
 }
 
+/* Messages to the user
+ *********************/
+
+div.warning {
+    margin: 1em;
+    padding: 2em;
+    background: #ffdddd;
+    border: solid 2px #ff8080;
+    font-weight: bold;
+    text-align: center;
+    font-size: large;
+}
+
+
 /* Highlighting Styles
  *********************/
 

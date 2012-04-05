@@ -272,13 +272,16 @@ pathTpl :: TheoryInfo   -- ^ The theory
         -> IO Widget
 pathTpl info TheoryMain = return [whamlet|
     <h2>Welcome!
-      <br>
+    <br>
     <h3>Theory information</h3>
       <ul
         <li>Theory: #{get thyName $ tiTheory info}
         <li>Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
         <li>Origin: #{show $ tiOrigin info}
     <h3>Quick introduction</h3>
+    <noscript>
+      <div class="warning">
+        Warning: JavaScript must be enabled for the tamarin prover GUI to function properly.
     <p>
       <em>Left pane:</em> Proof scripts display. You \
       can select proof states and examine them further \
@@ -310,6 +313,9 @@ pathTpl info path = wrapThHtml $ htmlThyPath (tiTheory info) path
 introTpl :: Widget
 introTpl = [HAMLET|
     <h1>Welcome!
+    <noscript>
+      <div class="warning">
+        Warning: JavaScript must be enabled for the tamarin prover GUI to function properly.
     <h2>About
     <p>
       You are running the\
