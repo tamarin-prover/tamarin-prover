@@ -78,9 +78,9 @@ run thisMode as = case findArg "workDir" as of
             [ "The server is starting up on localhost with port " ++ show port ++ "."
             , "Browse to"
             , ""
-	    , "  http://localhost:" ++ show port
+            , "  http://localhost:" ++ show port
             , ""
-	    , "once the server is ready."
+            , "once the server is ready."
             , ""
             , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
             ]
