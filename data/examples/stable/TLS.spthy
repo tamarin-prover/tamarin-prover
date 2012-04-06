@@ -7,11 +7,11 @@ section{* TLS Handshake *}
 
 /*
  * Protocol:	TLS Handshake
- * Modeler: 	Simon Meier
+ * Modeler: 	Simon Meier, minor update by Cas Cremers
  * Date: 	January 2012
  * Source:	Modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy.
  *
- * Status: 	working (25 seconds on an i7 Quad-Core CPU with +RTS -N)
+ * Status: 	working (2.5 seconds on an i7 Quad-Core CPU with +RTS -N)
  */
 
 text{*
@@ -26,6 +26,8 @@ text{*
        axiomatization as Paulson does.
 
 *}
+
+functions: PRF/1
 
 // Public key infrastructure
 rule Register_pk:
@@ -45,15 +47,15 @@ rule Reveal_ltk:
 
     3. C -> S: { '31', pms                     }pk(S) ,
                sign{ '32', h('32', ns, S, pms) }pk(C) ,
-               { '33', sid, h('PRF', pms, nc, ns),
+               { '33', sid, PRF(pms, nc, ns),
                  nc, pc, C, ns, ps, S
                } 
-               h('clientKey', nc, ns, h('PRF', pms, nc, ns))
+               h('clientKey', nc, ns, PRF(pms, nc, ns))
 
-    4. C <- S: { '4', sid, h('PRF', pms, nc, ns),
+    4. C <- S: { '4', sid, PRF(pms, nc, ns),
                  nc, pc, C, ns, ps, S
                } 
-               h('serverKey', nc, ns, h('PRF', pms, nc, ns))
+               h('serverKey', nc, ns, PRF(pms, nc, ns))
   }
 */
 
@@ -82,6 +84,10 @@ rule S_1:
     ]
 
 rule C_2:
+  let 
+      MS   = PRF(~pms, nc, ns)
+      Ckey = h('clientKey', nc, ns, MS)
+  in 
     [ St_C_1(C, nc, sid, pc)
     , In(
         <S, ns, sid, ps>
@@ -94,20 +100,23 @@ rule C_2:
     [ Out(
         < aenc{ '31', ~pms }pkS
         , sign{ '32', h('32', ns, S, ~pms) }ltkC
-        , senc{ '33', sid, h('PRF', ~pms, nc, ns), nc, pc, C, ns, ps, S}
-            h('clientKey', nc, ns, h('PRF', ~pms, nc, ns))
+        , senc{ '33', sid, MS, nc, pc, C, ns, ps, S}Ckey
         >
       )
     , St_C_2(S, C, sid, nc, pc, ns, ps, ~pms)
     ]
 
 rule S_2:
+  let 
+      MS   = PRF(pms, nc, ns)
+      Ckey = h('clientKey', nc, ns, MS)
+      Skey = h('serverKey', nc, ns, MS)
+  in 
     [ St_S_1(S, C, sid, nc, pc, ns, ps)
     , In(
         < aenc{ '31', pms }pk(ltkS)
         , signature
-        , senc{ '33', sid, h('PRF', pms, nc, ns), nc, pc, C, ns, ps, S}
-            h('clientKey', nc, ns, h('PRF', pms, nc, ns))
+        , senc{ '33', sid, MS, nc, pc, C, ns, ps, S}Ckey
         >
       )
     , !Pk(C, pkC)
@@ -115,31 +124,23 @@ rule S_2:
     ]
     /* Explicit equality check, enforced as part of the property. */
   --[ Eq(verify(signature, <'32', h('32', ns, S, pms)>, pkC), true )
-    , SessionKeys
-        ( S, C
-        , h('serverKey', nc, ns, h('PRF', pms, nc, ns))
-        , h('clientKey', nc, ns, h('PRF', pms, nc, ns))
-        )
+    , SessionKeys( S, C, Skey, Ckey )
     ]->
     [ Out(
-        senc{ '4', sid, h('PRF', pms, nc, ns), nc, pc, C, ns, ps, S}
-          h('serverKey', nc, ns, h('PRF', pms, nc, ns))
+        senc{ '4', sid, MS, nc, pc, C, ns, ps, S}Skey
       )
     ]
 
 rule C_3:
+  let 
+      MS   = PRF(pms, nc, ns)
+      Ckey = h('clientKey', nc, ns, MS)
+      Skey = h('serverKey', nc, ns, MS)
+  in 
     [ St_C_2(S, C, sid, nc, pc, ns, ps, pms)
-    , In(
-        senc{ '4', sid, h('PRF', pms, nc, ns), nc, pc, C, ns, ps, S}
-          h('serverKey', nc, ns, h('PRF', pms, nc, ns))
-      )
+    , In( senc{ '4', sid, MS, nc, pc, C, ns, ps, S}Skey )
     ]
-  --[ SessionKeys
-        ( S, C
-        , h('serverKey', nc, ns, h('PRF', pms, nc, ns))
-        , h('clientKey', nc, ns, h('PRF', pms, nc, ns))
-        )
-    ]->
+  --[ SessionKeys( S, C, Skey, Ckey ) ]->
     []
 
 
