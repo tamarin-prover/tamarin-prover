@@ -1,0 +1,161 @@
+theory KAS2_original
+begin
+
+builtin: diffie-hellman, hashing, asymmetric-encryption
+
+section{* KAS2 *}
+
+functions: KDF/1
+functions: MAC/2
+
+/*
+ * Protocol:	KAS2
+ * Modeler: 	Cas Cremers
+ * Date: 	April 2012
+ * Source:	"A Generic Variant of NISTS's KAS2 Key Agreement * Protocol"
+ * 		Chatterjee, Menezes, Ustaoglu, 2011
+ * Model:	Original model from the above paper 
+ * 		(a restricted version of eCK)
+ *
+ * Status: 	working
+ */
+
+/* Protocol rules */
+
+/* Generate long-term keypair */
+rule Register_pk:
+  let pkA = pk(~ltkA)
+  in
+  [ Fr(~ltkA) ] 
+  --> 
+  [ !Ltk($A, ~ltkA), !Pk($A, pkA), Out(pkA) ]
+
+/* Initiator */
+rule Init_1:
+  let c1 = aenc{ ~m1 }pkR
+  in
+   [ Fr( ~m1 ), !Ltk( $I, ~lkI ), !Pk($R,pkR) ]
+   --[ SidI_1( ~m1, $I, $R, c1) ]->
+   [ Init_1( ~m1, $I, $R, ~lkI, ~m1, c1), !Ephk(~m1), Out( c1 ) ]
+
+rule Resp_1:
+  let m1 = adec(c1, ~lkR)
+      c2 = aenc{ ~m2 }pkI
+      key = KDF(< m1, ~m2, $I, $R, c1, c2 >)
+      tagR = MAC(key, (< 'Resp', $R, $I, c2, c1 >) )
+  in
+   [ Fr( ~m2 ), In( c1 ), !Ltk( $R, ~lkR ), !Pk($I,pkI) ]
+   --[  SidR_1( ~m2, $R, $I, c1, c2) ]->
+   [ Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 ), !Ephk(~m2), Out(< c2 , tagR >) ]
+
+rule Init_2:
+  let m2 = adec(c2, ~lkI)
+      key = KDF(< ~m1, m2, $I, $R, c1, c2 >)
+      tagR = MAC( key, (< 'Resp', $R, $I, c2, c1 >) )
+      tagI = MAC( key, (< 'Init', $I, $R, c1, c2 >) )
+  in
+   [ Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) , In(< c2, tagR >) ]
+   --[ SidI_2( ~m1, $I, $R, c1, c2 ), Sessk( ~m1, key) ]->
+   [ Out( tagI ), !Sessk( ~m1, key ) ]
+
+rule Resp_2:
+  let 
+      key = KDF(< m1, ~m2, $I, $R, c1, c2 >)
+      tagI = MAC( key, (< 'Init', $I, $R, c1, c2 >) )
+  in
+   [ Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2), In( tagI ) ]
+   --[  SidR_2( ~m2, $R, $I, c1, c2 ) , Sessk( ~m2, key) ]->
+   [ !Sessk( ~m2, key ) ]
+
+
+/* Key Reveals for the eCK model */
+rule Sessk_reveal: 
+   [ !Sessk(~tid, k) ]
+   --[ SesskRev(~tid) ]->
+   [ Out(k) ]
+
+rule Ltk_reveal:
+   [ !Ltk($A, lkA) ]
+   --[ LtkRev($A) ]->
+   [ Out(lkA) ]
+
+rule Ephk_reveal:
+   [ !Ephk(~ekA) ]
+   --[ EphkRev(~ekA) ]->
+   [ Out(~ekA) ]
+
+
+/* Security properties */
+
+/*
+lemma key_agreement_reachable:
+  "not (Ex #i1 #i2 ekI ekR I R k hkI hkR.
+          SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2)"
+*/
+
+/* An attack is valid in eCK if the session key of the test session is deduced and
+   the test session is clean.
+*/
+lemma kas_initiator_key:
+  "not (Ex #i1 #i2 #ik ekI I R k hkI hkR.
+            SidI_2(ekI, I, R, hkI, hkR) @ i1 & K( k ) @ i2 & Sessk(ekI, k) @ ik
+
+            /* No session-key-reveal of test thread. */
+            & not(Ex #i3. SesskRev( ekI ) @ i3 )
+
+	    /* If matching session exists (for all matching sessions...) */
+	    & (All ekR #i3.
+                     SidR_1( ekR,R,I,hkI,hkR) @ i3
+		     ==>
+		   ( not(Ex #i4 #i5 kpartner. Sessk(ekR, kpartner) @ i4 & SesskRev( ekR ) @ i5 )
+		   & not(Ex #i4 #i5. LtkRev ( I ) @ i4    & EphkRev ( ekI ) @ i5 )
+		   & not(Ex #i4 #i5. LtkRev ( R ) @ i4    & EphkRev ( ekR ) @ i5 )
+		   & not(Ex #i4 #i5. LtkRev ( I ) @ i4    & LtkRev ( R ) @ i5    )
+		   & not(Ex #i4 #i5. EphkRev ( ekI ) @ i4 & EphkRev ( ekR ) @ i5 )
+		   )
+	      )
+
+	    /* No matching session exists */
+	    & (not (Ex ekR #i3.
+                     SidR_1( ekR,R,I,hkI,hkR) @i3 )
+		     ==>
+		   ( not(Ex #i4. EphkRev ( ekI ) @ i4 )
+		   & not(Ex #i4. LtkRev (R) @ i4 & i4 < i1 )
+		   )
+	      )
+  )"
+
+
+/* An attack is valid in eCK if the session key of the test session is deduced and
+   the test session is clean.
+*/
+lemma kas_responder_key:
+  "not (Ex #i1 #i2 #ik ekR I R k hkI hkR.
+            SidR_2(ekR, R, I, hkI, hkR) @ i1 & K( k ) @ i2 & Sessk( ekR, k) @ ik
+
+            /* No session-key-reveal of test thread. */
+            & not(Ex #i3. SesskRev( ekR ) @ i3 )
+
+	    /* If matching session exists (for all matching sessions...) */
+	    & (All ekI #i3.
+                     SidI_1( ekI,I,R,hkI) @ i3		// Implied by SidI_2 match
+		     ==>
+		   ( not(Ex #i4 #i5 kpartner. Sessk(ekI, kpartner) @ i4 & SesskRev( ekI ) @ i5 )
+		   & not(Ex #i4 #i5. LtkRev ( R ) @ i4    & EphkRev ( ekR ) @ i5 )
+		   & not(Ex #i4 #i5. LtkRev ( I ) @ i4    & EphkRev ( ekI ) @ i5 )
+		   & not(Ex #i4 #i5. LtkRev ( R ) @ i4    & LtkRev ( I ) @ i5    )
+		   & not(Ex #i4 #i5. EphkRev ( ekR ) @ i4 & EphkRev ( ekI ) @ i5 )
+		   )
+	      )
+
+	    /* No matching session exists */
+	    & (not (Ex ekI #i3.
+                     SidI_1( ekI,I,R,hkI) @i3 )		// Implied by SidI_2 match
+		     ==>
+		   ( not(Ex #i4. EphkRev ( ekR ) @ i4 )
+		   & not(Ex #i4. LtkRev (I) @ i4 & i4 < i1 )
+		   )
+	      )
+  )"
+
+end

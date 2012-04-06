@@ -1,4 +1,4 @@
-theory KAS2_eCK_PFS
+theory KAS2_eCK
 begin
 
 builtin: diffie-hellman, hashing, asymmetric-encryption
@@ -14,8 +14,9 @@ functions: MAC/2
  * Date: 	April 2012
  * Source:	"A Generic Variant of NISTS's KAS2 Key Agreement * Protocol"
  * 		Chatterjee, Menezes, Ustaoglu, 2011
+ * Model:	eCK
  *
- * Status: 	drafting
+ * Status: 	working
  */
 
 /* Protocol rules */
@@ -33,36 +34,36 @@ rule Init_1:
   let c1 = aenc{ ~m1 }pkR
   in
    [ Fr( ~m1 ), !Ltk( $I, ~lkI ), !Pk($R,pkR) ]
-   --[ Sid( ~m1, $I, $R, 'Init', c1) ]->
+   --[ SidI_1( ~m1, $I, $R, c1) ]->
    [ Init_1( ~m1, $I, $R, ~lkI, ~m1, c1), !Ephk(~m1), Out( c1 ) ]
 
 rule Resp_1:
   let m1 = adec(c1, ~lkR)
       c2 = aenc{ ~m2 }pkI
       key = KDF(< m1, ~m2, $I, $R, c1, c2 >)
-      macR = MAC(key, (< 'Resp', $R, $I, c2, c1 >) )
+      tagR = MAC(key, (< 'Resp', $R, $I, c2, c1 >) )
   in
-   [ Fr( ~m2 ), In( c1 ), !Ltk( $R, ~lkR ), !PK($I,pkI) ]
-   --[ Sid( ~m2, $R, $I, 'Resp', c1, c2) ]->
-   [ Resp_1(~m2, $I, $R, ~lkR, m1, ~m2, c1, c2, macR ), !Ephk(~m2), Out(< c2 , macR >) ]
+   [ Fr( ~m2 ), In( c1 ), !Ltk( $R, ~lkR ), !Pk($I,pkI) ]
+   --[  SidR_1( ~m2, $R, $I, c1, c2) ]->
+   [ Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 ), !Ephk(~m2), Out(< c2 , tagR >) ]
 
 rule Init_2:
   let m2 = adec(c2, ~lkI)
       key = KDF(< ~m1, m2, $I, $R, c1, c2 >)
-      macR = MAC( key, (< 'Resp', $R, $I, c2, c1 >) )
-      macI = MAC( key, (< 'Init', $I, $R, c1, c2 >) )
+      tagR = MAC( key, (< 'Resp', $R, $I, c2, c1 >) )
+      tagI = MAC( key, (< 'Init', $I, $R, c1, c2 >) )
   in
-   [ Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) , In(< c2, macR >) ]
-   --[ Sid( ~m1, $I, $R, 'Init', c1, c2 ), Sessk( ~m1, key) ]->
-   [ Out( macI ), !Sessk( ~m1, key ) ]
+   [ Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) , In(< c2, tagR >) ]
+   --[ SidI_2( ~m1, $I, $R, c1, c2 ), Sessk( ~m1, key) ]->
+   [ Out( tagI ), !Sessk( ~m1, key ) ]
 
 rule Resp_2:
   let 
       key = KDF(< m1, ~m2, $I, $R, c1, c2 >)
-      macI = MAC( key, (< 'Init', $I, $R, c1, c2 >) )
+      tagI = MAC( key, (< 'Init', $I, $R, c1, c2 >) )
   in
-   [ Resp_1(~m2, $I, $R, ~lkR, m1, ~m2, c1, c2), In( macI ) ]
-   --[ Sid( ~m2, $I, $R, 'Resp', c1, c2 ) , Sessk( ~m2, key) ]->
+   [ Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2), In( tagI ) ]
+   --[  SidR_2( ~m2, $R, $I, c1, c2 ) , Sessk( ~m2, key) ]->
    [ !Sessk( ~m2, key ) ]
 
 
@@ -96,7 +97,7 @@ lemma key_agreement_reachable:
 */
 lemma eCK_initiator_key:
   "not (Ex #i1 #i2 #ik ekI I R k hkI hkR.
-            Sid(ekI, I, R, 'Init', hkI, hkR) @ i1 & K( k ) @ i2 & Sessk(ekI, k) @ ik
+            SidI_2(ekI, I, R, hkI, hkR) @ i1 & K( k ) @ i2 & Sessk(ekI, k) @ ik
 
             /* Not both longterm-key-reveal _and_ ephemeral-key-reveal
 	     * for test thread. */
@@ -107,14 +108,14 @@ lemma eCK_initiator_key:
 
             /* No session-key-reveal for matching session. */
             & not(Ex #i3 #i4 #i5 ekR kpartner.
-                     Sid( ekR,R,I,'Resp',hkI,hkR) @i3
+                     SidR_1( ekR,R,I,hkI,hkR) @i3
 		   & Sessk(ekR, kpartner) @i4
 		   & SesskRev( ekR ) @ i5 )
 
             /* Not both long-term-key-reveal and ephemeral-key-reveal
 	     * for matching session */
             & not(Ex #i3 #i4 #i5 ekR.
-                    Sid( ekR,R,I,'Resp',hkI,hkR) @i3
+                    SidR_1( ekR,R,I,hkI,hkR) @i3
 		  & LtkRev( R ) @ i4
 		  & EphkRev( ekR ) @ i5 )
 
@@ -122,16 +123,15 @@ lemma eCK_initiator_key:
                or there must be a matching session
             */
             & (All #i3. LtkRev( R ) @ i3 ==> 
-                  (i1 < i3)
-	          |  (Ex #i4 ekR .
-                        Sid( ekR,R,I,'Resp',hkI,hkR) @i4)))"
+	             (Ex #i4 ekR .
+                        SidR_1( ekR,R,I,hkI,hkR) @i4)))"
 
 /* An attack is valid in eCK if the session key of the test session is deduced and
    the test session is clean.
 */
 lemma eCK_responder_key:
   "not (Ex #i1 #i2 #ik ekR I R k hkI hkR.
-            SidR_1(ekR, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2 & Sessk( ekR, k) @ ik
+            SidR_2(ekR, R, I, hkI, hkR) @ i1 & K( k ) @ i2 & Sessk( ekR, k) @ ik
 
             /* Not longterm-key-reveal _and_ ephemeral-key-reveal of actor . */
             & not(Ex #i3 #i4. LtkRev( R ) @ i3 & EphkRev( ekR ) @ i4)
@@ -143,15 +143,26 @@ lemma eCK_responder_key:
 	       A session key reveal can only happen after SidI_2 is logged anyways.
 	    */
             & not(Ex #i3 #i4 #i5 ekI kpartner.
-	           ( Sid( ekI, R, I, 'Init', hkI ) @ i3
-	           | Sid( ekI, R, I, 'Init', hkI, hkR ) @ i3 )
+	             SidI_1( ekI, I, R, hkI ) @ i3
 		   & Sessk( ekI, kpartner ) @ i5
 		   & SesskRev( ekI ) @ i4 )
+            /* One may consider adding the following conjunct. However,
+	     * if it exists (and the 'not' yields false) the previous
+	     * conjunct would already yield false. A full matching
+	     * session signal is always preceded by the partial matching
+	     * signal */
+	    /*
+            & not(Ex #i3 #i4 #i5 ekI kpartner.
+	             SidI_2( ekI, I, R, hkI, hkR ) @ i3 
+		   & Sessk( ekI, kpartner ) @ i5
+		   & SesskRev( ekI ) @ i4 )
+	    */
 
             /* If there is a partner thread, then not long-term-key-reveal and ephemeral-key-reveal. */
+	    /* Same observation as above wrt the full matching session.
+	     */
             & not(Ex #i3 #i4 #i5 ekI.
-	           ( Sid( ekI, R, I, 'Init', hkI ) @ i3
-	           | Sid( ekI, R, I, 'Init', hkI, hkR ) @ i3 )
+	             SidI_1( ekI, I, R, hkI ) @ i3
 		  & LtkRev( I ) @ i4
 		  & EphkRev( ekI ) @ i5 )
 
@@ -159,10 +170,8 @@ lemma eCK_responder_key:
                or there must be a matching session.
 	    */
             & (All #i3. LtkRev( I ) @ i3 ==>
-                  (i1 < i3)
-	          |  (Ex #i4 ekI.
-	           ( Sid( ekI, R, I, 'Init', hkI ) @ i4
-	           | Sid( ekI, R, I, 'Init', hkI, hkR ) @ i4 )
+	             (Ex #i4 ekI.
+	             SidI_1( ekI, I, R, hkI ) @ i4
                      )))"
 
 end
