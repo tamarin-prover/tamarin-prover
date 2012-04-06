@@ -73,6 +73,10 @@ data-files:
   -- CSF'12 case studies
   examples/csf12/Artificial.spthy
 
+  examples/csf12/DH2-original.spthy
+  examples/csf12/KAS2-eCK.spthy
+  examples/csf12/KAS2-original.spthy
+
   examples/csf12/KEA_plus_KI_KCI.spthy
   examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
   examples/csf12/KEA_plus_eCK.spthy
