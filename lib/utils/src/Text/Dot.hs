@@ -51,7 +51,8 @@ module Text.Dot
 	) where
 
 import Data.List (intersperse)
-import Control.Monad (liftM)
+import Control.Monad (liftM, ap)
+import Control.Applicative (Applicative(..))
 
 data NodeId = NodeId String
 	    | UserNodeId Int
@@ -69,6 +70,13 @@ data GraphElement = GraphAttribute String String
 		  | SubGraph NodeId [GraphElement]
 
 data Dot a = Dot { unDot :: Int -> ([GraphElement],Int,a) }
+
+instance Functor Dot where
+  fmap f m = Dot $ \ uq -> case unDot m uq of (a,b,x) -> (a,b,f x)
+
+instance Applicative Dot where
+  pure  = return
+  (<*>) = ap
 
 instance Monad Dot where
   return a = Dot $ \ uq -> ([],uq,a)
