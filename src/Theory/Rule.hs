@@ -53,6 +53,7 @@ module Theory.Rule (
 
   -- ** Queries
   , HasRuleName(..)
+  , isIntruderRule
   , isDestrRule
   , isConstrRule
   , isFreshRule
@@ -413,6 +414,11 @@ nfRule (Rule _ ps cs as) = reader $ \hnd ->
   where
     nfFactList hnd xs = 
         getAll $ foldMap (foldMap (All . (\t -> nf' t `runReader` hnd))) xs
+
+-- | True iff the rule is an intruder rule
+isIntruderRule :: HasRuleName r => r -> Bool
+isIntruderRule ru =
+    case ruleName ru of IntrInfo _ -> True; ProtoInfo _ -> False
 
 -- | True if the protocol rule has no variants.
 isTrivialProtoRuleAC :: ProtoRuleAC -> Bool

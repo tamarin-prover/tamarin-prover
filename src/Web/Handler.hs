@@ -446,8 +446,8 @@ getTheoryGraphR idx path = withTheory idx $ \ti -> do
       sendFile "image/png" png
   where
     graphStyle d c = dotStyle d . compression c
-    dotStyle True = dotSequentCompact
-    dotStyle False = dotSequentLoose
+    dotStyle True = dotSequentCompact CompactIntruderNodes
+    dotStyle False = dotSequentCompact FullIntruderNodes
     compression True = compressSequent
     compression False = id
 

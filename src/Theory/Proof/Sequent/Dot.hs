@@ -11,6 +11,7 @@ module Theory.Proof.Sequent.Dot (
     dotSequentLoose
   , dotSequentCompact
   , compressSequent
+  , IntruderNodeStyle(..)
   ) where
 
 import Safe
@@ -293,46 +294,62 @@ nodeColorMap rules =
 -- Record based dotting
 ------------------------------------------------------------------------------
 
+-- | The style for nodes of the intruder.
+data IntruderNodeStyle = FullIntruderNodes | CompactIntruderNodes
+    deriving( Eq, Ord, Show )
+
+
 -- | Dot a node in record based (compact) format.
-dotNodeCompact :: NodeId -> SeDot D.NodeId
-dotNodeCompact v = dotOnce dsNodes v $ do
+dotNodeCompact :: IntruderNodeStyle -> NodeId -> SeDot D.NodeId
+dotNodeCompact intrStyle v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
     case M.lookup v $ get sNodes se of
-      Nothing -> liftDot $ D.node $ [("label", show v),("shape","ellipse")] 
+      Nothing -> mkSimpleNode (show v) []
       Just ru -> do
           let color     = M.lookup (get rInfo ru) colorMap
               nodeColor = maybe "white" (rgbToHex . lighter) color
               attrs     = [("fillcolor", nodeColor),("style","filled")]
-          (_, ids) <- liftDot $ D.record (mkRecord ru) attrs
+          ids <- mkNode ru attrs
           let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
               concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
           modM dsPrems $ M.union $ M.fromList prems
           modM dsConcs $ M.union $ M.fromList concs
           return $ fromJust $ lookup Nothing ids
   where
-    mkRecord ru = D.vcat $ map D.hcat $ filter (not . null)
-      [ [ D.portField (Just (Left i)) (render (prettyLNFact p))
-        | (i, p) <- enumPrems ru ]
-      , [ D.portField Nothing (show v ++ " : " ++ showRuleCaseName ru ++ acts) ]
-      , [ D.portField (Just (Right i)) (render (prettyLNFact c))
-        | (i, c) <- enumConcs ru ]
-      ]
+    mkSimpleNode lbl attrs = 
+        liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
+
+    mkNode ru attrs
+      -- single node, share node-id for all premises and conclusions
+      | intrStyle == CompactIntruderNodes && isIntruderRule ru = do
+            -- nid <- mkSimpleNode (show v ++ " : " ++ concatMap snd cs) attrs
+            nid <- mkSimpleNode (show v ++ " : " ++ showRuleCaseName ru) []
+            return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
+      -- full record syntax
+      | otherwise =
+            fmap snd $ liftDot $ (`D.record` attrs) $
+            D.vcat $ map D.hcat $ map (map (uncurry D.portField)) $ 
+            filter (not . null) [ps, as, cs]
       where
+        ps = [ (Just (Left i),  render (prettyLNFact p)) | (i, p) <- enumPrems ru ]
+        as = [ (Nothing,        show v ++ " : " ++ showRuleCaseName ru ++ acts) ]
+        cs = [ (Just (Right i), render (prettyLNFact c)) | (i, c) <- enumConcs ru ]
+
         acts = (" " ++) $ render $
             brackets $ vcat $ punctuate comma $ map prettyLNFact $ get rActs ru
-    
+
 
 -- | Dot a sequent in compact form (one record per rule)
-dotSequentCompact :: Sequent -> D.Dot ()
-dotSequentCompact se = 
+dotSequentCompact :: IntruderNodeStyle -> Sequent -> D.Dot ()
+dotSequentCompact intrStyle se = 
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $ 
     (`runReaderT` (se, nodeColorMap (M.elems $ get sNodes se))) $ do
         liftDot $ setDefaultAttributes
-        mapM_ dotNodeCompact $ M.keys   $ get sNodes    se
-        mapM_ dotEdge        $ S.toList $ get sEdges    se
-        mapM_ dotChain       $ S.toList $ get sChains   se
-        mapM_ dotMsgEdge     $ S.toList $ get sMsgEdges se
-        mapM_ dotLess        $            sLessAtoms    se
+        mapM_ (dotNodeCompact intrStyle) $ M.keys   $ get sNodes    se
+        mapM_ dotEdge                    $ S.toList $ get sEdges    se
+        mapM_ dotChain                   $ S.toList $ get sChains   se
+        mapM_ dotMsgEdge                 $ S.toList $ get sMsgEdges se
+        mapM_ dotLess                    $            sLessAtoms    se
   where
     missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)] 
     dotPremC prem = dotOnce dsPrems prem $ missingNode "invtrapezium" $ prettyNodePrem prem
@@ -351,7 +368,7 @@ dotSequentCompact se =
         srcId <- dotConcC src
         tgtId <- dotPremC tgt
         liftDot $ D.edge srcId tgtId style
-    
+
     dotChain (Chain src tgt) = 
         dotGenEdge [("style","dashed"),("color","green")] src tgt 
 
@@ -359,26 +376,12 @@ dotSequentCompact se =
         dotGenEdge [("style","dotted"),("color","orange")] src tgt 
 
     dotLess (src, tgt) = do
-        srcId <- dotNodeCompact src
-        tgtId <- dotNodeCompact tgt
+        srcId <- dotNodeCompact intrStyle src
+        tgtId <- dotNodeCompact intrStyle tgt
         liftDot $ D.edge srcId tgtId 
             [("color","black"),("style","dotted"),("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
 
-    {-
-    dotProvides (SeProvides v fa) = do
-        vId <- dotNodeCompact v
-        faId <- liftDot $ D.node [("label",label),("shape","trapezium")]
-        dotNonFixedIntraRuleEdge vId faId
-      where
-        label = render $ prettyLNFact fa
-    dotRequires (SeRequires v _fa) = do
-       _vId <- dotNodeCompact v
-       return ()
-       -- FIXME: Reenable
-       -- premId <- dotPremC (NodePremFact v fa)
-       -- dotNonFixedIntraRuleEdge premId vId
-    -}
 
 ------------------------------------------------------------------------------
 -- Compressed versions of a sequent
