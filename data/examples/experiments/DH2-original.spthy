@@ -1,0 +1,142 @@
+theory DH2_original
+begin
+
+builtin: diffie-hellman, hashing
+
+section{* DH2 *}
+
+/*
+ * Protocol:	DH2
+ * Modeler: 	Cas Cremers
+ * Date: 	April 2012
+ * Source:	"A Generic Variant of NISTS's KAS2 Key Agreement Protocol"
+ * 		Chatterjee, Menezes, Ustaoglu, 2011
+ * Model:	Original model from the above paper 
+ * 		(a restricted version of eCK)
+ *
+ * Status: 	working
+ *
+ * Notes:	Slightly simplified to use only a single group 'g' instead of allowing participants to choose.
+ */
+
+functions: KDF/1
+functions: MAC/2
+
+/* Protocol rules */
+
+/* Generate long-term keypair */
+rule Register_pk:
+  let pkA = 'g'^~ltkA
+  in
+  [ Fr(~ltkA) ] 
+  --> 
+  [ !Ltk($A, ~ltkA), !Pk($A, pkA), Out(pkA) ]
+
+/* Initiator */
+rule Init_1:
+  let pkR = 'g'^~ltkR
+      X   = 'g'^~m1
+      XB  = pkR^~m1
+  in
+   [ Fr( ~m1 ), !Ltk( $I, ~ltkI ), !Pk($R,pkR) ]
+   --[ Sid( ~m1, $I, $R, <$I, $R, 'Init', XB>)
+     , EphKey ( ~m1, ~m1 ) ]->
+   [ Init_1( ~m1, $I, $R, ~ltkI, X, XB ), !Ephk( ~m1,~m1 ), Out( XB ) ]
+
+rule Resp_1:
+  let pkI = 'g'^~ltkI
+      Y   = 'g'^~m2
+      YA  = pkI^~m2
+      X   = XB^inv(~ltkR)
+      key = KDF(< X, Y, $I, $R, XB, YA >)
+      tagB = MAC(key, (< 'Resp', $R, $I, YA, XB >) )
+      tagA = MAC(key, (< 'Init', $I, $R, XB, YA >) )
+  in
+   [ Fr( ~m2 ), In( XB ), !Ltk( $R, ~ltkR ), !Pk($I,pkI) ]
+   --[  Sid  ( ~m2, $R, $I, <$R, $I, 'Resp', YA, XB >)
+     ,  Match( ~m2, <$I, $R, 'Init', XB >)
+     ,  Match( ~m2, <$I, $R, 'Init', XB, YA >)
+     ,  EphKey ( ~m2, ~m2 )
+     ]->
+   [ Resp_1( ~m2, $I, $R, YA, XB, tagA, key ), !Ephk( ~m2,~m2 ), Out(< YA , tagB >) ]
+
+rule Init_2:
+  let pkR = 'g'^~ltkR
+      Y   = YA^inv(~ltkI)
+      key = KDF(< X, Y, $I, $R, XB, YA >)
+      tagB = MAC(key, (< 'Resp', $R, $I, YA, XB >) )
+      tagA = MAC(key, (< 'Init', $I, $R, XB, YA >) )
+  in
+   [ Init_1( ~m1, $I, $R, ~ltkI, X, XB ) , In(< YA, tagB >) ]
+   --[ Sid  ( ~m1, $I, $R, <$I, $R, 'Init', XB, YA > )
+     , Match( ~m1, <$R, $I, 'Resp', YA, XB > )
+     , Accept( ~m1, key) 
+     ]->
+   [ Out(< YA, XB, tagA >), !Sessk( ~m1, key ) ]
+
+rule Resp_2:
+   [ Resp_1( ~m2, $I, $R, YA, XB, tagA, key), In(< YA, XB, tagA >) ]
+   --[ Accept( ~m2, key) ]->
+   [ !Sessk( ~m2, key ) ]
+
+
+
+/* Key Reveals for the eCK model */
+rule Sessk_reveal: 
+   [ !Sessk(~tid, k) ]
+   --[ SesskRev(~tid) ]->
+   [ Out(k) ]
+
+rule Ltk_reveal:
+   [ !Ltk($A, lkA) ]
+   --[ LtkRev($A) ]->
+   [ Out(lkA) ]
+
+rule Ephk_reveal:
+   [ !Ephk(~s, ~ek) ]
+   --[ EphkRev(~s) ]->
+   [ Out(~ek) ]
+
+
+/* Security properties */
+
+/*
+lemma key_agreement_reachable:
+  "not (Ex #i1 #i2 #i3 #i4 s ss k A B minfo.
+       Accept(s, k)  @ i1
+     & Accept(ss, k) @ i2
+     & Sid(s, A, B, minfo) @ i3
+     & Match(ss, minfo)    @ i4
+     )"
+*/
+          
+lemma KAS_key_secrecy:
+  "not (Ex #i1 #i2 #i3 s A B minfo k .
+            Sid(s, A, B, minfo) @ i1 & K( k ) @ i2 & Accept(s, k) @ i3
+
+            /* No session-key-reveal of test thread. */
+            & not(Ex #i4. SesskRev( s ) @ i4 )
+
+	    /* If matching session exists (for all matching sessions...) */
+	    & (All ss #i4 #i5 C D ms.
+	           ( Sid ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5)
+		     ==>
+		   ( not(Ex #i6 #i7 kpartner. Accept(ss, kpartner) @ i6 & SesskRev( ss ) @ i7 )
+		   & not(Ex #i6 #i7. LtkRev  ( A ) @ i6  & EphkRev ( s  ) @ i7 )
+		   & not(Ex #i6 #i7. LtkRev  ( B ) @ i6  & EphkRev ( ss ) @ i7 )
+		   & not(Ex #i6 #i7. LtkRev  ( A ) @ i6  & LtkRev  ( B  ) @ i7 )
+		   & not(Ex #i6 #i7. EphkRev ( s ) @ i6  & EphkRev ( ss ) @ i7 )
+		   )
+	      )
+
+	    /* No matching session exists */
+	    & ( ( not(Ex ss #i4 #i5 C D ms.
+	           Sid ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5 ) )
+		     ==>
+		   ( not(Ex #i6. EphkRev ( s ) @ i6 )
+		   & not(Ex #i6. LtkRev  ( B ) @ i6 & i6 < i3 )
+		   )
+	      )
+  )"
+
+end

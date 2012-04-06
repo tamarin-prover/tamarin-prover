@@ -1,4 +1,4 @@
-theory KAS2_eCK
+theory KAS2_original
 begin
 
 builtin: hashing, asymmetric-encryption
@@ -11,7 +11,8 @@ section{* KAS2 *}
  * Date: 	April 2012
  * Source:	"A Generic Variant of NISTS's KAS2 Key Agreement Protocol"
  * 		Chatterjee, Menezes, Ustaoglu, 2011
- * Model:	eCK
+ * Model:	Original model from the above paper 
+ * 		(a restricted version of eCK)
  *
  * Status: 	working
  */
@@ -98,7 +99,7 @@ lemma key_agreement_reachable:
   "not (Ex #i1 #i2 ekI ekR I R k hkI hkR.
           SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2)"
 */
-lemma eCK_key_secrecy:
+lemma KAS_key_secrecy:
   "not (Ex #i1 #i2 #i3 s A B minfo k .
             Sid(s, A, B, minfo) @ i1 & K( k ) @ i2 & Accept(s, k) @ i3
 
@@ -112,6 +113,8 @@ lemma eCK_key_secrecy:
 		   ( not(Ex #i6 #i7 kpartner. Accept(ss, kpartner) @ i6 & SesskRev( ss ) @ i7 )
 		   & not(Ex #i6 #i7. LtkRev  ( A ) @ i6  & EphkRev ( s  ) @ i7 )
 		   & not(Ex #i6 #i7. LtkRev  ( B ) @ i6  & EphkRev ( ss ) @ i7 )
+		   & not(Ex #i6 #i7. LtkRev  ( A ) @ i6  & LtkRev  ( B  ) @ i7 )
+		   & not(Ex #i6 #i7. EphkRev ( s ) @ i6  & EphkRev ( ss ) @ i7 )
 		   )
 	      )
 
@@ -119,8 +122,8 @@ lemma eCK_key_secrecy:
 	    & ( ( not(Ex ss #i4 #i5 C D ms.
 	           Sid ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5 ) )
 		     ==>
-		   ( not(Ex #i6    . LtkRev (B) @ i6 )
-		   & not(Ex #i6 #i7. LtkRev (A) @ i6 & EphkRev ( s ) @ i7 )
+		   ( not(Ex #i6. EphkRev ( s ) @ i6 )
+		   & not(Ex #i6. LtkRev  ( B ) @ i6 & i6 < i3 )
 		   )
 	      )
   )"

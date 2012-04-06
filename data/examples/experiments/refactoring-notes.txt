@@ -1,0 +1,47 @@
+Design for modular security model / protocol spec
+-------------------------------------------------
+
+Main target: allow for separate security model/protocol spec.
+Main issue:  matching is currently hard coded into security properties
+             and this does not port well.
+Idea:        encode matching in protocol rules
+
+Conventions:
+
+- Protocols emit standard facts for their session keys and ephemeral keys.
+
+  Ephk (sid, key)
+  Sessk (sid, key)
+  (Maybe later state)
+  These connect to the reveal rules.
+
+- Protocols log:
+  
+  SID facts of arity 4 (thread identifier, actor, peer, matching info).
+  MATCH facts of arity 2 (thread identifier, matching info).
+  Accept facts of arity 2 (thread identifier, key)
+
+  We could also consider Expire (thread) facts for precision wrt CK or
+  the KAS2 model.
+
+Examples:
+
+Exists matching session (m2) to m:
+
+  Ex minfo m2 #i1 #i2 . ( SID(m2,A,B,minfo) @ #i1 & MATCH(m,minfo) @ #i2 )
+
+kpartner is the session key of the matching session
+
+  Ex minfo m2 #i1 #i2 #i3. ( SID(m2,minfo) @ #i1 & MATCH(m,minfo) @ #i2
+    & SessKey (m2, kpartner ) )
+
+thread SID possibly matches with multiple others:
+
+  [] --[ SID(m,I,R,minfo), MATCH(m,minfo1), MATCH(m,minfo2) ]-> []
+
+The security model would also include the reveal rules that turn the
+emitted facts into logged reveals.
+
+This mechanism also allows us to write the property for both roles at
+once.
+
