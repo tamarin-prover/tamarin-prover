@@ -209,7 +209,7 @@ def specialReport(db,proofs,attacks):
                     res += "none"
 
         else:
-            res += "- (%s)" % (n,name)
+            res += "- (%s)" % (name)
 
         res += "\n"
 
