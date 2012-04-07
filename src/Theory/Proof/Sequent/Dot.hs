@@ -303,7 +303,9 @@ data IntruderNodeStyle = FullIntruderNodes | CompactIntruderNodes
 dotNodeCompact :: IntruderNodeStyle -> NodeId -> SeDot D.NodeId
 dotNodeCompact intrStyle v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
-    let hasOutgoingEdge = or [ v == v' | Edge (v', _) _ <- S.toList $ get sEdges se ]
+    let hasOutgoingEdge = 
+             or [ v == v' | Edge (v', _) _    <- S.toList $ get sEdges se ]
+          || or [ v == v' | MsgEdge (v', _) _ <- S.toList $ get sMsgEdges se ]
     case M.lookup v $ get sNodes se of
       Nothing -> mkSimpleNode (show v) []
       Just ru -> do
