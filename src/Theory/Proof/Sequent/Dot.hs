@@ -303,27 +303,30 @@ data IntruderNodeStyle = FullIntruderNodes | CompactIntruderNodes
 dotNodeCompact :: IntruderNodeStyle -> NodeId -> SeDot D.NodeId
 dotNodeCompact intrStyle v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
+    let hasOutgoingEdge = or [ v == v' | Edge (v', _) _ <- S.toList $ get sEdges se ]
     case M.lookup v $ get sNodes se of
       Nothing -> mkSimpleNode (show v) []
       Just ru -> do
           let color     = M.lookup (get rInfo ru) colorMap
               nodeColor = maybe "white" (rgbToHex . lighter) color
               attrs     = [("fillcolor", nodeColor),("style","filled")]
-          ids <- mkNode ru attrs
+          ids <- mkNode ru attrs hasOutgoingEdge
           let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
               concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
           modM dsPrems $ M.union $ M.fromList prems
           modM dsConcs $ M.union $ M.fromList concs
           return $ fromJust $ lookup Nothing ids
   where
+
     mkSimpleNode lbl attrs = 
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
 
-    mkNode ru attrs
+    mkNode ru attrs hasOutgoingEdge
       -- single node, share node-id for all premises and conclusions
       | intrStyle == CompactIntruderNodes && isIntruderRule ru = do
-            -- nid <- mkSimpleNode (show v ++ " : " ++ concatMap snd cs) attrs
-            nid <- mkSimpleNode (show v ++ " : " ++ showRuleCaseName ru) []
+            let lbl | hasOutgoingEdge = show v ++ " : " ++ showRuleCaseName ru
+                    | otherwise       = concatMap snd as
+            nid <- mkSimpleNode lbl []
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
       -- full record syntax
       | otherwise =
