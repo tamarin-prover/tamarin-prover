@@ -246,6 +246,7 @@ subProofSnippet ctxt mkProofPath mkPrfMethodPath prf =
         ] ++ 
         subCases
   where
+
     prettyPM (i, m) = linkToPath
       (mkPrfMethodPath i) ["proof-method"] (prettyProofMethod m)
 
@@ -425,7 +426,15 @@ resolveProofPath :: ClosedTheory            -- ^ Theory to resolve in
                  -> Maybe IncrementalProof
 resolveProofPath thy lemmaName path = do
   lemma <- lookupLemma lemmaName thy
-  get lProof lemma `atPath` path
+  -- Simplify variable indices just before displaying. This addresses #27.
+  -- Due to lazy-evaluation the effort is linear in the proof depth. This is
+  -- probably OK. Note that this implies that the displayed terms and the
+  -- stored terms do not agree. This is no problem for paths, as they use
+  -- relative addressing anyways.
+  simplifyVariableIndices (get lProof lemma) `atPath` path
+
+  -- If the non-simplified indices are required, then use this line.
+  -- get lProof lemma `atPath` path
 
 
 ------------------------------------------------------------------------------
