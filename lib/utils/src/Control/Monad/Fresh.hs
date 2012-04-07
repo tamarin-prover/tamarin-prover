@@ -18,7 +18,7 @@ module Control.Monad.Fresh (
   , evalFresh
   , execFresh
 
-  -- * The FreshT monad transformer
+  -- * The fast FreshT monad transformer
   , FreshT(..)
   , freshT
   , runFreshT
@@ -40,5 +40,5 @@ import Control.Monad.Fix
 import Control.Monad.Trans
 
 import Control.Monad.Fresh.Class
-import Control.Monad.Trans.Fresh hiding (freshIdents)
+import Control.Monad.Trans.FastFresh hiding (freshIdents)
 

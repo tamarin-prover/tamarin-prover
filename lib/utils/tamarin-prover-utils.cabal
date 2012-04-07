@@ -75,7 +75,8 @@ library
         Utils.Misc
 
     other-modules:
-        Control.Monad.Trans.Fresh
+        Control.Monad.Trans.FastFresh
+        Control.Monad.Trans.PreciseFresh
         Control.Monad.Fresh.Class
 
         Control.Monad.Trans.Disj

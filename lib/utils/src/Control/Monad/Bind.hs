@@ -45,6 +45,8 @@ import Control.Basics
 import Control.Monad.State
 import Control.Monad.Fresh
 
+import qualified Control.Monad.Trans.PreciseFresh as Precise
+
 ------------------------------------------------------------------------------
 -- Bindings
 ------------------------------------------------------------------------------
@@ -65,6 +67,7 @@ class MonadState (Bindings k v) m => MonadBind k v m where
 instance Monad m => MonadBind k v (StateT (Bindings k v) m) where
 
 instance MonadBind k v m => MonadBind k v (FreshT m) where
+instance MonadBind k v m => MonadBind k v (Precise.FreshT m) where
 
 ------------------------------------------------------------------------------
 -- Type synonym for the StateT monad transformer
@@ -123,6 +126,7 @@ insertBinding k = modify . M.insert k
 -- | @importBinding mkR d n@ checks if there is already a binding registered
 -- for the value @d@ and if not it generates a fresh identifier using the name
 -- @n@ as a hint and converting name and identifier to a value using $mkR$.
+{-# INLINE importBinding #-}
 importBinding :: (MonadBind k v m, MonadFresh m, Show v, Show k, Ord k) 
                => (String -> Int -> v) 
                -> k 
@@ -130,7 +134,7 @@ importBinding :: (MonadBind k v m, MonadFresh m, Show v, Show k, Ord k)
 importBinding mkR k n = do
     rOpt <- lookupBinding k
     case rOpt of
-      Nothing -> do v <- mkR n <$> freshIdents 1
+      Nothing -> do v <- mkR n <$> freshIdent n
                     modify $ M.insert k v 
                     return v
       Just v -> return v

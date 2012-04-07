@@ -1,18 +1,19 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}  -- require for MonadError
 -- |
--- Copyright   : (c) 2010 Simon Meier
+-- Copyright   : (c) 2010-2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- A monad transformer for passing a fresh name supply through a computation.
--- This is just a newtype wrapper around the 'StateT' monad transformer.
+-- The name supply is precise in the sense that every 'String' has its own
+-- supply of indices for the next fresh name.
 --
 -- Modeled after the mtl-2.0 library.
 --
-module Control.Monad.Trans.Fresh (
+module Control.Monad.Trans.PreciseFresh (
 
   -- * The Fresh monad
     Fresh
@@ -30,6 +31,7 @@ module Control.Monad.Trans.Fresh (
   -- * Fresh name generation
   , FreshState
   , nothingUsed
+  , freshIdent
   , freshIdents
 
   ) where
@@ -40,12 +42,14 @@ import Control.Monad.State.Strict
 import Control.Monad.Error
 import Control.Monad.Reader
 
+import qualified Data.Map as M
+
 ------------------------------------------------------------------------------
 -- FreshT monad transformer
 ------------------------------------------------------------------------------
 
 -- | The state of the name supply: the last used sequence number of every name.
-type FreshState = Int
+type FreshState = M.Map String Int
 
 -- | A computation that can generate fresh variables from name hints.
 newtype FreshT m a = FreshT { unFreshT :: StateT FreshState m a }
@@ -57,7 +61,7 @@ freshT = FreshT . StateT
 
 -- | The empty fresh state.
 nothingUsed :: FreshState
-nothingUsed = 0
+nothingUsed = M.empty
 
 -- | Run a computation with a fresh name supply.
 runFreshT :: FreshT m a -> FreshState -> m (a, FreshState)
@@ -71,14 +75,28 @@ evalFreshT (FreshT m) used = evalStateT m used
 execFreshT :: Monad m => FreshT m a -> FreshState -> m FreshState
 execFreshT (FreshT m) used = execStateT m used
 
--- | Get 'k' fresh identifiers.
+-- | /O(log(n))/. Get a fresh identifiers for the given name.
+freshIdent :: Monad m
+            => String        -- ^ number of desired identifiers
+            -> FreshT m Int  -- ^ The first fresh identifier.
+freshIdent name = do
+    m <- FreshT get
+    let i = M.findWithDefault 0 name m
+    FreshT (modify (M.insert name (succ i)))
+    return i
+
+-- | /O(n)/. Get 'k' fresh identifiers.
 freshIdents :: Monad m
             => Int           -- ^ number of desired identifiers
             -> FreshT m Int  -- ^ The first fresh identifier.
 freshIdents k = do
-    i <- FreshT get
-    FreshT $ put $ i + k
-    return i
+    m <- FreshT get
+    let maxIdx = maximum $ 0 : map snd (M.toList m)
+        nextIdx = maxIdx + k
+    -- insert 'nextIdx' at "" to remember it for the next call
+    FreshT (put (M.insert "" nextIdx $ M.map (const nextIdx) m))
+    return maxIdx
+
 
 -- Instances
 ------------

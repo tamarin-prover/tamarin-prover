@@ -18,16 +18,28 @@ import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Writer
 
-import qualified Control.Monad.Trans.Fresh as Fresh (FreshT, freshIdents)
+import qualified Control.Monad.Trans.FastFresh    as Fast (FreshT, freshIdents)
+import qualified Control.Monad.Trans.PreciseFresh as Precise (FreshT, freshIdent, freshIdents)
 
 -- Added 'Applicative' until base states this hierarchy
 class (Applicative m, Monad m) => MonadFresh m where
+    -- | Get the integer of the next fresh identifier of this name.
+    freshIdent  :: String   -- ^ Desired name
+                -> m Int
+
+    -- | Get a number of fresh identifiers. This reserves the required number
+    -- of identifiers on all names.
     freshIdents :: Int    -- ^ Number of desired fresh identifiers.
                 -> m Int  -- ^ The first Fresh identifier.
 
 
-instance (Functor m, Monad m) => MonadFresh (Fresh.FreshT m) where
-    freshIdents = Fresh.freshIdents
+instance (Functor m, Monad m) => MonadFresh (Fast.FreshT m) where
+    freshIdent _name = Fast.freshIdents 1
+    freshIdents      = Fast.freshIdents
+
+instance (Functor m, Monad m) => MonadFresh (Precise.FreshT m) where
+    freshIdent  = Precise.freshIdent
+    freshIdents = Precise.freshIdents
 
 
 ----------------------------------------------------------------------------
@@ -36,13 +48,17 @@ instance (Functor m, Monad m) => MonadFresh (Fresh.FreshT m) where
 -- TODO: Add remaining ones
 
 instance MonadFresh m => MonadFresh (MaybeT m) where
+    freshIdent  = lift . freshIdent
     freshIdents = lift . freshIdents
 
 instance MonadFresh m => MonadFresh (StateT s m) where
+    freshIdent  = lift . freshIdent
     freshIdents = lift . freshIdents
 
 instance MonadFresh m => MonadFresh (ReaderT r m) where
+    freshIdent  = lift . freshIdent
     freshIdents = lift . freshIdents
 
 instance (Monoid w, MonadFresh m) => MonadFresh (WriterT w m) where
+    freshIdent  = lift . freshIdent
     freshIdents = lift . freshIdents
