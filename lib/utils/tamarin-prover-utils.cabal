@@ -50,6 +50,8 @@ library
     exposed-modules:
         Control.Basics
         Control.Monad.Fresh
+        Control.Monad.Trans.PreciseFresh
+        Control.Monad.Trans.FastFresh
         Control.Monad.Bind
         Control.Monad.Disj
 
@@ -75,8 +77,6 @@ library
         Utils.Misc
 
     other-modules:
-        Control.Monad.Trans.FastFresh
-        Control.Monad.Trans.PreciseFresh
         Control.Monad.Fresh.Class
 
         Control.Monad.Trans.Disj
