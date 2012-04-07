@@ -797,7 +797,6 @@ solveListEqs solver eqs = do
 solveRuleConstraints :: Maybe RuleACConstrs -> SeProof ()
 solveRuleConstraints (Just eqConstr) = do
     hnd <- getMaudeHandle
-    se <- gets id
     setM sEqStore
         -- do not use expensive substCreatesNonNormalTerms here
         =<< (simp hnd (const False) . addRuleVariants eqConstr)
