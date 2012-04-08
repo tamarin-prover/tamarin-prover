@@ -152,8 +152,8 @@ unifyRaw l0 r0 = do
     l <- gets ((`applyVTerm` l0) . substFromMap)
     r <- gets ((`applyVTerm` r0) . substFromMap)
     guard (trace (show ("unifyRaw", mappings, l ,r)) True)
-    case (l, r) of
-       (viewTerm -> Lit (Var vl), viewTerm -> Lit (Var vr))
+    case (viewTerm l, viewTerm r) of
+       (Lit (Var vl), Lit (Var vr))
          | vl == vr  -> return ()
          | otherwise -> case (lvarSort vl, lvarSort vr) of
              (sl, sr) | sl == sr                 -> if vl < vr then elim vr l 
@@ -161,19 +161,19 @@ unifyRaw l0 r0 = do
              _        | sortGeqLTerm sortOf vl r -> elim vl r
              -- If unification can succeed here, then it must work by
              -- elimating the right-hand variable with the left-hand side.
-             _                                     -> elim vr l
+             _                                   -> elim vr l
 
-       (viewTerm -> Lit (Var vl),  _            ) -> elim vl r
-       (_,             viewTerm -> Lit (Var vr) ) -> elim vr l
-       (viewTerm -> Lit (Con cl),  viewTerm -> Lit (Con cr) ) -> guard (cl == cr)
-       (viewTerm -> FApp (NonAC lfsym) largs, viewTerm -> FApp (NonAC rfsym) rargs) ->
+       (Lit (Var vl),  _            ) -> elim vl r
+       (_,             Lit (Var vr) ) -> elim vr l
+       (Lit (Con cl),  Lit (Con cr) ) -> guard (cl == cr)
+       (FApp (NonAC lfsym) largs, FApp (NonAC rfsym) rargs) ->
            guard (lfsym == rfsym && length largs == length rargs)
            >> sequence_ (zipWith unifyRaw largs rargs)
-       (viewTerm -> FApp List largs, viewTerm -> FApp List rargs) ->
+       (FApp List largs, FApp List rargs) ->
            guard (length largs == length rargs)
            >> sequence_ (zipWith unifyRaw largs rargs)
        -- NOTE: We assume here that terms of the form mult(t) never occur.
-       (viewTerm -> FApp (AC lacsym) _, viewTerm -> FApp (AC racsym) _) ->
+       (FApp (AC lacsym) _, FApp (AC racsym) _) ->
            guard (lacsym == racsym) >> tell [Equal l r]  -- delay unification
 
        -- all unifiable pairs of term constructors have been enumerated
