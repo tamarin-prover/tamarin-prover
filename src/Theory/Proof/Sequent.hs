@@ -140,8 +140,8 @@ isForbiddenExp :: Rule a -> Bool
 isForbiddenExp ru = maybe False id $ do
     [_,p2] <- return $ get rPrems ru
     [conc] <- return $ get rConcs ru
-    (UpK, _,          b)       <- kFactView p2
-    (DnK, Just CannotExp, viewTerm -> FApp (NonAC ("exp",2)) [g,c]) <- kFactView conc
+    (UpK, _,          b) <- kFactView p2
+    (DnK, Just CannotExp, viewTerm2 -> FExp g c) <- kFactView conc
 
     -- g should be public and the required inputs for c already required by b
     guard (sortOfTerm g == LSortPub && (input c \\ input b == []))
@@ -943,8 +943,8 @@ openGoals se = delayUseless $ sortDecisionTree solveFirst $ concat $
         _                                                           -> False
 
     isDoubleExpGoal goal = case msgPremise goal of
-        Just (viewTerm -> FApp (NonAC ("exp",2)) [_, viewTerm -> FApp (AC Mult) _]) -> True
-        _                                                                           -> False
+        Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
+        _                                                  -> False
 
     isSplitGoalSmall (SplitG sid) = splitCasenum (get sEqStore se) sid < 3
     isSplitGoalSmall _            = False
