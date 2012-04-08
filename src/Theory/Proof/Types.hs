@@ -75,6 +75,7 @@ module Theory.Proof.Types (
   , sLastAtoms
   , sDedBeforeAtoms
   , sActions
+  , sRawEdgeRel
   , sRawLessRel
   , sRawGreaterRel
   , deducibleBefore
@@ -487,16 +488,20 @@ sDedBeforeAtoms :: Sequent -> [(LNTerm, NodeId)]
     aDedBefore ato@(DedBefore _ _)         = malformed ato
     aDedBefore _                           = Nothing
 
-
--- | @(from,to)@ is in @sRawLessRel se@ iff we can prove that there is a path
--- from @from@ to @to@ in @se@ without appealing to transitivity.
-sRawLessRel :: Sequent -> [(NodeId,NodeId)]
-sRawLessRel se =
-    sLessAtoms se ++
+-- | @(from,to)@ is in @sRawEdgeRel se@ iff we can prove that there is an
+-- edge-path from @from@ to @to@ in @se@ without appealing to transitivity.
+sRawEdgeRel :: Sequent -> [(NodeId, NodeId)]
+sRawEdgeRel se =
     map (nodeConcNode *** nodePremNode)
       ([ (from, to) | Edge from to <- S.toList $ L.get sEdges se ] ++
        [ (from, to) | MsgEdge from to <- S.toList $ L.get sMsgEdges se ] ++
        [ (from, to) | Chain from to <- S.toList $ L.get sChains se ])
+
+-- | @(from,to)@ is in @sRawLessRel se@ iff we can prove that there is a path
+-- (possibly using the 'Less' relation) from @from@ to @to@ in @se@ without
+-- appealing to transitivity.
+sRawLessRel :: Sequent -> [(NodeId,NodeId)]
+sRawLessRel se = sLessAtoms se ++ sRawEdgeRel se
 
 -- | 'sRawGreaterRel' is the inverse of 'sRawLessRel'. 
 sRawGreaterRel :: Sequent -> [(NodeId,NodeId)]

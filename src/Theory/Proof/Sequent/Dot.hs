@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeOperators #-}
+{-# LANGUAGE TemplateHaskell, ViewPatterns, TypeOperators #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -11,15 +11,16 @@ module Theory.Proof.Sequent.Dot (
     dotSequentLoose
   , dotSequentCompact
   , compressSequent
-  , IntruderNodeStyle(..)
+  , BoringNodeStyle(..)
   ) where
 
 import Safe
 import Data.Maybe
 import Data.List
 import Data.Monoid (Any(..))
-import qualified Data.Set as S
-import qualified Data.Map as M
+import qualified Data.Set        as S
+import qualified Data.Map        as M
+import qualified Data.DAG.Simple as D
 import Data.Color
 
 import Extension.Prelude
@@ -295,13 +296,13 @@ nodeColorMap rules =
 ------------------------------------------------------------------------------
 
 -- | The style for nodes of the intruder.
-data IntruderNodeStyle = FullIntruderNodes | CompactIntruderNodes
+data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
     deriving( Eq, Ord, Show )
 
 
 -- | Dot a node in record based (compact) format.
-dotNodeCompact :: IntruderNodeStyle -> NodeId -> SeDot D.NodeId
-dotNodeCompact intrStyle v = dotOnce dsNodes v $ do
+dotNodeCompact :: BoringNodeStyle -> NodeId -> SeDot D.NodeId
+dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
     let hasOutgoingEdge = 
              or [ v == v' | Edge (v', _) _    <- S.toList $ get sEdges se ]
@@ -325,7 +326,8 @@ dotNodeCompact intrStyle v = dotOnce dsNodes v $ do
 
     mkNode ru attrs hasOutgoingEdge
       -- single node, share node-id for all premises and conclusions
-      | intrStyle == CompactIntruderNodes && isIntruderRule ru = do
+      | boringStyle == CompactBoringNodes && 
+        (isIntruderRule ru || isFreshRule ru) = do
             let lbl | hasOutgoingEdge = show v ++ " : " ++ showRuleCaseName ru
                     | otherwise       = concatMap snd as
             nid <- mkSimpleNode lbl []
@@ -345,12 +347,12 @@ dotNodeCompact intrStyle v = dotOnce dsNodes v $ do
 
 
 -- | Dot a sequent in compact form (one record per rule)
-dotSequentCompact :: IntruderNodeStyle -> Sequent -> D.Dot ()
-dotSequentCompact intrStyle se = 
+dotSequentCompact :: BoringNodeStyle -> Sequent -> D.Dot ()
+dotSequentCompact boringStyle se = 
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $ 
     (`runReaderT` (se, nodeColorMap (M.elems $ get sNodes se))) $ do
         liftDot $ setDefaultAttributes
-        mapM_ (dotNodeCompact intrStyle) $ M.keys   $ get sNodes    se
+        mapM_ (dotNodeCompact boringStyle) $ M.keys   $ get sNodes    se
         mapM_ dotEdge                    $ S.toList $ get sEdges    se
         mapM_ dotChain                   $ S.toList $ get sChains   se
         mapM_ dotMsgEdge                 $ S.toList $ get sMsgEdges se
@@ -381,8 +383,8 @@ dotSequentCompact intrStyle se =
         dotGenEdge [("style","dotted"),("color","orange")] src tgt 
 
     dotLess (src, tgt) = do
-        srcId <- dotNodeCompact intrStyle src
-        tgtId <- dotNodeCompact intrStyle tgt
+        srcId <- dotNodeCompact boringStyle src
+        tgtId <- dotNodeCompact boringStyle tgt
         liftDot $ D.edge srcId tgtId 
             [("color","black"),("style","dotted"),("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
@@ -392,22 +394,39 @@ dotSequentCompact intrStyle se =
 -- Compressed versions of a sequent
 ------------------------------------------------------------------------------
 
+-- | Drop 'Less' atoms entailed by the edges of the 'Sequent'.
+dropEntailedOrdConstraints :: Sequent -> Sequent
+dropEntailedOrdConstraints se =
+    modify sAtoms (S.filter (not . entailed)) se
+  where
+    edges = sRawEdgeRel se
+
+    entailed (Less (viewTerm -> Lit (Var from)) (viewTerm -> Lit (Var to))) =
+       to `S.member` D.reachableSet [from] edges
+    entailed _ = False
+
 -- | Unsound compression of the sequent that drops fully connected learns and
 -- knows nodes.
 compressSequent :: Sequent -> Sequent
-compressSequent se = 
+compressSequent se0 = 
     foldl' (flip hideTransferNode) se $ 
     [ x | x@(_, ru) <- M.toList $ get sNodes se
-        , isFreshRule ru || isDestrRule ru || isConstrRule ru || isIRecvRule ru || isISendRule ru ]
+        , isFreshRule ru || isIntruderRule ru ]
+  where
+    se = dropEntailedOrdConstraints se0
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
--- transfer node; i.e., a node annotated with a rule with exactly one premise
--- and one conclusion with exactly one incoming and one outgoing edge.
+-- transfer node; i.e., a node annotated with a rule that is one of the
+-- special intruder rules or a rule with with at most one premise and 
+-- at most one conclusion and both premises and conclusions have incoming
+-- respectively outgoing edges.
+--
+-- The compression is chosen such that unly uninteresting nodes are that have
+-- no open goal are suppressed.
 hideTransferNode :: (NodeId, RuleACInst) -> Sequent -> Sequent
 hideTransferNode (v, ru) se = fromMaybe se $ do
     guard $    
-         all (\l -> length (get l ru) <= 1) [rPrems, rConcs]
-      && (null $ get rActs ru)
+         eligibleRule
       && (length eIns  == length (get rPrems ru))
       && (length eOuts == length (get rConcs ru))
       && all (\(Edge cIn pOut) -> nodeConcNode cIn /= nodePremNode pOut) eNews
@@ -423,6 +442,12 @@ hideTransferNode (v, ru) se = fromMaybe se $ do
            $ modify sNodes (M.delete v)
            $ se
   where
+    eligibleRule =
+      any ($ ru) [isISendRule, isIRecvRule, isCoerceRule, isFreshRule] || 
+      ( null (get rActs ru) && 
+        all (\l -> length (get l ru) <= 1) [rPrems, rConcs]
+      )
+
     selectPart :: (Sequent :-> S.Set a) -> (a -> Bool) -> [a]
     selectPart l p = filter p $ S.toList $ get l se
 
