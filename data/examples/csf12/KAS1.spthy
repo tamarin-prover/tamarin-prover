@@ -1,0 +1,130 @@
+theory KAS1
+begin
+
+builtin: hashing, asymmetric-encryption
+
+section{* KAS1 *}
+
+/*
+ * Protocol:	KAS1
+ * Modeler: 	Cas Cremers
+ * Date: 	April 2012
+ * Source:	"A Generic Variant of NISTS's KAS2 Key Agreement Protocol"
+ * 		Chatterjee, Menezes, Ustaoglu, 2011
+ * Model:	Weakened version of the model for the initiator only,
+ * 		motivated by the informal remarks for KAS1 security in the paper.
+ *
+ * Status: 	working
+ *
+ * Notes:	Confirming the results from the paper, we find that we
+ * 		cannot allow:
+ * 		- compromise of the peer's long-term key
+ * 		- compromise of the test session's ephemeral key
+ *
+ * 		The model covers KCI and KI.
+ */
+
+functions: KDF/1
+functions: MAC/2
+
+/* Protocol rules */
+
+/* Generate long-term keypair */
+rule Register_pk:
+  let pkA = pk(~ltkA)
+  in
+  [ Fr(~ltkA) ] 
+  --> 
+  [ !Ltk($A, ~ltkA), !Pk($A, pkA), Out(pkA) ]
+
+/* Initiator */
+rule Init_K1_1:
+  let c1 = aenc{ ~m1 }pkR
+  in
+   [ Fr( ~m1 ), !Ltk( $I, ~lkI ), !Pk($R,pkR) ]
+   --[ SidI ( ~m1, $I, $R, <$I, $R, 'Init', c1>) ]->
+   [ Init_1( ~m1, $I, $R, ~lkI, ~m1, c1), !Ephk( ~m1,~m1 ), Out( c1 ) ]
+
+rule Resp_K1_1:
+  let m1     = adec(c1, ~lkR)
+      nonceB = ~m2
+      key    = KDF(< m1, $I, $R, nonceB, c1 >)
+      tagB   = MAC(key, (< 'KC_1_V', $R, $I, nonceB, c1 >) )
+  in
+   [ Fr( ~m2 ), In( c1 ), !Ltk( $R, ~lkR ), !Pk($I,pkI) ]
+   --[  SidR ( ~m2, $R, $I, <$R, $I, 'Resp', nonceB, c1>)
+     ,  Match( ~m2, <$I, $R, 'Init', c1>)
+     ,  Match( ~m2, <$I, $R, 'Init', c1, nonceB>)
+     ,  Accept( ~m2, key )
+     ]->
+   [ Out(< nonceB , tagB >), !Sessk( ~m2, key ) ]
+
+rule Init_K1_2:
+  let m2   = adec(nonceB, ~lkI)
+      key  = KDF(< ~m1, $I, $R, nonceB, c1 >)
+      tagB = MAC( key, (< 'KC_1_V', $R, $I, nonceB, c1 >) )
+  in
+   [ Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) , In(< nonceB, tagB >) ]
+   --[ SidI ( ~m1, $I, $R, <$I, $R, 'Init', c1, nonceB> )
+     , Match( ~m1, <$R, $I, 'Resp', nonceB, c1> )
+     , Accept( ~m1, key) 
+     ]->
+   [ !Sessk( ~m1, key ) ]
+
+
+
+
+/* Key Reveals for the eCK model */
+rule Sessk_reveal: 
+   [ !Sessk(~tid, k) ]
+   --[ SesskRev(~tid) ]->
+   [ Out(k) ]
+
+rule Ltk_reveal:
+   [ !Ltk($A, lkA) ]
+   --[ LtkRev($A) ]->
+   [ Out(lkA) ]
+
+rule Ephk_reveal:
+   [ !Ephk(~s, ~ek) ]
+   --[ EphkRev(~s) ]->
+   [ Out(~ek) ]
+
+
+/* Security properties */
+
+/*
+lemma key_agreement_reachable:
+  "not (Ex #i1 #i2 ekI ekR I R k hkI hkR.
+          SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2)"
+*/
+lemma KAS1_key_secrecy:
+  "not (Ex #i1 #i2 #i3 s A B minfo k .
+            SidI(s, A, B, minfo) @ i1 & K( k ) @ i2 & Accept(s, k) @ i3
+
+            /* No session-key-reveal of test thread. */
+            & not(Ex #i4. SesskRev( s ) @ i4 )
+
+            /* No ephemeral key reveal of the test thread */
+	    & not(Ex #i4. EphkRev( s ) @ i4 )
+
+	    /* If matching session exists (for all matching sessions...) */
+	    & (All ss #i4 #i5 C D ms.
+	           ( SidR ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5)
+		     ==>
+		   ( not(Ex #i6 #i7 kpartner. Accept(ss, kpartner) @ i6 & SesskRev( ss ) @ i7 )
+		   & not(Ex #i6    . LtkRev  ( B ) @ i6  )
+		   & not(Ex #i6 #i7. LtkRev  ( A ) @ i6  & LtkRev  ( B  ) @ i7 )
+		   )
+	      )
+
+	    /* No matching session exists */
+	    & ( ( not(Ex ss #i4 #i5 C D ms.
+	           SidR ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5 ) )
+		     ==>
+		   ( not(Ex #i6. LtkRev  ( B ) @ i6 & i6 < i3 )
+		   )
+	      )
+  )"
+
+end

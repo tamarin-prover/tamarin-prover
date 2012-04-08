@@ -165,6 +165,7 @@ def specialReport(db,proofs,attacks):
     """
     csf12 = [
         "DH2-original.spthy", \
+        "KAS1.spthy", \
         "KAS2-original.spthy", \
         "KAS2-eCK.spthy", \
         "KEA_plus_KI_KCI.spthy", \
