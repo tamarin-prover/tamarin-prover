@@ -1,7 +1,8 @@
 theory NAXOS_eCK
 begin
 
-builtin: diffie-hellman, hashing
+builtin: diffie-hellman
+functions: H1/1, H2/1
 
 section{* NAXOS *}
 
@@ -37,7 +38,7 @@ rule generate_ltk:
  * the paper because there the responder property is not specified. */
 
 rule Init_1:
-  let exi = h(< '1', ~ekI, ~lkI >)
+  let exi = H1( ~ekI, ~lkI)
       hki = 'g'^exi
   in
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
@@ -47,20 +48,22 @@ rule Init_1:
      Out( hki ) ]
 
 rule Init_2:
-  let exi = h(< '1', ~ekI, ~lkI >)
-      key = h(< '2', Y^~lkI, ('g'^~lkR)^exi, Y^exi, $I, $R >)
+  let exi = H1( ~ekI, ~lkI )
+      pkr = 'g'^~lkR
+      key = H2( Y^~lkI, pkr^exi, Y^exi, $I, $R )
   in
-   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]
+   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R, pkr ) ]
    --[SidI_2( ~ekI, $I, $R, hkI, Y, key ) ]->
    [ !Sessk( ~ekI, key ) ]
 
 /* Responder */
 rule Resp_1:
-  let exr = h(< '1', ~ekR, ~lkR >)
+  let exr = H1( ~ekR, ~lkR )
+      pki = 'g'^~lkI
       hkr = 'g'^exr
-      key = h(< '2', ('g'^~lkI)^exr, X^~lkR, X^exr, $I, $R >) 
+      key = H2( pki^exr, X^~lkR, X^exr, $I, $R )
   in
-   [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
+   [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, pki) ]
    --[ SidR_1( ~ekR, $I, $R, X, hkr, key ) ]->
    [ Out( hkr ),
      !Ephk( ~ekR ),
