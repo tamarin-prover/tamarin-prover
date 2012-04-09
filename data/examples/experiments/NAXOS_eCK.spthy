@@ -13,7 +13,11 @@ section{* NAXOS *}
  * 		LaMacchia, Lauter, Mityagin, 2007
  * Property: 	eCK security
  *
- * Status: 	New version with 'let' blocks and refactored setup.
+ * Status: 	Working
+ *
+ * Notes:	New version with 'let' blocks and refactored setup.
+ * 		This is an experimental spec to figure out better ways
+ * 		of modeling AKE protocols.
  */
 
 functions: H/1
@@ -101,29 +105,53 @@ lemma eCK_same_key:
 */
 
 lemma eCK_key_secrecy:
-  "not (Ex #i1 #i2 #i3 s A B minfo k .
-            Sid(s, A, B, minfo) @ i1 & K( k ) @ i2 & Accept(s, k) @ i3
+  /* 
+   * The property specification very closely follows the original eCK
+   * (ProvSec) paper:
+   *
+   * If there exists a Test session whose key k is known to the
+   * Adversary, then...
+   */
+  "(All #i1 #i2 #i3 Test A B minfo k .
+    Sid(Test, A, B, minfo) @ i1 & K( k ) @ i2 & Accept(Test, k) @ i3
+    ==> ( 
+    /* ... the Test session must be "not clean".
+     * Test is not clean if one of the following has happened:
+     */
+    /* 1a. session-key-reveal of test thread. */
+      (Ex #i4. SesskRev( Test ) @ i4 )
 
-            /* No session-key-reveal of test thread. */
-            & not(Ex #i4. SesskRev( s ) @ i4 )
-
-	    /* If matching session exists (for all matching sessions...) */
-	    & (All ss #i4 #i5 C D ms.
-	           ( Sid ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5)
-		     ==>
-		   ( not(Ex #i6 #i7 kpartner. Accept(ss, kpartner) @ i6 & SesskRev( ss ) @ i7 )
-		   & not(Ex #i6 #i7. LtkRev  ( A ) @ i6  & EphkRev ( s  ) @ i7 )
-		   & not(Ex #i6 #i7. LtkRev  ( B ) @ i6  & EphkRev ( ss ) @ i7 )
-		   )
-	      )
-	    /* No matching session exists */
-	    & ( ( not(Ex ss #i4 #i5 C D ms.
-	           Sid ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5 ) )
-		     ==>
-		   ( not(Ex #i6    . LtkRev (B) @ i6 )
-		   & not(Ex #i6 #i7. LtkRev (A) @ i6 & EphkRev ( s ) @ i7 )
-		   )
-	      )
+    /* 1b. session-key-reveal of matching session */
+    | (Ex MatchingSession #i4 #i5 C D ms.
+    	   /* ( MatchingSession's 'ms' info matches with Test ) */
+           ( Sid ( MatchingSession, C, D, ms ) @ i4 & Match( Test, ms ) @ i5)
+	   & (
+	     (Ex #i6. SesskRev( MatchingSession ) @ i6 )
+	   )
+      )
+    /* 2. If matching session exists and ... */
+    | (Ex MatchingSession #i4 #i5 C D ms.
+    	   /* ( MatchingSession's 'ms' info matches with Test ) */
+           ( Sid ( MatchingSession, C, D, ms ) @ i4 & Match( Test, ms ) @ i5)
+	   & (
+	   /* 2a. reveal either both sk_A and esk_A, or */
+	     (Ex #i6 #i7. LtkRev  ( A ) @ i6  & EphkRev ( Test  ) @ i7 )
+	   /* 2b. both sk_B and esk_B */
+	   | (Ex #i6 #i7. LtkRev  ( B ) @ i6  & EphkRev ( MatchingSession ) @ i7 )
+	   )
+      )
+    /* 3. No matching session exists and ... */
+    | ( ( not(Ex MatchingSession #i4 #i5 C D ms.
+    	   /* ( MatchingSession's 'ms' info matches with Test ) */
+           Sid ( MatchingSession, C, D, ms ) @ i4 & Match( Test, ms ) @ i5 ) )
+	   & (
+	   /* 3a. reveal either sk_B, or */
+	     (Ex #i6    . LtkRev (B) @ i6 )
+	   /* 3b. both sk_A and esk_A */
+	   | (Ex #i6 #i7. LtkRev (A) @ i6 & EphkRev ( Test ) @ i7 )
+	   )
+      )
+    )
   )"
 
 end
