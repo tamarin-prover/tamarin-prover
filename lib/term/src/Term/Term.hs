@@ -1,4 +1,9 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, DeriveDataTypeable, ViewPatterns #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+  -- for ByteString
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -17,6 +22,7 @@ module Term.Term (
     , msetFunSig
     , pairFunSig
     , dhReducibleFunSig
+    , implicitFunSig
 
     -- * Terms
     , Term
@@ -81,6 +87,13 @@ import Data.Maybe (isJust)
 import Control.DeepSeq
 import Control.Basics
 
+import qualified Data.ByteString as B
+import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BC
+
+import Data.Set (Set)
+import qualified Data.Set as S
+
 import Text.Isar
 
 import Term.Classes
@@ -94,7 +107,7 @@ data ACSym = Union | Xor | Mult
   deriving (Eq, Ord, Typeable, Data, Show)
 
 -- | non-AC function symbols
-type NonACSym = (String, Int)
+type NonACSym = (ByteString, Int)
 
 -- | Function symbols
 data FunSym = NonAC NonACSym  -- ^ a non-AC function function symbol of a given arity
@@ -103,7 +116,7 @@ data FunSym = NonAC NonACSym  -- ^ a non-AC function function symbol of a given 
   deriving (Eq, Ord, Typeable, Data, Show)
 
 -- | Function signatures.
-type FunSig = [NonACSym]
+type FunSig = Set NonACSym
 
 
 
@@ -128,23 +141,27 @@ sndSym     = ("snd",1)
 
 -- | The signature for the non-AC Diffie-Hellman function symbols.
 dhFunSig :: FunSig
-dhFunSig = [ expSym, oneSym, invSym ]
+dhFunSig = S.fromList [ expSym, oneSym, invSym ]
 
 -- | The signature for the non-AC Xor function symbols.
 xorFunSig :: FunSig
-xorFunSig = [ zeroSym ]
+xorFunSig = S.fromList [ zeroSym ]
 
 -- | The signature for then non-AC multiset function symbols.
 msetFunSig :: FunSig
-msetFunSig = [ emptySym ]
+msetFunSig = S.fromList [ emptySym ]
 
 -- | The signature for pairing.
 pairFunSig :: FunSig
-pairFunSig = [ pairSym, fstSym, sndSym ]
+pairFunSig = S.fromList [ pairSym, fstSym, sndSym ]
 
 -- | Reducible non-AC symbols for DH.
 dhReducibleFunSig :: FunSig
-dhReducibleFunSig = [ expSym, invSym ]
+dhReducibleFunSig = S.fromList [ expSym, invSym ]
+
+-- | Implicit non-AC symbols.
+implicitFunSig :: FunSig
+implicitFunSig = S.fromList [ invSym, pairSym ]
 
 ----------------------------------------------------------------------
 -- Terms
@@ -218,21 +235,23 @@ viewTerm (FAPP sym ts) = FApp sym ts
 
 -- | @fApp fsym as@ creates an application of @fsym@ to @as@. The function
 -- ensures that the resulting term is in AC-normal-form.
+{-# INLINE fApp #-}
 fApp :: Ord a => FunSym -> [Term a] -> Term a
-fApp   (AC _) []  = error "Term.fApp: empty argument list"
-fApp   (AC _) [a] = a
-fApp o@(AC _) as  =
-    FAPP o (sort (o_as ++ non_o_as))
+fApp (AC acSym) ts = fAppAC acSym ts
+fApp o          ts = FAPP o ts
+
+-- | Smart constructor for AC terms.
+fAppAC :: Ord a => ACSym -> [Term a] -> Term a
+fAppAC _     []  = error "Term.fAppAC: empty argument list"
+fAppAC _     [a] = a
+fAppAC acsym as  =
+    FAPP (AC acsym) (sort (o_as ++ non_o_as))
   where
+    o = AC acsym
     isOTerm (FAPP o' _) | o' == o = True
     isOTerm _                     = False
     (o_as0, non_o_as) = partition isOTerm as
     o_as              = [ a | FAPP _ ts <- o_as0, a <- ts ]
-fApp o ts = FAPP o ts
-
--- | Smart constructor for AC terms.
-fAppAC :: Ord a => ACSym -> [Term a] -> Term a
-fAppAC acsym = fApp (AC acsym)
 
 -- | Smart constructor for non-AC terms.
 {-# INLINE fAppNonAC #-}
@@ -336,8 +355,8 @@ instance Foldable Term where
 
 instance Show a => Show (Term a) where
     show (LIT l)                  = show l
-    show (FAPP   (NonAC (s,_)) []) = s
-    show (FAPP   (NonAC (s,_)) as) = s++"("++(intercalate "," (map show as))++")"
+    show (FAPP   (NonAC (s,_)) []) = BC.unpack s
+    show (FAPP   (NonAC (s,_)) as) = BC.unpack s++"("++(intercalate "," (map show as))++")"
     show (FAPP   List as)          = "LIST"++"("++(intercalate "," (map show as))++")"
     show (FAPP   (AC o) as)        = show o++"("++(intercalate "," (map show as))++")"
 
@@ -387,7 +406,7 @@ prettyTerm ppLit = ppTerm
     split t                                 = [t]
 
     ppFun f ts =
-        text (f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
+        text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
 
 -- Derived instances
 --------------------
@@ -399,3 +418,9 @@ $( derive makeNFData ''Term )
 $( derive makeBinary ''FunSym)
 $( derive makeBinary ''ACSym)
 $( derive makeBinary ''Term )
+
+#if __GLASGOW_HASKELL__ < 704
+
+instance NFData B.ByteString
+
+#endif

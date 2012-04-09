@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -8,7 +9,7 @@
 module Term.Builtin.Signature where
 
 import Term.LTerm
-
+import qualified Data.Set as S
 
 -- Builtin symbols (pair and inv are defined in Term.Term)
 ----------------------------------------------------------------------
@@ -38,16 +39,16 @@ trueSym = ("true",0)
 
 -- | The signature for symmetric encryption.
 symEncFunSig :: FunSig
-symEncFunSig = [ sdecSym, sencSym ]
+symEncFunSig = S.fromList [ sdecSym, sencSym ]
 
 -- | The signature for asymmetric encryption.
 asymEncFunSig :: FunSig
-asymEncFunSig = [ adecSym, aencSym, pkSym ]
+asymEncFunSig = S.fromList [ adecSym, aencSym, pkSym ]
 
 -- | The signature for cryptographic signatures.
 signatureFunSig :: FunSig
-signatureFunSig = [ signSym, verifySym, trueSym, pkSym ]
+signatureFunSig = S.fromList [ signSym, verifySym, trueSym, pkSym ]
 
 -- | The signature for hashing.
 hashFunSig :: FunSig
-hashFunSig = [ hashSym ]
+hashFunSig = S.fromList [ hashSym ]

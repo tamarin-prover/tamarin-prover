@@ -1,12 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, RankNTypes, ScopedTypeVariables, BangPatterns #-}
 module Utils.Misc (
-    invertMap
-
-  , pNat
-  , commaWS
-
   -- * Environment
-  , envIsSet
+    envIsSet
   , getEnvMaybe
 
   -- * List operations
@@ -19,18 +14,22 @@ module Utils.Misc (
 
   -- * Hashing
   , stringSHA256
+
+  -- * Set operations
+  , setAny
+
+  -- * Map operations
+  , invertMap
 ) where
 
 import Data.List
 import System.Environment
 import System.IO.Unsafe
 import Data.Maybe
+import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Map ( Map )
 import qualified Data.Map as M
-import Control.Applicative
-
-import Text.ParserCombinators.Parsec hiding (many, optional, (<|>))
 
 import Data.Digest.Pure.SHA      (bytestringDigest, sha256)
 import Blaze.ByteString.Builder  (toLazyByteString)
@@ -61,14 +60,6 @@ subsetOf xs ys = (S.fromList xs) `S.isSubsetOf` (S.fromList ys)
 invertMap :: (Ord k, Ord v) => Map k v -> Map v k
 invertMap = M.fromList . map (uncurry (flip (,))) . M.toList
 
--- | parse natural number
-pNat :: GenParser Char st Int
-pNat = read <$> many1 digit
-
--- | parse comma
-commaWS :: GenParser Char st ()
-commaWS = char ',' *> spaces
-
 -- | @whileTrue m@ iterates m until it returns @False@.
 --   Returns the number of iterations @m@ was run. @0@
 --   means @m@ never returned @True@.
@@ -93,3 +84,6 @@ stringSHA256 =
    replace '/' = '_'
    replace '+' = '-'
    replace c   = c
+
+setAny :: (a -> Bool) -> Set a -> Bool
+setAny f = S.foldr (\x b -> f x || b) False

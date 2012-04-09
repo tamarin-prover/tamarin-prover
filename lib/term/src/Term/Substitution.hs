@@ -41,16 +41,17 @@ import Control.Basics
 -- | @composeVFresh s1 s2@ composes the fresh substitution s1 and the free substitution s2.
 --   The result is the fresh substitution s = s1.s2.
 composeVFresh :: (IsConst c, Show (Lit c LVar))
-              => SubstVFresh c LVar -> Subst c LVar -> SubstVFresh c LVar
+              => LSubstVFresh c -> LSubst c -> LSubstVFresh c
 composeVFresh s1_0 s2 =
+    -- all variables in vrange(s1.s2) originate from s1 and can be considered fresh.
     freeToFreshRaw (s1 `compose` s2)
   where
-    s1 = freshToFreeAvoiding (extendWithRenaming (varsRange s2)  s1_0) (s2,s1_0)
+    s1 = freshToFreeAvoidingFast (extendWithRenaming (varsRange s2)  s1_0) (s2,s1_0)
 
 -- Conversion between substitutions
 ----------------------------------------------------------------------
 
--- | @freshToFreeSimp s@ converts the bound variables in @s@ to free variables
+-- | @freshToFree s@ converts the bound variables in @s@ to free variables
 -- using fresh variable names. We try to preserve variables names if possible.
 freshToFree :: (MonadFresh m, IsConst c)
             => SubstVFresh c LVar -> m (Subst c LVar)
@@ -77,7 +78,7 @@ freshToFreeAvoiding s t = freshToFree s `evalFreshAvoiding` t
 -- | @freshToFreeAvoidingFast s t@ converts all fresh variables in the range of
 --   @s@ to free variables avoiding free variables in @t@. This function does
 --   not try to reuse variable names from the domain of the substitution.
-freshToFreeAvoidingFast :: HasFrees t => LNSubstVFresh -> t -> LNSubst
+freshToFreeAvoidingFast :: (HasFrees t, Ord c) => LSubstVFresh c -> t -> LSubst c
 freshToFreeAvoidingFast s t =
     substFromList . renameMappings . substToListVFresh $ s
   where

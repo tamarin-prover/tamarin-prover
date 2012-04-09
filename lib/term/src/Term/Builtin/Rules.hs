@@ -25,13 +25,16 @@ import Term.SubtermRule
 import Term.Builtin.Signature
 import Term.Builtin.Convenience
 
+import qualified Data.Set as S
+import Data.Set (Set)
+
 -- Rules for DH theory
 ----------------------------------------------------------------------
 
 -- | The rewriting rules for Diffie-Hellman. This is a presentation due to Lankford
 --   with the finite variant property.
-dhRules :: [RRule LNTerm]
-dhRules =
+dhRules :: Set (RRule LNTerm)
+dhRules = S.fromList
     [ expo(x1,one) `RRule` x1
     , expo(expo(x1,x2),x3) `RRule` expo(x1,(x2 *: x3))
 
@@ -52,8 +55,8 @@ dhRules =
     one  = fAppOne
 
 -- | The rewriting rules for Xor.
-xorRules :: [RRule LNTerm]
-xorRules =
+xorRules :: Set (RRule LNTerm)
+xorRules = S.fromList
     [ x1 +: x1 `RRule` zero
     , x1 +: zero `RRule` x1
     , x1 +: (x1 +: x2) `RRule` x2 ]
@@ -61,15 +64,15 @@ xorRules =
     zero = fAppZero
 
 -- | The rewriting rules for multisets.
-msetRules :: [RRule LNTerm]
-msetRules = [ s1 # fAppEmpty `RRule` s1 ]
+msetRules :: Set (RRule LNTerm)
+msetRules = S.fromList [ s1 # fAppEmpty `RRule` s1 ]
 
 
 -- | The rewriting rules for standard subterm operators that are builtin.
-pairRules, symEncRules, asymEncRules, signatureRules :: [StRule]
-pairRules      =
+pairRules, symEncRules, asymEncRules, signatureRules :: Set (StRule)
+pairRules = S.fromList
     [ fAppFst (fAppPair (x1,x2)) `StRule` (RhsPosition [0,0])
     , fAppSnd (fAppPair (x1,x2)) `StRule` (RhsPosition [0,1]) ]
-symEncRules    = [ sdec (senc (x1,x2), x2)     `StRule` (RhsPosition [0,0]) ]
-asymEncRules   = [ adec (aenc (x1, pk x2), x2) `StRule` (RhsPosition [0,0]) ]
-signatureRules = [ verify (sign (x1,x2), x1, pk x2) `StRule` (RhsGround trueC) ]
+symEncRules    = S.fromList [ sdec (senc (x1,x2), x2)     `StRule` (RhsPosition [0,0]) ]
+asymEncRules   = S.fromList [ adec (aenc (x1, pk x2), x2) `StRule` (RhsPosition [0,0]) ]
+signatureRules = S.fromList [ verify (sign (x1,x2), x1, pk x2) `StRule` (RhsGround trueC) ]

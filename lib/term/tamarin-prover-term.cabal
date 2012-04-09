@@ -36,6 +36,8 @@ library
     build-depends:
         base                 == 4.*
       , mtl                  == 2.0.*
+      , bytestring           == 0.9.*
+      , attoparsec           == 0.10.*
       , containers           >= 0.4.2   && < 0.5
       , dlist                == 0.5.*
       , safe                 >= 0.2     && < 0.4
@@ -76,7 +78,9 @@ library
       Term.Builtin.Signature
 
       Term.Maude.Process
+      Term.Maude.Signature
       Term.Maude.Types
+      Term.Maude.Parser
 
       Term.UnitTests
 

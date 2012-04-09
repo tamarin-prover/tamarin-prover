@@ -27,8 +27,10 @@ module Term.Unification (
   , mhFilePath
 
   -- * Maude signatures
-  , MaudeSig(..)
-  , emptyMaudeSig
+  , MaudeSig
+  , enableDH
+  , enableXor
+  , enableMSet
   , minimalMaudeSig
   , dhMaudeSig
   , xorMaudeSig
@@ -38,11 +40,12 @@ module Term.Unification (
   , asymEncMaudeSig
   , signatureMaudeSig
   , hashMaudeSig
-  , allMaudeSig
   , rrulesForMaudeSig
-  , funSigForMaudeSig
-  , irreducibleFunSig
-
+  , allFunctionSymbols
+  , stRules
+  , irreducibleFunctionSymbols
+  , addFunctionSymbol
+  , addStRule
 
   -- * Convenience exports
   , module Term.Substitution
@@ -64,12 +67,7 @@ import           Term.Substitution
 import qualified Term.Maude.Process as UM
 import           Term.Maude.Process
                    (MaudeHandle, WithMaude, startMaude, getMaudeStats, mhMaudeSig, mhFilePath)
-import           Term.Maude.Types
-                   (MaudeSig(..), emptyMaudeSig, allMaudeSig, rrulesForMaudeSig,
-                    funSigForMaudeSig, dhMaudeSig, xorMaudeSig, msetMaudeSig,
-                    pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig,
-                    hashMaudeSig, minimalMaudeSig, irreducibleFunSig)
-
+import           Term.Maude.Signature
 import           Debug.Trace.Ignore
 -- import qualified Debug.Trace as DT
 

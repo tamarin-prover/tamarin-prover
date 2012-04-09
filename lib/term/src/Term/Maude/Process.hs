@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell, DeriveDataTypeable, DeriveFunctor #-}
-{-# LANGUAGE FlexibleContexts, NamedFieldPuns #-}
+{-# LANGUAGE FlexibleContexts, NamedFieldPuns, BangPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -26,16 +27,16 @@ module Term.Maude.Process (
   , WithMaude
 ) where
 
-import Data.Either
-import Data.List
 import Data.Traversable hiding ( mapM )
 import qualified Data.Map as M
 
 import Term.Term
 import Term.LTerm
-import Term.Maude.Types
-import Term.Substitution
 import Term.Rewriting.Definitions
+import Term.Maude.Signature
+import Term.Maude.Types
+import Term.Maude.Parser
+import Term.Substitution
 
 import Control.Applicative
 import Control.Monad.Reader
@@ -45,80 +46,16 @@ import Control.Exception (onException, evaluate)
 import Control.DeepSeq   (rnf)
 import Control.Monad.Bind
 
+import qualified Data.ByteString as B
+import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BC
+
 import System.Process
 import System.IO
 
 import Utils.Misc
+import Text.Isar ((<>))
 
-
--- Pretty printing Maude commands
-----------------------------------------------------------------------
-
--- | The term algebra and rewriting rules as a functional module in Maude.
-theory :: MaudeSig -> String
-theory msig@(MaudeSig {enableDH, enableXor, enableMSet, funSig}) = unlines $
-    [ "fmod MSG is"
-    , "  protecting NAT ." ]
-    ++
-    (if enableMSet
-     then [ "  sort Pub Fresh Msg MSet Node TOP ."
-          , "  subsort Msg < MSet ."
-          , "  subsort MSet < TOP ."
-          , "  op m : Nat -> MSet ."
-          , "  op "++funsymPrefix++"mun : MSet MSet -> MSet [comm assoc] ."
-          , "  op "++funsymPrefix++"empty : -> MSet ."
-          ]
-     else [ "  sort Pub Fresh Msg Node TOP ."])
-    ++
-    [ "  subsort Pub < Msg ."
-    , "  subsort Fresh < Msg ."
-    , "  subsort Msg < TOP ."
-    , "  subsort Node < TOP ."
-    -- constants
-    , "  op f : Nat -> Fresh ."
-    , "  op p : Nat -> Pub ."
-    , "  op c : Nat -> Msg ."
-    , "  op n : Nat -> Node ."
-    -- used for encoding App List [t1,..,tk]
-    -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
-    , "  op "++funsymPrefix++"list : TOP -> TOP ."
-    , "  op "++funsymPrefix++"cons : TOP TOP -> TOP ."
-    , "  op "++funsymPrefix++"nil  : -> TOP ." ]
-    ++
-    (if enableDH
-       then
-       [ "  op "++funsymPrefix++"one : -> Msg ."
-       , "  op "++funsymPrefix++"exp : Msg Msg -> Msg ."
-       , "  op "++funsymPrefix++"mult : Msg Msg -> Msg [comm assoc] ."
-       , "  op "++funsymPrefix++"inv : Msg -> Msg ." ]
-       else [])
-    ++
-    (if enableXor
-       then
-       [ "  op "++funsymPrefix++"zero : -> Msg ."
-       , "  op "++funsymPrefix++"xor : Msg Msg -> Msg [comm assoc] ."]
-       else [])
-    ++
-    map theoryFunSym funSig
-    ++
-    (map theoryRule $ rrulesForMaudeSig msig)
-    ++
-    [ "endfm" ]
-  where
-    theoryFunSym (s,ar) =
-        "  op " ++ funsymPrefix ++ s ++" : " ++(concat $ replicate ar "Msg ")++" -> Msg ."
-    theoryRule (l `RRule` r) =
-        "  eq " ++ ppMaude lm ++" = " ++ ppMaude rm ++" ."
-      where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
-                        `evalFresh` nothingUsed
-
---
--- Unification using Maude
-----------------------------------------------------------------------
-
--- | Check environment if communication with Maude should be logged
-dEBUGMAUDE ::Bool
-dEBUGMAUDE = envIsSet "DEBUG_MAUDE"
 
 -- Unification using a persistent Maude process
 -----------------------------------------------------------------------
@@ -166,10 +103,10 @@ startMaudeProcess :: FilePath -- ^ Path to Maude
 startMaudeProcess maudePath maudeSig = do
     (hin,hout,herr,hproc) <- runInteractiveCommand maudeCmd
     _ <- getToDelim hout
+    -- set maude flags
+    mapM_ (executeMaudeCommand hin hout) setupCmds
     -- input the maude theory
-    hPutStr hin (theory maudeSig)
-    hFlush  hin
-    _ <- getToDelim hout
+    executeMaudeCommand hin hout (ppTheory maudeSig)
     return (MP hin hout herr hproc 0 0 0)
   where 
     maudeCmd
@@ -178,6 +115,14 @@ startMaudeProcess maudePath maudeSig = do
                      ++ "\" | tee /tmp/maude.output"
       | otherwise  = 
           maudePath ++ " -no-tecla -no-banner -no-wrap -batch " 
+    executeMaudeCommand hin hout cmd =
+        B.hPutStr hin cmd >> hFlush hin >> getToDelim hout >> return ()
+    setupCmds = [ "set show command off .\n"
+                , "set show timing off .\n"
+                , "set show stats off .\n" ]
+    dEBUGMAUDE = envIsSet "DEBUG_MAUDE"
+
+
 
 -- | Restart the Maude process on this handle.
 restartMaude :: MaudeHandle -> IO ()
@@ -185,24 +130,25 @@ restartMaude (MaudeHandle maudePath maudeSig mv) = modifyMVar_ mv $ \mp -> do
     terminateProcess (mProc mp) <* waitForProcess (mProc mp)
     startMaudeProcess maudePath maudeSig
 
--- | @getToDelim ih@ reads input from @ih@ until @mDelim@ is encountered.
---   It returns the string read up to (not including) mDelim.
-getToDelim :: Handle -> IO String
-getToDelim ih = go []
+-- | @getToDelim ih@ reads input from @ih@ until the Maude delimitier is encountered.
+--   It returns the 'ByteString' up to (not including) the delimiter.
+getToDelim :: Handle -> IO ByteString
+getToDelim ih =
+    go BC.empty
   where
-    go acc = do
-        c <- hGetChar ih
-        let acc' = c:acc
-        if mDelim `isPrefixOf` acc'
-          then return (reverse (drop (length mDelim) acc'))
-          else go acc'
-    mDelim = reverse "Maude> "
+    go !acc = do
+        bs <- BC.append acc <$> B.hGetSome ih 8096
+        case BC.breakSubstring mDelim bs of
+            (before, after) | after == mDelim -> return before
+            (_,      after) | after == ""     -> go bs
+            _  -> error $ "Too much maude output" ++ BC.unpack bs
+    mDelim = "Maude> "
 
 -- | @callMaude cmd@ sends the command @cmd@ to Maude and returns Maude's
 -- output up to the next prompt sign.
 callMaude :: MaudeHandle
           -> (MaudeProcess -> MaudeProcess) -- ^ Statistics updater.
-          -> String -> IO String
+          -> ByteString -> IO ByteString
 callMaude hnd updateStatistics cmd = do
     -- Ensure that the command is fully evaluated and therefore does not depend
     -- on another call to Maude anymore. Otherwise, we could end up in a
@@ -213,7 +159,7 @@ callMaude hnd updateStatistics cmd = do
     (`onException` restartMaude hnd) $ modifyMVar (mhProc hnd) $ \mp -> do
         let inp = mIn  mp
             out = mOut mp
-        hPutStr inp cmd
+        B.hPut inp cmd
         hFlush  inp
         mp' <- evaluate (updateStatistics mp)
         res <- getToDelim out
@@ -223,37 +169,34 @@ callMaude hnd updateStatistics cmd = do
 computeViaMaude :: 
        (Show a, Show b, Ord c)
     => MaudeHandle
-    -> (MaudeProcess -> MaudeProcess)                   -- ^ Update statistics
-    -> (a -> BindT (Lit c LVar) MaudeLit Fresh String)  -- ^ Conversion to Maude
-    -> (M.Map MaudeLit (Lit c LVar) -> MSubst -> b)     -- ^ Conversion from Maude
+    -> (MaudeProcess -> MaudeProcess)                                 -- ^ Update statistics
+    -> (a -> BindT (Lit c LVar) MaudeLit Fresh ByteString)            -- ^ Conversion to Maude command
+    -> (M.Map MaudeLit (Lit c LVar) -> ByteString -> Either String b) -- ^ Conversion from Maude reply
     -> a
-    -> IO [b]
+    -> IO b
 computeViaMaude hnd updateStats toMaude fromMaude inp = do
     let (cmd, bindings) = runConversion $ toMaude inp
-    s <- callMaude hnd updateStats cmd
-    let esubstsm = parseMaudeReply s
-        substs   = map (fromMaude bindings) $ rights esubstsm
-    case lefts esubstsm of
-      [] -> return $ substs
-      es -> fail $ "\ncomputeViaMaude:\nParse error: \n" ++ 
-                   concatMap show es ++ 
-                   "\n For Maude Output:\n" ++ s ++
-                   "\nFor query:\n" ++ cmd
+    reply <- callMaude hnd updateStats cmd
+    case fromMaude bindings reply of
+        Right res -> return res
+        Left    e -> fail $ "\ncomputeViaMaude:\nParse error: `" ++ e ++"'"++
+                            "\nFor Maude Output: `" ++ BC.unpack reply ++"'"++
+                            "\nFor query: `" ++ BC.unpack cmd++"'"
 
 
 ------------------------------------------------------------------------------
--- Unification
+-- Unification modulo AC
 ------------------------------------------------------------------------------
 
 -- | @unifyCmd eqs@ returns the Maude command to solve the unification problem @eqs@.
 --   Expects a nonempty list of equations
-unifyCmd :: [Equal MTerm] -> [Char]
+unifyCmd :: [Equal MTerm] -> ByteString
 unifyCmd []  = error "unifyCmd: cannot create cmd for empty list of equations."
 unifyCmd eqs =
-    "unify in MSG : " ++seqs++" .\n"
+    "unify in MSG : " <> seqs <> " .\n"
   where
-    ppEq (Equal t1 t2) = ppMaude t1 ++ " =? " ++ ppMaude t2
-    seqs = intercalate " /\\ " $ map ppEq eqs
+    ppEq (Equal t1 t2) = ppMaude t1 <> " =? " <> ppMaude t2
+    seqs = B.intercalate " /\\ " $ map ppEq eqs
 
 
 -- | @unifyViaMaude hnd eqs@ computes all AC unifiers of @eqs@ using the
@@ -264,11 +207,13 @@ unifyViaMaude
     -> (c -> LSort) -> [Equal (VTerm c LVar)] -> IO [SubstVFresh c LVar]
 unifyViaMaude _   _      []  = return [emptySubstVFresh]
 unifyViaMaude hnd sortOf eqs =
-    computeViaMaude hnd incUnifCount toMaude msubstToLSubstVFresh eqs
+    computeViaMaude hnd incUnifCount toMaude fromMaude eqs
   where
+    msig = mhMaudeSig hnd
     toMaude          = fmap unifyCmd . mapM (traverse (lTermToMTerm sortOf))
+    fromMaude bindings reply =
+        map (msubstToLSubstVFresh bindings) <$> parseUnifyReply msig reply
     incUnifCount mp  = mp { unifCount = 1 + unifCount mp }
-
 
 ------------------------------------------------------------------------------
 -- Matching modulo AC
@@ -276,11 +221,10 @@ unifyViaMaude hnd sortOf eqs =
 
 -- | @matchCmd p t@ returns the Maude command to match the terms @t@ to the
 -- pattern @p@.
-matchCmd :: [Equal MTerm] -> String
+matchCmd :: [Equal MTerm] -> ByteString
 matchCmd eqs =
-    "match in MSG : " ++ppTerms t2s++ " <=? " ++ ppTerms t1s++" .\n"
+    "match in MSG : " <> ppTerms t2s <> " <=? " <> ppTerms t1s <> " .\n"
   where
-    -- FIXME: slow
     (t1s,t2s) = unzip [ (a,b) | Equal a b <- eqs ]
     ppTerms = ppMaude . fAppList
 
@@ -293,9 +237,12 @@ matchViaMaude :: (IsConst c , Show (Lit c LVar), Ord c)
               -> IO [Subst c LVar]
 matchViaMaude _   _      []  = return [emptySubst]
 matchViaMaude hnd sortOf matcheqs =
-    computeViaMaude hnd incMatchCount toMaude msubstToLSubstVFree eqs
+    computeViaMaude hnd incMatchCount toMaude fromMaude eqs
   where
+    msig = mhMaudeSig hnd
     toMaude  = fmap matchCmd . mapM (traverse (lTermToMTerm sortOf)) 
+    fromMaude bindings reply =
+        map (msubstToLSubstVFree bindings) <$> parseMatchReply msig reply
     incMatchCount mp = mp { matchCount = 1 + matchCount mp }
     eqs = [Equal t p | MatchWith t p <- matcheqs ]
 
@@ -305,9 +252,8 @@ matchViaMaude hnd sortOf matcheqs =
 
 -- | @normCmd t@ returns the Maude command to normalize the term @t@
 -- pattern @p@.
-normCmd :: MTerm -> String
-normCmd tm = "reduce "++ppMaude tm++" .\n"
-
+normCmd :: MTerm -> ByteString
+normCmd tm = "reduce " <> ppMaude tm <> " .\n"
 
 -- | @normViaMaude t@ normalizes the term t via Maude.
 normViaMaude :: (IsConst c , Show (Lit c LVar), Ord c)
@@ -315,19 +261,16 @@ normViaMaude :: (IsConst c , Show (Lit c LVar), Ord c)
              -> (c -> LSort)
              -> VTerm c LVar
              -> IO (VTerm c LVar)
-normViaMaude hnd sortOf t = do
-    let (cmd, bindings) = runConversion $ toMaude t
-    s <- callMaude hnd incNorm cmd
-    case parseReduceSolution s of
-      Right mt -> return $ evalBindT (mTermToLNTerm "z" mt) bindings
-                             `evalFresh` nothingUsed
-      Left  e  -> fail $ "\ncomputeViaMaude:\nParse error: \n" ++ 
-                   show e ++ 
-                   "\n For Maude Output:\n" ++ s ++
-                   "\nFor query:\n" ++ cmd
+normViaMaude hnd sortOf t =
+    computeViaMaude hnd incNormCount toMaude fromMaude t
   where
-    toMaude    = fmap normCmd . (lTermToMTerm sortOf)
-    incNorm mp = mp { normCount = 1 + normCount mp }
+    msig = mhMaudeSig hnd
+    toMaude = fmap normCmd . (lTermToMTerm sortOf)
+    fromMaude bindings reply =
+        (\mt -> (mTermToLNTerm "z" mt `evalBindT` bindings) `evalFresh` nothingUsed)
+            <$> parseReduceReply msig reply
+    incNormCount mp = mp { normCount = 1 + normCount mp }
+
 
 -- Passing the Handle to Maude via a Reader monad
 -------------------------------------------------

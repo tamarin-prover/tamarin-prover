@@ -16,6 +16,7 @@ import Term.Positions
 import Control.Monad.Reader
 
 import Extension.Prelude
+import qualified Data.Set as S
 
 import Debug.Trace.Ignore
 
@@ -30,7 +31,7 @@ import Debug.Trace.Ignore
 --   then @s@ is included in the list of returned substitutions.
 narrowSubsts :: LNTerm -> WithMaude [LNSubstVFresh]
 narrowSubsts t = reader $ \hnd -> sortednub $ do
-    let rules0 = rrulesForMaudeSig $ mhMaudeSig hnd
+    let rules0 = S.toList . rrulesForMaudeSig $ mhMaudeSig hnd
     (l `RRule` _r) <- renameAvoiding rules0 t
     p <- positionsNonVar t
     subst <- unifyLNTerm [Equal (t `atPos` p) l] `runReader` hnd

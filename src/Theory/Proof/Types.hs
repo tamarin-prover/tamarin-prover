@@ -261,7 +261,7 @@ type SplitId = Int
 -- @s@ in the disjunction with @x `elem` dom s@.
 data EqStore = EqStore {
       _eqsSubst :: LNSubst
-    , _eqsConj  :: Conj (Disj (LNSubstVFresh))
+    , _eqsConj  :: Conj (S.Set LNSubstVFresh)
     }
   deriving( Eq, Ord )
 
@@ -276,8 +276,8 @@ eqsIsFalse :: EqStore -> Bool
 eqsIsFalse = (== falseEqConstrConj) . L.get eqsConj
 
 -- | The false typing conjunction.
-falseEqConstrConj :: Conj (Disj (LNSubstVFresh))
-falseEqConstrConj = Conj [(Disj [])]
+falseEqConstrConj :: Conj (S.Set (LNSubstVFresh))
+falseEqConstrConj = Conj [S.empty]
 
 
 -- Instances
@@ -623,7 +623,7 @@ sSubst = eqsSubst . sEqStore
 
 -- | Label to access the conjunction of disjunctions of fresh substutitution in
 -- the equation store.
-sConjDisjEqs :: Sequent :-> Conj (Disj (LNSubstVFresh))
+sConjDisjEqs :: Sequent :-> Conj (S.Set (LNSubstVFresh))
 sConjDisjEqs = eqsConj . sEqStore
 
 
@@ -702,10 +702,10 @@ prettyEqStore eqs@(EqStore subst (Conj disjs)) = vcat $
     ]
   where
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
-    ppDisj (Disj substs) =
+    ppDisj substs =
         numbered' conjs
       where 
-        conjs = map ppConj substs
+        conjs = map ppConj (S.toList substs)
         ppConj = vcat . map prettyEq . substToListVFresh
         prettyEq (a,b) = 
           prettyNTerm (lit (Var a)) $$ nest (6::Int) (opEqual <-> prettyNTerm b)

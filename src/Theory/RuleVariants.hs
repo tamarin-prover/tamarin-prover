@@ -24,6 +24,7 @@ import Control.Applicative
 
 import qualified Data.Map as M
 import Data.Traversable (traverse)
+import qualified Data.Set as S
 
 import Debug.Trace.Ignore
 
@@ -74,9 +75,9 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
              <*> mapM abstrFact concs0
              <*> mapM abstrFact acts0
 
-    irreducible = irreducibleFunSig (mhMaudeSig hnd)
+    irreducible = irreducibleFunctionSymbols (mhMaudeSig hnd)
     abstrFact = traverse abstrTerm
-    abstrTerm (viewTerm -> FApp (NonAC o) args) | o `elem` irreducible =
+    abstrTerm (viewTerm -> FApp (NonAC o) args) | o `S.member` irreducible =
         fAppNonAC o <$> mapM abstrTerm args
     abstrTerm t = do
         at :: LNTerm <- varTerm <$> importBinding (`LVar` sortOfLNTerm t) t (getHint t)

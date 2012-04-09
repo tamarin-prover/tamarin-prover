@@ -24,6 +24,7 @@ import qualified Data.Set                                 as S
 import qualified Data.Map                                 as M
 import           Data.Monoid
 import           Data.Maybe
+import qualified Data.ByteString.Char8                    as BC
 
 import           Control.Monad
 import           Control.Applicative hiding (empty, many, optional)
@@ -309,7 +310,7 @@ llit = asum
 lookupNonACArity :: String -> Parser Int
 lookupNonACArity op = do
     maudeSig <- getState
-    case lookup op (funSigForMaudeSig maudeSig) of
+    case lookup (BC.pack op) (S.toList $ allFunctionSymbols maudeSig) of
         Nothing -> fail $ "unknown operator `" ++ op ++ "'"
         Just k  -> return k
 
@@ -325,7 +326,7 @@ naryOpApp plit = do
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
-    return $ fAppNonAC (op, k') ts
+    return $ fAppNonAC (BC.pack op, k') ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -336,7 +337,7 @@ binaryAlgApp plit = do
     arg2 <- term plit
     when (k /= 2) $ fail $ 
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNonAC (op, 2) [arg1, arg2]
+    return $ fAppNonAC (BC.pack op, 2) [arg1, arg2]
 
 -- | Parse a term.
 term :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -354,8 +355,8 @@ term plit = asum
     pairing = kw LESS *> tupleterm plit <* kw GREATER
     nullaryApp = do
       maudeSig <- getState
-      asum [ try (string sym) *> pure (fApp (NonAC (sym,0)) [])
-           | (sym,0) <- funSigForMaudeSig maudeSig ]
+      asum [ try (string (BC.unpack sym)) *> pure (fApp (NonAC (sym,0)) [])
+           | (sym,0) <- S.toList $ allFunctionSymbols maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -763,14 +764,14 @@ functions =
     string "functions" *> kw COLON *> sepBy1 functionSymbol (kw COMMA) *> pure ()
   where
     functionSymbol = do
-        funsym <- (,) <$> identifier <*> (kw SLASH *> integer)
+        funsym <- (,) <$> (BC.pack <$> identifier) <*> (kw SLASH *> integer)
         sig <- getState
-        case lookup (fst funsym) (funSig sig) of
+        case lookup (fst funsym) (S.toList $ allFunctionSymbols sig) of
           Just k | k /= snd funsym ->
             fail $ "conflicting arities " ++ 
                    show k ++ " and " ++ show (snd funsym) ++ 
-                   " for `" ++ fst funsym
-          _ -> setState (sig `mappend` emptyMaudeSig {funSig = [funsym]})
+                   " for `" ++ BC.unpack (fst funsym)
+          _ -> setState (addFunctionSymbol funsym sig)
 
 equations :: Parser ()
 equations =
@@ -780,7 +781,7 @@ equations =
         rrule <- RRule <$> term llit <*> (kw EQUAL *> term llit)
         case rRuleToStRule rrule of
           Just str ->
-              modifyState (`mappend` emptyMaudeSig {stRules = [str]})
+              modifyState (addStRule str)
           Nothing  ->
               fail $ "Not a subterm rule: " ++ show rrule
 

@@ -24,6 +24,8 @@ import Data.Maybe
 import Prelude hiding ( catch )
 import Test.HUnit
 import Control.Monad.Reader
+import Data.Monoid
+
 
 testEqual :: (Eq a, Show a) => String -> a -> a -> Test
 testEqual t a b = TestLabel t $ TestCase $ assertEqual t b a
@@ -88,23 +90,23 @@ testsSubst :: Test
 testsSubst = TestLabel "Tests for Substitution" $
     TestList
       [ -- introduce renaming for x3
-        testEqual "a" (substFromListVFresh [(lx1, p1), (lx2, x6), (lx3,x6), (lx5, p1)])
-                     (composeVFresh (substFromListVFresh [(lx5, p1)])
-                                    (substFromList [(lx1, x5), (lx2, x3)]))
+        testEqual "a" (substFromListVFresh [(lx1, p1), (lx2, x9), (lx3,x9), (lx5, p1)])
+                      (composeVFresh (substFromListVFresh [(lx5, p1)])
+                                     (substFromList [(lx1, x5), (lx2, x3)]))
         -- rename (fresh) x6 in s1b and do not mix up with x6 in s3f
       , testEqual "b" s1b_o_s3f (composeVFresh s1b s3f)
         -- drop x1 |-> p1 mapping from s1b, but apply to x2 |-> pair(x3,x1) in s3f
       , testEqual "c" s1b_o_s4f (composeVFresh s1b s4f)
       , testEqual "d" s4f_o_s3f (compose s4f s3f)
       , testEqual "e" (substFromList [(lx1,f1), (lx2,f1)])
-                     (mapRange (const f1) s4f)
+                      (mapRange (const f1) s4f)
       , testTrue  "f" (isRenaming (substFromListVFresh [(lx1,x3), (lx2,x2), (lx3,x1)]))
 
       , testEqual "g" (substFromListVFresh [(lx1, f1)])
-                     (extendWithRenaming [lx1] (substFromListVFresh [(lx1, f1)]))
+                      (extendWithRenaming [lx1] (substFromListVFresh [(lx1, f1)]))
 
-      , testEqual "h" (substFromListVFresh [(lx2, x1), (lx1, x2)])
-                     (extendWithRenaming [lx1] (substFromListVFresh [(lx2, x1)]))
+      , testEqual "h" (substFromListVFresh [(lx2, x1), (lx1, x3)])
+                      (extendWithRenaming [lx1] (substFromListVFresh [(lx2, x1)]))
       -- trivial, increase coverage
       , testTrue "i" ((>0) . length $ show s1b)
       , testTrue "j" ((>0) . length $ (render $ prettyLSubstVFresh s1b))
@@ -119,12 +121,16 @@ testsSubst = TestLabel "Tests for Substitution" $
     s1b       = substFromListVFresh [(lx1, p1), (lx2, x6), (lx3, x6), (lx4, f1)]
     s3f       = substFromList [(lx8, x6), (lx2, pair(x2,x1))]
     s1b_o_s3f = substFromListVFresh -- x2 not identified with x8
-                  [(lx1, p1), (lx2, pair(x9, p1)), (lx3, x9), (lx4, f1), (lx6, x10), (lx8, x10)]
+                  [(lx1, p1), (lx2, pair(x15, p1)), (lx3, x15), (lx4, f1), (lx6, x22), (lx8, x22)]
     s4f       = substFromList [(lx1, x6), (lx2, pair(x3,x1))]
     s1b_o_s4f = substFromListVFresh
-                  [(lx1, x8), (lx2, pair(x7, p1)), (lx3, x7), (lx4, f1), (lx6, x8)]
+                  [(lx1, x20), (lx2, pair(x13, p1)), (lx3, x13), (lx4, f1), (lx6, x20)]
 
     s4f_o_s3f = substFromList [(lx1, x6), (lx2, pair(pair(x3,x1),x6)), (lx8, x6)]
+    x15 = varTerm $ LVar "x" LSortMsg 15
+    x13 = varTerm $ LVar "x" LSortMsg 13
+    x20 = varTerm $ LVar "x" LSortMsg 20
+    x22 = varTerm $ LVar "x" LSortMsg 22
 
 -- *****************************************************************************
 -- Tests for Subsumption
@@ -290,6 +296,12 @@ main maudePath = do
                          , testsSimple mhnd
                          , testsMatching mhnd
                          ]
+
+-- | Maude signatures with all builtin symbols.
+allMaudeSig :: MaudeSig
+allMaudeSig = mconcat
+    [ dhMaudeSig, xorMaudeSig, msetMaudeSig
+    , pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, hashMaudeSig ]
 
 
 -- testing in ghci

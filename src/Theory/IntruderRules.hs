@@ -19,7 +19,9 @@ import Control.Monad.Fresh
 import Control.Basics
 import Control.Monad.Reader
 
+import qualified Data.Set as S
 import Data.List
+import qualified Data.ByteString.Char8 as BC
 
 import Extension.Data.Label
 
@@ -27,6 +29,7 @@ import Utils.Misc
 
 import Term.SubtermRule
 import Term.Positions
+import Term.Maude.Signature
 import Term.Rewriting.Norm
 import Term.Narrowing.Variants.Compute
 
@@ -109,7 +112,7 @@ destructionRules (StRule lhs@(viewTerm -> FApp (NonAC (f,_)) _) (RhsPosition pos
                      dfact <- kdFact Nothing t'
                      ufacts <- mapM (kuFact Nothing) uprems'
                      concfact <- kdFact Nothing rhs
-                     return [ Rule (DestrRule f) (dfact:ufacts) [concfact] [] ]
+                     return [ Rule (DestrRule (BC.unpack f)) (dfact:ufacts) [concfact] [] ]
                  else []
     go _      (viewTerm -> Lit _)     (_:_)  =
         error "IntruderRules.destructionRules: impossible, position invalid"
@@ -135,19 +138,19 @@ minimizeIntruderRules rules =
 --   the free (not Xor, DH, and MSet) part of the given signature.
 subtermIntruderRules :: MaudeSig -> [IntrRuleAC]
 subtermIntruderRules maudeSig =
-     minimizeIntruderRules $ concatMap destructionRules (stRules maudeSig)
-     ++ constructionRules (funSig maudeSig)
+     minimizeIntruderRules $ concatMap destructionRules (S.toList $ stRules maudeSig)
+     ++ constructionRules (functionSymbols maudeSig)
 
 constructionRules :: FunSig -> [IntrRuleAC]
 constructionRules fSig =
-    [ createRule s k | (s,k) <- fSig ]
+    [ createRule s k | (s,k) <- S.toList fSig ]
   where
     createRule s k = (`evalFresh` nothingUsed) $ do
         vars     <- map varTerm <$> (sequence $ replicate k (freshLVar "x" LSortMsg))
         pfacts   <- mapM (kuFact Nothing) vars
         let m = fApp (NonAC (s,k)) vars
         concfact <- kuFact (Just CanExp) m
-        return $ Rule (ConstrRule s) pfacts [concfact] [dedLogFact m]
+        return $ Rule (ConstrRule (BC.unpack s)) pfacts [concfact] [dedLogFact m]
 
 dropExpTag :: Fact a -> Fact a
 dropExpTag (Fact KUFact [_e,m]) = Fact KUFact [m]

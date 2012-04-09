@@ -43,7 +43,7 @@ import           Control.DeepSeq
 
 import           Theory.Pretty
 import           Theory.Fact
-import           Term.Maude.Types
+import           Term.Maude.Signature
 
 import           Data.Binary
 
@@ -76,7 +76,7 @@ sigpMaudeSig = sigMaudeInfo
 
 -- | The empty pure signature.
 emptySignaturePure :: SignaturePure
-emptySignaturePure = Signature S.empty emptyMaudeSig
+emptySignaturePure = Signature S.empty minimalMaudeSig
 
 -- Instances
 ------------

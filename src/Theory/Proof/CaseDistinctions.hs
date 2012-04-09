@@ -318,8 +318,8 @@ precomputeCaseDistinctions ctxt typAsms =
       [ do return $ lit $ Var (LVar "t" LSortFresh 1)
 
       , [ fAppNonAC (s,k) $ nMsgVars k
-        | (s,k) <- funSigForMaudeSig  . mhMaudeSig . get sigmMaudeHandle . get pcSignature $ ctxt
-        ,  s `notElem` [ "inv", "pair" ], k > 0 ]
+        | (s,k) <- S.toList . allFunctionSymbols  . mhMaudeSig . get sigmMaudeHandle . get pcSignature $ ctxt
+        , (s,k) `S.notMember` implicitFunSig, k > 0 ]
       ] 
 
 -- | Refine a set of case distinction by exploiting additional typing

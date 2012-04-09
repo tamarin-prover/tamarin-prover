@@ -60,7 +60,6 @@ import Term.Rewriting.Definitions
 import Text.PrettyPrint.Highlight
 import Logic.Connectives
 
-import Extension.Prelude
 import Utils.Misc
 
 import Data.Maybe
@@ -99,9 +98,13 @@ applyLit _     c@(Con _)  = lit c
 
 
 
--- | @applyTermVFree subst t@ applies the substitution @subst@ to the term @t@.
+-- | @applyVTerm subst t@ applies the substitution @subst@ to the term @t@.
 applyVTerm :: (IsConst c, IsVar v, Ord c) => Subst c v -> VTerm c v -> VTerm c v
-applyVTerm subst = (`bindTerm` applyLit subst)
+applyVTerm subst t = case viewTerm t of
+    Lit l             -> applyLit subst l
+    FApp (AC o) ts    -> fAppAC    o (map (applyVTerm subst) ts)
+    FApp (NonAC o) ts -> fAppNonAC o (map (applyVTerm subst) ts)
+    FApp List ts      -> fAppList    (map (applyVTerm subst) ts)
 
 
 -- Construction
@@ -110,15 +113,17 @@ applyVTerm subst = (`bindTerm` applyLit subst)
 -- | Convert a list to a substitution. The @x/x@ mappings are removed.
 substFromList :: IsVar v => [(v, VTerm c v)] -> Subst c v
 substFromList xs  =
-    Subst (M.fromList [ (v,t) | (v,t) <- xs, not (t `equalToVar` v) ])
-  where
-    equalToVar (viewTerm -> Lit (Var v')) v = v == v'
-    equalToVar _                          _ = False
+    Subst (M.fromList [ (v,t) | (v,t) <- xs, not (equalToVar t v) ])
+
+-- | Returns @True@ if given term is equal to given variable.
+equalToVar :: IsVar v => VTerm c v -> v -> Bool
+equalToVar (viewTerm -> Lit (Var v')) v = v == v'
+equalToVar _                          _ = False
 
 -- | Convert a map to a substitution. The @x/x@ mappings are removed.
 -- FIXME: implement directly, use substFromMap for substFromList.
 substFromMap :: IsVar v => Map v (VTerm c v) -> Subst c v
-substFromMap = substFromList . M.toList
+substFromMap = Subst . M.filterWithKey (\v t -> not $ equalToVar t v)
 
 -- | @emptySubVFree@ is the substitution with empty domain.
 emptySubst :: Subst c v
@@ -139,8 +144,7 @@ applySubst subst subst' = mapRange (applyVTerm subst) subst'
 compose :: (IsConst c, IsVar v)
         => Subst c v -> Subst c v -> Subst c v
 compose s1 s2 =
-    Subst $
-      sMap (applySubst s1 s2) `M.union` sMap (restrict (dom s1 \\ dom s2) s1)
+    Subst $ sMap (applySubst s1 s2) `M.union` sMap (restrict (dom s1 \\ dom s2) s1)
 
 -- Operations
 ----------------------------------------------------------------------
@@ -171,10 +175,9 @@ dom = M.keys . sMap
 range :: Subst c v -> [VTerm c v]
 range = M.elems . sMap
 
--- | @varsRange subst@ returns all variables in the range of the substitution
---   FIXME: use Monoid, dlist, write occurs function.
+-- | @varsRange subst@ returns all variables in the range of the substitution.
 varsRange :: IsVar v => Subst c v -> [v]
-varsRange = sortednub . concatMap varsVTerm . range
+varsRange = varsVTerm . fAppList . range
 
 -- Views
 ----------------------------------------------------------------------

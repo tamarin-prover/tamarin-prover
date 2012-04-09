@@ -22,7 +22,7 @@ module Term.Rewriting.Norm (
 import Term.Term
 import Term.LTerm
 import Term.Substitution
-import Term.Maude.Types
+import Term.Maude.Signature
 import Term.Maude.Process
 import Term.SubtermRule
 import Term.Unification
@@ -33,6 +33,7 @@ import Control.Basics
 import Control.Monad.Reader
 
 import Data.List
+import qualified Data.Set as S
 
 import System.IO.Unsafe (unsafePerformIO)
 
@@ -58,15 +59,15 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
       where
         go t = case viewTerm2 t of
             -- irreducible function symbols
-            FAppNonAC o ts | o `elem` irreducible -> all go ts
-            FList ts                              -> all go ts
-            FPair t1 t2                           -> go t1 && go t2
-            One                                   -> True
-            Empty                                 -> True
-            Zero                                  -> True
-            Lit2 _                                -> True
+            FAppNonAC o ts | o `S.member` irreducible -> all go ts
+            FList ts                                  -> all go ts
+            FPair t1 t2                               -> go t1 && go t2
+            One                                       -> True
+            Empty                                     -> True
+            Zero                                      -> True
+            Lit2 _                                    -> True
             -- subterm rules
-            FAppNonAC _ _ | any (struleApplicable t) strules     -> False
+            FAppNonAC _ _ | setAny (struleApplicable t) strules     -> False
             -- exponentiation
             FExp (viewTerm2 -> FExp _ _) _                  | dh -> False
             FExp _                       (viewTerm2 -> One) | dh -> False
@@ -89,7 +90,6 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FUnion      ts    -> all go ts
             FAppNonAC _ ts    -> all go ts
 
-
         struleApplicable t (StRule lhs rhs) =
             case matchLNTerm [t `MatchWith` lhs] `runReader` hnd of
               []  -> False
@@ -108,7 +108,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
 
         msig        = mhMaudeSig hnd
         strules     = stRules msig
-        irreducible = irreducibleFunSig msig
+        irreducible = irreducibleFunctionSymbols msig
         dh          = enableDH msig
 
 
@@ -154,7 +154,7 @@ normSubstVFresh' s = reader $ \hnd -> mapRangeVFresh (\t -> norm' t `runReader` 
 -- | Returns all subterms that may be not in normal form.
 maybeNotNfSubterms :: MaudeSig -> LNTerm -> [LNTerm]
 maybeNotNfSubterms msig t0 = go t0
-  where irreducible = irreducibleFunSig msig
-        go (viewTerm -> Lit _)                                    = []
-        go (viewTerm -> FApp (NonAC o) as) | o `elem` irreducible = concatMap go as
-        go t                                                      = [t]
+  where irreducible = irreducibleFunctionSymbols msig
+        go (viewTerm -> Lit _)                                        = []
+        go (viewTerm -> FApp (NonAC o) as) | o `S.member` irreducible = concatMap go as
+        go t                                                          = [t]
