@@ -2,20 +2,26 @@ theory NAXOS_eCK
 begin
 
 builtin: diffie-hellman
-functions: H1/1, H2/1
 
 section{* NAXOS *}
 
 /*
  * Protocol:	NAXOS
  * Modeler: 	Cas Cremers, Benedikt Schmidt
- * Date: 	January 2012
+ * Date: 	January 2012/April 2012
  * Source:	"Stronger Security of Authenticated Key Exchange"
  * 		LaMacchia, Lauter, Mityagin, 2007
  * Property: 	eCK security
  *
- * Status: 	working
+ * Status: 	Working
+ *
+ * Notes:	New version with 'let' blocks and refactored setup.
+ * 		This is an experimental spec to figure out better ways
+ * 		of modeling AKE protocols.
  */
+
+functions: H/1
+functions: KDF/1
 
 /* Protocol rules */
 
@@ -27,141 +33,125 @@ section{* NAXOS *}
 
 /* Generate long-term keypair */
 rule generate_ltk:
-   let pkA = 'g'^~lkA
+   let pkA = 'g'^~lkA 
    in
-   [ Fr(~lkA) ] -->
+   [ Fr(~lkA) ] 
+   --[ RegKey($A) ]->
    [ !Ltk( $A, ~lkA ), !Pk( $A, pkA ), Out( pkA ) ]
 
 /* Initiator */
-/* To formulate the responder property, we also define a SidI action for
- * the first rule. For brevity, we omitted this from the description in
- * the paper because there the responder property is not specified. */
-
 rule Init_1:
-  let exi = H1( ~ekI, ~lkI)
-      hki = 'g'^exi
+  let exI = H(<~ekI, ~lkI >)
+      hkI = 'g'^exI
   in
-   [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
-   --[ SidI_1(~ekI,$I,$R, hki ) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, hki ),
-     !Ephk( ~ekI ),
-     Out( hki ) ]
+   [   Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
+   --[ Sid( ~ekI, < 'Init', $I, $R, hkI > ) ]->
+   [   Init_1( ~ekI, $I, $R, ~lkI, hkI )
+     , !Ephk(~ekI, ~ekI)
+     , Out( hkI ) ]
 
 rule Init_2:
-  let exi = H1( ~ekI, ~lkI )
-      pkr = 'g'^~lkR
-      key = H2( Y^~lkI, pkr^exi, Y^exi, $I, $R )
+  let pkR    = 'g'^~lkR
+      exI    = H(< ~ekI, ~lkI >)
+      seskey = KDF(< Y^~lkI, pkR^exI, Y^exI, $I, $R >) 
   in
-   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R, pkr ) ]
-   --[SidI_2( ~ekI, $I, $R, hkI, Y, key ) ]->
-   [ !Sessk( ~ekI, key ) ]
+   [   Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R, pkR ) ]
+   --[ Sid( ~ekI, < 'Init', $I, $R, hkI, Y >)
+     , Match( ~ekI, < 'Resp', $R, $I, hkI, Y >)
+     , Accept( ~ekI, $I, $R, seskey)
+     ]->
+   [   !Sessk( ~ekI, seskey) ]
 
 /* Responder */
 rule Resp_1:
-  let exr = H1( ~ekR, ~lkR )
-      pki = 'g'^~lkI
-      hkr = 'g'^exr
-      key = H2( pki^exr, X^~lkR, X^exr, $I, $R )
+  let pkI    = 'g'^~lkI
+      exR    = H(< ~ekR, ~lkR >)
+      hkr    = 'g'^exR
+      seskey = KDF(< pkI^exR, X^~lkR, X^exR, $I, $R >) 
   in
-   [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, pki) ]
-   --[ SidR_1( ~ekR, $I, $R, X, hkr, key ) ]->
-   [ Out( hkr ),
-     !Ephk( ~ekR ),
-     !Sessk( ~ekR, key ) ]
+   [   In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, pkI) ]
+   --[ Sid( ~ekR, <'Resp', $R, $I, X, hkr >)
+     , Match( ~ekR, <'Init', $I, $R, X, hkr> )
+     , Accept( ~ekR, $R, $I, seskey )
+     ]->
+   [   Out( hkr ),
+       !Ephk(~ekR, ~ekR),
+       !Sessk( ~ekR, seskey) ]
 
 /* Key Reveals for the eCK model */
 rule Sessk_reveal: 
-   [ !Sessk(~tid, k) ]
-   --[ SesskRev(~tid) ]->
-   [ Out(k) ]
+   [ !Sessk(~tid, k) ] --[ SesskRev(~tid) ]-> [ Out(k) ]
 
 rule Ltk_reveal:
-   [ !Ltk($A, lkA) ]
-   --[ LtkRev($A) ]->
-   [ Out(lkA) ]
+   [ !Ltk($A, lkA) ] --[ LtkRev($A) ]-> [ Out(lkA) ]
 
 rule Ephk_reveal:
-   [ !Ephk(~ekA) ]
-   --[ EphkRev(~ekA) ]->
-   [ Out(~ekA) ]
+   [ !Ephk(~s, ~ek) ] --[ EphkRev(~s) ]-> [ Out(~ek) ]
 
 
 /* Security properties */
-
 /*
-lemma key_agreement_reachable:
-  "not (Ex #i1 #i2 ekI ekR I R k hkI hkR.
-          SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2)"
+lemma eCK_same_key:
+  " // If every agent registered at most one public key
+  (All A #i #j. RegKey(A)@i & RegKey(A)@j ==> (#i = #j))
+  ==> // then matching sessions accept the same key
+  (not (Ex #i1 #i2 #i3 #i4 s ss k kk A B minfo .
+              Accept(s, A, B, k ) @ i1
+	    & Accept(ss, B, A, kk) @ i2
+	    & Sid(s, minfo) @ i3
+	    & Match(ss, minfo) @i4
+	    & not( k = kk )
+  ) )"
 */
 
-/* An attack is valid in eCK if the session key of the test session is deduced and
-   the test session is clean.
-*/
-lemma eCK_initiator_key:
-  "not (Ex #i1 #i2 ekI I R k hkI hkR.
-            SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
+lemma eCK_key_secrecy:
+  /* 
+   * The property specification very closely follows the original eCK
+   * (ProvSec) paper:
+   *
+   * If there exists a Test session whose key k is known to the
+   * Adversary, then...
+   */
+  "(All #i1 #i2 Test A B k.
+    Accept(Test, A, B, k) @ i1 & K( k ) @ i2
+    ==> ( 
+    /* ... the Test session must be "not clean".
+     * Test is not clean if one of the following has happened:
+     */
+    /* 1a. session-key-reveal of test thread. */
+      (Ex #i4. SesskRev( Test ) @ i4 )
 
-            /* Not both longterm-key-reveal _and_ ephemeral-key-reveal
-	     * for test thread. */
-            & not(Ex #i3 #i4. LtkRev( I ) @ i3 & EphkRev( ekI ) @ i4)
-
-            /* No session-key-reveal of test thread. */
-            & not(Ex #i3. SesskRev( ekI ) @ i3 )
-
-            /* No session-key-reveal for matching session. */
-            & not(Ex #i3 #i4 ekR kpartner.
-                   SidR_1( ekR,I,R,hkI,hkR,kpartner ) @ i3
-		   & SesskRev( ekR ) @ i4 )
-
-            /* Not both long-term-key-reveal and ephemeral-key-reveal
-	     * for matching session */
-            & not(Ex #i3 #i4 #i5 ekR kpartner.
-                  SidR_1( ekR,I,R,hkI,hkR,kpartner ) @ i3
-		  & LtkRev( R ) @ i4
-		  & EphkRev( ekR ) @ i5 )
-
-	    /* Longterm-key-reveal of partner only if there is a
-	     * matching session. */
-	    /* (We model eCK-wpfs, for eCK-pfs, add i1 < i3 to conclusion) */
-            & (All #i3. LtkRev( R ) @ i3 ==>
-                  (* (i1 < i3) | *)
-	          (Ex #i4 ekR kpartner.
-                      SidR_1( ekR,I,R,hkI,hkR,kpartner ) @ i4)))"
-
-
-/* An attack is valid in eCK if the session key of the test session is deduced and
-   the test session is clean.
-*/
-lemma eCK_responder_key:
-  "not (Ex #i1 #i2 ekR I R k hkI hkR.
-            SidR_1(ekR, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
-
-            /* Not longterm-key-reveal _and_ ephemeral-key-reveal of actor . */
-            & not(Ex #i3 #i4. LtkRev( R ) @ i3 & EphkRev( ekR ) @ i4)
-
-            /* Not session-key-reveal of test thread. */
-            & not(Ex #i3. SesskRev( ekR ) @ i3 )
-
-            /* Not session-key-reveal of partner thread. Note that we use SidI_2 here.
-	       A session key reveal can only happen after SidI_2 is logged anyways.
-	    */
-            & not(Ex #i3 #i4 ekI kpartner.
-                   SidI_2( ekI,I,R,hkI,hkR,kpartner ) @ i3
-		   & SesskRev( ekI ) @ i4 )
-
-            /* If there is a partner thread, then not long-term-key-reveal and ephemeral-key-reveal. */
-            & not(Ex #i3 #i4 #i5 ekI.
-                  SidI_1( ekI,I,R,hkI ) @ i3
-		  & LtkRev( I ) @ i4
-		  & EphkRev( ekI ) @ i5 )
-
-	    /* If there is no partner thread, then there is no longterm-key-reveal for
-	       the intended partner.
-	       (We model eCK-wpfs, for eCK-pfs, add i1 < i3 to conclusion)
-	       */
-            & (All #i3. LtkRev( I ) @ i3 ==>
-                  (* (i1 < i3) | *)
-	          (Ex #i4 ekI.
-                       SidI_1( ekI,I,R,hkI ) @ i4)))"
+    /* 1b. session-key-reveal of matching session */
+    | (Ex MatchingSession #i4 #i5 ms.
+    	   /* ( MatchingSession's 'ms' info matches with Test ) */
+           ( Sid ( MatchingSession, ms ) @ i4 & Match( Test, ms ) @ i5)
+	   & (
+	     (Ex #i6. SesskRev( MatchingSession ) @ i6 )
+	   )
+      )
+    /* 2. If matching session exists and ... */
+    | (Ex MatchingSession #i4 #i5 ms.
+    	   /* ( MatchingSession's 'ms' info matches with Test ) */
+           ( Sid ( MatchingSession, ms ) @ i4 & Match( Test, ms ) @ i5)
+	   & (
+	   /* 2a. reveal either both sk_A and esk_A, or */
+	     (Ex #i6 #i7. LtkRev  ( A ) @ i6  & EphkRev ( Test  ) @ i7 )
+	   /* 2b. both sk_B and esk_B */
+	   | (Ex #i6 #i7. LtkRev  ( B ) @ i6  & EphkRev ( MatchingSession ) @ i7 )
+	   )
+      )
+    /* 3. No matching session exists and ... */
+    | ( ( not(Ex MatchingSession #i4 #i5 ms.
+    	   /* ( MatchingSession's 'ms' info matches with Test ) */
+           Sid ( MatchingSession, ms ) @ i4 & Match( Test, ms ) @ i5 ) )
+	   & (
+	   /* 3a. reveal either sk_B, or */
+	     (Ex #i6    . LtkRev (B) @ i6 )
+	   /* 3b. both sk_A and esk_A */
+	   | (Ex #i6 #i7. LtkRev (A) @ i6 & EphkRev ( Test ) @ i7 )
+	   )
+      )
+    )
+  )"
 
 end
