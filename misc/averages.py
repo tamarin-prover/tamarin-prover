@@ -2,8 +2,9 @@
 
 # Averaging out the performance tests
 
-import commands
 import sys
+import commands
+from optparse import OptionParser
 
 
 # Awesome style: global variable
@@ -219,18 +220,14 @@ def specialReport(db,proofs,attacks):
     fp.close()
         
 
-def main():
+def main(options,args):
     """
     Run an averaging test for the csf12 examples
     """
 
-    prots = "../examples/csf12/*.spthy"
-    passes = 10
+    prots = " ".join(args)
 
-    #prots = "../examples/csf12/NAXOS*.spthy"
-    #passes = 1
-
-    (res,db,proofs,attacks) = runTests(prots,passes)
+    (res,db,proofs,attacks) = runTests(prots,options.passes)
 
     fp = open("averages-results.txt","w")
     fp.write(res)
@@ -244,6 +241,53 @@ def main():
     return
 
 
+def initParser():
+    """
+    Init the main parser.
+    """
+
+    usage = "usage %prog [options] files"
+
+    parser = OptionParser(usage=usage)
+
+    parser.add_option("-p", "--passes", type="int", dest="passes", default=1, help="Specify number of passes to make.")
+    #parser.add_option("-f", "--file", dest="filename",
+    #                  help="write report to FILE", metavar="FILE")
+    #parser.add_option("-q", "--quiet",
+    #                  action="store_false", dest="verbose", default=True,
+    #                  help="don't print status messages to stdout")
+
+    #parser.add_option("-m","--models", action="store", dest="models", help="Consider adversary models by name.", metavar="ID", default="paper")
+    #parser.add_option("","--max-runs", action="store", dest="maxruns", help="Bound maximum number of runs.", metavar="INT", default="5")
+    #parser.add_option("-d","--dir", action="append", dest="dirs", help="Set directories to scan for protocols.", metavar="PATH")
+    #parser.add_option("-a","--asymmetric", action="store_true", dest="asymmetric", help="Filter to asymmetric crypto only.", default=False)
+    #parser.add_option("","--ignore", action="append", dest="ignore", help="Ignore file names with this substring.", metavar="STRING")
+    #parser.add_option("-s","--symmetric", action="store_true", dest="symmetric", help="Filter to symmetric crypto only.", default=False)
+    #parser.add_option("","--PSH", action="append_const", const="psh", dest="graphs", help="Generate protocol-security hierarchy.")
+    #parser.add_option("","--MH",  action="append_const", const="mh",  dest="graphs", help="Generate adversary-model hierarchy.")
+    #parser.add_option("","--CH",  action="append_const", const="ch",  dest="graphs", help="Generate detailed combined hierarchy.")
+    #parser.add_option("-l","--label", action="store", dest="label", help="Add label to output graph.")
+    #parser.add_option("-g","--graphs", action="store_const", const=["psh","mh","ch"],  dest="graphs", help="Generate all graphs.")
+    #parser.add_option("-A","--authentication", action="store_const", const="authentication",  dest="claimfilter", help="Restrict to authentication claims.")
+    #parser.add_option("-S","--secrecy", action="store_const", const="secrecy",  dest="claimfilter", help="Restrict to secrecy claims.")
+    #parser.add_option("-M","--modulo", action="store", dest="modulo", metavar="\"(MOD,IDX)\"", help="Only consider protocol claims for which (count % MOD) == IDX")
+    #parser.add_option("","--cache-transitive-closure", action="store_const", const=True,  dest="closecache", default=False, help="Compute transitive closure of cached verification data.")
+    #parser.add_option("-D","--debug", action="store_const", const=True,  dest="debug", default=False, help="Display debugging information.")
+    #parser.add_option("","--paper", action="store_const", const=True, dest="paper", default=False, help="Repeat experiments as in paper.")
+    #parser.add_option("","--paper-protocols", action="store_const", const=True, dest="paperprotocols", default=False, help="Add protocols from paper.")
+    #parser.add_option("","--no-buffer", action="store_const", const=True, dest="nobuffer", default=False, help="Do not write large verification file cache.")
+
+    (options, args) = parser.parse_args()
+    if len(args) < 1:
+        print_usage()
+        sys.exit(-1)
+    return (options, args)
+
+
 if __name__ == '__main__':
-    main()
+
+    # Options
+    (options, args) = initParser()
+
+    main(options,args)
 
