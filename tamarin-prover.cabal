@@ -21,10 +21,9 @@ description:
     equational theories to model the algebraic properties of cryptographic
     operators.
     .
-    The paper describing the theory underlying the @tamarin@ prover is
-    currently under submission to CSF 2012. Drop us (simon.meier\@inf.ethz.ch
-    or benedikt.schmidt\@inf.ethz.ch) a mail, if you would like to obtain a
-    copy of the paper.
+    The paper describing the theory underlying the @tamarin@ prover was
+    accepted at CSF 2012. Its extended version is available from
+    <http://www.infsec.ethz.ch/research/software#TAMARIN>.
     .
     The @tamarin@ prover supports both a batch analysis mode and the
     interactive construction of security proofs using a GUI. Example protocols
@@ -34,8 +33,7 @@ description:
     The @tamarin@ prover uses maude (<http://maude.cs.uiuc.edu/>) as a
     unification backend and GraphViz (<http://www.graphviz.org/>) to visualize
     constraint systems. Detailed instructions for installing the `tamarin`
-    prover are given here:
-    <http://www.infsec.ethz.ch/research/software#TAMARIN>
+    prover are given at <http://www.infsec.ethz.ch/research/software#TAMARIN>.
 
 homepage:           http://www.infsec.ethz.ch/research/software#TAMARIN
 
