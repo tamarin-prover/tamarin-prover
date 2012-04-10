@@ -63,7 +63,8 @@ getRobotsR :: Handler RepPlain
 getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: B.ByteString)
 
 -- | Initialization function for the web application.
-withWebUI :: FilePath                        -- ^ Working directory.
+withWebUI :: String                          -- ^ Message to output once the sever is ready.
+          -> FilePath                        -- ^ Working directory.
           -> Bool                            -- ^ Load last proof state if present
           -> Bool                            -- ^ Automatically save proof state
           -> (FilePath -> IO ClosedTheory)   -- ^ Theory loader (from file).
@@ -73,7 +74,7 @@ withWebUI :: FilePath                        -- ^ Working directory.
           -> FilePath                        -- ^ Path to static content directory
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
-withWebUI thDir loadState autosave thLoader thParser thCloser debug' stPath f = do
+withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug' stPath f = do
     thy    <- getTheos
     thrVar <- newMVar M.empty
     thyVar <- newMVar thy
@@ -106,7 +107,7 @@ withWebUI thDir loadState autosave thLoader thParser thCloser debug' stPath f = 
                      _            -> return Nothing
          return $ M.fromList $ catMaybes thys
 
-       else loadTheories thDir thLoader
+       else loadTheories readyMsg thDir thLoader
 
     shutdownThreads thrVar = do
       m <- modifyMVar thrVar $ \m -> return (M.empty, m)
@@ -117,13 +118,12 @@ withWebUI thDir loadState autosave thLoader thParser thCloser debug' stPath f = 
 
 
 -- | Load theories from the current directory, generate map.
-loadTheories :: FilePath -> (FilePath -> IO ClosedTheory) -> IO TheoryMap
-loadTheories thDir thLoader = do
+loadTheories :: String -> FilePath -> (FilePath -> IO ClosedTheory) -> IO TheoryMap
+loadTheories readyMsg thDir thLoader = do
     mkImageDir
     thPaths <- filter (".spthy" `isSuffixOf`) <$> getDirectoryContents thDir
     theories <- catMaybes <$> mapM loadThy (zip [1..] (map (thDir </>) thPaths))
-    putStrLn ""
-    putStrLn "Finished loading theories ... server ready."
+    putStrLn readyMsg
     return $ M.fromList theories
   where
     -- Create image directory

@@ -74,22 +74,21 @@ run thisMode as = case findArg "workDir" as of
           putStrLn ""
           port <- readPort
           dataDir <- readDataDir
+          let serverUrl = "http://localhost:" ++ show port 
           putStrLn $ intercalate "\n"
             [ "The server is starting up on localhost with port " ++ show port ++ "."
-            , "Browse to"
-            , ""
-            , "  http://localhost:" ++ show port
-            , ""
-            , "once the server is ready."
+            , "Browse to " ++ serverUrl ++ " once the server is ready."
             , ""
             , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
             ]
-          withWebUI workDir (argExists "loadstate" as) (argExists "autosave" as)
+          withWebUI 
+            ("Finished loading theories ... server ready at \n\n    " ++ serverUrl ++ "\n")
+            workDir (argExists "loadstate" as) (argExists "autosave" as)
             (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
             (argExists "debug" as) dataDir (Warp.run port)
-        
-        else helpAndExit thisMode
-               (Just $ "directory '" ++ workDir ++ "' does not exist.")
+        else 
+          helpAndExit thisMode
+            (Just $ "directory '" ++ workDir ++ "' does not exist.")
   where
     -- Datadir argument
     readDataDir =
