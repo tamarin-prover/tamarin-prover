@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Copyright   : (c) 2011 Simon Meier
@@ -51,23 +50,10 @@ module Text.PrettyPrint.Class (
 import Prelude
 import qualified Text.PrettyPrint.HughesPJ as P
 import Control.DeepSeq
-import Data.Monoid
+import Extension.Data.Monoid
 
 infixr 6 <->
 infixl 5 $$, $-$, $--$
-
--- infixl 6 <> 
-
-#if __GLASGOW_HASKELL__ < 704
-
-infixr 6 <>
-
--- | An infix synonym for 'mappend'.
-(<>) :: Monoid m => m -> m -> m
-(<>) = mappend
-{-# INLINE (<>) #-}
-
-#endif
 
 -- emptyDoc = P.empty
 -- (<>)  = (P.<>)
