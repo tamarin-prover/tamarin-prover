@@ -713,7 +713,7 @@ iff = do
              ((lhs .<=>.) <$> imp)
        , pure lhs ]
 
--- | Parse a lemma attribute.
+-- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Parser LemmaAttribute
 lemmaAttribute = asum
   [ string "typing"    *> pure TypingLemma
@@ -721,11 +721,19 @@ lemmaAttribute = asum
   , string "invariant" *> pure InvariantLemma
   ]
 
+-- | Parse a 'TraceQuantifier'.
+traceQuantifier :: Parser TraceQuantifier
+traceQuantifier = asum
+  [ string "all"    *> kw MINUS *> string "traces" *> pure AllTraces
+  , string "exists" *> kw MINUS *> string "trace"  *> pure ExistsTrace
+  ]
+
 -- | Parse a lemma.
 lemma :: Parser (Lemma ProofSkeleton)
 lemma = skeletonLemma <$> (string "lemma" *> optional moduloE *> identifier) 
                       <*> (option [] $ list lemmaAttribute)
-                      <*> (kw COLON *> doubleQuoted iff)
+                      <*> (kw COLON *> option AllTraces traceQuantifier)
+                      <*> doubleQuoted iff
                       <*> (proofSkeleton <|> pure (unproven ()))
 
 

@@ -369,10 +369,10 @@ lemma Client_auth:
 */
 
 // Must not be provable!
-lemma Client_session_key_honest_setup_possible:
+lemma Client_session_key_honest_setup:
+  exists-trace
   " (All x y #i. Eq(x,y) @ i ==> x = y)
-  ==>
-    not(
+  & (
       Ex S k #i.
         SessKeyC(S, k) @ #i
       & not(Ex #r. LtkReveal(S) @ r) 

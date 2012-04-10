@@ -108,12 +108,15 @@ module Theory.Proof.Types (
 
   -- * Proof context
   , ProofContext(..)
+  , InductionHint(..)
+  , SequentTraceQuantifier(..)
 
   , pcSignature
   , pcRules
   , pcCaseDists
   , pcCaseDistKind
   , pcUseInduction
+  , pcTraceQuantifier
 
   -- ** Classified rules
   , ClassifiedRules(..)
@@ -727,6 +730,7 @@ prettyGoal (PremUpKG p m)  =
 prettyGoal (SplitG x) =
     text "splitEqs" <> parens (text $ show (succ x))
 
+
 -- Additional Show instances moved here due to TemplateHaskell splicing rules
 -----------------------------------------------------------------------------
 
@@ -775,14 +779,24 @@ data CaseDistinction = CaseDistinction
      }
      deriving( Eq, Ord, Show )
 
+-- | Whether we are checking for the existence of a trace satisfiying a the
+-- current constraint system or whether we're checking that no traces
+-- satisfies the current constraint system.
+data SequentTraceQuantifier = ExistsSomeTrace | ExistsNoTrace
+       deriving( Eq, Ord, Show )
+
+data InductionHint = UseInduction | AvoidInduction
+       deriving( Eq, Ord, Show )
+
 -- | A proof context contains the globally fresh facts, classified rewrite
 -- rules and the corresponding precomputed premise case distinction theorems.
 data ProofContext = ProofContext 
-       { _pcSignature    :: SignatureWithMaude
-       , _pcRules        :: ClassifiedRules
-       , _pcCaseDistKind :: CaseDistKind
-       , _pcCaseDists    :: [CaseDistinction]
-       , _pcUseInduction :: Bool
+       { _pcSignature       :: SignatureWithMaude
+       , _pcRules           :: ClassifiedRules
+       , _pcCaseDistKind    :: CaseDistKind
+       , _pcCaseDists       :: [CaseDistinction]
+       , _pcUseInduction    :: InductionHint
+       , _pcTraceQuantifier :: SequentTraceQuantifier
        }
        deriving( Eq, Ord, Show )
 
@@ -813,6 +827,8 @@ $( derive makeBinary ''CaseDistKind)
 $( derive makeBinary ''Sequent)
 $( derive makeBinary ''CaseDistinction)
 $( derive makeBinary ''ClassifiedRules)
+$( derive makeBinary ''SequentTraceQuantifier)
+$( derive makeBinary ''InductionHint)
 
 $( derive makeNFData ''Goal)
 $( derive makeNFData ''Chain)
@@ -823,3 +839,5 @@ $( derive makeNFData ''CaseDistKind)
 $( derive makeNFData ''Sequent)
 $( derive makeNFData ''CaseDistinction)
 $( derive makeNFData ''ClassifiedRules)
+$( derive makeNFData ''SequentTraceQuantifier)
+$( derive makeNFData ''InductionHint)

@@ -172,19 +172,16 @@ lemma session_key_secrecy:
 /* Consistency check: this lemma must NOT have a proof,
  * as otherwise no session-keys could be setup between honest agents. */
 lemma session_key_setup_possible:
-  " /* If all equality checks succeeded */
-    (All x y #i. Eq(x,y) @ i ==> x = y)
-  ==>
-    /* then there is no trace */ 
-    (not( 
-         /* It cannot be that */
-         Ex S C keyS keyC #k.
-           /* somebody claims to have setup session keys, */
-           SessionKeys(S, C, keyS, keyC) @ k 
-           /* without having performed a long-term key reveal. */
-         & not (Ex #r. RevLtk(S) @ r)
-         & not (Ex #r. RevLtk(C) @ r)
-    )   )"
+  exists-trace
+  " /* There is a trace satisfying all equality checks */
+     (All x y #i. Eq(x,y) @ i ==> x = y)
+  &  /* Session keys have been setup */
+     (Ex S C keyS keyC #k.  SessionKeys(S, C, keyS, keyC) @ k 
+      /* without having performed a long-term key reveal. */
+      & not (Ex #r. RevLtk(S) @ r)
+      & not (Ex #r. RevLtk(C) @ r)
+      )
+   "
 
 
 end

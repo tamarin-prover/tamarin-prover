@@ -354,20 +354,20 @@ foldProof f =
 data ProofStatus = 
          CompleteProof   -- ^ The proof is complete: no sorry, no attack
        | IncompleteProof -- ^ There is a sorry, but no attack.
-       | AttackFound     -- ^ There is an attack
+       | TraceFound     -- ^ There is an attack
 
 instance Monoid ProofStatus where
     mempty = CompleteProof
 
-    mappend AttackFound _               = AttackFound
-    mappend _ AttackFound               = AttackFound
+    mappend TraceFound _               = TraceFound
+    mappend _ TraceFound               = TraceFound
     mappend IncompleteProof _           = IncompleteProof
     mappend _ IncompleteProof           = IncompleteProof
     mappend CompleteProof CompleteProof = CompleteProof
 
 -- | The status of a 'ProofStep'.
 proofStepStatus :: ProofStep a -> ProofStatus
-proofStepStatus (ProofStep Attack _)    = AttackFound
+proofStepStatus (ProofStep Attack _)    = TraceFound
 proofStepStatus (ProofStep (Sorry _) _) = IncompleteProof
 proofStepStatus (ProofStep _ _)         = CompleteProof
 
@@ -406,17 +406,17 @@ cutOnAttackBFS =
         case S.runState (checkLevel l prf) CompleteProof of
           (_, CompleteProof)   -> prf
           (_, IncompleteProof) -> go (l+1) prf
-          (prf', AttackFound)  -> 
+          (prf', TraceFound)  -> 
               trace ("attack found at depth: " ++ show l) prf'
 
     checkLevel 0 (LNode  step@(ProofStep Attack _) _) = 
-        S.put AttackFound >> return (LNode step M.empty)
+        S.put TraceFound >> return (LNode step M.empty)
     checkLevel 0 prf@(LNode (ProofStep _ x) cs) 
       | M.null cs = return prf
       | otherwise = do
           st <- S.get
           msg <- case st of
-              AttackFound -> return $ "ignored (attack exists)"
+              TraceFound -> return $ "ignored (attack exists)"
               _           -> S.put IncompleteProof >> return "bound reached"
           return $ LNode (ProofStep (Sorry msg) x) M.empty
     checkLevel l (LNode step cs) =
@@ -505,9 +505,10 @@ execProofMethod ctxt method se =
 possibleProofMethods :: ProofContext -> Sequent -> [ProofMethod]
 possibleProofMethods ctxt se =
          ((Contradiction . Just) <$> contradictions (L.get pcSignature ctxt) se)
-     <|> (if L.get pcUseInduction ctxt
-            then [Induction, Simplify]
-            else [Simplify, Induction])
+     <|> (case L.get pcUseInduction ctxt of
+            AvoidInduction -> [Simplify, Induction]
+            UseInduction   -> [Induction, Simplify]
+         )
      <|> (SolveGoal <$> openGoals se)
 
 -- | @proveSequentDFS rules se@ tries to construct a proof that @se@ is valid
@@ -726,7 +727,7 @@ prettyContradiction contra = case contra of
 
 prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
-    Attack               -> keyword_ "SOLVED (trace found)"
+    Attack               -> keyword_ "SOLVED"
     Induction            -> keyword_ "induction"
     Sorry reason         -> fsep [keyword_ "sorry", lineComment_ reason]
     SolveGoal goal       -> hsep [keyword_ "solve(", prettyGoal goal, keyword_ ")"]
@@ -763,10 +764,12 @@ prettyProofWith prettyStep prettyCase =
       ppPrf prf
 
 -- | Convert a proof status to a redable string.
-showProofStatus :: ProofStatus -> String
-showProofStatus AttackFound     = "attack found"
-showProofStatus IncompleteProof = "incomplete proof"
-showProofStatus CompleteProof   = "complete proof"
+showProofStatus :: SequentTraceQuantifier -> ProofStatus -> String
+showProofStatus ExistsNoTrace   TraceFound      = "falsified - found trace"
+showProofStatus ExistsNoTrace   CompleteProof   = "verified"
+showProofStatus ExistsSomeTrace CompleteProof   = "falsified - no trace found"
+showProofStatus ExistsSomeTrace TraceFound      = "verified"
+showProofStatus _               IncompleteProof = "analysis incomplete"
 
 
 -- Derived instances

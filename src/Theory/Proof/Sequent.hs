@@ -86,11 +86,14 @@ import           Term.Rewriting.Norm (nf', maybeNotNfSubterms)
 
 -- | Returns the sequent that has to be proven to show that
 --   given formula holds in the context of the given theory.
-sequentFromFormula :: CaseDistKind -> LNFormula -> Sequent
-sequentFromFormula kind f = 
+sequentFromFormula :: CaseDistKind -> SequentTraceQuantifier -> LNFormula -> Sequent
+sequentFromFormula kind traceQuantifier f = 
     set sFormulas (S.singleton gf) (emptySequent kind)
   where 
-    gf = either error id (fromFormulaNegate f)
+    adapt = case traceQuantifier of
+      ExistsSomeTrace -> negateGuarded
+      ExistsNoTrace   -> id
+    gf = either error id (adapt <$> fromFormulaNegate f)
 
 
 ------------------------------------------------------------------------------

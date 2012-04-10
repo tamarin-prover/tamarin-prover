@@ -11,8 +11,10 @@
 module Theory (
   -- * Lemmas
     LemmaAttribute(..)
-  , Lemma(..)
+  , TraceQuantifier(..)
+  , Lemma
   , lName
+  , lTraceQuantifier
   , lFormulaE
   , lFormulaAC
   , lAttributes
@@ -77,6 +79,7 @@ module Theory (
   , prettyClosedSummary
 
   , prettyIntruderVariants
+  , prettyTraceQuantifier
 
   -- * Convenience exports
   , module Theory.Proof
@@ -205,7 +208,8 @@ closeRuleCache :: [LNGuarded]        -- ^ Typing lemmas.
 closeRuleCache typingAsms sig protoRules intrRulesAC = 
     ClosedRuleCache classifiedRules untypedCaseDists typedCaseDists
   where
-    ctxt0 = ProofContext sig classifiedRules UntypedCaseDist [] False {- No induction -}
+    ctxt0 = ProofContext sig classifiedRules UntypedCaseDist [] AvoidInduction
+                         (error "closeRuleCache: trace quantifier should not matter here")
     -- precomputing the case distinctions
     untypedCaseDists = precomputeCaseDistinctions ctxt0 [] 
     typedCaseDists   = 
@@ -233,20 +237,26 @@ closeRuleCache typingAsms sig protoRules intrRulesAC =
 -- Lemmas
 ------------------------------------------------------------------------------
 
+-- | An attribute for a 'Lemma'.
 data LemmaAttribute = 
          TypingLemma
        | ReuseLemma
        | InvariantLemma
        deriving( Eq, Ord, Show )
 
+-- | A 'TraceQuantifier' stating whether we check satisfiability of validity.
+data TraceQuantifier = ExistsTrace | AllTraces
+       deriving( Eq, Ord, Show )
+
 -- | A lemma describes a property that holds in the context of a theory
 -- together with a proof of its correctness.
 data Lemma p = Lemma
-       { _lName       :: String
-       , _lFormulaE   :: FormulaE
-       , _lFormulaAC  :: Maybe FormulaAC
-       , _lAttributes :: [LemmaAttribute]
-       , _lProof      :: p
+       { _lName            :: String
+       , _lTraceQuantifier :: TraceQuantifier
+       , _lFormulaE        :: FormulaE
+       , _lFormulaAC       :: Maybe FormulaAC
+       , _lAttributes      :: [LemmaAttribute]
+       , _lProof           :: p
        }
        deriving( Eq, Ord, Show )
 
@@ -257,25 +267,41 @@ $(mkLabels [''Lemma])
 ------------
 
 instance Functor Lemma where
-    fmap f (Lemma n fE fAC atts prf) = Lemma n fE fAC atts (f prf)
+    fmap f (Lemma n qua fE fAC atts prf) = Lemma n qua fE fAC atts (f prf)
 
 instance Foldable Lemma where
     foldMap f = f . L.get lProof
 
 instance Traversable Lemma where
-    traverse f (Lemma n fE fAC atts prf) = Lemma n fE fAC atts <$> f prf
+    traverse f (Lemma n qua fE fAC atts prf) = Lemma n qua fE fAC atts <$> f prf
+
+
+-- Lemma queries
+----------------------------------
+
+-- | Convert a trace quantifier to a sequent trace quantifier.
+toSequentTraceQuantifier :: TraceQuantifier -> SequentTraceQuantifier
+toSequentTraceQuantifier AllTraces   = ExistsNoTrace
+toSequentTraceQuantifier ExistsTrace = ExistsSomeTrace
+
+-- | True iff the lemma can be used as a typing lemma.
+isTypingLemma :: Lemma p -> Bool
+isTypingLemma lem =
+     (AllTraces == L.get lTraceQuantifier lem)
+  && (TypingLemma `elem` L.get lAttributes lem)
 
 
 -- Lemma construction/modification
 ----------------------------------
 
 -- | Create a new unproven lemma from a formula modulo E.
-unprovenLemma :: String -> [LemmaAttribute] -> FormulaE -> Lemma ProofSkeleton
-unprovenLemma name atts fmE = Lemma name fmE Nothing atts (unproven ())
+unprovenLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> FormulaE
+              -> Lemma ProofSkeleton
+unprovenLemma name atts qua fmE = Lemma name qua fmE Nothing atts (unproven ())
 
-skeletonLemma :: String -> [LemmaAttribute] -> FormulaE
+skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> FormulaE
               -> ProofSkeleton -> Lemma ProofSkeleton
-skeletonLemma name atts fmE = Lemma name fmE Nothing atts
+skeletonLemma name atts qua fmE = Lemma name qua fmE Nothing atts
 
 -- | The case-distinction kind allowed for a lemma
 lemmaCaseDistKind :: Lemma p -> CaseDistKind
@@ -441,12 +467,15 @@ getProofContext l thy = ProofContext
     ( L.get (crcRules . thyCache) thy)
     kind
     ( L.get (cases . thyCache)    thy)
-    useIndu
+    inductionHint
+    (toSequentTraceQuantifier $ L.get lTraceQuantifier l)
   where
     kind    = lemmaCaseDistKind l
-    useIndu = any (`elem` [TypingLemma, InvariantLemma]) (L.get lAttributes l)
     cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
                            TypedCaseDist   -> crcTypedCaseDists
+    inductionHint
+      | any (`elem` [TypingLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
+      | otherwise                                                        = AvoidInduction
 
 -- | The classified set of rules modulo AC in this theory.
 getClassifiedRules :: ClosedTheory -> ClassifiedRules
@@ -460,6 +489,10 @@ getCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists . thyCache)
 
 -- construction
 ---------------
+
+-- -- | Convert a lemma to the corresponding guarded formula.
+-- lemmaToGuarded :: Lemma p -> Maybe LNGuarded
+-- lemmaToGuarded lem = 
 
 -- | Close a theory by closing its associated rule set and converting the proof
 -- skeletons to unannotated incremental proofs and caching AC variants as well
@@ -498,7 +531,7 @@ closeTheoryWithMaude sig thy0 = do
     -- extract typing lemmas
     typAsms = do 
         LemmaItem lem <- items
-        guard (TypingLemma `elem` L.get lAttributes lem)
+        guard (isTypingLemma lem) 
         let toGuarded = fmap negateGuarded . fromFormulaNegate
         case toGuarded <$> L.get lFormulaAC lem of
           Just (Right gf) -> return gf
@@ -521,7 +554,6 @@ closeTheoryWithMaude sig thy0 = do
         addBreakers bs (RuleItem ru) = 
             RuleItem (L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
         addBreakers _  item = item
-
 
 
 
@@ -592,7 +624,8 @@ proveTheory prover thy =
 -- | Convert a formula modulo AC to a sequent.
 formulaToSequent :: ProofContext -> [TheoryItem r p] -> FormulaAC -> Sequent
 formulaToSequent ctxt lems = 
-    addLemmasToSequent lems . sequentFromFormula (L.get pcCaseDistKind ctxt)
+    addLemmasToSequent lems 
+  . sequentFromFormula (L.get pcCaseDistKind ctxt) (L.get pcTraceQuantifier ctxt)
 
 -- | Add the lemmas that have an associated AC variant to this sequent.
 addLemmasToSequent :: [TheoryItem r p] -> Sequent -> Sequent
@@ -616,7 +649,7 @@ ensureFormulaAC l =
     set lFormulaAC (Just fmAC) l
   where
     -- FIXME: AC-variant of formula is formula itself.
-    --        This is ensured by well-formed check (not implemented yet).
+    --        This must be ensured by well-formed check (not implemented yet).
     fmAC = fromMaybe (L.get lFormulaE l) $ L.get lFormulaAC l
 
 
@@ -695,7 +728,11 @@ prettyLemmaName l = case L.get lAttributes l of
 prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d
 prettyLemma ppPrf l =
     kwLemmaModulo "E" <-> prettyLemmaName l <> colon $-$ 
-    (nest 2 $ doubleQuotes $ prettyFormulaE $ L.get lFormulaE l)
+    (nest 2 $ 
+      sep [ prettyTraceQuantifier $ L.get lTraceQuantifier l
+          , doubleQuotes $ prettyFormulaE $ L.get lFormulaE l
+          ]
+    )
     $-$
     maybe emptyDoc ppFormulaAC (L.get lFormulaAC l)
     $-$
@@ -715,9 +752,13 @@ prettyLemma ppPrf l =
     ppFormulaACGuarded fmAC = case fromFormulaNegate fmAC of
         Left err -> multiComment_ 
             ["conversion to doubly-guarded formula failed:", err]
-        Right gf -> multiComment
-            ( text "guarded formula characterizing all attacks:" $-$
+        Right gf -> case toSequentTraceQuantifier $ L.get lTraceQuantifier l of
+          ExistsNoTrace -> multiComment
+            ( text "guarded formula characterizing all counter-examples:" $-$
               doubleQuotes (prettyGuarded gf) )
+          ExistsSomeTrace -> multiComment
+            ( text "guarded formula characterizing all satisfying traces:" $-$
+              doubleQuotes (prettyGuarded (negateGuarded gf)) )
 
     {-
     ppFormulaACInduction fmAC = case fmInd of
@@ -793,17 +834,27 @@ prettyClosedSummary thy =
     lemmaSummaries = do
         LemmaItem lem  <- L.get thyItems thy
         let (status, Sum siz) = foldProof proofStepSummary $ L.get lProof lem
-        return $ text (L.get lName lem) <> colon <-> 
-                 text (showProofStatus status) <->
+            quantifier = (toSequentTraceQuantifier $ L.get lTraceQuantifier lem)
+            analysisType = parens $ prettyTraceQuantifier $ L.get lTraceQuantifier lem
+        return $ text (L.get lName lem) <-> analysisType <> colon <-> 
+                 text (showProofStatus quantifier status) <->
                  parens (integer siz <-> text "steps")
 
     proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
+
+
+-- | Pretty print a 'TraceQuantifier'.
+prettyTraceQuantifier :: Document d => TraceQuantifier -> d
+prettyTraceQuantifier ExistsTrace = text "exists-trace"
+prettyTraceQuantifier AllTraces   = text "all-traces"
+
 
 -- Instances: FIXME: Sort them into the right files
 --------------------------------------------------
 
 $( derive makeBinary ''TheoryItem)
 $( derive makeBinary ''LemmaAttribute)
+$( derive makeBinary ''TraceQuantifier)
 $( derive makeBinary ''Lemma)
 $( derive makeBinary ''ClosedProtoRule)
 $( derive makeBinary ''ClosedRuleCache)
@@ -811,6 +862,7 @@ $( derive makeBinary ''Theory)
 
 $( derive makeNFData ''TheoryItem)
 $( derive makeNFData ''LemmaAttribute)
+$( derive makeNFData ''TraceQuantifier)
 $( derive makeNFData ''Lemma)
 $( derive makeNFData ''ClosedProtoRule)
 $( derive makeNFData ''ClosedRuleCache)

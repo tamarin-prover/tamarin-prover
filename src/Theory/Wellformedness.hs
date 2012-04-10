@@ -211,9 +211,9 @@ factReports thy = concat
           do ruleFacts <$> get thyCache thy
       <|> do RuleItem ru <- get thyItems thy
              return $ ruleFacts ru
-      <|> do LemmaItem (Lemma name fmE _ _ _) <- get thyItems thy
-             return $ (,) ("lemma " ++ quote name) $ do
-                 fa <- formulaFacts fmE
+      <|> do LemmaItem l <- get thyItems thy
+             return $ (,) ("lemma " ++ quote (get lName l)) $ do
+                 fa <- formulaFacts (get lFormulaE l)
                  return $ (text (show fa), factInfo fa)
       <|> do return $ (,) "unique_insts declaration" $ do
                tag <- S.toList $ get (sigpUniqueInsts . thySignature) thy 
@@ -290,9 +290,10 @@ factReports thy = concat
         (do RuleItem ru <- get thyItems thy; get rActs ru)
 
     inexistentActions = do
-        LemmaItem (Lemma name fmE _ _ _) <- get thyItems thy
-        fa <- sortednub $ formulaFacts fmE
+        LemmaItem l <- get thyItems thy
+        fa <- sortednub $ formulaFacts (get lFormulaE l)
         let info = factInfo fa
+            name = get lName l
         if info `S.member` ruleActions 
           then []
           else return $ (,) "lemma actions" $
@@ -336,8 +337,9 @@ formulaTerms =
 -- of facts, term, and atom constructors explicit.
 formulaReports :: OpenTheory -> WfErrorReport
 formulaReports thy = do
-    LemmaItem (Lemma name fmE _ _ _) <- get thyItems thy
-    let header = "lemma " ++ quote name 
+    LemmaItem l <- get thyItems thy
+    let header = "lemma " ++ quote (get lName l)
+        fmE    = get lFormulaE l
     msum [ ((,) "quantifier sorts") <$> checkQuantifiers header fmE
          , ((,) "formula terms")    <$> checkTerms header fmE
          , ((,) "guardedness")      <$> checkGuarded header fmE 

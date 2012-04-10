@@ -116,11 +116,14 @@ run thisMode as
       | otherwise        = 
           out prettyClosedSummary   prettyClosedTheory (loadClosedThy as inFile)
       where
+        ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
+
         out :: (a -> Pretty.Doc) -> (a -> Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load
           | dryRun    = do
-              putStrLn =<< (renderDoc <$> fullDoc <$> load)
-              return $ Pretty.emptyDoc
+              thy <- load
+              putStrLn $ renderDoc $ fullDoc thy
+              return $ ppAnalyzed Pretty.$--$ Pretty.nest 2 (summaryDoc thy)
           | otherwise = do
               putStrLn $ ""
               putStrLn $ "analyzing: " ++ inFile
@@ -131,7 +134,7 @@ run thisMode as
                   writeFileWithDirs outFile $ renderDoc $ fullDoc thy
                   return $ summaryDoc thy
               let summary = Pretty.vcat
-                    [ Pretty.text $ "analyzed: " ++ inFile
+                    [ ppAnalyzed
                     , Pretty.text $ ""
                     , Pretty.text $ "  output:          " ++ outFile
                     , Pretty.text $ "  processing time: " ++ show t

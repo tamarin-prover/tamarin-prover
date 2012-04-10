@@ -155,10 +155,14 @@ lemmaIndex :: HtmlDocument d
            -> Lemma IncrementalProof      -- ^ The lemma
            -> d
 lemmaIndex mkPath l =
-    markSolved (kwLemmaModulo "E" <-> prettyLemmaName l <> colon) <->
-    (linkToPath (TheoryLemma $ get lName l) ["edit-link"] editPng <->
-    linkToPath (TheoryLemma $ get lName l) ["delete-link"] deletePng) $-$
-    nest 2 (markSolved $ doubleQuotes $ prettyFormulaE $ get lFormulaE l) $-$
+    ( markSolved $
+        (kwLemmaModulo "E" <-> prettyLemmaName l <> colon) <->
+        (linkToPath (TheoryLemma $ get lName l) ["edit-link"] editPng <->
+        linkToPath (TheoryLemma $ get lName l) ["delete-link"] deletePng) $-$
+        nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
+                     , doubleQuotes $ prettyFormulaE $ get lFormulaE l
+                     ] )
+    ) $-$
     proofIndex mkPath annotatedProof
   where
     editPng = png "/static/img/edit.png"
