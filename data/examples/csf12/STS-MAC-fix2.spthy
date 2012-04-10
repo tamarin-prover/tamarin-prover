@@ -4,6 +4,7 @@ begin
 builtin: diffie-hellman, hashing, signing
 
 functions: mac/2
+functions: KDF/1
 
 section{* The Station-To-Station Protocol (MAC version, fixed with names and tags) *}
 
@@ -33,54 +34,60 @@ rule Register_pk_clone:
 
 // Protocol
 rule Init_1:
+  let epkI = 'g'^~ekI
+  in
   [ Fr(~ekI), !Ltk($I, ~ltkI) ]
   -->
   [ Init_1( $I, $R, ~ltkI, ~ekI )
-  , Out( <$I, $R, 'g' ^ ~ekI> ) ]
+  , Out( <$I, $R, epkI> ) ]
 
 rule Init_2:
+  let epkI = 'g'^~ekI
+      sigI = sign{ '2', $I, $R, epkI, Y }~ltkI
+      sigR = sign{ '1', $I, $R, Y, epkI }~ltkR
+      keymat = Y^~ekI
+      key = KDF(keymat)
+  in
     [ Init_1( $I, $R, ~ltkI, ~ekI )
     , !Pk($R, pk(~ltkR))
-    , In( <$R, $I, Y, 
-          sign{ '1', $I, $R, Y, 'g'^~ekI }~ltkR,
-        mac(Y^~ekI,
-            sign{ '1', $I, $R, Y, 'g'^~ekI }~ltkR
-	)
+    , In( <$R, $I, Y, sigR, mac( keymat, sigR)
       > ) ]
-  --[ AcceptedI(~ekI,$I,$R,'g'^~ekI,Y, h(Y ^ ~ekI) ) ]->
-    [ Out( <$I, $R, 
-          sign{ '2', $I, $R, 'g' ^ ~ekI, Y }~ltkI,
-	mac( Y^~ekI,
-             sign{ '2', $I, $R, 'g' ^ ~ekI, Y }~ltkI
-	)
-      > ),
-      !SessionKey(~ekI,$I,$R, h(Y ^ ~ekI))
+  --[ AcceptedI(~ekI,$I,$R,epkI,Y, key) ]->
+    [ Out( <$I, $R, sigI, mac( keymat, sigI) > ),
+      !SessionKey(~ekI,$I,$R, key)
     ]
 
 rule Resp_1:
+  let epkR = 'g'^~ekR
+      sigI = sign{ '2', $I, $R, X, epkR }~ltkI
+      sigR = sign{ '1', $I, $R, epkR, X }~ltkR
+      keymat = X^~ekR
+      key = KDF(keymat)
+  in
     [ !Ltk($R, ~ltkR)
     , Fr(~ekR)
     , In( <$I, $R, X > ) ]
   -->
     [ Resp_1( $I, $R, ~ltkR, ~ekR, X )
-    , Out( <$R, $I, 'g' ^ ~ekR,
-          sign{ '1', $I, $R, 'g' ^ ~ekR, X }~ltkR,
-	  mac( X^~ekR,
-             sign{ '1', $I, $R, 'g' ^ ~ekR, X }~ltkR
-          )
-      > ) ]
+    , Out(< $R, $I, epkR, sigR, mac( keymat, sigR ) >) 
+    ]
+
 
 rule Resp_2:
+  let epkR = 'g'^~ekR
+      sigI = sign{ '2', $I, $R, X, epkR }~ltkI
+      sigR = sign{ '1', $I, $R, epkR, X }~ltkR
+      keymat = X^~ekR
+      key = KDF(keymat)
+  in
     [ !Pk($I, pk(~ltkI))
     , Resp_1( $I, $R, ~ltkR, ~ekR, X )
-    , In( <$I, $R, 
-          sign{ '2', $I, $R, X, 'g'^~ekR }~ltkI,
-  	  mac(X^~ekR,
-              sign{ '2', $I, $R, X, 'g'^~ekR }~ltkI
-	  )
-      > ) ]
-  --[ AcceptedR(~ekR,$I,$R,X,'g'^~ekR, h(X ^ ~ekR) ) ]->
-    [ !SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ) ]
+    , In( <$I, $R, sigI, mac( keymat, sigI ) >)
+    ]
+  --[ AcceptedR(~ekR,$I,$R,X,epkR, key ) ]->
+    [ !SessionKey(~ekR,$I,$R, key) ]
+
+
 
 rule Sessionkey_Reveal:
     [ !SessionKey(~tid, $I,$R,k) ]

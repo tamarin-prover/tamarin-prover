@@ -1,9 +1,10 @@
 theory STS_MAC_FIX1
 begin
 
-builtin: diffie-hellman, hashing, signing
+builtin: diffie-hellman, signing
 
 functions: mac/2
+functions: KDF/1
 
 section{* The Station-To-Station Protocol (MAC version, fix UKS attack with proof-of-possession of exponent) *}
 
@@ -18,7 +19,7 @@ section{* The Station-To-Station Protocol (MAC version, fix UKS attack with proo
  * Status: 	working
  */
 
-// Public key infrastructure
+// Public keymat infrastructure
 /**
  * The !Pk facts can be regarded as certificates
  */
@@ -27,7 +28,7 @@ rule Register_pk_normal:
   --> 
   [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk(~ltk)) ]
 
-// Can register a key, but only if we know the exponent
+// Can register a keymat, but only if we know the exponent
 // Models proof-of-possession check.
 rule Register_pk_evil:
   [ In(ltk) ] 
@@ -36,59 +37,67 @@ rule Register_pk_evil:
 
 // Protocol
 rule Init_1:
+  let epkI = 'g'^~ekI
+  in
   [ Fr(~ekI), !Ltk($I, ~ltkI) ]
   -->
   [ Init_1( $I, $R, ~ltkI, ~ekI )
-  , Out( <$I, $R, 'g' ^ ~ekI> ) ]
+  , Out( <$I, $R, epkI> ) ]
 
 rule Init_2:
+  let epkI = 'g'^~ekI
+      sigI = sign{ epkI, Y }~ltkI
+      sigR = sign{ Y, epkI }~ltkR
+      keymat = Y^~ekI
+      key = KDF(keymat)
+  in
     [ Init_1( $I, $R, ~ltkI, ~ekI )
     , !Pk($R, pk(~ltkR))
-    , In( <$R, $I, Y, 
-          sign{ Y, 'g'^~ekI }~ltkR,
-        mac(Y^~ekI,
-            sign{ Y, 'g'^~ekI }~ltkR
-	)
+    , In( <$R, $I, Y, sigR, mac( keymat, sigR)
       > ) ]
-  --[ AcceptedI(~ekI,$I,$R,'g'^~ekI,Y, h(Y ^ ~ekI)) ]->
-    [ Out( <$I, $R, 
-          sign{ 'g' ^ ~ekI, Y }~ltkI,
-	mac( Y^~ekI,
-             sign{ 'g' ^ ~ekI, Y }~ltkI
-	)
-      > ),
-      !SessionKey(~ekI,$I,$R, h(Y ^ ~ekI))
+  --[ AcceptedI(~ekI,$I,$R,epkI,Y, key) ]->
+    [ Out( <$I, $R, sigI, mac( keymat, sigI) > ),
+      !SessionKey(~ekI,$I,$R, key)
     ]
 
 rule Resp_1:
+  let epkR = 'g'^~ekR
+      sigI = sign{ X, epkR }~ltkI
+      sigR = sign{ epkR, X }~ltkR
+      keymat = X^~ekR
+      key = KDF(keymat)
+  in
     [ !Ltk($R, ~ltkR)
     , Fr(~ekR)
     , In( <$I, $R, X > ) ]
   -->
     [ Resp_1( $I, $R, ~ltkR, ~ekR, X )
-    , Out( <$R, $I, 'g' ^ ~ekR,
-          sign{ 'g' ^ ~ekR, X }~ltkR,
-	  mac( X^~ekR,
-             sign{ 'g' ^ ~ekR, X }~ltkR
-          )
-      > ) ]
+    , Out(< $R, $I, epkR, sigR, mac( keymat, sigR ) >) 
+    ]
+
 
 rule Resp_2:
+  let epkR = 'g'^~ekR
+      sigI = sign{ X, epkR }~ltkI
+      sigR = sign{ epkR, X }~ltkR
+      keymat = X^~ekR
+      key = KDF(keymat)
+  in
     [ !Pk($I, pk(~ltkI))
     , Resp_1( $I, $R, ~ltkR, ~ekR, X )
-    , In( <$I, $R, 
-          sign{ X, 'g'^~ekR }~ltkI,
-  	  mac(X^~ekR,
-              sign{ X, 'g'^~ekR }~ltkI
-	  )
-      > ) ]
-  --[ AcceptedR(~ekR,$I,$R,X,'g'^~ekR, h(X ^ ~ekR)) ]->
-    [ !SessionKey(~ekR,$I,$R, h(X ^ ~ekR) ) ]
+    , In( <$I, $R, sigI, mac( keymat, sigI ) >)
+    ]
+  --[ AcceptedR(~ekR,$I,$R,X,epkR, key ) ]->
+    [ !SessionKey(~ekR,$I,$R, key) ]
+
+
 
 rule Sessionkey_Reveal:
     [ !SessionKey(~tid, $I,$R,k) ]
   --[ SesskRev(~tid) ]->
     [ Out(k) ]
+
+
 
 lemma KI_Perfect_Forward_Secrecy_I:
   "not (Ex ttest I R sessKey #i1 #k hki hkr.
@@ -96,9 +105,9 @@ lemma KI_Perfect_Forward_Secrecy_I:
      not (Ex #r. Corrupt(I) @ r) &
      not (Ex #r. Corrupt(R) @ r) &
      K(sessKey) @ k &
-     // No session key reveal of test
+     // No session keymat reveal of test
      not (Ex #i3. SesskRev(ttest) @ i3) &
-     // No session key reveal of partner
+     // No session keymat reveal of partner
      not (Ex #i3 #i4 tpartner kpartner. SesskRev(tpartner) @ i3
           & AcceptedR(tpartner,I,R,hki,hkr,kpartner) @ i4
          ) 
@@ -111,9 +120,9 @@ lemma KI_Perfect_Forward_Secrecy_R:
      not (Ex #r. Corrupt(I) @ r) &
      not (Ex #r. Corrupt(R) @ r) &
      K(sessKey) @ k &
-     // No session key reveal of test
+     // No session keymat reveal of test
      not (Ex #i2. SesskRev(ttest) @ i2) &
-     // No session key reveal of partner
+     // No session keymat reveal of partner
      not (Ex #i2 #i3 tpartner kpartner. SesskRev(tpartner) @ i2
           & AcceptedI(tpartner,I,R,hki,hkr,kpartner) @ i3
          ) 
