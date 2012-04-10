@@ -18,7 +18,7 @@ section{* Jeong, Katz, Lee : TS1 (2004) *}
 /* Protocol rules */
 
 rule generate_ltk:
-  let pkA = ~lkA
+  let pkA = 'g'^~lkA
   in
    [ Fr(~lkA) ] -->
    [ !Ltk( $A, ~lkA ), !Pk( $A, pkA ), Out( pkA ) ]
