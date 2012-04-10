@@ -2,7 +2,6 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable, ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
   -- for ByteString
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
@@ -87,9 +86,9 @@ import Data.Maybe (isJust)
 import Control.DeepSeq
 import Control.Basics
 
-import qualified Data.ByteString as B
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BC
+import Extension.Data.ByteString ()
 
 import Data.Set (Set)
 import qualified Data.Set as S
@@ -418,9 +417,3 @@ $( derive makeNFData ''Term )
 $( derive makeBinary ''FunSym)
 $( derive makeBinary ''ACSym)
 $( derive makeBinary ''Term )
-
-#if __GLASGOW_HASKELL__ < 704
-
-instance NFData B.ByteString
-
-#endif

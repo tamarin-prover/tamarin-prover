@@ -30,6 +30,7 @@ library
     build-depends:
         base              == 4.*
       , mtl               == 2.0.*
+      , bytestring        == 0.9.*
       , transformers      == 0.2.*
       , containers        >= 0.4.2   && < 0.5
       , fclabels          == 1.1.*
@@ -62,6 +63,7 @@ library
         Extension.Data.Label
         Extension.Data.Monoid
         Extension.Data.Bounded
+        Extension.Data.ByteString
 
         Text.Dot
         Text.PrettyPrint.Class
