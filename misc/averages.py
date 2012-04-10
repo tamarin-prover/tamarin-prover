@@ -55,6 +55,15 @@ def runOneTest(db,prots,i=None,proofs={},attacks={}):
     fn = None
     claimblock = False
     for rawl in out.splitlines():
+        """
+        Here we analyze the textual output of Tamarin - this may change in future releases.
+
+        The main possible outcomes are defined in
+
+          Theory/Proof.hs
+
+        where you can search for 'showProofStatus'
+        """
         l = rawl.strip()
         if claimblock:
             if len(l) == 0:
@@ -62,10 +71,10 @@ def runOneTest(db,prots,i=None,proofs={},attacks={}):
 
             else:
                 dt = l.split(":")
-                if "proof" in l:
+                if "verified" in l:
                     proofs[fn].append(dt[0])
 
-                if "attack" in l:
+                if "falsified" in l:
                     attacks[fn].append(dt[0])
 
         else:
