@@ -60,7 +60,7 @@ import           Control.Basics
 import           Control.Category
 
 import           Extension.Prelude
-import           Text.Isar
+import           Text.PrettyPrint.Class
 import           Theory
 
 ------------------------------------------------------------------------------

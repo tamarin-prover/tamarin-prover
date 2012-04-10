@@ -29,7 +29,6 @@ import           Data.Traversable (traverse)
 import           Data.Label
 
 import           Text.PrettyPrint.Highlight
-import           Text.Isar (numbered')
 import           Term.Substitution
 import           Theory.Rule
 

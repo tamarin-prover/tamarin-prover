@@ -58,7 +58,6 @@ module Term.Substitution.SubstVFresh (
 
 
 import Term.LTerm
-import Text.Isar (numbered')
 import Text.PrettyPrint.Highlight
 
 import Control.Applicative

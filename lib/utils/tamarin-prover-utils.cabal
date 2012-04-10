@@ -60,10 +60,10 @@ library
 
         Extension.Prelude
         Extension.Data.Label
+        Extension.Data.Monoid
         Extension.Data.Bounded
 
         Text.Dot
-        Text.Isar
         Text.PrettyPrint.Class
         Text.PrettyPrint.Highlight
         Text.PrettyPrint.Html

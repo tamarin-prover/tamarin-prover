@@ -81,7 +81,7 @@ import Data.Maybe (isJust)
 
 import Term.Unification
 
-import Text.Isar
+import Text.PrettyPrint.Class
 
 
 ------------------------------------------------------------------------------

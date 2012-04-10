@@ -45,12 +45,27 @@ module Text.PrettyPrint.Class (
   
      , hang
      , punctuate
+
+     -- * Additional combinators
+     , nestBetween
+     , nestShort
+     , nestShort'
+     , nestShortNonEmpty
+     , nestShortNonEmpty'
+     , fixedWidthText
+     , symbol
+     , numbered
+     , numbered'
 ) where
 
-import Prelude
+import           Control.DeepSeq        (NFData(..))
+
+import           Data.List              (intersperse)
+
+import           Extension.Data.Monoid  (Monoid(..), (<>))
+import           Extension.Prelude      (flushRight)
+
 import qualified Text.PrettyPrint.HughesPJ as P
-import Control.DeepSeq
-import Extension.Data.Monoid
 
 infixr 6 <->
 infixl 5 $$, $-$, $--$
@@ -156,3 +171,73 @@ instance Document P.Doc where
   nest  = P.nest
   caseEmptyDoc yes no d = if P.isEmpty d then yes else no
 
+------------------------------------------------------------------------------
+-- Additional combinators
+------------------------------------------------------------------------------
+
+-- | Nest a document surrounded by a leading and a finishing document breaking
+-- lead, body, and finish onto separate lines, if they don't fit on a single
+-- line.
+nestBetween :: Document d =>
+               Int -- ^ Indent of body
+            -> d -- ^ Leading document
+            -> d -- ^ Finishing document
+            -> d -- ^ Body document
+            -> d
+nestBetween n l r x = sep [l, nest n x, r]
+
+-- | Nest a document surrounded by a leading and a finishing document with an
+-- non-compulsory break between lead and body.
+nestShort :: Document d =>
+             Int -- ^ Indent of body
+          -> d -- ^ Leading document
+          -> d -- ^ Finishing document
+          -> d -- ^ Body document
+          -> d
+nestShort n lead finish body = sep [lead $$ nest n body, finish]
+
+-- | Nest document between two strings and indent body by @length lead + 1@.
+nestShort' :: Document d => String -> String -> d -> d
+nestShort' lead finish = 
+  nestShort (length lead + 1) (text lead) (text finish)
+
+-- | Like 'nestShort' but doesn't print the lead and finish, if the document is
+-- empty.
+nestShortNonEmpty :: Document d => Int -> d -> d -> d -> d
+nestShortNonEmpty n lead finish body =
+  caseEmptyDoc emptyDoc (nestShort n lead finish body) body
+
+-- | Like 'nestShort'' but doesn't print the lead and finish, if the document is
+-- empty.
+nestShortNonEmpty' :: Document d => String -> String -> d -> d
+nestShortNonEmpty' lead finish = 
+  nestShortNonEmpty (length lead + 1) (text lead) (text finish)
+
+-- | Output text with a fixed width: if it is smaller then nothing happens,
+-- otherwise care is taken to make the text appear having the given width.
+fixedWidthText :: Document d => Int -> String -> d
+fixedWidthText n cs
+  | length cs <= n  = text cs
+  | otherwise = text as <> zeroWidthText bs
+  where
+    (as,bs) = splitAt n cs
+
+-- | Print string as symbol having width 1.
+symbol :: Document d => String -> d
+symbol = fixedWidthText 1
+
+-- | Number a list of documents that are vertically separated by the given
+-- separator.
+numbered :: Document d => d -> [d] -> d
+numbered _   [] = emptyDoc
+numbered vsep ds = 
+    foldr1 ($-$) $ intersperse vsep $ map pp $ zip [(1::Int)..] ds
+  where
+    n         = length ds
+    nWidth    = length (show n)
+    pp (i, d) = text (flushRight nWidth (show i)) <> d
+
+-- | Number a list of documents with numbers terminated by "." and vertically
+-- separate using an empty line.
+numbered' :: Document d => [d] -> d
+numbered' = numbered (text "") . map (text ". " <>)

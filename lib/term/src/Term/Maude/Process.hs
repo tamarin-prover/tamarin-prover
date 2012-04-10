@@ -54,7 +54,7 @@ import System.Process
 import System.IO
 
 import Utils.Misc
-import Text.Isar ((<>))
+import Extension.Data.Monoid
 
 
 -- Unification using a persistent Maude process

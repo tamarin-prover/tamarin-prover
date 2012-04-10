@@ -46,7 +46,6 @@ import System.FilePath
 import Extension.Data.Label
 
 import qualified Text.Dot as D
-import Text.Isar
 import Text.PrettyPrint.Html
 import Utils.Misc (stringSHA256)
 

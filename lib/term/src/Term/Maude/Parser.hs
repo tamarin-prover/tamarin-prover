@@ -37,7 +37,7 @@ import qualified Data.ByteString.Char8 as BC
 
 import Data.Attoparsec.ByteString.Char8
 
-import Text.Isar ((<>))
+import Extension.Data.Monoid
 
 ------------------------------------------------------------------------------
 -- Pretty printing of Maude terms.

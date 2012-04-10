@@ -105,8 +105,6 @@ import           Control.Monad.Reader
 import qualified Extension.Data.Label    as L
 import           Extension.Data.Label    hiding (get)
 
-import           Text.Isar
-                 
 import           Theory.Pretty
 import           Theory.Rule
 import           Theory.RuleSet

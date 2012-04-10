@@ -31,7 +31,7 @@ import Control.Monad.State (StateT, evalStateT)
 import Control.Monad.Reader
 
 import qualified Text.Dot as D
-import Text.Isar hiding (style)
+import Text.PrettyPrint.Class hiding (style)
 
 import Theory.Rule
 import Theory.Proof.Sequent

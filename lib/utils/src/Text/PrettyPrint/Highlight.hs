@@ -29,13 +29,12 @@ module Text.PrettyPrint.Highlight (
   ) where
 
 import Text.PrettyPrint.Class
-import Control.DeepSeq
 
 -- | Currently we support only keywords, operators, and comments.
 data HighlightStyle = Keyword | Comment | Operator
        deriving( Eq, Ord, Show )
 
-class (NFData d, Document d) => HighlightDocument d where
+class Document d => HighlightDocument d where
     -- 'highlight' @style d@ marks that the document @d@ should be highlighted
     -- using the @style@.
     highlight :: HighlightStyle -> d -> d

@@ -18,7 +18,7 @@ import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 import           System.Timing (timed)
 
-import qualified Text.Isar as Isar
+import qualified Text.PrettyPrint.Class as Pretty
 
 import           Theory
 
@@ -74,7 +74,7 @@ run thisMode as
       putStrLn $ replicate 78 '='
       putStrLn $ "summary of summaries:"
       putStrLn $ ""
-      putStrLn $ renderDoc $ Isar.vcat $ intersperse (Isar.text "") summaries
+      putStrLn $ renderDoc $ Pretty.vcat $ intersperse (Pretty.text "") summaries
       putStrLn $ ""
       putStrLn $ replicate 78 '='
   where
@@ -107,20 +107,20 @@ run thisMode as
     -- theory processing functions
     ------------------------------
 
-    processThy :: FilePath -> IO (Isar.Doc)
+    processThy :: FilePath -> IO (Pretty.Doc)
     processThy inFile  
       -- | argExists "html" as = 
       --     generateHtml inFile =<< loadClosedThy as inFile
       | argExists "parseOnly" as =
-          out (const Isar.emptyDoc) prettyOpenTheory   (loadOpenThy   as inFile)
+          out (const Pretty.emptyDoc) prettyOpenTheory   (loadOpenThy   as inFile)
       | otherwise        = 
           out prettyClosedSummary   prettyClosedTheory (loadClosedThy as inFile)
       where
-        out :: (a -> Isar.Doc) -> (a -> Isar.Doc) -> IO a -> IO Isar.Doc
+        out :: (a -> Pretty.Doc) -> (a -> Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load
           | dryRun    = do
               putStrLn =<< (renderDoc <$> fullDoc <$> load)
-              return $ Isar.emptyDoc
+              return $ Pretty.emptyDoc
           | otherwise = do
               putStrLn $ ""
               putStrLn $ "analyzing: " ++ inFile
@@ -130,13 +130,13 @@ run thisMode as
                   thy <- load
                   writeFileWithDirs outFile $ renderDoc $ fullDoc thy
                   return $ summaryDoc thy
-              let summary = Isar.vcat
-                    [ Isar.text $ "analyzed: " ++ inFile
-                    , Isar.text $ ""
-                    , Isar.text $ "  output:          " ++ outFile
-                    , Isar.text $ "  processing time: " ++ show t
-                    , Isar.text $ ""
-                    , Isar.nest 2 thySummary
+              let summary = Pretty.vcat
+                    [ Pretty.text $ "analyzed: " ++ inFile
+                    , Pretty.text $ ""
+                    , Pretty.text $ "  output:          " ++ outFile
+                    , Pretty.text $ "  processing time: " ++ show t
+                    , Pretty.text $ ""
+                    , Pretty.nest 2 thySummary
                     ]
               putStrLn $ replicate 78 '-'
               putStrLn $ renderDoc summary

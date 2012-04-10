@@ -63,7 +63,7 @@ import           Control.Monad.Reader
 import           Control.Monad.Bind
 import           Control.Monad.State (StateT, runStateT, execStateT, gets, put)
 
-import           Text.Isar
+import           Text.PrettyPrint.Class
 
 import           Extension.Prelude
 import           Extension.Data.Label

@@ -94,7 +94,7 @@ import qualified Data.ByteString.Char8 as BC
 import Data.Set (Set)
 import qualified Data.Set as S
 
-import Text.Isar
+import Text.PrettyPrint.Class
 
 import Term.Classes
 

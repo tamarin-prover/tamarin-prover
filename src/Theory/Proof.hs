@@ -96,8 +96,6 @@ import qualified Control.Monad.Trans.PreciseFresh  as Precise
 import           Control.Parallel.Strategies
 import           Control.DeepSeq
 
-import           Text.Isar
-                 
 import           Theory.Pretty
 import           Theory.Proof.CaseDistinctions
 

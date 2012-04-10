@@ -17,7 +17,7 @@ import Term.Rewriting.Norm
 import Term.Narrowing.Variants
 import Term.Positions
 
-import Text.Isar
+import Text.PrettyPrint.Class
 
 import Data.List
 import Data.Maybe

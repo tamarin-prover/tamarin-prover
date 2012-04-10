@@ -43,7 +43,7 @@ import           Theory.Lexer
 import           Term.SubtermRule
 import           Term.Substitution
 
-import Text.Isar (render)
+import Text.PrettyPrint.Class (render)
 
 import Theory
 

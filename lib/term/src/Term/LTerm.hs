@@ -78,7 +78,7 @@ module Term.LTerm (
 import Term.VTerm
 import Term.Rewriting.Definitions
 
-import Text.Isar
+import Text.PrettyPrint.Class
 
 import Control.Applicative
 import Control.Monad.Fresh

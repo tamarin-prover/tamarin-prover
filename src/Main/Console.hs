@@ -53,7 +53,7 @@ import           System.Console.CmdArgs.Explicit
 import           System.Console.CmdArgs.Text
 import           System.Exit
 
-import qualified Text.Isar as Isar
+import qualified Text.PrettyPrint.Class as Pretty
 
 import           Paths_tamarin_prover
 
@@ -260,5 +260,5 @@ defaultMain firstMode otherModes = do
 ------------------------------------------------------------------------------
        
 -- | Render a pretty-printing document.
-renderDoc :: Isar.Doc -> String
-renderDoc = Isar.renderStyle (Isar.style { Isar.lineLength = lineWidth }) 
+renderDoc :: Pretty.Doc -> String
+renderDoc = Pretty.renderStyle (Pretty.style { Pretty.lineLength = lineWidth }) 

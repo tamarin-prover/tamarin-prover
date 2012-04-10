@@ -157,7 +157,7 @@ import           Control.DeepSeq
 import           Control.Category
 import           Control.Basics
 
-import           Text.Isar
+import           Text.PrettyPrint.Class
 
 import           Logic.Connectives
 
