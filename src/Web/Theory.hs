@@ -113,41 +113,32 @@ preformatted cl = withTag "div" [("class", classes cl)]
 
 -- | Render a proof index relative to a theory path constructor.
 proofIndex :: HtmlDocument d
-           => (ProofPath -> TheoryPath)   -- ^ Relative addressing function
-           -> Proof (Maybe Sequent, Bool) -- ^ The annotated incremental proof
+           => (ProofPath -> TheoryPath)         -- ^ Relative addressing function
+           -> Proof (Maybe Sequent, Maybe Bool) -- ^ The annotated incremental proof
            -> d
 proofIndex mkPath = 
     prettyProofWith ppStep ppCase . insertPaths
   where
-    isSolved = snd . fst . psInfo
-    isAnnotated = isJust . fst . fst . psInfo
+    ppCase step = markStatus (snd $ fst $ psInfo step)
 
-    isSorry ps
-      | Sorry _ <- psMethod ps = True
-      | otherwise = False
+    ppStep step = case fst $ psInfo step of
+        (Nothing, _)    -> superfluousStep
+        (_, Nothing)    -> stepLink ["sorry-step"] <>
+                           case psMethod step of
+                             Sorry _ -> emptyDoc
+                             _       -> removeStep
+        (_, Just True)  -> stepLink ["hl_good"]
+        (_, Just False) -> stepLink ["hl_bad"]
+      where
+        ppMethod = prettyProofMethod $ psMethod step
+        stepLink cls = linkToPath
+          (mkPath $ snd $ psInfo step) ("proof-step" : cls) ppMethod
 
-    markSolved = withTag "span" [("class", "hl_solved")]
+        superfluousStep = withTag "span" [("class","hl_superfluous")] ppMethod
 
-    ppStep ps
-      | not (isAnnotated ps) = superfluousStep ps
-      | isSolved ps = (markSolved $ linkToStep ["solved"] ps) <> removeStep ps
-      | isSorry ps = linkToStep ["unsolved", "sorry-step"] ps 
-      | otherwise = linkToStep ["unsolved"] ps <> removeStep ps
+        removeStep = linkToPath
+          (mkPath $ snd $ psInfo step) ["remove-step"] emptyDoc
 
-    removeStep ps = linkToPath
-      (mkPath $ snd $ psInfo ps) ["remove-step"] emptyDoc
-
-    ppCase ps
-      | isSolved ps = markSolved 
-      | otherwise = id 
-
-    superfluousStep ps = withTag "span"
-      [("class","hl_superfluous unsolved")] 
-      (prettyProofMethod $ psMethod ps)
-    
-    linkToStep cls ps = linkToPath
-      (mkPath $ snd $ psInfo ps) ("proof-step" : cls)
-      (prettyProofMethod $ psMethod ps)
 
 -- | Render the indexing links for a single lemma
 lemmaIndex :: HtmlDocument d
@@ -155,7 +146,7 @@ lemmaIndex :: HtmlDocument d
            -> Lemma IncrementalProof      -- ^ The lemma
            -> d
 lemmaIndex mkPath l =
-    ( markSolved $
+    ( markStatus (snd $ psInfo $ root annPrf) $
         (kwLemmaModulo "E" <-> prettyLemmaName l <> colon) <->
         (linkToPath (TheoryLemma $ get lName l) ["edit-link"] editPng <->
         linkToPath (TheoryLemma $ get lName l) ["delete-link"] deletePng) $-$
@@ -163,19 +154,13 @@ lemmaIndex mkPath l =
                      , doubleQuotes $ prettyFormulaE $ get lFormulaE l
                      ] )
     ) $-$
-    proofIndex mkPath annotatedProof
+    proofIndex mkPath annPrf
   where
     editPng = png "/static/img/edit.png"
     deletePng = png "/static/img/delete.png" 
     png path = closedTag "img" [("class","icon"),("src",path)]
 
-    annotatedProof = annotateProof $ get lProof l
-
-    markSolved doc
-      | solved = withTag "span" [("class", "hl_solved")] doc
-      | otherwise = doc
-      where
-        solved = snd $ psInfo $ root annotatedProof
+    annPrf = annotateLemmaProof l
 
 -- | Render the theory index.
 theoryIndex :: HtmlDocument d => ClosedTheory -> d
@@ -597,19 +582,35 @@ getPrevElement f (x:xs) = go x xs
       | f z = Just old
       | otherwise = go z zs
 
+-- | Translate a proof status returned by 'annotateLemmaProof' to a
+-- corresponding CSS class.
+markStatus :: HtmlDocument d => Maybe Bool -> d -> d
+markStatus Nothing      = id
+markStatus (Just True)  = withTag "span" [("class","hl_good")]
+markStatus (Just False) = withTag "span" [("class","hl_bad")]
+
 -- | Annotate a proof for pretty printing.
 -- The boolean flag indicates that the given proof step's children
 -- are (a) all annotated and (b) contain no sorry steps.
-annotateProof :: Proof (Maybe Sequent) -> Proof (Maybe Sequent, Bool)
-annotateProof (LNode (ProofStep method sequent) children')
-  | Nothing <- sequent = LNode (proofStep False) annotatedChildren
-  | Sorry _ <- method  = LNode (proofStep False) annotatedChildren
-  | otherwise          = LNode (proofStep checkChildren) annotatedChildren
+annotateLemmaProof :: Lemma IncrementalProof
+                   -> Proof (Maybe Sequent, Maybe Bool)
+annotateLemmaProof lem = 
+    mapProofInfo (second interpret) prf
   where
-    annotatedChildren = M.map annotateProof children'
-    proofStep bool = ProofStep method (sequent, bool)
-    checkChildren = all (snd . psInfo . root . snd) $ M.toList annotatedChildren
+    prf = annotateProof annotate $ get lProof lem
+    annotate step cs = 
+        ( psInfo step
+        , mconcat $ proofStepStatus step : incomplete ++ map snd cs
+        )
+      where
+        incomplete = if isNothing (psInfo step) then [IncompleteProof] else []
 
+    interpret status = case (get lTraceQuantifier lem, status) of
+      (_,           IncompleteProof) -> Nothing
+      (AllTraces,   TraceFound)      -> Just False
+      (AllTraces,   CompleteProof)   -> Just True
+      (ExistsTrace, TraceFound)      -> Just True
+      (ExistsTrace, CompleteProof)   -> Just False
 
 ------------------------------------------------------------------------------
 -- Html file generation

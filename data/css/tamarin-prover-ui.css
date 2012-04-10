@@ -99,12 +99,17 @@ div.warning {
     color: #a00000;
 }
 
-.hl_solved {
+.hl_good {
     background: #bbeebb;
 }
 
+.hl_bad {
+    background: #eecccc;
+}
+
 .hl_superfluous {
-    background: #eebbbb;
+    color: #ff0000;
+    text-decoration: line-through;
 }
 
 .keys {
@@ -213,7 +218,6 @@ a.edit-link:hover, a.delete-link:hover {
     background: none;
 }
 
-span.hl_solved:hover + a.remove-step,
 a.proof-step:hover + a.remove-step {
     /* Standard */
     opacity: 0.5;

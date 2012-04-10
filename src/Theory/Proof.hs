@@ -25,8 +25,10 @@ module Theory.Proof (
   , insertPaths
 
   -- ** Folding/modifying proofs
+  , mapProofInfo
   , foldProof
-  , ProofStatus
+  , annotateProof
+  , ProofStatus(..)
   , proofStepStatus
 
   , cutOnAttackDFS
@@ -345,7 +347,16 @@ foldProof f =
   where
     go (LNode step cs) = f step `mappend` foldMap go (M.elems cs)
 
-
+-- | Annotate a proof in a bottom-up fashion.
+annotateProof :: (ProofStep a -> [b] -> b) -> Proof a -> Proof b
+annotateProof f =
+    go
+  where
+    go (LNode step@(ProofStep method _) cs) =
+        LNode (ProofStep method info') cs'
+      where
+        cs' = M.map go cs
+        info' = f step (map (psInfo . root . snd) (M.toList cs'))
 
 -- Proof cutting
 ----------------
@@ -727,7 +738,7 @@ prettyContradiction contra = case contra of
 
 prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
-    Attack               -> keyword_ "SOLVED"
+    Attack               -> keyword_ "SOLVED" <-> lineComment_ "trace found"
     Induction            -> keyword_ "induction"
     Sorry reason         -> fsep [keyword_ "sorry", lineComment_ reason]
     SolveGoal goal       -> hsep [keyword_ "solve(", prettyGoal goal, keyword_ ")"]
