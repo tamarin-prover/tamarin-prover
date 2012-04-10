@@ -1,20 +1,20 @@
-  1. DH2-original                  	avg:   14.3	res: proof
-  2. KAS1                          	avg:    0.5	res: proof
-  3. KAS2-original                 	avg:    4.5	res: proof
-  4. KAS2-eCK                      	avg:    0.5	res: attack
+  1. DH2-original                  	avg:    6.8	res: proof
+  2. KAS1                          	avg:    0.3	res: proof
+  3. KAS2-original                 	avg:    3.0	res: proof
+  4. KAS2-eCK                      	avg:    0.4	res: attack
   5. KEA_plus_KI_KCI               	avg:    0.5	res: proof
-  6. KEA_plus_KI_KCI_wPFS          	avg:    0.7	res: attack
-  7. NAXOS_eCK                     	avg:    3.3	res: proof
-  8. NAXOS_eCK_PFS                 	avg:    1.9	res: attack
+  6. KEA_plus_KI_KCI_wPFS          	avg:    0.6	res: attack
+  7. NAXOS_eCK                     	avg:    5.0	res: proof
+  8. NAXOS_eCK_PFS                 	avg:    1.5	res: attack
   9. SignedDH_PFS                  	avg:    0.4	res: proof
- 10. SignedDH_eCK                  	avg:    0.7	res: attack
- 11. STS-MAC                       	avg:    3.0	res: attack
- 12. STS-MAC-fix1                  	avg:   10.1	res: proof
- 13. STS-MAC-fix2                  	avg:    2.2	res: proof
+ 10. SignedDH_eCK                  	avg:    0.6	res: attack
+ 11. STS-MAC                       	avg:    2.6	res: attack
+ 12. STS-MAC-fix1                  	avg:    8.8	res: proof
+ 13. STS-MAC-fix2                  	avg:    1.9	res: proof
  14. JKL_TS1_2004-KI               	avg:    0.2	res: attack
  15. JKL_TS1_2008-KI               	avg:    0.2	res: proof
- 16. JKL_TS2_2004-KI_wPFS          	avg:    0.5	res: attack
- 17. JKL_TS2_2008-KI_wPFS          	avg:    0.9	res: proof
+ 16. JKL_TS2_2004-KI_wPFS          	avg:    0.4	res: attack
+ 17. JKL_TS2_2008-KI_wPFS          	avg:    0.8	res: proof
  18. - (TS3 2004/2008)
- 19. UM_wPFS                       	avg:    0.8	res: proof
+ 19. UM_wPFS                       	avg:    0.7	res: proof
  20. UM_PFS                        	avg:    0.5	res: attack
