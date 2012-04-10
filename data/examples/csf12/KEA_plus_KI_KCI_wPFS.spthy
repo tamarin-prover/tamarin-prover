@@ -7,7 +7,7 @@ section{* KEA+ *}
 /*
  * Protocol:	KEA+
  * Modeler: 	Cas Cremers
- * Date: 	January 2012
+ * Date: 	January/April 2012
  * Source:	"Security Analysis of KEA Authenticated Key Exchange Protocol"
  * 		Lauter, Mityagin, 2006
  * Property:	KI, KCI, wPFS
@@ -22,28 +22,35 @@ rule generate_ltk:
    [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
 
 rule Init_1:
+  let epkI = 'g'^~ekI
+  in
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
-   --[ SidI_1(~ekI,$I,$R, 'g'^~ekI ) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ),
+   --[ SidI_1(~ekI, $I, $R, epkI ) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI, epkI ),
      !Ephk(~ekI),
-     Out( 'g'^~ekI ) ]
+     Out( epkI ) ]
 
 rule Init_2:
-   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]
-   --[SidI_2( ~ekI, $I, $R, hkI, Y,
-       h( <Y^~lkI, ('g'^~lkR)^~ekI, $I, $R > ) ) ]->
-   [ !Sessk( ~ekI, 
-       h( <Y^~lkI, ('g'^~lkR)^~ekI, $I, $R > ) ) ]
+  let pkR  = 'g'^~lkR
+      key  = h( <Y^~lkI, pkR^~ekI, $I, $R > ) 
+  in
+   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R, pkR ) ]
+   --[SidI_2( ~ekI, $I, $R, hkI, Y, key ) ]->
+   [ !Sessk( ~ekI, key ) ]
 
 
 rule Resp_1:
-   [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
-   --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR ,
-       h( <('g'^~lkI)^~ekR, X^~lkR, $I, $R > ) ) ]->
+  let pkI  = 'g'^~lkI
+      epkR = 'g'^~ekR
+      key  = h(< pkI^~ekR, X^~lkR, $I, $R >)
+  in
+   [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, pkI) ]
+   --[ SidR_1( ~ekR, $I, $R, X, epkR , key ) ]->
    [ Out( 'g'^~ekR ),
      !Ephk(~ekR),
-     !Sessk( ~ekR, 
-       h( <('g'^~lkI)^~ekR, X^~lkR, $I, $R > ) ) ]
+     !Sessk( ~ekR, key) ]
+
+
 
 rule Sessk_reveal: 
    [ !Sessk(~tid, k) ]
