@@ -72,6 +72,7 @@ data-files:
   examples/csf12/Artificial.spthy
 
   examples/csf12/DH2-original.spthy
+  examples/csf12/KAS1.spthy
   examples/csf12/KAS2-eCK.spthy
   examples/csf12/KAS2-original.spthy
 
@@ -96,12 +97,9 @@ data-files:
   examples/csf12/STS-MAC-fix2.spthy
 
   examples/csf12/JKL_TS1_2004-KI.spthy
-  examples/csf12/JKL_TS1_2008-KI_wPFS.spthy
   examples/csf12/JKL_TS1_2008-KI.spthy
   examples/csf12/JKL_TS2_2004-KI_wPFS.spthy
-  examples/csf12/JKL_TS2_2004-KI.spthy
   examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
-  examples/csf12/JKL_TS2_2008-KI.spthy
   examples/csf12/JKL_TS3_2004-KI_wPFS.spthy-nonterm
   examples/csf12/JKL_TS3_2008-KI_wPFS.spthy-nonterm
 
