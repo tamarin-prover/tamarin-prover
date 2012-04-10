@@ -1,7 +1,7 @@
 theory NAXOS_eCK
 begin
 
-builtin: diffie-hellman, hashing
+builtin: diffie-hellman
 
 section{* NAXOS *}
 
@@ -58,7 +58,7 @@ rule Init_2:
    [   Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R, pkR ) ]
    --[ Sid( ~ekI, $I, $R, < 'Init', $I, $R, hkI, Y >) 
      , Match( ~ekI, < 'Resp', $R, $I, hkI, Y >)
-     , Accept( ~ekI, seskey) 
+     , Accept( ~ekI, $I, $R, seskey) 
      ]->
    [   !Sessk( ~ekI, seskey) ]
 
@@ -72,7 +72,7 @@ rule Resp_1:
    [   In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, pkI) ]
    --[ Sid( ~ekR, $R, $I, <'Resp', $R, $I, X, hkr >) 
      , Match( ~ekR, <'Init', $I, $R, X, hkr> )
-     , Accept( ~ekR, seskey )
+     , Accept( ~ekR, $R, $I, seskey )
      ]->
    [   Out( hkr ),
        !Ephk(~ekR, ~ekR),
@@ -112,8 +112,8 @@ lemma eCK_key_secrecy:
    * If there exists a Test session whose key k is known to the
    * Adversary, then...
    */
-  "(All #i1 #i2 #i3 Test A B minfo k .
-    Sid(Test, A, B, minfo) @ i1 & K( k ) @ i2 & Accept(Test, k) @ i3
+  "(All #i1 #i2 Test A B k .
+    Accept(Test, A, B, k) @ i1 & K( k ) @ i2 
     ==> ( 
     /* ... the Test session must be "not clean".
      * Test is not clean if one of the following has happened:
