@@ -926,8 +926,9 @@ openGoals se = delayUseless $ sortDecisionTree solveFirst $ concat $
    ]
   where
     solveFirst = map (. snd)
-        [ isActionGoal, isProtoFactGoal
-        , isDisjGoal, isChainGoal, isFreshKnowsGoal
+        [ isDisjGoal, isProtoFactGoal
+        , isActionGoal
+        , isChainGoal, isFreshKnowsGoal
         , isSplitGoalSmall, isDoubleExpGoal ]
 
     isProtoFactGoal (PremiseG _ (Fact KUFact _) _) = False
