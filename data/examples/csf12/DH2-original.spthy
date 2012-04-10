@@ -55,7 +55,9 @@ rule Resp_1:
    [ Fr( ~m2 ), In( XB ), !Ltk( $R, ~ltkR ), !Pk($I,pkI) ]
    --[  Sid  ( ~m2, $R, $I, <$R, $I, 'Resp', YA, XB >)
      ,  Match( ~m2, <$I, $R, 'Init', XB >)
-     ,  Match( ~m2, <$I, $R, 'Init', XB, YA >)
+     //,  Match( ~m2, <$I, $R, 'Init', XB, YA >) // Case subsumed: if
+     // a matching Sid fact exists, then also a Sid fact exists that
+     // matches the previous
      ,  EphKey ( ~m2, ~m2 )
      ]->
    [ Resp_1( ~m2, $I, $R, YA, XB, tagA, key ), !Ephk( ~m2,~m2 ), Out(< YA , tagB >) ]
@@ -70,13 +72,13 @@ rule Init_2:
    [ Init_1( ~m1, $I, $R, ~ltkI, X, XB ) , In(< YA, tagB >) ]
    --[ Sid  ( ~m1, $I, $R, <$I, $R, 'Init', XB, YA > )
      , Match( ~m1, <$R, $I, 'Resp', YA, XB > )
-     , Accept( ~m1, key) 
+     , Accept( ~m1, $I, $R, key) 
      ]->
    [ Out(< YA, XB, tagA >), !Sessk( ~m1, key ) ]
 
 rule Resp_2:
    [ Resp_1( ~m2, $I, $R, YA, XB, tagA, key), In(< YA, XB, tagA >) ]
-   --[ Accept( ~m2, key) ]->
+   --[ Accept( ~m2, $R, $I, key) ]->
    [ !Sessk( ~m2, key ) ]
 
 
@@ -111,8 +113,8 @@ lemma key_agreement_reachable:
 */
           
 lemma KAS_key_secrecy:
-  "not (Ex #i1 #i2 #i3 s A B minfo k .
-            Sid(s, A, B, minfo) @ i1 & K( k ) @ i2 & Accept(s, k) @ i3
+  "not (Ex #i1 #i2 s A B k .
+	    Accept(s, A, B, k) @ i1 & K( k ) @ i2 
 
             /* No session-key-reveal of test thread. */
             & not(Ex #i4. SesskRev( s ) @ i4 )
@@ -121,7 +123,7 @@ lemma KAS_key_secrecy:
 	    & (All ss #i4 #i5 C D ms.
 	           ( Sid ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5)
 		     ==>
-		   ( not(Ex #i6 #i7 kpartner. Accept(ss, kpartner) @ i6 & SesskRev( ss ) @ i7 )
+		   ( not(Ex #i6    . SesskRev( ss ) @ i6 )
 		   & not(Ex #i6 #i7. LtkRev  ( A ) @ i6  & EphkRev ( s  ) @ i7 )
 		   & not(Ex #i6 #i7. LtkRev  ( B ) @ i6  & EphkRev ( ss ) @ i7 )
 		   & not(Ex #i6 #i7. LtkRev  ( A ) @ i6  & LtkRev  ( B  ) @ i7 )
@@ -134,7 +136,7 @@ lemma KAS_key_secrecy:
 	           Sid ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5 ) )
 		     ==>
 		   ( not(Ex #i6. EphkRev ( s ) @ i6 )
-		   & not(Ex #i6. LtkRev  ( B ) @ i6 & i6 < i3 )
+		   & not(Ex #i6. LtkRev  ( B ) @ i6 & i6 < i1 )
 		   )
 	      )
   )"

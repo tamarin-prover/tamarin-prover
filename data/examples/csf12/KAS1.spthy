@@ -55,7 +55,6 @@ rule Resp_K1_1:
    --[  SidR ( ~m2, $R, $I, <$R, $I, 'Resp', nonceB, c1>)
      ,  Match( ~m2, <$I, $R, 'Init', c1>)
      ,  Match( ~m2, <$I, $R, 'Init', c1, nonceB>)
-     ,  Accept( ~m2, key )
      ]->
    [ Out(< nonceB , tagB >), !Sessk( ~m2, key ) ]
 
@@ -67,7 +66,7 @@ rule Init_K1_2:
    [ Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) , In(< nonceB, tagB >) ]
    --[ SidI ( ~m1, $I, $R, <$I, $R, 'Init', c1, nonceB> )
      , Match( ~m1, <$R, $I, 'Resp', nonceB, c1> )
-     , Accept( ~m1, key) 
+     , Accept( ~m1, $I, $R, key) 
      ]->
    [ !Sessk( ~m1, key ) ]
 
@@ -99,8 +98,8 @@ lemma key_agreement_reachable:
           SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2)"
 */
 lemma KAS1_key_secrecy:
-  "not (Ex #i1 #i2 #i3 s A B minfo k .
-            SidI(s, A, B, minfo) @ i1 & K( k ) @ i2 & Accept(s, k) @ i3
+  "not (Ex #i1 #i2 s A B k .
+	    Accept(s, A, B, k) @ i1 & K( k ) @ i2 
 
             /* No session-key-reveal of test thread. */
             & not(Ex #i4. SesskRev( s ) @ i4 )
@@ -112,7 +111,7 @@ lemma KAS1_key_secrecy:
 	    & (All ss #i4 #i5 C D ms.
 	           ( SidR ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5)
 		     ==>
-		   ( not(Ex #i6 #i7 kpartner. Accept(ss, kpartner) @ i6 & SesskRev( ss ) @ i7 )
+		   ( not(Ex #i6    . SesskRev( ss ) @ i6 )
 		   & not(Ex #i6    . LtkRev  ( B ) @ i6  )
 		   & not(Ex #i6 #i7. LtkRev  ( A ) @ i6  & LtkRev  ( B  ) @ i7 )
 		   )
@@ -122,7 +121,7 @@ lemma KAS1_key_secrecy:
 	    & ( ( not(Ex ss #i4 #i5 C D ms.
 	           SidR ( ss, C, D, ms ) @ i4 & Match( s, ms ) @ i5 ) )
 		     ==>
-		   ( not(Ex #i6. LtkRev  ( B ) @ i6 & i6 < i3 )
+		   ( not(Ex #i6. LtkRev  ( B ) @ i6 & i6 < i1 )
 		   )
 	      )
   )"
