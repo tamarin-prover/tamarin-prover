@@ -50,8 +50,9 @@ module Text.Dot
 	, mrecord_
 	) where
 
-import Data.List (intersperse)
-import Control.Monad (liftM, ap)
+import Data.Char           (isSpace)
+import Data.List           (intersperse)
+import Control.Monad       (liftM, ap)
 import Control.Applicative (Applicative(..))
 
 data NodeId = NodeId String
@@ -84,10 +85,20 @@ instance Monad Dot where
 			   (g1,uq',r) -> case unDot (k r) uq' of
 					   (g2,uq2,r2) -> (g1 ++ g2,uq2,r2)
 
--- | 'node' takes a list of attributes, generates a new node, and gives a 'NodeId'.
-node      :: [(String,String)] -> Dot NodeId
-node attrs = Dot $ \ uq -> let nid = NodeId $ "n" ++ show uq 
-			  in ( [ GraphNode nid attrs ],succ uq,nid)
+-- | 'rawNode' takes a list of attributes, generates a new node, and gives a 'NodeId'.
+rawNode      :: [(String,String)] -> Dot NodeId
+rawNode attrs = Dot $ \ uq -> 
+    let nid = NodeId $ "n" ++ show uq 
+    in ( [ GraphNode nid attrs ],succ uq,nid)
+
+-- | 'node' takes a list of attributes, generates a new node, and gives a
+-- 'NodeId'. Multi-line labels are fixed such that they use non-breaking
+-- spaces and are terminated with a new-line.
+node :: [(String,String)] -> Dot NodeId
+node = rawNode . map fixLabel
+  where
+    fixLabel ("label",lbl) = ("label", fixMultiLineLabel lbl)
+    fixLabel attr          = attr
 
 
 -- | 'userNodeId' allows a user to use their own (Int-based) node id's, without needing to remap them.
@@ -166,11 +177,22 @@ showAttrs xs = "[" ++ showAttrs' xs ++ "]"
         showAttrs' []     = error "showAttrs: the impossible happended"
 
 showAttr :: (String, String) -> String
-showAttr (name,val) = name ++ "=\"" ++ concatMap escape val ++ "\""
-    where escape '\n' = "\\l"
-	  escape '"'  = "\\\""
-	  escape c    = [c]
+showAttr (name, val) =
+      name ++ "=\"" ++ concatMap escape val ++ "\""
+    where 
+      escape '\n' = "\\l"
+      escape '"'  = "\\\""
+      escape c    = [c]
 
+-- | Ensure that multi-line labels use non-breaking spaces at the start and
+-- are terminated with a newline.
+fixMultiLineLabel :: String -> String
+fixMultiLineLabel lbl
+  | '\n' `elem` lbl = unlines $ map useNonBreakingSpace $ lines lbl
+  | otherwise       = lbl
+  where
+    useNonBreakingSpace line = case span isSpace line of
+      (spaces, rest) -> concat (replicate (length spaces) "&nbsp;") ++ rest
 
 ------------------------------------------------------------------------------
 -- Records
@@ -185,16 +207,21 @@ data Record a =
   | VCat [Record a]
   deriving( Eq, Ord, Show )
 
+-- | Smart constructor for fields that massages the multi-line labels such
+-- that dot understands them.
+mkField :: Maybe a -> String -> Record a
+mkField port = Field port . fixMultiLineLabel
+
 -- | A simple field of a record.
 field :: String -> Record a
-field = Field Nothing
+field = mkField Nothing
 
 -- | A field together with a port which can be used to create direct edges to
 -- this field. Note that you can use any type to identify the ports. When
 -- creating a record node you will get back an association list between your
 -- record identifiers and their concrete node ids.
 portField :: a -> String -> Record a
-portField port = Field (Just port)
+portField port = mkField (Just port)
 
 -- | Concatenate records horizontally.
 hcat :: [Record a] -> Record a
@@ -243,11 +270,12 @@ renderRecord = render True
   esc '>'  = "\\>"
   esc c    = [c]
 
+
 -- | A generic version of record creation.
 genRecord :: String -> Record a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
 genRecord shape rec attrs = do
   (lbl, ids) <- renderRecord rec
-  i <- node ([("shape",shape),("label",lbl)] ++ attrs)
+  i <- rawNode ([("shape",shape),("label",lbl)] ++ attrs)
   return (i, ids i)
 
 -- | Create a record node with the given attributes. It returns the node-id of

@@ -13,7 +13,7 @@ module Text.PrettyPrint.Class (
      ,  P.isEmpty
      ,  P.render
      ,  P.renderStyle
-     ,  P.style
+     ,  defaultStyle
      ,  P.Style(..)
      ,  P.Mode(..)
 
@@ -89,6 +89,10 @@ class (Monoid d, NFData d) => Document d where
   fcat  :: [d] -> d
   nest  :: Int -> d -> d
   caseEmptyDoc :: d -> d -> d -> d
+
+-- | The default 'P.Style'.
+defaultStyle :: P.Style
+defaultStyle = P.style
 
 -- | The empty document.
 emptyDoc :: Document d => d

@@ -53,7 +53,7 @@ import           System.Console.CmdArgs.Explicit
 import           System.Console.CmdArgs.Text
 import           System.Exit
 
-import qualified Text.PrettyPrint.Class as Pretty
+import qualified Text.PrettyPrint.Class as PP
 
 import           Paths_tamarin_prover
 
@@ -260,5 +260,5 @@ defaultMain firstMode otherModes = do
 ------------------------------------------------------------------------------
        
 -- | Render a pretty-printing document.
-renderDoc :: Pretty.Doc -> String
-renderDoc = Pretty.renderStyle (Pretty.style { Pretty.lineLength = lineWidth }) 
+renderDoc :: PP.Doc -> String
+renderDoc = PP.renderStyle (PP.defaultStyle { PP.lineLength = lineWidth }) 

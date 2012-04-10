@@ -16,6 +16,7 @@ module Theory.Proof.Sequent.Dot (
 
 import Safe
 import Data.Maybe
+import Data.Char (isSpace)
 import Data.List
 import Data.Monoid (Any(..))
 import qualified Data.Set        as S
@@ -31,7 +32,7 @@ import Control.Monad.State (StateT, evalStateT)
 import Control.Monad.Reader
 
 import qualified Text.Dot as D
-import Text.PrettyPrint.Class hiding (style)
+import Text.PrettyPrint.Class
 
 import Theory.Rule
 import Theory.Proof.Sequent
@@ -338,12 +339,38 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
             D.vcat $ map D.hcat $ map (map (uncurry D.portField)) $ 
             filter (not . null) [ps, as, cs]
       where
-        ps = [ (Just (Left i),  render (prettyLNFact p)) | (i, p) <- enumPrems ru ]
-        as = [ (Nothing,        show v ++ " : " ++ showRuleCaseName ru ++ acts) ]
-        cs = [ (Just (Right i), render (prettyLNFact c)) | (i, c) <- enumConcs ru ]
+        ps = renderRow [ (Just (Left i),  prettyLNFact p) | (i, p) <- enumPrems ru ]
+        as = renderRow [ (Nothing,        ruleLabel ) ]
+        cs = renderRow [ (Just (Right i), prettyLNFact c) | (i, c) <- enumConcs ru ]
 
-        acts = (" " ++) $ render $
-            brackets $ vcat $ punctuate comma $ map prettyLNFact $ get rActs ru
+        ruleLabel =
+            prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
+            (brackets $ vcat $ punctuate comma $ map prettyLNFact $ get rActs ru)
+
+        renderRow annDocs =
+          zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $ 
+            -- magic factor 1.3 compensates for space gained due to
+            -- non-propertional font
+            renderBalanced 100 (max 30 . round . (* 1.3)) (map snd annDocs)
+
+        renderBalanced :: Double           -- ^ Total available width
+                       -> (Double -> Int)  -- ^ Convert available space to actual line-width.
+                       -> [Doc]            -- ^ Initial documents
+                       -> [String]         -- ^ Rendered documents
+        renderBalanced _          _    []   = []
+        renderBalanced totalWidth conv docs =
+            zipWith (\w d -> widthRender (conv (ratio * w)) d) usedWidths docs
+          where
+            oneLineRender  = renderStyle (defaultStyle { mode = OneLineMode })
+            widthRender w  = scaleIndent . renderStyle (defaultStyle { lineLength = w })
+            usedWidths     = map (fromIntegral . length . oneLineRender) docs
+            ratio          = totalWidth / sum usedWidths 
+            scaleIndent line = case span isSpace line of
+              (spaces, rest) -> 
+                  -- spaces are not wide-enough by default => scale them up
+                  let n = (1.5::Double) * fromIntegral (length spaces)
+                  in  replicate (round n) ' ' ++ rest
+
 
 
 -- | Dot a sequent in compact form (one record per rule)
