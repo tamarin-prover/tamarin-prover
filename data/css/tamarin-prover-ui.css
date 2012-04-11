@@ -522,3 +522,14 @@ div#header-links a.save-link {
     background-color: #666666;
     border-radius: 1em;
 }
+
+/* Logo
+ ********/
+
+.logo { 
+    display: inline; 
+    padding: 0px;
+    border: 0px;
+    margin: 0em;
+}
+

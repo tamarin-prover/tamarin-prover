@@ -312,7 +312,8 @@ pathTpl info path = wrapThHtml $ htmlThyPath (tiTheory info) path
 -- | Template for introduction.
 introTpl :: Widget
 introTpl = [HAMLET|
-    <h1>Welcome!
+    <img src="/static/img/tamarin-logo-96.png" class="logo">
+    <h1><span class="sc">Tamarin</span> prover GUI
     <noscript>
       <div class="warning">
         Warning: JavaScript must be enabled for the Tamarin prover GUI to function properly.
