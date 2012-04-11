@@ -1,7 +1,7 @@
 theory KEA_plus
 begin
 
-builtin: hashing, diffie-hellman
+builtins: hashing, diffie-hellman
 
 section{* KEA+ *}
 /*

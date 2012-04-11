@@ -1,7 +1,7 @@
 theory UM_wPFS
 begin
 
-builtin: hashing, diffie-hellman
+builtins: hashing, diffie-hellman
 
 section{* The Unified Model (UM) Key-Exchange Protocol *}
 

@@ -1,7 +1,7 @@
 theory DJB
 begin
 
-builtin: diffie-hellman, hashing, symmetric-encryption
+builtins: diffie-hellman, hashing, symmetric-encryption
 
 section{* DJB challenge protocol *}
 

@@ -40,7 +40,7 @@ begin
 
  */
 
-builtin: symmetric-encryption
+builtins: symmetric-encryption
 
 rule Step1:
   [ Fr(~x), Fr(~k) ] 

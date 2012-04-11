@@ -1,7 +1,7 @@
 theory STS_MAC_FIX1
 begin
 
-builtin: diffie-hellman, signing
+builtins: diffie-hellman, signing
 
 functions: mac/2
 functions: KDF/1

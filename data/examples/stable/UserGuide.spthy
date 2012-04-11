@@ -115,12 +115,12 @@ right-hand-side must be a subterm of the left-hand-side or a nullary
 function symbol.
 
 Certain equational theories are used very often when modeling cryptographic
-messages. We therefore provide builtin definitions for them. The above theory
+messages. We therefore provide builtins definitions for them. The above theory
 could also be enabled using the declaration
 
-  builtin: hashing, asymmetric-encryption
+  builtins: hashing, asymmetric-encryption
 
-We support the following builtin theories:
+We support the following builtins theories:
  
   diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
   hashing
@@ -135,7 +135,7 @@ definitions by uncommenting the following two line-comments and calling
 
 */
 
-// builtin: diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
+// builtins: diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
 //          hashing
 
 /*
@@ -173,7 +173,7 @@ rule Register_pk:
    and multiplicity. Otherwise, the tamarin prover complains that the theory
    is not wellformed.
 
-   The 'Fr' fact is a builtin fact. It denotes a freshly generated fresh name.
+   The 'Fr' fact is a builtins fact. It denotes a freshly generated fresh name.
    See the paper for details.
 
    We denote the sort of variables using prefixes:
@@ -195,7 +195,7 @@ rule Register_pk:
 
    We allow the adversary to retrieve any public key using the following rule.
    Intuitively, it just reads a public-key database entry and sends the public
-   key to the network using the builtin fact 'Out' denoting a message sent to
+   key to the network using the builtins fact 'Out' denoting a message sent to
    the network. See our paper for more information.
 */
 
@@ -273,8 +273,8 @@ rule Serv_1:
    the request is equal to '1'. We  model this by logging the claimed equality
    and then adapting the security property such that it only considers traces
    where all 'Eq' actions occur with two equal arguments. Note that 'Eq' is NO
-   builtin fact. Guarded trace properties are strong enough to formalize this
-   requirement without builtin support.
+   builtins fact. Guarded trace properties are strong enough to formalize this
+   requirement without builtins support.
 
    We log the session-key setup requests received by servers to allow
    formalizing the authentication property for the client.

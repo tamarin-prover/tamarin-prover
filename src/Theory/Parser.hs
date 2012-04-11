@@ -749,9 +749,9 @@ globallyFresh =
     factSymbol = 
         ProtoFact Linear <$> identifier <*> (kw SLASH *> integer)
 
-builtin :: Parser ()
-builtin =
-    string "builtin" *> kw COLON *> sepBy1 builtinTheory (kw COMMA) *> pure ()
+builtins :: Parser ()
+builtins =
+    string "builtins" *> kw COLON *> sepBy1 builtinTheory (kw COMMA) *> pure ()
   where
     extendSig msig = modifyState (`mappend` msig)
     builtinTheory = asum
@@ -813,7 +813,7 @@ theory flags0 = do
       [ do fresh <- globallyFresh
            addItems flags $ 
                modify (sigpUniqueInsts . thySignature) (S.union fresh) thy
-      , do builtin
+      , do builtins
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do functions

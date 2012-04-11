@@ -1,7 +1,7 @@
 theory NAXOS_PFS_initiator_simplified
 begin
 
-builtin: hashing, diffie-hellman
+builtins: hashing, diffie-hellman
 
 section{* NAXOS *}
 

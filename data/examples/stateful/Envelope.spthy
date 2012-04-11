@@ -8,7 +8,7 @@ Computer Security Foundations Symposium, 2011.
 
 *}
 
-builtin: signing, asymmetric-encryption, hashing
+builtins: signing, asymmetric-encryption, hashing
 
 // TPM platform configuration register (PCR) model
 // Here, we model only one PCR. Modelling multiple PCR's can be done by

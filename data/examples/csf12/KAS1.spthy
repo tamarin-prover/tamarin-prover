@@ -1,7 +1,7 @@
 theory KAS1
 begin
 
-builtin: hashing, asymmetric-encryption
+builtins: hashing, asymmetric-encryption
 
 section{* KAS1 *}
 

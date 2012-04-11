@@ -11,7 +11,7 @@ section{* The Signed Diffie-Hellman Protocol *}
  * Status: 	working
  */
 
-builtin: diffie-hellman, signing
+builtins: diffie-hellman, signing
 
 // Public key infrastructure
 rule Register_pk:

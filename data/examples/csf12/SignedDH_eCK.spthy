@@ -1,7 +1,7 @@
 theory SignedDH_eCK
 begin
 
-builtin: diffie-hellman, signing
+builtins: diffie-hellman, signing
 
 section{* The Signed Diffie-Hellman Protocol in the eCK model *}
 

@@ -18,7 +18,7 @@ functions:
   , pgetSk/2
 
 
-builtin: asymmetric-encryption
+builtins: asymmetric-encryption
 
 
 section{* The interpreter *}

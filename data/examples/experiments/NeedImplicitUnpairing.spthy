@@ -1,6 +1,6 @@
 theory NeedImplicitUnpairing begin
 
-builtin: asymmetric-encryption
+builtins: asymmetric-encryption
 
 /* The following protocol and property illustrate why we require implicit
  * unpairing to avoid non-termination for realistic protocols.

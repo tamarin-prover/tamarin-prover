@@ -1,6 +1,6 @@
 theory WMF_simplified begin
 
-builtin: symmetric-encryption
+builtins: symmetric-encryption
 
 /*
  * Protocol:	WMF (simplified)

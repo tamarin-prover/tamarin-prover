@@ -38,7 +38,7 @@ iknows(pair(M1,M2)) => iknows(M1).iknows(M2);
 iknows(M1).iknows(M2) => iknows(pair(M1,M2));
 */
 
-builtin: signing
+builtins: signing
 
 // The non-deterministic choice between the rules SetupHonestKey and
 // SetupDishonestKey determines whether an agent is honest or not.

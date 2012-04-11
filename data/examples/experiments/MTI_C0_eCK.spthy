@@ -1,7 +1,7 @@
 theory MTI_C0_eCK
 begin
 
-builtin: diffie-hellman 
+builtins: diffie-hellman 
 
 functions: kdf/1
 

@@ -11,7 +11,7 @@ section{* The Running Example of Our CSF 10 Paper *}
  * Status: 	working
  */
 
-builtin: asymmetric-encryption
+builtins: asymmetric-encryption
 
 /*
 anb-proto CR

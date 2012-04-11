@@ -1,7 +1,7 @@
 theory NAXOS_eCK_PFS
 begin
 
-builtin: diffie-hellman, hashing
+builtins: diffie-hellman, hashing
 
 section{* NAXOS *}
 

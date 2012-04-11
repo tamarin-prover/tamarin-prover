@@ -5,7 +5,7 @@ text{* Running example from StatVerif paper *}
 // Declare RFID/1 fact as globally fresh...for testing purposes.
 unique_insts: RFID/1
 
-builtin: asymmetric-encryption
+builtins: asymmetric-encryption
 
 // RFID Memory Cell model
 

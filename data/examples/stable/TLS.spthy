@@ -1,7 +1,7 @@
 theory TLS 
 begin
 
-builtin: hashing, symmetric-encryption, asymmetric-encryption, signing
+builtins: hashing, symmetric-encryption, asymmetric-encryption, signing
 
 section{* TLS Handshake *}
 
