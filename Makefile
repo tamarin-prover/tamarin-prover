@@ -98,7 +98,7 @@ case-studies:	$(CS_TARGETS)
 # individual case studies
 case-studies/%_analyzed.spthy:	data/examples/csf12/%.spthy
 	mkdir -p case-studies
-	tamarin-prover $< --prove --stop-on-attack=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
+	tamarin-prover $< --prove --stop-on-trace=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	echo "\n/* Output" >>$(TMPRES)

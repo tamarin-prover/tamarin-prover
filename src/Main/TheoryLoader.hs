@@ -64,8 +64,8 @@ theoryLoadFlags =
   [ flagNone ["prove"] (addEmptyArg "addProofs")
       "Attempt to prove all security properties"
 
-  , flagOpt "dfs" ["stop-on-attack"] (updateArg "stopOnAttack") "DFS|BFS|NONE"
-      "How to search for attacks (default DFS)"
+  , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|NONE"
+      "How to search for traces (default DFS)"
 
   , flagOpt "5" ["bound", "b"]   (updateArg "bound") "INT"
       "Bound the depth of the proofs"
@@ -157,8 +157,8 @@ closeThy as =
     proofBound      = read <$> findArg "bound" as
     requireProofs   = argExists "addProofs" as
 
-    stopOnAttack :: Maybe String
-    stopOnAttack = findArg "stopOnAttack" as
+    stopOnTrace :: Maybe String
+    stopOnTrace = findArg "stopOnTrace" as
 
     -- apply partial application
     ----------------------------
@@ -181,10 +181,10 @@ closeThy as =
        | requireProofs = cutAttack $ maybe id boundProver proofBound autoProver
        | otherwise     = mempty
        where 
-         cutAttack = mapProverProof $ case map toLower <$> stopOnAttack of
+         cutAttack = mapProverProof $ case map toLower <$> stopOnTrace of
            Nothing     -> cutOnAttackDFS
            Just "dfs"  -> cutOnAttackDFS
            Just "none" -> id
            Just "bfs"  -> cutOnAttackBFS
-           Just other  -> error $ "unknown stop-on-attack method: " ++ other
+           Just other  -> error $ "unknown stop-on-trace method: " ++ other
 
