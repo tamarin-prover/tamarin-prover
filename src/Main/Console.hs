@@ -10,10 +10,10 @@ module Main.Console (
 
     defaultMain
 
-  -- * Static information about tamarin
+  -- * Static information about the Tamarin prover
   , programName
 
-  -- * Constructing interaction modes for tamarin
+  -- * Constructing interaction modes for Tamarin prover
   , TamarinMode
   , tamarinMode
 
@@ -88,23 +88,6 @@ lineWidth = 110
 shortLineWidth :: Int
 shortLineWidth = 78
 
-{-
--- | Version string with HTML markup.
-htmlVersionStr :: String
-htmlVersionStr = concat
-    [ link "http://www.infsec.ethz.ch/research/software#TAMARIN" programName
-    , " "
-    , showVersion version
-    , ", &copy; "
-    , link "https://infsec.ethz.ch/infsec/people/benschmi/index" "Benedikt Schmidt"
-    , ", "
-    , link "http://people.inf.ethz.ch/meiersi" "Simon Meier"
-    , ", ETH Zurich 2010-2012"
-    ]
-  where
-    link href name = 
-        "<a href=\"" ++ href ++ "\" target=\"new\">" ++ name ++ "</a>"
--}
 
 ------------------------------------------------------------------------------
 -- A simple generic representation of arguments
@@ -153,10 +136,10 @@ helpFlag = flagHelpSimple (addEmptyArg "help")
 
 
 ------------------------------------------------------------------------------
--- Modes for using the tamarin-prover
+-- Modes for using the Tamarin prover
 ------------------------------------------------------------------------------
 
--- | A representation of an interaction mode with the tamarin prover.
+-- | A representation of an interaction mode with the Tamarin prover.
 data TamarinMode = TamarinMode
        { tmName        :: String
        , tmCmdArgsMode :: Mode Arguments
@@ -167,7 +150,7 @@ data TamarinMode = TamarinMode
        , tmIsMainMode  :: Bool
        }
 
--- | Smart constructor for a tamarin mode.
+-- | Smart constructor for a 'TamarinMode'.
 tamarinMode :: String -> Help 
             -> (Mode Arguments -> Mode Arguments) -- ^ Changes to default mode.
             -> (TamarinMode -> Arguments -> IO ()) 

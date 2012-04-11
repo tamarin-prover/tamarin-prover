@@ -674,7 +674,7 @@ data GenerationInput = GenerationInput {
   , giOutDir      :: FilePath  -- ^ Path to the output directory.
   , giTheory      :: ClosedTheory  -- ^ Theory to output.
   , giCmdLine     :: String    -- ^ The command line that was used in this call to
-                               --   tamarin.
+                               --   the Tamarin prover.
   , giCompress    :: Bool      -- ^ True if sequents should be compressed
                                -- before visualization by unsoundly dropping
                                -- information.

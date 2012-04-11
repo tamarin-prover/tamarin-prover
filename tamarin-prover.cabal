@@ -9,10 +9,10 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
                     Simon Meier <simon.meier@inf.ethz.ch>
 maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
 copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2012
-synopsis:           The tamarin prover for security protocol analysis.
+synopsis:           The Tamarin prover for security protocol analysis.
 description:        
 
-    The @tamarin@ prover is a tool for the analysis of security protocols. It
+    The Tamarin prover is a tool for the analysis of security protocols. It
     implements a constraint solving algorithm that supports both falsification
     and verification of security protocols with respect to an unbounded number
     of sessions. The underlying security protocol model uses multiset
@@ -21,18 +21,18 @@ description:
     equational theories to model the algebraic properties of cryptographic
     operators.
     .
-    The paper describing the theory underlying the @tamarin@ prover was
+    The paper describing the theory underlying the Tamarin prover was
     accepted at CSF 2012. Its extended version is available from
     <http://www.infsec.ethz.ch/research/software#TAMARIN>.
     .
-    The @tamarin@ prover supports both a batch analysis mode and the
+    The Tamarin prover supports both a batch analysis mode and the
     interactive construction of security proofs using a GUI. Example protocols
     and the user guide are installed together with the prover. Just call the
     @tamarin-prover@ executable without any arguments to get more information.
     .
-    The @tamarin@ prover uses maude (<http://maude.cs.uiuc.edu/>) as a
+    The Tamarin prover uses maude (<http://maude.cs.uiuc.edu/>) as a
     unification backend and GraphViz (<http://www.graphviz.org/>) to visualize
-    constraint systems. Detailed instructions for installing the `tamarin`
+    constraint systems. Detailed instructions for installing the Tamarin
     prover are given at <http://www.infsec.ethz.ch/research/software#TAMARIN>.
 
 homepage:           http://www.infsec.ethz.ch/research/software#TAMARIN
@@ -63,8 +63,11 @@ data-files:
   etc/spthy.vim
   etc/filetype.vim
 
+  -- documentation
+  doc/MANUAL
+
   -- example files
-  examples/stable/UserGuide.spthy
+  examples/stable/Tutorial.spthy
   examples/stable/TLS.spthy
   -- examples/Typing_Invariant_Example.spthy
 

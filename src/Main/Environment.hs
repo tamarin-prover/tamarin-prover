@@ -6,7 +6,7 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
--- Helpers for inspecting the environment of the tamarin prover.
+-- Helpers for inspecting the environment of the Tamarin prover.
 module Main.Environment where
 
 import           Data.List

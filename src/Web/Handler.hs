@@ -328,7 +328,7 @@ getRootR :: Handler RepHtml
 getRootR = do
     theories <- getTheories
     defaultLayout $ do
-      setTitle "Welcome to the tamarin prover"
+      setTitle "Welcome to the Tamarin prover"
       addWidget (rootTpl theories)
 
 {-
@@ -348,7 +348,7 @@ postRootR = do
         setMessage "Loaded new theory!"
     theories <- getTheories
     defaultLayout $ do
-      setTitle "Welcome to the tamarin prover"
+      setTitle "Welcome to the Tamarin prover"
       addWidget (rootTpl theories widget enctype nonce)
   where
     submitForm = fieldsToDivs $ fileField $ FormFieldSettings

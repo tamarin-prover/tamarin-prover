@@ -13,13 +13,13 @@ copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2012
 
 synopsis:           Term manipulation library for the tamarin prover.
 
-description:        This is an internal library of the @tamarin@ prover for
+description:        This is an internal library of the Tamarin prover for
                     security protocol verification
                     (<hackage.haskell.org/package/tamarin-prover>). 
                     .
                     This library provides term manipulation infrastructure
                     (matching, unification, narrowing, finite variants) for
-                    the @tamarin@ prover. It uses maude
+                    the Tamarin prover. It uses maude
                     (<http://maude.cs.uiuc.edu/>) as a backend for
                     normalization, equational matching, and unification.
 

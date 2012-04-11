@@ -6,7 +6,7 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
--- Main module for the tamarin prover.
+-- Main module for the Tamarin prover.
 module Main.Mode.Batch (
     batchMode
   ) where
