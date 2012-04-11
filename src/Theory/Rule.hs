@@ -61,7 +61,7 @@ module Theory.Rule (
   , isISendRule
   , isCoerceRule
   , nfRule
-  , isTrivialProtoRuleAC
+  , isTrivialProtoVariantAC
 
   -- ** Conversion
   , ruleACToIntrRuleAC
@@ -420,19 +420,20 @@ isIntruderRule :: HasRuleName r => r -> Bool
 isIntruderRule ru =
     case ruleName ru of IntrInfo _ -> True; ProtoInfo _ -> False
 
--- | True if the protocol rule has no variants.
-isTrivialProtoRuleAC :: ProtoRuleAC -> Bool
-isTrivialProtoRuleAC (Rule info _ _ _) =
+-- | True if the protocol rule has only the trivial variant.
+isTrivialProtoVariantAC :: ProtoRuleAC -> ProtoRuleE -> Bool
+isTrivialProtoVariantAC (Rule info ps as cs) (Rule _ ps' as' cs') =
     L.get pracVariants info == Disj [emptySubstVFresh]
+    && ps == ps' && as == as' && cs == cs'
 
 
 -- Construction
 ---------------
 
-type RuleACConstrs = Disj (LNSubstVFresh)
+type RuleACConstrs = Disj LNSubstVFresh
 
 -- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
--- protocol rule, then the given typing and variants also need to handled.
+-- protocol rule, then the given typing and variants also need to be handled.
 someRuleACInst :: MonadFresh m 
                => RuleAC 
                -> m (RuleACInst, Maybe RuleACConstrs)

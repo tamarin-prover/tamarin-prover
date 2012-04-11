@@ -20,6 +20,7 @@ import Logic.Connectives
 
 import Control.Monad.Reader
 import Control.Monad.Bind
+import qualified Control.Monad.Trans.PreciseFresh as Precise
 import Control.Applicative
 
 import qualified Data.Map as M
@@ -40,7 +41,7 @@ import Debug.Trace.Ignore
 variantsProtoRule :: MaudeHandle -> ProtoRuleE -> ProtoRuleAC
 variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
     -- rename rule to decrease variable indices
-    (`evalFresh` nothingUsed) . rename  $ convertRule `evalFreshAvoiding` ru
+    (`Precise.evalFresh` Precise.nothingUsed) . renamePrecise  $ convertRule `evalFreshAvoiding` ru
   where
     convertRule = do
         (abstrPsCsAs, bindings) <- abstrRule

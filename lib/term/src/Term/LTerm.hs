@@ -54,6 +54,7 @@ module Term.LTerm (
   , frees
   , someInst
   , rename
+  , renamePrecise
   , eqModuloFreshnessNoAC
   , maximumVarIdx
   , avoid
@@ -385,7 +386,9 @@ frees = sortednub . freesList
 someInst :: (MonadFresh m, MonadBind LVar LVar m, HasFrees t) => t -> m t
 someInst = mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x (lvarName x))
 
--- | @rename t@ replaces all variables in @t@ with fresh variables
+-- | @rename t@ replaces all variables in @t@ with fresh variables.
+--   Note that the result is not equal for terms that are
+--   equal modulo changing the indices of variables.
 rename :: (MonadFresh m, HasFrees a) => a -> m a
 rename x = do
     maxVarIdx <- freshIdents (avoid x)
@@ -393,6 +396,12 @@ rename x = do
   where
     incVar maxVarIdx (LVar n so i) = pure $ LVar n so (i+maxVarIdx)
 
+-- | @renamePrecise t@ replaces all variables in @t@ with fresh variables.
+--   If 'Control.Monad.PreciseFresh' is used with non-AC terms and identical
+--   fresh state, the same result is returned for two terms that only differ
+--   in the indices of variables.
+renamePrecise :: (MonadFresh m, HasFrees a) => a -> m a
+renamePrecise x = evalBindT (someInst x) noBindings
 
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
 -- renaming of indices of free variables. Note that the normal form is not

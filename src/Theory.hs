@@ -797,13 +797,14 @@ prettyIncrementalProof = prettyProofWith ppStep (const id)
 -- | Pretty print an closed rule together with its assertion soundness proof.
 prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d
 prettyClosedProtoRule cru =
-    (prettyProtoRuleE  $ L.get cprRuleE cru) $--$
+    (prettyProtoRuleE ruE) $--$
     (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
   where
     ruAC = L.get cprRuleAC cru
+    ruE  = L.get cprRuleE cru
     ppRuleAC
-      | isTrivialProtoRuleAC ruAC = multiComment_ ["has exactly the trivial AC variant"]
-      | otherwise                 = multiComment $ prettyProtoRuleAC ruAC
+      | isTrivialProtoVariantAC ruAC ruE = multiComment_ ["has exactly the trivial AC variant"]
+      | otherwise                        = multiComment $ prettyProtoRuleAC ruAC
 
 -- | Pretty print an open theory.
 prettyOpenTheory :: HighlightDocument d => OpenTheory -> d
