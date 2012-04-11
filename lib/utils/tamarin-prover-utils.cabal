@@ -13,7 +13,7 @@ copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2012
 
 synopsis:           Utility library for the tamarin prover.
 
-description:        This is an internal library of the @tamarin@ prover for
+description:        This is an internal library of the Tamarin prover for
                     security protocol verification
                     (<hackage.haskell.org/package/tamarin-prover>). 
 

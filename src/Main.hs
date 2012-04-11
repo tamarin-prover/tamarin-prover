@@ -5,7 +5,7 @@
 -- 
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
--- Main module for the tamarin prover without a GUI
+-- Main module for the Tamarin prover without a GUI
 module Main where
 
 #ifdef NO_GUI

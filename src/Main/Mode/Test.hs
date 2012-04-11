@@ -6,7 +6,7 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
--- Self-test mode for the tamarin-prover
+-- Self-test mode for the Tamarin prover.
 module Main.Mode.Test (
     testMode
   ) where
