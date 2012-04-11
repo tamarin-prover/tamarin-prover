@@ -64,8 +64,6 @@ import Control.Applicative
 import Control.Monad.Fresh
 import Control.DeepSeq
 
-import Extension.Prelude
-
 import Logic.Connectives
 
 import Utils.Misc
@@ -147,9 +145,8 @@ rangeVFresh :: SubstVFresh c v -> [VTerm c v]
 rangeVFresh = M.elems . svMap
 
 -- | @varsRangeVFresh subst@ returns all variables in the range of the substitution
---   FIXME: use Monoid, dlist, write occurs function.
 varsRangeVFresh :: IsVar v => SubstVFresh c v -> [v]
-varsRangeVFresh = sortednub . concatMap varsVTerm . rangeVFresh
+varsRangeVFresh = varsVTerm . fAppList . rangeVFresh
 
 -- | Returns @True@ if the given variable in the domain of the
 --   substitution is just renamed by the substitution.
@@ -157,7 +154,7 @@ isRenamedVar :: LVar -> LSubstVFresh c -> Bool
 isRenamedVar lv subst =
     case viewTerm <$> imageOfVFresh subst lv of
       Just (Lit (Var lv')) | lvarSort lv == lvarSort lv' ->
-          lv' `notElem` (concatMap varsVTerm $ [ t | (v,t) <- substToListVFresh subst, v /= lv ])
+          lv' `notElem` (varsVTerm . fAppList $ [ t | (v,t) <- substToListVFresh subst, v /= lv ])
       _ -> False
 
 -- | Returns @True@ if the substitution is a renaming.
