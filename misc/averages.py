@@ -288,7 +288,7 @@ def initParser():
 
     (options, args) = parser.parse_args()
     if len(args) < 1:
-        print_usage()
+        parser.print_usage()
         sys.exit(-1)
     return (options, args)
 
