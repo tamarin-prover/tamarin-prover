@@ -29,6 +29,7 @@ module Theory (
   , thySignature
   , thyCache
   , thyItems
+  , theoryRules
   , addLemma
   , removeLemma
   , lookupLemma

@@ -14,19 +14,33 @@
 --   
 --   [protocol rules] 
 --
---     1. all facts are used with the same arity.
+--     1. no fresh names in rule. (protocol cond. 1)
+--     ==> freshNamesReport
 --
---     2. fr, in, and out, facts are used with arity 1.
+--     2. no Out or K facts in premises. (protocol cond. 2)
+--     ==> factReports
 --
---     3. fr facts are used with a variable of sort msg or sort fresh
+--     3. no Fr, In, or K facts in conclusions. (protocol cond. 3)
+--     ==> factReports
 --
---     5. fresh facts of the same rule contain different variables. [TODO]
+--     4. vars(rhs) subset of vars(lhs) u V_Pub
+--     ==> multRestrictedReport
 --
---     4. no fr, or in facts in conclusions.
+--     5. lhs does not contain reducible function symbols (*-restricted (a))
+--     ==> multRestrictedReport
 --
---     5. no out facts in premises.
+--     6. rhs does not contain * (*-restricted (b))
+--     ==> multRestrictedReport
 --
---     6. no protocol fact uses a reserved name => 
+--     7. all facts are used with the same arity.
+--
+--     8. fr, in, and out, facts are used with arity 1.
+--
+--     9. fr facts are used with a variable of sort msg or sort fresh
+--
+--     10. fresh facts of the same rule contain different variables. [TODO]
+--
+--     11. no protocol fact uses a reserved name => 
 --        [TODO] change parser to ensure this and pretty printer to show this.
 --
 --   [security properties]
@@ -58,7 +72,11 @@ import           Data.Monoid (mempty, mappend)
 import qualified Data.Set      as S
 import           Control.Basics
 import           Control.Category
+import           Data.Traversable hiding (mapM)
 
+import           Control.Monad.Bind
+
+import           Term.Maude.Signature
 import           Extension.Prelude
 import           Text.PrettyPrint.Class
 import           Theory
@@ -98,9 +116,13 @@ thyProtoRules thy = [ ru | RuleItem ru <- get thyItems thy ]
 lowerCase :: String -> String
 lowerCase = map toLower
 
--- | Pretty-print a comman, separated list of 'LVar's.
+-- | Pretty-print a comma, separated list of 'LVar's.
 prettyVarList :: Document d => [LVar] -> d
 prettyVarList = fsep . punctuate comma . map prettyLVar
+
+-- | Pretty-print a comma, separated list of 'LNTerms's.
+prettyLNTermList :: Document d => [LNTerm] -> d
+prettyLNTermList = fsep . punctuate comma . map prettyLNTerm
 
 -- | Wrap strings at word boundaries.
 wrappedText :: Document d => String -> d
@@ -413,6 +435,73 @@ uniqueInstsReport thy = do
             thyProtoRules thy
     -}
 
+
+-- | Check that all rules are multipliation restricted. Compared
+-- to the definition in the paper we are slightly more lenient.
+-- We also accept a rule that is an instance of a multiplication
+-- restricted rule.
+-- 1. Consistently abstract terms with outermost reducible function symbols
+--    occuring in lhs with fresh variables in rule.
+-- 2. check vars(rhs) subset of vars(lhs) u V_Pub for abstracted rule for abstracted variables.
+-- 3. check that * does not occur in rhs of abstracted rule.
+multRestrictedReport :: OpenTheory -> WfErrorReport
+multRestrictedReport thy = do
+    ru <- theoryRules thy
+    (,) "multiplication restriction of rules" <$>
+        case restrictedFailures ru of
+          ([],[]) -> []
+          (mults, unbounds) ->
+              return $
+                (text "The following rule is not multiplication restricted:")
+                $-$ (nest 2 (prettyProtoRuleE ru))
+                $-$ (text "")
+                $-$ (text "After replacing reducible function symbols in lhs with variables:")
+                $-$ (nest 2 $ prettyProtoRuleE (abstractRule ru))
+                $-$ (text "")
+                $-$ (if null mults then mempty
+                     else nest 2 $ (text "Terms with multiplication: ") <-> (prettyLNTermList mults))
+                $-$ (if null unbounds then mempty
+                     else nest 2 $ (text "Variables that occur only in rhs: ") <-> (prettyVarList unbounds))
+  where
+    abstractRule ru@(Rule i lhs acts rhs) =
+        (`evalFreshAvoiding` ru) .  (`evalBindT` noBindings) $ do
+        Rule i <$> mapM (traverse abstractTerm) lhs
+               <*> mapM (traverse replaceAbstracted) acts
+               <*> mapM (traverse replaceAbstracted) rhs
+
+    abstractTerm (viewTerm -> FApp (NonAC o) args) | o `S.member` irreducible =
+        fAppNonAC o <$> mapM abstractTerm args
+    abstractTerm (viewTerm -> Lit l) = return $ lit l
+    abstractTerm t = varTerm <$> importBinding (`LVar` sortOfLNTerm t) t "x"
+
+    replaceAbstracted t = do
+        b <- lookupBinding t
+        case b of
+          Just v -> return $ varTerm v
+          Nothing ->
+              case viewTerm t of
+                FApp o args ->
+                    fApp o <$> mapM replaceAbstracted args
+                Lit l       -> return $ lit l
+
+    restrictedFailures ru = (mults, unbound ruAbstr \\ unbound ru)
+      where
+        ruAbstr = abstractRule ru
+
+        mults = [ mt | Fact _ ts <- get rConcs ru, t <- ts, mt <- multTerms t ]
+
+        multTerms t@(viewTerm -> FApp (AC Mult) _)  = [t]
+        multTerms   (viewTerm -> FApp _         as) = concatMap multTerms as
+        multTerms _                                 = []
+
+    unbound ru = [v | v <- frees (get rConcs ru) \\ frees (get rPrems ru)
+                 , lvarSort v /= LSortPub ]
+
+
+    irreducible = irreducibleFunctionSymbols $ get (sigpMaudeSig . thySignature) thy
+
+
+
 -- | All 2-multicombinations of a list.
 -- multicombine2 :: [a] -> [(a,a)]
 -- multicombine2 xs0 = do (x,xs) <- zip xs0 $ tails xs0; (,) x <$> xs
@@ -435,6 +524,7 @@ checkWellformedness thy = concatMap ($ thy)
     , factReports
     , formulaReports
     , uniqueInstsReport
+    , multRestrictedReport
     ]
 
 -- | Adds a note to the end of the theory, if it is not well-formed.
