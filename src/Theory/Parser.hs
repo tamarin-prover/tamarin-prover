@@ -702,7 +702,7 @@ imp :: Parser (LFormula Name)
 imp = do
   lhs <- disjuncts
   asum [ try (kw EQUAL *> kw EQUAL *> kw GREATER) *> 
-             ((lhs .==>.) <$> disjuncts)
+             ((lhs .==>.) <$> imp)
        , pure lhs ]
 
 -- | An logical equivalence.
