@@ -1,19 +1,20 @@
 /*
-User guide to the tamarin prover for security protocol analysis
-===============================================================
+Tutorial for the Tamarin prover for security protocol analysis
+==============================================================
 
 Authors: 	Simon Meier, Benedikt Schmidt
-Date: 	        February 2012
+Date: 	        April 2012
 
 
 Introduction
 ------------
 
-This user guide assumes that you have a copy of our CSF'12 submission on
+This user guide assumes that you have a copy of our CSF'12 paper on
 "Automated Analysis of Diffie-Hellman Protocols and Advanced Security
-Properties". Drop us a mail, if you would like to receive a copy.
+Properties", whose extended version is available from
+http://www.infsec.ethz.ch/research/software#TAMARIN.
 
-The input files for the tamarin prover have the extension .spthy, which is
+The input files for the Tamarin prover have the extension .spthy, which is
 short for 'security protocol theory'. A security protocol theory specifies
 
   1. the signature and equational theory to use for the message algebra,
@@ -26,36 +27,8 @@ We explain each of these parts where they occur in the following security
 protocol theory. Before we start, a few notes on the syntax.
 As you probably noticed, comments are C-style. All identifiers are
 case-sensitive. The parser is layout-insensitive, i.e., your are free to use
-whitespace as it suits you. For people using the 'vim' text-editor, we provide
-syntax highlighting files. We explain how to install them, before we explain
-how to model a simple example protocol.
-
-
-Installing the vim syntax highlighting files
---------------------------------------------
-
-As you've probably noticed, calling 'tamarin-prover' without any arguments
-yields a help-message listing all available flags and the paths to the
-installed example protocol files. We call the directory above the example
-files the DATA_PATH. The examples are found at
-
-  DATA_PATH/examples
-
-and the 'vim' syntax highlighting files are found at
-
-  DATA_PATH/etc/
-
-To install them, copy
-
-  DATA_PATH/etc/filepath.vim
-
-to the ~/.vim directory and copy
-
-  DATA_PATH/etc/spthy.vim
-
-to the ~/.vim/syntax directory. If one of these directories does not exist,
-then just create it.
-
+whitespace as it suits you. We provide a complete specification of the input
+syntax in the reference MANUAL.
 
 
 Modeling a security protocol
@@ -64,11 +37,11 @@ Modeling a security protocol
 Every security protocol theory starts with a header of the following form.
 */
 
-theory UserGuide
+theory Tutorial
 begin
 
 /*
-Obviously, you can replace 'UserGuide' with any name you like to give your
+Obviously, you can replace 'Tutorial' with any name you like to give your
 theory. After 'begin', you can declare function symbols, equations that they
 must satisfy, multiset rewriting rules, and lemmas specifying security
 properties. Moreover, you can also insert formal comments, to structure your
@@ -131,7 +104,7 @@ Apart from 'diffie-hellman', all of these theories are subterm-convergent and
 can therefore also be declared directly, as above. You can inspect their
 definitions by uncommenting the following two line-comments and calling
 
-  tamarin-prover UserGuide.spthy
+  tamarin-prover Tutorial.spthy
 
 */
 
@@ -139,8 +112,8 @@ definitions by uncommenting the following two line-comments and calling
 //          hashing
 
 /*
-The call 'tamarin-prover UserGuide.spthy' parses the UserGuide.spthy file,
-computes the variants of the multiset rewriting rules and checks their
+The call 'tamarin-prover Tutorial.spthy' parses the Tutorial.spthy file,
+computes the variants of the multiset rewriting rules, checks their
 wellformedness (explained below), and pretty-prints the theory. The
 declaration of the signature and the equations can be found at the top of the
 pretty-printed theory.
@@ -148,10 +121,11 @@ pretty-printed theory.
 Proving all lemmas contained in the theory is as simple as adding the
 flag '--prove' to the call; i.e.,
 
-  tamarin-prover UserGuide.spthy --prove
+  tamarin-prover Tutorial.spthy --prove
 
 However, let's not go there yet. We first have to model the PKI and our
 protocol.
+
 
 Modeling the Public Key Infrastructure
 --------------------------------------
@@ -265,7 +239,7 @@ rule Serv_1:
                                                // decrypted request.
 
 /* Above, we model all applications of cryptographic algorithms explicitly.
-   Call 'tamarin-prover UserGuide.spthy' to inspect the finite variants of the
+   Call 'tamarin-prover Tutorial.spthy' to inspect the finite variants of the
    Serv_1 rule, which list all possible interactions of the destructors used.
    In our proof search, we will consider all these interactions.
 
@@ -273,8 +247,9 @@ rule Serv_1:
    the request is equal to '1'. We  model this by logging the claimed equality
    and then adapting the security property such that it only considers traces
    where all 'Eq' actions occur with two equal arguments. Note that 'Eq' is NO
-   builtins fact. Guarded trace properties are strong enough to formalize this
-   requirement without builtins support.
+   builtin fact. Guarded trace properties are strong enough to formalize this
+   requirement without builtin support. Note that inequalities can be modeled
+   analogously.
 
    We log the session-key setup requests received by servers to allow
    formalizing the authentication property for the client.
@@ -355,10 +330,10 @@ lemma Client_auth:
 /*
   You can verify them by calling
 
-    tamarin-prover --prove UserGuide.spthy
+    tamarin-prover --prove Tutorial.spthy
 
   This will first output some logging from the constraint solver and then the
-  UserGuide security protocol theory with the lemmas and their attached
+  Tutorial security protocol theory with the lemmas and their attached
   (dis)proofs.
 
   Finding attacks is very useful, to check that a security property is not
@@ -366,9 +341,10 @@ lemma Client_auth:
   provable, as otherwise there would be no possibility to setup a session key
   with a honest sever.
 
+  We can check for the existence of a trace using the 'exists-trace'
+  quantifier in front of the trace formula. When modeling protocols such
+  existence proof are very useful sanity checks.
 */
-
-// Must not be provable!
 lemma Client_session_key_honest_setup:
   exists-trace
   " (All x y #i. Eq(x,y) @ i ==> x = y)
@@ -379,55 +355,44 @@ lemma Client_session_key_honest_setup:
     )
   "
 
-/* As you can see from the output of 
-
-    tamarin-prover --prove UserGuide.spthy
-
-  It finds an "attack" on this property, as expected. To characterize all
-  possible attacks use
-
-    tamarin-prover --prove --stop-on-attack=NONE UserGuide.spthy
-
-  You can see from the output that there is exactly one way to setup a session
-  key with an honest server.
-
+/*
 
 Interactive proof visualization and construction
 ------------------------------------------------
 
 Just call 
 
-  tamarin-prover interactive UserGuide.spthy
+  tamarin-prover interactive Tutorial.spthy
 
 This will start a web-server that loads all security protocol theories in the
-same directory as UserGuide.spthy. Point your browser to
+same directory as Tutorial.spthy. Point your browser to
 
   http://localhost:3001
 
-and explore the the UserGuide theory interactively by clicking on the
-'UserGuide' entry in the table of loaded theories. You can prove a lemma
+and explore the the Tutorial theory interactively by clicking on the
+'Tutorial' entry in the table of loaded theories. You can prove a lemma
 interactively by clicking on the available proof methods (corresponding to
 applications of constraint reduction rules) or by calling the 'autoprover' by
-right-clicking on a node in the theory overview.
+right-clicking on a node in the theory overview. Note that that the proof
+methods in the GUI are sorted according to our heuristic. Always selecting the
+first proof method will result in the same proof as the ones constructed by
+the 'autoprover' and '--prove'.
 
 
 Conclusion
 ----------
 
-The case studies from our CSF'12 submission should now be readable. Recall
-that you can find them in the directory listed at the bottom of the help
-message, when calling 'tamarin-prover' without any arguments. If you have
+By now, you should have enough knowledge to understand the case studies from
+our CSF'12 paper. Recall that you can find them in the directory listed at the
+bottom of the help message, when calling 'tamarin-prover' without any
+arguments. Note that Tamarin also outputs the path to the reference MANUAL
+specifying and explaining the grammar of security protocol theories and giving
+some additional hints on additional theory exploited by Tamarin.  If you have
 further questions, please do not hesitate to contact either
 
   Benedikt Schmidt    benedikt.schmidt@inf.ethz.ch 
-  Simon Meier         simon.meier@inf.ethz.ch.
-
-Note that our CSF'12 submission does not explain how we compose multiple
-constraint reductions into a precomputed case distinction. It also does not
-explain how we delay splitting on the different variants of multiset rewriting
-rules. We will report on this in an upcoming technical report. This report
-will also explain the support for proving loop invariants by induction, as it
-is already supported by this version of 'tamarin'.
+  Simon Meier         simon.meier@inf.ethz.ch
+  Cas Cremers         cas.cremers@inf.ethz.ch
 
 
 BTW, every security protocol theory must be delimited with 'end'.

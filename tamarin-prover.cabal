@@ -46,6 +46,7 @@ data-dir:           data
 data-files:
   LICENSE
   AUTHORS
+  CHANGES
 
   -- cached intruder variants for DH-exponentiation
   intruder_variants_dh.spthy
@@ -69,7 +70,7 @@ data-files:
   -- example files
   examples/stable/Tutorial.spthy
   examples/stable/TLS.spthy
-  -- examples/Typing_Invariant_Example.spthy
+  examples/stable/InvariantsExample.spthy
 
   -- CSF'12 case studies
   examples/csf12/Artificial.spthy
@@ -110,9 +111,6 @@ extra-source-files:
   .ghci
   interactive-only-src/Paths_tamarin_prover.hs
   interactive-only-src/Lexer.x
-
-  README
-  CHANGES
 
 
 --------------

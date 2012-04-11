@@ -1,0 +1,336 @@
+User manual for the Tamarin prover
+==================================
+
+Date:    2012/04/11
+Authors: Simon Meier <iridcode@gmail.com>,
+         Benedikt Schmidt <beschmi@gmail.com>
+
+
+Installation
+============
+
+See http://www.infsec.ethz.ch/research/software#TAMARIN for detailed
+installation instructions for Linux and Mac. The Tamarin prover also runs on
+Windows. Drop us a mail, if you would like access to a precompiled binary.
+
+
+Syntax highlighting
+-------------------
+
+We provide syntax highlighting files for the 'vim' text editor. Here, we
+describe how to install them. Let DATA_PATH be the superdirectory of the
+examples directory output in Tamarin's help message.  The 'vim' syntax
+highlighting files are found at
+
+  DATA_PATH/etc/
+
+To install them, copy 'DATA_PATH/etc/filepath.vim' to the '~/.vim' directory
+and copy 'DATA_PATH/etc/spthy.vim' to the '~/.vim/syntax directory'. If one of
+these directories does not exist, then just create it.
+
+
+Usage
+=====
+
+Once you have installed the 'tamarin-prover' executable, calling it without
+any arguments will print a help message explaining its different modes and the
+paths to example files. We suggest that you first have a look at the
+'Tutorial.spthy' file referenced there.
+
+Once, you have done that, you probably want to start modeling your own
+protocols. We normally use the following workflow to do that.
+
+  1. Copy the example protocol that is most similar to the one your are
+     modeling. Let us assume that this copy is named 'myproto.spthy'.
+
+  2. Modify the protocol a bit and call 'tamarin-prover myproto.spthy' to
+     ensure that it still parses and all well-formedness checks pass. This
+     way you get immediate feedback on your changes. Moreover, you can see the
+     expansions of syntactic sugar like the built-in signatures for hasing or
+     asymmetric encryption.
+
+  3. Once you are satisfied with your model, check if the automated prover
+     succeeds in analyzing your protocol by calling
+     
+       'tamarin-prover myproto.spthy --prove'
+
+  4. If the Tamarin prover does not terminate, then you can either bound the
+     proof-depth using the '--bound' flag or you can switch to the interactive
+     GUI to analyze what is going wrong. Call
+
+       'tamarin-prover interactive myproto.spthy'
+
+     and try to construct the proof interactively.
+
+     Note that you can also use the GUI to sanity check your model. Just go
+     through the message theory and check that it really models what you
+     intent to model. Moreover, the precomputed case distinctions, described
+     below, give a good overview about the behaviour/specification of your
+     protocol. If something is wrong with your model, then it is likely that
+     you can see it already from the precomputed case distinctions.
+
+
+
+Additional Theory
+=================
+
+Most of the theory behind the Tamarin prover is described in our CSF 2012
+paper, whose extended version is available from
+
+  http://www.infsec.ethz.ch/research/software#TAMARIN
+
+The implementation exploits a slightly refined theory, which allows to store
+multiple constraint reduction steps in the form of *precomputed case
+distinctions* and which allows to delay the enumeration of the finite variants
+of multiset rewriting rules using an *equation store*. We explain these two
+components below. We also give a sneak-peek preview on the theory we have
+developed for dealing with loop-invariants.
+
+
+Precomputed Case Distinctions
+-----------------------------
+
+Apart from unification, the most common step performed by Tamarin is the
+enumeration of the possible origins of an open premise. Most of these
+backwards steps result in a number of trivial further constraint reduction
+steps being applied immediatly. Instead of applying them over and over during
+proof/counter-example construction, we precompute the result of doing one
+backwards step and use the resulting precomputed case distinctions during
+proof/counter-example search.
+
+This precomputation is sound because the applicability of all our constraint
+reduction rules is invariant under set union and instantiation. We precompute
+cases for an arbitrary instance of every protocol fact and every outermost
+constructor of a message.
+
+
+Equation Store
+--------------
+
+We store equations in a special form to allow delaying case splits on them.
+This allows for example determine the shape of a signed message without case
+splitting on its variants. In the GUI, you can see the equation store being
+pretty printed as follows.
+
+  free-substituion
+
+  1. fresh-substitution-group
+  ...
+  n. fresh substitution-group
+
+The free-substitution represents the equalities that hold for the free
+variables in the constraint system in the usual normal form, i.e., a
+substitution. The variants of a protocol rule are represented as a group of
+substitutions mapping free variables of the constraint system to terms
+containing only fresh variables. The different fresh-substitions in a group
+are interpreted as a disjunction.
+
+Logically, the equation store represents expression of the form
+
+      x_1 = t_free_1
+    & ...
+    & x_n = t_free_n
+    & ( (Ex y_111 ... y_11k. x_111 = t_fresh_111 & ... & x_11m = t_fresh_11m)
+      | ...
+      | (Ex y_1l1 ... y_1lk. x_1l1 = t_fresh_1l1 & ... & x_1lm = t_fresh_1lm)
+      )
+    & ..
+    & ( (Ex y_o11 ... y_o1k. x_o11 = t_fresh_o11 & ... & x_o1m = t_fresh_o1m)
+      | ...
+      | (Ex y_ol1 ... y_olk. x_ol1 = t_fresh_ol1 & ... & x_1lm = t_fresh_1lm)
+      )
+
+
+(Loop) Invariants
+-----------------
+
+The normal form conditions that we impose on dependency graphs can be seen as
+a strong invariant on security protocol execution. As we have shown in our
+case studies many security properties follow from these normal form
+conditions. However, for some protocols additional invariants are necessary to
+prove their security properties.
+
+We can formalize such invariants by specifying them as trace formulas. We can
+prove them using the induction scheme associated to the traces of a protocol.
+We using this induction scheme in the form of a trace formula conversion that
+converts a guarded trace formula \phi to a semantically equivalent formula
+\phi_{inductive}. This formula \phi_{inductive} is again a guarded trace
+formula. It is easier to prove because it contains the induction hypothesis in
+a weakened form. Semantically, the formula \phi_{inductive} states that we are
+looking for counter-examples that are minimal with respect to the prefix-order
+on traces.
+
+You can apply induction by clicking on the 'induction' proof method in the
+GUI or adding the [inductive] attribute to a lemma. An example protocol whose
+proof require induction is given in 'examples/stable/InvariantsExample.spthy'.
+
+
+
+Security Protocol Theories
+==========================
+
+A security protocol theory specifies a signature, an equational theory, a
+security protocol, and several lemmas, which formalize security properties.
+The paper explaining the theory behind Tamarin has been published at CSF 2012
+and its extended version is available from
+
+  http://www.infsec.ethz.ch/research/software#TAMARIN
+
+Here, we explain the formal syntax of the security protocol theory format that
+is processed by Tamarin. We recommend first reading the 'Tutorial.spthy'
+example before delving into the following section.
+
+Comments are C-style: 
+
+    /* for a multi-line comment */
+    // for a line-comment
+
+All security protocol theory are named and delimited by 'begin' and 'end'.
+We explain the non-terminals of the body in the following paragraphs.
+
+    security_protocol_theory := 'theory' ident 'begin' body 'end'
+    body := (signature_spec | rule | lemma | formal_comment)+
+
+Here, we use the term signature more liberally to denote both the defined
+function symbols and the equalities describing their interaction.  Note that
+our parser is stateful and remembers what functions have been defined. It will
+only parse function applications of defined functions.
+
+    signature_spec := functions | equations | built_in
+    functions      := 'functions' ':' (ident '/' arity) list
+    equations      := 'equations' ':' (term '=' term) list
+    arity          := digit+
+
+Note that the equations must be subterm-convergent. Tamarin provides built-in
+sets of function definitions and subterm convergent equations. They are
+expanded upon parsing and you can therefore inspect them by pretty printing
+the file using 'tamarin-prover your_file.spthy'. The built-in 'diffie-hellman'
+is special. It refers to the equations given in the paper. You need to enable
+it to parse terms containing exponentiations, e.g.,  g ^ x.
+
+    built_in       := 'builtins' ':' built_ins list
+    built_ins      := 'diffie-hellman' 
+                    | 'hashing' | 'symmetric-encryption' 
+                    | 'asymmetric-encryption' | 'signing' 
+
+Multiset rewriting rules are specified as follows. The protocol corresponding
+to a security protocol theory is the set of all multiset rewriting rules
+specified in the body of the theory.
+
+    rule := 'rule' ident ':' 
+            [let_block]
+            '[' facts ']' ( '-->' | '--[' facts ']->') '[' facts ']'
+
+    let_block := 'let' (ident '=' term)+ 'in'
+
+The let-block allows more succinct specifications. The equations are applied
+in a bottom-up fashion. For example,
+
+    let x = y
+        y = <z,x>
+    in [] --> [ A(y)]    is desugared to    [] --> [ A(<z,y>) ]
+
+This becomes a lot less confusing if you keep the set of variables on the
+left-hand side separate from the free variables on the right-hand side ;-)
+
+Lemmas specify security properties. By default, the given formula is
+interpreted as a property that must hold for all traces of the protocol of the
+security protocol theory. You can change this using the 'exists-trace' trace
+quantifier.
+
+    lemma := 'lemma' ident [lemma_attrs] ':' 
+             [trace_quantifier] 
+             '"' formula '"'
+    lemma_attrs := '[' ('typing' | 'reuse' | 'inductive') ']'
+    trace_quantifier := 'all-traces' | 'exists-trace'
+
+
+Formal comments are used to make the input more readable. In contrast
+to /*...*/ and //... comments, formal comments are stored and output
+again when pretty-printing a security protocol theory.
+
+    formal_comment := ident '{*' ident* '*}'
+
+For the syntax of terms, you best look at our examples. A common pitfall is to
+use an undefined function symbol. This results in an error message pointing to
+a position slightly before the actual use of the function due to some
+ambiguity in our grammar.
+
+We provide special syntax for tuples, multiplications, exponentiation, nullary
+and binary function symbols. An n-ary tuple <t1,...,tn> is parsed as n-ary,
+right-associative application of pairing. Multiplication and exponentiation
+are parsed left-associatively. For a binary operator 'enc' you can write
+'enc{m}k' or 'enc(m,k)'. For nullary function symbols, there is no need to
+write 'nullary()'. Note that the number of arguments of an n-ary function
+application must agree with the arity given in the function definition.
+
+    tupleterm := multterm list
+    multterm  := expterm ('*' expterm)*
+    expterm   := term    ('^' term   )*
+    term      := '<' tupleterm '>'     // n-ary right-associative pairing
+               | '(' multterm ')'      // a nested term
+               | nullary_fun
+               | binary_app
+               | nary_app
+               | literal
+
+    nullary_fun := <all-nullary-functions-defined-up-to-here>
+    binary_app  := binary_fun '{' tupleterm '}' term
+    binary_fun  := <all-binary-functions-defined-up-to-here>
+    nary_app    := nary_fun '(' multterm* ')'
+
+    literal := "'"  ident "'"      // a fixed, public name
+             | '$'  ident          // a variable of sort 'pub'
+             | "~'" ident "'"      // a fixed, fresh name
+             | "~"  ident          // a variable of sort 'fresh'
+             | "#"  ident          // a variable of sort 'temp'
+             | ident               // a variable of sort 'msg'
+
+Facts do not have to be defined up-front. This will probably change once we
+implement user-defined sorts. Facts prefixed with '!' are persistent facts.
+All other facts are linear. There are six reserved fact symbols: In, Out, KU,
+KD, K, and Ded. KU and KD facts are used for construction and deconstruction
+rules. The 'Ded' fact logs the messages deduced by construction rules. See the
+InductionInvariant.spthy example for more information.
+
+    facts := fact list
+    fact := ['!'] ident '(' multterm list ')'
+
+Formulas are trace formulas as described in our paper. Note that we are a bit
+more liberal with respect to guardedness. We accept a conjunction of atoms as
+guards.
+
+    formula     := atom | '(' iff ')' | ( 'All' | 'Ex' ) ident+ '.' iff
+    iff         := imp '<=>' imp
+    imp         := disjuncts '==>' disjuncts
+    disjuctions := conjuncts ('|' disjuncts)+  // left-associative
+    conjuncts   := negation  ('|' disjuncts)+  // left-associative
+    negation    := 'not' formula
+
+    atom := tvar '<' tvar              // ordering of temporal variables
+          | '#' ident '=' '#' ident    // equality between temporal variables
+          | multterm  '=' multterm     // equality between terms
+          | fact '@' tvar              // action
+          | 'T'                        // true
+          | 'F'                        // false
+          | '(' formula ')'            // nested formula
+
+    // Where unambiguous the '#' sort prefix can be dropped.
+    tvar := ['#'] ident
+
+Identifiers always start with a letter. Moreover, they must not be one of the
+reserved keywords 'let', 'in', or 'rule'.
+
+    ident := alpha (alpha | digit)*
+
+
+
+Developing Tamarin
+==================
+
+The Tamarin prover is under active development. We are grateful to receive
+bug-reports. If you consider building on top of Tamarin, then you might
+consider integrating your idea into the main source repository. Please feel
+free to contact us such that we can discuss the next steps towards fully
+verified systesm :-)
+

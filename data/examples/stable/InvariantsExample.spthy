@@ -1,0 +1,69 @@
+theory InvariantsExample
+begin
+
+builtins: symmetric-encryption
+
+/*
+ * Protocol:	Minimal example of handle-based crypto
+ * Modeler: 	Simon Meier
+ * Date: 	April 2012
+ *
+ * Status: 	working
+
+ This example demonstrates the verification problem that we face when
+ reasoning about handle-based cryptography. The protocol is simple. It models
+ a crypto coprocessor that can generate new keys, use them to encrypt data,
+ and wrap keys with other stored keys.
+
+ */
+
+
+/* Generate a fresh handle and a fresh key, store their association, and
+ * output the handle */
+rule NewKey: 
+  [ Fr(~h), Fr(~k) ] 
+  --[ NewKey(~h,~k) ]-> 
+  [ !Store(~h,~k) , Out(~h) ]
+
+/* Encrypt a message using a key referenced by a handle */
+rule EncryptMsg:
+  [ !Store(h,k), In(<h, m>)] 
+  -->
+  [ Out( senc{m}k ) ]
+
+/* Wrap a key reference by a handle using another key referenced by a second
+ * handle */
+rule WrapKey:
+  [ !Store(h1,k1), !Store(h2,k2), In(<h1,h2>)] 
+  -->
+  [ Out( senc{k1}k2 ) ]
+  
+
+/* The 'reuse' attribute marks this property such that it should be used in
+ * proof of later theorems. This is what we'd like to do with such a property
+ * which proves that no created key can be deduced by the adversary. The
+ * 'invariant' attribute denotes that this property is an inductive invariant
+ * of normal dependency graphs. This instructs Tamarin to use induction as the
+ * first proof step.
+ * 
+ * Note that construction of using 'Ded'-facts to log the conclusions of
+ * construction rules is work in progress. Tamarin is missing some constraint
+ * reduction rules to infer the presence of 'Ded'-facts in all cases.
+ * Moreover, it might also miss some rules to deal with the 'Last(i)' atoms,
+ * which states that 'i' is the last index in the trace that is annotated with
+ * an action.
+ *
+ * Tamarin can prove this property automatically.
+ */
+lemma NewKey_invariant [reuse, invariant]:
+  "not(Ex #i #j h k. NewKey(h, k) @ i & Ded(k) @ j) "
+
+/* This property talks only about standard traces that do not refer to the
+ * actions of construction rules. It can be proven thanks to the
+ * NewKey_invariant proven before. Try an interactive proof after removing the
+ * 'reuse' flag above to see what goes wrong without induction and the 'Ded'
+ * facts. */
+lemma NewKey_secrecy:
+  "not(Ex #i #j h k. NewKey(h, k) @ i & K(k) @ j) "
+
+end
