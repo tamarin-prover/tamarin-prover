@@ -14,14 +14,10 @@ section{* NAXOS *}
  * Property: 	eCK security
  *
  * Status: 	Working
- *
- * Notes:	New version with 'let' blocks and refactored setup.
- * 		This is an experimental spec to figure out better ways
- * 		of modeling AKE protocols.
  */
 
-functions: H/1
-functions: KDF/1
+functions: h1/1
+functions: h2/1
 
 /* Protocol rules */
 
@@ -41,42 +37,42 @@ rule generate_ltk:
 
 /* Initiator */
 rule Init_1:
-  let exI = H(<~ekI, ~lkI >)
+  let exI = h1(<~eskI, ~lkI >)
       hkI = 'g'^exI
   in
-   [   Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
-   --[ Sid( ~ekI, < 'Init', $I, $R, hkI > ) ]->
-   [   Init_1( ~ekI, $I, $R, ~lkI, hkI )
-     , !Ephk(~ekI, ~ekI)
+   [   Fr( ~eskI ), !Ltk( $I, ~lkI ) ]
+   -->
+   [   Init_1( ~eskI, $I, $R, ~lkI, hkI )
+     , !Ephk(~eskI, ~eskI)
      , Out( hkI ) ]
 
 rule Init_2:
-  let pkR    = 'g'^~lkR
-      exI    = H(< ~ekI, ~lkI >)
-      seskey = KDF(< Y^~lkI, pkR^exI, Y^exI, $I, $R >) 
+  let pkR = 'g'^~lkR
+      exI = h1(< ~eskI, ~lkI >)
+      kI  = h2(< Y^~lkI, pkR^exI, Y^exI, $I, $R >) 
   in
-   [   Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R, pkR ) ]
-   --[ Sid( ~ekI, < 'Init', $I, $R, hkI, Y >)
-     , Match( ~ekI, < 'Resp', $R, $I, hkI, Y >)
-     , Accept( ~ekI, $I, $R, seskey)
+   [   Init_1( ~eskI, $I, $R, ~lkI , hkI), !Pk( $R, pkR ), In( Y ) ]
+   --[ Accept( ~eskI, $I, $R, kI)
+     , Sid( ~eskI, < 'Init', $I, $R, hkI, Y >)
+     , Match( ~eskI, < 'Resp', $R, $I, hkI, Y >)
      ]->
-   [   !Sessk( ~ekI, seskey) ]
+   [   !Sessk( ~eskI, kI) ]
 
 /* Responder */
 rule Resp_1:
-  let pkI    = 'g'^~lkI
-      exR    = H(< ~ekR, ~lkR >)
-      hkr    = 'g'^exR
-      seskey = KDF(< pkI^exR, X^~lkR, X^exR, $I, $R >) 
+  let pkI = 'g'^~lkI
+      exR = h1(< ~eskR, ~lkR >)
+      hkr = 'g'^exR
+      kR  = h2(< pkI^exR, X^~lkR, X^exR, $I, $R >) 
   in
-   [   In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, pkI) ]
-   --[ Sid( ~ekR, <'Resp', $R, $I, X, hkr >)
-     , Match( ~ekR, <'Init', $I, $R, X, hkr> )
-     , Accept( ~ekR, $R, $I, seskey )
+   [   Fr( ~eskR ), !Ltk($R, ~lkR), !Pk($I, pkI), In( X ) ]
+   --[ Accept( ~eskR, $R, $I, kR )
+     , Sid( ~eskR, <'Resp', $R, $I, X, hkr >)
+     , Match( ~eskR, <'Init', $I, $R, X, hkr> )
      ]->
    [   Out( hkr ),
-       !Ephk(~ekR, ~ekR),
-       !Sessk( ~ekR, seskey) ]
+       !Ephk(~eskR, ~eskR),
+       !Sessk( ~eskR, kR) ]
 
 /* Key Reveals for the eCK model */
 rule Sessk_reveal: 
@@ -119,36 +115,36 @@ lemma eCK_key_secrecy:
      * Test is not clean if one of the following has happened:
      */
     /* 1a. session-key-reveal of test thread. */
-      (Ex #i4. SesskRev( Test ) @ i4 )
+      (Ex #i3. SesskRev( Test ) @ i3 )
 
     /* 1b. session-key-reveal of matching session */
-    | (Ex MatchingSession #i4 #i5 ms.
+    | (Ex MatchingSession #i3 #i4 ms.
     	   /* ( MatchingSession's 'ms' info matches with Test ) */
-           ( Sid ( MatchingSession, ms ) @ i4 & Match( Test, ms ) @ i5)
+           ( Sid ( MatchingSession, ms ) @ i3 & Match( Test, ms ) @ i4)
 	   & (
-	     (Ex #i6. SesskRev( MatchingSession ) @ i6 )
+	     (Ex #i5. SesskRev( MatchingSession ) @ i5 )
 	   )
       )
     /* 2. If matching session exists and ... */
-    | (Ex MatchingSession #i4 #i5 ms.
+    | (Ex MatchingSession #i3 #i4 ms.
     	   /* ( MatchingSession's 'ms' info matches with Test ) */
-           ( Sid ( MatchingSession, ms ) @ i4 & Match( Test, ms ) @ i5)
+           ( Sid ( MatchingSession, ms ) @ i3 & Match( Test, ms ) @ i4)
 	   & (
 	   /* 2a. reveal either both sk_A and esk_A, or */
-	     (Ex #i6 #i7. LtkRev  ( A ) @ i6  & EphkRev ( Test  ) @ i7 )
+	     (Ex #i5 #i6. LtkRev  ( A ) @ i5  & EphkRev ( Test  ) @ i6 )
 	   /* 2b. both sk_B and esk_B */
-	   | (Ex #i6 #i7. LtkRev  ( B ) @ i6  & EphkRev ( MatchingSession ) @ i7 )
+	   | (Ex #i5 #i6. LtkRev  ( B ) @ i5  & EphkRev ( MatchingSession ) @ i6 )
 	   )
       )
     /* 3. No matching session exists and ... */
-    | ( ( not(Ex MatchingSession #i4 #i5 ms.
+    | ( ( not(Ex MatchingSession #i3 #i4 ms.
     	   /* ( MatchingSession's 'ms' info matches with Test ) */
-           Sid ( MatchingSession, ms ) @ i4 & Match( Test, ms ) @ i5 ) )
+           Sid ( MatchingSession, ms ) @ i3 & Match( Test, ms ) @ i4 ) )
 	   & (
 	   /* 3a. reveal either sk_B, or */
-	     (Ex #i6    . LtkRev (B) @ i6 )
+	     (Ex #i5    . LtkRev (B) @ i5 )
 	   /* 3b. both sk_A and esk_A */
-	   | (Ex #i6 #i7. LtkRev (A) @ i6 & EphkRev ( Test ) @ i7 )
+	   | (Ex #i5 #i6. LtkRev (A) @ i5 & EphkRev ( Test ) @ i6 )
 	   )
       )
     )
