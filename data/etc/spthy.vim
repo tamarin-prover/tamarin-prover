@@ -51,7 +51,7 @@ syn match spthyConstr           "\<diffie-hellman"
 syn match spthyConstr           "\<symmetric-encryption"
 syn match spthyConstr           "\<asymmetric-encryption"
 
-syn keyword spthyDecl           lemma assert equations functions builtin protocol property properties in let theory begin end subsection section text note
+syn keyword spthyDecl           lemma assert equations functions builtins protocol property properties in let theory begin end subsection section text note
 syn match spthyDecl             "\<exists-trace"
 syn match spthyDecl             "\<all-traces"
 syn match spthyDecl             "\<enable"
