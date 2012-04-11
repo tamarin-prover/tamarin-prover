@@ -30,8 +30,6 @@ import           Control.Monad
 import           Control.Applicative hiding (empty, many, optional)
 import           Control.Category
 
-import           Extension.Prelude
-
 import           Text.Parsec.Pos
 import           Text.Parsec hiding (token, (<|>), string )
 import qualified Text.Parsec as P
@@ -364,13 +362,15 @@ expterm plit = chainl1 (term plit) ((\a b -> fAppExp (a,b)) <$ kw HAT)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Parser (Term l) -> Parser (Term l)
-multterm plit = chainl1 (expterm plit) ((\a b -> fAppMult [a,b]) <$ kw STAR)
-  -- FIXME: parse as n-ary multiplication
+multterm plit = do
+    dh <- enableDH <$> getState
+    if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
+        then chainl1 (expterm plit) ((\a b -> fAppMult [a,b]) <$ kw STAR)
+        else term plit
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
-tupleterm plit = chainr1 pterm ((\a b -> fAppPair (a,b))<$ kw COMMA)
-  where pterm = ifM (enableDH <$> getState) (multterm plit) (term plit)
+tupleterm plit = chainr1 (multterm plit) ((\a b -> fAppPair (a,b))<$ kw COMMA)
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
