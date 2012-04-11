@@ -1,4 +1,23 @@
-  - fixed: intruder rule generation
+* 0.4.0.0 The version we used for our CSF'12 paper
+
+   - core prover:
+       - improved speed of constraint solver
+       - improved goal selection heuristic
+       - compute better loop-breakers for precomputing case splits
+       - experimental support for partial forward evaluation
+       - experimental support for loop invariants about construction rules
+
+   - input syntax:
+       - allow searching for trace existence using 'exists-trace'
+       - allow local let-block in rule definitions
+
+   - GUI:
+       - normalize variable indices before display
+       - more compact and beautiful default style for graph layout
+
+   - bugfixes: quite a slew, most notably
+       - compilation on Windows and GHC 7.4.1
+       - intruder rule generation works now correctly again
 
 * 0.1.1.0 Bug-fix release
   
