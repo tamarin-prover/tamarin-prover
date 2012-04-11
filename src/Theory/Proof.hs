@@ -266,6 +266,9 @@ instance Foldable ProofStep where
 instance Traversable ProofStep where
     traverse f (ProofStep m i) = ProofStep m <$> f i
 
+instance HasFrees a => HasFrees (ProofStep a) where
+    foldFrees f (ProofStep m i) = foldFrees f m `mappend` foldFrees f i
+    mapFrees f (ProofStep m i)  = ProofStep <$> mapFrees f m <*> mapFrees f i
 
 ------------------------------------------------------------------------------
 -- Proof Trees
@@ -717,10 +720,10 @@ simplifyVariableIndices :: HasFrees a => Proof a -> Proof a
 simplifyVariableIndices =
     go noBindings Precise.nothingUsed
   where
-    go bindSt freshSt (LNode (ProofStep info x) cs) =
-        case Precise.runFresh (runBindT (someInst x) bindSt) freshSt of
-            ((x', bindSt'), freshSt') ->
-                LNode (ProofStep info x') (M.map (go bindSt' freshSt') cs)
+    go bindSt freshSt (LNode step cs) =
+        case Precise.runFresh (runBindT (someInst step) bindSt) freshSt of
+            ((step', bindSt'), freshSt') ->
+                LNode step' (M.map (go bindSt' freshSt') cs)
 
 
 prettyContradiction :: Document d => Contradiction -> d

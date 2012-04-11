@@ -597,7 +597,7 @@ annotateLemmaProof :: Lemma IncrementalProof
 annotateLemmaProof lem = 
     mapProofInfo (second interpret) prf
   where
-    prf = annotateProof annotate $ get lProof lem
+    prf = annotateProof annotate $ simplifyVariableIndices $ get lProof lem
     annotate step cs = 
         ( psInfo step
         , mconcat $ proofStepStatus step : incomplete ++ map snd cs
