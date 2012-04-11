@@ -117,6 +117,11 @@ div.warning {
     color: #800000;
 }
 
+.sc {
+    font-family: Roman,serif;
+    font-variant: small-caps;
+}
+
 /* Specific Styles
  *****************/
 

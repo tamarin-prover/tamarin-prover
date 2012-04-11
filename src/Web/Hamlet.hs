@@ -204,7 +204,7 @@ headerTpl :: TheoryInfo -> Widget
 headerTpl info = [HAMLET|
     <div #header-info>
       Running the\
-      <a href="http://www.infsec.ethz.ch/research/software#TAMARIN">Tamarin prover</a>
+      <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span> prover</a>
       \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
@@ -281,7 +281,7 @@ pathTpl info TheoryMain = return [whamlet|
     <h3>Quick introduction</h3>
     <noscript>
       <div class="warning">
-        Warning: JavaScript must be enabled for the Tamarin prover GUI to function properly.
+        Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
     <p>
       <em>Left pane:</em> Proof scripts display. You \
       can select proof states and examine them further \
@@ -316,11 +316,11 @@ introTpl = [HAMLET|
     <h1><span class="sc">Tamarin</span> prover GUI
     <noscript>
       <div class="warning">
-        Warning: JavaScript must be enabled for the Tamarin prover GUI to function properly.
+        Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
     <h2>About
     <p>
       You are running the\
-      <strong><a href="http://www.infsec.ethz.ch/research/software#TAMARIN">Tamarin prover</a></strong>
+      <strong><a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span> prover</a></strong>
       \ version #{showVersion version} in interactive mode.<br>
       \ &copy;&nbsp;2010&nbsp;-&nbsp;2012 \
       <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt
