@@ -276,7 +276,7 @@ ul#navigation li a {
     margin-top: 0em;
     border-radius: 0.3em;
     padding: 0.3em;
-    border: solid 1px #006178;
+    border: solid 1px #3a6c78;
     /* Gecko */
     background:
       -moz-linear-gradient(
@@ -364,13 +364,13 @@ ul#navigation li ul li:hover {
 
 table {
     border-collapse: collapse;
-    border: solid 2px #006178;
+    border: solid 2px #3a6c78;
 }
 
 table th {
     padding: 0.5em;
     background: #dfeff1;
-    border: solid 1px #006178;
+    border: solid 1px #3a6c78;
     border-bottom: solid 1px #e3fcff;
 }
 
@@ -378,7 +378,7 @@ table td {
     background: #fff;
     text-align: left;
     padding: 0.5em;
-    border: solid 1px #006178;
+    border: solid 1px #3a6c78;
 }
 
 /* Headings
@@ -393,31 +393,31 @@ h1.pane-head {
     padding: 0.5em;
     background: #dfeff1;
     border-bottom: solid 1px #eff7f8;
-    border-top: solid 1px #006178;
-    /* border-top: solid 5px #006178; */
+    border-top: solid 1px #3a6c78;
+    /* border-top: solid 5px #3a6c78; */
     width: 100%;
     /* Gecko */
     background:
       -moz-linear-gradient(
         top,
-        #006178 0%,
+        #3a6c78 0%,
         #dfeff1 20%);
     /* Presto */
     background:
       -o-linear-gradient(
         top,
-        #006178 0%,
+        #3a6c78 0%,
         #dfeff1 20%);
     /* Webkit */
     background:
       -webkit-linear-gradient(
         top,
-        #006178 0%,
+        #3a6c78 0%,
         #dfeff1 20%);
     /* Trident */
     filter:
       progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#00a6cd',
+        startColorstr='#66b9cd',
         endColorstr='#dfeff1',
         GradientType=0 );
 }
@@ -494,24 +494,24 @@ h4 {
       -moz-linear-gradient(
         top,
         #dfeff1 0%,
-        #00a6cd 100%);
+        #66b9cd 100%);
     /* Presto */
     background:
       -o-linear-gradient(
         top,
         #dfeff1 0%,
-        #00a6cd 100%);
+        #66b9cd 100%);
     /* Webkit */
     background:
       -webkit-linear-gradient(
         top,
         #dfeff1 0%,
-        #00a6cd 100%);
+        #66b9cd 100%);
     /* Trident */
     filter:
       progid:DXImageTransform.Microsoft.gradient(
         startColorstr='#dfeff1',
-        endColorstr='#00a6cd',
+        endColorstr='#66b9cd',
         GradientType=0 );
 }
 
@@ -537,7 +537,7 @@ div#header-links a.save-link {
 }
 
 .ui-layout-resizer {
-    background-color: #006178;
+    background-color: #3a6c78;
     z-index: 1 !important;
 }
 
