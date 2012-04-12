@@ -327,15 +327,17 @@ introTpl = [HAMLET|
     <p>
       You are running 
       <strong><a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a></strong>
-      \ version #{showVersion version} in interactive mode.<br>
+      \ version #{showVersion version} in interactive mode.
+    <p>
       Authors:
       \ <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>,
-      \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a><br>
+      \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a>.<br>
       Contributors:
       \ <a href="http://people.inf.ethz.ch/cremersc/index.html">Cas Cremers</a>,
-      \ <a href="https://cssx.ch">Cedric Staub</a>,
+      \ <a href="https://cssx.ch">Cedric Staub</a>.<br>
+      <span class="sc">Tamarin</span> was developed at the 
       \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
-      \ <a href="http://www.ethz.ch">ETH Zurich</a>
+      \ <a href="http://www.ethz.ch">ETH Zurich</a>.
     <p>
       This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
       \ you are welcome to redistribute it according to its
