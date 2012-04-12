@@ -110,7 +110,6 @@ rootTpl theories = [whamlet|
     \^{introTpl}
     <h2>Currently loaded theories
     <p
-      Here is a list of the theories that are currently loaded.<br/>
       \^{theoriesTpl theories}
   |]
     {-
@@ -317,10 +316,9 @@ introTpl = [HAMLET|
     <noscript>
       <div class="warning">
         Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
-    <h2>About
     <p>
-      You are running the\
-      <strong><a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span> prover</a></strong>
+      You are running 
+      <strong><a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a></strong>
       \ version #{showVersion version} in interactive mode.<br>
       \ &copy;&nbsp;2010&nbsp;-&nbsp;2012 \
       <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt
