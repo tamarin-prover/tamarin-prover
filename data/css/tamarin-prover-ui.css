@@ -160,7 +160,7 @@ img.graph {
 
 div#help {
     border: solid 1px #000000;
-    background: #C6F8FF;
+    background: #dfeff1;
     padding: 1em;
     margin: 2em;
 }
@@ -281,24 +281,24 @@ ul#navigation li a {
     background:
       -moz-linear-gradient(
         top,
-        #c6f8ff 0%,
+        #dfeff1 0%,
         #7dc0cd 100%);
     /* Presto */
     background:
       -o-linear-gradient(
         top,
-        #c6f8ff 0%,
+        #dfeff1 0%,
         #7dc0cd 100%);
     /* Webkit */
     background:
       -webkit-linear-gradient(
         top,
-        #c6f8ff 0%,
+        #dfeff1 0%,
         #7dc0cd 100%);
     /* Trident */
     filter:
       progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#c6f8ff',
+        startColorstr='#dfeff1',
         endColorstr='#7dc0cd',
         GradientType=0 );
 }
@@ -369,7 +369,7 @@ table {
 
 table th {
     padding: 0.5em;
-    background: #c6f8ff;
+    background: #dfeff1;
     border: solid 1px #006178;
     border-bottom: solid 1px #e3fcff;
 }
@@ -391,8 +391,8 @@ h1.pane-head {
     position: relative;
     margin: 0em;
     padding: 0.5em;
-    background: #c6f8ff;
-    border-bottom: solid 1px #e3fcff;
+    background: #dfeff1;
+    border-bottom: solid 1px #eff7f8;
     border-top: solid 1px #006178;
     /* border-top: solid 5px #006178; */
     width: 100%;
@@ -401,24 +401,24 @@ h1.pane-head {
       -moz-linear-gradient(
         top,
         #006178 0%,
-        #c6f8ff 20%);
+        #dfeff1 20%);
     /* Presto */
     background:
       -o-linear-gradient(
         top,
         #006178 0%,
-        #c6f8ff 20%);
+        #dfeff1 20%);
     /* Webkit */
     background:
       -webkit-linear-gradient(
         top,
         #006178 0%,
-        #c6f8ff 20%);
+        #dfeff1 20%);
     /* Trident */
     filter:
       progid:DXImageTransform.Microsoft.gradient(
         startColorstr='#00a6cd',
-        endColorstr='#c6f8ff',
+        endColorstr='#dfeff1',
         GradientType=0 );
 }
 
@@ -487,30 +487,30 @@ h4 {
 
 .ui-layout-pane-north {
     font-size: 0.8em;
-    background: #c6f8ff;
+    background: #dfeff1;
     border-bottom: solid 1px #7dc0cd;
     /* Gecko */
     background:
       -moz-linear-gradient(
         top,
-        #c6f8ff 0%,
+        #dfeff1 0%,
         #00a6cd 100%);
     /* Presto */
     background:
       -o-linear-gradient(
         top,
-        #c6f8ff 0%,
+        #dfeff1 0%,
         #00a6cd 100%);
     /* Webkit */
     background:
       -webkit-linear-gradient(
         top,
-        #c6f8ff 0%,
+        #dfeff1 0%,
         #00a6cd 100%);
     /* Trident */
     filter:
       progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#c6f8ff',
+        startColorstr='#dfeff1',
         endColorstr='#00a6cd',
         GradientType=0 );
 }
