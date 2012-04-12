@@ -1,0 +1,14 @@
+
+
+eff7f8	midway light blue/white
+
+dfeff1	main fader light blue
+66b9cd	main fader mid blue
+
+3a6c78	blue shadow
+
+
+7dc0cd	low highlight (bottom of fader bar line)
+
+
+
