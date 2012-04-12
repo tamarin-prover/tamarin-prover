@@ -276,30 +276,30 @@ ul#navigation li a {
     margin-top: 0em;
     border-radius: 0.3em;
     padding: 0.3em;
-    border: solid 1px #aeaeae;
+    border: solid 1px #006178;
     /* Gecko */
     background:
       -moz-linear-gradient(
         top,
-        #eeeeee 0%,
-        #cccccc 100%);
+        #c6f8ff 0%,
+        #7dc0cd 100%);
     /* Presto */
     background:
       -o-linear-gradient(
         top,
-        #eeeeee 0%,
-        #cccccc 100%);
+        #c6f8ff 0%,
+        #7dc0cd 100%);
     /* Webkit */
     background:
       -webkit-linear-gradient(
         top,
-        #eeeeee 0%,
-        #cccccc 100%);
+        #c6f8ff 0%,
+        #7dc0cd 100%);
     /* Trident */
     filter:
       progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#eeeeee',
-        endColorstr='#cccccc',
+        startColorstr='#c6f8ff',
+        endColorstr='#7dc0cd',
         GradientType=0 );
 }
 
@@ -364,43 +364,21 @@ ul#navigation li ul li:hover {
 
 table {
     border-collapse: collapse;
+    border: solid 2px #006178;
 }
 
 table th {
     padding: 0.5em;
-    background: #eeeeee;
-    border: solid 1px #aeaeae;
-    /* Gecko */
-    background:
-      -moz-linear-gradient(
-        top,
-        #eeeeee 0%,
-        #cccccc 100%);
-    /* Presto */
-    background:
-      -o-linear-gradient(
-        top,
-        #eeeeee 0%,
-        #cccccc 100%);
-    /* Webkit */
-    background:
-      -webkit-linear-gradient(
-        top,
-        #eeeeee 0%,
-        #cccccc 100%);
-    /* Trident */
-    filter:
-      progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#eeeeee',
-        endColorstr='#cccccc',
-        GradientType=0 );
+    background: #c6f8ff;
+    border: solid 1px #006178;
+    border-bottom: solid 1px #e3fcff;
 }
 
 table td {
     background: #fff;
     text-align: left;
     padding: 0.5em;
-    border: solid 1px #aeaeae;
+    border: solid 1px #006178;
 }
 
 /* Headings
@@ -413,32 +391,34 @@ h1.pane-head {
     position: relative;
     margin: 0em;
     padding: 0.5em;
-    background: #eeeeee;
-    border-bottom: solid 1px #aeaeae;
+    background: #c6f8ff;
+    border-bottom: solid 1px #e3fcff;
+    border-top: solid 1px #006178;
+    /* border-top: solid 5px #006178; */
     width: 100%;
     /* Gecko */
     background:
       -moz-linear-gradient(
         top,
-        #eeeeee 0%,
-        #cccccc 100%);
+        #006178 0%,
+        #c6f8ff 20%);
     /* Presto */
     background:
       -o-linear-gradient(
         top,
-        #eeeeee 0%,
-        #cccccc 100%);
+        #006178 0%,
+        #c6f8ff 20%);
     /* Webkit */
     background:
       -webkit-linear-gradient(
         top,
-        #eeeeee 0%,
-        #cccccc 100%);
+        #006178 0%,
+        #c6f8ff 20%);
     /* Trident */
     filter:
       progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#eeeeee',
-        endColorstr='#cccccc',
+        startColorstr='#00a6cd',
+        endColorstr='#c6f8ff',
         GradientType=0 );
 }
 
@@ -507,15 +487,39 @@ h4 {
 
 .ui-layout-pane-north {
     font-size: 0.8em;
-    background: #eeeeee;
-    border-bottom: solid 1px #aeaeae;
+    background: #c6f8ff;
+    border-bottom: solid 1px #7dc0cd;
+    /* Gecko */
+    background:
+      -moz-linear-gradient(
+        top,
+        #c6f8ff 0%,
+        #00a6cd 100%);
+    /* Presto */
+    background:
+      -o-linear-gradient(
+        top,
+        #c6f8ff 0%,
+        #00a6cd 100%);
+    /* Webkit */
+    background:
+      -webkit-linear-gradient(
+        top,
+        #c6f8ff 0%,
+        #00a6cd 100%);
+    /* Trident */
+    filter:
+      progid:DXImageTransform.Microsoft.gradient(
+        startColorstr='#c6f8ff',
+        endColorstr='#00a6cd',
+        GradientType=0 );
 }
 
 div#header-info {
     float: left;
     font-weight: bold;
     padding: 0.75em;
-    border: solid 1px #eeeeee;
+    border: 0px;
 }
 
 div#header-links {
@@ -533,7 +537,7 @@ div#header-links a.save-link {
 }
 
 .ui-layout-resizer {
-    background-color: #aeaeae;
+    background-color: #006178;
     z-index: 1 !important;
 }
 
