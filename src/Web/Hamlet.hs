@@ -202,8 +202,8 @@ threadsTpl threads = [HAMLET|
 headerTpl :: TheoryInfo -> Widget
 headerTpl info = [HAMLET|
     <div #header-info>
-      Running the\
-      <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span> prover</a>
+      Running
+      \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a>
       \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
@@ -328,16 +328,18 @@ introTpl = [HAMLET|
       You are running 
       <strong><a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a></strong>
       \ version #{showVersion version} in interactive mode.<br>
-      \ &copy;&nbsp;2010&nbsp;-&nbsp;2012 \
-      <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt
-      , <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>
-      , <a href="https://cssx.ch">Cedric Staub</a>
-      , <a href="http://www.infsec.ethz.ch">Information Security Institute</a>
-      , <a href="http://www.ethz.ch">ETH Zurich</a>
+      Authors:
+      \ <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>,
+      \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a><br>
+      Contributors:
+      \ <a href="http://people.inf.ethz.ch/cremersc/index.html">Cas Cremers</a>,
+      \ <a href="https://cssx.ch">Cedric Staub</a>,
+      \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
+      \ <a href="http://www.ethz.ch">ETH Zurich</a>
     <p>
       This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
       \ you are welcome to redistribute it according to its
-      \ <a href="/static/LICENSE" type="text/plain">LICENSE</a>
+      \ <a href="/static/LICENSE" type="text/plain">LICENSE.</a>
   |]
 
 {-
