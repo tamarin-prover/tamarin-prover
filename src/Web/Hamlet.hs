@@ -277,34 +277,42 @@ pathTpl info TheoryMain = return [whamlet|
         <li>Theory: #{get thyName $ tiTheory info}
         <li>Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
         <li>Origin: #{show $ tiOrigin info}
-    <h3>Quick introduction</h3>
-    <noscript>
-      <div class="warning">
-        Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
-    <p>
-      <em>Left pane:</em> Proof scripts display. You \
-      can select proof states and examine them further \
-      by clicking on them!
-    <p>
-      <em>Center pane:</em> Visualization and \
-      information display relating to the currently \
-      selected item.
-    <p>
-      <em>Keyboard shortcuts:</em> The interactive interface supports \
-      multiple keyboard shortcuts for convenience. 
-      <ul>
-        <li>
-          Keys <span class=keys>j and k</span>: Jump to the next/previous \
-          proof path within the currently focused lemma.
-        <li>
-          Keys <span class=keys>J and K</span>: Jump to the next/previous \
-          open goal within the currently focused lemma, or to the \
-          next/previous lemma if there are no more open goals in the current \
-          lemma.
-        <li>
-          Keys <span class=keys>1 to 9</span>: Apply the proof method with \
-          the given number as shown in the applicable proof method section \
-          in the main view.
+    <div id="help">
+      <h3>Quick introduction</h3>
+      <noscript>
+        <div class="warning">
+          Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
+      <p>
+        <em>Left pane: Proof scripts display.
+        <ul>
+          <li>
+            When a theory is initially loaded, there will be a line at the end of each theorem \
+            stating <tt>"by sorry // not yet proven"</tt>. Click on <tt>sorry</tt> to inspect the proof state.
+          <li>
+            Right-click to show further options, such as auto-prove.
+          <li>
+            Click on the icons to the right of a lemma name to reveal further options.
+      <p>
+        <em>Center pane: Visualization.
+        <ul>
+          <li>
+            Visualization and information display relating to the currently \
+            selected item.
+      <p>
+        <em>Keyboard shortcuts.
+        <ul>
+          <li>
+            <span class="keys">j/k</span>: Jump to the next/previous \
+            proof path within the currently focused lemma.
+          <li>
+            <span class="keys">J/K</span>: Jump to the next/previous \
+            open goal within the currently focused lemma, or to the \
+            next/previous lemma if there are no more open goals in the current \
+            lemma.
+          <li>
+            <span class="keys">1-9</span>: Apply the proof method with \
+            the given number as shown in the applicable proof method section \
+            in the main view.
   |]
 pathTpl info path = wrapThHtml $ htmlThyPath (tiTheory info) path
 

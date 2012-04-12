@@ -114,7 +114,14 @@ div.warning {
 
 .keys {
     font-weight: bold;
-    color: #800000;
+    font-size: 1.1em;
+    color: #003040;
+    font-family:
+        'DejaVu Sans Mono', /* Linux */
+        'Liberation Mono',  /* Linux/RedHat */
+        'Monaco',           /* Mac OS X */
+        'Lucida Consola',   /* Windows */
+        monospace;          /* Fallback */
 }
 
 .sc {
@@ -149,6 +156,13 @@ p.rules {
 
 img.graph {
     border: solid 1px #ccc;
+}
+
+div#help {
+    border: solid 1px #000000;
+    background: #C6F8FF;
+    padding: 1em;
+    margin: 2em;
 }
 
 /* Forms
