@@ -3,7 +3,7 @@ theory STS_MAC begin
 // Function signature and definition of the equational theory E
 
 builtin: diffie-hellman
-functions: fst/1, h/1, mac/2, pair/2, pk/1, sign/2, snd/1, true/0,
+functions: KDF/1, fst/1, h/1, mac/2, pair/2, pk/1, sign/2, snd/1, true/0,
            verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
@@ -36,60 +36,54 @@ rule (modulo E) Init_2:
         mac(Y^~ekI, sign(<Y, 'g'^~ekI>, ~ltkR))>
    )
    ]
-  --[ AcceptedI( ~ekI, $I, $R, 'g'^~ekI, Y, h(Y^~ekI) ) ]->
+  --[ AcceptedI( ~ekI, $I, $R, 'g'^~ekI, Y, KDF(Y^~ekI) ) ]->
    [
    Out( <$I, $R, sign(<'g'^~ekI, Y>, ~ltkI), 
          mac(Y^~ekI, sign(<'g'^~ekI, Y>, ~ltkI))>
    ),
-   !SessionKey( ~ekI, $I, $R, h(Y^~ekI) )
+   !SessionKey( ~ekI, $I, $R, KDF(Y^~ekI) )
    ]
 
   /*
   rule (modulo AC) Init_2:
      [
-     Init_1( $I.1, $R.2, ~ltkI.4, ~ekI.3 ), !Pk( $R.2, pk(~ltkR.5) ),
-     In( <$R.2, $I.1, Y.6, sign(<Y.6, 'g'^~ekI.3>, ~ltkR.5), 
-          mac(z.8, sign(<Y.6, 'g'^~ekI.3>, ~ltkR.5))>
+     Init_1( $I, $R, ~ltkI, ~ekI ), !Pk( $R, pk(~ltkR) ),
+     In( <$R, $I, Y, sign(<Y, 'g'^~ekI>, ~ltkR), 
+          mac(z, sign(<Y, 'g'^~ekI>, ~ltkR))>
      )
      ]
-    --[ AcceptedI( ~ekI.3, $I.1, $R.2, 'g'^~ekI.3, Y.6, h(z.8) ) ]->
+    --[ AcceptedI( ~ekI, $I, $R, 'g'^~ekI, Y, KDF(z) ) ]->
      [
-     Out( <$I.1, $R.2, sign(<'g'^~ekI.3, Y.6>, ~ltkI.4), 
-           mac(z.8, sign(<'g'^~ekI.3, Y.6>, ~ltkI.4))>
+     Out( <$I, $R, sign(<'g'^~ekI, Y>, ~ltkI), 
+           mac(z, sign(<'g'^~ekI, Y>, ~ltkI))>
      ),
-     !SessionKey( ~ekI.3, $I.1, $R.2, h(z.8) )
+     !SessionKey( ~ekI, $I, $R, KDF(z) )
      ]
   
     variants (modulo AC)
-    1. ~ekI.3
-             = ~ekI.67
-       Y.6   = Y.68
-       z.8   = Y.68^~ekI.67
+    1. ~ekI  = ~ekI.80
+       Y     = Y.83
+       z     = Y.83^~ekI.80
     
-    2. ~ekI.3
-             = ~ekI.67
-       Y.6   = z.68^inv(~ekI.67)
-       z.8   = z.68
+    2. ~ekI  = ~ekI.88
+       Y     = z.93^inv(~ekI.88)
+       z     = z.93
     
-    3. ~ekI.3
-             = ~ekI.71
-       Y.6   = x.72^x.73
-       z.8   = x.72^(~ekI.71*x.73)
+    3. ~ekI  = ~ekI.271
+       Y     = x.534^x.535
+       z     = x.534^(~ekI.271*x.535)
     
-    4. ~ekI.3
-             = ~ekI.71
-       Y.6   = x.72^inv((~ekI.71*x.73))
-       z.8   = x.72^inv(x.73)
+    4. ~ekI  = ~ekI.271
+       Y     = x.534^inv((~ekI.271*x.535))
+       z     = x.534^inv(x.535)
     
-    5. ~ekI.3
-             = ~ekI.71
-       Y.6   = x.72^(x.73*inv(~ekI.71))
-       z.8   = x.72^x.73
+    5. ~ekI  = ~ekI.271
+       Y     = x.534^(x.535*inv(~ekI.271))
+       z     = x.534^x.535
     
-    6. ~ekI.3
-             = ~ekI.75
-       Y.6   = x.76^(x.77*inv((~ekI.75*x.78)))
-       z.8   = x.76^(x.77*inv(x.78))
+    6. ~ekI  = ~ekI.279
+       Y     = x.549^(x.551*inv((~ekI.279*x.550)))
+       z     = x.549^(x.551*inv(x.550))
   */
 
 rule (modulo E) Resp_1:
@@ -104,45 +98,39 @@ rule (modulo E) Resp_1:
 
   /*
   rule (modulo AC) Resp_1:
-     [ !Ltk( $R.2, ~ltkR.4 ), Fr( ~ekR.3 ), In( <$I.1, $R.2, X.5> ) ]
+     [ !Ltk( $R, ~ltkR ), Fr( ~ekR ), In( <$I, $R, X> ) ]
     -->
      [
-     Resp_1( $I.1, $R.2, ~ltkR.4, ~ekR.3, X.5 ),
-     Out( <$R.2, $I.1, 'g'^~ekR.3, sign(<'g'^~ekR.3, X.5>, ~ltkR.4), 
-           mac(z.7, sign(<'g'^~ekR.3, X.5>, ~ltkR.4))>
+     Resp_1( $I, $R, ~ltkR, ~ekR, X ),
+     Out( <$R, $I, 'g'^~ekR, sign(<'g'^~ekR, X>, ~ltkR), 
+           mac(z, sign(<'g'^~ekR, X>, ~ltkR))>
      )
      ]
   
     variants (modulo AC)
-    1. ~ekR.3
-             = ~ekR.61
-       X.5   = X.62
-       z.7   = X.62^~ekR.61
+    1. ~ekR  = ~ekR.72
+       X     = X.74
+       z     = X.74^~ekR.72
     
-    2. ~ekR.3
-             = ~ekR.61
-       X.5   = z.62^inv(~ekR.61)
-       z.7   = z.62
+    2. ~ekR  = ~ekR.80
+       X     = z.84^inv(~ekR.80)
+       z     = z.84
     
-    3. ~ekR.3
-             = ~ekR.65
-       X.5   = x.66^x.67
-       z.7   = x.66^(~ekR.65*x.67)
+    3. ~ekR  = ~ekR.248
+       X     = x.488^x.489
+       z     = x.488^(~ekR.248*x.489)
     
-    4. ~ekR.3
-             = ~ekR.65
-       X.5   = x.66^inv((~ekR.65*x.67))
-       z.7   = x.66^inv(x.67)
+    4. ~ekR  = ~ekR.248
+       X     = x.488^inv((~ekR.248*x.489))
+       z     = x.488^inv(x.489)
     
-    5. ~ekR.3
-             = ~ekR.65
-       X.5   = x.66^(x.67*inv(~ekR.65))
-       z.7   = x.66^x.67
+    5. ~ekR  = ~ekR.248
+       X     = x.488^(x.489*inv(~ekR.248))
+       z     = x.488^x.489
     
-    6. ~ekR.3
-             = ~ekR.69
-       X.5   = x.70^(x.71*inv((~ekR.69*x.72)))
-       z.7   = x.70^(x.71*inv(x.72))
+    6. ~ekR  = ~ekR.256
+       X     = x.503^(x.505*inv((~ekR.256*x.504)))
+       z     = x.503^(x.505*inv(x.504))
   */
 
 rule (modulo E) Resp_2:
@@ -152,50 +140,44 @@ rule (modulo E) Resp_2:
         mac(X^~ekR, sign(<X, 'g'^~ekR>, ~ltkI))>
    )
    ]
-  --[ AcceptedR( ~ekR, $I, $R, X, 'g'^~ekR, h(X^~ekR) ) ]->
-   [ !SessionKey( ~ekR, $I, $R, h(X^~ekR) ) ]
+  --[ AcceptedR( ~ekR, $I, $R, X, 'g'^~ekR, KDF(X^~ekR) ) ]->
+   [ !SessionKey( ~ekR, $I, $R, KDF(X^~ekR) ) ]
 
   /*
   rule (modulo AC) Resp_2:
      [
-     !Pk( $I.1, pk(~ltkI.4) ), Resp_1( $I.1, $R.2, ~ltkR.5, ~ekR.3, X.6 ),
-     In( <$I.1, $R.2, sign(<X.6, 'g'^~ekR.3>, ~ltkI.4), 
-          mac(z.8, sign(<X.6, 'g'^~ekR.3>, ~ltkI.4))>
+     !Pk( $I, pk(~ltkI) ), Resp_1( $I, $R, ~ltkR, ~ekR, X ),
+     In( <$I, $R, sign(<X, 'g'^~ekR>, ~ltkI), 
+          mac(z, sign(<X, 'g'^~ekR>, ~ltkI))>
      )
      ]
-    --[ AcceptedR( ~ekR.3, $I.1, $R.2, X.6, 'g'^~ekR.3, h(z.8) ) ]->
-     [ !SessionKey( ~ekR.3, $I.1, $R.2, h(z.8) ) ]
+    --[ AcceptedR( ~ekR, $I, $R, X, 'g'^~ekR, KDF(z) ) ]->
+     [ !SessionKey( ~ekR, $I, $R, KDF(z) ) ]
   
     variants (modulo AC)
-    1. ~ekR.3
-             = ~ekR.67
-       X.6   = X.68
-       z.8   = X.68^~ekR.67
+    1. ~ekR  = ~ekR.80
+       X     = X.83
+       z     = X.83^~ekR.80
     
-    2. ~ekR.3
-             = ~ekR.67
-       X.6   = z.68^inv(~ekR.67)
-       z.8   = z.68
+    2. ~ekR  = ~ekR.88
+       X     = z.93^inv(~ekR.88)
+       z     = z.93
     
-    3. ~ekR.3
-             = ~ekR.71
-       X.6   = x.72^x.73
-       z.8   = x.72^(~ekR.71*x.73)
+    3. ~ekR  = ~ekR.271
+       X     = x.534^x.535
+       z     = x.534^(~ekR.271*x.535)
     
-    4. ~ekR.3
-             = ~ekR.71
-       X.6   = x.72^inv((~ekR.71*x.73))
-       z.8   = x.72^inv(x.73)
+    4. ~ekR  = ~ekR.271
+       X     = x.534^inv((~ekR.271*x.535))
+       z     = x.534^inv(x.535)
     
-    5. ~ekR.3
-             = ~ekR.71
-       X.6   = x.72^(x.73*inv(~ekR.71))
-       z.8   = x.72^x.73
+    5. ~ekR  = ~ekR.271
+       X     = x.534^(x.535*inv(~ekR.271))
+       z     = x.534^x.535
     
-    6. ~ekR.3
-             = ~ekR.75
-       X.6   = x.76^(x.77*inv((~ekR.75*x.78)))
-       z.8   = x.76^(x.77*inv(x.78))
+    6. ~ekR  = ~ekR.279
+       X     = x.549^(x.551*inv((~ekR.279*x.550)))
+       z     = x.549^(x.551*inv(x.550))
   */
 
 rule (modulo E) Sessionkey_Reveal:
@@ -204,6 +186,7 @@ rule (modulo E) Sessionkey_Reveal:
   /* has exactly the trivial AC variant */
 
 lemma (modulo E) KI_Perfect_Forward_Secrecy_I:
+  all-traces
   "not(Ex ttest I.1 R.2 sessKey.3 #i1.4 #k.5 hki.6 hkr.7.
         (((((AcceptedI( ttest, I.1, R.2, hki.6, hkr.7, sessKey.3 ) @ #i1.4) &
             (not(Ex #r.8. Corrupt( I.1 ) @ #r.8))) &
@@ -216,7 +199,7 @@ lemma (modulo E) KI_Perfect_Forward_Secrecy_I:
                ) @ #i4.12))))"
 /* proof based on the same lemma modulo AC */
 /*
-guarded formula characterizing all attacks:
+guarded formula characterizing all counter-examples:
 "Ex ttest I.1 R.2 sessKey.3 #i1.4 #k.5 hki.6 hkr.7.
   (AcceptedI( ttest, I.1, R.2, hki.6, hkr.7, sessKey.3 ) @ #i1.4) &
   (K( sessKey.3 ) @ #k.5)
@@ -231,29 +214,29 @@ guarded formula characterizing all attacks:
     F)"
 */
 simplify
-solve( (#i1.4, 0)[Init_1( $I.9, $R.10, ~ltkI.12, ~ekI.11 )] )
+solve( (#i1.4, 0)[Init_1( $I.8, $R.8, ~ltkI.8, ~ekI.8 )] )
   case Init_1
-  solve( (#i1.4, 1)[!Pk( $R.10, pk(~ltkR.13) )] )
+  solve( (#i1.4, 1)[!Pk( $R.8, pk(~ltkR.8) )] )
     case Register_pk_clone_case_1
-    solve( KU((#vf.17, 0), mac(z.16, sign(<hkr.7, 'g'^~ekI.11>, ~ltkR.13))) )
+    solve( KU((#vf.9, 0), mac(z.8, sign(<hkr.7, 'g'^~ekI.8>, ~ltkR.8))) )
       case Resp_1
-      solve( (#k.5, 0)[!KU( f_.19, h('g'^(~ekI.115*~ekR.116))
+      solve( (#k.5, 0)[!KU( f_.11, KDF('g'^(~ekI.76*~ekR.77))
                        )] /* may loop */ )
         case Sessionkey_Reveal_case_4
-        solve( KU((#vf.141, 0), mac('g'^(~ekI.115*~ekR.116),
-                                    sign(<x.167^x.168, 'g'^~tid.129>, ~ltkI.136))) )
+        solve( KU((#vf.90, 0), mac('g'^(~ekI.76*~ekR.77),
+                                   sign(<x.103^x.104, 'g'^~tid.87>, ~ltkI.89))) )
           case Init_2_case_1
           solve( splitEqs(1) )
             case split
-            solve( KU((#vf.17, 0), 'g'^~ekR.236) )
+            solve( KU((#vf.9, 0), 'g'^~ekR.153) )
               case Resp_1
-              solve( KU((#vf.17, 0), sign(<'g'^~ekR.236, 'g'^~ekI.235>, ~ltkR.13)) )
+              solve( KU((#vf.9, 0), sign(<'g'^~ekR.153, 'g'^~ekI.152>, ~ltkR.8)) )
                 case Resp_1
-                solve( KU((#vf.71, 0), 'g'^~ekI.347) )
+                solve( KU((#vf.44, 0), 'g'^~ekI.235) )
                   case Init_1
-                  solve( KU((#vf.141, 0), sign(<'g'^~ekI.347, 'g'^~ekR.348>, ~ltkI.12)) )
+                  solve( KU((#vf.90, 0), sign(<'g'^~ekI.235, 'g'^~ekR.236>, ~ltkI.8)) )
                     case Init_2
-                    SOLVED (trace found)
+                    SOLVED // trace found
                   qed
                 qed
               qed
@@ -266,6 +249,7 @@ solve( (#i1.4, 0)[Init_1( $I.9, $R.10, ~ltkI.12, ~ekI.11 )] )
 qed
 
 lemma (modulo E) KI_Perfect_Forward_Secrecy_R:
+  all-traces
   "not(Ex ttest I.1 R.2 sessKey.3 #i1.4 #k.5 hki.6 hkr.7.
         (((((AcceptedR( ttest, I.1, R.2, hki.6, hkr.7, sessKey.3 ) @ #i1.4) &
             (not(Ex #r.8. Corrupt( I.1 ) @ #r.8))) &
@@ -278,7 +262,7 @@ lemma (modulo E) KI_Perfect_Forward_Secrecy_R:
                ) @ #i4.12))))"
 /* proof based on the same lemma modulo AC */
 /*
-guarded formula characterizing all attacks:
+guarded formula characterizing all counter-examples:
 "Ex ttest I.1 R.2 sessKey.3 #i1.4 #k.5 hki.6 hkr.7.
   (AcceptedR( ttest, I.1, R.2, hki.6, hkr.7, sessKey.3 ) @ #i1.4) &
   (K( sessKey.3 ) @ #k.5)
@@ -293,32 +277,32 @@ guarded formula characterizing all attacks:
     F)"
 */
 simplify
-solve( (#i1.4, 0)[!Pk( $I.9, pk(~ltkI.12) )] )
+solve( (#i1.4, 0)[!Pk( $I.8, pk(~ltkI.8) )] )
   case Register_pk_clone_case_1
-  solve( (#i1.4, 1)[Resp_1( $I.9, $R.10, ~ltkR.13, ~ekR.11, hki.6 )] )
+  solve( (#i1.4, 1)[Resp_1( $I.8, $R.8, ~ltkR.8, ~ekR.8, hki.6 )] )
     case Resp_1
-    solve( KU((#vf.17, 0), mac(z.16, sign(<hki.6, 'g'^~ekR.11>, ~ltkI.12))) )
+    solve( KU((#vf.9, 0), mac(z.8, sign(<hki.6, 'g'^~ekR.8>, ~ltkI.8))) )
       case Init_2_case_2
-      solve( (#k.5, 0)[!KU( f_.19, h('g'^(~ekR.125*~ekI.126))
+      solve( (#k.5, 0)[!KU( f_.11, KDF('g'^(~ekR.85*~ekI.86))
                        )] /* may loop */ )
         case Sessionkey_Reveal_case_2
-        solve( KU((#vf.76, 0), mac('g'^(~ekR.125*~ekI.126),
-                                   sign(<'g'^~ekR.125, 'g'^~ekI.126>, ~ltkR.72))) )
+        solve( KU((#vf.47, 0), mac('g'^(~ekR.85*~ekI.86),
+                                   sign(<'g'^~ekR.85, 'g'^~ekI.86>, ~ltkR.46))) )
           case Resp_1
-          solve( KU((#vf.151, 0), mac('g'^(~ekR.125*~ekI.126),
-                                      sign(<'g'^x.178, 'g'^~tid.139>, ~ltkR.147))) )
+          solve( KU((#vf.99, 0), mac('g'^(~ekR.85*~ekI.86),
+                                     sign(<'g'^x.113, 'g'^~tid.96>, ~ltkR.98))) )
             case Resp_1
             solve( splitEqs(1) )
               case split
-              solve( KU((#vf.17, 0), sign(<'g'^~ekI.286, 'g'^~ekR.285>, ~ltkI.12)) )
+              solve( KU((#vf.9, 0), sign(<'g'^~ekI.201, 'g'^~ekR.200>, ~ltkI.8)) )
                 case Init_2
-                solve( KU((#vf.46, 0), 'g'^~ekI.352) )
+                solve( KU((#vf.28, 0), 'g'^~ekI.248) )
                   case Init_1
-                  solve( KU((#vf.76, 0), 'g'^~ekR.351) )
+                  solve( KU((#vf.47, 0), 'g'^~ekR.247) )
                     case Resp_1
-                    solve( KU((#vf.76, 0), sign(<'g'^~ekR.351, 'g'^~ekI.352>, ~ltkR.13)) )
+                    solve( KU((#vf.47, 0), sign(<'g'^~ekR.247, 'g'^~ekI.248>, ~ltkR.8)) )
                       case Resp_1
-                      SOLVED (trace found)
+                      SOLVED // trace found
                     qed
                   qed
                 qed
@@ -345,9 +329,9 @@ analyzing: data/examples/csf12/STS-MAC.spthy
 analyzed: data/examples/csf12/STS-MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.184233s
-  KI_Perfect_Forward_Secrecy_I: attack found (12 steps)
-  KI_Perfect_Forward_Secrecy_R: attack found (13 steps)
+  processing time: 3.568812s
+  KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
+  KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
 
@@ -357,9 +341,9 @@ summary of summaries:
 analyzed: data/examples/csf12/STS-MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.184233s
-  KI_Perfect_Forward_Secrecy_I: attack found (12 steps)
-  KI_Perfect_Forward_Secrecy_R: attack found (13 steps)
+  processing time: 3.568812s
+  KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
+  KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================
 */

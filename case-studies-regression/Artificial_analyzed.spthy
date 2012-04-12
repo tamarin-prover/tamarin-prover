@@ -1,0 +1,49 @@
+theory Artificial begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Step1:
+   [ Fr( ~x ), Fr( ~k ) ]
+  -->
+   [ St( ~x, ~k ), Out( senc(~x, ~k) ), Key( ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Step2:
+   [ St( x, k ), In( <x, x> ) ] --[ Fin( x, k ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_key:
+   [ Key( k ) ] --[ Rev( k ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma (modulo E) Characterize_Fin:
+  all-traces "not(Ex k S.1 #i.2. Fin( S.1, k ) @ #i.2)"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"Ex k S.1 #i.2. (Fin( S.1, k ) @ #i.2) & T"
+*/
+simplify
+solve( (#i.2, 0)[St( S.1, k )] )
+  case Step1
+  solve( KU((#vf.6, 0), ~x.15) )
+    case Step1
+    solve( (#vr.32, 1)[!KU( f_.37, ~k.14 )] /* may loop */ )
+      case Reveal_key
+      SOLVED
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end

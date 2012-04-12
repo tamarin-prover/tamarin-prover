@@ -31,48 +31,35 @@ rule (modulo E) Init_2:
 
   /*
   rule (modulo AC) Init_2:
-     [
-     Init_1( ~ekI.3, $I.1, $R.2, ~lkI.4, hkI.7 ), In( Y.6 ),
-     !Pk( $R.2, 'g'^~x.13 )
-     ]
-    --[
-    SidI_2( ~ekI.3, $I.1, $R.2, hkI.7, Y.6,
-            h(<$I.1, $R.2, hkI.7, Y.6, z.9, 'g'^(~lkI.4*~x.13)>)
-    )
+     [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~x ) ]
+    --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<$I, $R, hkI, Y, z, 'g'^(~lkI*~x)>) )
     ]->
-     [ !Sessk( ~ekI.3, h(<$I.1, $R.2, hkI.7, Y.6, z.9, 'g'^(~lkI.4*~x.13)>) )
-     ]
+     [ !Sessk( ~ekI, h(<$I, $R, hkI, Y, z, 'g'^(~lkI*~x)>) ) ]
   
     variants (modulo AC)
-    1. ~ekI.3
-             = ~ekI.220
-       Y.6   = Y.221
-       z.9   = Y.221^~ekI.220
+    1. ~ekI  = ~ekI.369
+       Y     = Y.372
+       z     = Y.372^~ekI.369
     
-    2. ~ekI.3
-             = ~ekI.221
-       Y.6   = z.222^inv(~ekI.221)
-       z.9   = z.222
+    2. ~ekI  = ~ekI.381
+       Y     = z.387^inv(~ekI.381)
+       z     = z.387
     
-    3. ~ekI.3
-             = ~ekI.231
-       Y.6   = x.233^x.234
-       z.9   = x.233^(~ekI.231*x.234)
+    3. ~ekI  = ~ekI.21507
+       Y     = x.43006^x.43007
+       z     = x.43006^(~ekI.21507*x.43007)
     
-    4. ~ekI.3
-             = ~ekI.231
-       Y.6   = x.233^inv((~ekI.231*x.234))
-       z.9   = x.233^inv(x.234)
+    4. ~ekI  = ~ekI.21955
+       Y     = x.43902^inv((~ekI.21955*x.43903))
+       z     = x.43902^inv(x.43903)
     
-    5. ~ekI.3
-             = ~ekI.231
-       Y.6   = x.233^(x.234*inv(~ekI.231))
-       z.9   = x.233^x.234
+    5. ~ekI  = ~ekI.21955
+       Y     = x.43902^(x.43903*inv(~ekI.21955))
+       z     = x.43902^x.43903
     
-    6. ~ekI.3
-             = ~ekI.241
-       Y.6   = x.243^(x.244*inv((~ekI.241*x.245)))
-       z.9   = x.243^(x.244*inv(x.245))
+    6. ~ekI  = ~ekI.22467
+       Y     = x.44925^(x.44927*inv((~ekI.22467*x.44926)))
+       z     = x.44925^(x.44927*inv(x.44926))
   */
 
 rule (modulo E) Resp_1:
@@ -89,48 +76,41 @@ rule (modulo E) Resp_1:
 
   /*
   rule (modulo AC) Resp_1:
-     [ In( X.6 ), Fr( ~ekR.3 ), !Ltk( $R.2, ~lkR.5 ), !Pk( $I.1, 'g'^~x.13 ) ]
+     [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~x ) ]
     --[
-    SidR_1( ~ekR.3, $I.1, $R.2, X.6, 'g'^~ekR.3,
-            h(<$I.1, $R.2, X.6, 'g'^~ekR.3, z.9, 'g'^(~lkR.5*~x.13)>)
+    SidR_1( ~ekR, $I, $R, X, 'g'^~ekR,
+            h(<$I, $R, X, 'g'^~ekR, z, 'g'^(~lkR*~x)>)
     )
     ]->
      [
-     Out( 'g'^~ekR.3 ), !Ephk( ~ekR.3 ),
-     !Sessk( ~ekR.3, h(<$I.1, $R.2, X.6, 'g'^~ekR.3, z.9, 'g'^(~lkR.5*~x.13)>)
-     )
+     Out( 'g'^~ekR ), !Ephk( ~ekR ),
+     !Sessk( ~ekR, h(<$I, $R, X, 'g'^~ekR, z, 'g'^(~lkR*~x)>) )
      ]
   
     variants (modulo AC)
-    1. ~ekR.3
-             = ~ekR.323
-       X.6   = X.324
-       z.9   = X.324^~ekR.323
+    1. ~ekR  = ~ekR.512
+       X     = X.515
+       z     = X.515^~ekR.512
     
-    2. ~ekR.3
-             = ~ekR.323
-       X.6   = z.324^inv(~ekR.323)
-       z.9   = z.324
+    2. ~ekR  = ~ekR.524
+       X     = z.530^inv(~ekR.524)
+       z     = z.530
     
-    3. ~ekR.3
-             = ~ekR.337
-       X.6   = x.339^x.340
-       z.9   = x.339^(~ekR.337*x.340)
+    3. ~ekR  = ~ekR.343872
+       X     = x.687736^x.687737
+       z     = x.687736^(~ekR.343872*x.687737)
     
-    4. ~ekR.3
-             = ~ekR.337
-       X.6   = x.339^inv((~ekR.337*x.340))
-       z.9   = x.339^inv(x.340)
+    4. ~ekR  = ~ekR.351040
+       X     = x.702072^inv((~ekR.351040*x.702073))
+       z     = x.702072^inv(x.702073)
     
-    5. ~ekR.3
-             = ~ekR.337
-       X.6   = x.339^(x.340*inv(~ekR.337))
-       z.9   = x.339^x.340
+    5. ~ekR  = ~ekR.351040
+       X     = x.702072^(x.702073*inv(~ekR.351040))
+       z     = x.702072^x.702073
     
-    6. ~ekR.3
-             = ~ekR.351
-       X.6   = x.353^(x.354*inv((~ekR.351*x.355)))
-       z.9   = x.353^(x.354*inv(x.355))
+    6. ~ekR  = ~ekR.359232
+       X     = x.718455^(x.718457*inv((~ekR.359232*x.718456)))
+       z     = x.718455^(x.718457*inv(x.718456))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -149,6 +129,7 @@ rule (modulo E) Ltk_reveal:
   /* has exactly the trivial AC variant */
 
 lemma (modulo E) JKL2008_2_initiator_key:
+  all-traces
   "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
         ((((((SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
              (K( k.5 ) @ #i2.1)) &
@@ -168,7 +149,7 @@ lemma (modulo E) JKL2008_2_initiator_key:
             SidR_1( tpartner.21, I.3, R.4, hkI.6, hkR.7, kpartner.22 ) @ #i4.20)))"
 /* proof based on the same lemma modulo AC */
 /*
-guarded formula characterizing all attacks:
+guarded formula characterizing all counter-examples:
 "Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
   (SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
   (K( k.5 ) @ #i2.1)
@@ -196,12 +177,12 @@ guarded formula characterizing all attacks:
      T)"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
+solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, hkI.6 )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.10, 'g'^~x.21 )] )
+  solve( (#i1, 2)[!Pk( $R.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.24,
-                           h(<$I.9, $R.10, 'g'^~ekI.11, hkR.7, z.17, 'g'^(~lkI.12*~x.21)>)
+    solve( (#i2.1, 0)[!KU( f_.11,
+                           h(<$I.8, $R.8, 'g'^~ekI.8, hkR.7, z.8, 'g'^(~lkI.8*~x.8)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_1
       by contradiction // from formulas
@@ -216,31 +197,31 @@ solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
       by contradiction // from formulas
     next
       case ch
-      solve( KU((#vr.62, 0), 'g'^(~lkI.12*~x.21)) )
+      solve( KU((#vr.35, 0), 'g'^(~lkI.8*~x.8)) )
         case cexp
-        solve( KU((#vr.69, 1), ~lkI.12) )
+        solve( KU((#vr.42, 1), ~lkI.8) )
           case Ltk_reveal
-          solve( (#i4.116, 2)[!Ltk( $R.10, ~lkR.124 )] )
+          solve( (#i4.67, 2)[!Ltk( $R.8, ~lkR.70 )] )
             case generate_ltk
-            solve( (#i4.116, 3)[!Pk( $I.9, 'g'^~x.132 )] )
+            solve( (#i4.67, 3)[!Pk( $I.8, 'g'^~x.70 )] )
               case generate_ltk
-              solve( KU((#vr.69, 1), ~x.21) )
+              solve( KU((#vr.42, 1), ~x.8) )
                 case Ltk_reveal
-                solve( KU((#vr.62, 0), 'g'^(~ekI.155*~ekR.156)) )
+                solve( KU((#vr.35, 0), 'g'^(~ekI.89*~ekR.90)) )
                   case Init_1
-                  solve( (#vr.213, 1)[!KU( f_.216, ~ekR.237 )] /* may loop */ )
+                  solve( (#vr.127, 1)[!KU( f_.130, ~ekR.140 )] /* may loop */ )
                     case Ephk_reveal
                     by contradiction // from formulas
                   qed
                 next
                   case Resp_1
-                  solve( (#vr.229, 1)[!KU( f_.232, ~ekI.236 )] /* may loop */ )
+                  solve( (#vr.132, 1)[!KU( f_.135, ~ekI.139 )] /* may loop */ )
                     case Ephk_reveal
                     by contradiction // from formulas
                   qed
                 next
                   case cexp
-                  solve( KU((#vr.191, 1), ~ekI.155) )
+                  solve( KU((#vr.115, 1), ~ekI.89) )
                     case Ephk_reveal
                     by contradiction // from formulas
                   qed
@@ -251,27 +232,27 @@ solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
         qed
       next
         case generate_ltk_case_1
-        solve( (#vr.82, 1)[!KU( f_.85, ~x.115 )] /* may loop */ )
+        solve( (#vr.51, 1)[!KU( f_.54, ~x.67 )] /* may loop */ )
           case Ltk_reveal
-          solve( (#i4.159, 2)[!Ltk( $R.10, ~lkR.167 )] )
+          solve( (#i4.89, 2)[!Ltk( $R.8, ~lkR.92 )] )
             case generate_ltk
-            solve( (#i4.159, 3)[!Pk( $I.9, 'g'^~x.175 )] )
+            solve( (#i4.89, 3)[!Pk( $I.8, 'g'^~x.92 )] )
               case generate_ltk
-              solve( KU((#vr.62, 0), 'g'^(~ekI.198*~ekR.199)) )
+              solve( KU((#vr.35, 0), 'g'^(~ekI.111*~ekR.112)) )
                 case Init_1
-                solve( (#vr.237, 1)[!KU( f_.240, ~ekR.261 )] /* may loop */ )
+                solve( (#vr.136, 1)[!KU( f_.139, ~ekR.149 )] /* may loop */ )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case Resp_1
-                solve( (#vr.253, 1)[!KU( f_.256, ~ekI.260 )] /* may loop */ )
+                solve( (#vr.141, 1)[!KU( f_.144, ~ekI.148 )] /* may loop */ )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case cexp
-                solve( KU((#vr.215, 1), ~ekI.198) )
+                solve( KU((#vr.124, 1), ~ekI.111) )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
@@ -281,27 +262,27 @@ solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
         qed
       next
         case generate_ltk_case_2
-        solve( (#vr.82, 1)[!KU( f_.85, ~lkI.114 )] /* may loop */ )
+        solve( (#vr.51, 1)[!KU( f_.54, ~lkI.66 )] /* may loop */ )
           case Ltk_reveal
-          solve( (#i4.159, 2)[!Ltk( $R.10, ~lkR.167 )] )
+          solve( (#i4.89, 2)[!Ltk( $R.8, ~lkR.92 )] )
             case generate_ltk
-            solve( (#i4.159, 3)[!Pk( $I.9, 'g'^~x.175 )] )
+            solve( (#i4.89, 3)[!Pk( $I.8, 'g'^~x.92 )] )
               case generate_ltk
-              solve( KU((#vr.62, 0), 'g'^(~ekI.198*~ekR.199)) )
+              solve( KU((#vr.35, 0), 'g'^(~ekI.111*~ekR.112)) )
                 case Init_1
-                solve( (#vr.237, 1)[!KU( f_.240, ~ekR.261 )] /* may loop */ )
+                solve( (#vr.136, 1)[!KU( f_.139, ~ekR.149 )] /* may loop */ )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case Resp_1
-                solve( (#vr.253, 1)[!KU( f_.256, ~ekI.260 )] /* may loop */ )
+                solve( (#vr.141, 1)[!KU( f_.144, ~ekI.148 )] /* may loop */ )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case cexp
-                solve( KU((#vr.215, 1), ~ekI.198) )
+                solve( KU((#vr.124, 1), ~ekI.111) )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
@@ -315,6 +296,7 @@ solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
 qed
 
 lemma (modulo E) JKL2008_2_responder_key:
+  all-traces
   "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
         ((((((SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
              (K( k.5 ) @ #i2.1)) &
@@ -334,7 +316,7 @@ lemma (modulo E) JKL2008_2_responder_key:
             SidI_1( tpartner.20, I.3, R.4, hkI.6 ) @ #i4.19)))"
 /* proof based on the same lemma modulo AC */
 /*
-guarded formula characterizing all attacks:
+guarded formula characterizing all counter-examples:
 "Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
   (SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
   (K( k.5 ) @ #i2.1)
@@ -362,12 +344,12 @@ guarded formula characterizing all attacks:
      T)"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
+solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.9, 'g'^~x.21 )] )
+  solve( (#i1, 3)[!Pk( $I.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.25,
-                           h(<$I.9, $R.10, hkI.6, 'g'^~ekR.11, z.17, 'g'^(~lkR.13*~x.21)>)
+    solve( (#i2.1, 0)[!KU( f_.12,
+                           h(<$I.8, $R.8, hkI.6, 'g'^~ekR.8, z.8, 'g'^(~lkR.8*~x.8)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_1
       by contradiction // from formulas
@@ -382,29 +364,29 @@ solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
       by contradiction // from formulas
     next
       case ch
-      solve( KU((#vr.51, 0), 'g'^(~lkR.13*~x.21)) )
+      solve( KU((#vr.30, 0), 'g'^(~lkR.8*~x.8)) )
         case cexp
-        solve( KU((#vr.58, 1), ~lkR.13) )
+        solve( KU((#vr.37, 1), ~lkR.8) )
           case Ltk_reveal
-          solve( (#i4.105, 1)[!Ltk( $I.9, ~lkI.111 )] )
+          solve( (#i4.62, 1)[!Ltk( $I.8, ~lkI.64 )] )
             case generate_ltk
-            solve( KU((#vr.58, 1), ~x.21) )
+            solve( KU((#vr.37, 1), ~x.8) )
               case Ltk_reveal
-              solve( KU((#vr.51, 0), 'g'^(~ekR.128*~ekI.129)) )
+              solve( KU((#vr.30, 0), 'g'^(~ekR.75*~ekI.76)) )
                 case Init_1
-                solve( (#vr.175, 1)[!KU( f_.178, ~ekR.198 )] /* may loop */ )
+                solve( (#vr.106, 1)[!KU( f_.109, ~ekR.118 )] /* may loop */ )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case Resp_1
-                solve( (#vr.191, 1)[!KU( f_.194, ~ekI.199 )] /* may loop */ )
+                solve( (#vr.111, 1)[!KU( f_.114, ~ekI.119 )] /* may loop */ )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case cexp
-                solve( KU((#vr.153, 1), ~ekR.128) )
+                solve( KU((#vr.94, 1), ~ekR.75) )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
@@ -414,25 +396,25 @@ solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
         qed
       next
         case generate_ltk_case_1
-        solve( (#vr.71, 1)[!KU( f_.74, ~x.104 )] /* may loop */ )
+        solve( (#vr.46, 1)[!KU( f_.49, ~x.62 )] /* may loop */ )
           case Ltk_reveal
-          solve( (#i4.148, 1)[!Ltk( $I.9, ~lkI.154 )] )
+          solve( (#i4.84, 1)[!Ltk( $I.8, ~lkI.86 )] )
             case generate_ltk
-            solve( KU((#vr.51, 0), 'g'^(~ekR.171*~ekI.172)) )
+            solve( KU((#vr.30, 0), 'g'^(~ekR.97*~ekI.98)) )
               case Init_1
-              solve( (#vr.199, 1)[!KU( f_.202, ~ekR.222 )] /* may loop */ )
+              solve( (#vr.115, 1)[!KU( f_.118, ~ekR.127 )] /* may loop */ )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
             next
               case Resp_1
-              solve( (#vr.215, 1)[!KU( f_.218, ~ekI.223 )] /* may loop */ )
+              solve( (#vr.120, 1)[!KU( f_.123, ~ekI.128 )] /* may loop */ )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
             next
               case cexp
-              solve( KU((#vr.177, 1), ~ekR.171) )
+              solve( KU((#vr.103, 1), ~ekR.97) )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
@@ -441,25 +423,25 @@ solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
         qed
       next
         case generate_ltk_case_2
-        solve( (#vr.71, 1)[!KU( f_.74, ~lkR.103 )] /* may loop */ )
+        solve( (#vr.46, 1)[!KU( f_.49, ~lkR.61 )] /* may loop */ )
           case Ltk_reveal
-          solve( (#i4.148, 1)[!Ltk( $I.9, ~lkI.154 )] )
+          solve( (#i4.84, 1)[!Ltk( $I.8, ~lkI.86 )] )
             case generate_ltk
-            solve( KU((#vr.51, 0), 'g'^(~ekR.171*~ekI.172)) )
+            solve( KU((#vr.30, 0), 'g'^(~ekR.97*~ekI.98)) )
               case Init_1
-              solve( (#vr.199, 1)[!KU( f_.202, ~ekR.222 )] /* may loop */ )
+              solve( (#vr.115, 1)[!KU( f_.118, ~ekR.127 )] /* may loop */ )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
             next
               case Resp_1
-              solve( (#vr.215, 1)[!KU( f_.218, ~ekI.223 )] /* may loop */ )
+              solve( (#vr.120, 1)[!KU( f_.123, ~ekI.128 )] /* may loop */ )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
             next
               case cexp
-              solve( KU((#vr.177, 1), ~ekR.171) )
+              solve( KU((#vr.103, 1), ~ekR.97) )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
@@ -485,9 +467,9 @@ analyzing: data/examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
 analyzed: data/examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.268277s
-  JKL2008_2_initiator_key: complete proof (40 steps)
-  JKL2008_2_responder_key: complete proof (37 steps)
+  processing time: 1.203572s
+  JKL2008_2_initiator_key (all-traces): verified (40 steps)
+  JKL2008_2_responder_key (all-traces): verified (37 steps)
 
 ------------------------------------------------------------------------------
 
@@ -497,9 +479,9 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.268277s
-  JKL2008_2_initiator_key: complete proof (40 steps)
-  JKL2008_2_responder_key: complete proof (37 steps)
+  processing time: 1.203572s
+  JKL2008_2_initiator_key (all-traces): verified (40 steps)
+  JKL2008_2_responder_key (all-traces): verified (37 steps)
 
 ==============================================================================
 */

@@ -29,47 +29,34 @@ rule (modulo E) Init_2:
 
   /*
   rule (modulo AC) Init_2:
-     [
-     Init_1( ~ekI.3, $I.1, $R.2, ~lkI.4, hkI.7 ), In( Y.6 ),
-     !Pk( $R.2, 'g'^~x.13 )
-     ]
-    --[
-    SidI_2( ~ekI.3, $I.1, $R.2, hkI.7, Y.6,
-            h(<z.9, 'g'^(~ekI.3*~x.13), $I.1, $R.2>)
-    )
-    ]->
-     [ !Sessk( ~ekI.3, h(<z.9, 'g'^(~ekI.3*~x.13), $I.1, $R.2>) ) ]
+     [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~x ) ]
+    --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<z, 'g'^(~ekI*~x), $I, $R>) ) ]->
+     [ !Sessk( ~ekI, h(<z, 'g'^(~ekI*~x), $I, $R>) ) ]
   
     variants (modulo AC)
-    1. ~lkI.4
-             = ~lkI.220
-       Y.6   = Y.221
-       z.9   = Y.221^~lkI.220
+    1. ~lkI  = ~lkI.370
+       Y     = Y.372
+       z     = Y.372^~lkI.370
     
-    2. ~lkI.4
-             = ~lkI.221
-       Y.6   = z.222^inv(~lkI.221)
-       z.9   = z.222
+    2. ~lkI  = ~lkI.382
+       Y     = z.387^inv(~lkI.382)
+       z     = z.387
     
-    3. ~lkI.4
-             = ~lkI.231
-       Y.6   = x.233^x.234
-       z.9   = x.233^(~lkI.231*x.234)
+    3. ~lkI  = ~lkI.21508
+       Y     = x.43006^x.43007
+       z     = x.43006^(~lkI.21508*x.43007)
     
-    4. ~lkI.4
-             = ~lkI.231
-       Y.6   = x.233^inv((~lkI.231*x.234))
-       z.9   = x.233^inv(x.234)
+    4. ~lkI  = ~lkI.21956
+       Y     = x.43902^inv((~lkI.21956*x.43903))
+       z     = x.43902^inv(x.43903)
     
-    5. ~lkI.4
-             = ~lkI.231
-       Y.6   = x.233^(x.234*inv(~lkI.231))
-       z.9   = x.233^x.234
+    5. ~lkI  = ~lkI.21956
+       Y     = x.43902^(x.43903*inv(~lkI.21956))
+       z     = x.43902^x.43903
     
-    6. ~lkI.4
-             = ~lkI.241
-       Y.6   = x.243^(x.244*inv((~lkI.241*x.245)))
-       z.9   = x.243^(x.244*inv(x.245))
+    6. ~lkI  = ~lkI.22468
+       Y     = x.44925^(x.44927*inv((~lkI.22468*x.44926)))
+       z     = x.44925^(x.44927*inv(x.44926))
   */
 
 rule (modulo E) Resp_1:
@@ -84,47 +71,38 @@ rule (modulo E) Resp_1:
 
   /*
   rule (modulo AC) Resp_1:
-     [ In( X.6 ), Fr( ~ekR.3 ), !Ltk( $R.2, ~lkR.5 ), !Pk( $I.1, 'g'^~x.13 ) ]
-    --[
-    SidR_1( ~ekR.3, $I.1, $R.2, X.6, 'g'^~ekR.3,
-            h(<'g'^(~ekR.3*~x.13), z.10, $I.1, $R.2>)
-    )
+     [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~x ) ]
+    --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<'g'^(~ekR*~x), z, $I, $R>) )
     ]->
      [
-     Out( 'g'^~ekR.3 ), !Ephk( ~ekR.3 ),
-     !Sessk( ~ekR.3, h(<'g'^(~ekR.3*~x.13), z.10, $I.1, $R.2>) )
+     Out( 'g'^~ekR ), !Ephk( ~ekR ),
+     !Sessk( ~ekR, h(<'g'^(~ekR*~x), z, $I, $R>) )
      ]
   
     variants (modulo AC)
-    1. ~lkR.5
-             = ~lkR.323
-       X.6   = X.324
-       z.10  = X.324^~lkR.323
+    1. ~lkR  = ~lkR.514
+       X     = X.515
+       z     = X.515^~lkR.514
     
-    2. ~lkR.5
-             = ~lkR.323
-       X.6   = z.324^inv(~lkR.323)
-       z.10  = z.324
+    2. ~lkR  = ~lkR.526
+       X     = z.531^inv(~lkR.526)
+       z     = z.531
     
-    3. ~lkR.5
-             = ~lkR.337
-       X.6   = x.339^x.340
-       z.10  = x.339^(~lkR.337*x.340)
+    3. ~lkR  = ~lkR.343874
+       X     = x.687736^x.687737
+       z     = x.687736^(~lkR.343874*x.687737)
     
-    4. ~lkR.5
-             = ~lkR.337
-       X.6   = x.339^inv((~lkR.337*x.340))
-       z.10  = x.339^inv(x.340)
+    4. ~lkR  = ~lkR.351042
+       X     = x.702072^inv((~lkR.351042*x.702073))
+       z     = x.702072^inv(x.702073)
     
-    5. ~lkR.5
-             = ~lkR.337
-       X.6   = x.339^(x.340*inv(~lkR.337))
-       z.10  = x.339^x.340
+    5. ~lkR  = ~lkR.351042
+       X     = x.702072^(x.702073*inv(~lkR.351042))
+       z     = x.702072^x.702073
     
-    6. ~lkR.5
-             = ~lkR.351
-       X.6   = x.353^(x.354*inv((~lkR.351*x.355)))
-       z.10  = x.353^(x.354*inv(x.355))
+    6. ~lkR  = ~lkR.359234
+       X     = x.718455^(x.718457*inv((~lkR.359234*x.718456)))
+       z     = x.718455^(x.718457*inv(x.718456))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -143,6 +121,7 @@ rule (modulo E) Ltk_reveal:
   /* has exactly the trivial AC variant */
 
 lemma (modulo E) keaplus_initiator_key:
+  all-traces
   "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
         ((((((SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
              (K( k.5 ) @ #i2.1)) &
@@ -163,7 +142,7 @@ lemma (modulo E) keaplus_initiator_key:
              SidR_1( tpartner.20, I.3, R.4, hkI.6, hkR.7, kpartner.21 ) @ #i4.19))))"
 /* proof based on the same lemma modulo AC */
 /*
-guarded formula characterizing all attacks:
+guarded formula characterizing all counter-examples:
 "Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
   (SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
   (K( k.5 ) @ #i2.1)
@@ -190,27 +169,27 @@ guarded formula characterizing all attacks:
       T))"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
+solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, hkI.6 )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.10, 'g'^~x.21 )] )
+  solve( (#i1, 2)[!Pk( $R.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.24, h(<z.17, 'g'^(~ekI.11*~x.21), $I.9, $R.10>)
+    solve( (#i2.1, 0)[!KU( f_.11, h(<z.8, 'g'^(~ekI.8*~x.8), $I.8, $R.8>)
                       )] /* may loop */ )
       case Sessk_reveal_case_2
       solve( splitEqs(1) )
-        case split_case_2
-        solve( (#vf.22, 0)[!KU( f_.23, 'g'^(~tid.116*~x.117*inv(~lkI.115))
-                           )] /* may loop */ )
+        case split_case_1
+        solve( (#vf.9, 0)[!KU( f_.10, 'g'^(~tid.60*~x.61*inv(~lkI.59))
+                          )] /* may loop */ )
           case Resp_1
-          solve( KU((#vr.160, 1), ~lkI.115) )
+          solve( KU((#vr.83, 1), ~lkI.59) )
             case Ltk_reveal
-            solve( KU((#vr.160, 1), ~x.142) )
+            solve( KU((#vr.83, 1), ~x.73) )
               case Ltk_reveal
               solve( splitEqs(1) )
-                case split_case_1
-                solve( (#vf.86, 0)[!KU( f_.87, 'g'^~ekI.211 )] /* may loop */ )
+                case split_case_2
+                solve( (#vf.44, 0)[!KU( f_.45, 'g'^~ekI.122 )] /* may loop */ )
                   case Init_1
-                  SOLVED (trace found)
+                  SOLVED // trace found
                 qed
               qed
             qed
@@ -222,6 +201,7 @@ solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
 qed
 
 lemma (modulo E) keaplus_responder_key:
+  all-traces
   "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
         (((((((SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
               (K( k.5 ) @ #i2.1)) &
@@ -246,7 +226,7 @@ lemma (modulo E) keaplus_responder_key:
              SidI_1( tpartner.24, I.3, R.4, hkI.6 ) @ #i4.23))))"
 /* proof based on the same lemma modulo AC */
 /*
-guarded formula characterizing all attacks:
+guarded formula characterizing all counter-examples:
 "Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
   (SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
   (K( k.5 ) @ #i2.1)
@@ -278,27 +258,27 @@ guarded formula characterizing all attacks:
       T))"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
+solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.9, 'g'^~x.21 )] )
+  solve( (#i1, 3)[!Pk( $I.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.25, h(<'g'^(~ekR.11*~x.21), z.18, $I.9, $R.10>)
+    solve( (#i2.1, 0)[!KU( f_.12, h(<'g'^(~ekR.8*~x.8), z.8, $I.8, $R.8>)
                       )] /* may loop */ )
       case Sessk_reveal_case_1
       solve( splitEqs(1) )
         case split_case_1
-        solve( splitEqs(1) )
-          case split_case_2
-          solve( (#vf.75, 0)[!KU( f_.76, 'g'^(~ekR.106*~x.107*inv(~lkI.108))
-                             )] /* may loop */ )
-            case Resp_1
-            solve( KU((#vr.151, 1), ~lkI.108) )
+        solve( (#vf.9, 0)[!KU( f_.10, 'g'^(~tid.55*~x.56*inv(~lkR.54))
+                          )] /* may loop */ )
+          case Init_1
+          solve( KU((#vr.73, 1), ~lkR.54) )
+            case Ltk_reveal
+            solve( KU((#vr.73, 1), ~x.90) )
               case Ltk_reveal
-              solve( KU((#vr.151, 1), ~x.133) )
-                case Ltk_reveal
-                solve( (#vf.22, 0)[!KU( f_.23, 'g'^~tid.105 )] /* may loop */ )
-                  case Init_1
-                  SOLVED (trace found)
+              solve( splitEqs(1) )
+                case split_case_2
+                solve( (#vf.39, 0)[!KU( f_.40, 'g'^~ekR.117 )] /* may loop */ )
+                  case Resp_1
+                  SOLVED // trace found
                 qed
               qed
             qed
@@ -323,9 +303,9 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.887521s
-  keaplus_initiator_key: attack found (11 steps)
-  keaplus_responder_key: attack found (11 steps)
+  processing time: 1.02098s
+  keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
+  keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
 ------------------------------------------------------------------------------
 
@@ -335,9 +315,9 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.887521s
-  keaplus_initiator_key: attack found (11 steps)
-  keaplus_responder_key: attack found (11 steps)
+  processing time: 1.02098s
+  keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
+  keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
 ==============================================================================
 */

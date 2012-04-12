@@ -1,0 +1,316 @@
+theory KEA_plus_KCI_wPFS begin
+
+// Function signature and definition of the equational theory E
+
+builtin: diffie-hellman
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+section{* KEA+ *}
+
+rule (modulo E) generate_ltk:
+   [ Fr( ~lk ) ]
+  --[ RegKey( $A ) ]->
+   [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
+  --[ SidI_1( ~ekI, $I, $R, 'g'^~ekI ) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ), !Ephk( ~ekI ), Out( 'g'^~ekI )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_2:
+   [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
+  --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<Y^~lkI, 'g'^~lkR^~ekI, $I, $R>) )
+  ]->
+   [ !Sessk( ~ekI, h(<Y^~lkI, 'g'^~lkR^~ekI, $I, $R>) ) ]
+
+  /*
+  rule (modulo AC) Init_2:
+     [
+     Init_1( ~ekI.3, $I.1, $R.2, ~lkI.4, hkI.7 ), In( Y.6 ),
+     !Pk( $R.2, 'g'^~x.13 )
+     ]
+    --[
+    SidI_2( ~ekI.3, $I.1, $R.2, hkI.7, Y.6,
+            h(<z.9, 'g'^(~ekI.3*~x.13), $I.1, $R.2>)
+    )
+    ]->
+     [ !Sessk( ~ekI.3, h(<z.9, 'g'^(~ekI.3*~x.13), $I.1, $R.2>) ) ]
+  
+    variants (modulo AC)
+    1. ~lkI.4
+             = ~lkI.370
+       Y.6   = Y.372
+       z.9   = Y.372^~lkI.370
+    
+    2. ~lkI.4
+             = ~lkI.382
+       Y.6   = z.387^inv(~lkI.382)
+       z.9   = z.387
+    
+    3. ~lkI.4
+             = ~lkI.21508
+       Y.6   = x.43006^x.43007
+       z.9   = x.43006^(~lkI.21508*x.43007)
+    
+    4. ~lkI.4
+             = ~lkI.21956
+       Y.6   = x.43902^inv((~lkI.21956*x.43903))
+       z.9   = x.43902^inv(x.43903)
+    
+    5. ~lkI.4
+             = ~lkI.21956
+       Y.6   = x.43902^(x.43903*inv(~lkI.21956))
+       z.9   = x.43902^x.43903
+    
+    6. ~lkI.4
+             = ~lkI.22468
+       Y.6   = x.44925^(x.44927*inv((~lkI.22468*x.44926)))
+       z.9   = x.44925^(x.44927*inv(x.44926))
+  */
+
+rule (modulo E) Resp_1:
+   [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
+  --[
+  SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<'g'^~lkI^~ekR, X^~lkR, $I, $R>) )
+  ]->
+   [
+   Out( 'g'^~ekR ), !Ephk( ~ekR ),
+   !Sessk( ~ekR, h(<'g'^~lkI^~ekR, X^~lkR, $I, $R>) )
+   ]
+
+  /*
+  rule (modulo AC) Resp_1:
+     [ In( X.6 ), Fr( ~ekR.3 ), !Ltk( $R.2, ~lkR.5 ), !Pk( $I.1, 'g'^~x.13 ) ]
+    --[
+    SidR_1( ~ekR.3, $I.1, $R.2, X.6, 'g'^~ekR.3,
+            h(<'g'^(~ekR.3*~x.13), z.10, $I.1, $R.2>)
+    )
+    ]->
+     [
+     Out( 'g'^~ekR.3 ), !Ephk( ~ekR.3 ),
+     !Sessk( ~ekR.3, h(<'g'^(~ekR.3*~x.13), z.10, $I.1, $R.2>) )
+     ]
+  
+    variants (modulo AC)
+    1. ~lkR.5
+             = ~lkR.514
+       X.6   = X.515
+       z.10  = X.515^~lkR.514
+    
+    2. ~lkR.5
+             = ~lkR.526
+       X.6   = z.531^inv(~lkR.526)
+       z.10  = z.531
+    
+    3. ~lkR.5
+             = ~lkR.343874
+       X.6   = x.687736^x.687737
+       z.10  = x.687736^(~lkR.343874*x.687737)
+    
+    4. ~lkR.5
+             = ~lkR.351042
+       X.6   = x.702072^inv((~lkR.351042*x.702073))
+       z.10  = x.702072^inv(x.702073)
+    
+    5. ~lkR.5
+             = ~lkR.351042
+       X.6   = x.702072^(x.702073*inv(~lkR.351042))
+       z.10  = x.702072^x.702073
+    
+    6. ~lkR.5
+             = ~lkR.359234
+       X.6   = x.718455^(x.718457*inv((~lkR.359234*x.718456)))
+       z.10  = x.718455^(x.718457*inv(x.718456))
+  */
+
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ltk_reveal:
+   [ !Ltk( $A, lkA ) ] --[ LtkRev( $A ) ]-> [ Out( lkA ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~ekA ) ] --[ EphkRev( ~ekA ) ]-> [ Out( ~ekA ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma (modulo E) eCK_initiator_key:
+  all-traces
+  "(All A #i.1 #j.2.
+     ((RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)) ==> (#i.1 = #j.2)) ==>
+   (not(Ex #i1.3 #i2.4 ekI.5 I.6 R.7 k.8 hkI.9 hkR.10.
+         ((((((SidI_2( ekI.5, I.6, R.7, hkI.9, hkR.10, k.8 ) @ #i1.3) &
+              (K( k.8 ) @ #i2.4)) &
+             (not(Ex #i3.11 #i4.12.
+                   (LtkRev( I.6 ) @ #i3.11) & (EphkRev( ekI.5 ) @ #i4.12)))) &
+            (not(Ex #i3.13. SesskRev( ekI.5 ) @ #i3.13))) &
+           (not(Ex #i3.14 #i4.15 ekR.16 kpartner.17.
+                 (SidR_1( ekR.16, I.6, R.7, hkI.9, hkR.10, kpartner.17 ) @ #i3.14) &
+                 (SesskRev( ekR.16 ) @ #i4.15)))) &
+          (not(Ex #i3.18 #i4.19 #i5.20 ekR.21 kpartner.22.
+                ((SidR_1( ekR.21, I.6, R.7, hkI.9, hkR.10, kpartner.22 ) @ #i3.18) &
+                 (LtkRev( R.7 ) @ #i4.19)) &
+                (EphkRev( ekR.21 ) @ #i5.20)))) &
+         (All #i3.23.
+           (LtkRev( R.7 ) @ #i3.23) ==>
+           (Ex #i4.24 ekR.25 kpartner.26.
+             SidR_1( ekR.25, I.6, R.7, hkI.9, hkR.10, kpartner.26 ) @ #i4.24))))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"(All A #i.1 #j.2.
+   (RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)
+  ==>
+   #i.1 = #j.2) &
+ (Ex #i1.3 #i2.4 ekI.5 I.6 R.7 k.8 hkI.9 hkR.10.
+   (SidI_2( ekI.5, I.6, R.7, hkI.9, hkR.10, k.8 ) @ #i1.3) &
+   (K( k.8 ) @ #i2.4)
+  &
+   (All #i3.11 #i4.12.
+     (LtkRev( I.6 ) @ #i3.11) & (EphkRev( ekI.5 ) @ #i4.12)
+    ==>
+     F) &
+   (All #i3.13. (SesskRev( ekI.5 ) @ #i3.13) ==> F) &
+   (All #i3.14 #i4.15 ekR.16 kpartner.17.
+     (SidR_1( ekR.16, I.6, R.7, hkI.9, hkR.10, kpartner.17 ) @ #i3.14) &
+     (SesskRev( ekR.16 ) @ #i4.15)
+    ==>
+     F) &
+   (All #i3.18 #i4.19 #i5.20 ekR.21 kpartner.22.
+     (SidR_1( ekR.21, I.6, R.7, hkI.9, hkR.10, kpartner.22 ) @ #i3.18) &
+     (LtkRev( R.7 ) @ #i4.19) &
+     (EphkRev( ekR.21 ) @ #i5.20)
+    ==>
+     F) &
+   (All #i3.23.
+     (LtkRev( R.7 ) @ #i3.23)
+    ==>
+     Ex #i4.24 ekR.25 kpartner.26.
+      (SidR_1( ekR.25, I.6, R.7, hkI.9, hkR.10, kpartner.26 ) @ #i4.24)
+     &
+      T))"
+*/
+simplify
+solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
+  case Init_1
+  solve( (#i1, 2)[!Pk( $R.10, 'g'^~x.21 )] )
+    case generate_ltk
+    solve( (#i2.1, 0)[!KU( f_.24, h(<z.17, 'g'^(~ekI.11*~x.21), $I.9, $R.10>)
+                      )] /* may loop */ )
+      case ch
+      solve( KU((#vr.62, 0), 'g'^(~ekI.11*~x.21)) )
+        case Init_1
+        solve( (#vr.91, 1)[!KU( f_.94, ~x.115 )] /* may loop */ )
+          case Ltk_reveal
+          solve( (#i4.159, 2)[!Ltk( $R.10, ~lkR.187 )] )
+            case generate_ltk
+            solve( (#i4.159, 3)[!Pk( $I.9, 'g'^~x.175 )] )
+              case generate_ltk
+              solve( KU((#vr.62, 0), 'g'^(~x.175*~ekR.191)) )
+                case Resp_1
+                solve( (#vr.256, 1)[!KU( f_.259, ~x.238 )] /* may loop */ )
+                  case Ltk_reveal
+                  SOLVED
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma (modulo E) eCK_responder_key:
+  all-traces
+  "(All A #i.1 #j.2.
+     ((RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)) ==> (#i.1 = #j.2)) ==>
+   (not(Ex #i1.3 #i2.4 ekR.5 I.6 R.7 k.8 hkI.9 hkR.10.
+         ((((((SidR_1( ekR.5, I.6, R.7, hkI.9, hkR.10, k.8 ) @ #i1.3) &
+              (K( k.8 ) @ #i2.4)) &
+             (not(Ex #i3.11 #i4.12.
+                   (LtkRev( R.7 ) @ #i3.11) & (EphkRev( ekR.5 ) @ #i4.12)))) &
+            (not(Ex #i3.13. SesskRev( ekR.5 ) @ #i3.13))) &
+           (not(Ex #i3.14 #i4.15 ekI.16 kpartner.17.
+                 (SidI_2( ekI.16, I.6, R.7, hkI.9, hkR.10, kpartner.17 ) @ #i3.14) &
+                 (SesskRev( ekI.16 ) @ #i4.15)))) &
+          (not(Ex #i3.18 #i4.19 #i5.20 ekI.21.
+                ((SidI_1( ekI.21, I.6, R.7, hkI.9 ) @ #i3.18) &
+                 (LtkRev( I.6 ) @ #i4.19)) &
+                (EphkRev( ekI.21 ) @ #i5.20)))) &
+         (All #i3.22.
+           (LtkRev( I.6 ) @ #i3.22) ==>
+           (Ex #i4.23 ekI.24. SidI_1( ekI.24, I.6, R.7, hkI.9 ) @ #i4.23))))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"(All A #i.1 #j.2.
+   (RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)
+  ==>
+   #i.1 = #j.2) &
+ (Ex #i1.3 #i2.4 ekR.5 I.6 R.7 k.8 hkI.9 hkR.10.
+   (SidR_1( ekR.5, I.6, R.7, hkI.9, hkR.10, k.8 ) @ #i1.3) &
+   (K( k.8 ) @ #i2.4)
+  &
+   (All #i3.11 #i4.12.
+     (LtkRev( R.7 ) @ #i3.11) & (EphkRev( ekR.5 ) @ #i4.12)
+    ==>
+     F) &
+   (All #i3.13. (SesskRev( ekR.5 ) @ #i3.13) ==> F) &
+   (All #i3.14 #i4.15 ekI.16 kpartner.17.
+     (SidI_2( ekI.16, I.6, R.7, hkI.9, hkR.10, kpartner.17 ) @ #i3.14) &
+     (SesskRev( ekI.16 ) @ #i4.15)
+    ==>
+     F) &
+   (All #i3.18 #i4.19 #i5.20 ekI.21.
+     (SidI_1( ekI.21, I.6, R.7, hkI.9 ) @ #i3.18) &
+     (LtkRev( I.6 ) @ #i4.19) &
+     (EphkRev( ekI.21 ) @ #i5.20)
+    ==>
+     F) &
+   (All #i3.22.
+     (LtkRev( I.6 ) @ #i3.22)
+    ==>
+     Ex #i4.23 ekI.24. (SidI_1( ekI.24, I.6, R.7, hkI.9 ) @ #i4.23) & T))"
+*/
+simplify
+solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
+  case generate_ltk
+  solve( (#i1, 3)[!Pk( $I.9, 'g'^~x.21 )] )
+    case generate_ltk
+    solve( (#i2.1, 0)[!KU( f_.25, h(<'g'^(~ekR.11*~x.21), z.18, $I.9, $R.10>)
+                      )] /* may loop */ )
+      case ch
+      solve( KU((#vr.51, 0), 'g'^(~ekR.11*~x.21)) )
+        case Resp_1
+        solve( (#vr.96, 1)[!KU( f_.99, ~x.78 )] /* may loop */ )
+          case Ltk_reveal
+          solve( (#i4.148, 1)[!Ltk( $I.9, ~lkI.154 )] )
+            case generate_ltk
+            solve( KU((#vr.51, 0), 'g'^(~lkR.171*~ekI.172)) )
+              case Init_1
+              solve( (#vr.199, 1)[!KU( f_.202, ~lkR.222 )] /* may loop */ )
+                case Ltk_reveal
+                SOLVED
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end

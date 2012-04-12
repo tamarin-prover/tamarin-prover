@@ -47,42 +47,36 @@ rule (modulo E) Init_2:
   /*
   rule (modulo AC) Init_2:
      [
-     Init_1( $I.1, $R.2, ~ekI.3 ), !Pk( $R.2, pk(ltkR.5) ),
-     In( <$R.2, $I.1, Y.4, sign(<'2', $R.2, $I.1, Y.4>, ltkR.5)> )
+     Init_1( $I, $R, ~ekI ), !Pk( $R, pk(ltkR) ),
+     In( <$R, $I, Y, sign(<'2', $R, $I, Y>, ltkR)> )
      ]
-    --[ SessionKey( $I.1, $R.2, z.7 ) ]->
+    --[ SessionKey( $I, $R, z ) ]->
      [ ]
   
     variants (modulo AC)
-    1. ~ekI.3
-             = ~ekI.20
-       Y.4   = Y.21
-       z.7   = Y.21^~ekI.20
+    1. ~ekI  = ~ekI.20
+       Y     = Y.21
+       z     = Y.21^~ekI.20
     
-    2. ~ekI.3
-             = ~ekI.21
-       Y.4   = z.22^inv(~ekI.21)
-       z.7   = z.22
+    2. ~ekI  = ~ekI.22
+       Y     = z.26^inv(~ekI.22)
+       z     = z.26
     
-    3. ~ekI.3
-             = ~ekI.22
-       Y.4   = x.23^x.24
-       z.7   = x.23^(~ekI.22*x.24)
+    3. ~ekI  = ~ekI.23
+       Y     = x.37^x.38
+       z     = x.37^(~ekI.23*x.38)
     
-    4. ~ekI.3
-             = ~ekI.22
-       Y.4   = x.23^inv((~ekI.22*x.24))
-       z.7   = x.23^inv(x.24)
+    4. ~ekI  = ~ekI.23
+       Y     = x.37^inv((~ekI.23*x.38))
+       z     = x.37^inv(x.38)
     
-    5. ~ekI.3
-             = ~ekI.22
-       Y.4   = x.23^(x.24*inv(~ekI.22))
-       z.7   = x.23^x.24
+    5. ~ekI  = ~ekI.23
+       Y     = x.37^(x.38*inv(~ekI.23))
+       z     = x.37^x.38
     
-    6. ~ekI.3
-             = ~ekI.23
-       Y.4   = x.24^(x.25*inv((~ekI.23*x.26)))
-       z.7   = x.24^(x.25*inv(x.26))
+    6. ~ekI  = ~ekI.24
+       Y     = x.38^(x.40*inv((~ekI.24*x.39)))
+       z     = x.38^(x.40*inv(x.39))
   */
 
 rule (modulo E) Resp:
@@ -96,56 +90,47 @@ rule (modulo E) Resp:
   /*
   rule (modulo AC) Resp:
      [
-     !Pk( $I.1, pk(ltkI.5) ), !Ltk( $R.2, ltkR.6 ), Fr( ~ekR.3 ),
-     In( <$I.1, $R.2, X.4, sign(<'1', $I.1, $R.2, X.4>, ltkI.5)> )
+     !Pk( $I, pk(ltkI) ), !Ltk( $R, ltkR ), Fr( ~ekR ),
+     In( <$I, $R, X, sign(<'1', $I, $R, X>, ltkI)> )
      ]
-    --[ SessionKey( $I.1, $R.2, z.10 ) ]->
-     [
-     Out( <$R.2, $I.1, 'g'^~ekR.3, sign(<'2', $R.2, $I.1, 'g'^~ekR.3>, ltkR.6)
-          >
-     )
-     ]
+    --[ SessionKey( $I, $R, z ) ]->
+     [ Out( <$R, $I, 'g'^~ekR, sign(<'2', $R, $I, 'g'^~ekR>, ltkR)> ) ]
   
     variants (modulo AC)
-    1. ~ekR.3
-             = ~ekR.102
-       X.4   = X.103
-       z.10  = X.103^~ekR.102
+    1. ~ekR  = ~ekR.117
+       X     = X.118
+       z     = X.118^~ekR.117
     
-    2. ~ekR.3
-             = ~ekR.104
-       X.4   = z.105^inv(~ekR.104)
-       z.10  = z.105
+    2. ~ekR  = ~ekR.149
+       X     = z.156^inv(~ekR.149)
+       z     = z.156
     
-    3. ~ekR.3
-             = ~ekR.110
-       X.4   = x.111^x.112
-       z.10  = x.111^(~ekR.110*x.112)
+    3. ~ekR  = ~ekR.1294
+       X     = x.2580^x.2581
+       z     = x.2580^(~ekR.1294*x.2581)
     
-    4. ~ekR.3
-             = ~ekR.110
-       X.4   = x.111^inv((~ekR.110*x.112))
-       z.10  = x.111^inv(x.112)
+    4. ~ekR  = ~ekR.1294
+       X     = x.2580^inv((~ekR.1294*x.2581))
+       z     = x.2580^inv(x.2581)
     
-    5. ~ekR.3
-             = ~ekR.110
-       X.4   = x.111^(x.112*inv(~ekR.110))
-       z.10  = x.111^x.112
+    5. ~ekR  = ~ekR.1294
+       X     = x.2580^(x.2581*inv(~ekR.1294))
+       z     = x.2580^x.2581
     
-    6. ~ekR.3
-             = ~ekR.116
-       X.4   = x.117^(x.118*inv((~ekR.116*x.119)))
-       z.10  = x.117^(x.118*inv(x.119))
+    6. ~ekR  = ~ekR.1326
+       X     = x.2643^(x.2645*inv((~ekR.1326*x.2644)))
+       z     = x.2643^(x.2645*inv(x.2644))
   */
 
 lemma (modulo E) Perfect_Forward_Secrecy:
+  all-traces
   "All I R.1 sessKey.2 #i.3 #k.4.
     ((SessionKey( I, R.1, sessKey.2 ) @ #i.3) & (K( sessKey.2 ) @ #k.4)) ==>
     ((Ex #r.5. (LtkReveal( I ) @ #r.5) & (#r.5 < #i.3)) |
      (Ex #r.6. (LtkReveal( R.1 ) @ #r.6) & (#r.6 < #i.3)))"
 /* proof based on the same lemma modulo AC */
 /*
-guarded formula characterizing all attacks:
+guarded formula characterizing all counter-examples:
 "Ex I R.1 sessKey.2 #i.3 #k.4.
   (SessionKey( I, R.1, sessKey.2 ) @ #i.3) & (K( sessKey.2 ) @ #k.4)
  &
@@ -155,25 +140,25 @@ guarded formula characterizing all attacks:
 simplify
 solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
   case Init_2
-  solve( (#i.3, 0)[Init_1( $I.7, $R.8, ~ekI.9 )] )
+  solve( (#i.3, 0)[Init_1( $I.6, $R.6, ~ekI.6 )] )
     case Init_1
-    solve( (#i.3, 1)[!Pk( $R.8, pk(ltkR.11) )] )
+    solve( (#i.3, 1)[!Pk( $R.6, pk(ltkR.6) )] )
       case Register_pk
-      solve( KU((#vf.14, 0), sign(<'2', $R.8, $I.7, Y.10>, ~ltk.43)) )
+      solve( KU((#vf.7, 0), sign(<'2', $R.6, $I.6, Y.6>, ~ltk.25)) )
         case Resp
-        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.101*~ekR.102) )] /* may loop */ )
+        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.69*~ekR.70) )] /* may loop */ )
           case Init_1
-          by solve( (#vr.146, 1)[!KU( f_.149, ~ekR.164 )] /* may loop */ )
+          by solve( (#vr.105, 1)[!KU( f_.108, ~ekR.118 )] /* may loop */ )
         next
           case Resp
-          by solve( (#vr.156, 1)[!KU( f_.159, ~ekI.163 )] /* may loop */ )
+          by solve( (#vr.110, 1)[!KU( f_.113, ~ekI.117 )] /* may loop */ )
         next
           case cexp
-          by solve( KU((#vr.107, 1), ~ekI.101) )
+          by solve( KU((#vr.75, 1), ~ekI.69) )
         qed
       next
         case csign
-        solve( (#vr.49, 1)[!KU( f_.53, ~ltk.43 )] /* may loop */ )
+        solve( (#vr.31, 1)[!KU( f_.35, ~ltk.25 )] /* may loop */ )
           case Reveal_ltk
           by contradiction // cyclic
         qed
@@ -182,25 +167,25 @@ solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
   qed
 next
   case Resp
-  solve( (#i.3, 0)[!Pk( $I.7, pk(ltkI.11) )] )
+  solve( (#i.3, 0)[!Pk( $I.6, pk(ltkI.6) )] )
     case Register_pk
-    solve( (#i.3, 1)[!Ltk( $R.8, ltkR.12 )] )
+    solve( (#i.3, 1)[!Ltk( $R.6, ltkR.6 )] )
       case Register_pk
-      solve( KU((#vf.17, 0), sign(<'1', $I.7, $R.8, X.10>, ~ltk.27)) )
+      solve( KU((#vf.7, 0), sign(<'1', $I.6, $R.6, X.6>, ~ltk.15)) )
         case Init_1
-        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.94*~ekI.95) )] /* may loop */ )
+        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.66*~ekI.67) )] /* may loop */ )
           case Init_1
-          by solve( (#vr.139, 1)[!KU( f_.142, ~ekR.156 )] /* may loop */ )
+          by solve( (#vr.102, 1)[!KU( f_.105, ~ekR.114 )] /* may loop */ )
         next
           case Resp
-          by solve( (#vr.149, 1)[!KU( f_.152, ~ekI.157 )] /* may loop */ )
+          by solve( (#vr.107, 1)[!KU( f_.110, ~ekI.115 )] /* may loop */ )
         next
           case cexp
-          by solve( KU((#vr.100, 1), ~ekR.94) )
+          by solve( KU((#vr.72, 1), ~ekR.66) )
         qed
       next
         case csign
-        solve( (#vr.42, 1)[!KU( f_.46, ~ltk.27 )] /* may loop */ )
+        solve( (#vr.28, 1)[!KU( f_.32, ~ltk.15 )] /* may loop */ )
           case Reveal_ltk
           by contradiction // cyclic
         qed
@@ -223,8 +208,8 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.740422s
-  Perfect_Forward_Secrecy: complete proof (20 steps)
+  processing time: 0.59247s
+  Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
 
@@ -234,8 +219,8 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.740422s
-  Perfect_Forward_Secrecy: complete proof (20 steps)
+  processing time: 0.59247s
+  Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================
 */

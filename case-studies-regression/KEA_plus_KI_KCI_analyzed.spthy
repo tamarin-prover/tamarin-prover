@@ -9,9 +9,9 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 section{* KEA+ *}
 
 rule (modulo E) generate_ltk:
-   [ Fr( ~lk ) ]
+   [ Fr( ~lkA ) ]
   --[ RegKey( $A ) ]->
-   [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
+   [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -31,47 +31,34 @@ rule (modulo E) Init_2:
 
   /*
   rule (modulo AC) Init_2:
-     [
-     Init_1( ~ekI.3, $I.1, $R.2, ~lkI.4, hkI.7 ), In( Y.6 ),
-     !Pk( $R.2, 'g'^~x.13 )
-     ]
-    --[
-    SidI_2( ~ekI.3, $I.1, $R.2, hkI.7, Y.6,
-            h(<z.9, 'g'^(~ekI.3*~x.13), $I.1, $R.2>)
-    )
-    ]->
-     [ !Sessk( ~ekI.3, h(<z.9, 'g'^(~ekI.3*~x.13), $I.1, $R.2>) ) ]
+     [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~x ) ]
+    --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<z, 'g'^(~ekI*~x), $I, $R>) ) ]->
+     [ !Sessk( ~ekI, h(<z, 'g'^(~ekI*~x), $I, $R>) ) ]
   
     variants (modulo AC)
-    1. ~lkI.4
-             = ~lkI.220
-       Y.6   = Y.221
-       z.9   = Y.221^~lkI.220
+    1. ~lkI  = ~lkI.370
+       Y     = Y.372
+       z     = Y.372^~lkI.370
     
-    2. ~lkI.4
-             = ~lkI.221
-       Y.6   = z.222^inv(~lkI.221)
-       z.9   = z.222
+    2. ~lkI  = ~lkI.382
+       Y     = z.387^inv(~lkI.382)
+       z     = z.387
     
-    3. ~lkI.4
-             = ~lkI.231
-       Y.6   = x.233^x.234
-       z.9   = x.233^(~lkI.231*x.234)
+    3. ~lkI  = ~lkI.21508
+       Y     = x.43006^x.43007
+       z     = x.43006^(~lkI.21508*x.43007)
     
-    4. ~lkI.4
-             = ~lkI.231
-       Y.6   = x.233^inv((~lkI.231*x.234))
-       z.9   = x.233^inv(x.234)
+    4. ~lkI  = ~lkI.21956
+       Y     = x.43902^inv((~lkI.21956*x.43903))
+       z     = x.43902^inv(x.43903)
     
-    5. ~lkI.4
-             = ~lkI.231
-       Y.6   = x.233^(x.234*inv(~lkI.231))
-       z.9   = x.233^x.234
+    5. ~lkI  = ~lkI.21956
+       Y     = x.43902^(x.43903*inv(~lkI.21956))
+       z     = x.43902^x.43903
     
-    6. ~lkI.4
-             = ~lkI.241
-       Y.6   = x.243^(x.244*inv((~lkI.241*x.245)))
-       z.9   = x.243^(x.244*inv(x.245))
+    6. ~lkI  = ~lkI.22468
+       Y     = x.44925^(x.44927*inv((~lkI.22468*x.44926)))
+       z     = x.44925^(x.44927*inv(x.44926))
   */
 
 rule (modulo E) Resp_1:
@@ -86,47 +73,38 @@ rule (modulo E) Resp_1:
 
   /*
   rule (modulo AC) Resp_1:
-     [ In( X.6 ), Fr( ~ekR.3 ), !Ltk( $R.2, ~lkR.5 ), !Pk( $I.1, 'g'^~x.13 ) ]
-    --[
-    SidR_1( ~ekR.3, $I.1, $R.2, X.6, 'g'^~ekR.3,
-            h(<'g'^(~ekR.3*~x.13), z.10, $I.1, $R.2>)
-    )
+     [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~x ) ]
+    --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<'g'^(~ekR*~x), z, $I, $R>) )
     ]->
      [
-     Out( 'g'^~ekR.3 ), !Ephk( ~ekR.3 ),
-     !Sessk( ~ekR.3, h(<'g'^(~ekR.3*~x.13), z.10, $I.1, $R.2>) )
+     Out( 'g'^~ekR ), !Ephk( ~ekR ),
+     !Sessk( ~ekR, h(<'g'^(~ekR*~x), z, $I, $R>) )
      ]
   
     variants (modulo AC)
-    1. ~lkR.5
-             = ~lkR.323
-       X.6   = X.324
-       z.10  = X.324^~lkR.323
+    1. ~lkR  = ~lkR.514
+       X     = X.515
+       z     = X.515^~lkR.514
     
-    2. ~lkR.5
-             = ~lkR.323
-       X.6   = z.324^inv(~lkR.323)
-       z.10  = z.324
+    2. ~lkR  = ~lkR.526
+       X     = z.531^inv(~lkR.526)
+       z     = z.531
     
-    3. ~lkR.5
-             = ~lkR.337
-       X.6   = x.339^x.340
-       z.10  = x.339^(~lkR.337*x.340)
+    3. ~lkR  = ~lkR.343874
+       X     = x.687736^x.687737
+       z     = x.687736^(~lkR.343874*x.687737)
     
-    4. ~lkR.5
-             = ~lkR.337
-       X.6   = x.339^inv((~lkR.337*x.340))
-       z.10  = x.339^inv(x.340)
+    4. ~lkR  = ~lkR.351042
+       X     = x.702072^inv((~lkR.351042*x.702073))
+       z     = x.702072^inv(x.702073)
     
-    5. ~lkR.5
-             = ~lkR.337
-       X.6   = x.339^(x.340*inv(~lkR.337))
-       z.10  = x.339^x.340
+    5. ~lkR  = ~lkR.351042
+       X     = x.702072^(x.702073*inv(~lkR.351042))
+       z     = x.702072^x.702073
     
-    6. ~lkR.5
-             = ~lkR.351
-       X.6   = x.353^(x.354*inv((~lkR.351*x.355)))
-       z.10  = x.353^(x.354*inv(x.355))
+    6. ~lkR  = ~lkR.359234
+       X     = x.718455^(x.718457*inv((~lkR.359234*x.718456)))
+       z     = x.718455^(x.718457*inv(x.718456))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -145,6 +123,7 @@ rule (modulo E) Ltk_reveal:
   /* has exactly the trivial AC variant */
 
 lemma (modulo E) keaplus_initiator_key:
+  all-traces
   "(All A #i.1 #j.2.
      ((RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)) ==> (#i.1 = #j.2)) ==>
    (not(Ex #i1.3 #i2.4 ttest.5 I.6 R.7 k.8 hkI.9 hkR.10.
@@ -163,7 +142,7 @@ lemma (modulo E) keaplus_initiator_key:
          (All #i3.21. (LtkRev( R.7 ) @ #i3.21) ==> (F))))"
 /* proof based on the same lemma modulo AC */
 /*
-guarded formula characterizing all attacks:
+guarded formula characterizing all counter-examples:
 "(All A #i.1 #j.2.
    (RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)
   ==>
@@ -187,11 +166,11 @@ guarded formula characterizing all attacks:
    (All #i3.21. (LtkRev( R.7 ) @ #i3.21) ==> F))"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
+solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, hkI.6 )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.10, 'g'^~x.21 )] )
+  solve( (#i1, 2)[!Pk( $R.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.24, h(<z.17, 'g'^(~ekI.11*~x.21), $I.9, $R.10>)
+    solve( (#i2.1, 0)[!KU( f_.11, h(<z.8, 'g'^(~ekI.8*~x.8), $I.8, $R.8>)
                       )] /* may loop */ )
       case Sessk_reveal_case_1
       by contradiction // from formulas
@@ -200,21 +179,21 @@ solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
       by contradiction // from formulas
     next
       case ch
-      solve( KU((#vr.62, 0), 'g'^(~ekI.11*~x.21)) )
+      solve( KU((#vr.35, 0), 'g'^(~ekI.8*~x.8)) )
         case Init_1
-        solve( (#vr.91, 1)[!KU( f_.94, ~x.115 )] /* may loop */ )
+        solve( (#vr.54, 1)[!KU( f_.57, ~x.67 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case cexp
-        solve( KU((#vr.69, 1), ~ekI.11) )
+        solve( KU((#vr.42, 1), ~ekI.8) )
           case Ephk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk
-        solve( (#vr.82, 1)[!KU( f_.85, ~ekI.114 )] /* may loop */ )
+        solve( (#vr.51, 1)[!KU( f_.54, ~ekI.66 )] /* may loop */ )
           case Ephk_reveal
           by contradiction // from formulas
         qed
@@ -224,6 +203,7 @@ solve( (#i1, 0)[Init_1( ~ekI.11, $I.9, $R.10, ~lkI.12, hkI.6 )] )
 qed
 
 lemma (modulo E) keaplus_responder_key:
+  all-traces
   "(All A #i.1 #j.2.
      ((RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)) ==> (#i.1 = #j.2)) ==>
    (not(Ex #i1.3 #i2.4 ttest.5 I.6 R.7 k.8 hkI.9 hkR.10.
@@ -246,7 +226,7 @@ lemma (modulo E) keaplus_responder_key:
          (All #i3.25. (LtkRev( I.6 ) @ #i3.25) ==> (F))))"
 /* proof based on the same lemma modulo AC */
 /*
-guarded formula characterizing all attacks:
+guarded formula characterizing all counter-examples:
 "(All A #i.1 #j.2.
    (RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)
   ==>
@@ -275,11 +255,11 @@ guarded formula characterizing all attacks:
    (All #i3.25. (LtkRev( I.6 ) @ #i3.25) ==> F))"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
+solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.9, 'g'^~x.21 )] )
+  solve( (#i1, 3)[!Pk( $I.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.25, h(<'g'^(~ekR.11*~x.21), z.18, $I.9, $R.10>)
+    solve( (#i2.1, 0)[!KU( f_.12, h(<'g'^(~ekR.8*~x.8), z.8, $I.8, $R.8>)
                       )] /* may loop */ )
       case Sessk_reveal_case_1
       by contradiction // from formulas
@@ -288,21 +268,21 @@ solve( (#i1, 2)[!Ltk( $R.10, ~lkR.13 )] )
       by contradiction // from formulas
     next
       case ch
-      solve( KU((#vr.51, 0), 'g'^(~ekR.11*~x.21)) )
+      solve( KU((#vr.30, 0), 'g'^(~ekR.8*~x.8)) )
         case Resp_1
-        solve( (#vr.96, 1)[!KU( f_.99, ~x.78 )] /* may loop */ )
+        solve( (#vr.54, 1)[!KU( f_.57, ~x.44 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case cexp
-        solve( KU((#vr.58, 1), ~ekR.11) )
+        solve( KU((#vr.37, 1), ~ekR.8) )
           case Ephk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk
-        solve( (#vr.71, 1)[!KU( f_.74, ~ekR.103 )] /* may loop */ )
+        solve( (#vr.46, 1)[!KU( f_.49, ~ekR.61 )] /* may loop */ )
           case Ephk_reveal
           by contradiction // from formulas
         qed
@@ -325,9 +305,9 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.79015s
-  keaplus_initiator_key: complete proof (13 steps)
-  keaplus_responder_key: complete proof (13 steps)
+  processing time: 0.686344s
+  keaplus_initiator_key (all-traces): verified (13 steps)
+  keaplus_responder_key (all-traces): verified (13 steps)
 
 ------------------------------------------------------------------------------
 
@@ -337,9 +317,9 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.79015s
-  keaplus_initiator_key: complete proof (13 steps)
-  keaplus_responder_key: complete proof (13 steps)
+  processing time: 0.686344s
+  keaplus_initiator_key (all-traces): verified (13 steps)
+  keaplus_responder_key (all-traces): verified (13 steps)
 
 ==============================================================================
 */
