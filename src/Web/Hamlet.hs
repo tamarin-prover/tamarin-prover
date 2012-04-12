@@ -334,11 +334,11 @@ introTpl = [HAMLET|
       \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a>.<br>
       Contributors:
       \ <a href="http://people.inf.ethz.ch/cremersc/index.html">Cas Cremers</a>,
-      \ <a href="https://cssx.ch">Cedric Staub</a>.<br>
+      \ <a href="https://cssx.ch">Cedric Staub</a>.
+    <p>
       <span class="sc">Tamarin</span> was developed at the 
       \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
-      \ <a href="http://www.ethz.ch">ETH Zurich</a>.
-    <p>
+      \ <a href="http://www.ethz.ch">ETH Zurich</a>.<br>
       This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
       \ you are welcome to redistribute it according to its
       \ <a href="/static/LICENSE" type="text/plain">LICENSE.</a>
