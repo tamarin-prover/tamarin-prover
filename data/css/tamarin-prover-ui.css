@@ -10,6 +10,8 @@ html, body {
         sans-serif;         /* Fallback */
     background: #fff;
     font-size: 0.95em;
+    padding: 0px;
+    margin: 0px;
 }
 
 a {
@@ -62,6 +64,13 @@ p.loading {
 
 div.content {
     margin: 0.5em;
+}
+
+div#intropage {
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 img.icon {
@@ -368,9 +377,14 @@ table {
 }
 
 table th {
+    text-align: left;
     padding: 0.5em;
+    padding-left: 15px;
+    padding-right: 15px;
     background: #dfeff1;
-    border: solid 1px #3a6c78;
+    /*
+     * border: solid 1px #3a6c78;
+     */
     border-bottom: solid 1px #e3fcff;
 }
 
@@ -378,6 +392,8 @@ table td {
     background: #fff;
     text-align: left;
     padding: 0.5em;
+    padding-left: 15px;
+    padding-right: 15px;
     border: solid 1px #3a6c78;
 }
 
@@ -390,7 +406,9 @@ h1.pane-head {
     font-weight: bold;
     position: relative;
     margin: 0em;
-    padding: 0.5em;
+    padding: 25px;
+    padding-top: 0.7em;
+    padding-bottom: 0.5em;
     background: #dfeff1;
     border-bottom: solid 1px #eff7f8;
     border-top: solid 1px #3a6c78;
@@ -473,6 +491,9 @@ h4 {
 #ui-main-display, #ui-debug-display, #proof {
     z-index: inherit;
     padding: 0.8em;
+    padding-top: 25px;
+    padding-left: 25px;		/* propagate to ui-layout-pane-north and pane-head */
+    padding-right: 25px;		/* propagate to ui-layout-pane-north and pane-head */
     margin: 0em;
     height: 90%;
 }
@@ -487,6 +508,8 @@ h4 {
 
 .ui-layout-pane-north {
     font-size: 0.8em;
+    padding-left: 25px;
+    padding-right: 25px;
     background: #dfeff1;
     border-bottom: solid 1px #7dc0cd;
     /* Gecko */
@@ -518,7 +541,8 @@ h4 {
 div#header-info {
     float: left;
     font-weight: bold;
-    padding: 0.75em;
+    padding-top: 0.85em;
+    padding-bottom: 0.85em;
     border: 0px;
 }
 

@@ -107,10 +107,11 @@ rootTpl :: TheoryMap      -- ^ Map of loaded theories
         -> Widget
 -- rootTpl theories form enctype nonce = [whamlet|
 rootTpl theories = [whamlet|
-    \^{introTpl}
-    <h2>Currently loaded theories
-    <p
-      \^{theoriesTpl theories}
+    <div id="intropage">
+      \^{introTpl}
+      <h2>Currently loaded theories
+      <p
+        \^{theoriesTpl theories}
   |]
     {-
     <h2>Loading a new theory
@@ -250,7 +251,7 @@ overviewTpl info path = do
     <div .ui-layout-north>
       ^{headerTpl info}
     <div .ui-layout-west>
-      <h1 .pane-head>&nbsp;Proof scripts
+      <h1 .pane-head>Proof scripts
       <div #proof-wrapper .scroll-wrapper>
         <div #proof .monospace>
           ^{proofState}
@@ -259,7 +260,7 @@ overviewTpl info path = do
       <div #debug-wrapper .scroll-wrapper>
         <div #ui-debug-display>
     <div .ui-layout-center>
-      <h1 #main-title .pane-head>&nbsp;Visualization display
+      <h1 #main-title .pane-head>Visualization display
       <div #main-wrapper .scroll-wrapper tabindex=0>
         <div #ui-main-display>
           \^{mainView}
@@ -319,29 +320,29 @@ pathTpl info path = wrapThHtml $ htmlThyPath (tiTheory info) path
 -- | Template for introduction.
 introTpl :: Widget
 introTpl = [HAMLET|
-    <img src="/static/img/tamarin-logo-96.png" class="logo">
-    <h1><span class="sc">Tamarin</span> prover GUI
-    <noscript>
-      <div class="warning">
-        Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
-    <p>
-      You are running 
-      <strong><a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a></strong>
-      \ version #{showVersion version} in interactive mode.
-    <p>
-      Authors:
-      \ <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>,
-      \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a>.<br>
-      Contributors:
-      \ <a href="http://people.inf.ethz.ch/cremersc/index.html">Cas Cremers</a>,
-      \ <a href="https://cssx.ch">Cedric Staub</a>.
-    <p>
-      <span class="sc">Tamarin</span> was developed at the 
-      \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
-      \ <a href="http://www.ethz.ch">ETH Zurich</a>.<br>
-      This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
-      \ you are welcome to redistribute it according to its
-      \ <a href="/static/LICENSE" type="text/plain">LICENSE.</a>
+      <img src="/static/img/tamarin-logo-96.png" class="logo">
+      <h1><span class="sc">Tamarin</span> prover GUI
+      <noscript>
+        <div class="warning">
+          Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
+      <p>
+        You are running 
+        <strong><a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a></strong>
+        \ version #{showVersion version} in interactive mode.
+      <p>
+        Authors:
+        \ <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>,
+        \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a>.<br>
+        Contributors:
+        \ <a href="http://people.inf.ethz.ch/cremersc/index.html">Cas Cremers</a>,
+        \ <a href="https://cssx.ch">Cedric Staub</a>.
+      <p>
+        <span class="sc">Tamarin</span> was developed at the 
+        \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
+        \ <a href="http://www.ethz.ch">ETH Zurich</a>.<br>
+        This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
+        \ you are welcome to redistribute it according to its
+        \ <a href="/static/LICENSE" type="text/plain">LICENSE.</a>
   |]
 
 {-
