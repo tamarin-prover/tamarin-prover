@@ -82,6 +82,7 @@ import Term.Rewriting.Definitions
 import Text.PrettyPrint.Class
 
 import Control.Applicative
+import Control.Arrow
 import Control.Monad.Fresh
 import Control.Monad.Bind
 import Control.DeepSeq
@@ -391,10 +392,14 @@ someInst = mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x (lvar
 --   equal modulo changing the indices of variables.
 rename :: (MonadFresh m, HasFrees a) => a -> m a
 rename x = do
-    maxVarIdx <- freshIdents (avoid x)
-    return . runIdentity . mapFrees (Monotone $ incVar maxVarIdx) $ x
+    freshStart <- freshIdents requiredIdents
+    return . runIdentity . mapFrees (Monotone $ incVar (freshStart-minVarIdx)) $ x
   where
-    incVar maxVarIdx (LVar n so i) = pure $ LVar n so (i+maxVarIdx)
+    (minVarIdx, maxVarIdx) = boundsVarIdx x
+    requiredIdents
+        | minVarIdx > maxVarIdx = 0 -- there are no vars in x
+        | otherwise             = succ $ maxVarIdx - minVarIdx
+    incVar shift (LVar n so i) = pure $ LVar n so (i+shift)
 
 -- | @renamePrecise t@ replaces all variables in @t@ with fresh variables.
 --   If 'Control.Monad.PreciseFresh' is used with non-AC terms and identical
@@ -418,6 +423,10 @@ eqModuloFreshnessNoAC t1 =
 -- | The maximum index of all free variables.
 maximumVarIdx :: HasFrees t => t -> Int
 maximumVarIdx = getBoundedMax . foldFrees (BoundedMax . lvarIdx)
+
+-- | The mininum and maximum index of all free variables.
+boundsVarIdx :: HasFrees t => t -> (Int,Int)
+boundsVarIdx = (getBoundedMin *** getBoundedMax) . foldFrees ((BoundedMin &&& BoundedMax) . lvarIdx)
 
 -- | @avoid t@ computes a 'FreshState' that avoids generating
 -- variables occurring in @t@.
