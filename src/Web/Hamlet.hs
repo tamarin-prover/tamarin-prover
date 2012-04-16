@@ -107,6 +107,10 @@ rootTpl :: TheoryMap      -- ^ Map of loaded theories
         -> Widget
 -- rootTpl theories form enctype nonce = [whamlet|
 rootTpl theories = [whamlet|
+    <div #header-info>
+      Running
+      \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a>
+      \ #{showVersion version}
     <div id="intropage">
       \^{introTpl}
       <h2>Currently loaded theories
@@ -271,8 +275,6 @@ pathTpl :: TheoryInfo   -- ^ The theory
         -> TheoryPath   -- ^ Path to display on load
         -> IO Widget
 pathTpl info TheoryMain = return [whamlet|
-    <h2>Welcome!
-    <br>
     <h3>Theory information</h3>
       <ul
         <li>Theory: #{get thyName $ tiTheory info}
@@ -320,15 +322,11 @@ pathTpl info path = wrapThHtml $ htmlThyPath (tiTheory info) path
 -- | Template for introduction.
 introTpl :: Widget
 introTpl = [HAMLET|
-      <img src="/static/img/tamarin-logo-96.png" class="logo">
-      <h1><span class="sc">Tamarin</span> prover GUI
+      <div id="logo-body">
+        <img class="logo" src="/static/img/tamarin-logo-3-0-0.png">
       <noscript>
         <div class="warning">
           Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
-      <p>
-        You are running 
-        <strong><a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a></strong>
-        \ version #{showVersion version} in interactive mode.
       <p>
         Authors:
         \ <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>,

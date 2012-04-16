@@ -573,10 +573,18 @@ div#header-links a.save-link {
 /* Logo
  ********/
 
-.logo { 
-    display: inline; 
-    padding: 0px;
-    border: 0px;
-    margin: 0em;
+div#logo-body {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    height: 124px;
+    background-image:url('tamarin-logo-3-1-0.png');
+    background-repeat: repeat-x;
+}
+
+.logo {
+    position: relative;
+    top: 0px;
+	left: 0px;
 }
 
