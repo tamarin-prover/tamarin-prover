@@ -10,5 +10,8 @@ dfeff1	main fader light blue
 
 7dc0cd	low highlight (bottom of fader bar line)
 
+c3ea71	reference green (for right fade)
+
+Colors are more saturated at bottom.
 
 

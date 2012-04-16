@@ -66,7 +66,7 @@ div.content {
     margin: 0.5em;
 }
 
-div#intropage {
+div.intropage {
     padding-left: 25px;
     padding-right: 25px;
     padding-top: 10px;
@@ -573,18 +573,28 @@ div#header-links a.save-link {
 /* Logo
  ********/
 
-div#logo-body {
-    position: absolute;
-    left: 0px;
-    right: 0px;
+div#introbar {
+  height: 3em;
+}
+
+div#logo p {
     height: 124px;
-    background-image:url('tamarin-logo-3-1-0.png');
+	left: 0px;
+	right: 0px;
+	background-color: #c3ea71;
+	padding: 0px;
+	margin: 0px;
+/*
+	background-image: url('file:///home/cas/src/tamarin-prover/images/tamarin-logo-3-1-0.png');
+*/
+    background-image: url('/static/img/tamarin-logo-3-1-0.png');
     background-repeat: repeat-x;
 }
 
-.logo {
+div#logo img {
     position: relative;
     top: 0px;
 	left: 0px;
+	display: inline;
 }
 

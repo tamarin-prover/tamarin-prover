@@ -107,14 +107,19 @@ rootTpl :: TheoryMap      -- ^ Map of loaded theories
         -> Widget
 -- rootTpl theories form enctype nonce = [whamlet|
 rootTpl theories = [whamlet|
-    <div #header-info>
-      Running
-      \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a>
-      \ #{showVersion version}
-    <div id="intropage">
+    <div class="ui-layout-container">
+      <div class="ui-layout-north">
+        <div class="ui-layout-pane">
+          <div class="layout-pane-north">
+            <div class="ui-layout-pane-north">
+              <div id="introbar">
+                <div id="header-info">
+                  Running
+                  \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a>
+                  \ #{showVersion version}
       \^{introTpl}
-      <h2>Currently loaded theories
-      <p
+    <div class="intropage">
+      <p>
         \^{theoriesTpl theories}
   |]
     {-
@@ -206,10 +211,11 @@ threadsTpl threads = [HAMLET|
 -- | Template for header frame (various information)
 headerTpl :: TheoryInfo -> Widget
 headerTpl info = [HAMLET|
-    <div #header-info>
-      Running
-      \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a>
-      \ #{showVersion version}
+    <div class="layout-pane-north">
+      <div #header-info>
+        Running
+        \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a>
+        \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
       <a class=plain-link href=@{DownloadTheoryR idx filename}>Download</a>
@@ -322,23 +328,25 @@ pathTpl info path = wrapThHtml $ htmlThyPath (tiTheory info) path
 -- | Template for introduction.
 introTpl :: Widget
 introTpl = [HAMLET|
-      <div id="logo-body">
-        <img class="logo" src="/static/img/tamarin-logo-3-0-0.png">
+      <div id="logo">
+        <p>
+          <img src="/static/img/tamarin-logo-3-0-0.png">
       <noscript>
         <div class="warning">
           Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
+    <div class="intropage">
       <p>
         Authors:
         \ <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>,
-        \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a>.<br>
+        \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a><br>
         Contributors:
         \ <a href="http://people.inf.ethz.ch/cremersc/index.html">Cas Cremers</a>,
-        \ <a href="https://cssx.ch">Cedric Staub</a>.
+        \ <a href="https://cssx.ch">Cedric Staub</a>
       <p>
         <span class="sc">Tamarin</span> was developed at the 
         \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
-        \ <a href="http://www.ethz.ch">ETH Zurich</a>.<br>
-        This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
+        \ <a href="http://www.ethz.ch">ETH Zurich</a>.
+        \ This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
         \ you are welcome to redistribute it according to its
         \ <a href="/static/LICENSE" type="text/plain">LICENSE.</a>
   |]
