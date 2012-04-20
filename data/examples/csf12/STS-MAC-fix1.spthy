@@ -28,7 +28,7 @@ rule Register_pk_normal:
   --> 
   [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk(~ltk)) ]
 
-// Can register a keymat, but only if we know the exponent
+// Can register a key, but only if we know the exponent
 // Models proof-of-possession check.
 rule Register_pk_evil:
   [ In(ltk) ] 
