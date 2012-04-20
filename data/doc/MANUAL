@@ -18,7 +18,7 @@ Syntax highlighting
 -------------------
 
 We provide syntax highlighting files for the 'vim' text editor. Here, we
-describe how to install them. Let DATA_PATH be the superdirectory of the
+describe how to install them. Let DATA_PATH be the parent directory of the
 examples directory output in Tamarin's help message.  The 'vim' syntax
 highlighting files are found at
 
@@ -46,7 +46,7 @@ protocols. We normally use the following workflow to do that.
   2. Modify the protocol a bit and call 'tamarin-prover myproto.spthy' to
      ensure that it still parses and all well-formedness checks pass. This
      way you get immediate feedback on your changes. Moreover, you can see the
-     expansions of syntactic sugar like the built-in signatures for hasing or
+     expansions of syntactic sugar like the built-in signatures for hashing or
      asymmetric encryption.
 
   3. Once you are satisfied with your model, check if the automated prover
@@ -93,7 +93,7 @@ Precomputed Case Distinctions
 Apart from unification, the most common step performed by Tamarin is the
 enumeration of the possible origins of an open premise. Most of these
 backwards steps result in a number of trivial further constraint reduction
-steps being applied immediatly. Instead of applying them over and over during
+steps being applied immediately. Instead of applying them over and over during
 proof/counter-example construction, we precompute the result of doing one
 backwards step and use the resulting precomputed case distinctions during
 proof/counter-example search.
@@ -112,7 +112,7 @@ This allows for example determine the shape of a signed message without case
 splitting on its variants. In the GUI, you can see the equation store being
 pretty printed as follows.
 
-  free-substituion
+  free-substitution
 
   1. fresh-substitution-group
   ...
@@ -122,7 +122,7 @@ The free-substitution represents the equalities that hold for the free
 variables in the constraint system in the usual normal form, i.e., a
 substitution. The variants of a protocol rule are represented as a group of
 substitutions mapping free variables of the constraint system to terms
-containing only fresh variables. The different fresh-substitions in a group
+containing only fresh variables. The different fresh-substitutions in a group
 are interpreted as a disjunction.
 
 Logically, the equation store represents expression of the form
@@ -318,7 +318,7 @@ guards.
     // Where unambiguous the '#' sort prefix can be dropped.
     tvar := ['#'] ident
 
-Identifiers always start with a letter. Moreover, they must not be one of the
+Identifiers always start with a character. Moreover, they must not be one of the
 reserved keywords 'let', 'in', or 'rule'.
 
     ident := alpha (alpha | digit)*
@@ -332,5 +332,5 @@ The Tamarin prover is under active development. We are grateful to receive
 bug-reports. If you consider building on top of Tamarin, then you might
 consider integrating your idea into the main source repository. Please feel
 free to contact us such that we can discuss the next steps towards fully
-verified systesm :-)
+verified systems :-)
 
