@@ -44,7 +44,7 @@ import Control.Monad.Reader
 -- FreshT monad transformer
 ------------------------------------------------------------------------------
 
--- | The state of the name supply: the last used sequence number of every name.
+-- | The state of the name supply: the first unused sequence number of every name.
 type FreshState = Int
 
 -- | A computation that can generate fresh variables from name hints.
