@@ -322,6 +322,9 @@ pathTpl _ info TheoryHelp = return [whamlet|
             <span class="keys">1-9</span>: Apply the proof method with \
             the given number as shown in the applicable proof method section \
             in the main view.
+          <li>
+            <span class="keys">a</span>: Apply the autoprove method to \
+            the current goal.
   |]
 pathTpl renderUrl info path = liftIO . wrapThHtml $ htmlThyPath renderUrl info path
 
