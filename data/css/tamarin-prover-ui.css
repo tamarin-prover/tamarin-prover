@@ -133,7 +133,7 @@ div.warning {
         monospace;          /* Fallback */
 }
 
-.sc {
+.tamarin {
     font-family: Roman,serif;
     font-variant: small-caps;
 }

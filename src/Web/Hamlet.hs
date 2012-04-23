@@ -115,7 +115,7 @@ rootTpl theories = [whamlet|
               <div id="introbar">
                 <div id="header-info">
                   Running
-                  \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a>
+                  \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="tamarin">Tamarin</span></a>
                   \ #{showVersion version}
       \^{introTpl}
     <div class="intropage">
@@ -214,7 +214,7 @@ headerTpl info = [HAMLET|
     <div class="layout-pane-north">
       <div #header-info>
         Running
-        \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="sc">Tamarin</span></a>
+        \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="tamarin">Tamarin</span></a>
         \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
@@ -290,7 +290,7 @@ pathTpl info TheoryMain = return [whamlet|
       <h3>Quick introduction</h3>
       <noscript>
         <div class="warning">
-          Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
+          Warning: JavaScript must be enabled for the <span class="tamarin">Tamarin</span> prover GUI to function properly.
       <p>
         <em>Left pane: Proof scripts display.
         <ul>
@@ -333,7 +333,7 @@ introTpl = [HAMLET|
           <img src="/static/img/tamarin-logo-3-0-0.png">
       <noscript>
         <div class="warning">
-          Warning: JavaScript must be enabled for the <span class="sc">Tamarin</span> prover GUI to function properly.
+          Warning: JavaScript must be enabled for the <span class="tamarin">Tamarin</span> prover GUI to function properly.
     <div class="intropage">
       <p>
         Authors:
@@ -343,7 +343,7 @@ introTpl = [HAMLET|
         \ <a href="http://people.inf.ethz.ch/cremersc/index.html">Cas Cremers</a>,
         \ <a href="https://cssx.ch">Cedric Staub</a>
       <p>
-        <span class="sc">Tamarin</span> was developed at the 
+        <span class="tamarin">Tamarin</span> was developed at the 
         \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
         \ <a href="http://www.ethz.ch">ETH Zurich</a>.
         \ This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
