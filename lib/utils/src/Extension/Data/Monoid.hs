@@ -9,6 +9,9 @@
 module Extension.Data.Monoid (
     (<>)
   , module Data.Monoid
+
+  , MinMax(..)
+  , minMaxSingleton
   ) where
 
 import Data.Monoid
@@ -23,3 +26,19 @@ infixr 6 <>
 {-# INLINE (<>) #-}
 
 #endif
+
+-- | A newtype wrapper around 'Maybe' that returns a tuple of the minimum and
+-- maximum value encountered, if there was any.
+newtype MinMax a = MinMax { getMinMax :: Maybe (a, a) }
+
+-- | Construct a 'MinMax' value from a singleton value.
+minMaxSingleton :: a -> MinMax a
+minMaxSingleton x = MinMax (Just (x, x))
+
+instance Ord a => Monoid (MinMax a) where
+    mempty = MinMax Nothing
+
+    MinMax Nothing             `mappend` y                          = y
+    x                          `mappend` MinMax Nothing             = x
+    MinMax (Just (xMin, xMax)) `mappend` MinMax (Just (yMin, yMax)) =
+       MinMax (Just (min xMin yMin, max xMax yMax))

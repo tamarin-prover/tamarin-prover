@@ -56,7 +56,6 @@ module Term.LTerm (
   , rename
   , renamePrecise
   , eqModuloFreshnessNoAC
-  , maximumVarIdx
   , avoid
   , evalFreshAvoiding
   , evalFreshTAvoiding
@@ -82,7 +81,6 @@ import Term.Rewriting.Definitions
 import Text.PrettyPrint.Class
 
 import Control.Applicative
-import Control.Arrow
 import Control.Monad.Fresh
 import Control.Monad.Bind
 import Control.DeepSeq
@@ -101,7 +99,7 @@ import Data.Binary
 import Data.Foldable hiding (concatMap, elem)
 
 import Extension.Prelude
-import Extension.Data.Bounded
+import Extension.Data.Monoid
 
 import Logic.Connectives
 
@@ -177,12 +175,7 @@ data LSort = LSortPub   -- ^ Arbitrary public names.
 data LVar = LVar 
      { lvarName :: String
      , lvarSort :: !LSort
--- Work around GHC bug #5976
-#if __GLASGOW_HASKELL__ < 704
-     , lvarIdx  :: {-# UNPACK #-} !Int 
-#else
-     , lvarIdx  :: !Int 
-#endif
+     , lvarIdx  :: !Integer
      }
      deriving( Typeable, Data )
 
@@ -280,15 +273,15 @@ trivial _                                        = False
 ------------------------
 
 -- | Bound and free variables.
-data BVar v = Bound Int  -- ^ A bound variable in De-Brujin notation.
-            | Free  v    -- ^ A free variable.
+data BVar v = Bound Integer  -- ^ A bound variable in De-Brujin notation.
+            | Free  v        -- ^ A free variable.
             deriving( Eq, Ord, Show, Data, Typeable )
 
 
 
 -- | Fold a possibly bound variable.
 {-# INLINE foldBVar #-}
-foldBVar :: (Int -> a) -> (v -> a) -> BVar v -> a
+foldBVar :: (Integer -> a) -> (v -> a) -> BVar v -> a
 foldBVar fBound fFree = go
   where
     go (Bound i) = fBound i
@@ -397,13 +390,12 @@ someInst = mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x (lvar
 --   Note that the result is not guaranteed to be equal for terms that are
 --   equal modulo changing the indices of variables.
 rename :: (MonadFresh m, HasFrees a) => a -> m a
-rename x 
-  | minVarIdx > maxVarIdx = return x  -- there are no vars in x => no renaming required
-  | otherwise             = do
+rename x = case boundsVarIdx x of
+    Nothing                     -> return x
+    Just (minVarIdx, maxVarIdx) -> do
       freshStart <- freshIdents (succ (maxVarIdx - minVarIdx))
       return . runIdentity . mapFrees (Monotone $ incVar (freshStart - minVarIdx)) $ x
   where
-    (minVarIdx, maxVarIdx) = boundsVarIdx x
     incVar shift (LVar n so i) = pure $ LVar n so (i+shift)
 
 -- | @renamePrecise t@ replaces all variables in @t@ with fresh variables.
@@ -425,18 +417,14 @@ eqModuloFreshnessNoAC t1 =
     normIndices = (`evalFresh` nothingUsed) . (`evalBindT` noBindings) .
                   mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x "")
 
--- | The maximum index of all free variables.
-maximumVarIdx :: HasFrees t => t -> Int
-maximumVarIdx = getBoundedMax . foldFrees (BoundedMax . lvarIdx)
-
 -- | The mininum and maximum index of all free variables.
-boundsVarIdx :: HasFrees t => t -> (Int,Int)
-boundsVarIdx = (getBoundedMin *** getBoundedMax) . foldFrees ((BoundedMin &&& BoundedMax) . lvarIdx)
+boundsVarIdx :: HasFrees t => t -> Maybe (Integer, Integer)
+boundsVarIdx = getMinMax . foldFrees (minMaxSingleton . lvarIdx)
 
 -- | @avoid t@ computes a 'FreshState' that avoids generating
 -- variables occurring in @t@.
 avoid :: HasFrees t => t -> FreshState 
-avoid = max 0 . succ . maximumVarIdx
+avoid = maybe 0 (succ . snd) . boundsVarIdx
 
 -- | @m `evalFreshAvoiding` t@ evaluates the monadic action @m@ with a
 -- fresh-variable supply that avoids generating variables occurring in @t@.
@@ -500,6 +488,10 @@ instance HasFrees () where
     mapFrees   _ = pure
 
 instance HasFrees Int where
+    foldFrees  _ = const mempty
+    mapFrees   _ = pure
+
+instance HasFrees Integer where
     foldFrees  _ = const mempty
     mapFrees   _ = pure
 

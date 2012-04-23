@@ -38,7 +38,7 @@ pk a = fAppNonAC pkSym [a]
 trueC :: Ord a => Term a
 trueC = fAppNonAC trueSym []
 
-var :: String -> Int -> LNTerm
+var :: String -> Integer -> LNTerm
 var s i = varTerm $ LVar s LSortMsg i
 
 x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10 :: LNTerm
@@ -66,7 +66,7 @@ y7 = var "y" 7
 y8 = var "y" 8
 y9 = var "y" 9
 
-freshVar :: String -> Int -> LNTerm
+freshVar :: String -> Integer -> LNTerm
 freshVar s i = varTerm $ LVar s LSortFresh i
 
 fx0,fx1,fx2,fx3,fx4,fx5,fx6,fx7,fx8,fx9,fx10 :: LNTerm
@@ -82,7 +82,7 @@ fx8  = freshVar "fx" 8
 fx9  = freshVar "fx" 9
 fx10 = freshVar "fx" 10
 
-pubVar :: String -> Int -> LNTerm
+pubVar :: String -> Integer -> LNTerm
 pubVar s i = varTerm $ LVar s LSortPub i
 
 px0,px1,px2,px3,px4,px5,px6,px7,px8,px9,px10 :: LNTerm
