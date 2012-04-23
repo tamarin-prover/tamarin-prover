@@ -57,6 +57,20 @@ import System.Exit
 -- Various other functions
 ------------------------------------------------------------------------------
 
+-- | Extract and simplify a proof of a lemma for presentation.
+extractSimplifiedLemmaProof :: Lemma IncrementalProof -> IncrementalProof
+extractSimplifiedLemmaProof =
+  -- Simplify variable indices just before displaying. This addresses #27.
+  -- Due to lazy-evaluation the effort is linear in the proof depth. This is
+  -- probably OK. Note that this implies that the displayed terms and the
+  -- stored terms do not agree. This is no problem for paths, as they use
+  -- relative addressing anyways.
+    fmap dropMayLoop . simplifyVariableIndices . get lProof
+  where
+    dropMayLoop (ProofStep (SolveGoal (PremiseG p fa _)) info) =
+        ProofStep (SolveGoal (PremiseG p fa False)) info
+    dropMayLoop step = step
+
 checkProofs :: ClosedTheory -> ClosedTheory
 checkProofs = proveTheory checkedProver
   where
@@ -443,15 +457,7 @@ resolveProofPath :: ClosedTheory            -- ^ Theory to resolve in
                  -> Maybe IncrementalProof
 resolveProofPath thy lemmaName path = do
   lemma <- lookupLemma lemmaName thy
-  -- Simplify variable indices just before displaying. This addresses #27.
-  -- Due to lazy-evaluation the effort is linear in the proof depth. This is
-  -- probably OK. Note that this implies that the displayed terms and the
-  -- stored terms do not agree. This is no problem for paths, as they use
-  -- relative addressing anyways.
-  simplifyVariableIndices (get lProof lemma) `atPath` path
-
-  -- If the non-simplified indices are required, then use this line.
-  -- get lProof lemma `atPath` path
+  extractSimplifiedLemmaProof lemma `atPath` path
 
 
 ------------------------------------------------------------------------------
@@ -631,7 +637,7 @@ annotateLemmaProof :: Lemma IncrementalProof
 annotateLemmaProof lem = 
     mapProofInfo (second interpret) prf
   where
-    prf = annotateProof annotate $ simplifyVariableIndices $ get lProof lem
+    prf = annotateProof annotate $ extractSimplifiedLemmaProof lem
     annotate step cs = 
         ( psInfo step
         , mconcat $ proofStepStatus step : incomplete ++ map snd cs
