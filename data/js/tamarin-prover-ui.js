@@ -1,5 +1,5 @@
 /**
- * Dh-proto-proof ui controller
+ * Tamarin ui controller
  * @author Cedric Staub
  */
 
@@ -9,13 +9,22 @@
 
 var theory = {
     /**
-     * Convert a relative path into an absolute one.
-     * @param section Section/display, for example main or debug.
+     * Convert a relative path into an absolute one for the currently shown theory.
+     * @param action The action, for example "overview" or "main".
      * @param path The relative path.
      * @return The absolute path.
      */
     absolutePath: function(section, path) {
         return "/thy/" + this.idx + "/" + section + "/" + path;
+    },
+
+    /**
+     * Extract the theory path from the given url path.
+     * @param urlPath The url path
+     * @return The theory path.
+     */
+    extractTheoryPath : function(urlPath) {
+        return urlPath.split("/").splice(4).join("/");
     }
 }
 
@@ -138,10 +147,11 @@ var ui = {
 
         // Add keyboard shortcuts
         var shortcuts = {
-            74  : function() { proofScript.jump('next/smart', null); },
-            75  : function() { proofScript.jump('prev/smart', null); },
-            106 : function() { proofScript.jump('next/normal', null); },
-            107 : function() { proofScript.jump('prev/normal', null); }
+            97  : function() { mainDisplay.applyAutoprover(); },         // a
+            74  : function() { proofScript.jump('next/smart', null); },  // j
+            75  : function() { proofScript.jump('prev/smart', null); },  // k
+            106 : function() { proofScript.jump('next/normal', null); }, // J
+            107 : function() { proofScript.jump('prev/normal', null); }  // K
         }
 
         for(i = 1; i < 10; i++) {
@@ -151,6 +161,13 @@ var ui = {
         }
 
         this.add_shortcuts(shortcuts);
+
+        // set active link
+        path = window.location.pathname.split("/");
+        path[3] = "main";
+        this.setActiveLink(path.join("/"));
+        proofScript.focusActive();
+
 
         // Initialize dialog box
         $("div#dialog").dialog({
@@ -168,14 +185,11 @@ var ui = {
         $("#proof a.proof-step").contextMenu(
             { menu: "contextMenu" },
             function(action, el, pos) {
+                var theoryPath = theory.extractTheoryPath($(el).attr("href"));
                 mainDisplay.loadTarget(
-                    action,
-                    $(el).attr("href"),
-                    function() {
-                        var path = $(el).attr("href");
-                        $.cookie("last-target", path, { path: "/" });
-                        $.cookie("jump-to-target", true, { path: "/" });
-                    });
+                    theory.absolutePath(action,theoryPath),
+                    null
+                    );
             });
 
         // Click handler for save link
@@ -233,15 +247,7 @@ var ui = {
             "div#proof a.internal-link",
             "main",
             null);
-    
-        // Install handlers on edit links (lemma)
-        events.installRelativeClickHandler(
-            "div#proof a.internal-link.edit-link",
-            "edit/path",
-            function(el) {
-                events.installFormHandler();
-            });
-    
+
         // Install handlers on delete links
         events.installRelativeClickHandler(
             "div#proof a.internal-link.delete-link",
@@ -252,21 +258,21 @@ var ui = {
         events.installRelativeClickHandler(
             "div#proof a.internal-link.proof-step",
             "main",
-            function(el) {
-                var path = $(el).attr("href");
-                $.cookie("last-target", path, { path: "/" });
-                $.cookie("jump-next-open-goal", true, { path: "/" });
-            });
-    
+            null
+            );
+
+        // Install click handlers on main
+        events.installRelativeClickHandler(
+            "div#ui-main-display a.internal-link",
+            "main",
+            null);
+
         // Install handlers on removal links
         events.installRelativeClickHandler(
             "div#proof a.internal-link.remove-step",
             "del/path",
-            function(el) {
-                var path = $(el).attr("href");
-                $.cookie("last-target", path, { path: "/" });
-                $.cookie("jump-to-target", true, { path: "/" });
-            });
+            null
+            );
     },
 
     /**
@@ -341,7 +347,18 @@ var ui = {
         var dialog = $("div#dialog");
         dialog.html(msg.replace("\n","<br>"));
         dialog.dialog('open');
+    },
+
+    /**
+     * Set active link
+     * @param target The path
+     */
+    setActiveLink: function(target) {
+        var selector = "a.internal-link[href='" + target + "']";
+        $("a.active-link").removeClass("active-link");
+        $(selector).first().addClass("active-link");
     }
+
 }
 
 
@@ -400,7 +417,7 @@ var events = {
             ev.preventDefault();
             var element = $(this);
             mainDisplay.loadTarget(
-                section,
+                // section,
                 element.attr("href"),
                 function() {
                     if(callback) callback(element);
@@ -419,10 +436,11 @@ var events = {
 
         cancel.click(function(ev) {
             ev.preventDefault();
+            // FIXME: where to jump here
             if($.cookie("last-target")) {
-                mainDisplay.loadTarget("main", $.cookie("last-target"));
+                mainDisplay.loadTarget($.cookie("last-target"));
             } else {
-                mainDisplay.loadTarget("main", "rules");
+                mainDisplay.loadTarget("rules");
             }
         });
 
@@ -486,9 +504,9 @@ var proofScript = {
     
         if(active.length > 0) {
             var current = active.attr("href"); 
-    
+
             server.performASR(
-                theory.absolutePath(mode, current),
+                theory.absolutePath(mode, theory.extractTheoryPath(current)),
                 "text",
                 false,
                 // Success callback
@@ -498,7 +516,7 @@ var proofScript = {
 
                     if(link.length > 0) {
                         mainDisplay.loadTarget(
-                            "main",
+                            // "main",
                             link.attr("href"),
                             function() {
                                 proofScript.focusActive();
@@ -566,23 +584,34 @@ var mainDisplay = {
      */
     applyProofMethod: function(num) {
         var path = $("a.active-link").attr("href");
-        $.cookie("last-target", path, { path: "/" });
-        $.cookie("jump-next-open-goal", true, { path: "/" });
 
         var element = $("#ui-main-display");
         var methods = element.find("div.methods a.internal-link");
 
-        if(methods.length >= num) {
-            $(methods.get([ num - 1 ])).click();
-        }
+        if(methods.length >= num)  $(methods.get([ num - 1 ])).click();
     },
+
+    applyAutoprover: function() {
+        var auto = $("#ui-main-display").find("a.internal-link.autoprove");
+
+        if(auto.length >= 1) $(auto.get(0)).click();
+    },
+
 
     /**
      * Update main view with new HTML data.
      * @param html_data The html data.
      */
     setContent: function(title, html_data) {
-        if(title) $("#main-title").html(title);
+        if(title) {
+            // Only use first line for title
+            var titleLines = title.split('</br>');
+            var titleText = titleLines[0];
+            if(titleLines.length > 1 && titleLines[1] != "") {
+                titleText = titleText + " ..."
+            }
+            $("#main-title").html(titleText);
+        }
 
         var element = $("#ui-main-display");
         var wrapper = $("#main-wrapper");
@@ -628,10 +657,10 @@ var mainDisplay = {
      * @param target The target to load.
      * @param callback Optional callback to call after successful load.
      */
-    loadTarget: function(section, target, callback) {
+    loadTarget: function(target, callback) {
         // Load main view
         server.performASR(
-            theory.absolutePath(section, target),
+            target,
             "json",
             false,
             // Success callback
@@ -640,23 +669,12 @@ var mainDisplay = {
                 server.handleJson(data, function(title, html_data) {
                     mainDisplay.setContent(title, html_data);
     
-                    // Set active-link class for target
-                    var selector = "a.internal-link[href='" + target + "']";
-                    $("a.active-link").removeClass("active-link");
-                    $(selector).first().addClass("active-link");
-    
-                    /*
-                    // Load debug view
-                    server.performASR(
-                        theory.absolutePath('debug', target),
-                        "html",
-                        false,
-                        // Success callback
-                        function(data, textStatus) {
-                            $("#ui-debug-display").html(data);
-                        }
-                    );
-                    */
+                    if (window.history && window.history.pushState) {
+                        var url = theory.absolutePath("overview", theory.extractTheoryPath(target));
+                        window.history.replaceState({}, "", url);
+                    }
+
+                    ui.setActiveLink(target);
                 });
     
                 // Call optional callback
@@ -692,14 +710,6 @@ var mainDisplay = {
  * Initialize when document is ready.
  */
 $(document).ready(function() {
-    // Automatically submit upload form on root
-    $("input[type=file]").change(function() {
-        var obj = $(this);
-        if(obj.val()) {
-            obj.parents("form").submit(); 
-        }
-    });
-
     // Only run rest of script if the main display is available
     var main_display = $("#ui-main-display");
     if(main_display.length != 1) return;
@@ -730,18 +740,4 @@ $(document).ready(function() {
     
     // Initialize user interface
     ui.init();
-
-    // Process jump instructions
-    if($.cookie("jump-to-target")) {
-        if($.cookie("last-target")) {
-            proofScript.jumpToTarget($.cookie("last-target"));
-        }
-        $.cookie("jump-to-target", null, { path: "/" });
-    } else if($.cookie("jump-next-open-goal")) {
-        if($.cookie("last-target")) {
-            proofScript.jumpNextOpenGoal($.cookie("last-target"));
-        }
-        $.cookie("jump-next-open-goal", null, { path: "/" });
-    }
-
 });

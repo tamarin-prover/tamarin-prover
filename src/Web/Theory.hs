@@ -13,7 +13,7 @@ Portability :  non-portable
 
 module Web.Theory
   ( htmlThyPath
-  , htmlThyDbgPath
+--  , htmlThyDbgPath
   , pngThyPath
   , titleThyPath
   , theoryIndex
@@ -37,6 +37,7 @@ import Data.Maybe
 import Data.List
 import Data.Monoid
 import qualified Data.Map as M
+import qualified Data.Text as T
 
 import Control.Basics
 
@@ -86,23 +87,24 @@ applyProverAtPath thy lemmaName proofPath prover =
 ------------------------------------------------------------------------------
 
 -- | Reference a dot graph for the given path.
-refDotPath :: HtmlDocument d => TheoryPath -> d
-refDotPath path = closedTag "img" [("class", "graph"), ("src", imgPath)]
-  where imgPath = "graph/" ++ joinPath' (renderPath path)
+refDotPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> TheoryPath -> d
+refDotPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath)]
+  where imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
 
 getDotPath :: String -> FilePath
 getDotPath code = imageDir </> addExtension (stringSHA256 code) "dot"
 
 -- | Create a link to a given theory path.
 linkToPath :: HtmlDocument d
-           => TheoryPath  -- ^ Path to link to.
+           => RenderUrl   -- ^ Url rendering function.
+           -> Route WebUI -- ^ Route that should be linked.
            -> [String]    -- ^ Additional class
            -> d           -- ^ Document that carries the link.
            -> d
-linkToPath path cls = withTag "a" [("class", classes), ("href", linkPath)]
+linkToPath renderUrl route cls = withTag "a" [("class", classes), ("href", linkPath)]
   where
     classes = unwords $ "internal-link" : cls
-    linkPath = joinPath' $ renderPath path
+    linkPath = T.unpack $ renderUrl route
 
 -- | Output some preformatted text.
 preformatted :: HtmlDocument d => Maybe String -> d -> d
@@ -113,10 +115,11 @@ preformatted cl = withTag "div" [("class", classes cl)]
 
 -- | Render a proof index relative to a theory path constructor.
 proofIndex :: HtmlDocument d
-           => (ProofPath -> TheoryPath)         -- ^ Relative addressing function
+           => RenderUrl
+           -> (ProofPath -> Route WebUI)         -- ^ Relative addressing function
            -> Proof (Maybe Sequent, Maybe Bool) -- ^ The annotated incremental proof
            -> d
-proofIndex mkPath = 
+proofIndex renderUrl mkRoute =
     prettyProofWith ppStep ppCase . insertPaths
   where
     ppCase step = markStatus (snd $ fst $ psInfo step)
@@ -131,40 +134,44 @@ proofIndex mkPath =
         (_, Just False) -> stepLink ["hl_bad"]
       where
         ppMethod = prettyProofMethod $ psMethod step
-        stepLink cls = linkToPath
-          (mkPath $ snd $ psInfo step) ("proof-step" : cls) ppMethod
+        stepLink cls = linkToPath renderUrl
+            (mkRoute . snd . psInfo $ step)
+            ("proof-step" : cls) ppMethod
 
         superfluousStep = withTag "span" [("class","hl_superfluous")] ppMethod
 
-        removeStep = linkToPath
-          (mkPath $ snd $ psInfo step) ["remove-step"] emptyDoc
+        removeStep = linkToPath renderUrl (mkRoute . snd . psInfo $ step)
+          ["remove-step"] emptyDoc
 
 
 -- | Render the indexing links for a single lemma
 lemmaIndex :: HtmlDocument d
-           => (ProofPath -> TheoryPath)   -- ^ Relative addressing function
+           => RenderUrl                   -- ^ The url rendering function
+           -> TheoryIdx                   -- ^ The theory index
            -> Lemma IncrementalProof      -- ^ The lemma
            -> d
-lemmaIndex mkPath l =
+lemmaIndex renderUrl tidx l =
     ( markStatus (snd $ psInfo $ root annPrf) $
         (kwLemmaModulo "E" <-> prettyLemmaName l <> colon) <->
-        (linkToPath (TheoryLemma $ get lName l) ["edit-link"] editPng <->
-        linkToPath (TheoryLemma $ get lName l) ["delete-link"] deletePng) $-$
+        (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->
+        linkToPath renderUrl lemmaRoute ["delete-link"] deletePng) $-$
         nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
                      , doubleQuotes $ prettyFormulaE $ get lFormulaE l
                      ] )
     ) $-$
-    proofIndex mkPath annPrf
+    proofIndex renderUrl mkRoute annPrf
   where
     editPng = png "/static/img/edit.png"
     deletePng = png "/static/img/delete.png" 
     png path = closedTag "img" [("class","icon"),("src",path)]
 
     annPrf = annotateLemmaProof l
+    lemmaRoute = TheoryPathMR tidx (TheoryLemma $ get lName l)
+    mkRoute proofPath = TheoryPathMR tidx (TheoryProof (get lName l) proofPath)
 
 -- | Render the theory index.
-theoryIndex :: HtmlDocument d => ClosedTheory -> d
-theoryIndex thy = foldr1 ($-$)
+theoryIndex :: HtmlDocument d => RenderUrl -> TheoryIdx -> ClosedTheory -> d
+theoryIndex renderUrl tidx thy = foldr1 ($-$)
     [ kwTheoryHeader $ get thyName thy
     , text ""
     , messageLink
@@ -180,8 +187,7 @@ theoryIndex thy = foldr1 ($-$)
     , kwEnd
     ]
   where
-    mkPath path lemma = path $ get lName lemma
-    lemmaIndex' lemma = lemmaIndex (mkPath TheoryProof lemma) lemma
+    lemmaIndex' lemma = lemmaIndex renderUrl tidx lemma
 
     lemmas         = map lemmaIndex' (getLemmas thy)
     rules          = getClassifiedRules thy
@@ -196,7 +202,7 @@ theoryIndex thy = foldr1 ($-$)
                   | otherwise    = show nChains ++ " chains left"
          
     bold                = withTag "strong" [] . text
-    overview n info p   = linkToPath p [] (bold n <-> info)
+    overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
     messageLink         = overview "Message theory" (text "") TheoryMessage
     ruleLink            = overview "Multiset rewriting rules" rulesInfo TheoryRules
     reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
@@ -214,44 +220,63 @@ sequentSnippet se path = refDotPath path $-$ preformatted Nothing (prettySequent
 -- | A snippet that explains a sub-proof by displaying its proof state, the
 -- open-goals, and the new cases.
 subProofSnippet :: HtmlDocument d
-                => ProofContext              -- ^ The proof context.
-                -> (ProofPath -> TheoryPath) -- ^ Relative proof adressing
-                -> (Int -> TheoryPath)       -- ^ Relative proof method addressing
+                => RenderUrl
+                -> TheoryIdx                 -- ^ The theory index.
+                -> String                    -- ^ The lemma.
+                -> ProofPath                 -- ^ The proof path.
+                -> ProofContext              -- ^ The proof context.
                 -> IncrementalProof          -- ^ The sub-proof.
                 -> d
-subProofSnippet ctxt mkProofPath mkPrfMethodPath prf = 
+subProofSnippet renderUrl tidx lemma proofPath ctxt prf =
     case psInfo $ root prf of
-      Nothing -> text $ "no annotated sequent / " ++ nCases ++ " sub-case(s)"
+      Nothing -> text $ "no annotated constraint system / " ++ nCases ++ " sub-case(s)"
       Just se -> vcat $
-        [ withTag "h3" [] (text "Graph Part of Sequent")
-        , refDotPath (mkProofPath [])
-        , text ""
-        , withTag "h3" [] (text "Applicable Proof Methods")
-        , preformatted (Just "methods") (numbered' $ proofMethods se)
-        , withTag "h3" [] (text "Pretty-Printed Sequent")
+        prettyApplicableProofMethods se
+        ++
+        [ text "" ]
+        ++
+        (if hasGraphPart se
+         then [ withTag "h3" [] (text "Graph Part of Constraint System")
+              , refDotPath renderUrl tidx (TheoryProof lemma proofPath)
+              ]
+         else [ withTag "h3" [] (text "Constraint System has no Graph Part") ])
+        ++
+        [ withTag "h3" [] (text "Pretty-Printed Constraint System")
         , preformatted (Just "sequent") (prettyNonGraphSequent se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
         ] ++ 
         subCases
   where
+    prettyApplicableProofMethods se = case proofMethods se of
+        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        pms -> [ withTag "h3" [] (text "Applicable Proof Methods")
+               , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+               , text "(Press a for " <->
+                 linkToPath renderUrl (AutoProverR tidx (TheoryProof lemma proofPath))
+                     ["autoprove"] (text "autoprove") <->
+                 text ")"
+               ]
 
-    prettyPM (i, m) = linkToPath
-      (mkPrfMethodPath i) ["proof-method"] (prettyProofMethod m)
+    prettyPM (i, m) = linkToPath renderUrl
+      (TheoryPathMR tidx (TheoryMethod lemma proofPath i))
+      ["proof-method"] (prettyProofMethod m)
 
     nCases   = show $ M.size $ children prf
-    proofMethods = map prettyPM . zip [1..] . applicableProofMethods ctxt
+    hasGraphPart se = not $ M.empty == get sNodes se
+    proofMethods = applicableProofMethods ctxt
     subCases = concatMap refSubCase $ M.toList $ children prf 
     refSubCase (name, prf') = 
         [ withTag "h4" [] (text "Case" <-> text name)
         , maybe (text "no proof state available")
-                (const $ refDotPath $ mkProofPath [name])
+                (const $ refDotPath renderUrl tidx $ TheoryProof lemma (proofPath ++ [name]))
                 (psInfo $ root prf') 
         ]
 
+
 -- | A Html document representing the requires case splitting theorem.
 htmlCaseDistinction :: HtmlDocument d 
-                    => CaseDistKind -> (Int, CaseDistinction) -> d
-htmlCaseDistinction kind (j, th) =
+                    => RenderUrl -> TheoryIdx -> CaseDistKind -> (Int, CaseDistinction) -> d
+htmlCaseDistinction renderUrl tidx kind (j, th) =
     if null cases
       then withTag "h2" [] ppHeader $-$ withTag "h3" [] (text "No cases.")
       else vcat $ withTag "h2" [] ppHeader : cases
@@ -267,7 +292,7 @@ htmlCaseDistinction kind (j, th) =
     ppCase (i, (names, (conc, se))) = 
       [ withTag "h3" [] $ fsep [ text "Source", int i, text "of", nCases
                                , text " / named ", doubleQuotes (text name) ]
-      , refDotPath (TheoryCaseDist kind j i)
+      , refDotPath renderUrl tidx (TheoryCaseDist kind j i)
       , withTag "p" [] $ ppPrem <-> text "provided by conclusion" <-> prettyNodeConc conc
       , wrapP $ prettyNonGraphSequent se
       ]
@@ -275,9 +300,9 @@ htmlCaseDistinction kind (j, th) =
         name = intercalate "_" names
 
 -- | Build the Html document showing the source cases distinctions.
-reqCasesSnippet :: HtmlDocument d => CaseDistKind -> ClosedTheory -> d
-reqCasesSnippet kind thy = vcat $ 
-    htmlCaseDistinction kind <$> zip [1..] (getCaseDistinction kind thy)
+reqCasesSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> CaseDistKind -> ClosedTheory -> d
+reqCasesSnippet renderUrl tidx kind thy = vcat $
+    htmlCaseDistinction renderUrl tidx kind <$> zip [1..] (getCaseDistinction kind thy)
 
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
@@ -308,25 +333,28 @@ messageSnippet thy = vcat
 
 -- | Render the item in the given theory given by the supplied path.
 htmlThyPath :: HtmlDocument d
-            => ClosedTheory -- ^ The theory to render
+            => RenderUrl    -- ^ The function for rendering Urls.
+            -> TheoryInfo   -- ^ The info of the theory to render
             -> TheoryPath   -- ^ Path to render
             -> d
-htmlThyPath thy path = go path
+htmlThyPath renderUrl ti path = go path
   where
     go TheoryRules               = rulesSnippet thy
     go TheoryMessage             = messageSnippet thy
-    go (TheoryCaseDist kind _ _) = reqCasesSnippet kind thy
+    go (TheoryCaseDist kind _ _) = reqCasesSnippet renderUrl tidx kind thy
     go (TheoryProof l p)         = 
         fromMaybe (text "No such lemma or proof path.") $ do
            lemma <- lookupLemma l thy
            let ctxt = getProofContext lemma thy
-           subProofSnippet ctxt (mkProofPath l p) (TheoryMethod l p)
+           subProofSnippet renderUrl tidx l p ctxt
              <$> resolveProofPath thy l p
     go (TheoryLemma _)      = text "Implement theory item pretty printing!"
     go _                    = text "Unhandled theory path. This is a bug."
 
-    mkProofPath lemma path' subPath = TheoryProof lemma (path' ++ subPath)
+    thy = tiTheory ti
+    tidx = tiIndex ti
 
+{-
 -- | Render debug information for the item in the theory given by the path.
 htmlThyDbgPath :: HtmlDocument d
                => ClosedTheory -- ^ The theory to render
@@ -338,6 +366,7 @@ htmlThyDbgPath thy path = go path
       proof <- resolveProofPath thy l p
       prettySequent <$> psInfo (root proof)
     go _ = Nothing
+-}
 
 -- | Render the image corresponding to the given theory path.
 pngThyPath :: FilePath -> (Sequent -> D.Dot ()) -> ClosedTheory
@@ -433,17 +462,17 @@ resolveProofPath thy lemmaName path = do
 nextThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextThyPath thy = go
   where
-    go TheoryMain                           = TheoryMessage
+    go TheoryHelp                           = TheoryMessage
     go TheoryMessage                        = TheoryRules
     go TheoryRules                          = TheoryCaseDist UntypedCaseDist 0 0
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryCaseDist TypedCaseDist 0 0
-    go (TheoryCaseDist TypedCaseDist _ _)   = fromMaybe TheoryMain firstLemma
+    go (TheoryCaseDist TypedCaseDist _ _)   = fromMaybe TheoryHelp firstLemma
     go (TheoryLemma lemma)                  = TheoryProof lemma []
     go (TheoryProof l p)
       | Just nextPath <- getNextPath l p = TheoryProof l nextPath
       | Just nextLemma <- getNextLemma l = TheoryProof nextLemma []
-      | otherwise                        = TheoryMain
-    go _                                 = TheoryMain
+      | otherwise                        = TheoryHelp
+    go _                                 = TheoryHelp
 
     lemmas = map (\l -> (get lName l, l)) $ getLemmas thy
     firstLemma = flip TheoryProof [] . fst <$> listToMaybe lemmas
@@ -459,7 +488,7 @@ nextThyPath thy = go
 prevThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 prevThyPath thy = go
   where
-    go TheoryMessage                        = TheoryMain
+    go TheoryMessage                        = TheoryHelp
     go TheoryRules                          = TheoryMessage
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryRules
     go (TheoryCaseDist TypedCaseDist _ _)   = TheoryCaseDist UntypedCaseDist 0 0
@@ -470,7 +499,7 @@ prevThyPath thy = go
       | Just prevPath <- getPrevPath l p = TheoryProof l prevPath
       | Just prevLemma <- getPrevLemma l = TheoryProof prevLemma (lastPath prevLemma)
       | otherwise                        = TheoryCaseDist TypedCaseDist 0 0
-    go _                                 = TheoryMain
+    go _                                 = TheoryHelp
 
     lemmas = map (\l -> (get lName l, l)) $ getLemmas thy
 
@@ -484,21 +513,29 @@ prevThyPath thy = go
 
     getPrevLemma lemmaName = getPrevElement (== lemmaName) (map fst lemmas)
 
+
+
+-- | Interesting proof methods that are not skipped by next/prev-smart.
+isInterestingMethod :: ProofMethod -> Bool
+isInterestingMethod (Sorry _) = True
+isInterestingMethod m         = m == Attack
+
+
 -- Get 'next' smart theory path.
 nextSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextSmartThyPath thy = go
   where
-    go TheoryMain                           = TheoryMessage
+    go TheoryHelp                           = TheoryMessage
     go TheoryMessage                        = TheoryRules
     go TheoryRules                          = TheoryCaseDist UntypedCaseDist 0 0
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryCaseDist TypedCaseDist 0 0
-    go (TheoryCaseDist TypedCaseDist   _ _) = fromMaybe TheoryMain firstLemma
+    go (TheoryCaseDist TypedCaseDist   _ _) = fromMaybe TheoryHelp firstLemma
     go (TheoryLemma lemma)                  = TheoryProof lemma []
     go (TheoryProof l p)
       | Just nextPath <- getNextPath l p = TheoryProof l nextPath
       | Just nextLemma <- getNextLemma l = TheoryProof nextLemma []
-      | otherwise                        = TheoryMain
-    go _ = TheoryMain
+      | otherwise                        = TheoryHelp
+    go _ = TheoryHelp
 
     lemmas = map (\l -> (get lName l, l)) $ getLemmas thy
     firstLemma = flip TheoryProof [] . fst <$> listToMaybe lemmas
@@ -506,10 +543,9 @@ nextSmartThyPath thy = go
     getNextPath lemmaName path = do
       lemma <- lookupLemma lemmaName thy
       let paths = getProofPaths $ get lProof lemma
-      let nextSteps = snd $ break ((== path) . fst) paths
-      if null nextSteps
-        then Nothing
-        else listToMaybe $ map fst $ filter snd $ tail nextSteps
+      case dropWhile ((/= path) . fst) paths of
+        []        -> Nothing
+        nextSteps -> listToMaybe . map fst . filter (isInterestingMethod . snd) $ tail nextSteps
 
     getNextLemma lemmaName = getNextElement (== lemmaName) (map fst lemmas)
 
@@ -517,7 +553,7 @@ nextSmartThyPath thy = go
 prevSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 prevSmartThyPath thy = go
   where
-    go TheoryMessage                        = TheoryMain
+    go TheoryMessage                        = TheoryHelp
     go TheoryRules                          = TheoryMessage
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryRules
     go (TheoryCaseDist TypedCaseDist   _ _) = TheoryCaseDist UntypedCaseDist 0 0
@@ -526,44 +562,42 @@ prevSmartThyPath thy = go
       | otherwise                          = TheoryCaseDist TypedCaseDist 0 0
     go (TheoryProof l p)
       | Just prevPath <- getPrevPath l p   = TheoryProof l prevPath
-      | Just firstPath <- getFirstPath l p = TheoryProof l firstPath
+--      | Just firstPath <- getFirstPath l p = TheoryProof l firstPath
       | Just prevLemma <- getPrevLemma l   = TheoryProof prevLemma (lastPath prevLemma)
       | otherwise                          = TheoryCaseDist TypedCaseDist 0 0
-    go _ = TheoryMain
+    go _ = TheoryHelp
 
     lemmas = map (\l -> (get lName l, l)) $ getLemmas thy
 
+    {-
     getFirstPath lemmaName current = do
       lemma <- lookupLemma lemmaName thy
       let paths = map fst $ getProofPaths $ get lProof lemma
       if null paths || (head paths == current)
         then Nothing
         else Just $ head paths
+    -}
 
     getPrevPath lemmaName path = do
       lemma <- lookupLemma lemmaName thy
       let paths = getProofPaths $ get lProof lemma
-      let prevSteps = filter snd $ fst $ break ((== path) . fst) paths
-      if null prevSteps
-        then Nothing
-        else Just $ fst $ last prevSteps
+      case filter (isInterestingMethod . snd) . takeWhile ((/= path) . fst) $ paths of
+        []        -> Nothing
+        prevSteps -> Just . fst . last $ prevSteps
 
     lastPath lemmaName = last $ map fst $ getProofPaths $
       get lProof $ fromJust $ lookupLemma lemmaName thy
 
     getPrevLemma lemmaName = getPrevElement (== lemmaName) (map fst lemmas)
 
+
 -- | Extract proof paths out of a proof.
--- Boolean value in tuple indicates if path is sorry step.
-getProofPaths :: LTree CaseName (ProofStep a) -> [([String], Bool)]
-getProofPaths proof = ([], isSorry proof) : go proof
+getProofPaths :: LTree CaseName (ProofStep a) -> [([String], ProofMethod)]
+getProofPaths proof = ([], psMethod . root $ proof) : go proof
   where
     go = concatMap paths . M.toList . children
-    paths (lbl, prf) = ([lbl], isSorry prf) : map (first (lbl:)) (go prf)
+    paths (lbl, prf) = ([lbl], psMethod . root $ prf) : map (first (lbl:)) (go prf)
 
-    isSorry ps
-      | Sorry _ <- psMethod (root ps) = True
-      | otherwise = False
 
 -- | Get element _after_ the matching element in the list.
 getNextElement :: (a -> Bool) -> [a] -> Maybe a

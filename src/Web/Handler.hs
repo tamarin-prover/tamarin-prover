@@ -1,7 +1,7 @@
 {- |
 Module      :  Web.Handler
 Description :  Application-specific handler functions.
-Copyright   :  (c) 2011 Cedric Staub
+Copyright   :  (c) 2011 Cedric Staub, 2012 Benedikt Schmidt
 License     :  GPL-3
 
 Maintainer  :  Cedric Staub <cstaub@ethz.ch>
@@ -16,7 +16,7 @@ Portability :  non-portable
 module Web.Handler
   ( getOverviewR
   , getRootR
-  -- , postRootR
+  , postRootR
   , getTheorySourceR
   , getTheoryMessageDeductionR
   , getTheoryVariantsR
@@ -25,7 +25,7 @@ module Web.Handler
   , getTheoryGraphR
   , getAutoProverR
   , getDeleteStepR
-  -- , getKillThreadR
+  , getKillThreadR
   , getNextTheoryPathR
   , getPrevTheoryPathR
   , getSaveTheoryR
@@ -72,10 +72,10 @@ import Data.Label
 import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Traversable as Tr
--- import qualified Data.ByteString.Lazy.Char8 as BS
--- import Data.Text.Encoding
+import qualified Data.ByteString.Lazy.Char8 as BS
+import Data.Text.Encoding
 import qualified Blaze.ByteString.Builder   as B
--- import Network.HTTP.Types ( urlDecode )
+import Network.HTTP.Types ( urlDecode )
 import Text.Blaze.Html5 (toHtml)
 
 import Control.Monad
@@ -197,11 +197,10 @@ delThread str = do
   where
     msg = "Deleting thread: " ++ T.unpack str
 
-{-
+
 -- | Get a thread for the given request URL.
--- getThread :: MonadIO m
---           => T.Text       -- ^ Request path
---           -> GenericHandler m (Maybe ThreadId)
+getThread :: T.Text       -- ^ Request path
+          -> Handler (Maybe ThreadId)
 getThread str = do
     yesod <- getYesod
     liftIO $ dtrace yesod msg $
@@ -209,6 +208,7 @@ getThread str = do
   where
     msg = "Retrieving thread id of: " ++ T.unpack str
 
+{-
 -- | Get the map of all threads.
 -- getThreads :: MonadIO m
 --            => GenericHandler m [T.Text]
@@ -302,17 +302,17 @@ formHandler title formlet template success = do
 -- | Modify a theory, redirect if successful.
 modifyTheory :: TheoryInfo                                -- ^ Theory to modify
              -> (ClosedTheory -> IO (Maybe ClosedTheory)) -- ^ Function to apply
+             -> (ClosedTheory -> TheoryPath)              -- ^ Compute the new path
              -> JsonResponse                              -- ^ Response on failure
              -> Handler Value
-modifyTheory ti f errResponse = do
-    -- res <- evalInThread (liftIO $ f (tiTheory ti))
+modifyTheory ti f fpath errResponse = do
     res <- evalInThread (liftIO $ f (tiTheory ti))
     case res of
       Left e           -> return (excResponse e)
       Right Nothing    -> return (responseToJson errResponse)
       Right (Just thy) -> do
         newThyIdx <- putTheory (Just ti) Nothing thy
-        newUrl <- getUrlRender <*> pure (OverviewR newThyIdx) 
+        newUrl <- getUrlRender <*> pure (OverviewR newThyIdx (fpath thy))
         return . responseToJson $ JsonRedirect newUrl
   where
    excResponse e = responseToJson
@@ -331,43 +331,41 @@ getRootR = do
       setTitle "Welcome to the Tamarin prover"
       addWidget (rootTpl theories)
 
-{-
+data File = File T.Text
+  deriving Show
+
 postRootR :: Handler RepHtml
 postRootR = do
-    (result, widget, enctype, nonce) <- runFormPost submitForm
+    result <- lookupFile "uploadedTheory"
     case result of
-      FormMissing -> return ()
-      FormFailure errs -> do
-        mapM_ (liftIO . print) errs
-        setMessage "Loading failed."
-      FormSuccess fileinfo -> do
+      Nothing ->
+        setMessage "Post request failed."
+      Just fileinfo -> do
         yesod <- getYesod
-        closedThy <- parseThy yesod (BS.unpack $ fileContent fileinfo)
+        closedThy <- liftIO $ parseThy yesod (BS.unpack $ fileContent fileinfo)
         void $ putTheory Nothing
           (Just $ Upload $ T.unpack $ fileName fileinfo) closedThy
         setMessage "Loaded new theory!"
     theories <- getTheories
     defaultLayout $ do
       setTitle "Welcome to the Tamarin prover"
-      addWidget (rootTpl theories widget enctype nonce)
-  where
-    submitForm = fieldsToDivs $ fileField $ FormFieldSettings
-      "Select file:" "Select file" Nothing Nothing
--}
+      addWidget (rootTpl theories)
+
 
 -- | Show overview over theory (framed layout).
-getOverviewR :: TheoryIdx -> Handler RepHtml
-getOverviewR idx = withTheory idx $ \ti -> defaultLayout $ do
-  overview <- liftIO $ overviewTpl ti TheoryMain
-  setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
-  addWidget overview
+getOverviewR :: TheoryIdx -> TheoryPath -> Handler RepHtml
+getOverviewR idx path = withTheory idx $ \ti -> do
+  renderF <- getUrlRender
+  defaultLayout $ do
+    overview <- liftIO $ overviewTpl renderF ti path
+    setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
+    addWidget overview
 
 -- | Show source (pretty-printed open theory).
 getTheorySourceR :: TheoryIdx -> Handler RepPlain
 getTheorySourceR idx = withTheory idx $ \ti ->
   return $ RepPlain $ toContent $ prettyRender ti
-  where 
-    -- prettyRender = render . prettyOpenTheory . openTheory . tiTheory
+  where
     prettyRender = render . prettyClosedTheory . tiTheory
 
 -- | Show variants (pretty-printed closed theory).
@@ -388,23 +386,40 @@ getTheoryPathMR :: TheoryIdx
                 -> TheoryPath
                 -> Handler RepJson
 getTheoryPathMR idx path = do
-    jsonValue <- withTheory idx (go path)
+    renderUrl <- getUrlRender
+    jsonValue <- withTheory idx (go renderUrl path)
     return $ RepJson $ toContent jsonValue
   where
     --
     -- Handle method paths by trying to solve the given goal/method
     --
-    go (TheoryMethod lemma proofPath i) ti = modifyTheory ti
+    go _ (TheoryMethod lemma proofPath i) ti = modifyTheory ti
       (\thy -> return $ applyMethodAtPath thy lemma proofPath i)
+      (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
       (JsonAlert "Sorry, but the prover failed on the selected method!")
 
     --
     -- Handle generic paths by trying to render them
     --
-    go _ ti = do
+    go renderUrl _ ti = do
       let title = T.pack $ titleThyPath (tiTheory ti) path
-      let html = T.pack $ renderHtmlDoc $ htmlThyPath (tiTheory ti) path
+      let html = T.pack $ renderHtmlDoc $ htmlThyPath renderUrl ti path
       return $ responseToJson (JsonHtml title (toContent html))
+
+-- | Run the autoprover on a given proof path.
+getAutoProverR :: TheoryIdx -> TheoryPath -> Handler RepJson
+getAutoProverR idx path = do
+    jsonValue <- withTheory idx (go path)
+    return $ RepJson $ toContent jsonValue
+  where
+    go (TheoryProof lemma proofPath) ti = modifyTheory ti
+      (\thy -> 
+          return $ applyProverAtPath thy lemma proofPath (mapProverProof cutOnAttackDFS autoProver))
+      (\thy -> nextSmartThyPath thy path)
+      (JsonAlert "Sorry, but the autoprover failed on given proof step!")
+
+    go _ _ = return . responseToJson $ JsonAlert
+      "Can't run autoprover on the given theory path!"
 
 {-
 -- | Show a given path within a theory (debug view).
@@ -451,10 +466,10 @@ getTheoryGraphR idx path = withTheory idx $ \ti -> do
     compression True = compressSequent
     compression False = id
 
-{-
+
 -- | Kill a thread (aka 'cancel request').
 getKillThreadR :: Handler RepPlain
-getKillThreadR = lift $ do
+getKillThreadR = do
     maybeKey <- lookupGetParam "path"
     case maybeKey of
       Just key0 -> do
@@ -471,7 +486,6 @@ getKillThreadR = lift $ do
         Nothing  -> trace ("Killing failed: "++ T.unpack k) $ return ()
         Just tid -> trace ("Killing: " ++ T.unpack k)
                           (liftIO $ killThread tid)
--}
 
 -- | Get the 'next' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
@@ -479,8 +493,9 @@ getNextTheoryPathR :: TheoryIdx         -- ^ Theory index
                    -> String            -- ^ Jumping mode (smart?)
                    -> TheoryPath        -- ^ Current path
                    -> Handler RepPlain
-getNextTheoryPathR idx md path = withTheory idx $ \ti -> return $
-    RepPlain $ toContent $ joinPath' $ renderPath $ next md (tiTheory ti) path
+getNextTheoryPathR idx md path = withTheory idx $ \ti -> do
+    url <- getUrlRender <*> pure (TheoryPathMR idx $ next md (tiTheory ti) path)
+    return . RepPlain $ toContent url
   where
     next "normal" = nextThyPath
     next "smart"  = nextSmartThyPath
@@ -489,8 +504,9 @@ getNextTheoryPathR idx md path = withTheory idx $ \ti -> return $
 -- | Get the 'prev' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
 getPrevTheoryPathR :: TheoryIdx -> String -> TheoryPath -> Handler RepPlain
-getPrevTheoryPathR idx md path = withTheory idx $ \ti -> return $
-    RepPlain $ toContent $ joinPath' $ renderPath $ prev md (tiTheory ti) path
+getPrevTheoryPathR idx md path = withTheory idx $ \ti -> do
+    url <- getUrlRender <*> pure (TheoryPathMR idx $ prev md (tiTheory ti) path)
+    return $ RepPlain $ toContent url
   where
     prev "normal" = prevThyPath
     prev "smart" = prevSmartThyPath
@@ -584,21 +600,6 @@ postEditPathR _ _ =
   jsonResp $ JsonAlert $ "Editing for this path is not implemented!"
 -}
 
-
--- | Run the autoprover on a given proof path.
-getAutoProverR :: TheoryIdx -> TheoryPath -> Handler RepJson
-getAutoProverR idx path = do
-    jsonValue <- withTheory idx (go path)
-    return $ RepJson $ toContent jsonValue
-  where
-    go (TheoryProof lemma proofPath) ti = modifyTheory ti
-      (\thy -> 
-          return $ applyProverAtPath thy lemma proofPath (mapProverProof cutOnAttackDFS autoProver))
-      (JsonAlert "Sorry, but the autoprover failed on given proof step!")
-
-    go _ _ = return . responseToJson $ JsonAlert
-      "Can't run autoprover on the given theory path!"
-
 -- | Delete a given proof step.
 getDeleteStepR :: TheoryIdx -> TheoryPath -> Handler RepJson
 getDeleteStepR idx path = do
@@ -607,11 +608,13 @@ getDeleteStepR idx path = do
   where
     go (TheoryLemma lemma) ti = modifyTheory ti
       (return . removeLemma lemma)
+      (const path)
       (JsonAlert "Sorry, but removing the selected lemma failed!")
 
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
       (\thy -> return $ 
           applyProverAtPath thy lemma proofPath (sorryProver "removed"))
+      (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")
 
     go _ _ = return . responseToJson $ JsonAlert
