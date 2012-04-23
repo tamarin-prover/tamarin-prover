@@ -29,6 +29,7 @@ import Yesod.Core
 -- import Yesod.Form
 -- import Text.Hamlet
 
+import Control.Monad.IO.Class (liftIO)
 import Data.Ord
 import Data.List
 import Data.Time.Format
@@ -121,19 +122,16 @@ rootTpl theories = [whamlet|
     <div class="intropage">
       <p>
         \^{theoriesTpl theories}
-  |]
-    {-
     <h2>Loading a new theory
     <p
       You can load a new theory file from disk in order to work with it.
-    <form class=root-form action=@{RootR} method=POST enctype=#{enctype}>
-      ^{form}
+    <form class=root-form enctype="multipart/form-data" action=@{RootR} method=POST>
+      Filename:
+      <input type=file name="uploadedTheory">
       <div .submit-form>
         <input type=submit value="Load new theory">
     <p>Note: You can save a theory by downloading the source. 
   |]
-        -- ^{addHtml nonce}
-        -- -}
 
 -- | Template for listing theories.
 theoriesTpl :: TheoryMap -> Widget
@@ -170,7 +168,7 @@ theoryTpl :: (TheoryIdx, TheoryInfo) -> Widget
 theoryTpl th = [HAMLET|
     <tr>
       <td>
-        <a href=@{OverviewR (fst th)}>
+        <a href=@{OverviewR (fst th) TheoryHelp}>
           \#{get thyName $ tiTheory $ snd th}
       <td>#{formatTime defaultTimeLocale "%T" $ tiTime $ snd th}
       $if tiPrimary (snd th)
@@ -247,16 +245,17 @@ headerTpl info = [HAMLET|
     -}
 
 -- | Template for proof state (tree) frame.
-proofStateTpl :: TheoryInfo -> IO Widget
-proofStateTpl = wrapThHtml . theoryIndex . tiTheory
+proofStateTpl :: RenderUrl -> TheoryInfo -> IO Widget
+proofStateTpl renderUrl ti = wrapThHtml $ theoryIndex renderUrl (tiIndex ti) (tiTheory ti)
 
 -- | Framing/UI-layout template (based on JavaScript/JQuery)
-overviewTpl :: TheoryInfo -- ^ Theory information
+overviewTpl :: RenderUrl
+            -> TheoryInfo -- ^ Theory information
             -> TheoryPath -- ^ Theory path to load into main
             -> IO Widget
-overviewTpl info path = do
-  proofState <- proofStateTpl info
-  mainView <- pathTpl info path
+overviewTpl renderUrl info path = do
+  proofState <- proofStateTpl renderUrl info
+  mainView <- pathTpl renderUrl info path
   return [HAMLET|
     <div .ui-layout-north>
       ^{headerTpl info}
@@ -277,10 +276,11 @@ overviewTpl info path = do
   |]
 
 -- | Theory path, displayed when loading main screen for first time.
-pathTpl :: TheoryInfo   -- ^ The theory
+pathTpl :: RenderUrl
+        -> TheoryInfo   -- ^ The theory
         -> TheoryPath   -- ^ Path to display on load
         -> IO Widget
-pathTpl info TheoryMain = return [whamlet|
+pathTpl _ info TheoryHelp = return [whamlet|
     <h3>Theory information</h3>
       <ul
         <li>Theory: #{get thyName $ tiTheory info}
@@ -322,8 +322,11 @@ pathTpl info TheoryMain = return [whamlet|
             <span class="keys">1-9</span>: Apply the proof method with \
             the given number as shown in the applicable proof method section \
             in the main view.
+          <li>
+            <span class="keys">a</span>: Apply the autoprove method to \
+            the current goal.
   |]
-pathTpl info path = wrapThHtml $ htmlThyPath (tiTheory info) path
+pathTpl renderUrl info path = liftIO . wrapThHtml $ htmlThyPath renderUrl info path
 
 -- | Template for introduction.
 introTpl :: Widget

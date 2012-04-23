@@ -20,7 +20,9 @@ import           System.Directory (doesFileExist, doesDirectoryExist)
 
 import           Web.Dispatch
 import qualified Web.Settings
-import qualified Network.Wai.Handler.Warp as Warp (run)
+import qualified Network.Wai.Handler.Warp as Warp
+import           Network.Wai.Handler.Warp (defaultSettings, settingsHost
+                                          , settingsPort, HostPreference(Host))
 
 import           Main.Console
 import           Main.Environment
@@ -85,7 +87,10 @@ run thisMode as = case findArg "workDir" as of
             ("Finished loading theories ... server ready at \n\n    " ++ serverUrl ++ "\n")
             workDir (argExists "loadstate" as) (argExists "autosave" as)
             (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
-            (argExists "debug" as) dataDir (Warp.run port)
+            (argExists "debug" as) dataDir
+            (Warp.runSettings
+                 (defaultSettings { settingsHost = Host "127.0.0.1",
+                                    settingsPort = port}))
         else 
           helpAndExit thisMode
             (Just $ "directory '" ++ workDir ++ "' does not exist.")

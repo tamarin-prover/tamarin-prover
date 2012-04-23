@@ -24,12 +24,13 @@ module Web.Types
   , JsonResponse(..)
   , renderPath
   , parsePath
-  , joinPath'
   , TheoryIdx
   , TheoryMap
   , ThreadMap
   -- , GenericHandler
   , Handler
+  -- , URL rendering function
+  , RenderUrl
   -- , GenericWidget
   , Widget
   ) 
@@ -41,13 +42,10 @@ import Yesod.Core
 import Yesod.Static
 
 import Text.Hamlet
-import Text.Printf
 
 import Data.Monoid (mconcat)
-import Data.List (intercalate)
 import Data.Maybe (listToMaybe)
 import Data.Ord (comparing)
-import Data.Char (ord, isAlphaNum)
 import Data.Time.LocalTime
 import Data.Label
 import Control.Concurrent
@@ -161,7 +159,7 @@ instance Read CaseDistKind where
 -- | Simple data type for specifying a path to a specific
 -- item within a theory.
 data TheoryPath
-  = TheoryMain                          -- ^ The main view (info about theory)
+  = TheoryHelp                          -- ^ The help view (help and info about theory)
   | TheoryLemma String                  -- ^ Theory lemma with given name
   | TheoryIntrVar Int                   -- ^ Intruder variant (n'th from start)
   | TheoryCaseDist CaseDistKind Int Int -- ^ Required cases (i'th source, j'th case) 
@@ -173,7 +171,7 @@ data TheoryPath
 
 -- | Render a theory path to a list of strings.
 renderPath :: TheoryPath -> [String]
-renderPath TheoryMain = ["main"]
+renderPath TheoryHelp = ["help"]
 renderPath TheoryRules = ["rules"]
 renderPath TheoryMessage = ["message"]
 renderPath (TheoryLemma name) = ["lemma", name]
@@ -186,7 +184,7 @@ renderPath (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
 parsePath :: [String] -> Maybe TheoryPath
 parsePath []     = Nothing
 parsePath (x:xs) = case x of
-  "main"    -> Just TheoryMain
+  "help"    -> Just TheoryHelp
   "rules"   -> Just TheoryRules
   "message" -> Just TheoryMessage
   "lemma"   -> parseLemma xs
@@ -219,15 +217,7 @@ parsePath (x:xs) = case x of
     parseCases _       = Nothing
 
 
--- | Join a path (list of strings) into a single string.
--- This functions also performs escaping of special characters.
-joinPath' :: [String] -> String
-joinPath' = intercalate "/" . map escape
-  where
-    escape [] = []
-    escape (x:xs)
-      | isAlphaNum x = x : escape xs
-      | otherwise = printf "%%%02x" (ord x) ++ escape xs
+type RenderUrl = Route WebUI -> T.Text
 
 ------------------------------------------------------------------------------
 -- Routing
@@ -256,8 +246,8 @@ joinPath' = intercalate "/" . map escape
 -- whereas handlers ending in MR are for the main view
 -- and the ones ending in DR are for the debug view.
 mkYesodData "WebUI" [parseRoutes|
-/                                     RootR                   GET -- POST
-/thy/#Int/overview                    OverviewR               GET
+/                                     RootR                   GET POST
+/thy/#Int/overview/MP(TheoryPath)     OverviewR               GET
 /thy/#Int/source                      TheorySourceR           GET
 -- /thy/#Int/variants                    TheoryVariantsR         GET
 /thy/#Int/message                     TheoryMessageDeductionR GET
@@ -273,7 +263,7 @@ mkYesodData "WebUI" [parseRoutes|
 -- /thy/#Int/edit/path/MP(TheoryPath)    EditPathR               GET POST
 /thy/#Int/del/path/MP(TheoryPath)     DeleteStepR             GET
 /thy/#Int/unload                      UnloadTheoryR           GET
--- /kill                                 KillThreadR             GET
+/kill                                 KillThreadR             GET
 -- /threads                              ThreadsR                GET
 /robots.txt                           RobotsR                 GET
 /favicon.ico                          FaviconR                GET
@@ -298,7 +288,6 @@ instance Yesod WebUI where
   -- are not scrubbed from the end of the list. The default
   -- cleanPath function forces canonical URLs.
   cleanPath _ = Right
-
 
 ------------------------------------------------------------------------------
 -- Default layout
