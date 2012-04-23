@@ -98,9 +98,9 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, ~ekI.8 )] )
     solve( (#i2.1, 0)[!KU( f_.11, h(<~ekI.8, hkR.7, 'g'^(~lkI.8*~lkR.8)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_4
-      solve( (#vf.9, 0)[!KU( f_.10, ~tid.41 )] /* may loop */ )
+      solve( (#vf.9, 0)[!KU( f_.10, ~tid.39 )] /* may loop */ )
         case Resp_1
-        solve( (#vf.44, 0)[!KU( f_.45, ~ekI.8 )] /* may loop */ )
+        solve( (#vf.42, 0)[!KU( f_.43, ~ekI.8 )] /* may loop */ )
           case Init_1
           SOLVED // trace found
         qed
@@ -145,9 +145,9 @@ solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
     solve( (#i2.1, 0)[!KU( f_.12, h(<hkI.6, ~ekR.8, 'g'^(~lkI.8*~lkR.8)>)
                       )] /* may loop */ )
       case Sessk_reveal_case_2
-      solve( (#vf.9, 0)[!KU( f_.10, ~tid.36 )] /* may loop */ )
+      solve( (#vf.9, 0)[!KU( f_.10, ~tid.34 )] /* may loop */ )
         case Init_1
-        solve( (#vf.39, 0)[!KU( f_.40, ~ekR.8 )] /* may loop */ )
+        solve( (#vf.37, 0)[!KU( f_.38, ~ekR.8 )] /* may loop */ )
           case Resp_1
           SOLVED // trace found
         qed
@@ -170,7 +170,7 @@ analyzing: data/examples/csf12/JKL_TS1_2004-KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2004-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.350786s
+  processing time: 0.416827s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 
@@ -182,7 +182,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2004-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.350786s
+  processing time: 0.416827s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 

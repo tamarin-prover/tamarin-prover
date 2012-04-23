@@ -120,21 +120,21 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, ~ekI.8 )] )
       by contradiction // from formulas
     next
       case ch
-      solve( KU((#vr.35, 0), 'g'^(~lkI.8*~lkR.8)) )
+      solve( KU((#vr.33, 0), 'g'^(~lkI.8*~lkR.8)) )
         case cexp
-        solve( KU((#vr.42, 1), ~lkI.8) )
+        solve( KU((#vr.40, 1), ~lkI.8) )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_1
-        solve( (#vr.51, 1)[!KU( f_.54, ~lkR.59 )] /* may loop */ )
+        solve( (#vr.49, 1)[!KU( f_.51, ~lkR.56 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_2
-        solve( (#vr.51, 1)[!KU( f_.54, ~lkI.58 )] /* may loop */ )
+        solve( (#vr.49, 1)[!KU( f_.51, ~lkI.55 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
@@ -192,21 +192,21 @@ solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
       by contradiction // from formulas
     next
       case ch
-      solve( KU((#vr.30, 0), 'g'^(~lkI.8*~lkR.8)) )
+      solve( KU((#vr.28, 0), 'g'^(~lkI.8*~lkR.8)) )
         case cexp
-        solve( KU((#vr.37, 1), ~lkI.8) )
+        solve( KU((#vr.35, 1), ~lkI.8) )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_1
-        solve( (#vr.46, 1)[!KU( f_.49, ~lkR.54 )] /* may loop */ )
+        solve( (#vr.44, 1)[!KU( f_.46, ~lkR.51 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_2
-        solve( (#vr.46, 1)[!KU( f_.49, ~lkI.53 )] /* may loop */ )
+        solve( (#vr.44, 1)[!KU( f_.46, ~lkI.50 )] /* may loop */ )
           case Ltk_reveal
           by contradiction // from formulas
         qed
@@ -229,7 +229,7 @@ analyzing: data/examples/csf12/JKL_TS1_2008-KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2008-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.340498s
+  processing time: 0.35141s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 
@@ -241,7 +241,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2008-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.340498s
+  processing time: 0.35141s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 

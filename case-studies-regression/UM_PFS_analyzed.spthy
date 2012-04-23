@@ -33,29 +33,29 @@ rule (modulo E) Init_2:
      [ !Sessk( ~ekI, h(<z, 'g'^(~lkI*~x)>) ) ]
   
     variants (modulo AC)
-    1. ~ekI  = ~ekI.369
-       Y     = Y.372
-       z     = Y.372^~ekI.369
+    1. ~ekI  = ~ekI.31
+       Y     = Y.34
+       z     = Y.34^~ekI.31
     
-    2. ~ekI  = ~ekI.381
-       Y     = z.387^inv(~ekI.381)
-       z     = z.387
+    2. ~ekI  = ~ekI.31
+       Y     = z.37^inv(~ekI.31)
+       z     = z.37
     
-    3. ~ekI  = ~ekI.21507
-       Y     = x.43006^x.43007
-       z     = x.43006^(~ekI.21507*x.43007)
+    3. ~ekI  = ~ekI.143
+       Y     = x.281^x.282
+       z     = x.281^(~ekI.143*x.282)
     
-    4. ~ekI  = ~ekI.21955
-       Y     = x.43902^inv((~ekI.21955*x.43903))
-       z     = x.43902^inv(x.43903)
+    4. ~ekI  = ~ekI.143
+       Y     = x.281^inv((~ekI.143*x.282))
+       z     = x.281^inv(x.282)
     
-    5. ~ekI  = ~ekI.21955
-       Y     = x.43902^(x.43903*inv(~ekI.21955))
-       z     = x.43902^x.43903
+    5. ~ekI  = ~ekI.143
+       Y     = x.281^(x.282*inv(~ekI.143))
+       z     = x.281^x.282
     
-    6. ~ekI  = ~ekI.22467
-       Y     = x.44925^(x.44927*inv((~ekI.22467*x.44926)))
-       z     = x.44925^(x.44927*inv(x.44926))
+    6. ~ekI  = ~ekI.144
+       Y     = x.282^(x.284*inv((~ekI.144*x.283)))
+       z     = x.282^(x.284*inv(x.283))
   */
 
 rule (modulo E) Resp_1:
@@ -73,29 +73,29 @@ rule (modulo E) Resp_1:
      [ Out( 'g'^~ekR ), !Ephk( ~ekR ), !Sessk( ~ekR, h(<z, 'g'^(~lkR*~x)>) ) ]
   
     variants (modulo AC)
-    1. ~ekR  = ~ekR.512
-       X     = X.515
-       z     = X.515^~ekR.512
+    1. ~ekR  = ~ekR.34
+       X     = X.37
+       z     = X.37^~ekR.34
     
-    2. ~ekR  = ~ekR.524
-       X     = z.530^inv(~ekR.524)
-       z     = z.530
+    2. ~ekR  = ~ekR.34
+       X     = z.40^inv(~ekR.34)
+       z     = z.40
     
-    3. ~ekR  = ~ekR.343872
-       X     = x.687736^x.687737
-       z     = x.687736^(~ekR.343872*x.687737)
+    3. ~ekR  = ~ekR.218
+       X     = x.431^x.432
+       z     = x.431^(~ekR.218*x.432)
     
-    4. ~ekR  = ~ekR.351040
-       X     = x.702072^inv((~ekR.351040*x.702073))
-       z     = x.702072^inv(x.702073)
+    4. ~ekR  = ~ekR.218
+       X     = x.431^inv((~ekR.218*x.432))
+       z     = x.431^inv(x.432)
     
-    5. ~ekR  = ~ekR.351040
-       X     = x.702072^(x.702073*inv(~ekR.351040))
-       z     = x.702072^x.702073
+    5. ~ekR  = ~ekR.218
+       X     = x.431^(x.432*inv(~ekR.218))
+       z     = x.431^x.432
     
-    6. ~ekR  = ~ekR.359232
-       X     = x.718455^(x.718457*inv((~ekR.359232*x.718456)))
-       z     = x.718455^(x.718457*inv(x.718456))
+    6. ~ekR  = ~ekR.219
+       X     = x.432^(x.434*inv((~ekR.219*x.433)))
+       z     = x.432^(x.434*inv(x.433))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -142,15 +142,15 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, hkI.6 )] )
     solve( (#i2.1, 0)[!KU( f_.11, h(<z.8, 'g'^(~lkI.8*~x.8)>)
                       )] /* may loop */ )
       case ch
-      solve( KU((#vr.35, 0), 'g'^(~lkI.8*~x.8)) )
+      solve( KU((#vr.33, 0), 'g'^(~lkI.8*~x.8)) )
         case cexp
-        solve( KU((#vr.42, 1), ~lkI.8) )
+        solve( KU((#vr.40, 1), ~lkI.8) )
           case Ltk_reveal
-          solve( KU((#vr.42, 1), ~x.8) )
+          solve( KU((#vr.40, 1), ~x.8) )
             case Ltk_reveal
             solve( splitEqs(1) )
               case split_case_1
-              solve( KU((#vr.35, 0), hkR.72^~ekI.73) )
+              solve( KU((#vr.33, 0), hkR.70^~ekI.71) )
                 case Init_1
                 SOLVED // trace found
               qed
@@ -191,15 +191,15 @@ solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
     solve( (#i2.1, 0)[!KU( f_.12, h(<z.8, 'g'^(~lkR.8*~x.8)>)
                       )] /* may loop */ )
       case ch
-      solve( KU((#vr.30, 0), 'g'^(~lkR.8*~x.8)) )
+      solve( KU((#vr.28, 0), 'g'^(~lkR.8*~x.8)) )
         case cexp
-        solve( KU((#vr.37, 1), ~lkR.8) )
+        solve( KU((#vr.35, 1), ~lkR.8) )
           case Ltk_reveal
-          solve( KU((#vr.37, 1), ~x.8) )
+          solve( KU((#vr.35, 1), ~x.8) )
             case Ltk_reveal
             solve( splitEqs(1) )
               case split_case_1
-              solve( KU((#vr.30, 0), hkI.67^~ekR.68) )
+              solve( KU((#vr.28, 0), hkI.65^~ekR.66) )
                 case Resp_1
                 SOLVED // trace found
               qed
@@ -225,7 +225,7 @@ analyzing: data/examples/csf12/UM_PFS.spthy
 analyzed: data/examples/csf12/UM_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.716569s
+  processing time: 0.637709s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
@@ -237,7 +237,7 @@ summary of summaries:
 analyzed: data/examples/csf12/UM_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.716569s
+  processing time: 0.637709s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 

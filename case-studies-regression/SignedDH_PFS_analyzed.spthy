@@ -54,29 +54,29 @@ rule (modulo E) Init_2:
      [ ]
   
     variants (modulo AC)
-    1. ~ekI  = ~ekI.20
-       Y     = Y.21
-       z     = Y.21^~ekI.20
+    1. ~ekI  = ~ekI.9
+       Y     = Y.10
+       z     = Y.10^~ekI.9
     
-    2. ~ekI  = ~ekI.22
-       Y     = z.26^inv(~ekI.22)
-       z     = z.26
+    2. ~ekI  = ~ekI.10
+       Y     = z.14^inv(~ekI.10)
+       z     = z.14
     
-    3. ~ekI  = ~ekI.23
-       Y     = x.37^x.38
-       z     = x.37^(~ekI.23*x.38)
+    3. ~ekI  = ~ekI.11
+       Y     = x.16^x.17
+       z     = x.16^(~ekI.11*x.17)
     
-    4. ~ekI  = ~ekI.23
-       Y     = x.37^inv((~ekI.23*x.38))
-       z     = x.37^inv(x.38)
+    4. ~ekI  = ~ekI.11
+       Y     = x.16^inv((~ekI.11*x.17))
+       z     = x.16^inv(x.17)
     
-    5. ~ekI  = ~ekI.23
-       Y     = x.37^(x.38*inv(~ekI.23))
-       z     = x.37^x.38
+    5. ~ekI  = ~ekI.11
+       Y     = x.16^(x.17*inv(~ekI.11))
+       z     = x.16^x.17
     
-    6. ~ekI  = ~ekI.24
-       Y     = x.38^(x.40*inv((~ekI.24*x.39)))
-       z     = x.38^(x.40*inv(x.39))
+    6. ~ekI  = ~ekI.12
+       Y     = x.17^(x.19*inv((~ekI.12*x.18)))
+       z     = x.17^(x.19*inv(x.18))
   */
 
 rule (modulo E) Resp:
@@ -97,29 +97,29 @@ rule (modulo E) Resp:
      [ Out( <$R, $I, 'g'^~ekR, sign(<'2', $R, $I, 'g'^~ekR>, ltkR)> ) ]
   
     variants (modulo AC)
-    1. ~ekR  = ~ekR.117
-       X     = X.118
-       z     = X.118^~ekR.117
+    1. ~ekR  = ~ekR.13
+       X     = X.14
+       z     = X.14^~ekR.13
     
-    2. ~ekR  = ~ekR.149
-       X     = z.156^inv(~ekR.149)
-       z     = z.156
+    2. ~ekR  = ~ekR.19
+       X     = z.26^inv(~ekR.19)
+       z     = z.26
     
-    3. ~ekR  = ~ekR.1294
-       X     = x.2580^x.2581
-       z     = x.2580^(~ekR.1294*x.2581)
+    3. ~ekR  = ~ekR.64
+       X     = x.123^x.124
+       z     = x.123^(~ekR.64*x.124)
     
-    4. ~ekR  = ~ekR.1294
-       X     = x.2580^inv((~ekR.1294*x.2581))
-       z     = x.2580^inv(x.2581)
+    4. ~ekR  = ~ekR.64
+       X     = x.123^inv((~ekR.64*x.124))
+       z     = x.123^inv(x.124)
     
-    5. ~ekR  = ~ekR.1294
-       X     = x.2580^(x.2581*inv(~ekR.1294))
-       z     = x.2580^x.2581
+    5. ~ekR  = ~ekR.64
+       X     = x.123^(x.124*inv(~ekR.64))
+       z     = x.123^x.124
     
-    6. ~ekR  = ~ekR.1326
-       X     = x.2643^(x.2645*inv((~ekR.1326*x.2644)))
-       z     = x.2643^(x.2645*inv(x.2644))
+    6. ~ekR  = ~ekR.65
+       X     = x.124^(x.126*inv((~ekR.65*x.125)))
+       z     = x.124^(x.126*inv(x.125))
   */
 
 lemma (modulo E) Perfect_Forward_Secrecy:
@@ -144,21 +144,21 @@ solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
     case Init_1
     solve( (#i.3, 1)[!Pk( $R.6, pk(ltkR.6) )] )
       case Register_pk
-      solve( KU((#vf.7, 0), sign(<'2', $R.6, $I.6, Y.6>, ~ltk.25)) )
+      solve( KU((#vf.7, 0), sign(<'2', $R.6, $I.6, Y.6>, ~ltk.23)) )
         case Resp
-        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.69*~ekR.70) )] /* may loop */ )
+        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.64*~ekR.65) )] /* may loop */ )
           case Init_1
-          by solve( (#vr.105, 1)[!KU( f_.108, ~ekR.118 )] /* may loop */ )
+          by solve( (#vr.97, 1)[!KU( f_.99, ~ekR.109 )] /* may loop */ )
         next
           case Resp
-          by solve( (#vr.110, 1)[!KU( f_.113, ~ekI.117 )] /* may loop */ )
+          by solve( (#vr.102, 1)[!KU( f_.104, ~ekI.108 )] /* may loop */ )
         next
           case cexp
-          by solve( KU((#vr.75, 1), ~ekI.69) )
+          by solve( KU((#vr.70, 1), ~ekI.64) )
         qed
       next
         case csign
-        solve( (#vr.31, 1)[!KU( f_.35, ~ltk.25 )] /* may loop */ )
+        solve( (#vr.29, 1)[!KU( f_.33, ~ltk.23 )] /* may loop */ )
           case Reveal_ltk
           by contradiction // cyclic
         qed
@@ -171,21 +171,21 @@ next
     case Register_pk
     solve( (#i.3, 1)[!Ltk( $R.6, ltkR.6 )] )
       case Register_pk
-      solve( KU((#vf.7, 0), sign(<'1', $I.6, $R.6, X.6>, ~ltk.15)) )
+      solve( KU((#vf.7, 0), sign(<'1', $I.6, $R.6, X.6>, ~ltk.14)) )
         case Init_1
-        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.66*~ekI.67) )] /* may loop */ )
+        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.61*~ekI.62) )] /* may loop */ )
           case Init_1
-          by solve( (#vr.102, 1)[!KU( f_.105, ~ekR.114 )] /* may loop */ )
+          by solve( (#vr.94, 1)[!KU( f_.96, ~ekR.105 )] /* may loop */ )
         next
           case Resp
-          by solve( (#vr.107, 1)[!KU( f_.110, ~ekI.115 )] /* may loop */ )
+          by solve( (#vr.99, 1)[!KU( f_.101, ~ekI.106 )] /* may loop */ )
         next
           case cexp
-          by solve( KU((#vr.72, 1), ~ekR.66) )
+          by solve( KU((#vr.67, 1), ~ekR.61) )
         qed
       next
         case csign
-        solve( (#vr.28, 1)[!KU( f_.32, ~ltk.15 )] /* may loop */ )
+        solve( (#vr.26, 1)[!KU( f_.30, ~ltk.14 )] /* may loop */ )
           case Reveal_ltk
           by contradiction // cyclic
         qed
@@ -208,7 +208,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.59247s
+  processing time: 0.621948s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.59247s
+  processing time: 0.621948s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================
