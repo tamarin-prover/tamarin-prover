@@ -347,7 +347,13 @@ instance IsVar LVar where
 -- Managing bound and free LVars
 ------------------------------------------------------------------------------
 
-data MonotoneFunction f = Monotone (LVar -> f LVar ) | Arbitrary (LVar -> f LVar )
+-- | For performance reasons, we distinguish between monotone functions on
+-- 'LVar's and arbitrary functions. The monotone functions much map 'LVar's to
+-- equal or larger 'LVar's. This ensures that the AC-normal form does not have
+-- to be recomputed. If you are unsure about what to use, then use the
+-- 'Arbitrary' function.
+data MonotoneFunction f = Monotone (LVar -> f LVar ) 
+                        | Arbitrary (LVar -> f LVar )
 
 -- | @HasFree t@ denotes that the type @t@ has free @LVar@ variables. They can
 -- be collected using 'foldFrees' and mapped in the context of an applicative
@@ -388,17 +394,16 @@ someInst :: (MonadFresh m, MonadBind LVar LVar m, HasFrees t) => t -> m t
 someInst = mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x (lvarName x))
 
 -- | @rename t@ replaces all variables in @t@ with fresh variables.
---   Note that the result is not equal for terms that are
+--   Note that the result is not guaranteed to be equal for terms that are
 --   equal modulo changing the indices of variables.
 rename :: (MonadFresh m, HasFrees a) => a -> m a
-rename x = do
-    freshStart <- freshIdents requiredIdents
-    return . runIdentity . mapFrees (Monotone $ incVar (freshStart-minVarIdx)) $ x
+rename x 
+  | minVarIdx > maxVarIdx = return x  -- there are no vars in x => no renaming required
+  | otherwise             = do
+      freshStart <- freshIdents (succ (maxVarIdx - minVarIdx))
+      return . runIdentity . mapFrees (Monotone $ incVar (freshStart - minVarIdx)) $ x
   where
     (minVarIdx, maxVarIdx) = boundsVarIdx x
-    requiredIdents
-        | minVarIdx > maxVarIdx = 0 -- there are no vars in x
-        | otherwise             = succ $ maxVarIdx - minVarIdx
     incVar shift (LVar n so i) = pure $ LVar n so (i+shift)
 
 -- | @renamePrecise t@ replaces all variables in @t@ with fresh variables.
