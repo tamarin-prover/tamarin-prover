@@ -128,12 +128,12 @@ foldGuarded fAto fDisj fConj fGuarded =
   go (GGuarded qua ss as gf) = fGuarded qua ss as (go gf)
 
 -- | Fold a guarded formula with scope info.
--- The Int argument denotes the number of
+-- The Integer argument denotes the number of
 -- quantifiers that have been encountered so far.
-foldGuardedScope :: (Int -> Atom (VTerm c (BVar v)) -> b)
+foldGuardedScope :: (Integer -> Atom (VTerm c (BVar v)) -> b)
                  -> (Disj b -> b)
                  -> (Conj b -> b)
-                 -> (Quantifier -> [s] -> Int -> [Atom (VTerm c (BVar v))] -> b -> b)
+                 -> (Quantifier -> [s] -> Integer -> [Atom (VTerm c (BVar v))] -> b -> b)
                  -> Guarded s c v
                  -> b
 foldGuardedScope fAto fDisj fConj fGuarded =
@@ -145,13 +145,13 @@ foldGuardedScope fAto fDisj fConj fGuarded =
   go !i (GGuarded qua ss as gf) =
     fGuarded qua ss i' as (go i' gf)
    where
-    i' = i + length ss
+    i' = i + fromIntegral (length ss)
 
 
 -- | Map a guarded formula with scope info.
--- The Int argument denotes the number of
+-- The Integer argument denotes the number of
 -- quantifiers that have been encountered so far.
-mapGuardedAtoms :: (Int -> Atom (VTerm c (BVar v))
+mapGuardedAtoms :: (Integer -> Atom (VTerm c (BVar v))
                 -> Atom (VTerm d (BVar w)))
                 -> Guarded s c v
                 -> Guarded s d w
@@ -196,7 +196,7 @@ type LGuarded c = Guarded (String, LSort) c LVar
 
 -- | @substBoundAtom s a@ substitutes each occurence of a bound variables @i@
 -- in @dom(s)@ with the corresponding free variable @x=s(i)@ in the atom @a@.
-substBoundAtom :: Ord c => [(Int,LVar)] -> Atom (VTerm c (BVar LVar)) -> Atom (VTerm c (BVar LVar))
+substBoundAtom :: Ord c => [(Integer,LVar)] -> Atom (VTerm c (BVar LVar)) -> Atom (VTerm c (BVar LVar))
 substBoundAtom s = fmap (fmapTerm (fmap subst))
  where subst bv@(Bound i') = case lookup i' s of
                                Just x -> Free x
@@ -206,14 +206,14 @@ substBoundAtom s = fmap (fmapTerm (fmap subst))
 -- | @substBound s gf@ substitutes each occurence of a bound
 -- variable @i@ in @dom(s)@ with the corresponding free variable
 -- @s(i)=x@ in all atoms in @gf@.
-substBound :: Ord c => [(Int,LVar)] -> LGuarded c -> LGuarded c
+substBound :: Ord c => [(Integer,LVar)] -> LGuarded c -> LGuarded c
 substBound s = mapGuardedAtoms (\j a -> substBoundAtom [(i+j,v) | (i,v) <- s] a)
 
 
 -- | @substFreeAtom s a@ substitutes each occurence of a free variables @v@
 -- in @dom(s)@ with the bound variables @i=s(v)@ in the atom @a@.
 substFreeAtom :: Ord c
-              => [(LVar,Int)] 
+              => [(LVar,Integer)] 
               -> Atom (VTerm c (BVar LVar)) -> Atom (VTerm c (BVar LVar))
 substFreeAtom s = fmap (fmapTerm (fmap subst))
  where subst fv@(Free x) = case lookup x s of
@@ -224,7 +224,7 @@ substFreeAtom s = fmap (fmapTerm (fmap subst))
 -- | @substFreeAtom s gf@ substitutes each occurence of a free variables
 -- @v in dom(s)@ with the correpsonding bound variables @i=s(v)@
 -- in all atoms in  @gf@.
-substFree :: Ord c => [(LVar,Int)] -> LGuarded c -> LGuarded c
+substFree :: Ord c => [(LVar,Integer)] -> LGuarded c -> LGuarded c
 substFree s = mapGuardedAtoms (\j a -> substFreeAtom [(v,i+j) | (v,i) <- s] a)
 
 -- | Assuming that there are no more bound variables left in an atom of a
