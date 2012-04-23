@@ -128,7 +128,7 @@ insertBinding k = modify . M.insert k
 -- @n@ as a hint and converting name and identifier to a value using $mkR$.
 {-# INLINE importBinding #-}
 importBinding :: (MonadBind k v m, MonadFresh m, Show v, Show k, Ord k) 
-               => (String -> Integer -> v) 
+               => (String -> Int -> v) 
                -> k 
                -> String -> m v
 importBinding mkR k n = do

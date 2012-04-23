@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}  -- require for MonadError
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier
@@ -49,7 +49,7 @@ import qualified Data.Map as M
 ------------------------------------------------------------------------------
 
 -- | The state of the name supply: the first unused sequence number of every name.
-type FreshState = M.Map String Integer
+type FreshState = M.Map String Int
 
 -- | A computation that can generate fresh variables from name hints.
 newtype FreshT m a = FreshT { unFreshT :: StateT FreshState m a }
@@ -66,6 +66,8 @@ nothingUsed = M.empty
 -- | Run a computation with a fresh name supply.
 runFreshT :: FreshT m a -> FreshState -> m (a, FreshState)
 runFreshT (FreshT m) used = runStateT m used
+
+-- | Evaluate a computation with a fresh name supply.
 evalFreshT :: Monad m => FreshT m a -> FreshState -> m a
 evalFreshT (FreshT m) used = evalStateT m used
 
@@ -73,19 +75,20 @@ evalFreshT (FreshT m) used = evalStateT m used
 execFreshT :: Monad m => FreshT m a -> FreshState -> m FreshState
 execFreshT (FreshT m) used = execStateT m used
 
--- | /O(log(n))/. Get a fresh identifier for the given name.
-freshIdent :: Monad m => String -> FreshT m Integer
+-- | /O(log(n))/. Get a fresh identifiers for the given name.
+freshIdent :: Monad m
+            => String        -- ^ number of desired identifiers
+            -> FreshT m Int  -- ^ The first fresh identifier.
 freshIdent name = do
     m <- FreshT get
-    let i  = M.findWithDefault 0 name m
-        !i' = succ i -- avoid building thunks in the Map
-    FreshT (modify (M.insert name i'))
+    let i = M.findWithDefault 0 name m
+    FreshT (modify (M.insert name (succ i)))
     return i
 
 -- | /O(n)/. Get 'k' fresh identifiers.
 freshIdents :: Monad m
-            => Integer           -- ^ number of desired identifiers
-            -> FreshT m Integer  -- ^ The first fresh identifier.
+            => Int           -- ^ number of desired identifiers
+            -> FreshT m Int  -- ^ The first fresh identifier.
 freshIdents k = do
     m <- FreshT get
     let maxIdx = maximum $ 0 : map snd (M.toList m)

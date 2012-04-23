@@ -296,7 +296,7 @@ precomputeCaseDistinctions ctxt typAsms =
 
     absFact (Fact tag ts) = (tag, length ts)
 
-    nMsgVars n = [ varTerm (LVar "t" LSortMsg i) | i <- [1..fromIntegral n] ]
+    nMsgVars n = [ varTerm (LVar "t" LSortMsg i) | i <- [1..n] ]
 
     someProtoGoal :: (FactTag, Int) -> LNFact
     someProtoGoal (tag, arity) = Fact tag (nMsgVars arity)

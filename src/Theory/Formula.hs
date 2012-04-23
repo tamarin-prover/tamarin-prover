@@ -112,7 +112,7 @@ foldFormula fAto fTF fNot fConn fQua =
 
 -- | Fold a formula.
 {-# INLINE foldFormulaScope #-}
-foldFormulaScope :: (Integer -> Atom (VTerm c (BVar v)) -> b) -> (Bool -> b)
+foldFormulaScope :: (Int -> Atom (VTerm c (BVar v)) -> b) -> (Bool -> b)
                  -> (b -> b) -> (Connective -> b -> b -> b)
                  -> (Quantifier -> s -> b -> b)
                  -> Formula s c v
@@ -184,7 +184,7 @@ type LFormula c = Formula (String, LSort) c LVar
 type LNFormula = Formula (String, LSort) Name LVar
 
 -- | Change the representation of atoms.
-mapAtoms :: (Integer -> Atom (VTerm c (BVar v))
+mapAtoms :: (Int -> Atom (VTerm c (BVar v))
          -> Atom (VTerm c1 (BVar v1)))
          -> Formula s c v -> Formula s c1 v1
 mapAtoms f = foldFormulaScope (\i a -> Ato $ f i a) TF Not Conn Qua

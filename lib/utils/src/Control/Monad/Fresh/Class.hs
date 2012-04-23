@@ -25,12 +25,12 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise (FreshT, freshIdent
 class (Applicative m, Monad m) => MonadFresh m where
     -- | Get the integer of the next fresh identifier of this name.
     freshIdent  :: String   -- ^ Desired name
-                -> m Integer
+                -> m Int
 
     -- | Get a number of fresh identifiers. This reserves the required number
     -- of identifiers on all names.
-    freshIdents :: Integer    -- ^ Number of desired fresh identifiers.
-                -> m Integer  -- ^ The first Fresh identifier.
+    freshIdents :: Int    -- ^ Number of desired fresh identifiers.
+                -> m Int  -- ^ The first Fresh identifier.
 
 
 instance (Functor m, Monad m) => MonadFresh (Fast.FreshT m) where

@@ -43,14 +43,14 @@ import Data.Map ( Map )
 -- Maude Terms
 ----------------------------------------------------------------------
 
-data MaudeLit = MaudeVar   Integer LSort
-              | FreshVar   Integer LSort
-              | MaudeConst Integer LSort
+data MaudeLit = MaudeVar   Int LSort
+              | FreshVar   Int LSort
+              | MaudeConst Int LSort
   deriving (Eq, Ord, Show)
 
 type MTerm = Term MaudeLit
 
-type MSubst = [((LSort, Integer), MTerm)]
+type MSubst = [((LSort, Int), MTerm)]
 
 
 ------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 -- Portability : GHC only
 --
 -- A monad transformer for passing a fast fresh name supply through a
--- computation. It uses an 'Integer' counter to determine the next free name.
+-- computation. It uses an 'Int' counter to determine the next free name.
 --
 -- Modeled after the mtl-2.0 library.
 --
@@ -45,7 +45,7 @@ import Control.Monad.Reader
 ------------------------------------------------------------------------------
 
 -- | The state of the name supply: the first unused sequence number of every name.
-type FreshState = Integer
+type FreshState = Int
 
 -- | A computation that can generate fresh variables from name hints.
 newtype FreshT m a = FreshT { unFreshT :: StateT FreshState m a }
@@ -73,8 +73,8 @@ execFreshT (FreshT m) used = execStateT m used
 
 -- | Get 'k' fresh identifiers.
 freshIdents :: Monad m
-            => Integer           -- ^ number of desired identifiers
-            -> FreshT m Integer  -- ^ The first fresh identifier.
+            => Int           -- ^ number of desired identifiers
+            -> FreshT m Int  -- ^ The first fresh identifier.
 freshIdents k = do
     i <- FreshT get
     FreshT $ put $ i + k

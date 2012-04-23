@@ -23,6 +23,7 @@ import           Data.Label
 import qualified Data.Set                                 as S
 import qualified Data.Map                                 as M
 import           Data.Monoid
+import           Data.Maybe
 import qualified Data.ByteString.Char8                    as BC
 
 import           Control.Monad
@@ -253,10 +254,10 @@ ident       := <a-zA-Z> (<a-zA-Z0-9-_)
 ------------------------------------------------------------------------------
 
 -- | Parse an identifier possibly indexed with a number.
-indexedIdentifier :: Parser (String, Integer)
-indexedIdentifier = do
-    (,) <$> identifier
-        <*> option 0 (try (kw DOT *> (fromIntegral <$> integer)))
+indexedIdentifier :: Parser (String, Int)
+indexedIdentifier =
+    -- FIXME: It might be confusing that 'x.0' and 'x' denote the same variable
+    (\s mi -> (s, fromMaybe 0 mi)) <$> identifier <*> optionMaybe (try (kw DOT *> integer))
 
 -- | Parse a logical variable with the given sorts allowed.
 sortedLVar :: [LSort] -> Parser LVar
