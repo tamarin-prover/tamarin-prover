@@ -605,7 +605,7 @@ var mainDisplay = {
     setContent: function(title, html_data) {
         if(title) {
             // Only use first line for title
-            var titleLines = title.split('</br>');
+            var titleLines = title.split('<br/>');
             var titleText = titleLines[0];
             if(titleLines.length > 1 && titleLines[1] != "") {
                 titleText = titleText + " ..."
