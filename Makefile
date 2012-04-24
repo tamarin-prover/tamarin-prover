@@ -93,7 +93,7 @@ CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(CASE_STUDI
 
 # case studies
 case-studies:	$(CS_TARGETS)
-	grep "complete proof\|attack found\|processing time" case-studies/*.spthy
+	grep "verified\|falsified\|processing time" case-studies/*.spthy
 
 # individual case studies
 case-studies/%_analyzed.spthy:	data/examples/csf12/%.spthy
