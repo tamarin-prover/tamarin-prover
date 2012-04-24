@@ -108,7 +108,7 @@ Equation Store
 --------------
 
 We store equations in a special form to allow delaying case splits on them.
-This allows for example determine the shape of a signed message without case
+This allows for example to determine the shape of a signed message without case
 splitting on its variants. In the GUI, you can see the equation store being
 pretty printed as follows.
 
