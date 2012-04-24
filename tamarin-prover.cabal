@@ -75,10 +75,10 @@ data-files:
   -- CSF'12 case studies
   examples/csf12/Artificial.spthy
 
-  examples/csf12/DH2-original.spthy
+  examples/csf12/DH2_original.spthy
   examples/csf12/KAS1.spthy
-  examples/csf12/KAS2-eCK.spthy
-  examples/csf12/KAS2-original.spthy
+  examples/csf12/KAS2_eCK.spthy
+  examples/csf12/KAS2_original.spthy
 
   examples/csf12/KEA_plus_KI_KCI.spthy
   examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
@@ -96,16 +96,16 @@ data-files:
   examples/csf12/SignedDH_PFS.spthy
   examples/csf12/SignedDH_eCK.spthy
 
-  examples/csf12/STS-MAC.spthy
-  examples/csf12/STS-MAC-fix1.spthy
-  examples/csf12/STS-MAC-fix2.spthy
+  examples/csf12/STS_MAC.spthy
+  examples/csf12/STS_MAC_fix1.spthy
+  examples/csf12/STS_MAC_fix2.spthy
 
-  examples/csf12/JKL_TS1_2004-KI.spthy
-  examples/csf12/JKL_TS1_2008-KI.spthy
-  examples/csf12/JKL_TS2_2004-KI_wPFS.spthy
-  examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
-  examples/csf12/JKL_TS3_2004-KI_wPFS.spthy-nonterm
-  examples/csf12/JKL_TS3_2008-KI_wPFS.spthy-nonterm
+  examples/csf12/JKL_TS1_2004_KI.spthy
+  examples/csf12/JKL_TS1_2008_KI.spthy
+  examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
+  examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
+  examples/csf12/JKL_TS3_2004_KI_wPFS.spthy_nonterm
+  examples/csf12/JKL_TS3_2008_KI_wPFS.spthy_nonterm
 
 extra-source-files:
   .ghci
