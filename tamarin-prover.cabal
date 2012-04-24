@@ -206,10 +206,13 @@ executable tamarin-prover
       Main.Console
       Main.Environment
       Main.TheoryLoader
+      Main.Utils
+      Main.Mode.Test
       Main.Mode.Batch
       Main.Mode.Intruder
       Main.Mode.Interactive
 
+      Theory.AbstractInterpretation
       Theory.Pretty
       Theory.Fact
       Theory.Atom
