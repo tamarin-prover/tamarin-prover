@@ -118,19 +118,19 @@ rootTpl theories = [whamlet|
                   Running
                   \ <a href=@{RootR}><span class="tamarin">Tamarin</span></a>
                   \ #{showVersion version}
-      \^{introTpl}
+    \^{introTpl}
     <div class="intropage">
       <p>
         \^{theoriesTpl theories}
-    <h2>Loading a new theory
-    <p
-      You can load a new theory file from disk in order to work with it.
-    <form class=root-form enctype="multipart/form-data" action=@{RootR} method=POST>
-      Filename:
-      <input type=file name="uploadedTheory">
-      <div .submit-form>
-        <input type=submit value="Load new theory">
-    <p>Note: You can save a theory by downloading the source. 
+      <h2>Loading a new theory
+      <p
+        You can load a new theory file from disk in order to work with it.
+      <form class=root-form enctype="multipart/form-data" action=@{RootR} method=POST>
+        Filename:
+        <input type=file name="uploadedTheory">
+        <div .submit-form>
+          <input type=submit value="Load new theory">
+      <p>Note: You can save a theory by downloading the source. 
   |]
 
 -- | Template for listing theories.
