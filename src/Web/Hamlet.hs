@@ -116,7 +116,7 @@ rootTpl theories = [whamlet|
               <div id="introbar">
                 <div id="header-info">
                   Running
-                  \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="tamarin">Tamarin</span></a>
+                  \ <a href=@{RootR}><span class="tamarin">Tamarin</span></a>
                   \ #{showVersion version}
       \^{introTpl}
     <div class="intropage">
@@ -212,7 +212,7 @@ headerTpl info = [HAMLET|
     <div class="layout-pane-north">
       <div #header-info>
         Running
-        \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="tamarin">Tamarin</span></a>
+        \ <a href=@{RootR}><span class="tamarin">Tamarin</span></a>
         \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
@@ -346,12 +346,17 @@ introTpl = [HAMLET|
         \ <a href="http://people.inf.ethz.ch/cremersc/index.html">Cas Cremers</a>,
         \ <a href="https://cssx.ch">Cedric Staub</a>
       <p>
-        <span class="tamarin">Tamarin</span> was developed at the 
+        <span class="tamarin">Tamarin</span> was developed at the
         \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
         \ <a href="http://www.ethz.ch">ETH Zurich</a>.
         \ This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
         \ you are welcome to redistribute it according to its
         \ <a href="/static/LICENSE" type="text/plain">LICENSE.</a>
+      <p>
+        More information about Tamarin and technical papers describing the underlying
+        \ theory can be found on the
+        \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="tamarin">Tamarin</span>
+        \ webpage</a>.
   |]
 
 {-
