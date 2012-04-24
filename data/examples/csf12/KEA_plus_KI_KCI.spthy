@@ -1,4 +1,4 @@
-theory KEA_plus_KCI
+theory KEA_plus_KI_KCI
 begin
 
 builtins: hashing, diffie-hellman

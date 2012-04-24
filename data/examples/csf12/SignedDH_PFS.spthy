@@ -1,4 +1,4 @@
-theory SignedDH
+theory SignedDH_PFS
 begin
 
 section{* The Signed Diffie-Hellman Protocol *}

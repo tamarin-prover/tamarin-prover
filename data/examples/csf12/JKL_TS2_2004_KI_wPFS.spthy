@@ -1,11 +1,11 @@
-theory JKL_TS3_2004
+theory JKL_TS2_2004_KI_wPFS
 begin
 
-builtin: hashing, diffie-hellman
+builtins: hashing, diffie-hellman
 
-section{* Jeong, Katz, Lee : TS3 (2004) *}
+section{* Jeong, Katz, Lee : TS2 (2004) *}
 /*
- * Protocol:	JKL-TS3-2004
+ * Protocol:	JKL-TS2-2004
  * Modeler: 	Cas Cremers
  * Date: 	January 2012
  * Source:	"One-Round Protocols for Two-Party Authenticated Key Exchange"
@@ -21,28 +21,27 @@ rule generate_ltk:
    [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
 
 rule Init_1:
-   [ Fr( ~ekI ), !Ltk( $I, ~lkI ), !Pk($R,'g'^~lkR) ]
-   --[ SidI_1(~ekI,$I,$R, 'g'^~ekI ), Roles($I, $R) ]->
+   [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
+   --[ SidI_1(~ekI,$I,$R, 'g'^~ekI ) ]->
    [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ),
      !Ephk(~ekI),
-     Out( < 'g'^~ekI, h( ('g'^~lkR)^~lkI,$I,$R,'g'^~ekI ) > ) ]
+     Out( 'g'^~ekI ) ]
 
 rule Init_2:
-   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), !Pk($R,'g'^~lkR), 
-     In( < Y, h(('g'^~lkI)^~lkR,$R,$I,Y )>  ) ]
+   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]
    --[SidI_2( ~ekI, $I, $R, hkI, Y,
-       Y^~ekI ), Roles($I, $R) ]->
+       h( < hkI, Y, Y^~ekI, ('g'^~lkR)^~lkI > ) ) ]->
    [ !Sessk( ~ekI, 
-       Y^~ekI ) ]
+       h( < hkI, Y, Y^~ekI, ('g'^~lkR)^~lkI > ) ) ]
 
 rule Resp_1:
-   [ In( < X, h( ('g'^~lkR)^~lkI,$I,$R,X ) > ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
+   [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
    --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR ,
-       X^~ekR ), Roles($I, $R) ]->
-   [ Out( < 'g'^~ekR, h( ('g'^~lkI)^~lkR,$R,$I,'g'^~ekR ) > ),
+       h( < X, 'g'^~ekR, X^~ekR, ('g'^~lkI)^~lkR > ) ) ]->
+   [ Out( 'g'^~ekR ),
      !Ephk(~ekR),
      !Sessk( ~ekR, 
-       X^~ekR ) ]
+       h( < X, 'g'^~ekR, X^~ekR, ('g'^~lkI)^~lkR > ) ) ]
 
 rule Sessk_reveal: 
    [ !Sessk(~tid, k) ]
@@ -59,81 +58,21 @@ rule Ltk_reveal:
    --[ LtkRev($A) ]->
    [ Out(k) ]
 
-
 /* Security properties */
 
-/* Only non-reflected executions */
 /*
 lemma key_agreement_reachable:
   "not (Ex #i1 #i2 ekI ekR I R k hkI hkR.
-          SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2
-       
-          & (All #tid A. Roles(A, A) @ tid ==> F )
-        )"
+          SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2)"
 */
+
 
 /* An attack is valid in the security model if the session key of the test session is deduced and
    the test session is clean.
 */
-lemma JKL2004_1_initiator_key:
+lemma JKL2008_2_initiator_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
             SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
-
-            /* Only non-reflected executions */
-            & (All #tid A. Roles(A, A) @ tid ==> F )
-
-            /* Not ephemeral-key-reveal */
-            & (All #i3 t. EphkRev( t ) @ i3 ==> F)
-
-            /* Not longterm-key-reveal */
-            & (All #i3 a. LtkRev( a ) @ i3 ==> F)
-
-            /* Not session-key-reveal of test thread. */
-            & (All #i3. SesskRev( ttest ) @ i3 ==> F)
-
-            /* Not session-key-reveal of partner thread. */
-            & (All #i3 #i4 tpartner kpartner.
-                   SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i3
-		   & SesskRev( tpartner ) @ i4 ==> F)
-    )"
-
-/*
-/* An attack is valid in the security model if the session key of the test session is deduced and
-   the test session is clean.
-*/
-lemma JKL2004_1_responder_key:
-  "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
-
-            /* Only non-reflected executions */
-            & (All #tid A. Roles(A, A) @ tid ==> F )
-
-            /* Not ephemeral-key-reveal */
-            & (All #i3 t. EphkRev( t ) @ i3 ==> F)
-
-            /* Not longterm-key-reveal */
-            & (All #i3 a. LtkRev( a ) @ i3 ==> F)
-
-            /* Not session-key-reveal of test thread. */
-            & (All #i3. SesskRev( ttest ) @ i3 ==> F)
-
-            /* Not session-key-reveal of partner thread. Note that we use SidI_2 here.
-	       A session key reveal can only happen after SidI_2 is logged anyways.
-	    */
-            & (All #i3 #i4 tpartner kpartner.
-                   SidI_2( tpartner,I,R,hkI,hkR,kpartner ) @i3
-		   & SesskRev( tpartner ) @ i4 ==> F)
-    )"
-
-/* An attack is valid in the security model if the session key of the test session is deduced and
-   the test session is clean.
-*/
-lemma JKL2004_2_initiator_key:
-  "not (Ex #i1 #i2 ttest I R k hkI hkR.
-            SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
-
-            /* Only non-reflected executions */
-            & (All #tid A. Roles(A, A) @ tid ==> F )
 
             /* Not ephemeral-key-reveal */
             & (All #i3 t. EphkRev( t ) @ i3 ==> F)
@@ -162,12 +101,9 @@ lemma JKL2004_2_initiator_key:
 /* An attack is valid in the security model if the session key of the test session is deduced and
    the test session is clean.
 */
-lemma JKL2004_2_responder_key:
+lemma JKL2008_2_responder_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
             SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
-
-            /* Only non-reflected executions */
-            & (All #tid A. Roles(A, A) @ tid ==> F )
 
             /* Not ephemeral-key-reveal */
             & (All #i3 t. EphkRev( t ) @ i3 ==> F)
@@ -195,5 +131,5 @@ lemma JKL2004_2_responder_key:
                        (* (i1 < i3) | *)
                        SidI_1( tpartner,I,R,hkI ) @i4))
     )"
-*/
+
 end

@@ -1,15 +1,18 @@
-theory JKL_TS2_2004
+theory JKL_TS1_2008_KI
 begin
 
 builtins: hashing, diffie-hellman
 
-section{* Jeong, Katz, Lee : TS2 (2004) *}
+section{* Jeong, Katz, Lee : TS1 (2008) *}
 /*
- * Protocol:	JKL-TS2-2004
+ * Protocol:	JKL-TS1-2008
  * Modeler: 	Cas Cremers
  * Date: 	January 2012
  * Source:	"One-Round Protocols for Two-Party Authenticated Key Exchange"
- * 		Jeong, Katz, Lee, 2004
+ * 		Jeong, Katz, Lee, 2008
+ *		Note: Although the paper title is the same as the 2004
+ *		original, the updated version from 2008 includes
+ *		modified protocols and security models.
  *
  * Status: 	working
  */
@@ -22,26 +25,26 @@ rule generate_ltk:
 
 rule Init_1:
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
-   --[ SidI_1(~ekI,$I,$R, 'g'^~ekI ) ]->
-   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ),
+   --[ SidI_1(~ekI,$I,$R, ~ekI ) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ),
      !Ephk(~ekI),
-     Out( 'g'^~ekI ) ]
+     Out( ~ekI ) ]
 
 rule Init_2:
-   [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]
-   --[SidI_2( ~ekI, $I, $R, hkI, Y,
-       h( < hkI, Y, Y^~ekI, ('g'^~lkR)^~lkI > ) ) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI , ~ekI), In( Y ), !Pk( $R,'g'^~lkR ) ]
+   --[SidI_2( ~ekI, $I, $R, ~ekI, Y,
+       h( < $I, $R, ~ekI, Y, ('g'^~lkR)^~lkI > ) ) ]->
    [ !Sessk( ~ekI, 
-       h( < hkI, Y, Y^~ekI, ('g'^~lkR)^~lkI > ) ) ]
+       h( < $I, $R, ~ekI, Y, ('g'^~lkR)^~lkI > ) ) ]
 
 rule Resp_1:
    [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
-   --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR ,
-       h( < X, 'g'^~ekR, X^~ekR, ('g'^~lkI)^~lkR > ) ) ]->
-   [ Out( 'g'^~ekR ),
+   --[ SidR_1( ~ekR, $I, $R, X, ~ekR ,
+       h( < $I, $R, X, ~ekR, ('g'^~lkI)^~lkR > ) ) ]->
+   [ Out( ~ekR ),
      !Ephk(~ekR),
      !Sessk( ~ekR, 
-       h( < X, 'g'^~ekR, X^~ekR, ('g'^~lkI)^~lkR > ) ) ]
+       h( < $I, $R, X, ~ekR, ('g'^~lkI)^~lkR > ) ) ]
 
 rule Sessk_reveal: 
    [ !Sessk(~tid, k) ]
@@ -58,6 +61,7 @@ rule Ltk_reveal:
    --[ LtkRev($A) ]->
    [ Out(k) ]
 
+
 /* Security properties */
 
 /*
@@ -66,16 +70,18 @@ lemma key_agreement_reachable:
           SidI_2(ekI, I, R, hkI, hkR, k) @ i1 & SidR_1(ekR, I, R, hkI, hkR, k) @ i2)"
 */
 
-
 /* An attack is valid in the security model if the session key of the test session is deduced and
    the test session is clean.
 */
-lemma JKL2008_2_initiator_key:
+lemma JKL2008_1_initiator_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
             SidI_2(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not ephemeral-key-reveal */
             & (All #i3 t. EphkRev( t ) @ i3 ==> F)
+
+            /* Not longterm-key-reveal */
+            & (All #i3 a. LtkRev( a ) @ i3 ==> F)
 
             /* Not session-key-reveal of test thread. */
             & (All #i3. SesskRev( ttest ) @ i3 ==> F)
@@ -84,29 +90,20 @@ lemma JKL2008_2_initiator_key:
             & (All #i3 #i4 tpartner kpartner.
                    SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i3
 		   & SesskRev( tpartner ) @ i4 ==> F)
-
-	    /* If there is no partner thread, then there is no longterm-key-reveal for
-	       the intended partner.
-	       (We model wpfs, for pfs, add i1 < i3 to conclusion) */
-            & (All #i3. LtkRev( I ) @ i3 ==>
-	          (Ex #i4 tpartner kpartner.
-                      (* (i1 < i3) | *)
-                      SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i4))
-            & (All #i3. LtkRev( R ) @ i3 ==>
-	          (Ex #i4 tpartner kpartner.
-                      (* (i1 < i3) | *)
-                      SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i4))
     )"
 
 /* An attack is valid in the security model if the session key of the test session is deduced and
    the test session is clean.
 */
-lemma JKL2008_2_responder_key:
+lemma JKL2008_1_responder_key:
   "not (Ex #i1 #i2 ttest I R k hkI hkR.
             SidR_1(ttest, I, R, hkI, hkR, k) @ i1 & K( k ) @ i2
 
             /* Not ephemeral-key-reveal */
             & (All #i3 t. EphkRev( t ) @ i3 ==> F)
+
+            /* Not longterm-key-reveal */
+            & (All #i3 a. LtkRev( a ) @ i3 ==> F)
 
             /* Not session-key-reveal of test thread. */
             & (All #i3. SesskRev( ttest ) @ i3 ==> F)
@@ -117,19 +114,7 @@ lemma JKL2008_2_responder_key:
             & (All #i3 #i4 tpartner kpartner.
                    SidI_2( tpartner,I,R,hkI,hkR,kpartner ) @i3
 		   & SesskRev( tpartner ) @ i4 ==> F)
-
-	    /* If there is no partner thread, then there is no longterm-key-reveal for
-	       the actor or intended partner.
-	       (We model wpfs, for pfs, add i1 < i3 to conclusion)
-	       */
-            & (All #i3. LtkRev( I ) @ i3 ==>
-	          (Ex #i4 tpartner.
-                       (* (i1 < i3) | *)
-                       SidI_1( tpartner,I,R,hkI ) @i4))
-            & (All #i3. LtkRev( R ) @ i3 ==>
-	          (Ex #i4 tpartner.
-                       (* (i1 < i3) | *)
-                       SidI_1( tpartner,I,R,hkI ) @i4))
     )"
 
 end
+

@@ -1,4 +1,4 @@
-theory STS_MAC_FIX1
+theory STS_MAC_fix1
 begin
 
 builtins: diffie-hellman, signing
