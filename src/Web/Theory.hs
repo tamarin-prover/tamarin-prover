@@ -265,10 +265,9 @@ subProofSnippet renderUrl tidx lemma proofPath ctxt prf =
         []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
         pms -> [ withTag "h3" [] (text "Applicable Proof Methods")
                , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
-               , text "(Press "<-> withTag "span" [("class","keys")] (text "a" ) <-> text " for " <->
+               , text "a." <-> 
                  linkToPath renderUrl (AutoProverR tidx (TheoryProof lemma proofPath))
-                     ["autoprove"] (text "autoprove") <->
-                 text ")"
+                     ["autoprove"] (keyword_ "autoprove")
                ]
 
     prettyPM (i, m) = linkToPath renderUrl
