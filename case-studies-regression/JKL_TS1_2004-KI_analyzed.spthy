@@ -170,7 +170,7 @@ analyzing: data/examples/csf12/JKL_TS1_2004-KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2004-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.416827s
+  processing time: 0.387379s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 
@@ -182,7 +182,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2004-KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.416827s
+  processing time: 0.387379s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 

@@ -1289,7 +1289,7 @@ analyzing: data/examples/csf12/NAXOS_eCK.spthy
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.65883s
+  processing time: 8.108014s
   eCK_key_secrecy (all-traces): verified (290 steps)
 
 ------------------------------------------------------------------------------
@@ -1300,7 +1300,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.65883s
+  processing time: 8.108014s
   eCK_key_secrecy (all-traces): verified (290 steps)
 
 ==============================================================================
