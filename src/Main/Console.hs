@@ -47,7 +47,6 @@ import           Data.Maybe
 import           Data.Version (showVersion)
                  
 import           Control.Monad
-import           Control.Applicative
                  
 import           System.FilePath
 import           System.Console.CmdArgs.Explicit
@@ -187,7 +186,7 @@ helpAndExit tmode mayMsg = do
     -- output example info
     when (tmIsMainMode tmode) $ do
       examplePath <- getDataFileName "examples"
-      manualPath  <- ("doc" </>) <$> getDataFileName "MANUAL"
+      manualPath  <- getDataFileName "doc/MANUAL"
       let tutorialPath = examplePath </> "stable" </> "Tutorial.spthy"
           csf12Path = examplePath </> "csf12" </> "*.spthy"
           csf12Cmd  = programName ++ " --prove -Ocase-studies +RTS -N -RTS " ++ csf12Path 
