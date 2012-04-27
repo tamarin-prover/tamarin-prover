@@ -186,7 +186,7 @@ helpAndExit tmode mayMsg = do
     -- output example info
     when (tmIsMainMode tmode) $ do
       examplePath <- getDataFileName "examples"
-      manualPath  <- getDataFileName "doc/MANUAL"
+      manualPath  <- getDataFileName ("doc" </> "MANUAL")
       let tutorialPath = examplePath </> "stable" </> "Tutorial.spthy"
           csf12Path = examplePath </> "csf12" </> "*.spthy"
           csf12Cmd  = programName ++ " --prove -Ocase-studies +RTS -N -RTS " ++ csf12Path 
