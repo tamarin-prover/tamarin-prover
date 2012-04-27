@@ -1,0 +1,16 @@
+Before a release, the following things should be checked:
+
+1. run 'make case-studies' and compare 'case-studies/' with
+   'case-studies-regression/'
+
+2. run 'tamarin-prover test'
+
+3. generate 'intruder_variants_dh.spthy' and diff with version in data/
+
+4. run 'tamarin-prover interactive examples/csf12' and:
+   (a) open one of the presented theories
+   (b) try shortcuts (J,K,j,k,1,2,..,a)
+   (c) try different graph/sequent options
+   (d) try Download
+
+   (e) try 'Loading a new theory' from the start page
