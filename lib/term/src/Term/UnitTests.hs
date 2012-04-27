@@ -90,7 +90,7 @@ testsSubst :: Test
 testsSubst = TestLabel "Tests for Substitution" $
     TestList
       [ -- introduce renaming for x3
-        testEqual "a" (substFromListVFresh [(lx1, p1), (lx2, x9), (lx3,x9), (lx5, p1)])
+        testEqual "a" (substFromListVFresh [(lx1, p1), (lx2, x6), (lx3,x6), (lx5, p1)])
                       (composeVFresh (substFromListVFresh [(lx5, p1)])
                                      (substFromList [(lx1, x5), (lx2, x3)]))
         -- rename (fresh) x6 in s1b and do not mix up with x6 in s3f
@@ -105,7 +105,7 @@ testsSubst = TestLabel "Tests for Substitution" $
       , testEqual "g" (substFromListVFresh [(lx1, f1)])
                       (extendWithRenaming [lx1] (substFromListVFresh [(lx1, f1)]))
 
-      , testEqual "h" (substFromListVFresh [(lx2, x1), (lx1, x3)])
+      , testEqual "h" (substFromListVFresh [(lx2, x1), (lx1, x2)])
                       (extendWithRenaming [lx1] (substFromListVFresh [(lx2, x1)]))
       -- trivial, increase coverage
       , testTrue "i" ((>0) . length $ show s1b)
@@ -121,10 +121,10 @@ testsSubst = TestLabel "Tests for Substitution" $
     s1b       = substFromListVFresh [(lx1, p1), (lx2, x6), (lx3, x6), (lx4, f1)]
     s3f       = substFromList [(lx8, x6), (lx2, pair(x2,x1))]
     s1b_o_s3f = substFromListVFresh -- x2 not identified with x8
-                  [(lx1, p1), (lx2, pair(x15, p1)), (lx3, x15), (lx4, f1), (lx6, x22), (lx8, x22)]
+                  [(lx1, p1), (lx2, pair(x9, p1)), (lx3, x9), (lx4, f1), (lx6, x10), (lx8, x10)]
     s4f       = substFromList [(lx1, x6), (lx2, pair(x3,x1))]
     s1b_o_s4f = substFromListVFresh
-                  [(lx1, x20), (lx2, pair(x13, p1)), (lx3, x13), (lx4, f1), (lx6, x20)]
+                  [(lx1, x8), (lx2, pair(x7, p1)), (lx3, x7), (lx4, f1), (lx6, x8)]
 
     s4f_o_s3f = substFromList [(lx1, x6), (lx2, pair(pair(x3,x1),x6)), (lx8, x6)]
     x15 = varTerm $ LVar "x" LSortMsg 15
