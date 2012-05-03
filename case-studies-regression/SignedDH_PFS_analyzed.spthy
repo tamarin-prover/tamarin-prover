@@ -1,4 +1,4 @@
-theory SignedDH begin
+theory SignedDH_PFS begin
 
 // Function signature and definition of the equational theory E
 
@@ -146,15 +146,15 @@ solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
       case Register_pk
       solve( KU((#vf.7, 0), sign(<'2', $R.6, $I.6, Y.6>, ~ltk.23)) )
         case Resp
-        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.64*~ekR.65) )] /* may loop */ )
+        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.61*~ekR.62) )] /* may loop */ )
           case Init_1
-          by solve( (#vr.97, 1)[!KU( f_.99, ~ekR.109 )] /* may loop */ )
+          by solve( (#vr.91, 1)[!KU( f_.93, ~ekR.103 )] /* may loop */ )
         next
           case Resp
-          by solve( (#vr.102, 1)[!KU( f_.104, ~ekI.108 )] /* may loop */ )
+          by solve( (#vr.96, 1)[!KU( f_.98, ~ekI.102 )] /* may loop */ )
         next
           case cexp
-          by solve( KU((#vr.70, 1), ~ekI.64) )
+          by solve( KU((#vr.67, 1), ~ekI.61) )
         qed
       next
         case csign
@@ -173,15 +173,15 @@ next
       case Register_pk
       solve( KU((#vf.7, 0), sign(<'1', $I.6, $R.6, X.6>, ~ltk.14)) )
         case Init_1
-        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.61*~ekI.62) )] /* may loop */ )
+        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.58*~ekI.59) )] /* may loop */ )
           case Init_1
-          by solve( (#vr.94, 1)[!KU( f_.96, ~ekR.105 )] /* may loop */ )
+          by solve( (#vr.88, 1)[!KU( f_.90, ~ekR.99 )] /* may loop */ )
         next
           case Resp
-          by solve( (#vr.99, 1)[!KU( f_.101, ~ekI.106 )] /* may loop */ )
+          by solve( (#vr.93, 1)[!KU( f_.95, ~ekI.100 )] /* may loop */ )
         next
           case cexp
-          by solve( KU((#vr.67, 1), ~ekR.61) )
+          by solve( KU((#vr.64, 1), ~ekR.58) )
         qed
       next
         case csign
@@ -200,6 +200,7 @@ end
 /* Output
 maude tool: 'maude'
  checking version: 2.6. OK.
+ checking installation: OK.
 
 
 analyzing: data/examples/csf12/SignedDH_PFS.spthy
@@ -208,7 +209,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.588937s
+  processing time: 1.774083s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -219,7 +220,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.588937s
+  processing time: 1.774083s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

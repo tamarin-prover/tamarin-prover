@@ -1,4 +1,4 @@
-theory JKL_TS2_2008 begin
+theory JKL_TS2_2008_KI_wPFS begin
 
 // Function signature and definition of the equational theory E
 
@@ -459,15 +459,16 @@ end
 /* Output
 maude tool: 'maude'
  checking version: 2.6. OK.
+ checking installation: OK.
 
 
-analyzing: data/examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
+analyzing: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
+analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.117984s
+  processing time: 3.084884s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 
@@ -476,10 +477,10 @@ analyzed: data/examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/JKL_TS2_2008-KI_wPFS.spthy
+analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.117984s
+  processing time: 3.084884s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 

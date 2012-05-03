@@ -1281,6 +1281,7 @@ end
 /* Output
 maude tool: 'maude'
  checking version: 2.6. OK.
+ checking installation: OK.
 
 
 analyzing: data/examples/csf12/NAXOS_eCK.spthy
@@ -1289,7 +1290,7 @@ analyzing: data/examples/csf12/NAXOS_eCK.spthy
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 8.108014s
+  processing time: 16.471671s
   eCK_key_secrecy (all-traces): verified (290 steps)
 
 ------------------------------------------------------------------------------
@@ -1300,7 +1301,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 8.108014s
+  processing time: 16.471671s
   eCK_key_secrecy (all-traces): verified (290 steps)
 
 ==============================================================================

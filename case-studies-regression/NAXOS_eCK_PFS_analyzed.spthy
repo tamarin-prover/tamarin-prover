@@ -378,6 +378,7 @@ end
 /* Output
 maude tool: 'maude'
  checking version: 2.6. OK.
+ checking installation: OK.
 
 
 analyzing: data/examples/csf12/NAXOS_eCK_PFS.spthy
@@ -386,7 +387,7 @@ analyzing: data/examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.526567s
+  processing time: 14.830632s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -397,7 +398,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.526567s
+  processing time: 14.830632s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================

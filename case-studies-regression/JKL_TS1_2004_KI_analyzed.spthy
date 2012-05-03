@@ -1,4 +1,4 @@
-theory JKL_TS1_2004 begin
+theory JKL_TS1_2004_KI begin
 
 // Function signature and definition of the equational theory E
 
@@ -9,13 +9,15 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 section{* Jeong, Katz, Lee : TS1 (2004) *}
 
 rule (modulo E) generate_ltk:
-   [ Fr( ~lk ) ] --> [ !Ltk( $A, ~lk ), !Pk( $A, 'g'^~lk ), Out( 'g'^~lk ) ]
+   [ Fr( ~lkA ) ]
+  -->
+   [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Init_1:
    [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
-  --[ SidI_1( ~ekI, $I, $R, ~ekI ) ]->
+  --[ SidI_1( ~ekI, $I, $R, ~ekI ), NotEq( $I, $R ) ]->
    [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), !Ephk( ~ekI ), Out( ~ekI ) ]
 
   /* has exactly the trivial AC variant */
@@ -34,14 +36,20 @@ rule (modulo E) Init_2:
 
 rule (modulo E) Resp_1:
    [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
-  --[ SidR_1( ~ekR, $I, $R, X, ~ekR, h(<X, ~ekR, 'g'^~lkI^~lkR>) ) ]->
+  --[
+  SidR_1( ~ekR, $I, $R, X, ~ekR, h(<X, ~ekR, 'g'^~lkI^~lkR>) ),
+  NotEq( $I, $R )
+  ]->
    [ Out( ~ekR ), !Ephk( ~ekR ), !Sessk( ~ekR, h(<X, ~ekR, 'g'^~lkI^~lkR>) )
    ]
 
   /*
   rule (modulo AC) Resp_1:
      [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
-    --[ SidR_1( ~ekR, $I, $R, X, ~ekR, h(<X, ~ekR, 'g'^(~lkI*~lkR)>) ) ]->
+    --[
+    SidR_1( ~ekR, $I, $R, X, ~ekR, h(<X, ~ekR, 'g'^(~lkI*~lkR)>) ),
+    NotEq( $I, $R )
+    ]->
      [
      Out( ~ekR ), !Ephk( ~ekR ), !Sessk( ~ekR, h(<X, ~ekR, 'g'^(~lkI*~lkR)>) )
      ]
@@ -64,31 +72,33 @@ rule (modulo E) Ltk_reveal:
 
 lemma (modulo E) JKL2008_1_initiator_key:
   all-traces
-  "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-        (((((SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-            (K( k.5 ) @ #i2.1)) &
-           (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> (F))) &
-          (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> (F))) &
-         (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> (F))) &
-        (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-          ((SidR_1( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-           (SesskRev( tpartner.15 ) @ #i4.14)) ==>
-          (F)))"
+  "(not(Ex #i x.1. NotEq( x.1, x.1 ) @ #i)) ==>
+   (not(Ex #i1.2 #i2.3 ttest.4 I.5 R.6 k.7 hkI.8 hkR.9.
+         (((((SidI_2( ttest.4, I.5, R.6, hkI.8, hkR.9, k.7 ) @ #i1.2) &
+             (K( k.7 ) @ #i2.3)) &
+            (All #i3.10 t.11. (EphkRev( t.11 ) @ #i3.10) ==> (F))) &
+           (All #i3.12 a.13. (LtkRev( a.13 ) @ #i3.12) ==> (F))) &
+          (All #i3.14. (SesskRev( ttest.4 ) @ #i3.14) ==> (F))) &
+         (All #i3.15 #i4.16 tpartner.17 kpartner.18.
+           ((SidR_1( tpartner.17, I.5, R.6, hkI.8, hkR.9, kpartner.18 ) @ #i3.15) &
+            (SesskRev( tpartner.17 ) @ #i4.16)) ==>
+           (F))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-  (SidI_2( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-  (K( k.5 ) @ #i2.1)
- &
-  (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-  (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-  (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-  (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-    (SidR_1( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-    (SesskRev( tpartner.15 ) @ #i4.14)
-   ==>
-    F)"
+"(All #i x.1. (NotEq( x.1, x.1 ) @ #i) ==> F) &
+ (Ex #i1.2 #i2.3 ttest.4 I.5 R.6 k.7 hkI.8 hkR.9.
+   (SidI_2( ttest.4, I.5, R.6, hkI.8, hkR.9, k.7 ) @ #i1.2) &
+   (K( k.7 ) @ #i2.3)
+  &
+   (All #i3.10 t.11. (EphkRev( t.11 ) @ #i3.10) ==> F) &
+   (All #i3.12 a.13. (LtkRev( a.13 ) @ #i3.12) ==> F) &
+   (All #i3.14. (SesskRev( ttest.4 ) @ #i3.14) ==> F) &
+   (All #i3.15 #i4.16 tpartner.17 kpartner.18.
+     (SidR_1( tpartner.17, I.5, R.6, hkI.8, hkR.9, kpartner.18 ) @ #i3.15) &
+     (SesskRev( tpartner.17 ) @ #i4.16)
+    ==>
+     F))"
 */
 simplify
 solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, ~ekI.8 )] )
@@ -111,31 +121,33 @@ qed
 
 lemma (modulo E) JKL2008_1_responder_key:
   all-traces
-  "not(Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-        (((((SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-            (K( k.5 ) @ #i2.1)) &
-           (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> (F))) &
-          (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> (F))) &
-         (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> (F))) &
-        (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-          ((SidI_2( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-           (SesskRev( tpartner.15 ) @ #i4.14)) ==>
-          (F)))"
+  "(not(Ex #i x.1. NotEq( x.1, x.1 ) @ #i)) ==>
+   (not(Ex #i1.2 #i2.3 ttest.4 I.5 R.6 k.7 hkI.8 hkR.9.
+         (((((SidR_1( ttest.4, I.5, R.6, hkI.8, hkR.9, k.7 ) @ #i1.2) &
+             (K( k.7 ) @ #i2.3)) &
+            (All #i3.10 t.11. (EphkRev( t.11 ) @ #i3.10) ==> (F))) &
+           (All #i3.12 a.13. (LtkRev( a.13 ) @ #i3.12) ==> (F))) &
+          (All #i3.14. (SesskRev( ttest.4 ) @ #i3.14) ==> (F))) &
+         (All #i3.15 #i4.16 tpartner.17 kpartner.18.
+           ((SidI_2( tpartner.17, I.5, R.6, hkI.8, hkR.9, kpartner.18 ) @ #i3.15) &
+            (SesskRev( tpartner.17 ) @ #i4.16)) ==>
+           (F))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex #i1 #i2.1 ttest.2 I.3 R.4 k.5 hkI.6 hkR.7.
-  (SidR_1( ttest.2, I.3, R.4, hkI.6, hkR.7, k.5 ) @ #i1) &
-  (K( k.5 ) @ #i2.1)
- &
-  (All #i3.8 t.9. (EphkRev( t.9 ) @ #i3.8) ==> F) &
-  (All #i3.10 a.11. (LtkRev( a.11 ) @ #i3.10) ==> F) &
-  (All #i3.12. (SesskRev( ttest.2 ) @ #i3.12) ==> F) &
-  (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-    (SidI_2( tpartner.15, I.3, R.4, hkI.6, hkR.7, kpartner.16 ) @ #i3.13) &
-    (SesskRev( tpartner.15 ) @ #i4.14)
-   ==>
-    F)"
+"(All #i x.1. (NotEq( x.1, x.1 ) @ #i) ==> F) &
+ (Ex #i1.2 #i2.3 ttest.4 I.5 R.6 k.7 hkI.8 hkR.9.
+   (SidR_1( ttest.4, I.5, R.6, hkI.8, hkR.9, k.7 ) @ #i1.2) &
+   (K( k.7 ) @ #i2.3)
+  &
+   (All #i3.10 t.11. (EphkRev( t.11 ) @ #i3.10) ==> F) &
+   (All #i3.12 a.13. (LtkRev( a.13 ) @ #i3.12) ==> F) &
+   (All #i3.14. (SesskRev( ttest.4 ) @ #i3.14) ==> F) &
+   (All #i3.15 #i4.16 tpartner.17 kpartner.18.
+     (SidI_2( tpartner.17, I.5, R.6, hkI.8, hkR.9, kpartner.18 ) @ #i3.15) &
+     (SesskRev( tpartner.17 ) @ #i4.16)
+    ==>
+     F))"
 */
 simplify
 solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
@@ -162,15 +174,16 @@ end
 /* Output
 maude tool: 'maude'
  checking version: 2.6. OK.
+ checking installation: OK.
 
 
-analyzing: data/examples/csf12/JKL_TS1_2004-KI.spthy
+analyzing: data/examples/csf12/JKL_TS1_2004_KI.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/JKL_TS1_2004-KI.spthy
+analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.387379s
+  processing time: 1.282965s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 
@@ -179,10 +192,10 @@ analyzed: data/examples/csf12/JKL_TS1_2004-KI.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/JKL_TS1_2004-KI.spthy
+analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.387379s
+  processing time: 1.282965s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 

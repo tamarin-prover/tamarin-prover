@@ -432,6 +432,7 @@ end
 /* Output
 maude tool: 'maude'
  checking version: 2.6. OK.
+ checking installation: OK.
 
 
 analyzing: data/examples/csf12/UM_wPFS.spthy
@@ -440,7 +441,7 @@ analyzing: data/examples/csf12/UM_wPFS.spthy
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.018258s
+  processing time: 2.812282s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 
@@ -452,7 +453,7 @@ summary of summaries:
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.018258s
+  processing time: 2.812282s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 
