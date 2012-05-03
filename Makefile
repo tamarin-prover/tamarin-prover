@@ -79,11 +79,11 @@ UM=UM_wPFS.spthy UM_PFS.spthy
 
 SDH=SignedDH_PFS.spthy SignedDH_eCK.spthy
 
-STS=STS-MAC.spthy STS-MAC-fix1.spthy STS-MAC-fix2.spthy
+STS=STS_MAC.spthy STS_MAC_fix1.spthy STS_MAC_fix2.spthy
 
-JKL1=JKL_TS1_2004-KI.spthy JKL_TS1_2008-KI.spthy
-JKL2=JKL_TS2_2004-KI_wPFS.spthy JKL_TS2_2008-KI_wPFS.spthy
-JKL3=JKL_TS3_2004-KI_wPFS.spthy JKL_TS3_2008-KI_wPFS.spthy
+JKL1=JKL_TS1_2004_KI.spthy JKL_TS1_2008_KI.spthy
+JKL2=JKL_TS2_2004_KI_wPFS.spthy JKL_TS2_2008_KI_wPFS.spthy
+JKL3=JKL_TS3_2004_KI_wPFS.spthy JKL_TS3_2008_KI_wPFS.spthy
 
 TMPRES=case-studies/temp-analysis.spthy
 TMPOUT=case-studies/temp-output.spthy
