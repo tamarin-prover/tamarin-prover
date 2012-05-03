@@ -111,7 +111,7 @@ destructionRules (StRule lhs@(viewTerm -> FApp (NonAC (f,_)) _) (RhsPosition pos
                  then (`evalFresh` avoid ([rhs,t']++uprems')) $ do
                      dfact <- kdFact Nothing t'
                      ufacts <- mapM (kuFact Nothing) uprems'
-                     concfact <- kdFact Nothing rhs
+                     concfact <- kdFact (Just CanExp) rhs
                      return [ Rule (DestrRule (BC.unpack f)) (dfact:ufacts) [concfact] [] ]
                  else []
     go _      (viewTerm -> Lit _)     (_:_)  =
