@@ -1,3 +1,14 @@
+* 0.4.1.0
+   - core prover:
+       - detect maude errors earlier
+
+   - GUI
+       - support for SVG output
+       - the network interface for the webserver is configurable now
+
+   - bugfixes:
+       - fix unit-test executed by 'test' mode
+
 * 0.4.0.0 The version we used for our CSF'12 paper
 
    - core prover:
