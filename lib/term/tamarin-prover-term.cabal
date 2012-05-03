@@ -2,7 +2,7 @@ name:               tamarin-prover-term
 
 cabal-version:      >= 1.8
 build-type:         Simple
-version:            0.5.0.0
+version:            0.4.1.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -52,7 +52,7 @@ library
 
       , HUnit                == 1.2.*
                           
-      , tamarin-prover-utils == 0.5.*
+      , tamarin-prover-utils == 0.4.1.*
 
 
     hs-source-dirs: src
