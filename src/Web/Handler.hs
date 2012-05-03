@@ -67,6 +67,7 @@ import Yesod.Json()
 import Data.Maybe
 import Data.Aeson
 import Data.Label
+import Data.String (fromString)
 -- import Data.Traversable (traverse)
 
 import qualified Data.Map as M
@@ -453,12 +454,14 @@ getTheoryGraphR idx path = withTheory idx $ \ti -> do
       yesod <- getYesod
       compact <- isNothing <$> lookupGetParam "uncompact"
       compress <- isNothing <$> lookupGetParam "uncompress"
-      png <- liftIO $ traceExceptions "getTheoryGraphR" $
-        pngThyPath
+      img <- liftIO $ traceExceptions "getTheoryGraphR" $
+        imgThyPath
+          (imageFormat yesod)
+          (dotCmd yesod)
           (workDir yesod)
           (graphStyle compact compress)
           (tiTheory ti) path
-      sendFile "image/png" png
+      sendFile (fromString . imageFormatMIME $ imageFormat yesod) img
   where
     graphStyle d c = dotStyle d . compression c
     dotStyle True = dotSequentCompact CompactBoringNodes

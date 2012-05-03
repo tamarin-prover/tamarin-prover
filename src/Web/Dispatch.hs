@@ -16,7 +16,8 @@ Portability :  non-portable
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module Web.Dispatch 
-  ( withWebUI 
+  ( withWebUI
+  , ImageFormat(..)
   )
 where
 
@@ -72,9 +73,11 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
           -> FilePath                        -- ^ Path to static content directory
+          -> FilePath                        -- ^ Path to dot binary
+          -> ImageFormat                       -- ^ The preferred image format
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
-withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug' stPath f = do
+withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug' stPath dotCmd' imgFormat' f = do
     thy    <- getTheos
     thrVar <- newMVar M.empty
     thyVar <- newMVar thy
@@ -89,6 +92,8 @@ withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug' st
         , theoryVar          = thyVar
         , threadVar          = thrVar
         , autosaveProofstate = autosave
+        , dotCmd             = dotCmd'
+        , imageFormat        = imgFormat'
         , debug              = debug'
         }
   where

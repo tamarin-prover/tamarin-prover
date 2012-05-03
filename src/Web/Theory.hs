@@ -14,7 +14,7 @@ Portability :  non-portable
 module Web.Theory
   ( htmlThyPath
 --  , htmlThyDbgPath
-  , pngThyPath
+  , imgThyPath
   , titleThyPath
   , theoryIndex
   , nextThyPath
@@ -382,9 +382,9 @@ htmlThyDbgPath thy path = go path
 -}
 
 -- | Render the image corresponding to the given theory path.
-pngThyPath :: FilePath -> (Sequent -> D.Dot ()) -> ClosedTheory
+imgThyPath :: ImageFormat -> FilePath -> FilePath -> (Sequent -> D.Dot ()) -> ClosedTheory
            -> TheoryPath -> IO FilePath
-pngThyPath dir compact thy path = go path
+imgThyPath imgFormat dotCommand dir compact thy path = go path
   where
     go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j)
     go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
@@ -406,20 +406,22 @@ pngThyPath dir compact thy path = go path
     -- Render a piece of dot code
     renderDotCode code = do
       let dotPath = dir </> getDotPath code
-          pngPath = addExtension dotPath "png"
+          imgPath = addExtension dotPath (show imgFormat)
 
-      pngGenerated <-
-        firstSuccess [ doesFileExist pngPath
-                     ,  writeFile dotPath code >> dotToPng "dot" dotPath pngPath
-                     , dotToPng "fdp" dotPath pngPath ]
-      return (if pngGenerated then pngPath else imageDir ++ "/img/delete.png")
+      imgGenerated <-
+        firstSuccess [ doesFileExist imgPath
+                     , writeFile dotPath code >> dotToImg "dot" dotPath imgPath
+                     , dotToImg "fdp" dotPath imgPath ]
+      return (if imgGenerated then imgPath else imageDir ++ "/img/delete.png")
 
-    dotToPng dotCmd dotFile pngFile = do
-      (ecode,_out,err) <- readProcessWithExitCode dotCmd ["-Tpng","-o",pngFile,dotFile] ""
+    dotToImg dotMode dotFile imgFile = do
+      (ecode,_out,err) <- readProcessWithExitCode dotCommand
+                              [ "-T"++show imgFormat, "-K"++dotMode, "-o",imgFile, dotFile]
+                              ""
       case ecode of
         ExitSuccess   -> return True
         ExitFailure i -> do
-          putStrLn $ "dotToPng: "++dotCmd++" failed with code "
+          putStrLn $ "dotToImg: "++dotCommand++" failed with code "
                       ++show i++" for file "++dotFile++":\n"++err
           return False
 

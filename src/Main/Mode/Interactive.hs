@@ -13,7 +13,10 @@ module Main.Mode.Interactive (
 
 import           Data.List
 import           Data.Maybe
+import           Data.String (fromString)
+import           Data.Char (toLower)
 import           Control.Basics
+import           Control.Exception (handle, IOException)
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 import           System.Directory (doesFileExist, doesDirectoryExist)
@@ -47,7 +50,9 @@ interactiveMode = tamarinMode
 
     interactiveFlags =
       [ flagOpt "" ["port","p"] (updateArg "port") "PORT" "Port to listen on"
-      -- , flagOpt "" ["datadir"]  (updateArg "datadir") "DATADIR" "Directory with data"
+      , flagOpt "" ["interface","i"] (updateArg "interface") "INTERFACE"
+                "Interface to listen on (use '*4' for all IPv4 interfaces)"
+      , flagOpt "" ["image-format"] (updateArg "image-format") "PNG|SVG" "image format used for graphs"
       , flagNone ["debug"] (addEmptyArg "debug") "Show server debugging output"
       -- , flagNone ["autosave"] (addEmptyArg "autosave") "Automatically save proof state"
       -- , flagNone ["loadstate"] (addEmptyArg "loadstate") "Load proof state if present"
@@ -75,31 +80,24 @@ run thisMode as = case findArg "workDir" as of
           _ <- ensureMaude as
           putStrLn ""
           port <- readPort
-          dataDir <- readDataDir
-          let serverUrl = "http://127.0.0.1:" ++ show port 
+          dataDir <- getDataDir
+          let webUrl = serverUrl (fromString interface) port
           putStrLn $ intercalate "\n"
             [ "The server is starting up on port " ++ show port ++ "."
-            , "Browse to " ++ serverUrl ++ " once the server is ready."
+            , "Browse to " ++ webUrl ++ " once the server is ready."
             , ""
             , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
             ]
           withWebUI 
-            ("Finished loading theories ... server ready at \n\n    " ++ serverUrl ++ "\n")
+            ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
             workDir (argExists "loadstate" as) (argExists "autosave" as)
             (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
-            (argExists "debug" as) dataDir
-            (Warp.runSettings
-                 (defaultSettings { settingsHost = Host "127.0.0.1",
-                                    settingsPort = port}))
+            (argExists "debug" as) dataDir (dotPath as) readImageFormat
+            (runWarp port)
         else 
           helpAndExit thisMode
             (Just $ "directory '" ++ workDir ++ "' does not exist.")
   where
-    -- Datadir argument
-    readDataDir =
-      case findArg "datadir" as of
-        [d] -> return d
-        _   -> getDataDir
 
     -- Port argument
     ----------------
@@ -108,5 +106,32 @@ run thisMode as = case findArg "workDir" as of
       when
         (argExists "port" as && isNothing port) 
         (putStrLn $ "Unable to read port from argument `"
-                    ++fromMaybe "" (findArg "port" as)++"'. Using default.")
+                    ++ fromMaybe "" (findArg "port" as) ++ "'. Using default.")
       return $ fromMaybe Web.Settings.defaultPort port
+
+    -- Interface argument, we use 127.0.0.1 as default
+    --------------------------------------------------
+    interface = fromMaybe "127.0.0.1" $ findArg "interface" as
+
+    readImageFormat = case map toLower <$> findArg "image-format" as of
+                          Just "svg" -> SVG
+                          Just "png" -> PNG
+                          Nothing    -> PNG
+                          _          -> error "image-format must be one of PNG|SVG"
+
+    serverUrl host port = "http://" ++ hostString ++ ":" ++ show port
+      where
+        hostString = case host of
+                         Host s -> s
+                         _      -> "127.0.0.1" -- 127.0.0.1 should work for HostAny..
+
+    runWarp port wapp =
+        handle (\e -> err (e::IOException))
+            (Warp.runSettings
+               (defaultSettings { settingsHost = fromString interface
+                                , settingsPort = port})
+               wapp)
+
+    err e = error $ "Starting the webserver on "++interface++" failed: \n"
+                    ++ show e
+                    ++ "\nNote that you can use '--interface=\"*4\"' for binding to all interfaces."

@@ -33,6 +33,9 @@ module Web.Types
   , RenderUrl
   -- , GenericWidget
   , Widget
+  -- Image rendering
+  , ImageFormat(..)
+  , imageFormatMIME
   ) 
 where
 
@@ -77,6 +80,18 @@ type TheoryMap = M.Map TheoryIdx TheoryInfo
 -- | Type synonym representing a map of threads.
 type ThreadMap = M.Map T.Text ThreadId
 
+-- | The image format used for rendering graphs.
+data ImageFormat = PNG | SVG
+
+instance Show ImageFormat where
+    show PNG = "png"
+    show SVG = "svg"
+
+-- | convert image format to MIME type.
+imageFormatMIME :: ImageFormat -> String
+imageFormatMIME PNG = "image/png"
+imageFormatMIME SVG = "image/svg+xml"
+
 -- | The so-called site argument for our application, which can hold various
 -- information that can use to keep info that needs to be available to the 
 -- handler functions.
@@ -96,6 +111,10 @@ data WebUI = WebUI
     -- ^ MVar that holds the thread map
   , autosaveProofstate :: Bool
     -- ^ Automatically store theory map
+  , dotCmd :: FilePath
+    -- ^ The dot command
+  , imageFormat :: ImageFormat
+    -- ^ The image-format used for rendering graphs
   , debug :: Bool
     -- ^ Output debug messages
   }
