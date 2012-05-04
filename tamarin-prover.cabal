@@ -158,19 +158,19 @@ executable tamarin-prover
         , blaze-html        == 0.4.*
         , http-types        == 0.6.*
         , blaze-builder     == 0.3.*
-        , yesod-core        == 0.10.*
-        , yesod-json        == 0.3.*
-        , yesod-static      == 0.10.*
+        , yesod-core        == 1.0.*
+        , yesod-json        == 1.0.*
+        , yesod-static      == 1.0.*
         -- , yesod-form        == 0.4.*   -- required once we reactivate editing
         , text              == 0.11.*
-        , wai               == 1.1.*
-        , hamlet            == 0.10.*
-        , warp              == 1.1.*
+        , wai               == 1.2.*
+        , hamlet            == 1.0.*
+        , warp              == 1.2.*
         , aeson             == 0.6.*
         , old-locale        == 1.0.*
         , monad-control     == 0.3.*
-        , lifted-base
-        , threads           == 0.4.*
+        , lifted-base       == 0.1.*
+        , threads           == 0.5.*
 
     build-depends:
         base              == 4.*

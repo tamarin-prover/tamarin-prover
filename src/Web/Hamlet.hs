@@ -123,7 +123,7 @@ rootTpl theories = [whamlet|
       <p>
         \^{theoriesTpl theories}
       <h2>Loading a new theory
-      <p
+      <p>
         You can load a new theory file from disk in order to work with it.
       <form class=root-form enctype="multipart/form-data" action=@{RootR} method=POST>
         Filename:
@@ -282,12 +282,12 @@ pathTpl :: RenderUrl
         -> IO Widget
 pathTpl _ info TheoryHelp = return [whamlet|
     <h3>Theory information</h3>
-      <ul
+      <ul>
         <li>Theory: #{get thyName $ tiTheory info}
         <li>Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
         <li>Origin: #{show $ tiOrigin info}
     <div id="help">
-      <h3>Quick introduction</h3>
+      <h3>Quick introduction
       <noscript>
         <div class="warning">
           Warning: JavaScript must be enabled for the <span class="tamarin">Tamarin</span> prover GUI to function properly.

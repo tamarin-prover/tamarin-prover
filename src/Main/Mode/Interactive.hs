@@ -25,7 +25,7 @@ import           Web.Dispatch
 import qualified Web.Settings
 import qualified Network.Wai.Handler.Warp as Warp
 import           Network.Wai.Handler.Warp (defaultSettings, settingsHost
-                                          , settingsPort, HostPreference(Host))
+                                          , settingsPort )
 
 import           Main.Console
 import           Main.Environment
@@ -52,7 +52,7 @@ interactiveMode = tamarinMode
       [ flagOpt "" ["port","p"] (updateArg "port") "PORT" "Port to listen on"
       , flagOpt "" ["interface","i"] (updateArg "interface") "INTERFACE"
                 "Interface to listen on (use '*4' for all IPv4 interfaces)"
-      , flagOpt "" ["image-format"] (updateArg "image-format") "PNG|SVG" "image format used for graphs"
+      , flagOpt "" ["image-format"] (updateArg "image-format") "PNG|SVG" "image format used for graphs (default PNG)"
       , flagNone ["debug"] (addEmptyArg "debug") "Show server debugging output"
       -- , flagNone ["autosave"] (addEmptyArg "autosave") "Automatically save proof state"
       -- , flagNone ["loadstate"] (addEmptyArg "loadstate") "Load proof state if present"
@@ -81,7 +81,7 @@ run thisMode as = case findArg "workDir" as of
           putStrLn ""
           port <- readPort
           dataDir <- getDataDir
-          let webUrl = serverUrl (fromString interface) port
+          let webUrl = serverUrl port
           putStrLn $ intercalate "\n"
             [ "The server is starting up on port " ++ show port ++ "."
             , "Browse to " ++ webUrl ++ " once the server is ready."
@@ -119,11 +119,10 @@ run thisMode as = case findArg "workDir" as of
                           Nothing    -> PNG
                           _          -> error "image-format must be one of PNG|SVG"
 
-    serverUrl host port = "http://" ++ hostString ++ ":" ++ show port
+    serverUrl port = "http://" ++ address ++ ":" ++ show port
       where
-        hostString = case host of
-                         Host s -> s
-                         _      -> "127.0.0.1" -- 127.0.0.1 should work for HostAny..
+        address | interface `elem` ["*","*4","*6"] = "127.0.0.1"
+                | otherwise                        = interface
 
     runWarp port wapp =
         handle (\e -> err (e::IOException))
