@@ -12,16 +12,14 @@ Portability :  non-portable
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Web.Instances where
 
-import Data.DeriveTH
-import Data.Binary
+import           Data.Binary
+import           Data.DeriveTH
 
-import Web.Types
-import Data.Time.Calendar
-import Data.Time.LocalTime
-import Data.Fixed
-import Data.Set ()
-import Data.Map ()
-import Control.DeepSeq
+import           Control.DeepSeq
+import           Data.Fixed
+import           Data.Time.Calendar
+import           Data.Time.LocalTime
+import           Web.Types
 
 $( derive makeBinary ''TheoryOrigin)
 $( derive makeBinary ''TheoryInfo)

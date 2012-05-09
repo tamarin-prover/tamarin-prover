@@ -3,35 +3,34 @@
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 -- Portability : GHC only
 --
--- Guarded Formulas.
-module Theory.Proof.Guarded (
+-- Guarded formulas.
+module Theory.Constraint.System.Guarded (
 
-  -- * Guarded logical formulas
+  -- * Guarded formulas
     Guarded(..)
   , LGuarded
   , LNGuarded
-  
-  -- ** Formula Construction
+
+  -- ** Smart constructors
   , gfalse
   , gtrue
   , gdisj
   , gconj
+  , gex
+  , gall
+  , gnot
+  , ginduct
 
-  -- ** Traversals
+  , formulaToGuarded
+
+  -- ** Transformation
+  , simplifyGuarded
+
   , mapGuardedAtoms
-
-  -- ** Conversions to non-bound representations
-  , fromFormula
-  , fromFormulaNegate
-  , bvarToLVar
-
-  -- ** Induction
-  , applyInduction
-  , negateGuarded
 
   -- ** Queries
   , isConjunction
@@ -39,9 +38,9 @@ module Theory.Proof.Guarded (
   , isAllGuarded
   , isExGuarded
 
-  -- ** Opening quantifiers
-  , openExGuarded
-  , openAllGuarded
+  -- ** Conversions to non-bound representations
+  , bvarToLVar
+  , openGuarded
 
   -- ** Substitutions
   , substBound
@@ -54,28 +53,28 @@ module Theory.Proof.Guarded (
 
   ) where
 
-import Control.Applicative
-import Control.Monad.Error
-import Control.DeepSeq
+import           Control.Applicative
+import           Control.DeepSeq
+import           Control.Monad.Error
 
-import Data.Traversable hiding ( mapM, sequence )
-import Data.List
-import Data.Monoid   (mappend, mconcat)
-import Data.Foldable (Foldable(..), foldMap)
-import Data.Either   (partitionEithers)
-import Data.DeriveTH
-import Data.Binary
+import           Debug.Trace
 
+import           Data.Binary
+import           Data.DeriveTH
+import           Data.Either                (partitionEithers)
+import           Data.Foldable              (Foldable(..), foldMap)
+import           Data.List
+import           Data.Monoid                (mappend, mconcat)
+import           Data.Traversable           hiding ( mapM, sequence )
 
-import Theory.Rule
-import Logic.Connectives
-import Theory.Atom
-import Theory.Formula
+import           Logic.Connectives
 
-import Text.PrettyPrint.Highlight
+import           Text.PrettyPrint.Highlight
 
-import Control.Monad.Fresh hiding ( mapM )
-import Control.Arrow
+import           Control.Arrow
+import           Control.Monad.Fresh        hiding ( mapM )
+
+import           Theory.Model
 
 
 ------------------------------------------------------------------------------
@@ -155,9 +154,9 @@ mapGuardedAtoms :: (Integer -> Atom (VTerm c (BVar v))
                 -> Atom (VTerm d (BVar w)))
                 -> Guarded s c v
                 -> Guarded s d w
-mapGuardedAtoms f = 
+mapGuardedAtoms f =
     foldGuardedScope (\i a -> GAto $ f i a) GDisj GConj
-                     (\qua ss i as gf -> GGuarded qua ss (map (f i) as) gf) 
+                     (\qua ss i as gf -> GGuarded qua ss (map (f i) as) gf)
 
 ------------------------------------------------------------------------------
 -- Instances
@@ -213,7 +212,7 @@ substBound s = mapGuardedAtoms (\j a -> substBoundAtom [(i+j,v) | (i,v) <- s] a)
 -- | @substFreeAtom s a@ substitutes each occurence of a free variables @v@
 -- in @dom(s)@ with the bound variables @i=s(v)@ in the atom @a@.
 substFreeAtom :: Ord c
-              => [(LVar,Integer)] 
+              => [(LVar,Integer)]
               -> Atom (VTerm c (BVar LVar)) -> Atom (VTerm c (BVar LVar))
 substFreeAtom s = fmap (fmapTerm (fmap subst))
  where subst fv@(Free x) = case lookup x s of
@@ -230,11 +229,17 @@ substFree s = mapGuardedAtoms (\j a -> substFreeAtom [(v,i+j) | (v,i) <- s] a)
 -- | Assuming that there are no more bound variables left in an atom of a
 -- formula, convert it to an atom with free variables only.
 bvarToLVar :: Ord c => Atom (VTerm c (BVar LVar)) -> Atom (VTerm c LVar)
-bvarToLVar = 
+bvarToLVar =
     fmap (fmapTerm (fmap (foldBVar boundError id)))
   where
-    boundError v = error $ "bvarToLVar: left-over bound variable '" 
+    boundError v = error $ "bvarToLVar: left-over bound variable '"
                            ++ show v ++ "'"
+
+-- | Provided an 'Atom' does not contain a bound variable, it is converted to
+-- the type of atoms without bound varaibles.
+unbindAtom :: (Ord c, Ord v) => Atom (VTerm c (BVar v)) -> Maybe (Atom (VTerm c v))
+unbindAtom = traverse (traverseTerm (traverse (foldBVar (const Nothing) Just)))
+
 
 ------------------------------------------------------------------------------
 -- Opening and Closing
@@ -250,14 +255,14 @@ openGuarded :: (Ord c, MonadFresh m)
 openGuarded (GGuarded qua vs as gf) = do
     xs <- mapM (\(n,s) -> freshLVar n s) vs
     return $ Just (qua, xs, openas xs, opengf xs)
-  where 
+  where
     openas xs = map (bvarToLVar . substBoundAtom (subst xs)) as
     opengf xs = substBound (subst xs) gf
     subst xs  = zip [0..] (reverse xs)
 openGuarded _ = return Nothing
 
 -- | @closeGuarded vs ats gf@ is a smart constructor for @GGuarded@.
-closeGuarded :: Ord c => Quantifier -> [LVar] -> [Atom (VTerm c LVar)] 
+closeGuarded :: Ord c => Quantifier -> [LVar] -> [Atom (VTerm c LVar)]
              -> LGuarded c -> LGuarded c
 closeGuarded qua vs as gf = GGuarded qua vs' as' gf'
  where as' = map (substFreeAtom s . fmap (fmapTerm (fmap Free))) as
@@ -265,45 +270,10 @@ closeGuarded qua vs as gf = GGuarded qua vs' as' gf'
        s   = zip (reverse vs) [0..]
        vs' = map (lvarName &&& lvarSort) vs
 
--- | @openAllGuarded gf@ returns @Just (vs,ats,gf')@ if @gf@ is a guarded
--- all quantified trace formula and @Nothing@ otherwise. In the first case,
--- @vs@ is a list of fresh variables, @ats@ is the antecedent, and @gf'@ is
--- the succedent. In both antecedent and succedent, the bound variables are
--- replaced by @vs@.
-openAllGuarded :: (Ord c, MonadFresh m)
-               => LGuarded c -> m (Maybe ([LVar],[Atom (VTerm c LVar)], LGuarded c))
-openAllGuarded = (fmap adapt) . openGuarded
-  where
-    adapt (Just (All, vs, as, gf)) = Just (vs, as, gf)
-    adapt _                        = Nothing
-
--- | @openExGuarded gf@ returns @Just (vs,gf')@ if @gf@ is a guarded
--- existentially quantified trace formula and @Nothing@ otherwise. In the
--- first case, @vs@ is a list of fresh variables and @gf'@ is the body of @gf@
--- with the bound variable replaced by @v@.
-openExGuarded :: (MonadFresh m, Eq c, Ord c) 
-             => LGuarded c -> m (Maybe ([LVar], LGuarded c))
-openExGuarded (GGuarded Ex ss as gf0) = do
-    xs <- mapM (uncurry freshLVar) ss
-    return $ Just (xs, substBound (zip [0..] (reverse xs)) gf)
-  where 
-    gf = gconj (map GAto as ++ [gf0])
-openExGuarded _ = return Nothing
-
 
 ------------------------------------------------------------------------------
 -- Conversion and negation
 ------------------------------------------------------------------------------
-
--- | @fromFormulaNegate f@ returns a guarded formula @gf@ that is
--- equivalent to @f@ if possible.
-fromFormula :: LNFormula  -> Either String LNGuarded
-fromFormula = convert False
-
--- | @fromFormulaNegate f@ returns a guarded formula @gf@ that is
--- equivalent to @not f@ if possible.
-fromFormulaNegate :: LNFormula  -> Either String LNGuarded
-fromFormulaNegate = convert True
 
 type LNGuarded = Guarded (String,LSort) Name LVar
 
@@ -320,49 +290,59 @@ gfalse = gtf False
 gtrue :: Guarded s c v
 gtrue = gtf True
 
--- | @gnot a@ returns the guarded formula f with @not a <-> f@.
-gnot :: Atom (VTerm c (BVar v)) -> Guarded s c v
-gnot a  = GGuarded All [] [a] gfalse
--- FIXME: This was the old code. However, it should be necessary to quantify
--- the frees, as we are working in a closed formula always.
--- gnot a  = GGuarded All (map (lvarName &&& lvarSort) $ frees a) [a] gfalse
+-- | @gnotAtom a@ returns the guarded formula f with @not a <-> f@.
+gnotAtom :: Atom (VTerm c (BVar v)) -> Guarded s c v
+gnotAtom a  = GGuarded All [] [a] gfalse
 
 -- | @gconj gfs@ smart constructor for the conjunction of gfs.
-gconj :: (Eq s, Eq c, Eq v) => [Guarded s c v] -> Guarded s c v
-gconj gfs0 = case concatMap flatten gfs0 of 
+gconj :: (Ord s, Ord c, Ord v) => [Guarded s c v] -> Guarded s c v
+gconj gfs0 = case concatMap flatten gfs0 of
     [gf]                      -> gf
     gfs | any (gfalse ==) gfs -> gfalse
+        -- FIXME: See 'sortednub' below.
         | otherwise           -> GConj $ Conj $ nub gfs
   where
     flatten (GConj conj) = concatMap flatten $ getConj conj
     flatten gf           = [gf]
 
 -- | @gdisj gfs@ smart constructor for the disjunction of gfs.
-gdisj :: (Eq s, Eq c, Eq v) => [Guarded s c v] -> Guarded s c v
+gdisj :: (Ord s, Ord c, Ord v) => [Guarded s c v] -> Guarded s c v
 gdisj gfs0 = case concatMap flatten gfs0 of
     [gf]                     -> gf
     gfs | any (gtrue ==) gfs -> gtrue
+        -- FIXME: Consider using 'sortednub' here. This yields stronger
+        -- normalizaton for formulas. However, it also means that we loose
+        -- invariance under renaming free variables, as the order changes,
+        -- when they are renamed.
         | otherwise          -> GDisj $ Disj $ nub gfs
   where
     flatten (GDisj disj) = concatMap flatten $ getDisj disj
     flatten gf           = [gf]
 
 -- @ A smart constructor for @GGuarded Ex@ that removes empty quantifications.
-gex :: (Eq s, Eq c, Eq v)
+gex :: (Ord s, Ord c, Ord v)
     => [s] -> [Atom (VTerm c (BVar v))] -> Guarded s c v -> Guarded s c v
 gex [] as gf = gconj (map GAto as ++ [gf])
 gex ss as gf = GGuarded Ex ss as gf
 
--- @ A smart constructor for @GGuarded All@ that does nothing special
--- (currently).
-gall :: [s] -> [Atom (VTerm c (BVar v))] -> Guarded s c v -> Guarded s c v
-gall = GGuarded All
+-- @ A smart constructor for @GGuarded All@ that drops implications to 'gtrue'
+-- and removes empty premises.
+gall :: (Eq s, Eq c, Eq v)
+     => [s] -> [Atom (VTerm c (BVar v))] -> Guarded s c v -> Guarded s c v
+gall _  []   gf               = gf
+gall _  _    gf | gf == gtrue = gtrue
+gall ss atos gf               = GGuarded All ss atos gf
+
+-- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
+-- equivalent to @fm@ if possible.
+formulaToGuarded :: LNFormula  -> Either String LNGuarded
+formulaToGuarded = convert False
 
 -- | @convert neg f@ returns @Nothing@ if @f@ cannot be converted,
 -- @Just gf@ such that @mneg f <-> gf@ with @mneg = id@ if @neg@ is @False@
 -- and @mneg=not@ if @neg@ is true.
 convert :: Bool -> LNFormula  -> Either String LNGuarded
-convert True  (Ato a) = pure $ gnot a
+convert True  (Ato a) = pure $ gnotAtom a
 convert False (Ato a) = pure $ GAto a
 
 convert polarity (Not f) = convert (not polarity) f
@@ -373,9 +353,9 @@ convert False (Conn And f g) = gconj <$> mapM (convert False) [f, g]
 convert True  (Conn Or f g)  = gconj <$> mapM (convert True)  [f, g]
 convert False (Conn Or f g)  = gdisj <$> mapM (convert False) [f, g]
 
-convert True  (Conn Imp f g         ) = 
+convert True  (Conn Imp f g         ) =
     gconj <$> sequence [convert False f, convert True  g]
-convert False (Conn Imp f g         ) = 
+convert False (Conn Imp f g         ) =
     gdisj <$> sequence [convert True  f, convert False g]
 
 convert polarity    (TF b) = pure $ gtf (polarity /= b)
@@ -396,9 +376,9 @@ convert polarity f0@(Qua qua0 _ _) =
               -- all existentially quantified variables must be guarded
               unguarded = xs \\ guardedvars
 
-          unless (null unguarded) $ throwError $ 
+          unless (null unguarded) $ throwError $
               "unguarded variables " ++ show unguarded ++ " in " ++ show f0
-         
+
           gf <- (if polarity then gdisj else gconj)
                   <$> mapM (convert polarity) fs
           return $ closeGuarded qua xs as gf
@@ -430,7 +410,7 @@ convert polarity f0@(Qua qua0 _ _) =
         (++) <$> collectAllowedAtoms f1 <*> collectAllowedAtoms f2
       collectAllowedAtoms (Ato a@(Action _ _)) = return [bvarToLVar a]
       collectAllowedAtoms (Ato e@(EqE _ _))    = return [bvarToLVar e]
-      collectAllowedAtoms na                   = 
+      collectAllowedAtoms na                   =
         throwError $ show na ++ " not allowed in antecedent"
 
 convert _     (Conn Iff _ _) =
@@ -460,14 +440,14 @@ doublyGuarded = either (const False) (const True) . satisfiedByEmptyTrace
 -}
 
 -- | Negate a guarded formula.
-negateGuarded :: (Eq s, Eq c, Eq v) 
+gnot :: (Ord s, Ord c, Ord v)
               => Guarded s c v -> Guarded s c v
-negateGuarded = 
+gnot =
     go
   where
     go (GGuarded All ss as gf) = gex  ss as $ go gf
     go (GGuarded Ex ss as gf)  = gall ss as $ go gf
-    go (GAto ato)              = gnot ato
+    go (GAto ato)              = gnotAtom ato
     go (GDisj disj)            = gconj $ map go (getDisj disj)
     go (GConj conj)            = gdisj $ map go (getConj conj)
 
@@ -475,28 +455,28 @@ negateGuarded =
 -- | Checks if a doubly guarded formula is satisfied by the empty trace;
 -- returns @'Left' errMsg@ if the formula is not doubly guarded.
 satisfiedByEmptyTrace :: Guarded s c v -> Either String Bool
-satisfiedByEmptyTrace = 
-  foldGuarded 
+satisfiedByEmptyTrace =
+  foldGuarded
     (\_ato -> throwError "atom outside the scope of a quantifier")
-    (liftM or  . sequence . getDisj) 
+    (liftM or  . sequence . getDisj)
     (liftM and . sequence . getConj)
-    (\qua _ss _as _gf -> return $ qua == All)  
+    (\qua _ss _as _gf -> return $ qua == All)
     -- the empty trace always satisfies guarded all-quantification
     -- and always dissatisfies guarded ex-quantification
 
 -- | Tries to convert a doubly guarded formula to an induction hypothesis.
 -- Returns @'Left' errMsg@ if the formula is not last-free or not doubly
 -- guarded.
-toInductionHypothesis :: Eq c => LGuarded c -> Either String (LGuarded c)
+toInductionHypothesis :: Ord c => LGuarded c -> Either String (LGuarded c)
 toInductionHypothesis =
     go
   where
     go (GGuarded qua ss as gf) = do
         gf' <- go gf
         return $ case qua of
-          All -> GGuarded Ex  ss as (gconj $ (gnot <$> lastAtos) ++ [gf'])
+          All -> GGuarded Ex  ss as (gconj $ (gnotAtom <$> lastAtos) ++ [gf'])
           Ex  -> GGuarded All ss as (gdisj $ (GAto <$> lastAtos) ++ [gf'])
-        
+
       where
         lastAtos :: [Atom (VTerm c (BVar LVar))]
         lastAtos = do
@@ -505,14 +485,14 @@ toInductionHypothesis =
 
     go (GAto (Less i j)) = return $ gdisj [GAto (EqE i j), GAto (Less j i)]
     go (GAto (Last _))   = throwError "formula not last-free"
-    go (GAto ato)        = return $ gnot ato
+    go (GAto ato)        = return $ gnotAtom ato
     go (GDisj disj)      = gconj <$> traverse go (getDisj disj)
     go (GConj conj)      = gdisj <$> traverse go (getConj conj)
 
 -- | Try to prove the formula by applying induction over the trace.
 -- Returns @'Left' errMsg@ if this is not possible.
-applyInduction :: Eq c => LGuarded c -> Either String (LGuarded c)
-applyInduction gf = do
+ginduct :: Ord c => LGuarded c -> Either String (LGuarded c)
+ginduct gf = do
     baseCase <- satisfiedByEmptyTrace gf
     if baseCase
       then throwError "cannot apply induction: empty trace is an attack"
@@ -520,16 +500,60 @@ applyInduction gf = do
         gfIH <- toInductionHypothesis gf
         return (gconj [gf, gfIH])
 
+------------------------------------------------------------------------------
+-- Formula Simplification
+------------------------------------------------------------------------------
+
+-- | Simplify a 'Guarded' formula by replacing atoms with their truth value,
+-- if it can be determined.
+simplifyGuarded :: (LNAtom -> Maybe Bool)
+                -- ^ Partial assignment for truth value of atoms.
+                -> LNGuarded
+                -- ^ Original formula
+                -> Maybe LNGuarded
+                -- ^ Simplified formula, provided some simplification was
+                -- performed.
+simplifyGuarded valuation fm0
+    | fm1 /= fm0 = trace (render ppMsg) (Just fm1)
+    | otherwise  = Nothing
+  where
+    ppFm  = nest 2 . doubleQuotes . prettyGuarded
+    ppMsg = nest 2 $ text "simplified formula:" $-$
+                     nest 2 (vcat [ ppFm fm0, text "to", ppFm fm1])
+
+    fm1 = simp fm0
+
+    simp fm@(GAto ato)         = maybe fm gtf (valuation =<< unbindAtom ato)
+    simp (GDisj fms)           = gdisj $ map simp $ getDisj fms
+    simp (GConj fms)           = gconj $ map simp $ getConj fms
+    simp (GGuarded All [] atos gf)
+      | any ((Just False ==) . snd) annAtos = gtrue
+      | otherwise                           =
+          -- keep all atoms that we cannot evaluate yet.
+          -- NOTE: Here we are missing the opportunity to change the valuation
+          -- for evaluating the body 'gf'. We could add all atoms that we have
+          -- as a premise.
+          gall [] (fst <$> filter ((Nothing ==) . snd) annAtos) (simp gf)
+      where
+        -- cache the possibly expensive evaluation of the valuation
+        annAtos = (\x -> (x, valuation =<< unbindAtom x)) <$> atos
+
+    -- Note that existentials without quantifiers are already eliminated by
+    -- 'gex'. Moreover, we dealay simplification inside guarded all
+    -- quantification and guarded existential quantifiers. Their body will be
+    -- simplified once the quantifiers are gone.
+    simp fm@(GGuarded _ _ _ _) = fm
+
 
 ------------------------------------------------------------------------------
 -- Pretty Printing
 ------------------------------------------------------------------------------
 
 -- | Pretty print a formula.
-prettyGuarded :: HighlightDocument d 
+prettyGuarded :: HighlightDocument d
               => LNGuarded      -- ^ Guarded Formula.
               -> d              -- ^ Pretty printed formula.
-prettyGuarded f = 
+prettyGuarded f =
     pp f `evalFreshAvoiding` f
   where
     pp :: HighlightDocument d => LNGuarded -> Fresh d

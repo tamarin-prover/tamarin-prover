@@ -4,7 +4,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- AC-unification of DH terms using Maude as a backend.
@@ -16,13 +16,13 @@ module Term.Maude.Process (
 
   -- * Unification using Maude
   , unifyViaMaude
-  
+
   -- * Matching using Maude
   , matchViaMaude
 
   -- * Normalization using Maude
   , normViaMaude
-  
+
   -- * Managing the persistent Maude process
   , WithMaude
 ) where
@@ -87,7 +87,7 @@ data MaudeProcess = MP {
     }
 
 -- | @startMaude@ starts a new instance of Maude and returns a Handle to it.
-startMaude :: FilePath -> MaudeSig -> IO MaudeHandle 
+startMaude :: FilePath -> MaudeSig -> IO MaudeHandle
 startMaude maudePath maudeSig = do
     mv <- newMVar =<< startMaudeProcess maudePath maudeSig
     -- Add a finalizer to the MVar that stops maude.
@@ -108,13 +108,13 @@ startMaudeProcess maudePath maudeSig = do
     -- input the maude theory
     executeMaudeCommand hin hout (ppTheory maudeSig)
     return (MP hin hout herr hproc 0 0 0)
-  where 
+  where
     maudeCmd
-      | dEBUGMAUDE = "sh -c \"tee /tmp/maude.input | " 
+      | dEBUGMAUDE = "sh -c \"tee /tmp/maude.input | "
                      ++ maudePath ++ " -no-tecla -no-banner -no-wrap -batch "
                      ++ "\" | tee /tmp/maude.output"
-      | otherwise  = 
-          maudePath ++ " -no-tecla -no-banner -no-wrap -batch " 
+      | otherwise  =
+          maudePath ++ " -no-tecla -no-banner -no-wrap -batch "
     executeMaudeCommand hin hout cmd =
         B.hPutStr hin cmd >> hFlush hin >> getToDelim hout >> return ()
     setupCmds = [ "set show command off .\n"
@@ -166,7 +166,7 @@ callMaude hnd updateStatistics cmd = do
         return (mp', res)
 
 -- | Compute a result via Maude.
-computeViaMaude :: 
+computeViaMaude ::
        (Show a, Show b, Ord c)
     => MaudeHandle
     -> (MaudeProcess -> MaudeProcess)                                 -- ^ Update statistics
@@ -201,7 +201,7 @@ unifyCmd eqs =
 
 -- | @unifyViaMaude hnd eqs@ computes all AC unifiers of @eqs@ using the
 --   Maude process @hnd@.
-unifyViaMaude 
+unifyViaMaude
     :: (IsConst c , Show (Lit c LVar), Ord c)
     => MaudeHandle
     -> (c -> LSort) -> [Equal (VTerm c LVar)] -> IO [SubstVFresh c LVar]
@@ -233,18 +233,21 @@ matchCmd eqs =
 matchViaMaude :: (IsConst c , Show (Lit c LVar), Ord c)
               => MaudeHandle
               -> (c -> LSort)
-              -> [Match (VTerm c LVar)]
+              -> Match (VTerm c LVar)
               -> IO [Subst c LVar]
-matchViaMaude _   _      []  = return [emptySubst]
-matchViaMaude hnd sortOf matcheqs =
-    computeViaMaude hnd incMatchCount toMaude fromMaude eqs
+matchViaMaude hnd sortOf matchProblem =
+    case flattenMatch matchProblem of
+      Nothing -> return []
+      Just [] -> return [emptySubst]
+      Just ms -> computeViaMaude hnd incMatchCount toMaude fromMaude
+                                 (uncurry Equal <$> ms)
   where
     msig = mhMaudeSig hnd
-    toMaude  = fmap matchCmd . mapM (traverse (lTermToMTerm sortOf)) 
+    toMaude  = fmap matchCmd . mapM (traverse (lTermToMTerm sortOf))
     fromMaude bindings reply =
         map (msubstToLSubstVFree bindings) <$> parseMatchReply msig reply
     incMatchCount mp = mp { matchCount = 1 + matchCount mp }
-    eqs = [Equal t p | MatchWith t p <- matcheqs ]
+
 
 ------------------------------------------------------------------------------
 -- Normalization of terms

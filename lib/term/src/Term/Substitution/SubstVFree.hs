@@ -6,7 +6,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Standard substitutions (with free variables).
@@ -137,7 +137,7 @@ emptySubst = Subst M.empty
 applySubst :: (IsConst c, IsVar v)
            => Subst c v -> Subst c v -> Subst c v
 applySubst subst subst' = mapRange (applyVTerm subst) subst'
-  
+
 -- | @compose s1 s2@ composes the substitutions s1 and s2. The result is
 --   @s1.s2@, i.e., it has the same effect as @(t s2) s1 = s1(s2(t))@
 --   when applied to a term @t@.
@@ -223,8 +223,8 @@ instance Apply LVar where
     apply subst x = maybe x extractVar $ imageOf subst x
       where
         extractVar (viewTerm -> Lit (Var x')) = x'
-        extractVar t              = 
-          error $ "apply (LVar): variable '" ++ show x ++ 
+        extractVar t              =
+          error $ "apply (LVar): variable '" ++ show x ++
                   "' substituted with term '" ++ show t ++ "'"
 
 instance Apply LNTerm where
@@ -244,6 +244,12 @@ instance Apply Bool where
 
 instance (Apply a, Apply b) => Apply (a, b) where
     apply subst (x,y) = (apply subst x, apply subst y)
+
+instance Apply a => Apply (Maybe a) where
+    apply subst = fmap (apply subst)
+
+instance (Apply a, Apply b) => Apply (Either a b) where
+    apply subst = either (Left . apply subst) (Right . apply subst)
 
 instance Apply a => Apply [a] where
     apply subst = fmap (apply subst)
@@ -266,12 +272,12 @@ instance Apply t => Apply (Equal t) where
 ----------------------------------------------------------------------
 
 -- | Pretty print a substitution.
-prettySubst :: (Ord c, Ord v, HighlightDocument d) 
+prettySubst :: (Ord c, Ord v, HighlightDocument d)
             => (v -> d) -> (Lit c v -> d) -> Subst c v -> [d]
-prettySubst ppVar ppLit = 
+prettySubst ppVar ppLit =
     map pp . M.toList . equivClasses . substToList
   where
-    pp (t, vs)  = prettyTerm ppLit t <-> operator_ " <~ {" <> 
+    pp (t, vs)  = prettyTerm ppLit t <-> operator_ " <~ {" <>
         (fsep $ punctuate comma $ map ppVar $ S.toList vs) <> operator_ "}"
 
 -- | Pretty print a substitution with logical variables.

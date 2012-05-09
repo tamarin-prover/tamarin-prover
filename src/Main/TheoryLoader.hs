@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -24,11 +24,11 @@ module Main.TheoryLoader (
 
   ) where
 
-import           Prelude hiding (id, (.))
+import           Prelude                             hiding (id, (.))
 
-import           Data.Monoid
-import           Data.Char (toLower)
+import           Data.Char                           (toLower)
 import           Data.Label
+import           Data.Monoid
 
 import           Control.Basics
 import           Control.Category
@@ -39,14 +39,15 @@ import           System.Directory
 import           Extension.Prelude
 
 import           Theory
-import           Theory.Parser
-import           Theory.Wellformedness
-import           Theory.AbstractInterpretation (EvaluationStyle(..))
+import           Theory.Text.Parser
+import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
+import           Theory.Tools.IntruderRules
+import           Theory.Tools.Wellformedness
 
 import           Main.Console
 import           Main.Environment
 
-import           Paths_tamarin_prover (getDataFileName)
+import           Paths_tamarin_prover                (getDataFileName)
 
 
 ------------------------------------------------------------------------------
@@ -60,7 +61,7 @@ intruderVariantsFile = "intruder_variants_dh.spthy"
 
 -- | Flags for loading a theory.
 theoryLoadFlags :: [Flag Arguments]
-theoryLoadFlags = 
+theoryLoadFlags =
   [ flagNone ["prove"] (addEmptyArg "addProofs")
       "Attempt to prove all security properties"
 
@@ -92,7 +93,7 @@ loadClosedWfThy as file = do
     thy <- loadOpen file
     case checkWellformedness thy of
       []     -> close thy
-      report -> do 
+      report -> do
           putStrLn $ "WARNING: ignoring the following errors"
           putStrLn $ renderDoc $ prettyWfErrorReport report
           close thy
@@ -105,7 +106,7 @@ loadClosedThyString = uncurry (>=>) . loadThyString
 
 -- | Load an open/closed theory from a file.
 loadThy :: Arguments -> (FilePath -> IO OpenTheory, OpenTheory -> IO ClosedTheory)
-loadThy as = loadGenericThy (parseOpenTheory (defines as)) as 
+loadThy as = loadGenericThy (parseOpenTheory (defines as)) as
 
 -- | Load an open/closed theory from a string.
 loadThyString :: Arguments -> (String -> IO OpenTheory, OpenTheory -> IO ClosedTheory)
@@ -114,7 +115,7 @@ loadThyString as = loadGenericThy loader as
     loader str =
       case parseOpenTheoryString (defines as) str of
         Right thy -> return thy
-        Left err -> error $ show err 
+        Left err -> error $ show err
 
 -- | The defined pre-processor flags in the argument.
 defines :: Arguments -> [String]
@@ -122,7 +123,7 @@ defines = findArg "defines"
 
 -- | Load an open/closed theory given a loader function.
 loadGenericThy :: (a -> IO OpenTheory)
-               -> Arguments 
+               -> Arguments
                -> (a -> IO OpenTheory, OpenTheory -> IO ClosedTheory)
 loadGenericThy loader as =
     (loader, (closeThy as) <=< tryAddIntrVariants)
@@ -139,18 +140,18 @@ loadGenericThy loader as =
                 (do intrVariants <- parseIntruderRulesDH variantsFile
                     return $ addIntrRuleACs intrVariants thy
                 )
-                (error $ "could not find intruder message deduction theory '" 
+                (error $ "could not find intruder message deduction theory '"
                            ++ variantsFile ++ "'")
          else return thy
 
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
-closeThy as = 
-      fmap (proveTheory prover . partialEvaluation) 
+closeThy as =
+      fmap (proveTheory prover . partialEvaluation)
     . closeTheory (maudePath as)
     -- FIXME: wf-check is at the wrong position here. Needs to be more
     -- fine-grained.
-    . wfCheck 
+    . wfCheck
   where
     -- handles to relevant arguments
     --------------------------------
@@ -170,17 +171,17 @@ closeThy as =
     -- wellformedness check
     -----------------------
     wfCheck :: OpenTheory -> OpenTheory
-    wfCheck thy = 
+    wfCheck thy =
       noteWellformedness
         (checkWellformedness thy) thy
 
     -- protocol transformation
     --------------------------
     prover :: Prover
-    prover 
+    prover
        | requireProofs = cutAttack $ maybe id boundProver proofBound autoProver
        | otherwise     = mempty
-       where 
+       where
          cutAttack = mapProverProof $ case map toLower <$> stopOnTrace of
            Nothing     -> cutOnAttackDFS
            Just "dfs"  -> cutOnAttackDFS

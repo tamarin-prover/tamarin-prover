@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -13,7 +13,6 @@ module Theory.Proof (
   , mergeMapsWith
 
   -- * Types
-  , Contradiction(..)
   , ProofMethod(..)
   , ProofStep(..)
   , CaseName
@@ -70,36 +69,38 @@ module Theory.Proof (
   -- ** Parallel Strategy for exploring a proof
   , parLTreeDFS
 
-  -- * Convenience exports
-  , module Theory.Proof.CaseDistinctions
+  -- ** Convenience exports
+  , module Theory.Constraint.Solver
+
 ) where
 
-import           Safe
-import           Data.Maybe
-import           Data.List
-import           Data.Ord (comparing)
-import           Data.Function (on)
-import qualified Data.Map               as M
-import qualified Data.Set               as S
-import           Data.Monoid
-import           Data.Foldable (Foldable, foldMap, asum)
-import           Data.Traversable
-import qualified Data.Label             as L
-import           Data.Label             hiding (get)
-import           Data.DeriveTH
 import           Data.Binary
+import           Data.DeriveTH
+import           Data.Foldable                    (Foldable, foldMap)
+import           Data.Function                    (on)
+import           Data.Label                       hiding (get)
+import qualified Data.Label                       as L
+import           Data.List
+import qualified Data.Map                         as M
+import           Data.Maybe
+import           Data.Monoid
+import           Data.Ord                         (comparing)
+import qualified Data.Set                         as S
+import           Data.Traversable
+import           Safe
 
 import           Debug.Trace
-                 
-import           Control.Basics
-import qualified Control.Monad.State    as S
-import           Control.Monad.Bind
-import qualified Control.Monad.Trans.PreciseFresh  as Precise
-import           Control.Parallel.Strategies
-import           Control.DeepSeq
 
-import           Theory.Pretty
-import           Theory.Proof.CaseDistinctions
+import           Control.Basics
+import           Control.DeepSeq
+import           Control.Monad.Bind
+import qualified Control.Monad.State              as S
+import qualified Control.Monad.Trans.PreciseFresh as Precise
+import           Control.Parallel.Strategies
+
+import           Theory.Model
+import           Theory.Constraint.Solver
+import           Theory.Text.Pretty
 
 
 ------------------------------------------------------------------------------
@@ -131,7 +132,7 @@ uniqueListBy ord single distinguish xs0 =
 ------------------------------------------------------------------------------
 
 -- | Trees with uniquely labelled edges.
-data LTree l a = LNode 
+data LTree l a = LNode
      { root     :: a
      , children :: M.Map l (LTree l a)
      }
@@ -162,8 +163,8 @@ parLTreeDFS (LNode x0 cs0) = do
 ------------------------------------------------------------------------------
 
 -- | /O(n+m)/. A generalized union operator for maps with differing types.
-mergeMapsWith :: Ord k 
-              => (a -> c) -> (b -> c) -> (a -> b -> c) 
+mergeMapsWith :: Ord k
+              => (a -> c) -> (b -> c) -> (a -> b -> c)
               -> M.Map k a -> M.Map k b -> M.Map k c
 mergeMapsWith leftOnly rightOnly combine l r =
     M.map extract $ M.unionWith combine' l' r'
@@ -178,58 +179,17 @@ mergeMapsWith leftOnly rightOnly combine l r =
     extract (Left (Right b)) = rightOnly b
     extract (Right c)        = c
 
-
-------------------------------------------------------------------------------
--- Contradictions
-------------------------------------------------------------------------------
-
--- | Reasons why a sequent can be contradictory.
-data Contradiction = 
-    Cyclic                         -- ^ The paths are cyclic.
-  | NonNormalTerms                 -- ^ Has terms that are not in normal form.
-  -- | NonLastNode                    -- ^ Has a non-silent node after the last node.
-  | ForbiddenExp                   -- ^ Forbidden Exp-down rule instance
-  | NonUniqueFactInstance (NodeId, NodeId, NodeId) 
-    -- ^ Contradicts that certain facts have unique instances.
-  | IncompatibleEqs                -- ^ Incompatible equalities.
-  | FormulasFalse                  -- ^ False in formulas
-  | SuperfluousLearn LNTerm NodeId -- ^ A term is derived both before and after a learn
-  deriving( Eq, Ord, Show )
-
-instance HasFrees Contradiction where
-  foldFrees f (SuperfluousLearn t v) = foldFrees f t `mappend` foldFrees f v
-  foldFrees _ _                      = mempty
-
-  mapFrees f (SuperfluousLearn t v) = 
-      SuperfluousLearn <$> mapFrees f t <*> mapFrees f v
-  mapFrees _ c                      = pure c
-
--- | A list of all trivial contradictions in the sequent.
-contradictions :: SignatureWithMaude -> Sequent -> [Contradiction]
-contradictions sig se = asum
-    [ guard (proveCyclic se)                *> pure Cyclic
-    , guard (hasNonNormalTerms sig se)      *> pure NonNormalTerms
-    , guard (hasForbiddenExp se)            *> pure ForbiddenExp
-    , guard (eqsIsFalse $ L.get sEqStore se)  *> pure IncompatibleEqs
-    , guard (formulasFalse se)              *> pure FormulasFalse
-    -- , guard (hasNonLastNode se)             *> pure NonLastNode
-    -- , maybe [] (pure . uncurry SuperfluousLearn) $ findSuperfluousLearn se
-    ]
-    ++
-    (NonUniqueFactInstance <$> nonUniqueFactInstances sig se)
-
-
 ------------------------------------------------------------------------------
 -- Proof Methods
 ------------------------------------------------------------------------------
 
 -- | Sound transformations of sequents.
-data ProofMethod = 
-    Sorry String                         -- ^ Proof was not completed 
+data ProofMethod =
+    Sorry String                         -- ^ Proof was not completed
   | Attack                               -- ^ An attack was fond
   | Simplify                             -- ^ A simplification step.
   | SolveGoal Goal                       -- ^ A goal was solved.
-  | Contradiction (Maybe Contradiction)  
+  | Contradiction (Maybe Contradiction)
   | Induction
     -- ^ A contradiction could be derived, possibly with a reason.
   deriving( Eq, Ord, Show )
@@ -248,7 +208,7 @@ instance HasFrees ProofMethod where
 ------------------------------------------------------------------------------
 -- Proof Steps
 ------------------------------------------------------------------------------
-    
+
 -- | A proof steps is a proof method together with additional context-dependent
 -- information.
 data ProofStep a = ProofStep
@@ -307,7 +267,7 @@ atPath = foldM (flip M.lookup . children)
 modifyAtPath :: (Proof a -> Maybe (Proof a)) -> ProofPath
              -> Proof a -> Maybe (Proof a)
 modifyAtPath f =
-    go 
+    go
   where
     go []     prf = f prf
     go (l:ls) prf = do
@@ -345,8 +305,8 @@ boundProofDepth bound =
 
 -- | Fold a proof.
 foldProof :: Monoid m => (ProofStep a -> m) -> Proof a -> m
-foldProof f = 
-    go 
+foldProof f =
+    go
   where
     go (LNode step cs) = f step `mappend` foldMap go (M.elems cs)
 
@@ -365,7 +325,7 @@ annotateProof f =
 ----------------
 
 -- | The status of a 'Proof'.
-data ProofStatus = 
+data ProofStatus =
          CompleteProof   -- ^ The proof is complete: no sorry, no attack
        | IncompleteProof -- ^ There is a sorry, but no attack.
        | TraceFound     -- ^ There is an attack
@@ -387,7 +347,7 @@ proofStepStatus (ProofStep _ _)         = CompleteProof
 
 -- | @cutOnAttackDFS prf@ remove all other cases if attack is found.
 -- FIXME: Probably holds onto the whole proof tree. Use iterative deepening.
-cutOnAttackDFS :: Proof (Maybe Sequent) -> Proof (Maybe Sequent)
+cutOnAttackDFS :: Proof (Maybe System) -> Proof (Maybe System)
 cutOnAttackDFS prf =
     case getFirst $ findAttacks $ insertPaths prf of
       Nothing   -> prf
@@ -407,25 +367,25 @@ cutOnAttackDFS prf =
         Just subprf ->
           LNode pstep (M.fromList [(label, extractAttack ps subprf)])
         Nothing     ->
-          error "Theory.Proof.cutOnAttackDFS: impossible, extractAttack failed, invalid path"
+          error "Theory.Constraint.cutOnAttackDFS: impossible, extractAttack failed, invalid path"
 
 -- | Search for attacks in a BFS manner.
 cutOnAttackBFS :: Proof a -> Proof a
 cutOnAttackBFS =
     go (1::Int)
   where
-    go l prf = 
+    go l prf =
       -- FIXME: See if that poor man's logging could be done better.
       trace ("searching for attacks at depth: " ++ show l) $
         case S.runState (checkLevel l prf) CompleteProof of
           (_, CompleteProof)   -> prf
           (_, IncompleteProof) -> go (l+1) prf
-          (prf', TraceFound)  -> 
+          (prf', TraceFound)  ->
               trace ("attack found at depth: " ++ show l) prf'
 
-    checkLevel 0 (LNode  step@(ProofStep Attack _) _) = 
+    checkLevel 0 (LNode  step@(ProofStep Attack _) _) =
         S.put TraceFound >> return (LNode step M.empty)
-    checkLevel 0 prf@(LNode (ProofStep _ x) cs) 
+    checkLevel 0 prf@(LNode (ProofStep _ x) cs)
       | M.null cs = return prf
       | otherwise = do
           st <- S.get
@@ -435,7 +395,7 @@ cutOnAttackBFS =
           return $ LNode (ProofStep (Sorry msg) x) M.empty
     checkLevel l (LNode step cs) =
          LNode step <$> traverse (checkLevel (l-1)) cs
-       
+
 
 
 -- Proof method execution
@@ -445,54 +405,51 @@ cutOnAttackBFS =
 -- @execMethod rules method se@ checks first if the @method@ is applicable to
 -- the sequent @se@. Then, it applies the @method@ to the sequent under the
 -- assumption that the @rules@ describe all rewriting rules in scope.
-execProofMethod :: ProofContext 
-                -> ProofMethod -> Sequent -> Maybe (M.Map CaseName Sequent)
-execProofMethod ctxt method se = 
+execProofMethod :: ProofContext
+                -> ProofMethod -> System -> Maybe (M.Map CaseName System)
+execProofMethod ctxt method se =
     case method of
       Sorry _              -> return M.empty
-      Attack          
+      Attack
         | null (openGoals se) -> return M.empty
         | otherwise           -> Nothing
       SolveGoal goal       -> execSolveGoal goal
-      Simplify             -> singleCase (/=) simplifySequent
+      Simplify             -> singleCase (/=) simplifySystem
       Induction            -> execInduction
-      Contradiction _  
+      Contradiction _
         | null (contradictions (L.get pcSignature ctxt) se) -> Nothing
         | otherwise                                       -> Just M.empty
   where
-    -- Maude handle / signature to use
-    hnd = L.get sigmMaudeHandle $ L.get pcSignature ctxt
-
     -- expect only one or no subcase in the given case distinction
-    singleCase check m = 
-        case map fst $ execSeProof m ctxt se (avoid se) of
+    singleCase check m =
+        case map fst $ getDisj $ execReduction m ctxt se (avoid se) of
           []                   -> return $ M.empty
           [se'] | check se se' -> return $ M.singleton "" se'
                 | otherwise    -> mzero
-          ses                  -> 
+          ses                  ->
                return $ M.fromList (zip (map show [(1::Int)..]) ses)
 --             error $ "execMethod: unexpected number of sequents: " ++ show (length ses) ++
---                     render (nest 2 $ vcat $ map ((text "" $-$) . prettySequent) ses)
+--                     render (nest 2 $ vcat $ map ((text "" $-$) . prettySystem) ses)
 
     -- solve the given goal
     -- PRE: Goal must be valid in this sequent.
     execSolveGoal goal = do
-        return $ makeCaseNames $ map fst $ getDisj $ 
-            runSeProof solver ctxt se (avoid se)
+        return $ makeCaseNames $ map fst $ getDisj $
+            runReduction solver ctxt se (avoid se)
       where
         ths    = L.get pcCaseDists ctxt
-        solver = do name <- maybe (solveGoal goal) 
+        solver = do name <- maybe (solveGoal goal)
                                   (fmap $ concat . intersperse "_")
-                                  (solveWithCaseDistinction hnd ths goal)
-                    simplifySequent
+                                  (solveWithCaseDistinction ctxt ths goal)
+                    simplifySystem
                     return name
 
-        makeCaseNames = 
+        makeCaseNames =
             M.fromListWith (error "case names not unique")
           . uniqueListBy (comparing fst) id distinguish
           where
-            distinguish n = 
-                [ (\(x,y) -> (x ++ "_case_" ++ pad (show i), y)) 
+            distinguish n =
+                [ (\(x,y) -> (x ++ "_case_" ++ pad (show i), y))
                 | i <- [(1::Int)..] ]
               where
                 l      = length (show n)
@@ -503,20 +460,20 @@ execProofMethod ctxt method se =
     execInduction
       | se == se0 =
           case S.toList $ L.get sFormulas se of
-            [gf] -> case applyInduction gf of
-              Right gf' -> Just $ M.singleton "induction" $ 
+            [gf] -> case ginduct gf of
+              Right gf' -> Just $ M.singleton "induction" $
                               set sFormulas (S.singleton gf') se
               _         -> Nothing
             _    -> Nothing
 
       | otherwise = Nothing
       where
-        se0 = set sFormulas (L.get sFormulas se) $ 
+        se0 = set sFormulas (L.get sFormulas se) $
               set sLemmas (L.get sLemmas se)  $
-              emptySequent (L.get sCaseDistKind se) 
+              emptySystem (L.get sCaseDistKind se)
 
 -- | A list of possibly applicable proof methods.
-possibleProofMethods :: ProofContext -> Sequent -> [ProofMethod]
+possibleProofMethods :: ProofContext -> System -> [ProofMethod]
 possibleProofMethods ctxt se =
          ((Contradiction . Just) <$> contradictions (L.get pcSignature ctxt) se)
      <|> (case L.get pcUseInduction ctxt of
@@ -525,33 +482,33 @@ possibleProofMethods ctxt se =
          )
      <|> (SolveGoal <$> openGoals se)
 
--- | @proveSequentDFS rules se@ tries to construct a proof that @se@ is valid
+-- | @proveSystemDFS rules se@ tries to construct a proof that @se@ is valid
 -- using a depth-first-search strategy to resolve the non-determinism wrt. what
 -- goal to solve next.  This proof can be of infinite depth, if the proof
 -- strategy loops. Children at the same level are evaluated in parallel.
-proveSequentDFS :: ProofContext -> Sequent -> Proof Sequent
-proveSequentDFS ctxt se0 = 
+proveSystemDFS :: ProofContext -> System -> Proof System
+proveSystemDFS ctxt se0 =
     prove se0 -- `using` parLTreeDFS
   where
     prove se =
         LNode (ProofStep method se) (M.map prove cases)
       where
-        (method, cases) = 
+        (method, cases) =
             headDef (Attack, M.empty) $ do
-                m <- possibleProofMethods ctxt se 
+                m <- possibleProofMethods ctxt se
                 (m,) <$> maybe mzero return (execProofMethod ctxt m se)
 
 
 {- TODO: Test and probably improve
- 
--- | @proveSequent rules se@ tries to construct a proof that @se@ is valid.
+
+-- | @proveSystem rules se@ tries to construct a proof that @se@ is valid.
 -- This proof may contain 'Sorry' steps, if the prover is stuck. It can also be
 -- of infinite depth, if the proof strategy loops.
-proveSequentIterDeep :: ProofContext -> Sequent -> Proof Sequent
-proveSequentIterDeep rules se0 =
+proveSystemIterDeep :: ProofContext -> System -> Proof System
+proveSystemIterDeep rules se0 =
     fromJust $ asum $ map (prove se0 . round) $ iterate (*1.5) (3::Double)
   where
-    prove :: Sequent -> Int -> Maybe (Proof Sequent)
+    prove :: System -> Int -> Maybe (Proof System)
     prove se bound
       | bound < 0 = Nothing
       | otherwise =
@@ -559,9 +516,9 @@ proveSequentIterDeep rules se0 =
             [] -> pure $ sorry "prover stuck => possible attack found" se
             xs -> asum $ map mkProof xs
       where
-        next = do m <- possibleProofMethods se 
+        next = do m <- possibleProofMethods se
                   (m,) <$> maybe mzero return (execProofMethod rules m se)
-        mkProof (method, cases) = 
+        mkProof (method, cases) =
             LNode (ProofStep method se) <$> traverse (`prove` (bound - 1)) cases
 -}
 
@@ -570,12 +527,12 @@ proveSequentIterDeep rules se0 =
 -- proof step without an annotated sequent. An unhandled case is denoted using
 -- the 'Sorry' proof method.
 checkProof :: ProofContext
-           -> (Sequent -> Proof (Maybe Sequent)) -- prover for new cases
-           -> Sequent 
+           -> (System -> Proof (Maybe System)) -- prover for new cases
+           -> System
            -> Proof a
-           -> Proof (Maybe a, Maybe Sequent)
+           -> Proof (Maybe a, Maybe System)
 checkProof ctxt prover se (LNode (ProofStep method info) cs) =
-    fromMaybe (node method (M.map noSequentPrf cs)) $ headMay $ do
+    fromMaybe (node method (M.map noSystemPrf cs)) $ headMay $ do
         method' <- method : possibleProofMethods ctxt se
         -- FIXME: eqModuloFreshness is too strict currently as it doesn't
         -- rename variables to a canonical representative. Moreover, it screws
@@ -583,19 +540,19 @@ checkProof ctxt prover se (LNode (ProofStep method info) cs) =
         guard (method `eqModuloFreshnessNoAC` method')
         cases <- maybe mzero return $ execProofMethod ctxt method' se
         return $ node method' $ checkChildren cases
-        
+
   where
-    node m = LNode (ProofStep m (Just info, Just se)) 
+    node m = LNode (ProofStep m (Just info, Just se))
 
     -- cases = msum (execProofMethod rules method se) $
 
-    noSequentPrf = mapProofInfo (\i -> (Just i, Nothing))
+    noSystemPrf = mapProofInfo (\i -> (Just i, Nothing))
 
-    checkChildren cases = 
-        mergeMapsWith unhandledCase noSequentPrf (checkProof ctxt prover) cases cs
+    checkChildren cases =
+        mergeMapsWith unhandledCase noSystemPrf (checkProof ctxt prover) cases cs
       where
         unhandledCase = mapProofInfo ((,) Nothing) . prover
-        
+
 
 
 ------------------------------------------------------------------------------
@@ -604,17 +561,17 @@ checkProof ctxt prover se (LNode (ProofStep method info) cs) =
 
 -- | Incremental proofs are used to represent intermediate results of proof
 -- checking/construction.
-type IncrementalProof = Proof (Maybe Sequent)
+type IncrementalProof = Proof (Maybe System)
 
 -- | Provers whose sequencing is handled via the 'Monoid' instance.
 --
 -- > p1 `mappend` p2
 --
 -- Is a prover that first runs p1 and then p2 on the resulting proof.
-newtype Prover =  Prover 
-          { runProver 
+newtype Prover =  Prover
+          { runProver
               :: ProofContext              -- proof rules to use
-              -> Sequent                   -- original sequent to start with
+              -> System                   -- original sequent to start with
               -> IncrementalProof          -- original proof
               -> Maybe IncrementalProof    -- resulting proof
           }
@@ -629,12 +586,12 @@ mapProverProof :: (IncrementalProof -> IncrementalProof) -> Prover -> Prover
 mapProverProof f p = Prover $ \ rules se prf -> f <$> runProver p rules se prf
 
 -- | Prover that always fails.
-failProver :: Prover 
+failProver :: Prover
 failProver = Prover (\ _ _ _ -> Nothing)
 
 -- | Resorts to the second prover, if the first one is not successful.
 orelse :: Prover -> Prover -> Prover
-orelse p1 p2 = Prover $ \rules se prf -> 
+orelse p1 p2 = Prover $ \rules se prf ->
     runProver p1 rules se prf `mplus` runProver p2 rules se prf
 
 -- | Try to apply a prover. If it fails, just return the original proof.
@@ -659,14 +616,14 @@ boundProver b p = Prover $ \rules se prf ->
 -- | The standard automatic prover that ignores the existing proof and tries to
 -- find one by itself.
 autoProver :: Prover
-autoProver = Prover $ \rules se _ -> 
+autoProver = Prover $ \rules se _ ->
     -- evaluate cases in parallel
-    return $ fmap (fmap Just) $ proveSequentDFS rules se
+    return $ fmap (fmap Just) $ proveSystemDFS rules se
 
 -- | Apply a prover only to a sub-proof, fails if the subproof doesn't exist.
 focus :: ProofPath -> Prover -> Prover
 focus []   prover = prover
-focus path prover = 
+focus path prover =
     Prover $ \rules _ prf -> modifyAtPath (prover' rules) path prf
   where
     prover' rules prf = do
@@ -679,18 +636,18 @@ checkAndExtendProver prover0 = Prover $ \rules se prf ->
     return $ mapProofInfo snd $ checkProof rules (prover rules) se prf
   where
     unhandledCase   = sorry "unhandled case" Nothing
-    prover rules se = 
+    prover rules se =
         fromMaybe unhandledCase $ runProver prover0 rules se unhandledCase
 
--- | Replace all annotated sorry steps with 
+-- | Replace all annotated sorry steps with
 replaceSorryProver :: Prover -> Prover
 replaceSorryProver prover0 = Prover prover
   where
     prover rules _ = return . replace
       where
-        replace prf@(LNode (ProofStep (Sorry _) (Just se)) _) = 
+        replace prf@(LNode (ProofStep (Sorry _) (Just se)) _) =
             fromMaybe prf $ runProver prover0 rules se prf
-        replace (LNode ps cases) = 
+        replace (LNode ps cases) =
             LNode ps $ M.map replace cases
 
 
@@ -702,9 +659,9 @@ firstProver = foldr orelse failProver
 -- step.
 contradictionAndClauseProver :: Prover
 contradictionAndClauseProver = Prover $ \ctxt se prf ->
-    runProver 
-        (firstProver $ map oneStepProver $ 
-            (Contradiction . Just <$> 
+    runProver
+        (firstProver $ map oneStepProver $
+            (Contradiction . Just <$>
                 contradictions (L.get pcSignature ctxt) se))
         ctxt se prf
 
@@ -725,19 +682,6 @@ simplifyVariableIndices =
             ((step', bindSt'), freshSt') ->
                 LNode step' (M.map (go bindSt' freshSt') cs)
 
-
-prettyContradiction :: Document d => Contradiction -> d
-prettyContradiction contra = case contra of
-    Cyclic                    -> text "cyclic"
-    IncompatibleEqs           -> text "incompatible equalities"
-    NonNormalTerms            -> text "non-normal terms"
-    ForbiddenExp              -> text "non-normal exponentiation instance"
-    NonUniqueFactInstance cex -> text $ "non-unique facts" ++ show cex
-    FormulasFalse             -> text "from formulas"
-    SuperfluousLearn m v      ->
-        doubleQuotes (prettyLNTerm m) <->
-        text ("derived before and after") <-> 
-        doubleQuotes (prettyNodeId v)
 
 prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
@@ -765,12 +709,12 @@ prettyProofWith prettyStep prettyCase =
     ppPrf (LNode ps cs) = ppCases ps (M.toList cs)
 
     ppCases ps@(ProofStep Attack _) [] = prettyStep ps
-    ppCases ps []                      = prettyCase ps (kwBy <> text " ") 
+    ppCases ps []                      = prettyCase ps (kwBy <> text " ")
                                            <> prettyStep ps
     ppCases ps [("", prf)]             = prettyStep ps $-$ ppPrf prf
     ppCases ps cases                   =
         prettyStep ps $-$
-        (vcat $ intersperse (prettyCase ps kwNext) $ map ppCase cases) $-$ 
+        (vcat $ intersperse (prettyCase ps kwNext) $ map ppCase cases) $-$
         prettyCase ps kwQED
 
     ppCase (name, prf) = nest 2 $
@@ -778,7 +722,7 @@ prettyProofWith prettyStep prettyCase =
       ppPrf prf
 
 -- | Convert a proof status to a redable string.
-showProofStatus :: SequentTraceQuantifier -> ProofStatus -> String
+showProofStatus :: SystemTraceQuantifier -> ProofStatus -> String
 showProofStatus ExistsNoTrace   TraceFound      = "falsified - found trace"
 showProofStatus ExistsNoTrace   CompleteProof   = "verified"
 showProofStatus ExistsSomeTrace CompleteProof   = "falsified - no trace found"
@@ -789,12 +733,10 @@ showProofStatus _               IncompleteProof = "analysis incomplete"
 -- Derived instances
 --------------------
 
-$( derive makeBinary ''Contradiction)
 $( derive makeBinary ''ProofMethod)
 $( derive makeBinary ''ProofStep)
 $( derive makeBinary ''ProofStatus)
 
-$( derive makeNFData ''Contradiction)
 $( derive makeNFData ''ProofMethod)
 $( derive makeNFData ''ProofStep)
 $( derive makeNFData ''ProofStatus)

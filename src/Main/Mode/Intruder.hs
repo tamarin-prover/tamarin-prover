@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -11,23 +11,24 @@ module Main.Mode.Intruder (
     intruderMode
   ) where
 
-import Control.Basics
-import Control.Monad.Reader
+import           Control.Basics
+import           Control.Monad.Reader
 
-import System.Console.CmdArgs.Explicit as CmdArgs
-import System.FilePath
+import           System.Console.CmdArgs.Explicit as CmdArgs
+import           System.FilePath
 
-import Theory
+import           Theory
+import           Theory.Tools.IntruderRules
 
-import Main.Console
-import Main.Environment
-import Main.TheoryLoader (intruderVariantsFile)
-import Main.Utils
+import           Main.Console
+import           Main.Environment
+import           Main.TheoryLoader               (intruderVariantsFile)
+import           Main.Utils
 
 
 intruderMode :: TamarinMode
-intruderMode = tamarinMode 
-    "variants" 
+intruderMode = tamarinMode
+    "variants"
     "Compute the variants of the intruder rules for DH-exponentiation."
     setupFlags
     run
@@ -37,7 +38,7 @@ intruderMode = tamarinMode
       , modeGroupFlags = Group outputFlags [] [("About", [helpFlag])]
       }
 
-    outputFlags = 
+    outputFlags =
       [ flagOpt "" ["output","o"] (updateArg "outFile") "FILE" "Output file"
       , flagOpt "" ["Output","O"] (updateArg "outDir") "DIR"  "Output directory"
       ]
@@ -61,10 +62,10 @@ run _thisMode as = do
 
     -- Output file name, if output is desired.
     optOutPath :: Maybe FilePath
-    optOutPath = 
+    optOutPath =
       do outFile <- findArg "outFile" as
          guard (outFile /= "")
          return outFile
       <|>
       do outDir <- findArg "outDir" as
-         return $ outDir </> intruderVariantsFile 
+         return $ outDir </> intruderVariantsFile

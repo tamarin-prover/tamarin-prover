@@ -4,12 +4,12 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- This module implements normalization with respect to DH u AC using class
 -- rewriting and an ad-hoc function that uses the @TermAC@ representation of
--- terms modulo AC. 
+-- terms modulo AC.
 module Term.Rewriting.Norm (
 --    norm
    norm'
@@ -91,7 +91,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FAppNonAC _ ts    -> all go ts
 
         struleApplicable t (StRule lhs rhs) =
-            case matchLNTerm [t `MatchWith` lhs] `runReader` hnd of
+            case solveMatchLNTerm (t `matchWith` lhs) `runReader` hnd of
               []  -> False
               _:_ -> case rhs of
                        RhsPosition _ -> True
@@ -133,7 +133,7 @@ _nfCompare' t0 = reader $ \hnd ->
                   ++" maude: " ++ show x ++ " haskell: "++show y
 
 
--- Normalization 
+-- Normalization
 ----------------------------------------------------
 
 -- | @nfSubst s@ returns @True@ if the substitution @s@ is in normal form.

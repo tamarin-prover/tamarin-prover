@@ -2,17 +2,17 @@
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Wellformedness checks for intruder variants, protocol rules, and
 -- properties.
 --
--- The following checks are/should be performed 
+-- The following checks are/should be performed
 -- (FIXME: compare the list below to what is really implemented.)
---   
---   [protocol rules] 
+--
+--   [protocol rules]
 --
 --     1. no fresh names in rule. (protocol cond. 1)
 --     ==> freshNamesReport
@@ -40,7 +40,7 @@
 --
 --     10. fresh facts of the same rule contain different variables. [TODO]
 --
---     11. no protocol fact uses a reserved name => 
+--     11. no protocol fact uses a reserved name =>
 --        [TODO] change parser to ensure this and pretty printer to show this.
 --
 --   [security properties]
@@ -51,7 +51,7 @@
 --     2. no node variable is used in a message position and vice versa.
 --
 --
-module Theory.Wellformedness (
+module Theory.Tools.Wellformedness (
 
   -- * Wellformedness checking
     WfErrorReport
@@ -61,23 +61,24 @@ module Theory.Wellformedness (
   , prettyWfErrorReport
   ) where
 
-import           Prelude hiding (id, (.))
+import           Prelude                     hiding (id, (.))
 
-import           Data.Char
-import           Data.Generics.Uniplate.Data (universeBi)
-import           Data.List
-import           Data.Label
-import           Data.Maybe
-import           Data.Monoid (mempty, mappend)
-import qualified Data.Set      as S
 import           Control.Basics
 import           Control.Category
-import           Data.Traversable hiding (mapM)
+import           Data.Char
+import           Data.Generics.Uniplate.Data (universeBi)
+import           Data.Label
+import           Data.List
+import           Data.Maybe
+import           Data.Monoid                 (mempty, mappend)
+import qualified Data.Set                    as S
+import           Data.Traversable            (traverse)
 
 import           Control.Monad.Bind
 
-import           Term.Maude.Signature
 import           Extension.Prelude
+import           Term.LTerm
+import           Term.Maude.Signature
 import           Text.PrettyPrint.Class
 import           Theory
 
@@ -99,9 +100,9 @@ prettyWfErrorReport report = foldr1 ($-$)
   where
     ppTopic []                 = error "prettyWfErrorReport: groupOn returned empty list"
     ppTopic errs@((topic,_):_) =
-      text topic <> colon $-$ 
+      text topic <> colon $-$
       (nest 2 . vcat . intersperse (text "") $ map snd errs)
-    
+
 
 ------------------------------------------------------------------------------
 -- Utilities
@@ -111,7 +112,7 @@ prettyWfErrorReport report = foldr1 ($-$)
 -- thyProtoRules :: OpenTheory ->
 thyProtoRules :: OpenTheory -> [ProtoRuleE]
 thyProtoRules thy = [ ru | RuleItem ru <- get thyItems thy ]
-    
+
 -- | Lower-case a string.
 lowerCase :: String -> String
 lowerCase = map toLower
@@ -137,7 +138,7 @@ clashesOn f g xs = do
     grp <- groupOn f $ sortOn f xs
     guard (length (sortednubOn g grp) >= 2)
     return grp
-    
+
 -- | Nice quoting.
 quote :: String -> String
 quote cs = '`' : cs ++ "'"
@@ -150,7 +151,7 @@ quote cs = '`' : cs ++ "'"
 sortsClashCheck :: HasFrees t => String -> t -> WfErrorReport
 sortsClashCheck info t = case clashesOn removeSort id $ frees t of
     [] -> []
-    cs -> return $ 
+    cs -> return $
             ( "sorts"
             , text info $-$ (nest 2 $ numbered' $ map prettyVarList cs)
             )
@@ -161,7 +162,7 @@ sortsClashCheck info t = case clashesOn removeSort id $ frees t of
 ruleSortsReport :: OpenTheory -> WfErrorReport
 ruleSortsReport thy = do
     ru <- thyProtoRules thy
-    sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++ 
+    sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++
                      " clashing sorts, casings, or multiplicities:") ru
 
 -- | Report on fresh names.
@@ -186,10 +187,10 @@ publicNamesReport thy =
     topic       = "public names with mismatching capitalization"
     publicNames = do
         ru <- thyProtoRules thy
-        (,) (showRuleCaseName ru) <$> 
+        (,) (showRuleCaseName ru) <$>
             (filter ((LSortPub ==) . sortOfName) $ universeBi ru)
     findClashes   = clashesOn (map toLower . show . snd) (show . snd)
-    ppRuleAndName (ruName, pub) = 
+    ppRuleAndName (ruName, pub) =
         text $ "rule " ++ show ruName ++ " name " ++ show pub
 
 -- | Check whether a rule has unbound variables.
@@ -199,7 +200,7 @@ unboundCheck info ru
     | otherwise        = return $
         ( "unbound"
         , text info $-$ (nest 2 $ prettyVarList unboundVars) )
-  where 
+  where
     boundVars   = S.fromList $ frees (get rPrems ru)
     unboundVars = do
         v <- frees (get rConcs ru, get rActs ru, get rInfo ru)
@@ -210,7 +211,7 @@ unboundCheck info ru
 unboundReport :: OpenTheory -> WfErrorReport
 unboundReport thy = do
     RuleItem ru <- get thyItems thy
-    unboundCheck ("rule " ++ quote (showRuleCaseName ru) ++ 
+    unboundCheck ("rule " ++ quote (showRuleCaseName ru) ++
                   " has unbound variables: "
                  ) ru
 
@@ -221,7 +222,7 @@ factReports thy = concat
     , factUsage, inexistentActions
     ]
   where
-    ruleFacts ru = 
+    ruleFacts ru =
       ( "rule " ++ quote (showRuleCaseName ru)
       , extFactInfo <$> concatMap (`get` ru) [rPrems, rActs, rConcs])
 
@@ -238,7 +239,7 @@ factReports thy = concat
                  fa <- formulaFacts (get lFormulaE l)
                  return $ (text (show fa), factInfo fa)
       <|> do return $ (,) "unique_insts declaration" $ do
-               tag <- S.toList $ get (sigpUniqueInsts . thySignature) thy 
+               tag <- S.toList $ get (sigpUniqueInsts . thySignature) thy
                return $ ( text $ showFactTagArity tag
                         , (tag, factTagArity tag, factTagMultiplicity tag)
                         )
@@ -256,9 +257,9 @@ factReports thy = concat
         case mapMaybe reservedFactName fas of
           []   -> []
           errs -> return $ (,) "reseved names" $ foldr1 ($--$) $
-              wrappedText ("The " ++ origin ++ 
+              wrappedText ("The " ++ origin ++
                            " contains facts with reserved names:")
-            : map (nest 2) errs 
+            : map (nest 2) errs
 
     reservedFactName (ppFa, info@(ProtoFact _ name _, _,_))
       | map toLower name `elem` ["fr","ku","kd","out","in"] =
@@ -307,50 +308,47 @@ factReports thy = concat
     -- Check that every fact referenced in a formula is present as an action
     -- of a protocol rule. We have to add the linear "K/1" fact, as the
     -- WF-check cannot rely on a loaded intruder theory.
-    ruleActions = S.fromList $ map factInfo $ 
-        kLogFact undefined : dedLogFact undefined :
-        (do RuleItem ru <- get thyItems thy; get rActs ru)
+    ruleActions = S.fromList $ map factInfo $
+          kLogFact undefined
+        : dedLogFact undefined
+        : Fact KUFact [undefined, undefined]
+        : (do RuleItem ru <- get thyItems thy; get rActs ru)
 
     inexistentActions = do
         LemmaItem l <- get thyItems thy
         fa <- sortednub $ formulaFacts (get lFormulaE l)
         let info = factInfo fa
             name = get lName l
-        if info `S.member` ruleActions 
+        if info `S.member` ruleActions
           then []
           else return $ (,) "lemma actions" $
                  text ("lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
 
-   
-    
+
 -- | Gather all facts referenced in a formula.
 formulaFacts :: Formula s c v -> [Fact (VTerm c (BVar v))]
-formulaFacts = 
-    foldFormula atomFacts 
-      (const mempty) 
-      id 
+formulaFacts =
+    foldFormula atomFacts
+      (const mempty)
+      id
       (const mappend) (const $ const id)
   where
     atomFacts (Action _ fa)   = [fa]
     atomFacts (EqE _ _)       = mempty
     atomFacts (Less _ _)      = mempty
     atomFacts (Last _)        = mempty
-    atomFacts (DedBefore _ _) = mempty
-    atomFacts (EdgeA _ _)     = mempty
 
 -- | Gather all terms referenced in a formula.
 formulaTerms :: Formula s c v -> [VTerm c (BVar v)]
-formulaTerms = 
+formulaTerms =
     foldFormula atomTerms (const mempty) id (const mappend) (const $ const id)
   where
     atomTerms (Action i fa)   = i : factTerms fa
     atomTerms (EqE t s)       = [t, s]
     atomTerms (Less i j)      = [i, j]
     atomTerms (Last i)        = [i]
-    atomTerms (DedBefore t i) = [t, i]
-    atomTerms (EdgeA x y)     = [fst x, fst y]
 
 
 -- | Check for mistakes in lemmas.
@@ -364,29 +362,29 @@ formulaReports thy = do
         fmE    = get lFormulaE l
     msum [ ((,) "quantifier sorts") <$> checkQuantifiers header fmE
          , ((,) "formula terms")    <$> checkTerms header fmE
-         , ((,) "guardedness")      <$> checkGuarded header fmE 
+         , ((,) "guardedness")      <$> checkGuarded header fmE
          ]
   where
     -- check that only message and node variables are used
     checkQuantifiers header fm
       | null disallowed = []
-      | otherwise       = return $ fsep $ 
+      | otherwise       = return $ fsep $
           (text $ header ++ "uses quantifiers with wrong sort:") :
           (punctuate comma $ map (nest 2 . text . show) disallowed)
       where
-        binders    = foldFormula (const mempty) (const mempty) id (const mappend) 
+        binders    = foldFormula (const mempty) (const mempty) id (const mappend)
                          (\_ binder rest -> binder : rest) fm
         disallowed = filter (not . (`elem` [LSortMsg, LSortNode]) . snd) binders
 
     -- check that only bound variables and public names are used
     checkTerms header fm
       | null offenders = []
-      | otherwise      = return $ 
+      | otherwise      = return $
           (fsep $
             (text $ header ++ " uses terms of the wrong form:") :
             (punctuate comma $ map (nest 2 . text . quote . show) offenders)
           ) $--$
-          wrappedText 
+          wrappedText
             "The only allowed terms are public names and bound node and message\
             \ variables. If you encounter free message variables, then you might\
             \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
@@ -398,21 +396,21 @@ formulaReports thy = do
         allowed _                                        = False
 
     -- check that the formula can be converted to a guarded formula
-    checkGuarded header fm = case fromFormulaNegate fm of
-        Left err -> return $ 
+    checkGuarded header fm = case formulaToGuarded fm of
+        Left err -> return $
             text (header ++ " cannot be converted to a guarded formula:") $-$
             nest 2 (text err)
         Right _  -> []
 
-             
+
 
 uniqueInstsReport :: OpenTheory -> WfErrorReport
 uniqueInstsReport thy = do
     tag <- S.toList $ get (sigpUniqueInsts . thySignature) thy
-    (,) "unique fact instances" <$> 
+    (,) "unique fact instances" <$>
         if (Persistent == factTagMultiplicity tag)
           then return $ text $ showFactTagArity tag ++ " is persistent"
-          else msum 
+          else msum
                 [ checkAtMostOneConc tag
                 , checkCopying tag
                 ]
@@ -428,9 +426,9 @@ uniqueInstsReport thy = do
 
     checkCopying _f = [] -- FIXME: Implement check.
     {-
-        (ru1, ru2) <- 
+        (ru1, ru2) <-
       where
-        rules = 
+        rules =
             filter (any (any ((f ==) . factSymbol) . get rPrems)) $
             thyProtoRules thy
     -}
@@ -520,7 +518,7 @@ checkWellformedness thy = concatMap ($ thy)
     [ unboundReport
     , freshNamesReport
     , publicNamesReport
-    , ruleSortsReport 
+    , ruleSortsReport
     , factReports
     , formulaReports
     , uniqueInstsReport

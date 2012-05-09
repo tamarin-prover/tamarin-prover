@@ -1,10 +1,10 @@
 rule (modulo AC) cexp:
    [ !KU( 'exp', x ), !KU( f_.2, x.1 ) ]
-  --[ Ded( x^x.1 ) ]->
+  --[ !KU( 'noexp', x^x.1 ) ]->
    [ !KU( 'noexp', x^x.1 ) ]
 
 rule (modulo AC) cinv:
-   [ !KU( f_.1, x ) ] --[ Ded( inv(x) ) ]-> [ !KU( 'exp', inv(x) ) ]
+   [ !KU( f_.1, x ) ] --[ !KU( 'exp', inv(x) ) ]-> [ !KU( 'exp', inv(x) ) ]
 
 rule (modulo AC) dexp:
    [ !KD( 'exp', x.3^x.4 ), !KU( f_.2, x.1 ) ]

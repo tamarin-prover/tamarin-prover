@@ -139,18 +139,17 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, hkI.6 )] )
   case Init_1
   solve( (#i1, 2)[!Pk( $R.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.11, h(<z.8, 'g'^(~lkI.8*~x.8)>)
-                      )] /* may loop */ )
+    solve( !KU( f_.12, h(<z.8, 'g'^(~lkI.8*~x.8)>) ) @ #vk.13 )
       case ch
-      solve( KU((#vr.33, 0), 'g'^(~lkI.8*~x.8)) )
+      solve( !KU( f_.58, 'g'^(~lkI.8*~x.8) ) @ #vk.57 )
         case cexp
-        solve( KU((#vr.40, 1), ~lkI.8) )
+        solve( !KU( f_.88, ~lkI.8 ) @ #vk.87 )
           case Ltk_reveal
-          solve( KU((#vr.40, 1), ~x.8) )
+          solve( !KU( f_.90, ~x.8 ) @ #vk.89 )
             case Ltk_reveal
             solve( splitEqs(1) )
               case split_case_1
-              solve( KU((#vr.33, 0), hkR.70^~ekI.71) )
+              solve( !KU( f_.56, hkR.113^~ekI.114 ) @ #vk.55 )
                 case Init_1
                 SOLVED // trace found
               qed
@@ -188,18 +187,17 @@ solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
   case generate_ltk
   solve( (#i1, 3)[!Pk( $I.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.12, h(<z.8, 'g'^(~lkR.8*~x.8)>)
-                      )] /* may loop */ )
+    solve( !KU( f_.13, h(<z.8, 'g'^(~lkR.8*~x.8)>) ) @ #vk.14 )
       case ch
-      solve( KU((#vr.28, 0), 'g'^(~lkR.8*~x.8)) )
+      solve( !KU( f_.53, 'g'^(~lkR.8*~x.8) ) @ #vk.52 )
         case cexp
-        solve( KU((#vr.35, 1), ~lkR.8) )
+        solve( !KU( f_.83, ~lkR.8 ) @ #vk.82 )
           case Ltk_reveal
-          solve( KU((#vr.35, 1), ~x.8) )
+          solve( !KU( f_.85, ~x.8 ) @ #vk.84 )
             case Ltk_reveal
             solve( splitEqs(1) )
               case split_case_1
-              solve( KU((#vr.28, 0), hkI.65^~ekR.66) )
+              solve( !KU( f_.51, hkI.108^~ekR.109 ) @ #vk.50 )
                 case Resp_1
                 SOLVED // trace found
               qed
@@ -226,7 +224,7 @@ analyzing: data/examples/csf12/UM_PFS.spthy
 analyzed: data/examples/csf12/UM_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.242463s
+  processing time: 0.799s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
@@ -238,7 +236,7 @@ summary of summaries:
 analyzed: data/examples/csf12/UM_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.242463s
+  processing time: 0.799s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 

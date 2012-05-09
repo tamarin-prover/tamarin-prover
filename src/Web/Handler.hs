@@ -39,61 +39,57 @@ module Web.Handler
   )
 where
 
-import Theory (
+import           Theory                       (
     ClosedTheory,
-    thyName, 
+    thyName,
     -- lName,
-    -- lookupLemma, addLemma, 
+    -- lookupLemma, addLemma,
     removeLemma,
-    openTheory, 
+    openTheory,
     mapProverProof, sorryProver, autoProver, cutOnAttackDFS,
-    prettyClosedTheory, prettyOpenTheory 
-    -- prettyProof, prettyLemma, prettyClosedTheory, prettyOpenTheory 
+    prettyClosedTheory, prettyOpenTheory
+    -- prettyProof, prettyLemma, prettyClosedTheory, prettyOpenTheory
   )
 -- import Theory.Parser
-import Theory.Proof.Sequent.Dot
-import Web.Types
-import Web.Hamlet
-import Web.Theory
-import Web.Instances ()
-import Web.Settings
-import Text.PrettyPrint.Html
+import           Text.PrettyPrint.Html
+import           Theory.Constraint.System.Dot
+import           Web.Hamlet
+import           Web.Instances                ()
+import           Web.Settings
+import           Web.Theory
+import           Web.Types
 
-import Yesod.Core
-import Yesod.Json()
--- import Yesod.Form
--- import Text.Hamlet
+import           Yesod.Core
+import           Yesod.Json()
 
-import Data.Maybe
-import Data.Aeson
-import Data.Label
-import Data.String (fromString)
--- import Data.Traversable (traverse)
+import           Data.Aeson
+import           Data.Label
+import           Data.Maybe
+import           Data.String                  (fromString)
 
-import qualified Data.Map as M
-import qualified Data.Text as T
-import qualified Data.Traversable as Tr
-import qualified Data.ByteString.Lazy.Char8 as BS
-import Data.Text.Encoding
-import qualified Blaze.ByteString.Builder   as B
-import Network.HTTP.Types ( urlDecode )
-import Text.Blaze.Html5 (toHtml)
+import qualified Blaze.ByteString.Builder     as B
+import qualified Data.ByteString.Lazy.Char8   as BS
+import qualified Data.Map                     as M
+import qualified Data.Text                    as T
+import           Data.Text.Encoding
+import qualified Data.Traversable             as Tr
+import           Network.HTTP.Types           ( urlDecode )
+import           Text.Blaze.Html5             (toHtml)
 
-import Control.Monad
-import Control.Monad.IO.Class
--- import Control.Monad.IO.Control
-import Control.Monad.Trans.Control
-import Control.Applicative
-import Control.Concurrent
-import Control.DeepSeq
-import qualified Control.Exception.Lifted as E
-import Control.Exception.Base
-import qualified Control.Concurrent.Thread as Thread ( forkIO )
-import Data.Time.LocalTime
-import qualified Data.Binary as Bin
-import System.Directory
+import           Control.Applicative
+import           Control.Concurrent
+import qualified Control.Concurrent.Thread    as Thread ( forkIO )
+import           Control.DeepSeq
+import           Control.Exception.Base
+import qualified Control.Exception.Lifted     as E
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Control
+import qualified Data.Binary                  as Bin
+import           Data.Time.LocalTime
+import           System.Directory
 
-import Debug.Trace (trace)
+import           Debug.Trace                  (trace)
 
 -- Quasi-quotation syntax changed from GHC 6 to 7,
 -- so we need this switch in order to support both
@@ -224,7 +220,7 @@ getThreads = do
 
 -- | Print exceptions, if they happen.
 traceExceptions :: MonadBaseControl IO m => String -> m a -> m a
-traceExceptions info = 
+traceExceptions info =
     E.handle handler
   where
     handler :: MonadBaseControl IO m => E.SomeException -> m a
@@ -245,8 +241,8 @@ responseToJson = go
     go (JsonHtml title content) = object
       [ "html"  .= contentToJson content
       , "title" .= title ]
-    
-    contentToJson (ContentBuilder b _) = toJSON $ B.toLazyByteString b 
+
+    contentToJson (ContentBuilder b _) = toJSON $ B.toLazyByteString b
     contentToJson _ = error "Unsupported content format in json response!"
 
 -- | Fully evaluate a value in a thread that can be canceled.
@@ -414,7 +410,7 @@ getAutoProverR idx path = do
     return $ RepJson $ toContent jsonValue
   where
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
-      (\thy -> 
+      (\thy ->
           return $ applyProverAtPath thy lemma proofPath (mapProverProof cutOnAttackDFS autoProver))
       (\thy -> nextSmartThyPath thy path)
       (JsonAlert "Sorry, but the autoprover failed on given proof step!")
@@ -464,9 +460,9 @@ getTheoryGraphR idx path = withTheory idx $ \ti -> do
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img
   where
     graphStyle d c = dotStyle d . compression c
-    dotStyle True = dotSequentCompact CompactBoringNodes
-    dotStyle False = dotSequentCompact FullBoringNodes
-    compression True = compressSequent
+    dotStyle True = dotSystemCompact CompactBoringNodes
+    dotStyle False = dotSystemCompact FullBoringNodes
+    compression True = compressSystem
     compression False = id
 
 
@@ -547,7 +543,7 @@ postEditTheoryR idx = withTheory idx $ \ti -> formHandler
       , T.pack $ show err ]
 
     name = T.pack . get thyName . tiTheory
-    theoryFormTpl = formTpl (EditTheoryR idx) "Load as new theory" 
+    theoryFormTpl = formTpl (EditTheoryR idx) "Load as new theory"
 -}
 
 {-
@@ -575,7 +571,7 @@ postEditPathR idx (TheoryLemma lemmaName) = withTheory idx $ \ti -> do
               let openThy  = openTheory thy
                   openThy' = case lemma of
                     Nothing -> addLemma newLemma openThy
-                    Just _  -> removeLemma lemmaName openThy 
+                    Just _  -> removeLemma lemmaName openThy
                                   >>= addLemma newLemma
               traverse (closeThy yesod) openThy')
             -- Error response
@@ -615,7 +611,7 @@ getDeleteStepR idx path = do
       (JsonAlert "Sorry, but removing the selected lemma failed!")
 
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
-      (\thy -> return $ 
+      (\thy -> return $
           applyProverAtPath thy lemma proofPath (sorryProver "removed"))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")
@@ -659,7 +655,7 @@ getDownloadTheoryR idx _ = do
 -- | Unload a theory from the interactive server.
 getUnloadTheoryR :: TheoryIdx -> Handler RepPlain
 getUnloadTheoryR idx = do
-    delTheory idx 
+    delTheory idx
     redirect RootR
 
 {-

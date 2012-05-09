@@ -190,19 +190,23 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~ekI.8, hkI.6 )] )
   case Init_1
   solve( (#i1, 1)[!Pk( $R.8, pk(ltkR.8) )] )
     case Register_pk
-    solve( KU((#vf.9, 0), sign(<'2', $R.8, $I.8, hkR.7>, ~ltk.28)) )
+    solve( !KU( f_.23, sign(<'2', $R.8, $I.8, hkR.7>, ~ltk.42) ) @ #vk.22 )
       case Resp
-      solve( (#i2.1, 0)[!KU( f_.11, 'g'^(~ekI.66*~ekR.67) )] /* may loop */ )
+      solve( !KU( f_.24, 'g'^(~ekI.117*~ekR.118) ) @ #vk.25 )
         case Init_1
-        solve( (#vr.96, 1)[!KU( f_.98, ~ekR.108 )] /* may loop */ )
+        solve( !KU( f_.149, ~ekR.118 ) @ #vk.152 )
           case Ephk_reveal
-          solve( KU((#vf.43, 0), sign(<'1', $I.8, $R.8, X.42>, ~ltk.47)) )
+          solve( !KU( f_.71, sign(<'1', $I.8, $R.8, X.56>, ~ltk.74) ) @ #vk.70 )
             case Init_1
-            solve( KU((#vf.9, 0), 'g'^~ekR.166) )
+            solve( !KU( f_.21, 'g'^~ekR.281 ) @ #vk.20 )
               case Resp
-              solve( KU((#vf.43, 0), 'g'^~ekI.167) )
+              solve( !KU( f_.69, 'g'^~ekI.282 ) @ #vk.68 )
                 case Init_1
-                SOLVED // trace found
+                solve( !KU( 'exp', sign(<'1', $I.8, $R.8, 'g'^~ekI.282>, ~ltk.74)
+                       ) @ #vk.70 )
+                  case Init_1
+                  SOLVED // trace found
+                qed
               qed
             qed
           qed
@@ -267,13 +271,20 @@ solve( (#i1, 0)[!Pk( $I.8, pk(ltkI.8) )] )
   case Register_pk
   solve( (#i1, 1)[!Ltk( $R.8, ltkR.8 )] )
     case Register_pk
-    solve( KU((#vf.9, 0), sign(<'1', $I.8, $R.8, hkI.6>, ~ltk.17)) )
+    solve( !KU( f_.23, sign(<'1', $I.8, $R.8, hkI.6>, ~ltk.31) ) @ #vk.22 )
       case Init_1
-      solve( (#i2.1, 0)[!KU( f_.12, 'g'^(~ekR.61*~ekI.62) )] /* may loop */ )
+      solve( !KU( f_.25, 'g'^(~ekR.88*~ekI.89) ) @ #vk.26 )
         case Init_1
-        solve( (#vr.91, 1)[!KU( f_.93, ~ekR.102 )] /* may loop */ )
+        solve( !KU( f_.120, ~ekR.88 ) @ #vk.123 )
           case Ephk_reveal
-          SOLVED // trace found
+          solve( !KU( f_.21, 'g'^~ekI.89 ) @ #vk.20 )
+            case Init_1
+            solve( !KU( 'exp', sign(<'1', $I.8, $R.8, 'g'^~ekI.89>, ~ltk.31)
+                   ) @ #vk.22 )
+              case Init_1
+              SOLVED // trace found
+            qed
+          qed
         qed
       qed
     qed
@@ -295,9 +306,9 @@ analyzing: data/examples/csf12/SignedDH_eCK.spthy
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.313254s
-  eCK_initiator_key (all-traces): falsified - found trace (10 steps)
-  eCK_responder_key (all-traces): falsified - found trace (7 steps)
+  processing time: 1.696605s
+  eCK_initiator_key (all-traces): falsified - found trace (11 steps)
+  eCK_responder_key (all-traces): falsified - found trace (9 steps)
 
 ------------------------------------------------------------------------------
 
@@ -307,9 +318,9 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.313254s
-  eCK_initiator_key (all-traces): falsified - found trace (10 steps)
-  eCK_responder_key (all-traces): falsified - found trace (7 steps)
+  processing time: 1.696605s
+  eCK_initiator_key (all-traces): falsified - found trace (11 steps)
+  eCK_responder_key (all-traces): falsified - found trace (9 steps)
 
 ==============================================================================
 */

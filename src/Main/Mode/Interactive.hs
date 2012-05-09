@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -11,32 +11,31 @@ module Main.Mode.Interactive (
     interactiveMode
   ) where
 
+import           Control.Basics
+import           Control.Exception               (handle, IOException)
+import           Data.Char                       (toLower)
 import           Data.List
 import           Data.Maybe
-import           Data.String (fromString)
-import           Data.Char (toLower)
-import           Control.Basics
-import           Control.Exception (handle, IOException)
+import           Data.String                     (fromString)
 import           System.Console.CmdArgs.Explicit as CmdArgs
+import           System.Directory                (doesFileExist, doesDirectoryExist)
 import           System.FilePath
-import           System.Directory (doesFileExist, doesDirectoryExist)
 
+import           Network.Wai.Handler.Warp        (defaultSettings, settingsHost, settingsPort)
+import qualified Network.Wai.Handler.Warp        as Warp
 import           Web.Dispatch
 import qualified Web.Settings
-import qualified Network.Wai.Handler.Warp as Warp
-import           Network.Wai.Handler.Warp (defaultSettings, settingsHost
-                                          , settingsPort )
 
 import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
 
-import           Paths_tamarin_prover (getDataDir)
+import           Paths_tamarin_prover            (getDataDir)
 
 
 -- | Batch processing mode.
 interactiveMode :: TamarinMode
-interactiveMode = tamarinMode 
+interactiveMode = tamarinMode
     "interactive"
     "Start a web-server to construct proofs interactively."
     setupFlags
@@ -60,7 +59,7 @@ interactiveMode = tamarinMode
       theoryLoadFlags ++
       toolFlags
 
- 
+
 
 -- | Start the interactive theorem proving mode.
 run :: TamarinMode -> Arguments -> IO ()
@@ -88,13 +87,13 @@ run thisMode as = case findArg "workDir" as of
             , ""
             , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
             ]
-          withWebUI 
+          withWebUI
             ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
             workDir (argExists "loadstate" as) (argExists "autosave" as)
             (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
             (argExists "debug" as) dataDir (dotPath as) readImageFormat
             (runWarp port)
-        else 
+        else
           helpAndExit thisMode
             (Just $ "directory '" ++ workDir ++ "' does not exist.")
   where
@@ -104,7 +103,7 @@ run thisMode as = case findArg "workDir" as of
     readPort = do
       let port = findArg "port" as >>= fmap fst . listToMaybe . reads
       when
-        (argExists "port" as && isNothing port) 
+        (argExists "port" as && isNothing port)
         (putStrLn $ "Unable to read port from argument `"
                     ++ fromMaybe "" (findArg "port" as) ++ "'. Using default.")
       return $ fromMaybe Web.Settings.defaultPort port

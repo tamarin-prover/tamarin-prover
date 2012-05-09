@@ -1,12 +1,12 @@
 -- |
 -- Copyright   : (c) 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- General support for pretty printing theories.
-module Theory.Pretty (
+module Theory.Text.Pretty (
   -- * General highlighters
     module Text.PrettyPrint.Highlight
 
@@ -19,7 +19,7 @@ module Theory.Pretty (
 
   -- * Keywords
   , kwTheoryHeader
-  , kwEnd   
+  , kwEnd
   , kwModulo
   , kwBy
   , kwCase

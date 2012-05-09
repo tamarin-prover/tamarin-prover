@@ -36,28 +36,28 @@ module Web.Types
   -- Image rendering
   , ImageFormat(..)
   , imageFormatMIME
-  ) 
+  )
 where
 
-import Theory
+import           Theory
 
-import Yesod.Core
-import Yesod.Static
+import           Yesod.Core
+import           Yesod.Static
 
-import Text.Hamlet
+import           Text.Hamlet
 
-import Data.Monoid (mconcat)
-import Data.Maybe (listToMaybe)
-import Data.Ord (comparing)
-import Data.Time.LocalTime
-import Data.Label
-import Control.Concurrent
+import           Control.Concurrent
+import           Data.Label
+import           Data.Maybe          (listToMaybe)
+import           Data.Monoid         (mconcat)
+import           Data.Ord            (comparing)
+import           Data.Time.LocalTime
 
-import qualified Data.Map as M
-import qualified Data.Text as T
+import qualified Data.Map            as M
+import qualified Data.Text           as T
 
 -- import Control.Monad.IO.Class
-import Control.Applicative
+import           Control.Applicative
 
 ------------------------------------------------------------------------------
 -- Types
@@ -93,7 +93,7 @@ imageFormatMIME PNG = "image/png"
 imageFormatMIME SVG = "image/svg+xml"
 
 -- | The so-called site argument for our application, which can hold various
--- information that can use to keep info that needs to be available to the 
+-- information that can use to keep info that needs to be available to the
 -- handler functions.
 data WebUI = WebUI
   { getStatic   :: Static
@@ -131,7 +131,7 @@ data JsonResponse
 data TheoryOrigin = Local FilePath | Upload String | Interactive
      deriving (Show, Eq, Ord)
 
--- | Data type containg both the theory and it's index, making it easier to 
+-- | Data type containg both the theory and it's index, making it easier to
 -- pass the two around (since they are always tied to each other). We also
 -- keep some extra bookkeeping information.
 data TheoryInfo = TheoryInfo
@@ -181,7 +181,7 @@ data TheoryPath
   = TheoryHelp                          -- ^ The help view (help and info about theory)
   | TheoryLemma String                  -- ^ Theory lemma with given name
   | TheoryIntrVar Int                   -- ^ Intruder variant (n'th from start)
-  | TheoryCaseDist CaseDistKind Int Int -- ^ Required cases (i'th source, j'th case) 
+  | TheoryCaseDist CaseDistKind Int Int -- ^ Required cases (i'th source, j'th case)
   | TheoryProof String ProofPath        -- ^ Proof path within proof for given lemma
   | TheoryMethod String ProofPath Int   -- ^ Apply the proof method to proof path
   | TheoryRules                         -- ^ Theory rules
@@ -211,14 +211,14 @@ parsePath (x:xs) = case x of
   "variant" -> parseVariant xs
   "proof"   -> parseProof xs
   "method"  -> parseMethod xs
-  _         -> Nothing 
+  _         -> Nothing
   where
     safeRead = listToMaybe . map fst . reads
 
     parseLemma ys = TheoryLemma <$> listToMaybe ys
 
     parseProof (y:ys) = Just (TheoryProof y ys)
-    parseProof _      = Nothing 
+    parseProof _      = Nothing
 
     parseMethod (y:z:zs) = safeRead z >>= Just . TheoryMethod y zs
     parseMethod _        = Nothing
@@ -227,7 +227,7 @@ parsePath (x:xs) = case x of
     parseVariant _     = Nothing
 
     parseCases (kind:y:z:_) = do
-      k <- case kind of "typed"   -> return TypedCaseDist 
+      k <- case kind of "typed"   -> return TypedCaseDist
                         "untyped" -> return UntypedCaseDist
                         _         -> Nothing
       m <- safeRead y
@@ -315,7 +315,7 @@ instance Yesod WebUI where
 -- | Our application's default layout template.
 -- Note: We define the default layout here even tough it doesn't really
 -- belong in the "types" module in order to avoid mutually recursive modules.
--- defaultLayout' :: (Yesod master, Route master ~ WebUIRoute) 
+-- defaultLayout' :: (Yesod master, Route master ~ WebUIRoute)
 --                => GWidget sub master ()      -- ^ Widget to embed in layout
 --                -> GHandler sub master RepHtml
 defaultLayout' :: Yesod master =>

@@ -3,15 +3,29 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 -- Portability : GHC only
 --
 -- Support for reasoning with and about disjunctions of substitutions.
-module Theory.Proof.EquationStore (
+module Theory.Tools.EquationStore (
+  -- * Equations
+    SplitId
+
+  , EqStore(..)
+  , emptyEqStore
+  , eqsSubst
+  , eqsConj
+
+  -- ** Equalitiy constraint conjunctions
+  , falseEqConstrConj
+
+  -- ** Queries
+  , eqsIsFalse
+
 
   -- * Transformation
-    simp
+  , simp
   , addEqs
   , addRuleVariants
   , splitAtPos
@@ -24,29 +38,93 @@ module Theory.Proof.EquationStore (
   -- * simplify a disjunction
   , simpDisjunction
 
+  -- ** Pretty printing
+  , prettyEqStore
 ) where
 
-import Term.Unification
-import Logic.Connectives
-import Theory.Proof.Types
+import           Logic.Connectives
+import           Term.Unification
+import           Theory.Text.Pretty
 
-import Control.Monad.Reader
-import Control.Monad.Fresh
-import Utils.Misc
-import Extension.Prelude
+import           Control.Monad.Fresh
+import           Control.Monad.Reader
+import           Extension.Prelude
+import           Utils.Misc
 
-import Debug.Trace.Ignore
+import           Debug.Trace.Ignore
 
-import Data.List
-import Data.Label hiding ( for )
-import Data.Maybe
-import Safe
-import Data.Monoid
-import qualified Data.Foldable as F
-import qualified Data.Set as S
-import Control.Basics
-import Control.Monad.State hiding (get, modify)
-import qualified Control.Monad.State as MS
+import           Control.Basics
+import           Control.DeepSeq
+import           Control.Monad.State  hiding (put, get, modify)
+import qualified Control.Monad.State  as MS
+
+import           Data.Binary
+import           Data.DeriveTH
+import qualified Data.Foldable        as F
+import           Data.Label           hiding (get, for)
+import qualified Data.Label           as L
+import           Data.List
+import           Data.Maybe
+import           Data.Monoid
+import qualified Data.Set             as S
+import           Safe
+
+------------------------------------------------------------------------------
+-- Equation Store                                                --
+------------------------------------------------------------------------------
+
+-- | Index of disjunction in equation store
+type SplitId = Int
+
+-- FIXME: Make comment parse.
+--
+-- The semantics of an equation store
+-- > EqStore sigma_free
+-- >         [ [sigma_i1,..,sigma_ik_i] | i <- [1..l] ]
+-- where sigma_free = {t1/x1, .., tk/xk} is
+-- >    (x1 = t1 /\ .. /\ xk = tk)
+-- > /\_{i in [1..l]}
+-- >    ([|sigma_i1|] \/ .. \/ [|sigma_ik_1|] \/ [|mtinfo_i|]
+-- where @[|{t_1/x_1,..,t_l/x_l}|] = EX vars(t1,..,tl). x_1 = t1 /\ .. /\ x_l = t_l@.
+-- Note that the 'LVar's in the range of a substitution are interpreted as
+-- fresh variables, i.e., different by construction from the x_i which are
+-- free variables.
+--
+-- The variables in the domain of the substitutions sigma_ij and all
+-- variables in sigma_free are free (usually globally existentially quantified).
+-- We use Conj [] as a normal form to denote True and Conj [Disj []]
+-- as a normal form to denote False.
+-- We say a variable @x@ is constrained by a disjunction if there is a substition
+-- @s@ in the disjunction with @x `elem` dom s@.
+data EqStore = EqStore {
+      _eqsSubst :: LNSubst
+    , _eqsConj  :: Conj (S.Set LNSubstVFresh)
+    }
+  deriving( Eq, Ord )
+
+$(mkLabels [''EqStore])
+
+-- | @emptyEqStore@ is the empty equation store.
+emptyEqStore :: EqStore
+emptyEqStore = EqStore emptySubst (Conj [])
+
+-- | @True@ iff the 'EqStore' is contradictory.
+eqsIsFalse :: EqStore -> Bool
+eqsIsFalse = (== falseEqConstrConj) . L.get eqsConj
+
+-- | The false typing conjunction.
+falseEqConstrConj :: Conj (S.Set (LNSubstVFresh))
+falseEqConstrConj = Conj [S.empty]
+
+
+-- Instances
+------------
+
+instance HasFrees EqStore where
+    foldFrees f (EqStore subst substs) = foldFrees f subst `mappend` foldFrees f substs
+    mapFrees f (EqStore subst substs) = EqStore <$> mapFrees f subst <*> mapFrees f substs
+
+
 
 
 -- Equation Store
@@ -67,12 +145,12 @@ data SplitStrategy = SplitNow | SplitLater
 -- sorted by the size of the disjunctions.
 eqSplits :: EqStore -> [SplitId]
 eqSplits eqs =
-    map fst . sortOn snd $ zip [0..] (map S.size . getConj . get eqsConj $ eqs)
+    map fst . sortOn snd $ zip [0..] (map S.size . getConj . L.get eqsConj $ eqs)
 
 
 -- | Returns the number of cases for a given 'SplitId'.
 splitCasenum :: EqStore -> SplitId -> Int
-splitCasenum eqs sid = case atMay (getConj . get eqsConj $ eqs) sid of
+splitCasenum eqs sid = case atMay (getConj . L.get eqsConj $ eqs) sid of
     Just disj -> S.size disj
     Nothing   -> error "splitCasenum: invalid split id"
 
@@ -90,7 +168,7 @@ splitAtPos eqStore i
     | i `notElem` eqSplits eqStore = Nothing
     | otherwise = Just $ map (\d -> set eqsConj (conjNew d) eqStore) disj
   where
-    conj = getConj $ get eqsConj eqStore
+    conj = getConj $ L.get eqsConj eqStore
     disj = S.toList (conj !! i)
     conjNew d = Conj $ take i conj ++ [ S.singleton d ] ++ drop (i+1) conj
 
@@ -113,7 +191,7 @@ addEqs splitStrat hnd eqs0 eqStore =
                     addEqsAC (modify eqsSubst (compose subst) eqStore)
                         <$> simpDisjunction hnd (const False) (Disj substs)
   where
-    eqs = apply (get eqsSubst eqStore) $ trace (unlines ["addEqs: ", show eqs0]) $ eqs0
+    eqs = apply (L.get eqsSubst eqStore) $ trace (unlines ["addEqs: ", show eqs0]) $ eqs0
     addEqsAC eqSt (sfree, Nothing)   = [ applyEqStore hnd sfree eqSt ]
     addEqsAC eqSt (sfree, Just disj) =
       fromMaybe (error "addEqsSplit: impossible, splitAtPos failed")
@@ -130,8 +208,8 @@ applyEqStore hnd asubst eqStore
     = modify eqsConj (fmap (S.fromList . concatMap applyBound  . S.toList)) $
           set eqsSubst newsubst eqStore
   where
-    newsubst = asubst `compose` get eqsSubst eqStore
-    applyBound s = map (restrictVFresh (varsRange newsubst ++ domVFresh s)) $ 
+    newsubst = asubst `compose` L.get eqsSubst eqStore
+    applyBound s = map (restrictVFresh (varsRange newsubst ++ domVFresh s)) $
         (`runReader` hnd) $ unifyLNTerm
           [ Equal (apply newsubst (varTerm lv)) t
           | let slist = substToListVFresh s,
@@ -174,7 +252,7 @@ addRuleVariants (Disj substs) eqStore
               ++"This case has not been implemented, add rule variants earlier."
     | otherwise = addDisj eqStore (S.fromList substs)
   where
-    freeSubst = get eqsSubst eqStore
+    freeSubst = L.get eqsSubst eqStore
 
 
 -- | Return the set of variables that is constrained by disjunction at give position.
@@ -183,7 +261,7 @@ constrainedVarsPos eqStore k
     | k < length conj = frees (conj!!k)
     | otherwise       = []
   where
-    conj = getConj . get eqsConj $ eqStore
+    conj = getConj . L.get eqsConj $ eqStore
 
 -- Simplifying disjunctions
 ----------------------------------------------------------------------
@@ -197,7 +275,7 @@ simpDisjunction :: MonadFresh m
                 -> m (LNSubst, Maybe [LNSubstVFresh])
 simpDisjunction hnd isContr disj0 = do
     eqStore' <- simp hnd isContr eqStore
-    return (get eqsSubst eqStore', wrap $ get eqsConj eqStore')
+    return (L.get eqsSubst eqStore', wrap $ L.get eqsConj eqStore')
   where
     eqStore = set eqsConj (Conj [ S.fromList . getDisj $ disj0 ]) $ emptyEqStore
     wrap (Conj [])     = Nothing
@@ -239,7 +317,7 @@ simp1 hnd isContr = do
 -- | Remove variable renamings in fresh substitutions.
 simpRemoveRenamings :: MonadFresh m => StateT EqStore m Bool
 simpRemoveRenamings = do
-    conj <- gets (get eqsConj)
+    conj <- gets (L.get eqsConj)
     if F.any (S.foldl' (\b subst -> b || domVFresh subst /= domVFresh (removeRenamings subst)) False) conj
       then MS.modify (set eqsConj $ fmap (S.map removeRenamings) conj) >> return True
       else return False
@@ -249,7 +327,7 @@ simpRemoveRenamings = do
 --   can be simplified to False.
 simpEmptyDisj :: MonadFresh m => StateT EqStore m Bool
 simpEmptyDisj = do
-    conj <- gets (get eqsConj)
+    conj <- gets (L.get eqsConj)
     if (F.any (==falseDisj) conj && conj /= falseEqConstrConj)
       then MS.modify (set eqsConj falseEqConstrConj) >> return True
       else return False
@@ -314,7 +392,7 @@ simpAbstractFun (subst:others) = case commonOperators of
 
 
 -- | If all substitutions @si@ map a variable @v@ to the same name @n@,
---   then they all contain the common factor 
+--   then they all contain the common factor
 --   @{v |-> n}@ and we can remove @{v -> n} from all substitutions @si@
 simpAbstractName :: MonadFresh m
                  => [LNSubstVFresh]
@@ -334,7 +412,7 @@ simpAbstractName (subst:others) = case commonNames of
 
 
 -- | If all substitutions @si@ map a variable @v@ to variables @xi@ of the same
---   sort @s@ then they all contain the common factor 
+--   sort @s@ then they all contain the common factor
 --   @{v |-> y}@ for a fresh variable of sort @s@
 --   and we can replace @{v -> xi}@ by @{y -> xi} in all substitutions @si@
 simpAbstractSortedVar :: MonadFresh m
@@ -392,7 +470,7 @@ simpIdentify (subst:others) = case equalImgPairs of
 --   We could generalize this function by using AC-equality or subsumption.
 simpMinimize :: MonadFresh m => (LNSubstVFresh -> Bool) -> StateT EqStore m Bool
 simpMinimize isContr = do
-    conj <- MS.gets (get eqsConj)
+    conj <- MS.gets (L.get eqsConj)
     if F.any (S.foldr (\subst b -> subst == emptySubstVFresh || isContr subst || b) False) conj
         then MS.modify (set eqsConj (fmap minimize conj)) >> return True
         else return False
@@ -411,7 +489,7 @@ foreachDisj :: MonadFresh m
             -> ([LNSubstVFresh] -> m (Maybe (Maybe LNSubst, [S.Set LNSubstVFresh])))
             -> StateT EqStore m Bool
 foreachDisj hnd f =
-    go [] =<< gets (getConj . get eqsConj)
+    go [] =<< gets (getConj . L.get eqsConj)
   where
     go _     []         = return False
     go lefts (d:rights) = do
@@ -422,3 +500,36 @@ foreachDisj hnd f =
               MS.modify (set eqsConj (Conj (reverse lefts ++ disjs ++ rights)))
               maybe (return ()) (\s -> MS.modify (applyEqStore hnd s)) msubst
               return True
+
+------------------------------------------------------------------------------
+-- Pretty printing
+------------------------------------------------------------------------------
+
+-- | Pretty print an 'EqStore'.
+prettyEqStore :: HighlightDocument d => EqStore -> d
+prettyEqStore eqs@(EqStore subst (Conj disjs)) = vcat $
+  [if eqsIsFalse eqs then text "CONTRADICTORY" else emptyDoc] ++
+  map combine
+    [ ("subst", vcat $ prettySubst (text . show) (text . show) subst)
+    , ("conj",  numbered' $ map ppDisj disjs)
+    ]
+  where
+    combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
+    ppDisj substs =
+        numbered' conjs
+      where
+        conjs = map ppConj (S.toList substs)
+        ppConj = vcat . map prettyEq . substToListVFresh
+        prettyEq (a,b) =
+          prettyNTerm (lit (Var a)) $$ nest (6::Int) (opEqual <-> prettyNTerm b)
+
+
+
+-- Derived and delayed instances
+--------------------------------
+
+instance Show EqStore where
+    show = render . prettyEqStore
+
+$( derive makeBinary ''EqStore)
+$( derive makeNFData ''EqStore)

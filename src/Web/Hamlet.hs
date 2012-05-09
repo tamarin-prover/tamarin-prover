@@ -10,39 +10,39 @@ Portability :  non-portable
 -}
 
 {-# LANGUAGE
-    TypeFamilies, QuasiQuotes, TypeSynonymInstances, 
+    TypeFamilies, QuasiQuotes, TypeSynonymInstances,
     PatternGuards, FlexibleInstances, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Web.Hamlet (
     rootTpl
-  , overviewTpl  
+  , overviewTpl
   ) where
 
-import Theory
-import Web.Types
-import Web.Theory
-import Data.Label
-import Text.PrettyPrint.Html
+import           Data.Label
+import           Text.PrettyPrint.Html
+import           Theory
+import           Web.Theory
+import           Web.Types
 
-import Yesod.Core
+import           Yesod.Core
 -- import Yesod.Form
 -- import Text.Hamlet
 
-import Control.Monad.IO.Class (liftIO)
-import Data.Ord
-import Data.List
-import Data.Time.Format
-import Data.Version (showVersion)
-import qualified Data.Map as M
+import           Control.Monad.IO.Class (liftIO)
+import           Data.List
+import qualified Data.Map               as M
+import           Data.Ord
+import           Data.Time.Format
+import           Data.Version           (showVersion)
 -- import qualified Data.Text as T
-import Text.Blaze.Html5 (preEscapedString)
+import           Text.Blaze.Html5       (preEscapedString)
 
 -- import Control.Monad.RWS (runRWST)
-import qualified Control.Exception as E
-import System.Locale
+import qualified Control.Exception      as E
+import           System.Locale
 
-import Paths_tamarin_prover (version)
+import           Paths_tamarin_prover   (version)
 
 -- Quasi-quotation syntax changed from GHC 6 to 7,
 -- so we need this switch in order to support both
@@ -67,7 +67,7 @@ wrapHtmlDoc doc
 
 -- | Run a ThHtml value, catch exceptions.
 wrapThHtml :: HtmlDoc Doc -> IO Widget
-wrapThHtml th = 
+wrapThHtml th =
     E.catch (return $ wrapHtmlDoc th) handleEx
   where
     -- handleEx :: HamletValue h => E.SomeException -> IO h
@@ -130,7 +130,7 @@ rootTpl theories = [whamlet|
         <input type=file name="uploadedTheory">
         <div .submit-form>
           <input type=submit value="Load new theory">
-      <p>Note: You can save a theory by downloading the source. 
+      <p>Note: You can save a theory by downloading the source.
   |]
 
 -- | Template for listing theories.
@@ -153,7 +153,7 @@ theoriesTpl thmap = [whamlet|
   |]
   where
     processMap =
-      groupBy (\x y -> comparing tiName x y == EQ) . 
+      groupBy (\x y -> comparing tiName x y == EQ) .
       sortBy (comparing snd) . M.toList
 
     tiName = get thyName . tiTheory . snd

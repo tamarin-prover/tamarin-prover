@@ -1,4 +1,4 @@
-{-# LANGUAGE 
+{-# LANGUAGE
       CPP, FlexibleContexts, FlexibleInstances, TypeSynonymInstances,
       MultiParamTypeClasses, DeriveDataTypeable, StandaloneDeriving,
       TemplateHaskell, GeneralizedNewtypeDeriving, ViewPatterns
@@ -8,7 +8,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Terms with logical variables  and names.
@@ -31,6 +31,7 @@ module Term.LTerm (
   -- * LVar
   , LSort(..)
   , LVar(..)
+  , NodeId
   , LTerm
   , LNTerm
 
@@ -42,11 +43,18 @@ module Term.LTerm (
   , sortOfLNTerm
   , isMsgVar
   , isFreshVar
-  , trivial
-  , input
-  
+  , isSimpleTerm
+  , inputTerms
+
+  -- ** Destructors
+  , ltermVar
+  , ltermVar'
+  , ltermNodeId
+  , ltermNodeId'
+
+
   -- ** Manging Free LVars
-  
+
   , HasFrees(..)
   , MonotoneFunction(..)
   , occurs
@@ -68,6 +76,7 @@ module Term.LTerm (
 
   -- * Pretty-Printing
   , prettyLVar
+  , prettyNodeId
   , prettyNTerm
   , prettyLNTerm
 
@@ -98,10 +107,66 @@ import Data.Monoid
 import Data.Binary
 import Data.Foldable hiding (concatMap, elem)
 
+import Safe (fromJustNote)
+
 import Extension.Prelude
 import Extension.Data.Monoid
 
 import Logic.Connectives
+
+------------------------------------------------------------------------------
+-- Sorts.
+------------------------------------------------------------------------------
+
+-- | Sorts for logical variables. They satisfy the following sub-sort relation:
+--
+-- >  LSortMsg   < LSortMSet
+-- >  LSortFresh < LSortMsg
+-- >  LSortPub   < LSortMsg
+--
+data LSort = LSortPub   -- ^ Arbitrary public names.
+           | LSortFresh -- ^ Arbitrary fresh names.
+           | LSortMsg   -- ^ Arbitrary messages.
+           | LSortMSet  -- ^ Sort for multisets.
+           | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
+           deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data )
+
+-- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
+--   Partial order: Node      MSet
+--                             |
+--                            Msg
+--                           /   \
+--                         Pub  Fresh
+sortCompare :: LSort -> LSort -> Maybe Ordering
+sortCompare s1 s2 = case (s1, s2) of
+    (a, b) | a == b          -> Just EQ
+    -- Node is incomparable to all other sorts, invalid input
+    (LSortNode,  _        )  -> Nothing
+    (_,          LSortNode)  -> Nothing
+    -- MSet is greater than all except Node
+    (LSortMSet,  _        )  -> Just GT
+    (_,          LSortMSet)  -> Just LT
+    -- Msg is greater than all sorts except Node and MSet
+    (LSortMsg,   _        )  -> Just GT
+    (_,          LSortMsg )  -> Just LT
+    -- The remaining combinations (Pub/Fresh) are incomparable
+    _                        -> Nothing
+
+-- | @sortPrefix s@ is the prefix we use for annotating variables of sort @s@.
+sortPrefix :: LSort -> String
+sortPrefix LSortMsg   = ""
+sortPrefix LSortFresh = "~"
+sortPrefix LSortPub   = "$"
+sortPrefix LSortNode  = "#"
+sortPrefix LSortMSet  = "%"
+
+-- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
+sortSuffix :: LSort -> String
+sortSuffix LSortMsg   = "msg"
+sortSuffix LSortFresh = "fresh"
+sortSuffix LSortPub   = "pub"
+sortSuffix LSortNode  = "node"
+sortSuffix LSortMSet  = "mset"
 
 
 ------------------------------------------------------------------------------
@@ -152,32 +217,24 @@ sortOfName :: Name -> LSort
 sortOfName (Name FreshName _) = LSortFresh
 sortOfName (Name PubName   _) = LSortPub
 
-
 ------------------------------------------------------------------------------
 -- LVar: logical variables
 ------------------------------------------------------------------------------
 
--- | Sorts for logical variables. They satisfy the following sub-sort relation:
---
--- >  LSortMsg   < LSortMSet
--- >  LSortFresh < LSortMsg
--- >  LSortPub   < LSortMsg
---
-data LSort = LSortPub   -- ^ Arbitrary public names.
-           | LSortFresh -- ^ Arbitrary fresh names.
-           | LSortMsg   -- ^ Arbitrary messages.
-           | LSortMSet  -- ^ Sort for multisets.
-           | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
-           deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data )
 
 -- | Logical variables. Variables with the same name and index but different
 -- sorts are regarded as different variables.
-data LVar = LVar 
+data LVar = LVar
      { lvarName :: String
-     , lvarSort :: !LSort
+     , lvarSort :: !LSort     -- FIXME: Rename to 'sortOfLVar' for consistency
+                              -- with the other 'sortOf' functions.
      , lvarIdx  :: !Integer
      }
      deriving( Typeable, Data )
+
+-- | An alternative name for logical variables, which are intented to be
+-- variables of sort 'LSortNode'.
+type NodeId = LVar
 
 -- | Terms used for proving; i.e., variables fixed to logical variables.
 type LTerm c = VTerm c LVar
@@ -203,43 +260,6 @@ sortOfLTerm sortOfConst t = case viewTerm2 t of
 sortOfLNTerm :: LNTerm -> LSort
 sortOfLNTerm = sortOfLTerm sortOfName
 
--- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
---   Partial order: Node      MSet
---                             |
---                            Msg
---                           /   \
---                         Pub  Fresh
-sortCompare :: LSort -> LSort -> Maybe Ordering
-sortCompare s1 s2 = case (s1, s2) of
-    (a, b) | a == b          -> Just EQ
-    -- Node is incomparable to all other sorts, invalid input
-    (LSortNode,  _        )  -> Nothing
-    (_,          LSortNode)  -> Nothing
-    -- MSet is greater than all except Node
-    (LSortMSet,  _        )  -> Just GT
-    (_,          LSortMSet)  -> Just LT
-    -- Msg is greater than all sorts except Node and MSet
-    (LSortMsg,   _        )  -> Just GT
-    (_,          LSortMsg )  -> Just LT
-    -- The remaining combinations (Pub/Fresh) are incomparable
-    _                        -> Nothing
-
--- | @sortPrefix s@ is the prefix we use for annotating variables of sort @s@.
-sortPrefix :: LSort -> String
-sortPrefix LSortMsg   = ""
-sortPrefix LSortFresh = "~"
-sortPrefix LSortPub   = "$"
-sortPrefix LSortNode  = "#"
-sortPrefix LSortMSet  = "%"
-
--- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
-sortSuffix :: LSort -> String
-sortSuffix LSortMsg   = "msg"
-sortSuffix LSortFresh = "fresh"
-sortSuffix LSortPub   = "pub"
-sortSuffix LSortNode  = "node"
-sortSuffix LSortMSet  = "mset"
-
 -- | Is a term a message variable?
 isMsgVar :: LNTerm -> Bool
 isMsgVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortMsg)
@@ -251,12 +271,13 @@ isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
 isFreshVar _                         = False
 
 -- | The required components to construct the message.
-input :: LNTerm -> [LNTerm]
-input (viewTerm2 -> FMult ts)    = concatMap input ts
-input (viewTerm2 -> FInv t1)     = input t1
-input (viewTerm2 -> FPair t1 t2) = input t1 ++ input t2
-input t                          = [t]
+inputTerms :: LNTerm -> [LNTerm]
+inputTerms (viewTerm2 -> FMult ts)    = concatMap inputTerms ts
+inputTerms (viewTerm2 -> FInv t1)     = inputTerms t1
+inputTerms (viewTerm2 -> FPair t1 t2) = inputTerms t1 ++ inputTerms t2
+inputTerms t                          = [t]
 
+{-
 -- | Is a message trivial; i.e., can for sure be instantiated with something
 -- known to the intruder?
 trivial :: LNTerm -> Bool
@@ -267,6 +288,43 @@ trivial (viewTerm -> Lit (Var v))                = case lvarSort v of
                                                      LSortMsg -> True
                                                      _        -> False
 trivial _                                        = False
+-}
+
+-- | A term is *simple* iff there is an instance of this term that can be
+-- constructed from public names only. i.e., the term does not contain any
+-- fresh names or fresh variables.
+isSimpleTerm :: LNTerm -> Bool
+isSimpleTerm =
+    getAll . foldMap (All . (LSortFresh /=) . sortOfLit)
+  where
+    sortOfLit (Con n) = sortOfName n
+    sortOfLit (Var v) = lvarSort v
+
+
+-- Destructors
+--------------
+
+-- | Extract a variable of the given sort from a term that may be such a
+-- variable. Use 'termVar', if you do not want to restrict the sort.
+ltermVar :: LSort -> LTerm c -> Maybe LVar
+ltermVar s t = do v <- termVar t; guard (s == lvarSort v); return v
+
+-- | Extract a variable of the given sort from a term that must be such a
+-- variable. Fails with an error, if that is not possible.
+ltermVar' :: Show c => LSort -> LTerm c -> LVar
+ltermVar' s t =
+    fromJustNote err (ltermVar s t)
+  where
+    err = "ltermVar': expected variable term of sort " ++ show s ++ ", but got " ++ show t
+
+-- | Extract a node-id variable from a term that may be a node-id variable.
+ltermNodeId  :: LTerm c -> Maybe LVar
+ltermNodeId = ltermVar LSortNode
+
+-- | Extract a node-id variable from a term that must be a node-id variable.
+ltermNodeId' :: Show c => LTerm c -> LVar
+ltermNodeId' = ltermVar' LSortNode
+
 
 
 -- BVar: Bound variables
@@ -319,7 +377,7 @@ instance Eq LVar where
 
 -- An ord instane that prefers the 'lvarIdx' over the 'lvarName'.
 instance Ord LVar where
-    compare (LVar x1 x2 x3) (LVar y1 y2 y3) = 
+    compare (LVar x1 x2 x3) (LVar y1 y2 y3) =
         compare x3 y3 & compare x2 y2 & compare x1 y1 & EQ
       where
         EQ & x = x
@@ -345,12 +403,12 @@ instance IsVar LVar where
 -- equal or larger 'LVar's. This ensures that the AC-normal form does not have
 -- to be recomputed. If you are unsure about what to use, then use the
 -- 'Arbitrary' function.
-data MonotoneFunction f = Monotone (LVar -> f LVar ) 
+data MonotoneFunction f = Monotone (LVar -> f LVar )
                         | Arbitrary (LVar -> f LVar )
 
 -- | @HasFree t@ denotes that the type @t@ has free @LVar@ variables. They can
 -- be collected using 'foldFrees' and mapped in the context of an applicative
--- functor using 'mapFrees'. 
+-- functor using 'mapFrees'.
 --
 -- When defining instances of this class, you have to ensure that only the free
 -- LVars are collected and mapped and no others. The instances for standard
@@ -409,10 +467,10 @@ renamePrecise x = evalBindT (someInst x) noBindings
 -- renaming of indices of free variables. Note that the normal form is not
 -- unique with respect to AC symbols.
 eqModuloFreshnessNoAC :: (HasFrees a, Eq a) => a -> a -> Bool
-eqModuloFreshnessNoAC t1 = 
+eqModuloFreshnessNoAC t1 =
      -- this formulation shares normalisation of t1 among further calls to
      -- different t2.
-    (normIndices t1 ==) . normIndices 
+    (normIndices t1 ==) . normIndices
   where
     normIndices = (`evalFresh` nothingUsed) . (`evalBindT` noBindings) .
                   mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x "")
@@ -423,7 +481,7 @@ boundsVarIdx = getMinMax . foldFrees (minMaxSingleton . lvarIdx)
 
 -- | @avoid t@ computes a 'FreshState' that avoids generating
 -- variables occurring in @t@.
-avoid :: HasFrees t => t -> FreshState 
+avoid :: HasFrees t => t -> FreshState
 avoid = maybe 0 (succ . snd) . boundsVarIdx
 
 -- | @m `evalFreshAvoiding` t@ evaluates the monadic action @m@ with a
@@ -449,7 +507,7 @@ instance HasFrees LVar where
     foldFrees = id
     mapFrees  (Arbitrary f) = f
     mapFrees  (Monotone f)  = f
-    
+
 instance HasFrees v => HasFrees (Lit c v) where
     foldFrees f (Var x) = foldFrees f x
     foldFrees _ _       = mempty
@@ -517,7 +575,7 @@ instance (HasFrees a, HasFrees b) => HasFrees (a, b) where
 
 instance (HasFrees a, HasFrees b, HasFrees c) => HasFrees (a, b, c) where
     foldFrees  f (x, y, z)    = foldFrees f (x, (y, z))
-    mapFrees   f (x0, y0, z0) = 
+    mapFrees   f (x0, y0, z0) =
         (\(x, (y, z)) -> (x, y, z)) <$> mapFrees f (x0, (y0, z0))
 
 instance HasFrees a => HasFrees [a] where
@@ -550,6 +608,10 @@ instance (Ord k, HasFrees k, HasFrees v) => HasFrees (M.Map k v) where
 -- | Pretty print a 'LVar'.
 prettyLVar :: Document d => LVar -> d
 prettyLVar = text . show
+
+-- | Pretty print a 'NodeId'.
+prettyNodeId :: Document d => NodeId -> d
+prettyNodeId = text . show
 
 -- | Pretty print an @NTerm@.
 prettyNTerm :: (Show v, Document d) => NTerm v -> d

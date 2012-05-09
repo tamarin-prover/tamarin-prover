@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Terms with variables and constants.
@@ -18,6 +18,10 @@ module Term.VTerm (
     , occursVTerm
     , constsVTerm
     , isVar
+
+    -- ** Destructors
+    , termVar
+    , termVar'
 
     , IsVar
     , IsConst
@@ -36,6 +40,8 @@ import Control.DeepSeq
 import Control.Basics
 
 import Extension.Prelude
+
+import Safe (fromJustNote)
 
 import Term.Term
 
@@ -94,7 +100,7 @@ instance (Show v, Show c) => Show (Lit c v) where
 
 -- | @varTerm v@ is the 'VTerm' with the variable @v@.
 varTerm :: v -> VTerm c v
-varTerm = lit . Var 
+varTerm = lit . Var
 
 -- | @constTerm c@ is the 'VTerm' with the const @c@.
 constTerm :: c -> VTerm c v
@@ -118,6 +124,21 @@ constsVTerm :: IsConst c => VTerm c v -> [c]
 constsVTerm = sortednub . D.toList . foldMap fLit
   where fLit (Var _)  = mempty
         fLit (Con n) = return n
+
+-- Destructors
+--------------
+
+-- | Extract just the variable from a term that may be variable.
+termVar :: VTerm c v -> Maybe v
+termVar (viewTerm -> Lit (Var v)) = Just v
+termVar _                         = Nothing
+
+-- | Extract just the variable from a term that must be variable, throw an
+-- error if this fails.
+termVar' :: (Show c, Show v) => VTerm c v -> v
+termVar' t =
+    fromJustNote ("termVar': non-variable term " ++ show t) (termVar t)
+
 
 -- Derived instances
 --------------------

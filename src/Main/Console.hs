@@ -1,7 +1,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -42,18 +42,18 @@ module Main.Console (
   , renderDoc
   ) where
 
-import           Safe
 import           Data.Maybe
-import           Data.Version (showVersion)
-                 
+import           Data.Version                    (showVersion)
+import           Safe
+
 import           Control.Monad
-                 
-import           System.FilePath
+
 import           System.Console.CmdArgs.Explicit
 import           System.Console.CmdArgs.Text
 import           System.Exit
+import           System.FilePath
 
-import qualified Text.PrettyPrint.Class as PP
+import qualified Text.PrettyPrint.Class          as PP
 
 import           Paths_tamarin_prover
 
@@ -115,7 +115,7 @@ findArg a' as = msum [ return v | (a,v) <- as, a == a' ]
 -- | Find the value corresponding to the given key. Throw an error if no value
 -- exists.
 getArg :: ArgKey -> Arguments -> ArgVal
-getArg a = 
+getArg a =
   fromMaybe (error $ "getArg: argument '" ++ a ++ "' not found") . findArg a
 
 -- | Add an argument to the from of the list of arguments.
@@ -151,16 +151,16 @@ data TamarinMode = TamarinMode
        }
 
 -- | Smart constructor for a 'TamarinMode'.
-tamarinMode :: String -> Help 
+tamarinMode :: String -> Help
             -> (Mode Arguments -> Mode Arguments) -- ^ Changes to default mode.
-            -> (TamarinMode -> Arguments -> IO ()) 
+            -> (TamarinMode -> Arguments -> IO ())
             -> TamarinMode
 tamarinMode name help adaptMode run0 = TamarinMode
   { tmName = name
   , tmCmdArgsMode = adaptMode $ Mode
       { modeGroupModes = toGroup []
-      , modeNames      = [name] 
-      , modeValue      = [] 
+      , modeNames      = [name]
+      , modeValue      = []
       , modeCheck      = updateArg "mode" name
       , modeReform     = const Nothing-- no reform possibility
       , modeHelp       = help
@@ -172,16 +172,16 @@ tamarinMode name help adaptMode run0 = TamarinMode
   , tmIsMainMode = False
   }
   where
-    run thisMode as 
+    run thisMode as
       | argExists "help"    as = helpAndExit thisMode Nothing
       | argExists "version" as = do licensePath <- getDataFileName "LICENSE"
                                     putStrLn $ versionStr licensePath
       | otherwise              = run0 thisMode as
-    
+
 -- | Disply help message of a tamarin mode and exit.
 helpAndExit :: TamarinMode -> Maybe String -> IO ()
 helpAndExit tmode mayMsg = do
-    putStrLn $ showText (Wrap lineWidth) 
+    putStrLn $ showText (Wrap lineWidth)
              $ helpText header HelpFormatOne (tmCmdArgsMode tmode)
     -- output example info
     when (tmIsMainMode tmode) $ do
@@ -189,11 +189,11 @@ helpAndExit tmode mayMsg = do
       manualPath  <- getDataFileName ("doc" </> "MANUAL")
       let tutorialPath = examplePath </> "stable" </> "Tutorial.spthy"
           csf12Path = examplePath </> "csf12" </> "*.spthy"
-          csf12Cmd  = programName ++ " --prove -Ocase-studies +RTS -N -RTS " ++ csf12Path 
-          csf12Cmd' = programName ++ " interactive +RTS -N -RTS " ++ csf12Path 
+          csf12Cmd  = programName ++ " --prove -Ocase-studies +RTS -N -RTS " ++ csf12Path
+          csf12Cmd' = programName ++ " interactive +RTS -N -RTS " ++ csf12Path
           separator = replicate shortLineWidth '-'
           e info paths = info ++ concatMap ("\n  " ++) paths ++ "\n"
-      putStrLn $ unlines 
+      putStrLn $ unlines
         [ separator
         , e "For example protocol models see:" [examplePath]
         , e "A tutorial and the user manul are found at" [tutorialPath, manualPath]
@@ -225,7 +225,7 @@ defaultMain firstMode otherModes = do
       , tmCmdArgsMode = (tmCmdArgsMode firstMode)
           { modeNames = [programName]
           , modeCheck      = updateArg "mode" programName
-          , modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes) 
+          , modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
           , modeGroupFlags = (modeGroupFlags $ tmCmdArgsMode firstMode)
               { groupNamed =
                   [ ("About"
@@ -242,7 +242,7 @@ defaultMain firstMode otherModes = do
 ------------------------------------------------------------------------------
 -- Pretty printing
 ------------------------------------------------------------------------------
-       
+
 -- | Render a pretty-printing document.
 renderDoc :: PP.Doc -> String
-renderDoc = PP.renderStyle (PP.defaultStyle { PP.lineLength = lineWidth }) 
+renderDoc = PP.renderStyle (PP.defaultStyle { PP.lineLength = lineWidth })

@@ -173,23 +173,27 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, hkI.6 )] )
   case Init_1
   solve( (#i1, 2)[!Pk( $R.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.11, h(<z.8, 'g'^(~ekI.8*~x.8), $I.8, $R.8>)
-                      )] /* may loop */ )
-      case Sessk_reveal_case_2
-      solve( splitEqs(1) )
-        case split_case_2
-        solve( (#vf.9, 0)[!KU( f_.10, 'g'^(~tid.58*~x.59*inv(~lkI.57))
-                          )] /* may loop */ )
-          case Resp_1
-          solve( KU((#vr.81, 1), ~lkI.57) )
-            case Ltk_reveal
-            solve( KU((#vr.81, 1), ~x.71) )
-              case Ltk_reveal
-              solve( splitEqs(1) )
-                case split_case_1
-                solve( (#vf.42, 0)[!KU( f_.43, 'g'^~ekI.119 )] /* may loop */ )
-                  case Init_1
-                  SOLVED // trace found
+    solve( !KU( f_.12, h(<z.8, 'g'^(~ekI.8*~x.8), $I.8, $R.8>) ) @ #vk.13 )
+      case ch
+      solve( !KU( f_.60, 'g'^(~ekI.8*~x.8) ) @ #vk.59 )
+        case Init_1
+        solve( !KU( f_.85, ~x.8 ) @ #vk.88 )
+          case Ltk_reveal
+          solve( (#i4.118, 2)[!Ltk( $R.8, ~lkR.121 )] )
+            case generate_ltk
+            solve( (#i4.118, 3)[!Pk( $I.8, 'g'^~x.121 )] )
+              case generate_ltk
+              solve( !KU( f_.56, 'g'^(~lkI.140*~ekR.141) ) @ #vk.55 )
+                case Resp_1
+                solve( !KU( f_.172, ~lkI.140 ) @ #vk.175 )
+                  case Ltk_reveal
+                  solve( !KU( f_.10, 'g'^~ekR.141 ) @ #vk.11 )
+                    case Resp_1
+                    solve( !KU( f_.123, 'g'^~ekI.136 ) @ #vk.124 )
+                      case Init_1
+                      SOLVED // trace found
+                    qed
+                  qed
                 qed
               qed
             qed
@@ -262,21 +266,19 @@ solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
   case generate_ltk
   solve( (#i1, 3)[!Pk( $I.8, 'g'^~x.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.12, h(<'g'^(~ekR.8*~x.8), z.8, $I.8, $R.8>)
-                      )] /* may loop */ )
-      case Sessk_reveal_case_1
-      solve( splitEqs(1) )
-        case split_case_1
-        solve( splitEqs(1) )
-          case split_case_2
-          solve( (#vf.37, 0)[!KU( f_.38, 'g'^(~ekR.54*~x.55*inv(~lkI.56))
-                             )] /* may loop */ )
-            case Resp_1
-            solve( KU((#vr.78, 1), ~lkI.56) )
-              case Ltk_reveal
-              solve( KU((#vr.78, 1), ~x.68) )
+    solve( !KU( f_.13, h(<'g'^(~ekR.8*~x.8), z.8, $I.8, $R.8>) ) @ #vk.14 )
+      case ch
+      solve( !KU( f_.51, 'g'^(~ekR.8*~x.8) ) @ #vk.50 )
+        case Resp_1
+        solve( !KU( f_.86, ~x.8 ) @ #vk.89 )
+          case Ltk_reveal
+          solve( (#i4.113, 1)[!Ltk( $I.8, ~lkI.115 )] )
+            case generate_ltk
+            solve( !KU( f_.55, 'g'^(~lkR.125*~ekI.126) ) @ #vk.54 )
+              case Init_1
+              solve( !KU( f_.145, ~lkR.125 ) @ #vk.148 )
                 case Ltk_reveal
-                solve( (#vf.9, 0)[!KU( f_.10, 'g'^~tid.53 )] /* may loop */ )
+                solve( !KU( f_.10, 'g'^~ekI.126 ) @ #vk.11 )
                   case Init_1
                   SOLVED // trace found
                 qed
@@ -304,8 +306,8 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.56423s
-  keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
+  processing time: 0.987445s
+  keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
 ------------------------------------------------------------------------------
@@ -316,8 +318,8 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.56423s
-  keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
+  processing time: 0.987445s
+  keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
 ==============================================================================

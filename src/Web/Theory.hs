@@ -27,31 +27,33 @@ module Web.Theory
   )
 where
 
-import Theory
-import Theory.Pretty
+import           Data.List
+import qualified Data.Map              as M
+import           Data.Maybe
+import           Data.Monoid
+import qualified Data.Text             as T
 
-import Web.Types
-import Web.Settings
+import           Control.Basics
 
-import Data.Maybe
-import Data.List
-import Data.Monoid
-import qualified Data.Map as M
-import qualified Data.Text as T
+import           System.Directory
+import           System.FilePath
 
-import Control.Basics
+import           Extension.Data.Label
 
-import System.Directory
-import System.FilePath
+import qualified Text.Dot              as D
+import           Text.PrettyPrint.Html
+import           Utils.Misc            (stringSHA256)
 
-import Extension.Data.Label
+import           System.Exit
+import           System.Process
 
-import qualified Text.Dot as D
-import Text.PrettyPrint.Html
-import Utils.Misc (stringSHA256)
+import           Logic.Connectives
+import           Theory
+import           Theory.Text.Pretty
 
-import System.Process
-import System.Exit
+import           Web.Settings
+import           Web.Types
+
 
 ------------------------------------------------------------------------------
 -- Various other functions
@@ -84,8 +86,8 @@ applyMethodAtPath thy lemmaName proofPath i = do
     let ctxt = getProofContext lemma thy
     methods <- applicableProofMethods ctxt <$> psInfo (root subProof)
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
-    applyProverAtPath thy lemmaName proofPath 
-      (oneStepProver method `mappend` 
+    applyProverAtPath thy lemmaName proofPath
+      (oneStepProver method `mappend`
        replaceSorryProver (oneStepProver Simplify) `mappend`
        replaceSorryProver (contradictionAndClauseProver) `mappend`
        replaceSorryProver (oneStepProver Attack)
@@ -131,7 +133,7 @@ preformatted cl = withTag "div" [("class", classes cl)]
 proofIndex :: HtmlDocument d
            => RenderUrl
            -> (ProofPath -> Route WebUI)         -- ^ Relative addressing function
-           -> Proof (Maybe Sequent, Maybe Bool) -- ^ The annotated incremental proof
+           -> Proof (Maybe System, Maybe Bool) -- ^ The annotated incremental proof
            -> d
 proofIndex renderUrl mkRoute =
     prettyProofWith ppStep ppCase . insertPaths
@@ -176,7 +178,7 @@ lemmaIndex renderUrl tidx l =
     proofIndex renderUrl mkRoute annPrf
   where
     editPng = png "/static/img/edit.png"
-    deletePng = png "/static/img/delete.png" 
+    deletePng = png "/static/img/delete.png"
     png path = closedTag "img" [("class","icon"),("src",path)]
 
     annPrf = annotateLemmaProof l
@@ -208,13 +210,13 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     rulesInfo      = parens $ int $ length $ get crProtocol rules
     casesInfo kind =
         parens $ nCases <> comma <-> text chainInfo
-      where 
+      where
         cases   = getCaseDistinction kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
         chainInfo | nChains == 0 = "all chains solved"
                   | otherwise    = show nChains ++ " chains left"
-         
+
     bold                = withTag "strong" [] . text
     overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
     messageLink         = overview "Message theory" (text "") TheoryMessage
@@ -225,10 +227,10 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
 -- | A snippet that explains a sequent using a rendered graph and the pretty
 -- printed sequent.
 sequentSnippet :: HtmlDocument d
-               => Sequent     -- ^ Sequent to pretty print.
+               => System     -- ^ System to pretty print.
                -> TheoryPath  -- ^ The sequents path (NOT the path to its PNG)
                -> d
-sequentSnippet se path = refDotPath path $-$ preformatted Nothing (prettySequent se)
+sequentSnippet se path = refDotPath path $-$ preformatted Nothing (prettySystem se)
 -}
 
 -- | A snippet that explains a sub-proof by displaying its proof state, the
@@ -256,16 +258,16 @@ subProofSnippet renderUrl tidx lemma proofPath ctxt prf =
          else [ withTag "h3" [] (text "Constraint System has no Graph Part") ])
         ++
         [ withTag "h3" [] (text "Pretty-Printed Constraint System")
-        , preformatted (Just "sequent") (prettyNonGraphSequent se)
+        , preformatted (Just "sequent") (prettyNonGraphSystem se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
-        ] ++ 
+        ] ++
         subCases
   where
     prettyApplicableProofMethods se = case proofMethods se of
         []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
         pms -> [ withTag "h3" [] (text "Applicable Proof Methods")
                , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
-               , text "a." <-> 
+               , text "a." <->
                  linkToPath renderUrl (AutoProverR tidx (TheoryProof lemma proofPath))
                      ["autoprove"] (keyword_ "autoprove")
                ]
@@ -277,17 +279,17 @@ subProofSnippet renderUrl tidx lemma proofPath ctxt prf =
     nCases   = show $ M.size $ children prf
     hasGraphPart se = not $ M.empty == get sNodes se
     proofMethods = applicableProofMethods ctxt
-    subCases = concatMap refSubCase $ M.toList $ children prf 
-    refSubCase (name, prf') = 
+    subCases = concatMap refSubCase $ M.toList $ children prf
+    refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
         , maybe (text "no proof state available")
                 (const $ refDotPath renderUrl tidx $ TheoryProof lemma (proofPath ++ [name]))
-                (psInfo $ root prf') 
+                (psInfo $ root prf')
         ]
 
 
 -- | A Html document representing the requires case splitting theorem.
-htmlCaseDistinction :: HtmlDocument d 
+htmlCaseDistinction :: HtmlDocument d
                     => RenderUrl -> TheoryIdx -> CaseDistKind -> (Int, CaseDistinction) -> d
 htmlCaseDistinction renderUrl tidx kind (j, th) =
     if null cases
@@ -297,17 +299,17 @@ htmlCaseDistinction renderUrl tidx kind (j, th) =
     cases    = concatMap ppCase $ zip [1..] $ getDisj $ get cdCases th
     wrapP    = withTag "p" [("class","monospace cases")]
     nCases   = int $ length $ getDisj $ get cdCases th
-    ppPrem   = nest 2 $ doubleQuotes $ prettyLNFact $ get cdGoal th
-    ppHeader = hsep 
+    ppPrem   = nest 2 $ doubleQuotes $ prettyGoal $ get cdGoal th
+    ppHeader = hsep
       [ text "Sources of" <-> ppPrem
       , parens $ nCases <-> text "cases"
       ]
-    ppCase (i, (names, (conc, se))) = 
+    ppCase (i, (names, se)) =
       [ withTag "h3" [] $ fsep [ text "Source", int i, text "of", nCases
                                , text " / named ", doubleQuotes (text name) ]
       , refDotPath renderUrl tidx (TheoryCaseDist kind j i)
-      , withTag "p" [] $ ppPrem <-> text "provided by conclusion" <-> prettyNodeConc conc
-      , wrapP $ prettyNonGraphSequent se
+      , withTag "p" [] $ ppPrem
+      , wrapP $ prettyNonGraphSystem se
       ]
       where
         name = intercalate "_" names
@@ -321,7 +323,7 @@ reqCasesSnippet renderUrl tidx kind thy = vcat $
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
 rulesSnippet thy = vcat
     [ ppRules "Multiset Rewriting Rules"      crProtocol
-    ] 
+    ]
   where
     rules = getClassifiedRules thy
     ppRules header l =
@@ -355,7 +357,7 @@ htmlThyPath renderUrl ti path = go path
     go TheoryRules               = rulesSnippet thy
     go TheoryMessage             = messageSnippet thy
     go (TheoryCaseDist kind _ _) = reqCasesSnippet renderUrl tidx kind thy
-    go (TheoryProof l p)         = 
+    go (TheoryProof l p)         =
         fromMaybe (text "No such lemma or proof path.") $ do
            lemma <- lookupLemma l thy
            let ctxt = getProofContext lemma thy
@@ -377,22 +379,22 @@ htmlThyDbgPath thy path = go path
   where
     go (TheoryProof l p) = do
       proof <- resolveProofPath thy l p
-      prettySequent <$> psInfo (root proof)
+      prettySystem <$> psInfo (root proof)
     go _ = Nothing
 -}
 
 -- | Render the image corresponding to the given theory path.
-imgThyPath :: ImageFormat -> FilePath -> FilePath -> (Sequent -> D.Dot ()) -> ClosedTheory
+imgThyPath :: ImageFormat -> FilePath -> FilePath -> (System -> D.Dot ()) -> ClosedTheory
            -> TheoryPath -> IO FilePath
 imgThyPath imgFormat dotCommand dir compact thy path = go path
   where
     go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j)
     go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
     go _                      = error "Unhandled theory path. This is a bug."
-    
+
     -- Get dot code for required cases
     casesDotCode k i j = D.showDot $
-        compact $ snd $ snd $ cases !! (i-1) !! (j-1)
+        compact $ snd $ cases !! (i-1) !! (j-1)
       where
         cases = map (getDisj . get cdCases) (getCaseDistinction k thy)
 
@@ -432,7 +434,7 @@ imgThyPath imgFormat dotCommand dir compact thy path = go path
 
 
 -- | Get title to display for a given proof path.
-titleThyPath :: ClosedTheory -> TheoryPath -> String 
+titleThyPath :: ClosedTheory -> TheoryPath -> String
 titleThyPath thy path = go path
   where
     go TheoryRules                          = "Rewriting rules"
@@ -442,7 +444,7 @@ titleThyPath thy path = go path
     go (TheoryLemma l)                      = "Lemma: " ++ l
     go (TheoryProof l [])                   = "Lemma: " ++ l
     go (TheoryProof l p)
-      | null (last p)       = "Method: " ++ methodName l p 
+      | null (last p)       = "Method: " ++ methodName l p
       | otherwise           = "Case: " ++ last p
     go _ = "Unhandled theory path"
 
@@ -634,12 +636,12 @@ markStatus (Just False) = withTag "span" [("class","hl_bad")]
 -- The boolean flag indicates that the given proof step's children
 -- are (a) all annotated and (b) contain no sorry steps.
 annotateLemmaProof :: Lemma IncrementalProof
-                   -> Proof (Maybe Sequent, Maybe Bool)
-annotateLemmaProof lem = 
+                   -> Proof (Maybe System, Maybe Bool)
+annotateLemmaProof lem =
     mapProofInfo (second interpret) prf
   where
     prf = annotateProof annotate $ extractSimplifiedLemmaProof lem
-    annotate step cs = 
+    annotate step cs =
         ( psInfo step
         , mconcat $ proofStepStatus step : incomplete ++ map snd cs
         )
@@ -681,16 +683,16 @@ emptyThHtmlState = ThHtmlState M.empty M.empty M.empty
 
 $(mkLabels [''ThHtmlState])
 
-type ThHtml = ReaderT (Sequent -> Sequent) (StateT ThHtmlState Fresh)
+type ThHtml = ReaderT (System -> System) (StateT ThHtmlState Fresh)
 
-runThHtml :: (Sequent -> Sequent) -> ThHtml a -> (a, ThHtmlState)
-runThHtml compress = 
-    (`evalFresh` nothingUsed) 
-  . (`runStateT` emptyThHtmlState) 
+runThHtml :: (System -> System) -> ThHtml a -> (a, ThHtmlState)
+runThHtml compress =
+    (`evalFresh` nothingUsed)
+  . (`runStateT` emptyThHtmlState)
   . (`runReaderT` compress)
 
 instance JSON Viewport where
-        readJSON (JSString name) = case fromJSString name of 
+        readJSON (JSString name) = case fromJSString name of
             "Left"  -> return LeftView
             "Main"  -> return MainView
             "Debug" -> return DebugView
@@ -742,8 +744,8 @@ pathInfo input = info
       , filesDir        = "files"
       }
 
-    extendBaseName ext = 
-      filesDir info </> 
+    extendBaseName ext =
+      filesDir info </>
       addExtension (takeBaseName (giInputFile input) ++ ext) "spthy"
 
 -- | Make a path that is specified relative to the output directory absolute.
@@ -767,8 +769,8 @@ jsGenerationInfo input genTime = toJSObject $
     , ("inputFile",   showJSON . fileLink   $ inputFileCopy paths)
     , ("proofScript", showJSON . fileLink   $ proofScriptFile paths)
     , ("commandLine", showJSON . toJSString $ giCmdLine input)
-    , ("certificateStatus", showJSON . toJSString $ genTimeString) 
-    ] 
+    , ("certificateStatus", showJSON . toJSString $ genTimeString)
+    ]
   where
     paths = pathInfo input
     fileLink file = (toJSString (takeFileName file), toJSString file)
@@ -784,7 +786,7 @@ theoryToHtml input = do
     copyFile (giInputFile input) (mkAbsolute paths $ inputFileCopy paths)
     -- timed proof script generation
     putStr " generating proof script: " >> hFlush stdout
-    genTime <- timed_ $ writeAbsolute (proofScriptFile paths) 
+    genTime <- timed_ $ writeAbsolute (proofScriptFile paths)
                           (render $ prettyClosedTheory $ giTheory input)
     putStrLn $ show genTime
     -- json output
@@ -798,7 +800,7 @@ theoryToHtml input = do
     paths = pathInfo input
     writeAbsolute = writeFile . mkAbsolute paths
 
-    compress | giCompress input = compressSequent
+    compress | giCompress input = compressSystem
              | otherwise        = id
 
     (thId, thSt) = runThHtml compress $ do
@@ -819,20 +821,20 @@ theoryToHtml input = do
     mkGraph (path, dotCode) msgChan = do
       let outFile = mkAbsolute paths path
           pngFile = addExtension outFile "png"
-      ifM (doesFileExist pngFile) 
-          (writeChan msgChan $ "using cached file: " ++ pngFile) 
+      ifM (doesFileExist pngFile)
+          (writeChan msgChan $ "using cached file: " ++ pngFile)
           (do writeFile outFile dotCode
               graphvizDotToPng outFile pngFile msgChan
               removeFile outFile)
 
     -- | Convert a list of dot strings in parallel to png files, using the number of
     -- cores+1 parallel executions of the dot tool.
-    parMkGraphs = 
+    parMkGraphs =
         parCmd_ display . map mkGraph
       where
-        display n i msg = 
+        display n i msg =
             hPutStrLn stdout $ "  ["++showPadded i++" of "++show n++"] "++msg
-          where 
+          where
             showPadded x = flushRight (length (show n)) (show x)
 
 -- | Copy all the files referenced in the template index file to the output

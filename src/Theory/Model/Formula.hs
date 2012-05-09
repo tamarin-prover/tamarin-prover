@@ -6,12 +6,12 @@
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Types and operations for handling sorted first-order logic
-module Theory.Formula (
+module Theory.Model.Formula (
 
    -- * Formulas
     Connective(..)
@@ -45,9 +45,6 @@ module Theory.Formula (
   , prettyFormulaE
   , prettyFormulaAC
 
-  -- * Convenience exports
-  , module Theory.Atom
-
   ) where
 
 import Prelude hiding (negate)
@@ -63,7 +60,7 @@ import Control.DeepSeq
 import Control.Basics
 import Control.Monad.Fresh
 
-import Theory.Atom
+import Theory.Model.Atom
 
 import Text.PrettyPrint.Highlight
 
@@ -96,12 +93,12 @@ data Formula s c v = Ato (Atom (VTerm c (BVar v)))
 
 -- | Fold a formula.
 {-# INLINE foldFormula #-}
-foldFormula :: (Atom (VTerm c (BVar v)) -> b) -> (Bool -> b) 
+foldFormula :: (Atom (VTerm c (BVar v)) -> b) -> (Bool -> b)
             -> (b -> b) -> (Connective -> b -> b -> b)
             -> (Quantifier -> s -> b -> b)
             -> Formula s c v
             -> b
-foldFormula fAto fTF fNot fConn fQua = 
+foldFormula fAto fTF fNot fConn fQua =
     go
   where
     go (Ato a)       = fAto a
@@ -136,7 +133,7 @@ instance Functor (Formula s c) where
 -}
 
 instance Foldable (Formula s c) where
-    foldMap f = foldFormula (foldMap (foldMap (foldMap (foldMap f)))) mempty id 
+    foldMap f = foldFormula (foldMap (foldMap (foldMap (foldMap f)))) mempty id
                             (const mappend) (const $ const id)
 
 traverseFormula :: (Ord v, Ord c, Ord v', Applicative f)
@@ -153,7 +150,7 @@ instance Traversable (Formula a s) where
 
 -- Abbreviations
 ----------------
- 
+
 infixl 3 .&&.
 infixl 2 .||.
 infixr 1 .==>.
@@ -193,7 +190,7 @@ mapAtoms f = foldFormulaScope (\i a -> Ato $ f i a) TF Not Conn Qua
 -- alpha renaming and @Nothing otherwise@. @v@ is always chosen to be fresh.
 openFormula :: (MonadFresh m, Ord c)
             => LFormula c -> Maybe (Quantifier, m (LVar, LFormula c))
-openFormula (Qua qua (n,s) fm) = 
+openFormula (Qua qua (n,s) fm) =
     Just ( qua
          , do x <- freshLVar n s
               return $ (x, mapAtoms (\i a -> fmap (mapLits (subst x i)) a) fm)
@@ -215,7 +212,7 @@ openFormulaPrefix :: (MonadFresh m, Ord c)
                   => LFormula c -> m ([LVar], Quantifier, LFormula c)
 openFormulaPrefix f0 = case openFormula f0 of
     Nothing        -> error $ "openFormulaPrefix: no outermost quantifier"
-    Just (q, open) -> do 
+    Just (q, open) -> do
       (x, f) <- open
       go q [x] f
   where
@@ -268,7 +265,7 @@ exists hint x = Qua Ex hint . quantify x
 ------------------------------------------------------------------------------
 
 -- | Pretty print a formula.
-prettyLFormula :: (HighlightDocument d, MonadFresh m, Ord c) 
+prettyLFormula :: (HighlightDocument d, MonadFresh m, Ord c)
               => (Atom (VTerm c LVar) -> d)  -- ^ Function for pretty printing atoms
               -> LFormula c -- ^ Formula to pretty print.
               -> m d              -- ^ Pretty printed formula.
@@ -279,8 +276,8 @@ prettyLFormula ppAtom =
     extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
 
     pp (Ato a)    = return $ ppAtom (fmap (mapLits (fmap extractFree)) a)
-    pp (TF True)  = return $ operator_ "T"                    -- "⊤" 
-    pp (TF False) = return $ operator_ "F"                    -- "⊥" 
+    pp (TF True)  = return $ operator_ "T"                    -- "⊤"
+    pp (TF False) = return $ operator_ "F"                    -- "⊥"
 
     pp (Not p)    = do
       p' <- pp p
@@ -298,8 +295,8 @@ prettyLFormula ppAtom =
 
     pp fm@(Qua _ _ _) = do
         (vs,qua,fm') <- openFormulaPrefix fm
-        d' <- pp fm' 
-        return $ sep 
+        d' <- pp fm'
+        return $ sep
                  [ operator_ (ppQuant qua) <> ppVars vs <> operator_ "."
                  , nest 1 d']
       where
@@ -314,7 +311,7 @@ prettyFormulaAC = prettyLNFormula
 
 -- | Pretty print a logical formula
 prettyLNFormula :: HighlightDocument d => LNFormula -> d
-prettyLNFormula fm = 
+prettyLNFormula fm =
   prettyLFormula prettyNAtom fm `evalFreshAvoiding` fm
 
 

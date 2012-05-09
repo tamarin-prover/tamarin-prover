@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -13,26 +13,26 @@ module Main.Mode.Test (
 
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.Exit
-import           Test.HUnit (Counts(..))
+import           Test.HUnit                      (Counts(..))
 
 import           Main.Console
 import           Main.Environment
 
-import qualified Term.UnitTests as TestTerm (main)
+import qualified Term.UnitTests                  as TestTerm (main)
 
 
 -- | Self-test mode.
 testMode :: TamarinMode
-testMode = tamarinMode 
-    "test" 
+testMode = tamarinMode
+    "test"
     ("Self-test the " ++ programName ++ " installation.")
     setupFlags
     run
   where
     setupFlags defaultMode = defaultMode
       { modeArgs       = ([], Just $ flagArg (updateArg "inFile") "FILES")
-      , modeGroupFlags = Group 
-          { groupUnnamed = toolFlags 
+      , modeGroupFlags = Group
+          { groupUnnamed = toolFlags
           , groupHidden  = []
           , groupNamed   = [("About", [helpFlag])]
           }
@@ -41,7 +41,7 @@ testMode = tamarinMode
 -- | Run the self-test.
 run :: TamarinMode -> Arguments -> IO ()
 run _thisMode as = do
-    putStrLn $ "Self-testing the " ++ programName ++ " installation." 
+    putStrLn $ "Self-testing the " ++ programName ++ " installation."
     nextTopic "Testing the availability of the required tools"
     successMaude <- ensureMaude as
 #ifndef NO_GUI

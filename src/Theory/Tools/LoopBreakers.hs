@@ -2,12 +2,13 @@
 -- |
 -- Copyright   : (c) 2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
--- Computations over sets of rewriting rules.
-module Theory.RuleSet (
+-- Computate the loop-breakers in the premise-conclusion graph of a set of
+-- multiset rewriting rules.
+module Theory.Tools.LoopBreakers (
 
   -- * Computing loop breakers for solving premises
   useAutoLoopBreakersAC
@@ -19,7 +20,7 @@ import Control.Monad.Reader
 
 import Data.DAG.Simple
 
-import Theory.Rule
+import Theory.Model
 
 
 -- | An over-approximation of the dependency of solving premises. An element
@@ -57,7 +58,7 @@ premSolvingRelAC ePrems eConcs eVariants rules = reader $ \hnd -> do
 
 -- | Replace all loop-breaker information with loop-breakers computed
 -- automatically from the dataflow relation 'dataflowRelAC'.
-useAutoLoopBreakersAC 
+useAutoLoopBreakersAC
   :: Ord a
   => (a -> [(PremIdx, LNFact)])  -- ^ Enumerate premises
   -> (a -> [(ConcIdx, LNFact)])  -- ^ Enumerate conclusions

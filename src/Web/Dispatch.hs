@@ -15,37 +15,37 @@ Portability :  non-portable
 -- that we have the warning again for our code.
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
-module Web.Dispatch 
+module Web.Dispatch
   ( withWebUI
   , ImageFormat(..)
   )
 where
 
-import Theory
-import Web.Types
-import Web.Handler
-import Web.Settings
+import           Theory
+import           Web.Handler
+import           Web.Settings
+import           Web.Types
 
-import Yesod.Core
-import Yesod.Static
-import Network.Wai
+import           Network.Wai
+import           Yesod.Core
+import           Yesod.Static
 
-import qualified Data.Map as M
-import qualified Data.Text as T
-import qualified Data.ByteString as B
-import qualified Control.Exception as E
-import qualified Data.Binary as Bin
+import qualified Control.Exception      as E
+import qualified Data.Binary            as Bin
+import qualified Data.ByteString        as B
+import qualified Data.Map               as M
+import qualified Data.Text              as T
 
-import Data.List
-import Data.Maybe
-import Data.Time.LocalTime
-import Control.Concurrent
-import Control.Monad
-import Control.Applicative
-import Control.Monad.IO.Class
+import           Control.Applicative
+import           Control.Concurrent
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Data.List
+import           Data.Maybe
+import           Data.Time.LocalTime
 
-import System.FilePath
-import System.Directory
+import           System.Directory
+import           System.FilePath
 
 -- | Create YesodDispatch instance for the interface.
 -- mkYesodDispatch "WebUI" resourcesWebUI
@@ -85,7 +85,7 @@ withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug' st
     when autosave $ createDirectoryIfMissing False autosaveDir
     (`E.finally` shutdownThreads thrVar) $
       f =<< toWaiApp WebUI
-        { workDir            = thDir 
+        { workDir            = thDir
         , parseThy           = liftIO . thParser
         , closeThy           = thCloser
         , getStatic          = st
@@ -136,7 +136,7 @@ loadTheories readyMsg thDir thLoader = do
       let dir = thDir </> imageDir
       existsDir <- doesDirectoryExist dir
       unless existsDir (createDirectory dir)
-    
+
     -- Load theories
     loadThy (idx, path) = E.handle catchEx $ do
         thy <- thLoader path

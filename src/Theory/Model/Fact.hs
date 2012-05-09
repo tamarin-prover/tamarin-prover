@@ -3,20 +3,22 @@
 -- |
 -- Copyright   : (c) 2011, 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Facts used to formulate and reason about protocol execution.
-module Theory.Fact (
+module Theory.Model.Fact (
 
   -- * Fact
     Fact(..)
   , Multiplicity(..)
   , FactTag(..)
 
+  , matchFact
+
   -- ** Queries
-  , isLinearFact   
+  , isLinearFact
   , isPersistentFact
   , isProtoFact
 
@@ -35,9 +37,12 @@ module Theory.Fact (
   , DirTag(..)
   , kFactView
   , dedFactView
-  , isKFact
   , kuFact
   , kdFact
+
+  , isKFact
+  , isKUFact
+  , isKDFact
 
   -- ** Construction
   , freshFact
@@ -55,16 +60,12 @@ module Theory.Fact (
   , LNFact
   , unifyLNFactEqs
   , unifiableLNFacts
-  , matchLNFact
 
   -- * Pretty-Printing
-  
+
   , prettyFact
   , prettyNFact
   , prettyLNFact
-
-  -- * Convenience exports
-  , module Term.Unification
 
   ) where
 
@@ -76,8 +77,9 @@ import Data.DeriveTH
 import Data.Foldable (Foldable(..))
 import Data.Traversable (Traversable(..))
 import Data.Binary
-import Data.Generics 
+import Data.Generics
 import Data.Maybe (isJust)
+import Data.Monoid
 
 import Term.Unification
 
@@ -99,13 +101,13 @@ data FactTag = ProtoFact Multiplicity String Int
              | InFact     -- ^ Officially known by the intruder/network.
              | KUFact     -- ^ Up-knowledge fact in messsage deduction.
              | KDFact     -- ^ Down-knowledge fact in message deduction.
-             | DedFact    -- ^ Log-fact denoting that the intruder deduced 
+             | DedFact    -- ^ Log-fact denoting that the intruder deduced
                           -- a message using a construction rule.
     deriving( Eq, Ord, Show, Typeable, Data )
 
 -- | Facts.
-data Fact t = Fact 
-    { factTag   :: FactTag 
+data Fact t = Fact
+    { factTag   :: FactTag
     , factTerms :: [t]
     }
     deriving( Eq, Ord, Show, Typeable, Data )
@@ -119,7 +121,7 @@ instance Functor Fact where
 
 instance Foldable Fact where
     foldMap f (Fact _ ts) = foldMap f ts
-    
+
 instance Traversable Fact where
     sequenceA (Fact tag ts) = Fact tag <$> sequenceA ts
     traverse f (Fact tag ts) = Fact tag <$> traverse f ts
@@ -154,7 +156,7 @@ termToExpTag (viewTerm -> Lit (Con (Name PubName (NameId ("exp")))))   = return 
 termToExpTag _                                             = mzero
 
 
--- | A direction tag 
+-- | A direction tag
 data DirTag = UpK | DnK
             deriving( Eq, Ord, Show )
 
@@ -190,6 +192,16 @@ dedFactView fa = case fa of
 -- | True if the fact is a message-deduction fact.
 isKFact :: LNFact -> Bool
 isKFact = isJust . kFactView
+
+-- | True if the fact is a KU-fact.
+isKUFact :: LNFact -> Bool
+isKUFact (Fact KUFact _) = True
+isKUFact _               = False
+
+-- | True if the fact is a KD-fact.
+isKDFact :: LNFact -> Bool
+isKDFact (Fact KDFact _) = True
+isKDFact _               = False
 
 -- | Mark a fact as malformed.
 errMalformed :: String -> LNFact -> a
@@ -243,7 +255,7 @@ isPersistentFact = (Persistent ==) . factMultiplicity
 
 -- | The multiplicity of a 'FactTag'.
 factTagMultiplicity :: FactTag -> Multiplicity
-factTagMultiplicity tag = case tag of 
+factTagMultiplicity tag = case tag of
     ProtoFact multi _ _ -> multi
     KUFact              -> Persistent
     KDFact              -> Persistent
@@ -251,7 +263,7 @@ factTagMultiplicity tag = case tag of
 
 -- | The arity of a 'FactTag'.
 factTagArity :: FactTag -> Int
-factTagArity tag = case tag of 
+factTagArity tag = case tag of
     ProtoFact _ _ k -> k
     KUFact          -> 2
     KDFact          -> 2
@@ -264,7 +276,7 @@ factTagArity tag = case tag of
 factArity :: Fact t -> Int
 factArity (Fact tag ts)
   | length ts == k = k
-  | otherwise      = error $ "factArity: tag of arity " ++ show k ++ 
+  | otherwise      = error $ "factArity: tag of arity " ++ show k ++
                              " applied to " ++ show (length ts) ++ " terms"
   where
     k = factTagArity tag
@@ -295,25 +307,24 @@ type LNFact = Fact LNTerm
 
 -- | Unify a list of @LFact@ equalities.
 unifyLNFactEqs :: [Equal LNFact] -> WithMaude [LNSubstVFresh]
-unifyLNFactEqs eqs 
-  | all (evalEqual . fmap factTag) eqs = 
+unifyLNFactEqs eqs
+  | all (evalEqual . fmap factTag) eqs =
       unifyLNTerm (map (fmap (fAppList . factTerms)) eqs)
   | otherwise = return []
 
 -- | 'True' iff the two facts are unifiable.
 unifiableLNFacts :: LNFact -> LNFact -> WithMaude Bool
 unifiableLNFacts fa1 fa2 = (not . null) <$> unifyLNFactEqs [Equal fa1 fa2]
- 
+
 -- | @matchLFact t p@ is a complete set of AC matchers for the term fact @t@
 -- and the pattern fact @p@.
-matchLNFact :: LNFact -- ^ Term
-            -> LNFact -- ^ Pattern
-            -> WithMaude [LNSubst]
-matchLNFact t p
-  | (factTag t == factTag p && length (factTerms t) == length (factTerms p)) =
-       matchLNTerm $ zipWith MatchWith (factTerms t) (factTerms p)
-  | otherwise = return []
-
+matchFact :: Fact t -- ^ Term
+            -> Fact t -- ^ Pattern
+            -> Match t
+matchFact t p =
+    matchOnlyIf (factTag t == factTag p &&
+                 length (factTerms t) == length (factTerms p))
+    <> mconcat (zipWith matchWith (factTerms t) (factTerms p))
 
 ------------------------------------------------------------------------------
 -- Pretty Printing

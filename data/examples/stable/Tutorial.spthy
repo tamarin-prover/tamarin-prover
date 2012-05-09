@@ -46,7 +46,7 @@ theory. After 'begin', you can declare function symbols, equations that they
 must satisfy, multiset rewriting rules, and lemmas specifying security
 properties. Moreover, you can also insert formal comments, to structure your
 theory. We give examples of each of these elements while modeling the
-a simple protocol. 
+a simple protocol.
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
 with the public key of a server 'S' and sends it to 'S'. The server confirms
@@ -70,7 +70,7 @@ Function Signature and Equational Theory
 ----------------------------------------
 
 We model hashing using the unary function 'h'.
-We model asymmetric encryption by declaring 
+We model asymmetric encryption by declaring
   a binary function 'aenc' denoting the encryption algorithm,
   a binary function 'adec' denoting the decryption algorithm, and
   a unary function 'pk' denoting the algorithm computing a public
@@ -94,7 +94,7 @@ could also be enabled using the declaration
   builtins: hashing, asymmetric-encryption
 
 We support the following builtins theories:
- 
+
   diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
   hashing
 
@@ -133,13 +133,13 @@ Modeling the Public Key Infrastructure
 
 // Registering a public key
 rule Register_pk:
-  [ Fr(~ltk) ] 
-  --> 
+  [ Fr(~ltk) ]
+  -->
   [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
 
 /* The above rule models registering a public key. It makes use of the
    following syntax.
-   
+
    Facts always start with an upper-case letter and do not have to declared.
    If their name is prefixed with an exclamation mark '!', then they are
    persistent. Otherwise, they are linear. Note that you must use every fact
@@ -158,7 +158,7 @@ rule Register_pk:
      i   denotes  i:msg
 
      'c' denotes a public name 'c \in PN'; i.e., a fixed, global constant
-   
+
    Thus, the above rule can be read as follows. First, freshly generate a
    fresh name 'ltk', the new private key and nondeterministically choose a
    public name 'A', the agent for which we are generating the key-pair.
@@ -174,8 +174,8 @@ rule Register_pk:
 */
 
 rule Get_pk:
-  [ !Pk(A, pk) ] 
-  --> 
+  [ !Pk(A, pk) ]
+  -->
   [ Out(pk) ]
 
 /*
@@ -234,7 +234,7 @@ rule Serv_1:
     ]
   --[ Eq(fst(adec(request, ~ltkS)), '1')
     , AnswerRequest($S, snd(adec(request, ~ltkS)))   // Explanation below
-    ]->  
+    ]->
     [ Out( h(snd(adec(request, ~ltkS))) ) ]    // Return the hash of the
                                                // decrypted request.
 
@@ -266,10 +266,10 @@ The syntax for specifying security properties uses
   &        for conjunction
   |        for disjunction
   not      for  negation
-           
+
   f @ i    for action constraints, the sort prefix for the temporal variable 'i'
            is optional
-           
+
   i < j    for temporal ordering, the sort prefix for the temporal variables 'i'
            adn 'j' is optional
 
@@ -279,7 +279,7 @@ The syntax for specifying security properties uses
 Note that apart from public names (delimited using single-quotes), no terms
 may occur in guarded trace properties. Moreover, all variables must be
 guarded. The error message for an unguarded variable is currently not very
-good. 
+good.
 
 For universally quantified variables, one has to check that they all occur in
 an action constraint right after the quantifier and that the outermost logical operator
@@ -306,11 +306,12 @@ lemma Client_session_key_secrecy:
         /* and the adversary knows 'k' */
       & K(k) @ #j
         /* without having performed a long-term key reveal on 'S'. */
-      & not(Ex #r. LtkReveal(S) @ r) 
+      & not(Ex #r. LtkReveal(S) @ r)
     )
   "
 
 
+/* FIXME: Uncomment
 lemma Client_auth:
   " /* For all traces, where all equality checks succeed, */
     (All x y #i. Eq(x,y) @ i ==> x = y)
@@ -326,6 +327,7 @@ lemma Client_auth:
        )
     )
   "
+*/
 
 /*
   You can verify them by calling
@@ -345,22 +347,24 @@ lemma Client_auth:
   quantifier in front of the trace formula. When modeling protocols such
   existence proof are very useful sanity checks.
 */
+/* FIXME: Uncomment
 lemma Client_session_key_honest_setup:
   exists-trace
   " (All x y #i. Eq(x,y) @ i ==> x = y)
   & (
       Ex S k #i.
         SessKeyC(S, k) @ #i
-      & not(Ex #r. LtkReveal(S) @ r) 
+      & not(Ex #r. LtkReveal(S) @ r)
     )
   "
+*/
 
 /*
 
 Interactive proof visualization and construction
 ------------------------------------------------
 
-Just call 
+Just call
 
   tamarin-prover interactive Tutorial.spthy
 
@@ -390,7 +394,7 @@ specifying and explaining the grammar of security protocol theories and giving
 some additional hints on additional theory exploited by Tamarin.  If you have
 further questions, please do not hesitate to contact either
 
-  Benedikt Schmidt    benedikt.schmidt@inf.ethz.ch 
+  Benedikt Schmidt    benedikt.schmidt@inf.ethz.ch
   Simon Meier         simon.meier@inf.ethz.ch
   Cas Cremers         cas.cremers@inf.ethz.ch
 

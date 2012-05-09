@@ -3,7 +3,7 @@
 -- |
 -- Copyright   : (c) 2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Unit tests for the functions dealing with term algebra and related notions.
@@ -44,7 +44,7 @@ testsMatching hnd = TestLabel "Tests for Matching" $
       , testTrue "b" (propMatchSound hnd (pair(f1,inv(f2))) (pair(f1,inv(f2))))
       , testTrue "c" (propMatchSound hnd t1 t2)
       , testTrue "d" (propMatchSound hnd (x1 # f1) f1)
-      , testTrue "e" $ null (matchLNTerm [pair(x1,x2) `MatchWith` pair(x1,x1)] `runReader` hnd)
+      , testTrue "e" $ null (solveMatchLNTerm (pair(x1,x2) `matchWith` pair(x1,x1)) `runReader` hnd)
       ]
   where
     t1 = expo (inv(pair(f1,f2)), f2 # (inv f2) # f3 # f4 # f2)
@@ -52,7 +52,7 @@ testsMatching hnd = TestLabel "Tests for Matching" $
 
 propMatchSound :: MaudeHandle -> LNTerm -> LNTerm -> Bool
 propMatchSound mhnd t1 p = all (\s -> applyVTerm s t1 == applyVTerm s p) substs
-  where substs = matchLNTerm [t1 `MatchWith` p] `runReader` mhnd
+  where substs = solveMatchLNTerm (t1 `matchWith` p) `runReader` mhnd
 
 
 
@@ -179,7 +179,7 @@ testsNorm hnd = TestLabel "Tests for normalization" $ TestList
     , tcn (f1  *:  inv f2) (f1  *:  inv f2)
     , tcn (one::LNTerm) one
     , tcn x6 (expo(expo(x6,inv x3),x3))
-    
+
 --    , testEqual "a" (normAC (p3 *: (p1 *: p2))) (mult [p1, p2, p3])
 --    , testEqual "b" (normAC (p3 *: (p1 *: inv p3))) (mult [p1, p3, inv p3])
 --    , testEqual "c" (normAC ((p1 *: p2) *: p3)) (mult [p1, p2, p3])

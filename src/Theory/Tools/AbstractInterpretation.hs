@@ -2,12 +2,12 @@
 -- |
 -- Copyright   : (c) 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
 -- Abstract intepretation for partial evaluation of multiset rewriting
 -- systems.
-module Theory.AbstractInterpretation (
+module Theory.Tools.AbstractInterpretation (
   -- * Combinator to define abstract interpretations
     interpretAbstractly
 
@@ -23,14 +23,15 @@ import           Control.Basics
 import           Control.Monad.Bind
 import           Control.Monad.Reader
 
-import           Data.List
-import qualified Data.Set as S
-import           Data.Traversable (traverse)
 import           Data.Label
+import           Data.List
+import qualified Data.Set             as S
+import           Data.Traversable     (traverse)
 
-import           Text.PrettyPrint.Highlight
 import           Term.Substitution
-import           Theory.Rule
+import           Theory.Model
+import           Theory.Text.Pretty
+
 
 ------------------------------------------------------------------------------
 -- Abstract enough versions of builtin rules for computing
@@ -40,7 +41,7 @@ import           Theory.Rule
 -- | Higher-order combinator to construct abstract interpreters.
 interpretAbstractly
     :: (Eq s, HasFrees i, Apply i)
-    => ([Equal LNFact] -> [LNSubstVFresh]) 
+    => ([Equal LNFact] -> [LNSubstVFresh])
     -- ^ Unification  of equalities over facts. We assume that facts with
     -- different tags are never unified.
     -> s                  -- ^ Initial abstract state.
@@ -71,7 +72,7 @@ interpretAbstractly unifyFactEqs initState addFact stateFacts rus =
         -- E-unification problem. If successful, return the rule with the
         -- unifier applied.
         refineRule ru = (`evalFreshT` avoid ru) $ do
-            eqs <- forM (get rPrems ru) $ \prem -> msum $ do 
+            eqs <- forM (get rPrems ru) $ \prem -> msum $ do
                 fa <- stateFacts st
                 guard (factTag prem == factTag fa)
                 -- we compute a list of 'FreshT []' actions for the outer msum
@@ -83,10 +84,10 @@ interpretAbstractly unifyFactEqs initState addFact stateFacts rus =
 data EvaluationStyle = Silent | Summary | Tracing
 
 -- | Concrete partial evaluator activated with flag: --partial-evaluation
-partialEvaluation :: EvaluationStyle 
+partialEvaluation :: EvaluationStyle
                   -> [ProtoRuleE] -> WithMaude (S.Set LNFact, [ProtoRuleE])
 partialEvaluation evalStyle ruEs = reader $ \hnd ->
-    consumeEvaluation $ interpretAbstractly 
+    consumeEvaluation $ interpretAbstractly
         ((`runReader` hnd) . unifyLNFactEqs)  -- FIXME: Use E-unification here
         S.empty
         (S.insert . absFact)
@@ -97,7 +98,7 @@ partialEvaluation evalStyle ruEs = reader $ \hnd ->
     consumeEvaluation ((st0, rus0) : rest0) =
         go (0 :: Int) st0 rus0 rest0
       where
-        go _ st rus [] = 
+        go _ st rus [] =
           ( st
           , nubBy eqModuloFreshnessNoAC $                 -- remove duplicates
             map ((`evalFresh` nothingUsed) . rename) rus
@@ -113,20 +114,20 @@ partialEvaluation evalStyle ruEs = reader $ \hnd ->
               Tracing -> trace $ incDesc ++ "\n\n" ++
                 ( render $ nest 2 $ numbered' $ map prettyLNFact $
                   S.toList $ st' `S.difference` st ) ++ "\n"
-                
+
 
     -- NOTE: We should use an abstract state that identifies all variables at
     -- the same position provided they have the same sort.
     absFact :: LNFact -> LNFact
-    absFact fa = case fa of 
+    absFact fa = case fa of
         Fact OutFact _ -> outFact (varTerm (LVar "z" LSortMsg 0))
         Fact tag ts    -> Fact tag $ evalAbstraction $ traverse absTerm ts
       where
         evalAbstraction = (`evalBind` noBindings) . (`evalFreshT` nothingUsed)
 
-        absTerm t = case viewTerm t of 
+        absTerm t = case viewTerm t of
           Lit (Con _)                   -> pure t
-          FApp (sym@(NonAC (_f,_k))) ts  
+          FApp (sym@(NonAC (_f,_k))) ts
                                         -> fApp sym <$> traverse absTerm ts
           -- | "p" `isPrefixOf` f        -> FApp sym <$> traverse absTerm ts
           _                             -> importBinding mkVar t (varName t)

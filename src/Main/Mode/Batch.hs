@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -11,34 +11,34 @@ module Main.Mode.Batch (
     batchMode
   ) where
 
+import           Control.Basics
 import           Data.List
 import           Data.Maybe
-import           Control.Basics
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
-import           System.Timing (timed)
+import           System.Timing                   (timed)
 
-import qualified Text.PrettyPrint.Class as Pretty
+import qualified Text.PrettyPrint.Class          as Pretty
 
 import           Theory
 
-import           Main.Utils
 import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
+import           Main.Utils
 
 
 -- | Batch processing mode.
 batchMode :: TamarinMode
-batchMode = tamarinMode 
-    "batch" 
+batchMode = tamarinMode
+    "batch"
     "Security protocol analysis and verification."
     setupFlags
     run
   where
     setupFlags defaultMode = defaultMode
       { modeArgs       = ([], Just $ flagArg (updateArg "inFile") "FILES")
-      , modeGroupFlags = Group 
+      , modeGroupFlags = Group
           { groupUnnamed =
               theoryLoadFlags ++
               -- [ flagNone ["html"] (addEmptyArg "html")
@@ -51,20 +51,20 @@ batchMode = tamarinMode
                   "Just parse the input file and pretty print it as-is"
               ] ++
               outputFlags ++
-              toolFlags 
+              toolFlags
           , groupHidden = []
           , groupNamed = []
           }
       }
 
-    outputFlags = 
+    outputFlags =
       [ flagOpt "" ["output","o"] (updateArg "outFile") "FILE" "Output file"
       , flagOpt "" ["Output","O"] (updateArg "outDir") "DIR"  "Output directory"
       ]
 
 -- | Process a theory file.
 run :: TamarinMode -> Arguments -> IO ()
-run thisMode as 
+run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
   | otherwise    = do
       _ <- ensureMaude as
@@ -89,7 +89,7 @@ run thisMode as
 
     mkOutPath :: FilePath  -- ^ Input file name.
               -> FilePath  -- ^ Output file name.
-    mkOutPath inFile = 
+    mkOutPath inFile =
         fromMaybe (error "please specify an output file or directory") $
             do outFile <- findArg "outFile" as
                guard (outFile /= "")
@@ -108,12 +108,12 @@ run thisMode as
     ------------------------------
 
     processThy :: FilePath -> IO (Pretty.Doc)
-    processThy inFile  
-      -- | argExists "html" as = 
+    processThy inFile
+      -- | argExists "html" as =
       --     generateHtml inFile =<< loadClosedThy as inFile
       | argExists "parseOnly" as =
           out (const Pretty.emptyDoc) prettyOpenTheory   (loadOpenThy   as inFile)
-      | otherwise        = 
+      | otherwise        =
           out prettyClosedSummary   prettyClosedTheory (loadClosedThy as inFile)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile

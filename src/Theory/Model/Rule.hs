@@ -2,13 +2,13 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Rewriting rules representing protocol execution and intruder deduction. Once
 -- modulo the full Diffie-Hellman equational theory and once modulo AC.
-module Theory.Rule (
+module Theory.Model.Rule (
   -- * General Rules
     Rule(..)
   , PremIdx(..)
@@ -43,7 +43,7 @@ module Theory.Rule (
 
   -- * Intruder Rule Information
   , IntrRuleACInfo(..)
-  
+
   -- * Concrete Rules
   , ProtoRuleE
   , ProtoRuleAC
@@ -72,6 +72,7 @@ module Theory.Rule (
 
   -- ** Unification
   , unifyRuleACInstEqs
+  , unifiableRuleACInsts
 
   -- * Pretty-Printing
   , showRuleCaseName
@@ -85,24 +86,21 @@ module Theory.Rule (
   , prettyLoopBreakers
   , prettyRuleACInst
 
-  -- * Convenience exports
-  , module Theory.Fact
-
   )  where
 
-import           Prelude hiding ( (.), id )
+import           Prelude              hiding ( (.), id )
 
-import           Safe
+import           Data.Binary
+import           Data.DeriveTH
+import           Data.Foldable        (foldMap)
+import           Data.Generics
 import           Data.List
 import           Data.Monoid
-import           Data.Foldable (foldMap)
-import           Data.Generics 
-import           Data.DeriveTH
-import           Data.Binary
+import           Safe
 
-import           Control.DeepSeq
-import           Control.Category
 import           Control.Basics
+import           Control.Category
+import           Control.DeepSeq
 import           Control.Monad.Bind
 import           Control.Monad.Reader
 
@@ -110,9 +108,11 @@ import           Extension.Data.Label hiding (get)
 import qualified Extension.Data.Label as L
 import           Logic.Connectives
 
-import           Theory.Fact
-import           Theory.Pretty
-import           Term.Rewriting.Norm
+import           Term.LTerm
+import           Term.Rewriting.Norm  (nf')
+import           Term.Unification
+import           Theory.Model.Fact
+import           Theory.Text.Pretty
 
 ------------------------------------------------------------------------------
 -- General Rule
@@ -169,18 +169,18 @@ instance Functor Rule where
     fmap f (Rule i ps cs as) = Rule (f i) ps cs as
 
 instance HasFrees i => HasFrees (Rule i) where
-    foldFrees f (Rule i ps cs as) = 
-        (foldFrees f i  `mappend`) $ 
+    foldFrees f (Rule i ps cs as) =
+        (foldFrees f i  `mappend`) $
         (foldFrees f ps `mappend`) $
         (foldFrees f cs `mappend`) $
         (foldFrees f as)
 
     mapFrees f (Rule i ps cs as) =
-        Rule <$> mapFrees f i 
+        Rule <$> mapFrees f i
              <*> mapFrees f ps <*> mapFrees f cs <*> mapFrees f as
 
 instance Apply i => Apply (Rule i) where
-    apply subst (Rule i ps cs as) = 
+    apply subst (Rule i ps cs as) =
         Rule (apply subst i) (apply subst ps) (apply subst cs) (apply subst as)
 
 instance Sized (Rule i) where
@@ -191,9 +191,9 @@ instance Sized (Rule i) where
 ------------------------------------------------------------------------------
 
 -- | Rule information for protocol and intruder rules.
-data RuleInfo p i = 
+data RuleInfo p i =
          ProtoInfo p
-       | IntrInfo i 
+       | IntrInfo i
        deriving( Eq, Ord, Show )
 
 -- | @ruleInfo proto intr@ maps the protocol information with @proto@ and the
@@ -209,7 +209,7 @@ ruleInfo _     intr (IntrInfo  x) = intr x
 instance (HasFrees p, HasFrees i) => HasFrees (RuleInfo p i) where
     foldFrees  f = ruleInfo (foldFrees f) (foldFrees f)
 
-    mapFrees   f = ruleInfo (fmap ProtoInfo . mapFrees   f) 
+    mapFrees   f = ruleInfo (fmap ProtoInfo . mapFrees   f)
                             (fmap IntrInfo . mapFrees   f)
 
 instance (Apply p, Apply i) => Apply (RuleInfo p i) where
@@ -222,7 +222,7 @@ instance (Apply p, Apply i) => Apply (RuleInfo p i) where
 
 -- | A name of a protocol rule is either one of the special reserved rules or
 -- some standard rule.
-data ProtoRuleName = 
+data ProtoRuleName =
          FreshRule
        | StandRule String -- ^ Some standard protocol rule
        deriving( Eq, Ord, Show, Data, Typeable )
@@ -277,8 +277,8 @@ instance HasFrees ProtoRuleACInfo where
     foldFrees f (ProtoRuleACInfo na vari breakers) =
         foldFrees f na `mappend` foldFrees f vari
                        `mappend` foldFrees f breakers
-    
-    mapFrees f (ProtoRuleACInfo na vari breakers) = 
+
+    mapFrees f (ProtoRuleACInfo na vari breakers) =
         ProtoRuleACInfo na <$> mapFrees f vari <*> mapFrees f breakers
 
 instance Apply ProtoRuleACInstInfo where
@@ -287,8 +287,8 @@ instance Apply ProtoRuleACInstInfo where
 instance HasFrees ProtoRuleACInstInfo where
     foldFrees f (ProtoRuleACInstInfo na breakers) =
         foldFrees f na `mappend` foldFrees f breakers
-    
-    mapFrees f (ProtoRuleACInstInfo na breakers) = 
+
+    mapFrees f (ProtoRuleACInstInfo na breakers) =
         ProtoRuleACInstInfo na <$> mapFrees f breakers
 
 
@@ -297,7 +297,7 @@ instance HasFrees ProtoRuleACInstInfo where
 ------------------------------------------------------------------------------
 
 -- | An intruder rule modulo AC is described by its name.
-data IntrRuleACInfo = 
+data IntrRuleACInfo =
     ConstrRule String
   | DestrRule String
   | CoerceRule
@@ -412,7 +412,7 @@ nfRule :: Rule i -> WithMaude Bool
 nfRule (Rule _ ps cs as) = reader $ \hnd ->
     all (nfFactList hnd) [ps, cs, as]
   where
-    nfFactList hnd xs = 
+    nfFactList hnd xs =
         getAll $ foldMap (foldMap (All . (\t -> nf' t `runReader` hnd))) xs
 
 -- | True iff the rule is an intruder rule
@@ -434,19 +434,19 @@ type RuleACConstrs = Disj LNSubstVFresh
 
 -- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
 -- protocol rule, then the given typing and variants also need to be handled.
-someRuleACInst :: MonadFresh m 
-               => RuleAC 
+someRuleACInst :: MonadFresh m
+               => RuleAC
                -> m (RuleACInst, Maybe RuleACConstrs)
-someRuleACInst = 
+someRuleACInst =
     fmap extractInsts . rename
   where
-    extractInsts (Rule (ProtoInfo i) ps cs as) = 
+    extractInsts (Rule (ProtoInfo i) ps cs as) =
       ( Rule (ProtoInfo i') ps cs as
       , Just (L.get pracVariants i)
       )
       where
         i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
-    extractInsts (Rule (IntrInfo i) ps cs as) = 
+    extractInsts (Rule (IntrInfo i) ps cs as) =
       ( Rule (IntrInfo i) ps cs as, Nothing )
 
 
@@ -455,19 +455,23 @@ someRuleACInst =
 
 -- | Unify a list of @RuleACInst@ equalities.
 unifyRuleACInstEqs :: [Equal RuleACInst] -> WithMaude [LNSubstVFresh]
-unifyRuleACInstEqs eqs 
+unifyRuleACInstEqs eqs
   | all unifiable eqs = unifyLNFactEqs $ concatMap ruleEqs eqs
   | otherwise         = return []
   where
-    unifiable (Equal ru1 ru2) = 
+    unifiable (Equal ru1 ru2) =
          L.get rInfo ru1            == L.get rInfo ru2
       && length (L.get rPrems ru1) == length (L.get rPrems ru2)
       && length (L.get rConcs ru1) == length (L.get rConcs ru2)
 
-    ruleEqs (Equal ru1 ru2) = 
-        zipWith Equal (L.get rPrems ru1) (L.get rPrems ru2) ++ 
+    ruleEqs (Equal ru1 ru2) =
+        zipWith Equal (L.get rPrems ru1) (L.get rPrems ru2) ++
         zipWith Equal (L.get rConcs ru1) (L.get rConcs ru2)
 
+-- | Are these two rule instances unifiable.
+unifiableRuleACInsts :: RuleACInst -> RuleACInst -> WithMaude Bool
+unifiableRuleACInsts ru1 ru2 =
+    (not . null) <$> unifyRuleACInstEqs [Equal ru1 ru2]
 
 
 ------------------------------------------------------------------------------
@@ -497,7 +501,7 @@ unifyRuleACInstEqs eqs
 --
 -- And ensure that every duplication is non-unifiable.
 --
--- A Fr fact is described 
+-- A Fr fact is described
 --
 -- We track which symbols are not globally fresh.
 --
@@ -508,7 +512,7 @@ unifyRuleACInstEqs eqs
 --
 -- For simplicity: globally fresh fact symbols occur at most once in premise
 --   and conclusion of a rule.
--- 
+--
 -- A fact is removed by a rule if it occurs in the rules premise
 --   1. but doesn't occur in the rule's conclusion
 --   2. or does occur but non-unifiable.
@@ -540,11 +544,11 @@ prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
-showRuleCaseName = 
+showRuleCaseName =
     render . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
 prettyIntrRuleACInfo :: Document d => IntrRuleACInfo -> d
-prettyIntrRuleACInfo rn = text $ case rn of 
+prettyIntrRuleACInfo rn = text $ case rn of
     IRecvRule       -> "irecv"
     ISendRule       -> "isend"
     CoerceRule      -> "coerce"
@@ -560,7 +564,7 @@ prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
 prettyNamedRule prefix ppInfo ru =
     prefix <-> prettyRuleName ru <> colon $-$
     nest 2 (sep [ nest 1 $ ppFactsList rPrems
-                , if null (L.get rActs ru) 
+                , if null (L.get rActs ru)
                     then operator_ "-->"
                     else fsep [operator_ "--[", ppFacts rActs, operator_ "]->"]
                 , nest 1 $ ppFactsList rConcs]) $--$
@@ -590,8 +594,8 @@ prettyProtoRuleE :: HighlightDocument d => ProtoRuleE -> d
 prettyProtoRuleE = prettyNamedRule (kwRuleModulo "E") (const emptyDoc)
 
 prettyRuleAC :: HighlightDocument d => RuleAC -> d
-prettyRuleAC = 
-    prettyNamedRule (kwRuleModulo "AC") 
+prettyRuleAC =
+    prettyNamedRule (kwRuleModulo "AC")
         (ruleInfo prettyProtoRuleACInfo (const emptyDoc))
 
 prettyIntrRuleAC :: HighlightDocument d => IntrRuleAC -> d

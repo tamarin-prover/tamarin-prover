@@ -4,7 +4,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Subsumption of terms and substitutions.
@@ -23,15 +23,19 @@ module Term.Subsumption (
   , varOccurences
 ) where
 
+import Control.Basics
+
+import Data.Monoid
+
+import Extension.Prelude
+-- import Utils.Misc
+
+
 import Term.Term
 import Term.LTerm
 import Term.Unification
 import Term.Positions
 
-import Extension.Prelude
--- import Utils.Misc
-
-import Control.Basics
 
 ----------------------------------------------------------------------
 -- Subsumption order on terms and substitutions
@@ -40,7 +44,8 @@ import Control.Basics
 -- | Compare terms @t1@ and @t2@ with respect to the subsumption order modulo AC.
 compareTermSubs :: LNTerm -> LNTerm -> WithMaude (Maybe Ordering)
 compareTermSubs t1 t2 = do
-    check <$> matchLNTerm [t1 `MatchWith` t2] <*> matchLNTerm [t2 `MatchWith` t1]
+    check <$> solveMatchLNTerm (t1 `matchWith` t2)
+          <*> solveMatchLNTerm (t2 `matchWith` t1)
   where
     check []    []    = Nothing
     check (_:_) []    = Just GT
@@ -49,7 +54,7 @@ compareTermSubs t1 t2 = do
 
 -- | Returns True if @s1@ and @s2@ are equal with respect to the subsumption order modulo AC.
 eqTermSubs :: LNTerm -> LNTerm -> WithMaude Bool
-eqTermSubs s1 s2 = (== Just EQ) <$> compareTermSubs s1 s2 
+eqTermSubs s1 s2 = (== Just EQ) <$> compareTermSubs s1 s2
 
 -- | @factorSubstOn s1 s2 vs@ factors the free substitution @s1@
 --   through free substitution @s2@ on @vs@,
@@ -58,21 +63,25 @@ eqTermSubs s1 s2 = (== Just EQ) <$> compareTermSubs s1 s2
 --   >  applyVTerm s1 x =AC= applyVTerm s (applyVTerm s2 x).
 factorSubstVia :: [LVar] -> LNSubst -> LNSubst -> WithMaude [LNSubst]
 factorSubstVia vs s1 s2 =
-    matchLNTerm (zipWith MatchWith (substToListOn vs s1) (substToListOn vs s2))
+    solveMatchLNTerm (mconcat matches)
+  where
+    matches :: [Match LNTerm]
+    matches = zipWith matchWith (substToListOn vs s1) (substToListOn vs s2)
+
 
 {-
 -- | @factorSubstOnVFresh s1 s2 vs@ factors the fresh substitution @s1@
 --   through the free substitution @s2@ on @vs@,
 --   i.e., it returns a complete set of fresh substitutions s such that
 --   s1 is equivalent to s.s2 modulo renaming.
-factorSubstViaVFresh :: [LVar] -> LNSubstVFresh -> LNSubst 
+factorSubstViaVFresh :: [LVar] -> LNSubstVFresh -> LNSubst
                     -> WithMaude [LNSubstVFresh]
 factorSubstViaVFresh vs s1_0 s2 = do
     matchers <- matchLNTerm (zipWith MatchWith l1 l2)
     return $ do
         s <- matchers
         when (not $ varsRange s `subsetOf` varsRange s1) $
-            error $ "factorSubstOnVFresh " ++ show s1 ++ " " ++ show s2 
+            error $ "factorSubstOnVFresh " ++ show s1 ++ " " ++ show s2
                     ++ " => " ++ show s ++ " contains new variables"
         return $ freeToFreshRaw s
   where

@@ -20,24 +20,24 @@ builtins: symmetric-encryption
 
 /* Generate a fresh handle and a fresh key, store their association, and
  * output the handle */
-rule NewKey: 
-  [ Fr(~h), Fr(~k) ] 
-  --[ NewKey(~h,~k) ]-> 
+rule NewKey:
+  [ Fr(~h), Fr(~k) ]
+  --[ NewKey(~h,~k) ]->
   [ !Store(~h,~k) , Out(~h) ]
 
 /* Encrypt a message using a key referenced by a handle */
 rule EncryptMsg:
-  [ !Store(h,k), In(<h, m>)] 
+  [ !Store(h,k), In(<h, m>)]
   -->
   [ Out( senc{m}k ) ]
 
 /* Wrap a key reference by a handle using another key referenced by a second
  * handle */
 rule WrapKey:
-  [ !Store(h1,k1), !Store(h2,k2), In(<h1,h2>)] 
+  [ !Store(h1,k1), !Store(h2,k2), In(<h1,h2>)]
   -->
   [ Out( senc{k1}k2 ) ]
-  
+
 
 /* The 'reuse' attribute marks this property such that it should be used in
  * proof of later theorems. This is what we'd like to do with such a property
@@ -45,7 +45,7 @@ rule WrapKey:
  * 'invariant' attribute denotes that this property is an inductive invariant
  * of normal dependency graphs. This instructs Tamarin to use induction as the
  * first proof step.
- * 
+ *
  * Note that construction of using 'Ded'-facts to log the conclusions of
  * construction rules is work in progress. Tamarin is missing some constraint
  * reduction rules to infer the presence of 'Ded'-facts in all cases.
@@ -56,7 +56,7 @@ rule WrapKey:
  * Tamarin can prove this property automatically.
  */
 lemma NewKey_invariant [reuse, invariant]:
-  "not(Ex #i #j h k. NewKey(h, k) @ i & Ded(k) @ j) "
+  "not(Ex #i #j h k f. NewKey(h, k) @ i & KU(f,k) @ j) "
 
 /* This property talks only about standard traces that do not refer to the
  * actions of construction rules. It can be proven thanks to the

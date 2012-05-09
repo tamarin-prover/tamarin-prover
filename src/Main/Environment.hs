@@ -2,22 +2,22 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Helpers for inspecting the environment of the Tamarin prover.
 module Main.Environment where
 
+import           Data.Char                       (isSpace, toLower)
 import           Data.List
-import           Data.Char (isSpace, toLower)
-import           Data.Maybe (fromMaybe)
+import           Data.Maybe                      (fromMaybe)
 
-import           Control.Exception as E
+import           Control.Exception               as E
 
 import           System.Console.CmdArgs.Explicit
-import           System.Exit
 import           System.Environment
+import           System.Exit
 import           System.IO
 import           System.Process
 
@@ -31,7 +31,7 @@ import           Main.Console
 
 -- | Flags for handing over the path to the maude and 'dot' tool.
 toolFlags :: [Flag Arguments]
-toolFlags = 
+toolFlags =
   [ flagOpt "dot" ["with-dot"] (updateArg "withDot") "FILE" "Path to GraphViz 'dot' tool"
   , flagOpt "maude" ["with-maude"] (updateArg "withMaude") "FILE"  "Path to 'maude' rewriting tool"
   ]
@@ -57,7 +57,7 @@ getCommandLine = do
 
 -- | Read the cpu info using a call to cat /proc/cpuinfo
 getCpuModel :: IO String
-getCpuModel = 
+getCpuModel =
   handle handler $ do
     (_, info, _) <- readProcessWithExitCode "cat" ["/proc/cpuinfo"] []
     return $ maybe errMsg
@@ -79,7 +79,7 @@ commandLine prog args = concat $ intersperse " " $ prog : args
 
 -- | Test if a process is executable and check its response. This is used to
 -- determine the versions and capabilities of tools that we depend on.
-testProcess 
+testProcess
   :: (String -> String -> Either String String)
      -- ^ Analysis of stdout, stderr. Use 'Left' to report error.
   -> String         -- ^ Default error message to display to the user.
@@ -103,9 +103,9 @@ testProcess check defaultMsg testName prog args inp = do
                 return False
 
         case exitCode of
-            ExitFailure code -> errMsg $ 
+            ExitFailure code -> errMsg $
               "failed with exit code " ++ show code ++ "\n\n" ++ defaultMsg
-            ExitSuccess      -> 
+            ExitSuccess      ->
               case check out err of
                 Left msg     -> errMsg msg
                 Right msg    -> do putStrLn msg
@@ -145,7 +145,7 @@ ensureMaude as = do
     return (t1 && t2)
   where
     maude = maudePath as
-    checkVersion out _ 
+    checkVersion out _
       | filter (not . isSpace) out == "2.6" = Right "2.6. OK."
       | otherwise                           = Left  $ errMsg $
           " 'maude --version' returned wrong verison '" ++ out ++ "'"

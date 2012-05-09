@@ -260,3 +260,11 @@ errorFree1 ms = do
     ms' <- errorFree ms
     if null ms' then mzero else return ms'
 
+-- Error reporting
+------------------
+
+-- | Mark a part of the code as unreachable.
+unreachable :: String -> a
+unreachable location =
+    error $ "reached the 'unreachable' code in " ++ location
+

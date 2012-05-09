@@ -4,18 +4,18 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Signatures for the terms and multiset rewriting rules used to model and
 -- reason about a security protocol.
 -- modulo the full Diffie-Hellman equational theory and once modulo AC.
-module Theory.Signature (
+module Theory.Model.Signature (
 
   -- * Signature type
     Signature(..)
-  
+
   -- ** Pure signatures
   , SignaturePure
   , emptySignaturePure
@@ -35,19 +35,20 @@ module Theory.Signature (
 
   ) where
 
-import qualified Data.Set                            as S
-import qualified Data.Label                          as L
+import           Data.Binary
+import qualified Data.Label           as L
+import qualified Data.Set             as S
 
 import           Control.Applicative
 import           Control.DeepSeq
 
-import           Theory.Pretty
-import           Theory.Fact
-import           Term.Maude.Signature
+import           System.IO.Unsafe     (unsafePerformIO)
 
-import           Data.Binary
+import           Term.Maude.Process   (startMaude, mhMaudeSig, mhFilePath, MaudeHandle)
+import           Term.Maude.Signature (MaudeSig, minimalMaudeSig, enableDH, prettyMaudeSig)
+import           Theory.Model.Fact
+import           Theory.Text.Pretty
 
-import           System.IO.Unsafe (unsafePerformIO)
 
 -- | A theory signature.
 data Signature a = Signature
@@ -127,7 +128,7 @@ toSignaturePure sig = sig { _sigMaudeInfo = mhMaudeSig $ L.get sigMaudeInfo sig 
 
   The code below is a crutch and leads to unnecessary complication.
 
- 
+
 -- | Stop the maude process. This operation is unsafe, as there still might be
 -- thunks that rely on the MaudeHandle to refer to a running Maude process.
 unsafeStopMaude :: SignatureWithMaude -> IO (SignaturePure)
@@ -140,7 +141,7 @@ unsafeWithMaude :: FilePath      -- ^ Path to Maude executable
                 -> SignaturePure -- ^ Signature to use
                 -> (SignatureWithMaude -> IO a) -> IO a
 unsafeWithMaude maudePath sig  =
-    bracket (startMaude maudePath sig) unsafeStopMaude 
+    bracket (startMaude maudePath sig) unsafeStopMaude
 
 -}
 
@@ -181,7 +182,7 @@ prettySignaturePure sig = foldr ($--$) emptyDoc $ map combine $
     uniqueInsts = S.toList $ L.get sigpUniqueInsts sig
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
     ppGFresh = fsep . punctuate comma . map (text . showFactTagArity)
-    
+
 -- | Pretty-print a pure signature.
 prettySignatureWithMaude :: HighlightDocument d => SignatureWithMaude -> d
 prettySignatureWithMaude sig = foldr ($--$) emptyDoc $

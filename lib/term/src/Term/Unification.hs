@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- AC unification based on maude and free unification.
@@ -10,13 +10,18 @@ module Term.Unification (
   -- * Unification modulo AC
     unifyLTerm
   , unifyLNTerm
-
-  -- * matching modulo AC
-  , matchLTerm
-  , matchLNTerm
+  , unifiableLNTerms
 
   , unifyLTermFactored
   , unifyLNTermFactored
+
+  -- * matching modulo AC
+  -- ** Constructing matching problems
+  , matchLVar
+
+  -- ** Solving matching problems
+  , solveMatchLTerm
+  , solveMatchLNTerm
 
   -- * Handles to a Maude process
   , MaudeHandle
@@ -109,6 +114,9 @@ unifyLNTerm :: [Equal LNTerm] -> WithMaude [SubstVFresh Name LVar]
 -- unifyLNTerm eqs = reader $ \hnd -> (\res -> DT.trace (show ("unify", res, eqs)) res) $ unifyLTerm sortOfName eqs `runReader` hnd
 unifyLNTerm = unifyLTerm sortOfName
 
+-- | 'True' iff the terms are unifiable.
+unifiableLNTerms :: LNTerm -> LNTerm -> WithMaude Bool
+unifiableLNTerms t1 t2 = (not . null) <$> unifyLNTerm [Equal t1 t2]
 
 -- | Flatten a factored substitution to a list of substitutions.
 flattenUnif :: IsConst c => (LSubst c, [LSubstVFresh c]) -> [LSubstVFresh c]
@@ -117,25 +125,39 @@ flattenUnif (subst, substs) =  (\res -> trace (show ("flattenUnif",subst, substs
 -- Matching modulo AC
 ----------------------------------------------------------------------
 
+-- | Match an 'LVar' term to an 'LVar' pattern.
+matchLVar :: LVar -> LVar -> Match (LTerm c)
+matchLVar t p = varTerm t `matchWith` varTerm p
 
--- | @matchLNTerm sortOf eqs@ returns a complete set of matchers for @eqs@ modulo AC.
-matchLTerm :: (IsConst c , Show (Lit c LVar), Ord c)
+-- | @solveMatchLNTerm sortOf eqs@ returns a complete set of matchers for
+-- @eqs@ modulo AC.
+solveMatchLTerm :: (IsConst c , Show (Lit c LVar), Ord c)
            => (c -> LSort)
-           -> [Match (LTerm c)]
+           -> Match (LTerm c)
            -> WithMaude [Subst c LVar]
-matchLTerm sortOf eqs =
-    reader $ \h -> (\res -> trace (unlines $ ["matchLTerm: "++ show eqs, "result = "++  show res]) res) $
-        case runState (runErrorT match) M.empty of
-          (Left NoMatch,_)    -> []
-          (Left ACProblem, _) -> unsafePerformIO (UM.matchViaMaude h sortOf eqs)
-          (Right _, mappings) -> [substFromMap mappings]
+solveMatchLTerm sortOf matchProblem =
+    case flattenMatch matchProblem of
+      Nothing -> pure []
+      Just ms -> reader $ matchTerms ms
   where
-    match = sequence [ matchRaw sortOf t p | MatchWith t p <- eqs ]
+    trace' res = trace
+      (unlines $ ["matchLTerm: "++ show matchProblem, "result = "++  show res])
+      res
+
+    matchTerms ms hnd =
+        trace' $ case runState (runErrorT match) M.empty of
+          (Left NoMatcher, _)  -> []
+          (Left ACProblem, _)  ->
+              unsafePerformIO (UM.matchViaMaude hnd sortOf matchProblem)
+          (Right (), mappings) -> [substFromMap mappings]
+      where
+        match = forM_ ms $ \(t, p) -> matchRaw sortOf t p
 
 
--- | @matchLNTerm eqs@ returns a complete set of matchers for @eqs@ modulo AC.
-matchLNTerm :: [Match LNTerm] -> WithMaude [Subst Name LVar]
-matchLNTerm = matchLTerm sortOfName
+-- | @solveMatchLNTerm eqs@ returns a complete set of matchers for @eqs@
+-- modulo AC.
+solveMatchLNTerm :: Match LNTerm -> WithMaude [Subst Name LVar]
+solveMatchLNTerm = solveMatchLTerm sortOfName
 
 -- Free unification with lazy AC-equation solving.
 --------------------------------------------------------------------
@@ -154,7 +176,7 @@ unifyRaw l0 r0 = do
        (Lit (Var vl), Lit (Var vr))
          | vl == vr  -> return ()
          | otherwise -> case (lvarSort vl, lvarSort vr) of
-             (sl, sr) | sl == sr                 -> if vl < vr then elim vr l 
+             (sl, sr) | sl == sr                 -> if vl < vr then elim vr l
                                                     else elim vl r
              _        | sortGeqLTerm sortOf vl r -> elim vl r
              -- If unification can succeed here, then it must work by
@@ -177,7 +199,7 @@ unifyRaw l0 r0 = do
        -- all unifiable pairs of term constructors have been enumerated
        _                      -> mzero -- no unifier
   where
-    elim v t 
+    elim v t
       | v `occurs` t = mzero -- no unifier
       | otherwise    = do
           sortOf <- ask
@@ -185,14 +207,14 @@ unifyRaw l0 r0 = do
           modify (M.insert v t . M.map (applyVTerm (substFromList [(v,t)])))
 
 
-data MatchFailure = NoMatch | ACProblem
+data MatchFailure = NoMatcher | ACProblem
 
 instance Error MatchFailure where
-    strMsg _ = NoMatch
+    strMsg _ = NoMatcher
 
--- | Ensure that the computed substitution @sigma@ satisfies 
+-- | Ensure that the computed substitution @sigma@ satisfies
 -- @t ==_AC apply sigma p@ after the delayed equations are solved.
-matchRaw :: IsConst c 
+matchRaw :: IsConst c
          => (c -> LSort)
          -> LTerm c -- ^ Term @t@
          -> LTerm c -- ^ Pattern @p@.
@@ -205,10 +227,10 @@ matchRaw sortOf t p = do
           case M.lookup vp mappings of
               Nothing             -> do
                 unless (sortGeqLTerm sortOf vp t) $
-                    throwError NoMatch
+                    throwError NoMatcher
                 modify (M.insert vp t)
               Just tp | t == tp  -> return ()
-                      | otherwise -> throwError NoMatch
+                      | otherwise -> throwError NoMatcher
 
       (viewTerm -> Lit (Con ct),  viewTerm -> Lit (Con cp)) -> guard (ct == cp)
       (viewTerm -> FApp (NonAC tfsym) targs, viewTerm -> FApp (NonAC pfsym) pargs) ->
@@ -220,7 +242,7 @@ matchRaw sortOf t p = do
       (viewTerm -> FApp (AC _) _, viewTerm -> FApp (AC _) _) -> throwError ACProblem
 
       -- all matchable pairs of term constructors have been enumerated
-      _                      -> throwError NoMatch
+      _                      -> throwError NoMatcher
 
 
 -- | @sortGreaterEq v t@ returns @True@ if the sort ensures that the sort of @v@ is greater or equal to

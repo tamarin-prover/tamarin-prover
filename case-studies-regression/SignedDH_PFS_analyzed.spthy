@@ -140,54 +140,54 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
   case Init_2
-  solve( (#i.3, 0)[Init_1( $I.6, $R.6, ~ekI.6 )] )
+  solve( (#i.3, 0)[Init_1( $I.7, $R.7, ~ekI.7 )] )
     case Init_1
-    solve( (#i.3, 1)[!Pk( $R.6, pk(ltkR.6) )] )
+    solve( (#i.3, 1)[!Pk( $R.7, pk(ltkR.7) )] )
       case Register_pk
-      solve( KU((#vf.7, 0), sign(<'2', $R.6, $I.6, Y.6>, ~ltk.23)) )
+      solve( !KU( f_.22, sign(<'2', $R.7, $I.7, Y.7>, ~ltk.37) ) @ #vk.21 )
         case Resp
-        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekI.61*~ekR.62) )] /* may loop */ )
+        solve( !KU( f_.5, 'g'^(~ekI.112*~ekR.113) ) @ #vk.6 )
           case Init_1
-          by solve( (#vr.91, 1)[!KU( f_.93, ~ekR.103 )] /* may loop */ )
+          by solve( !KU( f_.144, ~ekR.113 ) @ #vk.147 )
         next
           case Resp
-          by solve( (#vr.96, 1)[!KU( f_.98, ~ekI.102 )] /* may loop */ )
+          by solve( !KU( f_.162, ~ekI.112 ) @ #vk.165 )
         next
           case cexp
-          by solve( KU((#vr.67, 1), ~ekI.61) )
+          by solve( !KU( f_.167, ~ekI.112 ) @ #vk.166 )
         qed
       next
         case csign
-        solve( (#vr.29, 1)[!KU( f_.33, ~ltk.23 )] /* may loop */ )
+        solve( !KU( f_.45, ~ltk.37 ) @ #vk.47 )
           case Reveal_ltk
-          by contradiction // cyclic
+          by contradiction // from formulas
         qed
       qed
     qed
   qed
 next
   case Resp
-  solve( (#i.3, 0)[!Pk( $I.6, pk(ltkI.6) )] )
+  solve( (#i.3, 0)[!Pk( $I.7, pk(ltkI.7) )] )
     case Register_pk
-    solve( (#i.3, 1)[!Ltk( $R.6, ltkR.6 )] )
+    solve( (#i.3, 1)[!Ltk( $R.7, ltkR.7 )] )
       case Register_pk
-      solve( KU((#vf.7, 0), sign(<'1', $I.6, $R.6, X.6>, ~ltk.14)) )
+      solve( !KU( f_.22, sign(<'1', $I.7, $R.7, X.7>, ~ltk.28) ) @ #vk.21 )
         case Init_1
-        solve( (#k.4, 0)[!KU( f_.5, 'g'^(~ekR.58*~ekI.59) )] /* may loop */ )
+        solve( !KU( f_.5, 'g'^(~ekR.85*~ekI.86) ) @ #vk.6 )
           case Init_1
-          by solve( (#vr.88, 1)[!KU( f_.90, ~ekR.99 )] /* may loop */ )
+          by solve( !KU( f_.117, ~ekR.85 ) @ #vk.120 )
         next
           case Resp
-          by solve( (#vr.93, 1)[!KU( f_.95, ~ekI.100 )] /* may loop */ )
+          by solve( !KU( f_.135, ~ekI.86 ) @ #vk.138 )
         next
           case cexp
-          by solve( KU((#vr.64, 1), ~ekR.58) )
+          by solve( !KU( f_.140, ~ekR.85 ) @ #vk.139 )
         qed
       next
         case csign
-        solve( (#vr.26, 1)[!KU( f_.30, ~ltk.14 )] /* may loop */ )
+        solve( !KU( f_.42, ~ltk.28 ) @ #vk.44 )
           case Reveal_ltk
-          by contradiction // cyclic
+          by contradiction // from formulas
         qed
       qed
     qed
@@ -209,7 +209,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.774083s
+  processing time: 0.938785s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -220,7 +220,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.774083s
+  processing time: 0.938785s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

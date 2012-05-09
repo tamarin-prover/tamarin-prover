@@ -3,31 +3,31 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 -- Portability : GHC only
 --
 -- Variants of protocol rules.
-module Theory.RuleVariants where
+module Theory.Tools.RuleVariants where
 
-import Theory.Rule
-import Term.Rewriting.Norm
-import Term.Narrowing.Variants
-import Theory.Proof.EquationStore
+import           Term.Narrowing.Variants
+import           Term.Rewriting.Norm
+import           Theory.Tools.EquationStore
+import           Theory.Model
 
-import Extension.Prelude
-import Logic.Connectives
+import           Extension.Prelude
+import           Logic.Connectives
 
-import Control.Monad.Reader
-import Control.Monad.Bind
-import qualified Control.Monad.Trans.PreciseFresh as Precise
-import Control.Applicative
+import           Control.Applicative
+import           Control.Monad.Bind
+import           Control.Monad.Reader
+import qualified Control.Monad.Trans.PreciseFresh       as Precise
 
-import qualified Data.Map as M
-import Data.Traversable (traverse)
-import qualified Data.Set as S
+import qualified Data.Map                               as M
+import qualified Data.Set                               as S
+import           Data.Traversable                       (traverse)
 
-import Debug.Trace.Ignore
+import           Debug.Trace.Ignore
 
 -- Variants of protocol rules
 ----------------------------------------------------------------------
@@ -57,7 +57,7 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
         case substs of
           [] -> error $ "variantsProtoRule: rule has no variants `"++show ru++"'"
           _  -> do
-              -- x <- return (emptySubst, Just substs) -- 
+              -- x <- return (emptySubst, Just substs) --
               x <- simpDisjunction hnd (const False) (Disj substs)
               case trace (show ("SIMP",abstractedTerms,
                                 "abstr", abstrPsCsAs,

@@ -105,12 +105,11 @@ solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, ~ekI.8 )] )
   case Init_1
   solve( (#i1, 2)[!Pk( $R.8, 'g'^~lkR.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.11, h(<~ekI.8, hkR.7, 'g'^(~lkI.8*~lkR.8)>)
-                      )] /* may loop */ )
+    solve( !KU( f_.12, h(<~ekI.8, hkR.7, 'g'^(~lkI.8*~lkR.8)>) ) @ #vk.13 )
       case Sessk_reveal_case_4
-      solve( (#vf.9, 0)[!KU( f_.10, ~tid.39 )] /* may loop */ )
+      solve( !KU( f_.10, ~tid.40 ) @ #vk.11 )
         case Resp_1
-        solve( (#vf.42, 0)[!KU( f_.43, ~ekI.8 )] /* may loop */ )
+        solve( !KU( f_.44, ~ekI.8 ) @ #vk.45 )
           case Init_1
           SOLVED // trace found
         qed
@@ -154,14 +153,16 @@ solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
   case generate_ltk
   solve( (#i1, 3)[!Pk( $I.8, 'g'^~lkI.8 )] )
     case generate_ltk
-    solve( (#i2.1, 0)[!KU( f_.12, h(<hkI.6, ~ekR.8, 'g'^(~lkI.8*~lkR.8)>)
-                      )] /* may loop */ )
+    solve( !KU( f_.13, h(<hkI.6, ~ekR.8, 'g'^(~lkI.8*~lkR.8)>) ) @ #vk.14 )
       case Sessk_reveal_case_2
-      solve( (#vf.9, 0)[!KU( f_.10, ~tid.34 )] /* may loop */ )
+      solve( !KU( f_.10, ~tid.35 ) @ #vk.11 )
         case Init_1
-        solve( (#vf.37, 0)[!KU( f_.38, ~ekR.8 )] /* may loop */ )
+        solve( !KU( f_.39, ~ekR.8 ) @ #vk.40 )
           case Resp_1
-          SOLVED // trace found
+          solve( !KU( 'exp', ~tid.35 ) @ #vk.11 )
+            case Init_1
+            SOLVED // trace found
+          qed
         qed
       qed
     qed
@@ -183,9 +184,9 @@ analyzing: data/examples/csf12/JKL_TS1_2004_KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.282965s
+  processing time: 0.431331s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
-  JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
+  JKL2008_1_responder_key (all-traces): falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
 
@@ -195,9 +196,9 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.282965s
+  processing time: 0.431331s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
-  JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
+  JKL2008_1_responder_key (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================
 */

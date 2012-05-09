@@ -2,12 +2,12 @@
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Parsing protocol theories.
-module Theory.Parser (
+module Theory.Text.Parser (
     parseOpenTheory
   , parseOpenTheoryString
   , parseProofMethod
@@ -15,34 +15,33 @@ module Theory.Parser (
   , parseIntruderRulesDH
   ) where
 
-import           Prelude hiding (id, (.))
+import           Prelude                hiding (id, (.))
 
-import           Data.Char     (toUpper, isUpper, isDigit)
-import           Data.Foldable (asum)
+import qualified Data.ByteString.Char8  as BC
+import           Data.Char              (toUpper, isUpper, isDigit)
+import           Data.Foldable          (asum)
 import           Data.Label
-import qualified Data.Set                                 as S
-import qualified Data.Map                                 as M
+import qualified Data.Map               as M
 import           Data.Monoid
-import qualified Data.ByteString.Char8                    as BC
+import qualified Data.Set               as S
 
-import           Control.Monad
-import           Control.Applicative hiding (empty, many, optional)
+import           Control.Applicative    hiding (empty, many, optional)
 import           Control.Category
+import           Control.Monad
 
+import           Text.Parsec            hiding (token, (<|>), string )
+import qualified Text.Parsec            as P
 import           Text.Parsec.Pos
-import           Text.Parsec hiding (token, (<|>), string )
-import qualified Text.Parsec as P
+import           Text.PrettyPrint.Class (render)
 
-import           Theory.Lexer 
+import           Term.Substitution
+import           Term.SubtermRule
+import           Theory
+import           Theory.Text.Lexer
                    ( Keyword(..), TextType(..), runAlex, AlexPosn(..)
                    , alexGetPos, alexMonadScan
                    )
-import           Term.SubtermRule
-import           Term.Substitution
 
-import Text.PrettyPrint.Class (render)
-
-import Theory
 
 ------------------------------------------------------------------------------
 -- Specializing Parsec to our needs
@@ -58,7 +57,7 @@ type Token = (SourcePos, Keyword)
 --
 -- NOTE: Lexical errors are thrown using 'error'.
 scanString :: FilePath -> String -> [Token]
-scanString filename s = 
+scanString filename s =
   case runAlex s gatherUntilEOF of
     Left err  -> error err
     Right kws -> kws
@@ -67,7 +66,7 @@ scanString filename s =
     AlexPn _ line col <- alexGetPos
     let pos = newPos filename line col
     k <- alexMonadScan
-    case k of 
+    case k of
       EOF -> return [(pos,EOF)]
       _   -> do kws <- gatherUntilEOF
                 return $ (pos,k) : kws
@@ -85,7 +84,7 @@ token p = P.token (show . snd) fst (p . snd)
 -- | Parse a term.
 kw :: Keyword -> Parser ()
 kw t = token check
-  where 
+  where
   check t' | t == t' = Just () | otherwise = Nothing
 
 -- | Parse content between keywords.
@@ -113,7 +112,7 @@ doubleQuoted = betweenKWs DQUOTE DQUOTE
 -- | Parse an identifier as a string
 identifier :: Parser String
 identifier = token extract
-  where extract (IDENT name) 
+  where extract (IDENT name)
          -- don't allow certain reserved words as identifiers
          | not (name `elem` ["in","let","rule"]) = Just name
         extract _                                = Nothing
@@ -151,7 +150,7 @@ list p = kw LBRACKET *> commaSep p <* kw RBRACKET
 -- | A formal comment; i.e., (header, body)
 formalComment :: Parser (String, String)
 formalComment =
-    (,) <$> text begin 
+    (,) <$> text begin
         <*> (concat <$> many (text content) <* text end)
   where
     text f = token (\t -> case t of TEXT ty -> f ty; _ -> mzero)
@@ -187,9 +186,9 @@ parseIntruderRulesDH = parseFile (setState dhMaudeSig >> many intrRule)
 -- | Parse a security protocol theory file.
 -- TODO: This function seems to parse a string, not a file from a file path?
 parseProofMethod :: FilePath -> Either ParseError ProofMethod
-parseProofMethod = 
+parseProofMethod =
     runParser proofMethod minimalMaudeSig dummySource . scanString dummySource
-  where 
+  where
     dummySource = "<interactive>"
 
 -- | Parse a security protocol theory from a string.
@@ -225,7 +224,7 @@ protorule   := ident ':' factList '-->' factList
 factList    := '[' [facts] ']'
 facts       := fact | fact ',' facts
 protoFact   := ident '(' terms ')'
-terms       := term | term ',' terms 
+terms       := term | term ',' terms
 term        := lit | application | '<' term ',' terms '>'  -- right assoc pairing
 application := ident '(' terms ')'
 lit        := ident | '\'' ident '\''
@@ -234,13 +233,13 @@ ident       := <a-zA-Z> (<a-zA-Z0-9-_)
 
 // example protocol rule
 
-  Init_1: 
+  Init_1:
     [ Pub(I), Pub(R), Fresh(ni) ]
     -->
     [ Init_1(I,R,ni), Send(encA(pk(R), <I,R,ni>)) ]
 
 // example intruder rule
-  
+
   Exp [Constr]:
     [ (x^_((x1*x2))), ((x3*x1)*_x4) ]
     -->
@@ -260,7 +259,7 @@ indexedIdentifier = do
 
 -- | Parse a logical variable with the given sorts allowed.
 sortedLVar :: [LSort] -> Parser LVar
-sortedLVar ss = 
+sortedLVar ss =
     asum $ map (try . mkSuffixParser) ss ++ map mkPrefixParser ss
   where
     mkSuffixParser s = do
@@ -289,7 +288,7 @@ msgvar = sortedLVar [LSortFresh, LSortPub, LSortMsg, LSortMSet]
 
 -- | Parse a graph node variable.
 nodevar :: Parser NodeId
-nodevar = asum 
+nodevar = asum
   [ sortedLVar [LSortNode]
   , (\(n, i) -> LVar n LSortNode i) <$> indexedIdentifier ]
   <?> "node"
@@ -332,7 +331,7 @@ binaryAlgApp plit = do
     k <- lookupNonACArity op
     arg1 <- kw LBRACE *> tupleterm plit <* kw RBRACE
     arg2 <- term plit
-    when (k /= 2) $ fail $ 
+    when (k /= 2) $ fail $
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNonAC (BC.pack op, 2) [arg1, arg2]
 
@@ -344,7 +343,7 @@ term plit = asum
     , string "1" *> pure fAppOne
     , application <?> "function application"
     , nullaryApp
-    , plit  
+    , plit
     ]
     <?> "term"
   where
@@ -373,7 +372,7 @@ tupleterm plit = chainr1 (multterm plit) ((\a b -> fAppPair (a,b))<$ kw COMMA)
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
-fact plit = 
+fact plit =
     do multi <- option Linear (kw BANG *> pure Persistent)
        i     <- identifier
        case i of
@@ -389,7 +388,7 @@ fact plit =
                                      show (length ts) ++ " instead of arity one"
 
     mkProtoFact multi f = case map toUpper f of
-      "OUT" -> singleTerm f outFact 
+      "OUT" -> singleTerm f outFact
       "IN"  -> singleTerm f inFact
       "KU"  -> return . Fact KUFact
       "KD"  -> return . Fact KDFact
@@ -418,10 +417,10 @@ typeAssertions = fmap TypingE $
        optional moduloE
        kw COLON
        many1 ((,) <$> (try (msgvar <* kw COLON))
-                  <*> ( commaSep1 (try $ multterm llit) <|> 
+                  <*> ( commaSep1 (try $ multterm llit) <|>
                         (kw MINUS *> pure [])
                       )
-             ) 
+             )
     <|> pure []
 -}
 
@@ -430,7 +429,7 @@ typeAssertions = fmap TypingE $
 -- contains them.
 protoRule :: Parser (ProtoRuleE)
 protoRule = do
-    name  <- try (string "rule" *> optional moduloE *> identifier <* kw COLON) 
+    name  <- try (string "rule" *> optional moduloE *> identifier <* kw COLON)
     subst <- option emptySubst letBlock
     (ps,as,cs) <- genericRule
     return $ apply subst $ Rule (StandRule name) ps cs as
@@ -446,7 +445,7 @@ letBlock = do
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
 intrRule = do
-    info <- try (string "rule" *> moduloAC *> intrInfo <* kw COLON) 
+    info <- try (string "rule" *> moduloAC *> intrInfo <* kw COLON)
     (ps,as,cs) <- genericRule
     return $ Rule info ps cs as
   where
@@ -458,8 +457,8 @@ intrRule = do
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
 genericRule :: Parser ([LNFact], [LNFact], [LNFact])
-genericRule = 
-    (,,) <$> list (fact llit) 
+genericRule =
+    (,,) <$> list (fact llit)
          <*> ((pure [] <* kw LONGRIGHTARROW) <|>
               (kw MINUS *> kw MINUS *> list (fact llit) <* kw RIGHTARROW))
          <*> list (fact llit)
@@ -468,7 +467,7 @@ genericRule =
 -- | Add facts to a rule.
 addFacts :: String        -- ^ Command to be used: add_concs, add_prems
          -> Parser (String, [LNFact])
-addFacts cmd = 
+addFacts cmd =
     (,) <$> (string cmd *> identifier <* kw COLON) <*> commaSep1 fact
 -}
 
@@ -529,7 +528,7 @@ transfer = do
                           , tfRecv = Just (desc left) }
            )
        )
-    ) 
+    )
   where
     transferDesc = do
         ts        <- tupleterm tlit
@@ -542,11 +541,11 @@ transfer = do
 -- | Parse a protocol in transfer notation
 transferProto :: Parser [ProtoRuleE]
 transferProto = do
-    name <- string "anb" *> kw MINUS *> string "proto" *> identifier 
+    name <- string "anb" *> kw MINUS *> string "proto" *> identifier
     braced (convTransferProto name <$> abbrevs <*> many1 transfer)
   where
     abbrevs = (string "let" *> many1 abbrev) <|> pure []
-    abbrev = (,) <$> try (identifier <* kw EQUAL) <*> multterm tlit 
+    abbrev = (,) <$> try (identifier <* kw EQUAL) <*> multterm tlit
 
 -}
 
@@ -570,10 +569,6 @@ actionOp :: Parser ()
 actionOp = try (kw AT)
 
 -- | Parse the @<@ temporal less operator.
-edgeOp :: Parser ()
-edgeOp = try (kw GREATER *> kw RIGHTARROW)
-
--- | Parse the @<@ temporal less operator.
 lessOp :: Parser ()
 lessOp = try (kw LESS)
 
@@ -581,11 +576,15 @@ lessOp = try (kw LESS)
 equalOp :: Parser ()
 equalOp = kw APPROX <|> kw EQUAL
 
+{-
 -- | Parse the @--|@ deduced before operator.
 dedBeforeOp :: Parser ()
 dedBeforeOp = try (kw MINUS *> kw MINUS *> kw MID)
 
-{-
+-- | Parse the @<@ temporal less operator.
+edgeOp :: Parser ()
+edgeOp = try (kw GREATER *> kw RIGHTARROW)
+
 -- | Parse the @~~>@ chain operator.
 chainOp :: Parser ()
 chainOp = kw TILDE *> kw TILDE *> kw TILDE *> kw GREATER
@@ -593,7 +592,7 @@ chainOp = kw TILDE *> kw TILDE *> kw TILDE *> kw GREATER
 
 -- | Parse a goal.
 goal :: Parser Goal
-goal = fail "SM: reimplement goal parsing" {- asum 
+goal = fail "SM: reimplement goal parsing" {- asum
   [ splitGoal
   , premiseGoal
   , chainGoal
@@ -605,7 +604,7 @@ goal = fail "SM: reimplement goal parsing" {- asum
         fa <- fact llit
         return $ PremiseGoal fa (NodePrem (v, i))
 
-    chainGoal = ChainGoal 
+    chainGoal = ChainGoal
         <$> (try $ term llit <* kw COLON)
         <*> (Chain <$> (nodeConc <* chainOp) <*> nodePrem)
 
@@ -626,7 +625,7 @@ proofMethod = optional (kw BANG) *> asum
 
 -- | Parse a proof skeleton.
 proofSkeleton :: Parser ProofSkeleton
-proofSkeleton = 
+proofSkeleton =
     finalProof <|> interProof
   where
     finalProof = do
@@ -635,11 +634,11 @@ proofSkeleton =
 
     interProof = do
         method <- proofMethod
-        cases  <- (sepBy oneCase (string "next") <* string "qed") <|> 
+        cases  <- (sepBy oneCase (string "next") <* string "qed") <|>
                   ((return . ("",)) <$> proofSkeleton           )
         return (LNode (ProofStep method ()) (M.fromList cases))
 
-    oneCase = (,) <$> (string "case" *> identifier) <*> proofSkeleton 
+    oneCase = (,) <$> (string "case" *> identifier) <*> proofSkeleton
 
 ------------------------------------------------------------------------------
 -- Parsing Formulas and Lemmas
@@ -650,17 +649,15 @@ blatom :: Parser BLAtom
 blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ flip Action <$> try (fact llit <* actionOp) <*> nodevarTerm      <?> "action"
   , Less        <$> try (nodevarTerm <* lessOp)    <*> nodevarTerm   <?> "less"
-  , DedBefore   <$> try (term llit <* dedBeforeOp) <*> nodevarTerm   <?> "deduced before"
-  , EdgeA       <$> try (nodeConc <* edgeOp)       <*> nodePrem      <?> "edge"
   , EqE         <$> try (multterm llit <* equalOp) <*> multterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* equalOp)  <*> nodevarTerm   <?> "node equality"
   ]
-  where 
+  where
     nodevarTerm = (lit . Var) <$> nodevar
-    nodePrem = annNode PremIdx
-    nodeConc = annNode ConcIdx
-    annNode mkAnn = parens ((,) <$> (nodevarTerm <* kw COMMA) 
-                                <*> (mkAnn <$> integer))
+    -- nodePrem = annNode PremIdx
+    -- nodeConc = annNode ConcIdx
+    -- annNode mkAnn = parens ((,) <$> (nodevarTerm <* kw COMMA)
+    --                             <*> (mkAnn <$> integer))
 
 -- | Parse an atom of a formula.
 fatom :: Parser (LFormula Name)
@@ -700,7 +697,7 @@ disjuncts = chainl1 conjuncts ((.||.) <$ (kw LOR <|> kw MID))
 imp :: Parser (LFormula Name)
 imp = do
   lhs <- disjuncts
-  asum [ try (kw EQUAL *> kw EQUAL *> kw GREATER) *> 
+  asum [ try (kw EQUAL *> kw EQUAL *> kw GREATER) *>
              ((lhs .==>.) <$> imp)
        , pure lhs ]
 
@@ -708,7 +705,7 @@ imp = do
 iff :: Parser (LFormula Name)
 iff = do
   lhs <- imp
-  asum [ try (kw LESS *> kw EQUAL *> kw GREATER) *> 
+  asum [ try (kw LESS *> kw EQUAL *> kw GREATER) *>
              ((lhs .<=>.) <$> imp)
        , pure lhs ]
 
@@ -729,7 +726,7 @@ traceQuantifier = asum
 
 -- | Parse a lemma.
 lemma :: Parser (Lemma ProofSkeleton)
-lemma = skeletonLemma <$> (string "lemma" *> optional moduloE *> identifier) 
+lemma = skeletonLemma <$> (string "lemma" *> optional moduloE *> identifier)
                       <*> (option [] $ list lemmaAttribute)
                       <*> (kw COLON *> option AllTraces traceQuantifier)
                       <*> doubleQuoted iff
@@ -737,15 +734,15 @@ lemma = skeletonLemma <$> (string "lemma" *> optional moduloE *> identifier)
 
 
 -- | Parse a globally fresh 'FactTag' written as
--- 
+--
 --     fresh proto/2
 
 globallyFresh :: Parser (S.Set FactTag)
-globallyFresh = 
-    string "unique_insts" *> kw COLON *> 
+globallyFresh =
+    string "unique_insts" *> kw COLON *>
         (S.fromList <$> sepBy1 factSymbol (kw COMMA))
   where
-    factSymbol = 
+    factSymbol =
         ProtoFact Linear <$> identifier <*> (kw SLASH *> integer)
 
 builtins :: Parser ()
@@ -775,8 +772,8 @@ functions =
         sig <- getState
         case lookup (fst funsym) (S.toList $ allFunctionSymbols sig) of
           Just k | k /= snd funsym ->
-            fail $ "conflicting arities " ++ 
-                   show k ++ " and " ++ show (snd funsym) ++ 
+            fail $ "conflicting arities " ++
+                   show k ++ " and " ++ show (snd funsym) ++
                    " for `" ++ BC.unpack (fst funsym)
           _ -> setState (addFunctionSymbol funsym sig)
 
@@ -803,14 +800,14 @@ theory :: [String]   -- ^ Defined flags.
 theory flags0 = do
     string "theory"
     thyId <- identifier
-    string "begin" 
-        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory) 
+    string "begin"
+        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory)
         <* string "end"
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
     addItems flags thy = asum
       [ do fresh <- globallyFresh
-           addItems flags $ 
+           addItems flags $
                modify (sigpUniqueInsts . thySignature) (S.union fresh) thy
       , do builtins
            msig <- getState

@@ -2,7 +2,7 @@
 {-# LINE 1 "src/Theory/Lexer.x" #-}
 
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-unused-matches -fno-warn-unused-binds -fno-warn-missing-signatures -fno-warn-lazy-unlifted-bindings #-}
-module Theory.Lexer where
+module Theory.Text.Lexer where
 
 
 #if __GLASGOW_HASKELL__ >= 603
@@ -65,16 +65,16 @@ scanFile f = do
 -}
 
 -- | Formal text types.
-data TextType = 
-       TextBegin String 
-     | TextContent String 
+data TextType =
+       TextBegin String
+     | TextContent String
      | TextEnd
      deriving( Eq, Ord, Show )
 
 -- | Lexable Keywords
 data Keyword =
     IDENT String
-  | TEXT TextType 
+  | TEXT TextType
   | SQUOTE
   | DQUOTE
   | RIGHTARROW
@@ -96,7 +96,7 @@ data Keyword =
   | RPAREN
   | LBRACKET
   | RBRACKET
-  | LBRACE 
+  | LBRACE
   | RBRACE
   | SLASH
   | BACKSLASH
@@ -121,7 +121,7 @@ data Keyword =
   deriving( Eq )
 
 instance Show Keyword where
-  show kw = case kw of 
+  show kw = case kw of
       IDENT i -> identifier i
       TEXT t -> txt t
       SQUOTE -> symbol "'"
@@ -159,12 +159,12 @@ instance Show Keyword where
       LESS -> symbol "<"
       GREATER -> symbol ">"
       EOF -> "end of file"
-      FORALL -> symbol   "∀"  
-      EXISTS -> symbol   "∃"  
-      LAND -> symbol     "∧"  
-      LOR -> symbol      "∨"  
-      LNOT -> symbol     "¬"  
-      APPROX -> symbol   "≈"  
+      FORALL -> symbol   "∀"
+      EXISTS -> symbol   "∃"
+      LAND -> symbol     "∧"
+      LOR -> symbol      "∨"
+      LNOT -> symbol     "¬"
+      APPROX -> symbol   "≈"
       DUMMY_KEYWORD -> "DUMMY_KEYWORD (this should not occur!)"
     where
       identifier i        = "identifier `" ++ i ++ "'"
@@ -238,21 +238,21 @@ data AlexState = AlexState {
 -- Compile with -funbox-strict-fields for best results!
 
 runAlex :: String -> Alex a -> Either String a
-runAlex input (Alex f) 
+runAlex input (Alex f)
    = case f (AlexState {alex_pos = alexStartPos,
-                        alex_inp = input,       
+                        alex_inp = input,
                         alex_chr = '\n',
                         alex_scd = 0,
                         alex_ocd = 0,
                         alex_cmt = []
-             }) of 
+             }) of
        Left msg -> Left msg
        Right ( _, a ) -> Right a
 
 newtype Alex a = Alex { unAlex :: AlexState -> Either String (AlexState, a) }
 
 instance Monad Alex where
-  m >>= k  = Alex $ \s -> case unAlex m s of 
+  m >>= k  = Alex $ \s -> case unAlex m s of
                                 Left msg -> Left msg
                                 Right (s',a) -> unAlex (k a) s'
   return a = Alex $ \s -> Right (s,a)
@@ -262,7 +262,7 @@ alexGetPos = Alex $ \s@AlexState{alex_pos=pos} -> Right (s, pos)
 
 alexGetInput :: Alex AlexInput
 alexGetInput
- = Alex $ \s@AlexState{alex_pos=pos,alex_chr=c,alex_inp=inp} -> 
+ = Alex $ \s@AlexState{alex_pos=pos,alex_chr=c,alex_inp=inp} ->
         Right (s, (pos,c,inp))
 
 alexSetInput :: AlexInput -> Alex ()
@@ -347,11 +347,11 @@ endComment cmtBegin input len = do
   case cmts of
     [] -> alexError $ "comment ended but no beginning '"++cmtBegin++"' marked."
     (cmt:cmts') -> do
-      if cmt == cmtBegin 
+      if cmt == cmtBegin
         then do
           alexSetComments cmts'
-          if null cmts' 
-            then alexGetOldStartCode >>= alexSetStartCode 
+          if null cmts'
+            then alexGetOldStartCode >>= alexSetStartCode
             else return ()
         else return ()
       alexMonadScan
@@ -370,60 +370,60 @@ alexEOF = return EOF
 comment,text :: Int
 comment = 1
 text = 2
-alex_action_2 =  beginComment "(*" comment 
-alex_action_3 =  beginComment "(*" comment 
-alex_action_4 =  beginComment "(*" comment 
-alex_action_5 =  endComment "(*" 
-alex_action_6 =  beginComment "/*" comment 
-alex_action_7 =  beginComment "/*" comment 
-alex_action_8 =  beginComment "/*" comment 
-alex_action_9 =  endComment "/*" 
-alex_action_10 =  skip 
-alex_action_11 =  beginText "text" text 
-alex_action_12 =  beginText "section" text 
-alex_action_13 =  beginText "subsection" text 
+alex_action_2 =  beginComment "(*" comment
+alex_action_3 =  beginComment "(*" comment
+alex_action_4 =  beginComment "(*" comment
+alex_action_5 =  endComment "(*"
+alex_action_6 =  beginComment "/*" comment
+alex_action_7 =  beginComment "/*" comment
+alex_action_8 =  beginComment "/*" comment
+alex_action_9 =  endComment "/*"
+alex_action_10 =  skip
+alex_action_11 =  beginText "text" text
+alex_action_12 =  beginText "section" text
+alex_action_13 =  beginText "subsection" text
 alex_action_14 =  endText 0
-alex_action_15 =  scanString (TEXT . TextContent) 
-alex_action_16 =  keyword FORALL 
-alex_action_17 =  keyword EXISTS 
-alex_action_18 =  keyword LAND 
-alex_action_19 =  keyword LOR 
-alex_action_20 =  keyword LNOT 
-alex_action_21 =  keyword APPROX 
-alex_action_22 =  keyword COMMA 
-alex_action_23 =  keyword LPAREN 
-alex_action_24 =  keyword RPAREN 
-alex_action_25 =  keyword LBRACKET 
-alex_action_26 =  keyword RBRACKET 
-alex_action_27 =  keyword LBRACE 
-alex_action_28 =  keyword RBRACE 
-alex_action_29 =  keyword SLASH 
-alex_action_30 =  keyword BACKSLASH 
-alex_action_31 =  keyword SQUOTE 
-alex_action_32 =  keyword DQUOTE 
-alex_action_33 =  keyword TILDE 
-alex_action_34 =  keyword HAT 
-alex_action_35 =  keyword EQUAL 
-alex_action_36 =  keyword COLON 
-alex_action_37 =  keyword DOLLAR 
-alex_action_38 =  keyword AT 
-alex_action_39 =  keyword SHARP 
-alex_action_40 =  keyword PERCENT 
-alex_action_41 =  keyword STAR 
-alex_action_42 =  keyword LESS 
-alex_action_43 =  keyword GREATER 
-alex_action_44 =  keyword QUESTIONMARK 
-alex_action_45 =  keyword BANG 
-alex_action_46 =  keyword AND 
-alex_action_47 =  keyword MID 
-alex_action_48 =  keyword DOT 
-alex_action_49 =  keyword UNDERSCORE 
-alex_action_50 =  keyword MINUS 
-alex_action_51 =  keyword PLUS 
-alex_action_52 =  keyword RIGHTARROW 
-alex_action_53 =  keyword LEFTARROW 
-alex_action_54 =  keyword LONGRIGHTARROW 
-alex_action_55 =  keyword LONGLEFTARROW 
+alex_action_15 =  scanString (TEXT . TextContent)
+alex_action_16 =  keyword FORALL
+alex_action_17 =  keyword EXISTS
+alex_action_18 =  keyword LAND
+alex_action_19 =  keyword LOR
+alex_action_20 =  keyword LNOT
+alex_action_21 =  keyword APPROX
+alex_action_22 =  keyword COMMA
+alex_action_23 =  keyword LPAREN
+alex_action_24 =  keyword RPAREN
+alex_action_25 =  keyword LBRACKET
+alex_action_26 =  keyword RBRACKET
+alex_action_27 =  keyword LBRACE
+alex_action_28 =  keyword RBRACE
+alex_action_29 =  keyword SLASH
+alex_action_30 =  keyword BACKSLASH
+alex_action_31 =  keyword SQUOTE
+alex_action_32 =  keyword DQUOTE
+alex_action_33 =  keyword TILDE
+alex_action_34 =  keyword HAT
+alex_action_35 =  keyword EQUAL
+alex_action_36 =  keyword COLON
+alex_action_37 =  keyword DOLLAR
+alex_action_38 =  keyword AT
+alex_action_39 =  keyword SHARP
+alex_action_40 =  keyword PERCENT
+alex_action_41 =  keyword STAR
+alex_action_42 =  keyword LESS
+alex_action_43 =  keyword GREATER
+alex_action_44 =  keyword QUESTIONMARK
+alex_action_45 =  keyword BANG
+alex_action_46 =  keyword AND
+alex_action_47 =  keyword MID
+alex_action_48 =  keyword DOT
+alex_action_49 =  keyword UNDERSCORE
+alex_action_50 =  keyword MINUS
+alex_action_51 =  keyword PLUS
+alex_action_52 =  keyword RIGHTARROW
+alex_action_53 =  keyword LEFTARROW
+alex_action_54 =  keyword LONGRIGHTARROW
+alex_action_55 =  keyword LONGLEFTARROW
 alex_action_56 =  scanString IDENT
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
@@ -468,7 +468,7 @@ alexIndexInt16OffAddr (AlexA# arr) off =
 
 
 {-# INLINE alexIndexInt32OffAddr #-}
-alexIndexInt32OffAddr (AlexA# arr) off = 
+alexIndexInt32OffAddr (AlexA# arr) off =
 #ifdef WORDS_BIGENDIAN
   narrow32Int# i
   where
@@ -515,7 +515,7 @@ alexScanUser user input (I# (sc))
   = case alex_scan_tkn user input 0# input sc AlexNone of
         (AlexNone, input') ->
                 case alexGetChar input of
-                        Nothing -> 
+                        Nothing ->
 
 
 
@@ -544,13 +544,13 @@ alexScanUser user input (I# (sc))
 
 alex_scan_tkn user orig_input len input s last_acc =
   input `seq` -- strict in the input
-  let 
+  let
         new_acc = check_accs (alex_accept `quickIndex` (I# (s)))
   in
   new_acc `seq`
   case alexGetChar input of
      Nothing -> (new_acc, input)
-     Just (c, new_input) -> 
+     Just (c, new_input) ->
 
 
 
@@ -559,16 +559,16 @@ alex_scan_tkn user orig_input len input s last_acc =
                 ((I# (ord_c))) = ord c
                 (offset) = (base +# ord_c)
                 (check)  = alexIndexInt16OffAddr alex_check offset
-                
+
                 (new_s) = if (offset >=# 0#) && (check ==# ord_c)
                           then alexIndexInt16OffAddr alex_table offset
                           else alexIndexInt16OffAddr alex_deflt s
         in
-        case new_s of 
+        case new_s of
             -1# -> (new_acc, input)
                 -- on an error, we want to keep the input *before* the
                 -- character that failed, not after.
-            _ -> alex_scan_tkn user orig_input (len +# 1#) 
+            _ -> alex_scan_tkn user orig_input (len +# 1#)
                         new_input new_s new_acc
 
   where
@@ -602,14 +602,14 @@ type AlexAccPred user = user -> AlexInput -> Int -> AlexInput -> Bool
 alexAndPred p1 p2 user in1 len in2
   = p1 user in1 len in2 && p2 user in1 len in2
 
---alexPrevCharIsPred :: Char -> AlexAccPred _ 
+--alexPrevCharIsPred :: Char -> AlexAccPred _
 alexPrevCharIs c _ input _ _ = c == alexInputPrevChar input
 
---alexPrevCharIsOneOfPred :: Array Char Bool -> AlexAccPred _ 
+--alexPrevCharIsOneOfPred :: Array Char Bool -> AlexAccPred _
 alexPrevCharIsOneOf arr _ input _ _ = arr ! alexInputPrevChar input
 
 --alexRightContext :: Int -> AlexAccPred _
-alexRightContext (I# (sc)) user _ _ input = 
+alexRightContext (I# (sc)) user _ _ input =
      case alex_scan_tkn user input 0# input sc AlexNone of
           (AlexNone, _) -> False
           _ -> True

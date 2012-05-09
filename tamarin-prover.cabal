@@ -10,7 +10,7 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
 maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
 copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2012
 synopsis:           The Tamarin prover for security protocol analysis.
-description:        
+description:
 
     The Tamarin prover is a tool for the analysis of security protocols. It
     implements a constraint solving algorithm that supports both falsification
@@ -201,45 +201,57 @@ executable tamarin-prover
 
     other-modules:
       Paths_tamarin_prover
-      Main_NoGui
+
+      Main
       Main_Full
+      Main_NoGui
       Main.Console
       Main.Environment
       Main.TheoryLoader
       Main.Utils
-      Main.Mode.Test
       Main.Mode.Batch
-      Main.Mode.Intruder
       Main.Mode.Interactive
+      Main.Mode.Intruder
+      Main.Mode.Test
 
-      Theory.AbstractInterpretation
-      Theory.Pretty
-      Theory.Fact
-      Theory.Atom
-      Theory.Formula
-      Theory.Rule
-      Theory.IntruderRules
-      Theory.Proof.Guarded
-      Theory.Proof.Types
-      Theory.Proof.EquationStore
-      Theory.Proof.SolveGuarded
-      Theory.Proof.Sequent
-      Theory.Proof.Sequent.Dot
-      Theory.Proof.CaseDistinctions
-      Theory.Proof
-      Theory.RuleVariants
-      Theory.RuleSet
-      Theory.Signature
       Theory
-      Theory.Lexer
-      Theory.Parser
-      Theory.Wellformedness
+      Theory.Proof
 
-      Web.Settings
-      Web.Types
-      Web.Theory
-      Web.Hamlet
-      Web.Instances
-      Web.Handler
+      Theory.Constraint.Solver
+      Theory.Constraint.Solver.CaseDistinctions
+      Theory.Constraint.Solver.Contradictions
+      Theory.Constraint.Solver.Goals
+      Theory.Constraint.Solver.Reduction
+      Theory.Constraint.Solver.Simplify
+      Theory.Constraint.Solver.Types
+      Theory.Constraint.System
+      Theory.Constraint.System.Dot
+      Theory.Constraint.System.Guarded
+      Theory.Constraint.System.Constraints
+
+      Theory.Model
+      Theory.Model.Atom
+      Theory.Model.Fact
+      Theory.Model.Formula
+      Theory.Model.Rule
+      Theory.Model.Signature
+
+      Theory.Text.Lexer
+      Theory.Text.Parser
+      Theory.Text.Pretty
+
+      Theory.Tools.AbstractInterpretation
+      Theory.Tools.IntruderRules
+      Theory.Tools.LoopBreakers
+      Theory.Tools.RuleVariants
+      Theory.Tools.Wellformedness
+      Theory.Tools.EquationStore
+
       Web.Dispatch
+      Web.Hamlet
+      Web.Handler
+      Web.Instances
+      Web.Settings
+      Web.Theory
+      Web.Types
 

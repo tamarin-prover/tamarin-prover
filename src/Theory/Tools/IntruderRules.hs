@@ -4,36 +4,36 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 -- Portability : GHC only
 --
-module Theory.IntruderRules (
+module Theory.Tools.IntruderRules (
     subtermIntruderRules
   , dhIntruderRules
   , specialIntruderRules
 --  , xorIntruderRules -- there are no multiset intruder rules
   ) where
 
-import Control.Monad.Fresh
-import Control.Basics
-import Control.Monad.Reader
+import           Control.Basics
+import           Control.Monad.Fresh
+import           Control.Monad.Reader
 
-import qualified Data.Set as S
-import Data.List
-import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Char8           as BC
+import           Data.List
+import qualified Data.Set                        as S
 
-import Extension.Data.Label
+import           Extension.Data.Label
 
-import Utils.Misc
+import           Utils.Misc
 
-import Term.SubtermRule
-import Term.Positions
-import Term.Maude.Signature
-import Term.Rewriting.Norm
-import Term.Narrowing.Variants.Compute
+import           Term.Maude.Signature
+import           Term.Narrowing.Variants.Compute
+import           Term.Positions
+import           Term.Rewriting.Norm
+import           Term.SubtermRule
 
-import Theory.Rule
+import           Theory.Model
 
 
 
@@ -49,32 +49,26 @@ import Theory.Rule
 These are the special intruder that are always included.
 
 rule (modulo AC) coerce:
-   [ KD( f_, x ) ] --> [ KU( f_, x ) ]
+   [ KD( f_, x ) ] --[ KU( f_, x) ]-> [ KU( f_, x ) ]
 
 rule (modulo AC) pub:
-   [ ] --> [ KU( f_, $x ) ]
+   [ ] --[ KU( f_, $x) ]-> [ KU( f_, $x ) ]
 
 rule (modulo AC) gen_fresh:
-   [ Fr( ~x ) ] --> [ KU( 'noexp', ~x ) ]
+   [ Fr( ~x ) ] --[ KU( 'noexp', ~x ) ]-> [ KU( 'noexp', ~x ) ]
 
 rule (modulo AC) isend:
    [ KU( f_, x) ] --[ K(x) ]-> [ In(x) ]
 
+rule (modulo AC) irecv:
+   [ Out( x) ] --> [ KD( 'exp', x) ]
+
 -}
 specialIntruderRules :: [IntrRuleAC]
 specialIntruderRules =
-    [ Rule CoerceRule
-          [Fact KDFact [f_var, x_var]]
-          [Fact KUFact [f_var,x_var]]
-          [dedLogFact x_var]
-    , Rule PubConstrRule
-          []
-          [Fact KUFact [f_var,x_pub_var]]
-          [dedLogFact x_pub_var] 
-    , Rule FreshConstrRule
-          [Fact FreshFact [x_fresh_var]]
-          [Fact KUFact [f_var,x_fresh_var]]
-          [dedLogFact x_fresh_var]
+    [ kuRule CoerceRule      [Fact KDFact [f_var, x_var]]   [f_var, x_var]
+    , kuRule PubConstrRule   []                             [f_var, x_pub_var]
+    , kuRule FreshConstrRule [Fact FreshFact [x_fresh_var]] [f_var, x_fresh_var]
     , Rule ISendRule
           [Fact KUFact [f_var, x_var]]
           [Fact InFact [x_var]]
@@ -85,10 +79,13 @@ specialIntruderRules =
           []
     ]
   where
+    kuRule name prems ts = Rule name prems [Fact KUFact ts] [Fact KUFact ts]
+
     f_var       = varTerm (LVar "f_" LSortMsg   0)
     x_var       = varTerm (LVar "x"  LSortMsg   0)
     x_pub_var   = varTerm (LVar "x"  LSortPub   0)
     x_fresh_var = varTerm (LVar "x"  LSortFresh 0)
+
 
 ------------------------------------------------------------------------------
 -- Subterm Intruder theory
@@ -126,7 +123,7 @@ minimizeIntruderRules rules =
   where
     go checked [] = reverse checked
     go checked (r@(Rule _ prems concs _):unchecked) = go checked' unchecked
-      where 
+      where
         checked' = if any (\(Rule _ prems' concs' _)
                                -> map dropExpTag concs' == map dropExpTag concs &&
                                   map dropExpTag prems' `subsetOf` map dropExpTag prems)
@@ -150,7 +147,7 @@ constructionRules fSig =
         pfacts   <- mapM (kuFact Nothing) vars
         let m = fApp (NonAC (s,k)) vars
         concfact <- kuFact (Just CanExp) m
-        return $ Rule (ConstrRule (BC.unpack s)) pfacts [concfact] [dedLogFact m]
+        return $ Rule (ConstrRule (BC.unpack s)) pfacts [concfact] [concfact]
 
 dropExpTag :: Fact a -> Fact a
 dropExpTag (Fact KUFact [_e,m]) = Fact KUFact [m]
@@ -163,10 +160,10 @@ dropExpTag t                    = t
 
 dhIntruderRules :: WithMaude [IntrRuleAC]
 dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
-    [ expRule ConstrRule kuFact (return . dedLogFact) 
-    , invRule ConstrRule kuFact (return . dedLogFact)
-    ] ++ 
-    concatMap (variantsIntruder hnd) 
+    [ expRule ConstrRule kuFact return
+    , invRule ConstrRule kuFact return
+    ] ++
+    concatMap (variantsIntruder hnd)
       [ expRule DestrRule kdFact (const [])
       , invRule DestrRule kdFact (const [])
       ]
@@ -178,14 +175,14 @@ dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
         efact    <- kuFact Nothing e
         let conc = fAppExp (b, e)
         concfact <- kudFact (Just CannotExp) conc
-        return $ Rule (mkInfo "exp") [bfact, efact] [concfact] (mkAction conc)
+        return $ Rule (mkInfo "exp") [bfact, efact] [concfact] (mkAction concfact)
 
     invRule mkInfo kudFact mkAction = (`evalFresh` nothingUsed) $ do
         x        <- varTerm <$> freshLVar "x" LSortMsg
         bfact    <- kudFact Nothing x
         let conc = fAppInv x
         concfact <- kudFact (Just CanExp) conc
-        return $ Rule (mkInfo "inv") [bfact] [concfact] (mkAction conc)
+        return $ Rule (mkInfo "inv") [bfact] [concfact] (mkAction concfact)
 
 
 variantsIntruder :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]

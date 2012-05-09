@@ -1,14 +1,14 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 -- Portability : GHC only
 --
 module Theory.UnitTests where
 
-import Theory.IntruderRules
-import Term.LTerm.Convenience
+import           Term.LTerm.Convenience
+import           Theory.IntruderRules
 
 {-
 -- EquationStore
@@ -175,8 +175,8 @@ testDisj_AbstractOuterMost = Disj $ map substFromList
 
 {-
          m2              m1   m2
-     ---------- hash    ---------- pair   
-        h(m2)            <m1,m2>          
+     ---------- hash    ---------- pair
+        h(m2)            <m1,m2>
         ------------------------ encS
            encS(<m1,m2>,m2)
 -}

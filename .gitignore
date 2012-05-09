@@ -8,6 +8,7 @@ tamarin-prover-img
 *.hi
 *.o
 *.prof
+*.un~
 
 *.hpc
 unit.tix
