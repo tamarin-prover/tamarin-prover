@@ -1,3 +1,25 @@
+* 0.5.0.0 (development release)
+   - core prover:
+       - Normal form construction rules now log their conclusion as a
+         KU-action. This allows to refer to the conclusions of construction
+         rules in security properties. We exploit this to formalize typing
+         invariants, which describe the structure of the instantiation of
+         message variables precisely enough for getting rid of
+         Chain-constraints starting from these message variables.
+
+       - Reimplemented the constraint solver using a modified set of
+         constraint rules that also supports attack extraction, when using
+         inductive strengthening of security properties. As a nice side effect
+         this allowed us to get rid of implicit construction dependencies.
+         Moreover, the new prover's code is extensively documented, thereby
+         facilitating further extensions.
+
+       - Removed preliminary support for typing invariants based on
+         Ded-actions and the deducible-before-atom (--|).
+
+   - GUI:
+       - action atoms are also displayed graphically
+
 * 0.4.1.0
    - core prover:
        - detect maude errors earlier
@@ -31,7 +53,7 @@
        - intruder rule generation works now correctly again
 
 * 0.1.1.0 Bug-fix release
-  
+
   - fixed: automatically create output directory, if it does not exist
   - fixed: wrong flags given in help message for starting interactive mode
 
