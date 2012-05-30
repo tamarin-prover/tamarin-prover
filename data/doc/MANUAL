@@ -51,7 +51,7 @@ protocols. We normally use the following workflow to do that.
 
   3. Once you are satisfied with your model, check if the automated prover
      succeeds in analyzing your protocol by calling
-     
+
        'tamarin-prover myproto.spthy --prove'
 
   4. If the Tamarin prover does not terminate, then you can either bound the
@@ -79,12 +79,56 @@ paper, whose extended version is available from
 
   http://www.infsec.ethz.ch/research/software#TAMARIN
 
-The implementation exploits a slightly refined theory, which allows to store
-multiple constraint reduction steps in the form of *precomputed case
-distinctions* and which allows to delay the enumeration of the finite variants
-of multiset rewriting rules using an *equation store*. We explain these two
-components below. We also give a sneak-peek preview on the theory we have
-developed for dealing with loop-invariants.
+The implementation exploits an slightly more restricted definition of normal
+dependency graphs and adapted versions of the constraint solving rules that
+also allow security properties to refer to the conclusions of normal
+construction rules. A technical report documenting this version of the
+constraint solver is under preparation. From a usage perspective, the changes
+are minor and explained below in the section on
+`Induction and Extended Traces`.
+
+Apart from the above changes to the constraint solving rules, we also refined
+the theory in two ways that allow to share work between different constraint
+reduction steps. First, we store multiple constraint reduction steps in the
+form of *precomputed case distinctions*. Second, we delay the enumeration of
+the finite variants of multiset rewriting rules using an *equation store*. We
+explain both of these refinements below.
+
+Induction
+---------
+
+The normal form conditions that we impose on dependency graphs can be seen as
+a strong invariant on security protocol execution. As we have shown in our
+case studies many security properties follow from these normal form
+conditions. However, for some protocols additional invariants are necessary to
+prove their security properties. A typical example are typing invariants that
+characterize the possible instantiations of a message variable.
+
+We can formalize such invariants by specifying them as trace formulas. We can
+prove them using the induction scheme associated to the traces of a protocol.
+We using this induction scheme in the form of a trace formula conversion that
+converts a guarded trace formula \phi to a semantically equivalent formula
+\phi_{inductive}. This formula \phi_{inductive} is again a guarded trace
+formula. It is easier to prove because it contains the induction hypothesis in
+a weakened form. Semantically, the formula \phi_{inductive} states that we are
+looking for counter-examples that are minimal with respect to the prefix-order
+on traces.
+
+You can apply induction by clicking on the 'induction' proof method in the
+GUI or adding the [inductive] attribute to a lemma. An example protocol whose
+proof require induction is given in 'examples/stable/InvariantsExample.spthy'.
+
+
+Typing Invariants over the Extended Traces
+------------------------------------------
+
+A typical case for the use of induction is proving typing invariants, which
+characterize the possible instantiation of a message variable. They are
+necessary for every message variable `v`
+whose content may be sent to the adversary, but it is not guaranteed that this
+content is known to the adversary.
+
+
 
 
 Precomputed Case Distinctions
@@ -141,30 +185,6 @@ Logically, the equation store represents expression of the form
       )
 
 
-(Loop) Invariants
------------------
-
-The normal form conditions that we impose on dependency graphs can be seen as
-a strong invariant on security protocol execution. As we have shown in our
-case studies many security properties follow from these normal form
-conditions. However, for some protocols additional invariants are necessary to
-prove their security properties.
-
-We can formalize such invariants by specifying them as trace formulas. We can
-prove them using the induction scheme associated to the traces of a protocol.
-We using this induction scheme in the form of a trace formula conversion that
-converts a guarded trace formula \phi to a semantically equivalent formula
-\phi_{inductive}. This formula \phi_{inductive} is again a guarded trace
-formula. It is easier to prove because it contains the induction hypothesis in
-a weakened form. Semantically, the formula \phi_{inductive} states that we are
-looking for counter-examples that are minimal with respect to the prefix-order
-on traces.
-
-You can apply induction by clicking on the 'induction' proof method in the
-GUI or adding the [inductive] attribute to a lemma. An example protocol whose
-proof require induction is given in 'examples/stable/InvariantsExample.spthy'.
-
-
 
 Security Protocol Theories
 ==========================
@@ -180,7 +200,7 @@ Here, we explain the formal syntax of the security protocol theory format that
 is processed by Tamarin. We recommend first reading the 'Tutorial.spthy'
 example before delving into the following section.
 
-Comments are C-style: 
+Comments are C-style:
 
     /* for a multi-line comment */
     // for a line-comment
@@ -209,15 +229,15 @@ is special. It refers to the equations given in the paper. You need to enable
 it to parse terms containing exponentiations, e.g.,  g ^ x.
 
     built_in       := 'builtins' ':' built_ins list
-    built_ins      := 'diffie-hellman' 
-                    | 'hashing' | 'symmetric-encryption' 
-                    | 'asymmetric-encryption' | 'signing' 
+    built_ins      := 'diffie-hellman'
+                    | 'hashing' | 'symmetric-encryption'
+                    | 'asymmetric-encryption' | 'signing'
 
 Multiset rewriting rules are specified as follows. The protocol corresponding
 to a security protocol theory is the set of all multiset rewriting rules
 specified in the body of the theory.
 
-    rule := 'rule' ident ':' 
+    rule := 'rule' ident ':'
             [let_block]
             '[' facts ']' ( '-->' | '--[' facts ']->') '[' facts ']'
 
@@ -238,8 +258,8 @@ interpreted as a property that must hold for all traces of the protocol of the
 security protocol theory. You can change this using the 'exists-trace' trace
 quantifier.
 
-    lemma := 'lemma' ident [lemma_attrs] ':' 
-             [trace_quantifier] 
+    lemma := 'lemma' ident [lemma_attrs] ':'
+             [trace_quantifier]
              '"' formula '"'
     lemma_attrs := '[' ('typing' | 'reuse' | 'inductive') ']'
     trace_quantifier := 'all-traces' | 'exists-trace'
