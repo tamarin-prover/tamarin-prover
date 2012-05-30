@@ -76,11 +76,11 @@ we use the following header in all files to make their context more explicit.
 
 ~~~~
 /*
-   Protocol:	Example
-   Modeler: 	Simon Meier, Benedikt Schmidt
-   Date: 	January 2012
+   Protocol:    Example
+   Modeler:     Simon Meier, Benedikt Schmidt
+   Date:        January 2012
 
-   Status: 	working
+   Status:      working
 
    Description of protocol.
 
