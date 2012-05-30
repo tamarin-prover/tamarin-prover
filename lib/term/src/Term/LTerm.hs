@@ -51,6 +51,8 @@ module Term.LTerm (
   , ltermVar'
   , ltermNodeId
   , ltermNodeId'
+  , bltermNodeId
+  , bltermNodeId'
 
 
   -- ** Manging Free LVars
@@ -71,6 +73,8 @@ module Term.LTerm (
 
   -- * BVar
   , BVar(..)
+  , BLVar
+  , BLTerm
   , foldBVar
   , fromFree
 
@@ -335,6 +339,11 @@ data BVar v = Bound Integer  -- ^ A bound variable in De-Brujin notation.
             | Free  v        -- ^ A free variable.
             deriving( Eq, Ord, Show, Data, Typeable )
 
+-- | 'LVar's combined with quantified variables. They occur only in 'LFormula's.
+type BLVar = BVar LVar
+
+-- | Terms built over names and 'LVar's combined with quantified variables.
+type BLTerm = NTerm BLVar
 
 
 -- | Fold a possibly bound variable.
@@ -368,6 +377,18 @@ fromFree :: BVar v -> v
 fromFree (Free v)  = v
 fromFree (Bound i) = error $ "fromFree: bound variable '" ++ show i ++ "'"
 
+-- | Extract a node-id variable from a term that may be a node-id variable.
+bltermNodeId  :: BLTerm -> Maybe LVar
+bltermNodeId t = do
+    Free v <- termVar t; guard (LSortNode == lvarSort v); return v
+
+-- | Extract a node-id variable from a term that must be a node-id variable.
+bltermNodeId' :: BLTerm -> LVar
+bltermNodeId' t =
+    fromJustNote err (bltermNodeId t)
+  where
+    err = "bltermNodeId': expected free node-id variable term, but got " ++
+           show t
 
 -- Instances
 ------------
