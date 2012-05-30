@@ -1,9 +1,18 @@
 theory RFID_Simple begin
 
-text{* Running example from StatVerif paper *}
+/*
+   Protocol:    Extended version of the running example from StatVerif paper
+   Modeler:     Simon Meier
+   Date:        May 2012
+
+   Status:      working
+
+   ...
+
+*/
 
 // Declare RFID/1 fact as globally fresh...for testing purposes.
-unique_insts: RFID/1
+// unique_insts: RFID/1
 
 builtins: asymmetric-encryption
 
@@ -23,7 +32,7 @@ rule Alice:
     , Fr(~x)
     , Fr(~y)
     ]
-  --[ Exclusive(~x,~y) 
+  --[ Exclusive(~x,~y)
     , Device_Use(sk)
     ]->
     [ Device_Alice(sk)
@@ -44,12 +53,12 @@ rule Select_Right:
     [ Device_Select(sk) ]
     -->
     [ !Device_Right(sk) ]
-  
+
 rule Decrypt_Left:
     [ !Device_Left(sk), In(aenc{x,y}pk(sk)) ]
   --[ Access(x) ]->
     [ Out(x) ]
-  
+
 rule Decrypt_Right:
     [ !Device_Right(sk), In(aenc{x,y}pk(sk)) ]
   --[ Access(y) ]->
@@ -57,30 +66,39 @@ rule Decrypt_Right:
 
 lemma types [typing]:
   "All m #i. Access(m) @ i ==>
-      (m --| i)
+      (Ex f #j. KU(f,m) @ j & j < i)
     | (Ex x #j. Exclusive(x,m) @ j)
     | (Ex y #j. Exclusive(m,y) @ j)
   "
 
-lemma Device_Init_Use_Set [reuse]:
-  "All sk #i. Device_Use(sk) @ i ==> 
-     Ex #j. Device_Key(sk) @ j
-  "
+lemma Device_ToBob [invariant]:
+  "All sk #i. Device_Use(sk) @ i ==>
+      (All #j. ToBob(sk) @ j ==> i < j)"
+
+lemma Device_Init_Use_Set [reuse, invariant]:
+  "All sk #i. Device_Use(sk) @ i ==>
+      (All #j. ToBob(sk) @ j ==> i < j)
+    & (Ex #j. Device_Key(sk) @ j & j < i)"
 
 // attackable
 lemma reachability_left:
-  "not( Ex x y #i #k.  Exclusive(x,y) @i & K(x) @ k )"
+  exists-trace
+  "Ex x y #i #j. Exclusive(x,y) @i & K(x) @ j"
 
-// attackable
+end
+
+/*
 lemma reachability_right:
-  "not( Ex x y #i #k.  Exclusive(x,y) @i & K(y) @ k )"
+  exists-trace
+  "Ex x y #i #k.  Exclusive(x,y) @i & K(y) @ k"
 
 lemma secrecy:
-  "not(Ex x y #i #k1 #k2. 
+  "not(Ex x y #i #k1 #k2.
          Exclusive(x,y) @i & K(x) @ k1 & K(y) @ k2
       )
   "
 
+/*
 // We cannot prove this lemma with the current system. We cannot state that
 // the ressource "Device_Alice" is no longer available after the device has
 // been handed to Bob.
@@ -92,5 +110,8 @@ lemma secrecy:
 lemma Alice_before_to_bob:
   "All sk #i #j. Device_Use(sk) @ i & ToBob(sk) @ j ==> i < j"
 
+*/
+*/
+*/
 
 end
