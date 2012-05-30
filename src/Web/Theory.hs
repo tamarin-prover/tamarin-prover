@@ -1,16 +1,15 @@
+{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE TupleSections #-}
 {- |
 Module      :  Web.Theory
 Description :  Pretty-printing security protocol theories into HTML code.
 Copyright   :  (c) 2011, 2012 Simon Meier & Cedric Staub
 License     :  GPL-3
 
-Maintainer  :  Cedric Staub <cstaub@ethz.ch>
+Maintainer  :  Simon Meier <iridcode@gmail.com>
 Stability   :  experimental
 Portability :  non-portable
 -}
-
-{-# LANGUAGE PatternGuards, TupleSections #-}
-
 module Web.Theory
   ( htmlThyPath
 --  , htmlThyDbgPath
@@ -62,12 +61,9 @@ import           Web.Types
 -- | Extract and simplify a proof of a lemma for presentation.
 extractSimplifiedLemmaProof :: Lemma IncrementalProof -> IncrementalProof
 extractSimplifiedLemmaProof =
-  -- Simplify variable indices just before displaying. This addresses #27.
-  -- Due to lazy-evaluation the effort is linear in the proof depth. This is
-  -- probably OK. Note that this implies that the displayed terms and the
-  -- stored terms do not agree. This is no problem for paths, as they use
-  -- relative addressing anyways.
-    fmap dropMayLoop . simplifyVariableIndices . get lProof
+    -- NOTE: 'simplifyVariableIndices' is called as part of the application of
+    -- a prover.
+    fmap dropMayLoop . get lProof
   where
     dropMayLoop (ProofStep (SolveGoal (PremiseG p fa _)) info) =
         ProofStep (SolveGoal (PremiseG p fa False)) info
@@ -95,8 +91,10 @@ applyMethodAtPath thy lemmaName proofPath i = do
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
                   -> Prover -> Maybe ClosedTheory
-applyProverAtPath thy lemmaName proofPath prover =
+applyProverAtPath thy lemmaName proofPath prover0 =
     modifyLemmaProof (focus proofPath prover) lemmaName thy
+  where
+    prover = mapProverProof simplifyVariableIndices prover0
 
 ------------------------------------------------------------------------------
 -- Pretty printing
