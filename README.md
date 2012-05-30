@@ -24,8 +24,8 @@ Main` in the root directory of this repository. Note that, if GHCi prints
 *** WARNING: /home/repositories/git/github/meiersi/tamarin-prover/.ghci is writable by someone else, IGNORING!
 ~~~~
 
-then you have to `chmod g-w` the directory `.` and the GHCi configuration file
-`.ghci`.
+, then you have to `chmod g-w` the directory `.` and the GHCi configuration
+file `.ghci`.
 
 Note that welcome all contributions, e.g., further protocol models. Just send
 us a pull request.
@@ -53,8 +53,8 @@ and minor version number.
 Manual
 ------
 
-The manual is found in `data/doc/MANUAL`. It is part of every installation of
-the Tamarin prover.
+The manual is `data/doc/MANUAL`. It is part of every installation of the
+Tamarin prover.
 
 
 Example Protocol Models
