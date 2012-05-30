@@ -226,9 +226,9 @@ factReports thy = concat
       ( "rule " ++ quote (showRuleCaseName ru)
       , extFactInfo <$> concatMap (`get` ru) [rPrems, rActs, rConcs])
 
-    -- FIXME: Possibly the check that term arity agrees with fact-tag arity
-    -- should be made here instead of just throwing an error, as implemented
-    -- in 'factArity'.
+    -- NOTE: The check that the number of actual function arguments in a term
+    -- agrees with the arity of the function as given by the signature is
+    -- enforced by the parser and implicitly checked in 'factArity'.
 
     theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
           do ruleFacts <$> get thyCache thy
@@ -238,11 +238,6 @@ factReports thy = concat
              return $ (,) ("lemma " ++ quote (get lName l)) $ do
                  fa <- formulaFacts (get lFormulaE l)
                  return $ (text (show fa), factInfo fa)
-      <|> do return $ (,) "unique_insts declaration" $ do
-               tag <- S.toList $ get (sigpUniqueInsts . thySignature) thy
-               return $ ( text $ showFactTagArity tag
-                        , (tag, factTagArity tag, factTagMultiplicity tag)
-                        )
 
     -- we must compute all important information up-front in order to
     -- mangle facts with terms with bound variables and such without them
@@ -404,35 +399,6 @@ formulaReports thy = do
 
 
 
-uniqueInstsReport :: OpenTheory -> WfErrorReport
-uniqueInstsReport thy = do
-    tag <- S.toList $ get (sigpUniqueInsts . thySignature) thy
-    (,) "unique fact instances" <$>
-        if (Persistent == factTagMultiplicity tag)
-          then return $ text $ showFactTagArity tag ++ " is persistent"
-          else msum
-                [ checkAtMostOneConc tag
-                , checkCopying tag
-                ]
-  where
-    checkAtMostOneConc tag = do
-        ru <- thyProtoRules thy
-        let occs = length $ filter ((tag ==) . factTag) $ get rConcs ru
-        guard (occs > 1)
-        return $ wrappedText $
-            "Failed to prove unique fact instances of " ++
-            showFactTagArity tag ++ ", as it occurs " ++ show occs ++
-            " times as a conclusion of rule '" ++ showRuleCaseName ru ++ "'."
-
-    checkCopying _f = [] -- FIXME: Implement check.
-    {-
-        (ru1, ru2) <-
-      where
-        rules =
-            filter (any (any ((f ==) . factSymbol) . get rPrems)) $
-            thyProtoRules thy
-    -}
-
 
 -- | Check that all rules are multipliation restricted. Compared
 -- to the definition in the paper we are slightly more lenient.
@@ -521,7 +487,6 @@ checkWellformedness thy = concatMap ($ thy)
     , ruleSortsReport
     , factReports
     , formulaReports
-    , uniqueInstsReport
     , multRestrictedReport
     ]
 

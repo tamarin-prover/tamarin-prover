@@ -56,7 +56,7 @@ module Theory.Proof (
   , focus
   , checkAndExtendProver
   , replaceSorryProver
-  , contradictionAndClauseProver
+  , contradictionProver
 
   -- ** Pretty Printing
   , simplifyVariableIndices
@@ -407,35 +407,33 @@ cutOnAttackBFS =
 -- assumption that the @rules@ describe all rewriting rules in scope.
 execProofMethod :: ProofContext
                 -> ProofMethod -> System -> Maybe (M.Map CaseName System)
-execProofMethod ctxt method se =
+execProofMethod ctxt method sys =
     case method of
       Sorry _              -> return M.empty
       Attack
-        | null (openGoals se) -> return M.empty
-        | otherwise           -> Nothing
+        | null (openGoals sys) -> return M.empty
+        | otherwise            -> Nothing
       SolveGoal goal       -> execSolveGoal goal
       Simplify             -> singleCase (/=) simplifySystem
       Induction            -> execInduction
       Contradiction _
-        | null (contradictions (L.get pcSignature ctxt) se) -> Nothing
-        | otherwise                                       -> Just M.empty
+        | null (contradictions ctxt sys) -> Nothing
+        | otherwise                      -> Just M.empty
   where
     -- expect only one or no subcase in the given case distinction
     singleCase check m =
-        case map fst $ getDisj $ execReduction m ctxt se (avoid se) of
-          []                   -> return $ M.empty
-          [se'] | check se se' -> return $ M.singleton "" se'
-                | otherwise    -> mzero
-          ses                  ->
-               return $ M.fromList (zip (map show [(1::Int)..]) ses)
---             error $ "execMethod: unexpected number of sequents: " ++ show (length ses) ++
---                     render (nest 2 $ vcat $ map ((text "" $-$) . prettySystem) ses)
+        case map fst $ getDisj $ execReduction m ctxt sys (avoid sys) of
+          []                      -> return $ M.empty
+          [sys'] | check sys sys' -> return $ M.singleton "" sys'
+                 | otherwise      -> mzero
+          syss                    ->
+               return $ M.fromList (zip (map show [(1::Int)..]) syss)
 
     -- solve the given goal
-    -- PRE: Goal must be valid in this sequent.
+    -- PRE: Goal must be valid in this system.
     execSolveGoal goal = do
         return $ makeCaseNames $ map fst $ getDisj $
-            runReduction solver ctxt se (avoid se)
+            runReduction solver ctxt sys (avoid sys)
       where
         ths    = L.get pcCaseDists ctxt
         solver = do name <- maybe (solveGoal goal)
@@ -455,27 +453,27 @@ execProofMethod ctxt method se =
                 l      = length (show n)
                 pad cs = replicate (l - length cs) '0' ++ cs
 
-    -- Apply induction: possible if the sequent contains only
+    -- Apply induction: possible if the system contains only
     -- a single formula.
     execInduction
-      | se == se0 =
-          case S.toList $ L.get sFormulas se of
+      | sys == sys0 =
+          case S.toList $ L.get sFormulas sys of
             [gf] -> case ginduct gf of
-              Right gf' -> Just $ M.singleton "induction" $
-                              set sFormulas (S.singleton gf') se
+              Right gf' -> Just $ M.singleton "induction"
+                                $ set sFormulas (S.singleton gf') sys
               _         -> Nothing
             _    -> Nothing
 
       | otherwise = Nothing
       where
-        se0 = set sFormulas (L.get sFormulas se) $
-              set sLemmas (L.get sLemmas se)  $
-              emptySystem (L.get sCaseDistKind se)
+        sys0 = set sFormulas (L.get sFormulas sys)
+             $ set sLemmas (L.get sLemmas sys)
+             $ emptySystem (L.get sCaseDistKind sys)
 
 -- | A list of possibly applicable proof methods.
 possibleProofMethods :: ProofContext -> System -> [ProofMethod]
 possibleProofMethods ctxt se =
-         ((Contradiction . Just) <$> contradictions (L.get pcSignature ctxt) se)
+         ((Contradiction . Just) <$> contradictions ctxt se)
      <|> (case L.get pcUseInduction ctxt of
             AvoidInduction -> [Simplify, Induction]
             UseInduction   -> [Induction, Simplify]
@@ -655,15 +653,13 @@ replaceSorryProver prover0 = Prover prover
 firstProver :: [Prover] -> Prover
 firstProver = foldr orelse failProver
 
--- | Prover that does one contradiction step or one graph clause resolution
--- step.
-contradictionAndClauseProver :: Prover
-contradictionAndClauseProver = Prover $ \ctxt se prf ->
+-- | Prover that does one contradiction step.
+contradictionProver :: Prover
+contradictionProver = Prover $ \ctxt sys prf ->
     runProver
         (firstProver $ map oneStepProver $
-            (Contradiction . Just <$>
-                contradictions (L.get pcSignature ctxt) se))
-        ctxt se prf
+            (Contradiction . Just <$> contradictions ctxt sys))
+        ctxt sys prf
 
 
 ------------------------------------------------------------------------------
@@ -691,9 +687,9 @@ prettyProofMethod method = case method of
     SolveGoal goal       -> hsep [keyword_ "solve(", prettyGoal goal, keyword_ ")"]
     Simplify             -> keyword_ "simplify"
     Contradiction reason ->
-        fsep [ keyword_ "contradiction"
-             , maybe emptyDoc (lineComment . prettyContradiction) reason
-             ]
+        sep [ keyword_ "contradiction"
+            , maybe emptyDoc (lineComment . prettyContradiction) reason
+            ]
 
 prettyProof :: HighlightDocument d => Proof a -> d
 prettyProof = prettyProofWith (prettyProofMethod . psMethod) (const id)

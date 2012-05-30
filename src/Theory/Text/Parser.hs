@@ -732,19 +732,7 @@ lemma = skeletonLemma <$> (string "lemma" *> optional moduloE *> identifier)
                       <*> doubleQuoted iff
                       <*> (proofSkeleton <|> pure (unproven ()))
 
-
--- | Parse a globally fresh 'FactTag' written as
---
---     fresh proto/2
-
-globallyFresh :: Parser (S.Set FactTag)
-globallyFresh =
-    string "unique_insts" *> kw COLON *>
-        (S.fromList <$> sepBy1 factSymbol (kw COMMA))
-  where
-    factSymbol =
-        ProtoFact Linear <$> identifier <*> (kw SLASH *> integer)
-
+-- | Builtin signatures.
 builtins :: Parser ()
 builtins =
     string "builtins" *> kw COLON *> sepBy1 builtinTheory (kw COMMA) *> pure ()
@@ -806,10 +794,7 @@ theory flags0 = do
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
     addItems flags thy = asum
-      [ do fresh <- globallyFresh
-           addItems flags $
-               modify (sigpUniqueInsts . thySignature) (S.union fresh) thy
-      , do builtins
+      [ do builtins
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do functions

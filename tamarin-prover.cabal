@@ -47,7 +47,6 @@ data-files:
   LICENSE
   AUTHORS
   CHANGES
-  README
 
   -- cached intruder variants for DH-exponentiation
   intruder_variants_dh.spthy
@@ -224,7 +223,6 @@ executable tamarin-prover
       Theory.Constraint.Solver.Goals
       Theory.Constraint.Solver.Reduction
       Theory.Constraint.Solver.Simplify
-      Theory.Constraint.Solver.Types
       Theory.Constraint.System
       Theory.Constraint.System.Dot
       Theory.Constraint.System.Guarded
@@ -247,6 +245,7 @@ executable tamarin-prover
       Theory.Tools.RuleVariants
       Theory.Tools.Wellformedness
       Theory.Tools.EquationStore
+      Theory.Tools.UniqueFactInstances
 
       Web.Dispatch
       Web.Hamlet

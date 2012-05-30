@@ -19,14 +19,12 @@ module Theory.Model.Signature (
   -- ** Pure signatures
   , SignaturePure
   , emptySignaturePure
-  , sigpUniqueInsts
   , sigpMaudeSig
 
   -- ** Using Maude to handle operations relative to a 'Signature'
   , SignatureWithMaude
   , toSignatureWithMaude
   , toSignaturePure
-  , sigmUniqueInsts
   , sigmMaudeHandle
 
   -- ** Pretty-printing
@@ -37,7 +35,6 @@ module Theory.Model.Signature (
 
 import           Data.Binary
 import qualified Data.Label           as L
-import qualified Data.Set             as S
 
 import           Control.Applicative
 import           Control.DeepSeq
@@ -46,15 +43,13 @@ import           System.IO.Unsafe     (unsafePerformIO)
 
 import           Term.Maude.Process   (startMaude, mhMaudeSig, mhFilePath, MaudeHandle)
 import           Term.Maude.Signature (MaudeSig, minimalMaudeSig, enableDH, prettyMaudeSig)
-import           Theory.Model.Fact
 import           Theory.Text.Pretty
 
 
 -- | A theory signature.
 data Signature a = Signature
-       { _sigUniqueInsts :: S.Set FactTag
-         -- ^ Fact symbols that are assumed to have unique instances.
-       , _sigMaudeInfo  :: a
+       { -- The signature of the message algebra
+         _sigMaudeInfo  :: a
        }
 
 $(L.mkLabels [''Signature])
@@ -67,17 +62,13 @@ $(L.mkLabels [''Signature])
 -- | A 'Signature' without an associated Maude process.
 type SignaturePure = Signature MaudeSig
 
--- | Access the globally fresh field.
-sigpUniqueInsts :: SignaturePure L.:-> S.Set FactTag
-sigpUniqueInsts = sigUniqueInsts
-
 -- | Access the maude signature.
 sigpMaudeSig:: SignaturePure L.:-> MaudeSig
 sigpMaudeSig = sigMaudeInfo
 
 -- | The empty pure signature.
 emptySignaturePure :: SignaturePure
-emptySignaturePure = Signature S.empty minimalMaudeSig
+emptySignaturePure = Signature minimalMaudeSig
 
 -- Instances
 ------------
@@ -87,12 +78,11 @@ deriving instance Ord      SignaturePure
 deriving instance Show     SignaturePure
 
 instance Binary SignaturePure where
-    put sig = put (L.get sigUniqueInsts sig)
-              >> put (L.get sigMaudeInfo sig)
-    get     = Signature <$> get <*> get
+    put sig =  put (L.get sigMaudeInfo sig)
+    get     = Signature <$> get
 
 instance NFData SignaturePure where
-  rnf (Signature x y) = rnf x `seq` rnf y
+  rnf (Signature y) = rnf y
 
 ------------------------------------------------------------------------------
 -- Signatures with an attached Maude process
@@ -100,11 +90,6 @@ instance NFData SignaturePure where
 
 -- | A 'Signature' with an associated, running Maude process.
 type SignatureWithMaude = Signature MaudeHandle
-
-
--- | Access the facts that are declared as globally fresh.
-sigmUniqueInsts :: SignatureWithMaude L.:-> S.Set FactTag
-sigmUniqueInsts = sigUniqueInsts
 
 -- | Access the maude handle in a signature.
 sigmMaudeHandle :: SignatureWithMaude L.:-> MaudeHandle
@@ -158,14 +143,14 @@ instance Show SignatureWithMaude where
   show = show . toSignaturePure
 
 instance Binary SignatureWithMaude where
-    put sig@(Signature _ maude) = do
+    put sig@(Signature maude) = do
         put (mhFilePath maude)
         put (toSignaturePure sig)
     -- FIXME: reload the right signature
     get = unsafePerformIO <$> (toSignatureWithMaude <$> get <*> get)
 
 instance NFData SignatureWithMaude where
-  rnf (Signature x _maude) = rnf x
+  rnf (Signature _maude) = ()
 
 ------------------------------------------------------------------------------
 -- Pretty-printing
@@ -173,25 +158,15 @@ instance NFData SignatureWithMaude where
 
 -- | Pretty-print a signature with maude.
 prettySignaturePure :: HighlightDocument d => SignaturePure -> d
-prettySignaturePure sig = foldr ($--$) emptyDoc $ map combine $
-       [ ("unique_insts",  ppGFresh $ uniqueInsts) | not $ null uniqueInsts ]
-       -- FIXME: Print Maude signature completely, this is only used for
-       -- intruder-variants for now.
-       ++ [ ("builtin", text "diffie-hellman" ) | enableDH . L.get sigpMaudeSig $ sig ]
+prettySignaturePure sig = vsep $ map combine $
+    -- FIXME: Print Maude signature completely, this is only used for
+    -- intruder-variants for now.
+    [ ("builtin", text "diffie-hellman" ) | enableDH . L.get sigpMaudeSig $ sig ]
   where
-    uniqueInsts = S.toList $ L.get sigpUniqueInsts sig
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
-    ppGFresh = fsep . punctuate comma . map (text . showFactTagArity)
 
 -- | Pretty-print a pure signature.
 prettySignatureWithMaude :: HighlightDocument d => SignatureWithMaude -> d
-prettySignatureWithMaude sig = foldr ($--$) emptyDoc $
-    (map combine
-        [ ("unique_insts",  ppGFresh $ uniqueInsts) | not $ null uniqueInsts ]
-    ) ++
-    [ prettyMaudeSig $ mhMaudeSig $ L.get sigmMaudeHandle sig ]
-  where
-    uniqueInsts = S.toList $ L.get sigmUniqueInsts sig
-    combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
-    ppGFresh = fsep . punctuate comma . map (text . showFactTagArity)
+prettySignatureWithMaude sig =
+    prettyMaudeSig $ mhMaudeSig $ L.get sigmMaudeHandle sig
 

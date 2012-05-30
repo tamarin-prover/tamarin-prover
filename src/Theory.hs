@@ -115,15 +115,7 @@ import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
-
-
-------------------------------------------------------------------------------
--- To MOVE
-------------------------------------------------------------------------------
-
--- | Vertically separate a list of documents by empty lines.
-vsep :: Document d => [d] -> d
-vsep = foldr ($--$) emptyDoc
+import           Theory.Tools.UniqueFactInstances
 
 
 ------------------------------------------------------------------------------
@@ -166,6 +158,7 @@ data ClosedRuleCache = ClosedRuleCache
        { _crcRules            :: ClassifiedRules
        , _crcUntypedCaseDists :: [CaseDistinction]
        , _crcTypedCaseDists   :: [CaseDistinction]
+       , _crcUniqueFactInsts  :: S.Set FactTag
        }
        deriving( Eq, Ord, Show )
 
@@ -206,10 +199,17 @@ closeRuleCache :: [FormulaAC]        -- ^ Typing lemmas.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
 closeRuleCache typingAsms sig protoRules intrRulesAC =
-    ClosedRuleCache classifiedRules untypedCaseDists typedCaseDists
+    ClosedRuleCache
+        classifiedRules untypedCaseDists typedCaseDists uniqueFactInsts
   where
-    ctxt0 = ProofContext sig classifiedRules UntypedCaseDist [] AvoidInduction
-                         (error "closeRuleCache: trace quantifier should not matter here")
+    ctxt0 = ProofContext
+        sig classifiedRules uniqueFactInsts UntypedCaseDist [] AvoidInduction
+        (error "closeRuleCache: trace quantifier should not matter here")
+
+    -- unique fact instances
+    uniqueFactInsts =
+        simpleUniqueFactInstances $ L.get cprRuleE <$> protoRules
+
     -- precomputing the case distinctions
     untypedCaseDists = precomputeCaseDistinctions ctxt0 []
     typedCaseDists   =
@@ -463,10 +463,11 @@ getProtoRuleEs = map openProtoRule . theoryRules
 -- | Get the proof context for a lemma of the closed theory.
 getProofContext :: Lemma a -> ClosedTheory -> ProofContext
 getProofContext l thy = ProofContext
-    ( L.get thySignature          thy)
-    ( L.get (crcRules . thyCache) thy)
+    ( L.get thySignature                    thy)
+    ( L.get (crcRules . thyCache)           thy)
+    ( L.get (crcUniqueFactInsts . thyCache) thy)
     kind
-    ( L.get (cases . thyCache)    thy)
+    ( L.get (cases . thyCache)              thy)
     inductionHint
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
   where
@@ -811,16 +812,17 @@ prettyOpenTheory =
 prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
 prettyClosedTheory thy =
     prettyTheory prettySignatureWithMaude
-                 (const emptyDoc)
+                 ppUniqueFactInsts
                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
                  prettyClosedProtoRule
                  prettyIncrementalProof
                  thy
-    -- $--$
-    -- (multiComment $
-      -- let ruEs = getProtoRuleEs thy
-      -- in prettyAbstractState ruEs $ absInterpretation ruEs
-    -- )
+  where
+    ppUniqueFactInsts crc = case S.toList $ L.get crcUniqueFactInsts crc of
+      []   -> emptyDoc
+      tags -> lineComment $ sep
+                [ text "looping facts with unique instances:"
+                , nest 2 $ fsepList (text . showFactTagArity) tags ]
 
 prettyClosedSummary :: Document d => ClosedTheory -> d
 prettyClosedSummary thy =

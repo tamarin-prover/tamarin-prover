@@ -1,4 +1,8 @@
-{-# LANGUAGE ViewPatterns, StandaloneDeriving, TypeOperators, TemplateHaskell, TupleSections #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE TupleSections      #-}
+{-# LANGUAGE TypeOperators      #-}
+{-# LANGUAGE ViewPatterns       #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -52,6 +56,7 @@ module Theory.Constraint.System (
   , rawEdgeRel
 
   , alwaysBefore
+  , isInTrace
 
   -- ** The last node
   , sLastAtom
@@ -81,11 +86,12 @@ module Theory.Constraint.System (
 
   ) where
 
-import           Prelude                              hiding ((.), id)
+import           Prelude                              hiding (id, (.))
 
 import           Data.Binary
 import qualified Data.DAG.Simple                      as D
 import           Data.DeriveTH
+import qualified Data.Foldable                        as F
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe)
 import           Data.Monoid                          (Monoid(..))
@@ -294,10 +300,19 @@ alwaysBefore sys =
          ((i, j) `S.member` L.get sLessAtoms sys)
       || (j `S.member` D.reachableSet [i] lessRel)
 
+-- | 'True' iff the given node id is guaranteed to be instantiated to an
+-- index in the trace.
+isInTrace :: System -> NodeId -> Bool
+isInTrace sys i =
+     i `M.member` L.get sNodes sys
+  || isLast sys i
+  || F.any ((i ==) . fst) (L.get sActionAtoms sys)
+
 -- | 'True' iff the given node id is guaranteed to be instantiated to the last
 -- index of the trace.
 isLast :: System -> NodeId -> Bool
 isLast sys i = Just i == L.get sLastAtom sys
+
 
 
 ------------------------------------------------------------------------------

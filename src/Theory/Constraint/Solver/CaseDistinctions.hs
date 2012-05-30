@@ -127,7 +127,7 @@ solveAllSafeGoals ths =
     solve caseNames = do
         simplifySystem
         ctxt <- ask
-        contradictoryIf =<< gets (contradictorySystem $ get pcSignature ctxt)
+        contradictoryIf =<< gets (contradictorySystem ctxt)
         goals  <- gets openGoals
         chains <- getM sChains
         -- try to either solve a safe goal or use one of the precomputed case

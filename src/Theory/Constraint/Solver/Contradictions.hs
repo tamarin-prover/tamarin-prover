@@ -1,4 +1,6 @@
-{-# LANGUAGE TemplateHaskell, ViewPatterns, TupleSections #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections   #-}
+{-# LANGUAGE ViewPatterns    #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -22,30 +24,31 @@ module Theory.Constraint.Solver.Contradictions (
 
   ) where
 
-import           Prelude                              hiding ((.), id)
+import           Prelude                        hiding (id, (.))
 
 import           Data.Binary
-import qualified Data.DAG.Simple                      as D (cyclic, reachableSet)
+import qualified Data.DAG.Simple                as D (cyclic, reachableSet)
 import           Data.DeriveTH
-import           Data.Foldable                        (asum)
+import qualified Data.Foldable                  as F
 import           Data.List
-import qualified Data.Map                             as M
+import qualified Data.Map                       as M
 import           Data.Monoid
-import qualified Data.Set                             as S
+import qualified Data.Set                       as S
 
 import           Control.Basics
 import           Control.Category
 import           Control.DeepSeq
 import           Control.Monad.Reader
 
-import qualified Extension.Data.Label                 as L
+import qualified Extension.Data.Label           as L
 import           Extension.Prelude
 
+import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
 
-import           Term.Rewriting.Norm                  (nf', maybeNotNfSubterms)
+import           Term.Rewriting.Norm            (maybeNotNfSubterms, nf')
 
 
 ------------------------------------------------------------------------------
@@ -63,36 +66,42 @@ data Contradiction =
   | IncompatibleEqs                -- ^ Incompatible equalities.
   | FormulasFalse                  -- ^ False in formulas
   | SuperfluousLearn LNTerm NodeId -- ^ A term is derived both before and after a learn
+  | NodeAfterLast (NodeId, NodeId) -- ^ There is a node after the last node.
   deriving( Eq, Ord, Show )
 
 
 -- | 'True' if the constraint system is contradictory.
-contradictorySystem :: SignatureWithMaude -> System -> Bool
-contradictorySystem sig = not . null . contradictions sig
+contradictorySystem :: ProofContext -> System -> Bool
+contradictorySystem ctxt = not . null . contradictions ctxt
 
 -- | All CR-rules reducing a constraint system to *⟂* represented as a list of
 -- trivial contradictions. Note that some constraint systems are also removed
 -- because they have no unifier. This is part of unification. Note also that
 -- *S_{¬,@}* is handled as part of *S_∀*.
-contradictions :: SignatureWithMaude -> System -> [Contradiction]
-contradictions sig se = asum
+contradictions :: ProofContext -> System -> [Contradiction]
+contradictions ctxt sys = F.asum
     -- CR-rule **
-    [ guard (D.cyclic $ rawLessRel se)            *> pure Cyclic
+    [ guard (D.cyclic $ rawLessRel sys)             *> pure Cyclic
     -- CR-rule *N1*
-    , guard (hasNonNormalTerms sig se)             *> pure NonNormalTerms
+    , guard (hasNonNormalTerms sig sys)             *> pure NonNormalTerms
     -- CR-rule *N7*
-    , guard (hasForbiddenExp se)                   *> pure ForbiddenExp
+    , guard (hasForbiddenExp sys)                   *> pure ForbiddenExp
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
-    , guard (eqsIsFalse $ L.get sEqStore se)       *> pure IncompatibleEqs
+    , guard (eqsIsFalse $ L.get sEqStore sys)       *> pure IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
-    , guard (S.member gfalse $ L.get sFormulas se) *> pure FormulasFalse
+    , guard (S.member gfalse $ L.get sFormulas sys) *> pure FormulasFalse
     ]
     ++
     -- This rule is not yet documented. It removes constraint systems that
     -- require a unique fact to be present in the system state more than once.
     -- Unique facts are declared as part of the specification of the rule
     -- system.
-    (NonUniqueFactInstance <$> nonUniqueFactInstances sig se)
+    (NonUniqueFactInstance <$> nonUniqueFactInstances ctxt sys)
+    ++
+    -- TODO: Document corresponding constratint reduction rule.
+    (NodeAfterLast <$> nodesAfterLast sys)
+  where
+    sig = L.get pcSignature ctxt
 
 -- | True iff there are terms in the node constraints that are not in normal form wrt.
 -- to 'Term.Rewriting.Norm.norm' (DH/AC).
@@ -153,12 +162,12 @@ isForbiddenExp ru = maybe False id $ do
 -- according to i < j < k, j requires a premise f(t), and i provides a
 -- conclusion f(t) for the node k. Graphically, the edge from i to k is
 -- interrupted by the node j that requires the same fact carried on the edge.
-nonUniqueFactInstances :: SignatureWithMaude -> System
+nonUniqueFactInstances :: ProofContext -> System
                        -> [(NodeId, NodeId, NodeId)]
-nonUniqueFactInstances sig se = do
+nonUniqueFactInstances ctxt se = do
     Edge c@(i, _) (k, _) <- S.toList $ L.get sEdges se
     let tag = factTag (nodeConcFact c se)
-    guard (tag `S.member` L.get sigmUniqueInsts sig)
+    guard (tag `S.member` L.get pcUniqueFactInsts ctxt)
     j <- S.toList $ D.reachableSet [i] less
 
     let isCounterExample = (j /= i) && (j /= k) &&
@@ -172,6 +181,15 @@ nonUniqueFactInstances sig se = do
   where
     less = rawLessRel se
 
+-- | The node-ids that must be instantiated to the trace, but are temporally
+-- after the last node.
+nodesAfterLast :: System -> [(NodeId, NodeId)]
+nodesAfterLast sys = case L.get sLastAtom sys of
+  Nothing -> []
+  Just i  -> do j <- S.toList $ D.reachableSet [i] $ rawLessRel sys
+                guard (j /= i && isInTrace sys j)
+                return (i, j)
+
 
 -- | Pretty-print a 'Contradiction'.
 prettyContradiction :: Document d => Contradiction -> d
@@ -180,12 +198,14 @@ prettyContradiction contra = case contra of
     IncompatibleEqs           -> text "incompatible equalities"
     NonNormalTerms            -> text "non-normal terms"
     ForbiddenExp              -> text "non-normal exponentiation instance"
-    NonUniqueFactInstance cex -> text $ "non-unique facts" ++ show cex
+    NonUniqueFactInstance cex -> text $ "non-unique facts " ++ show cex
     FormulasFalse             -> text "from formulas"
     SuperfluousLearn m v      ->
         doubleQuotes (prettyLNTerm m) <->
         text ("derived before and after") <->
         doubleQuotes (prettyNodeId v)
+    NodeAfterLast (i,j)       ->
+        text $ "node " ++ show j ++ " after last node " ++ show i
 
 
 -- Instances
@@ -194,10 +214,12 @@ prettyContradiction contra = case contra of
 instance HasFrees Contradiction where
   foldFrees f (SuperfluousLearn t v)    = foldFrees f t `mappend` foldFrees f v
   foldFrees f (NonUniqueFactInstance x) = foldFrees f x
+  foldFrees f (NodeAfterLast x)         = foldFrees f x
   foldFrees _ _                         = mempty
 
   mapFrees f (SuperfluousLearn t v)    = SuperfluousLearn <$> mapFrees f t <*> mapFrees f v
   mapFrees f (NonUniqueFactInstance x) = NonUniqueFactInstance <$> mapFrees f x
+  mapFrees f (NodeAfterLast x)         = NodeAfterLast <$> mapFrees f x
   mapFrees _ c                         = pure c
 
 $( derive makeBinary ''Contradiction)

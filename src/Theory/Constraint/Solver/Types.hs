@@ -1,5 +1,8 @@
-{-# LANGUAGE TypeOperators, StandaloneDeriving, DeriveDataTypeable, TemplateHaskell #-}
-{-# LANGUAGE TemplateHaskell, ViewPatterns #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE TypeOperators      #-}
+{-# LANGUAGE ViewPatterns       #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -18,6 +21,7 @@ module Theory.Constraint.Solver.Types (
 
   , pcSignature
   , pcRules
+  , pcUniqueFactInsts
   , pcCaseDists
   , pcCaseDistKind
   , pcUseInduction
@@ -53,13 +57,14 @@ module Theory.Constraint.Solver.Types (
 
   ) where
 
-import           Prelude                          hiding ( (.), id )
+import           Prelude                  hiding (id, (.))
 
 import           Data.Binary
 import           Data.DeriveTH
-import           Data.Label                       hiding (get)
-import qualified Data.Label                       as L
-import           Data.Monoid                      (Monoid(..))
+import           Data.Label               hiding (get)
+import qualified Data.Label               as L
+import           Data.Monoid              (Monoid(..))
+import qualified Data.Set                 as S
 
 import           Control.Basics
 import           Control.Category
@@ -233,6 +238,7 @@ data InductionHint = UseInduction | AvoidInduction
 data ProofContext = ProofContext
        { _pcSignature       :: SignatureWithMaude
        , _pcRules           :: ClassifiedRules
+       , _pcUniqueFactInsts :: S.Set FactTag
        , _pcCaseDistKind    :: CaseDistKind
        , _pcCaseDists       :: [CaseDistinction]
        , _pcUseInduction    :: InductionHint

@@ -264,11 +264,13 @@ openGuarded _ = return Nothing
 -- | @closeGuarded vs ats gf@ is a smart constructor for @GGuarded@.
 closeGuarded :: Ord c => Quantifier -> [LVar] -> [Atom (VTerm c LVar)]
              -> LGuarded c -> LGuarded c
-closeGuarded qua vs as gf = GGuarded qua vs' as' gf'
- where as' = map (substFreeAtom s . fmap (fmapTerm (fmap Free))) as
-       gf' = substFree s gf
-       s   = zip (reverse vs) [0..]
-       vs' = map (lvarName &&& lvarSort) vs
+closeGuarded qua vs as gf =
+   (case qua of Ex -> gex; All -> gall) vs' as' gf'
+ where
+   as' = map (substFreeAtom s . fmap (fmapTerm (fmap Free))) as
+   gf' = substFree s gf
+   s   = zip (reverse vs) [0..]
+   vs' = map (lvarName &&& lvarSort) vs
 
 
 ------------------------------------------------------------------------------
@@ -474,8 +476,8 @@ toInductionHypothesis =
     go (GGuarded qua ss as gf) = do
         gf' <- go gf
         return $ case qua of
-          All -> GGuarded Ex  ss as (gconj $ (gnotAtom <$> lastAtos) ++ [gf'])
-          Ex  -> GGuarded All ss as (gdisj $ (GAto <$> lastAtos) ++ [gf'])
+          All -> gex  ss as (gconj $ (gnotAtom <$> lastAtos) ++ [gf'])
+          Ex  -> gall ss as (gdisj $ (GAto <$> lastAtos) ++ [gf'])
 
       where
         lastAtos :: [Atom (VTerm c (BVar LVar))]

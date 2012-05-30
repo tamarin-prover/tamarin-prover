@@ -23,6 +23,7 @@ import           Prelude                            hiding ((.), id)
 import           Data.Data
 import           Data.Either                        (partitionEithers)
 import qualified Data.Foldable                      as F
+import qualified Data.DAG.Simple                    as D
 import           Data.List
 import qualified Data.Map                           as M
 import           Data.Monoid                        (Monoid(..))
@@ -233,12 +234,10 @@ partialAtomValuation :: ProofContext -> System -> LNAtom -> Maybe Bool
 partialAtomValuation ctxt sys =
     eval
   where
-    runMaude  = (`runReader` get pcMaudeHandle ctxt)
-    before = alwaysBefore sys
-
-    -- | 'True' iff the given node id is guaranteed to be instantiated to an
-    -- index in the trace.
-    isInTrace i = i `M.member` get sNodes sys || isLast sys i
+    runMaude   = (`runReader` get pcMaudeHandle ctxt)
+    before     = alwaysBefore sys
+    lessRel    = rawLessRel sys
+    nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
 
     -- | 'True' iff there in every solution to the system the two node-ids are
     -- instantiated to a different index *in* the trace.
@@ -260,12 +259,12 @@ partialAtomValuation ctxt sys =
                   _                                                             -> Nothing
 
           Less (ltermNodeId' -> i) (ltermNodeId' -> j)
-            | i == j || j `before` i         -> Just False
-            | i `before` j                   -> Just True
-            | isLast sys i && isInTrace j    -> Just False
-            | isLast sys j && isInTrace i &&
-              nonUnifiableNodes i j          -> Just True
-            | otherwise                      -> Nothing
+            | i == j || j `before` i             -> Just False
+            | i `before` j                       -> Just True
+            | isLast sys i && isInTrace sys j    -> Just False
+            | isLast sys j && isInTrace sys i &&
+              nonUnifiableNodes i j              -> Just True
+            | otherwise                          -> Nothing
 
           EqE x y
             | x == y                                -> Just True
@@ -277,8 +276,14 @@ partialAtomValuation ctxt sys =
                     | nonUnifiableNodes i j         -> Just False
                   _                                 -> Nothing
 
-          Last i | isLast sys (ltermNodeId' i) -> Just True
-                 | otherwise                   -> Nothing
+          Last (ltermNodeId' -> i)
+            | isLast sys i                       -> Just True
+            | any (isInTrace sys) (nodesAfter i) -> Just False
+            | otherwise ->
+                case get sLastAtom sys of
+                  Just j | nonUnifiableNodes i j -> Just False
+                  _                              -> Nothing
+
 
 
 -- | CR-rule *S_∀*: insert all newly implied formulas.

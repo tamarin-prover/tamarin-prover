@@ -87,9 +87,9 @@ applyMethodAtPath thy lemmaName proofPath i = do
     methods <- applicableProofMethods ctxt <$> psInfo (root subProof)
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPath thy lemmaName proofPath
-      (oneStepProver method `mappend`
+      (oneStepProver method                        `mappend`
        replaceSorryProver (oneStepProver Simplify) `mappend`
-       replaceSorryProver (contradictionAndClauseProver) `mappend`
+       replaceSorryProver (contradictionProver)    `mappend`
        replaceSorryProver (oneStepProver Attack)
       )
 

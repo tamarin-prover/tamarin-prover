@@ -10,6 +10,10 @@ module Theory.Text.Pretty (
   -- * General highlighters
     module Text.PrettyPrint.Highlight
 
+  -- * Additional combinators
+  , vsep
+  , fsepList
+
   -- * Comments
   , lineComment
   , multiComment
@@ -46,6 +50,21 @@ module Theory.Text.Pretty (
   ) where
 
 import Text.PrettyPrint.Highlight
+
+
+------------------------------------------------------------------------------
+-- Additional combinators
+------------------------------------------------------------------------------
+
+-- | Vertically separate a list of documents by empty lines.
+vsep :: Document d => [d] -> d
+vsep = foldr ($--$) emptyDoc
+
+-- | Pretty print a list of values as a comma-separated list wrapped in
+-- paragraph mode.
+fsepList :: Document d => (a -> d) -> [a] -> d
+fsepList pp = fsep . punctuate comma . map pp
+
 
 ------------------------------------------------------------------------------
 -- Comments
