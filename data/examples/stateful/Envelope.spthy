@@ -1,10 +1,10 @@
-theory Envelope begin
+theory TPM_Envelope begin
 
 text{* Envelope protocol example from:
 
-Stephanie Delaune, Steve Kremer, Mark D. Ryan, Graham Steel, "Formal Analysis
-of Protocols Based on TPM State Registers," csf, pp.66-80, 2011 IEEE 24th
-Computer Security Foundations Symposium, 2011.
+[1] Stephanie Delaune, Steve Kremer, Mark D. Ryan, Graham Steel, "Formal
+Analysis of Protocols Based on TPM State Registers," csf, pp.66-80, 2011 IEEE
+24th Computer Security Foundations Symposium, 2011.
 
 *}
 
@@ -16,7 +16,7 @@ builtins: signing, asymmetric-encryption, hashing
 rule PCR_Init:
     [ Fr(~aik)             // Authentication identity key
     ]
-  --[ 
+  --[
       PCR_Init()           // Used in property to ensure at most one initialization
     , PCR_Write('pcr0')
     ]->
@@ -30,9 +30,9 @@ rule PCR_Init:
 rule PCR_Reboot:
     [ PCR(x)
     , PCR_Write(x)
-    ] 
+    ]
   --[ PCR_Write('pcr0')
-    ]-> 
+    ]->
     [ PCR_Write('pcr0')
     , PCR('pcr0')
     ]
@@ -40,12 +40,12 @@ rule PCR_Reboot:
 // Extend the hash-chain in the PCR
 rule PCR_Extend:
     [ PCR_Write(x)       // Get write access
-    , PCR(x)             // 
+    , PCR(x)             //
     , In(y)              // The adversary can present any value.
-    ] 
+    ]
   --[ PCR_Write(h(x,y))
-    ]-> 
-    [ PCR(h(x,y)) 
+    ]->
+    [ PCR(h(x,y))
     , PCR_Write(h(x,y))
     ]
 
@@ -55,7 +55,7 @@ rule PCR_CertKey:
     , !KeyTable(lock, sk)
     ]
   --[ ]->
-    [ Out(sign{'certkey', lock, pk(sk)}aik) 
+    [ Out(sign{'certkey', lock, pk(sk)}aik)
     ]
 
 // Quote the current value of the PCR
@@ -63,9 +63,9 @@ rule PCR_Quote:
     [ PCR(x)
     , !AIK(aik)
     ]
-  --[ PCR_Read(x) 
+  --[ PCR_Read(x)
     ]->
-    [ Out(sign{'certpcr', x}aik) 
+    [ Out(sign{'certpcr', x}aik)
     , PCR(x)
     ]
 
@@ -100,14 +100,15 @@ rule Alice1:
 
 // Bob sends Alice a certified key locked to the value
 //   h(h('pcr0',n),'obtain')
-// to obtain a secret in an envelope.
+// to obtain a secret in an envelope. Note that we only allow for one session
+// per reboot as [1].
 rule Alice2:
     [ Alice1(n)
     , Fr(~s)
     , !AIK(aik)
     , In(sign{'certkey', h(h('pcr0',n),'obtain'), pk}aik)
     ]
-  --[ Secret(~s) 
+  --[ Secret(~s)
     ]->
     [ Out(aenc{~s}pk)
     , Alice2(n,~s)
@@ -136,15 +137,17 @@ rule CreateLockedKey:
     , Out(pk(~sk))
     ]
 
+// Automatically proven
 lemma types [typing]:
     // Values created by the PCR_Unbind rule
   " (All m d1 d2 #i. PCR_Unbind(d1, d2, m) @ i ==>
-        (m --| i)
+        (Ex f #j. KU(f,m) @ j & j < i)
       | (Ex #j. Secret(m) @ j)
     )
   "
 
-lemma PCR_Write [reuse]:
+// Automatically proven
+lemma PCR_Write_charn [reuse, invariant]:
     // Values read from the PCR have been written to it beforehand.
   " (All x #i. PCR_Read(x) @ i ==>
       (Ex #j. PCR_Write(x) @ j)
@@ -154,65 +157,14 @@ lemma PCR_Write [reuse]:
 // Assuming that there is at most one instance of the PCR,
 // the adversary (playing Bob) must not know a secret that Alice created and
 // thinks that access to it was denied.
+//
+// Currently, we have to construct its proof manually. The key argument relies
+// on following the PCR_Write-premises once their presence has been
+// established via the PCR_Write_charn lemma.
 lemma reachable_Denied:
   "(All #i #j. PCR_Init() @ i & PCR_Init() @ j ==> #i = #j)
    ==>
    not(Ex s #i #j #k. Secret(s) @ i & Denied(s) @ j & K(s) @ k)"
 
-
-/* Properties from earlier experiments
-
-/*
-lemma PCR_Read_Write [reuse]:
-  "(All x #i. PCR_Read(x) @ i ==>
-     (Ex #j. PCR_Write(x) @ j)
-   )"
-*/
-
-/*
-lemma PCR_Update_Unique [reuse]:
-  "(All x y1 #i1. Update(x, y1) @ i1 ==>
-      (All y2 #i2. Update(x, y2) @ i2 ==>
-           y1 = y2        
-        & #i1 = #i2
-      )
-   )"
-*/
-
-// lemma reachable_Denied:
-  // "not(Ex s #i #j. Secret(s) @ i & Denied(s) @ j)"
-
-/* Lemmas from mutual secrecy access.
-
-
-lemma types [typing]:
-  " (All m d1 d2 #i. PCR_Unbind(d1, d2, m) @ i ==>
-        (m --| i)
-      | (Ex s #j. Secrets(m, s) @ j)
-      | (Ex s #j. Secrets(s, m) @ j)
-    )
-  "
-
-lemma Unbind_PCR_Value [reuse]:
-    "All x sk m #i.
-        PCR_Unbind(x, sk, m) @ i
-        ==>
-        ( (Ex aik #j.     PCR_Init(x, aik) @ j  )
-        | (Ex y xPrev #j. PCR_Extend(xPrev,y,x) @ j)
-        )
-    "
-
-lemma secrecy:
-  "not(
-      (All t #e. Ineq(t,t) @ e ==> F)
-    & (Ex s0 s1 #i #d0 #d1. 
-          Secrets(s0, s1) @ i
-        & K(s0) @ d0
-        & K(s1) @ d1
-      )
-    )"
-
-*/
-*/
 
 end

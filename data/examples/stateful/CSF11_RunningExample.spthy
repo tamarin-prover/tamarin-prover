@@ -24,24 +24,28 @@ rule PCR_Init:
 
 // Disabled, as the protocol is not secure under reboots.
 // TODO: Check that we can find the attack.
-
+//
+// Note that we miss the attack, as we do not consider collapsing different
+// PCR_Unbind nodes. In order to find this attack, we would require to
+// introduce strongly different node variables.
+//
 // rule PCR_Reboot:
-//    [ PCR(x) ] --> [ PCR('pcr0') ]  // reset the PCR to 'pcr0'
+//     [ PCR(x) ] --> [ PCR('pcr0') ]  // reset the PCR to 'pcr0'
 
 rule PCR_Extend:
     [ PCR(x)
-    , In(y) 
-    ] 
+    , In(y)
+    ]
   --[ PCR_Extend(x,y,h(x,y))
-    ]-> 
-    [ PCR(h(x,y)) 
+    ]->
+    [ PCR(h(x,y))
     ]
 
 rule PCR_CertKey:
     [ !AIK(aik)
     , !KeyTable(x, sk)
     ]
-  --[ PCR_CertKey_Inst(x) 
+  --[ PCR_CertKey_Inst(x)
     ]->
     [ Out(sign{'certkey', x, pk(sk)}aik) ]
 
@@ -55,9 +59,6 @@ rule PCR_Unbind:
     [ PCR(x)
     , Out(m) ]
 
-// Deducability
-rule Deducible: [ In(x) ] --[ Deducible(x) ]-> []
-
 // Alice
 rule Alice_Init:
     [ Fr(~s0)
@@ -67,7 +68,7 @@ rule Alice_Init:
     , In(sign{'certkey', x1, pk1}aik)
     ]
   --[ Ineq(x0, x1)
-    , Secrets(~s0,~s1) 
+    , Secrets(~s0,~s1)
     ]->
     [ Out(aenc{~s0}pk0)
     , Out(aenc{~s1}pk1)
@@ -82,35 +83,31 @@ rule MkKey:
 
 lemma types [typing]:
   " (All m d1 d2 #i. PCR_Unbind(d1, d2, m) @ i ==>
-        (m --| i)
+        (Ex f #j. KU(f,m) @ j & j < i)
       | (Ex s #j. Secrets(m, s) @ j)
       | (Ex s #j. Secrets(s, m) @ j)
     )
   "
 
-lemma Unbind_PCR_Value [reuse]:
-    "(All #i #j. UniqueInit() @ j & UniqueInit() @ i ==> #i = #j)
-     ==>
-     (All x sk m #i.
+lemma Unbind_PCR_Value [reuse, invariant]:
+    "All x sk m #i.
         PCR_Unbind(x, sk, m) @ i
         ==>
         ( (Ex aik #j.     PCR_Init(x, aik) @ j  )
         | (Ex y xPrev #j. PCR_Extend(xPrev,y,x) @ j)
+        | (Ex #i #j. UniqueInit() @ j & UniqueInit() @ i & not (#i = #j))
         )
-     )
     "
 
 lemma secrecy:
-  "(All #i #j. UniqueInit() @ j & UniqueInit() @ i ==> #i = #j)
-   ==>
-   not(
-      (All t #e. Ineq(t,t) @ e ==> F)
-    & (Ex s0 s1 #i #d0 #d1. 
-          Secrets(s0, s1) @ i
-        & Deducible(s0) @ d0
-        & Deducible(s1) @ d1
-      )
-    )"
+  " ( (All #i #j. UniqueInit() @ j & UniqueInit() @ i ==> #i = #j)
+    & (All t #e. Ineq(t,t) @ e ==> F)
+    ) ==>
+    not( (Ex s0 s1 #i #d0 #d1.
+             Secrets(s0, s1) @ i
+           & K(s0) @ d0
+           & K(s1) @ d1
+       ) )"
 
 
 
