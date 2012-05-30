@@ -68,12 +68,6 @@ type NAtom v = Atom (VTerm Name v)
 -- | @LAtom@ are the atoms we actually use in graph formulas input by the user.
 type LNAtom = Atom LNTerm
 
--- | 'LVar's combined with quantified variables. They occur only in 'LFormula's.
-type BLVar = BVar LVar
-
--- | Terms built over names and 'LVar's combined with quantified variables.
-type BLTerm = NTerm BLVar
-
 -- | Atoms built over 'BLTerm's.
 type BLAtom = Atom BLTerm
 

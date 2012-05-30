@@ -364,6 +364,13 @@ insertFormula = do
               markAsSolved
               insert False (gdisj [GAto (EqE i j), GAto (Less j i)])
 
+          -- CR-rule: FIXME add this rule to paper
+          GGuarded All [] [EqE i@(bltermNodeId -> Just _)
+                               j@(bltermNodeId -> Just _) ] gf
+            | gf == gfalse -> do
+                markAsSolved
+                insert False (gdisj [GAto (Less i j), GAto (Less j i)])
+
           -- CR-rule *S_{¬,last}*
           GGuarded All [] [Last i]   gf  | gf == gfalse -> do
               markAsSolved

@@ -157,16 +157,16 @@ openGoals se = delayUseless $ sortDecisionTree solveFirst $ concat $
   where
     solveFirst = map (. snd)
         [ isDisjGoal
-        , isProtoFactGoal
+        , isNonLoopingProtoFactGoal
         , isStandardActionGoal
         , isChainGoal
         , isFreshKnowsGoal
         , isSplitGoalSmall
         , isDoubleExpGoal ]
 
-    isProtoFactGoal (PremiseG _ (Fact KUFact _) _) = False
-    isProtoFactGoal (PremiseG _ _               _) = True
-    isProtoFactGoal _                              = False
+    isNonLoopingProtoFactGoal (PremiseG _ (Fact KUFact _) _      ) = False
+    isNonLoopingProtoFactGoal (PremiseG _ _               mayLoop) = not mayLoop
+    isNonLoopingProtoFactGoal _                                    = False
 
     msgPremise (ActionG _ fa) = do (UpK, _, m) <- kFactView fa; return m
     msgPremise _              = Nothing

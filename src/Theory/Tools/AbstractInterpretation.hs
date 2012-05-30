@@ -135,3 +135,12 @@ partialEvaluation evalStyle ruEs = reader $ \hnd ->
             mkVar name idx        = varTerm (LVar name (sortOfLNTerm t) idx)
             varName (viewTerm -> Lit (Var v)) = lvarName v
             varName _                         = "z"
+
+{- FIXME: Implement
+
+-- | Perform a simple propagation of sorts at the fact level.
+propagateSorts :: [ProtoRuleE]
+               -> WithMaude (M.Map FactTag [LSort], [ProtoRuleE])
+propagateSorts ruEs = reader $ \hnd ->
+
+-}
