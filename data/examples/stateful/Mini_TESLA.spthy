@@ -1,0 +1,40 @@
+theory Mini_TESLA begin
+
+/*
+   Protocol:    A minimal version of the TESLA protocol
+   Modeler:     Simon Meier
+   Date:        May 2012
+
+   Status:      WIP
+
+   Testing verification of stream-protocols, i.e., repeated key
+   re-negotiation.
+
+*/
+
+builtins: symmetric-encryption
+
+rule Setup:
+    [ Fr(~k) ]
+  -->
+    [ Sender(~k), Receiver(~k) ]
+
+rule Send:
+    [ Sender(k0), Fr(~k) ]
+  --[ Secret(~k) ]->
+    [ Sender(~k), Out( senc{~k}k0 ) ]
+
+
+rule Receive:
+    [ Receiver(k0), In(senc{k}k0) ]
+  --[ Secret(k) ]->
+    [ Receiver(k) ]
+
+lemma Secret_reachable:
+  exists-trace
+  "Ex k #i. Secret(k) @ i"
+
+lemma secrecy:
+  "All k f #i #j. Secret(k) @ i & KU(f,k) @ j ==> F"
+
+end
