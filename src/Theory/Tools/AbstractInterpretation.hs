@@ -1,4 +1,5 @@
-{-# LANGUAGE BangPatterns, ViewPatterns #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ViewPatterns #-}
 -- |
 -- Copyright   : (c) 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)

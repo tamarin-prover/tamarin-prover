@@ -1,5 +1,7 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, DeriveDataTypeable #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE ViewPatterns       #-}
 -- |
 -- Copyright   : (c) 2011, 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -69,21 +71,21 @@ module Theory.Model.Fact (
 
   ) where
 
-import Control.Basics
-import Control.Monad.Fresh
-import Control.DeepSeq
+import           Control.Basics
+import           Control.DeepSeq
+import           Control.Monad.Fresh
 
-import Data.DeriveTH
-import Data.Foldable (Foldable(..))
-import Data.Traversable (Traversable(..))
-import Data.Binary
-import Data.Generics
-import Data.Maybe (isJust)
-import Data.Monoid
+import           Data.Binary
+import           Data.DeriveTH
+import           Data.Foldable          (Foldable(..))
+import           Data.Generics
+import           Data.Maybe             (isJust)
+import           Data.Monoid
+import           Data.Traversable       (Traversable(..))
 
-import Term.Unification
+import           Term.Unification
 
-import Text.PrettyPrint.Class
+import           Text.PrettyPrint.Class
 
 
 ------------------------------------------------------------------------------

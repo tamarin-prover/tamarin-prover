@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleContexts, ViewPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ViewPatterns     #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |

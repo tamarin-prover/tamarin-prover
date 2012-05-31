@@ -1,5 +1,6 @@
-{-# LANGUAGE TypeOperators, TemplateHaskell, DeriveDataTypeable, ScopedTypeVariables, TupleSections
-             , StandaloneDeriving, TypeSynonymInstances, BangPatterns, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE BangPatterns         #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE TemplateHaskell      #-}
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -65,14 +66,14 @@ import           Data.Either                (partitionEithers)
 import           Data.Foldable              (Foldable(..), foldMap)
 import           Data.List
 import           Data.Monoid                (mappend, mconcat)
-import           Data.Traversable           hiding ( mapM, sequence )
+import           Data.Traversable           hiding (mapM, sequence)
 
 import           Logic.Connectives
 
 import           Text.PrettyPrint.Highlight
 
 import           Control.Arrow
-import           Control.Monad.Fresh        hiding ( mapM )
+import           Control.Monad.Fresh        hiding (mapM)
 
 import           Theory.Model
 

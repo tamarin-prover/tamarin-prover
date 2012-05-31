@@ -230,6 +230,23 @@ instance Apply LVar where
 instance Apply LNTerm where
     apply subst = applyVTerm subst
 
+instance Apply BLVar where
+    apply _     x@(Bound _) = x
+    apply subst x@(Free  v) = maybe x extractVar $ imageOf subst v
+      where
+        extractVar (viewTerm -> Lit (Var v')) = Free v'
+        extractVar _t                     =
+          error $ "apply (BLVar): variable '" ++ show v ++
+                  "' substituted with term '" -- ++ show _t ++ "'"
+
+instance Apply BLTerm where
+    apply subst = (`bindTerm` applyBLLit)
+      where
+        applyBLLit :: Lit Name BLVar -> BLTerm
+        applyBLLit l@(Var (Free v)) =
+            maybe (lit l) (fmapTerm (fmap Free)) (imageOf subst v)
+        applyBLLit l                = lit l
+
 instance Apply () where
     apply _ = id
 

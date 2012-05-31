@@ -1,4 +1,5 @@
-{-# LANGUAGE TemplateHaskell, ViewPatterns, TypeOperators #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators   #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -14,15 +15,15 @@ module Theory.Constraint.System.Dot (
   , BoringNodeStyle(..)
   ) where
 
-import           Data.Char                      (isSpace)
+import           Data.Char                (isSpace)
 import           Data.Color
-import qualified Data.DAG.Simple                as D
-import qualified Data.Foldable                  as F
+import qualified Data.DAG.Simple          as D
+import qualified Data.Foldable            as F
 import           Data.List
-import qualified Data.Map                       as M
+import qualified Data.Map                 as M
 import           Data.Maybe
-import           Data.Monoid                    (Any(..))
-import qualified Data.Set                       as S
+import           Data.Monoid              (Any(..))
+import qualified Data.Set                 as S
 import           Safe
 
 import           Extension.Data.Label
@@ -30,14 +31,14 @@ import           Extension.Prelude
 
 import           Control.Basics
 import           Control.Monad.Reader
-import           Control.Monad.State            (StateT, evalStateT)
+import           Control.Monad.State      (StateT, evalStateT)
 
-import qualified Text.Dot                       as D
+import qualified Text.Dot                 as D
 import           Text.PrettyPrint.Class
 
 import           Theory.Constraint.System
 import           Theory.Model
-import           Theory.Text.Pretty             (opAction)
+import           Theory.Text.Pretty       (opAction)
 
 type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (HSV Double)
 type SeDot = ReaderT (System, NodeColorMap) (StateT DotState D.Dot)

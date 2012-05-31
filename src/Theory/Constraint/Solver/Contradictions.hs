@@ -1,5 +1,4 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TupleSections   #-}
 {-# LANGUAGE ViewPatterns    #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier

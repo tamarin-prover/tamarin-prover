@@ -1,6 +1,10 @@
-{-# LANGUAGE TemplateHaskell, DeriveDataTypeable, DeriveFunctor #-}
-{-# LANGUAGE StandaloneDeriving, TypeSynonymInstances #-}
-{-# LANGUAGE TypeOperators,FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable   #-}
+{-# LANGUAGE DeriveFunctor        #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -41,8 +45,8 @@ import           Control.DeepSeq
 
 import           System.IO.Unsafe     (unsafePerformIO)
 
-import           Term.Maude.Process   (startMaude, mhMaudeSig, mhFilePath, MaudeHandle)
-import           Term.Maude.Signature (MaudeSig, minimalMaudeSig, enableDH, prettyMaudeSig)
+import           Term.Maude.Process   (MaudeHandle, mhFilePath, mhMaudeSig, startMaude)
+import           Term.Maude.Signature (MaudeSig, enableDH, minimalMaudeSig, prettyMaudeSig)
 import           Theory.Text.Pretty
 
 

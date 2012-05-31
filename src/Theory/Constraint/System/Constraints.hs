@@ -1,6 +1,5 @@
-{-# LANGUAGE TypeOperators, StandaloneDeriving, DeriveDataTypeable,
-             TemplateHaskell, ViewPatterns
-  #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell    #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -29,7 +28,7 @@ module Theory.Constraint.System.Constraints (
   , prettyLess
   ) where
 
-import           Prelude                          hiding ( (.), id )
+import           Prelude                          hiding (id, (.))
 
 import           Data.Binary
 import           Data.DeriveTH

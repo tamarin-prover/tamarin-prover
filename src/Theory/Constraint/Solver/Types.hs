@@ -37,18 +37,6 @@ module Theory.Constraint.Solver.Types (
   , joinAllRules
   , nonSilentRules
 
-  -- * Goals
-  , Goal(..)
-  , isActionGoal
-  , isStandardActionGoal
-  , isPremiseGoal
-  , isPremDnKGoal
-  , isChainGoal
-  , isSplitGoal
-  , isDisjGoal
-
-  , prettyGoal
-
   -- * Precomputed case distinctions.
   , CaseDistinction(..)
 
@@ -70,124 +58,9 @@ import           Control.Basics
 import           Control.Category
 import           Control.DeepSeq
 
-import           Text.PrettyPrint.Class
-
 import           Logic.Connectives
-
 import           Theory.Constraint.System
 import           Theory.Model
-import           Theory.Text.Pretty
-
-
-------------------------------------------------------------------------------
--- Goals
-------------------------------------------------------------------------------
-
--- | A 'Goal' denotes that a constraint reduction rule is applicable, which
--- might result in case splits. We either use a heuristic to decide what goal
--- to solve next or leave the choice to user (in case of the interactive UI).
-data Goal =
-       ActionG LVar LNFact
-       -- ^ An action that must exist in the trace.
-     | PremiseG NodePrem LNFact Bool
-       -- ^ A premise that must have an incoming direct edge. The 'Bool'
-       -- argument is 'True' if this premise is marked as a loop-breaker;
-       -- i.e., if care must be taken to avoid solving such a premise too
-       -- often.
-     | PremDnKG NodePrem
-       -- ^ A KD goal that must be solved using a destruction chain.
-     | ChainG Chain
-       -- A destruction chain that does not start from a message variable.
-     | SplitG SplitId
-       -- ^ A case split over equalities.
-     | DisjG (Disj LNGuarded)
-       -- ^ A case split over a disjunction.
-     | ImplG LNGuarded
-       -- ^ The consequent of a universally quantified clause that could be
-       -- added to the sequent. For debugging mode only; currently commented
-       -- out.
-     deriving( Eq, Ord, Show )
-
--- | Pretty print a goal.
-prettyGoal :: HighlightDocument d => Goal -> d
-prettyGoal (ActionG i fa)          = prettyNAtom (Action (varTerm i) fa)
-prettyGoal (ChainG ch)             = prettyChain ch
-prettyGoal (PremiseG p fa mayLoop) =
-    prettyNodePrem p <> brackets (prettyLNFact fa) <->
-    (if mayLoop then comment_ "/* may loop */" else emptyDoc)
-prettyGoal (PremDnKG p)            = text "KD" <> parens (prettyNodePrem p)
-prettyGoal (ImplG gf)              =
-    (text "Consequent" <>) $ nest 1 $ parens $ prettyGuarded gf
-prettyGoal (DisjG (Disj gfs)) = (text "Disj" <>) $ fsep $
-    punctuate (operator_ " |") (map (nest 1 . parens . prettyGuarded) gfs)
-prettyGoal (SplitG x) =
-    text "splitEqs" <> parens (text $ show (succ x))
-
--- Indicators
--------------
-
-isActionGoal :: Goal -> Bool
-isActionGoal (ActionG _ _) = True
-isActionGoal _             = False
-
-isStandardActionGoal :: Goal -> Bool
-isStandardActionGoal (ActionG _ fa) = not (isKUFact fa)
-isStandardActionGoal _              = False
-
-isPremiseGoal :: Goal -> Bool
-isPremiseGoal (PremiseG _ _ _) = True
-isPremiseGoal _                = False
-
-isPremDnKGoal :: Goal -> Bool
-isPremDnKGoal (PremDnKG _) = True
-isPremDnKGoal _            = False
-
-isChainGoal :: Goal -> Bool
-isChainGoal (ChainG _) = True
-isChainGoal _          = False
-
-isSplitGoal :: Goal -> Bool
-isSplitGoal (SplitG _) = True
-isSplitGoal _          = False
-
-isDisjGoal :: Goal -> Bool
-isDisjGoal (DisjG _) = True
-isDisjGoal _         = False
-
-
-
--- Instances
-------------
-
-instance HasFrees Goal where
-    foldFrees f goal = case goal of
-        ActionG i fa          -> foldFrees f i `mappend` foldFrees f fa
-        PremiseG p fa mayLoop -> foldFrees f p `mappend` foldFrees f fa `mappend` foldFrees f mayLoop
-        PremDnKG p            -> foldFrees f p
-        ChainG ch             -> foldFrees f ch
-        SplitG i              -> foldFrees f i
-        DisjG x               -> foldFrees f x
-        ImplG x               -> foldFrees f x
-
-    mapFrees f goal = case goal of
-        ActionG i fa          -> ActionG  <$> mapFrees f i <*> mapFrees f fa
-        PremiseG p fa mayLoop -> PremiseG <$> mapFrees f p <*> mapFrees f fa <*> mapFrees f mayLoop
-        PremDnKG p            -> PremDnKG <$> mapFrees f p
-        ChainG ch             -> ChainG   <$> mapFrees f ch
-        SplitG i              -> SplitG   <$> mapFrees f i
-        DisjG x               -> DisjG    <$> mapFrees f x
-        ImplG x               -> ImplG    <$> mapFrees f x
-
-instance Apply Goal where
-    apply subst goal = case goal of
-        ActionG i fa          -> ActionG  (apply subst i)     (apply subst fa)
-        PremiseG p fa mayLoop -> PremiseG (apply subst p)     (apply subst fa) (apply subst mayLoop)
-        PremDnKG p            -> PremDnKG (apply subst p)
-        ChainG ch             -> ChainG   (apply subst ch)
-        SplitG i              -> SplitG   (apply subst i)
-        DisjG x               -> DisjG    (apply subst x)
-        ImplG x               -> ImplG    (apply subst x)
-
 
 
 ----------------------------------------------------------------------
@@ -268,12 +141,10 @@ instance HasFrees CaseDistinction where
 -- NFData
 ---------
 
-$( derive makeBinary ''Goal)
 $( derive makeBinary ''CaseDistinction)
 $( derive makeBinary ''ClassifiedRules)
 $( derive makeBinary ''InductionHint)
 
-$( derive makeNFData ''Goal)
 $( derive makeNFData ''CaseDistinction)
 $( derive makeNFData ''ClassifiedRules)
 $( derive makeNFData ''InductionHint)

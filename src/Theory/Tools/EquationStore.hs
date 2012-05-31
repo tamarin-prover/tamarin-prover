@@ -1,5 +1,9 @@
-{-# LANGUAGE TypeOperators, TemplateHaskell, DeriveDataTypeable #-}
-{-# LANGUAGE ScopedTypeVariables, TupleSections, ViewPatterns #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TupleSections       #-}
+{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE ViewPatterns        #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -55,13 +59,13 @@ import           Debug.Trace.Ignore
 
 import           Control.Basics
 import           Control.DeepSeq
-import           Control.Monad.State  hiding (put, get, modify)
+import           Control.Monad.State  hiding (get, modify, put)
 import qualified Control.Monad.State  as MS
 
 import           Data.Binary
 import           Data.DeriveTH
 import qualified Data.Foldable        as F
-import           Data.Label           hiding (get, for)
+import           Data.Label           hiding (for, get)
 import qualified Data.Label           as L
 import           Data.List
 import           Data.Maybe

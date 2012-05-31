@@ -1,8 +1,10 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, BangPatterns #-}
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, TypeSynonymInstances #-}
-{-# LANGUAGE ViewPatterns, StandaloneDeriving #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
-  -- spurious warnings for view patterns
+{-# LANGUAGE BangPatterns         #-}
+{-# LANGUAGE DeriveDataTypeable   #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE ViewPatterns         #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -47,25 +49,25 @@ module Theory.Model.Formula (
 
   ) where
 
-import Prelude hiding (negate)
+import           Prelude                    hiding (negate)
 
-import Data.Monoid hiding (All)
-import Data.Foldable (Foldable, foldMap)
-import Data.Traversable
-import Data.Generics
-import Data.DeriveTH
-import Data.Binary
+import           Data.Binary
+import           Data.DeriveTH
+import           Data.Foldable              (Foldable, foldMap)
+import           Data.Generics
+import           Data.Monoid                hiding (All)
+import           Data.Traversable
 
-import Control.DeepSeq
-import Control.Basics
-import Control.Monad.Fresh
+import           Control.Basics
+import           Control.DeepSeq
+import           Control.Monad.Fresh
 
-import Theory.Model.Atom
+import           Theory.Model.Atom
 
-import Text.PrettyPrint.Highlight
+import           Text.PrettyPrint.Highlight
 
-import Term.LTerm
-import Term.Substitution
+import           Term.LTerm
+import           Term.Substitution
 
 ------------------------------------------------------------------------------
 -- Types
@@ -202,8 +204,9 @@ openFormula (Qua qua (n,s) fm) =
 openFormula _ = Nothing
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
-mapLits f (viewTerm -> Lit l) = lit . f $ l
-mapLits f (viewTerm -> FApp o as) = fApp o (map (mapLits f) as)
+mapLits f t = case viewTerm t of
+    Lit l     -> lit . f $ l
+    FApp o as -> fApp o (map (mapLits f) as)
 
 -- | @openFormulaPrefix f@ returns @Just (vs,Q,f')@ if @f = Q v_1 .. v_k. f'@
 -- modulo alpha renaming and @Nothing otherwise@. @vs@ is always chosen to be

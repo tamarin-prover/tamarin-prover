@@ -1,4 +1,5 @@
-{-# LANGUAGE ViewPatterns, DeriveDataTypeable, TupleSections, TypeOperators, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ViewPatterns  #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -63,29 +64,29 @@ module Theory.Constraint.Solver.Reduction (
 
   ) where
 
-import           Prelude                        hiding ( (.), id )
+import           Prelude                                 hiding (id, (.))
 
-import qualified Data.Foldable                  as F
-import qualified Data.Map                       as M
-import qualified Data.Set                       as S
+import qualified Data.Foldable                           as F
+import qualified Data.Map                                as M
+import qualified Data.Set                                as S
 
 import           Control.Basics
 import           Control.Category
 import           Control.Monad.Bind
 import           Control.Monad.Disj
 import           Control.Monad.Reader
-import           Control.Monad.State            (StateT, runStateT, execStateT, gets )
+import           Control.Monad.State                     (StateT, execStateT, gets, runStateT)
 
 import           Text.PrettyPrint.Class
 
 import           Extension.Data.Label
-import           Extension.Data.Monoid          (Monoid(..))
+import           Extension.Data.Monoid                   (Monoid(..))
 import           Extension.Prelude
 
 import           Logic.Connectives
 
-import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.Solver.Contradictions
+import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 

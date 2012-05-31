@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns, DeriveDataTypeable, TupleSections, TypeOperators, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, FlexibleContexts, GeneralizedNewtypeDeriving #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -88,7 +87,6 @@ module Theory.Constraint.Solver (
   , solveWithCaseDistinction
 
   -- * Pretty-printing
-  , prettyGoal
   , prettyContradiction
 
   -- ** Convenience export
@@ -97,8 +95,8 @@ module Theory.Constraint.Solver (
   ) where
 
 import           Logic.Connectives
-import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.CaseDistinctions
+import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify

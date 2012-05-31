@@ -1,5 +1,9 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, StandaloneDeriving #-}
-{-# LANGUAGE TypeSynonymInstances, ViewPatterns, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -12,8 +16,8 @@ module Theory.Tools.RuleVariants where
 
 import           Term.Narrowing.Variants
 import           Term.Rewriting.Norm
-import           Theory.Tools.EquationStore
 import           Theory.Model
+import           Theory.Tools.EquationStore
 
 import           Extension.Prelude
 import           Logic.Connectives
@@ -21,11 +25,11 @@ import           Logic.Connectives
 import           Control.Applicative
 import           Control.Monad.Bind
 import           Control.Monad.Reader
-import qualified Control.Monad.Trans.PreciseFresh       as Precise
+import qualified Control.Monad.Trans.PreciseFresh as Precise
 
-import qualified Data.Map                               as M
-import qualified Data.Set                               as S
-import           Data.Traversable                       (traverse)
+import qualified Data.Map                         as M
+import qualified Data.Set                         as S
+import           Data.Traversable                 (traverse)
 
 import           Debug.Trace.Ignore
 

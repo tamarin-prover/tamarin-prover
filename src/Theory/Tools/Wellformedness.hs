@@ -70,7 +70,7 @@ import           Data.Generics.Uniplate.Data (universeBi)
 import           Data.Label
 import           Data.List
 import           Data.Maybe
-import           Data.Monoid                 (mempty, mappend)
+import           Data.Monoid                 (mappend, mempty)
 import qualified Data.Set                    as S
 import           Data.Traversable            (traverse)
 

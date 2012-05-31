@@ -1,4 +1,10 @@
-{-# LANGUAGE TemplateHaskell, GeneralizedNewtypeDeriving, DeriveDataTypeable, TupleSections, TypeOperators, FlexibleInstances, FlexibleContexts, TypeSynonymInstances #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -88,7 +94,7 @@ module Theory.Model.Rule (
 
   )  where
 
-import           Prelude              hiding ( (.), id )
+import           Prelude              hiding (id, (.))
 
 import           Data.Binary
 import           Data.DeriveTH

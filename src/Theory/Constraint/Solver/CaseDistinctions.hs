@@ -1,7 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable, TupleSections, TypeOperators,
-             TemplateHaskell, TypeSynonymInstances, FlexibleInstances,
-             FlexibleContexts, GeneralizedNewtypeDeriving, ViewPatterns
-  #-}
 -- |
 -- Copyright   : (c) 2011,2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -25,7 +21,7 @@ module Theory.Constraint.Solver.CaseDistinctions (
 
   ) where
 
-import           Prelude                                 hiding ( (.), id )
+import           Prelude                                 hiding (id, (.))
 import           Safe
 
 import           Data.Foldable                           (asum)

@@ -1,4 +1,5 @@
-{-# LANGUAGE ViewPatterns, DeriveDataTypeable, TupleSections, TypeOperators, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ViewPatterns  #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -16,7 +17,7 @@ module Theory.Constraint.Solver.Goals (
 
 import           Debug.Trace
 
-import           Prelude                                 hiding ((.), id)
+import           Prelude                                 hiding (id, (.))
 
 import qualified Data.DAG.Simple                         as D (cyclic)
 import           Data.List

@@ -1,14 +1,13 @@
-{-# LANGUAGE StandaloneDeriving
-           , FlexibleContexts
-           , TypeSynonymInstances
-           , FlexibleInstances
-           , DeriveDataTypeable
-           , TupleSections
-           , TemplateHaskell
-           , ViewPatterns
-  #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# LANGUAGE DeriveDataTypeable   #-}
+-- {-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE FlexibleInstances    #-}
+-- {-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE TemplateHaskell      #-}
+-- {-# LANGUAGE TupleSections        #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE ViewPatterns         #-}
+-- {-# OPTIONS_GHC -fno-warn-orphans #-}
+-- {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2011, 2012 Benedikt Schmidt & Simon Meier
@@ -104,23 +103,6 @@ instance Apply LNAtom where
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
     apply subst (Last i)          = Last (apply subst i)
-
-instance Apply BLVar where
-    apply _     x@(Bound _) = x
-    apply subst x@(Free  v) = maybe x extractVar $ imageOf subst v
-      where
-        extractVar (viewTerm -> Lit (Var v')) = Free v'
-        extractVar _t                     =
-          error $ "apply (BLVar): variable '" ++ show v ++
-                  "' substituted with term '" -- ++ show _t ++ "'"
-
-instance Apply BLTerm where
-    apply subst = (`bindTerm` applyBLLit)
-      where
-        applyBLLit :: Lit Name BLVar -> BLTerm
-        applyBLLit l@(Var (Free v)) =
-            maybe (lit l) (fmapTerm (fmap Free)) (imageOf subst v)
-        applyBLLit l                = lit l
 
 instance Apply BLAtom where
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
