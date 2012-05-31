@@ -1,5 +1,8 @@
-{-# LANGUAGE PatternGuards, FlexibleContexts, ExplicitForAll #-}
-{-# LANGUAGE ScopedTypeVariables, ViewPatterns #-}
+{-# LANGUAGE ExplicitForAll      #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE PatternGuards       #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
   -- spurious warnings for view patterns
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
@@ -19,23 +22,23 @@ module Term.Rewriting.Norm (
   , maybeNotNfSubterms
 ) where
 
-import Term.Term
-import Term.LTerm
-import Term.Substitution
-import Term.Maude.Signature
-import Term.Maude.Process
-import Term.SubtermRule
-import Term.Unification
+import           Term.LTerm
+import           Term.Maude.Process
+import           Term.Maude.Signature
+import           Term.Substitution
+import           Term.SubtermRule
+import           Term.Term
+import           Term.Unification
 
-import Utils.Misc
+import           Utils.Misc
 
-import Control.Basics
-import Control.Monad.Reader
+import           Control.Basics
+import           Control.Monad.Reader
 
-import Data.List
-import qualified Data.Set as S
+import           Data.List
+import qualified Data.Set             as S
 
-import System.IO.Unsafe (unsafePerformIO)
+import           System.IO.Unsafe     (unsafePerformIO)
 
 -- Normalization using Maude
 ----------------------------------------------------------------------
