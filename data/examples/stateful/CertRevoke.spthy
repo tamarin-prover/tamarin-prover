@@ -28,12 +28,12 @@ rule Destroy:
   --[ Destroy(x) ]->
     []
 
-lemma Use_charn [reuse, invariant]:
+lemma Use_charn [reuse, use_induction]:
   "All x #j. Use(x) @ j ==>
     (Ex #i. Create(x) @ i & i < j)
   "
 
-lemma Destroy_charn [reuse, invariant]:
+lemma Destroy_charn [reuse, use_induction]:
   "All x #j. Destroy(x) @ j ==>
     ( (Ex #i. Create(x) @ i & i < j)
     & (All #i. Use(x) @ i  ==>  i < j)

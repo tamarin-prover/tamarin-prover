@@ -71,11 +71,11 @@ lemma types [typing]:
     | (Ex y #j. Exclusive(m,y) @ j)
   "
 
-lemma Device_ToBob [invariant]:
+lemma Device_ToBob [use_induction]:
   "All sk #i. Device_Use(sk) @ i ==>
       (All #j. ToBob(sk) @ j ==> i < j)"
 
-lemma Device_Init_Use_Set [reuse, invariant]:
+lemma Device_Init_Use_Set [reuse, use_induction]:
   "All sk #i. Device_Use(sk) @ i ==>
       (All #j. ToBob(sk) @ j ==> i < j)
     & (Ex #j. Device_Key(sk) @ j & j < i)"
@@ -105,7 +105,7 @@ lemma secrecy:
 //
 // The fundamental problem is that we cannot express the multiplicity of a
 // fact in the *state* in our formula language, as we are always talking about
-// the whole history. It's also unclear how to exploit such state invariants
+// the whole history. It's also unclear how to exploit such state use_inductions
 // in our backwards approach.
 lemma Alice_before_to_bob:
   "All sk #i #j. Device_Use(sk) @ i & ToBob(sk) @ j ==> i < j"

@@ -89,7 +89,7 @@ lemma types [typing]:
     )
   "
 
-lemma Unbind_PCR_Value [reuse, invariant]:
+lemma Unbind_PCR_Value [reuse, use_induction]:
     "All x sk m #i.
         PCR_Unbind(x, sk, m) @ i
         ==>

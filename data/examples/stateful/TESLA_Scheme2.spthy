@@ -58,11 +58,11 @@ rule Recv:
   --[ FromSender(m) ]->
     [ Reciever(f(kOld)) ]
 
-lemma types [invariant]:
+lemma types [use_induction]:
   " All m #i. FromSender(m) @ i ==> Ex #j. Sent(m) @ j & j < i "
 
 
-lemma authentic [invariant]:
+lemma authentic [use_induction]:
   " All m #i. FromSender(m) @ i ==> Ex #j. Sent(m) @ j & j < i "
 
 /*

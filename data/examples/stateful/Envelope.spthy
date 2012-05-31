@@ -147,7 +147,7 @@ lemma types [typing]:
   "
 
 // Automatically proven
-lemma PCR_Write_charn [reuse, invariant]:
+lemma PCR_Write_charn [reuse, use_induction]:
     // Values read from the PCR have been written to it beforehand.
   " (All x #i. PCR_Read(x) @ i ==>
       (Ex #j. PCR_Write(x) @ j)

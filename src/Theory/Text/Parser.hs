@@ -712,9 +712,9 @@ iff = do
 -- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Parser LemmaAttribute
 lemmaAttribute = asum
-  [ string "typing"    *> pure TypingLemma
-  , string "reuse"     *> pure ReuseLemma
-  , string "invariant" *> pure InvariantLemma
+  [ string "typing"        *> pure TypingLemma
+  , string "reuse"         *> pure ReuseLemma
+  , string "use_induction" *> pure InvariantLemma
   ]
 
 -- | Parse a 'TraceQuantifier'.

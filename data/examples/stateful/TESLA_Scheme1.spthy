@@ -75,7 +75,7 @@ rule Recv:
     ]->
     [ Receiver(data, mac, commit_k, commit_kNew) ]
 
-lemma claim_reachable [invariant]:
+lemma claim_reachable [use_induction]:
   exists-trace
   "(All commit #i #j .
         AssumeCommitNotExpired(commit) @ i
@@ -86,7 +86,7 @@ lemma claim_reachable [invariant]:
    (Ex m #i. ClaimSent(m) @ i)
   "
 
-lemma authentic2 [invariant]:
+lemma authentic2 [use_induction]:
   "(All commit #i #j .
         AssumeCommitNotExpired(commit) @ i
       & CommitExpired(commit) @ j

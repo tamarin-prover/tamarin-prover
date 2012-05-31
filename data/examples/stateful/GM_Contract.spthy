@@ -89,7 +89,7 @@ lemma secrecy:
 //
 // The fundamental problem is that we cannot express the multiplicity of a
 // fact in the *state* in our formula language, as we are always talking about
-// the whole history. It's also unclear how to exploit such state invariants
+// the whole history. It's also unclear how to exploit such state use_inductions
 // in our backwards approach.
 lemma Alice_before_to_bob:
   "All sk #i #j. Device_Use(sk) @ i & ToBob(sk) @ j ==> i < j"
