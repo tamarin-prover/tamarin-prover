@@ -1,0 +1,107 @@
+theory TESLA_Scheme1 begin
+
+/*
+  Protocol:    The TESLA protocol, scheme 1
+  Modeler:     Simon Meier
+  Date:        May 2012
+
+  Status:      WIP
+
+
+    Msg 0a. R -> S: nR
+    Msg 0b. S -> R: {f (k1 ), nR }SK (S )
+    Msg 1.  S -> R: D1 , MAC (k1 , D1 ) where D1 = m1 , f (k2 )
+    Msg 2.  S -> R: D2 , MAC (k2 , D2 ) where D2 = m2 , f (k3 ), k1 .
+
+  For n > 1, the n-th message is:2
+    Msg n. S -> R : Dn , MAC (kn , Dn ) where Dn = mn , f (kn+1 ), kn-1 .
+
+*/
+
+functions: MAC/2, f/1
+
+rule Setup:
+    [ Fr(~k1) ]
+  -->
+    [ Sender1(~k1)
+    , Receiver1(f(~k1))
+    ]
+
+rule Send1:
+  let data1 = <'1', ~m1, f(~k2)>
+  in
+    [ Sender1(~k1)
+    , Fr(~m1)
+    , Fr(~k2)
+    ]
+  --[ Sent(data1)
+    ]->
+    [ Sender(~k1, ~k2)
+    , Out( < data1, MAC{data1}~k1 > )
+    ]
+
+rule Recv1:
+  let data1 = <'1', m1, commit_k2>
+  in
+    [ Receiver1(commit_k1)
+    , In( <data1, mac1> )
+    ]
+  --[ AssumeCommitNotExpired(commit_k1)
+    ]->
+    [ Receiver(data1, mac1, commit_k1, commit_k2) ]
+
+rule SendN:
+  let data = <'N', ~m, f(~kNew), ~kOld>
+  in
+    [ Sender(~kOld, ~k)
+    , Fr(~m)
+    , Fr(~kNew)
+    ]
+  --[ Sent(data)
+    , CommitExpired(f(~kOld))
+    ]->
+    [ Sender(~k, ~kNew)
+    , Out( <data, MAC{data}~k> )
+    ]
+
+rule Recv:
+  let data = <'N', m, commit_kNew, kOld>
+  in
+    [ In(< data, mac >)
+    , Receiver(dataOld, MAC{dataOld}kOld, f(kOld), commit_k)
+    ]
+  --[ ClaimSent(dataOld)
+    , AssumeCommitNotExpired(commit_k)
+    ]->
+    [ Receiver(data, mac, commit_k, commit_kNew) ]
+
+lemma claim_reachable [invariant]:
+  exists-trace
+  "(All commit #i #j .
+        AssumeCommitNotExpired(commit) @ i
+      & CommitExpired(commit) @ j
+        ==> i < j
+   )
+   ==>
+   (Ex m #i. ClaimSent(m) @ i)
+  "
+
+lemma authentic2 [invariant]:
+  "(All commit #i #j .
+        AssumeCommitNotExpired(commit) @ i
+      & CommitExpired(commit) @ j
+        ==> i < j
+   )
+   ==>
+   (All m #i. ClaimSent(m) @ i ==> (Ex #j. Sent(m) @ j & j < i) )
+  "
+
+
+
+
+
+
+
+
+
+end

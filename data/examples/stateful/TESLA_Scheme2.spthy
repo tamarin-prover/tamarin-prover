@@ -1,0 +1,98 @@
+theory TESLA_Scheme2 begin
+
+/*
+   Protocol:    The TESLA protocol, scheme 2
+   Modeler:     Simon Meier
+   Date:        May 2012
+
+   Status:      WIP
+
+   Testing verification of stream-protocols, i.e., repeated key
+   re-negotiation.
+
+      Msg 0a. R -> S : nR
+      Msg 0b. S -> R : {k0 , nR }SK (S )
+      Msg 1.  S -> R : m1 , MAC (k1 , m1 ).
+
+    And for n > 1:
+      Msg n. S -> R : Dn , MAC (kn , Dn ) where Dn = mn , kn-1 .
+
+    One aim of this second version is to be able to tolerate an arbitrary number of
+    packet losses, and to drop unauthenticated packets, yet continue to authenticate
+    later packets.
+
+*/
+
+functions: MAC/2, f/1
+
+rule Setup:
+    [ Fr(~k0) ]
+  -->
+    [ Sender0(~k0), Receiver0(~k0) ]
+
+rule Send1:
+    [ Sender0(k0), Fr(~m1) ]
+  --[ Sent(~m1) ]->
+    [ Sender(k0), Out( <~m1, MAC{'1', ~m1}(f(k0))> ) ]
+
+rule SendN:
+  let data = <~m, kOld>
+      kCur = f(kOld)
+      kNew = f(kCur)
+  in
+    [ Sender(kOld), Fr(~m) ]
+  --[ Sent(~m) ]->
+    [ Sender(kCur), Out( <data, MAC{'N',data}kNew> ) ]
+
+rule Recv1:
+    [ Receiver0(k0), In(<m, MAC{'1', m}(f(k0))>) ]
+  --[ FromSender(m) ]->
+    [ Reciever1(k0) ]
+
+rule Recv:
+  let data = <m, kOld>
+      kCur = f(kOld)
+      kNew = f(kCur)
+  in
+    [ Receiver(kOld), In(< data, MAC{'N', data}~kNew>) ]
+  --[ FromSender(m) ]->
+    [ Reciever(f(kOld)) ]
+
+lemma types [invariant]:
+  " All m #i. FromSender(m) @ i ==> Ex #j. Sent(m) @ j & j < i "
+
+
+lemma authentic [invariant]:
+  " All m #i. FromSender(m) @ i ==> Ex #j. Sent(m) @ j & j < i "
+
+/*
+
+rule Receive:
+    [ Receiver(k0), In(senc{k}k0) ]
+  --[ Secret(k) ]->
+    [ Receiver(k) ]
+
+lemma Secret_reachable:
+  exists-trace
+  "Ex k #i. Secret(k) @ i"
+
+lemma secrecy:
+  "All k f #i #j. Secret(k) @ i & KU(f,k) @ j ==> F"
+
+
+
+
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+end
