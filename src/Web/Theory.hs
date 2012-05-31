@@ -58,17 +58,6 @@ import           Web.Types
 -- Various other functions
 ------------------------------------------------------------------------------
 
--- | Extract and simplify a proof of a lemma for presentation.
-extractSimplifiedLemmaProof :: Lemma IncrementalProof -> IncrementalProof
-extractSimplifiedLemmaProof =
-    -- NOTE: 'simplifyVariableIndices' is called as part of the application of
-    -- a prover.
-    fmap dropMayLoop . get lProof
-  where
-    dropMayLoop (ProofStep (SolveGoal (PremiseG p fa _)) info) =
-        ProofStep (SolveGoal (PremiseG p fa False)) info
-    dropMayLoop step = step
-
 checkProofs :: ClosedTheory -> ClosedTheory
 checkProofs = proveTheory checkedProver
   where
@@ -86,15 +75,13 @@ applyMethodAtPath thy lemmaName proofPath i = do
       (oneStepProver method                        `mappend`
        replaceSorryProver (oneStepProver Simplify) `mappend`
        replaceSorryProver (contradictionProver)    `mappend`
-       replaceSorryProver (oneStepProver Attack)
+       replaceSorryProver (oneStepProver Solved)
       )
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
                   -> Prover -> Maybe ClosedTheory
-applyProverAtPath thy lemmaName proofPath prover0 =
+applyProverAtPath thy lemmaName proofPath prover =
     modifyLemmaProof (focus proofPath prover) lemmaName thy
-  where
-    prover = mapProverProof simplifyVariableIndices prover0
 
 ------------------------------------------------------------------------------
 -- Pretty printing
@@ -458,7 +445,7 @@ resolveProofPath :: ClosedTheory            -- ^ Theory to resolve in
                  -> Maybe IncrementalProof
 resolveProofPath thy lemmaName path = do
   lemma <- lookupLemma lemmaName thy
-  extractSimplifiedLemmaProof lemma `atPath` path
+  get lProof lemma `atPath` path
 
 
 ------------------------------------------------------------------------------
@@ -520,13 +507,11 @@ prevThyPath thy = go
 
     getPrevLemma lemmaName = getPrevElement (== lemmaName) (map fst lemmas)
 
-
-
 -- | Interesting proof methods that are not skipped by next/prev-smart.
 isInterestingMethod :: ProofMethod -> Bool
 isInterestingMethod (Sorry _) = True
-isInterestingMethod m         = m == Attack
-
+isInterestingMethod Solved    = True
+isInterestingMethod _         = False
 
 -- Get 'next' smart theory path.
 nextSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
@@ -638,7 +623,7 @@ annotateLemmaProof :: Lemma IncrementalProof
 annotateLemmaProof lem =
     mapProofInfo (second interpret) prf
   where
-    prf = annotateProof annotate $ extractSimplifiedLemmaProof lem
+    prf = annotateProof annotate $ get lProof lem
     annotate step cs =
         ( psInfo step
         , mconcat $ proofStepStatus step : incomplete ++ map snd cs

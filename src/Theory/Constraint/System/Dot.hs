@@ -218,14 +218,14 @@ dotSystemLoose se =
             return (dotPrem (v,i))
         mapM_ dotNode     $ M.keys   $ get sNodes     se
         mapM_ dotEdge     $ S.toList $ get sEdges     se
-        mapM_ dotChain    $ S.toList $ get sChains    se
+        mapM_ dotChain    $            unsolvedChains se
         mapM_ dotLess     $ S.toList $ get sLessAtoms se
   where
     dotEdge  (Edge src tgt)  = do
         mayNid <- M.lookup (src,tgt) `liftM` getM dsSingles
         maybe (dotGenEdge [] src tgt) (const $ return ()) mayNid
 
-    dotChain (Chain src tgt) =
+    dotChain (src, tgt) =
         dotGenEdge [("style","dashed"),("color","green")] src tgt
 
     dotLess (src, tgt) = do
@@ -307,7 +307,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     let hasOutgoingEdge =
             or [ v == v' | Edge (v', _) _ <- S.toList $ get sEdges se ]
     case M.lookup v $ get sNodes se of
-      Nothing -> case filter ((v ==) . fst) (S.toList $ get sActionAtoms se) of
+      Nothing -> case filter ((v ==) . fst) (unsolvedActionAtoms se) of
         [] -> mkSimpleNode (show v) []
         as -> let lbl = (fsep $ punctuate comma $ map (prettyLNFact . snd) as)
                         <-> opAction <-> text (show v)
@@ -383,11 +383,11 @@ dotSystemCompact boringStyle se =
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
     (`runReaderT` (se, nodeColorMap (M.elems $ get sNodes se))) $ do
         liftDot $ setDefaultAttributes
-        mapM_ (dotNodeCompact boringStyle) $ M.keys $ get sNodes     se
-        F.mapM_ (dotNodeCompact boringStyle . fst) $ get sActionAtoms   se
-        F.mapM_ dotEdge                            $ get sEdges     se
-        F.mapM_ dotChain                           $ get sChains    se
-        F.mapM_ dotLess                            $ get sLessAtoms se
+        mapM_ (dotNodeCompact boringStyle) $ M.keys $ get sNodes       se
+        mapM_ (dotNodeCompact boringStyle . fst) $ unsolvedActionAtoms se
+        F.mapM_ dotEdge                            $ get sEdges        se
+        F.mapM_ dotChain                           $ unsolvedChains    se
+        F.mapM_ dotLess                            $ get sLessAtoms    se
   where
     missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
     dotPremC prem = dotOnce dsPrems prem $ missingNode "invtrapezium" $ prettyNodePrem prem
@@ -407,7 +407,7 @@ dotSystemCompact boringStyle se =
         tgtId <- dotPremC tgt
         liftDot $ D.edge srcId tgtId style
 
-    dotChain (Chain src tgt) =
+    dotChain (src, tgt) =
         dotGenEdge [("style","dashed"),("color","green")] src tgt
 
     dotLess (src, tgt) = do
@@ -449,7 +449,7 @@ compressSystem se0 =
 tryHideNodeId :: NodeId -> System -> System
 tryHideNodeId v se = fromMaybe se $ do
     guard $  (lvarSort v == LSortNode)
-          && notOccursIn (get sChains)
+          && notOccursIn unsolvedChains
           && notOccursIn (get sFormulas)
     maybe hideAction hideRule (M.lookup v $ get sNodes se)
   where
@@ -472,14 +472,14 @@ tryHideNodeId v se = fromMaybe se $ do
                                    . (`S.difference` S.fromList lIns)
                                    . (`S.difference` S.fromList lOuts)
                                    )
-               $ modify sActionAtoms (`S.difference` removeActions)
+               $ modify sGoals (\m -> foldl' removeAction m kuActions)
                $ se
       where
         kuActions            = [ x | x@(i,_,_) <- kuActionAtoms se, i == v ]
         eligibleTerm (_,_,m) =
             isPair m || isInverse m || sortOfLNTerm m == LSortPub
 
-        removeActions = S.fromList [ (i, fa) | (i, fa, _) <- kuActions ]
+        removeAction m (i, fa, _) = M.delete (ActionG i fa) m
 
         lIns  = selectPart sLessAtoms ((v ==) . snd)
         lOuts = selectPart sLessAtoms ((v ==) . fst)
@@ -493,7 +493,7 @@ tryHideNodeId v se = fromMaybe se $ do
               && ( all (not . selfEdge) eNews             )
               && notOccursIn (get sLastAtom)
               && notOccursIn (get sLessAtoms)
-              && notOccursIn (get sActionAtoms)
+              && notOccursIn (unsolvedActionAtoms)
 
         return $ modify sEdges ( (`S.union` S.fromList eNews)
                                . (`S.difference` S.fromList eIns)

@@ -56,7 +56,7 @@ import           Theory.Model
 -- | The number of remaining chain constraints of each case.
 unsolvedChainConstraints :: CaseDistinction -> [Int]
 unsolvedChainConstraints =
-    map (S.size . get sChains . snd) . getDisj . get cdCases
+    map (length . unsolvedChains . snd) . getDisj . get cdCases
 
 
 -- Construction
@@ -73,9 +73,13 @@ initialCaseDistinction ctxt typAsms goal =
     CaseDistinction goal cases
   where
     polish ((name, se), _) = ([name], se)
-    se0   = set sFormulas (S.fromList typAsms) (emptySystem UntypedCaseDist)
-    cases = fmap polish $ runReduction instantiate ctxt se0 (avoid (goal, se0))
-    instantiate = solveGoal goal
+    se0   = emptySystem UntypedCaseDist
+    cases =
+        fmap polish $ runReduction instantiate ctxt se0 (avoid (goal, typAsms))
+    instantiate = do
+        insertGoal goal False
+        mapM_ insertFormula typAsms
+        solveGoal goal
 
 -- | Refine a source case distinction by applying the additional proof step.
 refineCaseDistinction
@@ -107,37 +111,39 @@ solveAllSafeGoals :: [CaseDistinction] -> Reduction [String]
 solveAllSafeGoals ths =
     solve []
   where
-    safeGoal _            (ChainG _)              = True
-    safeGoal _            (PremDnKG _)            = True
-    safeGoal _            (ActionG _ fa)          = not $ isKUFact fa
-    safeGoal splitAllowed (DisjG _)               = splitAllowed
-    -- NOTE: Uncomment the line below to get more extensive case splitting
-    -- for precomputed case distinctions.
-    -- safeGoal splitAllowed (SplitG _ _) = splitAllowed
-    safeGoal _            (PremiseG _ fa mayLoop) = not (mayLoop || isKFact fa)
-    safeGoal _            _                       = False
+    -- safeGoal _ _ = False
+    safeGoal _       (_,   (_, Useless)) = False
+    safeGoal doSplit (goal, _          ) =
+      case goal of
+        ChainG _ _    -> True
+        ActionG _ fa  -> not (isKUFact fa)
+        PremiseG _ fa -> not (isKUFact fa)
+        DisjG _       -> doSplit
+        -- Uncomment to get more extensive case splitting
+        -- SplitG _   -> doSplit
+        SplitG _      -> False
 
-    nonLoopingGoal (PremiseG _ _ mayLoop) = not mayLoop
-    nonLoopingGoal _                      = True
+    usefulGoal (_, (_, Useful)) = True
+    usefulGoal _                = False
 
     solve caseNames = do
         simplifySystem
         ctxt <- ask
         contradictoryIf =<< gets (contradictorySystem ctxt)
         goals  <- gets openGoals
-        chains <- getM sChains
+        chains <- gets unsolvedChains
         -- try to either solve a safe goal or use one of the precomputed case
         -- distinctions
-        let noChainGoals = null [ () | ChainG _ <- goals ]
+        let noChainGoals = null [ () | (ChainG _ _, _) <- goals ]
             -- we perform equation splits, if there is a chain goal starting
             -- from a message variable; i.e., a chain constraint that is no
             -- open goal.
-            splitAllowed    = noChainGoals && not (S.null chains)
-            safeGoals       = filter (safeGoal splitAllowed) goals
-            nonLoopingGoals = filter nonLoopingGoal goals
+            splitAllowed = noChainGoals && not (null chains)
+            safeGoals    = fst <$> filter (safeGoal splitAllowed) goals
+            usefulGoals  = fst <$> filter usefulGoal goals
             nextStep        =
                 ((fmap return . solveGoal) <$> headMay safeGoals) <|>
-                (asum $ map (solveWithCaseDistinction ctxt ths) nonLoopingGoals)
+                (asum $ map (solveWithCaseDistinction ctxt ths) usefulGoals)
         case nextStep of
           Nothing   -> return $ caseNames
           Just step -> solve . (caseNames ++) =<< step
@@ -157,8 +163,8 @@ matchToGoal
     -- distinction goal to the substitution goal.
 matchToGoal ctxt th goalTerm =
   case (goalTerm, get cdGoal th) of
-    ( PremiseG      (iTerm, premIdxTerm) faTerm _mayLoopTerm
-     ,PremiseG pPat@(iPat,  _          ) faPat  _mayLoopPat  ) ->
+    ( PremiseG      (iTerm, premIdxTerm) faTerm
+     ,PremiseG pPat@(iPat,  _          ) faPat  ) ->
         let match = faTerm `matchFact` faPat <> iTerm `matchLVar` iPat in
         case runReader (solveMatchLNTerm match) (get pcMaudeHandle ctxt) of
             []      -> Nothing
@@ -260,7 +266,7 @@ precomputeCaseDistinctions ctxt typAsms =
 
     someProtoGoal :: (FactTag, Int) -> Goal
     someProtoGoal (tag, arity) =
-        PremiseG (someNodeId, PremIdx 0) (Fact tag (nMsgVars arity)) False
+        PremiseG (someNodeId, PremIdx 0) (Fact tag (nMsgVars arity))
 
     someKUGoal :: LNTerm -> Goal
     someKUGoal m =

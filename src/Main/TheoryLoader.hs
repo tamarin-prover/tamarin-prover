@@ -183,9 +183,9 @@ closeThy as =
        | otherwise     = mempty
        where
          cutAttack = mapProverProof $ case map toLower <$> stopOnTrace of
-           Nothing     -> cutOnAttackDFS
-           Just "dfs"  -> cutOnAttackDFS
+           Nothing     -> cutOnSolvedDFS
+           Just "dfs"  -> cutOnSolvedDFS
            Just "none" -> id
-           Just "bfs"  -> cutOnAttackBFS
+           Just "bfs"  -> cutOnSolvedBFS
            Just other  -> error $ "unknown stop-on-trace method: " ++ other
 

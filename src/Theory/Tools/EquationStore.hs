@@ -1,11 +1,12 @@
-{-# LANGUAGE DeriveDataTypeable  #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
-{-# LANGUAGE TupleSections       #-}
-{-# LANGUAGE TypeOperators       #-}
-{-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE ViewPatterns               #-}
 -- |
--- Copyright   : (c) 2010-2012 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt, Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -14,7 +15,7 @@
 -- Support for reasoning with and about disjunctions of substitutions.
 module Theory.Tools.EquationStore (
   -- * Equations
-    SplitId
+    SplitId(..)
 
   , EqStore(..)
   , emptyEqStore
@@ -28,18 +29,19 @@ module Theory.Tools.EquationStore (
   , eqsIsFalse
 
 
-  -- * Transformation
-  , simp
+  -- ** Adding equalities
   , addEqs
   , addRuleVariants
-  , splitAtPos
-  , eqSplits
-  , splitCasenum
-  , constrainedVarsPos
 
-  , SplitStrategy(..)
+  -- ** Case splitting
+  , performSplit
 
-  -- * simplify a disjunction
+  , splits
+  , splitSize
+  , splitExists
+
+  -- * Simplification
+  , simp
   , simpDisjunction
 
   -- ** Pretty printing
@@ -59,26 +61,26 @@ import           Debug.Trace.Ignore
 
 import           Control.Basics
 import           Control.DeepSeq
-import           Control.Monad.State  hiding (get, modify, put)
-import qualified Control.Monad.State  as MS
+import           Control.Monad.State   hiding (get, modify, put)
+import qualified Control.Monad.State   as MS
 
 import           Data.Binary
 import           Data.DeriveTH
-import qualified Data.Foldable        as F
-import           Data.Label           hiding (for, get)
-import qualified Data.Label           as L
+import qualified Data.Foldable         as F
 import           Data.List
 import           Data.Maybe
-import           Data.Monoid
-import qualified Data.Set             as S
-import           Safe
+import qualified Data.Set              as S
+import           Extension.Data.Label  hiding (for, get)
+import qualified Extension.Data.Label  as L
+import           Extension.Data.Monoid
 
 ------------------------------------------------------------------------------
 -- Equation Store                                                --
 ------------------------------------------------------------------------------
 
 -- | Index of disjunction in equation store
-type SplitId = Int
+newtype SplitId = SplitId { unSplitId :: Integer }
+  deriving( Eq, Ord, Show, Enum, Binary, NFData, HasFrees )
 
 -- FIXME: Make comment parse.
 --
@@ -101,8 +103,9 @@ type SplitId = Int
 -- We say a variable @x@ is constrained by a disjunction if there is a substition
 -- @s@ in the disjunction with @x `elem` dom s@.
 data EqStore = EqStore {
-      _eqsSubst :: LNSubst
-    , _eqsConj  :: Conj (S.Set LNSubstVFresh)
+      _eqsSubst       :: LNSubst
+    , _eqsConj        :: Conj (SplitId, S.Set LNSubstVFresh)
+    , _eqsNextSplitId :: SplitId
     }
   deriving( Eq, Ord )
 
@@ -110,24 +113,30 @@ $(mkLabels [''EqStore])
 
 -- | @emptyEqStore@ is the empty equation store.
 emptyEqStore :: EqStore
-emptyEqStore = EqStore emptySubst (Conj [])
+emptyEqStore = EqStore emptySubst (Conj []) (SplitId 0)
 
 -- | @True@ iff the 'EqStore' is contradictory.
 eqsIsFalse :: EqStore -> Bool
-eqsIsFalse = (== falseEqConstrConj) . L.get eqsConj
+eqsIsFalse = any ((S.empty == ) . snd) . getConj . L.get eqsConj
 
--- | The false typing conjunction.
-falseEqConstrConj :: Conj (S.Set (LNSubstVFresh))
-falseEqConstrConj = Conj [S.empty]
+-- | The false conjunction. It is always identified with split number -1.
+falseEqConstrConj :: Conj (SplitId, S.Set (LNSubstVFresh))
+falseEqConstrConj = Conj [ (SplitId (-1), S.empty) ]
 
 
 -- Instances
 ------------
 
-instance HasFrees EqStore where
-    foldFrees f (EqStore subst substs) = foldFrees f subst `mappend` foldFrees f substs
-    mapFrees f (EqStore subst substs) = EqStore <$> mapFrees f subst <*> mapFrees f substs
+instance Apply SplitId where
+    apply _ = id
 
+instance HasFrees EqStore where
+    foldFrees f (EqStore subst substs nextSplitId) =
+        foldFrees f subst <> foldFrees f substs <> foldFrees f nextSplitId
+    mapFrees f (EqStore subst substs nextSplitId) =
+        EqStore <$> mapFrees f subst
+                <*> mapFrees f substs
+                <*> mapFrees f nextSplitId
 
 
 
@@ -138,69 +147,79 @@ instance HasFrees EqStore where
 falseDisj :: S.Set LNSubstVFresh
 falseDisj = S.empty
 
--- | 'SplitStrategy' denotes if the equation store should be split into
--- multiple equation stores.
-data SplitStrategy = SplitNow | SplitLater
 
 -- Dealing with equations
 ----------------------------------------------------------------------
 
 -- | Returns the list of all @SplitId@s valid for the given equation store
 -- sorted by the size of the disjunctions.
-eqSplits :: EqStore -> [SplitId]
-eqSplits eqs =
-    map fst . sortOn snd $ zip [0..] (map S.size . getConj . L.get eqsConj $ eqs)
-
+splits :: EqStore -> [SplitId]
+splits eqs = map fst $ nub $ sortOn snd
+    [ (idx, S.size conj) | (idx, conj) <- getConj $ L.get eqsConj eqs ]
 
 -- | Returns the number of cases for a given 'SplitId'.
-splitCasenum :: EqStore -> SplitId -> Int
-splitCasenum eqs sid = case atMay (getConj . L.get eqsConj $ eqs) sid of
-    Just disj -> S.size disj
-    Nothing   -> error "splitCasenum: invalid split id"
+splitExists :: EqStore -> SplitId -> Bool
+splitExists eqs = isJust . splitSize eqs
 
+-- | Returns the number of cases for a given 'SplitId'.
+splitSize :: EqStore -> SplitId -> Maybe Int
+splitSize eqs sid =
+    (S.size . snd) <$> (find ((sid ==) . fst) $ getConj $ L.get eqsConj $ eqs)
 
 -- | Add a disjunction to the equation store at the beginning
-addDisj :: EqStore -> (S.Set LNSubstVFresh) -> EqStore
-addDisj eqStore disj = modify eqsConj ((Conj [disj]) `mappend`) eqStore
-
-
--- | @splitEqStoreAt eqs i@ takes the disjunction at position @i@ in @eqs@
---   and returns a list of resulting substitutions and the equality store
---   with the remaining equations.
-splitAtPos :: EqStore -> Int -> Maybe [EqStore]
-splitAtPos eqStore i
-    | i `notElem` eqSplits eqStore = Nothing
-    | otherwise = Just $ map (\d -> set eqsConj (conjNew d) eqStore) disj
+addDisj :: EqStore -> (S.Set LNSubstVFresh) -> (EqStore, SplitId)
+addDisj eqStore disj =
+    (   modify eqsConj ((Conj [(sid, disj)]) `mappend`)
+      $ modify eqsNextSplitId succ
+      $ eqStore
+    , sid
+    )
   where
-    conj = getConj $ L.get eqsConj eqStore
-    disj = S.toList (conj !! i)
-    conjNew d = Conj $ take i conj ++ [ S.singleton d ] ++ drop (i+1) conj
+    sid = L.get eqsNextSplitId eqStore
 
+-- | @performSplit eqs i@ performs a case-split on the first disjunction
+-- with the given 'SplitId'.
+performSplit :: EqStore -> SplitId -> Maybe [EqStore]
+performSplit eqStore idx =
+    case break ((idx ==) . fst) (getConj $ L.get eqsConj eqStore) of
+        (_, [])                   -> Nothing
+        (before, (_, disj):after) -> Just $
+            mkNewEqStore before after <$> S.toList disj
+  where
+    mkNewEqStore before after subst =
+        fst $ addDisj (set eqsConj (Conj (before ++ after)) eqStore)
+                      (S.singleton subst)
 
--- | Add a list of term equalities to the equation store.
---   Returns the resulting equation store(s) depending
---   on the split strategy.
-addEqs :: MonadFresh m => SplitStrategy -> MaudeHandle
-                       -> [Equal LNTerm] -> EqStore -> m [EqStore]
-addEqs splitStrat hnd eqs0 eqStore =
+-- | Add a list of term equalities to the equation store. Returns the split
+-- identifier of the disjunction in resulting equation store.
+addEqs :: MonadFresh m
+       => MaudeHandle -> [Equal LNTerm] -> EqStore -> m (EqStore, Maybe SplitId)
+addEqs hnd eqs0 eqStore =
     case unifyLNTermFactored eqs `runReader` hnd of
-        (_, [])         -> return [ set eqsConj falseEqConstrConj eqStore ]
-        (subst, [ substFresh ]) | substFresh == emptySubstVFresh ->
-            return [ applyEqStore hnd subst eqStore ]
-        (subst, substs) ->
+        (_, []) ->
+            return (set eqsConj falseEqConstrConj eqStore, Nothing)
+        (subst, [substFresh]) | substFresh == emptySubstVFresh ->
+            return (applyEqStore hnd subst eqStore, Nothing)
+        (subst, substs) -> do
+            let (eqStore', sid) = addDisj (applyEqStore hnd subst eqStore)
+                                          (S.fromList substs)
+            return (eqStore', Just sid)
+            {-
             case splitStrat of
                 SplitLater ->
                     return [ addDisj (applyEqStore hnd subst eqStore) (S.fromList substs) ]
                 SplitNow ->
                     addEqsAC (modify eqsSubst (compose subst) eqStore)
                         <$> simpDisjunction hnd (const False) (Disj substs)
+            -}
   where
     eqs = apply (L.get eqsSubst eqStore) $ trace (unlines ["addEqs: ", show eqs0]) $ eqs0
+    {-
     addEqsAC eqSt (sfree, Nothing)   = [ applyEqStore hnd sfree eqSt ]
     addEqsAC eqSt (sfree, Just disj) =
       fromMaybe (error "addEqsSplit: impossible, splitAtPos failed")
                 (splitAtPos (applyEqStore hnd sfree (addDisj eqSt (S.fromList disj))) 0)
-
+-}
 
 -- | Apply a substitution to an equation store and bring resulting equations into
 --   normal form again by using unification.
@@ -209,7 +228,7 @@ applyEqStore hnd asubst eqStore
     | dom asubst `intersect` varsRange asubst /= [] || trace (show ("applyEqStore", asubst, eqStore)) False
     = error $ "applyEqStore: dom and vrange not disjoint for `"++show asubst++"'"
     | otherwise
-    = modify eqsConj (fmap (S.fromList . concatMap applyBound  . S.toList)) $
+    = modify eqsConj (fmap (second (S.fromList . concatMap applyBound  . S.toList))) $
           set eqsSubst newsubst eqStore
   where
     newsubst = asubst `compose` L.get eqsSubst eqStore
@@ -249,7 +268,7 @@ So we have
 -}
 
 -- | Add the given rule variants.
-addRuleVariants :: Disj LNSubstVFresh -> EqStore -> EqStore
+addRuleVariants :: Disj LNSubstVFresh -> EqStore -> (EqStore, SplitId)
 addRuleVariants (Disj substs) eqStore
     | dom freeSubst `intersect` concatMap domVFresh substs /= []
     = error $ "addRuleVariants: Nonempty intersection between domain of variants and free substitution. "
@@ -259,6 +278,7 @@ addRuleVariants (Disj substs) eqStore
     freeSubst = L.get eqsSubst eqStore
 
 
+{-
 -- | Return the set of variables that is constrained by disjunction at give position.
 constrainedVarsPos :: EqStore -> Int -> [LVar]
 constrainedVarsPos eqStore k
@@ -266,6 +286,7 @@ constrainedVarsPos eqStore k
     | otherwise       = []
   where
     conj = getConj . L.get eqsConj $ eqStore
+-}
 
 -- Simplifying disjunctions
 ----------------------------------------------------------------------
@@ -281,11 +302,11 @@ simpDisjunction hnd isContr disj0 = do
     eqStore' <- simp hnd isContr eqStore
     return (L.get eqsSubst eqStore', wrap $ L.get eqsConj eqStore')
   where
-    eqStore = set eqsConj (Conj [ S.fromList . getDisj $ disj0 ]) $ emptyEqStore
-    wrap (Conj [])     = Nothing
-    wrap (Conj [disj]) = Just $ S.toList disj
-    wrap conj          =
-        error ("simplifyDisjunction: imposible, unexpected conjuction `"
+    eqStore = fst $ addDisj emptyEqStore (S.fromList $ getDisj $ disj0)
+    wrap (Conj [])          = Nothing
+    wrap (Conj [(_, disj)]) = Just $ S.toList disj
+    wrap conj               =
+        error ("simplifyDisjunction: imposible, unexpected conjunction `"
                ++ show conj ++ "'")
 
 
@@ -295,7 +316,8 @@ simpDisjunction hnd isContr disj0 = do
 -- | @simp eqStore@ simplifies the equation store.
 simp :: MonadFresh m => MaudeHandle -> (LNSubstVFresh -> Bool) -> EqStore -> m EqStore
 simp hnd isContr eqStore =
-    (`execStateT` (trace (show ("eqStore", eqStore)) eqStore)) $ whileTrue (simp1 hnd isContr)
+    execStateT (whileTrue (simp1 hnd isContr))
+               (trace (show ("eqStore", eqStore)) eqStore)
 
 
 -- | @simp1@ tries to execute one simplification step
@@ -315,15 +337,16 @@ simp1 hnd isContr = do
           b6 <- foreachDisj hnd simpIdentify
           b7 <- foreachDisj hnd simpAbstractFun
           b8 <- foreachDisj hnd simpAbstractName
-          (trace (show ("simp:", [b1, b2, b3, b4, b5, b6, b7, b8]))) $ return $ (or [b1, b2, b3, b4, b5, b6, b7, b8])
+          (trace (show ("simp:", [b1, b2, b3, b4, b5, b6, b7, b8]))) $
+              return $ (or [b1, b2, b3, b4, b5, b6, b7, b8])
 
 
 -- | Remove variable renamings in fresh substitutions.
 simpRemoveRenamings :: MonadFresh m => StateT EqStore m Bool
 simpRemoveRenamings = do
     conj <- gets (L.get eqsConj)
-    if F.any (S.foldl' (\b subst -> b || domVFresh subst /= domVFresh (removeRenamings subst)) False) conj
-      then MS.modify (set eqsConj $ fmap (S.map removeRenamings) conj) >> return True
+    if F.any (S.foldl' (\b subst -> b || domVFresh subst /= domVFresh (removeRenamings subst)) False . snd) conj
+      then modM eqsConj (fmap (second $ S.map removeRenamings)) >> return True
       else return False
 
 
@@ -331,9 +354,9 @@ simpRemoveRenamings = do
 --   can be simplified to False.
 simpEmptyDisj :: MonadFresh m => StateT EqStore m Bool
 simpEmptyDisj = do
-    conj <- gets (L.get eqsConj)
-    if (F.any (==falseDisj) conj && conj /= falseEqConstrConj)
-      then MS.modify (set eqsConj falseEqConstrConj) >> return True
+    conj <- getM eqsConj
+    if (F.any ((== falseDisj) . snd) conj && conj /= falseEqConstrConj)
+      then eqsConj =: falseEqConstrConj >> return True
       else return False
 
 
@@ -475,12 +498,15 @@ simpIdentify (subst:others) = case equalImgPairs of
 simpMinimize :: MonadFresh m => (LNSubstVFresh -> Bool) -> StateT EqStore m Bool
 simpMinimize isContr = do
     conj <- MS.gets (L.get eqsConj)
-    if F.any (S.foldr (\subst b -> subst == emptySubstVFresh || isContr subst || b) False) conj
-        then MS.modify (set eqsConj (fmap minimize conj)) >> return True
-        else return False
-  where minimize substs
-            | emptySubstVFresh `S.member` substs = S.singleton emptySubstVFresh
-            | otherwise                          = S.filter (not . isContr) substs
+    if F.any (F.any check . snd) conj
+      then MS.modify (set eqsConj (fmap (second minimize) conj)) >> return True
+      else return False
+  where
+    minimize substs
+      | emptySubstVFresh `S.member` substs = S.singleton emptySubstVFresh
+      | otherwise                          = S.filter (not . isContr) substs
+
+    check subst = subst == emptySubstVFresh || isContr subst
 
 
 -- | Traverse disjunctions and execute @f@ until it returns
@@ -495,13 +521,13 @@ foreachDisj :: MonadFresh m
 foreachDisj hnd f =
     go [] =<< gets (getConj . L.get eqsConj)
   where
-    go _     []         = return False
-    go lefts (d:rights) = do
+    go _     []               = return False
+    go lefts ((idx,d):rights) = do
         b <- lift $ f (S.toList d)
         case b of
-          Nothing              -> go (d:lefts) rights
+          Nothing              -> go ((idx,d):lefts) rights
           Just (msubst, disjs) -> do
-              MS.modify (set eqsConj (Conj (reverse lefts ++ disjs ++ rights)))
+              eqsConj =: Conj (reverse lefts ++ ((,) idx <$> disjs) ++ rights)
               maybe (return ()) (\s -> MS.modify (applyEqStore hnd s)) msubst
               return True
 
@@ -511,18 +537,18 @@ foreachDisj hnd f =
 
 -- | Pretty print an 'EqStore'.
 prettyEqStore :: HighlightDocument d => EqStore -> d
-prettyEqStore eqs@(EqStore subst (Conj disjs)) = vcat $
+prettyEqStore eqs@(EqStore subst (Conj disjs) _nextSplitId) = vcat $
   [if eqsIsFalse eqs then text "CONTRADICTORY" else emptyDoc] ++
   map combine
     [ ("subst", vcat $ prettySubst (text . show) (text . show) subst)
-    , ("conj",  numbered' $ map ppDisj disjs)
+    , ("conj",  vcat $ map ppDisj disjs)
     ]
   where
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
-    ppDisj substs =
-        numbered' conjs
+    ppDisj (idx, substs) =
+        text (show (unSplitId idx)) <-> numbered' conjs
       where
-        conjs = map ppConj (S.toList substs)
+        conjs  = map ppConj (S.toList substs)
         ppConj = vcat . map prettyEq . substToListVFresh
         prettyEq (a,b) =
           prettyNTerm (lit (Var a)) $$ nest (6::Int) (opEqual <-> prettyNTerm b)

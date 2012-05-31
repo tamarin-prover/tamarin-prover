@@ -30,14 +30,19 @@ module Theory.Constraint.Solver.Reduction (
   , labelNodeId
   , insertFreshNode
   , insertFreshNodeConc
-  , insertFreshCoerceRuleNode
 
+  , insertGoal
   , insertAtom
   , insertEdges
+  , insertChain
   , insertAction
   , insertLess
   , insertFormula
   , reducibleFormula
+
+  -- ** Goal management
+  , markGoalAsSolved
+  , removeSolvedSplitGoals
 
   -- ** Substitution application
   , substSystem
@@ -45,11 +50,12 @@ module Theory.Constraint.Solver.Reduction (
   , substEdges
   , substLastAtom
   , substLessAtoms
-  , substActionAtoms
   , substFormulas
   , substSolvedFormulas
 
   -- ** Solving equalities
+  , SplitStrategy(..)
+
   , solveNodeIdEqs
   , solveTermEqs
   , solveFactEqs
@@ -64,11 +70,13 @@ module Theory.Constraint.Solver.Reduction (
 
   ) where
 
+import           Debug.Trace
 import           Prelude                                 hiding (id, (.))
 
 import qualified Data.Foldable                           as F
 import qualified Data.Map                                as M
 import qualified Data.Set                                as S
+import           Safe
 
 import           Control.Basics
 import           Control.Category
@@ -200,33 +208,7 @@ labelNodeId = \i rules -> do
     (ru, mrconstrs) <- importRule =<< disjunctionOfList rules
     solveRuleConstraints mrconstrs
     modM sNodes (M.insert i ru)
-
-    -- CR-rule *DG2_2* specialized for *In* facts.
-    let inFacts = do
-            (v, Fact InFact [m]) <- enumPrems ru
-            return $ do
-                j <- freshLVar "vf" LSortNode
-                ruKnows <- mkISendRuleAC m
-                modM sNodes (M.insert j ruKnows)
-                modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i, v))
-                solveKuPrems j ruKnows
-
-    -- CR-rule *DG2_2* specialized for *Fr* facts.
-    let freshFacts = do
-            (v, Fact FreshFact [m]) <- enumPrems ru
-            return $ do
-                j <- freshLVar "vf" LSortNode
-                modM sNodes (M.insert j (mkFreshRuleAC m))
-                unless (isFreshVar m) $ do
-                    -- 'm' must be of sort fresh
-                    n <- varTerm <$> freshLVar "n" LSortFresh
-                    void (solveTermEqs SplitNow [Equal m n])
-                modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i,v))
-
-    -- solve all Fr, In, and KU premises
-    sequence_ inFacts
-    sequence_ freshFacts
-    solveKuPrems i ru
+    exploitPrems i ru
     return ru
   where
     -- | Import a rule with all its variables renamed to fresh variables.
@@ -240,28 +222,42 @@ labelNodeId = \i rules -> do
     mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule []))
                            [] [freshFact m] []
 
-    -- CR-rule *DG2_{2,u}*: solve all KU-premises of a node annoted with the
-    -- given rule by inserting the corresponding KU-actions before this node.
-    solveKuPrems :: NodeId -> RuleACInst -> Reduction ()
-    solveKuPrems i ru = sequence_ $ do
-        (_, fa) <- enumPrems ru
-        guard (isKUFact fa)
-        return $ do
-            j <- freshLVar "vk" LSortNode
-            insertLess j i
-            void (insertAction j fa)
+    exploitPrems i ru = mapM_ (exploitPrem i ru) (enumPrems ru)
 
--- | Generate a fresh coerce rule node; return node-index, premise, and
--- conclusion.
-insertFreshCoerceRuleNode :: Reduction (LVar, (LNFact, LNFact))
-insertFreshCoerceRuleNode = do
-    i <- freshLVar "vc" LSortNode
-    x <- varTerm <$> freshLVar "x" LSortMsg
-    v <- freshLVar "f_" LSortMsg
-    let faPrem = Fact KDFact [varTerm v, x]
-        faConc = Fact KUFact [varTerm v, x]
-    modM sNodes (M.insert i (Rule (IntrInfo CoerceRule) [faPrem] [faConc] []))
-    return (i, (faPrem, faConc))
+    exploitPrem i ru (v, fa) = case fa of
+        -- CR-rule *DG2_2* specialized for *In* facts.
+        Fact InFact [m] -> do
+            j <- freshLVar "vf" LSortNode
+            ruKnows <- mkISendRuleAC m
+            modM sNodes (M.insert j ruKnows)
+            modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i, v))
+            exploitPrems j ruKnows
+
+        -- CR-rule *DG2_2* specialized for *Fr* facts.
+        Fact FreshFact [m] -> do
+            j <- freshLVar "vf" LSortNode
+            modM sNodes (M.insert j (mkFreshRuleAC m))
+            unless (isFreshVar m) $ do
+                -- 'm' must be of sort fresh ==> enforce via unification
+                n <- varTerm <$> freshLVar "n" LSortFresh
+                void (solveTermEqs SplitNow [Equal m n])
+            modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i,v))
+
+          -- CR-rule *DG2_{2,u}*: solve a KU-premise by inserting the
+          -- corresponding KU-actions before this node.
+        _ | isKUFact fa -> do
+              j <- freshLVar "vk" LSortNode
+              insertLess j i
+              void (insertAction j fa)
+
+          -- Store premise goal for later processing using CR-rule *DG2_2*
+          | otherwise -> insertGoal (PremiseG (i,v) fa) (v `elem` breakers)
+      where
+        breakers = ruleInfo (get praciLoopBreakers) (const []) $ get rInfo ru
+
+-- | Insert a chain constrain.
+insertChain :: NodeConc -> NodePrem -> Reduction ()
+insertChain c p = insertGoal (ChainG c p) False
 
 -- | Insert an edge constraint. CR-rule *DG1_2* is enforced automatically,
 -- i.e., the fact equalities are enforced.
@@ -279,10 +275,10 @@ insertEdges edges = do
 -- that no rule is applicable.
 insertAction :: NodeId -> LNFact -> Reduction ChangeIndicator
 insertAction i fa = do
-    present <- ((i, fa) `S.member`) <$> getM sActionAtoms
+    present <- (goal `M.member`) <$> getM sGoals
     if present
       then do return Unchanged
-      else do modM sActionAtoms (S.insert (i, fa))
+      else do insertGoal goal False
               case kFactView fa of
                 Just (UpK, _, viewTerm2 -> FPair m1 m2) ->
                     requiresKU m1 *> requiresKU m2 *> return Changed
@@ -295,6 +291,7 @@ insertAction i fa = do
 
                 _ -> return Unchanged
   where
+    goal = ActionG i fa
     -- Here we rely on the fact that the action is new. Otherwise, we might
     -- loop due to generating new KU-nodes that are merged immediatly.
     requiresKU t = do
@@ -351,6 +348,11 @@ insertFormula = do
               markAsSolved
               mapM_ (insert False) (getConj fms)
 
+          -- Store for later applications of CR-rule *S_∨*
+          GDisj disj -> do
+              modM sFormulas (S.insert fm)
+              insertGoal (DisjG disj) False
+
           -- CR-rule *S_∃*
           GGuarded Ex ss as gf -> do
               -- must always mark as solved, as we otherwise may repeatedly
@@ -377,15 +379,14 @@ insertFormula = do
               markAsSolved
               lst <- getM sLastAtom
               j <- case lst of
-                     Nothing  -> do j <- freshLVar "l" LSortNode
+                     Nothing  -> do j <- freshLVar "last" LSortNode
                                     void (insertLast j)
                                     return (varTerm (Free j))
                      Just j -> return (varTerm (Free j))
               insert False $ gdisj [ GAto (Less j i), GAto (Less i j) ]
 
-          -- Fallback -- for Disj and Guarded All quantification: just store
-          -- for later steps.
-          _ -> modM sFormulas (S.insert fm)
+          -- Guarded All quantification: store for saturation
+          GGuarded All _ _ _ -> modM sFormulas (S.insert fm)
       where
         markAsSolved = when mark $ modM sSolvedFormulas $ S.insert fm
 
@@ -401,6 +402,72 @@ reducibleFormula fm = case fm of
     _                             -> False
 
 
+-- Goal management
+------------------
+
+-- | Combine the status of two goals.
+combineGoalStatus :: GoalStatus -> GoalStatus -> GoalStatus
+combineGoalStatus (GoalStatus solved1 age1 loops1)
+                  (GoalStatus solved2 age2 loops2) =
+    GoalStatus (solved1 || solved2) (min age1 age2) (loops1 || loops2)
+
+-- | Insert a goal and its status with a new age. Merge status if goal exists.
+insertGoalStatus :: Goal -> GoalStatus -> Reduction ()
+insertGoalStatus goal status = do
+    age <- getM sNextGoalNr
+    modM sGoals $ M.insertWith' combineGoalStatus goal (set gsNr age status)
+    sNextGoalNr =: succ age
+
+-- | Insert a 'Goal' and store its age.
+insertGoal :: Goal -> Bool -> Reduction ()
+insertGoal goal looping =
+    insertGoalStatus goal (GoalStatus solved 0 looping)
+  where
+    solved = case goal of
+      ActionG _ (kFactView -> Just(UpK, _, m))
+        | sortOfLNTerm m == LSortPub             -> True
+        -- Pairs, products, and inverses are always immediatly solved by
+        -- 'insertAction'
+        | isPair m || isInverse m || isProduct m -> True
+      PremiseG _ fa
+        -- KU-facts handled by 'labelNodeId'
+        | isKUFact fa                            -> True
+      _                                          -> False
+
+-- | Mark the given goal as solved.
+markGoalAsSolved :: String -> Goal -> Reduction ()
+markGoalAsSolved how goal =
+    case goal of
+      ActionG _ _     -> updateStatus
+      PremiseG _ fa
+        | isKDFact fa -> modM sGoals $ M.delete goal
+        | otherwise   -> updateStatus
+      ChainG _ _      -> modM sGoals $ M.delete goal
+      SplitG _        -> updateStatus
+      DisjG disj      -> modM sFormulas       (S.delete $ GDisj disj) >>
+                         modM sSolvedFormulas (S.insert $ GDisj disj) >>
+                         updateStatus
+  where
+    updateStatus = do
+        mayStatus <- M.lookup goal <$> getM sGoals
+        case mayStatus of
+          Just status -> trace (msg status) $
+              modM sGoals $ M.insert goal $ set gsSolved True status
+          Nothing     -> trace ("markGoalAsSolved: inexistent goal " ++ show goal) $ return ()
+
+    msg status = render $ nest 2 $ fsep $
+        [ text ("solved goal nr. "++ show (get gsNr status))
+          <-> parens (text how) <> colon
+        , nest 2 (prettyGoal goal) ]
+
+removeSolvedSplitGoals :: Reduction ()
+removeSolvedSplitGoals = do
+    goals    <- getM sGoals
+    existent <- splitExists <$> getM sEqStore
+    sequence_ [ modM sGoals $ M.delete goal
+              | goal@(SplitG i) <- M.keys goals, not (existent i) ]
+
+
 -- Substitution
 ---------------
 
@@ -410,48 +477,33 @@ substSystem :: Reduction ChangeIndicator
 substSystem = do
     c1 <- substNodes
     substEdges
-    substChains
     substLastAtom
     substLessAtoms
-    c2 <- substActionAtoms
     substFormulas
     substSolvedFormulas
     substLemmas
+    c2 <- substGoals
+    substNextGoalNr
     return (c1 <> c2)
 
 -- no invariants to maintain here
-substEdges, substChains, substLessAtoms, substLastAtom, substFormulas,
-  substSolvedFormulas, substLemmas :: Reduction ()
+substEdges, substLessAtoms, substLastAtom, substFormulas,
+  substSolvedFormulas, substLemmas, substNextGoalNr :: Reduction ()
 
 substEdges          = substPart sEdges
 substLessAtoms      = substPart sLessAtoms
 substLastAtom       = substPart sLastAtom
-substChains         = substPart sChains
 substFormulas       = substPart sFormulas
 substSolvedFormulas = substPart sSolvedFormulas
 substLemmas         = substPart sLemmas
+substNextGoalNr     = return ()
+
 
 -- | Apply the current substitution of the equation store to a part of the
 -- sequent. This is an internal function.
 substPart :: Apply a => (System :-> a) -> Reduction ()
 substPart l = do subst <- getM sSubst
                  modM l (apply subst)
-
--- | Substitute all action atoms.
-substActionAtoms :: Reduction ChangeIndicator
-substActionAtoms = do
-    subst <- getM sSubst
-    actions <- S.toList <$> getM sActionAtoms
-    sActionAtoms =: S.empty
-    changes <- forM actions $ \action@(i, fa) -> case kFactView fa of
-        -- Look out for KU-actions that might need to be solved again.
-        Just (UpK, _, m)
-          | (isMsgVar m || isProduct m) && (apply subst m /= m) ->
-              insertAction i (apply subst fa)
-        _ -> do modM sActionAtoms (S.insert $ apply subst action)
-                return Unchanged
-
-    return (mconcat changes)
 
 -- | Apply the current substitution of the equation store the nodes of the
 -- constraint system. Indicates whether additional equalities were added to
@@ -485,6 +537,23 @@ substNodeIds =
         nodes <- gets (map (first (apply subst)) . M.toList . get sNodes)
         setNodes nodes
 
+-- | Substitute all goals. Keep the ones with the lower nr.
+substGoals :: Reduction ChangeIndicator
+substGoals = do
+    subst <- getM sSubst
+    goals <- M.toList <$> getM sGoals
+    sGoals =: M.empty
+    changes <- forM goals $ \(goal, status) -> case goal of
+        -- Look out for KU-actions that might need to be solved again.
+        ActionG i fa@(kFactView -> Just (UpK, _, m))
+          | (isMsgVar m || isProduct m) && (apply subst m /= m) ->
+              insertAction i (apply subst fa)
+        _ -> do modM sGoals $
+                  M.insertWith' combineGoalStatus (apply subst goal) status
+                return Unchanged
+
+    return (mconcat changes)
+
 
 -- Conjoining two constraint systems
 ------------------------------------
@@ -499,11 +568,10 @@ conjoinSystem sys = do
         error "conjoinSystem: typing-kind mismatch"
     joinSets sSolvedFormulas
     joinSets sLemmas
-    joinSets sChains
     joinSets sEdges
-    F.mapM_ insertLast             $ get sLastAtom    sys
-    F.mapM_ (uncurry insertLess)   $ get sLessAtoms   sys
-    F.mapM_ (uncurry insertAction) $ get sActionAtoms sys
+    F.mapM_ insertLast                 $ get sLastAtom    sys
+    F.mapM_ (uncurry insertLess)       $ get sLessAtoms   sys
+    mapM_   (uncurry insertGoalStatus) $ M.toList $ get sGoals sys
     F.mapM_ insertFormula $ get sFormulas sys
     -- update nodes
     _ <- (setNodes . (M.toList (get sNodes sys) ++) . M.toList) =<< getM sNodes
@@ -522,6 +590,10 @@ conjoinSystem sys = do
 -- Unification via the equation store
 -------------------------------------
 
+-- | 'SplitStrategy' denotes if the equation store should be split into
+-- multiple equation stores.
+data SplitStrategy = SplitNow | SplitLater
+
 -- The 'ChangeIndicator' indicates whether at least one non-trivial equality
 -- was solved.
 
@@ -533,18 +605,29 @@ noContradictoryEqStore = (contradictoryIf . eqsIsFalse) =<< getM sEqStore
 -- | Add a list of term equalities to the equation store. And
 --  split resulting disjunction of equations according
 --  to given split strategy.
+--
+-- Note that updating the remaining parts of the constraint system with the
+-- substitution has to be performed using a separate call to 'substSystem'.
 solveTermEqs :: SplitStrategy -> [Equal LNTerm] -> Reduction ChangeIndicator
 solveTermEqs splitStrat eqs0 =
     case filter (not . evalEqual) eqs0 of
       []  -> do return Unchanged
-      eqs -> do hnd <- getMaudeHandle
-                se <- gets id
-                setM sEqStore =<< simp hnd (substCreatesNonNormalTerms hnd se)
-                              =<< disjunctionOfList
-                              =<< addEqs splitStrat hnd eqs
-                              =<< getM sEqStore
-                noContradictoryEqStore
-                return Changed
+      eqs1 -> do
+        hnd <- getMaudeHandle
+        se  <- gets id
+        (eqs2, maySplitId) <- addEqs hnd eqs1 =<< getM sEqStore
+        setM sEqStore
+            =<< simp hnd (substCreatesNonNormalTerms hnd se)
+            =<< case (maySplitId, splitStrat) of
+                  (Just splitId, SplitNow) -> disjunctionOfList
+                                                $ fromJustNote "solveTermEqs"
+                                                $ performSplit eqs2 splitId
+                  (Just splitId, SplitLater) -> do
+                      insertGoal (SplitG splitId) False
+                      return eqs2
+                  _                        -> return eqs2
+        noContradictoryEqStore
+        return Changed
 
 -- | Add a list of equalities in substitution form to the equation store
 solveSubstEqs :: SplitStrategy -> LNSubst -> Reduction ChangeIndicator
@@ -581,10 +664,10 @@ solveListEqs solver eqs = do
 solveRuleConstraints :: Maybe RuleACConstrs -> Reduction ()
 solveRuleConstraints (Just eqConstr) = do
     hnd <- getMaudeHandle
-    setM sEqStore
-        -- do not use expensive substCreatesNonNormalTerms here
-        =<< (simp hnd (const False) . addRuleVariants eqConstr)
-        =<< getM sEqStore
+    (eqs, splitId) <- addRuleVariants eqConstr <$> getM sEqStore
+    insertGoal (SplitG splitId) False
+    -- do not use expensive substCreatesNonNormalTerms here
+    setM sEqStore =<< simp hnd (const False) eqs
     noContradictoryEqStore
 solveRuleConstraints Nothing = return ()
 

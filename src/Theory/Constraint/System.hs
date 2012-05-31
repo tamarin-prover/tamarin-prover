@@ -16,18 +16,6 @@ module Theory.Constraint.System (
   -- * Constraints
     module Theory.Constraint.System.Constraints
 
-  -- * Goals
-  , Goal(..)
-  , isActionGoal
-  , isStandardActionGoal
-  , isPremiseGoal
-  , isPremDnKGoal
-  , isChainGoal
-  , isSplitGoal
-  , isDisjGoal
-
-  , prettyGoal
-
   -- * Constraint systems
   , System
 
@@ -49,16 +37,16 @@ module Theory.Constraint.System (
   , resolveNodeConcFact
 
   -- ** Actions
-  , sActionAtoms
-
   , allActions
   , allKUActions
+  , unsolvedActionAtoms
+  -- FIXME: The two functions below should also be prefixed with 'unsolved'
   , kuActionAtoms
   , standardActionAtoms
 
   -- ** Edge and chain constraints
   , sEdges
-  , sChains
+  , unsolvedChains
 
   -- ** Temporal ordering
   , sLessAtoms
@@ -91,6 +79,15 @@ module Theory.Constraint.System (
   , CaseDistKind(..)
   , sCaseDistKind
 
+  -- ** Goals
+  , GoalStatus(..)
+  , gsSolved
+  , gsLoops
+  , gsNr
+
+  , sGoals
+  , sNextGoalNr
+
   -- * Pretty-printing
   , prettySystem
   , prettyNonGraphSystem
@@ -102,7 +99,6 @@ import           Prelude                              hiding (id, (.))
 import           Data.Binary
 import qualified Data.DAG.Simple                      as D
 import           Data.DeriveTH
-import qualified Data.Foldable                        as F
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe)
 import           Data.Monoid                          (Monoid(..))
@@ -120,116 +116,6 @@ import           Theory.Constraint.System.Constraints
 import           Theory.Model
 import           Theory.Text.Pretty
 import           Theory.Tools.EquationStore
-
-
-------------------------------------------------------------------------------
--- Goals
-------------------------------------------------------------------------------
-
--- | A 'Goal' denotes that a constraint reduction rule is applicable, which
--- might result in case splits. We either use a heuristic to decide what goal
--- to solve next or leave the choice to user (in case of the interactive UI).
-data Goal =
-       ActionG LVar LNFact
-       -- ^ An action that must exist in the trace.
-     | PremiseG NodePrem LNFact Bool
-       -- ^ A premise that must have an incoming direct edge. The 'Bool'
-       -- argument is 'True' if this premise is marked as a loop-breaker;
-       -- i.e., if care must be taken to avoid solving such a premise too
-       -- often.
-     | PremDnKG NodePrem
-       -- ^ A KD goal that must be solved using a destruction chain.
-     | ChainG Chain
-       -- A destruction chain that does not start from a message variable.
-     | SplitG SplitId
-       -- ^ A case split over equalities.
-     | DisjG (Disj LNGuarded)
-       -- ^ A case split over a disjunction.
-     | ImplG LNGuarded
-       -- ^ The consequent of a universally quantified clause that could be
-       -- added to the sequent. For debugging mode only; currently commented
-       -- out.
-     deriving( Eq, Ord, Show )
-
--- | Pretty print a goal.
-prettyGoal :: HighlightDocument d => Goal -> d
-prettyGoal (ActionG i fa)          = prettyNAtom (Action (varTerm i) fa)
-prettyGoal (ChainG ch)             = prettyChain ch
-prettyGoal (PremiseG p fa mayLoop) =
-    prettyNodePrem p <> brackets (prettyLNFact fa) <->
-    (if mayLoop then comment_ "/* may loop */" else emptyDoc)
-prettyGoal (PremDnKG p)            = text "KD" <> parens (prettyNodePrem p)
-prettyGoal (ImplG gf)              =
-    (text "Consequent" <>) $ nest 1 $ parens $ prettyGuarded gf
-prettyGoal (DisjG (Disj gfs)) = (text "Disj" <>) $ fsep $
-    punctuate (operator_ " |") (map (nest 1 . parens . prettyGuarded) gfs)
-prettyGoal (SplitG x) =
-    text "splitEqs" <> parens (text $ show (succ x))
-
--- Indicators
--------------
-
-isActionGoal :: Goal -> Bool
-isActionGoal (ActionG _ _) = True
-isActionGoal _             = False
-
-isStandardActionGoal :: Goal -> Bool
-isStandardActionGoal (ActionG _ fa) = not (isKUFact fa)
-isStandardActionGoal _              = False
-
-isPremiseGoal :: Goal -> Bool
-isPremiseGoal (PremiseG _ _ _) = True
-isPremiseGoal _                = False
-
-isPremDnKGoal :: Goal -> Bool
-isPremDnKGoal (PremDnKG _) = True
-isPremDnKGoal _            = False
-
-isChainGoal :: Goal -> Bool
-isChainGoal (ChainG _) = True
-isChainGoal _          = False
-
-isSplitGoal :: Goal -> Bool
-isSplitGoal (SplitG _) = True
-isSplitGoal _          = False
-
-isDisjGoal :: Goal -> Bool
-isDisjGoal (DisjG _) = True
-isDisjGoal _         = False
-
-
-
--- Instances
-------------
-
-instance HasFrees Goal where
-    foldFrees f goal = case goal of
-        ActionG i fa          -> foldFrees f i `mappend` foldFrees f fa
-        PremiseG p fa mayLoop -> foldFrees f p `mappend` foldFrees f fa `mappend` foldFrees f mayLoop
-        PremDnKG p            -> foldFrees f p
-        ChainG ch             -> foldFrees f ch
-        SplitG i              -> foldFrees f i
-        DisjG x               -> foldFrees f x
-        ImplG x               -> foldFrees f x
-
-    mapFrees f goal = case goal of
-        ActionG i fa          -> ActionG  <$> mapFrees f i <*> mapFrees f fa
-        PremiseG p fa mayLoop -> PremiseG <$> mapFrees f p <*> mapFrees f fa <*> mapFrees f mayLoop
-        PremDnKG p            -> PremDnKG <$> mapFrees f p
-        ChainG ch             -> ChainG   <$> mapFrees f ch
-        SplitG i              -> SplitG   <$> mapFrees f i
-        DisjG x               -> DisjG    <$> mapFrees f x
-        ImplG x               -> ImplG    <$> mapFrees f x
-
-instance Apply Goal where
-    apply subst goal = case goal of
-        ActionG i fa          -> ActionG  (apply subst i)     (apply subst fa)
-        PremiseG p fa mayLoop -> PremiseG (apply subst p)     (apply subst fa) (apply subst mayLoop)
-        PremDnKG p            -> PremDnKG (apply subst p)
-        ChainG ch             -> ChainG   (apply subst ch)
-        SplitG i              -> SplitG   (apply subst i)
-        DisjG x               -> DisjG    (apply subst x)
-        ImplG x               -> ImplG    (apply subst x)
 
 
 
@@ -252,23 +138,40 @@ instance Show CaseDistKind where
     show UntypedCaseDist = "untyped"
     show TypedCaseDist   = "typed"
 
+-- | The status of a 'Goal'. Use its 'Semigroup' instance to combine the
+-- status info of goals that collapse.
+data GoalStatus = GoalStatus
+    { _gsSolved  :: Bool
+       -- True if the goal has been solved already.
+    , _gsNr      :: Integer
+       -- The number of the goal: we use it to track the creation order of
+       -- goals.
+    , _gsLoops   :: Bool
+       -- True if this goal should be solved with care because it may lead to
+       -- non-termination.
+    }
+    deriving( Eq, Ord, Show )
+
 -- | A constraint system.
-data System = System {
-      _sNodes          :: M.Map NodeId RuleACInst
+data System = System
+    { _sNodes          :: M.Map NodeId RuleACInst
     , _sEdges          :: S.Set Edge
-    , _sChains         :: S.Set Chain
-    , _sEqStore        :: EqStore
-    , _sActionAtoms    :: S.Set (NodeId, LNFact)
     , _sLessAtoms      :: S.Set (NodeId, NodeId)
     , _sLastAtom       :: Maybe NodeId
+    , _sEqStore        :: EqStore
     , _sFormulas       :: S.Set LNGuarded
     , _sSolvedFormulas :: S.Set LNGuarded
     , _sLemmas         :: S.Set LNGuarded
+    , _sGoals          :: M.Map Goal GoalStatus
+    , _sNextGoalNr     :: Integer
     , _sCaseDistKind   :: CaseDistKind
     }
+    -- NOTE: Don't forget the update 'substSystem' in
+    -- "Constraint.Solver.Reduction" when adding further fields to the
+    -- constraint system.
     deriving( Eq, Ord )
 
-$(mkLabels [''System])
+$(mkLabels [''System, ''GoalStatus])
 
 
 -- Further accessors
@@ -280,8 +183,9 @@ sSubst = eqsSubst . sEqStore
 
 -- | Label to access the conjunction of disjunctions of fresh substutitution in
 -- the equation store.
-sConjDisjEqs :: System :-> Conj (S.Set (LNSubstVFresh))
+sConjDisjEqs :: System :-> Conj (SplitId, S.Set (LNSubstVFresh))
 sConjDisjEqs = eqsConj . sEqStore
+
 
 
 ------------------------------------------------------------------------------
@@ -291,8 +195,9 @@ sConjDisjEqs = eqsConj . sEqStore
 -- | The empty constraint system, which is logically equivalent to true.
 emptySystem :: CaseDistKind -> System
 emptySystem = System
-    M.empty S.empty S.empty emptyEqStore
-    S.empty S.empty Nothing S.empty S.empty S.empty
+    M.empty S.empty S.empty Nothing emptyEqStore
+    S.empty S.empty S.empty
+    M.empty 0
 
 -- | Returns the constraint system that has to be proven to show that given
 -- formula holds in the context of the given theory.
@@ -370,27 +275,44 @@ nodeConcNode = fst
 ----------
 
 -- | All actions that hold in a sequent.
+unsolvedActionAtoms :: System -> [(NodeId, LNFact)]
+unsolvedActionAtoms sys =
+      do (ActionG i fa, status) <- M.toList (L.get sGoals sys)
+         guard (not $ L.get gsSolved status)
+         return (i, fa)
+
+-- | All actions that hold in a sequent.
 allActions :: System -> [(NodeId, LNFact)]
-allActions se =
-     S.toList (L.get sActionAtoms se)
-  ++ do (i, ru) <- M.toList $ L.get sNodes se
-        (,) i <$> L.get rActs ru
+allActions sys =
+      unsolvedActionAtoms sys
+  <|> do (i, ru) <- M.toList $ L.get sNodes sys
+         (,) i <$> L.get rActs ru
+
 -- | All actions that hold in a sequent.
 allKUActions :: System -> [(NodeId, LNFact, LNTerm)]
-allKUActions se = do
-    (i, fa@(kFactView -> Just (UpK, _, m))) <- allActions se
+allKUActions sys = do
+    (i, fa@(kFactView -> Just (UpK, _, m))) <- allActions sys
     return (i, fa, m)
 
 -- | The standard actions, i.e., non-KU-actions.
 standardActionAtoms :: System -> [(NodeId, LNFact)]
-standardActionAtoms =
-    filter (not . isKUFact . snd) . S.toList . L.get sActionAtoms
+standardActionAtoms = filter (not . isKUFact . snd) . unsolvedActionAtoms
 
 -- | All KU-actions.
 kuActionAtoms :: System -> [(NodeId, LNFact, LNTerm)]
 kuActionAtoms sys = do
-    (i, fa@(kFactView -> Just (UpK, _, m))) <- S.toList $ L.get sActionAtoms sys
+    (i, fa@(kFactView -> Just (UpK, _, m))) <- unsolvedActionAtoms sys
     return (i, fa, m)
+
+-- Destruction chains
+---------------------
+
+-- | All unsolved destruction chains in the constraint system.
+unsolvedChains :: System -> [(NodeConc, NodePrem)]
+unsolvedChains sys = do
+    (ChainG from to, status) <- M.toList $ L.get sGoals sys
+    guard (not $ L.get gsSolved status)
+    return (from, to)
 
 
 -- The temporal order
@@ -399,10 +321,9 @@ kuActionAtoms sys = do
 -- | @(from,to)@ is in @rawEdgeRel se@ iff we can prove that there is an
 -- edge-path from @from@ to @to@ in @se@ without appealing to transitivity.
 rawEdgeRel :: System -> [(NodeId, NodeId)]
-rawEdgeRel se =
-    map (nodeConcNode *** nodePremNode)
-      ([ (from, to) | Edge from to <- S.toList $ L.get sEdges se ] ++
-       [ (from, to) | Chain from to <- S.toList $ L.get sChains se ])
+rawEdgeRel sys = map (nodeConcNode *** nodePremNode) $
+     [(from, to) | Edge from to <- S.toList $ L.get sEdges sys]
+  ++ unsolvedChains sys
 
 -- | @(from,to)@ is in @rawLessRel se@ iff we can prove that there is a path
 -- (possibly using the 'Less' relation) from @from@ to @to@ in @se@ without
@@ -428,7 +349,7 @@ isInTrace :: System -> NodeId -> Bool
 isInTrace sys i =
      i `M.member` L.get sNodes sys
   || isLast sys i
-  || F.any ((i ==) . fst) (L.get sActionAtoms sys)
+  || any ((i ==) . fst) (unsolvedActionAtoms sys)
 
 -- | 'True' iff the given node id is guaranteed to be instantiated to the last
 -- index of the trace.
@@ -446,31 +367,32 @@ prettySystem :: HighlightDocument d => System -> d
 prettySystem se = vcat $
     map combine
       [ ("nodes",     vcat $ map prettyNode $ M.toList $ L.get sNodes se)
-      , ("actions",   ppSet ppActionAtom    $ L.get sActionAtoms se)
-      , ("edges",     ppSet prettyEdge      $ L.get sEdges se)
-      , ("chains",    ppSet prettyChain     $ L.get sChains se)
-      , ("less",      ppSet prettyLess      $ L.get sLessAtoms se)
+      , ("actions",   fsepList ppActionAtom $ unsolvedActionAtoms se)
+      , ("edges",     fsepList prettyEdge   $ S.toList $ L.get sEdges se)
+      , ("less",      fsepList prettyLess   $ S.toList $ L.get sLessAtoms se)
       ]
     ++ [prettyNonGraphSystem se]
   where
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
-    ppSet :: HighlightDocument d => (a -> d) -> S.Set a -> d
-    ppSet f = fsep . punctuate comma . map f . S.toList
     ppActionAtom (i, fa) = prettyNAtom (Action (varTerm i) fa)
 
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
 prettyNonGraphSystem :: HighlightDocument d => System -> d
-prettyNonGraphSystem se = foldr ($--$) emptyDoc $ map combine
+prettyNonGraphSystem se = vsep $ map combine
   [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
   , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
-  , ("formulas",        foldr ($--$) emptyDoc $ map prettyGuarded $ S.toList $ L.get sFormulas se)
+  , ("formulas",        vsep $ map prettyGuarded $ S.toList $ L.get sFormulas se)
   , ("equations",       prettyEqStore $ L.get sEqStore se)
-  , ("solved formulas", foldr ($--$) emptyDoc $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
-  , ("lemmas",          foldr ($--$) emptyDoc $ map prettyGuarded $ S.toList $ L.get sLemmas se)
+  , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
+  , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
+  , ("goal age",        vsep $ map ppGoalAge $ M.toList $ L.get sGoals se)
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
+
+    ppGoalAge (goal, age) = prettyGoal goal <->
+                            lineComment_ ("age: " ++ show age)
 
 
 -- Additional instances
@@ -482,6 +404,10 @@ instance Apply CaseDistKind where
     apply = const id
 
 instance HasFrees CaseDistKind where
+    foldFrees = const mempty
+    mapFrees  = const pure
+
+instance HasFrees GoalStatus where
     foldFrees = const mempty
     mapFrees  = const pure
 
@@ -514,11 +440,11 @@ instance HasFrees System where
 
 
 $( derive makeBinary ''CaseDistKind)
+$( derive makeBinary ''GoalStatus)
 $( derive makeBinary ''System)
 $( derive makeBinary ''SystemTraceQuantifier)
-$( derive makeBinary ''Goal)
 
 $( derive makeNFData ''CaseDistKind)
+$( derive makeNFData ''GoalStatus)
 $( derive makeNFData ''System)
 $( derive makeNFData ''SystemTraceQuantifier)
-$( derive makeNFData ''Goal)

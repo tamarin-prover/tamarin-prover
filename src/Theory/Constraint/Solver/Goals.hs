@@ -10,9 +10,13 @@
 -- The constraint reduction rules, which are not enforced as invariants in
 -- "Theory.Constraint.Solver.Reduction".
 module Theory.Constraint.Solver.Goals (
-    openGoals
+    Usefulness(..)
+  , AnnotatedGoal
+  , GoalRanking
+  , wfProtoRanking
+
+  , openGoals
   , solveGoal
-  , markGoalAsSolved
   ) where
 
 import           Debug.Trace
@@ -48,6 +52,122 @@ import           Theory.Model
 data Usefulness = Useful | Useless
   deriving (Show, Eq, Ord)
 
+-- | Goals annotated with their number and usefulness.
+type AnnotatedGoal = (Goal, (Integer, Usefulness))
+
+type GoalRanking   = System -> [AnnotatedGoal] -> [AnnotatedGoal]
+
+
+-- | The list of goals that must be solved before a solution can be extracted.
+-- Each goal is annotated with its age and an indicator for its usefulness.
+openGoals :: System -> [AnnotatedGoal]
+openGoals sys = do
+    (goal, status) <- M.toList $ get sGoals sys
+    let solved = get gsSolved status
+    -- check whether the goal is still open
+    guard $ case goal of
+        ActionG _ (kFactView -> Just (UpK, _, m)) -> not (isMsgVar m || solved)
+        ActionG _ _                               -> not solved
+        PremiseG _ _                              -> not solved
+        -- Technically the 'False' disj would be a solvable goal. However, we
+        -- have a separate proof method for this, i.e., contradictions.
+        DisjG (Disj [])                           -> False
+        DisjG _                                   -> not solved
+
+        ChainG c _     ->
+          case kFactView (nodeConcFact c sys) of
+              Just (DnK, _, m) | isMsgVar m -> False
+                               | otherwise  -> not solved
+              fa -> error $ "openChainGoals: impossible fact: " ++ show fa
+
+        -- FIXME: Split goals may be duplicated, we always have to check
+        -- explicitly if they still exist.
+        SplitG idx -> splitExists (get sEqStore sys) idx
+
+    let useful = case goal of
+          -- Note that 'solveAllSafeGoals' in "CaseDistinctions" relies on
+          -- looping goals being classified as 'Useless'.
+          _ | get gsLoops status                    -> Useless
+          ActionG i (kFactView -> Just (UpK, _, m))
+            | isSimpleTerm m || deducible i m       -> Useless
+          _                                         -> Useful
+
+    return (goal, (get gsNr status, useful))
+  where
+    existingDeps = rawLessRel sys
+
+    -- We use the following heuristic for marking KU-actions as useful (worth
+    -- solving now) or useless (to be delayed until no more useful goals
+    -- remain). We ignore all goals that are simple terms or where there
+    -- exists a node, not after the premise or the last node, providing an Out
+    -- or KD conclusion that provides the message we are looking for as a
+    -- toplevel term. If such a node exist, then solving the goal will result
+    -- in at least one case where we didn't make real progress except.
+    toplevelTerms t@(destPair -> Just (t1, t2)) =
+        t : toplevelTerms t1 ++ toplevelTerms t2
+    toplevelTerms t@(destInverse -> Just t1) = t : toplevelTerms t1
+    toplevelTerms t = [t]
+
+    deducible i m = or $ do
+        (j, ru) <- M.toList $ get sNodes sys
+        -- We cannot deduce a message from a last node.
+        guard (not $ isLast sys j)
+        let derivedMsgs = concatMap toplevelTerms $
+                [ t | Fact OutFact [t] <- get rConcs ru] <|>
+                [ t | Just (DnK, _, t) <- kFactView <$> get rConcs ru]
+        -- m is deducible from j without an immediate contradiction
+        -- if it is a derived message of 'ru' and the dependency does
+        -- not make the graph cyclic.
+        return $ m `elem` derivedMsgs &&
+                 not (D.cyclic ((j, i) : existingDeps))
+
+-- | A ranking function tuned for the automatic verification of
+-- classical security protocols that exhibit a well-founded protocol premise
+-- fact flow.
+wfProtoRanking :: GoalRanking
+wfProtoRanking sys =
+    delayUseless . sortDecisionTree solveFirst
+  where
+    delayUseless = sortOn (snd . snd)
+
+    solveFirst = map (. fst)
+        [ isDisjGoal
+        , isProtoFactGoal
+        , isChainGoal
+        , isStandardActionGoal
+        , isFreshKnowsGoal
+        , isSplitGoalSmall
+        , isDoubleExpGoal ]
+
+    isProtoFactGoal (PremiseG _ fa) = not $ isKFact fa
+    isProtoFactGoal _               = False
+
+    msgPremise (ActionG _ fa) = do (UpK, _, m) <- kFactView fa; return m
+    msgPremise _              = Nothing
+
+    isFreshKnowsGoal goal = case msgPremise goal of
+        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
+        _                                                           -> False
+
+    isDoubleExpGoal goal = case msgPremise goal of
+        Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
+        _                                                  -> False
+
+    -- Be conservative on splits that don't exist.
+    isSplitGoalSmall (SplitG sid) =
+        maybe False (< 3) $ splitSize (get sEqStore sys) sid
+    isSplitGoalSmall _            = False
+
+    -- | @sortDecisionTree xs ps@ returns a reordering of @xs@
+    -- such that the sublist satisfying @ps!!0@ occurs first,
+    -- then the sublist satisfying @ps!!1@, and so on.
+    sortDecisionTree :: [a -> Bool] -> [a] -> [a]
+    sortDecisionTree []     xs = xs
+    sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
+      where (sat, nonsat) = partition p xs
+
+
+{-
 -- | All open premises stemming both from labelled nodes and requires facts.
 openPremiseGoals :: System -> [(Usefulness, Goal)]
 openPremiseGoals se = do
@@ -55,31 +175,23 @@ openPremiseGoals se = do
     (u, fa) <- enumPrems ru
     let p = (i, u)
         breakers = ruleInfo (get praciLoopBreakers) (const []) $ get rInfo ru
-    case fa of
-      -- up-K facts: are transformed to actions by 'labelNodeId'.
-      (kFactView -> Just (UpK, _, _))  -> mzero
-      -- down-K facts
-      (kFactView -> Just (DnK, _, _))
-        | p `S.member` coveredPrems -> mzero
-        | otherwise                 -> return . (Useful,)  $ PremDnKG p
-      -- all other facts
-      _ | p `S.member` coveredPrems -> mzero
+    case () of
+      _ | isKUFact fa               -> [] -- KU-facts handled by 'labelNodeId'
+        | p `S.member` coveredPrems -> []
         | u `elem` breakers         -> return . (Useless,) $ PremiseG p fa True
         | otherwise                 -> return . (Useful,) $  PremiseG p fa False
   where
     coveredPrems = S.fromList $ eTgt <$> S.toList (get sEdges se) <|>
-                                cTgt <$> S.toList (get sChains se)
-
-
+                                snd <$> chains se
 
 -- | All open chain goals. These are all the chains that do not end in a
 -- message variable in the sequent because they are deleted upon solving.
 openChainGoals :: System -> [Goal]
 openChainGoals se = do
-    ch@(Chain c _) <- S.toList $ get sChains se
+    (c, p) <- chains se
     case kFactView (nodeConcFact c se) of
       Just (DnK, _, m) | isMsgVar m -> mzero
-                       | otherwise  -> return $ ChainG ch
+                       | otherwise  -> return $ ChainG c p
       fa -> error $ "openChainGoals: impossible fact: " ++ show fa
 
 -- | All open splitting goals.
@@ -143,24 +255,35 @@ openDisjunctionGoals se = do
   return $ DisjG d
 
 -- | All open goals (non-deterministic choices of possible proof steps) in the
--- sequent.
-openGoals :: System -> [Goal]
-openGoals se = delayUseless $ sortDecisionTree solveFirst $ concat $
-   [ (Useful,) <$> openStandardActionGoals se
-   , (Useful,) <$> openDisjunctionGoals se
-   , (Useful,) <$> openChainGoals se
-   , openPremiseGoals se
-   , openKUActionGoals se
-   -- SM: Commented out as automatic saturation works again.
-   -- , (Useful,) <$> openImplicationGoals se
-   , (Useful,) <$> openSplitGoals se
-   ]
+-- system together with their age.
+openGoals :: System -> [(Goal, Maybe Integer)]
+openGoals sys = do
+    goal <- openGoals_ sys
+    return (goal, M.lookup goal (get sGoals sys))
+
+-- | All open goals (non-deterministic choices of possible proof steps) in the
+-- system.
+openGoals_:: System -> [Goal]
+openGoals_ sys =
+   filter annotated $ delayUseless $ sortDecisionTree solveFirst $ concat $
+     [ (Useful,) <$> openStandardActionGoals sys
+     , (Useful,) <$> openDisjunctionGoals sys
+     , (Useful,) <$> openChainGoals sys
+     , openPremiseGoals sys
+     , openKUActionGoals sys
+     , (Useful,) <$> openSplitGoals sys
+     ]
   where
+    annotated goal
+      | goal `M.member` get sGoals sys = True
+      | otherwise                      =
+          error (render $ text "goal not annotated: " $-$ prettyGoal goal) True
+
     solveFirst = map (. snd)
         [ isDisjGoal
         , isNonLoopingProtoFactGoal
-        , isStandardActionGoal
         , isChainGoal
+        , isStandardActionGoal
         , isFreshKnowsGoal
         , isSplitGoalSmall
         , isDoubleExpGoal ]
@@ -180,7 +303,7 @@ openGoals se = delayUseless $ sortDecisionTree solveFirst $ concat $
         Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
         _                                                  -> False
 
-    isSplitGoalSmall (SplitG sid) = splitCasenum (get sEqStore se) sid < 3
+    isSplitGoalSmall (SplitG sid) = splitCasenum (get sEqStore sys) sid < 3
     isSplitGoalSmall _            = False
 
     delayUseless = map snd . sortOn fst
@@ -193,6 +316,7 @@ sortDecisionTree :: [a -> Bool] -> [a] -> [a]
 sortDecisionTree []     xs = xs
 sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
   where (sat, nonsat) = partition p xs
+-}
 
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
@@ -207,41 +331,20 @@ solveGoal goal = do
     markGoalAsSolved "directly" goal
     rules <- askM pcRules
     case goal of
-      ActionG i fa   -> solveAction  (nonSilentRules rules) (i, fa)
-      PremiseG p fa _mayLoop ->
-          solvePremise (get crProtocol rules ++ get crConstruct rules) p fa
-      PremDnKG p     -> solvePremDnK (get crProtocol  rules) p
-      ChainG ch      -> solveChain   (get crDestruct  rules) ch
-      SplitG i       -> solveSplit i
-      DisjG disj     -> solveDisjunction disj
-      ImplG gf       -> modM sFormulas (S.insert gf) >> return "add_formula"
+      ActionG i fa  -> solveAction  (nonSilentRules rules) (i, fa)
+      PremiseG p fa ->
+           solvePremise (get crProtocol rules ++ get crConstruct rules) p fa
+      ChainG c p    -> solveChain (get crDestruct  rules) (c, p)
+      SplitG i      -> solveSplit i
+      DisjG disj    -> solveDisjunction disj
 
 -- The follwoing functions are internal to 'solveGoal'. Use them with great
 -- care.
 
--- | Mark this 'Goal' as being solved. This does not work for all goals. Check
--- the code.
-markGoalAsSolved :: String -> Goal -> Reduction ()
-markGoalAsSolved how goal =
-    trace msg $
-    case goal of
-      ActionG i fa   -> modM sActionAtoms (S.delete (i, fa))
-      PremiseG _ _ _ -> return ()
-      PremDnKG _     -> return ()
-      ChainG ch      -> modM sChains (S.delete ch)
-      SplitG _       -> return () -- FIXME:
-      DisjG disj     -> modM sFormulas       (S.delete $ GDisj disj) >>
-                        modM sSolvedFormulas (S.insert $ GDisj disj)
-      ImplG _       -> return ()
-  where
-    msg = render $ nest 2 $ sep
-      [ text "solving goal" <-> parens (text how) <> colon
-      , nest 2 (prettyGoal goal) ]
-
 -- | CR-rule *S_at*: solve an action goal.
-solveAction :: [RuleAC]         -- ^ All rules labelled with an action
-            -> (NodeId, LNFact) -- ^ The action we are looking for.
-            -> Reduction String   -- ^ A sensible case name.
+solveAction :: [RuleAC]          -- ^ All rules labelled with an action
+            -> (NodeId, LNFact)  -- ^ The action we are looking for.
+            -> Reduction String  -- ^ A sensible case name.
 solveAction rules (i, fa) = do
     mayRu <- M.lookup i <$> getM sNodes
     showRuleCaseName <$> case mayRu of
@@ -255,72 +358,44 @@ solveAction rules (i, fa) = do
                           void (solveFactEqs SplitNow [Equal fa act])
                       return ru
 
-{-
--- | CR-rule *DG2_2,u*: solve a KU-premise.
+-- | CR-rules *DG_{2,P}* and *DG_{2,d}*: solve a premise with a direct edge
+-- from a unifying conclusion or using a destruction chain.
 --
--- Solve a K-up-knowledge premise.
---
---  Should not be required, as non-trivial KU-premises are solved by
---  solvePremise and rule S_{at,u,triv} is applied by solveUpK.
---
-solvePremUpK :: [RuleAC]  -- ^ All rules with KU-conclusions.
-             -> NodePrem  -- ^ Premise requiring the
-             -> LNTerm
-             -> Reduction String
-solvePremUpK rules p m = do
-    (ru, c, faConc) <- freshNodeConc rules
-    case kFactView faConc of
-      Just (UpK, _, m') ->
-        do solveTermEqs SplitNow [(Equal m m')]
-           modM sMsgEdges (S.insert (MsgEdge c p))
-           return $ showRuleCaseName ru
-      _ -> error $ "solveUpK: unexpected fact: " ++ show faConc
--}
-
--- | CR-rule *DG_{2,P}*: solve a premise with a direct edge
--- from a unifying conclusion.
---
--- Note that *In* and *Fr* facts are solved directly when adding a 'ruleNode'.
--- Moreover, *KD* facts are solved by 'solveDnK' and *KU* facts are solved by
--- 'solveUpK'.
+-- Note that *In*, *Fr*, and *KU* facts are solved directly when adding a
+-- 'ruleNode'.
 --
 solvePremise :: [RuleAC]       -- ^ All rules with a non-K-fact conclusion.
              -> NodePrem       -- ^ Premise to solve.
              -> LNFact         -- ^ Fact required at this premise.
              -> Reduction String -- ^ Case name to use.
-solvePremise rules p faPrem = do
-    (ru, c, faConc) <- insertFreshNodeConc rules
-    void (solveFactEqs SplitNow [(Equal faPrem faConc)])
-    modM sEdges (S.insert (Edge c p))
-    return $ showRuleCaseName ru
+solvePremise rules p faPrem
+  | isKDFact faPrem = do
+      iLearn    <- freshLVar "vl" LSortNode
+      mLearn    <- varTerm <$> freshLVar "t" LSortMsg
+      concLearn <- kdFact (Just CanExp) mLearn
+      let premLearn = outFact mLearn
+          -- !! Make sure that you construct the correct rule!
+          ruLearn = Rule (IntrInfo IRecvRule) [premLearn] [concLearn] []
+          cLearn = (iLearn, ConcIdx 0)
+          pLearn = (iLearn, PremIdx 0)
+      modM sNodes  (M.insert iLearn ruLearn)
+      insertChain cLearn p
+      solvePremise rules pLearn premLearn
 
--- | CR-rule *DG2_{2,d}*: solve a KD-premise.
-solvePremDnK :: [RuleAC]       -- ^ All rules that derive a send fact.
-             -> NodePrem       -- ^ The KD-premise to solve.
-             -> Reduction String -- ^ Case name to use.
-solvePremDnK rules p = do
-    iLearn    <- freshLVar "vl" LSortNode
-    mLearn    <- varTerm <$> freshLVar "t" LSortMsg
-    concLearn <- kdFact (Just CanExp) mLearn
-    let premLearn = outFact mLearn
-        -- !! Make sure that you construct the correct rule!
-        ruLearn = Rule (IntrInfo IRecvRule) [premLearn] [concLearn] []
-        cLearn = (iLearn, ConcIdx 0)
-        pLearn = (iLearn, PremIdx 0)
-    modM sNodes  (M.insert iLearn ruLearn)
-    modM sChains (S.insert (Chain cLearn p))
-    solvePremise rules pLearn premLearn
+  | otherwise = do
+      (ru, c, faConc) <- insertFreshNodeConc rules
+      insertEdges [(c, faConc, faPrem, p)]
+      return $ showRuleCaseName ru
 
 -- | CR-rule *DG2_chain*: solve a chain constraint.
-solveChain :: [RuleAC]        -- ^ All destruction rules.
-           -> Chain           -- ^ The chain to extend by one step.
-           -> Reduction String  -- ^ Case name to use.
-solveChain rules (Chain c p) = do
+solveChain :: [RuleAC]              -- ^ All destruction rules.
+           -> (NodeConc, NodePrem)  -- ^ The chain to extend by one step.
+           -> Reduction String      -- ^ Case name to use.
+solveChain rules (c, p) = do
     faConc  <- gets $ nodeConcFact c
     (do -- solve it by a direct edge
         faPrem <- gets $ nodePremFact p
-        void (solveFactEqs SplitNow [(Equal faPrem faConc)])
-        modM sEdges  (S.insert (Edge c p))
+        insertEdges [(c, faConc, faPrem, p)]
         let m = case kFactView faConc of
                   Just (DnK, _, m') -> m'
                   _                 -> error $ "solveChain: impossible"
@@ -331,9 +406,9 @@ solveChain rules (Chain c p) = do
      do -- extend it with one step
         (i, ru)     <- insertFreshNode rules
         (v, faPrem) <- disjunctionOfList $ enumPrems ru
-        void (solveFactEqs SplitNow [(Equal faPrem faConc)])
-        modM sEdges  (S.insert (Edge c (i, v)))
-        modM sChains (S.insert (Chain (i, ConcIdx 0) p))
+        insertEdges [(c, faConc, faPrem, (i, v))]
+        markGoalAsSolved "directly" (PremiseG (i, v) faPrem)
+        insertChain (i, ConcIdx 0) p
         return $ showRuleCaseName ru
      )
 
@@ -343,8 +418,8 @@ solveChain rules (Chain c p) = do
 -- to delay these splits.
 solveSplit :: SplitId -> Reduction String
 solveSplit x = do
-    split <- gets ((`splitAtPos` x) . get sEqStore)
-    let errMsg = error "solveSplit: split of equations on unconstrained variable!"
+    split <- gets ((`performSplit` x) . get sEqStore)
+    let errMsg = error "solveSplit: inexistent split-id"
     store      <- maybe errMsg disjunctionOfList split
     -- FIXME: Simplify this interaction with the equation store
     hnd        <- getMaudeHandle

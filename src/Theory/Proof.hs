@@ -30,8 +30,8 @@ module Theory.Proof (
   , ProofStatus(..)
   , proofStepStatus
 
-  , cutOnAttackDFS
-  , cutOnAttackBFS
+  , cutOnSolvedDFS
+  , cutOnSolvedBFS
 
   -- ** Unfinished proofs
   , sorry
@@ -59,7 +59,6 @@ module Theory.Proof (
   , contradictionProver
 
   -- ** Pretty Printing
-  , simplifyVariableIndices
   , prettyProofMethod
   , prettyProof
   , prettyProofWith
@@ -186,9 +185,9 @@ mergeMapsWith leftOnly rightOnly combine l r =
 -- | Sound transformations of sequents.
 data ProofMethod =
     Sorry String                         -- ^ Proof was not completed
-  | Attack                               -- ^ An attack was fond
+  | Solved                               -- ^ An attack was fond
   | Simplify                             -- ^ A simplification step.
-  | SolveGoal Goal                       -- ^ A goal was solved.
+  | SolveGoal Goal                       -- ^ A goal that was solved.
   | Contradiction (Maybe Contradiction)
   | Induction
     -- ^ A contradiction could be derived, possibly with a reason.
@@ -341,37 +340,37 @@ instance Monoid ProofStatus where
 
 -- | The status of a 'ProofStep'.
 proofStepStatus :: ProofStep a -> ProofStatus
-proofStepStatus (ProofStep Attack _)    = TraceFound
+proofStepStatus (ProofStep Solved _)    = TraceFound
 proofStepStatus (ProofStep (Sorry _) _) = IncompleteProof
 proofStepStatus (ProofStep _ _)         = CompleteProof
 
--- | @cutOnAttackDFS prf@ remove all other cases if attack is found.
+-- | @cutOnSolvedDFS prf@ remove all other cases if attack is found.
 -- FIXME: Probably holds onto the whole proof tree. Use iterative deepening.
-cutOnAttackDFS :: Proof (Maybe System) -> Proof (Maybe System)
-cutOnAttackDFS prf =
-    case getFirst $ findAttacks $ insertPaths prf of
+cutOnSolvedDFS :: Proof (Maybe System) -> Proof (Maybe System)
+cutOnSolvedDFS prf =
+    case getFirst $ findSolveds $ insertPaths prf of
       Nothing   -> prf
-      Just path -> extractAttack path prf
+      Just path -> extractSolved path prf
   where
-    findAttacks (LNode (ProofStep Attack (_,path)) _) = First (Just path)
-    findAttacks (LNode _ cs) = foldMap findAttacks $ M.elems cs
+    findSolveds (LNode (ProofStep Solved (_,path)) _) = First (Just path)
+    findSolveds (LNode _ cs) = foldMap findSolveds $ M.elems cs
         {- The following "optimization" didn't work out in practice.
-        foldMap findAttacks preferred `mappend` foldMap findAttacks delayed
+        foldMap findSolveds preferred `mappend` foldMap findSolveds delayed
       where
         (preferred, delayed) = parPartition prefer $ M.elems cs
         prefer = maybe False (S.null . L.get sChains) . fst . psInfo . root
         -}
 
-    extractAttack []         p               = p
-    extractAttack (label:ps) (LNode pstep m) = case M.lookup label m of
+    extractSolved []         p               = p
+    extractSolved (label:ps) (LNode pstep m) = case M.lookup label m of
         Just subprf ->
-          LNode pstep (M.fromList [(label, extractAttack ps subprf)])
+          LNode pstep (M.fromList [(label, extractSolved ps subprf)])
         Nothing     ->
-          error "Theory.Constraint.cutOnAttackDFS: impossible, extractAttack failed, invalid path"
+          error "Theory.Constraint.cutOnSolvedDFS: impossible, extractSolved failed, invalid path"
 
 -- | Search for attacks in a BFS manner.
-cutOnAttackBFS :: Proof a -> Proof a
-cutOnAttackBFS =
+cutOnSolvedBFS :: Proof a -> Proof a
+cutOnSolvedBFS =
     go (1::Int)
   where
     go l prf =
@@ -383,7 +382,7 @@ cutOnAttackBFS =
           (prf', TraceFound)  ->
               trace ("attack found at depth: " ++ show l) prf'
 
-    checkLevel 0 (LNode  step@(ProofStep Attack _) _) =
+    checkLevel 0 (LNode  step@(ProofStep Solved _) _) =
         S.put TraceFound >> return (LNode step M.empty)
     checkLevel 0 prf@(LNode (ProofStep _ x) cs)
       | M.null cs = return prf
@@ -405,21 +404,35 @@ cutOnAttackBFS =
 -- @execMethod rules method se@ checks first if the @method@ is applicable to
 -- the sequent @se@. Then, it applies the @method@ to the sequent under the
 -- assumption that the @rules@ describe all rewriting rules in scope.
+--
+-- NOTE that the returned systems have their free substitution fully applied
+-- and all variable indices reset.
 execProofMethod :: ProofContext
                 -> ProofMethod -> System -> Maybe (M.Map CaseName System)
 execProofMethod ctxt method sys =
-    case method of
-      Sorry _              -> return M.empty
-      Attack
-        | null (openGoals sys) -> return M.empty
-        | otherwise            -> Nothing
-      SolveGoal goal       -> execSolveGoal goal
-      Simplify             -> singleCase (/=) simplifySystem
-      Induction            -> execInduction
-      Contradiction _
-        | null (contradictions ctxt sys) -> Nothing
-        | otherwise                      -> Just M.empty
+    M.map cleanupSystem <$>
+      case method of
+        Sorry _                  -> return M.empty
+        Solved
+          | null (openGoals sys) -> return M.empty
+          | otherwise            -> Nothing
+        SolveGoal goal           -> execSolveGoal goal
+        Simplify                 -> singleCase (/=) simplifySystem
+        Induction                -> execInduction
+        Contradiction _
+          | null (contradictions ctxt sys) -> Nothing
+          | otherwise                      -> Just M.empty
   where
+    -- at this point it is safe to remove the free substitution, as all
+    -- systems have it fully applied (by the virtue of a call to
+    -- simplifySystem). We also reset the variable indices here.
+    cleanupSystem =
+         (`Precise.evalFresh` Precise.nothingUsed)
+       . (`evalBindT` noBindings)
+       . someInst
+       . set sSubst emptySubst
+
+
     -- expect only one or no subcase in the given case distinction
     singleCase check m =
         case map fst $ getDisj $ execReduction m ctxt sys (avoid sys) of
@@ -472,13 +485,13 @@ execProofMethod ctxt method sys =
 
 -- | A list of possibly applicable proof methods.
 possibleProofMethods :: ProofContext -> System -> [ProofMethod]
-possibleProofMethods ctxt se =
-         ((Contradiction . Just) <$> contradictions ctxt se)
+possibleProofMethods ctxt sys =
+         ((Contradiction . Just) <$> contradictions ctxt sys)
      <|> (case L.get pcUseInduction ctxt of
             AvoidInduction -> [Simplify, Induction]
             UseInduction   -> [Induction, Simplify]
          )
-     <|> (SolveGoal <$> openGoals se)
+     <|> ((SolveGoal . fst) <$> (wfProtoRanking sys $ openGoals sys))
 
 -- | @proveSystemDFS rules se@ tries to construct a proof that @se@ is valid
 -- using a depth-first-search strategy to resolve the non-determinism wrt. what
@@ -492,7 +505,7 @@ proveSystemDFS ctxt se0 =
         LNode (ProofStep method se) (M.map prove cases)
       where
         (method, cases) =
-            headDef (Attack, M.empty) $ do
+            headDef (Solved, M.empty) $ do
                 m <- possibleProofMethods ctxt se
                 (m,) <$> maybe mzero return (execProofMethod ctxt m se)
 
@@ -666,6 +679,8 @@ contradictionProver = Prover $ \ctxt sys prf ->
 -- Pretty printing
 ------------------------------------------------------------------------------
 
+{- NOT used anymore
+
 -- | Consistently simplify variable indices in the proof; i.e., rename all
 -- free variables in a top-down fashion using the 'Precise.FreshT'
 -- transformer.
@@ -677,14 +692,16 @@ simplifyVariableIndices =
         case Precise.runFresh (runBindT (someInst step) bindSt) freshSt of
             ((step', bindSt'), freshSt') ->
                 LNode step' (M.map (go bindSt' freshSt') cs)
+-}
 
 
 prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
-    Attack               -> keyword_ "SOLVED" <-> lineComment_ "trace found"
+    Solved               -> keyword_ "SOLVED" <-> lineComment_ "trace found"
     Induction            -> keyword_ "induction"
     Sorry reason         -> fsep [keyword_ "sorry", lineComment_ reason]
-    SolveGoal goal       -> hsep [keyword_ "solve(", prettyGoal goal, keyword_ ")"]
+    SolveGoal goal       ->
+        keyword_ "solve(" <-> prettyGoal goal <-> keyword_ ")"
     Simplify             -> keyword_ "simplify"
     Contradiction reason ->
         sep [ keyword_ "contradiction"
@@ -704,7 +721,7 @@ prettyProofWith prettyStep prettyCase =
   where
     ppPrf (LNode ps cs) = ppCases ps (M.toList cs)
 
-    ppCases ps@(ProofStep Attack _) [] = prettyStep ps
+    ppCases ps@(ProofStep Solved _) [] = prettyStep ps
     ppCases ps []                      = prettyCase ps (kwBy <> text " ")
                                            <> prettyStep ps
     ppCases ps [("", prf)]             = prettyStep ps $-$ ppPrf prf

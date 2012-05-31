@@ -46,7 +46,7 @@ import           Theory                       (
     -- lookupLemma, addLemma,
     removeLemma,
     openTheory,
-    mapProverProof, sorryProver, autoProver, cutOnAttackDFS,
+    mapProverProof, sorryProver, autoProver, cutOnSolvedDFS,
     prettyClosedTheory, prettyOpenTheory
     -- prettyProof, prettyLemma, prettyClosedTheory, prettyOpenTheory
   )
@@ -411,7 +411,7 @@ getAutoProverR idx path = do
   where
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
       (\thy ->
-          return $ applyProverAtPath thy lemma proofPath (mapProverProof cutOnAttackDFS autoProver))
+          return $ applyProverAtPath thy lemma proofPath (mapProverProof cutOnSolvedDFS autoProver))
       (\thy -> nextSmartThyPath thy path)
       (JsonAlert "Sorry, but the autoprover failed on given proof step!")
 

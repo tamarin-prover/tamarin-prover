@@ -57,6 +57,8 @@ simplifySystem = do
     go (0 :: Int) [Changed]
     -- Add all ordering constraint implied by CR-rule *N6*.
     exploitUniqueMsgOrder
+    -- Remove equation split goals that do not exist anymore
+    removeSolvedSplitGoals
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -65,19 +67,19 @@ simplifySystem = do
       | otherwise                     = do
           -- Store original system for reporting
           se0 <- gets id
+          -- Perform one initial substitution. We do not have to consider its
+          -- changes as 'substSystem' is idempotent.
+          void substSystem
           -- Perform one simplification pass.
           (c1,c2,c3) <- enforceNodeUniqueness
           c4 <- enforceEdgeUniqueness
           c5 <- solveUniqueActions
-          -- Substitute the whole constraint system, as 'evalFormulaAtoms'
-          -- uses the 'partialAtomValuation'.
-          c6 <- substSystem
-          c7 <- reduceFormulas
-          c8 <- evalFormulaAtoms
-          c9 <- insertImpliedFormulas
+          c6 <- reduceFormulas
+          c7 <- evalFormulaAtoms
+          c8 <- insertImpliedFormulas
 
           -- Report on looping behaviour if necessary
-          let changes = [c1, c2, c3, c4, c5, c6, c7, c8, c9]
+          let changes = [c1, c2, c3, c4, c5, c6, c7, c8]
               traceIfLooping
                 | n <= 10   = id
                 | otherwise = trace $ render $ vcat
@@ -104,12 +106,10 @@ exploitUniqueMsgOrder = do
 -- Returns 'Changed' if a change was done.
 enforceNodeUniqueness :: Reduction (ChangeIndicator, ChangeIndicator, ChangeIndicator)
 enforceNodeUniqueness =
-    -- We ensure that the latest substitution is applied to the relevant parts
-    -- of the constraint system.
     (,,)
-      <$> (substNodes >> merge (const $ return Unchanged) freshRuleInsts)
-      <*> (substNodes >> merge (solveRuleEqs SplitNow)    kdConcs)
-      <*> (substNodes >> substActionAtoms >> merge (solveFactEqs SplitNow) kuActions)
+      <$> (merge (const $ return Unchanged) freshRuleInsts)
+      <*> (merge (solveRuleEqs SplitNow)    kdConcs)
+      <*> (merge (solveFactEqs SplitNow)    kuActions)
   where
     -- *DG4*
     freshRuleInsts se = do
@@ -143,12 +143,10 @@ enforceNodeUniqueness =
 -- and multiple outgoing edges from linear facts.
 enforceEdgeUniqueness :: Reduction ChangeIndicator
 enforceEdgeUniqueness = do
-    substEdges
     se <- gets id
     let edges = S.toList (get sEdges se)
     (<>) <$> mergeNodes eSrc eTgt edges
-         <*> (substNodes *> substEdges *>
-              mergeNodes eTgt eSrc (filter (proveLinearConc se . eSrc) edges))
+         <*> mergeNodes eTgt eSrc (filter (proveLinearConc se . eSrc) edges)
   where
     -- | @proveLinearConc se (v,i)@ tries to prove that the @i@-th
     -- conclusion of node @v@ is a linear fact.
@@ -175,9 +173,8 @@ enforceEdgeUniqueness = do
 -- that are guaranteed not to result in case splits.
 solveUniqueActions :: Reduction ChangeIndicator
 solveUniqueActions = do
-    c1          <- substActionAtoms
     rules       <- nonSilentRules <$> askM pcRules
-    actionAtoms <- S.toList <$> getM sActionAtoms
+    actionAtoms <- gets unsolvedActionAtoms
 
     -- FIXME: We might cache the result of this static computation in the
     -- proof-context, e.g., in the 'ClassifiedRules'.
@@ -191,7 +188,7 @@ solveUniqueActions = do
           | isUnique fa = solveGoal (ActionG i fa) >> return Changed
           | otherwise   = return Unchanged
 
-    (mappend c1 . mconcat) <$> mapM trySolve actionAtoms
+    mconcat <$> mapM trySolve actionAtoms
 
 -- | Reduce all formulas as far as possible. See 'insertFormula' for the
 -- CR-rules exploited in this step. Note that this step is normally only
@@ -216,9 +213,13 @@ evalFormulaAtoms = do
     applyChangeList $ do
         fm <- S.toList formulas
         case simplifyGuarded valuation fm of
-          Just fm' -> return $ do modM sFormulas       $ S.delete fm
-                                  modM sSolvedFormulas $ S.insert fm
-                                  insertFormula fm'
+          Just fm' -> return $ do
+              case fm of
+                GDisj disj -> markGoalAsSolved "simplified" (DisjG disj)
+                _          -> return ()
+              modM sFormulas       $ S.delete fm
+              modM sSolvedFormulas $ S.insert fm
+              insertFormula fm'
           Nothing  -> []
 
 -- | A partial valuation for atoms. The return value of this function is
@@ -251,7 +252,7 @@ partialAtomValuation ctxt sys =
     -- constraint system 'sys'.
     eval ato = case ato of
           Action (ltermNodeId' -> i) fa
-            | (i, fa) `S.member` get sActionAtoms sys -> Just True
+            | ActionG i fa `M.member` get sGoals sys -> Just True
             | otherwise ->
                 case M.lookup i (get sNodes sys) of
                   Just ru

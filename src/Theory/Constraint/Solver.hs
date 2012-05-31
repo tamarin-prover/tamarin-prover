@@ -72,6 +72,9 @@ module Theory.Constraint.Solver (
   , openGoals
   , solveGoal
 
+  -- ** Heuristics
+  , wfProtoRanking
+
   -- ** Precomputed case distinctions
   -- | For better speed, we precompute case distinctions. This is especially
   -- important for getting rid of all chain constraints before actually
