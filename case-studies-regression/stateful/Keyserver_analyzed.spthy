@@ -1,0 +1,379 @@
+theory Keyserver begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true()
+
+// looping facts with unique instances: ClientKey/2
+
+text{* The keyserver example from
+       "2010 - Moedersheim - Abstraction by Set-Membership".
+*}
+
+rule (modulo E) SetupHonestKey:
+   [ Fr( ~sk ) ]
+  --[ HonestKey( ~sk ) ]->
+   [ Out( pk(~sk) ), ClientKey( $A, ~sk ), ServerDB( $A, ~sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) SetupDishonestKey:
+   [ In( sk ) ] --> [ ServerDB( $A, sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) RequestRenewKey:
+   [ ClientKey( $A, sk ), Fr( ~skNew ) ]
+  --[ HonestKey( ~skNew ) ]->
+   [ Out( sign(<'renew', $A, pk(~skNew)>, sk) ), ClientKey( $A, ~skNew ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) RenewKey:
+   [ In( sign(<'renew', A, pk(skNew)>, sk) ), ServerDB( A, sk ) ]
+  --[ Revoked( sk ) ]->
+   [ ServerDB( A, skNew ), Out( sk ) ]
+
+  // loop breaker: [1]
+  /* has exactly the trivial AC variant */
+
+lemma (modulo E) types [typing]:
+  all-traces
+  "All sk #i.1.
+    (Revoked( sk ) @ #i.1) ==>
+    ((Ex f.2 #j.3. (!KU( f.2, sk ) @ #j.3) & (#j.3 < #i.1)) |
+     (Ex #j.4. (HonestKey( sk ) @ #j.4) & (#j.4 < #i.1)))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"Ex sk #i.1.
+  (Revoked( sk ) @ #i.1)
+ &
+  (All f.2 #j.3. (!KU( f.2, sk ) @ #j.3) ==> All . (#j.3 < #i.1) ==> F) &
+  (All #j.4. (HonestKey( sk ) @ #j.4) ==> All . (#j.4 < #i.1) ==> F)"
+*/
+induction
+  case induction
+  simplify
+  solve( Disj(Last(#i)) |
+             (Ex f.1 #j.2.
+               (!KU( f.1, sk ) @ #j.2)
+              &
+               (All . (Last(#j.2)) ==> F) & (#j.2 < #i)) |
+             (Ex #j.1.
+               (HonestKey( sk ) @ #j.1)
+              &
+               (All . (Last(#j.1)) ==> F) & (#j.1 < #i)) )
+    case case_1
+    solve( !KU( f_, sign(<'renew', A, pk(skNew)>, sk) ) @ #vk )
+      case RenewKey
+      solve( Disj(Ex f.1 #j.2.
+                   (!KU( f.1, t ) @ #j.2)
+                  &
+                   (All . (Last(#j.2)) ==> F) & (#j.2 < #vr)) |
+                 (Ex #j.1.
+                   (HonestKey( t ) @ #j.1)
+                  &
+                   (All . (Last(#j.1)) ==> F) & (#j.1 < #vr)) )
+        case case_1
+        by contradiction // cyclic
+      next
+        case case_2
+        solve( HonestKey( t ) @ #j )
+          case RequestRenewKey
+          by solve( (#vl, 0) ~~> (#vk, 0) )
+        next
+          case SetupHonestKey
+          by solve( (#vl, 0) ~~> (#vk, 0) )
+        qed
+      qed
+    next
+      case RequestRenewKey
+      solve( (#i, 1)[ServerDB( $A, sk )] )
+        case RenewKey
+        solve( Disj(Ex f.2 #j.3.
+                     (!KU( f.2, sk.1 ) @ #j.3)
+                    &
+                     (All . (Last(#j.3)) ==> F) & (#j.3 < #vr.1)) |
+                   (Ex #j.2.
+                     (HonestKey( sk.1 ) @ #j.2)
+                    &
+                     (All . (Last(#j.2)) ==> F) & (#j.2 < #vr.1)) )
+          case case_1
+          solve( (#vr, 0)[ClientKey( $A, sk )] )
+            case RequestRenewKey
+            by contradiction // from formulas
+          next
+            case SetupHonestKey
+            by contradiction // from formulas
+          qed
+        next
+          case case_2
+          solve( HonestKey( sk.1 ) @ #j )
+            case RequestRenewKey
+            solve( !KU( f_, sign(<'renew', $A, pk(sk)>, ~skNew.1) ) @ #vk.1 )
+              case RenewKey
+              solve( Disj(Ex f.3 #j.4.
+                           (!KU( f.3, t ) @ #j.4)
+                          &
+                           (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
+                         (Ex #j.3.
+                           (HonestKey( t ) @ #j.3)
+                          &
+                           (All . (Last(#j.3)) ==> F) & (#j.3 < #vr.2)) )
+                case case_1
+                by contradiction // cyclic
+              next
+                case case_2
+                solve( HonestKey( t ) @ #j.1 )
+                  case RequestRenewKey
+                  by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+                next
+                  case SetupHonestKey
+                  by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+                qed
+              qed
+            next
+              case RequestRenewKey
+              by contradiction // from formulas
+            next
+              case csign
+              solve( !KU( f_.1, ~skNew.1 ) @ #vk.3 )
+                case RenewKey
+                solve( Disj(Ex f.3 #j.4.
+                             (!KU( f.3, t ) @ #j.4)
+                            &
+                             (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
+                           (Ex #j.3.
+                             (HonestKey( t ) @ #j.3)
+                            &
+                             (All . (Last(#j.3)) ==> F) & (#j.3 < #vr.2)) )
+                  case case_1
+                  by contradiction // cyclic
+                next
+                  case case_2
+                  solve( HonestKey( t ) @ #j.1 )
+                    case RequestRenewKey
+                    solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                      case ~skNew.2
+                      solve( !KU( f_.1, sign(<'renew', A.2, pk(skNew.2)>, ~skNew.1) ) @ #vk.8 )
+                        case RenewKey
+                        solve( Disj(Ex f.4 #j.5.
+                                     (!KU( f.4, t ) @ #j.5)
+                                    &
+                                     (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
+                                   (Ex #j.4.
+                                     (HonestKey( t ) @ #j.4)
+                                    &
+                                     (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.3)) )
+                          case case_1
+                          by contradiction // cyclic
+                        next
+                          case case_2
+                          solve( HonestKey( t ) @ #j.1 )
+                            case RequestRenewKey
+                            by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                          next
+                            case SetupHonestKey
+                            by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                          qed
+                        qed
+                      next
+                        case RequestRenewKey
+                        solve( (#vr, 0)[ClientKey( $A, sk )] )
+                          case RequestRenewKey
+                          by contradiction // from formulas
+                        next
+                          case SetupHonestKey
+                          by contradiction // from formulas
+                        qed
+                      next
+                        case csign
+                        by contradiction // cyclic
+                      qed
+                    qed
+                  next
+                    case SetupHonestKey
+                    by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case SetupHonestKey
+            solve( !KU( f_, sign(<'renew', $A, pk(sk)>, ~sk.1) ) @ #vk.1 )
+              case RenewKey
+              solve( Disj(Ex f.3 #j.4.
+                           (!KU( f.3, t ) @ #j.4)
+                          &
+                           (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
+                         (Ex #j.3.
+                           (HonestKey( t ) @ #j.3)
+                          &
+                           (All . (Last(#j.3)) ==> F) & (#j.3 < #vr.2)) )
+                case case_1
+                by contradiction // cyclic
+              next
+                case case_2
+                solve( HonestKey( t ) @ #j.1 )
+                  case RequestRenewKey
+                  by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+                next
+                  case SetupHonestKey
+                  by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+                qed
+              qed
+            next
+              case RequestRenewKey
+              by contradiction // from formulas
+            next
+              case csign
+              solve( !KU( f_.1, ~sk.1 ) @ #vk.3 )
+                case RenewKey
+                solve( Disj(Ex f.3 #j.4.
+                             (!KU( f.3, t ) @ #j.4)
+                            &
+                             (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
+                           (Ex #j.3.
+                             (HonestKey( t ) @ #j.3)
+                            &
+                             (All . (Last(#j.3)) ==> F) & (#j.3 < #vr.2)) )
+                  case case_1
+                  by contradiction // cyclic
+                next
+                  case case_2
+                  solve( HonestKey( t ) @ #j.1 )
+                    case RequestRenewKey
+                    by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                  next
+                    case SetupHonestKey
+                    solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                      case ~sk.2
+                      solve( !KU( f_.1, sign(<'renew', A.2, pk(skNew.1)>, ~sk.1) ) @ #vk.8 )
+                        case RenewKey
+                        solve( Disj(Ex f.4 #j.5.
+                                     (!KU( f.4, t ) @ #j.5)
+                                    &
+                                     (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
+                                   (Ex #j.4.
+                                     (HonestKey( t ) @ #j.4)
+                                    &
+                                     (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.3)) )
+                          case case_1
+                          by contradiction // cyclic
+                        next
+                          case case_2
+                          solve( HonestKey( t ) @ #j.1 )
+                            case RequestRenewKey
+                            by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                          next
+                            case SetupHonestKey
+                            by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                          qed
+                        qed
+                      next
+                        case RequestRenewKey
+                        solve( (#vr, 0)[ClientKey( $A, sk )] )
+                          case RequestRenewKey
+                          by contradiction // from formulas
+                        next
+                          case SetupHonestKey
+                          by contradiction // from formulas
+                        qed
+                      next
+                        case csign
+                        by contradiction // cyclic
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case SetupDishonestKey
+        by contradiction // from formulas
+      next
+        case SetupHonestKey
+        by contradiction // from formulas
+      qed
+    next
+      case csign
+      by contradiction // from formulas
+    qed
+  next
+    case case_2
+    by contradiction // from formulas
+  next
+    case case_3
+    by contradiction // from formulas
+  qed
+qed
+
+lemma (modulo E) In_Honest_Key_imp_Revoked:
+  all-traces
+  "All sk #i.1 #d.2.
+    ((HonestKey( sk ) @ #i.1) & (K( sk ) @ #d.2)) ==>
+    (Ex #r.3. Revoked( sk ) @ #r.3)"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"Ex sk #i.1 #d.2.
+  (HonestKey( sk ) @ #i.1) & (K( sk ) @ #d.2)
+ &
+  All #r.3. (Revoked( sk ) @ #r.3) ==> F"
+*/
+simplify
+solve( HonestKey( sk ) @ #i )
+  case RequestRenewKey
+  solve( !KU( f_, ~skNew ) @ #vk )
+    case RenewKey
+    by contradiction // from formulas
+  qed
+next
+  case SetupHonestKey
+  solve( !KU( f_, ~sk ) @ #vk )
+    case RenewKey
+    by contradiction // from formulas
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.6. OK.
+ checking installation: OK.
+
+
+analyzing: data/examples/stateful/Keyserver.spthy
+
+------------------------------------------------------------------------------
+analyzed: data/examples/stateful/Keyserver.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.34438s
+  types (all-traces): verified (66 steps)
+  In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: data/examples/stateful/Keyserver.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.34438s
+  types (all-traces): verified (66 steps)
+  In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
+
+==============================================================================
+*/

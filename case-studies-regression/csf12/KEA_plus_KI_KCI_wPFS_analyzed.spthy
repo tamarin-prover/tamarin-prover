@@ -169,27 +169,27 @@ guarded formula characterizing all counter-examples:
       T))"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, hkI.6 )] )
+solve( (#i1, 0)[Init_1( ~ekI, $I, $R, ~lkI, hkI )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.8, 'g'^~x.8 )] )
+  solve( (#i1, 2)[!Pk( $R, 'g'^~x )] )
     case generate_ltk
-    solve( !KU( f_.12, h(<z.8, 'g'^(~ekI.8*~x.8), $I.8, $R.8>) ) @ #vk.13 )
+    solve( !KU( f_, h(<z, 'g'^(~ekI*~x), $I, $R>) ) @ #vk.1 )
       case ch
-      solve( !KU( f_.60, 'g'^(~ekI.8*~x.8) ) @ #vk.59 )
+      solve( !KU( f_.4, 'g'^(~ekI*~x) ) @ #vk.5 )
         case Init_1
-        solve( !KU( f_.85, ~x.8 ) @ #vk.88 )
+        solve( !KU( f_.2, ~x ) @ #vk.9 )
           case Ltk_reveal
-          solve( (#i4.118, 2)[!Ltk( $R.8, ~lkR.121 )] )
+          solve( (#i4, 2)[!Ltk( $R, ~lkR )] )
             case generate_ltk
-            solve( (#i4.118, 3)[!Pk( $I.8, 'g'^~x.121 )] )
+            solve( (#i4, 3)[!Pk( $I, 'g'^~x.1 )] )
               case generate_ltk
-              solve( !KU( f_.56, 'g'^(~lkI.140*~ekR.141) ) @ #vk.55 )
+              solve( !KU( f_.4, 'g'^(~ekR*~lkI) ) @ #vk.7 )
                 case Resp_1
-                solve( !KU( f_.172, ~lkI.140 ) @ #vk.175 )
+                solve( !KU( f_.3, ~lkI ) @ #vk.11 )
                   case Ltk_reveal
-                  solve( !KU( f_.10, 'g'^~ekR.141 ) @ #vk.11 )
+                  solve( !KU( f_, 'g'^~ekR ) @ #vk.7 )
                     case Resp_1
-                    solve( !KU( f_.123, 'g'^~ekI.136 ) @ #vk.124 )
+                    solve( !KU( f_.1, 'g'^~ekI ) @ #vk.6 )
                       case Init_1
                       SOLVED // trace found
                     qed
@@ -262,23 +262,23 @@ guarded formula characterizing all counter-examples:
       T))"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
+solve( (#i1, 2)[!Ltk( $R, ~lkR )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.8, 'g'^~x.8 )] )
+  solve( (#i1, 3)[!Pk( $I, 'g'^~x )] )
     case generate_ltk
-    solve( !KU( f_.13, h(<'g'^(~ekR.8*~x.8), z.8, $I.8, $R.8>) ) @ #vk.14 )
+    solve( !KU( f_, h(<'g'^(~ekR*~x), z, $I, $R>) ) @ #vk.1 )
       case ch
-      solve( !KU( f_.51, 'g'^(~ekR.8*~x.8) ) @ #vk.50 )
+      solve( !KU( f_.2, 'g'^(~ekR*~x) ) @ #vk.3 )
         case Resp_1
-        solve( !KU( f_.86, ~x.8 ) @ #vk.89 )
+        solve( !KU( f_.2, ~x ) @ #vk.9 )
           case Ltk_reveal
-          solve( (#i4.113, 1)[!Ltk( $I.8, ~lkI.115 )] )
+          solve( (#i4, 1)[!Ltk( $I, ~lkI )] )
             case generate_ltk
-            solve( !KU( f_.55, 'g'^(~lkR.125*~ekI.126) ) @ #vk.54 )
+            solve( !KU( f_.3, 'g'^(~ekI*~lkR) ) @ #vk.6 )
               case Init_1
-              solve( !KU( f_.145, ~lkR.125 ) @ #vk.148 )
+              solve( !KU( f_.2, ~lkR ) @ #vk.10 )
                 case Ltk_reveal
-                solve( !KU( f_.10, 'g'^~ekI.126 ) @ #vk.11 )
+                solve( !KU( f_, 'g'^~ekI ) @ #vk.6 )
                   case Init_1
                   SOLVED // trace found
                 qed
@@ -306,7 +306,7 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.987445s
+  processing time: 0.957073s
   keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -318,7 +318,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.987445s
+  processing time: 0.957073s
   keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

@@ -1,0 +1,260 @@
+theory TESLA_Scheme1 begin
+
+// Function signature and definition of the equational theory E
+
+functions: MAC/2, f/1, fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+// looping facts with unique instances: Sender/2
+
+rule (modulo E) Setup:
+   [ Fr( ~k1 ) ] --> [ Sender1( ~k1 ), Receiver1( f(~k1) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Send1:
+   [ Sender1( ~k1 ), Fr( ~m1 ), Fr( ~k2 ) ]
+  --[ Sent( <'1', ~m1, f(~k2)> ) ]->
+   [
+   Sender( ~k1, ~k2 ),
+   Out( <<'1', ~m1, f(~k2)>, MAC(<'1', ~m1, f(~k2)>, ~k1)> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Recv1:
+   [ Receiver1( commit_k1 ), In( <<'1', m1, commit_k2>, mac1> ) ]
+  --[ AssumeCommitNotExpired( commit_k1 ) ]->
+   [ Receiver( <'1', m1, commit_k2>, mac1, commit_k1, commit_k2 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) SendN:
+   [ Sender( ~kOld, ~k ), Fr( ~m ), Fr( ~kNew ) ]
+  --[ Sent( <'N', ~m, f(~kNew), ~kOld> ), CommitExpired( f(~kOld) ) ]->
+   [
+   Sender( ~k, ~kNew ),
+   Out( <<'N', ~m, f(~kNew), ~kOld>, MAC(<'N', ~m, f(~kNew), ~kOld>, ~k)> )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Recv:
+   [
+   In( <<'N', m, commit_kNew, kOld>, mac> ),
+   Receiver( dataOld, MAC(dataOld, kOld), f(kOld), commit_k )
+   ]
+  --[ ClaimSent( dataOld ), AssumeCommitNotExpired( commit_k ) ]->
+   [ Receiver( <'N', m, commit_kNew, kOld>, mac, commit_k, commit_kNew ) ]
+
+  // loop breaker: [1]
+  /* has exactly the trivial AC variant */
+
+lemma (modulo E) claim_reachable [use_induction]:
+  exists-trace
+  "(All commit #i.1 #j.2.
+     ((AssumeCommitNotExpired( commit ) @ #i.1) &
+      (CommitExpired( commit ) @ #j.2)) ==>
+     (#i.1 < #j.2)) ==>
+   (Ex m.3 #i.4. ClaimSent( m.3 ) @ #i.4)"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all satisfying traces:
+"(Ex commit #i.1 #j.2.
+   (AssumeCommitNotExpired( commit ) @ #i.1) &
+   (CommitExpired( commit ) @ #j.2)
+  &
+   All . (#i.1 < #j.2) ==> F) |
+ (Ex m.3 #i.4. (ClaimSent( m.3 ) @ #i.4) & T)"
+*/
+induction
+  case induction
+  simplify
+  solve( Disj(Ex commit #i.1 #j.2.
+               (AssumeCommitNotExpired( commit ) @ #i.1) &
+               (CommitExpired( commit ) @ #j.2)
+              &
+               All . (#i.1 < #j.2) ==> F) |
+             (Ex m #i.1. (ClaimSent( m ) @ #i.1) & T) )
+    case case_1
+    solve( Disj(#i = #j) | (#j < #i) )
+      case case_2
+      solve( AssumeCommitNotExpired( f(~kOld) ) @ #i )
+        case Recv1
+        solve( (#i, 0)[Receiver1( f(~kOld) )] )
+          case Setup
+          solve( (#j, 0)[Sender( ~kOld, ~k )] )
+            case Send1
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma (modulo E) authentic2 [use_induction]:
+  all-traces
+  "(All commit #i.1 #j.2.
+     ((AssumeCommitNotExpired( commit ) @ #i.1) &
+      (CommitExpired( commit ) @ #j.2)) ==>
+     (#i.1 < #j.2)) ==>
+   (All m.3 #i.4.
+     (ClaimSent( m.3 ) @ #i.4) ==>
+     (Ex #j.5. (Sent( m.3 ) @ #j.5) & (#j.5 < #i.4)))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"(All commit #i.1 #j.2.
+   (AssumeCommitNotExpired( commit ) @ #i.1) &
+   (CommitExpired( commit ) @ #j.2)
+  ==>
+   #i.1 < #j.2) &
+ (Ex m.3 #i.4.
+   (ClaimSent( m.3 ) @ #i.4)
+  &
+   All #j.5. (Sent( m.3 ) @ #j.5) ==> All . (#j.5 < #i.4) ==> F)"
+*/
+induction
+  case induction
+  simplify
+  solve( Disj(Ex commit #i.1 #j.2.
+               (AssumeCommitNotExpired( commit ) @ #i.1) &
+               (CommitExpired( commit ) @ #j.2)
+              &
+               (All . (Last(#j.2)) ==> F) &
+               (All . (Last(#i.1)) ==> F) &
+               ((#i.1 = #j.2) | (#j.2 < #i.1))) |
+             (All m #i.1.
+               (ClaimSent( m ) @ #i.1)
+              ==>
+               (Last(#i.1)) |
+               (Ex #j.2.
+                 (Sent( m ) @ #j.2)
+                &
+                 (All . (Last(#j.2)) ==> F) & (#j.2 < #i.1))) )
+    case case_1
+    by contradiction // from formulas
+  next
+    case case_2
+    solve( Disj(Last(#i)) |
+               (Ex #j.2.
+                 (Sent( m.1 ) @ #j.2)
+                &
+                 (All . (Last(#j.2)) ==> F) & (#j.2 < #i)) )
+      case case_1
+      solve( (#i, 1)[Receiver( m.1, MAC(m.1, kOld), f(kOld), commit_k )] )
+        case Recv
+        solve( Sent( dataOld ) @ #j )
+          case Send1
+          solve( (#j, 0)[Sender1( ~k1 )] )
+            case Setup
+            solve( (#vr, 1)[Receiver( <'1', ~m1, f(~k2)>,
+                                      MAC(<'1', ~m1, f(~k2)>, kOld.1), f(kOld.1), f(kOld)
+                            )] )
+              case Recv1
+              solve( !KU( f_.9, ~k2 ) @ #vk.7 )
+                case SendN
+                solve( !KU( f_.16, ~k1 ) @ #vk.16 )
+                  case SendN
+                  solve( !KU( f_.16, MAC(<'N', m.1, commit_k, ~k1>, ~k2) ) @ #vk.17 )
+                    case SendN
+                    by contradiction // from formulas
+                  next
+                    case cMAC
+                    by contradiction // cyclic
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case SendN
+          solve( (#vr, 1)[Receiver( <'N', ~m.2, f(~kNew), ~kOld.2>,
+                                    MAC(<'N', ~m.2, f(~kNew), ~kOld.2>, kOld.1), f(kOld.1), f(kOld)
+                          )] )
+            case Recv
+            solve( Sent( dataOld ) @ #j.1 )
+              case Send1
+              solve( (#j.1, 0)[Sender1( ~k1 )] )
+                case Setup
+                solve( !KU( f_.9, ~kNew ) @ #vk.7 )
+                  case SendN
+                  solve( !KU( f_.17, MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.17 )
+                    case SendN
+                    by contradiction // from formulas
+                  next
+                    case cMAC
+                    by contradiction // cyclic
+                  qed
+                qed
+              qed
+            next
+              case SendN
+              solve( !KU( f_.9, ~kNew ) @ #vk.7 )
+                case SendN
+                solve( !KU( f_.17, MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.17 )
+                  case SendN
+                  by contradiction // from formulas
+                next
+                  case cMAC
+                  by contradiction // cyclic
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case Recv1
+        solve( !KU( f_.8, ~k1 ) @ #vk.7 )
+          case SendN
+          solve( !KU( f_.14, MAC(<'1', m1, commit_k>, ~k1) ) @ #vk.15 )
+            case Send1
+            by contradiction // from formulas
+          next
+            case cMAC
+            by contradiction // cyclic
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction // from formulas
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.6. OK.
+ checking installation: OK.
+
+
+analyzing: data/examples/stateful/TESLA_Scheme1.spthy
+
+------------------------------------------------------------------------------
+analyzed: data/examples/stateful/TESLA_Scheme1.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.35982s
+  claim_reachable (exists-trace): verified (8 steps)
+  authentic2 (all-traces): verified (30 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: data/examples/stateful/TESLA_Scheme1.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.35982s
+  claim_reachable (exists-trace): verified (8 steps)
+  authentic2 (all-traces): verified (30 steps)
+
+==============================================================================
+*/

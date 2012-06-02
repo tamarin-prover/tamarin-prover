@@ -30,11 +30,11 @@ rule Receive:
   --[ Secret(k) ]->
     [ Receiver(k) ]
 
-lemma Secret_reachable:
+lemma Secret_reachable [use_induction]:
   exists-trace
   "Ex k #i. Secret(k) @ i"
 
-lemma secrecy:
+lemma secrecy [use_induction]:
   "All k f #i #j. Secret(k) @ i & KU(f,k) @ j ==> F"
 
 end

@@ -135,21 +135,21 @@ guarded formula characterizing all counter-examples:
   (All #i3.13. (LtkRev( R.4 ) @ #i3.13) ==> #i1 < #i3.13)"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~lkI.8, hkI.6 )] )
+solve( (#i1, 0)[Init_1( ~ekI, $I, $R, ~lkI, hkI )] )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R.8, 'g'^~x.8 )] )
+  solve( (#i1, 2)[!Pk( $R, 'g'^~x )] )
     case generate_ltk
-    solve( !KU( f_.12, h(<z.8, 'g'^(~lkI.8*~x.8)>) ) @ #vk.13 )
+    solve( !KU( f_, h(<z, 'g'^(~lkI*~x)>) ) @ #vk.1 )
       case ch
-      solve( !KU( f_.58, 'g'^(~lkI.8*~x.8) ) @ #vk.57 )
+      solve( !KU( f_.3, 'g'^(~lkI*~x) ) @ #vk.4 )
         case cexp
-        solve( !KU( f_.88, ~lkI.8 ) @ #vk.87 )
+        solve( !KU( f_.4, ~lkI ) @ #vk.7 )
           case Ltk_reveal
-          solve( !KU( f_.90, ~x.8 ) @ #vk.89 )
+          solve( !KU( f_.4, ~x ) @ #vk.8 )
             case Ltk_reveal
-            solve( splitEqs(1) )
+            solve( splitEqs(0) )
               case split_case_1
-              solve( !KU( f_.56, hkR.113^~ekI.114 ) @ #vk.55 )
+              solve( !KU( f_.3, hkR^~ekI ) @ #vk.7 )
                 case Init_1
                 SOLVED // trace found
               qed
@@ -183,21 +183,21 @@ guarded formula characterizing all counter-examples:
   (All #i3.13. (LtkRev( R.4 ) @ #i3.13) ==> #i1 < #i3.13)"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R.8, ~lkR.8 )] )
+solve( (#i1, 2)[!Ltk( $R, ~lkR )] )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I.8, 'g'^~x.8 )] )
+  solve( (#i1, 3)[!Pk( $I, 'g'^~x )] )
     case generate_ltk
-    solve( !KU( f_.13, h(<z.8, 'g'^(~lkR.8*~x.8)>) ) @ #vk.14 )
+    solve( !KU( f_, h(<z, 'g'^(~lkR*~x)>) ) @ #vk.1 )
       case ch
-      solve( !KU( f_.53, 'g'^(~lkR.8*~x.8) ) @ #vk.52 )
+      solve( !KU( f_.3, 'g'^(~lkR*~x) ) @ #vk.4 )
         case cexp
-        solve( !KU( f_.83, ~lkR.8 ) @ #vk.82 )
+        solve( !KU( f_.4, ~lkR ) @ #vk.7 )
           case Ltk_reveal
-          solve( !KU( f_.85, ~x.8 ) @ #vk.84 )
+          solve( !KU( f_.4, ~x ) @ #vk.8 )
             case Ltk_reveal
-            solve( splitEqs(1) )
+            solve( splitEqs(0) )
               case split_case_1
-              solve( !KU( f_.51, hkI.108^~ekR.109 ) @ #vk.50 )
+              solve( !KU( f_.3, hkI^~ekR ) @ #vk.7 )
                 case Resp_1
                 SOLVED // trace found
               qed
@@ -224,7 +224,7 @@ analyzing: data/examples/csf12/UM_PFS.spthy
 analyzed: data/examples/csf12/UM_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.799s
+  processing time: 0.980486s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
@@ -236,7 +236,7 @@ summary of summaries:
 analyzed: data/examples/csf12/UM_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.799s
+  processing time: 0.980486s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 

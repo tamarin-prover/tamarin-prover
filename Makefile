@@ -58,7 +58,7 @@ profiling-install:
 # requires the cabal-dev tool. Install it using the 'cabal-dev'
 dev-install:
 	cabal-dev configure && cabal-dev build
-	
+
 dev-run:
 	./dist/build/tamarin-prover/tamarin-prover interactive examples/TPM
 
@@ -70,10 +70,18 @@ cabal-dev:
 	# force install with 'native' flag of blaze-textual
 	cabal-dev install blaze-textual -fnative --reinstall
 
+
+###############################################################################
+## Case Studies
+###############################################################################
+
+## CSF'12
+#########
+
 # These case studies are located in data/examples/ or examples/
 KEA=KEA_plus_KI_KCI.spthy KEA_plus_KI_KCI_wPFS.spthy
 
-NAXOS=NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy 
+NAXOS=NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy
 
 UM=UM_wPFS.spthy UM_PFS.spthy
 
@@ -88,17 +96,19 @@ JKL3=JKL_TS3_2004_KI_wPFS.spthy JKL_TS3_2008_KI_wPFS.spthy
 TMPRES=case-studies/temp-analysis.spthy
 TMPOUT=case-studies/temp-output.spthy
 
-CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(STS) $(SDH)
-CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(CASE_STUDIES)))
+CSF12_CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(STS) $(SDH)
+CSF12_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/csf12/,$(CSF12_CASE_STUDIES)))
+
+CSF12_CS_HEURISTIC=s
 
 # case studies
-case-studies:	$(CS_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/*.spthy
+csf12-case-studies:	$(CSF12_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/csf12/*.spthy
 
 # individual case studies
-case-studies/%_analyzed.spthy:	data/examples/csf12/%.spthy
-	mkdir -p case-studies
-	tamarin-prover $< --prove --stop-on-trace=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
+case-studies/csf12/%_analyzed.spthy:	data/examples/csf12/%.spthy
+	mkdir -p case-studies/csf12
+	tamarin-prover $< --prove --heuristic=$(CSF12_CS_HEURISTIC) --stop-on-trace=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	echo "\n/* Output" >>$(TMPRES)
@@ -106,6 +116,40 @@ case-studies/%_analyzed.spthy:	data/examples/csf12/%.spthy
 	echo "*/" >>$(TMPRES)
 	mv $(TMPRES) $@
 	\rm -f $(TMPOUT)
+
+## Inductive Strengthening
+##########################
+
+TPM=CSF11_RunningExample.spthy
+# Envelope.spthy
+TESLA=TESLA_Scheme1.spthy Mini_TESLA.spthy
+# TESLA_Scheme2.spthy
+STATVERIF=StatVerif_Example1.spthy
+# GM_Contract.spthy
+EXCLUSIVITY=CertRevoke.spthy RFID_Simple.spthy
+AIF=Keyserver.spthy
+
+IND_CASE_STUDIES=$(AIF) $(TPM) $(TESLA) $(STATVERIF) $(EXCLUSIVITY)
+IND_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/stateful/,$(IND_CASE_STUDIES)))
+
+IND_CS_HEURISTIC=s
+
+# case studies
+ind-case-studies:	$(IND_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/stateful/*.spthy
+
+# individual case studies
+case-studies/stateful/%_analyzed.spthy:	data/examples/stateful/%.spthy
+	mkdir -p case-studies/stateful/
+	tamarin-prover $< --prove --heuristic=$(IND_CS_HEURISTIC) --stop-on-trace=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	echo "\n/* Output" >>$(TMPRES)
+	cat $(TMPOUT) >>$(TMPRES)
+	echo "*/" >>$(TMPRES)
+	mv $(TMPRES) $@
+	\rm -f $(TMPOUT)
+
 
 ###############################################################################
 ## Developer specific targets (some out of date)

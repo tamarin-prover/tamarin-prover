@@ -138,27 +138,27 @@ guarded formula characterizing all counter-examples:
   (All #r.6. (LtkReveal( R.1 ) @ #r.6) ==> All . (#r.6 < #i.3) ==> F)"
 */
 simplify
-solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
+solve( SessionKey( I, R, sessKey ) @ #i )
   case Init_2
-  solve( (#i.3, 0)[Init_1( $I.7, $R.7, ~ekI.7 )] )
+  solve( (#i, 0)[Init_1( $I, $R, ~ekI )] )
     case Init_1
-    solve( (#i.3, 1)[!Pk( $R.7, pk(ltkR.7) )] )
+    solve( (#i, 1)[!Pk( $R, pk(ltkR) )] )
       case Register_pk
-      solve( !KU( f_.22, sign(<'2', $R.7, $I.7, Y.7>, ~ltk.37) ) @ #vk.21 )
+      solve( !KU( f_.7, sign(<'2', $R, $I, Y>, ~ltk) ) @ #vk.7 )
         case Resp
-        solve( !KU( f_.5, 'g'^(~ekI.112*~ekR.113) ) @ #vk.6 )
+        solve( !KU( f_, 'g'^(~ekI*~ekR) ) @ #vk.1 )
           case Init_1
-          by solve( !KU( f_.144, ~ekR.113 ) @ #vk.147 )
+          by solve( !KU( f_.2, ~ekR ) @ #vk.15 )
         next
           case Resp
-          by solve( !KU( f_.162, ~ekI.112 ) @ #vk.165 )
+          by solve( !KU( f_.2, ~ekI ) @ #vk.20 )
         next
           case cexp
-          by solve( !KU( f_.167, ~ekI.112 ) @ #vk.166 )
+          by solve( !KU( f_.14, ~ekI ) @ #vk.17 )
         qed
       next
         case csign
-        solve( !KU( f_.45, ~ltk.37 ) @ #vk.47 )
+        solve( !KU( f_.3, ~ltk ) @ #vk.10 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
@@ -167,25 +167,25 @@ solve( SessionKey( I, R.1, sessKey.2 ) @ #i.3 )
   qed
 next
   case Resp
-  solve( (#i.3, 0)[!Pk( $I.7, pk(ltkI.7) )] )
+  solve( (#i, 0)[!Pk( $I, pk(ltkI) )] )
     case Register_pk
-    solve( (#i.3, 1)[!Ltk( $R.7, ltkR.7 )] )
+    solve( (#i, 1)[!Ltk( $R, ltkR )] )
       case Register_pk
-      solve( !KU( f_.22, sign(<'1', $I.7, $R.7, X.7>, ~ltk.28) ) @ #vk.21 )
+      solve( !KU( f_.7, sign(<'1', $I, $R, X>, ~ltk) ) @ #vk.7 )
         case Init_1
-        solve( !KU( f_.5, 'g'^(~ekR.85*~ekI.86) ) @ #vk.6 )
+        solve( !KU( f_, 'g'^(~ekI*~ekR) ) @ #vk.1 )
           case Init_1
-          by solve( !KU( f_.117, ~ekR.85 ) @ #vk.120 )
+          by solve( !KU( f_.1, ~ekR ) @ #vk.8 )
         next
           case Resp
-          by solve( !KU( f_.135, ~ekI.86 ) @ #vk.138 )
+          by solve( !KU( f_.1, ~ekI ) @ #vk.13 )
         next
           case cexp
-          by solve( !KU( f_.140, ~ekR.85 ) @ #vk.139 )
+          by solve( !KU( f_.7, ~ekI ) @ #vk.10 )
         qed
       next
         case csign
-        solve( !KU( f_.42, ~ltk.28 ) @ #vk.44 )
+        solve( !KU( f_.3, ~ltk ) @ #vk.10 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
@@ -209,7 +209,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.938785s
+  processing time: 0.685174s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -220,7 +220,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.938785s
+  processing time: 0.685174s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

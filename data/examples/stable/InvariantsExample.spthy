@@ -55,7 +55,7 @@ rule WrapKey:
  *
  * Tamarin can prove this property automatically.
  */
-lemma NewKey_invariant [reuse, invariant]:
+lemma NewKey_invariant [reuse, use_induction]:
   "not(Ex #i #j h k f. NewKey(h, k) @ i & KU(f,k) @ j) "
 
 /* This property talks only about standard traces that do not refer to the

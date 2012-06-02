@@ -186,27 +186,23 @@ guarded formula characterizing all counter-examples:
      T)"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI.8, $I.8, $R.8, ~ekI.8, hkI.6 )] )
+solve( (#i1, 0)[Init_1( ~ekI, $I, $R, ~ekI, hkI )] )
   case Init_1
-  solve( (#i1, 1)[!Pk( $R.8, pk(ltkR.8) )] )
+  solve( (#i1, 1)[!Pk( $R, pk(ltkR) )] )
     case Register_pk
-    solve( !KU( f_.23, sign(<'2', $R.8, $I.8, hkR.7>, ~ltk.42) ) @ #vk.22 )
+    solve( !KU( f_.7, sign(<'2', $R, $I, hkR>, ~ltk) ) @ #vk.6 )
       case Resp
-      solve( !KU( f_.24, 'g'^(~ekI.117*~ekR.118) ) @ #vk.25 )
+      solve( !KU( f_, 'g'^(~ekI*~ekR) ) @ #vk.7 )
         case Init_1
-        solve( !KU( f_.149, ~ekR.118 ) @ #vk.152 )
+        solve( !KU( f_.2, ~ekR ) @ #vk.15 )
           case Ephk_reveal
-          solve( !KU( f_.71, sign(<'1', $I.8, $R.8, X.56>, ~ltk.74) ) @ #vk.70 )
+          solve( !KU( f_.12, sign(<'1', $I, $R, X>, ~ltk.2) ) @ #vk.16 )
             case Init_1
-            solve( !KU( f_.21, 'g'^~ekR.281 ) @ #vk.20 )
+            solve( !KU( f_.6, 'g'^~ekR ) @ #vk.9 )
               case Resp
-              solve( !KU( f_.69, 'g'^~ekI.282 ) @ #vk.68 )
+              solve( !KU( f_.10, 'g'^~ekI.1 ) @ #vk.17 )
                 case Init_1
-                solve( !KU( 'exp', sign(<'1', $I.8, $R.8, 'g'^~ekI.282>, ~ltk.74)
-                       ) @ #vk.70 )
-                  case Init_1
-                  SOLVED // trace found
-                qed
+                SOLVED // trace found
               qed
             qed
           qed
@@ -267,23 +263,19 @@ guarded formula characterizing all counter-examples:
      T)"
 */
 simplify
-solve( (#i1, 0)[!Pk( $I.8, pk(ltkI.8) )] )
+solve( (#i1, 0)[!Pk( $I, pk(ltkI) )] )
   case Register_pk
-  solve( (#i1, 1)[!Ltk( $R.8, ltkR.8 )] )
+  solve( (#i1, 1)[!Ltk( $R, ltkR )] )
     case Register_pk
-    solve( !KU( f_.23, sign(<'1', $I.8, $R.8, hkI.6>, ~ltk.31) ) @ #vk.22 )
+    solve( !KU( f_.7, sign(<'1', $I, $R, hkI>, ~ltk) ) @ #vk.6 )
       case Init_1
-      solve( !KU( f_.25, 'g'^(~ekR.88*~ekI.89) ) @ #vk.26 )
+      solve( !KU( f_, 'g'^(~ekI*~ekR) ) @ #vk.7 )
         case Init_1
-        solve( !KU( f_.120, ~ekR.88 ) @ #vk.123 )
+        solve( !KU( f_.1, ~ekR ) @ #vk.8 )
           case Ephk_reveal
-          solve( !KU( f_.21, 'g'^~ekI.89 ) @ #vk.20 )
+          solve( !KU( f_.5, 'g'^~ekI ) @ #vk.9 )
             case Init_1
-            solve( !KU( 'exp', sign(<'1', $I.8, $R.8, 'g'^~ekI.89>, ~ltk.31)
-                   ) @ #vk.22 )
-              case Init_1
-              SOLVED // trace found
-            qed
+            SOLVED // trace found
           qed
         qed
       qed
@@ -306,9 +298,9 @@ analyzing: data/examples/csf12/SignedDH_eCK.spthy
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.696605s
-  eCK_initiator_key (all-traces): falsified - found trace (11 steps)
-  eCK_responder_key (all-traces): falsified - found trace (9 steps)
+  processing time: 11.383295s
+  eCK_initiator_key (all-traces): falsified - found trace (10 steps)
+  eCK_responder_key (all-traces): falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
 
@@ -318,9 +310,9 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.696605s
-  eCK_initiator_key (all-traces): falsified - found trace (11 steps)
-  eCK_responder_key (all-traces): falsified - found trace (9 steps)
+  processing time: 11.383295s
+  eCK_initiator_key (all-traces): falsified - found trace (10 steps)
+  eCK_responder_key (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================
 */

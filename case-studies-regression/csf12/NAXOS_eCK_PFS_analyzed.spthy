@@ -326,38 +326,36 @@ guarded formula characterizing all counter-examples:
       F)))"
 */
 simplify
-solve( Disj(Ex MatchingSession.3 #i3.4 #i4.5 ms.6.
-             (Sid( MatchingSession.3, ms.6 ) @ #i3.4) &
-             (Match( Test.2, ms.6 ) @ #i4.5)
+solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
+             (Sid( MatchingSession.1, ms.4 ) @ #i3.2) & (Match( Test, ms.4 ) @ #i4.3)
             &
              T) |
-           ((All #i5.5. (LtkRev( B.4 ) @ #i5.5) ==> All . (#i5.5 < #i1) ==> F) &
-            (All #i5.6 #i6.7.
-              (LtkRev( A.3 ) @ #i5.6) & (EphkRev( Test.2 ) @ #i6.7)
+           ((All #i5.1. (LtkRev( B ) @ #i5.1) ==> All . (#i5.1 < #i1) ==> F) &
+            (All #i5.2 #i6.3.
+              (LtkRev( A ) @ #i5.2) & (EphkRev( Test ) @ #i6.3)
              ==>
               F)) )
   case case_2
-  solve( Accept( Test.2, A.3, B.4, k.5 ) @ #i1 )
+  solve( Accept( Test, A, B, k ) @ #i1 )
     case Init_2
-    solve( (#i1, 0)[Init_1( ~eskI.8, $I.8, $R.8, ~lkI.8, hkI.8 )] )
+    solve( (#i1, 0)[Init_1( ~eskI, $I, $R, ~lkI, hkI )] )
       case Init_1
-      solve( (#i1, 1)[!Pk( $R.8, 'g'^~x.8 )] )
+      solve( (#i1, 1)[!Pk( $R, 'g'^~x )] )
         case generate_ltk
-        solve( !KU( f_.6,
-                    h2(<z.8, 'g'^(~x.8*h1(<~eskI.8, ~lkI.8>)), z.9, $I.8, $R.8>)
-               ) @ #vk.7 )
+        solve( !KU( f_, h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>)
+               ) @ #vk )
           case ch2
-          solve( !KU( f_.60, 'g'^(~x.8*h1(<~eskI.8, ~lkI.8>)) ) @ #vk.59 )
+          solve( !KU( f_.4, 'g'^(~x*h1(<~eskI, ~lkI>)) ) @ #vk.5 )
             case Init_1
-            solve( !KU( f_.89, ~x.8 ) @ #vk.92 )
+            solve( !KU( f_.2, ~x ) @ #vk.11 )
               case Ltk_reveal
-              solve( splitEqs(1) )
+              solve( splitEqs(0) )
                 case split_case_01
-                solve( !KU( f_.56, Y.116^~lkI.115 ) @ #vk.55 )
+                solve( !KU( f_.3, Y^~lkI ) @ #vk.6 )
                   case cexp
-                  solve( !KU( f_.122, ~lkI.115 ) @ #vk.124 )
+                  solve( !KU( f_.1, ~lkI ) @ #vk.12 )
                     case Ltk_reveal
-                    solve( !KU( f_.64, Y.116^h1(<~eskI.114, ~lkI.115>) ) @ #vk.63 )
+                    solve( !KU( f_.3, Y^h1(<~eskI, ~lkI>) ) @ #vk.9 )
                       case Init_1
                       SOLVED // trace found
                     qed
@@ -387,7 +385,7 @@ analyzing: data/examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.914561s
+  processing time: 4.116642s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -398,7 +396,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.914561s
+  processing time: 4.116642s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================

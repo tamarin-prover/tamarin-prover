@@ -1,0 +1,212 @@
+theory Create_Use_Destroy begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+// looping facts with unique instances: Object/1
+
+text{*
+  Author: Simon Meier <simon.meier@inf.ethz.ch>
+  Date:   2011 12 01
+
+  One model of the key mechnaism for certificate revocation.
+  For every certificate, we create a single fact denoting that
+  it has not yet been revoked. In every use of the certificate,
+  we check that this fact still exists.
+
+*}
+
+rule (modulo E) Create:
+   [ Fr( x ) ] --[ Create( x ) ]-> [ Object( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Use:
+   [ Object( x ) ] --[ Use( x ) ]-> [ Object( x ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Destroy:
+   [ Object( x ) ] --[ Destroy( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma (modulo E) Use_charn [reuse, use_induction]:
+  all-traces
+  "All x #j.1.
+    (Use( x ) @ #j.1) ==> (Ex #i.2. (Create( x ) @ #i.2) & (#i.2 < #j.1))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"Ex x #j.1.
+  (Use( x ) @ #j.1)
+ &
+  All #i.2. (Create( x ) @ #i.2) ==> All . (#i.2 < #j.1) ==> F"
+*/
+induction
+  case induction
+  simplify
+  solve( Disj(Last(#j)) |
+             (Ex #i.1.
+               (Create( x ) @ #i.1)
+              &
+               (All . (Last(#i.1)) ==> F) & (#i.1 < #j)) )
+    case case_1
+    solve( (#j, 0)[Object( x )] )
+      case Create
+      by contradiction // from formulas
+    next
+      case Use
+      by contradiction // from formulas
+    qed
+  next
+    case case_2
+    by contradiction // from formulas
+  qed
+qed
+
+lemma (modulo E) Destroy_charn [reuse, use_induction]:
+  all-traces
+  "All x #j.1.
+    (Destroy( x ) @ #j.1) ==>
+    (((Ex #i.2. (Create( x ) @ #i.2) & (#i.2 < #j.1)) &
+      (All #i.3. (Use( x ) @ #i.3) ==> (#i.3 < #j.1))) &
+     (All #i.4. (Destroy( x ) @ #i.4) ==> (#i.4 = #j.1)))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"Ex x #j.1.
+  (Destroy( x ) @ #j.1)
+ &
+  (All #i.2. (Create( x ) @ #i.2) ==> All . (#i.2 < #j.1) ==> F) |
+  (Ex #i.3. (Use( x ) @ #i.3) & All . (#i.3 < #j.1) ==> F) |
+  (Ex #i.4. (Destroy( x ) @ #i.4) & All . (#i.4 = #j.1) ==> F)"
+*/
+induction
+  case induction
+  simplify
+  solve( Disj(All #i.1. (Create( x ) @ #i.1) ==> All . (#i.1 < #j) ==> F) |
+             (Ex #i.1. (Use( x ) @ #i.1) & All . (#i.1 < #j) ==> F) |
+             (Ex #i.1. (Destroy( x ) @ #i.1) & All . (#i.1 = #j) ==> F) )
+    case case_1
+    solve( Disj(Last(#j)) |
+               ((Ex #i.1.
+                  (Create( x ) @ #i.1)
+                 &
+                  (All . (Last(#i.1)) ==> F) & (#i.1 < #j)) &
+                (All #i.2. (Use( x ) @ #i.2) ==> (Last(#i.2)) | (#i.2 < #j)) &
+                (All #i.3. (Destroy( x ) @ #i.3) ==> (Last(#i.3)) | (#i.3 = #j))) )
+      case case_1
+      solve( (#j, 0)[Object( x )] )
+        case Create
+        by contradiction // from formulas
+      next
+        case Use
+        by contradiction // from formulas
+      qed
+    next
+      case case_2
+      by contradiction // from formulas
+    qed
+  next
+    case case_2
+    solve( (#j, 0)[Object( ~n )] )
+      case Create
+      solve( (#i, 0)[Object( ~n )] )
+        case Use
+        by contradiction // non-unique facts (#vr,#j,#i)
+      qed
+    next
+      case Use
+      solve( (#i, 0)[Object( ~n )] )
+        case Create
+        by contradiction // non-unique facts (#i.1,#j,#i)
+      next
+        case Use
+        by contradiction // non-unique facts (#vr.1,#j,#i)
+      qed
+    qed
+  next
+    case case_3
+    solve( Disj(Last(#j)) |
+               ((Ex #i.1.
+                  (Create( x ) @ #i.1)
+                 &
+                  (All . (Last(#i.1)) ==> F) & (#i.1 < #j)) &
+                (All #i.2. (Use( x ) @ #i.2) ==> (Last(#i.2)) | (#i.2 < #j)) &
+                (All #i.3. (Destroy( x ) @ #i.3) ==> (Last(#i.3)) | (#i.3 = #j))) )
+      case case_1
+      solve( (#j, 0)[Object( ~n )] )
+        case Create
+        by contradiction // non-unique facts (#i.1,#i,#j)
+      next
+        case Use
+        by contradiction // non-unique facts (#vr,#i,#j)
+      qed
+    next
+      case case_2
+      solve( Disj(#i < #j) | (#j < #i) )
+        case case_1
+        by contradiction // from formulas
+      next
+        case case_2
+        solve( (#j, 0)[Object( ~n )] )
+          case Create
+          solve( (#i, 0)[Object( ~n )] )
+            case Create
+            by contradiction // cyclic
+          next
+            case Use
+            by contradiction // non-unique facts (#vr,#j,#i)
+          qed
+        next
+          case Use
+          solve( (#i, 0)[Object( ~n )] )
+            case Create
+            by contradiction // non-unique facts (#i.1,#j,#i)
+          next
+            case Use
+            by contradiction // non-unique facts (#vr.1,#j,#i)
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.6. OK.
+ checking installation: OK.
+
+
+analyzing: data/examples/stateful/CertRevoke.spthy
+
+------------------------------------------------------------------------------
+analyzed: data/examples/stateful/CertRevoke.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.16831s
+  Use_charn (all-traces): verified (7 steps)
+  Destroy_charn (all-traces): verified (27 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: data/examples/stateful/CertRevoke.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.16831s
+  Use_charn (all-traces): verified (7 steps)
+  Destroy_charn (all-traces): verified (27 steps)
+
+==============================================================================
+*/
