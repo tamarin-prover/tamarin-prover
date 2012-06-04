@@ -170,7 +170,7 @@ executable tamarin-prover
         , old-locale        == 1.0.*
         , monad-control     == 0.3.*
         , lifted-base       == 0.1.*
-        , threads           == 0.5.*
+        , threads           >= 0.4 && < 0.6
 
     build-depends:
         base              == 4.*
@@ -224,6 +224,7 @@ executable tamarin-prover
       Theory.Constraint.Solver.Reduction
       Theory.Constraint.Solver.Simplify
       Theory.Constraint.Solver.ProofMethod
+      Theory.Constraint.Solver.Types
       Theory.Constraint.System
       Theory.Constraint.System.Dot
       Theory.Constraint.System.Guarded
