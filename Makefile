@@ -75,6 +75,7 @@ cabal-dev:
 ## Case Studies
 ###############################################################################
 
+
 ## CSF'12
 #########
 
@@ -99,16 +100,16 @@ TMPOUT=case-studies/temp-output.spthy
 CSF12_CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(STS) $(SDH)
 CSF12_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/csf12/,$(CSF12_CASE_STUDIES)))
 
-CSF12_CS_HEURISTIC=s
-
-# case studies
+# CSF'12 case studies
 csf12-case-studies:	$(CSF12_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/csf12/*.spthy
 
 # individual case studies
-case-studies/csf12/%_analyzed.spthy:	data/examples/csf12/%.spthy
+case-studies/%_analyzed.spthy:	data/examples/%.spthy
 	mkdir -p case-studies/csf12
-	tamarin-prover $< --prove --heuristic=$(CSF12_CS_HEURISTIC) --stop-on-trace=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
+	mkdir -p case-studies/stateful
+	mkdir -p case-studies/stable
+	tamarin-prover $< --prove --stop-on-trace=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	echo "\n/* Output" >>$(TMPRES)
@@ -116,6 +117,7 @@ case-studies/csf12/%_analyzed.spthy:	data/examples/csf12/%.spthy
 	echo "*/" >>$(TMPRES)
 	mv $(TMPRES) $@
 	\rm -f $(TMPOUT)
+
 
 ## Inductive Strengthening
 ##########################
@@ -132,24 +134,29 @@ AIF=Keyserver.spthy
 IND_CASE_STUDIES=$(AIF) $(TPM) $(TESLA) $(STATVERIF) $(EXCLUSIVITY)
 IND_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/stateful/,$(IND_CASE_STUDIES)))
 
-IND_CS_HEURISTIC=s
-
 # case studies
 ind-case-studies:	$(IND_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/stateful/*.spthy
 
-# individual case studies
-case-studies/stateful/%_analyzed.spthy:	data/examples/stateful/%.spthy
-	mkdir -p case-studies/stateful/
-	tamarin-prover $< --prove --heuristic=$(IND_CS_HEURISTIC) --stop-on-trace=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
-	# We only produce the target after the run, otherwise aborted
-	# runs already 'finish' the case.
-	echo "\n/* Output" >>$(TMPRES)
-	cat $(TMPOUT) >>$(TMPRES)
-	echo "*/" >>$(TMPRES)
-	mv $(TMPRES) $@
-	\rm -f $(TMPOUT)
 
+## Classical Protocols
+######################
+
+CLASSICAL=TLS.spthy Tutorial.spthy InvariantsExample.spthy
+
+CLASSIC_CASE_STUDIES=$(CLASSICAL)
+CLASSIC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/stable/,$(CLASSIC_CASE_STUDIES)))
+
+# case studies
+classic-case-studies:	$(CLASSIC_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/stable/*.spthy
+
+
+## All case studies
+###################
+
+case-studies: 	$(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS)
+	grep -R "verified\|falsified\|processing time" case-studies/
 
 ###############################################################################
 ## Developer specific targets (some out of date)
