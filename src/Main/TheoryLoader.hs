@@ -195,7 +195,7 @@ constructAutoProver as =
     rankings = case findArg "heuristic" as of
         Just (rawRankings@(_:_)) -> map ranking rawRankings
         Just []                  -> error "--heuristic: at least one ranking must be given"
-        _                        -> [SmartRanking True]
+        _                        -> [SmartRanking False]
 
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
