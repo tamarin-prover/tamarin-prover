@@ -420,19 +420,7 @@ insertGoalStatus goal status = do
 
 -- | Insert a 'Goal' and store its age.
 insertGoal :: Goal -> Bool -> Reduction ()
-insertGoal goal looping =
-    insertGoalStatus goal (GoalStatus solved 0 looping)
-  where
-    solved = case goal of
-      ActionG _ (kFactView -> Just(UpK, _, m))
-        | sortOfLNTerm m == LSortPub             -> True
-        -- Pairs, products, and inverses are always immediatly solved by
-        -- 'insertAction'
-        | isPair m || isInverse m || isProduct m -> True
-      PremiseG _ fa
-        -- KU-facts handled by 'labelNodeId'
-        | isKUFact fa                            -> True
-      _                                          -> False
+insertGoal goal looping = insertGoalStatus goal (GoalStatus False 0 looping)
 
 -- | Mark the given goal as solved.
 markGoalAsSolved :: String -> Goal -> Reduction ()

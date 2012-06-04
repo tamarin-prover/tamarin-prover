@@ -60,7 +60,11 @@ openGoals sys = do
     let solved = get gsSolved status
     -- check whether the goal is still open
     guard $ case goal of
-        ActionG _ (kFactView -> Just (UpK, _, m)) -> not (isMsgVar m || solved)
+        ActionG _ (kFactView -> Just (UpK, _, m)) ->
+          not $    solved
+                || isMsgVar m || sortOfLNTerm m == LSortPub
+                -- handled by 'insertAction'
+                || isPair m || isInverse m || isProduct m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
         -- Technically the 'False' disj would be a solvable goal. However, we
