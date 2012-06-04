@@ -107,8 +107,11 @@ csf12-case-studies:	$(CSF12_CS_TARGETS)
 # individual case studies
 case-studies/%_analyzed.spthy:	data/examples/%.spthy
 	mkdir -p case-studies/csf12
-	mkdir -p case-studies/stateful
-	mkdir -p case-studies/stable
+	mkdir -p case-studies/classic
+	mkdir -p case-studies/loops
+	mkdir -p case-studies/related_work/AIF_Moedersheim_CCS10
+	mkdir -p case-studies/related_work/StatVerif_ARR_CSF11
+	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
 	tamarin-prover $< --prove --stop-on-trace=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
@@ -122,30 +125,29 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 ## Inductive Strengthening
 ##########################
 
-TPM=CSF11_RunningExample.spthy
-# Envelope.spthy
-TESLA=TESLA_Scheme1.spthy Mini_TESLA.spthy
-# TESLA_Scheme2.spthy
-STATVERIF=StatVerif_Example1.spthy
-# GM_Contract.spthy
-EXCLUSIVITY=CertRevoke.spthy RFID_Simple.spthy
-AIF=Keyserver.spthy
+TPM=related_work/TPM_DKRS_CSF11/CSF11_RunningExample.spthy
+# Envelope.spthy (not yet working automatically)
+STATVERIF=related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
+# GM_Contract.spthy (not finished)
+AIF=related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
+LOOPS=loops/TESLA_Scheme1.spthy loops/Minimal_KeyRenegotiation.spthy loops/Minimal_Create_Use_Destroy.spthy loops/RFID_Simple.spthy loops/Minimal_Create_Use_Destroy.spthy loops/Minimal_Crypto_API.spthy
+# TESLA_Scheme2.spthy (not finished)
 
-IND_CASE_STUDIES=$(AIF) $(TPM) $(TESLA) $(STATVERIF) $(EXCLUSIVITY)
-IND_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/stateful/,$(IND_CASE_STUDIES)))
+IND_CASE_STUDIES=$(TPM) $(AIF) $(LOOPS) $(STATVERIF)
+IND_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(IND_CASE_STUDIES)))
 
 # case studies
-ind-case-studies:	$(IND_CS_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/stateful/*.spthy
+induction-case-studies:	$(IND_CS_TARGETS)
+	grep -R "verified\|falsified\|processing time" case-studies/related_work/ case-studies/loops/
 
 
 ## Classical Protocols
 ######################
 
-CLASSICAL=TLS.spthy Tutorial.spthy InvariantsExample.spthy
 
-CLASSIC_CASE_STUDIES=$(CLASSICAL)
-CLASSIC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/stable/,$(CLASSIC_CASE_STUDIES)))
+CLASSIC_CASE_STUDIES=TLS_Handshake.spthy NSLPK3.spthy
+
+CLASSIC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/classic/,$(CLASSIC_CASE_STUDIES)))
 
 # case studies
 classic-case-studies:	$(CLASSIC_CS_TARGETS)

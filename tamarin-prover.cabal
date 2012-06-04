@@ -67,10 +67,24 @@ data-files:
   -- documentation
   doc/MANUAL
 
-  -- example files
-  examples/stable/Tutorial.spthy
-  examples/stable/TLS.spthy
-  examples/stable/InvariantsExample.spthy
+  -- examples files
+  examples/Tutorial.spthy
+
+  -- classic security protocols
+  examples/classic/TLS_Handshake.spthy
+  examples/classic/NSLPK3.spthy
+
+  -- loops
+  examples/loops/Minimal_Crypto_API.spthy
+  examples/loops/Minimal_KeyRenegotiation.spthy
+  examples/loops/Minimal_Create_Use_Destroy.spthy
+  examples/loops/TESLA_Scheme1.spthy
+
+  -- related work
+  examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
+  examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
+  examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
+  examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   -- CSF'12 case studies
   examples/csf12/Artificial.spthy

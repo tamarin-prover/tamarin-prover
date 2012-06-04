@@ -1,4 +1,4 @@
-theory InvariantsExample
+theory Minimal_Crypto_API
 begin
 
 builtins: symmetric-encryption

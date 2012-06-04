@@ -1,4 +1,4 @@
-theory TLS 
+theory TLS_Handshake
 begin
 
 builtins: hashing, symmetric-encryption, asymmetric-encryption, signing
@@ -31,8 +31,8 @@ functions: PRF/1
 
 // Public key infrastructure
 rule Register_pk:
-  [ Fr(~ltkA) ] 
-  --> 
+  [ Fr(~ltkA) ]
+  -->
   [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
 rule Reveal_ltk:
@@ -49,12 +49,12 @@ rule Reveal_ltk:
                sign{ '32', h('32', ns, S, pms) }pk(C) ,
                { '33', sid, PRF(pms, nc, ns),
                  nc, pc, C, ns, ps, S
-               } 
+               }
                h('clientKey', nc, ns, PRF(pms, nc, ns))
 
     4. C <- S: { '4', sid, PRF(pms, nc, ns),
                  nc, pc, C, ns, ps, S
-               } 
+               }
                h('serverKey', nc, ns, PRF(pms, nc, ns))
   }
 */
@@ -71,7 +71,7 @@ rule C_1:
     ]
 
 rule S_1:
-    [ In( 
+    [ In(
         <$C, nc, sid, pc>
       )
     , Fr(~ns)
@@ -84,10 +84,10 @@ rule S_1:
     ]
 
 rule C_2:
-  let 
+  let
       MS   = PRF(~pms, nc, ns)
       Ckey = h('clientKey', nc, ns, MS)
-  in 
+  in
     [ St_C_1(C, nc, sid, pc)
     , In(
         <S, ns, sid, ps>
@@ -107,11 +107,11 @@ rule C_2:
     ]
 
 rule S_2:
-  let 
+  let
       MS   = PRF(pms, nc, ns)
       Ckey = h('clientKey', nc, ns, MS)
       Skey = h('serverKey', nc, ns, MS)
-  in 
+  in
     [ St_S_1(S, C, sid, nc, pc, ns, ps)
     , In(
         < aenc{ '31', pms }pk(ltkS)
@@ -132,11 +132,11 @@ rule S_2:
     ]
 
 rule C_3:
-  let 
+  let
       MS   = PRF(pms, nc, ns)
       Ckey = h('clientKey', nc, ns, MS)
       Skey = h('serverKey', nc, ns, MS)
-  in 
+  in
     [ St_C_2(S, C, sid, nc, pc, ns, ps, pms)
     , In( senc{ '4', sid, MS, nc, pc, C, ns, ps, S}Skey )
     ]
@@ -147,21 +147,21 @@ rule C_3:
 /* TODO: Also model session-key reveals and adapt security properties. */
 
 
-/* Session key secrecy from the perspecitive of both the server and the client
+/* Session key secrecy from the perspective of both the server and the client
  * for both the key of the server and the key of the client. Note that this
  * lemma thus captures four security properties at once. */
 lemma session_key_secrecy:
   " /* If all equality checks succeeded */
     (All x y #i. Eq(x,y) @ i ==> x = y)
   ==>
-    /* then there is no attack */ 
-    (not( 
+    /* then there is no attack */
+    (not(
          /* It cannot be that */
          Ex S C keyS keyC #k.
            /* somebody claims to have setup session keys, */
-           SessionKeys(S, C, keyS, keyC) @ k 
+           SessionKeys(S, C, keyS, keyC) @ k
            /* but the adversary knows one of them */
-         & ( (Ex #i. K(keyS) @ i) 
+         & ( (Ex #i. K(keyS) @ i)
            | (Ex #i. K(keyC) @ i)
            )
            /* without having performed a long-term key reveal. */
@@ -169,20 +169,19 @@ lemma session_key_secrecy:
          & not (Ex #r. RevLtk(C) @ r)
     )   )"
 
-/* Consistency check: this lemma must NOT have a proof,
- * as otherwise no session-keys could be setup between honest agents. */
+/* Consistency check: ensure that session-keys can be setup between honest
+ * agents. */
 lemma session_key_setup_possible:
   exists-trace
   " /* There is a trace satisfying all equality checks */
      (All x y #i. Eq(x,y) @ i ==> x = y)
   &  /* Session keys have been setup */
-     (Ex S C keyS keyC #k.  SessionKeys(S, C, keyS, keyC) @ k 
+     (Ex S C keyS keyC #k.  SessionKeys(S, C, keyS, keyC) @ k
       /* without having performed a long-term key reveal. */
       & not (Ex #r. RevLtk(S) @ r)
       & not (Ex #r. RevLtk(C) @ r)
       )
    "
-
 
 end
 

@@ -93,7 +93,7 @@ are minor and explained below in the sections on
 
 Moreover, we added a constraint solving rule that allows to reason about
 protocols that make use of exclusive access to linear facts. A typical example
-is 'exclusivity/Certificate_Revoke_Simple.spthy'. The corresponding constraint
+is 'loops/Minimal_Create_Use_Destroy.spthy'. The corresponding constraint
 reduction rule is explained below.
 
 Apart from the above changes to the constraint solving rules, we also refined
@@ -142,7 +142,8 @@ attribute [use_induction]. In the interactive GUI, one can just select
 guarded trace property.
 
 For examples of protocols where inductive strengthening is required for a
-successful proof, see the directory `examples/loops`.
+successful proof, see the directories `examples/loops` and
+`examples/related_work`.
 
 
 Typing Invariants over the Extended Traces
@@ -162,7 +163,7 @@ A typing invariant specifies the possible instantiations of a message variable
 sent to the adversary. We describe these instantiations by relating an action
 logging the instantiation in the rule sending the variable to actions logging
 the possible instantiations in the rules sending the contents of this
-variable. See the 'stable/NSL3.spthy' file for an example of a typing
+variable. See the 'classic/NSLPK3.spthy' file for an example of a typing
 invariant.
 
 To enable the specification of the case that the intruder constructed the

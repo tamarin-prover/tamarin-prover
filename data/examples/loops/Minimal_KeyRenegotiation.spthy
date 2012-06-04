@@ -1,13 +1,13 @@
-theory Mini_TESLA begin
+theory KeyRenegotiation_Minimal begin
 
 /*
-   Protocol:    A minimal version of the TESLA protocol
+   Protocol:    A minimal version of a key renegotiation protocol.
    Modeler:     Simon Meier
    Date:        May 2012
 
-   Status:      WIP
+   Status:      working
 
-   Testing verification of stream-protocols, i.e., repeated key
+   Minimal example of the verification of a protocol with repeated key
    re-negotiation.
 
 */
@@ -34,6 +34,8 @@ lemma Secret_reachable [use_induction]:
   exists-trace
   "Ex k #i. Secret(k) @ i"
 
+// TODO: Investigate the form of the property and its proof when key
+// compromise is allowed.
 lemma secrecy [use_induction]:
   "All k f #i #j. Secret(k) @ i & KU(f,k) @ j ==> F"
 

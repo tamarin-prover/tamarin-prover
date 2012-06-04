@@ -5,6 +5,11 @@ text{* Running example from:
 Stephanie Delaune, Steve Kremer, Mark D. Ryan, Graham Steel, "Formal Analysis
 of Protocols Based on TPM State Registers," csf, pp.66-80, 2011 IEEE 24th
 Computer Security Foundations Symposium, 2011.
+
+Modeler: Simon Meier
+Date:    June 2012
+Status:  Working
+
 *}
 
 builtins: hashing, asymmetric-encryption, signing

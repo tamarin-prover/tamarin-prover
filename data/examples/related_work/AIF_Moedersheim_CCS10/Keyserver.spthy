@@ -1,10 +1,18 @@
 theory Keyserver begin
 
-text{* The keyserver example from
-       "2010 - Moedersheim - Abstraction by Set-Membership".
-*}
+/*
+ * Protocol:	The keyserver example from [1]
+ * Modeler: 	Simon Meier
+ * Date: 	June 2012
+ *
+ * Status: 	working
 
-/* Original Problem from
+ [1] Sebastian Moedersheim: Abstraction by set-membership: verifying security
+ protocols and web services with databases. ACM Conference on Computer and
+ Communications Security 2010: 351-360
+ */
+
+/* Original input file from [1]
 
 Problem: zebsKeyserver;
 
@@ -94,10 +102,10 @@ prove, as it depends only on the fact that secret keys are not leaked by
 any other means than the "RenewKey" rule. The "RenewKey" rule always log's
 that the key is "Revoked", which directly implies the lemma below.
 
-FIXME: Prove property that depends on ordering of revocation. For
-example, DH-key exchange always succeeds for a protocol with an online
-key-server. This crucially depends on the client not sending a renewal message
-while he's waiting for the key confirmation.
+TODO: Prove property that depends on ordering of revocation. For example,
+DH-key exchange always succeeds for a protocol with an online key-server. This
+crucially depends on the client not sending a renewal message while he's
+waiting for the key confirmation.
 */
 
 

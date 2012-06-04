@@ -70,10 +70,13 @@ are part of every installation of the Tamarin prover. See
 following sub-directories to organize the models.
 
 ~~~~
-csf12/         the case studies from our CSF'12 paper.
-stable/        protocols from literature whose model is finished
-stateful/      experiments for testing loop-invariants and stateful
-               protocols and mechanisms
+csf12/         the AKE case studies from our CSF'12 paper.
+classic/       classic security protocols like the ones from
+               [SPORE](http://www.lsv.ens-cachan.fr/Software/spore/table.html)
+loops/         experiments for testing loop-invariants and protocols with
+               non-monotonic state
+related_work/  examples from related work on protocols with loops or
+               non-monotonic state
 experiments/   all other experiments
 ~~~~
 

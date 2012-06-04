@@ -1,10 +1,11 @@
-theory Create_Use_Destroy begin
+theory Minimal_Create_Use_Destroy begin
 
 
 
 text{*
   Author: Simon Meier <simon.meier@inf.ethz.ch>
   Date:   2011 12 01
+  Status: Working
 
   One model of the key mechnaism for certificate revocation.
   For every certificate, we create a single fact denoting that

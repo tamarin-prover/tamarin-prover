@@ -6,6 +6,15 @@ text{* Envelope protocol example from:
 Analysis of Protocols Based on TPM State Registers," csf, pp.66-80, 2011 IEEE
 24th Computer Security Foundations Symposium, 2011.
 
+Modeler: Simon Meier
+Date:    June 2012
+Status:  No automatic proof (interactive proof possible)
+
+Note that this model incorporates an arbitrary number of reboots, which is an
+open problem in [1]. The verification relies on the construction that we track
+all writes to the PCR-fact using the additional PCR_Write-fact. This allows us
+then to descend in the hash chain by solving PCR_Write-premises.
+
 *}
 
 builtins: signing, asymmetric-encryption, hashing
