@@ -25,6 +25,7 @@ import           Prelude                                 hiding (id, (.))
 import           Safe
 
 import           Data.Foldable                           (asum)
+import qualified Data.Map                                as M
 import           Data.Maybe                              (isJust)
 import qualified Data.Set                                as S
 
@@ -309,4 +310,13 @@ refineWithTypingAsms typAsms0 ctxt cases0 =
     updateSystem se =
         modify sFormulas (S.union (S.fromList typAsms)) $
         set sCaseDistKind TypedCaseDist                 $ se
-    removeFormulas = set sFormulas S.empty . set sSolvedFormulas S.empty
+    removeFormulas =
+        modify sGoals (M.filterWithKey isNoDisjGoal)
+      . set sFormulas S.empty
+      . set sSolvedFormulas S.empty
+
+    isNoDisjGoal (DisjG _)  _ = False
+    isNoDisjGoal _          _ = True
+
+
+
