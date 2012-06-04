@@ -115,6 +115,8 @@ data WebUI = WebUI
     -- ^ The dot command
   , imageFormat :: ImageFormat
     -- ^ The image-format used for rendering graphs
+  , defaultAutoProver :: AutoProver
+    -- ^ The default prover to use for automatic proving.
   , debug :: Bool
     -- ^ Output debug messages
   }
@@ -135,12 +137,13 @@ data TheoryOrigin = Local FilePath | Upload String | Interactive
 -- pass the two around (since they are always tied to each other). We also
 -- keep some extra bookkeeping information.
 data TheoryInfo = TheoryInfo
-  { tiIndex     :: TheoryIdx       -- ^ Index of theory.
-  , tiTheory    :: ClosedTheory    -- ^ The closed theory.
-  , tiTime      :: ZonedTime       -- ^ Time theory was loaded.
-  , tiParent    :: Maybe TheoryIdx -- ^ Prev theory in history
-  , tiPrimary   :: Bool            -- ^ This is the orginally loaded theory.
-  , tiOrigin    :: TheoryOrigin    -- ^ Origin of theory.
+  { tiIndex      :: TheoryIdx       -- ^ Index of theory.
+  , tiTheory     :: ClosedTheory    -- ^ The closed theory.
+  , tiTime       :: ZonedTime       -- ^ Time theory was loaded.
+  , tiParent     :: Maybe TheoryIdx -- ^ Prev theory in history
+  , tiPrimary    :: Bool            -- ^ This is the orginally loaded theory.
+  , tiOrigin     :: TheoryOrigin    -- ^ Origin of theory.
+  , tiAutoProver :: AutoProver      -- ^ The automatic prover to use.
   }
 
 -- | We use the ordering in order to display loaded theories to the user.
@@ -148,7 +151,7 @@ data TheoryInfo = TheoryInfo
 -- that were loaded from the command-line are displayed earlier then
 -- interactively loaded ones.
 compareTI :: TheoryInfo -> TheoryInfo -> Ordering
-compareTI (TheoryInfo _ i1 t1 p1 a1 o1) (TheoryInfo _ i2 t2 p2 a2 o2) =
+compareTI (TheoryInfo _ i1 t1 p1 a1 o1 _) (TheoryInfo _ i2 t2 p2 a2 o2 _) =
   mconcat
     [ comparing (get thyName) i1 i2
     , comparing zonedTimeToUTC t1 t2

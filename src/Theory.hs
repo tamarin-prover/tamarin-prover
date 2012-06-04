@@ -64,7 +64,6 @@ module Theory (
   -- ** Proving
   , ProofSkeleton
   , proveTheory
-  , applicableProofMethods
 
   -- ** Lemma references
   , lookupLemmaProof
@@ -591,13 +590,6 @@ applyPartialEvaluation evalStyle thy0 =
 -- Applying provers
 -------------------
 
--- | A list of proof methods that could be applied to the given sequent.
-applicableProofMethods :: ProofContext -> System -> [ProofMethod]
-applicableProofMethods ctxt se = do
-    m <- possibleProofMethods ctxt se
-    guard (isJust $ execProofMethod ctxt m se)
-    return m
-
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.
 proveTheory :: Prover -> ClosedTheory -> ClosedTheory
@@ -616,7 +608,7 @@ proveTheory prover thy =
         l       = ensureFormulaAC l0
         ctxt    = getProofContext l thy
         sys     = mkSystem ctxt preItems $ fromJust $ L.get lFormulaAC l
-        add prf = fromMaybe prf $ runProver prover ctxt sys prf
+        add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
 -- | Construct a constraint system for verifying the given formula.
 mkSystem :: ProofContext -> [TheoryItem r p] -> FormulaAC -> System
@@ -672,7 +664,7 @@ modifyLemmaProof prover name thy =
          let l1   = ensureFormulaAC l0
              ctxt = getProofContext l1 thy
          sys <- mkSystem ctxt preItems <$> L.get lFormulaAC l1
-         l2  <- modA lProof (runProver prover ctxt sys) l1
+         l2  <- modA lProof (runProver prover ctxt 0 sys) l1
          return $ LemmaItem l2
     change _ _ = error "LemmaProof: change: impossible"
 
@@ -717,7 +709,7 @@ prettyLemmaName l = case L.get lAttributes l of
   where
     prettyLemmaAttribute TypingLemma    = text "typing"
     prettyLemmaAttribute ReuseLemma     = text "reuse"
-    prettyLemmaAttribute InvariantLemma = text "invariant"
+    prettyLemmaAttribute InvariantLemma = text "use_induction"
 
 -- | Pretty print a lemma.
 prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d

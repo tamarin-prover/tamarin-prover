@@ -20,6 +20,9 @@ module Main.TheoryLoader (
   , loadClosedWfThy
   , loadClosedThyString
 
+  -- ** Constructing automatic provers
+  , constructAutoProver
+
   , closeThy
 
   ) where
@@ -32,6 +35,7 @@ import           Data.Monoid
 
 import           Control.Basics
 import           Control.Category
+import           Control.DeepSeq (rnf)
 
 import           System.Console.CmdArgs.Explicit
 import           System.Directory
@@ -40,6 +44,7 @@ import           Extension.Prelude
 
 import           Theory
 import           Theory.Text.Parser
+import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules
 import           Theory.Tools.Wellformedness
@@ -68,8 +73,11 @@ theoryLoadFlags =
   , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|NONE"
       "How to search for traces (default DFS)"
 
-  , flagOpt "5" ["bound", "b"]   (updateArg "bound") "INT"
+  , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
+
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|c|C)+"
+      "Sequence of goal rankings to use (smart, creation order and useful first, Creation order)"
 
   --, flagOpt "" ["intruder","i"] (updateArg "intruderVariants") "FILE"
   --    "Cached intruder rules to use"
@@ -153,13 +161,6 @@ closeThy as =
     -- fine-grained.
     . wfCheck
   where
-    -- handles to relevant arguments
-    --------------------------------
-    proofBound      = read <$> findArg "bound" as
-    requireProofs   = argExists "addProofs" as
-
-    stopOnTrace :: Maybe String
-    stopOnTrace = findArg "stopOnTrace" as
 
     -- apply partial application
     ----------------------------
@@ -175,17 +176,38 @@ closeThy as =
       noteWellformedness
         (checkWellformedness thy) thy
 
-    -- protocol transformation
-    --------------------------
     prover :: Prover
-    prover
-       | requireProofs = cutAttack $ maybe id boundProver proofBound autoProver
-       | otherwise     = mempty
-       where
-         cutAttack = mapProverProof $ case map toLower <$> stopOnTrace of
-           Nothing     -> cutOnSolvedDFS
-           Just "dfs"  -> cutOnSolvedDFS
-           Just "none" -> id
-           Just "bfs"  -> cutOnSolvedBFS
-           Just other  -> error $ "unknown stop-on-trace method: " ++ other
+    prover | argExists "addProofs" as = runAutoProver $ constructAutoProver as
+           | otherwise                = mempty
 
+-- | Construct an 'AutoProver' from the given arguments (--bound,
+-- --stop-on-trace).
+constructAutoProver :: Arguments -> AutoProver
+constructAutoProver as =
+    -- force error early
+    (rnf rankings) `seq`
+    AutoProver (roundRobinHeuristic rankings) proofBound stopOnTrace
+  where
+    -- handles to relevant arguments
+    --------------------------------
+    proofBound      = read <$> findArg "bound" as
+
+    rankings = maybe [SmartRanking True] (map ranking) (findArg "heuristic" as)
+
+    ranking 's' = SmartRanking False
+    ranking 'S' = SmartRanking True
+    ranking 'c' = UsefulGoalNrRanking
+    ranking 'C' = GoalNrRanking
+    ranking r   = error $ render $ fsep $ map text $ words $
+      "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
+      \ 's' for the smart ranking without loop breakers,\
+      \ 'S' for the smart ranking with loop breakers,\
+      \ 'c' for the creation order and useful goals first,\
+      \ and 'C' for the creation order."
+
+    stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
+      Nothing     -> CutDFS
+      Just "dfs"  -> CutDFS
+      Just "none" -> CutNothing
+      Just "bfs"  -> CutBFS
+      Just other  -> error $ "unknown stop-on-trace method: " ++ other

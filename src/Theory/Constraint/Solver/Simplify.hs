@@ -7,9 +7,12 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
--- Simplification of constraint systems. We try to solve as much as possible,
--- without explicit case splitting. Some additional cases may although result
--- from splitting over multiple AC-unifiers.
+-- This module implements all rules that do not result in case distinctions
+-- and equation solving. Some additional cases may although result from
+-- splitting over multiple AC-unifiers. Note that a few of these rules are
+-- implemented directly in the methods for inserting constraints to the
+-- constraint system.  These methods are provided by
+-- "Theory.Constraint.Solver.Reduction".
 --
 module Theory.Constraint.Solver.Simplify (
 

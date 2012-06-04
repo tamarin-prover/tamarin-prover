@@ -9,34 +9,30 @@
 --
 -- The constraint reduction rules, which are not enforced as invariants in
 -- "Theory.Constraint.Solver.Reduction".
+--
+-- A goal represents a possible application of a rule that may result in
+-- multiple cases or even non-termination (if applied repeatedly). These goals
+-- are computed as the list of 'openGoals'. See
+-- "Theory.Constraint.Solver.ProofMethod" for the public interface to solving
+-- goals and the implementation of heuristics.
 module Theory.Constraint.Solver.Goals (
     Usefulness(..)
   , AnnotatedGoal
-  , GoalRanking
-  , wfProtoRanking
-
   , openGoals
   , solveGoal
   ) where
 
-import           Debug.Trace
-
 import           Prelude                                 hiding (id, (.))
 
 import qualified Data.DAG.Simple                         as D (cyclic)
-import           Data.List
 import qualified Data.Map                                as M
-import qualified Data.Set                                as S
 
 import           Control.Basics
 import           Control.Category
 import           Control.Monad.Disj
 import           Control.Monad.State                     (gets)
 
-import           Text.PrettyPrint.Class
-
 import           Extension.Data.Label
-import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
@@ -54,8 +50,6 @@ data Usefulness = Useful | Useless
 
 -- | Goals annotated with their number and usefulness.
 type AnnotatedGoal = (Goal, (Integer, Usefulness))
-
-type GoalRanking   = System -> [AnnotatedGoal] -> [AnnotatedGoal]
 
 
 -- | The list of goals that must be solved before a solution can be extracted.
@@ -87,7 +81,7 @@ openGoals sys = do
     let useful = case goal of
           -- Note that 'solveAllSafeGoals' in "CaseDistinctions" relies on
           -- looping goals being classified as 'Useless'.
-          _ | get gsLoops status                    -> Useless
+          _ | get gsLoopBreaker status              -> Useless
           ActionG i (kFactView -> Just (UpK, _, m))
             | isSimpleTerm m || deducible i m       -> Useless
           _                                         -> Useful
@@ -121,202 +115,6 @@ openGoals sys = do
         return $ m `elem` derivedMsgs &&
                  not (D.cyclic ((j, i) : existingDeps))
 
--- | A ranking function tuned for the automatic verification of
--- classical security protocols that exhibit a well-founded protocol premise
--- fact flow.
-wfProtoRanking :: GoalRanking
-wfProtoRanking sys =
-    delayUseless . sortDecisionTree solveFirst
-  where
-    delayUseless = sortOn (snd . snd)
-
-    solveFirst = map (. fst)
-        [ isDisjGoal
-        , isProtoFactGoal
-        , isChainGoal
-        , isStandardActionGoal
-        , isFreshKnowsGoal
-        , isSplitGoalSmall
-        , isDoubleExpGoal ]
-
-    isProtoFactGoal (PremiseG _ fa) = not $ isKFact fa
-    isProtoFactGoal _               = False
-
-    msgPremise (ActionG _ fa) = do (UpK, _, m) <- kFactView fa; return m
-    msgPremise _              = Nothing
-
-    isFreshKnowsGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
-        _                                                           -> False
-
-    isDoubleExpGoal goal = case msgPremise goal of
-        Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
-        _                                                  -> False
-
-    -- Be conservative on splits that don't exist.
-    isSplitGoalSmall (SplitG sid) =
-        maybe False (< 3) $ splitSize (get sEqStore sys) sid
-    isSplitGoalSmall _            = False
-
-    -- | @sortDecisionTree xs ps@ returns a reordering of @xs@
-    -- such that the sublist satisfying @ps!!0@ occurs first,
-    -- then the sublist satisfying @ps!!1@, and so on.
-    sortDecisionTree :: [a -> Bool] -> [a] -> [a]
-    sortDecisionTree []     xs = xs
-    sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
-      where (sat, nonsat) = partition p xs
-
-
-{-
--- | All open premises stemming both from labelled nodes and requires facts.
-openPremiseGoals :: System -> [(Usefulness, Goal)]
-openPremiseGoals se = do
-    (i, ru) <- oneOfMap $ get sNodes se
-    (u, fa) <- enumPrems ru
-    let p = (i, u)
-        breakers = ruleInfo (get praciLoopBreakers) (const []) $ get rInfo ru
-    case () of
-      _ | isKUFact fa               -> [] -- KU-facts handled by 'labelNodeId'
-        | p `S.member` coveredPrems -> []
-        | u `elem` breakers         -> return . (Useless,) $ PremiseG p fa True
-        | otherwise                 -> return . (Useful,) $  PremiseG p fa False
-  where
-    coveredPrems = S.fromList $ eTgt <$> S.toList (get sEdges se) <|>
-                                snd <$> chains se
-
--- | All open chain goals. These are all the chains that do not end in a
--- message variable in the sequent because they are deleted upon solving.
-openChainGoals :: System -> [Goal]
-openChainGoals se = do
-    (c, p) <- chains se
-    case kFactView (nodeConcFact c se) of
-      Just (DnK, _, m) | isMsgVar m -> mzero
-                       | otherwise  -> return $ ChainG c p
-      fa -> error $ "openChainGoals: impossible fact: " ++ show fa
-
--- | All open splitting goals.
-openSplitGoals :: System -> [Goal]
-openSplitGoals se = SplitG <$> eqSplits (get sEqStore se)
-
-openKUActionGoals :: System -> [(Usefulness, Goal)]
-openKUActionGoals sys = do
-    (i, fa, m) <- kuActionAtoms sys
-    case () of
-        -- Products, pairs, and inverses are solved by 'insertAction'
-      _ | isProduct m || isPair m || isInverse m   -> []
-        -- Message variables and public names can be instantiated such that
-        -- they are solved.
-        | isMsgVar m || sortOfLNTerm m == LSortPub -> []
-        -- Simple terms must be constructed, but their actions are unlikely
-        -- to introduce a contradiction. Deducible terms are also unlikely to
-        -- introduce a contradiction => delay both of them
-        | isSimpleTerm m || deducible i m -> return (Useless, ActionG i fa)
-        -- Other KU-action goals.
-        | otherwise                       -> return (Useful, ActionG i fa)
-  where
-    existingDeps = rawLessRel sys
-
-    -- We use the following heuristic for marking KU-actions as useful (worth
-    -- solving now) or useless (to be delayed until no more useful goals
-    -- remain). We ignore all goals that do not contain a fresh variable
-    -- or where there exists a node, not after the premise or the last node,
-    -- providing an Out or KD conclusion that provides the message we are
-    -- looking for as a toplevel term.
-    --
-    -- If such a node exist, then solving the goal will result in at least one
-    -- case where we didn't make real progress except.
-    toplevelTerms t@(destPair -> Just (t1, t2)) =
-        t : toplevelTerms t1 ++ toplevelTerms t2
-    toplevelTerms t@(destInverse -> Just t1) = t : toplevelTerms t1
-    toplevelTerms t = [t]
-
-    deducible i m = or $ do
-        (j, ru) <- M.toList $ get sNodes sys
-        -- We cannot deduce a message from a last node.
-        guard (not $ isLast sys j)
-        let derivedMsgs = concatMap toplevelTerms $
-                [ t | Fact OutFact [t] <- get rConcs ru] <|>
-                [ t | Just (DnK, _, t) <- kFactView <$> get rConcs ru]
-        -- m is deducible from j without an immediate contradiction
-        -- if it is a derived message of 'ru' and the dependency does
-        -- not make the graph cyclic.
-        return $ m `elem` derivedMsgs &&
-                 not (D.cyclic ((j, i) : existingDeps))
-
-openStandardActionGoals :: System -> [Goal]
-openStandardActionGoals = map (uncurry ActionG) . standardActionAtoms
-
--- | All open disjunction goals.
---
--- We assume that solved formulas have been removed from sFormulas
-openDisjunctionGoals :: System -> [Goal]
-openDisjunctionGoals se = do
-  GDisj d <- filter (/= gfalse) $ S.toList $ get sFormulas se
-  return $ DisjG d
-
--- | All open goals (non-deterministic choices of possible proof steps) in the
--- system together with their age.
-openGoals :: System -> [(Goal, Maybe Integer)]
-openGoals sys = do
-    goal <- openGoals_ sys
-    return (goal, M.lookup goal (get sGoals sys))
-
--- | All open goals (non-deterministic choices of possible proof steps) in the
--- system.
-openGoals_:: System -> [Goal]
-openGoals_ sys =
-   filter annotated $ delayUseless $ sortDecisionTree solveFirst $ concat $
-     [ (Useful,) <$> openStandardActionGoals sys
-     , (Useful,) <$> openDisjunctionGoals sys
-     , (Useful,) <$> openChainGoals sys
-     , openPremiseGoals sys
-     , openKUActionGoals sys
-     , (Useful,) <$> openSplitGoals sys
-     ]
-  where
-    annotated goal
-      | goal `M.member` get sGoals sys = True
-      | otherwise                      =
-          error (render $ text "goal not annotated: " $-$ prettyGoal goal) True
-
-    solveFirst = map (. snd)
-        [ isDisjGoal
-        , isNonLoopingProtoFactGoal
-        , isChainGoal
-        , isStandardActionGoal
-        , isFreshKnowsGoal
-        , isSplitGoalSmall
-        , isDoubleExpGoal ]
-
-    isNonLoopingProtoFactGoal (PremiseG _ (Fact KUFact _) _      ) = False
-    isNonLoopingProtoFactGoal (PremiseG _ _               mayLoop) = not mayLoop
-    isNonLoopingProtoFactGoal _                                    = False
-
-    msgPremise (ActionG _ fa) = do (UpK, _, m) <- kFactView fa; return m
-    msgPremise _              = Nothing
-
-    isFreshKnowsGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
-        _                                                           -> False
-
-    isDoubleExpGoal goal = case msgPremise goal of
-        Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
-        _                                                  -> False
-
-    isSplitGoalSmall (SplitG sid) = splitCasenum (get sEqStore sys) sid < 3
-    isSplitGoalSmall _            = False
-
-    delayUseless = map snd . sortOn fst
-
-
--- | @sortDecisionTree xs ps@ returns a reordering of @xs@
--- such that the sublist satisfying @ps!!0@ occurs first,
--- then the sublist satisfying @ps!!1@, and so on.
-sortDecisionTree :: [a -> Bool] -> [a] -> [a]
-sortDecisionTree []     xs = xs
-sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
-  where (sat, nonsat) = partition p xs
--}
 
 ------------------------------------------------------------------------------
 -- Solving 'Goal's

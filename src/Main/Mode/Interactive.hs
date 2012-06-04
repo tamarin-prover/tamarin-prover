@@ -92,6 +92,7 @@ run thisMode as = case findArg "workDir" as of
             workDir (argExists "loadstate" as) (argExists "autosave" as)
             (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
             (argExists "debug" as) dataDir (dotPath as) readImageFormat
+            (constructAutoProver as)
             (runWarp port)
         else
           helpAndExit thisMode

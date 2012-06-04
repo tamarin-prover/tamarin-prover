@@ -41,16 +41,11 @@ where
 
 import           Theory                       (
     ClosedTheory,
-    thyName,
-    -- lName,
-    -- lookupLemma, addLemma,
-    removeLemma,
-    openTheory,
-    mapProverProof, sorryProver, autoProver, cutOnSolvedDFS,
+    thyName, removeLemma,
+    openTheory, sorryProver, runAutoProver,
     prettyClosedTheory, prettyOpenTheory
-    -- prettyProof, prettyLemma, prettyClosedTheory, prettyOpenTheory
   )
--- import Theory.Parser
+import           Theory.Proof (apHeuristic)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
 import           Web.Hamlet
@@ -130,11 +125,14 @@ putTheory parent origin thy = do
     yesod <- getYesod
     liftIO $ modifyMVar (theoryVar yesod) $ \theories -> do
       time <- getZonedTime
-      let idx = if M.null theories then 1 else fst (M.findMax theories) + 1
-          parentIdx = tiIndex <$> parent
+      let idx | M.null theories = 1
+              | otherwise       = fst (M.findMax theories) + 1
+          parentIdx    = tiIndex <$> parent
           parentOrigin = tiOrigin <$> parent
-          newOrigin = parentOrigin <|> origin <|> (Just Interactive)
-          newThy = TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
+          newOrigin    = parentOrigin <|> origin <|> (Just Interactive)
+          newThy       =
+              TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
+                         (maybe (defaultAutoProver yesod) tiAutoProver parent)
       storeTheory yesod newThy idx
       return (M.insert idx newThy theories, idx)
 
@@ -391,9 +389,11 @@ getTheoryPathMR idx path = do
     -- Handle method paths by trying to solve the given goal/method
     --
     go _ (TheoryMethod lemma proofPath i) ti = modifyTheory ti
-      (\thy -> return $ applyMethodAtPath thy lemma proofPath i)
-      (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
-      (JsonAlert "Sorry, but the prover failed on the selected method!")
+        (\thy -> return $ applyMethodAtPath thy lemma proofPath heuristic i)
+        (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
+        (JsonAlert "Sorry, but the prover failed on the selected method!")
+      where
+        heuristic = apHeuristic (tiAutoProver ti)
 
     --
     -- Handle generic paths by trying to render them
@@ -410,10 +410,12 @@ getAutoProverR idx path = do
     return $ RepJson $ toContent jsonValue
   where
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
-      (\thy ->
-          return $ applyProverAtPath thy lemma proofPath (mapProverProof cutOnSolvedDFS autoProver))
-      (\thy -> nextSmartThyPath thy path)
-      (JsonAlert "Sorry, but the autoprover failed on given proof step!")
+        (\thy ->
+            return $ applyProverAtPath thy lemma proofPath autoProver)
+        (\thy -> nextSmartThyPath thy path)
+        (JsonAlert "Sorry, but the autoprover failed on given proof step!")
+      where
+        autoProver = runAutoProver (tiAutoProver ti)
 
     go _ _ = return . responseToJson $ JsonAlert
       "Can't run autoprover on the given theory path!"

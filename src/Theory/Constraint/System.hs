@@ -82,7 +82,7 @@ module Theory.Constraint.System (
   -- ** Goals
   , GoalStatus(..)
   , gsSolved
-  , gsLoops
+  , gsLoopBreaker
   , gsNr
 
   , sGoals
@@ -141,12 +141,12 @@ instance Show CaseDistKind where
 -- | The status of a 'Goal'. Use its 'Semigroup' instance to combine the
 -- status info of goals that collapse.
 data GoalStatus = GoalStatus
-    { _gsSolved  :: Bool
+    { _gsSolved :: Bool
        -- True if the goal has been solved already.
-    , _gsNr      :: Integer
+    , _gsNr :: Integer
        -- The number of the goal: we use it to track the creation order of
        -- goals.
-    , _gsLoops   :: Bool
+    , _gsLoopBreaker :: Bool
        -- True if this goal should be solved with care because it may lead to
        -- non-termination.
     }
@@ -366,10 +366,11 @@ isLast sys i = Just i == L.get sLastAtom sys
 prettySystem :: HighlightDocument d => System -> d
 prettySystem se = vcat $
     map combine
-      [ ("nodes",     vcat $ map prettyNode $ M.toList $ L.get sNodes se)
-      , ("actions",   fsepList ppActionAtom $ unsolvedActionAtoms se)
-      , ("edges",     fsepList prettyEdge   $ S.toList $ L.get sEdges se)
-      , ("less",      fsepList prettyLess   $ S.toList $ L.get sLessAtoms se)
+      [ ("nodes",          vcat $ map prettyNode $ M.toList $ L.get sNodes se)
+      , ("actions",        fsepList ppActionAtom $ unsolvedActionAtoms se)
+      , ("edges",          fsepList prettyEdge   $ S.toList $ L.get sEdges se)
+      , ("less",           fsepList prettyLess   $ S.toList $ L.get sLessAtoms se)
+      , ("unsolved goals", prettyGoals False se)
       ]
     ++ [prettyNonGraphSystem se]
   where
@@ -386,13 +387,20 @@ prettyNonGraphSystem se = vsep $ map combine
   , ("equations",       prettyEqStore $ L.get sEqStore se)
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
-  , ("goal age",        vsep $ map ppGoalAge $ M.toList $ L.get sGoals se)
+  , ("solved goals",    prettyGoals True se)
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
 
-    ppGoalAge (goal, age) = prettyGoal goal <->
-                            lineComment_ ("age: " ++ show age)
+-- | Pretty print solved or unsolved goals.
+prettyGoals :: HighlightDocument d => Bool -> System -> d
+prettyGoals solved sys = vsep $ do
+    (goal, status) <- M.toList $ L.get sGoals sys
+    guard (solved == L.get gsSolved status)
+    let nr  = L.get gsNr status
+        loopBreaker | L.get gsLoopBreaker status = " (loop breaker)"
+                    | otherwise                  = ""
+    return $ prettyGoal goal <-> lineComment_ ("nr: " ++ show nr ++ loopBreaker)
 
 
 -- Additional instances

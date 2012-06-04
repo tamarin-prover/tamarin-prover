@@ -45,36 +45,6 @@ module Theory.Constraint.Solver (
   , Contradiction
   , contradictions
 
-  -- ** The Reduction monad
-  -- | This monad manages the state of the implementation of a constraint
-  -- reduction rule. This is essentially the list of all constraint systems
-  -- resulting from a constraint reduction step.
-  , Reduction
-  , execReduction
-  , runReduction
-
-  -- ** Simplification
-  -- | All rules that do not result in case distinctions and equation solving.
-  -- Note that a few of these rules are implemented directly in the methods
-  -- for inserting constraints to the constraint system. These methods are
-  -- provided by "Theory.Constraint.Solver.Reduction".
-  , simplifySystem
-
-  -- ** Goals
-  -- | A goal represents a possible application of a rule that may result in
-  -- multiple cases or even non-termination (if applied repeatedly). These
-  -- goals are computed as the list of 'openGoals'. A heuristic is used to
-  -- order the goals such that more worthwhile goals are preferred. If this
-  -- list is empty, then the constraint system is solved and we can extract a
-  -- trace from it. Solving a goal means applying the corresponding constraint
-  -- reduction rule.
-  , Goal(..)
-  , openGoals
-  , solveGoal
-
-  -- ** Heuristics
-  , wfProtoRanking
-
   -- ** Precomputed case distinctions
   -- | For better speed, we precompute case distinctions. This is especially
   -- important for getting rid of all chain constraints before actually
@@ -87,10 +57,11 @@ module Theory.Constraint.Solver (
   , refineWithTypingAsms
   , unsolvedChainConstraints
 
-  , solveWithCaseDistinction
-
-  -- * Pretty-printing
-  , prettyContradiction
+  -- * Proof methods
+  -- | Proof methods are the external to the constraint solver. They allow its
+  -- small step execution. This module also provides the heuristics for
+  -- selecting the best proof method to apply to a constraint system.
+  , module Theory.Constraint.Solver.ProofMethod
 
   -- ** Convenience export
   , module Logic.Connectives
@@ -100,11 +71,8 @@ module Theory.Constraint.Solver (
 import           Logic.Connectives
 import           Theory.Constraint.Solver.CaseDistinctions
 import           Theory.Constraint.Solver.Contradictions
-import           Theory.Constraint.Solver.Goals
-import           Theory.Constraint.Solver.Reduction
-import           Theory.Constraint.Solver.Simplify
+import           Theory.Constraint.Solver.ProofMethod
 import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
-
 
 

@@ -64,12 +64,16 @@ checkProofs = proveTheory checkedProver
     checkedProver = checkAndExtendProver (sorryProver "not yet proven")
 
 applyMethodAtPath :: ClosedTheory -> String -> ProofPath
-                  -> Int -> Maybe ClosedTheory
-applyMethodAtPath thy lemmaName proofPath i = do
+                  -> Heuristic             -- ^ How to extract/order the proof methods.
+                  -> Int                   -- What proof method to use.
+                  -> Maybe ClosedTheory
+applyMethodAtPath thy lemmaName proofPath heuristic i = do
     lemma <- lookupLemma lemmaName thy
     subProof <- get lProof lemma `atPath` proofPath
-    let ctxt = getProofContext lemma thy
-    methods <- applicableProofMethods ctxt <$> psInfo (root subProof)
+    let ctxt  = getProofContext lemma thy
+        sys   = psInfo (root subProof)
+        ranking = useHeuristic heuristic (length proofPath)
+    methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPath thy lemmaName proofPath
       (oneStepProver method                        `mappend`
@@ -82,6 +86,7 @@ applyProverAtPath :: ClosedTheory -> String -> ProofPath
                   -> Prover -> Maybe ClosedTheory
 applyProverAtPath thy lemmaName proofPath prover =
     modifyLemmaProof (focus proofPath prover) lemmaName thy
+
 
 ------------------------------------------------------------------------------
 -- Pretty printing
@@ -225,10 +230,11 @@ subProofSnippet :: HtmlDocument d
                 -> TheoryIdx                 -- ^ The theory index.
                 -> String                    -- ^ The lemma.
                 -> ProofPath                 -- ^ The proof path.
+                -> Heuristic                 -- ^ The heuristic to use.
                 -> ProofContext              -- ^ The proof context.
                 -> IncrementalProof          -- ^ The sub-proof.
                 -> d
-subProofSnippet renderUrl tidx lemma proofPath ctxt prf =
+subProofSnippet renderUrl tidx lemma proofPath heuristic ctxt prf =
     case psInfo $ root prf of
       Nothing -> text $ "no annotated constraint system / " ++ nCases ++ " sub-case(s)"
       Just se -> vcat $
@@ -248,23 +254,29 @@ subProofSnippet renderUrl tidx lemma proofPath ctxt prf =
         ] ++
         subCases
   where
-    prettyApplicableProofMethods se = case proofMethods se of
+    prettyApplicableProofMethods sys = case proofMethods sys of
         []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
-        pms -> [ withTag "h3" [] (text "Applicable Proof Methods")
-               , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
-               , text "a." <->
-                 linkToPath renderUrl (AutoProverR tidx (TheoryProof lemma proofPath))
-                     ["autoprove"] (keyword_ "autoprove")
-               ]
+        pms ->
+          [ withTag "h3" [] (text "Applicable Proof Methods:" <->
+                             comment_ (goalRankingName ranking))
+          , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+          , text "a." <->
+            linkToPath renderUrl (AutoProverR tidx (TheoryProof lemma proofPath))
+                ["autoprove"] (keyword_ "autoprove")
+          ]
 
-    prettyPM (i, m) = linkToPath renderUrl
-      (TheoryPathMR tidx (TheoryMethod lemma proofPath i))
-      ["proof-method"] (prettyProofMethod m)
+    prettyPM (i, (m, (_cases, expl))) =
+      linkToPath renderUrl
+        (TheoryPathMR tidx (TheoryMethod lemma proofPath i))
+        ["proof-method"] (prettyProofMethod m)
+      <-> (if null expl then emptyDoc else lineComment_ expl)
 
-    nCases   = show $ M.size $ children prf
-    hasGraphPart se = not $ M.empty == get sNodes se
-    proofMethods = applicableProofMethods ctxt
-    subCases = concatMap refSubCase $ M.toList $ children prf
+    nCases                  = show $ M.size $ children prf
+    hasGraphPart se         = not $ M.empty == get sNodes se
+    depth                   = length proofPath
+    ranking                 = useHeuristic heuristic depth
+    proofMethods            = rankProofMethods ranking ctxt
+    subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
         , maybe (text "no proof state available")
@@ -345,8 +357,9 @@ htmlThyPath renderUrl ti path = go path
     go (TheoryProof l p)         =
         fromMaybe (text "No such lemma or proof path.") $ do
            lemma <- lookupLemma l thy
-           let ctxt = getProofContext lemma thy
-           subProofSnippet renderUrl tidx l p ctxt
+           let ctxt      = getProofContext lemma thy
+               heuristic = apHeuristic $ tiAutoProver ti
+           subProofSnippet renderUrl tidx l p heuristic ctxt
              <$> resolveProofPath thy l p
     go (TheoryLemma _)      = text "Implement theory item pretty printing!"
     go _                    = text "Unhandled theory path. This is a bug."

@@ -223,6 +223,7 @@ executable tamarin-prover
       Theory.Constraint.Solver.Goals
       Theory.Constraint.Solver.Reduction
       Theory.Constraint.Solver.Simplify
+      Theory.Constraint.Solver.ProofMethod
       Theory.Constraint.System
       Theory.Constraint.System.Dot
       Theory.Constraint.System.Guarded

@@ -74,10 +74,13 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> Bool                            -- ^ Show debugging messages?
           -> FilePath                        -- ^ Path to static content directory
           -> FilePath                        -- ^ Path to dot binary
-          -> ImageFormat                       -- ^ The preferred image format
+          -> ImageFormat                     -- ^ The preferred image format
+          -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
-withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug' stPath dotCmd' imgFormat' f = do
+withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug'
+          stPath dotCmd' imgFormat' defaultAutoProver' f
+  = do
     thy    <- getTheos
     thrVar <- newMVar M.empty
     thyVar <- newMVar thy
@@ -94,6 +97,7 @@ withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug' st
         , autosaveProofstate = autosave
         , dotCmd             = dotCmd'
         , imageFormat        = imgFormat'
+        , defaultAutoProver  = defaultAutoProver'
         , debug              = debug'
         }
   where
@@ -112,7 +116,7 @@ withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug' st
                      _            -> return Nothing
          return $ M.fromList $ catMaybes thys
 
-       else loadTheories readyMsg thDir thLoader
+       else loadTheories readyMsg thDir thLoader defaultAutoProver'
 
     shutdownThreads thrVar = do
       m <- modifyMVar thrVar $ \m -> return (M.empty, m)
@@ -123,8 +127,12 @@ withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug' st
 
 
 -- | Load theories from the current directory, generate map.
-loadTheories :: String -> FilePath -> (FilePath -> IO ClosedTheory) -> IO TheoryMap
-loadTheories readyMsg thDir thLoader = do
+loadTheories :: String
+             -> FilePath
+             -> (FilePath -> IO ClosedTheory)
+             -> AutoProver
+             -> IO TheoryMap
+loadTheories readyMsg thDir thLoader autoProver = do
     mkImageDir
     thPaths <- filter (".spthy" `isSuffixOf`) <$> getDirectoryContents thDir
     theories <- catMaybes <$> mapM loadThy (zip [1..] (map (thDir </>) thPaths))
@@ -141,7 +149,10 @@ loadTheories readyMsg thDir thLoader = do
     loadThy (idx, path) = E.handle catchEx $ do
         thy <- thLoader path
         time <- getZonedTime
-        return $ Just (idx, TheoryInfo idx thy time Nothing True (Local path))
+        return $ Just
+          ( idx
+          , TheoryInfo idx thy time Nothing True (Local path) autoProver
+          )
       where
         -- Exception handler (if loading theory fails)
         catchEx :: E.SomeException -> IO (Maybe (TheoryIdx, TheoryInfo))
