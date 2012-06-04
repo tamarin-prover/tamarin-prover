@@ -221,7 +221,7 @@ goalRankingName ranking =
         SmartRanking useLoopBreakers -> smart useLoopBreakers
    where
      smart b = "the 'smart' heuristic (loop breakers " ++
-               (if b then "allowed" else "ignored") ++ ")."
+               (if b then "allowed" else "delayed") ++ ")."
 
 -- | Use a 'GoalRanking' to sort a list of 'AnnotatedGoal's stemming from the
 -- given constraint 'System'.

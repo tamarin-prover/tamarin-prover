@@ -76,8 +76,8 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|c|C)+"
-      "Sequence of goal rankings to use (smart, creation order and useful first, Creation order)"
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|c|C)+"
+      "Sequence of goal rankings to use (default 's')"
 
   --, flagOpt "" ["intruder","i"] (updateArg "intruderVariants") "FILE"
   --    "Cached intruder rules to use"

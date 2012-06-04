@@ -460,22 +460,40 @@ runAutoProver (AutoProver heuristic bound cut) =
     boundProver b p = Prover $ \ctxt d se prf ->
         boundProofDepth b <$> runProver p ctxt d se prf
 
--- | @cutOnSolvedDFS prf@ remove all other cases if attack is found.
--- FIXME: Probably holds onto the whole proof tree. Use iterative deepening.
+
+-- | The result of one pass of iterative deepening.
+data IterDeepRes = NoSolution | MaybeNoSolution | Solution ProofPath
+
+instance Monoid IterDeepRes where
+    mempty = NoSolution
+
+    x@(Solution _)   `mappend` _                = x
+    _                `mappend` y@(Solution _)   = y
+    MaybeNoSolution  `mappend` _                = MaybeNoSolution
+    _                `mappend` MaybeNoSolution  = MaybeNoSolution
+    NoSolution       `mappend` NoSolution       = NoSolution
+
+-- | @cutOnSolvedDFS prf@ removes all other cases if an attack is found. The
+-- attack search is performed using a parallel DFS traversal with iterative
+-- deepening.
+--
+-- FIXME: Note that this function may use a lot of space, as it holds onto the
+-- whole proof tree.
 cutOnSolvedDFS :: Proof (Maybe System) -> Proof (Maybe System)
-cutOnSolvedDFS prf =
-    case getFirst $ findSolveds $ insertPaths prf of
-      Nothing   -> prf
-      Just path -> extractSolved path prf
+cutOnSolvedDFS prf0 =
+    go (4 :: Integer) $ insertPaths prf0
   where
-    findSolveds (LNode (ProofStep Solved (_,path)) _) = First (Just path)
-    findSolveds (LNode _ cs) = foldMap findSolveds $ M.elems cs
-        {- The following "optimization" didn't work out in practice.
-        foldMap findSolveds preferred `mappend` foldMap findSolveds delayed
+    go dMax prf = case findSolved 0 prf of
+        NoSolution      -> prf0
+        MaybeNoSolution -> go (2 * dMax) prf
+        Solution path   -> extractSolved path prf0
       where
-        (preferred, delayed) = parPartition prefer $ M.elems cs
-        prefer = maybe False (S.null . L.get sChains) . fst . psInfo . root
-        -}
+        findSolved d node
+          | d >= dMax = MaybeNoSolution
+          | otherwise = case node of
+              LNode (ProofStep Solved (_,path)) _ -> Solution path
+              LNode _ cs                          ->
+                mconcat $ parMap rseq (findSolved (succ d)) $ M.elems cs
 
     extractSolved []         p               = p
     extractSolved (label:ps) (LNode pstep m) = case M.lookup label m of
@@ -483,6 +501,7 @@ cutOnSolvedDFS prf =
           LNode pstep (M.fromList [(label, extractSolved ps subprf)])
         Nothing     ->
           error "Theory.Constraint.cutOnSolvedDFS: impossible, extractSolved failed, invalid path"
+
 
 -- | Search for attacks in a BFS manner.
 cutOnSolvedBFS :: Proof a -> Proof a
