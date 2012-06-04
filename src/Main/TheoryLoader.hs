@@ -192,7 +192,10 @@ constructAutoProver as =
     --------------------------------
     proofBound      = read <$> findArg "bound" as
 
-    rankings = maybe [SmartRanking True] (map ranking) (findArg "heuristic" as)
+    rankings = case findArg "heuristic" as of
+        Just (rawRankings@(_:_)) -> map ranking rawRankings
+        Just []                  -> error "--heuristic: at least one ranking must be given"
+        _                        -> [SmartRanking True]
 
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True

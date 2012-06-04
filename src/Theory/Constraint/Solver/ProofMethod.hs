@@ -269,6 +269,7 @@ roundRobinHeuristic = Heuristic
 -- | Use a heuristic to schedule a 'GoalRanking' according to the given
 -- proof-depth.
 useHeuristic :: Heuristic -> Int -> GoalRanking
+useHeuristic (Heuristic []      ) = error "useHeuristic: empty list of rankings"
 useHeuristic (Heuristic rankings) =
     ranking
   where
