@@ -1,7 +1,7 @@
 User manual for the Tamarin prover
 ==================================
 
-Date:    2012/04/11
+Date:    2012/06/04
 Authors: Simon Meier <iridcode@gmail.com>,
          Benedikt Schmidt <beschmi@gmail.com>
 
@@ -43,11 +43,11 @@ protocols. We normally use the following workflow to do that.
   1. Copy the example protocol that is most similar to the one your are
      modeling. Let us assume that this copy is named 'myproto.spthy'.
 
-  2. Modify the protocol a bit and call 'tamarin-prover myproto.spthy' to
-     ensure that it still parses and all well-formedness checks pass. This
-     way you get immediate feedback on your changes. Moreover, you can see the
-     expansions of syntactic sugar like the built-in signatures for hashing or
-     asymmetric encryption.
+  2. Modify the protocol piece by piece and call 'tamarin-prover
+     myproto.spthy' to ensure that it still parses and all well-formedness
+     checks pass. This way you get immediate feedback on your changes.
+     Moreover, you can see the expansions of syntactic sugar like the built-in
+     signatures for hashing or asymmetric encryption.
 
   3. Once you are satisfied with your model, check if the automated prover
      succeeds in analyzing your protocol by calling
@@ -60,7 +60,11 @@ protocols. We normally use the following workflow to do that.
 
        'tamarin-prover interactive myproto.spthy'
 
-     and try to construct the proof interactively.
+     and try to construct the proof interactively. If you want to bound the
+     proof depth of the autoprover in interactive mode, you can call the
+     Tamarin prover as follows.
+
+       'tamarin-prover interactive myproto.spthy --bound=7'
 
      Note that you can also use the GUI to sanity check your model. Just go
      through the message theory and check that it really models what you
@@ -79,13 +83,18 @@ paper, whose extended version is available from
 
   http://www.infsec.ethz.ch/research/software#TAMARIN
 
-The implementation exploits an slightly more restricted definition of normal
+The implementation exploits a slightly more restricted definition of normal
 dependency graphs and adapted versions of the constraint solving rules that
 also allow security properties to refer to the conclusions of normal
 construction rules. A technical report documenting this version of the
 constraint solver is under preparation. From a usage perspective, the changes
-are minor and explained below in the section on
-`Induction and Extended Traces`.
+are minor and explained below in the sections on
+`Induction` and `Typing Invariants over the Extended Traces`.
+
+Moreover, we added a constraint solving rule that allows to reason about
+protocols that make use of exclusive access to linear facts. A typical example
+is 'exclusivity/Certificate_Revoke_Simple.spthy'. The corresponding constraint
+reduction rule is explained below.
 
 Apart from the above changes to the constraint solving rules, we also refined
 the theory in two ways that allow to share work between different constraint
@@ -93,42 +102,6 @@ reduction steps. First, we store multiple constraint reduction steps in the
 form of *precomputed case distinctions*. Second, we delay the enumeration of
 the finite variants of multiset rewriting rules using an *equation store*. We
 explain both of these refinements below.
-
-Induction
----------
-
-The normal form conditions that we impose on dependency graphs can be seen as
-a strong invariant on security protocol execution. As we have shown in our
-case studies many security properties follow from these normal form
-conditions. However, for some protocols additional invariants are necessary to
-prove their security properties. A typical example are typing invariants that
-characterize the possible instantiations of a message variable.
-
-We can formalize such invariants by specifying them as trace formulas. We can
-prove them using the induction scheme associated to the traces of a protocol.
-We using this induction scheme in the form of a trace formula conversion that
-converts a guarded trace formula \phi to a semantically equivalent formula
-\phi_{inductive}. This formula \phi_{inductive} is again a guarded trace
-formula. It is easier to prove because it contains the induction hypothesis in
-a weakened form. Semantically, the formula \phi_{inductive} states that we are
-looking for counter-examples that are minimal with respect to the prefix-order
-on traces.
-
-You can apply induction by clicking on the 'induction' proof method in the
-GUI or adding the [inductive] attribute to a lemma. An example protocol whose
-proof require induction is given in 'examples/stable/InvariantsExample.spthy'.
-
-
-Typing Invariants over the Extended Traces
-------------------------------------------
-
-A typical case for the use of induction is proving typing invariants, which
-characterize the possible instantiation of a message variable. They are
-necessary for every message variable `v`
-whose content may be sent to the adversary, but it is not guaranteed that this
-content is known to the adversary.
-
-
 
 
 Precomputed Case Distinctions
@@ -146,6 +119,97 @@ This precomputation is sound because the applicability of all our constraint
 reduction rules is invariant under set union and instantiation. We precompute
 cases for an arbitrary instance of every protocol fact and every outermost
 constructor of a message.
+
+
+Inductive Strengthening
+-----------------------
+
+The normal form conditions that we impose on dependency graphs can be seen as
+a strong invariant on security protocol execution. As we have shown in our
+case studies many security properties follow from these normal form
+conditions. For some protocols, we must however strengthen security properties
+before being able to prove them using our backwards reasoning technique. This
+strengthening works by transforming the security property according to the
+induction scheme associated with the set of traces of a protocol. Intuitively,
+this strengthening amounts to searching for traces that violate the security
+property, but do not contain any prefix that violates the security property.
+Stated differently, we focus on first violations of security properties with
+respect to the prefix-order on traces.
+
+Properties that should be proven using induction can be marked with the
+attribute [use_induction]. In the interactive GUI, one can just select
+`induction` as a proof method provided the constraint system contains just one
+guarded trace property.
+
+For examples of protocols where inductive strengthening is required for a
+successful proof, see the directory `examples/loops`.
+
+
+Typing Invariants over the Extended Traces
+------------------------------------------
+
+Note that every protocol communicating via the public network/adversary
+implicitly contains loops. The adversary may send messages received from a
+later step of one instance a role to an earlier step of another instance of
+the same role. These loops manifest themselves during backwards reasoning as
+infinite proof branches. For trivial loops where all messages are also
+received as plain-text, we can prune these branches using the constraint
+reduction rule N6. To prune more complicated loops, e.g., loops stemming from
+receiving an encrypted message and sending out some of its contents, we need
+so called typing invariants.
+
+A typing invariant specifies the possible instantiations of a message variable
+sent to the adversary. We describe these instantiations by relating an action
+logging the instantiation in the rule sending the variable to actions logging
+the possible instantiations in the rules sending the contents of this
+variable. See the 'stable/NSL3.spthy' file for an example of a typing
+invariant.
+
+To enable the specification of the case that the intruder constructed the
+message that a variable is instantiated with, we changed every construction
+rule such that a KU-action logs the rule's conclusion. Properties referring to
+this KU-actions can only be evaluated over the traces of normal dependency
+graphs of a protocol. We call these traces the 'extended traces of a protocol'.
+Note that we cannot transfer the validity of properties over extended traces
+to the validity of these properties over standard traces stemming from the
+multiset rewriting semantics. However, we can use these properties over
+extended traces as lemmas during the proof of a property over standard traces
+using the lemma attribute [reuse] or [typing].
+
+The goal of typing invariants is to ensure that all chain-constraints are
+solved during the precomputation of the case distinctions. We use a two-step
+process to achieve this. We first precompute the so-called *untyped case
+distinctions* without the assumption of the validity of any typing invariant.
+These untyped precomputed case are used during the proof of a typing
+invariant. We then use the typing invariants to refine the untyped case
+distinctions to typed case distinctions. They are used during the proofs of
+properties other than typing invariants.
+
+In the input file, all typing invariants are marked with the [typing]
+attribute. In the GUI, you can inspect both the untyped and typed precomputed
+case distinctions. A typing invariant achieves its goal, if the typed
+precomputed case distinctions are marked with "all chains solved".
+
+
+Reasoning about Exclusivity
+---------------------------
+
+We say that a fact symbol 'f' has `unique instances with respect to a security
+protocol 'P', if all instances of 'f' occur with cardinality <= 1 in all
+reachable states of 'P'. As computing the set of fact symbols with unique
+instances with respect to a security protocol 'P' is undecidable, we use a
+simple under-approximation to this set. We gather all linear fact symbols that
+occur in all conclusions either as a copy of themselves or a copy of the term
+of a Fr-fact.
+
+For facts with unique instances, we can use a further constraint reduction
+rule. This rule states that it is impossible that there is a node 'i' with a
+premise with a unique fact instance and an edge with the same fact instance
+from a node 'j' to a node 'k' such that 'j' < 'i' < 'k'.
+
+Together with inductive strengthening, this simple construction suffices for
+many protocols to reason about their exclusive use of a linear fact symbol to
+model locked access to a resource.
 
 
 Equation Store
@@ -261,7 +325,7 @@ quantifier.
     lemma := 'lemma' ident [lemma_attrs] ':'
              [trace_quantifier]
              '"' formula '"'
-    lemma_attrs := '[' ('typing' | 'reuse' | 'inductive') ']'
+    lemma_attrs := '[' ('typing' | 'reuse' | 'use_induction') ']'
     trace_quantifier := 'all-traces' | 'exists-trace'
 
 
@@ -309,9 +373,11 @@ application must agree with the arity given in the function definition.
 Facts do not have to be defined up-front. This will probably change once we
 implement user-defined sorts. Facts prefixed with '!' are persistent facts.
 All other facts are linear. There are six reserved fact symbols: In, Out, KU,
-KD, K, and Ded. KU and KD facts are used for construction and deconstruction
-rules. The 'Ded' fact logs the messages deduced by construction rules. See the
-InductionInvariant.spthy example for more information.
+KD, and K. KU and KD facts are used for construction and deconstruction
+rules. KU-facts also log the messages deduced by construction rules. Note that
+KU-facts have arity 2. Their first argument is used to track the
+exponentiation tags. See the 'loops/Crypto_API_Simple.spthy' example for more
+information.
 
     facts := fact list
     fact := ['!'] ident '(' multterm list ')'
@@ -349,8 +415,8 @@ Developing Tamarin
 ==================
 
 The Tamarin prover is under active development. We are grateful to receive
-bug-reports. If you consider building on top of Tamarin, then you might
-consider integrating your idea into the main source repository. Please feel
-free to contact us such that we can discuss the next steps towards fully
-verified systems :-)
+bug-reports at 'https://github.com/tamarin-prover/tamarin-prover/issues'. If
+you consider building on top of Tamarin, then you might consider integrating
+your idea into the main source repository. Please feel free to contact us such
+that we can discuss the next steps towards fully verified systems :-)
 
