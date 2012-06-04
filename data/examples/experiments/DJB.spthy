@@ -59,42 +59,63 @@ server knows who the client is.
 
 // Public key infrastructure
 rule Register_pk:
+  let pkA = 'g'^~ltk
+  in
   [ Fr(~ltk) ] 
   -->
-  [ !Ltk($A, ~ltk), !Pk($A, 'g'^~ltk), Out('g'^~ltk) ]
+  [ !Ltk($A, ~ltk), !Pk($A, pkA), Out(pkA) ]
 
 // Protocol
 rule Init_1:
+  let key_scp = h(< pkR^~ekI >)
+  in
   [ Fr(~ekI), !Ltk($I, ~ltkI), !Pk($R, pkR) ]
   -->
   [ Init_1( $I, $R, ~ltkI, ~ekI, pkR )
-  , Out( <$I, $R, 'g' ^ ~ekI, senc{ '0' }(pkR^~ekI)> ) ]
+  , Out( <$I, $R, 'g' ^ ~ekI, senc{ '0' }(key_scp)> ) ]
 
 rule Init_2:
+  let key_scp = h(< pkR^~ekI >)
+      key_sc = h(< pkR^~ltkI >)
+      key_spcp = h(< Y^~ekI >)
+      epki = 'g'^~ekI
+      pkI = 'g'^~ltkI
+  in
   [ Init_1( $I, $R, ~ltkI, ~ekI, pkR )
-  , In( <$R, $I, senc{ < Y, cookie > }(pkR^~ekI) > ) ]
-  --[ AcceptedI(~ekI, $I, $R, 'g'^~ekI, Y, Y^~ekI) ]->
-  [ !SessionKey(~ekI, $I, $R, Y^~ekI )
-  , Out( <$I, $R, 'g' ^ ~ekI, cookie, 
-    senc{ 'g'^~ltkI, 
-      senc{ 'g'^~ekI }(pkR^~ltkI) }(Y^~ekI) >) ]
+  , In( <$R, $I, senc{ < Y, cookie > }(key_scp) > ) ]
+  --[ AcceptedI(~ekI, $I, $R, epki, Y, key_spcp) ]->
+  [ !SessionKey(~ekI, $I, $R, key_spcp )
+  , Out( <$I, $R, epki, cookie, 
+    senc{ pkI, senc{ epki }(key_sc) }(key_spcp) >) ]
 
 // In this model the client keeps state, maybe that's not the correct model
 rule Resp_1:
+  let key_scp = h(< Y^~ltkR >)
+      key_sc = h(< pkI^~ltkR >)
+      key_spcp = h(< X^~ekR >)
+      epkr = 'g'^~ekR
+      pkR = 'g'^~ltkR
+  in
   [ !Ltk($R, ~ltkR)
   , Fr(~ekR)
   , Fr(~cookie)
   , !Pk($I, pkI)
-  , In( <$I, $R, X, senc{ '0' }(X^~ltkR) > ) ]
+  , In( <$I, $R, X, senc{ '0' }(key_scp) > ) ]
   -->
   [ Resp_1( $I, $R, ~ltkR, ~ekR, X, pkI, ~cookie )
-  , Out( <$R, $I, senc{ < 'g'^~ekR, ~cookie > }(X^~ltkR) > ) ]
+  , Out( <$R, $I, senc{ < epkr, ~cookie > }(key_scp) > ) ]
 
 rule Resp_2:
+  let key_scp = h(< Y^~ltkR >)
+      key_sc = h(< pkI^~ltkR >)
+      key_spcp = h(< X^~ekR >)
+      epkr = 'g'^~ekR
+      pkR = 'g'^~ltkR
+  in
   [ Resp_1( $I, $R, ~ltkR, ~ekR, X, pkI, ~cookie )
   , In( <$I, $R, X, ~cookie, 
-    senc{ pkI, senc{ X }(pkI^~ltkR) }(X^~ekR) >) ]
-  --[ AcceptedR(~ekR, $I, $R, X, 'g'^~ekR, X^~ekR) ]->
+    senc{ pkI, senc{ X }(key_sc) }(key_spcp) >) ]
+  --[ AcceptedR(~ekR, $I, $R, X, epkr, key_spcp) ]->
   [ !SessionKey(~ekR, $I, $R, X^~ekR) ]
 
 rule Ltk_reveal:
