@@ -12,7 +12,7 @@ catchIO = Exception.catch
 
 
 version :: Version
-version = Version {versionBranch = [0,6,0,0], versionTags = []}
+version = Version {versionBranch = [0,7,0,0], versionTags = []}
 bindir, libdir, datadir, libexecdir :: FilePath
 
 bindir     = "./"
