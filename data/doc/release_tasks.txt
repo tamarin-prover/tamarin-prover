@@ -14,3 +14,21 @@ Before a release, the following things should be checked:
    (d) try Download
 
    (e) try 'Loading a new theory' from the start page
+
+5. Bump version number to even minor version and
+   (a) make source-dists
+   (b) copy
+
+         lib/utils/dist/tamarin-prover-utils.tar.gz
+         lib/term/dist/tamarin-prover-termXXXX.tar.gz
+         dist/tamarin-prover-XXXX.tar.gz
+
+       to a fresh temporary directory and check that
+       theese three compile using
+
+         'cabal-dev install *.tar.gz'
+
+6. Commit version bump, add tag 'tamarin-prover-XXXX' to repository, and merge
+   into 'main' branch.
+
+7. Upload all three packages to hackage.
