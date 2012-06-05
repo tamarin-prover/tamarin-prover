@@ -435,7 +435,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                               case cexp
                               solve( !KU( f_.10, h1(<~eskI, ~lkI>) ) @ #vk.16 )
                                 case ch1
-                                solve( !KU( f_.12, ~eskI ) @ #vk.21 )
+                                solve( !KU( f_.12, ~eskI ) @ #vk.20 )
                                   case Ephk_reveal
                                   by contradiction // from formulas
                                 qed
@@ -504,7 +504,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                               case cexp
                               solve( !KU( f_.10, h1(<~eskR, ~lkR>) ) @ #vk.16 )
                                 case ch1
-                                solve( !KU( f_.12, ~eskR ) @ #vk.21 )
+                                solve( !KU( f_.12, ~eskR ) @ #vk.20 )
                                   case Ephk_reveal
                                   by contradiction // from formulas
                                 qed
@@ -513,13 +513,13 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                           qed
                         next
                           case cexp
-                          solve( !KU( f_.12, ~x ) @ #vk.18 )
+                          solve( !KU( f_.12, ~x ) @ #vk.17 )
                             case Ltk_reveal
                             solve( !KU( f_.7, 'g'^(h1(<~eskI, ~lkI>)*h1(<~eskR, ~lkR>)) ) @ #vk.11 )
                               case Init_1
                               solve( !KU( f_.5, h1(<~eskR, ~lkR>) ) @ #vk.17 )
                                 case ch1
-                                solve( !KU( f_.12, ~eskR ) @ #vk.21 )
+                                solve( !KU( f_.12, ~eskR ) @ #vk.20 )
                                   case Ephk_reveal
                                   by contradiction // from formulas
                                 qed
@@ -528,7 +528,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                               case Resp_1
                               solve( !KU( f_.11, h1(<~eskR, ~lkR>) ) @ #vk.17 )
                                 case ch1
-                                solve( !KU( f_.12, ~eskR ) @ #vk.21 )
+                                solve( !KU( f_.12, ~eskR ) @ #vk.20 )
                                   case Ephk_reveal
                                   by contradiction // from formulas
                                 qed
@@ -537,7 +537,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                               case cexp
                               solve( !KU( f_.11, h1(<~eskR, ~lkR>) ) @ #vk.17 )
                                 case ch1
-                                solve( !KU( f_.13, ~eskR ) @ #vk.23 )
+                                solve( !KU( f_.13, ~eskR ) @ #vk.21 )
                                   case Ephk_reveal
                                   by contradiction // from formulas
                                 qed
@@ -574,9 +574,9 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                             case cexp
                             solve( !KU( f_.11, h1(<~eskR, ~lkR>) ) @ #vk.15 )
                               case ch1
-                              solve( !KU( f_.12, ~eskR ) @ #vk.20 )
+                              solve( !KU( f_.12, ~eskR ) @ #vk.19 )
                                 case Ephk_reveal
-                                solve( !KU( f_.12, ~lkR ) @ #vk.21 )
+                                solve( !KU( f_.12, ~lkR ) @ #vk.20 )
                                   case Ltk_reveal
                                   by contradiction // from formulas
                                 qed
@@ -646,7 +646,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                             case cexp
                             solve( !KU( f_.4, h1(<~eskR, ~lkR>) ) @ #vk.14 )
                               case ch1
-                              solve( !KU( f_.12, ~eskR ) @ #vk.20 )
+                              solve( !KU( f_.12, ~eskR ) @ #vk.19 )
                                 case Ephk_reveal
                                 by contradiction // from formulas
                               qed
@@ -788,7 +788,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                             case cexp
                             solve( !KU( f_.10, h1(<~eskI, ~lkI>) ) @ #vk.16 )
                               case ch1
-                              solve( !KU( f_.12, ~eskI ) @ #vk.21 )
+                              solve( !KU( f_.12, ~eskI ) @ #vk.20 )
                                 case Ephk_reveal
                                 by contradiction // from formulas
                               qed
@@ -857,7 +857,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                             case cexp
                             solve( !KU( f_.10, h1(<~eskR, ~lkR>) ) @ #vk.16 )
                               case ch1
-                              solve( !KU( f_.12, ~eskR ) @ #vk.21 )
+                              solve( !KU( f_.12, ~eskR ) @ #vk.20 )
                                 case Ephk_reveal
                                 by contradiction // from formulas
                               qed
@@ -866,13 +866,13 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                         qed
                       next
                         case cexp
-                        solve( !KU( f_.12, ~lkR ) @ #vk.18 )
+                        solve( !KU( f_.12, ~lkR ) @ #vk.17 )
                           case Ltk_reveal
                           solve( !KU( f_.7, 'g'^(h1(<~eskI, ~lkI>)*h1(<~eskR, ~lkR>)) ) @ #vk.11 )
                             case Init_1
                             solve( !KU( f_.5, h1(<~eskR, ~lkR>) ) @ #vk.17 )
                               case ch1
-                              solve( !KU( f_.12, ~eskR ) @ #vk.21 )
+                              solve( !KU( f_.12, ~eskR ) @ #vk.20 )
                                 case Ephk_reveal
                                 by contradiction // from formulas
                               qed
@@ -881,7 +881,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                             case Resp_1
                             solve( !KU( f_.11, h1(<~eskR, ~lkR>) ) @ #vk.17 )
                               case ch1
-                              solve( !KU( f_.12, ~eskR ) @ #vk.21 )
+                              solve( !KU( f_.12, ~eskR ) @ #vk.20 )
                                 case Ephk_reveal
                                 by contradiction // from formulas
                               qed
@@ -890,7 +890,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                             case cexp
                             solve( !KU( f_.11, h1(<~eskR, ~lkR>) ) @ #vk.17 )
                               case ch1
-                              solve( !KU( f_.13, ~eskR ) @ #vk.23 )
+                              solve( !KU( f_.13, ~eskR ) @ #vk.21 )
                                 case Ephk_reveal
                                 by contradiction // from formulas
                               qed
@@ -927,9 +927,9 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                           case cexp
                           solve( !KU( f_.11, h1(<~eskR, ~lkR>) ) @ #vk.15 )
                             case ch1
-                            solve( !KU( f_.12, ~eskR ) @ #vk.20 )
+                            solve( !KU( f_.12, ~eskR ) @ #vk.19 )
                               case Ephk_reveal
-                              solve( !KU( f_.12, ~lkR ) @ #vk.21 )
+                              solve( !KU( f_.12, ~lkR ) @ #vk.20 )
                                 case Ltk_reveal
                                 by contradiction // from formulas
                               qed
@@ -999,7 +999,7 @@ solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
                           case cexp
                           solve( !KU( f_.4, h1(<~eskR, ~lkR>) ) @ #vk.14 )
                             case ch1
-                            solve( !KU( f_.12, ~eskR ) @ #vk.20 )
+                            solve( !KU( f_.12, ~eskR ) @ #vk.19 )
                               case Ephk_reveal
                               by contradiction // from formulas
                             qed
@@ -1168,7 +1168,7 @@ analyzing: data/examples/csf12/NAXOS_eCK.spthy
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.555367s
+  processing time: 4.748257s
   eCK_key_secrecy (all-traces): verified (270 steps)
 
 ------------------------------------------------------------------------------
@@ -1179,7 +1179,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.555367s
+  processing time: 4.748257s
   eCK_key_secrecy (all-traces): verified (270 steps)
 
 ==============================================================================

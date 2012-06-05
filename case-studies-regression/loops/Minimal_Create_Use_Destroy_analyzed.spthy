@@ -1,4 +1,4 @@
-theory Create_Use_Destroy begin
+theory Minimal_Create_Use_Destroy begin
 
 // Function signature and definition of the equational theory E
 
@@ -10,6 +10,7 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 text{*
   Author: Simon Meier <simon.meier@inf.ethz.ch>
   Date:   2011 12 01
+  Status: Working
 
   One model of the key mechnaism for certificate revocation.
   For every certificate, we create a single fact denoting that
@@ -186,13 +187,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/stateful/CertRevoke.spthy
+analyzing: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/stateful/CertRevoke.spthy
+analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.16831s
+  processing time: 0.160465s
   Use_charn (all-traces): verified (7 steps)
   Destroy_charn (all-traces): verified (27 steps)
 
@@ -201,10 +202,10 @@ analyzed: data/examples/stateful/CertRevoke.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/stateful/CertRevoke.spthy
+analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.16831s
+  processing time: 0.160465s
   Use_charn (all-traces): verified (7 steps)
   Destroy_charn (all-traces): verified (27 steps)
 

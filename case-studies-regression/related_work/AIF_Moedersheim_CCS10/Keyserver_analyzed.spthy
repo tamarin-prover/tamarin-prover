@@ -10,10 +10,6 @@ equations:
 
 // looping facts with unique instances: ClientKey/2
 
-text{* The keyserver example from
-       "2010 - Moedersheim - Abstraction by Set-Membership".
-*}
-
 rule (modulo E) SetupHonestKey:
    [ Fr( ~sk ) ]
   --[ HonestKey( ~sk ) ]->
@@ -353,13 +349,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/stateful/Keyserver.spthy
+analyzing: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/stateful/Keyserver.spthy
+analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.34438s
+  processing time: 0.35658s
   types (all-traces): verified (66 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
@@ -368,10 +364,10 @@ analyzed: data/examples/stateful/Keyserver.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/stateful/Keyserver.spthy
+analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.34438s
+  processing time: 0.35658s
   types (all-traces): verified (66 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 

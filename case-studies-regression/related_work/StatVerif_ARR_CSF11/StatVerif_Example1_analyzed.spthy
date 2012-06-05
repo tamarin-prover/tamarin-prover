@@ -298,13 +298,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/stateful/StatVerif_Example1.spthy
+analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/stateful/StatVerif_Example1.spthy
+analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.374911s
+  processing time: 0.384716s
   types (all-traces): verified (31 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -315,10 +315,10 @@ analyzed: data/examples/stateful/StatVerif_Example1.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/stateful/StatVerif_Example1.spthy
+analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.374911s
+  processing time: 0.384716s
   types (all-traces): verified (31 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)

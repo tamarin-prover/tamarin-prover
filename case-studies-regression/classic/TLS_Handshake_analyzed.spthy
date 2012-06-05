@@ -1,0 +1,611 @@
+theory TLS_Handshake begin
+
+// Function signature and definition of the equational theory E
+
+functions: PRF/1, adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sdec/2,
+           senc/2, sign/2, snd/1, true/0, verify/3
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true()
+
+section{* TLS Handshake *}
+
+text{*
+  Modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy. Notable
+  differences are:
+
+    1. We use explicit global constants to differentiate between different
+       encryptions instead of implicit typing.
+
+    2. We model session keys directly as hashes of the relevant information.
+       Due to our support for composed keys, we do not need any custom
+       axiomatization as Paulson does.
+
+*}
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltkA ) ]
+  -->
+   [ !Ltk( $A, ~ltkA ), !Pk( $A, pk(~ltkA) ), Out( pk(~ltkA) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltkA ) ] --[ RevLtk( A ) ]-> [ Out( ltkA ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) C_1:
+   [ Fr( ~nc ), Fr( ~sid ) ]
+  -->
+   [ Out( <$C, ~nc, ~sid, $pc> ), St_C_1( $C, ~nc, ~sid, $pc ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) S_1:
+   [ In( <$C, nc, sid, pc> ), Fr( ~ns ) ]
+  -->
+   [ Out( <$S, ~ns, sid, $ps> ), St_S_1( $S, $C, sid, nc, pc, ~ns, $ps ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) C_2:
+   [
+   St_C_1( C, nc, sid, pc ), In( <S, ns, sid, ps> ), Fr( ~pms ),
+   !Pk( S, pkS ), !Ltk( C, ltkC )
+   ]
+  -->
+   [
+   Out( <aenc(<'31', ~pms>, pkS), 
+         sign(<'32', h(<'32', ns, S, ~pms>)>, ltkC), 
+         senc(<'33', sid, PRF(<~pms, nc, ns>), nc, pc, C, ns, ps, S>,
+              h(<'clientKey', nc, ns, PRF(<~pms, nc, ns>)>))
+        >
+   ),
+   St_C_2( S, C, sid, nc, pc, ns, ps, ~pms )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) S_2:
+   [
+   St_S_1( S, C, sid, nc, pc, ns, ps ),
+   In( <aenc(<'31', pms>, pk(ltkS)), signature, 
+        senc(<'33', sid, PRF(<pms, nc, ns>), nc, pc, C, ns, ps, S>,
+             h(<'clientKey', nc, ns, PRF(<pms, nc, ns>)>))
+       >
+   ),
+   !Pk( C, pkC ), !Ltk( S, ltkS )
+   ]
+  --[
+  Eq( verify(signature, <'32', h(<'32', ns, S, pms>)>, pkC), true() ),
+  SessionKeys( S, C, h(<'serverKey', nc, ns, PRF(<pms, nc, ns>)>),
+               h(<'clientKey', nc, ns, PRF(<pms, nc, ns>)>)
+  )
+  ]->
+   [
+   Out( senc(<'4', sid, PRF(<pms, nc, ns>), nc, pc, C, ns, ps, S>,
+             h(<'serverKey', nc, ns, PRF(<pms, nc, ns>)>))
+   )
+   ]
+
+  /*
+  rule (modulo AC) S_2:
+     [
+     St_S_1( S, C, sid, nc, pc, ns, ps ),
+     In( <aenc(<'31', pms>, pk(ltkS)), signature, 
+          senc(<'33', sid, PRF(<pms, nc, ns>), nc, pc, C, ns, ps, S>,
+               h(<'clientKey', nc, ns, PRF(<pms, nc, ns>)>))
+         >
+     ),
+     !Pk( C, pkC ), !Ltk( S, ltkS )
+     ]
+    --[
+    Eq( z, true() ),
+    SessionKeys( S, C, h(<'serverKey', nc, ns, PRF(<pms, nc, ns>)>),
+                 h(<'clientKey', nc, ns, PRF(<pms, nc, ns>)>)
+    )
+    ]->
+     [
+     Out( senc(<'4', sid, PRF(<pms, nc, ns>), nc, pc, C, ns, ps, S>,
+               h(<'serverKey', nc, ns, PRF(<pms, nc, ns>)>))
+     )
+     ]
+  
+    variants (modulo AC)
+    1. S     = S.28
+       ns    = ns.31
+       pkC   = pkC.33
+       pms   = pms.34
+       signature
+             = signature.37
+       z     = verify(signature.37, <'32', h(<'32', ns.31, S.28, pms.34>)>,
+                      pkC.33)
+    
+    2. S     = S.84
+       ns    = ns.87
+       pkC   = pk(x.165)
+       pms   = pms.90
+       signature
+             = sign(<'32', h(<'32', ns.87, S.84, pms.90>)>, x.165)
+       z     = true()
+  */
+
+rule (modulo E) C_3:
+   [
+   St_C_2( S, C, sid, nc, pc, ns, ps, pms ),
+   In( senc(<'4', sid, PRF(<pms, nc, ns>), nc, pc, C, ns, ps, S>,
+            h(<'serverKey', nc, ns, PRF(<pms, nc, ns>)>))
+   )
+   ]
+  --[
+  SessionKeys( S, C, h(<'serverKey', nc, ns, PRF(<pms, nc, ns>)>),
+               h(<'clientKey', nc, ns, PRF(<pms, nc, ns>)>)
+  )
+  ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma (modulo E) session_key_secrecy:
+  all-traces
+  "(All x y.1 #i.2. (Eq( x, y.1 ) @ #i.2) ==> (x = y.1)) ==>
+   (not(Ex S.3 C.4 keyS.5 keyC.6 #k.7.
+         (((SessionKeys( S.3, C.4, keyS.5, keyC.6 ) @ #k.7) &
+           ((Ex #i.8. K( keyS.5 ) @ #i.8) | (Ex #i.9. K( keyC.6 ) @ #i.9))) &
+          (not(Ex #r.10. RevLtk( S.3 ) @ #r.10))) &
+         (not(Ex #r.11. RevLtk( C.4 ) @ #r.11))))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"(All x y.1 #i.2. (Eq( x, y.1 ) @ #i.2) ==> x = y.1) &
+ (Ex S.3 C.4 keyS.5 keyC.6 #k.7.
+   (SessionKeys( S.3, C.4, keyS.5, keyC.6 ) @ #k.7)
+  &
+   ((Ex #i.8. (K( keyS.5 ) @ #i.8) & T) |
+    (Ex #i.9. (K( keyC.6 ) @ #i.9) & T)) &
+   (All #r.10. (RevLtk( S.3 ) @ #r.10) ==> F) &
+   (All #r.11. (RevLtk( C.4 ) @ #r.11) ==> F))"
+*/
+simplify
+solve( Disj(Ex #i.1. (K( keyS ) @ #i.1) & T) |
+           (Ex #i.1. (K( keyC ) @ #i.1) & T) )
+  case case_1
+  solve( SessionKeys( S, C, keyS, keyC ) @ #k )
+    case C_3
+    solve( (#k, 0)[St_C_2( S, C, sid, nc, pc, ns, ps, pms )] )
+      case C_2
+      solve( !KU( f_.1,
+                  senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, $A>,
+                       h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>))
+             ) @ #vk.1 )
+        case S_2
+        solve( !KU( f_, h(<'serverKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
+               ) @ #vk.1 )
+          case ch
+          solve( !KU( f_.11, aenc(<'31', ~pms>, pk(~ltkA.2)) ) @ #vk.13 )
+            case C_2
+            solve( !KU( f_.14, sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.2)
+                   ) @ #vk.17 )
+              case C_2
+              solve( !KU( f_.20, PRF(<~pms, ~nc, ~ns>) ) @ #vk.24 )
+                case cPRF
+                solve( !KU( f_.21, ~pms ) @ #vk.27 )
+                  case C_2
+                  solve( !KU( f_.5, ~ltkA ) @ #vk.28 )
+                    case Reveal_ltk
+                    by contradiction // from formulas
+                  qed
+                qed
+              qed
+            next
+              case csign
+              solve( !KU( f_.5, ~ltkA.2 ) @ #vk.26 )
+                case Reveal_ltk
+                by contradiction // from formulas
+              qed
+            qed
+          next
+            case caenc
+            solve( !KU( f_.25, ~pms ) @ #vk.28 )
+              case C_2
+              solve( !KU( f_.6, ~ltkA ) @ #vk.29 )
+                case Reveal_ltk
+                by contradiction // from formulas
+              qed
+            qed
+          qed
+        qed
+      next
+        case csenc
+        solve( !KU( f_, h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>)
+               ) @ #vk.1 )
+          case ch
+          solve( !KU( f_.14, PRF(<~pms, ~nc, ns>) ) @ #vk.17 )
+            case cPRF
+            solve( !KU( f_.24, ~pms ) @ #vk.28 )
+              case C_2
+              solve( !KU( f_.4, ~ltkA ) @ #vk.29 )
+                case Reveal_ltk
+                by contradiction // from formulas
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case S_2
+    solve( (#k, 0)[St_S_1( S, C, sid, nc, pc, ns, ps )] )
+      case S_1
+      solve( (#k, 2)[!Pk( $C, pk(x) )] )
+        case Register_pk
+        solve( (#k, 3)[!Ltk( $S, ltkS )] )
+          case Register_pk
+          solve( !KU( f_.3, aenc(<'31', pms>, pk(~ltkA)) ) @ #vk.2 )
+            case C_2
+            solve( !KU( f_.6,
+                        senc(<'33', sid, PRF(<~pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, $S>,
+                             h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>))
+                   ) @ #vk.5 )
+              case C_2
+              solve( !KU( f_, h(<'serverKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
+                     ) @ #vk.3 )
+                case ch
+                solve( !KU( f_.5, sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1)
+                       ) @ #vk.5 )
+                  case C_2
+                  solve( !KU( f_.19, PRF(<~pms, ~nc, ~ns>) ) @ #vk.23 )
+                    case cPRF
+                    solve( !KU( f_.20, ~pms ) @ #vk.26 )
+                      case C_2
+                      solve( !KU( f_.5, ~ltkA ) @ #vk.27 )
+                        case Reveal_ltk
+                        by contradiction // from formulas
+                      qed
+                    qed
+                  qed
+                next
+                  case csign
+                  solve( !KU( f_.5, ~ltkA.1 ) @ #vk.25 )
+                    case Reveal_ltk
+                    by contradiction // from formulas
+                  qed
+                qed
+              qed
+            next
+              case csenc
+              solve( !KU( f_, h(<'serverKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>)
+                     ) @ #vk.3 )
+                case ch
+                solve( !KU( f_.7, sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1)
+                       ) @ #vk.5 )
+                  case C_2
+                  solve( !KU( f_.28, PRF(<~pms, nc, ~ns>) ) @ #vk.33 )
+                    case cPRF
+                    solve( !KU( f_.32, ~pms ) @ #vk.38 )
+                      case C_2
+                      solve( !KU( f_.7, ~ltkA ) @ #vk.39 )
+                        case Reveal_ltk
+                        by contradiction // from formulas
+                      qed
+                    qed
+                  qed
+                next
+                  case csign
+                  solve( !KU( f_.7, ~ltkA.1 ) @ #vk.38 )
+                    case Reveal_ltk
+                    by contradiction // from formulas
+                  qed
+                qed
+              qed
+            qed
+          next
+            case caenc
+            solve( !KU( f_.7,
+                        senc(<'33', sid, PRF(<pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, $S>,
+                             h(<'clientKey', nc, ~ns, PRF(<pms, nc, ~ns>)>))
+                   ) @ #vk.5 )
+              case C_2
+              solve( !KU( f_.15, ~pms ) @ #vk.17 )
+                case C_2
+                solve( !KU( f_.6, ~ltkA.2 ) @ #vk.23 )
+                  case Reveal_ltk
+                  by contradiction // from formulas
+                qed
+              qed
+            next
+              case csenc
+              solve( !KU( f_, h(<'serverKey', nc, ~ns, PRF(<pms, nc, ~ns>)>)
+                     ) @ #vk.3 )
+                case ch
+                solve( !KU( f_.8, sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1)
+                       ) @ #vk.5 )
+                  case C_2
+                  solve( !KU( f_.22, ~pms ) @ #vk.24 )
+                    case C_2
+                    solve( !KU( f_.8, ~ltkA.2 ) @ #vk.40 )
+                      case Reveal_ltk
+                      by contradiction // from formulas
+                    qed
+                  qed
+                next
+                  case csign
+                  solve( !KU( f_.8, ~ltkA.1 ) @ #vk.36 )
+                    case Reveal_ltk
+                    by contradiction // from formulas
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( SessionKeys( S, C, keyS, keyC ) @ #k )
+    case C_3
+    solve( (#k, 0)[St_C_2( S, C, sid, nc, pc, ns, ps, pms )] )
+      case C_2
+      solve( !KU( f_.1,
+                  senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, $A>,
+                       h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>))
+             ) @ #vk.1 )
+        case S_2
+        solve( !KU( f_, h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
+               ) @ #vk.1 )
+          case ch
+          solve( !KU( f_.11, aenc(<'31', ~pms>, pk(~ltkA.2)) ) @ #vk.13 )
+            case C_2
+            solve( !KU( f_.14, sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.2)
+                   ) @ #vk.17 )
+              case C_2
+              solve( !KU( f_.20, PRF(<~pms, ~nc, ~ns>) ) @ #vk.24 )
+                case cPRF
+                solve( !KU( f_.21, ~pms ) @ #vk.27 )
+                  case C_2
+                  solve( !KU( f_.5, ~ltkA ) @ #vk.28 )
+                    case Reveal_ltk
+                    by contradiction // from formulas
+                  qed
+                qed
+              qed
+            next
+              case csign
+              solve( !KU( f_.5, ~ltkA.2 ) @ #vk.26 )
+                case Reveal_ltk
+                by contradiction // from formulas
+              qed
+            qed
+          next
+            case caenc
+            solve( !KU( f_.25, ~pms ) @ #vk.28 )
+              case C_2
+              solve( !KU( f_.6, ~ltkA ) @ #vk.29 )
+                case Reveal_ltk
+                by contradiction // from formulas
+              qed
+            qed
+          qed
+        qed
+      next
+        case csenc
+        solve( !KU( f_, h(<'clientKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>)
+               ) @ #vk.1 )
+          case ch
+          solve( !KU( f_.15, PRF(<~pms, ~nc, ns>) ) @ #vk.18 )
+            case cPRF
+            solve( !KU( f_.25, ~pms ) @ #vk.29 )
+              case C_2
+              solve( !KU( f_.5, ~ltkA ) @ #vk.30 )
+                case Reveal_ltk
+                by contradiction // from formulas
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case S_2
+    solve( (#k, 0)[St_S_1( S, C, sid, nc, pc, ns, ps )] )
+      case S_1
+      solve( (#k, 2)[!Pk( $C, pk(x) )] )
+        case Register_pk
+        solve( (#k, 3)[!Ltk( $S, ltkS )] )
+          case Register_pk
+          solve( !KU( f_.3, aenc(<'31', pms>, pk(~ltkA)) ) @ #vk.2 )
+            case C_2
+            solve( !KU( f_.6,
+                        senc(<'33', sid, PRF(<~pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, $S>,
+                             h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>))
+                   ) @ #vk.5 )
+              case C_2
+              solve( !KU( f_, h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
+                     ) @ #vk.3 )
+                case ch
+                solve( !KU( f_.5, sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1)
+                       ) @ #vk.5 )
+                  case C_2
+                  solve( !KU( f_.19, PRF(<~pms, ~nc, ~ns>) ) @ #vk.23 )
+                    case cPRF
+                    solve( !KU( f_.20, ~pms ) @ #vk.26 )
+                      case C_2
+                      solve( !KU( f_.5, ~ltkA ) @ #vk.27 )
+                        case Reveal_ltk
+                        by contradiction // from formulas
+                      qed
+                    qed
+                  qed
+                next
+                  case csign
+                  solve( !KU( f_.5, ~ltkA.1 ) @ #vk.25 )
+                    case Reveal_ltk
+                    by contradiction // from formulas
+                  qed
+                qed
+              qed
+            next
+              case csenc
+              solve( !KU( f_, h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>)
+                     ) @ #vk.3 )
+                case ch
+                solve( !KU( f_.6, sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1)
+                       ) @ #vk.5 )
+                  case C_2
+                  solve( !KU( f_.27, PRF(<~pms, nc, ~ns>) ) @ #vk.32 )
+                    case cPRF
+                    solve( !KU( f_.31, ~pms ) @ #vk.37 )
+                      case C_2
+                      solve( !KU( f_.6, ~ltkA ) @ #vk.38 )
+                        case Reveal_ltk
+                        by contradiction // from formulas
+                      qed
+                    qed
+                  qed
+                next
+                  case csign
+                  solve( !KU( f_.6, ~ltkA.1 ) @ #vk.37 )
+                    case Reveal_ltk
+                    by contradiction // from formulas
+                  qed
+                qed
+              qed
+            qed
+          next
+            case caenc
+            solve( !KU( f_.7,
+                        senc(<'33', sid, PRF(<pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, $S>,
+                             h(<'clientKey', nc, ~ns, PRF(<pms, nc, ~ns>)>))
+                   ) @ #vk.5 )
+              case C_2
+              solve( !KU( f_.15, ~pms ) @ #vk.17 )
+                case C_2
+                solve( !KU( f_.6, ~ltkA.2 ) @ #vk.23 )
+                  case Reveal_ltk
+                  by contradiction // from formulas
+                qed
+              qed
+            next
+              case csenc
+              solve( !KU( f_, h(<'clientKey', nc, ~ns, PRF(<pms, nc, ~ns>)>)
+                     ) @ #vk.3 )
+                case ch
+                solve( !KU( f_.7, sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1)
+                       ) @ #vk.5 )
+                  case C_2
+                  solve( !KU( f_.21, ~pms ) @ #vk.24 )
+                    case C_2
+                    solve( !KU( f_.7, ~ltkA.2 ) @ #vk.39 )
+                      case Reveal_ltk
+                      by contradiction // from formulas
+                    qed
+                  qed
+                next
+                  case csign
+                  solve( !KU( f_.7, ~ltkA.1 ) @ #vk.35 )
+                    case Reveal_ltk
+                    by contradiction // from formulas
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma (modulo E) session_key_setup_possible:
+  exists-trace
+  "(All x y.1 #i.2. (Eq( x, y.1 ) @ #i.2) ==> (x = y.1)) &
+   (Ex S.3 C.4 keyS.5 keyC.6 #k.7.
+     ((SessionKeys( S.3, C.4, keyS.5, keyC.6 ) @ #k.7) &
+      (not(Ex #r.8. RevLtk( S.3 ) @ #r.8))) &
+     (not(Ex #r.9. RevLtk( C.4 ) @ #r.9)))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all satisfying traces:
+"(All x y.1 #i.2. (Eq( x, y.1 ) @ #i.2) ==> x = y.1) &
+ (Ex S.3 C.4 keyS.5 keyC.6 #k.7.
+   (SessionKeys( S.3, C.4, keyS.5, keyC.6 ) @ #k.7)
+  &
+   (All #r.8. (RevLtk( S.3 ) @ #r.8) ==> F) &
+   (All #r.9. (RevLtk( C.4 ) @ #r.9) ==> F))"
+*/
+simplify
+solve( SessionKeys( S, C, keyS, keyC ) @ #k )
+  case C_3
+  solve( (#k, 0)[St_C_2( S, C, sid, nc, pc, ns, ps, pms )] )
+    case C_2
+    solve( !KU( f_,
+                senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, $A>,
+                     h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>))
+           ) @ #vk )
+      case S_2
+      solve( !KU( f_.9, aenc(<'31', ~pms>, pk(~ltkA.2)) ) @ #vk.10 )
+        case C_2
+        solve( !KU( f_.11, sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.2)
+               ) @ #vk.13 )
+          case C_2
+          solve( !KU( f_.7, ~sid ) @ #vk.9 )
+            case C_1
+            solve( !KU( f_.5, ~ns ) @ #vk.9 )
+              case S_1
+              solve( !KU( f_.12, ~nc ) @ #vk.17 )
+                case C_1
+                solve( !KU( f_.10,
+                            senc(<'33', ~sid, PRF(<~pms, ~nc, ~ns>), ~nc, $pc, $C, ~ns, $ps, $A>,
+                                 h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>))
+                       ) @ #vk.16 )
+                  case C_2
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.6. OK.
+ checking installation: OK.
+
+
+analyzing: data/examples/classic/TLS_Handshake.spthy
+
+------------------------------------------------------------------------------
+analyzed: data/examples/classic/TLS_Handshake.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 2.192051s
+  session_key_secrecy (all-traces): verified (106 steps)
+  session_key_setup_possible (exists-trace): verified (11 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: data/examples/classic/TLS_Handshake.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 2.192051s
+  session_key_secrecy (all-traces): verified (106 steps)
+  session_key_setup_possible (exists-trace): verified (11 steps)
+
+==============================================================================
+*/

@@ -219,7 +219,7 @@ solve( (#i1, 0)[Init_1( ~ekI, $I, $R, ~lkI, hkI )] )
                   qed
                 next
                   case cexp
-                  solve( !KU( f_.11, ~ekI ) @ #vk.18 )
+                  solve( !KU( f_.11, ~ekI ) @ #vk.17 )
                     case Ephk_reveal
                     by contradiction // from formulas
                   qed
@@ -382,7 +382,7 @@ solve( (#i1, 2)[!Ltk( $R, ~lkR )] )
                 qed
               next
                 case cexp
-                solve( !KU( f_.11, ~ekI ) @ #vk.18 )
+                solve( !KU( f_.11, ~ekI ) @ #vk.17 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
@@ -464,7 +464,7 @@ analyzing: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.189545s
+  processing time: 1.129432s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 
@@ -476,7 +476,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.189545s
+  processing time: 1.129432s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 

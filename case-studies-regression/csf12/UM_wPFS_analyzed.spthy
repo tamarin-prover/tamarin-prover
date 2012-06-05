@@ -199,7 +199,7 @@ solve( (#i1, 0)[Init_1( ~ekI, $I, $R, ~lkI, hkI )] )
                   qed
                 next
                   case cexp
-                  solve( !KU( f_.5, ~ekI ) @ #vk.12 )
+                  solve( !KU( f_.5, ~ekI ) @ #vk.11 )
                     case Ephk_reveal
                     by contradiction // from formulas
                   qed
@@ -357,7 +357,7 @@ solve( (#i1, 2)[!Ltk( $R, ~lkR )] )
                 qed
               next
                 case cexp
-                solve( !KU( f_.4, ~ekI ) @ #vk.11 )
+                solve( !KU( f_.4, ~ekI ) @ #vk.10 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
@@ -439,7 +439,7 @@ analyzing: data/examples/csf12/UM_wPFS.spthy
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.968371s
+  processing time: 1.008401s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 
@@ -451,7 +451,7 @@ summary of summaries:
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.968371s
+  processing time: 1.008401s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 

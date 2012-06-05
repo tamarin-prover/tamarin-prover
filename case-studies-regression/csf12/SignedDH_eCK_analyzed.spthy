@@ -192,15 +192,15 @@ solve( (#i1, 0)[Init_1( ~ekI, $I, $R, ~ekI, hkI )] )
     case Register_pk
     solve( !KU( f_.7, sign(<'2', $R, $I, hkR>, ~ltk) ) @ #vk.6 )
       case Resp
-      solve( !KU( f_, 'g'^(~ekI*~ekR) ) @ #vk.7 )
+      solve( !KU( f_, 'g'^(~ekI*~ekR) ) @ #vk.9 )
         case Init_1
-        solve( !KU( f_.2, ~ekR ) @ #vk.15 )
+        solve( !KU( f_.2, ~ekR ) @ #vk.13 )
           case Ephk_reveal
-          solve( !KU( f_.12, sign(<'1', $I, $R, X>, ~ltk.2) ) @ #vk.16 )
+          solve( !KU( f_.10, sign(<'1', $I, $R, X>, ~ltk.2) ) @ #vk.13 )
             case Init_1
-            solve( !KU( f_.6, 'g'^~ekR ) @ #vk.9 )
+            solve( !KU( f_.7, 'g'^~ekR ) @ #vk.11 )
               case Resp
-              solve( !KU( f_.10, 'g'^~ekI.1 ) @ #vk.17 )
+              solve( !KU( f_.8, 'g'^~ekI.1 ) @ #vk.13 )
                 case Init_1
                 SOLVED // trace found
               qed
@@ -273,7 +273,7 @@ solve( (#i1, 0)[!Pk( $I, pk(ltkI) )] )
         case Init_1
         solve( !KU( f_.1, ~ekR ) @ #vk.8 )
           case Ephk_reveal
-          solve( !KU( f_.5, 'g'^~ekI ) @ #vk.9 )
+          solve( !KU( f_.5, 'g'^~ekI ) @ #vk.8 )
             case Init_1
             SOLVED // trace found
           qed
@@ -298,7 +298,7 @@ analyzing: data/examples/csf12/SignedDH_eCK.spthy
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.383295s
+  processing time: 13.653694s
   eCK_initiator_key (all-traces): falsified - found trace (10 steps)
   eCK_responder_key (all-traces): falsified - found trace (8 steps)
 
@@ -310,7 +310,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.383295s
+  processing time: 13.653694s
   eCK_initiator_key (all-traces): falsified - found trace (10 steps)
   eCK_responder_key (all-traces): falsified - found trace (8 steps)
 

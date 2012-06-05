@@ -220,22 +220,23 @@ solve( (#i1, 0)[Init_1( $I, $R, ~ltkI, ~ekI )] )
     case Register_pk_clone_case_1
     solve( !KU( f_.8, sign(<hkr, 'g'^~ekI>, ~ltkR) ) @ #vk.7 )
       case Resp_1
-      solve( !KU( f_, KDF('g'^(~ekI*~ekR)) ) @ #vk.9 )
+      solve( !KU( f_, KDF('g'^(~ekI*~ekR)) ) @ #vk.10 )
         case Sessionkey_Reveal_case_4
-        solve( !KU( f_.19, sign(<x^x.1, 'g'^~tid>, ~ltkI.1) ) @ #vk.20 )
+        solve( !KU( f_.18, sign(<x^x.1, 'g'^~tid>, ~ltkI.1) ) @ #vk.21 )
           case Init_2_case_1
           solve( splitEqs(1) )
             case split
-            solve( !KU( f_.9, mac('g'^(~ekI*~ekR), sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR))
-                   ) @ #vk.13 )
+            solve( !KU( f_.10,
+                        mac('g'^(~ekI*~ekR), sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR))
+                   ) @ #vk.14 )
               case Resp_1
-              solve( !KU( f_.10, 'g'^~ekR ) @ #vk.14 )
+              solve( !KU( f_.11, 'g'^~ekR ) @ #vk.15 )
                 case Resp_1
-                solve( !KU( f_.16, 'g'^~ekI ) @ #vk.22 )
+                solve( !KU( f_.12, 'g'^~ekI ) @ #vk.17 )
                   case Init_1
-                  solve( !KU( f_.21,
+                  solve( !KU( f_.12,
                               mac('g'^(~ekI*~ekR), sign(<'g'^~ekI, 'g'^~ekR>, ~ltkI))
-                         ) @ #vk.31 )
+                         ) @ #vk.18 )
                     case Init_2
                     SOLVED // trace found
                   qed
@@ -282,26 +283,27 @@ solve( (#i1, 0)[!Pk( $I, pk(~ltkI) )] )
   case Register_pk_clone_case_1
   solve( (#i1, 1)[Resp_1( $I, $R, ~ltkR, ~ekR, hki )] )
     case Resp_1
-    solve( !KU( f_.7, sign(<hki, 'g'^~ekR>, ~ltkI) ) @ #vk.5 )
+    solve( !KU( f_.7, sign(<hki, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
       case Init_2_case_2
-      solve( !KU( f_, KDF('g'^(~ekI*~ekR)) ) @ #vk.7 )
+      solve( !KU( f_, KDF('g'^(~ekI*~ekR)) ) @ #vk.10 )
         case Sessionkey_Reveal_case_2
-        solve( !KU( f_.19, sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.20 )
+        solve( !KU( f_.16, sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.17 )
           case Resp_1
-          solve( !KU( f_.26, sign(<'g'^x, 'g'^~tid>, ~ltkR.1) ) @ #vk.30 )
+          solve( !KU( f_.23, sign(<'g'^x, 'g'^~tid>, ~ltkR.1) ) @ #vk.26 )
             case Resp_1
             solve( splitEqs(1) )
               case split
-              solve( !KU( f_.8, mac('g'^(~ekI*~ekR), sign(<'g'^~ekI, 'g'^~ekR>, ~ltkI))
-                     ) @ #vk.11 )
+              solve( !KU( f_.10,
+                          mac('g'^(~ekI*~ekR), sign(<'g'^~ekI, 'g'^~ekR>, ~ltkI))
+                     ) @ #vk.14 )
                 case Init_2
-                solve( !KU( f_.21,
+                solve( !KU( f_.14,
                             mac('g'^(~ekI*~ekR), sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR))
-                       ) @ #vk.30 )
+                       ) @ #vk.18 )
                   case Resp_1
-                  solve( !KU( f_.16, 'g'^~ekI ) @ #vk.23 )
+                  solve( !KU( f_.11, 'g'^~ekI ) @ #vk.16 )
                     case Init_1
-                    solve( !KU( f_.23, 'g'^~ekR ) @ #vk.34 )
+                    solve( !KU( f_.12, 'g'^~ekR ) @ #vk.18 )
                       case Resp_1
                       SOLVED // trace found
                     qed
@@ -331,7 +333,7 @@ analyzing: data/examples/csf12/STS_MAC.spthy
 analyzed: data/examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.941023s
+  processing time: 3.957069s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)
 
@@ -343,7 +345,7 @@ summary of summaries:
 analyzed: data/examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.941023s
+  processing time: 3.957069s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)
 

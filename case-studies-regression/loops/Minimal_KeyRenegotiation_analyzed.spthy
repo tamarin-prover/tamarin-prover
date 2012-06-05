@@ -1,4 +1,4 @@
-theory Mini_TESLA begin
+theory KeyRenegotiation_Minimal begin
 
 // Function signature and definition of the equational theory E
 
@@ -146,13 +146,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/stateful/Mini_TESLA.spthy
+analyzing: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/stateful/Mini_TESLA.spthy
+analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.095346s
+  processing time: 0.115092s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (27 steps)
 
@@ -161,10 +161,10 @@ analyzed: data/examples/stateful/Mini_TESLA.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/stateful/Mini_TESLA.spthy
+analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.095346s
+  processing time: 0.115092s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (27 steps)
 

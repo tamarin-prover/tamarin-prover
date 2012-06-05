@@ -148,17 +148,17 @@ solve( SessionKey( I, R, sessKey ) @ #i )
         case Resp
         solve( !KU( f_, 'g'^(~ekI*~ekR) ) @ #vk.1 )
           case Init_1
-          by solve( !KU( f_.2, ~ekR ) @ #vk.15 )
+          by solve( !KU( f_.2, ~ekR ) @ #vk.13 )
         next
           case Resp
-          by solve( !KU( f_.2, ~ekI ) @ #vk.20 )
+          by solve( !KU( f_.2, ~ekI ) @ #vk.13 )
         next
           case cexp
-          by solve( !KU( f_.14, ~ekI ) @ #vk.17 )
+          by solve( !KU( f_.12, ~ekI ) @ #vk.15 )
         qed
       next
         case csign
-        solve( !KU( f_.3, ~ltk ) @ #vk.10 )
+        solve( !KU( f_.3, ~ltk ) @ #vk.11 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
@@ -178,14 +178,14 @@ next
           by solve( !KU( f_.1, ~ekR ) @ #vk.8 )
         next
           case Resp
-          by solve( !KU( f_.1, ~ekI ) @ #vk.13 )
+          by solve( !KU( f_.1, ~ekI ) @ #vk.8 )
         next
           case cexp
           by solve( !KU( f_.7, ~ekI ) @ #vk.10 )
         qed
       next
         case csign
-        solve( !KU( f_.3, ~ltk ) @ #vk.10 )
+        solve( !KU( f_.3, ~ltk ) @ #vk.11 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
@@ -209,7 +209,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.685174s
+  processing time: 0.677059s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -220,7 +220,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.685174s
+  processing time: 0.677059s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

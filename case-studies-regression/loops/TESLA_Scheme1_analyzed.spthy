@@ -154,11 +154,11 @@ induction
                                       MAC(<'1', ~m1, f(~k2)>, kOld.1), f(kOld.1), f(kOld)
                             )] )
               case Recv1
-              solve( !KU( f_.9, ~k2 ) @ #vk.7 )
+              solve( !KU( f_.10, ~k2 ) @ #vk.9 )
                 case SendN
-                solve( !KU( f_.16, ~k1 ) @ #vk.16 )
+                solve( !KU( f_.15, ~k1 ) @ #vk.15 )
                   case SendN
-                  solve( !KU( f_.16, MAC(<'N', m.1, commit_k, ~k1>, ~k2) ) @ #vk.17 )
+                  solve( !KU( f_.15, MAC(<'N', m.1, commit_k, ~k1>, ~k2) ) @ #vk.16 )
                     case SendN
                     by contradiction // from formulas
                   next
@@ -179,9 +179,9 @@ induction
               case Send1
               solve( (#j.1, 0)[Sender1( ~k1 )] )
                 case Setup
-                solve( !KU( f_.9, ~kNew ) @ #vk.7 )
+                solve( !KU( f_.11, ~kNew ) @ #vk.11 )
                   case SendN
-                  solve( !KU( f_.17, MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.17 )
+                  solve( !KU( f_.17, MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.18 )
                     case SendN
                     by contradiction // from formulas
                   next
@@ -192,9 +192,9 @@ induction
               qed
             next
               case SendN
-              solve( !KU( f_.9, ~kNew ) @ #vk.7 )
+              solve( !KU( f_.11, ~kNew ) @ #vk.11 )
                 case SendN
-                solve( !KU( f_.17, MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.17 )
+                solve( !KU( f_.17, MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.18 )
                   case SendN
                   by contradiction // from formulas
                 next
@@ -234,13 +234,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/stateful/TESLA_Scheme1.spthy
+analyzing: data/examples/loops/TESLA_Scheme1.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/stateful/TESLA_Scheme1.spthy
+analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.35982s
+  processing time: 0.356997s
   claim_reachable (exists-trace): verified (8 steps)
   authentic2 (all-traces): verified (30 steps)
 
@@ -249,10 +249,10 @@ analyzed: data/examples/stateful/TESLA_Scheme1.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/stateful/TESLA_Scheme1.spthy
+analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.35982s
+  processing time: 0.356997s
   claim_reachable (exists-trace): verified (8 steps)
   authentic2 (all-traces): verified (30 steps)
 
