@@ -187,7 +187,7 @@ helpAndExit tmode mayMsg = do
     when (tmIsMainMode tmode) $ do
       examplePath <- getDataFileName "examples"
       manualPath  <- getDataFileName ("doc" </> "MANUAL")
-      let tutorialPath = examplePath </> "stable" </> "Tutorial.spthy"
+      let tutorialPath = examplePath </> "Tutorial.spthy"
           csf12Path = examplePath </> "csf12" </> "*.spthy"
           csf12Cmd  = programName ++ " --prove -Ocase-studies +RTS -N -RTS " ++ csf12Path
           csf12Cmd' = programName ++ " interactive +RTS -N -RTS " ++ csf12Path
@@ -196,8 +196,8 @@ helpAndExit tmode mayMsg = do
       putStrLn $ unlines
         [ separator
         , e "For example protocol models see:" [examplePath]
-        , e "A tutorial and the user manul are found at" [tutorialPath, manualPath]
-        , e "To run all case-studies from our CSF'12 submission, use" [csf12Cmd]
+        , e "A tutorial and the user manual are found at" [tutorialPath, manualPath]
+        , e "To run all case-studies from our CSF'12 paper, use" [csf12Cmd]
         , e "To construct their security proofs interactively, use" [csf12Cmd']
         , "Note that the +RTS -N -RTS flags instruct the Haskell runtime system to"
         , "use as many cores as your system has. This speeds-up some of the computations."
