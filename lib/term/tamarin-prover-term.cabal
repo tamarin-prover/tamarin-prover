@@ -2,7 +2,7 @@ name:               tamarin-prover-term
 
 cabal-version:      >= 1.8
 build-type:         Simple
-version:            0.5.0.0
+version:            0.6.0.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -15,7 +15,7 @@ synopsis:           Term manipulation library for the tamarin prover.
 
 description:        This is an internal library of the Tamarin prover for
                     security protocol verification
-                    (<hackage.haskell.org/package/tamarin-prover>). 
+                    (<hackage.haskell.org/package/tamarin-prover>).
                     .
                     This library provides term manipulation infrastructure
                     (matching, unification, narrowing, finite variants) for
@@ -55,8 +55,8 @@ library
       , derive               == 2.5.*
 
       , HUnit                == 1.2.*
-                          
-      , tamarin-prover-utils == 0.5.*
+
+      , tamarin-prover-utils == 0.6.*
 
 
     hs-source-dirs: src
