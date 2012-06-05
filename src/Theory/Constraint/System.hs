@@ -212,8 +212,11 @@ formulaToSystem kind traceQuantifier fm =
 
 -- | Add a lemma / additional assumption to a constraint system.
 insertLemma :: LNFormula -> System -> System
-insertLemma fm =
-    L.modify sLemmas (S.insert (either error id $ formulaToGuarded fm))
+insertLemma fm0 =
+    go (either error id $ formulaToGuarded fm0)
+  where
+    go (GConj conj) = foldr (.) id $ map go $ getConj conj
+    go fm           = L.modify sLemmas (S.insert fm)
 
 
 ------------------------------------------------------------------------------
