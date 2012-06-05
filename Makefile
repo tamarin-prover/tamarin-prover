@@ -150,7 +150,7 @@ induction-case-studies:	$(IND_CS_TARGETS)
 ######################
 
 
-CLASSIC_CASE_STUDIES=TLS_Handshake.spthy NSLPK3.spthy
+CLASSIC_CASE_STUDIES=TLS_Handshake.spthy NSLPK3.spthy NSLPK3_untagged.spthy
 
 CLASSIC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/classic/,$(CLASSIC_CASE_STUDIES)))
 
