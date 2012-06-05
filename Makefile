@@ -80,11 +80,13 @@ cabal-dev:
 #########
 
 # These case studies are located in data/examples/ or examples/
+DH2=DH2_original.spthy
+
+KAS=KAS1.spthy KAS2_eCK.spthy KAS2_original.spthy
+
 KEA=KEA_plus_KI_KCI.spthy KEA_plus_KI_KCI_wPFS.spthy
 
 NAXOS=NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy
-
-UM=UM_wPFS.spthy UM_PFS.spthy
 
 SDH=SignedDH_PFS.spthy SignedDH_eCK.spthy
 
@@ -94,10 +96,13 @@ JKL1=JKL_TS1_2004_KI.spthy JKL_TS1_2008_KI.spthy
 JKL2=JKL_TS2_2004_KI_wPFS.spthy JKL_TS2_2008_KI_wPFS.spthy
 JKL3=JKL_TS3_2004_KI_wPFS.spthy JKL_TS3_2008_KI_wPFS.spthy
 
+UM=UM_wPFS.spthy UM_PFS.spthy
+
+
 TMPRES=case-studies/temp-analysis.spthy
 TMPOUT=case-studies/temp-output.spthy
 
-CSF12_CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(STS) $(SDH)
+CSF12_CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(STS) $(SDH) $(KAS) $(DH2)
 CSF12_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/csf12/,$(CSF12_CASE_STUDIES)))
 
 # CSF'12 case studies

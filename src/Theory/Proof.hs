@@ -493,7 +493,7 @@ cutOnSolvedDFS prf0 =
           | otherwise = case node of
               LNode (ProofStep Solved (_,path)) _ -> Solution path
               LNode _ cs                          ->
-                mconcat $ parMap rseq (findSolved (succ d)) $ M.elems cs
+                  foldMap (findSolved (succ d)) cs
 
     extractSolved []         p               = p
     extractSolved (label:ps) (LNode pstep m) = case M.lookup label m of

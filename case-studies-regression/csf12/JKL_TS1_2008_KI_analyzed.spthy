@@ -226,7 +226,7 @@ analyzing: data/examples/csf12/JKL_TS1_2008_KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.37841s
+  processing time: 0.4421s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 
@@ -238,7 +238,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.37841s
+  processing time: 0.4421s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 

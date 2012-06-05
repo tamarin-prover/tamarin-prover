@@ -454,7 +454,7 @@ analyzing: data/examples/csf12/STS_MAC_fix2.spthy
 analyzed: data/examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.955787s
+  processing time: 1.938819s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (28 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (36 steps)
 
@@ -466,7 +466,7 @@ summary of summaries:
 analyzed: data/examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.955787s
+  processing time: 1.938819s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (28 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (36 steps)
 
