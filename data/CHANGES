@@ -1,4 +1,6 @@
-* 0.5.0.0 (development release)
+* 0.6.0.0
+   - open-sourced the code: https://github.com/tamarin-prover/tamarin-prover
+
    - core prover:
        - Normal form construction rules now log their conclusion as a
          KU-action. This allows to refer to the conclusions of construction
@@ -17,8 +19,14 @@
        - Removed preliminary support for typing invariants based on
          Ded-actions and the deducible-before-atom (--|).
 
+       - See the MANUAL for an explanation of the theory that we changed with
+         respect to our CSF'12 paper.
+
    - GUI:
        - action atoms are also displayed graphically
+       - the autoprover now respect all flags from the command line; e.g.,
+         using `tamarin-prover interactive --bound=7` will give you a
+         bounded-depth prover in the interactive GUI.
 
 * 0.4.1.0
    - core prover:
