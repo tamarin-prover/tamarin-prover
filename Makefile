@@ -125,7 +125,7 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 ## Inductive Strengthening
 ##########################
 
-TPM=related_work/TPM_DKRS_CSF11/CSF11_RunningExample.spthy
+TPM=related_work/TPM_DKRS_CSF11/RunningExample.spthy
 # Envelope.spthy (not yet working automatically)
 STATVERIF=related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 # GM_Contract.spthy (not finished)
