@@ -291,13 +291,13 @@ factReports thy = concat
        return $ (,) "fact usage" $ numbered' $ do
            (origin, (ppFa, info@(tag, _, _))) <- clash
            return $ text (origin ++
-                          ", fact " ++ show (map toLower $ showFactTag tag) ++
+                          ", fact " ++ show (map toLower $ factTagName tag) ++
                           ": " ++ showInfo info)
                     $-$ nest 2 ppFa
       where
         showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
-        factIdentifier (_, (_, (tag, _, _))) = map toLower $ showFactTag tag
+        factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
 
 
     -- Check that every fact referenced in a formula is present as an action

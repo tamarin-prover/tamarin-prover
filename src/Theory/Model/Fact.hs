@@ -24,6 +24,7 @@ module Theory.Model.Fact (
   , isPersistentFact
   , isProtoFact
 
+  , factTagName
   , showFactTag
   , showFactTagArity
   , factTagArity
@@ -265,7 +266,7 @@ factTagMultiplicity tag = case tag of
 
 -- | The arity of a 'FactTag'.
 factTagArity :: FactTag -> Int
-factTagArity tag = case tag of
+factTagArity tag = case  tag of
     ProtoFact _ _ k -> k
     KUFact          -> 2
     KDFact          -> 2
@@ -332,19 +333,24 @@ matchFact t p =
 -- Pretty Printing
 ------------------------------------------------------------------------------
 
--- | Show a fact tag as a 'String'.
-showFactTag :: FactTag -> String
-showFactTag tag = case tag of
-    KUFact            -> "!KU"
-    KDFact            -> "!KD"
+-- | The name of a fact tag, e.g., @factTagName KUFact = "KU"@.
+factTagName :: FactTag -> String
+factTagName tag = case tag of
+    KUFact            -> "KU"
+    KDFact            -> "KD"
     DedFact           -> "Ded"
     InFact            -> "In"
     OutFact           -> "Out"
     FreshFact         -> "Fr"
-    (ProtoFact m n _) -> multi m ++ n
-  where
-    multi Linear     = ""
-    multi Persistent = "!"
+    (ProtoFact _ n _) -> n
+
+-- | Show a fact tag as a 'String'. This is the 'factTagName' prefixed with
+-- the multiplicity.
+showFactTag :: FactTag -> String
+showFactTag tag =
+    (++ factTagName tag) $ case factTagMultiplicity tag of
+                             Linear     -> ""
+                             Persistent -> "!"
 
 -- | Show a fact tag together with its aritiy.
 showFactTagArity :: FactTag -> String
