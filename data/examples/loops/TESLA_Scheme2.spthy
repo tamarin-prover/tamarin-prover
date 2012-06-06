@@ -1,98 +1,250 @@
 theory TESLA_Scheme2 begin
 
 /*
-   Protocol:    The TESLA protocol, scheme 2
-   Modeler:     Simon Meier
-   Date:        May 2012
+  Protocol:    The TESLA protocol, scheme 2
+  Modeler:     Simon Meier
+  Date:        May 2012
 
-   Status:      WIP
+  Status:      working
 
-   Testing verification of stream-protocols, i.e., repeated key
-   re-negotiation.
+  Original descrption in [1]. This model is based on the following description
+  from [2].
 
-      Msg 0a. R -> S : nR
-      Msg 0b. S -> R : {k0 , nR }SK (S )
-      Msg 1.  S -> R : m1 , MAC (k1 , m1 ).
+    Msg 0a. R -> S : nR
+    Msg 0b. S -> R : {k0 , nR }SK (S )
+    Msg 1.  S -> R : m1 , MAC (k1 , m1 ).
 
-    And for n > 1:
-      Msg n. S -> R : Dn , MAC (kn , Dn ) where Dn = mn , kn-1 .
+  And for n > 1:
+    Msg n. S -> R : Dn , MAC (kn , Dn ) where Dn = mn , kn-1 .
 
-    One aim of this second version is to be able to tolerate an arbitrary number of
-    packet losses, and to drop unauthenticated packets, yet continue to authenticate
-    later packets.
+  One aim of this second version is to be able to tolerate an arbitrary number of
+  packet losses, and to drop unauthenticated packets, yet continue to authenticate
+  later packets.
+
+  We verify that the use of cryptography is correct under the assumption that
+  the security condition holds. We do not verify that the timing schedule
+  works, as we do not have a notion of time. For a manual, but machine-checked
+  verification of the Scheme 2 of the TESLA protocol with time see [3].
+
+
+  [1] Perrig, Adrian, Ran Canetti, Dawn Song, and Doug Tygar. "The TESLA
+  Broadcast Authentication Protocol." In RSA Cryptobytes, Summer 2002.
+
+  [2] Philippa J. Hopcroft, Gavin Lowe: Analysing a stream authentication
+  protocol using model checking. Int. J. Inf. Sec. 3(1): 2-13 (2004)
+
+  [3] David A. Basin, Srdjan Capkun, Patrick Schaller, Benedikt Schmidt:
+  Formal Reasoning about Physical Properties of Security Protocols. ACM Trans.
+  Inf. Syst. Secur. 14(2): 16 (2011)
 
 */
 
-functions: MAC/2, f/1
+builtins: signing
 
-rule Setup:
-    [ Fr(~k0) ]
+functions: MAC/2, h/1
+
+// PKI
+//////
+
+rule Generate_Keypair:
+    [ Fr(~ltk) ]
   -->
-    [ Sender0(~k0), Receiver0(~k0) ]
+    [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk(~ltk)) ]
 
+// We assume an active adversary.
+rule Reveal_Ltk:
+    [ !Ltk(A, ltk) ]
+  --[ RevealLtk(A) ]->
+    [ Out(ltk) ]
+
+
+// Setup phase
+//////////////
+
+// Hash chain generation
+rule Gen_Start:
+  [ Fr(~x0) ]
+  -->
+  [ GenChain(~x0) ]
+
+// The NextKey-facts are used by the sender rules to store the link between
+// the keys in the chain.
+rule Gen_Step:
+    [ GenChain(x)
+    ]
+  --[ Key(h(x))
+    ]->
+    [ GenChain( h(x) )
+    , NextKey( h(x), x )
+    ]
+
+/*
+// At some point the sender decides to stop the hash-chain precomputation.
+rule Gen_Stop:
+  [ GenChain(x) ]
+  -->
+  [ NextKey( h(x), x )
+  , Sender1(h(x))
+  , !Sender0a(h(x)) ]
+*/
+
+/* The following rule would allow skiping the verification that the PKI works
+ * properly */
+
+rule Gen_Stop:
+  [ GenChain(x) ]
+  --[ KeyExpired(x) ]->
+  [ Sender1(x) , !Receiver0(x), Out(x) ]
+
+rule New_Receiver:
+  [ !Receiver0(x) ]
+  -->
+  [ Receiver1($S, x) ]
+
+/*
+// Everybody can listen in by sending a request for the commitment to the
+// first key.
+rule Sender0a:
+    [ !Sender0a(k0)
+    , In( < R, S, nR> )
+    , !Ltk(S, ltkS)
+    ]
+  -->
+    [ Out( <S, R, k0, sign{ k0, nR}ltkS> ) ]
+
+// Receivers start by requesting the commitment to the first key and verifying
+// the signature on this commitment.
+rule Receiver0a:
+    [ Fr( ~nR ) ]
+  -->
+    [ Out( < $R, $S, ~nR > )
+    , Receiver0b( $R, $S, ~nR ) ]
+
+rule Receiver0b:
+    [ Receiver0b ( R, S, nR )
+    , !Pk( S, pkS)
+    , In( <S, R, k0, signature> )
+    ]
+  -->
+    [ Receiver0b_check(S, k0, verify(signature, <k0, nR>, pkS)) ]
+
+rule Receiver0b_check:
+    [ Receiver0b_check(S, k0, true) ]
+  -->
+    [ Receiver1( S, k0 ) ]
+*/
+
+
+// Authenticated broadcast
 rule Send1:
-    [ Sender0(k0), Fr(~m1) ]
-  --[ Sent(~m1) ]->
-    [ Sender(k0), Out( <~m1, MAC{'1', ~m1}(f(k0))> ) ]
+  let data = ~m1
+      mac  = MAC{data}k
+  in
+    [ Sender1(k)
+    , Fr(~m1)
+    ]
+  --[ Sent(data)
+    ]->
+    [ Out( < data, mac > )
+    , Sender(k, mac)
+    ]
 
 rule SendN:
   let data = <~m, kOld>
-      kCur = f(kOld)
-      kNew = f(kCur)
+      mac  = MAC{data}k
   in
-    [ Sender(kOld), Fr(~m) ]
-  --[ Sent(~m) ]->
-    [ Sender(kCur), Out( <data, MAC{'N',data}kNew> ) ]
+    [ Sender(kOld, macOld)
+    , NextKey(kOld, k)      // Descend the chain by one step.
+                            // Note that we will stop before the
+                            // Sending the first key of the chain.
+    , Fr(~m)
+    ]
+  --[ Sent(data)
+    , KeyExpired(kOld)
+    ]->
+    [ Out( <data, mac> )
+    , Sender(k, mac)
+    ]
 
-rule Recv1:
-    [ Receiver0(k0), In(<m, MAC{'1', m}(f(k0))>) ]
-  --[ FromSender(m) ]->
-    [ Reciever1(k0) ]
+rule Receive1:
+    [ Receiver1(S, kOld)
+    , In( <data, mac> )
+    , Fr(~claimId)
+    ]
+  --[ KeyNotExpiredHere(~claimId) ]->
+    [
+      Receiver( S, ~claimId, kOld, data, mac )
+    ]
 
-rule Recv:
-  let data = <m, kOld>
-      kCur = f(kOld)
-      kNew = f(kCur)
+rule ReceiveN:
+  let data   = <m, kOld>
   in
-    [ Receiver(kOld), In(< data, MAC{'N', data}~kNew>) ]
-  --[ FromSender(m) ]->
-    [ Reciever(f(kOld)) ]
+    [ In( <data, mac> )
+    , Receiver( S, oldClaimId, h(kOld), dataOld, MAC{dataOld}kOld )
+    , Fr(~claimId)
+    ]
+  --[ CheckKeyNotExpired(oldClaimId, kOld)
+    , FromSender(S, dataOld)
+    , KeyNotExpiredHere(~claimId)
+    ]->
+    [ Receiver( S, ~claimId, kOld, data, mac ) ]
 
-lemma types [use_induction]:
-  " All m #i. FromSender(m) @ i ==> Ex #j. Sent(m) @ j & j < i "
+// The following two lemmas constraint the search space strongly enough to
+// allow reasoning about the authenticity of the received messages.
 
+// Every key in a hash-chain is unique.
+lemma keys_inj [use_induction, reuse]:
+  " All k #i #j. Key(k) @ i & Key(k) @j ==> #i = #j "
 
+// Keys are only known to the adversary once they are expired.
+lemma secrecy [use_induction, reuse]:
+  " All k #i #j. Key(k) @ i & KU(k) @ j
+      ==> Ex #e. KeyExpired(k) @ e & e < j"
+
+// The desired security property: received messages are authentic.
 lemma authentic [use_induction]:
-  " All m #i. FromSender(m) @ i ==> Ex #j. Sent(m) @ j & j < i "
+  " (All claimId k #i #j #l.
+         KeyNotExpiredHere(claimId) @ i
+       & CheckKeyNotExpired(claimId, k) @ j
+       & KeyExpired(k) @ l
+       ==>
+         i < l
+    ) ==>
+    (All S m #i. FromSender(S, m) @ i ==>
+       ( (Ex #j. Sent(m) @ j      & j < i)
+       | (Ex #j. RevealLtk(S) @ j & j < i)
+       )
+    )
+  "
 
-/*
-
-rule Receive:
-    [ Receiver(k0), In(senc{k}k0) ]
-  --[ Secret(k) ]->
-    [ Receiver(k) ]
-
-lemma Secret_reachable:
+// To ensure that the above security property is not vacuously true due to the
+// filtering, we show that there exists a trace satisfying the filtering
+// condition and containing a 'FromSender'-action.
+lemma authentic_reachable [use_induction]:
   exists-trace
-  "Ex k #i. Secret(k) @ i"
+  " (All claimId k #i #j #e.
+         KeyNotExpiredHere(claimId) @ i
+       & CheckKeyNotExpired(claimId, k) @ j
+       & KeyExpired(k) @ e
+       ==>
+         i < e
+    ) &
+    (Ex S m #i. FromSender(S, m) @ i)
+  "
 
-lemma secrecy:
-  "All k #i #j. Secret(k) @ i & KU(k) @ j ==> F"
-
-
-
-
-
-
-
-*/
-
-
-
-
-
-
-
-
+// Just to make sure that everything is as expected, we also check that there
+// is no trace satisfying the filtering condition that excludes send steps
+// from happening before the corresponding receive steps.
+lemma wrong_filter_empty [use_induction]:
+  exists-trace
+  " (All claimId k #i #j #e.
+         KeyNotExpiredHere(claimId) @ i
+       & CheckKeyNotExpired(claimId, k) @ j
+       & KeyExpired(k) @ e
+       ==>
+         j < e
+    ) &
+    (Ex S m #i. FromSender(S, m) @ i)
+  "
 
 end

@@ -5,7 +5,10 @@ theory TESLA_Scheme1 begin
   Modeler:     Simon Meier
   Date:        May 2012
 
-  Status:      WIP
+  Status:      working
+
+  Original descrption in [1]. This model is based on the following description
+  from [2].
 
 
     Msg 0a. R -> S: nR
@@ -16,9 +19,87 @@ theory TESLA_Scheme1 begin
   For n > 1, the n-th message is:2
     Msg n. S -> R : Dn , MAC (kn , Dn ) where Dn = mn , f (kn+1 ), kn-1 .
 
+
+  We verify that the use of cryptography is correct under the assumption that
+  the security condition holds. We do not verify that the timing schedule
+  works, as we do not have a notion of time. For a manual, but machine-checked
+  verification of the Scheme 2 of the TESLA protocol with time see [3].
+
+
+  [1] Perrig, Adrian, Ran Canetti, Dawn Song, and Doug Tygar. "The TESLA
+  Broadcast Authentication Protocol." In RSA Cryptobytes, Summer 2002.
+
+  [2] Philippa J. Hopcroft, Gavin Lowe: Analysing a stream authentication
+  protocol using model checking. Int. J. Inf. Sec. 3(1): 2-13 (2004)
+
+  [3] David A. Basin, Srdjan Capkun, Patrick Schaller, Benedikt Schmidt:
+  Formal Reasoning about Physical Properties of Security Protocols. ACM Trans.
+  Inf. Syst. Secur. 14(2): 16 (2011)
+
 */
 
+builtins: signing
+
 functions: MAC/2, f/1
+
+// PKI
+//////
+
+rule Generate_Keypair:
+    [ Fr(~ltk) ]
+  -->
+    [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk(~ltk)) ]
+
+// We assume an active adversary.
+rule Reveal_Ltk:
+    [ !Ltk(A, ltk) ]
+  --[ RevealLtk(A) ]->
+    [ Out(ltk) ]
+
+
+// Setup phase
+//////////////
+
+// We choose a fresh start key and provide facts for sending and answering
+// receiver connection requests.
+rule Sender_Setup:
+    [ Fr(~k1) ]
+  -->
+    [ Sender1(~k1), !Sender0a(~k1) ]
+
+// Everybody can listen in by sending a request for the commitment to the
+// first key.
+rule Sender0a:
+    [ !Sender0a(k1)
+    , In( < R, S, nR> )
+    , !Ltk(S, ltkS)
+    ]
+  -->
+    [ Out( <S, R, f(k1), sign{ f(k1), nR}ltkS> ) ]
+
+// Receivers start by requesting the commitment to the first key and verifying
+// the signature on this commitment.
+rule Receiver0a:
+    [ Fr( ~nR ) ]
+  -->
+    [ Out( < $R, $S, ~nR > )
+    , Receiver0b( $R, $S, ~nR ) ]
+
+rule Receiver0b:
+    [ Receiver0b ( R, S, nR )
+    , !Pk( S, pkS)
+    , In( <S, R, k2, signature> )
+    ]
+  -->
+    [ Receiver0b_check(S, k2, verify(signature, <k2, nR>, pkS)) ]
+
+rule Receiver0b_check:
+    [ Receiver0b_check(S, k2, true) ]
+  -->
+    [ Receiver1( S, k2 ) ]
+
+
+/* The following setup-phase allows for a simpler proof.
 
 rule Setup:
     [ Fr(~k1) ]
@@ -27,6 +108,9 @@ rule Setup:
     , Receiver1(f(~k1))
     ]
 
+*/
+
+// Authenticated broadcasting
 rule Send1:
   let data1 = <'1', ~m1, f(~k2)>
   in
@@ -43,12 +127,12 @@ rule Send1:
 rule Recv1:
   let data1 = <'1', m1, commit_k2>
   in
-    [ Receiver1(commit_k1)
+    [ Receiver1(S, commit_k1)
     , In( <data1, mac1> )
     ]
   --[ AssumeCommitNotExpired(commit_k1)
     ]->
-    [ Receiver(data1, mac1, commit_k1, commit_k2) ]
+    [ Receiver(S, data1, mac1, commit_k1, commit_k2) ]
 
 rule SendN:
   let data = <'N', ~m, f(~kNew), ~kOld>
@@ -64,44 +148,50 @@ rule SendN:
     , Out( <data, MAC{data}~k> )
     ]
 
-rule Recv:
+rule RecvN:
   let data = <'N', m, commit_kNew, kOld>
   in
     [ In(< data, mac >)
-    , Receiver(dataOld, MAC{dataOld}kOld, f(kOld), commit_k)
+    , Receiver(S, dataOld, MAC{dataOld}kOld, f(kOld), commit_k)
     ]
-  --[ ClaimSent(dataOld)
+  --[ FromSender(S, dataOld)
     , AssumeCommitNotExpired(commit_k)
     ]->
-    [ Receiver(data, mac, commit_k, commit_kNew) ]
+    [ Receiver(S, data, mac, commit_k, commit_kNew) ]
 
-lemma claim_reachable [use_induction]:
+
+// The desired security property: if all commits expired after all asumptions
+// that they are not expired, then we have message authentication provided the
+// long-term key of the server was not revealed.
+//
+// Note that we could strengthen this property such that only expiredness of
+// commits in this broadcasting session before the 'FromSender'-claim is
+// required.
+lemma authentic [use_induction]:
+  "(All commit #i #j .
+        AssumeCommitNotExpired(commit) @ i
+      & CommitExpired(commit) @ j
+        ==> i < j
+   )
+   ==>
+   (All S m #i. FromSender(S, m) @ i ==>
+       ( (Ex #j. Sent(m) @ j & j < i)
+       | (Ex #j. RevealLtk(S) @ j & j < i)
+       )
+   )
+  "
+
+// Ensure that the above lemma is not vacuous due to the filtering condition.
+lemma authentic_reachable [use_induction]:
   exists-trace
   "(All commit #i #j .
         AssumeCommitNotExpired(commit) @ i
       & CommitExpired(commit) @ j
         ==> i < j
    )
-   ==>
-   (Ex m #i. ClaimSent(m) @ i)
+   &
+   (Ex S m #i. FromSender(S, m) @ i)
   "
-
-lemma authentic2 [use_induction]:
-  "(All commit #i #j .
-        AssumeCommitNotExpired(commit) @ i
-      & CommitExpired(commit) @ j
-        ==> i < j
-   )
-   ==>
-   (All m #i. ClaimSent(m) @ i ==> (Ex #j. Sent(m) @ j & j < i) )
-  "
-
-
-
-
-
-
-
 
 
 end
