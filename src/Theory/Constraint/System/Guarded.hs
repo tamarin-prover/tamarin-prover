@@ -323,11 +323,13 @@ gdisj gfs0 = case concatMap flatten gfs0 of
     flatten (GDisj disj) = concatMap flatten $ getDisj disj
     flatten gf           = [gf]
 
--- @ A smart constructor for @GGuarded Ex@ that removes empty quantifications.
+-- @ A smart constructor for @GGuarded Ex@ that removes empty quantifications
+-- and conjunctions with 'gfalse'.
 gex :: (Ord s, Ord c, Ord v)
     => [s] -> [Atom (VTerm c (BVar v))] -> Guarded s c v -> Guarded s c v
-gex [] as gf = gconj (map GAto as ++ [gf])
-gex ss as gf = GGuarded Ex ss as gf
+gex [] as gf                = gconj (map GAto as ++ [gf])
+gex _  _  gf | gf == gfalse = gfalse
+gex ss as gf                = GGuarded Ex ss as gf
 
 -- @ A smart constructor for @GGuarded All@ that drops implications to 'gtrue'
 -- and removes empty premises.
