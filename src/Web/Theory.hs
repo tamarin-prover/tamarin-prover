@@ -49,6 +49,7 @@ import           System.Process
 import           Logic.Connectives
 import           Theory
 import           Theory.Text.Pretty
+import           Theory.Constraint.System.Dot (nonEmptyGraph)
 
 import           Web.Settings
 import           Web.Types
@@ -242,11 +243,11 @@ subProofSnippet renderUrl tidx lemma proofPath heuristic ctxt prf =
         ++
         [ text "" ]
         ++
-        (if hasGraphPart se
+        (if nonEmptyGraph se
          then [ withTag "h3" [] (text "Graph Part of Constraint System")
               , refDotPath renderUrl tidx (TheoryProof lemma proofPath)
               ]
-         else [ withTag "h3" [] (text "Constraint System has no Graph Part") ])
+         else [ withTag "h3" [] (text "Constraint System has no graph part.") ])
         ++
         [ withTag "h3" [] (text "Pretty-Printed Constraint System")
         , preformatted (Just "sequent") (prettyNonGraphSystem se)
@@ -272,7 +273,6 @@ subProofSnippet renderUrl tidx lemma proofPath heuristic ctxt prf =
       <-> (if null expl then emptyDoc else lineComment_ expl)
 
     nCases                  = show $ M.size $ children prf
-    hasGraphPart se         = not $ M.empty == get sNodes se
     depth                   = length proofPath
     ranking                 = useHeuristic heuristic depth
     proofMethods            = rankProofMethods ranking ctxt

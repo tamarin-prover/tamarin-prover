@@ -9,7 +9,8 @@
 --
 -- Conversion of the graph part of a sequent to a Graphviz Dot file.
 module Theory.Constraint.System.Dot (
-    dotSystemLoose
+    nonEmptyGraph
+  , dotSystemLoose
   , dotSystemCompact
   , compressSystem
   , BoringNodeStyle(..)
@@ -39,6 +40,13 @@ import           Text.PrettyPrint.Class
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty       (opAction)
+
+-- | 'True' iff the dotted system will be a non-empty graph.
+nonEmptyGraph :: System -> Bool
+nonEmptyGraph sys = not $
+    M.null (get sNodes sys) && null (unsolvedActionAtoms sys) &&
+    null (unsolvedChains sys) &&
+    S.null (get sEdges sys) && S.null (get sLessAtoms sys)
 
 type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (HSV Double)
 type SeDot = ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
@@ -194,6 +202,8 @@ dotConc =
             liftDot $ D.node $ [("label", label),("shape",shape)]
                                ++ moreStyle
 
+
+
 -- | Convert the sequent to a 'D.Dot' action representing this sequent as a
 -- graph in the GraphViz format. The style is loose in the sense that each
 -- premise and conclusion gets its own node.
@@ -216,6 +226,7 @@ dotSystemLoose se =
             (v, ru) <- M.toList $ get sNodes se
             (i, _)  <- enumPrems ru
             return (dotPrem (v,i))
+        -- FIXME: Also dot unsolved actions.
         mapM_ dotNode     $ M.keys   $ get sNodes     se
         mapM_ dotEdge     $ S.toList $ get sEdges     se
         mapM_ dotChain    $            unsolvedChains se
@@ -240,21 +251,6 @@ dotSystemLoose se =
         tgtId <- dotPrem tgt
         liftDot $ D.edge srcId tgtId style
 
-    {-
-    dotProvides (SeProvides v fa) = do
-        vId <- dotNode v
-        faId <- liftDot $ D.node [("label",label),("shape","trapezium")]
-        dotNonFixedIntraRuleEdge vId faId
-      where
-        label = render $ prettyLNFact fa
-
-    dotRequires (SeRequires v _fa) = do
-       _vId <- dotNode v
-       return ()
-       -- FIXME: Reenable
-       -- premId <- dotPrem (NodePremFact v fa)
-       -- dotNonFixedIntraRuleEdge premId vId
-    -}
 
 -- | Set default attributes for nodes and edges.
 setDefaultAttributes :: D.Dot ()
@@ -377,7 +373,8 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
 
 
 
--- | Dot a sequent in compact form (one record per rule)
+-- | Dot a sequent in compact form (one record per rule), if there is anything
+-- to draw.
 dotSystemCompact :: BoringNodeStyle -> System -> D.Dot ()
 dotSystemCompact boringStyle se =
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
