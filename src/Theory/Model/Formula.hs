@@ -270,8 +270,8 @@ exists hint x = Qua Ex hint . quantify x
 -- | Pretty print a formula.
 prettyLFormula :: (HighlightDocument d, MonadFresh m, Ord c)
               => (Atom (VTerm c LVar) -> d)  -- ^ Function for pretty printing atoms
-              -> LFormula c -- ^ Formula to pretty print.
-              -> m d              -- ^ Pretty printed formula.
+              -> LFormula c                      -- ^ Formula to pretty print.
+              -> m d                             -- ^ Pretty printed formula.
 prettyLFormula ppAtom =
     pp
   where
@@ -279,22 +279,23 @@ prettyLFormula ppAtom =
     extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
 
     pp (Ato a)    = return $ ppAtom (fmap (mapLits (fmap extractFree)) a)
-    pp (TF True)  = return $ operator_ "T"                    -- "⊤"
-    pp (TF False) = return $ operator_ "F"                    -- "⊥"
+    pp (TF True)  = return $ operator_ "⊤"    -- "T"
+    pp (TF False) = return $ operator_ "⊥"    -- "F"
 
     pp (Not p)    = do
       p' <- pp p
-      return $ operator_ "not" <> opParens p' -- text "¬" <> parens (pp a)
+      return $ operator_ "¬" <> opParens p' -- text "¬" <> parens (pp a)
+      -- return $ operator_ "not" <> opParens p' -- text "¬" <> parens (pp a)
 
     pp (Conn op p q) = do
         p' <- pp p
         q' <- pp q
         return $ sep [opParens p' <-> operator_ (ppOp op), opParens q']
       where
-        ppOp And = "&"   -- "∧"
-        ppOp Or  = "|"   -- "∨"
-        ppOp Imp = "==>" -- "⇒"
-        ppOp Iff = "<=>" -- "⇔"
+        ppOp And = "∧" -- "&"
+        ppOp Or  = "∨" -- "|"
+        ppOp Imp = "⇒" -- "==>"
+        ppOp Iff = "⇔" -- "<=>"
 
     pp fm@(Qua _ _ _) = do
         (vs,qua,fm') <- openFormulaPrefix fm
@@ -305,8 +306,8 @@ prettyLFormula ppAtom =
       where
         ppVars       = fsep . map (text . show)
 
-        ppQuant All = "All " -- "∀"
-        ppQuant Ex  = "Ex "  -- "∃"
+        ppQuant All = "∀ " -- "All "
+        ppQuant Ex  = "∃ " -- "Ex "
 
 prettyFormulaAC, prettyFormulaE :: HighlightDocument d => FormulaE -> d
 prettyFormulaE  = prettyLNFormula

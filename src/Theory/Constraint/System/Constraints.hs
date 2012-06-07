@@ -191,8 +191,10 @@ prettyGoal (ChainG c p)   =
     prettyNodeConc c <-> operator_ "~~>" <-> prettyNodePrem p
 prettyGoal (PremiseG p fa) =
     prettyNodePrem p <> brackets (prettyLNFact fa)
-prettyGoal (DisjG (Disj gfs)) = (text "Disj" <>) $ fsep $
-    punctuate (operator_ " |") (map (nest 1 . parens . prettyGuarded) gfs)
+prettyGoal (DisjG (Disj []))  = text "Disj" <-> operator_ "(⊥)"
+prettyGoal (DisjG (Disj gfs)) = fsep $
+    punctuate (operator_ "  ∥") (map (nest 1 . parens . prettyGuarded) gfs)
+    -- punctuate (operator_ " |") (map (nest 1 . parens . prettyGuarded) gfs)
 prettyGoal (SplitG x) =
     text "splitEqs" <> parens (text $ show (unSplitId x))
 

@@ -563,28 +563,38 @@ prettyGuarded f =
     pp :: HighlightDocument d => LNGuarded -> Fresh d
     pp (GAto a) = return $ prettyNAtom $ bvarToLVar a
 
-    pp (GDisj (Disj [])) = return $ operator_ "F"
+    pp (GDisj (Disj [])) = return $ operator_  "⊥"  -- "F"
 
     pp (GDisj (Disj xs)) = do
         ps <- mapM (\x -> opParens <$> pp x) xs
-        return $ sep $ punctuate (operator_ " |") ps
+        return $ sep $ punctuate (operator_ " ∨") ps
+        -- return $ sep $ punctuate (operator_ " |") ps
 
-    pp (GConj (Conj [])) = return $ operator_ "T"
+    pp (GConj (Conj [])) = return $ operator_ "⊤"  -- "T"
 
     pp (GConj (Conj xs)) = do
         ps <- mapM (\x -> opParens <$> pp x) xs
-        return $ sep $ punctuate (operator_ " &") ps
+        return $ sep $ punctuate (operator_ " ∧") ps --- " &") ps
 
     pp gf0@(GGuarded _ _ _ _) = do
       Just (qua, vs, atoms, gf) <- openGuarded gf0
-      dante <- pp (GConj (Conj (map (GAto . fmap (fmapTerm (fmap Free))) atoms)))
-      dsucc <- pp gf
-      return $ sep [ operator_ (show qua) <-> ppVars vs <> operator_ "."
-                   , nest 1 dante
-                   , operator_ (case qua of All -> "==>"; Ex -> "&")
-                   , nest 1 dsucc]
+      let antecedent = (GAto . fmap (fmapTerm (fmap Free))) <$> atoms
+          connective = operator_ (case qua of All -> "⇒"; Ex -> "∧")
+                        -- operator_ (case qua of All -> "==>"; Ex -> "&")
+          quantifier = operator_ (ppQuant qua) <-> ppVars vs <> operator_ "."
+      dante <- nest 1 <$> pp (GConj (Conj antecedent))
+      case (qua, vs, gf) of
+        (Ex,  _,  GConj (Conj [])) ->
+            return $ sep $ [ quantifier, dante ]
+        (All, [], GDisj (Disj [])) | gf == gfalse ->
+            return $ operator_ "¬" <> dante
+        _  -> do
+            dsucc <- nest 1 <$> pp gf
+            return $ sep [ quantifier, sep [dante, connective, dsucc] ]
       where
-        ppVars       = fsep . map (text . show)
+        ppVars      = fsep . map (text . show)
+        ppQuant All = "∀"  -- "All "
+        ppQuant Ex  = "∃"  -- "Ex "
 
 
 -- Derived instances
