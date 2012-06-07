@@ -385,11 +385,11 @@ prettySystem se = vcat $
 prettyNonGraphSystem :: HighlightDocument d => System -> d
 prettyNonGraphSystem se = vsep $ map combine
   [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
-  , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
   , ("formulas",        vsep $ map prettyGuarded $ S.toList $ L.get sFormulas se)
   , ("equations",       prettyEqStore $ L.get sEqStore se)
-  , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
+  , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
+  , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("solved goals",    prettyGoals True se)
   ]
   where

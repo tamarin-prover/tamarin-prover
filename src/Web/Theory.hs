@@ -241,16 +241,13 @@ subProofSnippet renderUrl tidx lemma proofPath heuristic ctxt prf =
       Just se -> vcat $
         prettyApplicableProofMethods se
         ++
-        [ text "" ]
+        [ text ""
+        , withTag "h3" [] (text "Constraint system")
+        ] ++
+        [ refDotPath renderUrl tidx (TheoryProof lemma proofPath)
+        | nonEmptyGraph se ]
         ++
-        (if nonEmptyGraph se
-         then [ withTag "h3" [] (text "Graph Part of Constraint System")
-              , refDotPath renderUrl tidx (TheoryProof lemma proofPath)
-              ]
-         else [ withTag "h3" [] (text "Constraint System has no graph part.") ])
-        ++
-        [ withTag "h3" [] (text "Pretty-Printed Constraint System")
-        , preformatted (Just "sequent") (prettyNonGraphSystem se)
+        [ preformatted (Just "sequent") (prettyNonGraphSystem se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
         ] ++
         subCases
