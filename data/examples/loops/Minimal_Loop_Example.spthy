@@ -1,0 +1,22 @@
+theory Minimal_Loop_Example begin
+
+
+
+/*
+  Author: Simon Meier <simon.meier@inf.ethz.ch>
+  Date:   2012 06 10
+  Status: Working
+
+  A minimal example that is looping and satisfies a property cannot be proven
+  without inductive strengthening.
+
+*/
+
+rule Start:      [] --[ Start() ]-> [ A() ]
+
+rule Loop:  [ A() ] --[ Loop()  ]-> [ A() ]
+
+lemma Start_before_Loop [use_induction]:
+  "All #j. Loop() @ j ==> (Ex #i. Start() @ i & i < j)"
+
+end
