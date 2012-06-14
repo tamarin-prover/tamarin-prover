@@ -29,6 +29,7 @@ module Theory.Constraint.System (
   , sNodes
   , allKDConcs
 
+  , nodeRule
   , nodeConcNode
   , nodePremNode
   , nodePremFact
@@ -231,7 +232,7 @@ insertLemma fm0 =
 allKDConcs :: System -> [(NodeId, RuleACInst, LNTerm)]
 allKDConcs sys = do
     (i, ru)                            <- M.toList $ L.get sNodes sys
-    (_, kFactView -> Just (DnK, _, m)) <- enumConcs ru
+    (_, kFactView -> Just (DnK, m)) <- enumConcs ru
     return (i, ru, m)
 
 -- | @nodeRule v@ accesses the rule label of node @v@ under the assumption that
@@ -294,7 +295,7 @@ allActions sys =
 -- | All actions that hold in a sequent.
 allKUActions :: System -> [(NodeId, LNFact, LNTerm)]
 allKUActions sys = do
-    (i, fa@(kFactView -> Just (UpK, _, m))) <- allActions sys
+    (i, fa@(kFactView -> Just (UpK, m))) <- allActions sys
     return (i, fa, m)
 
 -- | The standard actions, i.e., non-KU-actions.
@@ -304,7 +305,7 @@ standardActionAtoms = filter (not . isKUFact . snd) . unsolvedActionAtoms
 -- | All KU-actions.
 kuActionAtoms :: System -> [(NodeId, LNFact, LNTerm)]
 kuActionAtoms sys = do
-    (i, fa@(kFactView -> Just (UpK, _, m))) <- unsolvedActionAtoms sys
+    (i, fa@(kFactView -> Just (UpK, m))) <- unsolvedActionAtoms sys
     return (i, fa, m)
 
 -- Destruction chains

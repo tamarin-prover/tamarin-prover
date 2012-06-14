@@ -32,16 +32,11 @@ module Theory.Model.Fact (
   , factArity
   , factMultiplicity
 
-  -- ** Message deduction facts
-  , ExpTag(..)
-  , expTagToTerm
-  , termToExpTag
-
   , DirTag(..)
-  , kFactView
-  , dedFactView
   , kuFact
   , kdFact
+  , kFactView
+  , dedFactView
 
   , isKFact
   , isKUFact
@@ -74,7 +69,6 @@ module Theory.Model.Fact (
 
 import           Control.Basics
 import           Control.DeepSeq
-import           Control.Monad.Fresh
 
 import           Data.Binary
 import           Data.DeriveTH
@@ -143,47 +137,22 @@ instance Apply t => Apply (Fact t) where
 -- KU and KD facts
 ------------------
 
--- | Message fact exponentation tag.
-data ExpTag = CannotExp | CanExp
-            deriving( Eq, Ord, Show)
-
--- | Exponentiation-symbol to term.
-expTagToTerm :: ExpTag -> LNTerm
-expTagToTerm CannotExp   = lit (Con (Name PubName (NameId ("noexp"))))
-expTagToTerm CanExp      = lit (Con (Name PubName (NameId ("exp"))))
-
--- | Term to exponentiation-symbol.
-termToExpTag :: LNTerm -> Maybe ExpTag
-termToExpTag (viewTerm -> Lit (Con (Name PubName (NameId ("noexp"))))) = return CannotExp
-termToExpTag (viewTerm -> Lit (Con (Name PubName (NameId ("exp")))))   = return CanExp
-termToExpTag _                                             = mzero
-
-
 -- | A direction tag
 data DirTag = UpK | DnK
             deriving( Eq, Ord, Show )
 
--- | Construct a message fact. If no 'ExpTag' is given, then
--- a fresh variable that matches any 'ExpTag' is constructed.
-kuFact, kdFact :: MonadFresh m => Maybe ExpTag -> LNTerm -> m LNFact
-kuFact = mkFact KUFact
-kdFact = mkFact KDFact
-
--- | A generic fact creation function.
-mkFact :: MonadFresh m => FactTag -> Maybe ExpTag -> LNTerm -> m LNFact
-mkFact tag (Just t) m = return $ Fact tag [expTagToTerm t, m]
-mkFact tag Nothing  m = do
-    v <- freshLVar "f_" LSortMsg
-    return $ Fact tag [varTerm v, m]
+kdFact, kuFact :: LNTerm -> LNFact
+kdFact = Fact KDFact . return
+kuFact = Fact KUFact . return
 
 -- | View a message-deduction fact.
-kFactView :: LNFact -> Maybe (DirTag, Maybe ExpTag, LNTerm)
+kFactView :: LNFact -> Maybe (DirTag, LNTerm)
 kFactView fa = case fa of
-    Fact KUFact [e, m] -> Just (UpK, termToExpTag e, m)
-    Fact KUFact _      -> errMalformed "kFactView" fa
-    Fact KDFact [e, m] -> Just (DnK, termToExpTag e, m)
-    Fact KDFact _      -> errMalformed "kFactView" fa
-    _                  -> Nothing
+    Fact KUFact [m] -> Just (UpK, m)
+    Fact KUFact _   -> errMalformed "kFactView" fa
+    Fact KDFact [m] -> Just (DnK, m)
+    Fact KDFact _   -> errMalformed "kFactView" fa
+    _               -> Nothing
 
 -- | View a deduction logging fact.
 dedFactView :: LNFact -> Maybe LNTerm
@@ -268,8 +237,8 @@ factTagMultiplicity tag = case tag of
 factTagArity :: FactTag -> Int
 factTagArity tag = case  tag of
     ProtoFact _ _ k -> k
-    KUFact          -> 2
-    KDFact          -> 2
+    KUFact          -> 1
+    KDFact          -> 1
     DedFact         -> 1
     FreshFact       -> 1
     InFact          -> 1

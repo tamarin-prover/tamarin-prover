@@ -60,7 +60,7 @@ openGoals sys = do
     let solved = get gsSolved status
     -- check whether the goal is still open
     guard $ case goal of
-        ActionG _ (kFactView -> Just (UpK, _, m)) ->
+        ActionG _ (kFactView -> Just (UpK, m)) ->
           not $    solved
                 || isMsgVar m || sortOfLNTerm m == LSortPub
                 -- handled by 'insertAction'
@@ -74,8 +74,8 @@ openGoals sys = do
 
         ChainG c _     ->
           case kFactView (nodeConcFact c sys) of
-              Just (DnK, _, m) | isMsgVar m -> False
-                               | otherwise  -> not solved
+              Just (DnK,  m) | isMsgVar m -> False
+                             | otherwise  -> not solved
               fa -> error $ "openChainGoals: impossible fact: " ++ show fa
 
         -- FIXME: Split goals may be duplicated, we always have to check
@@ -86,7 +86,7 @@ openGoals sys = do
           -- Note that 'solveAllSafeGoals' in "CaseDistinctions" relies on
           -- looping goals being classified as 'Useless'.
           _ | get gsLoopBreaker status              -> Useless
-          ActionG i (kFactView -> Just (UpK, _, m))
+          ActionG i (kFactView -> Just (UpK, m))
             | isSimpleTerm m || deducible i m       -> Useless
           _                                         -> Useful
 
@@ -112,7 +112,7 @@ openGoals sys = do
         guard (not $ isLast sys j)
         let derivedMsgs = concatMap toplevelTerms $
                 [ t | Fact OutFact [t] <- get rConcs ru] <|>
-                [ t | Just (DnK, _, t) <- kFactView <$> get rConcs ru]
+                [ t | Just (DnK, t)    <- kFactView <$> get rConcs ru]
         -- m is deducible from j without an immediate contradiction
         -- if it is a derived message of 'ru' and the dependency does
         -- not make the graph cyclic.
@@ -174,8 +174,8 @@ solvePremise rules p faPrem
   | isKDFact faPrem = do
       iLearn    <- freshLVar "vl" LSortNode
       mLearn    <- varTerm <$> freshLVar "t" LSortMsg
-      concLearn <- kdFact (Just CanExp) mLearn
-      let premLearn = outFact mLearn
+      let concLearn = kdFact mLearn
+          premLearn = outFact mLearn
           -- !! Make sure that you construct the correct rule!
           ruLearn = Rule (IntrInfo IRecvRule) [premLearn] [concLearn] []
           cLearn = (iLearn, ConcIdx 0)
@@ -199,24 +199,33 @@ solveChain rules (c, p) = do
         faPrem <- gets $ nodePremFact p
         insertEdges [(c, faConc, faPrem, p)]
         let m = case kFactView faConc of
-                  Just (DnK, _, m') -> m'
-                  _                 -> error $ "solveChain: impossible"
+                  Just (DnK, m') -> m'
+                  _              -> error $ "solveChain: impossible"
             caseName (viewTerm -> FApp o _) = show o
             caseName t                      = show t
         return $ caseName m
      `disjunction`
      do -- extend it with one step
+        cRule <- gets $ nodeRule (nodeConcNode c)
         (i, ru)     <- insertFreshNode rules
+        -- contradicts normal form condition:
+        -- no edge from dexp to dexp KD premise
+        -- (this condition replaces the exp/noexp tags)
+        contradictoryIf (isDexpRule cRule && isDexpRule ru)
         (v, faPrem) <- disjunctionOfList $ enumPrems ru
         insertEdges [(c, faConc, faPrem, (i, v))]
         markGoalAsSolved "directly" (PremiseG (i, v) faPrem)
         insertChain (i, ConcIdx 0) p
         return $ showRuleCaseName ru
      )
+  where
+    isDexpRule ru = case get rInfo ru of
+        IntrInfo (DestrRule n) | n == expSymString -> True
+        _                                          -> False
 
 -- | Solve an equation split. There is no corresponding CR-rule in the rule
 -- system on paper because there we eagerly split over all variants of a rule.
--- In practice, this es too expensive and we therefore use the equation store
+-- In practice, this is too expensive and we therefore use the equation store
 -- to delay these splits.
 solveSplit :: SplitId -> Reduction String
 solveSplit x = do

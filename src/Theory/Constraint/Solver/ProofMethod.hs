@@ -343,7 +343,7 @@ smartRanking allowPremiseGLoopBreakers sys =
     isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) = not $ isKFact fa
     isNonLoopBreakerProtoFactGoal _                            = False
 
-    msgPremise (ActionG _ fa) = do (UpK, _, m) <- kFactView fa; return m
+    msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing
 
     isFreshKnowsGoal goal = case msgPremise goal of

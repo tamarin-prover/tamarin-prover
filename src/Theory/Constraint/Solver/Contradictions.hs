@@ -144,10 +144,11 @@ hasForbiddenExp se =
 -- > True
 isForbiddenExp :: Rule a -> Bool
 isForbiddenExp ru = maybe False id $ do
-    [_,p2] <- return $ L.get rPrems ru
+    [p1,p2] <- return $ L.get rPrems ru
     [conc] <- return $ L.get rConcs ru
-    (UpK, _,          b) <- kFactView p2
-    (DnK, Just CannotExp, viewTerm2 -> FExp g c) <- kFactView conc
+    (DnK, viewTerm2 -> FExp _ _) <- kFactView p1
+    (UpK,            b) <- kFactView p2
+    (DnK, viewTerm2 -> FExp g c) <- kFactView conc
 
     -- g should be public and the required inputs for c already required by b
     guard (sortOfLNTerm g == LSortPub && (inputTerms c \\ inputTerms b == []))

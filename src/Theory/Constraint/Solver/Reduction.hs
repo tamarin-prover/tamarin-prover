@@ -214,10 +214,9 @@ labelNodeId = \i rules -> do
     -- | Import a rule with all its variables renamed to fresh variables.
     importRule ru = someRuleACInst ru `evalBindT` noBindings
 
-    mkISendRuleAC m = do
-        faPrem <- kuFact Nothing m
-        return $ Rule (IntrInfo (ISendRule))
-                      [faPrem] [inFact m] [kLogFact m]
+    mkISendRuleAC m = return $ Rule (IntrInfo (ISendRule))
+                                    [kuFact m] [inFact m] [kLogFact m]
+
 
     mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule []))
                            [] [freshFact m] []
@@ -280,13 +279,13 @@ insertAction i fa = do
       then do return Unchanged
       else do insertGoal goal False
               case kFactView fa of
-                Just (UpK, _, viewTerm2 -> FPair m1 m2) ->
+                Just (UpK, viewTerm2 -> FPair m1 m2) ->
                     requiresKU m1 *> requiresKU m2 *> return Changed
 
-                Just (UpK, _, viewTerm2 -> FInv m) ->
+                Just (UpK, viewTerm2 -> FInv m) ->
                     requiresKU m *> return Changed
 
-                Just (UpK, _, viewTerm2 -> FMult ms) ->
+                Just (UpK, viewTerm2 -> FMult ms) ->
                     mapM_ requiresKU ms *> return Changed
 
                 _ -> return Unchanged
@@ -296,7 +295,7 @@ insertAction i fa = do
     -- loop due to generating new KU-nodes that are merged immediatly.
     requiresKU t = do
       j <- freshLVar "vk" LSortNode
-      faKU <- kuFact Nothing t
+      let faKU = kuFact t
       insertLess j i
       void (insertAction j faKU)
 
@@ -533,7 +532,7 @@ substGoals = do
     sGoals =: M.empty
     changes <- forM goals $ \(goal, status) -> case goal of
         -- Look out for KU-actions that might need to be solved again.
-        ActionG i fa@(kFactView -> Just (UpK, _, m))
+        ActionG i fa@(kFactView -> Just (UpK, m))
           | (isMsgVar m || isProduct m) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
         _ -> do modM sGoals $

@@ -306,7 +306,7 @@ factReports thy = concat
     ruleActions = S.fromList $ map factInfo $
           kLogFact undefined
         : dedLogFact undefined
-        : Fact KUFact [undefined, undefined]
+        : kuFact undefined
         : (do RuleItem ru <- get thyItems thy; get rActs ru)
 
     inexistentActions = do

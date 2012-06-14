@@ -270,8 +270,7 @@ precomputeCaseDistinctions ctxt typAsms =
         PremiseG (someNodeId, PremIdx 0) (Fact tag (nMsgVars arity))
 
     someKUGoal :: LNTerm -> Goal
-    someKUGoal m =
-        ActionG someNodeId (Fact KUFact [varTerm (LVar "f_" LSortMsg 0), m])
+    someKUGoal m = ActionG someNodeId (kuFact m)
 
     someNodeId = LVar "i" LSortNode 0
 

@@ -13,14 +13,11 @@ module Theory.Tools.IntruderRules (
     subtermIntruderRules
   , dhIntruderRules
   , specialIntruderRules
---  , xorIntruderRules -- there are no multiset intruder rules
   ) where
 
 import           Control.Basics
-import           Control.Monad.Fresh
 import           Control.Monad.Reader
 
-import qualified Data.ByteString.Char8           as BC
 import           Data.List
 import qualified Data.Set                        as S
 
@@ -30,9 +27,9 @@ import           Utils.Misc
 
 import           Term.Maude.Signature
 import           Term.Narrowing.Variants.Compute
-import           Term.Positions
 import           Term.Rewriting.Norm
 import           Term.SubtermRule
+import           Term.Positions
 
 import           Theory.Model
 
@@ -65,24 +62,19 @@ rule (modulo AC) irecv:
    [ Out( x) ] --> [ KD( 'exp', x) ]
 
 -}
+-- | @specialIntruderRules@ returns the special intruder rules that are
+--   included independently of the message theory
 specialIntruderRules :: [IntrRuleAC]
 specialIntruderRules =
-    [ kuRule CoerceRule      [Fact KDFact [f_var, x_var]]   [f_var, x_var]
-    , kuRule PubConstrRule   []                             [f_var, x_pub_var]
-    , kuRule FreshConstrRule [Fact FreshFact [x_fresh_var]] [f_var, x_fresh_var]
-    , Rule ISendRule
-          [Fact KUFact [f_var, x_var]]
-          [Fact InFact [x_var]]
-          [kLogFact x_var]
-    , Rule IRecvRule
-          [Fact OutFact [x_var]]
-          [Fact KDFact [expTagToTerm CanExp, x_var]]
-          []
+    [ kuRule CoerceRule      [kdFact x_var]                 (x_var)
+    , kuRule PubConstrRule   []                             (x_pub_var)
+    , kuRule FreshConstrRule [Fact FreshFact [x_fresh_var]] (x_fresh_var)
+    , Rule ISendRule [Fact KUFact [x_var]]  [Fact InFact [x_var]] [kLogFact x_var]
+    , Rule IRecvRule [Fact OutFact [x_var]] [Fact KDFact [x_var]] []
     ]
   where
-    kuRule name prems ts = Rule name prems [Fact KUFact ts] [Fact KUFact ts]
+    kuRule name prems t = Rule name prems [Fact KUFact [t]] [Fact KUFact [t]]
 
-    f_var       = varTerm (LVar "f_" LSortMsg   0)
     x_var       = varTerm (LVar "x"  LSortMsg   0)
     x_pub_var   = varTerm (LVar "x"  LSortPub   0)
     x_fresh_var = varTerm (LVar "x"  LSortFresh 0)
@@ -92,6 +84,8 @@ specialIntruderRules =
 -- Subterm Intruder theory
 ------------------------------------------------------------------------------
 
+-- | @destuctionRules st@ returns the destruction rules for the given
+-- subterm rule @st@
 destructionRules :: StRule -> [IntrRuleAC]
 destructionRules (StRule lhs@(viewTerm -> FApp (NonAC (f,_)) _) (RhsPosition pos)) =
     go [] lhs pos
@@ -106,18 +100,16 @@ destructionRules (StRule lhs@(viewTerm -> FApp (NonAC (f,_)) _) (RhsPosition pos
         uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
         t'      = as!!i
         irule = if (t' /= rhs && rhs `notElem` uprems')
-                 then (`evalFresh` avoid ([rhs,t']++uprems')) $ do
-                     dfact <- kdFact Nothing t'
-                     ufacts <- mapM (kuFact Nothing) uprems'
-                     concfact <- kdFact (Just CanExp) rhs
-                     return [ Rule (DestrRule (BC.unpack f)) (dfact:ufacts) [concfact] [] ]
-                 else []
+                then [ Rule (DestrRule f)
+                            ((kdFact  t'):(map kuFact uprems'))
+                            [kdFact rhs] [] ]
+                else []
     go _      (viewTerm -> Lit _)     (_:_)  =
         error "IntruderRules.destructionRules: impossible, position invalid"
 
 destructionRules _ = []
 
--- | Simple removal of subsumed rules for auto-generated free intruder rules.
+-- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
 minimizeIntruderRules :: [IntrRuleAC] -> [IntrRuleAC]
 minimizeIntruderRules rules =
     go [] rules
@@ -126,39 +118,35 @@ minimizeIntruderRules rules =
     go checked (r@(Rule _ prems concs _):unchecked) = go checked' unchecked
       where
         checked' = if any (\(Rule _ prems' concs' _)
-                               -> map dropExpTag concs' == map dropExpTag concs &&
-                                  map dropExpTag prems' `subsetOf` map dropExpTag prems)
+                               -> concs' == concs && prems' `subsetOf` prems)
                           (checked++unchecked)
                    then checked
-                   else (r:checked)
+                   else r:checked
 
--- | @freeIntruderRules rus@ returns the set of intruder rules for
---   the free (not Xor, DH, and MSet) part of the given signature.
+-- | @subtermIntruderRules maudeSig@ returns the set of intruder rules for
+--   the subterm (not Xor, DH, and MSet) part of the given signature.
 subtermIntruderRules :: MaudeSig -> [IntrRuleAC]
 subtermIntruderRules maudeSig =
      minimizeIntruderRules $ concatMap destructionRules (S.toList $ stRules maudeSig)
      ++ constructionRules (functionSymbols maudeSig)
 
+-- | @constructionRules fSig@ returns the construction rules for the given
+-- function signature @fSig@
 constructionRules :: FunSig -> [IntrRuleAC]
 constructionRules fSig =
     [ createRule s k | (s,k) <- S.toList fSig ]
   where
-    createRule s k = (`evalFresh` nothingUsed) $ do
-        vars     <- map varTerm <$> (sequence $ replicate k (freshLVar "x" LSortMsg))
-        pfacts   <- mapM (kuFact Nothing) vars
-        let m = fApp (NonAC (s,k)) vars
-        concfact <- kuFact (Just CanExp) m
-        return $ Rule (ConstrRule (BC.unpack s)) pfacts [concfact] [concfact]
+    createRule s k = Rule (ConstrRule s) (map kuFact vars) [concfact] [concfact]
+      where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i<- [0..] ]
+            m        = fApp (NonAC (s,k)) vars
+            concfact = kuFact m
 
-dropExpTag :: Fact a -> Fact a
-dropExpTag (Fact KUFact [_e,m]) = Fact KUFact [m]
-dropExpTag (Fact KDFact [_e,m]) = Fact KDFact [m]
-dropExpTag t                    = t
 
 ------------------------------------------------------------------------------
 -- Diffie-Hellman Intruder Rules
 ------------------------------------------------------------------------------
 
+-- | @dhIntruderRules@ computes the intruder rules for DH
 dhIntruderRules :: WithMaude [IntrRuleAC]
 dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
     [ expRule ConstrRule kuFact return
@@ -169,70 +157,49 @@ dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
       , invRule DestrRule kdFact (const [])
       ]
   where
-    expRule mkInfo kudFact mkAction = (`evalFresh` nothingUsed) $ do
-        b        <- varTerm <$> freshLVar "x" LSortMsg
-        e        <- varTerm <$> freshLVar "x" LSortMsg
-        bfact    <- kudFact (Just CanExp) b
-        efact    <- kuFact Nothing e
-        let conc = fAppExp (b, e)
-        concfact <- kudFact (Just CannotExp) conc
-        return $ Rule (mkInfo "exp") [bfact, efact] [concfact] (mkAction concfact)
+    x_var_0 = varTerm (LVar "x" LSortMsg 0)
+    x_var_1 = varTerm (LVar "x" LSortMsg 1)
 
-    invRule mkInfo kudFact mkAction = (`evalFresh` nothingUsed) $ do
-        x        <- varTerm <$> freshLVar "x" LSortMsg
-        bfact    <- kudFact Nothing x
-        let conc = fAppInv x
-        concfact <- kudFact (Just CanExp) conc
-        return $ Rule (mkInfo "inv") [bfact] [concfact] (mkAction concfact)
+    expRule mkInfo kudFact mkAction =
+        Rule (mkInfo expSymString) [bfact, efact] [concfact] (mkAction concfact)
+      where
+        bfact = kudFact x_var_0
+        efact = kuFact  x_var_1
+        conc = fAppExp (x_var_0, x_var_1)
+        concfact = kudFact conc
+
+    invRule mkInfo kudFact mkAction =
+        Rule (mkInfo invSymString) [bfact] [concfact] (mkAction concfact)
+      where
+        bfact    = kudFact x_var_0
+        conc = fAppInv x_var_0
+        concfact = kudFact conc
 
 
+-- | @variantsIntruder mh irule@ computes the deconstruction-variants
+-- of a given intruder rule @irule@
 variantsIntruder :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
 variantsIntruder hnd ru = do
-    let concTerms = concatMap factTerms
+    let ruleTerms = concatMap factTerms
                               (get rPrems ru++get rConcs ru++get rActs ru)
-    fsigma <- computeVariants (fAppList concTerms) `runReader` hnd
-    let sigma     = freshToFree fsigma `evalFreshAvoiding` concTerms
+    fsigma <- computeVariants (fAppList ruleTerms) `runReader` hnd
+    let sigma     = freshToFree fsigma `evalFreshAvoiding` ruleTerms
         ruvariant = normRule' (apply sigma ru) `runReader` hnd
     guard (frees (get rConcs ruvariant) /= [] &&
            -- ground terms are already deducible by applying construction rules
            ruvariant /= ru &&
            -- this is a construction rule
-           (map dropExpTag (get rConcs ruvariant))
-           \\ (map dropExpTag (get rPrems ruvariant)) /= []
+           (get rConcs ruvariant) \\ (get rPrems ruvariant) /= []
            -- The conclusion is included in the premises
            )
 
     case concatMap factTerms $ get rConcs ruvariant of
-        [_, viewTerm -> FApp (AC Mult) _] ->
+        [viewTerm -> FApp (AC Mult) _] ->
             fail "Rules with product conclusion are redundant"
-        _                     -> return ruvariant
+        _                                 -> return ruvariant
 
-
+-- | @normRule irule@ computes the normal form of @irule@
 normRule' :: IntrRuleAC -> WithMaude IntrRuleAC
 normRule' (Rule i ps cs as) = reader $ \hnd ->
     let normFactTerms = map (fmap (\t -> norm' t `runReader` hnd)) in
     Rule i (normFactTerms ps) (normFactTerms cs) (normFactTerms as)
-
-
-
-{-
-------------------------------------------------------------------------------
--- Xor Intruder Rules
-------------------------------------------------------------------------------
-
-xorIntruderRules :: WithMaude [IntrRuleAC]
-xorIntruderRules = return []
-  -- TODO: extend XOR tagging
-
-maude :: IO MaudeHandle
-maude = startMaude "maude" allMaudeSig
-
-t :: IO ()
-t = do
-  m <- maude
-  let rules = dhIntruderRules `runReader` m
-  mapM_ (putStrLn . render . prettyIntrRuleAC) rules
-  writeFile "/tmp/dhrules" $ unlines (map ((++"\n"). render . prettyIntrRuleAC) rules)
-  putStrLn ("\nThere are " ++ show (length rules)
-            ++ " and " ++ show (length rules - 3) ++ " of these are exp-down rules")
--}
