@@ -56,6 +56,9 @@ module Term.Term (
     , fAppFst
     , fAppSnd
 
+    -- ** exp symbol
+    , expSymString
+    , invSymString
 
     -- ** Destructors and classifiers
     , destPair
@@ -117,15 +120,19 @@ data FunSym = NonAC NonACSym  -- ^ a non-AC function function symbol of a given 
 -- | Function signatures.
 type FunSig = Set NonACSym
 
+expSymString :: ByteString
+expSymString = "exp"
 
+invSymString :: ByteString
+invSymString = "inv"
 
 pairSym, expSym, invSym, oneSym, zeroSym, emptySym, fstSym, sndSym :: NonACSym
 -- | Pairing.
 pairSym  = ("pair",2)
 -- | Exponentiation.
-expSym   = ("exp",2)
+expSym   = (expSymString,2)
 -- | The inverse in the groups of exponents.
-invSym   = ("inv",1) 
+invSym   = (invSymString,1)
 -- | The one in the group of exponents.
 oneSym   = ("one", 0)
 -- | The zero for Xor.
