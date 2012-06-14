@@ -97,6 +97,7 @@ module Theory.Model.Rule (
 import           Prelude              hiding (id, (.))
 
 import           Data.Binary
+import qualified Data.ByteString.Char8 as BC
 import           Data.DeriveTH
 import           Data.Foldable        (foldMap)
 import           Data.Generics
@@ -304,8 +305,8 @@ instance HasFrees ProtoRuleACInstInfo where
 
 -- | An intruder rule modulo AC is described by its name.
 data IntrRuleACInfo =
-    ConstrRule String
-  | DestrRule String
+    ConstrRule BC.ByteString
+  | DestrRule BC.ByteString
   | CoerceRule
   | IRecvRule
   | ISendRule
@@ -560,8 +561,8 @@ prettyIntrRuleACInfo rn = text $ case rn of
     CoerceRule      -> "coerce"
     FreshConstrRule -> "fresh"
     PubConstrRule   -> "pub"
-    ConstrRule name -> prefixIfReserved ('c' : name)
-    DestrRule name  -> prefixIfReserved ('d' : name)
+    ConstrRule name -> prefixIfReserved ('c' : BC.unpack name)
+    DestrRule name  -> prefixIfReserved ('d' : BC.unpack name)
 
 prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
                 => d           -- ^ Prefix.

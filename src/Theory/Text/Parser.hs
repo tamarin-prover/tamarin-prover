@@ -452,8 +452,8 @@ intrRule = do
     intrInfo = do
         name <- identifier
         case name of
-          'c':cname -> return $ ConstrRule cname
-          'd':dname -> return $ DestrRule dname
+          'c':cname -> return $ ConstrRule (BC.pack cname)
+          'd':dname -> return $ DestrRule (BC.pack dname)
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
 genericRule :: Parser ([LNFact], [LNFact], [LNFact])
