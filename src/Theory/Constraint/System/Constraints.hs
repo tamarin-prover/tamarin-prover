@@ -191,6 +191,7 @@ prettyGoal (ActionG i fa) = prettyNAtom (Action (varTerm i) fa)
 prettyGoal (ChainG c p)   =
     prettyNodeConc c <-> operator_ "~~>" <-> prettyNodePrem p
 prettyGoal (PremiseG (i, (PremIdx v)) fa) =
+    -- Note that we can use "▷" for conclusions once we need them.
     prettyLNFact fa <-> text ("▶" ++ subscript (show v)) <-> prettyNodeId i
     -- prettyNodePrem p <> brackets (prettyLNFact fa)
 prettyGoal (DisjG (Disj []))  = text "Disj" <-> operator_ "(⊥)"
