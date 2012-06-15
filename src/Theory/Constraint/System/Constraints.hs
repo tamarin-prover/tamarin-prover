@@ -45,6 +45,7 @@ import           Control.Basics
 import           Control.DeepSeq
 
 import           Text.PrettyPrint.Class
+import           Text.Unicode
 
 import           Logic.Connectives
 import           Theory.Constraint.System.Guarded
@@ -189,8 +190,9 @@ prettyGoal :: HighlightDocument d => Goal -> d
 prettyGoal (ActionG i fa) = prettyNAtom (Action (varTerm i) fa)
 prettyGoal (ChainG c p)   =
     prettyNodeConc c <-> operator_ "~~>" <-> prettyNodePrem p
-prettyGoal (PremiseG p fa) =
-    prettyNodePrem p <> brackets (prettyLNFact fa)
+prettyGoal (PremiseG (i, (PremIdx v)) fa) =
+    prettyLNFact fa <-> text ("▶" ++ subscript (show v)) <-> prettyNodeId i
+    -- prettyNodePrem p <> brackets (prettyLNFact fa)
 prettyGoal (DisjG (Disj []))  = text "Disj" <-> operator_ "(⊥)"
 prettyGoal (DisjG (Disj gfs)) = fsep $
     punctuate (operator_ "  ∥") (map (nest 1 . parens . prettyGuarded) gfs)
