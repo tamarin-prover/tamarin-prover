@@ -70,6 +70,7 @@ library
         Extension.Data.ByteString
 
         Text.Dot
+        Text.Unicode
         Text.PrettyPrint.Class
         Text.PrettyPrint.Highlight
         Text.PrettyPrint.Html

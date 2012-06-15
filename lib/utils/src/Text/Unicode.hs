@@ -1,7 +1,7 @@
 -- |
 -- Copyright   : (c) 2010 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
@@ -9,9 +9,9 @@
 module Text.Unicode where
 
 
--- | Convert a subsriptable character to its subsript.
-subsriptChar :: Char -> Char
-subsriptChar c = case c of
+-- | Convert a subscriptable character to its subsript.
+subscriptChar :: Char -> Char
+subscriptChar c = case c of
     '0' -> '₀'
     '1' -> '₁'
     '2' -> '₂'
@@ -27,9 +27,9 @@ subsriptChar c = case c of
     '=' -> '₌'
     '(' -> '₍'
     ')' -> '₎'
-    _   -> c  -- FIXME: Add further characters from 
+    _   -> c  -- FIXME: Add further characters from
               --   http://tlt.its.psu.edu/suggestions/international/bylanguage/mathchart.html#super
 
--- | Convert all subsriptable characters to subsripts.
-subsript :: String -> String
-subsript = map subsriptChar
+-- | Convert all subscriptable characters to subscripts.
+subscript :: String -> String
+subscript = map subscriptChar
