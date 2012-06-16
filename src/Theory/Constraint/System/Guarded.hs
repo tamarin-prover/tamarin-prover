@@ -56,25 +56,26 @@ module Theory.Constraint.System.Guarded (
   ) where
 
 import           Control.Applicative
+import           Control.Arrow
 import           Control.DeepSeq
 import           Control.Monad.Error
+import           Control.Monad.Fresh              (MonadFresh, scopeFreshness)
+import qualified Control.Monad.Trans.FastFresh    as Fast (evalFreshT)
+import qualified Control.Monad.Trans.PreciseFresh as Precise (Fresh, evalFresh)
 
 import           Debug.Trace
 
 import           Data.Binary
 import           Data.DeriveTH
-import           Data.Either                (partitionEithers)
-import           Data.Foldable              (Foldable(..), foldMap)
+import           Data.Either                      (partitionEithers)
+import           Data.Foldable                    (Foldable(..), foldMap)
 import           Data.List
-import           Data.Monoid                (mappend, mconcat)
-import           Data.Traversable           hiding (mapM, sequence)
+import           Data.Monoid                      (mappend, mconcat)
+import           Data.Traversable                 hiding (mapM, sequence)
 
 import           Logic.Connectives
 
 import           Text.PrettyPrint.Highlight
-
-import           Control.Arrow
-import           Control.Monad.Fresh        hiding (mapM)
 
 import           Theory.Model
 
@@ -375,7 +376,9 @@ convert polarity f0@(Qua qua0 _ _) =
       (Ex,  False) -> convEx  Ex
   where
     convEx qua = do
-      (xs,_,f) <- openFormulaPrefix f0 `evalFreshT` avoid f0
+      -- can use the 'Fast' freshness monad  here, as we are inventing the names only
+      -- temporarily
+      (xs,_,f) <- openFormulaPrefix f0 `Fast.evalFreshT` avoid f0
       case partitionEithers $ partitionConj f of
         (as, fs) -> do
           let guardedvars = frees as
@@ -395,7 +398,7 @@ convert polarity f0@(Qua qua0 _ _) =
         partitionConj f                    = [Right f]
 
     convAll qua = do
-      (xs,_,f) <- openFormulaPrefix f0 `evalFreshT` avoid f0
+      (xs,_,f) <- openFormulaPrefix f0 `Fast.evalFreshT` avoid f0
       case f of
         Conn Imp ante suc -> do
           allowedAtoms <- collectAllowedAtoms ante
@@ -559,10 +562,10 @@ simplifyGuarded valuation fm0
 prettyGuarded :: HighlightDocument d
               => LNGuarded      -- ^ Guarded Formula.
               -> d              -- ^ Pretty printed formula.
-prettyGuarded f =
-    pp f `evalFreshAvoiding` f
+prettyGuarded fm =
+    Precise.evalFresh (pp fm) (avoidPrecise fm)
   where
-    pp :: HighlightDocument d => LNGuarded -> Fresh d
+    pp :: HighlightDocument d => LNGuarded -> Precise.Fresh d
     pp (GAto a) = return $ prettyNAtom $ bvarToLVar a
 
     pp (GDisj (Disj [])) = return $ operator_  "⊥"  -- "F"
@@ -578,21 +581,23 @@ prettyGuarded f =
         ps <- mapM (\x -> opParens <$> pp x) xs
         return $ sep $ punctuate (operator_ " ∧") ps --- " &") ps
 
-    pp gf0@(GGuarded _ _ _ _) = do
-      Just (qua, vs, atoms, gf) <- openGuarded gf0
-      let antecedent = (GAto . fmap (fmapTerm (fmap Free))) <$> atoms
-          connective = operator_ (case qua of All -> "⇒"; Ex -> "∧")
-                        -- operator_ (case qua of All -> "==>"; Ex -> "&")
-          quantifier = operator_ (ppQuant qua) <-> ppVars vs <> operator_ "."
-      dante <- nest 1 <$> pp (GConj (Conj antecedent))
-      case (qua, vs, gf) of
-        (Ex,  _,  GConj (Conj [])) ->
-            return $ sep $ [ quantifier, dante ]
-        (All, [], GDisj (Disj [])) | gf == gfalse ->
-            return $ operator_ "¬" <> dante
-        _  -> do
-            dsucc <- nest 1 <$> pp gf
-            return $ sep [ quantifier, sep [dante, connective, dsucc] ]
+    pp gf0@(GGuarded _ _ _ _) =
+      -- variable names invented here can be reused otherwise
+      scopeFreshness $ do
+          Just (qua, vs, atoms, gf) <- openGuarded gf0
+          let antecedent = (GAto . fmap (fmapTerm (fmap Free))) <$> atoms
+              connective = operator_ (case qua of All -> "⇒"; Ex -> "∧")
+                            -- operator_ (case qua of All -> "==>"; Ex -> "&")
+              quantifier = operator_ (ppQuant qua) <-> ppVars vs <> operator_ "."
+          dante <- nest 1 <$> pp (GConj (Conj antecedent))
+          case (qua, vs, gf) of
+            (Ex,  _,  GConj (Conj [])) ->
+                return $ sep $ [ quantifier, dante ]
+            (All, [], GDisj (Disj [])) | gf == gfalse ->
+                return $ operator_ "¬" <> dante
+            _  -> do
+                dsucc <- nest 1 <$> pp gf
+                return $ sep [ quantifier, sep [dante, connective, dsucc] ]
       where
         ppVars      = fsep . map (text . show)
         ppQuant All = "∀"  -- "All "

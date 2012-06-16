@@ -49,18 +49,19 @@ module Theory.Model.Formula (
 
   ) where
 
-import           Prelude                    hiding (negate)
+import           Prelude                          hiding (negate)
 
 import           Data.Binary
 import           Data.DeriveTH
-import           Data.Foldable              (Foldable, foldMap)
+import           Data.Foldable                    (Foldable, foldMap)
 import           Data.Generics
-import           Data.Monoid                hiding (All)
+import           Data.Monoid                      hiding (All)
 import           Data.Traversable
 
 import           Control.Basics
 import           Control.DeepSeq
 import           Control.Monad.Fresh
+import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import           Theory.Model.Atom
 
@@ -297,12 +298,13 @@ prettyLFormula ppAtom =
         ppOp Imp = "⇒" -- "==>"
         ppOp Iff = "⇔" -- "<=>"
 
-    pp fm@(Qua _ _ _) = do
-        (vs,qua,fm') <- openFormulaPrefix fm
-        d' <- pp fm'
-        return $ sep
-                 [ operator_ (ppQuant qua) <> ppVars vs <> operator_ "."
-                 , nest 1 d']
+    pp fm@(Qua _ _ _) =
+        scopeFreshness $ do
+            (vs,qua,fm') <- openFormulaPrefix fm
+            d' <- pp fm'
+            return $ sep
+                     [ operator_ (ppQuant qua) <> ppVars vs <> operator_ "."
+                     , nest 1 d']
       where
         ppVars       = fsep . map (text . show)
 
@@ -316,7 +318,7 @@ prettyFormulaAC = prettyLNFormula
 -- | Pretty print a logical formula
 prettyLNFormula :: HighlightDocument d => LNFormula -> d
 prettyLNFormula fm =
-  prettyLFormula prettyNAtom fm `evalFreshAvoiding` fm
+    Precise.evalFresh (prettyLFormula prettyNAtom fm) (avoidPrecise fm)
 
 
 -- Derived instances
