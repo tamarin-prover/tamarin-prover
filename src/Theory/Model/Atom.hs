@@ -122,7 +122,7 @@ prettyNAtom (EqE l r) =
     sep [prettyNTerm l <-> opEqual, prettyNTerm r]
     -- sep [prettyNTerm l <-> text "≈", prettyNTerm r]
 prettyNAtom (Less u v) = text (show u) <-> opLess <-> text (show v)
-prettyNAtom (Last i)   = operator_ "Last" <> parens (text (show i))
+prettyNAtom (Last i)   = operator_ "last" <> parens (text (show i))
 
 
 -- derived instances
