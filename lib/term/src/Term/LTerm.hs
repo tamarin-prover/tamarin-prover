@@ -1,8 +1,13 @@
-{-# LANGUAGE
-      CPP, FlexibleContexts, FlexibleInstances, TypeSynonymInstances,
-      MultiParamTypeClasses, DeriveDataTypeable, StandaloneDeriving,
-      TemplateHaskell, GeneralizedNewtypeDeriving, ViewPatterns
-  #-}
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |
@@ -64,12 +69,13 @@ module Term.LTerm (
   , frees
   , someInst
   , rename
-  , renamePrecise
   , eqModuloFreshnessNoAC
   , avoid
   , evalFreshAvoiding
   , evalFreshTAvoiding
   , renameAvoiding
+  , avoidPrecise
+  , renamePrecise
 
   -- * BVar
   , BVar(..)
@@ -88,35 +94,33 @@ module Term.LTerm (
   , module Term.VTerm
 ) where
 
-import Term.VTerm
-import Term.Rewriting.Definitions
+import           Term.Rewriting.Definitions
+import           Term.VTerm
 
-import Text.PrettyPrint.Class
+import           Text.PrettyPrint.Class
 
-import Control.Applicative
-import Control.Monad.Fresh
-import Control.Monad.Bind
-import Control.DeepSeq
-import Control.Monad.Identity
+import           Control.Applicative
+import           Control.DeepSeq
+import           Control.Monad.Bind
+import           Control.Monad.Identity
+import qualified Control.Monad.Trans.PreciseFresh as Precise
 
-import Data.DeriveTH
-import qualified Data.Set   as S
-import qualified Data.Map as M
+import           Data.Binary
+import qualified Data.DList                       as D
+import           Data.DeriveTH
+import           Data.Foldable                    hiding (concatMap, elem)
+import           Data.Generics                    hiding (GT)
+import qualified Data.Map                         as M
+import           Data.Monoid
+import qualified Data.Set                         as S
+import           Data.Traversable
 
-import Data.Generics hiding (GT)
+import           Safe                             (fromJustNote)
 
-import qualified Data.DList as D
-import Data.Traversable
-import Data.Monoid
-import Data.Binary
-import Data.Foldable hiding (concatMap, elem)
+import           Extension.Data.Monoid
+import           Extension.Prelude
 
-import Safe (fromJustNote)
-
-import Extension.Prelude
-import Extension.Data.Monoid
-
-import Logic.Connectives
+import           Logic.Connectives
 
 ------------------------------------------------------------------------------
 -- Sorts.
@@ -249,7 +253,7 @@ type LNTerm = VTerm Name LVar
 
 -- | @freshLVar v@ represents a fresh logical variable with name @v@.
 freshLVar :: MonadFresh m => String -> LSort -> m LVar
-freshLVar n s = LVar n s <$> freshIdents 1
+freshLVar n s = LVar n s <$> freshIdent n
 
 -- | Returns the most precise sort of an 'LTerm'.
 sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
@@ -477,13 +481,6 @@ rename x = case boundsVarIdx x of
   where
     incVar shift (LVar n so i) = pure $ LVar n so (i+shift)
 
--- | @renamePrecise t@ replaces all variables in @t@ with fresh variables.
---   If 'Control.Monad.PreciseFresh' is used with non-AC terms and identical
---   fresh state, the same result is returned for two terms that only differ
---   in the indices of variables.
-renamePrecise :: (MonadFresh m, HasFrees a) => a -> m a
-renamePrecise x = evalBindT (someInst x) noBindings
-
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
 -- renaming of indices of free variables. Note that the normal form is not
 -- unique with respect to AC symbols.
@@ -520,6 +517,21 @@ evalFreshTAvoiding m = evalFreshT m . avoid
 --   fresh variables avoiding variables in @t@.
 renameAvoiding :: (HasFrees s, HasFrees t) => s -> t -> s
 s `renameAvoiding` t = rename s `evalFreshAvoiding` t
+
+-- | @avoidPrecise t@ computes a 'Precise.FreshState' that avoids generating
+-- variables occurring in @t@.
+avoidPrecise :: HasFrees t => t -> Precise.FreshState
+avoidPrecise =
+    foldl' ins M.empty . frees
+  where
+    ins m v = M.insertWith' max (lvarName v) (lvarIdx v + 1) m
+
+-- | @renamePrecise t@ replaces all variables in @t@ with fresh variables.
+--   If 'Control.Monad.PreciseFresh' is used with non-AC terms and identical
+--   fresh state, the same result is returned for two terms that only differ
+--   in the indices of variables.
+renamePrecise :: (MonadFresh m, HasFrees a) => a -> m a
+renamePrecise x = evalBindT (someInst x) noBindings
 
 -- Instances
 ------------
