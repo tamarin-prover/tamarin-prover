@@ -15,7 +15,7 @@
 -- terms modulo AC.
 module Term.Rewriting.Norm (
 --    norm
-   norm'
+    norm'
   , nf'
   , nfSubstVFresh'
   , normSubstVFresh'
@@ -27,7 +27,6 @@ import           Term.Maude.Process
 import           Term.Maude.Signature
 import           Term.Substitution
 import           Term.SubtermRule
-import           Term.Term
 import           Term.Unification
 
 import           Utils.Misc
