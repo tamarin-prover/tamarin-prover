@@ -3,7 +3,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -33,6 +33,7 @@ module Control.Monad.Trans.PreciseFresh (
   , nothingUsed
   , freshIdent
   , freshIdents
+  , scopeFreshness
 
   ) where
 
@@ -77,7 +78,7 @@ execFreshT (FreshT m) used = execStateT m used
 freshIdent :: Monad m => String -> FreshT m Integer
 freshIdent name = do
     m <- FreshT get
-    let i  = M.findWithDefault 0 name m
+    let i   = M.findWithDefault 0 name m
         !i' = succ i -- avoid building thunks in the Map
     FreshT (modify (M.insert name i'))
     return i
@@ -93,6 +94,14 @@ freshIdents k = do
     -- insert 'nextIdx' at "" to remember it for the next call
     FreshT (put (M.insert "" nextIdx $ M.map (const nextIdx) m))
     return maxIdx
+
+-- | Restrict the scope of the freshness requests.
+scopeFreshness :: Monad m => FreshT m a -> FreshT m a
+scopeFreshness scoped = do
+    state <- FreshT get -- save state before scoped action
+    x <- scoped
+    FreshT (put state) -- restore freshness state
+    return x
 
 
 -- Instances

@@ -3,7 +3,7 @@
 -- |
 -- Copyright   : (c) 2010 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -31,6 +31,7 @@ module Control.Monad.Trans.FastFresh (
   , FreshState
   , nothingUsed
   , freshIdents
+  , scopeFreshness
 
   ) where
 
@@ -79,6 +80,15 @@ freshIdents k = do
     i <- FreshT get
     FreshT $ put $ i + k
     return i
+
+-- | Restrict the scope of the freshness requests.
+scopeFreshness :: Monad m => FreshT m a -> FreshT m a
+scopeFreshness scoped = do
+    state <- FreshT get -- save state before scoped action
+    x <- scoped
+    FreshT (put state) -- restore freshness state
+    return x
+
 
 -- Instances
 ------------

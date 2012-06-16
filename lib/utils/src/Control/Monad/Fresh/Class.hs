@@ -1,7 +1,7 @@
 -- |
 -- Copyright   : (c) 2010 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
@@ -18,8 +18,8 @@ import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Writer
 
-import qualified Control.Monad.Trans.FastFresh    as Fast (FreshT, freshIdents)
-import qualified Control.Monad.Trans.PreciseFresh as Precise (FreshT, freshIdent, freshIdents)
+import qualified Control.Monad.Trans.FastFresh    as Fast
+import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 -- Added 'Applicative' until base states this hierarchy
 class (Applicative m, Monad m) => MonadFresh m where
@@ -32,14 +32,19 @@ class (Applicative m, Monad m) => MonadFresh m where
     freshIdents :: Integer    -- ^ Number of desired fresh identifiers.
                 -> m Integer  -- ^ The first Fresh identifier.
 
+    -- | Scope the 'freshIdent' and 'freshIdents' requests such that these
+    -- variables are not marked as used once the scope is left.
+    scopeFreshness :: m a -> m a
 
 instance (Functor m, Monad m) => MonadFresh (Fast.FreshT m) where
     freshIdent _name = Fast.freshIdents 1
     freshIdents      = Fast.freshIdents
+    scopeFreshness   = Fast.scopeFreshness
 
 instance (Functor m, Monad m) => MonadFresh (Precise.FreshT m) where
-    freshIdent  = Precise.freshIdent
-    freshIdents = Precise.freshIdents
+    freshIdent     = Precise.freshIdent
+    freshIdents    = Precise.freshIdents
+    scopeFreshness = Precise.scopeFreshness
 
 
 ----------------------------------------------------------------------------
