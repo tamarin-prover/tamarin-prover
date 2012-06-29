@@ -12,11 +12,22 @@ theory Minimal_Loop_Example begin
 
 */
 
-rule Start:      [] --[ Start() ]-> [ A() ]
+rule Start: [ Fr(x) ] --[ Start(x) ]-> [ A(x) ]
 
-rule Loop:  [ A() ] --[ Loop()  ]-> [ A() ]
+rule Loop:  [ A(x) ]  --[ Loop(x)  ]-> [ A(x) ]
 
-lemma Start_before_Loop [use_induction]:
-  "All #j. Loop() @ j ==> (Ex #i. Start() @ i & i < j)"
+rule Stop:  [ A(x) ]  --[ Stop(x)  ]-> [ ]
+
+lemma Start_before_Loop [reuse, use_induction]:
+  "All x #j. Loop(x) @ j ==> (Ex #i. Start(x) @ i & i < j)"
+
+lemma Start_before_Stop:
+  "All x #j. Stop(x) @ j ==> (Ex #i. Start(x) @ i & i < j)"
+
+lemma Loop_before_Stop [reuse, use_induction]:
+  "All x #i #j. Stop(x) @ j & Loop(x) @ i ==> #i < #j"
+
+lemma Stop_unique [reuse]:
+  "All x #i #j. Stop(x) @ j & Stop(x) @ i ==> #i = #j"
 
 end
