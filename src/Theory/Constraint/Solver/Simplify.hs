@@ -40,7 +40,6 @@ import           Control.Monad.Fresh
 import           Control.Monad.Reader
 import           Control.Monad.State                (gets)
 
-import           Text.PrettyPrint.Class
 
 import           Extension.Data.Label
 import           Extension.Prelude
@@ -50,6 +49,7 @@ import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
+import           Theory.Text.Pretty
 
 
 -- | Apply CR-rules that don't result in case splitting until the constraint
@@ -82,16 +82,27 @@ simplifySystem = do
           c8 <- insertImpliedFormulas
 
           -- Report on looping behaviour if necessary
-          let changes = [c1, c2, c3, c4, c5, c6, c7, c8]
+          let changes = filter ((Changed ==) . snd) $
+                [ ("unique fresh instances (DG4)",        c1)
+                , ("unique K↓-facts (N5↓)",               c2)
+                , ("unique K↑-facts (N5↑)",               c3)
+                , ("unique (linear) edges (DG2 and DG3)", c4)
+                , ("solve unambiguous actions (S_@)",     c5)
+                , ("decompose trace formula",             c6)
+                , ("propagate atom valuation to formula", c7)
+                , ("saturate under ∀-clauses (S_∀)",      c8)
+                ]
               traceIfLooping
                 | n <= 10   = id
-                | otherwise = trace $ render $ vcat
+                | otherwise = trace $ render $ vsep
                     [ text "Simplifier iteration" <-> int n <> colon
-                    , nest 2 (text (show changes))
+                    , fsep $ text "The reduction-rules for" :
+                             (punctuate comma $ map (text . fst) changes) ++
+                             [text "were applied to the following constraint system."]
                     , nest 2 (prettySystem se0)
                     ]
 
-          traceIfLooping $ go (n + 1) changes
+          traceIfLooping $ go (n + 1) (map snd changes)
 
 
 -- | CR-rule *N6*: add ordering constraints between all KU-actions and
