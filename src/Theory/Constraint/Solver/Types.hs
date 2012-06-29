@@ -21,7 +21,7 @@ module Theory.Constraint.Solver.Types (
 
   , pcSignature
   , pcRules
-  , pcUniqueFactInsts
+  , pcInjectiveFactInsts
   , pcCaseDists
   , pcCaseDistKind
   , pcUseInduction
@@ -109,13 +109,13 @@ data InductionHint = UseInduction | AvoidInduction
 -- | A proof context contains the globally fresh facts, classified rewrite
 -- rules and the corresponding precomputed premise case distinction theorems.
 data ProofContext = ProofContext
-       { _pcSignature       :: SignatureWithMaude
-       , _pcRules           :: ClassifiedRules
-       , _pcUniqueFactInsts :: S.Set FactTag
-       , _pcCaseDistKind    :: CaseDistKind
-       , _pcCaseDists       :: [CaseDistinction]
-       , _pcUseInduction    :: InductionHint
-       , _pcTraceQuantifier :: SystemTraceQuantifier
+       { _pcSignature          :: SignatureWithMaude
+       , _pcRules              :: ClassifiedRules
+       , _pcInjectiveFactInsts :: S.Set FactTag
+       , _pcCaseDistKind       :: CaseDistKind
+       , _pcCaseDists          :: [CaseDistinction]
+       , _pcUseInduction       :: InductionHint
+       , _pcTraceQuantifier    :: SystemTraceQuantifier
        }
        deriving( Eq, Ord, Show )
 

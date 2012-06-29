@@ -114,7 +114,7 @@ import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
-import           Theory.Tools.UniqueFactInstances
+import           Theory.Tools.InjectiveFactInstances
 
 
 ------------------------------------------------------------------------------
@@ -199,15 +199,15 @@ closeRuleCache :: [FormulaAC]        -- ^ Typing lemmas.
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
 closeRuleCache typingAsms sig protoRules intrRulesAC =
     ClosedRuleCache
-        classifiedRules untypedCaseDists typedCaseDists uniqueFactInsts
+        classifiedRules untypedCaseDists typedCaseDists injFactInstances
   where
     ctxt0 = ProofContext
-        sig classifiedRules uniqueFactInsts UntypedCaseDist [] AvoidInduction
+        sig classifiedRules injFactInstances UntypedCaseDist [] AvoidInduction
         (error "closeRuleCache: trace quantifier should not matter here")
 
-    -- unique fact instances
-    uniqueFactInsts =
-        simpleUniqueFactInstances $ L.get cprRuleE <$> protoRules
+    -- inj fact instances
+    injFactInstances =
+        simpleInjectiveFactInstances $ L.get cprRuleE <$> protoRules
 
     -- precomputing the case distinctions
     untypedCaseDists = precomputeCaseDistinctions ctxt0 []
@@ -813,7 +813,7 @@ prettyClosedTheory thy =
     ppUniqueFactInsts crc = case S.toList $ L.get crcUniqueFactInsts crc of
       []   -> emptyDoc
       tags -> lineComment $ sep
-                [ text "looping facts with unique instances:"
+                [ text "looping facts with injective instances:"
                 , nest 2 $ fsepList (text . showFactTagArity) tags ]
 
 prettyClosedSummary :: Document d => ClosedTheory -> d

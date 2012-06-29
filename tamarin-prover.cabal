@@ -261,7 +261,7 @@ executable tamarin-prover
       Theory.Tools.RuleVariants
       Theory.Tools.Wellformedness
       Theory.Tools.EquationStore
-      Theory.Tools.UniqueFactInstances
+      Theory.Tools.InjectiveFactInstances
 
       Web.Dispatch
       Web.Hamlet

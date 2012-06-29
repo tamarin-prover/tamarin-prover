@@ -33,6 +33,7 @@ import           Data.List
 import qualified Data.Map                       as M
 import           Data.Monoid
 import qualified Data.Set                       as S
+import           Safe                           (headMay)
 
 import           Control.Basics
 import           Control.Category
@@ -60,7 +61,7 @@ data Contradiction =
   | NonNormalTerms                 -- ^ Has terms that are not in normal form.
   -- | NonLastNode                    -- ^ Has a non-silent node after the last node.
   | ForbiddenExp                   -- ^ Forbidden Exp-down rule instance
-  | NonUniqueFactInstance (NodeId, NodeId, NodeId)
+  | NonInjectiveFactInstance (NodeId, NodeId, NodeId)
     -- ^ Contradicts that certain facts have unique instances.
   | IncompatibleEqs                -- ^ Incompatible equalities.
   | FormulasFalse                  -- ^ False in formulas
@@ -95,7 +96,7 @@ contradictions ctxt sys = F.asum
     -- require a unique fact to be present in the system state more than once.
     -- Unique facts are declared as part of the specification of the rule
     -- system.
-    (NonUniqueFactInstance <$> nonUniqueFactInstances ctxt sys)
+    (NonInjectiveFactInstance <$> nonInjectiveFactInstances ctxt sys)
     ++
     -- TODO: Document corresponding constratint reduction rule.
     (NodeAfterLast <$> nodesAfterLast sys)
@@ -154,31 +155,45 @@ isForbiddenExp ru = maybe False id $ do
     -- FIXME: change according to:  guard p >> return True  =  return p
 
 
--- | Compute all contradictions to unique fact instances.
+-- | Compute all contradictions to injective fact instances.
 --
--- Constraint systems are contradictory, where 'f' is a fact symbol
--- with unique instances and temporal variables i, j, and k are ordered
--- according to i < j < k, j requires a premise f(t), and i provides a
--- conclusion f(t) for the node k. Graphically, the edge from i to k is
--- interrupted by the node j that requires the same fact carried on the edge.
-nonUniqueFactInstances :: ProofContext -> System
-                       -> [(NodeId, NodeId, NodeId)]
-nonUniqueFactInstances ctxt se = do
+-- Formally, they are computed as follows. Let 'f' be a fact symbol with
+-- injective instances. Let i, j, and k be temporal variables ordered
+-- according to
+--
+--   i < j < k
+--
+-- and let there be an edge from (i,u) to (k,w) for some indices u and v
+--
+-- Then, we have a contradiction if both the premise (k,w) that requires a
+-- fact 'f(t,...)' and there is a premise (j,v) requiring a fact 'f(t,...)'.
+--
+-- These two premises would have to be merged, but cannot due to the ordering
+-- constraint 'j < k'.
+nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId, NodeId)]
+nonInjectiveFactInstances ctxt se = do
     Edge c@(i, _) (k, _) <- S.toList $ L.get sEdges se
-    let tag = factTag (nodeConcFact c se)
-    guard (tag `S.member` L.get pcUniqueFactInsts ctxt)
+    let kFaPrem            = nodeConcFact c se
+        kTag               = factTag kFaPrem
+        kTerm              = firstTerm kFaPrem
+        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
+
+    guard (kTag `S.member` L.get pcInjectiveFactInsts ctxt)
     j <- S.toList $ D.reachableSet [i] less
 
     let isCounterExample = (j /= i) && (j /= k) &&
                            maybe False checkRule (M.lookup j $ L.get sNodes se)
 
-        checkRule jRu    = any ((tag ==) . factTag) (L.get rPrems jRu) &&
+        -- FIXME: There should be a weaker version of the rule that just
+        -- introduces the constraint 'k < j || k == j' here.
+        checkRule jRu    = any conflictingFact (L.get rPrems jRu) &&
                            k `S.member` D.reachableSet [j] less
 
     guard isCounterExample
     return (i, j, k) -- counter-example to unique fact instances
   where
-    less = rawLessRel se
+    less      = rawLessRel se
+    firstTerm = headMay . factTerms
 
 -- | The node-ids that must be instantiated to the trace, but are temporally
 -- after the last node.
@@ -193,13 +208,13 @@ nodesAfterLast sys = case L.get sLastAtom sys of
 -- | Pretty-print a 'Contradiction'.
 prettyContradiction :: Document d => Contradiction -> d
 prettyContradiction contra = case contra of
-    Cyclic                    -> text "cyclic"
-    IncompatibleEqs           -> text "incompatible equalities"
-    NonNormalTerms            -> text "non-normal terms"
-    ForbiddenExp              -> text "non-normal exponentiation instance"
-    NonUniqueFactInstance cex -> text $ "non-unique facts " ++ show cex
-    FormulasFalse             -> text "from formulas"
-    SuperfluousLearn m v      ->
+    Cyclic                       -> text "cyclic"
+    IncompatibleEqs              -> text "incompatible equalities"
+    NonNormalTerms               -> text "non-normal terms"
+    ForbiddenExp                 -> text "non-normal exponentiation instance"
+    NonInjectiveFactInstance cex -> text $ "non-injective facts " ++ show cex
+    FormulasFalse                -> text "from formulas"
+    SuperfluousLearn m v         ->
         doubleQuotes (prettyLNTerm m) <->
         text ("derived before and after") <->
         doubleQuotes (prettyNodeId v)
@@ -211,15 +226,15 @@ prettyContradiction contra = case contra of
 ------------
 
 instance HasFrees Contradiction where
-  foldFrees f (SuperfluousLearn t v)    = foldFrees f t `mappend` foldFrees f v
-  foldFrees f (NonUniqueFactInstance x) = foldFrees f x
-  foldFrees f (NodeAfterLast x)         = foldFrees f x
-  foldFrees _ _                         = mempty
+  foldFrees f (SuperfluousLearn t v)       = foldFrees f t `mappend` foldFrees f v
+  foldFrees f (NonInjectiveFactInstance x) = foldFrees f x
+  foldFrees f (NodeAfterLast x)            = foldFrees f x
+  foldFrees _ _                            = mempty
 
-  mapFrees f (SuperfluousLearn t v)    = SuperfluousLearn <$> mapFrees f t <*> mapFrees f v
-  mapFrees f (NonUniqueFactInstance x) = NonUniqueFactInstance <$> mapFrees f x
-  mapFrees f (NodeAfterLast x)         = NodeAfterLast <$> mapFrees f x
-  mapFrees _ c                         = pure c
+  mapFrees f (SuperfluousLearn t v)       = SuperfluousLearn <$> mapFrees f t <*> mapFrees f v
+  mapFrees f (NonInjectiveFactInstance x) = NonInjectiveFactInstance <$> mapFrees f x
+  mapFrees f (NodeAfterLast x)            = NodeAfterLast <$> mapFrees f x
+  mapFrees _ c                            = pure c
 
 $( derive makeBinary ''Contradiction)
 $( derive makeNFData ''Contradiction)
