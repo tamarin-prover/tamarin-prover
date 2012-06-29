@@ -7,7 +7,7 @@ text{*
   Date:   2011 12 01
   Status: Working
 
-  One model of the key mechnaism for certificate revocation.
+  One model of the key mechanism for certificate revocation.
   For every certificate, we create a single fact denoting that
   it has not yet been revoked. In every use of the certificate,
   we check that this fact still exists.
