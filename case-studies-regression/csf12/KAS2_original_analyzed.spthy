@@ -145,78 +145,55 @@ rule (modulo E) Ephk_reveal:
 
 lemma (modulo E) KAS_key_secrecy:
   all-traces
-  "not(Ex #i1 #i2.1 s.2 A.3 B.4 k.5.
-        ((((Accept( s.2, A.3, B.4, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)) &
-          (not(Ex #i4.6. SesskRev( s.2 ) @ #i4.6))) &
-         (All ss.7 #i4.8 #i5.9 C.10 D.11 ms.12.
-           ((Sid( ss.7, C.10, D.11, ms.12 ) @ #i4.8) &
-            (Match( s.2, ms.12 ) @ #i5.9)) ==>
-           (((((not(Ex #i6.13. SesskRev( ss.7 ) @ #i6.13)) &
-               (not(Ex #i6.14 #i7.15.
-                     (LtkRev( A.3 ) @ #i6.14) & (EphkRev( s.2 ) @ #i7.15)))) &
-              (not(Ex #i6.16 #i7.17.
-                    (LtkRev( B.4 ) @ #i6.16) & (EphkRev( ss.7 ) @ #i7.17)))) &
-             (not(Ex #i6.18 #i7.19.
-                   (LtkRev( A.3 ) @ #i6.18) & (LtkRev( B.4 ) @ #i7.19)))) &
-            (not(Ex #i6.20 #i7.21.
-                  (EphkRev( s.2 ) @ #i6.20) & (EphkRev( ss.7 ) @ #i7.21)))))) &
-        ((not(Ex ss.22 #i4.23 #i5.24 C.25 D.26 ms.27.
-               (Sid( ss.22, C.25, D.26, ms.27 ) @ #i4.23) &
-               (Match( s.2, ms.27 ) @ #i5.24))) ==>
-         ((not(Ex #i6.28. EphkRev( s.2 ) @ #i6.28)) &
-          (not(Ex #i6.29. (LtkRev( B.4 ) @ #i6.29) & (#i6.29 < #i1))))))"
+  "¬(∃ #i1 #i2 s A B k.
+      ((((Accept( s, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+        (¬(∃ #i4. SesskRev( s ) @ #i4))) ∧
+       (∀ ss #i4 #i5 C D ms.
+         ((Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ⇒
+         (((((¬(∃ #i6. SesskRev( ss ) @ #i6)) ∧
+             (¬(∃ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7)))) ∧
+            (¬(∃ #i6 #i7. (LtkRev( B ) @ #i6) ∧ (EphkRev( ss ) @ #i7)))) ∧
+           (¬(∃ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (LtkRev( B ) @ #i7)))) ∧
+          (¬(∃ #i6 #i7. (EphkRev( s ) @ #i6) ∧ (EphkRev( ss ) @ #i7)))))) ∧
+      ((¬(∃ ss #i4 #i5 C D ms.
+           (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5))) ⇒
+       ((¬(∃ #i6. EphkRev( s ) @ #i6)) ∧
+        (¬(∃ #i6. (LtkRev( B ) @ #i6) ∧ (#i6 < #i1))))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex #i1 #i2.1 s.2 A.3 B.4 k.5.
-  (Accept( s.2, A.3, B.4, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)
- &
-  (All #i4.6. (SesskRev( s.2 ) @ #i4.6) ==> F) &
-  (All ss.7 #i4.8 #i5.9 C.10 D.11 ms.12.
-    (Sid( ss.7, C.10, D.11, ms.12 ) @ #i4.8) & (Match( s.2, ms.12 ) @ #i5.9)
-   ==>
-    (All #i6.13. (SesskRev( ss.7 ) @ #i6.13) ==> F) &
-    (All #i6.14 #i7.15.
-      (LtkRev( A.3 ) @ #i6.14) & (EphkRev( s.2 ) @ #i7.15)
-     ==>
-      F) &
-    (All #i6.16 #i7.17.
-      (LtkRev( B.4 ) @ #i6.16) & (EphkRev( ss.7 ) @ #i7.17)
-     ==>
-      F) &
-    (All #i6.18 #i7.19.
-      (LtkRev( A.3 ) @ #i6.18) & (LtkRev( B.4 ) @ #i7.19)
-     ==>
-      F) &
-    (All #i6.20 #i7.21.
-      (EphkRev( s.2 ) @ #i6.20) & (EphkRev( ss.7 ) @ #i7.21)
-     ==>
-      F)) &
-  ((Ex ss.22 #i4.23 #i5.24 C.25 D.26 ms.27.
-     (Sid( ss.22, C.25, D.26, ms.27 ) @ #i4.23) &
-     (Match( s.2, ms.27 ) @ #i5.24)
-    &
-     T) |
-   ((All #i6.28. (EphkRev( s.2 ) @ #i6.28) ==> F) &
-    (All #i6.29. (LtkRev( B.4 ) @ #i6.29) ==> All . (#i6.29 < #i1) ==> F)))"
+"∃ #i1 #i2 s A B k.
+  (Accept( s, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)
+ ∧
+  (∀ #i4. (SesskRev( s ) @ #i4) ⇒ ⊥) ∧
+  (∀ ss #i4 #i5 C D ms.
+    (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)
+   ⇒
+    (∀ #i6. (SesskRev( ss ) @ #i6) ⇒ ⊥) ∧
+    (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7) ⇒ ⊥) ∧
+    (∀ #i6 #i7. (LtkRev( B ) @ #i6) ∧ (EphkRev( ss ) @ #i7) ⇒ ⊥) ∧
+    (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (LtkRev( B ) @ #i7) ⇒ ⊥) ∧
+    (∀ #i6 #i7. (EphkRev( s ) @ #i6) ∧ (EphkRev( ss ) @ #i7) ⇒ ⊥)) ∧
+  ((∃ ss #i4 #i5 C D ms.
+     (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
+   ((∀ #i6. (EphkRev( s ) @ #i6) ⇒ ⊥) ∧
+    (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1))))"
 */
 simplify
-solve( Disj(Ex ss.1 #i4.2 #i5.3 C.4 D.5 ms.6.
-             (Sid( ss.1, C.4, D.5, ms.6 ) @ #i4.2) & (Match( s, ms.6 ) @ #i5.3)
-            &
-             T) |
-           ((All #i6.1. (EphkRev( s ) @ #i6.1) ==> F) &
-            (All #i6.2. (LtkRev( B ) @ #i6.2) ==> All . (#i6.2 < #i1) ==> F)) )
+solve( (∃ ss #i4 #i5 C D ms.
+         (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5))  ∥
+       ((∀ #i6. (EphkRev( s ) @ #i6) ⇒ ⊥) ∧
+        (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1))) )
   case case_1
   solve( Accept( s, A, B, k ) @ #i1 )
     case Init_2
-    solve( (#i1, 0)[Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 )] )
+    solve( Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) ▶₀ #i1 )
       case Init_1
       solve( Sid( ss, C, D, ms ) @ #i4 )
         case Init_1
-        solve( (#i4, 1)[!Ltk( $I.1, ~lkI.1 )] )
+        solve( !Ltk( $I.1, ~lkI.1 ) ▶₁ #i4 )
           case Register_pk
-          solve( (#i4, 2)[!Pk( $R.1, pkR )] )
+          solve( !Pk( $R.1, pkR ) ▶₂ #i4 )
             case Register_pk
             by solve( Match( ~m1, <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1))>
                       ) @ #i5 )
@@ -224,7 +201,7 @@ solve( Disj(Ex ss.1 #i4.2 #i5.3 C.4 D.5 ms.6.
         qed
       next
         case Init_2
-        solve( (#i4, 0)[Init_1( ~m1.1, $I.1, $R.1, ~lkI.1, ~m1.1, c1 )] )
+        solve( Init_1( ~m1.1, $I.1, $R.1, ~lkI.1, ~m1.1, c1 ) ▶₀ #i4 )
           case Init_1
           by solve( Match( ~m1,
                            <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1)), c2.1>
@@ -232,14 +209,14 @@ solve( Disj(Ex ss.1 #i4.2 #i5.3 C.4 D.5 ms.6.
         qed
       next
         case Resp_1
-        solve( (#i4, 2)[!Ltk( $R.1, ~lkR )] )
+        solve( !Ltk( $R.1, ~lkR ) ▶₂ #i4 )
           case Register_pk
-          solve( (#i4, 3)[!Pk( $I.1, pkI )] )
+          solve( !Pk( $I.1, pkI ) ▶₃ #i4 )
             case Register_pk
             solve( Match( ~m1, <$R.1, $I.1, 'Resp', aenc(~m2, pk(~ltkA.1)), c1>
                    ) @ #i5 )
               case Init_2
-              solve( (#i5, 0)[Init_1( ~m1, $I.1, $R.1, ~lkI.1, ~m1, c1 )] )
+              solve( Init_1( ~m1, $I.1, $R.1, ~lkI.1, ~m1, c1 ) ▶₀ #i5 )
                 case Init_1
                 solve( splitEqs(0) )
                   case split_case_1
@@ -427,13 +404,13 @@ solve( Disj(Ex ss.1 #i4.2 #i5.3 C.4 D.5 ms.6.
     qed
   next
     case Resp_2
-    solve( (#i1, 0)[Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 )] )
+    solve( Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 ) ▶₀ #i1 )
       case Resp_1
       solve( Sid( ss, C, D, ms ) @ #i4 )
         case Init_1
-        solve( (#i4, 1)[!Ltk( $I.1, ~lkI )] )
+        solve( !Ltk( $I.1, ~lkI ) ▶₁ #i4 )
           case Register_pk
-          solve( (#i4, 2)[!Pk( $R.1, pkR )] )
+          solve( !Pk( $R.1, pkR ) ▶₂ #i4 )
             case Register_pk
             solve( Match( ~m2, <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1))>
                    ) @ #i5 )
@@ -578,7 +555,7 @@ solve( Disj(Ex ss.1 #i4.2 #i5.3 C.4 D.5 ms.6.
         qed
       next
         case Init_2
-        solve( (#i4, 0)[Init_1( ~m1.1, $I.1, $R.1, ~lkI, ~m1.1, c1.1 )] )
+        solve( Init_1( ~m1.1, $I.1, $R.1, ~lkI, ~m1.1, c1.1 ) ▶₀ #i4 )
           case Init_1
           solve( Match( ~m2, <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1)), c2>
                  ) @ #i5 )
@@ -1001,14 +978,14 @@ solve( Disj(Ex ss.1 #i4.2 #i5.3 C.4 D.5 ms.6.
         qed
       next
         case Resp_1
-        solve( (#i4, 2)[!Ltk( $R.1, ~lkR.1 )] )
+        solve( !Ltk( $R.1, ~lkR.1 ) ▶₂ #i4 )
           case Register_pk
-          solve( (#i4, 3)[!Pk( $I.1, pkI )] )
+          solve( !Pk( $I.1, pkI ) ▶₃ #i4 )
             case Register_pk
             solve( Match( ~m2, <$R.1, $I.1, 'Resp', aenc(~m2.1, pk(~ltkA.1)), c1.1>
                    ) @ #i5 )
               case Init_2
-              by solve( (#i5, 0)[Init_1( ~m2, $I.1, $R.1, ~lkI, ~m2, c1.1 )] )
+              by solve( Init_1( ~m2, $I.1, $R.1, ~lkI, ~m2, c1.1 ) ▶₀ #i5 )
             qed
           qed
         qed
@@ -1019,7 +996,7 @@ next
   case case_2
   solve( Accept( s, A, B, k ) @ #i1 )
     case Init_2
-    solve( (#i1, 0)[Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 )] )
+    solve( Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) ▶₀ #i1 )
       case Init_1
       solve( splitEqs(0) )
         case split_case_1
@@ -1115,7 +1092,7 @@ next
     qed
   next
     case Resp_2
-    solve( (#i1, 0)[Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 )] )
+    solve( Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 ) ▶₀ #i1 )
       case Resp_1
       solve( splitEqs(0) )
         case split_case_1
@@ -1233,7 +1210,7 @@ analyzing: data/examples/csf12/KAS2_original.spthy
 analyzed: data/examples/csf12/KAS2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.478153s
+  processing time: 5.861587s
   KAS_key_secrecy (all-traces): verified (290 steps)
 
 ------------------------------------------------------------------------------
@@ -1244,7 +1221,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KAS2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.478153s
+  processing time: 5.861587s
   KAS_key_secrecy (all-traces): verified (290 steps)
 
 ==============================================================================

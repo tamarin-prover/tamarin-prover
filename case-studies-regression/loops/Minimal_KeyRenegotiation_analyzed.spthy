@@ -8,7 +8,7 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-// looping facts with unique instances: Sender/1
+// looping facts with injective instances: Sender/1
 
 rule (modulo E) Setup:
    [ Fr( ~k ) ] --> [ Sender( ~k ), Receiver( ~k ) ]
@@ -32,18 +32,18 @@ rule (modulo E) Receive:
   /* has exactly the trivial AC variant */
 
 lemma (modulo E) Secret_reachable [use_induction]:
-  exists-trace "Ex k #i.1. Secret( k ) @ #i.1"
+  exists-trace "∃ k #i. Secret( k ) @ #i"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
-"Ex k #i.1. (Secret( k ) @ #i.1) & T"
+"∃ k #i. (Secret( k ) @ #i)"
 */
 induction
   case induction
   simplify
   solve( Secret( k ) @ #i )
     case Send
-    solve( (#i, 0)[Sender( k0 )] )
+    solve( Sender( k0 ) ▶₀ #i )
       case Setup
       SOLVED // trace found
     qed
@@ -51,22 +51,20 @@ induction
 qed
 
 lemma (modulo E) secrecy [use_induction]:
-  all-traces
-  "All k f.1 #i.2 #j.3.
-    ((Secret( k ) @ #i.2) & (!KU( f.1, k ) @ #j.3)) ==> (F)"
+  all-traces "∀ k f #i #j. ((Secret( k ) @ #i) ∧ (!KU( f, k ) @ #j)) ⇒ (⊥)"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex k f.1 #i.2 #j.3. (Secret( k ) @ #i.2) & (!KU( f.1, k ) @ #j.3) & T"
+"∃ k f #i #j. (Secret( k ) @ #i) ∧ (!KU( f, k ) @ #j)"
 */
 induction
   case induction
   simplify
-  solve( Disj(Last(#j)) | (Last(#i)) )
+  solve( (last(#j))  ∥ (last(#i)) )
     case case_1
     solve( Secret( k ) @ #i )
       case Receive
-      solve( (#i, 0)[Receiver( k0 )] )
+      solve( Receiver( k0 ) ▶₀ #i )
         case Receive
         solve( !KU( f_, senc(k, k0) ) @ #vk )
           case Send
@@ -95,7 +93,7 @@ induction
       case Send
       solve( !KU( f, ~k ) @ #j )
         case Send
-        solve( (#i, 0)[Sender( k0 )] )
+        solve( Sender( k0 ) ▶₀ #i )
           case Send
           by contradiction // from formulas
         next
@@ -108,7 +106,7 @@ induction
     case case_2
     solve( Secret( k ) @ #i )
       case Receive
-      solve( (#i, 0)[Receiver( k0 )] )
+      solve( Receiver( k0 ) ▶₀ #i )
         case Receive
         solve( !KU( f_, senc(k, k0) ) @ #vk )
           case Send
@@ -152,7 +150,7 @@ analyzing: data/examples/loops/Minimal_KeyRenegotiation.spthy
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.115092s
+  processing time: 0.123953s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (27 steps)
 
@@ -164,7 +162,7 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.115092s
+  processing time: 0.123953s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (27 steps)
 

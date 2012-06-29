@@ -152,31 +152,29 @@ rule (modulo E) C_3:
 
 lemma (modulo E) session_key_secrecy:
   all-traces
-  "(All x y.1 #i.2. (Eq( x, y.1 ) @ #i.2) ==> (x = y.1)) ==>
-   (not(Ex S.3 C.4 keyS.5 keyC.6 #k.7.
-         (((SessionKeys( S.3, C.4, keyS.5, keyC.6 ) @ #k.7) &
-           ((Ex #i.8. K( keyS.5 ) @ #i.8) | (Ex #i.9. K( keyC.6 ) @ #i.9))) &
-          (not(Ex #r.10. RevLtk( S.3 ) @ #r.10))) &
-         (not(Ex #r.11. RevLtk( C.4 ) @ #r.11))))"
+  "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ⇒
+   (¬(∃ S C keyS keyC #k.
+       (((SessionKeys( S, C, keyS, keyC ) @ #k) ∧
+         ((∃ #i. K( keyS ) @ #i) ∨ (∃ #i. K( keyC ) @ #i))) ∧
+        (¬(∃ #r. RevLtk( S ) @ #r))) ∧
+       (¬(∃ #r. RevLtk( C ) @ #r))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"(All x y.1 #i.2. (Eq( x, y.1 ) @ #i.2) ==> x = y.1) &
- (Ex S.3 C.4 keyS.5 keyC.6 #k.7.
-   (SessionKeys( S.3, C.4, keyS.5, keyC.6 ) @ #k.7)
-  &
-   ((Ex #i.8. (K( keyS.5 ) @ #i.8) & T) |
-    (Ex #i.9. (K( keyC.6 ) @ #i.9) & T)) &
-   (All #r.10. (RevLtk( S.3 ) @ #r.10) ==> F) &
-   (All #r.11. (RevLtk( C.4 ) @ #r.11) ==> F))"
+"(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
+ (∃ S C keyS keyC #k.
+   (SessionKeys( S, C, keyS, keyC ) @ #k)
+  ∧
+   ((∃ #i. (K( keyS ) @ #i)) ∨ (∃ #i. (K( keyC ) @ #i))) ∧
+   (∀ #r. (RevLtk( S ) @ #r) ⇒ ⊥) ∧
+   (∀ #r. (RevLtk( C ) @ #r) ⇒ ⊥))"
 */
 simplify
-solve( Disj(Ex #i.1. (K( keyS ) @ #i.1) & T) |
-           (Ex #i.1. (K( keyC ) @ #i.1) & T) )
+solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
   case case_1
   solve( SessionKeys( S, C, keyS, keyC ) @ #k )
     case C_3
-    solve( (#k, 0)[St_C_2( S, C, sid, nc, pc, ns, ps, pms )] )
+    solve( St_C_2( S, C, sid, nc, pc, ns, ps, pms ) ▶₀ #k )
       case C_2
       solve( !KU( f_.1,
                   senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, $A>,
@@ -239,11 +237,11 @@ solve( Disj(Ex #i.1. (K( keyS ) @ #i.1) & T) |
     qed
   next
     case S_2
-    solve( (#k, 0)[St_S_1( S, C, sid, nc, pc, ns, ps )] )
+    solve( St_S_1( S, C, sid, nc, pc, ns, ps ) ▶₀ #k )
       case S_1
-      solve( (#k, 2)[!Pk( $C, pk(x) )] )
+      solve( !Pk( $C, pk(x) ) ▶₂ #k )
         case Register_pk
-        solve( (#k, 3)[!Ltk( $S, ltkS )] )
+        solve( !Ltk( $S, ltkS ) ▶₃ #k )
           case Register_pk
           solve( !KU( f_.3, aenc(<'31', pms>, pk(~ltkA)) ) @ #vk.2 )
             case C_2
@@ -350,7 +348,7 @@ next
   case case_2
   solve( SessionKeys( S, C, keyS, keyC ) @ #k )
     case C_3
-    solve( (#k, 0)[St_C_2( S, C, sid, nc, pc, ns, ps, pms )] )
+    solve( St_C_2( S, C, sid, nc, pc, ns, ps, pms ) ▶₀ #k )
       case C_2
       solve( !KU( f_.1,
                   senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, $A>,
@@ -413,11 +411,11 @@ next
     qed
   next
     case S_2
-    solve( (#k, 0)[St_S_1( S, C, sid, nc, pc, ns, ps )] )
+    solve( St_S_1( S, C, sid, nc, pc, ns, ps ) ▶₀ #k )
       case S_1
-      solve( (#k, 2)[!Pk( $C, pk(x) )] )
+      solve( !Pk( $C, pk(x) ) ▶₂ #k )
         case Register_pk
-        solve( (#k, 3)[!Ltk( $S, ltkS )] )
+        solve( !Ltk( $S, ltkS ) ▶₃ #k )
           case Register_pk
           solve( !KU( f_.3, aenc(<'31', pms>, pk(~ltkA)) ) @ #vk.2 )
             case C_2
@@ -524,25 +522,23 @@ qed
 
 lemma (modulo E) session_key_setup_possible:
   exists-trace
-  "(All x y.1 #i.2. (Eq( x, y.1 ) @ #i.2) ==> (x = y.1)) &
-   (Ex S.3 C.4 keyS.5 keyC.6 #k.7.
-     ((SessionKeys( S.3, C.4, keyS.5, keyC.6 ) @ #k.7) &
-      (not(Ex #r.8. RevLtk( S.3 ) @ #r.8))) &
-     (not(Ex #r.9. RevLtk( C.4 ) @ #r.9)))"
+  "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ∧
+   (∃ S C keyS keyC #k.
+     ((SessionKeys( S, C, keyS, keyC ) @ #k) ∧ (¬(∃ #r. RevLtk( S ) @ #r))) ∧
+     (¬(∃ #r. RevLtk( C ) @ #r)))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
-"(All x y.1 #i.2. (Eq( x, y.1 ) @ #i.2) ==> x = y.1) &
- (Ex S.3 C.4 keyS.5 keyC.6 #k.7.
-   (SessionKeys( S.3, C.4, keyS.5, keyC.6 ) @ #k.7)
-  &
-   (All #r.8. (RevLtk( S.3 ) @ #r.8) ==> F) &
-   (All #r.9. (RevLtk( C.4 ) @ #r.9) ==> F))"
+"(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
+ (∃ S C keyS keyC #k.
+   (SessionKeys( S, C, keyS, keyC ) @ #k)
+  ∧
+   (∀ #r. (RevLtk( S ) @ #r) ⇒ ⊥) ∧ (∀ #r. (RevLtk( C ) @ #r) ⇒ ⊥))"
 */
 simplify
 solve( SessionKeys( S, C, keyS, keyC ) @ #k )
   case C_3
-  solve( (#k, 0)[St_C_2( S, C, sid, nc, pc, ns, ps, pms )] )
+  solve( St_C_2( S, C, sid, nc, pc, ns, ps, pms ) ▶₀ #k )
     case C_2
     solve( !KU( f_,
                 senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, $A>,
@@ -591,7 +587,7 @@ analyzing: data/examples/classic/TLS_Handshake.spthy
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.192051s
+  processing time: 3.045126s
   session_key_secrecy (all-traces): verified (106 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 
@@ -603,7 +599,7 @@ summary of summaries:
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.192051s
+  processing time: 3.045126s
   session_key_secrecy (all-traces): verified (106 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 

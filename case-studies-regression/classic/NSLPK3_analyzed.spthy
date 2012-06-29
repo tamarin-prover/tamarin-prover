@@ -66,72 +66,60 @@ rule (modulo E) Secrecy_claim:
 
 lemma (modulo E) types [typing]:
   all-traces
-  "(All ni m1.1 #i.2.
-     (IN_R_1_ni( ni, m1.1 ) @ #i.2) ==>
-     ((Ex f.3 #j.4. (!KU( f.3, ni ) @ #j.4) & (#j.4 < #i.2)) |
-      (Ex #j.5. OUT_I_1( m1.1 ) @ #j.5))) &
-   (All nr.6 m2.7 #i.8.
-     (IN_I_2_nr( nr.6, m2.7 ) @ #i.8) ==>
-     ((Ex f.9 #j.10. (!KU( f.9, nr.6 ) @ #j.10) & (#j.10 < #i.8)) |
-      (Ex #j.11. OUT_R_1( m2.7 ) @ #j.11)))"
+  "(∀ ni m1 #i.
+     (IN_R_1_ni( ni, m1 ) @ #i) ⇒
+     ((∃ f #j. (!KU( f, ni ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j. OUT_I_1( m1 ) @ #j))) ∧
+   (∀ nr m2 #i.
+     (IN_I_2_nr( nr, m2 ) @ #i) ⇒
+     ((∃ f #j. (!KU( f, nr ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j. OUT_R_1( m2 ) @ #j)))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"(Ex ni m1.1 #i.2.
-   (IN_R_1_ni( ni, m1.1 ) @ #i.2)
-  &
-   (All f.3 #j.4. (!KU( f.3, ni ) @ #j.4) ==> All . (#j.4 < #i.2) ==> F) &
-   (All #j.5. (OUT_I_1( m1.1 ) @ #j.5) ==> F)) |
- (Ex nr.6 m2.7 #i.8.
-   (IN_I_2_nr( nr.6, m2.7 ) @ #i.8)
-  &
-   (All f.9 #j.10.
-     (!KU( f.9, nr.6 ) @ #j.10)
-    ==>
-     All . (#j.10 < #i.8) ==> F) &
-   (All #j.11. (OUT_R_1( m2.7 ) @ #j.11) ==> F))"
+"(∃ ni m1 #i.
+   (IN_R_1_ni( ni, m1 ) @ #i)
+  ∧
+   (∀ f #j. (!KU( f, ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+   (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
+ (∃ nr m2 #i.
+   (IN_I_2_nr( nr, m2 ) @ #i)
+  ∧
+   (∀ f #j. (!KU( f, nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+   (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥))"
 */
 induction
   case induction
   simplify
-  solve( Disj(Ex ni m1.1 #i.2.
-               (IN_R_1_ni( ni, m1.1 ) @ #i.2)
-              &
-               (All f.3 #j.4. (!KU( f.3, ni ) @ #j.4) ==> All . (#j.4 < #i.2) ==> F) &
-               (All #j.5. (OUT_I_1( m1.1 ) @ #j.5) ==> F)) |
-             (Ex nr m2.1 #i.2.
-               (IN_I_2_nr( nr, m2.1 ) @ #i.2)
-              &
-               (All f.3 #j.4. (!KU( f.3, nr ) @ #j.4) ==> All . (#j.4 < #i.2) ==> F) &
-               (All #j.5. (OUT_R_1( m2.1 ) @ #j.5) ==> F)) )
+  solve( (∃ ni m1 #i.
+           (IN_R_1_ni( ni, m1 ) @ #i)
+          ∧
+           (∀ f #j. (!KU( f, ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥))  ∥
+         (∃ nr m2 #i.
+           (IN_I_2_nr( nr, m2 ) @ #i)
+          ∧
+           (∀ f #j. (!KU( f, nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)) )
     case case_1
-    solve( Disj(Last(#i)) |
-               (Ex f.1 #j.2.
-                 (!KU( f.1, ni ) @ #j.2)
-                &
-                 (All . (Last(#j.2)) ==> F) & (#j.2 < #i)) |
-               (Ex #j.1.
-                 (OUT_I_1( aenc(<'1', ni, I>, pk(ltkR)) ) @ #j.1)
-                &
-                 All . (Last(#j.1)) ==> F) )
+    solve( (last(#i))  ∥
+           (∃ f #j. (!KU( f, ni ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j. (OUT_I_1( aenc(<'1', ni, I>, pk(ltkR)) ) @ #j) ∧ ¬(last(#j))) )
       case case_1
-      solve( (#i, 0)[!Ltk( $R, ltkR )] )
+      solve( !Ltk( $R, ltkR ) ▶₀ #i )
         case Register_pk
-        solve( (#i, 2)[!Pk( I, pkI )] )
+        solve( !Pk( I, pkI ) ▶₂ #i )
           case Register_pk
           solve( !KU( f_, aenc(<'1', ni, $A>, pk(~ltkA)) ) @ #vk )
             case I_1
             by contradiction // from formulas
           next
             case I_2
-            solve( Disj(Ex f.3 #j.4.
-                         (!KU( f.3, nr.1 ) @ #j.4)
-                        &
-                         (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
-                       (Ex #j.4.
-                         (OUT_R_1( aenc(<'2', ~ni.1, nr.1, $R.1>, pk(~ltkA.3)) ) @ #j.4)
-                        &
-                         All . (Last(#j.4)) ==> F) )
+            solve( (∃ f #j. (!KU( f, nr.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (OUT_R_1( aenc(<'2', ~ni.1, nr.1, $R.1>, pk(~ltkA.3)) ) @ #j)
+                    ∧
+                     ¬(last(#j))) )
               case case_1
               by contradiction // cyclic
             next
@@ -140,14 +128,9 @@ induction
             qed
           next
             case R_1
-            solve( Disj(Ex f.3 #j.4.
-                         (!KU( f.3, ni.1 ) @ #j.4)
-                        &
-                         (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
-                       (Ex #j.4.
-                         (OUT_I_1( aenc(<'1', ni.1, $A.1>, pk(~ltkA.3)) ) @ #j.4)
-                        &
-                         All . (Last(#j.4)) ==> F) )
+            solve( (∃ f #j. (!KU( f, ni.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (OUT_I_1( aenc(<'1', ni.1, $A.1>, pk(~ltkA.3)) ) @ #j) ∧ ¬(last(#j))) )
               case case_1
               by contradiction // cyclic
             next
@@ -169,32 +152,24 @@ induction
     qed
   next
     case case_2
-    solve( Disj(Last(#i)) |
-               (Ex f.1 #j.2.
-                 (!KU( f.1, nr ) @ #j.2)
-                &
-                 (All . (Last(#j.2)) ==> F) & (#j.2 < #i)) |
-               (Ex #j.1.
-                 (OUT_R_1( aenc(<'2', ni, nr, R>, pk(ltkI)) ) @ #j.1)
-                &
-                 All . (Last(#j.1)) ==> F) )
+    solve( (last(#i))  ∥
+           (∃ f #j. (!KU( f, nr ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j.
+             (OUT_R_1( aenc(<'2', ni, nr, R>, pk(ltkI)) ) @ #j) ∧ ¬(last(#j))) )
       case case_1
-      solve( (#i, 0)[St_I_1( I, R, ni )] )
+      solve( St_I_1( I, R, ni ) ▶₀ #i )
         case I_1
-        solve( (#i, 1)[!Ltk( $I, ltkI )] )
+        solve( !Ltk( $I, ltkI ) ▶₁ #i )
           case Register_pk
-          solve( (#i, 3)[!Pk( $R, pkR )] )
+          solve( !Pk( $R, pkR ) ▶₃ #i )
             case Register_pk
             solve( !KU( f_, aenc(<'2', ~ni, nr, $R>, pk(~ltkA)) ) @ #vk )
               case I_2
-              solve( Disj(Ex f.5 #j.6.
-                           (!KU( f.5, nr.1 ) @ #j.6)
-                          &
-                           (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                         (Ex #j.5.
-                           (OUT_R_1( aenc(<'2', ~ni.1, nr.1, $R.1>, pk(~ltkA.4)) ) @ #j.5)
-                          &
-                           All . (Last(#j.5)) ==> F) )
+              solve( (∃ f #j. (!KU( f, nr.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                     (∃ #j.
+                       (OUT_R_1( aenc(<'2', ~ni.1, nr.1, $R.1>, pk(~ltkA.4)) ) @ #j)
+                      ∧
+                       ¬(last(#j))) )
                 case case_1
                 by contradiction // cyclic
               next
@@ -206,14 +181,9 @@ induction
               by contradiction // from formulas
             next
               case R_1_case_2
-              solve( Disj(Ex f.5 #j.6.
-                           (!KU( f.5, ni.1 ) @ #j.6)
-                          &
-                           (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                         (Ex #j.5.
-                           (OUT_I_1( aenc(<'1', ni.1, $A>, pk(~ltkA.4)) ) @ #j.5)
-                          &
-                           All . (Last(#j.5)) ==> F) )
+              solve( (∃ f #j. (!KU( f, ni.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                     (∃ #j.
+                       (OUT_I_1( aenc(<'1', ni.1, $A>, pk(~ltkA.4)) ) @ #j) ∧ ¬(last(#j))) )
                 case case_1
                 by contradiction // cyclic
               next
@@ -239,22 +209,22 @@ qed
 
 lemma (modulo E) nonce_secrecy:
   all-traces
-  "not(Ex A B.1 s.2 #i.3.
-        (((Secret( A, B.1, s.2 ) @ #i.3) & (Ex #j.4. K( s.2 ) @ #j.4)) &
-         (not(Ex #r.5. RevLtk( A ) @ #r.5))) &
-        (not(Ex #r.6. RevLtk( B.1 ) @ #r.6)))"
+  "¬(∃ A B s #i.
+      (((Secret( A, B, s ) @ #i) ∧ (∃ #j. K( s ) @ #j)) ∧
+       (¬(∃ #r. RevLtk( A ) @ #r))) ∧
+      (¬(∃ #r. RevLtk( B ) @ #r)))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex A B.1 s.2 #i.3.
-  (Secret( A, B.1, s.2 ) @ #i.3)
- &
-  (Ex #j.4. (K( s.2 ) @ #j.4) & T) &
-  (All #r.5. (RevLtk( A ) @ #r.5) ==> F) &
-  (All #r.6. (RevLtk( B.1 ) @ #r.6) ==> F)"
+"∃ A B s #i.
+  (Secret( A, B, s ) @ #i)
+ ∧
+  (∃ #j. (K( s ) @ #j)) ∧
+  (∀ #r. (RevLtk( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (RevLtk( B ) @ #r) ⇒ ⊥)"
 */
 simplify
-solve( (#i, 0)[Secret( A, B, s )] )
+solve( Secret( A, B, s ) ▶₀ #i )
   case I_2_case_1
   solve( !KU( f_.1, aenc(<'2', ~ni, s, $R>, pk(~ltkA)) ) @ #vk.1 )
     case R_1
@@ -414,20 +384,19 @@ qed
 
 lemma (modulo E) session_key_setup_possible:
   exists-trace
-  "Ex A B.1 s.2 #i.3.
-    ((Secret( A, B.1, s.2 ) @ #i.3) & (not(Ex #r.4. RevLtk( A ) @ #r.4))) &
-    (not(Ex #r.5. RevLtk( B.1 ) @ #r.5))"
+  "∃ A B s #i.
+    ((Secret( A, B, s ) @ #i) ∧ (¬(∃ #r. RevLtk( A ) @ #r))) ∧
+    (¬(∃ #r. RevLtk( B ) @ #r))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
-"Ex A B.1 s.2 #i.3.
-  (Secret( A, B.1, s.2 ) @ #i.3)
- &
-  (All #r.4. (RevLtk( A ) @ #r.4) ==> F) &
-  (All #r.5. (RevLtk( B.1 ) @ #r.5) ==> F)"
+"∃ A B s #i.
+  (Secret( A, B, s ) @ #i)
+ ∧
+  (∀ #r. (RevLtk( A ) @ #r) ⇒ ⊥) ∧ (∀ #r. (RevLtk( B ) @ #r) ⇒ ⊥)"
 */
 simplify
-solve( (#i, 0)[Secret( A, B, s )] )
+solve( Secret( A, B, s ) ▶₀ #i )
   case I_2_case_1
   solve( !KU( f_, aenc(<'2', ~ni, s, $R>, pk(~ltkA)) ) @ #vk )
     case R_1
@@ -453,7 +422,7 @@ analyzing: data/examples/classic/NSLPK3.spthy
 analyzed: data/examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.960159s
+  processing time: 1.20613s
   types (all-traces): verified (32 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   session_key_setup_possible (exists-trace): verified (5 steps)
@@ -466,7 +435,7 @@ summary of summaries:
 analyzed: data/examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.960159s
+  processing time: 1.20613s
   types (all-traces): verified (32 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   session_key_setup_possible (exists-trace): verified (5 steps)

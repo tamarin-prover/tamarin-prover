@@ -270,77 +270,54 @@ rule (modulo E) Ephk_reveal:
 
 lemma (modulo E) eCK_PFS_key_secrecy:
   all-traces
-  "All #i1 #i2.1 Test.2 A.3 B.4 k.5.
-    ((Accept( Test.2, A.3, B.4, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)) ==>
-    ((((Ex #i3.6. SesskRev( Test.2 ) @ #i3.6) |
-       (Ex MatchingSession.7 #i3.8 #i4.9 ms.10.
-         ((Sid( MatchingSession.7, ms.10 ) @ #i3.8) &
-          (Match( Test.2, ms.10 ) @ #i4.9)) &
-         (Ex #i5.11. SesskRev( MatchingSession.7 ) @ #i5.11))) |
-      (Ex MatchingSession.12 #i3.13 #i4.14 ms.15.
-        ((Sid( MatchingSession.12, ms.15 ) @ #i3.13) &
-         (Match( Test.2, ms.15 ) @ #i4.14)) &
-        ((Ex #i5.16 #i6.17.
-           (LtkRev( A.3 ) @ #i5.16) & (EphkRev( Test.2 ) @ #i6.17)) |
-         (Ex #i5.18 #i6.19.
-           (LtkRev( B.4 ) @ #i5.18) & (EphkRev( MatchingSession.12 ) @ #i6.19))))) |
-     ((not(Ex MatchingSession.20 #i3.21 #i4.22 ms.23.
-            (Sid( MatchingSession.20, ms.23 ) @ #i3.21) &
-            (Match( Test.2, ms.23 ) @ #i4.22))) &
-      ((Ex #i5.24. (LtkRev( B.4 ) @ #i5.24) & (#i5.24 < #i1)) |
-       (Ex #i5.25 #i6.26.
-         (LtkRev( A.3 ) @ #i5.25) & (EphkRev( Test.2 ) @ #i6.26)))))"
+  "∀ #i1 #i2 Test A B k.
+    ((Accept( Test, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)) ⇒
+    ((((∃ #i3. SesskRev( Test ) @ #i3) ∨
+       (∃ MatchingSession #i3 #i4 ms.
+         ((Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)) ∧
+         (∃ #i5. SesskRev( MatchingSession ) @ #i5))) ∨
+      (∃ MatchingSession #i3 #i4 ms.
+        ((Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)) ∧
+        ((∃ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6)) ∨
+         (∃ #i5 #i6.
+           (LtkRev( B ) @ #i5) ∧ (EphkRev( MatchingSession ) @ #i6))))) ∨
+     ((¬(∃ MatchingSession #i3 #i4 ms.
+          (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4))) ∧
+      ((∃ #i5. (LtkRev( B ) @ #i5) ∧ (#i5 < #i1)) ∨
+       (∃ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6)))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex #i1 #i2.1 Test.2 A.3 B.4 k.5.
-  (Accept( Test.2, A.3, B.4, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)
- &
-  (All #i3.6. (SesskRev( Test.2 ) @ #i3.6) ==> F) &
-  (All MatchingSession.7 #i3.8 #i4.9 ms.10.
-    (Sid( MatchingSession.7, ms.10 ) @ #i3.8) &
-    (Match( Test.2, ms.10 ) @ #i4.9)
-   ==>
-    All #i5.11. (SesskRev( MatchingSession.7 ) @ #i5.11) ==> F) &
-  (All MatchingSession.12 #i3.13 #i4.14 ms.15.
-    (Sid( MatchingSession.12, ms.15 ) @ #i3.13) &
-    (Match( Test.2, ms.15 ) @ #i4.14)
-   ==>
-    (All #i5.16 #i6.17.
-      (LtkRev( A.3 ) @ #i5.16) & (EphkRev( Test.2 ) @ #i6.17)
-     ==>
-      F) &
-    (All #i5.18 #i6.19.
-      (LtkRev( B.4 ) @ #i5.18) & (EphkRev( MatchingSession.12 ) @ #i6.19)
-     ==>
-      F)) &
-  ((Ex MatchingSession.20 #i3.21 #i4.22 ms.23.
-     (Sid( MatchingSession.20, ms.23 ) @ #i3.21) &
-     (Match( Test.2, ms.23 ) @ #i4.22)
-    &
-     T) |
-   ((All #i5.24. (LtkRev( B.4 ) @ #i5.24) ==> All . (#i5.24 < #i1) ==> F) &
-    (All #i5.25 #i6.26.
-      (LtkRev( A.3 ) @ #i5.25) & (EphkRev( Test.2 ) @ #i6.26)
-     ==>
-      F)))"
+"∃ #i1 #i2 Test A B k.
+  (Accept( Test, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)
+ ∧
+  (∀ #i3. (SesskRev( Test ) @ #i3) ⇒ ⊥) ∧
+  (∀ MatchingSession #i3 #i4 ms.
+    (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)
+   ⇒
+    ∀ #i5. (SesskRev( MatchingSession ) @ #i5) ⇒ ⊥) ∧
+  (∀ MatchingSession #i3 #i4 ms.
+    (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)
+   ⇒
+    (∀ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6) ⇒ ⊥) ∧
+    (∀ #i5 #i6.
+      (LtkRev( B ) @ #i5) ∧ (EphkRev( MatchingSession ) @ #i6) ⇒ ⊥)) ∧
+  ((∃ MatchingSession #i3 #i4 ms.
+     (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)) ∨
+   ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
+    (∀ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6) ⇒ ⊥)))"
 */
 simplify
-solve( Disj(Ex MatchingSession.1 #i3.2 #i4.3 ms.4.
-             (Sid( MatchingSession.1, ms.4 ) @ #i3.2) & (Match( Test, ms.4 ) @ #i4.3)
-            &
-             T) |
-           ((All #i5.1. (LtkRev( B ) @ #i5.1) ==> All . (#i5.1 < #i1) ==> F) &
-            (All #i5.2 #i6.3.
-              (LtkRev( A ) @ #i5.2) & (EphkRev( Test ) @ #i6.3)
-             ==>
-              F)) )
+solve( (∃ MatchingSession #i3 #i4 ms.
+         (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4))  ∥
+       ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
+        (∀ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6) ⇒ ⊥)) )
   case case_2
   solve( Accept( Test, A, B, k ) @ #i1 )
     case Init_2
-    solve( (#i1, 0)[Init_1( ~eskI, $I, $R, ~lkI, hkI )] )
+    solve( Init_1( ~eskI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
       case Init_1
-      solve( (#i1, 1)[!Pk( $R, 'g'^~x )] )
+      solve( !Pk( $R, 'g'^~x ) ▶₁ #i1 )
         case generate_ltk
         solve( !KU( f_, h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>)
                ) @ #vk )
@@ -385,7 +362,7 @@ analyzing: data/examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.171984s
+  processing time: 6.057191s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -396,7 +373,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.171984s
+  processing time: 6.057191s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================

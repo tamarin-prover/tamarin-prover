@@ -98,62 +98,49 @@ rule (modulo E) Ephk_reveal:
 
 lemma (modulo E) KAS1_key_secrecy:
   all-traces
-  "not(Ex #i1 #i2.1 s.2 A.3 B.4 k.5.
-        (((((Accept( s.2, A.3, B.4, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)) &
-           (not(Ex #i4.6. SesskRev( s.2 ) @ #i4.6))) &
-          (not(Ex #i4.7. EphkRev( s.2 ) @ #i4.7))) &
-         (All ss.8 #i4.9 #i5.10 C.11 D.12 ms.13.
-           ((SidR( ss.8, C.11, D.12, ms.13 ) @ #i4.9) &
-            (Match( s.2, ms.13 ) @ #i5.10)) ==>
-           (((not(Ex #i6.14. SesskRev( ss.8 ) @ #i6.14)) &
-             (not(Ex #i6.15. LtkRev( B.4 ) @ #i6.15))) &
-            (not(Ex #i6.16 #i7.17.
-                  (LtkRev( A.3 ) @ #i6.16) & (LtkRev( B.4 ) @ #i7.17)))))) &
-        ((not(Ex ss.18 #i4.19 #i5.20 C.21 D.22 ms.23.
-               (SidR( ss.18, C.21, D.22, ms.23 ) @ #i4.19) &
-               (Match( s.2, ms.23 ) @ #i5.20))) ==>
-         (not(Ex #i6.24. (LtkRev( B.4 ) @ #i6.24) & (#i6.24 < #i1)))))"
+  "¬(∃ #i1 #i2 s A B k.
+      (((((Accept( s, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+         (¬(∃ #i4. SesskRev( s ) @ #i4))) ∧
+        (¬(∃ #i4. EphkRev( s ) @ #i4))) ∧
+       (∀ ss #i4 #i5 C D ms.
+         ((SidR( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ⇒
+         (((¬(∃ #i6. SesskRev( ss ) @ #i6)) ∧ (¬(∃ #i6. LtkRev( B ) @ #i6))) ∧
+          (¬(∃ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (LtkRev( B ) @ #i7)))))) ∧
+      ((¬(∃ ss #i4 #i5 C D ms.
+           (SidR( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5))) ⇒
+       (¬(∃ #i6. (LtkRev( B ) @ #i6) ∧ (#i6 < #i1)))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex #i1 #i2.1 s.2 A.3 B.4 k.5.
-  (Accept( s.2, A.3, B.4, k.5 ) @ #i1) & (K( k.5 ) @ #i2.1)
- &
-  (All #i4.6. (SesskRev( s.2 ) @ #i4.6) ==> F) &
-  (All #i4.7. (EphkRev( s.2 ) @ #i4.7) ==> F) &
-  (All ss.8 #i4.9 #i5.10 C.11 D.12 ms.13.
-    (SidR( ss.8, C.11, D.12, ms.13 ) @ #i4.9) &
-    (Match( s.2, ms.13 ) @ #i5.10)
-   ==>
-    (All #i6.14. (SesskRev( ss.8 ) @ #i6.14) ==> F) &
-    (All #i6.15. (LtkRev( B.4 ) @ #i6.15) ==> F) &
-    (All #i6.16 #i7.17.
-      (LtkRev( A.3 ) @ #i6.16) & (LtkRev( B.4 ) @ #i7.17)
-     ==>
-      F)) &
-  ((Ex ss.18 #i4.19 #i5.20 C.21 D.22 ms.23.
-     (SidR( ss.18, C.21, D.22, ms.23 ) @ #i4.19) &
-     (Match( s.2, ms.23 ) @ #i5.20)
-    &
-     T) |
-   (All #i6.24. (LtkRev( B.4 ) @ #i6.24) ==> All . (#i6.24 < #i1) ==> F))"
+"∃ #i1 #i2 s A B k.
+  (Accept( s, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)
+ ∧
+  (∀ #i4. (SesskRev( s ) @ #i4) ⇒ ⊥) ∧
+  (∀ #i4. (EphkRev( s ) @ #i4) ⇒ ⊥) ∧
+  (∀ ss #i4 #i5 C D ms.
+    (SidR( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)
+   ⇒
+    (∀ #i6. (SesskRev( ss ) @ #i6) ⇒ ⊥) ∧
+    (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ⊥) ∧
+    (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (LtkRev( B ) @ #i7) ⇒ ⊥)) ∧
+  ((∃ ss #i4 #i5 C D ms.
+     (SidR( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
+   (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1)))"
 */
 simplify
-solve( Disj(Ex ss.1 #i4.2 #i5.3 C.4 D.5 ms.6.
-             (SidR( ss.1, C.4, D.5, ms.6 ) @ #i4.2) & (Match( ~m1, ms.6 ) @ #i5.3)
-            &
-             T) |
-           (All #i6.1. (LtkRev( $R ) @ #i6.1) ==> All . (#i6.1 < #i1) ==> F) )
+solve( (∃ ss #i4 #i5 C D ms.
+         (SidR( ss, C, D, ms ) @ #i4) ∧ (Match( ~m1, ms ) @ #i5))  ∥
+       (∀ #i6. (LtkRev( $R ) @ #i6) ⇒ ¬(#i6 < #i1)) )
   case case_1
-  solve( (#i1, 0)[Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 )] )
+  solve( Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) ▶₀ #i1 )
     case Init_K1_1
-    solve( (#i4, 2)[!Ltk( $R.1, ~lkR )] )
+    solve( !Ltk( $R.1, ~lkR ) ▶₂ #i4 )
       case Register_pk
-      solve( (#i4, 3)[!Pk( $I.1, pkI )] )
+      solve( !Pk( $I.1, pkI ) ▶₃ #i4 )
         case Register_pk
         solve( Match( ~m1, <$R.1, $I.1, 'Resp', ~m2, c1> ) @ #i5 )
           case Init_K1_2
-          solve( (#i5, 0)[Init_1( ~m1, $I.1, $R.1, ~lkI.1, ~m1, c1 )] )
+          solve( Init_1( ~m1, $I.1, $R.1, ~lkI.1, ~m1, c1 ) ▶₀ #i5 )
             case Init_K1_1
             solve( splitEqs(1) )
               case split_case_1
@@ -208,7 +195,7 @@ solve( Disj(Ex ss.1 #i4.2 #i5.3 C.4 D.5 ms.6.
   qed
 next
   case case_2
-  solve( (#i1, 0)[Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 )] )
+  solve( Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) ▶₀ #i1 )
     case Init_K1_1
     solve( !KU( f_.3,
                 MAC(KDF(<~m1, $I, $R, nonceB, aenc(~m1, pk(~ltkA))>),
@@ -275,7 +262,7 @@ analyzing: data/examples/csf12/KAS1.spthy
 analyzed: data/examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.719276s
+  processing time: 0.680934s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ------------------------------------------------------------------------------
@@ -286,7 +273,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.719276s
+  processing time: 0.680934s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ==============================================================================

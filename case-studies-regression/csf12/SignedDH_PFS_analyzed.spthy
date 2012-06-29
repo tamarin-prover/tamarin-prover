@@ -124,25 +124,25 @@ rule (modulo E) Resp:
 
 lemma (modulo E) Perfect_Forward_Secrecy:
   all-traces
-  "All I R.1 sessKey.2 #i.3 #k.4.
-    ((SessionKey( I, R.1, sessKey.2 ) @ #i.3) & (K( sessKey.2 ) @ #k.4)) ==>
-    ((Ex #r.5. (LtkReveal( I ) @ #r.5) & (#r.5 < #i.3)) |
-     (Ex #r.6. (LtkReveal( R.1 ) @ #r.6) & (#r.6 < #i.3)))"
+  "∀ I R sessKey #i #k.
+    ((SessionKey( I, R, sessKey ) @ #i) ∧ (K( sessKey ) @ #k)) ⇒
+    ((∃ #r. (LtkReveal( I ) @ #r) ∧ (#r < #i)) ∨
+     (∃ #r. (LtkReveal( R ) @ #r) ∧ (#r < #i)))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex I R.1 sessKey.2 #i.3 #k.4.
-  (SessionKey( I, R.1, sessKey.2 ) @ #i.3) & (K( sessKey.2 ) @ #k.4)
- &
-  (All #r.5. (LtkReveal( I ) @ #r.5) ==> All . (#r.5 < #i.3) ==> F) &
-  (All #r.6. (LtkReveal( R.1 ) @ #r.6) ==> All . (#r.6 < #i.3) ==> F)"
+"∃ I R sessKey #i #k.
+  (SessionKey( I, R, sessKey ) @ #i) ∧ (K( sessKey ) @ #k)
+ ∧
+  (∀ #r. (LtkReveal( I ) @ #r) ⇒ ¬(#r < #i)) ∧
+  (∀ #r. (LtkReveal( R ) @ #r) ⇒ ¬(#r < #i))"
 */
 simplify
 solve( SessionKey( I, R, sessKey ) @ #i )
   case Init_2
-  solve( (#i, 0)[Init_1( $I, $R, ~ekI )] )
+  solve( Init_1( $I, $R, ~ekI ) ▶₀ #i )
     case Init_1
-    solve( (#i, 1)[!Pk( $R, pk(ltkR) )] )
+    solve( !Pk( $R, pk(ltkR) ) ▶₁ #i )
       case Register_pk
       solve( !KU( f_.7, sign(<'2', $R, $I, Y>, ~ltk) ) @ #vk.7 )
         case Resp
@@ -167,9 +167,9 @@ solve( SessionKey( I, R, sessKey ) @ #i )
   qed
 next
   case Resp
-  solve( (#i, 0)[!Pk( $I, pk(ltkI) )] )
+  solve( !Pk( $I, pk(ltkI) ) ▶₀ #i )
     case Register_pk
-    solve( (#i, 1)[!Ltk( $R, ltkR )] )
+    solve( !Ltk( $R, ltkR ) ▶₁ #i )
       case Register_pk
       solve( !KU( f_.7, sign(<'1', $I, $R, X>, ~ltk) ) @ #vk.7 )
         case Init_1
@@ -209,7 +209,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.706958s
+  processing time: 0.776896s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -220,7 +220,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.706958s
+  processing time: 0.776896s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

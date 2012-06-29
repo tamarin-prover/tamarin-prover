@@ -124,51 +124,45 @@ rule (modulo E) Ltk_reveal:
 
 lemma (modulo E) keaplus_initiator_key:
   all-traces
-  "(All A #i.1 #j.2.
-     ((RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)) ==> (#i.1 = #j.2)) ==>
-   (not(Ex #i1.3 #i2.4 ttest.5 I.6 R.7 k.8 hkI.9 hkR.10.
-         ((((((SidI_2( ttest.5, I.6, R.7, hkI.9, hkR.10, k.8 ) @ #i1.3) &
-              (K( k.8 ) @ #i2.4)) &
-             (All #i3.11. (EphkRev( ttest.5 ) @ #i3.11) ==> (F))) &
-            (All #i3.12. (SesskRev( ttest.5 ) @ #i3.12) ==> (F))) &
-           (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-             ((SidR_1( tpartner.15, I.6, R.7, hkI.9, hkR.10, kpartner.16 ) @ #i3.13) &
-              (EphkRev( tpartner.15 ) @ #i4.14)) ==>
-             (F))) &
-          (All #i3.17 #i4.18 tpartner.19 kpartner.20.
-            ((SidR_1( tpartner.19, I.6, R.7, hkI.9, hkR.10, kpartner.20 ) @ #i3.17) &
-             (SesskRev( tpartner.19 ) @ #i4.18)) ==>
-            (F))) &
-         (All #i3.21. (LtkRev( R.7 ) @ #i3.21) ==> (F))))"
+  "(∀ A #i #j. ((RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j)) ⇒ (#i = #j)) ⇒
+   (¬(∃ #i1 #i2 ttest I R k hkI hkR.
+       ((((((SidI_2( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+           (∀ #i3. (EphkRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+          (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+         (∀ #i3 #i4 tpartner kpartner.
+           ((SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+            (EphkRev( tpartner ) @ #i4)) ⇒
+           (⊥))) ∧
+        (∀ #i3 #i4 tpartner kpartner.
+          ((SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+           (SesskRev( tpartner ) @ #i4)) ⇒
+          (⊥))) ∧
+       (∀ #i3. (LtkRev( R ) @ #i3) ⇒ (⊥))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"(All A #i.1 #j.2.
-   (RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)
-  ==>
-   #i.1 = #j.2) &
- (Ex #i1.3 #i2.4 ttest.5 I.6 R.7 k.8 hkI.9 hkR.10.
-   (SidI_2( ttest.5, I.6, R.7, hkI.9, hkR.10, k.8 ) @ #i1.3) &
-   (K( k.8 ) @ #i2.4)
-  &
-   (All #i3.11. (EphkRev( ttest.5 ) @ #i3.11) ==> F) &
-   (All #i3.12. (SesskRev( ttest.5 ) @ #i3.12) ==> F) &
-   (All #i3.13 #i4.14 tpartner.15 kpartner.16.
-     (SidR_1( tpartner.15, I.6, R.7, hkI.9, hkR.10, kpartner.16 ) @ #i3.13) &
-     (EphkRev( tpartner.15 ) @ #i4.14)
-    ==>
-     F) &
-   (All #i3.17 #i4.18 tpartner.19 kpartner.20.
-     (SidR_1( tpartner.19, I.6, R.7, hkI.9, hkR.10, kpartner.20 ) @ #i3.17) &
-     (SesskRev( tpartner.19 ) @ #i4.18)
-    ==>
-     F) &
-   (All #i3.21. (LtkRev( R.7 ) @ #i3.21) ==> F))"
+"(∀ A #i #j. (RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j) ⇒ #i = #j) ∧
+ (∃ #i1 #i2 ttest I R k hkI hkR.
+   (SidI_2( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)
+  ∧
+   (∀ #i3. (EphkRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (EphkRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (SesskRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3. (LtkRev( R ) @ #i3) ⇒ ⊥))"
 */
 simplify
-solve( (#i1, 0)[Init_1( ~ekI, $I, $R, ~lkI, hkI )] )
+solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
   case Init_1
-  solve( (#i1, 2)[!Pk( $R, 'g'^~x )] )
+  solve( !Pk( $R, 'g'^~x ) ▶₂ #i1 )
     case generate_ltk
     solve( !KU( f_, h(<z, 'g'^(~ekI*~x), $I, $R>) ) @ #vk.1 )
       case Sessk_reveal
@@ -200,60 +194,52 @@ qed
 
 lemma (modulo E) keaplus_responder_key:
   all-traces
-  "(All A #i.1 #j.2.
-     ((RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)) ==> (#i.1 = #j.2)) ==>
-   (not(Ex #i1.3 #i2.4 ttest.5 I.6 R.7 k.8 hkI.9 hkR.10.
-         (((((((SidR_1( ttest.5, I.6, R.7, hkI.9, hkR.10, k.8 ) @ #i1.3) &
-               (K( k.8 ) @ #i2.4)) &
-              (All #i3.11. (EphkRev( ttest.5 ) @ #i3.11) ==> (F))) &
-             (All #i3.12. (SesskRev( ttest.5 ) @ #i3.12) ==> (F))) &
-            (All #i3.13 #i4.14 tpartner.15 lki.16.
-              ((SidI_1( tpartner.15, I.6, R.7, lki.16 ) @ #i3.13) &
-               (EphkRev( tpartner.15 ) @ #i4.14)) ==>
-              (F))) &
-           (All #i3.17 #i4.18 tpartner.19 kpartner.20.
-             ((SidI_2( tpartner.19, I.6, R.7, hkI.9, hkR.10, kpartner.20 ) @ #i3.17) &
-              (EphkRev( tpartner.19 ) @ #i4.18)) ==>
-             (F))) &
-          (All #i3.21 #i4.22 tpartner.23 kpartner.24.
-            ((SidI_2( tpartner.23, I.6, R.7, hkI.9, hkR.10, kpartner.24 ) @ #i3.21) &
-             (SesskRev( tpartner.23 ) @ #i4.22)) ==>
-            (F))) &
-         (All #i3.25. (LtkRev( I.6 ) @ #i3.25) ==> (F))))"
+  "(∀ A #i #j. ((RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j)) ⇒ (#i = #j)) ⇒
+   (¬(∃ #i1 #i2 ttest I R k hkI hkR.
+       (((((((SidR_1( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+            (∀ #i3. (EphkRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+           (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+          (∀ #i3 #i4 tpartner lki.
+            ((SidI_1( tpartner, I, R, lki ) @ #i3) ∧ (EphkRev( tpartner ) @ #i4)) ⇒
+            (⊥))) ∧
+         (∀ #i3 #i4 tpartner kpartner.
+           ((SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+            (EphkRev( tpartner ) @ #i4)) ⇒
+           (⊥))) ∧
+        (∀ #i3 #i4 tpartner kpartner.
+          ((SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+           (SesskRev( tpartner ) @ #i4)) ⇒
+          (⊥))) ∧
+       (∀ #i3. (LtkRev( I ) @ #i3) ⇒ (⊥))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"(All A #i.1 #j.2.
-   (RegKey( A ) @ #i.1) & (RegKey( A ) @ #j.2)
-  ==>
-   #i.1 = #j.2) &
- (Ex #i1.3 #i2.4 ttest.5 I.6 R.7 k.8 hkI.9 hkR.10.
-   (SidR_1( ttest.5, I.6, R.7, hkI.9, hkR.10, k.8 ) @ #i1.3) &
-   (K( k.8 ) @ #i2.4)
-  &
-   (All #i3.11. (EphkRev( ttest.5 ) @ #i3.11) ==> F) &
-   (All #i3.12. (SesskRev( ttest.5 ) @ #i3.12) ==> F) &
-   (All #i3.13 #i4.14 tpartner.15 lki.16.
-     (SidI_1( tpartner.15, I.6, R.7, lki.16 ) @ #i3.13) &
-     (EphkRev( tpartner.15 ) @ #i4.14)
-    ==>
-     F) &
-   (All #i3.17 #i4.18 tpartner.19 kpartner.20.
-     (SidI_2( tpartner.19, I.6, R.7, hkI.9, hkR.10, kpartner.20 ) @ #i3.17) &
-     (EphkRev( tpartner.19 ) @ #i4.18)
-    ==>
-     F) &
-   (All #i3.21 #i4.22 tpartner.23 kpartner.24.
-     (SidI_2( tpartner.23, I.6, R.7, hkI.9, hkR.10, kpartner.24 ) @ #i3.21) &
-     (SesskRev( tpartner.23 ) @ #i4.22)
-    ==>
-     F) &
-   (All #i3.25. (LtkRev( I.6 ) @ #i3.25) ==> F))"
+"(∀ A #i #j. (RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j) ⇒ #i = #j) ∧
+ (∃ #i1 #i2 ttest I R k hkI hkR.
+   (SidR_1( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)
+  ∧
+   (∀ #i3. (EphkRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3 #i4 tpartner lki.
+     (SidI_1( tpartner, I, R, lki ) @ #i3) ∧ (EphkRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (EphkRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (SesskRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3. (LtkRev( I ) @ #i3) ⇒ ⊥))"
 */
 simplify
-solve( (#i1, 2)[!Ltk( $R, ~lkR )] )
+solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
   case generate_ltk
-  solve( (#i1, 3)[!Pk( $I, 'g'^~x )] )
+  solve( !Pk( $I, 'g'^~x ) ▶₃ #i1 )
     case generate_ltk
     solve( !KU( f_, h(<'g'^(~ekR*~x), z, $I, $R>) ) @ #vk.1 )
       case Sessk_reveal
@@ -298,7 +284,7 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.796525s
+  processing time: 0.795988s
   keaplus_initiator_key (all-traces): verified (12 steps)
   keaplus_responder_key (all-traces): verified (12 steps)
 
@@ -310,7 +296,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.796525s
+  processing time: 0.795988s
   keaplus_initiator_key (all-traces): verified (12 steps)
   keaplus_responder_key (all-traces): verified (12 steps)
 

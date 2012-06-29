@@ -69,33 +69,30 @@ rule (modulo E) MkKey:
 
 lemma (modulo E) types [typing]:
   all-traces
-  "All m d1.1 d2.2 #i.3.
-    (PCR_Unbind( d1.1, d2.2, m ) @ #i.3) ==>
-    (((Ex f.4 #j.5. (!KU( f.4, m ) @ #j.5) & (#j.5 < #i.3)) |
-      (Ex s.6 #j.7. Secrets( m, s.6 ) @ #j.7)) |
-     (Ex s.8 #j.9. Secrets( s.8, m ) @ #j.9))"
+  "∀ m d1 d2 #i.
+    (PCR_Unbind( d1, d2, m ) @ #i) ⇒
+    (((∃ f #j. (!KU( f, m ) @ #j) ∧ (#j < #i)) ∨
+      (∃ s #j. Secrets( m, s ) @ #j)) ∨
+     (∃ s #j. Secrets( s, m ) @ #j))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex m d1.1 d2.2 #i.3.
-  (PCR_Unbind( d1.1, d2.2, m ) @ #i.3)
- &
-  (All f.4 #j.5. (!KU( f.4, m ) @ #j.5) ==> All . (#j.5 < #i.3) ==> F) &
-  (All s.6 #j.7. (Secrets( m, s.6 ) @ #j.7) ==> F) &
-  (All s.8 #j.9. (Secrets( s.8, m ) @ #j.9) ==> F)"
+"∃ m d1 d2 #i.
+  (PCR_Unbind( d1, d2, m ) @ #i)
+ ∧
+  (∀ f #j. (!KU( f, m ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ s #j. (Secrets( m, s ) @ #j) ⇒ ⊥) ∧
+  (∀ s #j. (Secrets( s, m ) @ #j) ⇒ ⊥)"
 */
 induction
   case induction
   simplify
-  solve( Disj(Last(#i)) |
-             (Ex f.1 #j.2.
-               (!KU( f.1, m ) @ #j.2)
-              &
-               (All . (Last(#j.2)) ==> F) & (#j.2 < #i)) |
-             (Ex s.1 #j.2. (Secrets( m, s.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-             (Ex s.1 #j.2. (Secrets( s.1, m ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+  solve( (last(#i))  ∥
+         (∃ f #j. (!KU( f, m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ s #j. (Secrets( m, s ) @ #j) ∧ ¬(last(#j)))  ∥
+         (∃ s #j. (Secrets( s, m ) @ #j) ∧ ¬(last(#j))) )
     case case_1
-    solve( (#i, 1)[!KeyTable( d1, d2 )] )
+    solve( !KeyTable( d1, d2 ) ▶₁ #i )
       case MkKey
       solve( !KU( f_, aenc(m, pk(~ska)) ) @ #vk )
         case Alice_Init_case_1
@@ -105,12 +102,9 @@ induction
         by contradiction // from formulas
       next
         case PCR_Unbind
-        solve( Disj(Ex f.2 #j.3.
-                     (!KU( f.2, t ) @ #j.3)
-                    &
-                     (All . (Last(#j.3)) ==> F) & (#j.3 < #vr.1)) |
-                   (Ex s.1 #j.2. (Secrets( t, s.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                   (Ex s.1 #j.2. (Secrets( s.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+        solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
+               (∃ s #j. (Secrets( t, s ) @ #j) ∧ ¬(last(#j)))  ∥
+               (∃ s #j. (Secrets( s, t ) @ #j) ∧ ¬(last(#j))) )
           case case_1
           by contradiction // cyclic
         next
@@ -139,46 +133,34 @@ qed
 
 lemma (modulo E) Unbind_PCR_Value [reuse, use_induction]:
   all-traces
-  "All x sk.1 m.2 #i.3.
-    (PCR_Unbind( x, sk.1, m.2 ) @ #i.3) ==>
-    (((Ex aik.4 #j.5. PCR_Init( x, aik.4 ) @ #j.5) |
-      (Ex y.6 xPrev.7 #j.8. PCR_Extend( xPrev.7, y.6, x ) @ #j.8)) |
-     (Ex #i.9 #j.10.
-       ((UniqueInit( ) @ #j.10) & (UniqueInit( ) @ #i.9)) &
-       (not(#i.9 = #j.10))))"
+  "∀ x sk m #i.
+    (PCR_Unbind( x, sk, m ) @ #i) ⇒
+    (((∃ aik #j. PCR_Init( x, aik ) @ #j) ∨
+      (∃ y xPrev #j. PCR_Extend( xPrev, y, x ) @ #j)) ∨
+     (∃ #i.1 #j.
+       ((UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i.1)) ∧ (¬(#i.1 = #j))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex x sk.1 m.2 #i.3.
-  (PCR_Unbind( x, sk.1, m.2 ) @ #i.3)
- &
-  (All aik.4 #j.5. (PCR_Init( x, aik.4 ) @ #j.5) ==> F) &
-  (All y.6 xPrev.7 #j.8. (PCR_Extend( xPrev.7, y.6, x ) @ #j.8) ==> F) &
-  (All #i.9 #j.10.
-    (UniqueInit( ) @ #j.10) & (UniqueInit( ) @ #i.9)
-   ==>
-    #i.9 = #j.10)"
+"∃ x sk m #i.
+  (PCR_Unbind( x, sk, m ) @ #i)
+ ∧
+  (∀ aik #j. (PCR_Init( x, aik ) @ #j) ⇒ ⊥) ∧
+  (∀ y xPrev #j. (PCR_Extend( xPrev, y, x ) @ #j) ⇒ ⊥) ∧
+  (∀ #i.1 #j. (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i.1) ⇒ #i.1 = #j)"
 */
 induction
   case induction
   simplify
-  solve( Disj(Last(#i)) |
-             (Ex aik.1 #j.2.
-               (PCR_Init( x, aik.1 ) @ #j.2)
-              &
-               All . (Last(#j.2)) ==> F) |
-             (Ex y.1 xPrev.2 #j.3.
-               (PCR_Extend( xPrev.2, y.1, x ) @ #j.3)
-              &
-               All . (Last(#j.3)) ==> F) |
-             (Ex #i #j.1.
-               (UniqueInit( ) @ #j.1) & (UniqueInit( ) @ #i)
-              &
-               (All . (Last(#j.1)) ==> F) &
-               (All . (Last(#i)) ==> F) &
-               (All . (#i = #j.1) ==> F)) )
+  solve( (last(#i))  ∥
+         (∃ aik #j. (PCR_Init( x, aik ) @ #j) ∧ ¬(last(#j)))  ∥
+         (∃ y xPrev #j. (PCR_Extend( xPrev, y, x ) @ #j) ∧ ¬(last(#j)))  ∥
+         (∃ #i #j.
+           (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i)
+          ∧
+           (¬(last(#j))) ∧ (¬(last(#i))) ∧ (¬(#i = #j))) )
     case case_1
-    solve( (#i, 1)[!KeyTable( x, sk )] )
+    solve( !KeyTable( x, sk ) ▶₁ #i )
       case MkKey
       solve( !KU( f_, aenc(m, pk(~ska)) ) @ #vk )
         case Alice_Init_case_1
@@ -186,25 +168,19 @@ induction
           case PCR_CertKey
           solve( !KU( f_, sign(<'certkey', x1, pk1>, ~aik) ) @ #vk.2 )
             case PCR_CertKey
-            solve( (#i, 0)[PCR( h(<'pcr0', $a>) )] )
+            solve( PCR( h(<'pcr0', $a>) ) ▶₀ #i )
               case PCR_Extend
               by contradiction // from formulas
             next
               case PCR_Unbind
-              solve( Disj(Ex aik.1 #j.2.
-                           (PCR_Init( h(<'pcr0', $a>), aik.1 ) @ #j.2)
-                          &
-                           All . (Last(#j.2)) ==> F) |
-                         (Ex y.1 xPrev.2 #j.3.
-                           (PCR_Extend( xPrev.2, y.1, h(<'pcr0', $a>) ) @ #j.3)
-                          &
-                           All . (Last(#j.3)) ==> F) |
-                         (Ex #i #j.1.
-                           (UniqueInit( ) @ #j.1) & (UniqueInit( ) @ #i)
-                          &
-                           (All . (Last(#j.1)) ==> F) &
-                           (All . (Last(#i)) ==> F) &
-                           (All . (#i = #j.1) ==> F)) )
+              solve( (∃ aik #j.
+                       (PCR_Init( h(<'pcr0', $a>), aik ) @ #j) ∧ ¬(last(#j)))  ∥
+                     (∃ y xPrev #j.
+                       (PCR_Extend( xPrev, y, h(<'pcr0', $a>) ) @ #j) ∧ ¬(last(#j)))  ∥
+                     (∃ #i #j.
+                       (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i)
+                      ∧
+                       (¬(last(#j))) ∧ (¬(last(#i))) ∧ (¬(#i = #j))) )
                 case case_2
                 by contradiction // from formulas
               next
@@ -226,25 +202,19 @@ induction
           case PCR_CertKey
           solve( !KU( f_, sign(<'certkey', x1, pk(~ska)>, ~aik) ) @ #vk.2 )
             case PCR_CertKey
-            solve( (#i, 0)[PCR( h(<'pcr0', $a>) )] )
+            solve( PCR( h(<'pcr0', $a>) ) ▶₀ #i )
               case PCR_Extend
               by contradiction // from formulas
             next
               case PCR_Unbind
-              solve( Disj(Ex aik.1 #j.2.
-                           (PCR_Init( h(<'pcr0', $a>), aik.1 ) @ #j.2)
-                          &
-                           All . (Last(#j.2)) ==> F) |
-                         (Ex y.1 xPrev.2 #j.3.
-                           (PCR_Extend( xPrev.2, y.1, h(<'pcr0', $a>) ) @ #j.3)
-                          &
-                           All . (Last(#j.3)) ==> F) |
-                         (Ex #i #j.1.
-                           (UniqueInit( ) @ #j.1) & (UniqueInit( ) @ #i)
-                          &
-                           (All . (Last(#j.1)) ==> F) &
-                           (All . (Last(#i)) ==> F) &
-                           (All . (#i = #j.1) ==> F)) )
+              solve( (∃ aik #j.
+                       (PCR_Init( h(<'pcr0', $a>), aik ) @ #j) ∧ ¬(last(#j)))  ∥
+                     (∃ y xPrev #j.
+                       (PCR_Extend( xPrev, y, h(<'pcr0', $a>) ) @ #j) ∧ ¬(last(#j)))  ∥
+                     (∃ #i #j.
+                       (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i)
+                      ∧
+                       (¬(last(#j))) ∧ (¬(last(#i))) ∧ (¬(#i = #j))) )
                 case case_2
                 by contradiction // from formulas
               next
@@ -282,29 +252,20 @@ qed
 
 lemma (modulo E) secrecy:
   all-traces
-  "((All #i #j.1.
-      ((UniqueInit( ) @ #j.1) & (UniqueInit( ) @ #i)) ==> (#i = #j.1)) &
-    (All t.2 #e.3. (Ineq( t.2, t.2 ) @ #e.3) ==> (F))) ==>
-   (not(Ex s0.4 s1.5 #i.6 #d0.7 #d1.8.
-         ((Secrets( s0.4, s1.5 ) @ #i.6) & (K( s0.4 ) @ #d0.7)) &
-         (K( s1.5 ) @ #d1.8)))"
+  "((∀ #i #j. ((UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i)) ⇒ (#i = #j)) ∧
+    (∀ t #e. (Ineq( t, t ) @ #e) ⇒ (⊥))) ⇒
+   (¬(∃ s0 s1 #i #d0 #d1.
+       ((Secrets( s0, s1 ) @ #i) ∧ (K( s0 ) @ #d0)) ∧ (K( s1 ) @ #d1)))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"(All #i #j.1.
-   (UniqueInit( ) @ #j.1) & (UniqueInit( ) @ #i)
-  ==>
-   #i = #j.1) &
- (All t.2 #e.3. (Ineq( t.2, t.2 ) @ #e.3) ==> F) &
- (Ex s0.4 s1.5 #i.6 #d0.7 #d1.8.
-   (Secrets( s0.4, s1.5 ) @ #i.6) &
-   (K( s0.4 ) @ #d0.7) &
-   (K( s1.5 ) @ #d1.8)
-  &
-   T)"
+"(∀ #i #j. (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i) ⇒ #i = #j) ∧
+ (∀ t #e. (Ineq( t, t ) @ #e) ⇒ ⊥) ∧
+ (∃ s0 s1 #i #d0 #d1.
+   (Secrets( s0, s1 ) @ #i) ∧ (K( s0 ) @ #d0) ∧ (K( s1 ) @ #d1))"
 */
 simplify
-solve( (#i, 2)[!AIK( aik )] )
+solve( !AIK( aik ) ▶₂ #i )
   case PCR_Init
   solve( !KU( f_, ~s0 ) @ #vk.2 )
     case Alice_Init
@@ -319,18 +280,9 @@ solve( (#i, 2)[!AIK( aik )] )
       qed
     next
       case PCR_Unbind
-      solve( Disj(Ex aik.1 #j.2.
-                   (PCR_Init( h(<'pcr0', $a>), aik.1 ) @ #j.2)
-                  &
-                   T) |
-                 (Ex y.1 xPrev.2 #j.3.
-                   (PCR_Extend( xPrev.2, y.1, h(<'pcr0', $a>) ) @ #j.3)
-                  &
-                   T) |
-                 (Ex #i #j.1.
-                   (UniqueInit( ) @ #j.1) & (UniqueInit( ) @ #i)
-                  &
-                   All . (#i = #j.1) ==> F) )
+      solve( (∃ aik #j. (PCR_Init( h(<'pcr0', $a>), aik ) @ #j))  ∥
+             (∃ y xPrev #j. (PCR_Extend( xPrev, y, h(<'pcr0', $a>) ) @ #j))  ∥
+             (∃ #i #j. (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i) ∧ ¬(#i = #j)) )
         case case_2
         solve( !KU( f_.1, sign(<'certkey', x0, pk(x)>, ~aik) ) @ #vk.2 )
           case PCR_CertKey
@@ -346,18 +298,9 @@ solve( (#i, 2)[!AIK( aik )] )
     qed
   next
     case PCR_Unbind
-    solve( Disj(Ex aik.1 #j.2.
-                 (PCR_Init( h(<'pcr0', $a>), aik.1 ) @ #j.2)
-                &
-                 T) |
-               (Ex y.1 xPrev.2 #j.3.
-                 (PCR_Extend( xPrev.2, y.1, h(<'pcr0', $a>) ) @ #j.3)
-                &
-                 T) |
-               (Ex #i #j.1.
-                 (UniqueInit( ) @ #j.1) & (UniqueInit( ) @ #i)
-                &
-                 All . (#i = #j.1) ==> F) )
+    solve( (∃ aik #j. (PCR_Init( h(<'pcr0', $a>), aik ) @ #j))  ∥
+           (∃ y xPrev #j. (PCR_Extend( xPrev, y, h(<'pcr0', $a>) ) @ #j))  ∥
+           (∃ #i #j. (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i) ∧ ¬(#i = #j)) )
       case case_2
       solve( !KU( f_, ~s1 ) @ #vk.3 )
         case Alice_Init
@@ -376,18 +319,9 @@ solve( (#i, 2)[!AIK( aik )] )
         qed
       next
         case PCR_Unbind
-        solve( Disj(Ex aik.2 #j.3.
-                     (PCR_Init( h(<'pcr0', $a.1>), aik.2 ) @ #j.3)
-                    &
-                     T) |
-                   (Ex y.2 xPrev.3 #j.4.
-                     (PCR_Extend( xPrev.3, y.2, h(<'pcr0', $a.1>) ) @ #j.4)
-                    &
-                     T) |
-                   (Ex #i #j.1.
-                     (UniqueInit( ) @ #j.1) & (UniqueInit( ) @ #i)
-                    &
-                     All . (#i = #j.1) ==> F) )
+        solve( (∃ aik #j. (PCR_Init( h(<'pcr0', $a.1>), aik ) @ #j))  ∥
+               (∃ y xPrev #j. (PCR_Extend( xPrev, y, h(<'pcr0', $a.1>) ) @ #j))  ∥
+               (∃ #i #j. (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i) ∧ ¬(#i = #j)) )
           case case_2
           solve( !KU( f_, sign(<'certkey', x0, pk0>, ~aik) ) @ #vk.2 )
             case PCR_CertKey
@@ -397,13 +331,13 @@ solve( (#i, 2)[!AIK( aik )] )
                 case Alice_Init
                 solve( !KU( f_.1, aenc(~s1, pk(~ska.2)) ) @ #vk.6 )
                   case Alice_Init
-                  solve( (#vr.1, 0)[PCR( h(<'pcr0', $a>) )] )
+                  solve( PCR( h(<'pcr0', $a>) ) ▶₀ #vr.1 )
                     case PCR_Extend
-                    solve( (#j, 0)[PCR( 'pcr0' )] )
+                    solve( PCR( 'pcr0' ) ▶₀ #j )
                       case PCR_Init
-                      solve( (#vr.3, 0)[PCR( h(<'pcr0', $a.1>) )] )
+                      solve( PCR( h(<'pcr0', $a.1>) ) ▶₀ #vr.3 )
                         case PCR_Extend
-                        solve( (#j.1, 0)[PCR( 'pcr0' )] )
+                        solve( PCR( 'pcr0' ) ▶₀ #j.1 )
                           case PCR_Init
                           by contradiction // from formulas
                         qed
@@ -415,7 +349,7 @@ solve( (#i, 2)[!AIK( aik )] )
                             case PCR_CertKey
                             solve( !KU( f_.2, sign(<'certkey', x1, pk1>, ~aik) ) @ #vk.10 )
                               case PCR_CertKey
-                              solve( (#j.1, 0)[PCR( 'pcr0' )] )
+                              solve( PCR( 'pcr0' ) ▶₀ #j.1 )
                                 case PCR_Init
                                 by contradiction // from formulas
                               qed
@@ -433,7 +367,7 @@ solve( (#i, 2)[!AIK( aik )] )
                             case PCR_CertKey
                             solve( !KU( f_.2, sign(<'certkey', x1, pk(~ska.2)>, ~aik) ) @ #vk.10 )
                               case PCR_CertKey
-                              solve( (#j.1, 0)[PCR( 'pcr0' )] )
+                              solve( PCR( 'pcr0' ) ▶₀ #j.1 )
                                 case PCR_Init
                                 by contradiction // from formulas
                               qed
@@ -462,11 +396,11 @@ solve( (#i, 2)[!AIK( aik )] )
                         case PCR_CertKey
                         solve( !KU( f_.2, sign(<'certkey', x1, pk1>, ~aik) ) @ #vk.10 )
                           case PCR_CertKey
-                          solve( (#j, 0)[PCR( 'pcr0' )] )
+                          solve( PCR( 'pcr0' ) ▶₀ #j )
                             case PCR_Init
-                            solve( (#vr.3, 0)[PCR( h(<'pcr0', $a.1>) )] )
+                            solve( PCR( h(<'pcr0', $a.1>) ) ▶₀ #vr.3 )
                               case PCR_Extend
-                              solve( (#j.1, 0)[PCR( 'pcr0' )] )
+                              solve( PCR( 'pcr0' ) ▶₀ #j.1 )
                                 case PCR_Init
                                 by contradiction // from formulas
                               qed
@@ -478,7 +412,7 @@ solve( (#i, 2)[!AIK( aik )] )
                                   case PCR_CertKey
                                   solve( !KU( f_.2, sign(<'certkey', x1, pk1>, ~aik) ) @ #vk.13 )
                                     case PCR_CertKey
-                                    solve( (#j.1, 0)[PCR( 'pcr0' )] )
+                                    solve( PCR( 'pcr0' ) ▶₀ #j.1 )
                                       case PCR_Init
                                       by contradiction // from formulas
                                     qed
@@ -496,7 +430,7 @@ solve( (#i, 2)[!AIK( aik )] )
                                   case PCR_CertKey
                                   solve( !KU( f_.2, sign(<'certkey', x1, pk(~ska.4)>, ~aik) ) @ #vk.13 )
                                     case PCR_CertKey
-                                    solve( (#j.1, 0)[PCR( 'pcr0' )] )
+                                    solve( PCR( 'pcr0' ) ▶₀ #j.1 )
                                       case PCR_Init
                                       by contradiction // from formulas
                                     qed
@@ -531,11 +465,11 @@ solve( (#i, 2)[!AIK( aik )] )
                         case PCR_CertKey
                         solve( !KU( f_.2, sign(<'certkey', x1, pk(~ska.2)>, ~aik) ) @ #vk.10 )
                           case PCR_CertKey
-                          solve( (#j, 0)[PCR( 'pcr0' )] )
+                          solve( PCR( 'pcr0' ) ▶₀ #j )
                             case PCR_Init
-                            solve( (#vr.3, 0)[PCR( h(<'pcr0', $a.1>) )] )
+                            solve( PCR( h(<'pcr0', $a.1>) ) ▶₀ #vr.3 )
                               case PCR_Extend
-                              solve( (#j.1, 0)[PCR( 'pcr0' )] )
+                              solve( PCR( 'pcr0' ) ▶₀ #j.1 )
                                 case PCR_Init
                                 by contradiction // from formulas
                               qed
@@ -547,7 +481,7 @@ solve( (#i, 2)[!AIK( aik )] )
                                   case PCR_CertKey
                                   solve( !KU( f_.2, sign(<'certkey', x1, pk1>, ~aik) ) @ #vk.13 )
                                     case PCR_CertKey
-                                    solve( (#j.1, 0)[PCR( 'pcr0' )] )
+                                    solve( PCR( 'pcr0' ) ▶₀ #j.1 )
                                       case PCR_Init
                                       by contradiction // from formulas
                                     qed
@@ -565,7 +499,7 @@ solve( (#i, 2)[!AIK( aik )] )
                                   case PCR_CertKey
                                   solve( !KU( f_.2, sign(<'certkey', x1, pk(~ska.4)>, ~aik) ) @ #vk.13 )
                                     case PCR_CertKey
-                                    solve( (#j.1, 0)[PCR( 'pcr0' )] )
+                                    solve( PCR( 'pcr0' ) ▶₀ #j.1 )
                                       case PCR_Init
                                       by contradiction // from formulas
                                     qed
@@ -645,7 +579,7 @@ analyzing: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.441132s
+  processing time: 1.908047s
   types (all-traces): verified (15 steps)
   Unbind_PCR_Value (all-traces): verified (28 steps)
   secrecy (all-traces): verified (99 steps)
@@ -658,7 +592,7 @@ summary of summaries:
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.441132s
+  processing time: 1.908047s
   types (all-traces): verified (15 steps)
   Unbind_PCR_Value (all-traces): verified (28 steps)
   secrecy (all-traces): verified (99 steps)

@@ -8,7 +8,7 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
-// looping facts with unique instances: Device_Alice/1
+// looping facts with injective instances: Device_Alice/1
 
 rule (modulo E) GenKey:
    [ Fr( ~sk ) ]
@@ -58,47 +58,41 @@ rule (modulo E) Decrypt_Right:
 
 lemma (modulo E) types [typing]:
   all-traces
-  "All m #i.1.
-    (Access( m ) @ #i.1) ==>
-    (((Ex f.2 #j.3. (!KU( f.2, m ) @ #j.3) & (#j.3 < #i.1)) |
-      (Ex x.4 #j.5. Exclusive( x.4, m ) @ #j.5)) |
-     (Ex y.6 #j.7. Exclusive( m, y.6 ) @ #j.7))"
+  "∀ m #i.
+    (Access( m ) @ #i) ⇒
+    (((∃ f #j. (!KU( f, m ) @ #j) ∧ (#j < #i)) ∨
+      (∃ x #j. Exclusive( x, m ) @ #j)) ∨
+     (∃ y #j. Exclusive( m, y ) @ #j))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex m #i.1.
-  (Access( m ) @ #i.1)
- &
-  (All f.2 #j.3. (!KU( f.2, m ) @ #j.3) ==> All . (#j.3 < #i.1) ==> F) &
-  (All x.4 #j.5. (Exclusive( x.4, m ) @ #j.5) ==> F) &
-  (All y.6 #j.7. (Exclusive( m, y.6 ) @ #j.7) ==> F)"
+"∃ m #i.
+  (Access( m ) @ #i)
+ ∧
+  (∀ f #j. (!KU( f, m ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ x #j. (Exclusive( x, m ) @ #j) ⇒ ⊥) ∧
+  (∀ y #j. (Exclusive( m, y ) @ #j) ⇒ ⊥)"
 */
 induction
   case induction
   simplify
-  solve( Disj(Last(#i)) |
-             (Ex f.1 #j.2.
-               (!KU( f.1, m ) @ #j.2)
-              &
-               (All . (Last(#j.2)) ==> F) & (#j.2 < #i)) |
-             (Ex x.1 #j.2. (Exclusive( x.1, m ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-             (Ex y.1 #j.2. (Exclusive( m, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+  solve( (last(#i))  ∥
+         (∃ f #j. (!KU( f, m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ x #j. (Exclusive( x, m ) @ #j) ∧ ¬(last(#j)))  ∥
+         (∃ y #j. (Exclusive( m, y ) @ #j) ∧ ¬(last(#j))) )
     case case_1
     solve( Access( m ) @ #i )
       case Decrypt_Left
-      solve( (#i, 0)[!Device_Left( sk )] )
+      solve( !Device_Left( sk ) ▶₀ #i )
         case Select_Left_case_1
         solve( !KU( f_, aenc(<m, y>, pk(~sk)) ) @ #vk )
           case Alice
           by contradiction // from formulas
         next
           case Decrypt_Left_case_1
-          solve( Disj(Ex f.4 #j.5.
-                       (!KU( f.4, t ) @ #j.5)
-                      &
-                       (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -110,12 +104,9 @@ induction
           qed
         next
           case Decrypt_Left_case_2
-          solve( Disj(Ex f.4 #j.5.
-                       (!KU( f.4, t ) @ #j.5)
-                      &
-                       (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -127,12 +118,9 @@ induction
           qed
         next
           case Decrypt_Right_case_1
-          solve( Disj(Ex f.4 #j.5.
-                       (!KU( f.4, t ) @ #j.5)
-                      &
-                       (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -144,12 +132,9 @@ induction
           qed
         next
           case Decrypt_Right_case_2
-          solve( Disj(Ex f.4 #j.5.
-                       (!KU( f.4, t ) @ #j.5)
-                      &
-                       (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -170,12 +155,9 @@ induction
           by contradiction // from formulas
         next
           case Decrypt_Left_case_1
-          solve( Disj(Ex f.5 #j.6.
-                       (!KU( f.5, t ) @ #j.6)
-                      &
-                       (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -187,12 +169,9 @@ induction
           qed
         next
           case Decrypt_Left_case_2
-          solve( Disj(Ex f.5 #j.6.
-                       (!KU( f.5, t ) @ #j.6)
-                      &
-                       (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -204,12 +183,9 @@ induction
           qed
         next
           case Decrypt_Right_case_1
-          solve( Disj(Ex f.5 #j.6.
-                       (!KU( f.5, t ) @ #j.6)
-                      &
-                       (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -221,12 +197,9 @@ induction
           qed
         next
           case Decrypt_Right_case_2
-          solve( Disj(Ex f.5 #j.6.
-                       (!KU( f.5, t ) @ #j.6)
-                      &
-                       (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -243,19 +216,16 @@ induction
       qed
     next
       case Decrypt_Right
-      solve( (#i, 0)[!Device_Right( sk )] )
+      solve( !Device_Right( sk ) ▶₀ #i )
         case Select_Right_case_1
         solve( !KU( f_, aenc(<x, m>, pk(~sk)) ) @ #vk )
           case Alice
           by contradiction // from formulas
         next
           case Decrypt_Left_case_1
-          solve( Disj(Ex f.4 #j.5.
-                       (!KU( f.4, t ) @ #j.5)
-                      &
-                       (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -267,12 +237,9 @@ induction
           qed
         next
           case Decrypt_Left_case_2
-          solve( Disj(Ex f.4 #j.5.
-                       (!KU( f.4, t ) @ #j.5)
-                      &
-                       (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -284,12 +251,9 @@ induction
           qed
         next
           case Decrypt_Right_case_1
-          solve( Disj(Ex f.4 #j.5.
-                       (!KU( f.4, t ) @ #j.5)
-                      &
-                       (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -301,12 +265,9 @@ induction
           qed
         next
           case Decrypt_Right_case_2
-          solve( Disj(Ex f.4 #j.5.
-                       (!KU( f.4, t ) @ #j.5)
-                      &
-                       (All . (Last(#j.5)) ==> F) & (#j.5 < #vr.3)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -327,12 +288,9 @@ induction
           by contradiction // from formulas
         next
           case Decrypt_Left_case_1
-          solve( Disj(Ex f.5 #j.6.
-                       (!KU( f.5, t ) @ #j.6)
-                      &
-                       (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -344,12 +302,9 @@ induction
           qed
         next
           case Decrypt_Left_case_2
-          solve( Disj(Ex f.5 #j.6.
-                       (!KU( f.5, t ) @ #j.6)
-                      &
-                       (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -361,12 +316,9 @@ induction
           qed
         next
           case Decrypt_Right_case_1
-          solve( Disj(Ex f.5 #j.6.
-                       (!KU( f.5, t ) @ #j.6)
-                      &
-                       (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -378,12 +330,9 @@ induction
           qed
         next
           case Decrypt_Right_case_2
-          solve( Disj(Ex f.5 #j.6.
-                       (!KU( f.5, t ) @ #j.6)
-                      &
-                       (All . (Last(#j.6)) ==> F) & (#j.6 < #vr.4)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -413,39 +362,36 @@ qed
 
 lemma (modulo E) Device_ToBob [use_induction]:
   all-traces
-  "All sk #i.1.
-    (Device_Use( sk ) @ #i.1) ==>
-    (All #j.2. (ToBob( sk ) @ #j.2) ==> (#i.1 < #j.2))"
+  "∀ sk #i.
+    (Device_Use( sk ) @ #i) ⇒ (∀ #j. (ToBob( sk ) @ #j) ⇒ (#i < #j))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex sk #i.1.
-  (Device_Use( sk ) @ #i.1)
- &
-  Ex #j.2. (ToBob( sk ) @ #j.2) & All . (#i.1 < #j.2) ==> F"
+"∃ sk #i.
+  (Device_Use( sk ) @ #i) ∧ ∃ #j. (ToBob( sk ) @ #j) ∧ ¬(#i < #j)"
 */
 induction
   case induction
   simplify
-  solve( Disj(Last(#i)) |
-             (All #j.1. (ToBob( sk ) @ #j.1) ==> (Last(#j.1)) | (#i < #j.1)) )
+  solve( (last(#i))  ∥
+         (∀ #j. (ToBob( sk ) @ #j) ⇒ (last(#j)) ∨ (#i < #j)) )
     case case_1
-    solve( (#j, 0)[Device_Init( sk )] )
+    solve( Device_Init( sk ) ▶₀ #j )
       case GenKey
-      solve( (#j, 1)[Device_Alice( ~sk )] )
+      solve( Device_Alice( ~sk ) ▶₁ #j )
         case Alice
-        solve( (#i, 0)[Device_Alice( ~sk )] )
+        solve( Device_Alice( ~sk ) ▶₀ #i )
           case Alice
-          by contradiction // non-unique facts (#vr.2,#j,#i)
+          by contradiction // non-injective facts (#vr.2,#j,#i)
         next
           case GenKey
-          by contradiction // non-unique facts (#vr,#j,#i)
+          by contradiction // non-injective facts (#vr,#j,#i)
         qed
       next
         case GenKey
-        solve( (#i, 0)[Device_Alice( ~sk )] )
+        solve( Device_Alice( ~sk ) ▶₀ #i )
           case Alice
-          by contradiction // non-unique facts (#vr.1,#j,#i)
+          by contradiction // non-injective facts (#vr.1,#j,#i)
         qed
       qed
     qed
@@ -457,48 +403,45 @@ qed
 
 lemma (modulo E) Device_Init_Use_Set [reuse, use_induction]:
   all-traces
-  "All sk #i.1.
-    (Device_Use( sk ) @ #i.1) ==>
-    ((All #j.2. (ToBob( sk ) @ #j.2) ==> (#i.1 < #j.2)) &
-     (Ex #j.3. (Device_Key( sk ) @ #j.3) & (#j.3 < #i.1)))"
+  "∀ sk #i.
+    (Device_Use( sk ) @ #i) ⇒
+    ((∀ #j. (ToBob( sk ) @ #j) ⇒ (#i < #j)) ∧
+     (∃ #j. (Device_Key( sk ) @ #j) ∧ (#j < #i)))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex sk #i.1.
-  (Device_Use( sk ) @ #i.1)
- &
-  (Ex #j.2. (ToBob( sk ) @ #j.2) & All . (#i.1 < #j.2) ==> F) |
-  (All #j.3. (Device_Key( sk ) @ #j.3) ==> All . (#j.3 < #i.1) ==> F)"
+"∃ sk #i.
+  (Device_Use( sk ) @ #i)
+ ∧
+  (∃ #j. (ToBob( sk ) @ #j) ∧ ¬(#i < #j)) ∨
+  (∀ #j. (Device_Key( sk ) @ #j) ⇒ ¬(#j < #i))"
 */
 induction
   case induction
   simplify
-  solve( Disj(Ex #j.1. (ToBob( sk ) @ #j.1) & All . (#i < #j.1) ==> F) |
-             (All #j.1. (Device_Key( sk ) @ #j.1) ==> All . (#j.1 < #i) ==> F) )
+  solve( (∃ #j. (ToBob( sk ) @ #j) ∧ ¬(#i < #j))  ∥
+         (∀ #j. (Device_Key( sk ) @ #j) ⇒ ¬(#j < #i)) )
     case case_1
-    solve( Disj(Last(#i)) |
-               ((All #j.1. (ToBob( sk ) @ #j.1) ==> (Last(#j.1)) | (#i < #j.1)) &
-                (Ex #j.2.
-                  (Device_Key( sk ) @ #j.2)
-                 &
-                  (All . (Last(#j.2)) ==> F) & (#j.2 < #i))) )
+    solve( (last(#i))  ∥
+           ((∀ #j. (ToBob( sk ) @ #j) ⇒ (last(#j)) ∨ (#i < #j)) ∧
+            (∃ #j. (Device_Key( sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
       case case_1
-      solve( (#j, 0)[Device_Init( sk )] )
+      solve( Device_Init( sk ) ▶₀ #j )
         case GenKey
-        solve( (#j, 1)[Device_Alice( ~sk )] )
+        solve( Device_Alice( ~sk ) ▶₁ #j )
           case Alice
-          solve( (#i, 0)[Device_Alice( ~sk )] )
+          solve( Device_Alice( ~sk ) ▶₀ #i )
             case Alice
-            by contradiction // non-unique facts (#vr.2,#j,#i)
+            by contradiction // non-injective facts (#vr.2,#j,#i)
           next
             case GenKey
-            by contradiction // non-unique facts (#vr,#j,#i)
+            by contradiction // non-injective facts (#vr,#j,#i)
           qed
         next
           case GenKey
-          solve( (#i, 0)[Device_Alice( ~sk )] )
+          solve( Device_Alice( ~sk ) ▶₀ #i )
             case Alice
-            by contradiction // non-unique facts (#vr,#vr.1,#j)
+            by contradiction // non-injective facts (#vr,#vr.1,#j)
           qed
         qed
       qed
@@ -508,14 +451,11 @@ induction
     qed
   next
     case case_2
-    solve( Disj(Last(#i)) |
-               ((All #j.1. (ToBob( sk ) @ #j.1) ==> (Last(#j.1)) | (#i < #j.1)) &
-                (Ex #j.2.
-                  (Device_Key( sk ) @ #j.2)
-                 &
-                  (All . (Last(#j.2)) ==> F) & (#j.2 < #i))) )
+    solve( (last(#i))  ∥
+           ((∀ #j. (ToBob( sk ) @ #j) ⇒ (last(#j)) ∨ (#i < #j)) ∧
+            (∃ #j. (Device_Key( sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
       case case_1
-      solve( (#i, 0)[Device_Alice( sk )] )
+      solve( Device_Alice( sk ) ▶₀ #i )
         case Alice
         by contradiction // from formulas
       next
@@ -530,25 +470,24 @@ induction
 qed
 
 lemma (modulo E) reachability_left:
-  exists-trace
-  "Ex x y.1 #i.2 #j.3. (Exclusive( x, y.1 ) @ #i.2) & (K( x ) @ #j.3)"
+  exists-trace "∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
-"Ex x y.1 #i.2 #j.3. (Exclusive( x, y.1 ) @ #i.2) & (K( x ) @ #j.3) & T"
+"∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
 */
 simplify
 solve( !KU( f_, ~x ) @ #vk )
   case Decrypt_Left_case_2
   solve( !KU( f_, aenc(<~x, y.1>, pk(~sk.1)) ) @ #vk.1 )
     case Alice
-    solve( (#i, 0)[Device_Alice( ~sk )] )
+    solve( Device_Alice( ~sk ) ▶₀ #i )
       case Alice
-      solve( (#vr.3, 0)[Device_Alice( ~sk )] )
+      solve( Device_Alice( ~sk ) ▶₀ #vr.3 )
         case Alice
-        solve( (#vr.4, 0)[Device_Alice( ~sk )] )
+        solve( Device_Alice( ~sk ) ▶₀ #vr.4 )
           case GenKey
-          solve( (#vr.5, 0)[Device_Alice( ~sk )] )
+          solve( Device_Alice( ~sk ) ▶₀ #vr.5 )
             case GenKey
             SOLVED // trace found
           qed
@@ -573,7 +512,7 @@ analyzing: data/examples/loops/RFID_Simple.spthy
 analyzed: data/examples/loops/RFID_Simple.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.84012s
+  processing time: 0.739986s
   types (all-traces): verified (85 steps)
   Device_ToBob (all-traces): verified (11 steps)
   Device_Init_Use_Set (all-traces): verified (17 steps)
@@ -587,7 +526,7 @@ summary of summaries:
 analyzed: data/examples/loops/RFID_Simple.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.84012s
+  processing time: 0.739986s
   types (all-traces): verified (85 steps)
   Device_ToBob (all-traces): verified (11 steps)
   Device_Init_Use_Set (all-traces): verified (17 steps)

@@ -46,47 +46,41 @@ rule (modulo E) UseRightDevice:
 
 lemma (modulo E) types [typing]:
   all-traces
-  "All m #i.1.
-    (Access( m ) @ #i.1) ==>
-    (((Ex f.2 #j.3. (!KU( f.2, m ) @ #j.3) & (#j.3 < #i.1)) |
-      (Ex x.4 #j.5. Exclusive( x.4, m ) @ #j.5)) |
-     (Ex y.6 #j.7. Exclusive( m, y.6 ) @ #j.7))"
+  "∀ m #i.
+    (Access( m ) @ #i) ⇒
+    (((∃ f #j. (!KU( f, m ) @ #j) ∧ (#j < #i)) ∨
+      (∃ x #j. Exclusive( x, m ) @ #j)) ∨
+     (∃ y #j. Exclusive( m, y ) @ #j))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex m #i.1.
-  (Access( m ) @ #i.1)
- &
-  (All f.2 #j.3. (!KU( f.2, m ) @ #j.3) ==> All . (#j.3 < #i.1) ==> F) &
-  (All x.4 #j.5. (Exclusive( x.4, m ) @ #j.5) ==> F) &
-  (All y.6 #j.7. (Exclusive( m, y.6 ) @ #j.7) ==> F)"
+"∃ m #i.
+  (Access( m ) @ #i)
+ ∧
+  (∀ f #j. (!KU( f, m ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ x #j. (Exclusive( x, m ) @ #j) ⇒ ⊥) ∧
+  (∀ y #j. (Exclusive( m, y ) @ #j) ⇒ ⊥)"
 */
 induction
   case induction
   simplify
-  solve( Disj(Last(#i)) |
-             (Ex f.1 #j.2.
-               (!KU( f.1, m ) @ #j.2)
-              &
-               (All . (Last(#j.2)) ==> F) & (#j.2 < #i)) |
-             (Ex x.1 #j.2. (Exclusive( x.1, m ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-             (Ex y.1 #j.2. (Exclusive( m, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+  solve( (last(#i))  ∥
+         (∃ f #j. (!KU( f, m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ x #j. (Exclusive( x, m ) @ #j) ∧ ¬(last(#j)))  ∥
+         (∃ y #j. (Exclusive( m, y ) @ #j) ∧ ¬(last(#j))) )
     case case_1
     solve( Access( m ) @ #i )
       case UseLeftDevice
-      solve( (#i, 0)[!ConfiguredDevice( sk, 'left' )] )
+      solve( !ConfiguredDevice( sk, 'left' ) ▶₀ #i )
         case ConfigureDevice
         solve( !KU( f_, aenc(<m, y>, pk(~sk)) ) @ #vk )
           case Alice
           by contradiction // from formulas
         next
           case UseLeftDevice
-          solve( Disj(Ex f.3 #j.4.
-                       (!KU( f.3, t ) @ #j.4)
-                      &
-                       (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -98,12 +92,9 @@ induction
           qed
         next
           case UseRightDevice
-          solve( Disj(Ex f.3 #j.4.
-                       (!KU( f.3, t ) @ #j.4)
-                      &
-                       (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -120,19 +111,16 @@ induction
       qed
     next
       case UseRightDevice
-      solve( (#i, 0)[!ConfiguredDevice( sk, 'right' )] )
+      solve( !ConfiguredDevice( sk, 'right' ) ▶₀ #i )
         case ConfigureDevice
         solve( !KU( f_, aenc(<x, m>, pk(~sk)) ) @ #vk )
           case Alice
           by contradiction // from formulas
         next
           case UseLeftDevice
-          solve( Disj(Ex f.3 #j.4.
-                       (!KU( f.3, t ) @ #j.4)
-                      &
-                       (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -144,12 +132,9 @@ induction
           qed
         next
           case UseRightDevice
-          solve( Disj(Ex f.3 #j.4.
-                       (!KU( f.3, t ) @ #j.4)
-                      &
-                       (All . (Last(#j.4)) ==> F) & (#j.4 < #vr.2)) |
-                     (Ex x.1 #j.2. (Exclusive( x.1, t ) @ #j.2) & All . (Last(#j.2)) ==> F) |
-                     (Ex y.1 #j.2. (Exclusive( t, y.1 ) @ #j.2) & All . (Last(#j.2)) ==> F) )
+          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
             by contradiction // cyclic
           next
@@ -178,15 +163,14 @@ induction
 qed
 
 lemma (modulo E) reachability_left:
-  exists-trace
-  "Ex x y.1 #i.2 #j.3. (Exclusive( x, y.1 ) @ #i.2) & (K( x ) @ #j.3)"
+  exists-trace "∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
-"Ex x y.1 #i.2 #j.3. (Exclusive( x, y.1 ) @ #i.2) & (K( x ) @ #j.3) & T"
+"∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
 */
 simplify
-solve( (#i, 2)[!DevicePublicKey( key )] )
+solve( !DevicePublicKey( key ) ▶₂ #i )
   case NewDevice
   solve( !KU( f_, ~x ) @ #vk )
     case UseLeftDevice
@@ -198,18 +182,14 @@ solve( (#i, 2)[!DevicePublicKey( key )] )
 qed
 
 lemma (modulo E) reachability_right:
-  exists-trace
-  "Ex x y.1 #i.2 #k.3. (Exclusive( x, y.1 ) @ #i.2) & (K( y.1 ) @ #k.3)"
+  exists-trace "∃ x y #i #k. (Exclusive( x, y ) @ #i) ∧ (K( y ) @ #k)"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
-"Ex x y.1 #i.2 #k.3.
-  (Exclusive( x, y.1 ) @ #i.2) & (K( y.1 ) @ #k.3)
- &
-  T"
+"∃ x y #i #k. (Exclusive( x, y ) @ #i) ∧ (K( y ) @ #k)"
 */
 simplify
-solve( (#i, 2)[!DevicePublicKey( key )] )
+solve( !DevicePublicKey( key ) ▶₂ #i )
   case NewDevice
   solve( !KU( f_, ~y ) @ #vk )
     case UseRightDevice
@@ -222,18 +202,16 @@ qed
 
 lemma (modulo E) secrecy:
   all-traces
-  "not(Ex x y.1 #i.2 #k1.3 #k2.4.
-        ((Exclusive( x, y.1 ) @ #i.2) & (K( x ) @ #k1.3)) & (K( y.1 ) @ #k2.4))"
+  "¬(∃ x y #i #k1 #k2.
+      ((Exclusive( x, y ) @ #i) ∧ (K( x ) @ #k1)) ∧ (K( y ) @ #k2))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex x y.1 #i.2 #k1.3 #k2.4.
-  (Exclusive( x, y.1 ) @ #i.2) & (K( x ) @ #k1.3) & (K( y.1 ) @ #k2.4)
- &
-  T"
+"∃ x y #i #k1 #k2.
+  (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #k1) ∧ (K( y ) @ #k2)"
 */
 simplify
-solve( (#i, 2)[!DevicePublicKey( key )] )
+solve( !DevicePublicKey( key ) ▶₂ #i )
   case NewDevice
   solve( !KU( f_, ~x ) @ #vk )
     case Alice
@@ -304,7 +282,7 @@ analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spt
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.384716s
+  processing time: 0.362866s
   types (all-traces): verified (31 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -318,7 +296,7 @@ summary of summaries:
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.384716s
+  processing time: 0.362866s
   types (all-traces): verified (31 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)

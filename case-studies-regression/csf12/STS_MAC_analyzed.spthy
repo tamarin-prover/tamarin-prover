@@ -187,36 +187,34 @@ rule (modulo E) Sessionkey_Reveal:
 
 lemma (modulo E) KI_Perfect_Forward_Secrecy_I:
   all-traces
-  "not(Ex ttest I.1 R.2 sessKey.3 #i1.4 #k.5 hki.6 hkr.7.
-        (((((AcceptedI( ttest, I.1, R.2, hki.6, hkr.7, sessKey.3 ) @ #i1.4) &
-            (not(Ex #r.8. Corrupt( I.1 ) @ #r.8))) &
-           (not(Ex #r.9. Corrupt( R.2 ) @ #r.9))) &
-          (K( sessKey.3 ) @ #k.5)) &
-         (not(Ex #i3.10. SesskRev( ttest ) @ #i3.10))) &
-        (not(Ex #i3.11 #i4.12 tpartner.13 kpartner.14.
-              (SesskRev( tpartner.13 ) @ #i3.11) &
-              (AcceptedR( tpartner.13, I.1, R.2, hki.6, hkr.7, kpartner.14
-               ) @ #i4.12))))"
+  "¬(∃ ttest I R sessKey #i1 #k hki hkr.
+      (((((AcceptedI( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧
+          (¬(∃ #r. Corrupt( I ) @ #r))) ∧
+         (¬(∃ #r. Corrupt( R ) @ #r))) ∧
+        (K( sessKey ) @ #k)) ∧
+       (¬(∃ #i3. SesskRev( ttest ) @ #i3))) ∧
+      (¬(∃ #i3 #i4 tpartner kpartner.
+          (SesskRev( tpartner ) @ #i3) ∧
+          (AcceptedR( tpartner, I, R, hki, hkr, kpartner ) @ #i4))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex ttest I.1 R.2 sessKey.3 #i1.4 #k.5 hki.6 hkr.7.
-  (AcceptedI( ttest, I.1, R.2, hki.6, hkr.7, sessKey.3 ) @ #i1.4) &
-  (K( sessKey.3 ) @ #k.5)
- &
-  (All #r.8. (Corrupt( I.1 ) @ #r.8) ==> F) &
-  (All #r.9. (Corrupt( R.2 ) @ #r.9) ==> F) &
-  (All #i3.10. (SesskRev( ttest ) @ #i3.10) ==> F) &
-  (All #i3.11 #i4.12 tpartner.13 kpartner.14.
-    (SesskRev( tpartner.13 ) @ #i3.11) &
-    (AcceptedR( tpartner.13, I.1, R.2, hki.6, hkr.7, kpartner.14 ) @ #i4.12)
-   ==>
-    F)"
+"∃ ttest I R sessKey #i1 #k hki hkr.
+  (AcceptedI( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧ (K( sessKey ) @ #k)
+ ∧
+  (∀ #r. (Corrupt( I ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Corrupt( R ) @ #r) ⇒ ⊥) ∧
+  (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+  (∀ #i3 #i4 tpartner kpartner.
+    (SesskRev( tpartner ) @ #i3) ∧
+    (AcceptedR( tpartner, I, R, hki, hkr, kpartner ) @ #i4)
+   ⇒
+    ⊥)"
 */
 simplify
-solve( (#i1, 0)[Init_1( $I, $R, ~ltkI, ~ekI )] )
+solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
   case Init_1
-  solve( (#i1, 1)[!Pk( $R, pk(~ltkR) )] )
+  solve( !Pk( $R, pk(~ltkR) ) ▶₁ #i1 )
     case Register_pk_clone_case_1
     solve( !KU( f_.8, sign(<hkr, 'g'^~ekI>, ~ltkR) ) @ #vk.7 )
       case Resp_1
@@ -252,36 +250,34 @@ qed
 
 lemma (modulo E) KI_Perfect_Forward_Secrecy_R:
   all-traces
-  "not(Ex ttest I.1 R.2 sessKey.3 #i1.4 #k.5 hki.6 hkr.7.
-        (((((AcceptedR( ttest, I.1, R.2, hki.6, hkr.7, sessKey.3 ) @ #i1.4) &
-            (not(Ex #r.8. Corrupt( I.1 ) @ #r.8))) &
-           (not(Ex #r.9. Corrupt( R.2 ) @ #r.9))) &
-          (K( sessKey.3 ) @ #k.5)) &
-         (not(Ex #i3.10. SesskRev( ttest ) @ #i3.10))) &
-        (not(Ex #i3.11 #i4.12 tpartner.13 kpartner.14.
-              (SesskRev( tpartner.13 ) @ #i3.11) &
-              (AcceptedI( tpartner.13, I.1, R.2, hki.6, hkr.7, kpartner.14
-               ) @ #i4.12))))"
+  "¬(∃ ttest I R sessKey #i1 #k hki hkr.
+      (((((AcceptedR( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧
+          (¬(∃ #r. Corrupt( I ) @ #r))) ∧
+         (¬(∃ #r. Corrupt( R ) @ #r))) ∧
+        (K( sessKey ) @ #k)) ∧
+       (¬(∃ #i3. SesskRev( ttest ) @ #i3))) ∧
+      (¬(∃ #i3 #i4 tpartner kpartner.
+          (SesskRev( tpartner ) @ #i3) ∧
+          (AcceptedI( tpartner, I, R, hki, hkr, kpartner ) @ #i4))))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"Ex ttest I.1 R.2 sessKey.3 #i1.4 #k.5 hki.6 hkr.7.
-  (AcceptedR( ttest, I.1, R.2, hki.6, hkr.7, sessKey.3 ) @ #i1.4) &
-  (K( sessKey.3 ) @ #k.5)
- &
-  (All #r.8. (Corrupt( I.1 ) @ #r.8) ==> F) &
-  (All #r.9. (Corrupt( R.2 ) @ #r.9) ==> F) &
-  (All #i3.10. (SesskRev( ttest ) @ #i3.10) ==> F) &
-  (All #i3.11 #i4.12 tpartner.13 kpartner.14.
-    (SesskRev( tpartner.13 ) @ #i3.11) &
-    (AcceptedI( tpartner.13, I.1, R.2, hki.6, hkr.7, kpartner.14 ) @ #i4.12)
-   ==>
-    F)"
+"∃ ttest I R sessKey #i1 #k hki hkr.
+  (AcceptedR( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧ (K( sessKey ) @ #k)
+ ∧
+  (∀ #r. (Corrupt( I ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Corrupt( R ) @ #r) ⇒ ⊥) ∧
+  (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+  (∀ #i3 #i4 tpartner kpartner.
+    (SesskRev( tpartner ) @ #i3) ∧
+    (AcceptedI( tpartner, I, R, hki, hkr, kpartner ) @ #i4)
+   ⇒
+    ⊥)"
 */
 simplify
-solve( (#i1, 0)[!Pk( $I, pk(~ltkI) )] )
+solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
   case Register_pk_clone_case_1
-  solve( (#i1, 1)[Resp_1( $I, $R, ~ltkR, ~ekR, hki )] )
+  solve( Resp_1( $I, $R, ~ltkR, ~ekR, hki ) ▶₁ #i1 )
     case Resp_1
     solve( !KU( f_.7, sign(<hki, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
       case Init_2_case_2
@@ -333,7 +329,7 @@ analyzing: data/examples/csf12/STS_MAC.spthy
 analyzed: data/examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.127604s
+  processing time: 5.410432s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)
 
@@ -345,7 +341,7 @@ summary of summaries:
 analyzed: data/examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.127604s
+  processing time: 5.410432s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)
 

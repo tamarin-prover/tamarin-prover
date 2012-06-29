@@ -5,8 +5,6 @@ theory TESLA_Scheme1 begin
 functions: MAC/2, f/1, fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-// looping facts with unique instances: Sender/2
-
 rule (modulo E) Setup:
    [ Fr( ~k1 ) ] --> [ Sender1( ~k1 ), Receiver1( f(~k1) ) ]
 
@@ -53,38 +51,36 @@ rule (modulo E) Recv:
 
 lemma (modulo E) claim_reachable [use_induction]:
   exists-trace
-  "(All commit #i.1 #j.2.
-     ((AssumeCommitNotExpired( commit ) @ #i.1) &
-      (CommitExpired( commit ) @ #j.2)) ==>
-     (#i.1 < #j.2)) ==>
-   (Ex m.3 #i.4. ClaimSent( m.3 ) @ #i.4)"
+  "(∀ commit #i #j.
+     ((AssumeCommitNotExpired( commit ) @ #i) ∧
+      (CommitExpired( commit ) @ #j)) ⇒
+     (#i < #j)) ⇒
+   (∃ m #i. ClaimSent( m ) @ #i)"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
-"(Ex commit #i.1 #j.2.
-   (AssumeCommitNotExpired( commit ) @ #i.1) &
-   (CommitExpired( commit ) @ #j.2)
-  &
-   All . (#i.1 < #j.2) ==> F) |
- (Ex m.3 #i.4. (ClaimSent( m.3 ) @ #i.4) & T)"
+"(∃ commit #i #j.
+   (AssumeCommitNotExpired( commit ) @ #i) ∧ (CommitExpired( commit ) @ #j)
+  ∧
+   ¬(#i < #j)) ∨
+ (∃ m #i. (ClaimSent( m ) @ #i))"
 */
 induction
   case induction
   simplify
-  solve( Disj(Ex commit #i.1 #j.2.
-               (AssumeCommitNotExpired( commit ) @ #i.1) &
-               (CommitExpired( commit ) @ #j.2)
-              &
-               All . (#i.1 < #j.2) ==> F) |
-             (Ex m #i.1. (ClaimSent( m ) @ #i.1) & T) )
+  solve( (∃ commit #i #j.
+           (AssumeCommitNotExpired( commit ) @ #i) ∧ (CommitExpired( commit ) @ #j)
+          ∧
+           ¬(#i < #j))  ∥
+         (∃ m #i. (ClaimSent( m ) @ #i)) )
     case case_1
-    solve( Disj(#i = #j) | (#j < #i) )
+    solve( (#i = #j)  ∥ (#j < #i) )
       case case_2
       solve( AssumeCommitNotExpired( f(~kOld) ) @ #i )
         case Recv1
-        solve( (#i, 0)[Receiver1( f(~kOld) )] )
+        solve( Receiver1( f(~kOld) ) ▶₀ #i )
           case Setup
-          solve( (#j, 0)[Sender( ~kOld, ~k )] )
+          solve( Sender( ~kOld, ~k ) ▶₀ #j )
             case Send1
             SOLVED // trace found
           qed
@@ -96,63 +92,47 @@ qed
 
 lemma (modulo E) authentic2 [use_induction]:
   all-traces
-  "(All commit #i.1 #j.2.
-     ((AssumeCommitNotExpired( commit ) @ #i.1) &
-      (CommitExpired( commit ) @ #j.2)) ==>
-     (#i.1 < #j.2)) ==>
-   (All m.3 #i.4.
-     (ClaimSent( m.3 ) @ #i.4) ==>
-     (Ex #j.5. (Sent( m.3 ) @ #j.5) & (#j.5 < #i.4)))"
+  "(∀ commit #i #j.
+     ((AssumeCommitNotExpired( commit ) @ #i) ∧
+      (CommitExpired( commit ) @ #j)) ⇒
+     (#i < #j)) ⇒
+   (∀ m #i. (ClaimSent( m ) @ #i) ⇒ (∃ #j. (Sent( m ) @ #j) ∧ (#j < #i)))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"(All commit #i.1 #j.2.
-   (AssumeCommitNotExpired( commit ) @ #i.1) &
-   (CommitExpired( commit ) @ #j.2)
-  ==>
-   #i.1 < #j.2) &
- (Ex m.3 #i.4.
-   (ClaimSent( m.3 ) @ #i.4)
-  &
-   All #j.5. (Sent( m.3 ) @ #j.5) ==> All . (#j.5 < #i.4) ==> F)"
+"(∀ commit #i #j.
+   (AssumeCommitNotExpired( commit ) @ #i) ∧ (CommitExpired( commit ) @ #j)
+  ⇒
+   #i < #j) ∧
+ (∃ m #i. (ClaimSent( m ) @ #i) ∧ ∀ #j. (Sent( m ) @ #j) ⇒ ¬(#j < #i))"
 */
 induction
   case induction
   simplify
-  solve( Disj(Ex commit #i.1 #j.2.
-               (AssumeCommitNotExpired( commit ) @ #i.1) &
-               (CommitExpired( commit ) @ #j.2)
-              &
-               (All . (Last(#j.2)) ==> F) &
-               (All . (Last(#i.1)) ==> F) &
-               ((#i.1 = #j.2) | (#j.2 < #i.1))) |
-             (All m #i.1.
-               (ClaimSent( m ) @ #i.1)
-              ==>
-               (Last(#i.1)) |
-               (Ex #j.2.
-                 (Sent( m ) @ #j.2)
-                &
-                 (All . (Last(#j.2)) ==> F) & (#j.2 < #i.1))) )
+  solve( (∃ commit #i #j.
+           (AssumeCommitNotExpired( commit ) @ #i) ∧ (CommitExpired( commit ) @ #j)
+          ∧
+           (¬(last(#j))) ∧ (¬(last(#i))) ∧ ((#i = #j) ∨ (#j < #i)))  ∥
+         (∀ m #i.
+           (ClaimSent( m ) @ #i)
+          ⇒
+           (last(#i)) ∨ (∃ #j. (Sent( m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
     case case_1
     by contradiction // from formulas
   next
     case case_2
-    solve( Disj(Last(#i)) |
-               (Ex #j.2.
-                 (Sent( m.1 ) @ #j.2)
-                &
-                 (All . (Last(#j.2)) ==> F) & (#j.2 < #i)) )
+    solve( (last(#i))  ∥
+           (∃ #j. (Sent( m.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
       case case_1
-      solve( (#i, 1)[Receiver( m.1, MAC(m.1, kOld), f(kOld), commit_k )] )
+      solve( Receiver( m.1, MAC(m.1, kOld), f(kOld), commit_k ) ▶₁ #i )
         case Recv
         solve( Sent( dataOld ) @ #j )
           case Send1
-          solve( (#j, 0)[Sender1( ~k1 )] )
+          solve( Sender1( ~k1 ) ▶₀ #j )
             case Setup
-            solve( (#vr, 1)[Receiver( <'1', ~m1, f(~k2)>,
-                                      MAC(<'1', ~m1, f(~k2)>, kOld.1), f(kOld.1), f(kOld)
-                            )] )
+            solve( Receiver( <'1', ~m1, f(~k2)>, MAC(<'1', ~m1, f(~k2)>, kOld.1),
+                             f(kOld.1), f(kOld)
+                   ) ▶₁ #vr )
               case Recv1
               solve( !KU( f_.10, ~k2 ) @ #vk.9 )
                 case SendN
@@ -171,13 +151,13 @@ induction
           qed
         next
           case SendN
-          solve( (#vr, 1)[Receiver( <'N', ~m.2, f(~kNew), ~kOld.2>,
-                                    MAC(<'N', ~m.2, f(~kNew), ~kOld.2>, kOld.1), f(kOld.1), f(kOld)
-                          )] )
+          solve( Receiver( <'N', ~m.2, f(~kNew), ~kOld.2>,
+                           MAC(<'N', ~m.2, f(~kNew), ~kOld.2>, kOld.1), f(kOld.1), f(kOld)
+                 ) ▶₁ #vr )
             case Recv
             solve( Sent( dataOld ) @ #j.1 )
               case Send1
-              solve( (#j.1, 0)[Sender1( ~k1 )] )
+              solve( Sender1( ~k1 ) ▶₀ #j.1 )
                 case Setup
                 solve( !KU( f_.11, ~kNew ) @ #vk.11 )
                   case SendN
@@ -240,7 +220,7 @@ analyzing: data/examples/loops/TESLA_Scheme1.spthy
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.356997s
+  processing time: 0.379955s
   claim_reachable (exists-trace): verified (8 steps)
   authentic2 (all-traces): verified (30 steps)
 
@@ -252,7 +232,7 @@ summary of summaries:
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.356997s
+  processing time: 0.379955s
   claim_reachable (exists-trace): verified (8 steps)
   authentic2 (all-traces): verified (30 steps)
 
