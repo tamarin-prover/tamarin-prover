@@ -325,6 +325,10 @@ pathTpl _ info TheoryHelp = return [whamlet|
           <li>
             <span class="keys">a</span>: Apply the autoprove method to \
             the current goal.
+          <li>
+            <span class="keys">c</span>: Characterize the constraint system, \
+            i.e, represent all its possible solutions as a set of \
+            solved constraint system.
   |]
 pathTpl renderUrl info path = liftIO . wrapThHtml $ htmlThyPath renderUrl info path
 

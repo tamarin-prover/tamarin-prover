@@ -26,11 +26,12 @@ module Web.Theory
   )
 where
 
+import           Data.Char                    (toUpper)
 import           Data.List
-import qualified Data.Map              as M
+import qualified Data.Map                     as M
 import           Data.Maybe
 import           Data.Monoid
-import qualified Data.Text             as T
+import qualified Data.Text                    as T
 
 import           Control.Basics
 
@@ -39,17 +40,17 @@ import           System.FilePath
 
 import           Extension.Data.Label
 
-import qualified Text.Dot              as D
+import qualified Text.Dot                     as D
 import           Text.PrettyPrint.Html
-import           Utils.Misc            (stringSHA256)
+import           Utils.Misc                   (stringSHA256)
 
 import           System.Exit
 import           System.Process
 
 import           Logic.Connectives
 import           Theory
-import           Theory.Text.Pretty
 import           Theory.Constraint.System.Dot (nonEmptyGraph)
+import           Theory.Text.Pretty
 
 import           Web.Settings
 import           Web.Types
@@ -229,13 +230,13 @@ sequentSnippet se path = refDotPath path $-$ preformatted Nothing (prettySystem 
 subProofSnippet :: HtmlDocument d
                 => RenderUrl
                 -> TheoryIdx                 -- ^ The theory index.
+                -> TheoryInfo                -- ^ The theory info of this index.
                 -> String                    -- ^ The lemma.
                 -> ProofPath                 -- ^ The proof path.
-                -> Heuristic                 -- ^ The heuristic to use.
                 -> ProofContext              -- ^ The proof context.
                 -> IncrementalProof          -- ^ The sub-proof.
                 -> d
-subProofSnippet renderUrl tidx lemma proofPath heuristic ctxt prf =
+subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     case psInfo $ root prf of
       Nothing -> text $ "no annotated constraint system / " ++ nCases ++ " sub-case(s)"
       Just se -> vcat $
@@ -258,10 +259,27 @@ subProofSnippet renderUrl tidx lemma proofPath heuristic ctxt prf =
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
-          , text "a." <->
-            linkToPath renderUrl (AutoProverR tidx (TheoryProof lemma proofPath))
-                ["autoprove"] (keyword_ "autoprove")
+          , autoProverLinks 'a' ""         emptyDoc      0
+          , autoProverLinks 'b' "bounded-" boundDesc bound
           ]
+        where
+          boundDesc = text $ " with proof-depth bound " ++ show bound
+          bound     = fromMaybe 5 $ apBound $ tiAutoProver ti
+
+    autoProverLinks key classPrefix nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoProverR tidx CutDFS bound (TheoryProof lemma proofPath))
+            [classPrefix ++ "autoprove"]
+            (keyword_ $ "autoprove")
+      , parens $
+          text (toUpper key : ".") <->
+          linkToPath renderUrl
+              (AutoProverR tidx CutNothing bound (TheoryProof lemma proofPath))
+              [classPrefix ++ "characterization"]
+              (keyword_ "for all solutions")
+      , nameSuffix
+      ]
 
     prettyPM (i, (m, (_cases, expl))) =
       linkToPath renderUrl
@@ -271,7 +289,7 @@ subProofSnippet renderUrl tidx lemma proofPath heuristic ctxt prf =
 
     nCases                  = show $ M.size $ children prf
     depth                   = length proofPath
-    ranking                 = useHeuristic heuristic depth
+    ranking                 = useHeuristic (apHeuristic $ tiAutoProver ti) depth
     proofMethods            = rankProofMethods ranking ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
@@ -354,9 +372,7 @@ htmlThyPath renderUrl ti path = go path
     go (TheoryProof l p)         =
         fromMaybe (text "No such lemma or proof path.") $ do
            lemma <- lookupLemma l thy
-           let ctxt      = getProofContext lemma thy
-               heuristic = apHeuristic $ tiAutoProver ti
-           subProofSnippet renderUrl tidx l p heuristic ctxt
+           subProofSnippet renderUrl tidx ti l p (getProofContext lemma thy)
              <$> resolveProofPath thy l p
     go (TheoryLemma _)      = text "Implement theory item pretty printing!"
     go _                    = text "Unhandled theory path. This is a bug."

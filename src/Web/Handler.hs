@@ -45,7 +45,7 @@ import           Theory                       (
     openTheory, sorryProver, runAutoProver,
     prettyClosedTheory, prettyOpenTheory
   )
-import           Theory.Proof (apHeuristic)
+import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, apHeuristic)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
 import           Web.Hamlet
@@ -61,6 +61,8 @@ import           Data.Aeson
 import           Data.Label
 import           Data.Maybe
 import           Data.String                  (fromString)
+import           Data.List                    (intersperse)
+import           Data.Monoid                  (mconcat)
 
 import qualified Blaze.ByteString.Builder     as B
 import qualified Data.ByteString.Lazy.Char8   as BS
@@ -403,9 +405,10 @@ getTheoryPathMR idx path = do
       let html = T.pack $ renderHtmlDoc $ htmlThyPath renderUrl ti path
       return $ responseToJson (JsonHtml title (toContent html))
 
--- | Run the autoprover on a given proof path.
-getAutoProverR :: TheoryIdx -> TheoryPath -> Handler RepJson
-getAutoProverR idx path = do
+-- | Run the some prover on a given proof path.
+getProverR :: (T.Text, AutoProver -> Prover)
+           -> TheoryIdx -> TheoryPath -> Handler RepJson
+getProverR (name, mkProver) idx path = do
     jsonValue <- withTheory idx (go path)
     return $ RepJson $ toContent jsonValue
   where
@@ -413,12 +416,36 @@ getAutoProverR idx path = do
         (\thy ->
             return $ applyProverAtPath thy lemma proofPath autoProver)
         (\thy -> nextSmartThyPath thy path)
-        (JsonAlert "Sorry, but the autoprover failed on given proof step!")
+        (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
-        autoProver = runAutoProver (tiAutoProver ti)
+        autoProver = mkProver (tiAutoProver ti)
 
-    go _ _ = return . responseToJson $ JsonAlert
-      "Can't run autoprover on the given theory path!"
+    go _ _ = return $ responseToJson $ JsonAlert $
+      "Can't run " <> name <> " on the given theory path!"
+
+-- | Run an autoprover on a given proof path.
+getAutoProverR :: TheoryIdx
+               -> SolutionExtractor
+               -> Int                             -- autoprover bound to use
+               -> TheoryPath -> Handler RepJson
+getAutoProverR idx extractor bound =
+    getProverR (fullName, runAutoProver . adapt) idx
+  where
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+
+    withCommas = intersperse ", "
+    fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
+    qualifiers = extractorQualfier ++ boundQualifier
+
+    (actualBound, boundQualifier)
+        | bound > 0 = (Just bound, ["bound " <> T.pack (show bound)])
+        | otherwise = (Nothing,    []                               )
+
+    (proverName, extractorQualfier) = case extractor of
+        CutNothing -> ("characterization", ["dfs"])
+        CutDFS     -> ("the autoprover",   []     )
+        CutBFS     -> ("the autoprover",   ["bfs"])
+
 
 {-
 -- | Show a given path within a theory (debug view).

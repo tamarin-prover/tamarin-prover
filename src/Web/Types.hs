@@ -22,8 +22,6 @@ module Web.Types
   , TheoryPath(..)
   , TheoryOrigin(..)
   , JsonResponse(..)
-  , renderPath
-  , parsePath
   , TheoryIdx
   , TheoryMap
   , ThreadMap
@@ -192,20 +190,20 @@ data TheoryPath
   deriving (Eq, Show, Read)
 
 -- | Render a theory path to a list of strings.
-renderPath :: TheoryPath -> [String]
-renderPath TheoryHelp = ["help"]
-renderPath TheoryRules = ["rules"]
-renderPath TheoryMessage = ["message"]
-renderPath (TheoryLemma name) = ["lemma", name]
-renderPath (TheoryIntrVar i) = ["variant", show i]
-renderPath (TheoryCaseDist k i j) = ["cases", show k, show i, show j]
-renderPath (TheoryProof lemma path) = "proof" : lemma : path
-renderPath (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
+renderTheoryPath :: TheoryPath -> [String]
+renderTheoryPath TheoryHelp = ["help"]
+renderTheoryPath TheoryRules = ["rules"]
+renderTheoryPath TheoryMessage = ["message"]
+renderTheoryPath (TheoryLemma name) = ["lemma", name]
+renderTheoryPath (TheoryIntrVar i) = ["variant", show i]
+renderTheoryPath (TheoryCaseDist k i j) = ["cases", show k, show i, show j]
+renderTheoryPath (TheoryProof lemma path) = "proof" : lemma : path
+renderTheoryPath (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
 
 -- | Parse a list of strings into a theory path.
-parsePath :: [String] -> Maybe TheoryPath
-parsePath []     = Nothing
-parsePath (x:xs) = case x of
+parseTheoryPath :: [String] -> Maybe TheoryPath
+parseTheoryPath []     = Nothing
+parseTheoryPath (x:xs) = case x of
   "help"    -> Just TheoryHelp
   "rules"   -> Just TheoryRules
   "message" -> Just TheoryMessage
@@ -268,34 +266,44 @@ type RenderUrl = Route WebUI -> T.Text
 -- whereas handlers ending in MR are for the main view
 -- and the ones ending in DR are for the debug view.
 mkYesodData "WebUI" [parseRoutes|
-/                                     RootR                   GET POST
-/thy/#Int/overview/MP(TheoryPath)     OverviewR               GET
-/thy/#Int/source                      TheorySourceR           GET
--- /thy/#Int/variants                    TheoryVariantsR         GET
-/thy/#Int/message                     TheoryMessageDeductionR GET
-/thy/#Int/main/MP(TheoryPath)         TheoryPathMR            GET
--- /thy/#Int/debug/MP(TheoryPath)        TheoryPathDR            GET
-/thy/#Int/graph/MP(TheoryPath)        TheoryGraphR            GET
-/thy/#Int/autoprove/MP(TheoryPath)    AutoProverR             GET
-/thy/#Int/next/#String/MP(TheoryPath) NextTheoryPathR         GET
-/thy/#Int/prev/#String/MP(TheoryPath) PrevTheoryPathR         GET
--- /thy/#Int/save                        SaveTheoryR             GET
-/thy/#Int/download/#String            DownloadTheoryR         GET
--- /thy/#Int/edit/source                 EditTheoryR             GET POST
--- /thy/#Int/edit/path/MP(TheoryPath)    EditPathR               GET POST
-/thy/#Int/del/path/MP(TheoryPath)     DeleteStepR             GET
-/thy/#Int/unload                      UnloadTheoryR           GET
-/kill                                 KillThreadR             GET
--- /threads                              ThreadsR                GET
-/robots.txt                           RobotsR                 GET
-/favicon.ico                          FaviconR                GET
-/static                               StaticR                 Static getStatic
+/                                          RootR                   GET POST
+/thy/#Int/overview/MP(TheoryPath)          OverviewR               GET
+/thy/#Int/source                           TheorySourceR           GET
+-- /thy/#Int/variants                         TheoryVariantsR         GET
+/thy/#Int/message                          TheoryMessageDeductionR GET
+/thy/#Int/main/MP(TheoryPath)              TheoryPathMR            GET
+-- /thy/#Int/debug/MP(TheoryPath)             TheoryPathDR            GET
+/thy/#Int/graph/MP(TheoryPath)             TheoryGraphR            GET
+/thy/#Int/autoprove/#SolutionExtractor/#Int/MP(TheoryPath) AutoProverR             GET
+/thy/#Int/next/#String/MP(TheoryPath)      NextTheoryPathR         GET
+/thy/#Int/prev/#String/MP(TheoryPath)      PrevTheoryPathR         GET
+-- /thy/#Int/save                             SaveTheoryR             GET
+/thy/#Int/download/#String                 DownloadTheoryR         GET
+-- /thy/#Int/edit/source                      EditTheoryR             GET POST
+-- /thy/#Int/edit/path/MP(TheoryPath)         EditPathR               GET POST
+/thy/#Int/del/path/MP(TheoryPath)          DeleteStepR             GET
+/thy/#Int/unload                           UnloadTheoryR           GET
+/kill                                      KillThreadR             GET
+-- /threads                                   ThreadsR                GET
+/robots.txt                                RobotsR                 GET
+/favicon.ico                               FaviconR                GET
+/static                                    StaticR                 Static getStatic
 |]
+
+instance PathPiece SolutionExtractor where
+  toPathPiece CutNothing = "characterize"
+  toPathPiece CutDFS     = "idfs"
+  toPathPiece CutBFS     = "bfs"
+
+  fromPathPiece "characterize" = Just CutNothing
+  fromPathPiece "idfs"         = Just CutDFS
+  fromPathPiece "bfs"          = Just CutBFS
+  fromPathPiece _              = Nothing
 
 -- | MultiPiece instance for TheoryPath.
 instance PathMultiPiece TheoryPath where
-  toPathMultiPiece   = map T.pack . renderPath
-  fromPathMultiPiece = parsePath . map T.unpack
+  toPathMultiPiece   = map T.pack . renderTheoryPath
+  fromPathMultiPiece = parseTheoryPath . map T.unpack
 
 -- Instance of the Yesod typeclass.
 instance Yesod WebUI where
@@ -353,6 +361,6 @@ defaultLayout' w = do
         <ul#contextMenu>
           <li.autoprove>
             <a href="#autoprove">Autoprove</a>
-          <li.delstep>
-            <a href="#del/path">Remove step</a>
   |]
+          -- <li.delstep>
+            -- <a href="#del/path">Remove step</a>

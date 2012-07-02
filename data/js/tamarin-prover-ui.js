@@ -113,7 +113,7 @@ var loadingScreen = {
         // Display loading screen
         var display = $("p.loading");
         display.hide().fadeIn(1000);
-    
+
         // Install cancel click handler
         display.children("a#cancel").unbind('click').click(function() {
             loadingScreen.cancel(path);
@@ -147,7 +147,10 @@ var ui = {
 
         // Add keyboard shortcuts
         var shortcuts = {
-            97  : function() { mainDisplay.applyAutoprover(); },         // a
+            97  : function() { mainDisplay.applyProver('autoprove'); },                 // a
+            65  : function() { mainDisplay.applyProver('characterization'); },          // A
+            98  : function() { mainDisplay.applyProver('bounded-autoprove'); },         // b
+            66  : function() { mainDisplay.applyProver('bounded-characterization'); },  // B
             74  : function() { proofScript.jump('next/smart', null); },  // j
             75  : function() { proofScript.jump('prev/smart', null); },  // k
             106 : function() { proofScript.jump('next/normal', null); }, // J
@@ -210,7 +213,7 @@ var ui = {
             layout.toggle("east");
             mainDisplay.toggleOption(debug_toggle);
         });
-        
+
         // Click handler for graph toggle
         var graph_toggle = $('a#graph-toggle');
         graph_toggle.click(function(ev) {
@@ -223,7 +226,7 @@ var ui = {
             $("a.active-link").click();
             mainDisplay.toggleOption(graph_toggle);
         });
-    
+
         // Click handler for sequent compression toggle
         var sequent_toggle = $('a#seqnt-toggle');
         sequent_toggle.click(function(ev) {
@@ -241,7 +244,7 @@ var ui = {
         events.installScrollHandler(
             "west",
             "div.ui-layout-west div.scroll-wrapper");
-    
+
         // Install handlers on plain internal links
         events.installRelativeClickHandler(
             "div#proof a.internal-link",
@@ -253,7 +256,7 @@ var ui = {
             "div#proof a.internal-link.delete-link",
             "del/path",
             null);
-    
+
         // Install handlers on proof-step links
         events.installRelativeClickHandler(
             "div#proof a.internal-link.proof-step",
@@ -282,7 +285,7 @@ var ui = {
         if($.cookie("east-size")) {
             layout.sizePane("east", $.cookie("east-size"));
         }
-    
+
         if($.cookie("east-open")) {
             layout.open("east");
             $("a#debug-toggle").addClass("active-option");
@@ -290,24 +293,24 @@ var ui = {
             layout.close("east");
             $("a#debug-toggle").addClass("inactive-option");
         }
-    
+
         if($.cookie("west-size")) {
             layout.sizePane("west", $.cookie("west-size"));
         } else {
             layout.sizePane("west", 475);
         }
-    
+
         if($.cookie("west-position")) {
             var pos = $.cookie("west-position");
             $("div.ui-layout-west div.scroll-wrapper").scrollTop(pos);
         }
-    
+
         if($.cookie("uncompress-sequents")) {
             $("a#seqnt-toggle").addClass("inactive-option");
         } else {
             $("a#seqnt-toggle").addClass("active-option");
         }
-    
+
         if($.cookie("uncompact-graphs")) {
             $("a#graph-toggle").addClass("inactive-option");
         } else {
@@ -413,7 +416,7 @@ var events = {
         // Remove (possible) old click handler(s)
         $(selector).unbind('click');
         // Add new click handler
-        $(selector).click(function(ev) { 
+        $(selector).click(function(ev) {
             ev.preventDefault();
             var element = $(this);
             mainDisplay.loadTarget(
@@ -483,7 +486,7 @@ var proofScript = {
             var linkOffset = link.offset().top;
             var height = wrapper.height();
             var newPos = pos + linkOffset - (height/2) - (contOffset/2);
-        
+
             // Now scroll there
             wrapper.stop(true, true);
             wrapper.animate(
@@ -501,9 +504,9 @@ var proofScript = {
     jump: function(mode, err_callback) {
         var element = $("#proof");
         var active = element.find("a.active-link").first();
-    
+
         if(active.length > 0) {
-            var current = active.attr("href"); 
+            var current = active.attr("href");
 
             server.performASR(
                 theory.absolutePath(mode, theory.extractTheoryPath(current)),
@@ -591,11 +594,16 @@ var mainDisplay = {
         if(methods.length >= num)  $(methods.get([ num - 1 ])).click();
     },
 
-    applyAutoprover: function() {
-        var auto = $("#ui-main-display").find("a.internal-link.autoprove");
+    /**
+     * Apply a prover to the currently selected constraint system.
+     * @param prover The CSS style of the link to the prover
+     */
+    applyProver: function(prover) {
+        var auto = $("#ui-main-display").find("a.internal-link." + prover);
 
         if(auto.length >= 1) $(auto.get(0)).click();
     },
+
 
 
     /**
@@ -618,7 +626,7 @@ var mainDisplay = {
 
         // Received html, display it
         element.html(html_data);
-        
+
         // Get image settings from cookie
         var params = []
         if($.cookie("uncompact-graphs")) {
@@ -631,7 +639,7 @@ var mainDisplay = {
                 { name: "uncompress", value: "" }
             );
         }
-        
+
         // Rewrite image paths (if necessary)
         if(params.length > 0) {
             var query_string = $.param(params);
@@ -641,10 +649,10 @@ var mainDisplay = {
                 img.attr("src", path);
             });
         }
-        
+
         // Focus main view (so PgUp/PgDown works)
         wrapper.focus();
-    
+
         // Re-install click handlers on main
         events.installRelativeClickHandler(
             "div#ui-main-display a.internal-link",
@@ -668,7 +676,7 @@ var mainDisplay = {
                 // Handle JSON reponse
                 server.handleJson(data, function(title, html_data) {
                     mainDisplay.setContent(title, html_data);
-    
+
                     if (window.history && window.history.pushState) {
                         var url = theory.absolutePath("overview", theory.extractTheoryPath(target));
                         window.history.replaceState({}, "", url);
@@ -676,7 +684,7 @@ var mainDisplay = {
 
                     ui.setActiveLink(target);
                 });
-    
+
                 // Call optional callback
                 if(callback) callback();
             },
@@ -737,7 +745,7 @@ $(document).ready(function() {
             $.cookie(name + "-size", elem.width(), { path: '/' });
         },
     });
-    
+
     // Initialize user interface
     ui.init();
 });

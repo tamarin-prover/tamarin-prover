@@ -433,6 +433,8 @@ contradictionProver = Prover $ \ctxt d sys prf ->
 ------------------------------------------------------------------------------
 
 data SolutionExtractor = CutDFS | CutBFS | CutNothing
+    deriving( Eq, Ord, Show, Read )
+
 
 data AutoProver = AutoProver
     { apHeuristic :: Heuristic
