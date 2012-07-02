@@ -1,3 +1,16 @@
+* 0.8.0.0
+    - GUI:
+        - improved pretty-printing of formulas and constraint systems using
+          Unicode characters. Currently, the parser fails to parse unicode
+          characters. This breaks the property that saved theory files can be
+          parsed again, which is the reason for the major version bump.
+
+        - added shortcuts for bounded autoprover and searching for all
+          solutions, which can be used to characterize the set of solutions of
+          a constraint system.
+
+    - fixed: bug in unique facts computation and application.
+
 * 0.6.1.0
    - fixed: parallel exploration of proof tree was using too much memory
    - fixed: reference to Tutorial.spthy broken in help message
