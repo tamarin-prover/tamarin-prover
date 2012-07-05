@@ -1,0 +1,94 @@
+theory Minimal_Typing_Example
+begin
+
+/*
+   Protocol:    A minimal example to demonstrate the use of typing assertions
+   Modeler:     Simon Meier
+   Date:        July 2012
+
+   Status:      working
+
+   Note that this is an artificial example to demonstrate typing assertions.
+   It is explained in detail in my Ph.D. thesis.
+*/
+
+
+builtins: symmetric-encryption, hashing
+
+// Shared keys that can be compromised.
+rule Setup_Key:
+  [ Fr(~k) ] --> [ !Key(~k) ]
+
+rule Reveal_Key:
+  [ !Key(k) ] --[ Rev(k) ]-> [ Out(k) ]
+
+
+// Protocol
+rule Initiator:
+  let msg = senc{~pub,~sec}k
+  in
+    [ !Key(k), Fr(~pub), Fr(~sec) ]
+  --[ Out_Initiator(msg)
+    , Public(~pub)
+    ]->
+    [ Out( msg ) ]
+
+rule Responder:
+  let msg = senc{pub,sec}key
+  in
+    [ !Key(key), In( msg )
+    ]
+  --[ In_Responder(msg, pub)
+    , Secret(sec, key)
+    ]->
+    [ Out( pub ) ]
+
+/* This is our typing assertion: it ensures that we have enough constraints on
+ * the 'pub' variable in the 'Responder' rule to determine all possible
+ * messages that can be extracted from it using the deconstruction rules.
+ *
+ * Note that typing assertion are invariants over the traces of the normal
+ * form dependency graphs of a protocol. We mark lemmas with the 'typing'
+ * attribute to ensure that they are proving using induction and that they are
+ * reused when precomputing case distinctions and proving non-typing lemmas.
+ */
+lemma typing_assertion [typing]:
+  /* For all messages received by the responder */
+  "(All m k #i. In_Responder(m, k) @ i ==>
+        /* they either came from the adversary and he therefore knows the
+         * contained 'k' variable before it was instantiated */
+      ( (Ex f #j. KU(f, k) @ j & j < i)
+        /* or there is an initiator that sent this message. */
+      | (Ex #j. Out_Initiator(m) @ j)
+      )
+   )
+  "
+
+/* The secret part of the message received by Responder is really secret
+ * provided the key has not been compromised.
+ */
+lemma Responder_secrecy:
+  "  /* For all traces, we have that */
+     All sec key #i #j.
+        /* if client setup a session key 'k' with a server'S' */
+        Secret(sec, key) @ #i
+        /* and the adversary deduced 'k' */
+      & K(key) @ #j
+        /* the he must have performed a long-term key reveal on 'S' or 'C'
+         * before learning the key 'k'. */
+      ==>
+       (Ex #r. Rev(key) @ r)
+  "
+
+/* Sanity check: the public part is accessible to the adversary without
+ * performing a key reveal.
+ */
+lemma Public_part_public:
+  exists-trace
+  "  /* No key reveal has been performed */
+    not (Ex k #i. Rev(k) @ i)
+    /* and the public part of a message is known to the adversary. */
+  & (Ex pub #i #j. Public(pub) @ i & K(pub) @ j )
+  "
+
+end
