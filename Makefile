@@ -167,6 +167,7 @@ CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS
 
 case-studies: 	$(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/
+	grep -iR "warning\|error" case-studies/
 
 ###############################################################################
 ## Developer specific targets (some out of date)
