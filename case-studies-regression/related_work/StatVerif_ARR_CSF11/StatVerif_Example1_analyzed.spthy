@@ -62,7 +62,10 @@ guarded formula characterizing all counter-examples:
   (∀ y #j. (Exclusive( m, y ) @ #j) ⇒ ⊥)"
 */
 induction
-  case induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
   simplify
   solve( (last(#i))  ∥
          (∃ f #j. (!KU( f, m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
@@ -282,8 +285,8 @@ analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spt
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.362866s
-  types (all-traces): verified (31 steps)
+  processing time: 0.438792s
+  types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (20 steps)
@@ -296,8 +299,8 @@ summary of summaries:
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.362866s
-  types (all-traces): verified (31 steps)
+  processing time: 0.438792s
+  types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (20 steps)

@@ -85,7 +85,10 @@ guarded formula characterizing all counter-examples:
   (∀ s #j. (Secrets( s, m ) @ #j) ⇒ ⊥)"
 */
 induction
-  case induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
   simplify
   solve( (last(#i))  ∥
          (∃ f #j. (!KU( f, m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
@@ -150,7 +153,10 @@ guarded formula characterizing all counter-examples:
   (∀ #i.1 #j. (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i.1) ⇒ #i.1 = #j)"
 */
 induction
-  case induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
   simplify
   solve( (last(#i))  ∥
          (∃ aik #j. (PCR_Init( x, aik ) @ #j) ∧ ¬(last(#j)))  ∥
@@ -579,9 +585,9 @@ analyzing: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.908047s
-  types (all-traces): verified (15 steps)
-  Unbind_PCR_Value (all-traces): verified (28 steps)
+  processing time: 2.223036s
+  types (all-traces): verified (16 steps)
+  Unbind_PCR_Value (all-traces): verified (29 steps)
   secrecy (all-traces): verified (99 steps)
 
 ------------------------------------------------------------------------------
@@ -592,9 +598,9 @@ summary of summaries:
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.908047s
-  types (all-traces): verified (15 steps)
-  Unbind_PCR_Value (all-traces): verified (28 steps)
+  processing time: 2.223036s
+  types (all-traces): verified (16 steps)
+  Unbind_PCR_Value (all-traces): verified (29 steps)
   secrecy (all-traces): verified (99 steps)
 
 ==============================================================================

@@ -52,7 +52,10 @@ guarded formula characterizing all counter-examples:
   (∀ #j. (HonestKey( sk ) @ #j) ⇒ ¬(#j < #i))"
 */
 induction
-  case induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
   simplify
   solve( (last(#i))  ∥
          (∃ f #j. (!KU( f, sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
@@ -296,8 +299,8 @@ analyzing: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.475636s
-  types (all-traces): verified (66 steps)
+  processing time: 0.407505s
+  types (all-traces): verified (67 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -308,8 +311,8 @@ summary of summaries:
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.475636s
-  types (all-traces): verified (66 steps)
+  processing time: 0.407505s
+  types (all-traces): verified (67 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ==============================================================================

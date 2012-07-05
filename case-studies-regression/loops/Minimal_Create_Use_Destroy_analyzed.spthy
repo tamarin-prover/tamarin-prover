@@ -44,7 +44,10 @@ guarded formula characterizing all counter-examples:
 "∃ x #j. (Use( x ) @ #j) ∧ ∀ #i. (Create( x ) @ #i) ⇒ ¬(#i < #j)"
 */
 induction
-  case induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
   simplify
   solve( (last(#j))  ∥
          (∃ #i. (Create( x ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #j)) )
@@ -80,7 +83,10 @@ guarded formula characterizing all counter-examples:
   (∃ #i. (Destroy( x ) @ #i) ∧ ¬(#i = #j))"
 */
 induction
-  case induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
   simplify
   solve( (∀ #i. (Create( x ) @ #i) ⇒ ¬(#i < #j))  ∥
          (∃ #i. (Use( x ) @ #i) ∧ ¬(#i < #j))  ∥
@@ -180,9 +186,9 @@ analyzing: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.177334s
-  Use_charn (all-traces): verified (7 steps)
-  Destroy_charn (all-traces): verified (27 steps)
+  processing time: 0.199705s
+  Use_charn (all-traces): verified (8 steps)
+  Destroy_charn (all-traces): verified (28 steps)
 
 ------------------------------------------------------------------------------
 
@@ -192,9 +198,9 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.177334s
-  Use_charn (all-traces): verified (7 steps)
-  Destroy_charn (all-traces): verified (27 steps)
+  processing time: 0.199705s
+  Use_charn (all-traces): verified (8 steps)
+  Destroy_charn (all-traces): verified (28 steps)
 
 ==============================================================================
 */

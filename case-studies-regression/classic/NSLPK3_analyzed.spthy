@@ -89,7 +89,10 @@ guarded formula characterizing all counter-examples:
    (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥))"
 */
 induction
-  case induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
   simplify
   solve( (∃ ni m1 #i.
            (IN_R_1_ni( ni, m1 ) @ #i)
@@ -422,8 +425,8 @@ analyzing: data/examples/classic/NSLPK3.spthy
 analyzed: data/examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.20613s
-  types (all-traces): verified (32 steps)
+  processing time: 1.194295s
+  types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   session_key_setup_possible (exists-trace): verified (5 steps)
 
@@ -435,8 +438,8 @@ summary of summaries:
 analyzed: data/examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.20613s
-  types (all-traces): verified (32 steps)
+  processing time: 1.194295s
+  types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   session_key_setup_possible (exists-trace): verified (5 steps)
 

@@ -39,7 +39,7 @@ guarded formula characterizing all satisfying traces:
 "∃ k #i. (Secret( k ) @ #i)"
 */
 induction
-  case induction
+  case non_empty_trace
   simplify
   solve( Secret( k ) @ #i )
     case Send
@@ -58,7 +58,10 @@ guarded formula characterizing all counter-examples:
 "∃ k f #i #j. (Secret( k ) @ #i) ∧ (!KU( f, k ) @ #j)"
 */
 induction
-  case induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
   simplify
   solve( (last(#j))  ∥ (last(#i)) )
     case case_1
@@ -150,9 +153,9 @@ analyzing: data/examples/loops/Minimal_KeyRenegotiation.spthy
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.123953s
+  processing time: 0.145453s
   Secret_reachable (exists-trace): verified (5 steps)
-  secrecy (all-traces): verified (27 steps)
+  secrecy (all-traces): verified (28 steps)
 
 ------------------------------------------------------------------------------
 
@@ -162,9 +165,9 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.123953s
+  processing time: 0.145453s
   Secret_reachable (exists-trace): verified (5 steps)
-  secrecy (all-traces): verified (27 steps)
+  secrecy (all-traces): verified (28 steps)
 
 ==============================================================================
 */
