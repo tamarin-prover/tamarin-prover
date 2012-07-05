@@ -21,6 +21,7 @@ import           System.Timing                   (timed)
 import qualified Text.PrettyPrint.Class          as Pretty
 
 import           Theory
+import           Theory.Tools.Wellformedness     (checkWellformedness)
 
 import           Main.Console
 import           Main.Environment
@@ -114,9 +115,18 @@ run thisMode as
       | argExists "parseOnly" as =
           out (const Pretty.emptyDoc) prettyOpenTheory   (loadOpenThy   as inFile)
       | otherwise        =
-          out prettyClosedSummary   prettyClosedTheory (loadClosedThy as inFile)
+          out ppWfAndSummary prettyClosedTheory (loadClosedThy as inFile)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
+
+        ppWfAndSummary thy =
+            case checkWellformedness (openTheory thy) of
+                []   -> Pretty.emptyDoc
+                errs -> Pretty.vcat $ map Pretty.text $
+                          [ "WARNING: " ++ show (length errs)
+                                        ++ " wellformedness check failed!"
+                          , "         The analysis results might be wrong!" ]
+            Pretty.$--$ prettyClosedSummary thy
 
         out :: (a -> Pretty.Doc) -> (a -> Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load

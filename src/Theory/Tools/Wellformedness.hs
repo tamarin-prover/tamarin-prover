@@ -93,7 +93,7 @@ type WfErrorReport = [WfError]
 prettyWfErrorReport :: WfErrorReport -> Doc
 prettyWfErrorReport []     = text "All well-formedness checks were successful."
 prettyWfErrorReport report = foldr1 ($-$)
-  [ text "Error: the following well-formedness checks failed!"
+  [ text "WARNING: the following wellformedness checks failed!"
   , text ""
   , vcat . intersperse (text "") . map ppTopic $ groupOn fst report
   ]
