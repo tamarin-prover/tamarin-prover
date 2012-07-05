@@ -1,0 +1,166 @@
+theory Minimal_Typing_Example begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Setup_Key:
+   [ Fr( ~k ) ] --> [ !Key( ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_Key:
+   [ !Key( k ) ] --[ Rev( k ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Initiator:
+   [ !Key( k ), Fr( ~pub ), Fr( ~sec ) ]
+  --[ Out_Initiator( senc(<~pub, ~sec>, k) ), Public( ~pub ) ]->
+   [ Out( senc(<~pub, ~sec>, k) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Responder:
+   [ !Key( key ), In( senc(<pub, sec>, key) ) ]
+  --[ In_Responder( senc(<pub, sec>, key), pub ), Secret( sec, key ) ]->
+   [ Out( pub ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma (modulo E) typing_assertion [typing]:
+  all-traces
+  "∀ m k #i.
+    (In_Responder( m, k ) @ #i) ⇒
+    ((∃ f #j. (!KU( f, k ) @ #j) ∧ (#j < #i)) ∨
+     (∃ #j. Out_Initiator( m ) @ #j))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"∃ m k #i.
+  (In_Responder( m, k ) @ #i)
+ ∧
+  (∀ f #j. (!KU( f, k ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (Out_Initiator( m ) @ #j) ⇒ ⊥)"
+*/
+induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∃ f #j. (!KU( f, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j. (Out_Initiator( senc(<k, sec>, key) ) @ #j) ∧ ¬(last(#j))) )
+    case case_1
+    solve( !Key( key ) ▶₀ #i )
+      case Setup_Key
+      solve( !KU( f_, senc(<k.1, sec>, ~k) ) @ #vk )
+        case Initiator
+        by contradiction // from formulas
+      next
+        case Responder
+        solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
+               (∃ #j. (Out_Initiator( senc(<t, sec.1>, ~k.2) ) @ #j) ∧ ¬(last(#j))) )
+          case case_1
+          by contradiction // cyclic
+        next
+          case case_2
+          by solve( (#vl, 0) ~~> (#vk, 0) )
+        qed
+      next
+        case csenc
+        by contradiction // from formulas
+      qed
+    qed
+  next
+    case case_2
+    by contradiction // from formulas
+  next
+    case case_3
+    by contradiction // from formulas
+  qed
+qed
+
+lemma (modulo E) Responder_secrecy:
+  all-traces
+  "∀ sec key #i #j.
+    ((Secret( sec, key ) @ #i) ∧ (K( key ) @ #j)) ⇒ (∃ #r. Rev( key ) @ #r)"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all counter-examples:
+"∃ sec key #i #j.
+  (Secret( sec, key ) @ #i) ∧ (K( key ) @ #j)
+ ∧
+  ∀ #r. (Rev( key ) @ #r) ⇒ ⊥"
+*/
+simplify
+solve( !Key( key ) ▶₀ #i )
+  case Setup_Key
+  solve( !KU( f_, ~k ) @ #vk.1 )
+    case Reveal_Key
+    by contradiction // from formulas
+  qed
+qed
+
+lemma (modulo E) Public_part_public:
+  exists-trace
+  "(¬(∃ k #i. Rev( k ) @ #i)) ∧
+   (∃ pub #i #j. (Public( pub ) @ #i) ∧ (K( pub ) @ #j))"
+/* proof based on the same lemma modulo AC */
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ k #i. (Rev( k ) @ #i) ⇒ ⊥) ∧
+ (∃ pub #i #j. (Public( pub ) @ #i) ∧ (K( pub ) @ #j))"
+*/
+simplify
+solve( !Key( k ) ▶₀ #i )
+  case Setup_Key
+  solve( !KU( f_, ~pub ) @ #vk )
+    case Responder
+    solve( !KU( f_, senc(<~pub, ~sec>, ~k) ) @ #vk.1 )
+      case Initiator
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.6. OK.
+ checking installation: OK.
+
+
+analyzing: data/examples/loops/Minimal_Typing_Example.spthy
+
+------------------------------------------------------------------------------
+analyzed: data/examples/loops/Minimal_Typing_Example.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.133777s
+  typing_assertion (all-traces): verified (13 steps)
+  Responder_secrecy (all-traces): verified (4 steps)
+  Public_part_public (exists-trace): verified (5 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: data/examples/loops/Minimal_Typing_Example.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.133777s
+  typing_assertion (all-traces): verified (13 steps)
+  Responder_secrecy (all-traces): verified (4 steps)
+  Public_part_public (exists-trace): verified (5 steps)
+
+==============================================================================
+*/

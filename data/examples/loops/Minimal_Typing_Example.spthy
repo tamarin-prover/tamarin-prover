@@ -8,8 +8,8 @@ begin
 
    Status:      working
 
-   Note that this is an artificial example to demonstrate typing assertions.
-   It is explained in detail in my Ph.D. thesis.
+   Note that this is an artificial example to demonstrate the use of typing
+   assertions. It is explained in detail in my Ph.D. thesis.
 */
 
 
@@ -23,7 +23,13 @@ rule Reveal_Key:
   [ !Key(k) ] --[ Rev(k) ]-> [ Out(k) ]
 
 
-// Protocol
+/* The protocol: there are shared keys that all honest processes have access
+ * to. The intruder can access them too by revealing them using the
+ * 'Reveal_Key' rule above. We use these keys to exchange a message consisting
+ * of a public part and a secret part. The initiator sends the message and the
+ * responder claims that the secret part is secret provided that the used key
+ * has not been revealed by the adversary.
+ */
 rule Initiator:
   let msg = senc{~pub,~sec}k
   in
@@ -46,8 +52,12 @@ rule Responder:
 /* This is our typing assertion: it ensures that we have enough constraints on
  * the 'pub' variable in the 'Responder' rule to determine all possible
  * messages that can be extracted from it using the deconstruction rules.
+ * You can see the effect of having too few constraint in the GUI under the
+ * 'untyped precomupted case distinctions' link. Several cases have
+ * superfluous decryption chains. Getting rid of them is the goal of the
+ * typing assertion.
  *
- * Note that typing assertion are invariants over the traces of the normal
+ * Note that typing assertions are invariants over the traces of the normal
  * form dependency graphs of a protocol. We mark lemmas with the 'typing'
  * attribute to ensure that they are proving using induction and that they are
  * reused when precomputing case distinctions and proving non-typing lemmas.
@@ -58,24 +68,30 @@ lemma typing_assertion [typing]:
         /* they either came from the adversary and he therefore knows the
          * contained 'k' variable before it was instantiated */
       ( (Ex f #j. KU(f, k) @ j & j < i)
-        /* or there is an initiator that sent this message. */
+        /* or there is an initiator that sent 'm'. */
       | (Ex #j. Out_Initiator(m) @ j)
       )
    )
   "
+/* Note that in general typing assertions do not directly relate received
+ * messsages to sent messages, but received cryptographic components to sent
+ * cryptographic components. For this simple protocol, the two notions
+ * however coincide.
+ */
 
-/* The secret part of the message received by Responder is really secret
- * provided the key has not been compromised.
+
+/* The secret part of the message received by Responder is secret provided the
+ * key has not been compromised.
  */
 lemma Responder_secrecy:
   "  /* For all traces, we have that */
      All sec key #i #j.
-        /* if client setup a session key 'k' with a server'S' */
+        /* if a responder claims the secrecy of a message 'sec' provided 'key'
+         * is not compromised */
         Secret(sec, key) @ #i
-        /* and the adversary deduced 'k' */
+        /* and the adversary nevertheless deduced 'k' */
       & K(key) @ #j
-        /* the he must have performed a long-term key reveal on 'S' or 'C'
-         * before learning the key 'k'. */
+        /* then the adversary must have revealed 'key' */
       ==>
        (Ex #r. Rev(key) @ r)
   "
