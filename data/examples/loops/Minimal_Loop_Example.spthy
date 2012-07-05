@@ -30,4 +30,8 @@ lemma Loop_before_Stop [reuse, use_induction]:
 lemma Stop_unique [reuse]:
   "All x #i #j. Stop(x) @ j & Stop(x) @ i ==> #i = #j"
 
+lemma Satisfied_by_empty_trace_only [use_induction]:
+  exists-trace
+  "All x #j. Loop(x) @ j ==> F"
+
 end
