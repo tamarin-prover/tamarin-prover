@@ -183,14 +183,15 @@ execProofMethod ctxt method sys =
                 pad cs = replicate (l - length cs) '0' ++ cs
 
     -- Apply induction: possible if the system contains only
-    -- a single formula.
+    -- a single, last-free, closed formula.
     execInduction
       | sys == sys0 =
           case S.toList $ L.get sFormulas sys of
             [gf] -> case ginduct gf of
-              Right gf' -> Just $ M.singleton "induction"
-                                $ set sFormulas (S.singleton gf') sys
-              _         -> Nothing
+                      Right (bc, sc) -> Just $ insCase "empty_trace"     bc
+                                             $ insCase "non_empty_trace" sc
+                                             $ M.empty
+                      _              -> Nothing
             _    -> Nothing
 
       | otherwise = Nothing
@@ -199,6 +200,7 @@ execProofMethod ctxt method sys =
              $ set sLemmas (L.get sLemmas sys)
              $ emptySystem (L.get sCaseDistKind sys)
 
+        insCase name gf = M.insert name (set sFormulas (S.singleton gf) sys)
 
 ------------------------------------------------------------------------------
 -- Heuristics

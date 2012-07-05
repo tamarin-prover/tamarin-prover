@@ -10,6 +10,7 @@
           a constraint system.
 
     - fixed: bug in unique facts computation and application.
+    - fixed: induction now generates cases for the empty and the non-empty trace
 
 * 0.6.1.0
    - fixed: parallel exploration of proof tree was using too much memory

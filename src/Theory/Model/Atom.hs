@@ -24,6 +24,11 @@ module Theory.Model.Atom(
   , NAtom
   , LNAtom
 
+  , isActionAtom
+  , isLastAtom
+  , isLessAtom
+  , isEqAtom
+
   -- * LFormula
   , BLVar
   , BLAtom
@@ -109,6 +114,26 @@ instance Apply BLAtom where
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
     apply subst (Last i)          = Last (apply subst i)
+
+
+-- Queries
+----------
+
+-- | True iff the atom is an action atom.
+isActionAtom :: Atom t -> Bool
+isActionAtom ato = case ato of Action _ _ -> True; _ -> False
+
+-- | True iff the atom is a last atom.
+isLastAtom :: Atom t -> Bool
+isLastAtom ato = case ato of Last _ -> True; _ -> False
+
+-- | True iff the atom is a temporal ordering atom.
+isLessAtom :: Atom t -> Bool
+isLessAtom ato = case ato of Less _ _ -> True; _ -> False
+
+-- | True iff the atom is an equality atom.
+isEqAtom :: Atom t -> Bool
+isEqAtom ato = case ato of EqE _ _ -> True; _ -> False
 
 
 ------------------------------------------------------------------------------

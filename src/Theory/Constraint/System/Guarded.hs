@@ -480,12 +480,13 @@ toInductionHypothesis :: Ord c => LGuarded c -> Either String (LGuarded c)
 toInductionHypothesis =
     go
   where
-    go (GGuarded qua ss as gf) = do
-        gf' <- go gf
-        return $ case qua of
-          All -> gex  ss as (gconj $ (gnotAtom <$> lastAtos) ++ [gf'])
-          Ex  -> gall ss as (gdisj $ (GAto <$> lastAtos) ++ [gf'])
-
+    go (GGuarded qua ss as gf)
+      | any isLastAtom as = throwError "formula not last-free"
+      | otherwise         = do
+          gf' <- go gf
+          return $ case qua of
+            All -> gex  ss as (gconj $ (gnotAtom <$> lastAtos) ++ [gf'])
+            Ex  -> gall ss as (gdisj $ (GAto <$> lastAtos) ++ [gf'])
       where
         lastAtos :: [Atom (VTerm c (BVar LVar))]
         lastAtos = do
@@ -499,15 +500,19 @@ toInductionHypothesis =
     go (GConj conj)      = gdisj <$> traverse go (getConj conj)
 
 -- | Try to prove the formula by applying induction over the trace.
--- Returns @'Left' errMsg@ if this is not possible.
-ginduct :: Ord c => LGuarded c -> Either String (LGuarded c)
+-- Returns @'Left' errMsg@ if this is not possible. Returns a tuple of
+-- formulas: one formalzing the proof obligation of the base-case and one
+-- formalizing the proof obligation of the step-case.
+ginduct :: Ord c => LGuarded c -> Either String (LGuarded c, LGuarded c)
 ginduct gf = do
+    unless (null $ frees gf)   (throwError "formula not closed")
+    unless (containsAction gf) (throwError "formula contains no action atom")
     baseCase <- satisfiedByEmptyTrace gf
-    if baseCase
-      then throwError "cannot apply induction: empty trace is an attack"
-      else do
-        gfIH <- toInductionHypothesis gf
-        return (gconj [gf, gfIH])
+    gfIH     <- toInductionHypothesis gf
+    return (gtf baseCase, gconj [gf, gfIH])
+  where
+    containsAction = foldGuarded (const True) (or . getDisj) (or . getConj)
+                                 (\_ _ as body -> not (null as) || body)
 
 ------------------------------------------------------------------------------
 -- Formula Simplification
