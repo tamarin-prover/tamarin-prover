@@ -160,21 +160,24 @@ lemmaIndex :: HtmlDocument d
            -> d
 lemmaIndex renderUrl tidx l =
     ( markStatus (snd $ psInfo $ root annPrf) $
-        (kwLemmaModulo "E" <-> prettyLemmaName l <> colon) <->
-        (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->
-        linkToPath renderUrl lemmaRoute ["delete-link"] deletePng) $-$
+        (kwLemmaModulo "E" <-> prettyLemmaName l <> colon)
+        -- FIXME: Reactivate theory editing.
+        -- <->
+        -- (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->
+        -- linkToPath renderUrl lemmaRoute ["delete-link"] deletePng)
+        $-$
         nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
                      , doubleQuotes $ prettyFormulaE $ get lFormulaE l
                      ] )
     ) $-$
     proofIndex renderUrl mkRoute annPrf
   where
-    editPng = png "/static/img/edit.png"
-    deletePng = png "/static/img/delete.png"
-    png path = closedTag "img" [("class","icon"),("src",path)]
+    -- editPng = png "/static/img/edit.png"
+    -- deletePng = png "/static/img/delete.png"
+    -- png path = closedTag "img" [("class","icon"),("src",path)]
+    -- lemmaRoute = TheoryPathMR tidx (TheoryLemma $ get lName l)
 
     annPrf = annotateLemmaProof l
-    lemmaRoute = TheoryPathMR tidx (TheoryLemma $ get lName l)
     mkRoute proofPath = TheoryPathMR tidx (TheoryProof (get lName l) proofPath)
 
 -- | Render the theory index.
