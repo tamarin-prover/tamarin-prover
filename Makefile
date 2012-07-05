@@ -162,7 +162,10 @@ classic-case-studies:	$(CLASSIC_CS_TARGETS)
 ## All case studies
 ###################
 
-case-studies: 	$(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS)
+
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS)
+
+case-studies: 	$(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/
 
 ###############################################################################

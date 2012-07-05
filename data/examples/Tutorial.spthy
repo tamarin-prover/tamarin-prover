@@ -311,7 +311,6 @@ lemma Client_session_key_secrecy:
   "
 
 
-/* FIXME: Uncomment
 lemma Client_auth:
   " /* For all traces, where all equality checks succeed, */
     (All x y #i. Eq(x,y) @ i ==> x = y)
@@ -327,7 +326,6 @@ lemma Client_auth:
        )
     )
   "
-*/
 
 /*
   You can verify them by calling
@@ -347,7 +345,6 @@ lemma Client_auth:
   quantifier in front of the trace formula. When modeling protocols such
   existence proof are very useful sanity checks.
 */
-/* FIXME: Uncomment
 lemma Client_session_key_honest_setup:
   exists-trace
   " (All x y #i. Eq(x,y) @ i ==> x = y)
@@ -357,7 +354,6 @@ lemma Client_session_key_honest_setup:
       & not(Ex #r. LtkReveal(S) @ r)
     )
   "
-*/
 
 /*
 
