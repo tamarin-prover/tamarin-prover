@@ -23,7 +23,7 @@ description:
     .
     The paper describing the theory underlying the Tamarin prover was
     accepted at CSF 2012. Its extended version is available from
-    <http://www.infsec.ethz.ch/research/software#TAMARIN>.
+    <http://www.infsec.ethz.ch/research/software/tamarin>.
     .
     The Tamarin prover supports both a batch analysis mode and the
     interactive construction of security proofs using a GUI. Example protocols
@@ -33,9 +33,9 @@ description:
     The Tamarin prover uses maude (<http://maude.cs.uiuc.edu/>) as a
     unification backend and GraphViz (<http://www.graphviz.org/>) to visualize
     constraint systems. Detailed instructions for installing the Tamarin
-    prover are given at <http://www.infsec.ethz.ch/research/software#TAMARIN>.
+    prover are given at <http://www.infsec.ethz.ch/research/software/tamarin>.
 
-homepage:           http://www.infsec.ethz.ch/research/software#TAMARIN
+homepage:           http://www.infsec.ethz.ch/research/software/tamarin
 
 
 --------------

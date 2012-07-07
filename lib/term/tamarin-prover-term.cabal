@@ -23,7 +23,7 @@ description:        This is an internal library of the Tamarin prover for
                     (<http://maude.cs.uiuc.edu/>) as a backend for
                     normalization, equational matching, and unification.
 
-homepage:           http://www.infsec.ethz.ch/research/software#TAMARIN
+homepage:           http://www.infsec.ethz.ch/research/software/tamarin
 
 
 source-repository head

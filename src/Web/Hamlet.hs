@@ -359,7 +359,7 @@ introTpl = [HAMLET|
       <p>
         More information about Tamarin and technical papers describing the underlying
         \ theory can be found on the
-        \ <a href="http://www.infsec.ethz.ch/research/software#TAMARIN"><span class="tamarin">Tamarin</span>
+        \ <a href="http://www.infsec.ethz.ch/research/software/tamarin"><span class="tamarin">Tamarin</span>
         \ webpage</a>.
   |]
 

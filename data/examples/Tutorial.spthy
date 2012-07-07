@@ -12,7 +12,7 @@ Introduction
 This user guide assumes that you have a copy of our CSF'12 paper on
 "Automated Analysis of Diffie-Hellman Protocols and Advanced Security
 Properties", whose extended version is available from
-http://www.infsec.ethz.ch/research/software#TAMARIN.
+http://www.infsec.ethz.ch/research/software/tamarin.
 
 The input files for the Tamarin prover have the extension .spthy, which is
 short for 'security protocol theory'. A security protocol theory specifies

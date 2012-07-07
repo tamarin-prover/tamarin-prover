@@ -9,7 +9,7 @@ Authors: Simon Meier <iridcode@gmail.com>,
 Installation
 ============
 
-See http://www.infsec.ethz.ch/research/software#TAMARIN for detailed
+See http://www.infsec.ethz.ch/research/software/tamarin for detailed
 installation instructions for Linux and Mac. The Tamarin prover also runs on
 Windows. Drop us a mail, if you would like access to a precompiled binary.
 
@@ -81,7 +81,7 @@ Additional Theory
 Most of the theory behind the Tamarin prover is described in our CSF 2012
 paper, whose extended version is available from
 
-  http://www.infsec.ethz.ch/research/software#TAMARIN
+  http://www.infsec.ethz.ch/research/software/tamarin
 
 The implementation exploits a slightly more restricted definition of normal
 dependency graphs and adapted versions of the constraint solving rules that
@@ -259,7 +259,7 @@ security protocol, and several lemmas, which formalize security properties.
 The paper explaining the theory behind Tamarin has been published at CSF 2012
 and its extended version is available from
 
-  http://www.infsec.ethz.ch/research/software#TAMARIN
+  http://www.infsec.ethz.ch/research/software/tamarin
 
 Here, we explain the formal syntax of the security protocol theory format that
 is processed by Tamarin. We recommend first reading the 'Tutorial.spthy'

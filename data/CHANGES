@@ -9,6 +9,8 @@
           solutions, which can be used to characterize the set of solutions of
           a constraint system.
 
+    - new homepage: http://www.infsec.ethz.ch/research/software/tamarin
+
     - fixed: bug in unique facts computation and application.
     - fixed: induction now generates cases for the empty and the non-empty trace
 
