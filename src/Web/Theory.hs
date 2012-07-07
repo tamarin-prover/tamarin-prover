@@ -34,6 +34,7 @@ import           Data.Monoid
 import qualified Data.Text                    as T
 
 import           Control.Basics
+import           Control.Concurrent           (threadDelay)
 
 import           System.Directory
 import           System.FilePath
@@ -398,9 +399,14 @@ htmlThyDbgPath thy path = go path
 -}
 
 -- | Render the image corresponding to the given theory path.
-imgThyPath :: ImageFormat -> FilePath -> FilePath -> (System -> D.Dot ()) -> ClosedTheory
-           -> TheoryPath -> IO FilePath
-imgThyPath imgFormat dotCommand dir compact thy path = go path
+imgThyPath :: ImageFormat
+           -> FilePath               -- ^ 'dot' command
+           -> FilePath               -- ^ Tamarin's cache directory
+           -> (System -> D.Dot ())
+           -> ClosedTheory
+           -> TheoryPath
+           -> IO FilePath
+imgThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
   where
     go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j)
     go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
@@ -421,14 +427,37 @@ imgThyPath imgFormat dotCommand dir compact thy path = go path
 
     -- Render a piece of dot code
     renderDotCode code = do
-      let dotPath = dir </> getDotPath code
+      let dotPath = cacheDir_ </> getDotPath code
           imgPath = addExtension dotPath (show imgFormat)
 
-      imgGenerated <-
-        firstSuccess [ doesFileExist imgPath
-                     , writeFile dotPath code >> dotToImg "dot" dotPath imgPath
-                     , dotToImg "fdp" dotPath imgPath ]
-      return (if imgGenerated then imgPath else imageDir ++ "/img/delete.png")
+          -- A busy wait loop with a maximal number of iterations
+          renderedOrRendering :: Int -> IO Bool
+          renderedOrRendering n = do
+              dotExists <- doesFileExist dotPath
+              imgExists <- doesFileExist imgPath
+              if (n <= 0 || (dotExists && not imgExists))
+                  then do threadDelay 100             -- wait 10 ms
+                          renderedOrRendering (n - 1)
+                  else return imgExists
+
+      -- Ensure that the output directory exists.
+      createDirectoryIfMissing True (takeDirectory dotPath)
+
+      imgGenerated <- firstSuccess
+          [ -- There might be some other thread that rendered or is rendering
+            -- this dot file. We wait at most 50 iterations (0.5 sec timout)
+            -- for this other thread to render the image. Afterwards, we give
+            -- it a try by ourselves.
+            renderedOrRendering 50
+            -- create dot-file and render to image
+          , do writeFile dotPath code
+               dotToImg "dot" dotPath imgPath
+            -- sometimes 'dot' fails => use 'fdp' as a backup tool
+          , dotToImg "fdp" dotPath imgPath
+          ]
+      if imgGenerated
+        then return imgPath
+        else return $ imageDir ++ "/img/delete.png"
 
     dotToImg dotMode dotFile imgFile = do
       (ecode,_out,err) <- readProcessWithExitCode dotCommand
@@ -441,7 +470,7 @@ imgThyPath imgFormat dotCommand dir compact thy path = go path
                       ++show i++" for file "++dotFile++":\n"++err
           return False
 
-    firstSuccess [] = return False
+    firstSuccess []     = return False
     firstSuccess (m:ms) = do
       s <- m
       if s then return True else firstSuccess ms

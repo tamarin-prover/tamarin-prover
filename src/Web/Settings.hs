@@ -25,7 +25,7 @@ staticRoot = "/static"
 
 -- | Subdirectory to use for images.
 imageDir :: FilePath
-imageDir = "tamarin-prover-img"
+imageDir = "img"
 
 -- | Filename for persistent state
 autosaveSubdir :: FilePath

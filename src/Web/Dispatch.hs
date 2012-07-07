@@ -65,6 +65,7 @@ getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: B.ByteString)
 
 -- | Initialization function for the web application.
 withWebUI :: String                          -- ^ Message to output once the sever is ready.
+          -> FilePath                        -- ^ Cache directory.
           -> FilePath                        -- ^ Working directory.
           -> Bool                            -- ^ Load last proof state if present
           -> Bool                            -- ^ Automatically save proof state
@@ -78,7 +79,7 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
-withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug'
+withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser thCloser debug'
           stPath dotCmd' imgFormat' defaultAutoProver' f
   = do
     thy    <- getTheos
@@ -86,9 +87,12 @@ withWebUI readyMsg thDir loadState autosave thLoader thParser thCloser debug'
     thyVar <- newMVar thy
     st     <- static stPath
     when autosave $ createDirectoryIfMissing False autosaveDir
+    -- Don't create parent dirs, as temp-dir should be created by OS.
+    createDirectoryIfMissing False cacheDir_
     (`E.finally` shutdownThreads thrVar) $
       f =<< toWaiApp WebUI
         { workDir            = thDir
+        , cacheDir           = cacheDir_
         , parseThy           = liftIO . thParser
         , closeThy           = thCloser
         , getStatic          = st

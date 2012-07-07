@@ -13,6 +13,10 @@
 
     - fixed: bug in unique facts computation and application.
     - fixed: induction now generates cases for the empty and the non-empty trace
+    - fixed: We no longer use local 'tamarin-prover-img' directories to cache
+             rendered constraint systems. All images are now cached in
+             a 'tamarin-prover-cache/img' subdirectory of the OS specific
+             temporary directory.
 
 * 0.6.1.0
    - fixed: parallel exploration of proof tree was using too much memory

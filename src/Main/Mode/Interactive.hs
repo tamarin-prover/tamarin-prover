@@ -12,13 +12,13 @@ module Main.Mode.Interactive (
   ) where
 
 import           Control.Basics
-import           Control.Exception               (handle, IOException)
+import           Control.Exception               (IOException, handle)
 import           Data.Char                       (toLower)
 import           Data.List
 import           Data.Maybe
 import           Data.String                     (fromString)
 import           System.Console.CmdArgs.Explicit as CmdArgs
-import           System.Directory                (doesFileExist, doesDirectoryExist)
+import           System.Directory                (doesDirectoryExist, doesFileExist, getTemporaryDirectory)
 import           System.FilePath
 
 import           Network.Wai.Handler.Warp        (defaultSettings, settingsHost, settingsPort)
@@ -74,6 +74,9 @@ run thisMode as = case findArg "workDir" as of
       wdIsDir  <- doesDirectoryExist workDir
       if wdIsDir
         then do
+          -- determine caching directory
+          tempDir <- getTemporaryDirectory
+          let cacheDir = tempDir </> "tamarin-prover-cache"
           -- process theories
           _ <- ensureGraphVizDot as
           _ <- ensureMaude as
@@ -89,6 +92,7 @@ run thisMode as = case findArg "workDir" as of
             ]
           withWebUI
             ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
+            cacheDir
             workDir (argExists "loadstate" as) (argExists "autosave" as)
             (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
             (argExists "debug" as) dataDir (dotPath as) readImageFormat

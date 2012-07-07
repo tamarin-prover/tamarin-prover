@@ -483,7 +483,7 @@ getTheoryGraphR idx path = withTheory idx $ \ti -> do
         imgThyPath
           (imageFormat yesod)
           (dotCmd yesod)
-          (workDir yesod)
+          (cacheDir yesod)
           (graphStyle compact compress)
           (tiTheory ti) path
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img

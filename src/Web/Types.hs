@@ -96,6 +96,8 @@ imageFormatMIME SVG = "image/svg+xml"
 data WebUI = WebUI
   { getStatic   :: Static
     -- ^ Settings for static file serving.
+  , cacheDir    :: FilePath
+    -- ^ The caching directory (for storing rendered graphs).
   , workDir     :: FilePath
     -- ^ The working directory (for storing/loading theories).
   -- , parseThy    :: MonadIO m => String -> GenericHandler m ClosedTheory
