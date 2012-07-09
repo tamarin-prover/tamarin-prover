@@ -31,6 +31,7 @@ import           Data.DeriveTH
 import qualified Data.Foldable                  as F
 import           Data.List
 import qualified Data.Map                       as M
+import           Data.Maybe                     (fromMaybe)
 import           Data.Monoid
 import qualified Data.Set                       as S
 import           Safe                           (headMay)
@@ -143,17 +144,17 @@ hasForbiddenExp se =
 --                           [Fact KDFact [expTagToTerm IsExp, Exp p1 x2]] [])
 -- > True
 isForbiddenExp :: Rule a -> Bool
-isForbiddenExp ru = maybe False id $ do
+isForbiddenExp ru = fromMaybe False $ do
     [p1,p2] <- return $ L.get rPrems ru
-    [conc] <- return $ L.get rConcs ru
+    [conc]  <- return $ L.get rConcs ru
     (DnK, viewTerm2 -> FExp _ _) <- kFactView p1
-    (UpK,            b) <- kFactView p2
+    (UpK, b                    ) <- kFactView p2
     (DnK, viewTerm2 -> FExp g c) <- kFactView conc
 
-    -- g should be public and the required inputs for c already required by b
-    guard (sortOfLNTerm g == LSortPub && (inputTerms c \\ inputTerms b == []))
-    return True
-    -- FIXME: change according to:  guard p >> return True  =  return p
+    -- For a forbidden exp the following conditions must hold: g must be of
+    -- sort 'pub' and the required inputs for c are already required by b
+    return $    sortOfLNTerm g == LSortPub
+             && (inputTerms c \\ inputTerms b == [])
 
 
 -- | Compute all contradictions to injective fact instances.
