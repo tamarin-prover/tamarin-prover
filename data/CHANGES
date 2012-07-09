@@ -11,6 +11,21 @@
 
     - new homepage: http://www.infsec.ethz.ch/research/software/tamarin
 
+    - prover:
+        - We now use the following additional normal form condition.
+
+            > There is no edge (i,1)>->(j,1) between two exponentiation rules
+            > i and j.
+
+          This removes the need for exponentiation tags and thereby simplifies
+          the constraint-reduction rules, both in theory and in code.
+
+    - editor support: Tomas Zgraggen contributed a syntax highligthing file
+      for .spthy files for Notepad++ (http://notepad-plus-plus.org/).  This is
+      great text editor for Windows. The syntax-highlighting file is installed
+      in the same directory as the 'examples' directory under
+      'etc/notepad_plus_plus_stphy.xml'.
+
     - fixed: bug in unique facts computation and application.
     - fixed: induction now generates cases for the empty and the non-empty trace
     - fixed: We no longer use local 'tamarin-prover-img' directories to cache
