@@ -27,6 +27,7 @@ module Theory.Constraint.Solver (
   , pcUseInduction
   , pcCaseDistKind
   , pcTraceQuantifier
+  , pcInjectiveFactInsts
 
   , InductionHint(..)
 

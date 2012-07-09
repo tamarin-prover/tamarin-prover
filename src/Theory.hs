@@ -58,6 +58,7 @@ module Theory (
   , getProtoRuleEs
   , getProofContext
   , getClassifiedRules
+  , getInjectiveFactInsts
 
   , getCaseDistinction
 
@@ -157,7 +158,7 @@ data ClosedRuleCache = ClosedRuleCache
        { _crcRules            :: ClassifiedRules
        , _crcUntypedCaseDists :: [CaseDistinction]
        , _crcTypedCaseDists   :: [CaseDistinction]
-       , _crcUniqueFactInsts  :: S.Set FactTag
+       , _crcInjectiveFactInsts  :: S.Set FactTag
        }
        deriving( Eq, Ord, Show )
 
@@ -464,7 +465,7 @@ getProofContext :: Lemma a -> ClosedTheory -> ProofContext
 getProofContext l thy = ProofContext
     ( L.get thySignature                    thy)
     ( L.get (crcRules . thyCache)           thy)
-    ( L.get (crcUniqueFactInsts . thyCache) thy)
+    ( L.get (crcInjectiveFactInsts . thyCache) thy)
     kind
     ( L.get (cases . thyCache)              thy)
     inductionHint
@@ -476,6 +477,10 @@ getProofContext l thy = ProofContext
     inductionHint
       | any (`elem` [TypingLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
       | otherwise                                                        = AvoidInduction
+
+-- | The facts with injective instances in this theory
+getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
+getInjectiveFactInsts = L.get (crcInjectiveFactInsts . thyCache)
 
 -- | The classified set of rules modulo AC in this theory.
 getClassifiedRules :: ClosedTheory -> ClassifiedRules
@@ -804,17 +809,18 @@ prettyOpenTheory =
 prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
 prettyClosedTheory thy =
     prettyTheory prettySignatureWithMaude
-                 ppUniqueFactInsts
+                 ppInjectiveFactInsts
                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
                  prettyClosedProtoRule
                  prettyIncrementalProof
                  thy
   where
-    ppUniqueFactInsts crc = case S.toList $ L.get crcUniqueFactInsts crc of
-      []   -> emptyDoc
-      tags -> lineComment $ sep
-                [ text "looping facts with injective instances:"
-                , nest 2 $ fsepList (text . showFactTagArity) tags ]
+    ppInjectiveFactInsts crc =
+        case S.toList $ L.get crcInjectiveFactInsts crc of
+            []   -> emptyDoc
+            tags -> lineComment $ sep
+                      [ text "looping facts with injective instances:"
+                      , nest 2 $ fsepList (text . showFactTagArity) tags ]
 
 prettyClosedSummary :: Document d => ClosedTheory -> d
 prettyClosedSummary thy =

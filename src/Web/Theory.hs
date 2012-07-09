@@ -29,6 +29,7 @@ where
 import           Data.Char                    (toUpper)
 import           Data.List
 import qualified Data.Map                     as M
+import qualified Data.Set                     as S
 import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Text                    as T
@@ -338,14 +339,20 @@ reqCasesSnippet renderUrl tidx kind thy = vcat $
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
 rulesSnippet thy = vcat
-    [ ppRules "Multiset Rewriting Rules"      crProtocol
+    [ ppWithHeader "Fact Symbols with Injective Instances" $
+        fsepList (text . showFactTagArity) injFacts
+    , ppWithHeader "Multiset Rewriting Rules" $
+        vcat $ intersperse (text "") $ map prettyRuleAC msrRules
     ]
   where
-    rules = getClassifiedRules thy
-    ppRules header l =
-      withTag "h2" [] (text header) $$ withTag "p"
-        [("class","monospace rules")]
-        (vcat (intersperse (text "") $ map prettyRuleAC $ get l rules))
+    msrRules   = get crProtocol $ getClassifiedRules thy
+    injFacts   = S.toList $ getInjectiveFactInsts thy
+    ppWithHeader header body =
+        caseEmptyDoc
+            emptyDoc
+            ( withTag "h2" []                            (text header) $$
+              withTag "p"  [("class","monospace rules")] body             )
+            body
 
 -- | Build the Html document showing the message theory.
 messageSnippet :: HtmlDocument d => ClosedTheory -> d
@@ -353,7 +360,6 @@ messageSnippet thy = vcat
     [ ppSection "Signature"           [prettySignatureWithMaude (get thySignature thy)]
     , ppSection "Construction Rules"  (ppRules crConstruct)
     , ppSection "Destruction Rules"   (ppRules crDestruct)
---    , ppSection "Special Rules"       (ppRules crSpecial)
     ]
   where
     ppRules l = map prettyRuleAC $ get l $ getClassifiedRules thy
