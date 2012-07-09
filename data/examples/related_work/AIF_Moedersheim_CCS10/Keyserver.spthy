@@ -92,7 +92,7 @@ rule RenewKey:
 // ensure that it always makes at least some progress.
 lemma types [typing]:
   "All sk #i. Revoked(sk) @ i ==>
-     ( (Ex f #j. KU(f,sk) @ j & j < i)
+     ( (Ex #j. KU(sk) @ j & j < i)
      | (Ex #j. HonestKey(sk) @ j & j < i)
      )
   "

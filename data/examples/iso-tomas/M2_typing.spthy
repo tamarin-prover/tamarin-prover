@@ -96,7 +96,7 @@ lemma typing_invariant [typing]:
       (Ex #o. GEN_Sessk(k) @ o)
       |
       // or known by the intruder before sending it back to the intruder.
-      (Ex f #o. KU(f,k) @ o & o < i)
+      (Ex f #o. KU(k) @ o & o < i)
   "
 
 // Some secrecy property, which is actually violated because the matching

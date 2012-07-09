@@ -88,7 +88,7 @@ rule MkKey:
 
 lemma types [typing]:
   " (All m d1 d2 #i. PCR_Unbind(d1, d2, m) @ i ==>
-        (Ex f #j. KU(f,m) @ j & j < i)
+        (Ex #j.   KU(m) @ j & j < i)
       | (Ex s #j. Secrets(m, s) @ j)
       | (Ex s #j. Secrets(s, m) @ j)
     )

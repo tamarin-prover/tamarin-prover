@@ -85,7 +85,7 @@ rule Serv_1:
  */
 lemma typing_assertion [typing]:
   "(All m v #i. In_Serv_1(m, v) @ i ==>
-      ( (Ex f #j. KU(f, v) @ j & j < i)
+      ( (Ex #j. KU(v) @ j & j < i)
       | (Ex #j. Out_Client_1(m) @ j)
       )
    )
@@ -99,11 +99,11 @@ lemma typing_assertion [typing]:
  */
 lemma Client_session_key_secrecy_raw [reuse]:
   "  /* For all traces, we have that */
-     All S C f k #i #j.
+     All S C k #i #j.
         /* if client setup a session key 'k' with a server'S' */
         SessKeyC(C, S, k) @ #i
         /* and the adversary deduced 'k' */
-      & KU(f,k) @ #j
+      & KU(k) @ #j
         /* the he must have performed a long-term key reveal on 'S' or 'C'
          * before learning the key 'k'. */
       ==>

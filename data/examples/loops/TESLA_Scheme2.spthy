@@ -77,7 +77,7 @@ lemma Secret_reachable:
   "Ex k #i. Secret(k) @ i"
 
 lemma secrecy:
-  "All k f #i #j. Secret(k) @ i & KU(f,k) @ j ==> F"
+  "All k #i #j. Secret(k) @ i & KU(k) @ j ==> F"
 
 
 

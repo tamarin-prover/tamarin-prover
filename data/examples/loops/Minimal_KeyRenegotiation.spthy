@@ -37,6 +37,6 @@ lemma Secret_reachable [use_induction]:
 // TODO: Investigate the form of the property and its proof when key
 // compromise is allowed.
 lemma secrecy [use_induction]:
-  "All k f #i #j. Secret(k) @ i & KU(f,k) @ j ==> F"
+  "All k #i #j. Secret(k) @ i & KU(k) @ j ==> F"
 
 end

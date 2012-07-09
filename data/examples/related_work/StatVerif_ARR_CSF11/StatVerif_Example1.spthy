@@ -83,8 +83,8 @@ rule UseRightDevice:
 // incorporated in the case distinction precomputation.
 lemma types [typing]:
   "All m #i. Access(m) @ i ==>
-      (Ex f #j. KU(f,m) @ j & j < i)  // Make use of the KU-facts logged
-                                      // by the construction rules.
+      (Ex #j. KU(m) @ j & j < i)  // Make use of the KU-facts logged
+                                  // by the construction rules.
     | (Ex x #j. Exclusive(x,m) @ j)
     | (Ex y #j. Exclusive(m,y) @ j)
   "
