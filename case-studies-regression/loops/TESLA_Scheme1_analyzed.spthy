@@ -137,11 +137,11 @@ next
                              f(kOld.1), f(kOld)
                    ) ▶₁ #vr )
               case Recv1
-              solve( !KU( f_.10, ~k2 ) @ #vk.9 )
+              solve( !KU( ~k2 ) @ #vk.9 )
                 case SendN
-                solve( !KU( f_.15, ~k1 ) @ #vk.15 )
+                solve( !KU( ~k1 ) @ #vk.15 )
                   case SendN
-                  solve( !KU( f_.15, MAC(<'N', m.1, commit_k, ~k1>, ~k2) ) @ #vk.16 )
+                  solve( !KU( MAC(<'N', m.1, commit_k, ~k1>, ~k2) ) @ #vk.16 )
                     case SendN
                     by contradiction // from formulas
                   next
@@ -162,9 +162,9 @@ next
               case Send1
               solve( Sender1( ~k1 ) ▶₀ #j.1 )
                 case Setup
-                solve( !KU( f_.11, ~kNew ) @ #vk.11 )
+                solve( !KU( ~kNew ) @ #vk.11 )
                   case SendN
-                  solve( !KU( f_.17, MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.18 )
+                  solve( !KU( MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.18 )
                     case SendN
                     by contradiction // from formulas
                   next
@@ -175,9 +175,9 @@ next
               qed
             next
               case SendN
-              solve( !KU( f_.11, ~kNew ) @ #vk.11 )
+              solve( !KU( ~kNew ) @ #vk.11 )
                 case SendN
-                solve( !KU( f_.17, MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.18 )
+                solve( !KU( MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.18 )
                   case SendN
                   by contradiction // from formulas
                 next
@@ -190,9 +190,9 @@ next
         qed
       next
         case Recv1
-        solve( !KU( f_.8, ~k1 ) @ #vk.7 )
+        solve( !KU( ~k1 ) @ #vk.7 )
           case SendN
-          solve( !KU( f_.14, MAC(<'1', m1, commit_k>, ~k1) ) @ #vk.15 )
+          solve( !KU( MAC(<'1', m1, commit_k>, ~k1) ) @ #vk.15 )
             case Send1
             by contradiction // from formulas
           next
@@ -223,7 +223,7 @@ analyzing: data/examples/loops/TESLA_Scheme1.spthy
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.431464s
+  processing time: 0.731171s
   claim_reachable (exists-trace): verified (8 steps)
   authentic2 (all-traces): verified (31 steps)
 
@@ -235,7 +235,7 @@ summary of summaries:
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.431464s
+  processing time: 0.731171s
   claim_reachable (exists-trace): verified (8 steps)
   authentic2 (all-traces): verified (31 steps)
 

@@ -216,11 +216,11 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
   case Init_1
   solve( !Pk( $R, pk(~ltkR) ) ▶₁ #i1 )
     case Register_pk_clone_case_1
-    solve( !KU( f_.8, sign(<'1', $I, $R, hkr, 'g'^~ekI>, ~ltkR) ) @ #vk.7 )
+    solve( !KU( sign(<'1', $I, $R, hkr, 'g'^~ekI>, ~ltkR) ) @ #vk.7 )
       case Resp_1
-      solve( !KU( f_, KDF('g'^(~ekI*~ekR)) ) @ #vk.11 )
+      solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.11 )
         case Sessionkey_Reveal_case_1
-        solve( !KU( f_.18, sign(<'1', $I.1, $R.1, x^x.1, 'g'^~tid>, ~ltkR.1)
+        solve( !KU( sign(<'1', $I.1, $R.1, x^x.1, 'g'^~tid>, ~ltkR.1)
                ) @ #vk.20 )
           case Resp_1
           solve( splitEqs(1) )
@@ -229,21 +229,21 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           qed
         next
           case csign
-          by solve( !KU( f_.4, ~ltkR.1 ) @ #vk.26 )
+          by solve( !KU( ~ltkR.1 ) @ #vk.26 )
         qed
       next
         case Sessionkey_Reveal_case_2
-        solve( !KU( f_.18, sign(<'1', $I.1, $R.1, x^x.1, 'g'^~tid>, ~ltkR.1)
+        solve( !KU( sign(<'1', $I.1, $R.1, x^x.1, 'g'^~tid>, ~ltkR.1)
                ) @ #vk.20 )
           case Resp_1
           by solve( splitEqs(1) )
         next
           case csign
-          by solve( !KU( f_.4, ~ltkR.1 ) @ #vk.26 )
+          by solve( !KU( ~ltkR.1 ) @ #vk.26 )
         qed
       next
         case Sessionkey_Reveal_case_3
-        solve( !KU( f_.17, sign(<'2', $I.1, $R.1, x^x.1, 'g'^~tid>, ~ltkI.1)
+        solve( !KU( sign(<'2', $I.1, $R.1, x^x.1, 'g'^~tid>, ~ltkI.1)
                ) @ #vk.20 )
           case Init_2_case_1
           solve( splitEqs(1) )
@@ -255,11 +255,11 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           by solve( splitEqs(1) )
         next
           case csign
-          by solve( !KU( f_.5, ~ltkI.1 ) @ #vk.27 )
+          by solve( !KU( ~ltkI.1 ) @ #vk.27 )
         qed
       next
         case Sessionkey_Reveal_case_4
-        solve( !KU( f_.17, sign(<'2', $I.1, $R.1, x^x.1, 'g'^~tid>, ~ltkI.1)
+        solve( !KU( sign(<'2', $I.1, $R.1, x^x.1, 'g'^~tid>, ~ltkI.1)
                ) @ #vk.20 )
           case Init_2_case_1
           solve( splitEqs(1) )
@@ -271,24 +271,24 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           by solve( splitEqs(1) )
         next
           case csign
-          by solve( !KU( f_.5, ~ltkI.1 ) @ #vk.27 )
+          by solve( !KU( ~ltkI.1 ) @ #vk.27 )
         qed
       next
         case cKDF
-        solve( !KU( f_.2, 'g'^(~ekI*~ekR) ) @ #vk.13 )
+        solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.13 )
           case Init_1
-          by solve( !KU( f_.2, ~ekR ) @ #vk.14 )
+          by solve( !KU( ~ekR ) @ #vk.14 )
         next
           case Resp_1
-          by solve( !KU( f_.2, ~ekI ) @ #vk.14 )
+          by solve( !KU( ~ekI ) @ #vk.14 )
         next
           case cexp
-          by solve( !KU( f_.12, ~ekI ) @ #vk.16 )
+          by solve( !KU( ~ekI ) @ #vk.16 )
         qed
       qed
     next
       case csign
-      by solve( !KU( f_.3, ~ltkR ) @ #vk.14 )
+      by solve( !KU( ~ltkR ) @ #vk.14 )
     qed
   next
     case Register_pk_clone_case_2
@@ -327,14 +327,13 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
   case Register_pk_clone_case_1
   solve( Resp_1( $I, $R, ~ltkR, ~ekR, hki ) ▶₁ #i1 )
     case Resp_1
-    solve( !KU( f_.7, sign(<'2', $I, $R, hki, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
+    solve( !KU( sign(<'2', $I, $R, hki, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
       case Init_2_case_1
-      solve( !KU( f_, KDF('g'^(~ekI*~ekR)) ) @ #vk.11 )
+      solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.11 )
         case Sessionkey_Reveal_case_1
-        solve( !KU( f_.15, sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1)
-               ) @ #vk.16 )
+        solve( !KU( sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.16 )
           case Resp_1
-          solve( !KU( f_.22, sign(<'1', $I.1, $R.1, 'g'^x, 'g'^~tid>, ~ltkR.1)
+          solve( !KU( sign(<'1', $I.1, $R.1, 'g'^x, 'g'^~tid>, ~ltkR.1)
                  ) @ #vk.25 )
             case Resp_1
             solve( splitEqs(1) )
@@ -343,35 +342,33 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
             qed
           next
             case csign
-            by solve( !KU( f_.5, ~ltkR.1 ) @ #vk.31 )
+            by solve( !KU( ~ltkR.1 ) @ #vk.31 )
           qed
         next
           case csign
-          by solve( !KU( f_.5, ~ltkR.1 ) @ #vk.31 )
+          by solve( !KU( ~ltkR.1 ) @ #vk.31 )
         qed
       next
         case Sessionkey_Reveal_case_2
-        solve( !KU( f_.15, sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1)
-               ) @ #vk.16 )
+        solve( !KU( sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.16 )
           case Resp_1
-          solve( !KU( f_.22, sign(<'1', $I.1, $R.1, 'g'^x, 'g'^~tid>, ~ltkR.1)
+          solve( !KU( sign(<'1', $I.1, $R.1, 'g'^x, 'g'^~tid>, ~ltkR.1)
                  ) @ #vk.25 )
             case Resp_1
             by solve( splitEqs(1) )
           next
             case csign
-            by solve( !KU( f_.5, ~ltkR.1 ) @ #vk.31 )
+            by solve( !KU( ~ltkR.1 ) @ #vk.31 )
           qed
         next
           case csign
-          by solve( !KU( f_.5, ~ltkR.1 ) @ #vk.31 )
+          by solve( !KU( ~ltkR.1 ) @ #vk.31 )
         qed
       next
         case Sessionkey_Reveal_case_3
-        solve( !KU( f_.16, sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1)
-               ) @ #vk.16 )
+        solve( !KU( sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.16 )
           case Resp_1
-          solve( !KU( f_.22, sign(<'2', $I.1, $R.1, 'g'^x, 'g'^~tid>, ~ltkI.1)
+          solve( !KU( sign(<'2', $I.1, $R.1, 'g'^x, 'g'^~tid>, ~ltkI.1)
                  ) @ #vk.25 )
             case Init_2_case_1
             solve( splitEqs(1) )
@@ -383,18 +380,17 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
             by solve( splitEqs(1) )
           next
             case csign
-            by solve( !KU( f_.6, ~ltkI.1 ) @ #vk.32 )
+            by solve( !KU( ~ltkI.1 ) @ #vk.32 )
           qed
         next
           case csign
-          by solve( !KU( f_.6, ~ltkR.1 ) @ #vk.32 )
+          by solve( !KU( ~ltkR.1 ) @ #vk.32 )
         qed
       next
         case Sessionkey_Reveal_case_4
-        solve( !KU( f_.16, sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1)
-               ) @ #vk.16 )
+        solve( !KU( sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.16 )
           case Resp_1
-          solve( !KU( f_.22, sign(<'2', $I.1, $R.1, 'g'^x, 'g'^~tid>, ~ltkI.1)
+          solve( !KU( sign(<'2', $I.1, $R.1, 'g'^x, 'g'^~tid>, ~ltkI.1)
                  ) @ #vk.25 )
             case Init_2_case_1
             by solve( splitEqs(1) )
@@ -403,23 +399,23 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
             by solve( splitEqs(1) )
           next
             case csign
-            by solve( !KU( f_.6, ~ltkI.1 ) @ #vk.32 )
+            by solve( !KU( ~ltkI.1 ) @ #vk.32 )
           qed
         next
           case csign
-          by solve( !KU( f_.6, ~ltkR.1 ) @ #vk.32 )
+          by solve( !KU( ~ltkR.1 ) @ #vk.32 )
         qed
       next
         case cKDF
-        solve( !KU( f_.3, 'g'^(~ekI*~ekR) ) @ #vk.18 )
+        solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.18 )
           case Init_1
-          by solve( !KU( f_.3, ~ekR ) @ #vk.19 )
+          by solve( !KU( ~ekR ) @ #vk.19 )
         next
           case Resp_1
-          by solve( !KU( f_.3, ~ekI ) @ #vk.19 )
+          by solve( !KU( ~ekI ) @ #vk.19 )
         next
           case cexp
-          by solve( !KU( f_.17, ~ekI ) @ #vk.21 )
+          by solve( !KU( ~ekI ) @ #vk.21 )
         qed
       qed
     next
@@ -427,7 +423,7 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
       by contradiction // from formulas
     next
       case csign
-      by solve( !KU( f_.4, ~ltkI ) @ #vk.15 )
+      by solve( !KU( ~ltkI ) @ #vk.15 )
     qed
   qed
 next
@@ -450,7 +446,7 @@ analyzing: data/examples/csf12/STS_MAC_fix2.spthy
 analyzed: data/examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.667839s
+  processing time: 2.657207s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (28 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (36 steps)
 
@@ -462,7 +458,7 @@ summary of summaries:
 analyzed: data/examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.667839s
+  processing time: 2.657207s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (28 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (36 steps)
 

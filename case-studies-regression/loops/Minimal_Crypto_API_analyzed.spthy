@@ -28,11 +28,11 @@ rule (modulo E) WrapKey:
   /* has exactly the trivial AC variant */
 
 lemma (modulo E) NewKey_invariant [reuse, use_induction]:
-  all-traces "¬(∃ #i #j h k f. (NewKey( h, k ) @ #i) ∧ (!KU( f, k ) @ #j))"
+  all-traces "¬(∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (!KU( k ) @ #j))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"∃ #i #j h k f. (NewKey( h, k ) @ #i) ∧ (!KU( f, k ) @ #j)"
+"∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (!KU( k ) @ #j)"
 */
 induction
   case empty_trace
@@ -42,13 +42,13 @@ next
   simplify
   solve( (last(#j))  ∥ (last(#i)) )
     case case_1
-    solve( !KU( f, ~k ) @ #j )
+    solve( !KU( ~k ) @ #j )
       case WrapKey
       by contradiction // from formulas
     qed
   next
     case case_2
-    solve( !KU( f, ~k ) @ #j )
+    solve( !KU( ~k ) @ #j )
       case WrapKey
       by contradiction // from formulas
     qed
@@ -80,7 +80,7 @@ analyzing: data/examples/loops/Minimal_Crypto_API.spthy
 analyzed: data/examples/loops/Minimal_Crypto_API.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.079422s
+  processing time: 0.250994s
   NewKey_invariant (all-traces): verified (8 steps)
   NewKey_secrecy (all-traces): verified (2 steps)
 
@@ -92,7 +92,7 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_Crypto_API.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.079422s
+  processing time: 0.250994s
   NewKey_invariant (all-traces): verified (8 steps)
   NewKey_secrecy (all-traces): verified (2 steps)
 

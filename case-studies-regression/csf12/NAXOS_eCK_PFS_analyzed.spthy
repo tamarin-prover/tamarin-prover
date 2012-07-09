@@ -319,20 +319,19 @@ solve( (∃ MatchingSession #i3 #i4 ms.
       case Init_1
       solve( !Pk( $R, 'g'^~x ) ▶₁ #i1 )
         case generate_ltk
-        solve( !KU( f_, h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>)
-               ) @ #vk )
+        solve( !KU( h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>) ) @ #vk )
           case ch2
-          solve( !KU( f_.4, 'g'^(~x*h1(<~eskI, ~lkI>)) ) @ #vk.5 )
+          solve( !KU( 'g'^(~x*h1(<~eskI, ~lkI>)) ) @ #vk.5 )
             case Init_1
-            solve( !KU( f_.2, ~x ) @ #vk.11 )
+            solve( !KU( ~x ) @ #vk.11 )
               case Ltk_reveal
               solve( splitEqs(0) )
                 case split_case_01
-                solve( !KU( f_.3, Y^~lkI ) @ #vk.6 )
+                solve( !KU( Y^~lkI ) @ #vk.6 )
                   case cexp
-                  solve( !KU( f_.1, ~lkI ) @ #vk.12 )
+                  solve( !KU( ~lkI ) @ #vk.12 )
                     case Ltk_reveal
-                    solve( !KU( f_.3, Y^h1(<~eskI, ~lkI>) ) @ #vk.9 )
+                    solve( !KU( Y^h1(<~eskI, ~lkI>) ) @ #vk.9 )
                       case Init_1
                       SOLVED // trace found
                     qed
@@ -362,7 +361,7 @@ analyzing: data/examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.457785s
+  processing time: 6.535308s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -373,7 +372,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.457785s
+  processing time: 6.535308s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================

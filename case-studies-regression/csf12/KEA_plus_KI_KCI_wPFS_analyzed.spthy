@@ -169,23 +169,23 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
   case Init_1
   solve( !Pk( $R, 'g'^~x ) ▶₂ #i1 )
     case generate_ltk
-    solve( !KU( f_, h(<z, 'g'^(~ekI*~x), $I, $R>) ) @ #vk.1 )
+    solve( !KU( h(<z, 'g'^(~ekI*~x), $I, $R>) ) @ #vk.1 )
       case ch
-      solve( !KU( f_.4, 'g'^(~ekI*~x) ) @ #vk.5 )
+      solve( !KU( 'g'^(~ekI*~x) ) @ #vk.5 )
         case Init_1
-        solve( !KU( f_.2, ~x ) @ #vk.9 )
+        solve( !KU( ~x ) @ #vk.9 )
           case Ltk_reveal
           solve( !Ltk( $R, ~lkR ) ▶₂ #i4 )
             case generate_ltk
             solve( !Pk( $I, 'g'^~x.1 ) ▶₃ #i4 )
               case generate_ltk
-              solve( !KU( f_.4, 'g'^(~ekR*~lkI) ) @ #vk.7 )
+              solve( !KU( 'g'^(~ekR*~lkI) ) @ #vk.7 )
                 case Resp_1
-                solve( !KU( f_.3, ~lkI ) @ #vk.11 )
+                solve( !KU( ~lkI ) @ #vk.11 )
                   case Ltk_reveal
-                  solve( !KU( f_, 'g'^~ekR ) @ #vk.7 )
+                  solve( !KU( 'g'^~ekR ) @ #vk.7 )
                     case Resp_1
-                    solve( !KU( f_.1, 'g'^~ekI ) @ #vk.6 )
+                    solve( !KU( 'g'^~ekI ) @ #vk.6 )
                       case Init_1
                       SOLVED // trace found
                     qed
@@ -252,19 +252,19 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
   case generate_ltk
   solve( !Pk( $I, 'g'^~x ) ▶₃ #i1 )
     case generate_ltk
-    solve( !KU( f_, h(<'g'^(~ekR*~x), z, $I, $R>) ) @ #vk.1 )
+    solve( !KU( h(<'g'^(~ekR*~x), z, $I, $R>) ) @ #vk.1 )
       case ch
-      solve( !KU( f_.2, 'g'^(~ekR*~x) ) @ #vk.3 )
+      solve( !KU( 'g'^(~ekR*~x) ) @ #vk.3 )
         case Resp_1
-        solve( !KU( f_.2, ~x ) @ #vk.9 )
+        solve( !KU( ~x ) @ #vk.9 )
           case Ltk_reveal
           solve( !Ltk( $I, ~lkI ) ▶₁ #i4 )
             case generate_ltk
-            solve( !KU( f_.3, 'g'^(~ekI*~lkR) ) @ #vk.6 )
+            solve( !KU( 'g'^(~ekI*~lkR) ) @ #vk.6 )
               case Init_1
-              solve( !KU( f_.2, ~lkR ) @ #vk.10 )
+              solve( !KU( ~lkR ) @ #vk.10 )
                 case Ltk_reveal
-                solve( !KU( f_, 'g'^~ekI ) @ #vk.6 )
+                solve( !KU( 'g'^~ekI ) @ #vk.6 )
                   case Init_1
                   SOLVED // trace found
                 qed
@@ -292,7 +292,7 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.81471s
+  processing time: 0.957886s
   keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -304,7 +304,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.81471s
+  processing time: 0.957886s
   keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

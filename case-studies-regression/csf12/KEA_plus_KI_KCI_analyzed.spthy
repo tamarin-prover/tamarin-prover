@@ -164,26 +164,26 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
   case Init_1
   solve( !Pk( $R, 'g'^~x ) ▶₂ #i1 )
     case generate_ltk
-    solve( !KU( f_, h(<z, 'g'^(~ekI*~x), $I, $R>) ) @ #vk.1 )
+    solve( !KU( h(<z, 'g'^(~ekI*~x), $I, $R>) ) @ #vk.1 )
       case Sessk_reveal
       by contradiction // from formulas
     next
       case ch
-      solve( !KU( f_.4, 'g'^(~ekI*~x) ) @ #vk.5 )
+      solve( !KU( 'g'^(~ekI*~x) ) @ #vk.5 )
         case Init_1
-        solve( !KU( f_.2, ~x ) @ #vk.9 )
+        solve( !KU( ~x ) @ #vk.9 )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case cexp
-        solve( !KU( f_.8, ~ekI ) @ #vk.11 )
+        solve( !KU( ~ekI ) @ #vk.11 )
           case Ephk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk
-        solve( !KU( f_.2, ~ekI ) @ #vk.9 )
+        solve( !KU( ~ekI ) @ #vk.9 )
           case Ephk_reveal
           by contradiction // from formulas
         qed
@@ -241,26 +241,26 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
   case generate_ltk
   solve( !Pk( $I, 'g'^~x ) ▶₃ #i1 )
     case generate_ltk
-    solve( !KU( f_, h(<'g'^(~ekR*~x), z, $I, $R>) ) @ #vk.1 )
+    solve( !KU( h(<'g'^(~ekR*~x), z, $I, $R>) ) @ #vk.1 )
       case Sessk_reveal
       by contradiction // from formulas
     next
       case ch
-      solve( !KU( f_.2, 'g'^(~ekR*~x) ) @ #vk.3 )
+      solve( !KU( 'g'^(~ekR*~x) ) @ #vk.3 )
         case Resp_1
-        solve( !KU( f_.2, ~x ) @ #vk.9 )
+        solve( !KU( ~x ) @ #vk.9 )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case cexp
-        solve( !KU( f_.8, ~ekR ) @ #vk.11 )
+        solve( !KU( ~ekR ) @ #vk.11 )
           case Ephk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk
-        solve( !KU( f_.2, ~ekR ) @ #vk.9 )
+        solve( !KU( ~ekR ) @ #vk.9 )
           case Ephk_reveal
           by contradiction // from formulas
         qed
@@ -284,7 +284,7 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.804019s
+  processing time: 0.850887s
   keaplus_initiator_key (all-traces): verified (12 steps)
   keaplus_responder_key (all-traces): verified (12 steps)
 
@@ -296,7 +296,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.804019s
+  processing time: 0.850887s
   keaplus_initiator_key (all-traces): verified (12 steps)
   keaplus_responder_key (all-traces): verified (12 steps)
 

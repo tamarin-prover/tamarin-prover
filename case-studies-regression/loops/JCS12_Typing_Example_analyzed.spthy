@@ -92,15 +92,14 @@ lemma (modulo E) typing_assertion [typing]:
   all-traces
   "∀ m v #i.
     (In_Serv_1( m, v ) @ #i) ⇒
-    ((∃ f #j. (!KU( f, v ) @ #j) ∧ (#j < #i)) ∨
-     (∃ #j. Out_Client_1( m ) @ #j))"
+    ((∃ #j. (!KU( v ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. Out_Client_1( m ) @ #j))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ m v #i.
   (In_Serv_1( m, v ) @ #i)
  ∧
-  (∀ f #j. (!KU( f, v ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (!KU( v ) @ #j) ⇒ ¬(#j < #i)) ∧
   (∀ #j. (Out_Client_1( m ) @ #j) ⇒ ⊥)"
 */
 induction
@@ -110,20 +109,19 @@ next
   case non_empty_trace
   simplify
   solve( (last(#i))  ∥
-         (∃ f #j. (!KU( f, v ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j. (!KU( v ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j. (Out_Client_1( m ) @ #j) ∧ ¬(last(#j))) )
     case case_1
     solve( !Ltk( $S, ~ltkS ) ▶₀ #i )
       case Register_pk
       solve( !Pk( z, pkC ) ▶₂ #i )
         case Register_pk
-        solve( !KU( f_, aenc(<z, $A, v>, pk(~ltkS)) ) @ #vk )
+        solve( !KU( aenc(<z, $A, v>, pk(~ltkS)) ) @ #vk )
           case Client_1
           by contradiction // from formulas
         next
           case Serv_1_case_1
-          solve( (∃ f #j.
-                   (!KU( f, <$A, v> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+          solve( (∃ #j. (!KU( <$A, v> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                  (∃ #j.
                    (Out_Client_1( aenc(<z, $S, $A, v>, pk(~ltkS.1)) ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -131,7 +129,7 @@ next
           qed
         next
           case Serv_1_case_2
-          solve( (∃ f #j. (!KU( f, z.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+          solve( (∃ #j. (!KU( z.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                  (∃ #j.
                    (Out_Client_1( aenc(<z.2, $A.1, z.1>, pk(~ltkS.1)) ) @ #j)
                   ∧
@@ -159,15 +157,15 @@ qed
 
 lemma (modulo E) Client_session_key_secrecy_raw [reuse]:
   all-traces
-  "∀ S C f k #i #j.
-    ((SessKeyC( C, S, k ) @ #i) ∧ (!KU( f, k ) @ #j)) ⇒
+  "∀ S C k #i #j.
+    ((SessKeyC( C, S, k ) @ #i) ∧ (!KU( k ) @ #j)) ⇒
     ((∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #j)) ∨
      (∃ #r. (LtkReveal( C ) @ #r) ∧ (#r < #j)))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"∃ S C f k #i #j.
-  (SessKeyC( C, S, k ) @ #i) ∧ (!KU( f, k ) @ #j)
+"∃ S C k #i #j.
+  (SessKeyC( C, S, k ) @ #i) ∧ (!KU( k ) @ #j)
  ∧
   (∀ #r. (LtkReveal( S ) @ #r) ⇒ ¬(#r < #j)) ∧
   (∀ #r. (LtkReveal( C ) @ #r) ⇒ ¬(#r < #j))"
@@ -177,15 +175,15 @@ solve( Client_1( C, S, k ) ▶₀ #i )
   case Client_1
   solve( !Ltk( $C, ltkC ) ▶₂ #i )
     case Register_pk
-    solve( !KU( f, ~k ) @ #j )
+    solve( !KU( ~k ) @ #j )
       case Client_1
-      solve( !KU( f_.1, ~ltk.1 ) @ #vk.1 )
+      solve( !KU( ~ltk.1 ) @ #vk.1 )
         case Reveal_ltk
         by contradiction // from formulas
       qed
     next
       case Serv_1
-      solve( !KU( f_.2, ~ltk.2 ) @ #vk.2 )
+      solve( !KU( ~ltk.2 ) @ #vk.2 )
         case Reveal_ltk
         by contradiction // from formulas
       qed
@@ -242,9 +240,9 @@ solve( Client_1( C, S, k ) ▶₀ #i )
   case Client_1
   solve( !Ltk( $C, ltkC ) ▶₂ #i )
     case Register_pk
-    solve( !KU( f_, aenc(<'2', ~k>, pk(~ltk)) ) @ #vk )
+    solve( !KU( aenc(<'2', ~k>, pk(~ltk)) ) @ #vk )
       case Serv_1
-      solve( !KU( f_, aenc(<'1', $C, ~k>, pk(~ltkS)) ) @ #vk.1 )
+      solve( !KU( aenc(<'1', $C, ~k>, pk(~ltkS)) ) @ #vk.1 )
         case Client_1
         by contradiction // from formulas
       next
@@ -287,7 +285,7 @@ analyzing: data/examples/loops/JCS12_Typing_Example.spthy
 analyzed: data/examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.308781s
+  processing time: 0.484641s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
@@ -301,7 +299,7 @@ summary of summaries:
 analyzed: data/examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.308781s
+  processing time: 0.484641s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)

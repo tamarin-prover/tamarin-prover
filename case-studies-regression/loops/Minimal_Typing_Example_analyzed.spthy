@@ -36,15 +36,14 @@ lemma (modulo E) typing_assertion [typing]:
   all-traces
   "∀ m k #i.
     (In_Responder( m, k ) @ #i) ⇒
-    ((∃ f #j. (!KU( f, k ) @ #j) ∧ (#j < #i)) ∨
-     (∃ #j. Out_Initiator( m ) @ #j))"
+    ((∃ #j. (!KU( k ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. Out_Initiator( m ) @ #j))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ m k #i.
   (In_Responder( m, k ) @ #i)
  ∧
-  (∀ f #j. (!KU( f, k ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (!KU( k ) @ #j) ⇒ ¬(#j < #i)) ∧
   (∀ #j. (Out_Initiator( m ) @ #j) ⇒ ⊥)"
 */
 induction
@@ -54,17 +53,17 @@ next
   case non_empty_trace
   simplify
   solve( (last(#i))  ∥
-         (∃ f #j. (!KU( f, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j. (!KU( k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j. (Out_Initiator( senc(<k, sec>, key) ) @ #j) ∧ ¬(last(#j))) )
     case case_1
     solve( !Key( key ) ▶₀ #i )
       case Setup_Key
-      solve( !KU( f_, senc(<k.1, sec>, ~k) ) @ #vk )
+      solve( !KU( senc(<k.1, sec>, ~k) ) @ #vk )
         case Initiator
         by contradiction // from formulas
       next
         case Responder
-        solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
+        solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                (∃ #j. (Out_Initiator( senc(<t, sec.1>, ~k.2) ) @ #j) ∧ ¬(last(#j))) )
           case case_1
           by contradiction // cyclic
@@ -101,7 +100,7 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( !Key( key ) ▶₀ #i )
   case Setup_Key
-  solve( !KU( f_, ~k ) @ #vk.1 )
+  solve( !KU( ~k ) @ #vk.1 )
     case Reveal_Key
     by contradiction // from formulas
   qed
@@ -120,9 +119,9 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( !Key( k ) ▶₀ #i )
   case Setup_Key
-  solve( !KU( f_, ~pub ) @ #vk )
+  solve( !KU( ~pub ) @ #vk )
     case Responder
-    solve( !KU( f_, senc(<~pub, ~sec>, ~k) ) @ #vk.1 )
+    solve( !KU( senc(<~pub, ~sec>, ~k) ) @ #vk.1 )
       case Initiator
       SOLVED // trace found
     qed
@@ -144,7 +143,7 @@ analyzing: data/examples/loops/Minimal_Typing_Example.spthy
 analyzed: data/examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.133777s
+  processing time: 0.211164s
   typing_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (4 steps)
   Public_part_public (exists-trace): verified (5 steps)
@@ -157,7 +156,7 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.133777s
+  processing time: 0.211164s
   typing_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (4 steps)
   Public_part_public (exists-trace): verified (5 steps)

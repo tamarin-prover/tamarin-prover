@@ -60,7 +60,7 @@ lemma (modulo E) types [typing]:
   all-traces
   "∀ m #i.
     (Access( m ) @ #i) ⇒
-    (((∃ f #j. (!KU( f, m ) @ #j) ∧ (#j < #i)) ∨
+    (((∃ #j. (!KU( m ) @ #j) ∧ (#j < #i)) ∨
       (∃ x #j. Exclusive( x, m ) @ #j)) ∨
      (∃ y #j. Exclusive( m, y ) @ #j))"
 /* proof based on the same lemma modulo AC */
@@ -69,7 +69,7 @@ guarded formula characterizing all counter-examples:
 "∃ m #i.
   (Access( m ) @ #i)
  ∧
-  (∀ f #j. (!KU( f, m ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (!KU( m ) @ #j) ⇒ ¬(#j < #i)) ∧
   (∀ x #j. (Exclusive( x, m ) @ #j) ⇒ ⊥) ∧
   (∀ y #j. (Exclusive( m, y ) @ #j) ⇒ ⊥)"
 */
@@ -80,7 +80,7 @@ next
   case non_empty_trace
   simplify
   solve( (last(#i))  ∥
-         (∃ f #j. (!KU( f, m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j. (!KU( m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ x #j. (Exclusive( x, m ) @ #j) ∧ ¬(last(#j)))  ∥
          (∃ y #j. (Exclusive( m, y ) @ #j) ∧ ¬(last(#j))) )
     case case_1
@@ -88,12 +88,12 @@ next
       case Decrypt_Left
       solve( !Device_Left( sk ) ▶₀ #i )
         case Select_Left_case_1
-        solve( !KU( f_, aenc(<m, y>, pk(~sk)) ) @ #vk )
+        solve( !KU( aenc(<m, y>, pk(~sk)) ) @ #vk )
           case Alice
           by contradiction // from formulas
         next
           case Decrypt_Left_case_1
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -107,7 +107,7 @@ next
           qed
         next
           case Decrypt_Left_case_2
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -121,7 +121,7 @@ next
           qed
         next
           case Decrypt_Right_case_1
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -135,7 +135,7 @@ next
           qed
         next
           case Decrypt_Right_case_2
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -153,12 +153,12 @@ next
         qed
       next
         case Select_Left_case_2
-        solve( !KU( f_, aenc(<m, y>, pk(~sk)) ) @ #vk )
+        solve( !KU( aenc(<m, y>, pk(~sk)) ) @ #vk )
           case Alice
           by contradiction // from formulas
         next
           case Decrypt_Left_case_1
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -172,7 +172,7 @@ next
           qed
         next
           case Decrypt_Left_case_2
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -186,7 +186,7 @@ next
           qed
         next
           case Decrypt_Right_case_1
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -200,7 +200,7 @@ next
           qed
         next
           case Decrypt_Right_case_2
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -221,12 +221,12 @@ next
       case Decrypt_Right
       solve( !Device_Right( sk ) ▶₀ #i )
         case Select_Right_case_1
-        solve( !KU( f_, aenc(<x, m>, pk(~sk)) ) @ #vk )
+        solve( !KU( aenc(<x, m>, pk(~sk)) ) @ #vk )
           case Alice
           by contradiction // from formulas
         next
           case Decrypt_Left_case_1
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -240,7 +240,7 @@ next
           qed
         next
           case Decrypt_Left_case_2
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -254,7 +254,7 @@ next
           qed
         next
           case Decrypt_Right_case_1
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -268,7 +268,7 @@ next
           qed
         next
           case Decrypt_Right_case_2
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -286,12 +286,12 @@ next
         qed
       next
         case Select_Right_case_2
-        solve( !KU( f_, aenc(<x, m>, pk(~sk)) ) @ #vk )
+        solve( !KU( aenc(<x, m>, pk(~sk)) ) @ #vk )
           case Alice
           by contradiction // from formulas
         next
           case Decrypt_Left_case_1
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -305,7 +305,7 @@ next
           qed
         next
           case Decrypt_Left_case_2
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -319,7 +319,7 @@ next
           qed
         next
           case Decrypt_Right_case_1
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -333,7 +333,7 @@ next
           qed
         next
           case Decrypt_Right_case_2
-          solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
@@ -486,9 +486,9 @@ guarded formula characterizing all satisfying traces:
 "∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
 */
 simplify
-solve( !KU( f_, ~x ) @ #vk )
+solve( !KU( ~x ) @ #vk )
   case Decrypt_Left_case_2
-  solve( !KU( f_, aenc(<~x, y.1>, pk(~sk.1)) ) @ #vk.1 )
+  solve( !KU( aenc(<~x, y.1>, pk(~sk.1)) ) @ #vk.1 )
     case Alice
     solve( Device_Alice( ~sk ) ▶₀ #i )
       case Alice
@@ -521,7 +521,7 @@ analyzing: data/examples/loops/RFID_Simple.spthy
 analyzed: data/examples/loops/RFID_Simple.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.762794s
+  processing time: 2.516025s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)
@@ -535,7 +535,7 @@ summary of summaries:
 analyzed: data/examples/loops/RFID_Simple.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.762794s
+  processing time: 2.516025s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)

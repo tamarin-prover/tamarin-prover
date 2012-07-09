@@ -155,7 +155,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
   case Init_1
   solve( !Pk( $R, 'g'^~x ) ▶₂ #i1 )
     case generate_ltk
-    solve( !KU( f_, h(<z, 'g'^(~lkI*~x)>) ) @ #vk.1 )
+    solve( !KU( h(<z, 'g'^(~lkI*~x)>) ) @ #vk.1 )
       case Sessk_reveal_case_1
       by contradiction // from formulas
     next
@@ -169,31 +169,31 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
       by contradiction // from formulas
     next
       case ch
-      solve( !KU( f_.3, 'g'^(~lkI*~x) ) @ #vk.4 )
+      solve( !KU( 'g'^(~lkI*~x) ) @ #vk.4 )
         case cexp
-        solve( !KU( f_.4, ~lkI ) @ #vk.7 )
+        solve( !KU( ~lkI ) @ #vk.7 )
           case Ltk_reveal
           solve( !Ltk( $R, ~lkR ) ▶₂ #i4 )
             case generate_ltk
             solve( !Pk( $I, 'g'^~x.1 ) ▶₃ #i4 )
               case generate_ltk
-              solve( !KU( f_.5, ~x ) @ #vk.8 )
+              solve( !KU( ~x ) @ #vk.8 )
                 case Ltk_reveal
-                solve( !KU( f_.4, 'g'^(~ekI*~ekR) ) @ #vk.7 )
+                solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.7 )
                   case Init_1
-                  solve( !KU( f_.4, ~ekR ) @ #vk.10 )
+                  solve( !KU( ~ekR ) @ #vk.10 )
                     case Ephk_reveal
                     by contradiction // from formulas
                   qed
                 next
                   case Resp_1
-                  solve( !KU( f_.4, ~ekI ) @ #vk.10 )
+                  solve( !KU( ~ekI ) @ #vk.10 )
                     case Ephk_reveal
                     by contradiction // from formulas
                   qed
                 next
                   case cexp
-                  solve( !KU( f_.5, ~ekI ) @ #vk.11 )
+                  solve( !KU( ~ekI ) @ #vk.11 )
                     case Ephk_reveal
                     by contradiction // from formulas
                   qed
@@ -204,27 +204,27 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( f_.2, ~lkI ) @ #vk.5 )
+        solve( !KU( ~lkI ) @ #vk.5 )
           case Ltk_reveal
           solve( !Ltk( $R, ~lkR ) ▶₂ #i4 )
             case generate_ltk
             solve( !Pk( $I, 'g'^~x.1 ) ▶₃ #i4 )
               case generate_ltk
-              solve( !KU( f_.3, 'g'^(~ekI*~ekR) ) @ #vk.5 )
+              solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.5 )
                 case Init_1
-                solve( !KU( f_.3, ~ekR ) @ #vk.7 )
+                solve( !KU( ~ekR ) @ #vk.7 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case Resp_1
-                solve( !KU( f_.3, ~ekI ) @ #vk.7 )
+                solve( !KU( ~ekI ) @ #vk.7 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case cexp
-                solve( !KU( f_.4, ~ekI ) @ #vk.9 )
+                solve( !KU( ~ekI ) @ #vk.9 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
@@ -234,27 +234,27 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( f_.2, ~x ) @ #vk.5 )
+        solve( !KU( ~x ) @ #vk.5 )
           case Ltk_reveal
           solve( !Ltk( $R, ~lkR ) ▶₂ #i4 )
             case generate_ltk
             solve( !Pk( $I, 'g'^~x.1 ) ▶₃ #i4 )
               case generate_ltk
-              solve( !KU( f_.3, 'g'^(~ekI*~ekR) ) @ #vk.5 )
+              solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.5 )
                 case Init_1
-                solve( !KU( f_.3, ~ekR ) @ #vk.7 )
+                solve( !KU( ~ekR ) @ #vk.7 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case Resp_1
-                solve( !KU( f_.3, ~ekI ) @ #vk.7 )
+                solve( !KU( ~ekI ) @ #vk.7 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case cexp
-                solve( !KU( f_.4, ~ekI ) @ #vk.9 )
+                solve( !KU( ~ekI ) @ #vk.9 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
@@ -301,7 +301,7 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
   case generate_ltk
   solve( !Pk( $I, 'g'^~x ) ▶₃ #i1 )
     case generate_ltk
-    solve( !KU( f_, h(<z, 'g'^(~lkR*~x)>) ) @ #vk.1 )
+    solve( !KU( h(<z, 'g'^(~lkR*~x)>) ) @ #vk.1 )
       case Sessk_reveal_case_1
       by contradiction // from formulas
     next
@@ -315,29 +315,29 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
       by contradiction // from formulas
     next
       case ch
-      solve( !KU( f_.3, 'g'^(~lkR*~x) ) @ #vk.4 )
+      solve( !KU( 'g'^(~lkR*~x) ) @ #vk.4 )
         case cexp
-        solve( !KU( f_.4, ~lkR ) @ #vk.7 )
+        solve( !KU( ~lkR ) @ #vk.7 )
           case Ltk_reveal
           solve( !Ltk( $I, ~lkI ) ▶₁ #i4 )
             case generate_ltk
-            solve( !KU( f_.4, ~x ) @ #vk.8 )
+            solve( !KU( ~x ) @ #vk.8 )
               case Ltk_reveal
-              solve( !KU( f_.3, 'g'^(~ekI*~ekR) ) @ #vk.7 )
+              solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.7 )
                 case Init_1
-                solve( !KU( f_.3, ~ekR ) @ #vk.9 )
+                solve( !KU( ~ekR ) @ #vk.9 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case Resp_1
-                solve( !KU( f_.3, ~ekI ) @ #vk.9 )
+                solve( !KU( ~ekI ) @ #vk.9 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
               next
                 case cexp
-                solve( !KU( f_.4, ~ekI ) @ #vk.10 )
+                solve( !KU( ~ekI ) @ #vk.10 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 qed
@@ -347,25 +347,25 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( f_.2, ~lkR ) @ #vk.5 )
+        solve( !KU( ~lkR ) @ #vk.5 )
           case Ltk_reveal
           solve( !Ltk( $I, ~lkI ) ▶₁ #i4 )
             case generate_ltk
-            solve( !KU( f_.2, 'g'^(~ekI*~ekR) ) @ #vk.5 )
+            solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.5 )
               case Init_1
-              solve( !KU( f_.2, ~ekR ) @ #vk.6 )
+              solve( !KU( ~ekR ) @ #vk.6 )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
             next
               case Resp_1
-              solve( !KU( f_.2, ~ekI ) @ #vk.6 )
+              solve( !KU( ~ekI ) @ #vk.6 )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
             next
               case cexp
-              solve( !KU( f_.3, ~ekI ) @ #vk.8 )
+              solve( !KU( ~ekI ) @ #vk.8 )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
@@ -374,25 +374,25 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( f_.2, ~x ) @ #vk.5 )
+        solve( !KU( ~x ) @ #vk.5 )
           case Ltk_reveal
           solve( !Ltk( $I, ~lkI ) ▶₁ #i4 )
             case generate_ltk
-            solve( !KU( f_.2, 'g'^(~ekI*~ekR) ) @ #vk.5 )
+            solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.5 )
               case Init_1
-              solve( !KU( f_.2, ~ekR ) @ #vk.6 )
+              solve( !KU( ~ekR ) @ #vk.6 )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
             next
               case Resp_1
-              solve( !KU( f_.2, ~ekI ) @ #vk.6 )
+              solve( !KU( ~ekI ) @ #vk.6 )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
             next
               case cexp
-              solve( !KU( f_.3, ~ekI ) @ #vk.8 )
+              solve( !KU( ~ekI ) @ #vk.8 )
                 case Ephk_reveal
                 by contradiction // from formulas
               qed
@@ -419,7 +419,7 @@ analyzing: data/examples/csf12/UM_wPFS.spthy
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.197046s
+  processing time: 1.321619s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 
@@ -431,7 +431,7 @@ summary of summaries:
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.197046s
+  processing time: 1.321619s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 

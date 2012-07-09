@@ -196,22 +196,22 @@ solve( (∃ ss #i4 #i5 C D ms.
               case Resp_1
               solve( splitEqs(0) )
                 case split_case_1
-                solve( !KU( f_.1,
-                            MAC(KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>),
+                solve( !KU( MAC(KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                                     aenc(~m2, pk(~ltkA))>),
                                 <'Init', $I, $R, aenc(~m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>)
                        ) @ #vk.1 )
                   case cMAC
-                  solve( !KU( f_,
-                              KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>)
+                  solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                                   aenc(~m2, pk(~ltkA))>)
                          ) @ #vk.1 )
                     case cKDF
-                    solve( !KU( f_.10, ~m1 ) @ #vk.13 )
+                    solve( !KU( ~m1 ) @ #vk.13 )
                       case Ephk_reveal
-                      solve( !KU( f_.11, ~m2 ) @ #vk.14 )
+                      solve( !KU( ~m2 ) @ #vk.14 )
                         case Ephk_reveal
-                        solve( !KU( f_.2, aenc(~m1, pk(~lkR)) ) @ #vk.5 )
+                        solve( !KU( aenc(~m1, pk(~lkR)) ) @ #vk.5 )
                           case Init_1
-                          solve( !KU( f_.9, aenc(~m2, pk(~ltkA)) ) @ #vk.14 )
+                          solve( !KU( aenc(~m2, pk(~ltkA)) ) @ #vk.14 )
                             case Resp_1
                             SOLVED // trace found
                           qed
@@ -244,7 +244,7 @@ analyzing: data/examples/csf12/KAS2_eCK.spthy
 analyzed: data/examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.67406s
+  processing time: 2.750259s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ------------------------------------------------------------------------------
@@ -255,7 +255,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.67406s
+  processing time: 2.750259s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

@@ -51,11 +51,11 @@ induction
 qed
 
 lemma (modulo E) secrecy [use_induction]:
-  all-traces "∀ k f #i #j. ((Secret( k ) @ #i) ∧ (!KU( f, k ) @ #j)) ⇒ (⊥)"
+  all-traces "∀ k #i #j. ((Secret( k ) @ #i) ∧ (!KU( k ) @ #j)) ⇒ (⊥)"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
-"∃ k f #i #j. (Secret( k ) @ #i) ∧ (!KU( f, k ) @ #j)"
+"∃ k #i #j. (Secret( k ) @ #i) ∧ (!KU( k ) @ #j)"
 */
 induction
   case empty_trace
@@ -69,9 +69,9 @@ next
       case Receive
       solve( Receiver( k0 ) ▶₀ #i )
         case Receive
-        solve( !KU( f_, senc(k, k0) ) @ #vk )
+        solve( !KU( senc(k, k0) ) @ #vk )
           case Send
-          solve( !KU( f, ~k ) @ #j )
+          solve( !KU( ~k ) @ #j )
             case Send
             by contradiction // from formulas
           qed
@@ -81,11 +81,11 @@ next
         qed
       next
         case Setup
-        solve( !KU( f_, senc(k.1, ~k) ) @ #vk )
+        solve( !KU( senc(k.1, ~k) ) @ #vk )
           case Send
-          solve( !KU( f, ~k.1 ) @ #j )
+          solve( !KU( ~k.1 ) @ #j )
             case Send
-            by solve( !KU( f_, ~k ) @ #vk.1 )
+            by solve( !KU( ~k ) @ #vk.1 )
           qed
         next
           case csenc
@@ -94,14 +94,14 @@ next
       qed
     next
       case Send
-      solve( !KU( f, ~k ) @ #j )
+      solve( !KU( ~k ) @ #j )
         case Send
         solve( Sender( k0 ) ▶₀ #i )
           case Send
           by contradiction // from formulas
         next
           case Setup
-          by solve( !KU( f_, ~k ) @ #vk )
+          by solve( !KU( ~k ) @ #vk )
         qed
       qed
     qed
@@ -111,26 +111,26 @@ next
       case Receive
       solve( Receiver( k0 ) ▶₀ #i )
         case Receive
-        solve( !KU( f_, senc(k, k0) ) @ #vk )
+        solve( !KU( senc(k, k0) ) @ #vk )
           case Send
-          by solve( !KU( f, ~k ) @ #i )
+          by solve( !KU( ~k ) @ #i )
         next
           case csenc
           by contradiction // from formulas
         qed
       next
         case Setup
-        solve( !KU( f_, senc(k.1, ~k) ) @ #vk )
+        solve( !KU( senc(k.1, ~k) ) @ #vk )
           case Send
-          by solve( !KU( f, ~k.1 ) @ #i )
+          by solve( !KU( ~k.1 ) @ #i )
         next
           case csenc
-          by solve( !KU( f_, ~k ) @ #vk.1 )
+          by solve( !KU( ~k ) @ #vk.1 )
         qed
       qed
     next
       case Send
-      solve( !KU( f, ~k ) @ #j )
+      solve( !KU( ~k ) @ #j )
         case Send
         by contradiction // from formulas
       qed
@@ -153,7 +153,7 @@ analyzing: data/examples/loops/Minimal_KeyRenegotiation.spthy
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.145453s
+  processing time: 0.217028s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (28 steps)
 
@@ -165,7 +165,7 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.145453s
+  processing time: 0.217028s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (28 steps)
 

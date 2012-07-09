@@ -65,24 +65,22 @@ lemma (modulo E) types [typing, reuse]:
   all-traces
   "(∀ ni m1 #i.
      (IN_R_1_ni( ni, m1 ) @ #i) ⇒
-     ((∃ f #j. (!KU( f, ni ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. OUT_I_1( m1 ) @ #j))) ∧
+     ((∃ #j. (!KU( ni ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_I_1( m1 ) @ #j))) ∧
    (∀ nr m2 #i.
      (IN_I_2_nr( nr, m2 ) @ #i) ⇒
-     ((∃ f #j. (!KU( f, nr ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. OUT_R_1( m2 ) @ #j)))"
+     ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_R_1( m2 ) @ #j)))"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∃ ni m1 #i.
    (IN_R_1_ni( ni, m1 ) @ #i)
   ∧
-   (∀ f #j. (!KU( f, ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+   (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
    (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
  (∃ nr m2 #i.
    (IN_I_2_nr( nr, m2 ) @ #i)
   ∧
-   (∀ f #j. (!KU( f, nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+   (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
    (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥))"
 */
 induction
@@ -94,29 +92,28 @@ next
   solve( (∃ ni m1 #i.
            (IN_R_1_ni( ni, m1 ) @ #i)
           ∧
-           (∀ f #j. (!KU( f, ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
            (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥))  ∥
          (∃ nr m2 #i.
            (IN_I_2_nr( nr, m2 ) @ #i)
           ∧
-           (∀ f #j. (!KU( f, nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
            (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)) )
     case case_1
     solve( (last(#i))  ∥
-           (∃ f #j. (!KU( f, ni ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j. (!KU( ni ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
            (∃ #j. (OUT_I_1( aenc(<ni, I>, pk(ltkR)) ) @ #j) ∧ ¬(last(#j))) )
       case case_1
       solve( !Ltk( $R, ltkR ) ▶₀ #i )
         case Register_pk
         solve( !Pk( I, pkI ) ▶₂ #i )
           case Register_pk
-          solve( !KU( f_, aenc(<ni, $A>, pk(~ltkA)) ) @ #vk )
+          solve( !KU( aenc(<ni, $A>, pk(~ltkA)) ) @ #vk )
             case I_1
             by contradiction // from formulas
           next
             case I_2_case_1
-            solve( (∃ f #j.
-                     (!KU( f, <ni, $A> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+            solve( (∃ #j. (!KU( <ni, $A> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                    (∃ #j.
                      (OUT_R_1( aenc(<~ni.1, <ni, $A>, $R>, pk(~ltkA.2)) ) @ #j)
                     ∧
@@ -126,7 +123,7 @@ next
             qed
           next
             case I_2_case_2
-            solve( (∃ f #j. (!KU( f, nr.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+            solve( (∃ #j. (!KU( nr.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                    (∃ #j.
                      (OUT_R_1( aenc(<~ni.1, nr.1, $R.1>, pk(~ltkA.3)) ) @ #j) ∧ ¬(last(#j))) )
               case case_1
@@ -137,7 +134,7 @@ next
             qed
           next
             case R_1
-            solve( (∃ f #j. (!KU( f, ni.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+            solve( (∃ #j. (!KU( ni.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                    (∃ #j. (OUT_I_1( aenc(<ni.1, $A.1>, pk(~ltkA.3)) ) @ #j) ∧ ¬(last(#j))) )
               case case_1
               by contradiction // cyclic
@@ -161,7 +158,7 @@ next
   next
     case case_2
     solve( (last(#i))  ∥
-           (∃ f #j. (!KU( f, nr ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j. (!KU( nr ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
            (∃ #j. (OUT_R_1( aenc(<ni, nr, R>, pk(ltkI)) ) @ #j) ∧ ¬(last(#j))) )
       case case_1
       solve( St_I_1( I, R, ni ) ▶₀ #i )
@@ -170,10 +167,10 @@ next
           case Register_pk
           solve( !Pk( $R, pkR ) ▶₃ #i )
             case Register_pk
-            solve( !KU( f_, aenc(<~ni, nr, $R>, pk(~ltkA)) ) @ #vk )
+            solve( !KU( aenc(<~ni, nr, $R>, pk(~ltkA)) ) @ #vk )
               case I_2_case_1
-              solve( (∃ f #j.
-                       (!KU( f, <~ni, nr, $R> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+              solve( (∃ #j.
+                       (!KU( <~ni, nr, $R> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                      (∃ #j.
                        (OUT_R_1( aenc(<~ni.1, <~ni, nr, $R>, $I>, pk(~ltkA.3)) ) @ #j)
                       ∧
@@ -183,7 +180,7 @@ next
               qed
             next
               case I_2_case_2
-              solve( (∃ f #j. (!KU( f, nr.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+              solve( (∃ #j. (!KU( nr.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                      (∃ #j.
                        (OUT_R_1( aenc(<~ni.1, nr.1, $R.1>, pk(~ltkA.4)) ) @ #j) ∧ ¬(last(#j))) )
                 case case_1
@@ -197,7 +194,7 @@ next
               by contradiction // from formulas
             next
               case R_1_case_2
-              solve( (∃ f #j. (!KU( f, ni.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+              solve( (∃ #j. (!KU( ni.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                      (∃ #j. (OUT_I_1( aenc(<ni.1, $A>, pk(~ltkA.4)) ) @ #j) ∧ ¬(last(#j))) )
                 case case_1
                 by contradiction // cyclic
@@ -241,29 +238,29 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( Secret( A, B, s ) ▶₀ #i )
   case I_2_case_1
-  solve( (∃ f #j. (!KU( f, s ) @ #j) ∧ #j < #vr)  ∥
+  solve( (∃ #j. (!KU( s ) @ #j) ∧ #j < #vr)  ∥
          (∃ #j. (OUT_R_1( aenc(<~ni, s, $R>, pk(~ltkA)) ) @ #j)) )
     case case_1
-    solve( !KU( f_.1, aenc(<~ni, s, $R>, pk(~ltkA)) ) @ #vk.1 )
+    solve( !KU( aenc(<~ni, s, $R>, pk(~ltkA)) ) @ #vk.1 )
       case I_2
-      solve( (∃ f #j. (!KU( f, <~ni, s, $R> ) @ #j) ∧ #j < #vr.5)  ∥
+      solve( (∃ #j. (!KU( <~ni, s, $R> ) @ #j) ∧ #j < #vr.5)  ∥
              (∃ #j. (OUT_R_1( aenc(<~ni.1, <~ni, s, $R>, $I>, pk(~ltkA.3)) ) @ #j)) )
         case case_1
-        solve( !KU( f_.2, ~ni ) @ #vk.4 )
+        solve( !KU( ~ni ) @ #vk.4 )
           case I_1
-          solve( !KU( f_.2, ~ltkA.2 ) @ #vk.6 )
+          solve( !KU( ~ltkA.2 ) @ #vk.6 )
             case Reveal_ltk
             by contradiction // from formulas
           qed
         next
           case R_1
-          solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.9)  ∥
+          solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.9)  ∥
                  (∃ #j. (OUT_I_1( aenc(<~ni, $I>, pk(~ltkA.2)) ) @ #j)) )
             case case_1
             by contradiction // cyclic
           next
             case case_2
-            solve( !KU( f_.3, ~ltkA.2 ) @ #vk.7 )
+            solve( !KU( ~ltkA.2 ) @ #vk.7 )
               case Reveal_ltk
               by contradiction // from formulas
             qed
@@ -272,29 +269,29 @@ solve( Secret( A, B, s ) ▶₀ #i )
       qed
     next
       case R_1
-      solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.5)  ∥
+      solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.5)  ∥
              (∃ #j. (OUT_I_1( aenc(<~ni, $I>, pk(~ltkA.3)) ) @ #j)) )
         case case_1
-        solve( !KU( f_, ~nr ) @ #vk.1 )
+        solve( !KU( ~nr ) @ #vk.1 )
           case I_2
           by contradiction // cyclic
         next
           case R_1
-          solve( !KU( f, ~ni ) @ #j.1 )
+          solve( !KU( ~ni ) @ #j.1 )
             case I_1
-            solve( !KU( f_.1, ~ltkA ) @ #vk.3 )
+            solve( !KU( ~ltkA ) @ #vk.3 )
               case Reveal_ltk
               by contradiction // from formulas
             qed
           next
             case R_1
-            solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.10)  ∥
+            solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.10)  ∥
                    (∃ #j. (OUT_I_1( aenc(<~ni, $I>, pk(~ltkA.2)) ) @ #j)) )
               case case_1
               by contradiction // cyclic
             next
               case case_2
-              solve( !KU( f_.1, ~ltkA ) @ #vk.3 )
+              solve( !KU( ~ltkA ) @ #vk.3 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
@@ -303,12 +300,12 @@ solve( Secret( A, B, s ) ▶₀ #i )
         qed
       next
         case case_2
-        solve( !KU( f_, ~nr ) @ #vk.1 )
+        solve( !KU( ~nr ) @ #vk.1 )
           case I_2
           by contradiction // cyclic
         next
           case R_1
-          solve( !KU( f_.1, ~ltkA ) @ #vk.3 )
+          solve( !KU( ~ltkA ) @ #vk.3 )
             case Reveal_ltk
             by contradiction // from formulas
           qed
@@ -316,21 +313,21 @@ solve( Secret( A, B, s ) ▶₀ #i )
       qed
     next
       case caenc
-      solve( !KU( f_.3, ~ni ) @ #vk.5 )
+      solve( !KU( ~ni ) @ #vk.5 )
         case I_1
-        solve( !KU( f_.3, ~ltkA.2 ) @ #vk.7 )
+        solve( !KU( ~ltkA.2 ) @ #vk.7 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
       next
         case R_1
-        solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.5)  ∥
+        solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.5)  ∥
                (∃ #j. (OUT_I_1( aenc(<~ni, $I>, pk(~ltkA.2)) ) @ #j)) )
           case case_1
           by contradiction // cyclic
         next
           case case_2
-          solve( !KU( f_.4, ~ltkA.1 ) @ #vk.8 )
+          solve( !KU( ~ltkA.1 ) @ #vk.8 )
             case Reveal_ltk
             by contradiction // from formulas
           qed
@@ -339,30 +336,30 @@ solve( Secret( A, B, s ) ▶₀ #i )
     qed
   next
     case case_2
-    solve( (∃ f #j.2. (!KU( f, ~ni ) @ #j.2) ∧ #j.2 < #j.1)  ∥
+    solve( (∃ #j.2. (!KU( ~ni ) @ #j.2) ∧ #j.2 < #j.1)  ∥
            (∃ #j. (OUT_I_1( aenc(<~ni, I.1>, pk(ltkR)) ) @ #j)) )
       case case_1
       solve( !Ltk( $R, ltkR ) ▶₀ #j.1 )
         case Register_pk
         solve( !Pk( I.1, pk(~ltkA) ) ▶₂ #j.1 )
           case Register_pk
-          solve( !KU( f_, ~nr ) @ #vk )
+          solve( !KU( ~nr ) @ #vk )
             case I_2
-            solve( !KU( f, ~ni ) @ #j.2 )
+            solve( !KU( ~ni ) @ #j.2 )
               case I_1
-              solve( !KU( f_.2, ~ltkA.1 ) @ #vk.3 )
+              solve( !KU( ~ltkA.1 ) @ #vk.3 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
             next
               case R_1
-              solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.7)  ∥
+              solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.7)  ∥
                      (∃ #j. (OUT_I_1( aenc(<~ni, $I>, pk(~ltkA.3)) ) @ #j)) )
                 case case_1
                 by contradiction // cyclic
               next
                 case case_2
-                solve( !KU( f_.2, ~ltkA.1 ) @ #vk.3 )
+                solve( !KU( ~ltkA.1 ) @ #vk.3 )
                   case Reveal_ltk
                   by contradiction // from formulas
                 qed
@@ -370,21 +367,21 @@ solve( Secret( A, B, s ) ▶₀ #i )
             qed
           next
             case R_1
-            solve( !KU( f, ~ni ) @ #j.2 )
+            solve( !KU( ~ni ) @ #j.2 )
               case I_1
-              solve( !KU( f_.2, ~ltkA ) @ #vk.3 )
+              solve( !KU( ~ltkA ) @ #vk.3 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
             next
               case R_1
-              solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.9)  ∥
+              solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.9)  ∥
                      (∃ #j. (OUT_I_1( aenc(<~ni, $I>, pk(~ltkA.3)) ) @ #j)) )
                 case case_1
                 by contradiction // cyclic
               next
                 case case_2
-                solve( !KU( f_.2, ~ltkA ) @ #vk.3 )
+                solve( !KU( ~ltkA ) @ #vk.3 )
                   case Reveal_ltk
                   by contradiction // from formulas
                 qed
@@ -399,15 +396,15 @@ solve( Secret( A, B, s ) ▶₀ #i )
         case Register_pk
         solve( !Pk( $I, pk(~ltkA) ) ▶₂ #j.1 )
           case Register_pk
-          solve( !KU( f_, ~nr ) @ #vk )
+          solve( !KU( ~nr ) @ #vk )
             case I_2
-            solve( !KU( f_.2, ~ltkA.1 ) @ #vk.3 )
+            solve( !KU( ~ltkA.1 ) @ #vk.3 )
               case Reveal_ltk
               by contradiction // from formulas
             qed
           next
             case R_1
-            solve( !KU( f_.2, ~ltkA ) @ #vk.3 )
+            solve( !KU( ~ltkA ) @ #vk.3 )
               case Reveal_ltk
               by contradiction // from formulas
             qed
@@ -418,24 +415,24 @@ solve( Secret( A, B, s ) ▶₀ #i )
   qed
 next
   case I_2_case_2
-  solve( (∃ f #j. (!KU( f, nr ) @ #j) ∧ #j < #vr)  ∥
+  solve( (∃ #j. (!KU( nr ) @ #j) ∧ #j < #vr)  ∥
          (∃ #j. (OUT_R_1( aenc(<~ni, nr, $R>, pk(~ltkA)) ) @ #j)) )
     case case_1
-    solve( !KU( f_, ~ni ) @ #vk )
+    solve( !KU( ~ni ) @ #vk )
       case I_1
-      solve( !KU( f_.1, ~ltkA.2 ) @ #vk.2 )
+      solve( !KU( ~ltkA.2 ) @ #vk.2 )
         case Reveal_ltk
         by contradiction // from formulas
       qed
     next
       case R_1
-      solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.5)  ∥
+      solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.5)  ∥
              (∃ #j. (OUT_I_1( aenc(<~ni, $I>, pk(~ltkA.2)) ) @ #j)) )
         case case_1
         by contradiction // cyclic
       next
         case case_2
-        solve( !KU( f_.2, ~ltkA.1 ) @ #vk.3 )
+        solve( !KU( ~ltkA.1 ) @ #vk.3 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
@@ -443,28 +440,28 @@ next
     qed
   next
     case case_2
-    solve( (∃ f #j.2. (!KU( f, ~ni ) @ #j.2) ∧ #j.2 < #j.1)  ∥
+    solve( (∃ #j.2. (!KU( ~ni ) @ #j.2) ∧ #j.2 < #j.1)  ∥
            (∃ #j. (OUT_I_1( aenc(<~ni, I.1>, pk(ltkR)) ) @ #j)) )
       case case_1
       solve( !Ltk( $R, ltkR ) ▶₀ #j.1 )
         case Register_pk
         solve( !Pk( I.1, pk(~ltkA) ) ▶₂ #j.1 )
           case Register_pk
-          solve( !KU( f_, ~ni ) @ #vk )
+          solve( !KU( ~ni ) @ #vk )
             case I_1
-            solve( !KU( f_.2, ~ltkA.3 ) @ #vk.3 )
+            solve( !KU( ~ltkA.3 ) @ #vk.3 )
               case Reveal_ltk
               by contradiction // from formulas
             qed
           next
             case R_1
-            solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.6)  ∥
+            solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.6)  ∥
                    (∃ #j. (OUT_I_1( aenc(<~ni, $I>, pk(~ltkA.3)) ) @ #j)) )
               case case_1
               by contradiction // cyclic
             next
               case case_2
-              solve( !KU( f_.2, ~ltkA.1 ) @ #vk.4 )
+              solve( !KU( ~ltkA.1 ) @ #vk.4 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
@@ -478,21 +475,21 @@ next
         case Register_pk
         solve( !Pk( $I, pk(~ltkA) ) ▶₂ #j.1 )
           case Register_pk
-          solve( !KU( f_, ~ni ) @ #vk )
+          solve( !KU( ~ni ) @ #vk )
             case I_1
-            solve( !KU( f_.2, ~ltkA.2 ) @ #vk.3 )
+            solve( !KU( ~ltkA.2 ) @ #vk.3 )
               case Reveal_ltk
               by contradiction // from formulas
             qed
           next
             case R_1
-            solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.5)  ∥
+            solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.5)  ∥
                    (∃ #j. (OUT_I_1( aenc(<~ni, $I>, pk(~ltkA.2)) ) @ #j)) )
               case case_1
               by contradiction // cyclic
             next
               case case_2
-              solve( !KU( f_.2, ~ltkA.1 ) @ #vk.3 )
+              solve( !KU( ~ltkA.1 ) @ #vk.3 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
@@ -504,25 +501,25 @@ next
   qed
 next
   case R_2_case_1
-  solve( (∃ f #j. (!KU( f, ni ) @ #j) ∧ #j < #vr.1)  ∥
+  solve( (∃ #j. (!KU( ni ) @ #j) ∧ #j < #vr.1)  ∥
          (∃ #j. (OUT_I_1( aenc(<ni, $A>, pk(~ltkA.1)) ) @ #j)) )
     case case_1
-    solve( !KU( f_, ~nr ) @ #vk )
+    solve( !KU( ~nr ) @ #vk )
       case I_2
-      solve( (∃ f #j. (!KU( f, ~nr ) @ #j) ∧ #j < #vr.5)  ∥
+      solve( (∃ #j. (!KU( ~nr ) @ #j) ∧ #j < #vr.5)  ∥
              (∃ #j. (OUT_R_1( aenc(<~ni, ~nr, $R>, pk(~ltkA.2)) ) @ #j)) )
         case case_1
         by contradiction // cyclic
       next
         case case_2
-        solve( !KU( f_.3, ~ltkA.1 ) @ #vk.4 )
+        solve( !KU( ~ltkA.1 ) @ #vk.4 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
       qed
     next
       case R_1
-      solve( !KU( f_.2, ~ltkA.2 ) @ #vk.3 )
+      solve( !KU( ~ltkA.2 ) @ #vk.3 )
         case Reveal_ltk
         by contradiction // from formulas
       qed
@@ -531,22 +528,22 @@ next
     case case_2
     solve( !Pk( $R.1, pk(~ltkA.1) ) ▶₁ #j.1 )
       case Register_pk
-      solve( !KU( f_, ~nr ) @ #vk )
+      solve( !KU( ~nr ) @ #vk )
         case I_2
-        solve( (∃ f #j. (!KU( f, ~nr ) @ #j) ∧ #j < #vr.5)  ∥
+        solve( (∃ #j. (!KU( ~nr ) @ #j) ∧ #j < #vr.5)  ∥
                (∃ #j. (OUT_R_1( aenc(<~ni, ~nr, $R>, pk(~ltkA.2)) ) @ #j)) )
           case case_1
           by contradiction // cyclic
         next
           case case_2
-          solve( !KU( f_.2, ~ltkA.1 ) @ #vk.4 )
+          solve( !KU( ~ltkA.1 ) @ #vk.4 )
             case Reveal_ltk
             by contradiction // from formulas
           qed
         qed
       next
         case R_1
-        solve( !KU( f_.2, ~ltkA.2 ) @ #vk.3 )
+        solve( !KU( ~ltkA.2 ) @ #vk.3 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
@@ -555,51 +552,51 @@ next
   qed
 next
   case R_2_case_2
-  solve( (∃ f #j. (!KU( f, s ) @ #j) ∧ #j < #vr.1)  ∥
+  solve( (∃ #j. (!KU( s ) @ #j) ∧ #j < #vr.1)  ∥
          (∃ #j. (OUT_I_1( aenc(<s, $A>, pk(~ltkA.1)) ) @ #j)) )
     case case_1
-    solve( !KU( f_.1, aenc(~nr, pk(~ltkA)) ) @ #vk.1 )
+    solve( !KU( aenc(~nr, pk(~ltkA)) ) @ #vk.1 )
       case I_2
-      solve( (∃ f #j. (!KU( f, ~nr ) @ #j) ∧ #j < #vr.5)  ∥
+      solve( (∃ #j. (!KU( ~nr ) @ #j) ∧ #j < #vr.5)  ∥
              (∃ #j. (OUT_R_1( aenc(<~ni, ~nr, $R>, pk(~ltkA.3)) ) @ #j)) )
         case case_1
-        solve( !KU( f, ~nr ) @ #j.1 )
+        solve( !KU( ~nr ) @ #j.1 )
           case I_2
-          solve( (∃ f #j. (!KU( f, ~nr ) @ #j) ∧ #j < #vr.9)  ∥
+          solve( (∃ #j. (!KU( ~nr ) @ #j) ∧ #j < #vr.9)  ∥
                  (∃ #j. (OUT_R_1( aenc(<~ni, ~nr, $R>, pk(~ltkA.2)) ) @ #j)) )
             case case_1
             by contradiction // cyclic
           next
             case case_2
-            solve( !KU( f_.4, ~ltkA.2 ) @ #vk.5 )
+            solve( !KU( ~ltkA.2 ) @ #vk.5 )
               case Reveal_ltk
               by contradiction // from formulas
             qed
           qed
         next
           case R_1
-          solve( !KU( f_.3, ~ltkA.2 ) @ #vk.4 )
+          solve( !KU( ~ltkA.2 ) @ #vk.4 )
             case Reveal_ltk
             by contradiction // from formulas
           qed
         qed
       next
         case case_2
-        solve( !KU( f_, ~ni ) @ #vk.1 )
+        solve( !KU( ~ni ) @ #vk.1 )
           case I_1
-          solve( !KU( f_.2, ~ltkA.3 ) @ #vk.4 )
+          solve( !KU( ~ltkA.3 ) @ #vk.4 )
             case Reveal_ltk
             by contradiction // from formulas
           qed
         next
           case R_1
-          solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.8)  ∥
+          solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.8)  ∥
                  (∃ #j. (OUT_I_1( aenc(<~ni, $A>, pk(~ltkA.3)) ) @ #j)) )
             case case_1
             by contradiction // cyclic
           next
             case case_2
-            solve( !KU( f_.3, ~ltkA.2 ) @ #vk.5 )
+            solve( !KU( ~ltkA.2 ) @ #vk.5 )
               case Reveal_ltk
               by contradiction // from formulas
             qed
@@ -608,22 +605,22 @@ next
       qed
     next
       case caenc
-      solve( !KU( f_.2, ~nr ) @ #vk.3 )
+      solve( !KU( ~nr ) @ #vk.3 )
         case I_2
-        solve( (∃ f #j. (!KU( f, ~nr ) @ #j) ∧ #j < #vr.5)  ∥
+        solve( (∃ #j. (!KU( ~nr ) @ #j) ∧ #j < #vr.5)  ∥
                (∃ #j. (OUT_R_1( aenc(<~ni, ~nr, $R>, pk(~ltkA.2)) ) @ #j)) )
           case case_1
           by contradiction // cyclic
         next
           case case_2
-          solve( !KU( f_.4, ~ltkA.1 ) @ #vk.6 )
+          solve( !KU( ~ltkA.1 ) @ #vk.6 )
             case Reveal_ltk
             by contradiction // from formulas
           qed
         qed
       next
         case R_1
-        solve( !KU( f_.3, ~ltkA.2 ) @ #vk.5 )
+        solve( !KU( ~ltkA.2 ) @ #vk.5 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
@@ -633,21 +630,21 @@ next
     case case_2
     solve( !Pk( $R.1, pk(~ltkA.1) ) ▶₁ #j.1 )
       case Register_pk
-      solve( !KU( f_, ~ni ) @ #vk )
+      solve( !KU( ~ni ) @ #vk )
         case I_1
-        solve( !KU( f_.2, ~ltkA.1 ) @ #vk.3 )
+        solve( !KU( ~ltkA.1 ) @ #vk.3 )
           case Reveal_ltk
           by contradiction // from formulas
         qed
       next
         case R_1
-        solve( (∃ f #j. (!KU( f, ~ni ) @ #j) ∧ #j < #vr.5)  ∥
+        solve( (∃ #j. (!KU( ~ni ) @ #j) ∧ #j < #vr.5)  ∥
                (∃ #j. (OUT_I_1( aenc(<~ni, $A>, pk(~ltkA.1)) ) @ #j)) )
           case case_1
           by contradiction // cyclic
         next
           case case_2
-          solve( !KU( f_.2, ~ltkA.1 ) @ #vk.3 )
+          solve( !KU( ~ltkA.1 ) @ #vk.3 )
             case Reveal_ltk
             by contradiction // from formulas
           qed
@@ -673,19 +670,19 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( Secret( A, B, s ) ▶₀ #i )
   case I_2_case_1
-  solve( (∃ f #j. (!KU( f, s ) @ #j) ∧ #j < #vr)  ∥
+  solve( (∃ #j. (!KU( s ) @ #j) ∧ #j < #vr)  ∥
          (∃ #j. (OUT_R_1( aenc(<~ni, s, $R>, pk(~ltkA)) ) @ #j)) )
     case case_2
-    solve( (∃ f #j.1. (!KU( f, ~ni ) @ #j.1) ∧ #j.1 < #j)  ∥
+    solve( (∃ #j.1. (!KU( ~ni ) @ #j.1) ∧ #j.1 < #j)  ∥
            (∃ #j. (OUT_I_1( aenc(<~ni, I.1>, pk(ltkR)) ) @ #j)) )
       case case_2
       solve( !Ltk( $R, ~ltkA ) ▶₀ #j )
         case Register_pk
         solve( !Pk( $I, pk(~ltkA.1) ) ▶₂ #j )
           case Register_pk
-          solve( !KU( f_, aenc(<~ni, ~nr, $R>, pk(~ltkA.1)) ) @ #vk )
+          solve( !KU( aenc(<~ni, ~nr, $R>, pk(~ltkA.1)) ) @ #vk )
             case R_1
-            solve( !KU( f_, aenc(<~ni, $I>, pk(~ltkA)) ) @ #vk.1 )
+            solve( !KU( aenc(<~ni, $I>, pk(~ltkA)) ) @ #vk.1 )
               case I_1
               SOLVED // trace found
             qed
@@ -711,7 +708,7 @@ analyzing: data/examples/classic/NSLPK3_untagged.spthy
 analyzed: data/examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.982657s
+  processing time: 3.973808s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -724,7 +721,7 @@ summary of summaries:
 analyzed: data/examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.982657s
+  processing time: 3.973808s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

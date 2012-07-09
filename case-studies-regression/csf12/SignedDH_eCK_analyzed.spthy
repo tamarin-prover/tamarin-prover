@@ -182,17 +182,17 @@ solve( Init_1( ~ekI, $I, $R, ~ekI, hkI ) ▶₀ #i1 )
   case Init_1
   solve( !Pk( $R, pk(ltkR) ) ▶₁ #i1 )
     case Register_pk
-    solve( !KU( f_.7, sign(<'2', $R, $I, hkR>, ~ltk) ) @ #vk.6 )
+    solve( !KU( sign(<'2', $R, $I, hkR>, ~ltk) ) @ #vk.6 )
       case Resp
-      solve( !KU( f_, 'g'^(~ekI*~ekR) ) @ #vk.9 )
+      solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.9 )
         case Init_1
-        solve( !KU( f_.2, ~ekR ) @ #vk.13 )
+        solve( !KU( ~ekR ) @ #vk.13 )
           case Ephk_reveal
-          solve( !KU( f_.10, sign(<'1', $I, $R, X>, ~ltk.2) ) @ #vk.13 )
+          solve( !KU( sign(<'1', $I, $R, X>, ~ltk.2) ) @ #vk.13 )
             case Init_1
-            solve( !KU( f_.7, 'g'^~ekR ) @ #vk.11 )
+            solve( !KU( 'g'^~ekR ) @ #vk.11 )
               case Resp
-              solve( !KU( f_.8, 'g'^~ekI.1 ) @ #vk.13 )
+              solve( !KU( 'g'^~ekI.1 ) @ #vk.13 )
                 case Init_1
                 SOLVED // trace found
               qed
@@ -248,13 +248,13 @@ solve( !Pk( $I, pk(ltkI) ) ▶₀ #i1 )
   case Register_pk
   solve( !Ltk( $R, ltkR ) ▶₁ #i1 )
     case Register_pk
-    solve( !KU( f_.7, sign(<'1', $I, $R, hkI>, ~ltk) ) @ #vk.6 )
+    solve( !KU( sign(<'1', $I, $R, hkI>, ~ltk) ) @ #vk.6 )
       case Init_1
-      solve( !KU( f_, 'g'^(~ekI*~ekR) ) @ #vk.7 )
+      solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.7 )
         case Init_1
-        solve( !KU( f_.1, ~ekR ) @ #vk.8 )
+        solve( !KU( ~ekR ) @ #vk.8 )
           case Ephk_reveal
-          solve( !KU( f_.5, 'g'^~ekI ) @ #vk.8 )
+          solve( !KU( 'g'^~ekI ) @ #vk.8 )
             case Init_1
             SOLVED // trace found
           qed
@@ -279,7 +279,7 @@ analyzing: data/examples/csf12/SignedDH_eCK.spthy
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 18.715065s
+  processing time: 15.947535s
   eCK_initiator_key (all-traces): falsified - found trace (10 steps)
   eCK_responder_key (all-traces): falsified - found trace (8 steps)
 
@@ -291,7 +291,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 18.715065s
+  processing time: 15.947535s
   eCK_initiator_key (all-traces): falsified - found trace (10 steps)
   eCK_responder_key (all-traces): falsified - found trace (8 steps)
 

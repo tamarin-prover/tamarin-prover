@@ -176,24 +176,22 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
     case C_3
     solve( St_C_2( S, C, sid, nc, pc, ns, ps, pms ) ▶₀ #k )
       case C_2
-      solve( !KU( f_.1,
-                  senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, $A>,
+      solve( !KU( senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, 
+                        $A>,
                        h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>))
              ) @ #vk.1 )
         case S_2
-        solve( !KU( f_, h(<'serverKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
-               ) @ #vk.1 )
+        solve( !KU( h(<'serverKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>) ) @ #vk.1 )
           case ch
-          solve( !KU( f_.11, aenc(<'31', ~pms>, pk(~ltkA.2)) ) @ #vk.13 )
+          solve( !KU( aenc(<'31', ~pms>, pk(~ltkA.2)) ) @ #vk.13 )
             case C_2
-            solve( !KU( f_.14, sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.2)
-                   ) @ #vk.17 )
+            solve( !KU( sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.2) ) @ #vk.17 )
               case C_2
-              solve( !KU( f_.20, PRF(<~pms, ~nc, ~ns>) ) @ #vk.24 )
+              solve( !KU( PRF(<~pms, ~nc, ~ns>) ) @ #vk.24 )
                 case cPRF
-                solve( !KU( f_.21, ~pms ) @ #vk.27 )
+                solve( !KU( ~pms ) @ #vk.27 )
                   case C_2
-                  solve( !KU( f_.5, ~ltkA ) @ #vk.28 )
+                  solve( !KU( ~ltkA ) @ #vk.28 )
                     case Reveal_ltk
                     by contradiction // from formulas
                   qed
@@ -201,16 +199,16 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
               qed
             next
               case csign
-              solve( !KU( f_.5, ~ltkA.2 ) @ #vk.26 )
+              solve( !KU( ~ltkA.2 ) @ #vk.26 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
             qed
           next
             case caenc
-            solve( !KU( f_.25, ~pms ) @ #vk.28 )
+            solve( !KU( ~pms ) @ #vk.28 )
               case C_2
-              solve( !KU( f_.6, ~ltkA ) @ #vk.29 )
+              solve( !KU( ~ltkA ) @ #vk.29 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
@@ -219,14 +217,13 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
         qed
       next
         case csenc
-        solve( !KU( f_, h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>)
-               ) @ #vk.1 )
+        solve( !KU( h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>) ) @ #vk.1 )
           case ch
-          solve( !KU( f_.14, PRF(<~pms, ~nc, ns>) ) @ #vk.17 )
+          solve( !KU( PRF(<~pms, ~nc, ns>) ) @ #vk.17 )
             case cPRF
-            solve( !KU( f_.24, ~pms ) @ #vk.28 )
+            solve( !KU( ~pms ) @ #vk.28 )
               case C_2
-              solve( !KU( f_.4, ~ltkA ) @ #vk.29 )
+              solve( !KU( ~ltkA ) @ #vk.29 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
@@ -243,24 +240,22 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
         case Register_pk
         solve( !Ltk( $S, ltkS ) ▶₃ #k )
           case Register_pk
-          solve( !KU( f_.3, aenc(<'31', pms>, pk(~ltkA)) ) @ #vk.2 )
+          solve( !KU( aenc(<'31', pms>, pk(~ltkA)) ) @ #vk.2 )
             case C_2
-            solve( !KU( f_.6,
-                        senc(<'33', sid, PRF(<~pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, $S>,
+            solve( !KU( senc(<'33', sid, PRF(<~pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, 
+                              $S>,
                              h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>))
                    ) @ #vk.5 )
               case C_2
-              solve( !KU( f_, h(<'serverKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
-                     ) @ #vk.3 )
+              solve( !KU( h(<'serverKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>) ) @ #vk.3 )
                 case ch
-                solve( !KU( f_.5, sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1)
-                       ) @ #vk.5 )
+                solve( !KU( sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1) ) @ #vk.5 )
                   case C_2
-                  solve( !KU( f_.19, PRF(<~pms, ~nc, ~ns>) ) @ #vk.23 )
+                  solve( !KU( PRF(<~pms, ~nc, ~ns>) ) @ #vk.23 )
                     case cPRF
-                    solve( !KU( f_.20, ~pms ) @ #vk.26 )
+                    solve( !KU( ~pms ) @ #vk.26 )
                       case C_2
-                      solve( !KU( f_.5, ~ltkA ) @ #vk.27 )
+                      solve( !KU( ~ltkA ) @ #vk.27 )
                         case Reveal_ltk
                         by contradiction // from formulas
                       qed
@@ -268,7 +263,7 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
                   qed
                 next
                   case csign
-                  solve( !KU( f_.5, ~ltkA.1 ) @ #vk.25 )
+                  solve( !KU( ~ltkA.1 ) @ #vk.25 )
                     case Reveal_ltk
                     by contradiction // from formulas
                   qed
@@ -276,17 +271,15 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
               qed
             next
               case csenc
-              solve( !KU( f_, h(<'serverKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>)
-                     ) @ #vk.3 )
+              solve( !KU( h(<'serverKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>) ) @ #vk.3 )
                 case ch
-                solve( !KU( f_.7, sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1)
-                       ) @ #vk.5 )
+                solve( !KU( sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1) ) @ #vk.5 )
                   case C_2
-                  solve( !KU( f_.28, PRF(<~pms, nc, ~ns>) ) @ #vk.33 )
+                  solve( !KU( PRF(<~pms, nc, ~ns>) ) @ #vk.33 )
                     case cPRF
-                    solve( !KU( f_.32, ~pms ) @ #vk.38 )
+                    solve( !KU( ~pms ) @ #vk.38 )
                       case C_2
-                      solve( !KU( f_.7, ~ltkA ) @ #vk.39 )
+                      solve( !KU( ~ltkA ) @ #vk.39 )
                         case Reveal_ltk
                         by contradiction // from formulas
                       qed
@@ -294,7 +287,7 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
                   qed
                 next
                   case csign
-                  solve( !KU( f_.7, ~ltkA.1 ) @ #vk.38 )
+                  solve( !KU( ~ltkA.1 ) @ #vk.38 )
                     case Reveal_ltk
                     by contradiction // from formulas
                   qed
@@ -303,36 +296,34 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
             qed
           next
             case caenc
-            solve( !KU( f_.7,
-                        senc(<'33', sid, PRF(<pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, $S>,
+            solve( !KU( senc(<'33', sid, PRF(<pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, 
+                              $S>,
                              h(<'clientKey', nc, ~ns, PRF(<pms, nc, ~ns>)>))
                    ) @ #vk.5 )
               case C_2
-              solve( !KU( f_.15, ~pms ) @ #vk.17 )
+              solve( !KU( ~pms ) @ #vk.17 )
                 case C_2
-                solve( !KU( f_.6, ~ltkA.2 ) @ #vk.23 )
+                solve( !KU( ~ltkA.2 ) @ #vk.23 )
                   case Reveal_ltk
                   by contradiction // from formulas
                 qed
               qed
             next
               case csenc
-              solve( !KU( f_, h(<'serverKey', nc, ~ns, PRF(<pms, nc, ~ns>)>)
-                     ) @ #vk.3 )
+              solve( !KU( h(<'serverKey', nc, ~ns, PRF(<pms, nc, ~ns>)>) ) @ #vk.3 )
                 case ch
-                solve( !KU( f_.8, sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1)
-                       ) @ #vk.5 )
+                solve( !KU( sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1) ) @ #vk.5 )
                   case C_2
-                  solve( !KU( f_.22, ~pms ) @ #vk.24 )
+                  solve( !KU( ~pms ) @ #vk.24 )
                     case C_2
-                    solve( !KU( f_.8, ~ltkA.2 ) @ #vk.40 )
+                    solve( !KU( ~ltkA.2 ) @ #vk.40 )
                       case Reveal_ltk
                       by contradiction // from formulas
                     qed
                   qed
                 next
                   case csign
-                  solve( !KU( f_.8, ~ltkA.1 ) @ #vk.36 )
+                  solve( !KU( ~ltkA.1 ) @ #vk.36 )
                     case Reveal_ltk
                     by contradiction // from formulas
                   qed
@@ -350,24 +341,22 @@ next
     case C_3
     solve( St_C_2( S, C, sid, nc, pc, ns, ps, pms ) ▶₀ #k )
       case C_2
-      solve( !KU( f_.1,
-                  senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, $A>,
+      solve( !KU( senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, 
+                        $A>,
                        h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>))
              ) @ #vk.1 )
         case S_2
-        solve( !KU( f_, h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
-               ) @ #vk.1 )
+        solve( !KU( h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>) ) @ #vk.1 )
           case ch
-          solve( !KU( f_.11, aenc(<'31', ~pms>, pk(~ltkA.2)) ) @ #vk.13 )
+          solve( !KU( aenc(<'31', ~pms>, pk(~ltkA.2)) ) @ #vk.13 )
             case C_2
-            solve( !KU( f_.14, sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.2)
-                   ) @ #vk.17 )
+            solve( !KU( sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.2) ) @ #vk.17 )
               case C_2
-              solve( !KU( f_.20, PRF(<~pms, ~nc, ~ns>) ) @ #vk.24 )
+              solve( !KU( PRF(<~pms, ~nc, ~ns>) ) @ #vk.24 )
                 case cPRF
-                solve( !KU( f_.21, ~pms ) @ #vk.27 )
+                solve( !KU( ~pms ) @ #vk.27 )
                   case C_2
-                  solve( !KU( f_.5, ~ltkA ) @ #vk.28 )
+                  solve( !KU( ~ltkA ) @ #vk.28 )
                     case Reveal_ltk
                     by contradiction // from formulas
                   qed
@@ -375,16 +364,16 @@ next
               qed
             next
               case csign
-              solve( !KU( f_.5, ~ltkA.2 ) @ #vk.26 )
+              solve( !KU( ~ltkA.2 ) @ #vk.26 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
             qed
           next
             case caenc
-            solve( !KU( f_.25, ~pms ) @ #vk.28 )
+            solve( !KU( ~pms ) @ #vk.28 )
               case C_2
-              solve( !KU( f_.6, ~ltkA ) @ #vk.29 )
+              solve( !KU( ~ltkA ) @ #vk.29 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
@@ -393,14 +382,13 @@ next
         qed
       next
         case csenc
-        solve( !KU( f_, h(<'clientKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>)
-               ) @ #vk.1 )
+        solve( !KU( h(<'clientKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>) ) @ #vk.1 )
           case ch
-          solve( !KU( f_.15, PRF(<~pms, ~nc, ns>) ) @ #vk.18 )
+          solve( !KU( PRF(<~pms, ~nc, ns>) ) @ #vk.18 )
             case cPRF
-            solve( !KU( f_.25, ~pms ) @ #vk.29 )
+            solve( !KU( ~pms ) @ #vk.29 )
               case C_2
-              solve( !KU( f_.5, ~ltkA ) @ #vk.30 )
+              solve( !KU( ~ltkA ) @ #vk.30 )
                 case Reveal_ltk
                 by contradiction // from formulas
               qed
@@ -417,24 +405,22 @@ next
         case Register_pk
         solve( !Ltk( $S, ltkS ) ▶₃ #k )
           case Register_pk
-          solve( !KU( f_.3, aenc(<'31', pms>, pk(~ltkA)) ) @ #vk.2 )
+          solve( !KU( aenc(<'31', pms>, pk(~ltkA)) ) @ #vk.2 )
             case C_2
-            solve( !KU( f_.6,
-                        senc(<'33', sid, PRF(<~pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, $S>,
+            solve( !KU( senc(<'33', sid, PRF(<~pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, 
+                              $S>,
                              h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>))
                    ) @ #vk.5 )
               case C_2
-              solve( !KU( f_, h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
-                     ) @ #vk.3 )
+              solve( !KU( h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>) ) @ #vk.3 )
                 case ch
-                solve( !KU( f_.5, sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1)
-                       ) @ #vk.5 )
+                solve( !KU( sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1) ) @ #vk.5 )
                   case C_2
-                  solve( !KU( f_.19, PRF(<~pms, ~nc, ~ns>) ) @ #vk.23 )
+                  solve( !KU( PRF(<~pms, ~nc, ~ns>) ) @ #vk.23 )
                     case cPRF
-                    solve( !KU( f_.20, ~pms ) @ #vk.26 )
+                    solve( !KU( ~pms ) @ #vk.26 )
                       case C_2
-                      solve( !KU( f_.5, ~ltkA ) @ #vk.27 )
+                      solve( !KU( ~ltkA ) @ #vk.27 )
                         case Reveal_ltk
                         by contradiction // from formulas
                       qed
@@ -442,7 +428,7 @@ next
                   qed
                 next
                   case csign
-                  solve( !KU( f_.5, ~ltkA.1 ) @ #vk.25 )
+                  solve( !KU( ~ltkA.1 ) @ #vk.25 )
                     case Reveal_ltk
                     by contradiction // from formulas
                   qed
@@ -450,17 +436,15 @@ next
               qed
             next
               case csenc
-              solve( !KU( f_, h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>)
-                     ) @ #vk.3 )
+              solve( !KU( h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>) ) @ #vk.3 )
                 case ch
-                solve( !KU( f_.6, sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1)
-                       ) @ #vk.5 )
+                solve( !KU( sign(<'32', h(<'32', ~ns, $S, ~pms>)>, ~ltkA.1) ) @ #vk.5 )
                   case C_2
-                  solve( !KU( f_.27, PRF(<~pms, nc, ~ns>) ) @ #vk.32 )
+                  solve( !KU( PRF(<~pms, nc, ~ns>) ) @ #vk.32 )
                     case cPRF
-                    solve( !KU( f_.31, ~pms ) @ #vk.37 )
+                    solve( !KU( ~pms ) @ #vk.37 )
                       case C_2
-                      solve( !KU( f_.6, ~ltkA ) @ #vk.38 )
+                      solve( !KU( ~ltkA ) @ #vk.38 )
                         case Reveal_ltk
                         by contradiction // from formulas
                       qed
@@ -468,7 +452,7 @@ next
                   qed
                 next
                   case csign
-                  solve( !KU( f_.6, ~ltkA.1 ) @ #vk.37 )
+                  solve( !KU( ~ltkA.1 ) @ #vk.37 )
                     case Reveal_ltk
                     by contradiction // from formulas
                   qed
@@ -477,36 +461,34 @@ next
             qed
           next
             case caenc
-            solve( !KU( f_.7,
-                        senc(<'33', sid, PRF(<pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, $S>,
+            solve( !KU( senc(<'33', sid, PRF(<pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, 
+                              $S>,
                              h(<'clientKey', nc, ~ns, PRF(<pms, nc, ~ns>)>))
                    ) @ #vk.5 )
               case C_2
-              solve( !KU( f_.15, ~pms ) @ #vk.17 )
+              solve( !KU( ~pms ) @ #vk.17 )
                 case C_2
-                solve( !KU( f_.6, ~ltkA.2 ) @ #vk.23 )
+                solve( !KU( ~ltkA.2 ) @ #vk.23 )
                   case Reveal_ltk
                   by contradiction // from formulas
                 qed
               qed
             next
               case csenc
-              solve( !KU( f_, h(<'clientKey', nc, ~ns, PRF(<pms, nc, ~ns>)>)
-                     ) @ #vk.3 )
+              solve( !KU( h(<'clientKey', nc, ~ns, PRF(<pms, nc, ~ns>)>) ) @ #vk.3 )
                 case ch
-                solve( !KU( f_.7, sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1)
-                       ) @ #vk.5 )
+                solve( !KU( sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1) ) @ #vk.5 )
                   case C_2
-                  solve( !KU( f_.21, ~pms ) @ #vk.24 )
+                  solve( !KU( ~pms ) @ #vk.24 )
                     case C_2
-                    solve( !KU( f_.7, ~ltkA.2 ) @ #vk.39 )
+                    solve( !KU( ~ltkA.2 ) @ #vk.39 )
                       case Reveal_ltk
                       by contradiction // from formulas
                     qed
                   qed
                 next
                   case csign
-                  solve( !KU( f_.7, ~ltkA.1 ) @ #vk.35 )
+                  solve( !KU( ~ltkA.1 ) @ #vk.35 )
                     case Reveal_ltk
                     by contradiction // from formulas
                   qed
@@ -540,24 +522,23 @@ solve( SessionKeys( S, C, keyS, keyC ) @ #k )
   case C_3
   solve( St_C_2( S, C, sid, nc, pc, ns, ps, pms ) ▶₀ #k )
     case C_2
-    solve( !KU( f_,
-                senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, $A>,
+    solve( !KU( senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, 
+                      $A>,
                      h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>))
            ) @ #vk )
       case S_2
-      solve( !KU( f_.9, aenc(<'31', ~pms>, pk(~ltkA.2)) ) @ #vk.10 )
+      solve( !KU( aenc(<'31', ~pms>, pk(~ltkA.2)) ) @ #vk.10 )
         case C_2
-        solve( !KU( f_.11, sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.2)
-               ) @ #vk.13 )
+        solve( !KU( sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.2) ) @ #vk.13 )
           case C_2
-          solve( !KU( f_.7, ~sid ) @ #vk.9 )
+          solve( !KU( ~sid ) @ #vk.9 )
             case C_1
-            solve( !KU( f_.5, ~ns ) @ #vk.9 )
+            solve( !KU( ~ns ) @ #vk.9 )
               case S_1
-              solve( !KU( f_.12, ~nc ) @ #vk.17 )
+              solve( !KU( ~nc ) @ #vk.17 )
                 case C_1
-                solve( !KU( f_.10,
-                            senc(<'33', ~sid, PRF(<~pms, ~nc, ~ns>), ~nc, $pc, $C, ~ns, $ps, $A>,
+                solve( !KU( senc(<'33', ~sid, PRF(<~pms, ~nc, ~ns>), ~nc, $pc, $C, ~ns, 
+                                  $ps, $A>,
                                  h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>))
                        ) @ #vk.16 )
                   case C_2
@@ -587,7 +568,7 @@ analyzing: data/examples/classic/TLS_Handshake.spthy
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.335029s
+  processing time: 4.457306s
   session_key_secrecy (all-traces): verified (106 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 
@@ -599,7 +580,7 @@ summary of summaries:
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.335029s
+  processing time: 4.457306s
   session_key_secrecy (all-traces): verified (106 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 

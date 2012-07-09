@@ -144,7 +144,7 @@ solve( (∃ ss #i4 #i5 C D ms.
             case Init_K1_1
             solve( splitEqs(1) )
               case split_case_1
-              solve( !KU( f_, KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~lkR))>) ) @ #vk.3 )
+              solve( !KU( KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~lkR))>) ) @ #vk.3 )
                 case Sessk_reveal_case_1
                 by contradiction // from formulas
               next
@@ -152,12 +152,12 @@ solve( (∃ ss #i4 #i5 C D ms.
                 by contradiction // from formulas
               next
                 case cKDF
-                solve( !KU( f_.5, ~m1 ) @ #vk.7 )
+                solve( !KU( ~m1 ) @ #vk.7 )
                   case Ephk_reveal
                   by contradiction // from formulas
                 next
                   case Init_K1_1
-                  solve( !KU( f_.3, ~lkR ) @ #vk.12 )
+                  solve( !KU( ~lkR ) @ #vk.12 )
                     case Ltk_reveal
                     by contradiction // from formulas
                   qed
@@ -165,22 +165,21 @@ solve( (∃ ss #i4 #i5 C D ms.
               qed
             next
               case split_case_2
-              solve( !KU( f_.4,
-                          MAC(KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>),
+              solve( !KU( MAC(KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>),
                               <'KC_1_V', $R, $I, ~m2, aenc(~m1, pk(~ltkA))>)
                      ) @ #vk.2 )
                 case cMAC
-                solve( !KU( f_, KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>) ) @ #vk.4 )
+                solve( !KU( KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>) ) @ #vk.4 )
                   case Sessk_reveal
                   by contradiction // cyclic
                 next
                   case cKDF
-                  solve( !KU( f_.11, ~m1 ) @ #vk.15 )
+                  solve( !KU( ~m1 ) @ #vk.15 )
                     case Ephk_reveal
                     by contradiction // from formulas
                   next
                     case Init_K1_1
-                    solve( !KU( f_.4, ~ltkA ) @ #vk.16 )
+                    solve( !KU( ~ltkA ) @ #vk.16 )
                       case Ltk_reveal
                       by contradiction // from formulas
                     qed
@@ -197,12 +196,11 @@ next
   case case_2
   solve( Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) ▶₀ #i1 )
     case Init_K1_1
-    solve( !KU( f_.3,
-                MAC(KDF(<~m1, $I, $R, nonceB, aenc(~m1, pk(~ltkA))>),
+    solve( !KU( MAC(KDF(<~m1, $I, $R, nonceB, aenc(~m1, pk(~ltkA))>),
                     <'KC_1_V', $R, $I, nonceB, aenc(~m1, pk(~ltkA))>)
            ) @ #vk.2 )
       case Resp_K1_1
-      solve( !KU( f_, KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>) ) @ #vk.3 )
+      solve( !KU( KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>) ) @ #vk.3 )
         case Sessk_reveal_case_1
         by contradiction // from formulas
       next
@@ -210,12 +208,12 @@ next
         by contradiction // from formulas
       next
         case cKDF
-        solve( !KU( f_.4, ~m1 ) @ #vk.7 )
+        solve( !KU( ~m1 ) @ #vk.7 )
           case Ephk_reveal
           by contradiction // from formulas
         next
           case Init_K1_1
-          solve( !KU( f_.3, ~ltkA ) @ #vk.12 )
+          solve( !KU( ~ltkA ) @ #vk.12 )
             case Ltk_reveal
             by contradiction // from formulas
           qed
@@ -223,8 +221,7 @@ next
       qed
     next
       case cMAC
-      solve( !KU( f_, KDF(<~m1, $I, $R, nonceB, aenc(~m1, pk(~ltkA))>)
-             ) @ #vk.4 )
+      solve( !KU( KDF(<~m1, $I, $R, nonceB, aenc(~m1, pk(~ltkA))>) ) @ #vk.4 )
         case Sessk_reveal_case_1
         by contradiction // from formulas
       next
@@ -232,12 +229,12 @@ next
         by contradiction // cyclic
       next
         case cKDF
-        solve( !KU( f_.11, ~m1 ) @ #vk.15 )
+        solve( !KU( ~m1 ) @ #vk.15 )
           case Ephk_reveal
           by contradiction // from formulas
         next
           case Init_K1_1
-          solve( !KU( f_.3, ~ltkA ) @ #vk.16 )
+          solve( !KU( ~ltkA ) @ #vk.16 )
             case Ltk_reveal
             by contradiction // from formulas
           qed
@@ -262,7 +259,7 @@ analyzing: data/examples/csf12/KAS1.spthy
 analyzed: data/examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.615556s
+  processing time: 0.72821s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ------------------------------------------------------------------------------
@@ -273,7 +270,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.615556s
+  processing time: 0.72821s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ==============================================================================

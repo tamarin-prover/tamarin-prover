@@ -40,7 +40,7 @@ lemma (modulo E) types [typing]:
   all-traces
   "∀ sk #i.
     (Revoked( sk ) @ #i) ⇒
-    ((∃ f #j. (!KU( f, sk ) @ #j) ∧ (#j < #i)) ∨
+    ((∃ #j. (!KU( sk ) @ #j) ∧ (#j < #i)) ∨
      (∃ #j. (HonestKey( sk ) @ #j) ∧ (#j < #i)))"
 /* proof based on the same lemma modulo AC */
 /*
@@ -48,7 +48,7 @@ guarded formula characterizing all counter-examples:
 "∃ sk #i.
   (Revoked( sk ) @ #i)
  ∧
-  (∀ f #j. (!KU( f, sk ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (!KU( sk ) @ #j) ⇒ ¬(#j < #i)) ∧
   (∀ #j. (HonestKey( sk ) @ #j) ⇒ ¬(#j < #i))"
 */
 induction
@@ -58,12 +58,12 @@ next
   case non_empty_trace
   simplify
   solve( (last(#i))  ∥
-         (∃ f #j. (!KU( f, sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j. (!KU( sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j. (HonestKey( sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
     case case_1
-    solve( !KU( f_, sign(<'renew', A, pk(skNew)>, sk) ) @ #vk )
+    solve( !KU( sign(<'renew', A, pk(skNew)>, sk) ) @ #vk )
       case RenewKey
-      solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr))  ∥
+      solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr))  ∥
              (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr)) )
         case case_1
         by contradiction // cyclic
@@ -81,7 +81,7 @@ next
       case RequestRenewKey
       solve( ServerDB( $A, sk ) ▶₁ #i )
         case RenewKey
-        solve( (∃ f #j. (!KU( f, sk.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
+        solve( (∃ #j. (!KU( sk.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                (∃ #j. (HonestKey( sk.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1)) )
           case case_1
           solve( ClientKey( $A, sk ) ▶₀ #vr )
@@ -95,9 +95,9 @@ next
           case case_2
           solve( HonestKey( sk.1 ) @ #j )
             case RequestRenewKey
-            solve( !KU( f_, sign(<'renew', $A, pk(sk)>, ~skNew.1) ) @ #vk.1 )
+            solve( !KU( sign(<'renew', $A, pk(sk)>, ~skNew.1) ) @ #vk.1 )
               case RenewKey
-              solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+              solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                      (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2)) )
                 case case_1
                 by contradiction // cyclic
@@ -116,9 +116,9 @@ next
               by contradiction // from formulas
             next
               case csign
-              solve( !KU( f_.1, ~skNew.1 ) @ #vk.3 )
+              solve( !KU( ~skNew.1 ) @ #vk.3 )
                 case RenewKey
-                solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                        (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2)) )
                   case case_1
                   by contradiction // cyclic
@@ -128,9 +128,9 @@ next
                     case RequestRenewKey
                     solve( (#vl.1, 0) ~~> (#vk.2, 0) )
                       case ~skNew.2
-                      solve( !KU( f_.1, sign(<'renew', A.2, pk(skNew.2)>, ~skNew.1) ) @ #vk.8 )
+                      solve( !KU( sign(<'renew', A.2, pk(skNew.2)>, ~skNew.1) ) @ #vk.8 )
                         case RenewKey
-                        solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                        solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                                (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3)) )
                           case case_1
                           by contradiction // cyclic
@@ -167,9 +167,9 @@ next
             qed
           next
             case SetupHonestKey
-            solve( !KU( f_, sign(<'renew', $A, pk(sk)>, ~sk.1) ) @ #vk.1 )
+            solve( !KU( sign(<'renew', $A, pk(sk)>, ~sk.1) ) @ #vk.1 )
               case RenewKey
-              solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+              solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                      (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2)) )
                 case case_1
                 by contradiction // cyclic
@@ -188,9 +188,9 @@ next
               by contradiction // from formulas
             next
               case csign
-              solve( !KU( f_.1, ~sk.1 ) @ #vk.3 )
+              solve( !KU( ~sk.1 ) @ #vk.3 )
                 case RenewKey
-                solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                        (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2)) )
                   case case_1
                   by contradiction // cyclic
@@ -203,9 +203,9 @@ next
                     case SetupHonestKey
                     solve( (#vl.1, 0) ~~> (#vk.2, 0) )
                       case ~sk.2
-                      solve( !KU( f_.1, sign(<'renew', A.2, pk(skNew.1)>, ~sk.1) ) @ #vk.8 )
+                      solve( !KU( sign(<'renew', A.2, pk(skNew.1)>, ~sk.1) ) @ #vk.8 )
                         case RenewKey
-                        solve( (∃ f #j. (!KU( f, t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                        solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                                (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3)) )
                           case case_1
                           by contradiction // cyclic
@@ -272,13 +272,13 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( HonestKey( sk ) @ #i )
   case RequestRenewKey
-  solve( !KU( f_, ~skNew ) @ #vk )
+  solve( !KU( ~skNew ) @ #vk )
     case RenewKey
     by contradiction // from formulas
   qed
 next
   case SetupHonestKey
-  solve( !KU( f_, ~sk ) @ #vk )
+  solve( !KU( ~sk ) @ #vk )
     case RenewKey
     by contradiction // from formulas
   qed
@@ -299,7 +299,7 @@ analyzing: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.407505s
+  processing time: 1.253234s
   types (all-traces): verified (67 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
@@ -311,7 +311,7 @@ summary of summaries:
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.407505s
+  processing time: 1.253234s
   types (all-traces): verified (67 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 

@@ -170,11 +170,11 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
   case Init_1
   solve( !Pk( $R, 'g'^~x ) ▶₂ #i1 )
     case generate_ltk
-    solve( !KU( f_, h(<'g'^~ekI, hkR, z, 'g'^(~lkI*~x)>) ) @ #vk.1 )
+    solve( !KU( h(<'g'^~ekI, hkR, z, 'g'^(~lkI*~x)>) ) @ #vk.1 )
       case Sessk_reveal_case_3
-      solve( !KU( f_, 'g'^~tid ) @ #vk.1 )
+      solve( !KU( 'g'^~tid ) @ #vk.1 )
         case Resp_1
-        solve( !KU( f_, 'g'^~ekI ) @ #vk.2 )
+        solve( !KU( 'g'^~ekI ) @ #vk.2 )
           case Init_1
           SOLVED // trace found
         qed
@@ -226,11 +226,11 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
   case generate_ltk
   solve( !Pk( $I, 'g'^~x ) ▶₃ #i1 )
     case generate_ltk
-    solve( !KU( f_, h(<hkI, 'g'^~ekR, z, 'g'^(~lkR*~x)>) ) @ #vk.1 )
+    solve( !KU( h(<hkI, 'g'^~ekR, z, 'g'^(~lkR*~x)>) ) @ #vk.1 )
       case Sessk_reveal_case_1
-      solve( !KU( f_, 'g'^~tid ) @ #vk.1 )
+      solve( !KU( 'g'^~tid ) @ #vk.1 )
         case Init_1
-        solve( !KU( f_, 'g'^~ekR ) @ #vk.2 )
+        solve( !KU( 'g'^~ekR ) @ #vk.2 )
           case Resp_1
           SOLVED // trace found
         qed
@@ -254,7 +254,7 @@ analyzing: data/examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 analyzed: data/examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.644036s
+  processing time: 0.696446s
   JKL2008_2_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_2_responder_key (all-traces): falsified - found trace (7 steps)
 
@@ -266,7 +266,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.644036s
+  processing time: 0.696446s
   JKL2008_2_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_2_responder_key (all-traces): falsified - found trace (7 steps)
 
