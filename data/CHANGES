@@ -12,6 +12,7 @@
     - new homepage: http://www.infsec.ethz.ch/research/software/tamarin
 
     - prover:
+        - reduced memory usage of the autoprover by a factor 2 to 10.
         - We now use the following additional normal form condition.
 
             > There is no edge (i,1)>->(j,1) between two exponentiation rules
