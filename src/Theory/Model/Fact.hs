@@ -141,7 +141,7 @@ instance Apply t => Apply (Fact t) where
 data DirTag = UpK | DnK
             deriving( Eq, Ord, Show )
 
-kdFact, kuFact :: LNTerm -> LNFact
+kdFact, kuFact :: t -> Fact t
 kdFact = Fact KDFact . return
 kuFact = Fact KUFact . return
 
