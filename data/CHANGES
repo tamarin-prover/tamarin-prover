@@ -20,6 +20,7 @@
 
           This removes the need for exponentiation tags and thereby simplifies
           the constraint-reduction rules, both in theory and in code.
+        - improved error messages of wellformedness checks
 
     - editor support: Tomas Zgraggen contributed a syntax highligthing file
       for .spthy files for Notepad++ (http://notepad-plus-plus.org/).  This is

@@ -209,12 +209,12 @@ formulaToSystem kind traceQuantifier fm =
     adapt = case traceQuantifier of
       ExistsSomeTrace -> id
       ExistsNoTrace   -> gnot
-    gf = either error id (adapt <$> formulaToGuarded fm)
+    gf = either (error . render) id (adapt <$> formulaToGuarded fm)
 
 -- | Add a lemma / additional assumption to a constraint system.
 insertLemma :: LNFormula -> System -> System
 insertLemma fm0 =
-    go (either error id $ formulaToGuarded fm0)
+    go (either (error . render) id $ formulaToGuarded fm0)
   where
     go (GConj conj) = foldr (.) id $ map go $ getConj conj
     go fm           = L.modify sLemmas (S.insert fm)

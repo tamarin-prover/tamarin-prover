@@ -383,7 +383,7 @@ formulaReports thy = do
             "The only allowed terms are public names and bound node and message\
             \ variables. If you encounter free message variables, then you might\
             \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
-            \ this is unambiguous"
+            \ this is unambiguous."
       where
         offenders = filter (not . allowed) $ formulaTerms fm
         allowed (viewTerm -> Lit (Var (Bound _)))        = True
@@ -394,7 +394,7 @@ formulaReports thy = do
     checkGuarded header fm = case formulaToGuarded fm of
         Left err -> return $
             text (header ++ " cannot be converted to a guarded formula:") $-$
-            nest 2 (text err)
+            nest 2 err
         Right _  -> []
 
 

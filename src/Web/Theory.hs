@@ -169,7 +169,7 @@ lemmaIndex renderUrl tidx l =
         -- linkToPath renderUrl lemmaRoute ["delete-link"] deletePng)
         $-$
         nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
-                     , doubleQuotes $ prettyFormulaE $ get lFormulaE l
+                     , doubleQuotes $ prettyLNFormula $ get lFormulaE l
                      ] )
     ) $-$
     proofIndex renderUrl mkRoute annPrf

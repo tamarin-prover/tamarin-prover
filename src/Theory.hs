@@ -722,7 +722,7 @@ prettyLemma ppPrf l =
     kwLemmaModulo "E" <-> prettyLemmaName l <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier l
-          , doubleQuotes $ prettyFormulaE $ L.get lFormulaE l
+          , doubleQuotes $ prettyLNFormula $ L.get lFormulaE l
           ]
     )
     $-$
@@ -739,11 +739,12 @@ prettyLemma ppPrf l =
       | otherwise               =
           multiComment
               ( text "proof based on the following equivalent lemma modulo AC:" $-$
-                doubleQuotes (prettyFormulaAC fmAC) )
+                doubleQuotes (prettyLNFormula fmAC) )
 
     ppFormulaACGuarded fmAC = case formulaToGuarded fmAC of
-        Left err -> multiComment_
-            ["conversion to doubly-guarded formula failed:", err]
+        Left err -> multiComment $
+            text "conversion to guarded formula failed:" $$
+            nest 2 err
         Right gf -> case toSystemTraceQuantifier $ L.get lTraceQuantifier l of
           ExistsNoTrace -> multiComment
             ( text "guarded formula characterizing all counter-examples:" $-$

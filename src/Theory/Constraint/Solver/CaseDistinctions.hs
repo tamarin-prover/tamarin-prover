@@ -304,7 +304,7 @@ refineWithTypingAsms typAsms0 ctxt cases0 =
     saturateCaseDistinctions ctxt $
     modifySystems updateSystem <$> cases0
   where
-    typAsms = map (either error id . formulaToGuarded) typAsms0
+    typAsms = map (either (error . render) id . formulaToGuarded) typAsms0
     modifySystems = modify cdCases . fmap . second
     updateSystem se =
         modify sFormulas (S.union (S.fromList typAsms)) $

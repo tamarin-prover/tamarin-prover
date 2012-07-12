@@ -44,8 +44,7 @@ module Theory.Model.Formula (
   , foldFormula
 
   -- ** Pretty-Printing
-  , prettyFormulaE
-  , prettyFormulaAC
+  , prettyLNFormula
 
   ) where
 
@@ -311,9 +310,6 @@ prettyLFormula ppAtom =
         ppQuant All = "∀ " -- "All "
         ppQuant Ex  = "∃ " -- "Ex "
 
-prettyFormulaAC, prettyFormulaE :: HighlightDocument d => FormulaE -> d
-prettyFormulaE  = prettyLNFormula
-prettyFormulaAC = prettyLNFormula
 
 -- | Pretty print a logical formula
 prettyLNFormula :: HighlightDocument d => LNFormula -> d

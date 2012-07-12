@@ -1,7 +1,8 @@
-{-# LANGUAGE BangPatterns         #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE BangPatterns               #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -60,8 +61,7 @@ import           Control.Arrow
 import           Control.DeepSeq
 import           Control.Monad.Error
 import           Control.Monad.Fresh              (MonadFresh, scopeFreshness)
-import qualified Control.Monad.Trans.FastFresh    as Fast (evalFreshT)
-import qualified Control.Monad.Trans.PreciseFresh as Precise (Fresh, evalFresh)
+import qualified Control.Monad.Trans.PreciseFresh as Precise (Fresh, evalFresh, evalFreshT)
 
 import           Debug.Trace
 
@@ -70,7 +70,7 @@ import           Data.DeriveTH
 import           Data.Either                      (partitionEithers)
 import           Data.Foldable                    (Foldable(..), foldMap)
 import           Data.List
-import           Data.Monoid                      (mappend, mconcat)
+import           Data.Monoid                      (Monoid(..))
 import           Data.Traversable                 hiding (mapM, sequence)
 
 import           Logic.Connectives
@@ -282,6 +282,10 @@ closeGuarded qua vs as gf =
 
 type LNGuarded = Guarded (String,LSort) Name LVar
 
+instance Apply LNGuarded where
+  apply subst = mapGuardedAtoms (const $ apply subst)
+
+
 -- | @gtf b@ returns the guarded formula f with @b <-> f@.
 gtf :: Bool -> Guarded s c v
 gtf False = GDisj (Disj [])
@@ -340,93 +344,101 @@ gall _  []   gf               = gf
 gall _  _    gf | gf == gtrue = gtrue
 gall ss atos gf               = GGuarded All ss atos gf
 
+
+-- Conversion of formulas to guarded formulas
+---------------------------------------------
+
+-- | Local newtype to avoid orphan instance.
+newtype ErrorDoc d = ErrorDoc { unErrorDoc :: d }
+    deriving( Monoid, NFData, Document, HighlightDocument )
+
+instance Document d => Error (ErrorDoc d) where
+    noMsg  = emptyDoc
+    strMsg = text
+
 -- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
 -- equivalent to @fm@ if possible.
-formulaToGuarded :: LNFormula  -> Either String LNGuarded
-formulaToGuarded = convert False
-
--- | @convert neg f@ returns @Nothing@ if @f@ cannot be converted,
--- @Just gf@ such that @mneg f <-> gf@ with @mneg = id@ if @neg@ is @False@
--- and @mneg=not@ if @neg@ is true.
-convert :: Bool -> LNFormula  -> Either String LNGuarded
-convert True  (Ato a) = pure $ gnotAtom a
-convert False (Ato a) = pure $ GAto a
-
-convert polarity (Not f) = convert (not polarity) f
-
-convert True  (Conn And f g) = gdisj <$> mapM (convert True)  [f, g]
-convert False (Conn And f g) = gconj <$> mapM (convert False) [f, g]
-
-convert True  (Conn Or f g)  = gconj <$> mapM (convert True)  [f, g]
-convert False (Conn Or f g)  = gdisj <$> mapM (convert False) [f, g]
-
-convert True  (Conn Imp f g         ) =
-    gconj <$> sequence [convert False f, convert True  g]
-convert False (Conn Imp f g         ) =
-    gdisj <$> sequence [convert True  f, convert False g]
-
-convert polarity    (TF b) = pure $ gtf (polarity /= b)
-
-convert polarity f0@(Qua qua0 _ _) =
-    -- The quantifier switch stems from our implicit negation of the formula.
-    case (qua0, polarity) of
-      (All, True ) -> convAll Ex
-      (All, False) -> convAll All
-      (Ex,  True ) -> convEx  All
-      (Ex,  False) -> convEx  Ex
+formulaToGuarded :: HighlightDocument d => LNFormula  -> Either d LNGuarded
+formulaToGuarded fmOrig =
+      either (Left . ppError . unErrorDoc) Right
+    $ Precise.evalFreshT (convert False fmOrig) (avoidPrecise fmOrig)
   where
-    convEx qua = do
-      -- can use the 'Fast' freshness monad  here, as we are inventing the names only
-      -- temporarily
-      (xs,_,f) <- openFormulaPrefix f0 `Fast.evalFreshT` avoid f0
-      case partitionEithers $ partitionConj f of
-        (as, fs) -> do
-          let guardedvars = frees as
-              -- all existentially quantified variables must be guarded
-              unguarded = xs \\ guardedvars
+    ppFormula :: HighlightDocument a => LNFormula -> a
+    ppFormula = nest 2 . doubleQuotes . prettyLNFormula
 
-          unless (null unguarded) $ throwError $
-              "unguarded variables " ++ show unguarded ++ " in " ++ show f0
+    ppError d = d $-$ text "in the formula" $-$ ppFormula fmOrig
 
-          gf <- (if polarity then gdisj else gconj)
-                  <$> mapM (convert polarity) fs
-          return $ closeGuarded qua xs as gf
+    convert True  (Ato a) = pure $ gnotAtom a
+    convert False (Ato a) = pure $ GAto a
+
+    convert polarity (Not f) = convert (not polarity) f
+
+    convert True  (Conn And f g) = gdisj <$> mapM (convert True)  [f, g]
+    convert False (Conn And f g) = gconj <$> mapM (convert False) [f, g]
+
+    convert True  (Conn Or f g)  = gconj <$> mapM (convert True)  [f, g]
+    convert False (Conn Or f g)  = gdisj <$> mapM (convert False) [f, g]
+
+    convert True  (Conn Imp f g         ) =
+        gconj <$> sequence [convert False f, convert True  g]
+    convert False (Conn Imp f g         ) =
+        gdisj <$> sequence [convert True  f, convert False g]
+
+    convert polarity    (TF b) = pure $ gtf (polarity /= b)
+
+    convert polarity f0@(Qua qua0 _ _) =
+        -- The quantifier switch stems from our implicit negation of the formula.
+        case (qua0, polarity) of
+          (All, True ) -> convAll Ex
+          (All, False) -> convAll All
+          (Ex,  True ) -> convEx  All
+          (Ex,  False) -> convEx  Ex
       where
-        partitionConj (Conn And f1 f2)     = partitionConj f1 ++ partitionConj f2
-        partitionConj (Ato a@(Action _ _)) = [Left $ bvarToLVar a]
-        partitionConj (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]
-        partitionConj f                    = [Right f]
+        noUnguardedVars []        = return ()
+        noUnguardedVars unguarded = throwError $ vcat
+          [ fsep $   text "unguarded variable(s)"
+                   : (punctuate comma $
+                      map (quotes . text . show) unguarded)
+                  ++ map text ["in", "the", "subformula"]
+          , ppFormula f0
+          ]
 
-    convAll qua = do
-      (xs,_,f) <- openFormulaPrefix f0 `Fast.evalFreshT` avoid f0
-      case f of
-        Conn Imp ante suc -> do
-          allowedAtoms <- collectAllowedAtoms ante
+        conjActions (Conn And f1 f2)     = conjActions f1 ++ conjActions f2
+        conjActions (Ato a@(Action _ _)) = [Left $ bvarToLVar a]
+        conjActions f                    = [Right f]
 
-          let guardedvars = frees [ a | a@(Action _ _) <- allowedAtoms ]
-              -- all universally quantified variables must be guarded
-              unguarded = xs \\ guardedvars
+        convEx qua = do
+            (xs,_,f) <- openFormulaPrefix f0
+            case partitionEithers $ conjActions f of
+              (as, fs) -> do
+                -- all existentially quantified variables must be guarded
+                noUnguardedVars (xs \\ frees as)
+                -- convert all other formulas
+                gf <- (if polarity then gdisj else gconj)
+                        <$> mapM (convert polarity) fs
+                return $ closeGuarded qua xs as gf
+          where
 
-          when (not $ null unguarded) $ throwError $
-              "unguarded variables " ++ show unguarded ++ " in " ++ show f0
+        convAll qua = do
+            (xs,_,f) <- openFormulaPrefix f0
+            case f of
+              Conn Imp ante suc -> case partitionEithers $ conjActions ante of
+                (as, fs) -> do
+                  -- all universally quantified variables must be guarded
+                  noUnguardedVars (xs \\ frees as)
+                  -- negate formulas in antecedent and combine with body
+                  gf <- (if polarity then gconj else gdisj)
+                          <$> sequence ( map (convert (not polarity)) fs ++
+                                         [convert polarity suc] )
 
-          g <- convert polarity suc
-          return $ closeGuarded qua xs allowedAtoms g
+                  return $ closeGuarded qua xs as gf
 
-        _ -> throwError $ show f ++ "outside guarded fragment"
-     where
-      collectAllowedAtoms (Conn And f1 f2)     =
-        (++) <$> collectAllowedAtoms f1 <*> collectAllowedAtoms f2
-      collectAllowedAtoms (Ato a@(Action _ _)) = return [bvarToLVar a]
-      collectAllowedAtoms (Ato e@(EqE _ _))    = return [bvarToLVar e]
-      collectAllowedAtoms na                   =
-        throwError $ show na ++ " not allowed in antecedent"
+              _ -> throwError $
+                     text "universal quantifier without toplevel implication" $-$
+                     ppFormula f0
 
-convert _     (Conn Iff _ _) =
-  Left $ "`iff' not supported (yet)"
-
-instance Apply LNGuarded where
-  apply subst = mapGuardedAtoms (const $ apply subst)
+    convert polarity (Conn Iff f1 f2) =
+        gconj <$> mapM (convert polarity) [Conn Imp f1 f2, Conn Imp f2 f1]
 
 
 ------------------------------------------------------------------------------
