@@ -637,6 +637,7 @@ solveRuleEqs split eqs = do
     contradictoryIf (not $ all evalEqual $ map (fmap (get rInfo)) eqs)
     solveListEqs (solveFactEqs split) $
         map (fmap (get rConcs)) eqs ++ map (fmap (get rPrems)) eqs
+        ++ map (fmap (get rActs)) eqs
 
 -- | Solve a number of equalities between lists interpreted as free terms
 -- using the given solver for solving the entailed per-element equalities.
