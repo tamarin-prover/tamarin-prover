@@ -390,7 +390,7 @@ fact plit =
     mkProtoFact multi f = case map toUpper f of
       "OUT" -> singleTerm f outFact
       "IN"  -> singleTerm f inFact
-      "KU"  -> singleTerm "KU" kuFact
+      "KU"  -> singleTerm f kuFact
       "KD"  -> return . Fact KDFact
       "DED" -> return . Fact DedFact
       "FR"  -> singleTerm f freshFact
