@@ -433,21 +433,6 @@ instance Apply LNGuarded where
 -- Induction over the trace
 ------------------------------------------------------------------------------
 
--- Note that we assume that the guarded formula describes the attack.
--- Hence, we want to show that it is false.
-
-{-
--- | Checks if a doubly guarded formula is last-free; i.e., does not contain a 'Last'
--- atom.
-lastFree :: Guarded s c v -> Bool
-lastFree = error "lastFree: implement"
-
--- | Checks if a formula is doubly guarded; i.e., both universal and existential
--- quantifiers are guarded.
-doublyGuarded :: Guarded s c v -> Bool
-doublyGuarded = either (const False) (const True) . satisfiedByEmptyTrace
--}
-
 -- | Negate a guarded formula.
 gnot :: (Ord s, Ord c, Ord v)
               => Guarded s c v -> Guarded s c v
