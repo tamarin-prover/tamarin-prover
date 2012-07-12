@@ -175,25 +175,3 @@ i6 = lit $ Var $ li6
 i7 = lit $ Var $ li7
 i8 = lit $ Var $ li8
 i9 = lit $ Var $ li9
-
-ls1,ls2,ls3,ls4,ls5,ls6,ls7,ls8,ls9 :: LVar
-ls1 = LVar "s1" LSortMSet 0
-ls2 = LVar "s2" LSortMSet 0
-ls3 = LVar "s3" LSortMSet 0
-ls4 = LVar "s4" LSortMSet 0
-ls5 = LVar "s5" LSortMSet 0
-ls6 = LVar "s6" LSortMSet 0
-ls7 = LVar "s7" LSortMSet 0
-ls8 = LVar "s8" LSortMSet 0
-ls9 = LVar "s9" LSortMSet 0
-
-s1,s2,s3,s4,s5,s6,s7,s8,s9 :: LNTerm
-s1 = lit $ Var $ ls1
-s2 = lit $ Var $ ls2
-s3 = lit $ Var $ ls3
-s4 = lit $ Var $ ls4
-s5 = lit $ Var $ ls5
-s6 = lit $ Var $ ls6
-s7 = lit $ Var $ ls7
-s8 = lit $ Var $ ls8
-s9 = lit $ Var $ ls9

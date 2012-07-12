@@ -50,7 +50,6 @@ ppLSort s = case s of
     LSortFresh -> "Fresh"
     LSortMsg   -> "Msg"
     LSortNode  -> "Node"
-    LSortMSet  -> "MSet"
 
 ppLSortSym :: LSort -> ByteString
 ppLSortSym lsort = case lsort of
@@ -58,7 +57,6 @@ ppLSortSym lsort = case lsort of
     LSortPub   -> "p"
     LSortMsg   -> "c"
     LSortNode  -> "n"
-    LSortMSet  -> "m"
 
 parseLSortSym :: ByteString -> Maybe LSort
 parseLSortSym s = case s of
@@ -66,7 +64,6 @@ parseLSortSym s = case s of
     "p"  -> Just LSortPub
     "c"  -> Just LSortMsg
     "n"  -> Just LSortNode
-    "m"  -> Just LSortMSet
     _    -> Nothing
 
 -- | Used to prevent clashes with predefined Maude function symbols
@@ -117,12 +114,9 @@ ppTheory msig = BC.unlines $
     , "  protecting NAT ." ]
     ++
     (if enableMSet msig
-     then [ "  sort Pub Fresh Msg MSet Node TOP ."
-          , "  subsort Msg < MSet ."
-          , "  subsort MSet < TOP ."
-          , "  op m : Nat -> MSet ."
-          , "  op " <> funSymPrefix <> "mun : MSet MSet -> MSet [comm assoc] ."
-          , "  op " <> funSymPrefix <> "empty : -> MSet ."
+     then [ "  sort Pub Fresh Msg Node TOP ."
+          , "  op " <> funSymPrefix <> "mun : Msg Msg -> Msg [comm assoc] ."
+          , "  op " <> funSymPrefix <> "empty : -> Msg ."
           ]
      else [ "  sort Pub Fresh Msg Node TOP ."])
     ++
@@ -211,9 +205,7 @@ parseSort =  string "Pub"      *> return LSortPub
          <|> string "Fresh"    *> return LSortFresh
          <|> string "Node"     *> return LSortNode
          <|> string "M"        *>
-               (    string "sg"  *> return LSortMsg
-                <|> string "Set" *> return LSortMSet)
-
+               (    string "sg"  *> return LSortMsg )
 
 
 -- | @parseTerm@ is a parser for Maude terms.

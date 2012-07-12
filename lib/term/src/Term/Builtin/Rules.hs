@@ -65,7 +65,7 @@ xorRules = S.fromList
 
 -- | The rewriting rules for multisets.
 msetRules :: Set (RRule LNTerm)
-msetRules = S.fromList [ s1 # fAppEmpty `RRule` s1 ]
+msetRules = S.fromList [ x1 # fAppEmpty `RRule` x1 ]
 
 
 -- | The rewriting rules for standard subterm operators that are builtin.

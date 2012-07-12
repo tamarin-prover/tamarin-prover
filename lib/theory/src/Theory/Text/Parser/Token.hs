@@ -259,7 +259,6 @@ sortedLVar ss =
           LSortPub   -> void $ char '$'
           LSortFresh -> void $ char '~'
           LSortNode  -> void $ char '#'
-          LSortMSet  -> void $ char '%'
         (n, i) <- indexedIdentifier
         return (LVar n s i)
 
@@ -269,7 +268,7 @@ lvar = sortedLVar [minBound..]
 
 -- | Parse a non-node variable.
 msgvar :: Parser LVar
-msgvar = sortedLVar [LSortFresh, LSortPub, LSortMsg, LSortMSet]
+msgvar = sortedLVar [LSortFresh, LSortPub, LSortMsg]
 
 -- | Parse a graph node variable.
 nodevar :: Parser NodeId

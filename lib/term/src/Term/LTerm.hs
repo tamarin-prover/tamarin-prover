@@ -126,21 +126,17 @@ import           Logic.Connectives
 
 -- | Sorts for logical variables. They satisfy the following sub-sort relation:
 --
--- >  LSortMsg   < LSortMSet
 -- >  LSortFresh < LSortMsg
 -- >  LSortPub   < LSortMsg
 --
 data LSort = LSortPub   -- ^ Arbitrary public names.
            | LSortFresh -- ^ Arbitrary fresh names.
            | LSortMsg   -- ^ Arbitrary messages.
-           | LSortMSet  -- ^ Sort for multisets.
            | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
            deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data )
 
 -- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
---   Partial order: Node      MSet
---                             |
---                            Msg
+--   Partial order: Node      Msg
 --                           /   \
 --                         Pub  Fresh
 sortCompare :: LSort -> LSort -> Maybe Ordering
@@ -149,10 +145,7 @@ sortCompare s1 s2 = case (s1, s2) of
     -- Node is incomparable to all other sorts, invalid input
     (LSortNode,  _        )  -> Nothing
     (_,          LSortNode)  -> Nothing
-    -- MSet is greater than all except Node
-    (LSortMSet,  _        )  -> Just GT
-    (_,          LSortMSet)  -> Just LT
-    -- Msg is greater than all sorts except Node and MSet
+    -- Msg is greater than all sorts except Node
     (LSortMsg,   _        )  -> Just GT
     (_,          LSortMsg )  -> Just LT
     -- The remaining combinations (Pub/Fresh) are incomparable
@@ -164,7 +157,6 @@ sortPrefix LSortMsg   = ""
 sortPrefix LSortFresh = "~"
 sortPrefix LSortPub   = "$"
 sortPrefix LSortNode  = "#"
-sortPrefix LSortMSet  = "%"
 
 -- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
 sortSuffix :: LSort -> String
@@ -172,7 +164,6 @@ sortSuffix LSortMsg   = "msg"
 sortSuffix LSortFresh = "fresh"
 sortSuffix LSortPub   = "pub"
 sortSuffix LSortNode  = "node"
-sortSuffix LSortMSet  = "mset"
 
 
 ------------------------------------------------------------------------------
@@ -258,8 +249,6 @@ sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Con c)  -> sortOfConst c
     Lit2 (Var lv) -> lvarSort lv
-    Empty         -> LSortMSet
-    FUnion _      -> LSortMSet
     _             -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.

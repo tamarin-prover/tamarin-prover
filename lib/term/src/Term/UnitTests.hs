@@ -264,10 +264,10 @@ testsVariant hnd =
                                 , [(lx1, x2 +: x3), (lx2, x1 +: x3)]
                                 ])
 
-      , testEqual "d" (computeVariantsCheck (fAppList [s1, s2, s1  #  s2]) `runReader` hnd)
+      , testEqual "d" (computeVariantsCheck (fAppList [x1, x2, x1  #  x2]) `runReader` hnd)
                       (toSubsts [ []
-                                , [(ls1, emptyMSet)]
-                                , [(ls2, emptyMSet) ] ])
+                                , [(lx1, emptyMSet)]
+                                , [(lx2, emptyMSet) ] ])
 
       , testTrue "e" $ not (checkComplete (sdec(x1, p1)) (toSubsts [[]]) `runReader` hnd)
       , testTrue "f" $ (checkComplete (sdec(x1, p1)) (toSubsts [[], [(lx1, senc(x1,p1))]])
