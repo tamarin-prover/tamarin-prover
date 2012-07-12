@@ -154,7 +154,7 @@ flag build-tests
 
 executable tamarin-prover
     if flag(threaded)
-        ghc-options:   -threaded
+        ghc-options:   -threaded -feager-blackholing
 
     ghc-options:       -Wall -funbox-strict-fields -fwarn-tabs -rtsopts
     ghc-prof-options:  -auto-all

@@ -30,6 +30,7 @@ source-repository head
 
 library
     ghc-prof-options:  -auto-all
+    ghc-options:       -feager-blackholing
 
     build-depends:
         base              == 4.*
