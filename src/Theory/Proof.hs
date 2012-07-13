@@ -518,7 +518,14 @@ cutOnSolvedDFS prf0 =
           | otherwise = case node of
               LNode (ProofStep Solved (_,path)) _ -> Solution path
               LNode _ cs                          ->
-                  foldMap (findSolved (succ d)) cs
+                  foldMap (findSolved (succ d))
+                      (cs `using` parTraversable nfProofMethod)
+
+        nfProofMethod node = do
+            void $ rseq (psMethod $ root node)
+            void $ rseq (psInfo   $ root node)
+            void $ rseq (children node)
+            return node
 
     extractSolved []         p               = p
     extractSolved (label:ps) (LNode pstep m) = case M.lookup label m of
@@ -526,7 +533,6 @@ cutOnSolvedDFS prf0 =
           LNode pstep (M.fromList [(label, extractSolved ps subprf)])
         Nothing     ->
           error "Theory.Constraint.cutOnSolvedDFS: impossible, extractSolved failed, invalid path"
-
 
 -- | Search for attacks in a BFS manner.
 cutOnSolvedBFS :: Proof a -> Proof a
