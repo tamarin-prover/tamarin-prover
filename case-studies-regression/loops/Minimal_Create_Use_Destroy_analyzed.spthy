@@ -186,7 +186,7 @@ analyzing: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.296013s
+  processing time: 0.149549s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 
@@ -198,7 +198,7 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.296013s
+  processing time: 0.149549s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 

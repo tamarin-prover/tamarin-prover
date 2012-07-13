@@ -584,7 +584,7 @@ analyzing: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.496534s
+  processing time: 1.454866s
   types (all-traces): verified (16 steps)
   Unbind_PCR_Value (all-traces): verified (29 steps)
   secrecy (all-traces): verified (99 steps)
@@ -597,7 +597,7 @@ summary of summaries:
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.496534s
+  processing time: 1.454866s
   types (all-traces): verified (16 steps)
   Unbind_PCR_Value (all-traces): verified (29 steps)
   secrecy (all-traces): verified (99 steps)
