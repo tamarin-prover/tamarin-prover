@@ -22,7 +22,7 @@ theory StatVerif_Example1 begin
    components, but never both.
 
    Note that in contrast to [1], we allow the creation of an unbounded number
-   of devices. We also verify both the accessability of left and right
+   of devices. We also verify both the accessibility of left and right
    components, as well as their exclusivity. The source code of the model
    from [1] is attached at the end of this file.
 
