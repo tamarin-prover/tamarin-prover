@@ -156,7 +156,7 @@ executable tamarin-prover
     if flag(threaded)
         ghc-options:   -threaded -feager-blackholing
 
-    ghc-options:       -Wall -funbox-strict-fields -fwarn-tabs -rtsopts
+    ghc-options:       -Wall -fwarn-tabs -rtsopts
     ghc-prof-options:  -auto-all
     hs-source-dirs:    src
     main-is:           Main.hs
