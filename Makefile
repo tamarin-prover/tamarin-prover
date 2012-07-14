@@ -70,6 +70,11 @@ cabal-dev:
 	# force install with 'native' flag of blaze-textual
 	cabal-dev install blaze-textual -fnative --reinstall
 
+cabal-clean:
+	cd lib/utils; cabal clean
+	cd lib/term; cabal clean
+	cabal clean
+
 
 ###############################################################################
 ## Case Studies
