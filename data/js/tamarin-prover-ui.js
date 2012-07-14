@@ -154,7 +154,8 @@ var ui = {
             74  : function() { proofScript.jump('next/smart', null); },  // j
             75  : function() { proofScript.jump('prev/smart', null); },  // k
             106 : function() { proofScript.jump('next/normal', null); }, // J
-            107 : function() { proofScript.jump('prev/normal', null); }  // K
+            107 : function() { proofScript.jump('prev/normal', null); }, // K
+            63  : proofScript.showHelp                                   // ?
         }
 
         for(i = 1; i < 10; i++) {
@@ -471,6 +472,16 @@ var events = {
 
 var proofScript = {
     /**
+     * Show the help message
+     */
+    showHelp: function() {
+        var auto = $("#proof").find("a.internal-link.help");
+
+        if(auto.length >= 1)
+          $(auto.get(0)).click();
+    },
+
+    /**
      * Focus the active link by scrolling to it.
      */
     focusActive: function() {
@@ -603,8 +614,6 @@ var mainDisplay = {
 
         if(auto.length >= 1) $(auto.get(0)).click();
     },
-
-
 
     /**
      * Update main view with new HTML data.

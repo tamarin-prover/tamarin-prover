@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE QuasiQuotes   #-}
 {-# LANGUAGE TupleSections #-}
 {- |
 Module      :  Web.Theory
@@ -29,20 +30,24 @@ where
 import           Data.Char                    (toUpper)
 import           Data.List
 import qualified Data.Map                     as M
-import qualified Data.Set                     as S
 import           Data.Maybe
 import           Data.Monoid
+import qualified Data.Set                     as S
 import qualified Data.Text                    as T
+import           Data.Time.Format             (formatTime)
 
 import           Control.Basics
 import           Control.Concurrent           (threadDelay)
 
 import           System.Directory
 import           System.FilePath
+import           System.Locale                (defaultTimeLocale)
 
 import           Extension.Data.Label
 
+import           Text.Blaze.Html5             (preEscapedString, toHtml)
 import qualified Text.Dot                     as D
+import           Text.Hamlet                  (Html, hamlet)
 import           Text.PrettyPrint.Html
 import           Utils.Misc                   (stringSHA256)
 
@@ -185,7 +190,9 @@ lemmaIndex renderUrl tidx l =
 -- | Render the theory index.
 theoryIndex :: HtmlDocument d => RenderUrl -> TheoryIdx -> ClosedTheory -> d
 theoryIndex renderUrl tidx thy = foldr1 ($-$)
-    [ kwTheoryHeader $ get thyName thy
+    [ kwTheoryHeader
+        $ linkToPath renderUrl (TheoryPathMR tidx TheoryHelp) ["help"]
+        $ text $ get thyName thy
     , text ""
     , messageLink
     , text ""
@@ -369,26 +376,108 @@ messageSnippet thy = vcat
         (vcat (intersperse (text "") $ s))
 
 -- | Render the item in the given theory given by the supplied path.
-htmlThyPath :: HtmlDocument d
-            => RenderUrl    -- ^ The function for rendering Urls.
+htmlThyPath :: RenderUrl    -- ^ The function for rendering Urls.
             -> TheoryInfo   -- ^ The info of the theory to render
             -> TheoryPath   -- ^ Path to render
-            -> d
-htmlThyPath renderUrl ti path = go path
+            -> Html
+htmlThyPath renderUrl info path =
+    go path
   where
-    go TheoryRules               = rulesSnippet thy
-    go TheoryMessage             = messageSnippet thy
-    go (TheoryCaseDist kind _ _) = reqCasesSnippet renderUrl tidx kind thy
-    go (TheoryProof l p)         =
+    thy  = tiTheory info
+    tidx = tiIndex  info
+
+    -- Rendering a HtmlDoc to Html
+    pp :: HtmlDoc Doc -> Html
+    pp d = case renderHtmlDoc d of
+      [] -> toHtml "Trying to render document yielded empty string. This is a bug."
+      cs -> preEscapedString cs
+
+    go (TheoryMethod _ _ _)      = pp $ text "Cannot display theory method."
+
+    go TheoryRules               = pp $ rulesSnippet thy
+    go TheoryMessage             = pp $ messageSnippet thy
+    go (TheoryCaseDist kind _ _) = pp $ reqCasesSnippet renderUrl tidx kind thy
+
+    go (TheoryProof l p)         = pp $
         fromMaybe (text "No such lemma or proof path.") $ do
            lemma <- lookupLemma l thy
-           subProofSnippet renderUrl tidx ti l p (getProofContext lemma thy)
+           subProofSnippet renderUrl tidx info l p (getProofContext lemma thy)
              <$> resolveProofPath thy l p
-    go (TheoryLemma _)      = text "Implement theory item pretty printing!"
-    go _                    = text "Unhandled theory path. This is a bug."
 
-    thy = tiTheory ti
-    tidx = tiIndex ti
+    go (TheoryLemma _)      = pp $ text "Implement lemma pretty printing!"
+
+    go TheoryHelp           = [hamlet|
+        <h3>Theory information</h3>
+          <ul>
+            <li>Theory: #{get thyName $ tiTheory info}
+            <li>Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
+            <li>Origin: #{show $ tiOrigin info}
+        <div id="help">
+          <h3>Quick introduction
+          <noscript>
+            <div class="warning">
+              Warning: JavaScript must be enabled for the
+              <span class="tamarin">Tamarin</span>
+              prover GUI to function properly.
+          <p>
+            <em>Left pane: Proof scripts display.
+            <ul>
+              <li>
+                When a theory is initially loaded, there will be a line at the
+                \ end of each theorem stating #
+                <tt>"by sorry // not yet proven"
+                .  Click on #
+                <tt>sorry
+                \ to inspect the proof state.
+              <li>
+                Right-click to show further options, such as autoprove.
+          <p>
+            <em>Center pane: Visualization.
+            <ul>
+              <li>
+                Visualization and information display relating to the
+                \ currently selected item.
+          <p>
+            <em>Keyboard shortcuts.
+            <ul>
+              <li>
+                <span class="keys">j/k
+                : Jump to the next/previous proof path within the currently
+                \ focused lemma.
+              <li>
+                <span class="keys">J/K
+                : Jump to the next/previous open goal within the currently
+                \ focused lemma, or to the next/previous lemma if there are no
+                \ more #
+                <tt>sorry
+                \ steps in the proof of the current lemma.
+              <li>
+                <span class="keys">1-9
+                : Apply the proof method with the given number as shown in the
+                \ applicable proof method section in the main view.
+              <li>
+                <span class="keys">a</span>
+                : Apply the autoprove method to the focused proof step.
+              <li>
+                <span class="keys">b
+                : Apply a bounded-depth version of the autoprove method to the
+                \ focused proof step.
+              <li>
+                Note that both of the above autoprove methods stop their
+                \ search as soon as they find a solved constraint system.
+                \ Use #
+                <span class="keys">A
+                \ (respectively #
+                <span class="keys">B
+                ) to search for #
+                <em>all
+                \ solutions.
+              <li>
+                <span class="keys">?
+                : Display this help message.
+      |] renderUrl
+
+
 
 {-
 -- | Render debug information for the item in the theory given by the path.
@@ -486,7 +575,8 @@ imgThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
 titleThyPath :: ClosedTheory -> TheoryPath -> String
 titleThyPath thy path = go path
   where
-    go TheoryRules                          = "Rewriting rules"
+    go TheoryHelp                           = "Theory: " ++ get thyName thy
+    go TheoryRules                          = "Multiset rewriting rules"
     go TheoryMessage                        = "Message theory"
     go (TheoryCaseDist UntypedCaseDist _ _) = "Untyped case distinctions"
     go (TheoryCaseDist TypedCaseDist _ _)   = "Typed case distinctions"
@@ -495,7 +585,7 @@ titleThyPath thy path = go path
     go (TheoryProof l p)
       | null (last p)       = "Method: " ++ methodName l p
       | otherwise           = "Case: " ++ last p
-    go _ = "Unhandled theory path"
+    go (TheoryMethod _ _ _) = "Method Path: This title should not be shown. Please file a bug"
 
     methodName l p =
       case resolveProofPath thy l p of
@@ -529,8 +619,8 @@ nextThyPath thy = go
     go (TheoryProof l p)
       | Just nextPath <- getNextPath l p = TheoryProof l nextPath
       | Just nextLemma <- getNextLemma l = TheoryProof nextLemma []
-      | otherwise                        = TheoryHelp
-    go _                                 = TheoryHelp
+      | otherwise                        = TheoryProof l p
+    go path@(TheoryMethod _ _ _)         = path
 
     lemmas = map (\l -> (get lName l, l)) $ getLemmas thy
     firstLemma = flip TheoryProof [] . fst <$> listToMaybe lemmas
@@ -546,6 +636,7 @@ nextThyPath thy = go
 prevThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 prevThyPath thy = go
   where
+    go TheoryHelp                           = TheoryHelp
     go TheoryMessage                        = TheoryHelp
     go TheoryRules                          = TheoryMessage
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryRules
@@ -557,7 +648,7 @@ prevThyPath thy = go
       | Just prevPath <- getPrevPath l p = TheoryProof l prevPath
       | Just prevLemma <- getPrevLemma l = TheoryProof prevLemma (lastPath prevLemma)
       | otherwise                        = TheoryCaseDist TypedCaseDist 0 0
-    go _                                 = TheoryHelp
+    go path@(TheoryMethod _ _ _)         = path
 
     lemmas = map (\l -> (get lName l, l)) $ getLemmas thy
 
@@ -590,8 +681,8 @@ nextSmartThyPath thy = go
     go (TheoryProof l p)
       | Just nextPath <- getNextPath l p = TheoryProof l nextPath
       | Just nextLemma <- getNextLemma l = TheoryProof nextLemma []
-      | otherwise                        = TheoryHelp
-    go _ = TheoryHelp
+      | otherwise                        = TheoryProof l p
+    go path@(TheoryMethod _ _ _)         = path
 
     lemmas = map (\l -> (get lName l, l)) $ getLemmas thy
     firstLemma = flip TheoryProof [] . fst <$> listToMaybe lemmas
@@ -609,6 +700,7 @@ nextSmartThyPath thy = go
 prevSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 prevSmartThyPath thy = go
   where
+    go TheoryHelp                           = TheoryHelp
     go TheoryMessage                        = TheoryHelp
     go TheoryRules                          = TheoryMessage
     go (TheoryCaseDist UntypedCaseDist _ _) = TheoryRules
@@ -621,7 +713,7 @@ prevSmartThyPath thy = go
 --      | Just firstPath <- getFirstPath l p = TheoryProof l firstPath
       | Just prevLemma <- getPrevLemma l   = TheoryProof prevLemma (lastPath prevLemma)
       | otherwise                          = TheoryCaseDist TypedCaseDist 0 0
-    go _ = TheoryHelp
+    go path@(TheoryMethod _ _ _)           = path
 
     lemmas = map (\l -> (get lName l, l)) $ getLemmas thy
 

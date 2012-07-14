@@ -26,69 +26,21 @@ import           Web.Theory
 import           Web.Types
 
 import           Yesod.Core
--- import Yesod.Form
--- import Text.Hamlet
 
-import           Control.Monad.IO.Class (liftIO)
 import           Data.List
 import qualified Data.Map               as M
 import           Data.Ord
 import           Data.Time.Format
 import           Data.Version           (showVersion)
--- import qualified Data.Text as T
 import           Text.Blaze.Html5       (preEscapedString)
 
--- import Control.Monad.RWS (runRWST)
-import qualified Control.Exception      as E
 import           System.Locale
 
 import           Paths_tamarin_prover   (version)
 
--- Quasi-quotation syntax changed from GHC 6 to 7,
--- so we need this switch in order to support both
-#if __GLASGOW_HASKELL__ >= 700
-#define HAMLET whamlet
-#else
-#define HAMLET $whamlet
-#endif
-
---
--- Wrappers
---
-
--- | Wrapper for @HtmlDoc@ values.
-wrapHtmlDoc :: HtmlDoc Doc -> Widget
-wrapHtmlDoc doc
-  | null res  = exceptionTpl err
-  | otherwise = [HAMLET|#{preEscapedString res}|]
-  where
-    res = renderHtmlDoc doc
-    err = "Trying to render document yielded empty string. This is a bug."
-
--- | Run a ThHtml value, catch exceptions.
-wrapThHtml :: HtmlDoc Doc -> IO Widget
-wrapThHtml th =
-    E.catch (return $ wrapHtmlDoc th) handleEx
-  where
-    -- handleEx :: HamletValue h => E.SomeException -> IO h
-    handleEx :: E.SomeException -> IO Widget
-    handleEx e = do
-      putStrLn "----------------"
-      putStrLn "Caught exception"
-      putStrLn "----------------"
-      print e
-      return (exceptionTpl (show e))
-
 --
 -- Templates
 --
-
--- | Exception/error template.
-exceptionTpl :: String -> Widget
-exceptionTpl err = [HAMLET|
-    <h1>Caught exception!
-    \#{err}
-  |]
 
 {-
 -- | Simple template for serving sites which are loaded through
@@ -100,7 +52,7 @@ exceptionTpl err = [HAMLET|
 ajaxLayout w = error "ajaxLayout" $ fmap fst $ unGWidget w -- do
   -- (body, _, _) <- runRWST (unGWidget $ extractBody w) () 0
   -- (body, _, _) <- unGWidget $ w -- () 0
-  -- hamletToRepHtml [HAMLET|^{body}|]
+  -- hamletToRepHtml [whamlet|^{body}|]
 -}
 
 -- | Template for root/welcome page.
@@ -165,7 +117,7 @@ theoriesTpl thmap = [whamlet|
 
 -- | Template for single line in table on root page.
 theoryTpl :: (TheoryIdx, TheoryInfo) -> Widget
-theoryTpl th = [HAMLET|
+theoryTpl th = [whamlet|
     <tr>
       <td>
         <a href=@{OverviewR (fst th) TheoryHelp}>
@@ -186,7 +138,7 @@ theoryTpl th = [HAMLET|
 -- | Template for listing threads.
 -- threadsTpl :: (HamletValue h, HamletUrl h ~ WebUIRoute) => [T.Text] -> h
 {-
-threadsTpl threads = [HAMLET|
+threadsTpl threads = [whamlet|
     <h2>Threads
     <p>
       This page lists all threads that are currently registered as
@@ -208,7 +160,7 @@ threadsTpl threads = [HAMLET|
 
 -- | Template for header frame (various information)
 headerTpl :: TheoryInfo -> Widget
-headerTpl info = [HAMLET|
+headerTpl info = [whamlet|
     <div class="layout-pane-north">
       <div #header-info>
         Running
@@ -246,7 +198,9 @@ headerTpl info = [HAMLET|
 
 -- | Template for proof state (tree) frame.
 proofStateTpl :: RenderUrl -> TheoryInfo -> IO Widget
-proofStateTpl renderUrl ti = wrapThHtml $ theoryIndex renderUrl (tiIndex ti) (tiTheory ti)
+proofStateTpl renderUrl ti = do
+    let res = renderHtmlDoc $ theoryIndex renderUrl (tiIndex ti) (tiTheory ti)
+    return [whamlet| #{preEscapedString res} |]
 
 -- | Framing/UI-layout template (based on JavaScript/JQuery)
 overviewTpl :: RenderUrl
@@ -256,7 +210,7 @@ overviewTpl :: RenderUrl
 overviewTpl renderUrl info path = do
   proofState <- proofStateTpl renderUrl info
   mainView <- pathTpl renderUrl info path
-  return [HAMLET|
+  return [whamlet|
     <div .ui-layout-north>
       ^{headerTpl info}
     <div .ui-layout-west>
@@ -280,61 +234,12 @@ pathTpl :: RenderUrl
         -> TheoryInfo   -- ^ The theory
         -> TheoryPath   -- ^ Path to display on load
         -> IO Widget
-pathTpl _ info TheoryHelp = return [whamlet|
-    <h3>Theory information</h3>
-      <ul>
-        <li>Theory: #{get thyName $ tiTheory info}
-        <li>Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
-        <li>Origin: #{show $ tiOrigin info}
-    <div id="help">
-      <h3>Quick introduction
-      <noscript>
-        <div class="warning">
-          Warning: JavaScript must be enabled for the <span class="tamarin">Tamarin</span> prover GUI to function properly.
-      <p>
-        <em>Left pane: Proof scripts display.
-        <ul>
-          <li>
-            When a theory is initially loaded, there will be a line at the end of each theorem \
-            stating <tt>"by sorry // not yet proven"</tt>. Click on <tt>sorry</tt> to inspect the proof state.
-          <li>
-            Right-click to show further options, such as auto-prove.
-          <li>
-            Click on the icons to the right of a lemma name to reveal further options.
-      <p>
-        <em>Center pane: Visualization.
-        <ul>
-          <li>
-            Visualization and information display relating to the currently \
-            selected item.
-      <p>
-        <em>Keyboard shortcuts.
-        <ul>
-          <li>
-            <span class="keys">j/k</span>: Jump to the next/previous \
-            proof path within the currently focused lemma.
-          <li>
-            <span class="keys">J/K</span>: Jump to the next/previous \
-            open goal within the currently focused lemma, or to the \
-            next/previous lemma if there are no more open goals in the current \
-            lemma.
-          <li>
-            <span class="keys">1-9</span>: Apply the proof method with \
-            the given number as shown in the applicable proof method section \
-            in the main view.
-          <li>
-            <span class="keys">a</span>: Apply the autoprove method to \
-            the current goal.
-          <li>
-            <span class="keys">c</span>: Characterize the constraint system, \
-            i.e, represent all its possible solutions as a set of \
-            solved constraint system.
-  |]
-pathTpl renderUrl info path = liftIO . wrapThHtml $ htmlThyPath renderUrl info path
+pathTpl renderUrl info path =
+    return $ [whamlet| #{htmlThyPath renderUrl info path} |]
 
 -- | Template for introduction.
 introTpl :: Widget
-introTpl = [HAMLET|
+introTpl = [whamlet|
       <div id="logo">
         <p>
           <img src="/static/img/tamarin-logo-3-0-0.png">

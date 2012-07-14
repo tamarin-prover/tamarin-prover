@@ -183,7 +183,6 @@ instance Read CaseDistKind where
 data TheoryPath
   = TheoryHelp                          -- ^ The help view (help and info about theory)
   | TheoryLemma String                  -- ^ Theory lemma with given name
-  | TheoryIntrVar Int                   -- ^ Intruder variant (n'th from start)
   | TheoryCaseDist CaseDistKind Int Int -- ^ Required cases (i'th source, j'th case)
   | TheoryProof String ProofPath        -- ^ Proof path within proof for given lemma
   | TheoryMethod String ProofPath Int   -- ^ Apply the proof method to proof path
@@ -197,7 +196,6 @@ renderTheoryPath TheoryHelp = ["help"]
 renderTheoryPath TheoryRules = ["rules"]
 renderTheoryPath TheoryMessage = ["message"]
 renderTheoryPath (TheoryLemma name) = ["lemma", name]
-renderTheoryPath (TheoryIntrVar i) = ["variant", show i]
 renderTheoryPath (TheoryCaseDist k i j) = ["cases", show k, show i, show j]
 renderTheoryPath (TheoryProof lemma path) = "proof" : lemma : path
 renderTheoryPath (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
@@ -211,7 +209,6 @@ parseTheoryPath (x:xs) = case x of
   "message" -> Just TheoryMessage
   "lemma"   -> parseLemma xs
   "cases"   -> parseCases xs
-  "variant" -> parseVariant xs
   "proof"   -> parseProof xs
   "method"  -> parseMethod xs
   _         -> Nothing
@@ -225,9 +222,6 @@ parseTheoryPath (x:xs) = case x of
 
     parseMethod (y:z:zs) = safeRead z >>= Just . TheoryMethod y zs
     parseMethod _        = Nothing
-
-    parseVariant (y:_) = safeRead y >>= Just . TheoryIntrVar
-    parseVariant _     = Nothing
 
     parseCases (kind:y:z:_) = do
       k <- case kind of "typed"   -> return TypedCaseDist
@@ -271,7 +265,6 @@ mkYesodData "WebUI" [parseRoutes|
 /                                          RootR                   GET POST
 /thy/#Int/overview/MP(TheoryPath)          OverviewR               GET
 /thy/#Int/source                           TheorySourceR           GET
--- /thy/#Int/variants                         TheoryVariantsR         GET
 /thy/#Int/message                          TheoryMessageDeductionR GET
 /thy/#Int/main/MP(TheoryPath)              TheoryPathMR            GET
 -- /thy/#Int/debug/MP(TheoryPath)             TheoryPathDR            GET

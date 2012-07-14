@@ -402,8 +402,8 @@ getTheoryPathMR idx path = do
     --
     go renderUrl _ ti = do
       let title = T.pack $ titleThyPath (tiTheory ti) path
-      let html = T.pack $ renderHtmlDoc $ htmlThyPath renderUrl ti path
-      return $ responseToJson (JsonHtml title (toContent html))
+      let html = htmlThyPath renderUrl ti path
+      return $ responseToJson (JsonHtml title $ toContent html)
 
 -- | Run the some prover on a given proof path.
 getProverR :: (T.Text, AutoProver -> Prover)

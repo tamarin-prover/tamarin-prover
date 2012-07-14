@@ -694,7 +694,7 @@ prettyTheory :: HighlightDocument d
              => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d)
              -> Theory sig c r p -> d
 prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
-    [ kwTheoryHeader $ L.get thyName thy
+    [ kwTheoryHeader $ text $ L.get thyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get thySignature thy
     , ppCache $ L.get thyCache thy

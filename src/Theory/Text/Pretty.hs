@@ -86,8 +86,8 @@ multiComment_ ls = comment $ fsep [text "/*", vcat $ map text ls, text "*/"]
 -- Keywords
 ------------------------------------------------------------------------------
 
-kwTheoryHeader :: HighlightDocument d => String -> d
-kwTheoryHeader name = keyword_ "theory" <-> text name <-> keyword_ "begin"
+kwTheoryHeader :: HighlightDocument d => d -> d
+kwTheoryHeader name = keyword_ "theory" <-> name <-> keyword_ "begin"
 
 kwEnd, kwBy, kwCase, kwNext, kwQED :: HighlightDocument d => d
 kwEnd    = keyword_ "end"
