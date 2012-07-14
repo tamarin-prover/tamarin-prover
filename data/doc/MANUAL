@@ -12,7 +12,8 @@ Installation
 See http://www.infsec.ethz.ch/research/software/tamarin for detailed
 installation instructions for Linux and Mac. The Tamarin prover also runs on
 Windows. Drop us a mail, if you would like access to a precompiled binary.
-
+Subscribe to https://groups.google.com/group/tamarin-prover for receiving news
+on updates and new releases of the Tamarin prover.
 
 Syntax highlighting
 -------------------
@@ -27,6 +28,13 @@ highlighting files are found at
 To install them, copy 'DATA_PATH/etc/filepath.vim' to the '~/.vim' directory
 and copy 'DATA_PATH/etc/spthy.vim' to the '~/.vim/syntax directory'. If one of
 these directories does not exist, then just create it.
+
+We also provide a syntax highlighting file for Notepad++
+(http://notepad-plus-plus.org/). This is great text editor for Windows. See
+
+  DATA_PATH/notepad_plus_plus_stphy.xml
+
+for the syntax highlighting file.
 
 
 Usage

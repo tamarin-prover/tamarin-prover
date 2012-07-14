@@ -2,7 +2,10 @@ The Tamarin prover repository
 =============================
 
 This README describes the organization of the repository of the Tamarin prover
-for security protocol verification.
+for security protocol verification. Its intended audience are interested
+users and future developers of the Tamarin prover. For installation
+and usage instructions of the Tamarin prover see:
+http://www.infsec.ethz.ch/research/software/tamarin.
 
 Developing
 ----------
@@ -48,6 +51,9 @@ We use version numbers with four components.
 We ensure that the external interface of a version of the Tamarin prover is backwards
 compatible with the external interface of all versions that agree on the major
 and minor version number.
+
+We announce all releases of the Tamarin prover on:
+http://www.infsec.ethz.ch/research/software/tamarin.
 
 
 Manual

@@ -10,6 +10,7 @@
           a constraint system.
 
     - new homepage: http://www.infsec.ethz.ch/research/software/tamarin
+    - mailing list: https://groups.google.com/group/tamarin-prover
 
     - prover:
         - We now use the following additional normal form condition.
