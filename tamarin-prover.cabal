@@ -168,7 +168,12 @@ executable tamarin-prover
       -- To help the top-down solver we put the more difficult to solve yesod
       -- dependencies up front.
       build-depends:
-          bytestring        == 0.9.*
+        -- not direct dependencies, but wai-extra specifies its dependencies
+        -- to lax and thus breaks due to the upgrade of fast-logger
+          fast-logger       == 0.0.2
+        , wai-logger        == 0.1.*
+
+        , bytestring        == 0.9.*
         , blaze-html        == 0.4.*
         , http-types        == 0.6.*
         , blaze-builder     == 0.3.*
