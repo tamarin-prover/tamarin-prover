@@ -154,7 +154,12 @@ flag build-tests
 
 executable tamarin-prover
     if flag(threaded)
-        ghc-options:   -threaded -feager-blackholing
+        ghc-options:   -threaded
+
+    -- Note that eager blackholing lead to segfaults: See GHC Ticket #6146
+    -- Morevoer, it seems that the bug is not fully fixed on GHC 7.4.2, as we
+    -- still get segfaults: see GHC Ticket #7076.
+    -- Therefore, we do not use -feager-blackholing (yet).
 
     ghc-options:       -Wall -fwarn-tabs -rtsopts
     ghc-prof-options:  -auto-all
