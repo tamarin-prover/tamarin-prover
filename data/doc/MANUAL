@@ -30,7 +30,7 @@ and copy 'DATA_PATH/etc/spthy.vim' to the '~/.vim/syntax directory'. If one of
 these directories does not exist, then just create it.
 
 We also provide a syntax highlighting file for Notepad++
-(http://notepad-plus-plus.org/). This is great text editor for Windows. See
+(http://notepad-plus-plus.org/). This is a great text editor for Windows. See
 
   DATA_PATH/notepad_plus_plus_stphy.xml
 
