@@ -407,11 +407,10 @@ htmlThyPath renderUrl info path =
     go (TheoryLemma _)      = pp $ text "Implement lemma pretty printing!"
 
     go TheoryHelp           = [hamlet|
-        <h3>Theory information</h3>
-          <ul>
-            <li>Theory: #{get thyName $ tiTheory info}
-            <li>Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
-            <li>Origin: #{show $ tiOrigin info}
+        <p>
+          Theory: #{get thyName $ tiTheory info}
+          \ (Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
+          \ from #{show $ tiOrigin info})
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -432,49 +431,60 @@ htmlThyPath renderUrl info path =
               <li>
                 Right-click to show further options, such as autoprove.
           <p>
-            <em>Center pane: Visualization.
+            <em>Right pane: Visualization.
             <ul>
               <li>
                 Visualization and information display relating to the
                 \ currently selected item.
-          <p>
-            <em>Keyboard shortcuts.
-            <ul>
-              <li>
+
+        <h3>Keyboard shortcuts
+        <p>
+          <table>
+            <tr>
+              <td>
                 <span class="keys">j/k
-                : Jump to the next/previous proof path within the currently
+              <td>
+                Jump to the next/previous proof path within the currently
                 \ focused lemma.
-              <li>
+            <tr>
+              <td>
                 <span class="keys">J/K
-                : Jump to the next/previous open goal within the currently
+              <td>
+                Jump to the next/previous open goal within the currently
                 \ focused lemma, or to the next/previous lemma if there are no
                 \ more #
                 <tt>sorry
                 \ steps in the proof of the current lemma.
-              <li>
+            <tr>
+              <td>
                 <span class="keys">1-9
-                : Apply the proof method with the given number as shown in the
+              <td>
+                Apply the proof method with the given number as shown in the
                 \ applicable proof method section in the main view.
-              <li>
-                <span class="keys">a</span>
-                : Apply the autoprove method to the focused proof step.
-              <li>
-                <span class="keys">b
-                : Apply a bounded-depth version of the autoprove method to the
+            <tr>
+              <td>
+                <span class="keys">a/A
+              <td>
+                Apply the autoprove method to the focused proof step.
+                \ <span class="keys">a</span>
+                \ stops after finding a solution, and
+                \ <span class="keys">A</span>
+                \ searches for all solutions.
+            <tr>
+              <td>
+                <span class="keys">b/B
+              <td>
+                Apply a bounded-depth version of the autoprove method to the
                 \ focused proof step.
-              <li>
-                Note that both of the above autoprove methods stop their
-                \ search as soon as they find a solved constraint system.
-                \ Use #
-                <span class="keys">A
-                \ (respectively #
-                <span class="keys">B
-                ) to search for #
-                <em>all
-                \ solutions.
-              <li>
+                \ <span class="keys">b</span>
+                \ stops after finding a solution, and
+                \ <span class="keys">B</span>
+                \ searches for all solutions.
+            <tr>
+              <td>
                 <span class="keys">?
-                : Display this help message.
+              <td>
+                Display this help message.
       |] renderUrl
 
 

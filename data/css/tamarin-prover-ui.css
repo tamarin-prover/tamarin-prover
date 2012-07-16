@@ -170,8 +170,9 @@ img.graph {
 div#help {
     border: solid 1px #000000;
     background: #dfeff1;
-    padding: 1em;
-    margin: 2em;
+    padding: 0.5em;
+    margin: 0px;
+    margin-bottom: 0.5em;
 }
 
 /* Forms
