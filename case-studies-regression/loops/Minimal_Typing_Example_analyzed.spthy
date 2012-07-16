@@ -88,21 +88,33 @@ qed
 lemma (modulo E) Responder_secrecy:
   all-traces
   "∀ sec key #i #j.
-    ((Secret( sec, key ) @ #i) ∧ (K( key ) @ #j)) ⇒ (∃ #r. Rev( key ) @ #r)"
+    ((Secret( sec, key ) @ #i) ∧ (K( sec ) @ #j)) ⇒ (∃ #r. Rev( key ) @ #r)"
 /* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ sec key #i #j.
-  (Secret( sec, key ) @ #i) ∧ (K( key ) @ #j)
+  (Secret( sec, key ) @ #i) ∧ (K( sec ) @ #j)
  ∧
   ∀ #r. (Rev( key ) @ #r) ⇒ ⊥"
 */
 simplify
 solve( !Key( key ) ▶₀ #i )
   case Setup_Key
-  solve( !KU( ~k ) @ #vk.1 )
-    case Reveal_Key
-    by contradiction // from formulas
+  solve( !KU( senc(<pub, sec>, ~k) ) @ #vk )
+    case Initiator
+    solve( !KU( ~sec ) @ #vk.1 )
+      case Initiator
+      solve( !KU( ~k ) @ #vk.2 )
+        case Reveal_Key
+        by contradiction // from formulas
+      qed
+    qed
+  next
+    case csenc
+    solve( !KU( ~k ) @ #vk.3 )
+      case Reveal_Key
+      by contradiction // from formulas
+    qed
   qed
 qed
 
@@ -143,9 +155,9 @@ analyzing: data/examples/loops/Minimal_Typing_Example.spthy
 analyzed: data/examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.156851s
+  processing time: 0.160955s
   typing_assertion (all-traces): verified (13 steps)
-  Responder_secrecy (all-traces): verified (4 steps)
+  Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)
 
 ------------------------------------------------------------------------------
@@ -156,9 +168,9 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.156851s
+  processing time: 0.160955s
   typing_assertion (all-traces): verified (13 steps)
-  Responder_secrecy (all-traces): verified (4 steps)
+  Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)
 
 ==============================================================================

@@ -90,7 +90,7 @@ lemma Responder_secrecy:
          * is not compromised */
         Secret(sec, key) @ #i
         /* and the adversary nevertheless deduced 'k' */
-      & K(key) @ #j
+      & K(sec) @ #j
         /* then the adversary must have revealed 'key' */
       ==>
        (Ex #r. Rev(key) @ r)
