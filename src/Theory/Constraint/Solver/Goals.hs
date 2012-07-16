@@ -46,10 +46,25 @@ import           Theory.Model
 ------------------------------------------------------------------------------
 
 data Usefulness = Useful | Useless
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq)
 
 -- | Goals annotated with their number and usefulness.
 type AnnotatedGoal = (Goal, (Integer, Usefulness))
+
+
+-- Instances
+------------
+
+-- We need a custom 'Ord' instance that guarantees that @Useful < Useless@.
+instance Ord Usefulness where
+        compare a b =
+            check a b
+          where
+            check Useful Useful   = EQ
+            check Useless Useless = EQ
+            check x y             = compare (tag x) (tag y)
+            tag (Useful)          = 0 :: Int
+            tag (Useless)         = 1 :: Int
 
 
 -- | The list of goals that must be solved before a solution can be extracted.
