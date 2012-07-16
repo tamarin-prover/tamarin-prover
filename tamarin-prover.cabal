@@ -266,6 +266,7 @@ executable tamarin-prover
 
       Theory.Text.Lexer
       Theory.Text.Parser
+      Theory.Text.Parser.Token
       Theory.Text.Pretty
 
       Theory.Tools.AbstractInterpretation
