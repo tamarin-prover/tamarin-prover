@@ -78,13 +78,8 @@ module Theory.Text.Parser.Token (
 
 import           Prelude                hiding (id, (.))
 
-import qualified Data.ByteString.Char8  as BC
-import           Data.Char              (toUpper, isUpper, isDigit)
+import           Data.Char              (isDigit)
 import           Data.Foldable          (asum)
-import           Data.Label
-import qualified Data.Map               as M
-import           Data.Monoid
-import qualified Data.Set               as S
 
 import           Control.Applicative    hiding (empty, many, optional)
 import           Control.Category
@@ -93,10 +88,7 @@ import           Control.Monad
 import           Text.Parsec            hiding (token, (<|>), string )
 import qualified Text.Parsec            as P
 import           Text.Parsec.Pos
-import           Text.PrettyPrint.Class (render)
 
-import           Term.Substitution
-import           Term.SubtermRule
 import           Theory
 import           Theory.Text.Lexer
                    ( Keyword(..), TextType(..), runAlex, AlexPosn(..)

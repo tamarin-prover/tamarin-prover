@@ -333,6 +333,7 @@ data Theory sig c r p = Theory {
        , _thyCache     :: c
        , _thyItems     :: [TheoryItem r p]
        }
+       deriving( Eq, Ord, Show )
 
 $(mkLabels [''Theory])
 
@@ -341,7 +342,6 @@ $(mkLabels [''Theory])
 type OpenTheory =
     Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton
 
-deriving instance Show OpenTheory
 
 -- | Closed theories can be proven. Invariants:
 --     1. Lemma names are unique
@@ -351,7 +351,6 @@ deriving instance Show OpenTheory
 type ClosedTheory =
     Theory SignatureWithMaude ClosedRuleCache ClosedProtoRule IncrementalProof
 
-deriving instance Show ClosedTheory
 
 
 -- Shared theory modification functions

@@ -7,7 +7,7 @@
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Unit tests for the functions dealing with term algebra and related notions.
-module Term.UnitTests (main) where
+module Term.UnitTests (tests) where
 
 import Term.Substitution
 import Term.Subsumption
@@ -281,21 +281,20 @@ testsSimple _hnd =
     TestLabel "Tests for simple functions" $ TestList
       [ testTrue "" (size [bigTerm] > 0) ]
 
--- | Execute all unification infrastructure unit tests.
-main :: FilePath -- ^ Path to maude executable.
-     -> IO Counts
-main maudePath = do
+-- | All unification infrastructure unit tests.
+tests :: FilePath -> IO Test
+tests maudePath = do
     mhnd <- startMaude maudePath allMaudeSig
-    runTestTT $ TestList [ testsVariant mhnd
-                         , tcompare mhnd
-                         , testsSubs mhnd
-                         , testsTerm
-                         , testsSubst
-                         , testsNorm mhnd
-                         , testsUnify mhnd
-                         , testsSimple mhnd
-                         , testsMatching mhnd
-                         ]
+    return $ TestList [ testsVariant mhnd
+                      , tcompare mhnd
+                      , testsSubs mhnd
+                      , testsTerm
+                      , testsSubst
+                      , testsNorm mhnd
+                      , testsUnify mhnd
+                      , testsSimple mhnd
+                      , testsMatching mhnd
+                      ]
 
 -- | Maude signatures with all builtin symbols.
 allMaudeSig :: MaudeSig
