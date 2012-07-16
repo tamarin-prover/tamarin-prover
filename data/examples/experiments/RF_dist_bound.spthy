@@ -1,52 +1,63 @@
 theory RF_dist_bound
 begin
 
-section{* Kasper's RF Distance Bounding Protocol from his Usenix Paper *}
+section{* RF Distance Bounding Protocol from the Usenix Paper of Kaspar
+Rasmusson *}
 
-Prov1:
+/* Modeler: Simon Meier
+   Date:   January, 2011
+   Status: Incomplete
+*/
+
+builtins: signing, hashing
+
+/* FIXME: Finish example
+
+rule Prov1:
   [ Pub( P ), Fr( Np ) ]
   -->
   [ Prov1( P, Np )
   , Out( sign{h(Np)}sk(lts(P)) ) ]
 
-Verif1:
+rule Verif1:
   [ Pub( V ), Fr( Nv ), In( sign{commit}sk(lts(P)) ) ]
   -->
   [ Verif1( V, P, Nv, commit )
   , Challenge( Nv )
   , Out( Nv ) ]
 
-Prov2:
+rule Prov2:
   [ Prov1( P, Np ), Challenge( Nv ) ]
   -->
   [ Prov2( P, Np, Nv ), Response( Nv, Np ), Out( Np ) ]
 
-Verif2:
+rule Verif2:
   [ Verif1( V, P, Nv, commit ), Response( Nv, Np )
   -->
   [ Verif2( V, P, Nv, Np, commit ), Out( <Nv, Np> ) ]
 
-Prov3:
+rule Prov3:
   [ Prov2( P, Np, Nv ), Pub(V) ]
   -->
   [ Prov3( P, V, Np, Nv ), Out( sign{V, Np, Nv}sk(lts(P)) ) ]
 
-Verif3:
+rule Verif3:
   [ Verif2( V, P, Nv, Np, commit ), In( sign{V, Np, Nv}sk(lts(P)) ) ]
   -->
   [ Verif3( V, P, Nv, Np, commit ) ]
 
 
+/*
 lemma Verif_auth:
   " vv :> Verif3( V, P, Nv, Np, commit ) & commit = h(Np) &
     vr :> Response( Np, Nv )
     ==>
     (Ex vp. vp :> Prov3( P, V, Np, Nv ) )
   "
-           
+
+*/
 
 
-/*
 /*
 lemma lts_secrecy:
   "vk <: Msg(lts(x)) ==>
@@ -55,7 +66,7 @@ lemma lts_secrecy:
 */
 
 lemma C_k_secrecy:
-  "vc :> CR_C_1( S, k) & 
+  "vc :> CR_C_1( S, k) &
    vk <: Msg(k)
    ==>
    (Ex vr. vr :> Ltsr(S) & vr >+> vk)
@@ -64,13 +75,13 @@ lemma C_k_secrecy:
 lemma C_niagree:
   " vc :> CR_C_2(cS, ck)
     ==>
-    (Ex sS sk vs. 
-        vs :> CR_S_1(sS, sk) & 
+    (Ex sS sk vs.
+        vs :> CR_S_1(sS, sk) &
         <sS, sk> = <cS, ck>
     )
     |
     (Ex vr. vr :> Ltsr(cS) & vr >+> vc)
-  "     
+  "
 */
 
 end

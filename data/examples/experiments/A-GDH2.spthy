@@ -1,5 +1,5 @@
-theory A_GDH_2
-begin
+theory A_GDH_2 begin
+
 
 section{* A-GDH.2 cliques *}
 
@@ -11,6 +11,8 @@ section{* A-GDH.2 cliques *}
  *
  * Status: 	incomplete model
  */
+
+builtins: diffie-hellman
 
 // First some generic infrastructure
 // Symmetric long-term shared keys.
@@ -42,7 +44,7 @@ rule Ltk_reveal:
 rule roleA1:
   [ Fr(~ra) ]
   -->
-  [ StepA($A,~ra), Out('g'^~ra) ]
+  [ StepA($A,~ra), Out('g'^(~ra)) ]
 
 rule roleA2:
   [ StepA($A,~ra), In(X), !LTK($A,$D,~kad) ]
@@ -74,7 +76,7 @@ rule roleC2:
 // Role D
 // kad, kbd, kcd are symmetric shared long-term keys
 rule roleD:
-  [ In(Xa), In(Xb), In(Xc), In(Xd), Fr(~rd), 
+  [ In(Xa), In(Xb), In(Xc), In(Xd), Fr(~rd),
     !LTK($A,$D,~kad),
     !LTK($B,$D,~kbd),
     !LTK($C,$D,~kcd) ]
