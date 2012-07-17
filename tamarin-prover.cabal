@@ -78,6 +78,9 @@ data-files:
   examples/loops/Minimal_Crypto_API.spthy
   examples/loops/Minimal_KeyRenegotiation.spthy
   examples/loops/Minimal_Create_Use_Destroy.spthy
+  examples/loops/Minimal_Typing_Example.spthy
+  examples/loops/Minimal_Loop_Example.spthy
+  examples/loops/JCS12_Typing_Example.spthy
   examples/loops/TESLA_Scheme1.spthy
 
   -- related work
