@@ -127,7 +127,6 @@ data-files:
 extra-source-files:
   .ghci
   interactive-only-src/Paths_tamarin_prover.hs
-  interactive-only-src/Lexer.x
 
 
 --------------
@@ -264,7 +263,6 @@ executable tamarin-prover
       Theory.Model.Rule
       Theory.Model.Signature
 
-      Theory.Text.Lexer
       Theory.Text.Parser
       Theory.Text.Parser.Token
       Theory.Text.Parser.UnitTests

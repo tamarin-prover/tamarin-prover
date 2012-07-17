@@ -8,14 +8,17 @@
 --
 -- Tokenizing infrastructure
 module Theory.Text.Parser.Token (
-  -- * Tokens
-    integer
-  , string
-  , strings
+  -- * Symbols
+    symbol
+  , symbol_
+  , dot
+  , comma
+  , colon
 
-  -- ** Text passages
-  , TextType(..)
-  , text
+  , integer
+
+  -- ** Formal comments
+  , formalComment
 
   -- * Identifiers and Variables
   , identifier
@@ -43,15 +46,14 @@ module Theory.Text.Parser.Token (
   , opLAnd
   , opLOr
   , opLNot
+  , opLFalse
+  , opLTrue
 
   -- ** Pseudo operators
   , equalSign
-  , opDot
-  , opComma
   , opSharp
   , opBang
   , opSlash
-  , opColon
   , opMinus
   , opLeftarrow
   , opRightarrow
@@ -62,6 +64,7 @@ module Theory.Text.Parser.Token (
   , braced
   , parens
   , angled
+  , brackets
   , singleQuoted
   , doubleQuoted
 
@@ -76,24 +79,21 @@ module Theory.Text.Parser.Token (
   , parseFromString
   ) where
 
-import           Prelude                hiding (id, (.))
+import           Prelude             hiding (id, (.))
 
-import           Data.Char              (isDigit)
-import           Data.Foldable          (asum)
+import           Data.Foldable       (asum)
 
-import           Control.Applicative    hiding (empty, many, optional)
+import           Control.Applicative hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
 
-import           Text.Parsec            hiding (token, (<|>), string )
-import qualified Text.Parsec            as P
-import           Text.Parsec.Pos
+import           Text.Parsec         hiding ((<|>))
+import qualified Text.Parsec.Token   as T
 
 import           Theory
-import           Theory.Text.Lexer
-                   ( Keyword(..), TextType(..), runAlex, AlexPosn(..)
-                   , alexGetPos, alexMonadScan
-                   )
+
+
+
 
 
 
@@ -102,136 +102,132 @@ import           Theory.Text.Lexer
 ------------------------------------------------------------------------------
 
 -- | A parser for a stream of tokens.
-type Parser a = Parsec [Token] MaudeSig a
+type Parser a = Parsec String MaudeSig a
 
--- | Parser a file.
+-- Use Parsec's support for defining token parsers.
+spthy :: T.TokenParser MaudeSig
+spthy =
+    T.makeTokenParser spthyStyle
+  where
+    spthyStyle = T.LanguageDef
+      { T.commentStart   = "/*"
+      , T.commentEnd     = "*/"
+      , T.commentLine    = "//"
+      , T.nestedComments = True
+      , T.identStart     = alphaNum
+      , T.identLetter    = alphaNum <|> oneOf "_"
+      , T.reservedNames  = ["in","let","rule"]
+      , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-"
+      , T.opLetter       = oneOf ":!$%&*+./<=>?@\\^|-"
+      , T.reservedOpNames= []
+      , T.caseSensitive  = True
+      }
+
+-- | Parse a file.
 parseFile :: Parser a -> FilePath -> IO a
 parseFile parser f = do
   s <- readFile f
-  case runParser parser minimalMaudeSig f (scanString f s) of
+  case runParser (T.whiteSpace spthy *> parser) minimalMaudeSig f s of
     Right p -> return p
     Left err -> error $ show err
 
 -- | Run a given parser on a given string.
 parseFromString :: Parser a -> String -> Either ParseError a
 parseFromString parser =
-    runParser parser minimalMaudeSig dummySource . scanString dummySource
+    runParser (T.whiteSpace spthy *> parser) minimalMaudeSig dummySource
   where
     dummySource = "<interactive>"
-
-
-------------------------------------------------------------------------------
--- Lexing (based on Alex)
-------------------------------------------------------------------------------
-
--- | The tokens delivered by our Alex based scanner
-type Token = (SourcePos, Keyword)
-
--- | Scan a string using the given filename in the error messages.
---
--- NOTE: Lexical errors are thrown using 'error'.
-scanString :: FilePath -> String -> [Token]
-scanString filename s =
-  case runAlex s gatherUntilEOF of
-    Left err  -> error err
-    Right kws -> kws
-  where
-  gatherUntilEOF = do
-    AlexPn _ line col <- alexGetPos
-    let pos = newPos filename line col
-    k <- alexMonadScan
-    case k of
-      EOF -> return [(pos,EOF)]
-      _   -> do kws <- gatherUntilEOF
-                return $ (pos,k) : kws
 
 
 -- Token parsers
 ----------------
 
--- | Parse a token based on the acceptance condition
-token :: (Keyword -> Maybe a) -> Parser a
-token p = P.token (show . snd) fst (p . snd)
+-- | Parse a symbol.
+symbol :: String -> Parser String
+symbol = try . T.symbol spthy
 
--- | Parse a keyword.
-kw :: Keyword -> Parser ()
-kw t = token check
-  where
-  check t' | t == t' = Just () | otherwise = Nothing
-
--- | Parse content between keywords.
-betweenKWs :: Keyword -> Keyword -> Parser a -> Parser a
-betweenKWs l r = between (kw l) (kw r)
+-- | Parse a symbol without returning the parsed string.
+symbol_ :: String -> Parser ()
+symbol_ = void . symbol
 
 -- | Between braces.
 braced :: Parser a -> Parser a
-braced = betweenKWs LBRACE RBRACE
+braced = T.braces spthy
+
+-- | Between brackets.
+brackets :: Parser a -> Parser a
+brackets = T.brackets spthy
 
 -- | Between parentheses.
 parens :: Parser a -> Parser a
-parens = betweenKWs LPAREN RPAREN
+parens = T.parens spthy
 
 -- | Between angular brackets.
 angled :: Parser a -> Parser a
-angled = betweenKWs LESS GREATER
+angled = T.angles spthy
 
 -- | Between single quotes.
 singleQuoted :: Parser a -> Parser a
-singleQuoted = betweenKWs SQUOTE SQUOTE
+singleQuoted = between (symbol "'") (symbol "'")
 
 -- | Between double quotes.
 doubleQuoted :: Parser a -> Parser a
-doubleQuoted = betweenKWs DQUOTE DQUOTE
+doubleQuoted = between (symbol "\"") (symbol "\"")
 
--- | Parse an identifier as a string
-string :: String -> Parser ()
-string cs = token extract
-  where extract (IDENT name) | cs == name = Just ()
-        extract _                         = Nothing
+-- | A dot @.@.
+dot :: Parser ()
+dot = void $ T.dot spthy
 
--- | Parse a sequence of fixed strings.
-strings :: [String] -> Parser ()
-strings = mapM_ string
+-- | A comma @,@.
+comma :: Parser ()
+comma = void $ T.comma spthy
 
--- | Parse a text passage.
-text :: (TextType -> Maybe a) -> Parser a
-text f = token (\t -> case t of TEXT ty -> f ty; _ -> mzero)
+-- | A colon @:@.
+colon :: Parser ()
+colon = void $ T.colon spthy
 
 -- | Parse an integer.
-integer :: Parser Int
-integer = do i <- identifier
-             guard (all isDigit i)
-             return (read i)
+integer :: Parser Integer
+integer = T.natural spthy
 
 -- | A comma separated list of elements.
 commaSep :: Parser a -> Parser [a]
-commaSep = (`sepBy` kw COMMA)
+commaSep = T.commaSep spthy
 
 -- | A comma separated non-empty list of elements.
 commaSep1 :: Parser a -> Parser [a]
-commaSep1 = (`sepBy1` kw COMMA)
+commaSep1 = T.commaSep1 spthy
 
 -- | Parse a list of items '[' item ',' ... ',' item ']'
 list :: Parser a -> Parser [a]
-list p = kw LBRACKET *> commaSep p <* kw RBRACKET
+list = brackets . commaSep
 
+-- | A formal comment; i.e., (header, body)
+formalComment :: Parser (String, String)
+formalComment = T.lexeme spthy $ do
+    header <- try (many1 letter <* string "{*")
+    body   <- many bodyChar <* string "*}"
+    return (header, body)
+  where
+    bodyChar = try $ do
+      c <- anyChar
+      case c of
+        '\\' -> char '\\' <|> char '*'
+        '*'  -> mzero
+        _    -> return c
 
 -- Identifiers and Variables
 ----------------------------
 
 -- | Parse an identifier as a string
 identifier :: Parser String
-identifier = token extract
-  where extract (IDENT name)
-         -- don't allow certain reserved words as identifiers
-         | not (name `elem` ["in","let","rule"]) = Just name
-        extract _                                = Nothing
+identifier = T.identifier spthy
 
 -- | Parse an identifier possibly indexed with a number.
 indexedIdentifier :: Parser (String, Integer)
 indexedIdentifier = do
     (,) <$> identifier
-        <*> option 0 (try (kw DOT *> (fromIntegral <$> integer)))
+        <*> option 0 (try (dot *> (fromIntegral <$> integer)))
 
 -- | Parse a logical variable with the given sorts allowed.
 sortedLVar :: [LSort] -> Parser LVar
@@ -239,18 +235,17 @@ sortedLVar ss =
     asum $ map (try . mkSuffixParser) ss ++ map mkPrefixParser ss
   where
     mkSuffixParser s = do
-        (n, i) <- indexedIdentifier
-        kw COLON
-        string (sortSuffix s)
+        (n, i) <- indexedIdentifier <* colon
+        symbol_ (sortSuffix s)
         return (LVar n s i)
 
     mkPrefixParser s = do
         case s of
           LSortMsg   -> pure ()
-          LSortPub   -> kw DOLLAR
-          LSortFresh -> kw TILDE
-          LSortNode  -> kw SHARP
-          LSortMSet  -> kw PERCENT
+          LSortPub   -> void $ char '$'
+          LSortFresh -> void $ char '~'
+          LSortNode  -> void $ char '#'
+          LSortMSet  -> void $ char '%'
         (n, i) <- indexedIdentifier
         return (LVar n s i)
 
@@ -271,7 +266,7 @@ nodevar = asum
 
 -- | Parse a literal fresh name, e.g., @~'n'@.
 freshName :: Parser String
-freshName = try (kw TILDE *> singleQuoted identifier)
+freshName = try (symbol "~" *> singleQuoted identifier)
 
 -- | Parse a literal public name, e.g., @'n'@.
 pubName :: Parser String
@@ -283,51 +278,59 @@ pubName = singleQuoted identifier
 
 -- | The exponentiation operator @^@.
 opExp :: Parser ()
-opExp = kw HAT
+opExp = symbol_ "^"
 
 -- | The multiplication operator @*@.
 opMult :: Parser ()
-opMult = kw STAR
+opMult = symbol_ "*"
 
 -- | The timepoint comparison operator @<@.
 opLess :: Parser ()
-opLess = kw LESS
+opLess = symbol_ "<"
 
 -- | The action-at-timepoint operator \@.
 opAt :: Parser ()
-opAt = kw AT
+opAt = symbol_ "@"
 
 -- | The equality operator @=@.
 opEqual :: Parser ()
-opEqual = kw EQUAL
+opEqual = symbol_ "="
 
 -- | The logical-forall operator @All@ or @∀@.
 opForall :: Parser ()
-opForall = string "All" <|> kw FORALL
+opForall = symbol_ "All" <|> symbol_ "∀"
 
 -- | The logical-exists operator @Ex@ or @∃@.
 opExists :: Parser ()
-opExists = string "Ex" <|> kw EXISTS
+opExists = symbol_ "Ex" <|> symbol_ "∃"
 
 -- | The logical-implies operator @==>@.
 opImplies :: Parser ()
-opImplies = kw EQUAL *> kw EQUAL *> kw GREATER
+opImplies = symbol_ "==>" <|> symbol_ "⇒"
 
 -- | The logical-equivalence operator @<=>@.
 opLEquiv :: Parser  ()
-opLEquiv = try (kw LESS *> kw EQUAL *> kw GREATER)
+opLEquiv = symbol_ "<=>" <|> symbol_ "⇔"
 
 -- | The logical-and operator @&@ or @∧@.
 opLAnd :: Parser ()
-opLAnd = kw LAND <|> kw AND
+opLAnd = symbol_ "&" <|> symbol_ "∧"
 
 -- | The logical-or operator @|@ or @∨@.
 opLOr :: Parser ()
-opLOr = kw MID <|> kw LOR
+opLOr = symbol_ "|" <|> symbol_ "∨"
 
 -- | The logical not operator @not@ or @¬@.
 opLNot :: Parser  ()
-opLNot = kw LNOT <|> string "not"
+opLNot = symbol_ "¬" <|> symbol_ "not"
+
+-- | A logical false, @F@ or @⊥@.
+opLFalse :: Parser  ()
+opLFalse = symbol_ "⊥" <|> T.reserved spthy "F"
+
+-- | A logical false, @T@ or @⊥@.
+opLTrue :: Parser  ()
+opLTrue = symbol_ "⊤" <|> T.reserved spthy "T"
 
 
 -- Pseudo operators (to be replaced by usage of proper tokens)
@@ -335,48 +338,36 @@ opLNot = kw LNOT <|> string "not"
 
 -- | The equal sign @=@.
 equalSign :: Parser ()
-equalSign = kw EQUAL
-
--- | The dot operator @.@.
-opDot :: Parser ()
-opDot = kw DOT
-
--- | The comma operator @,@.
-opComma :: Parser ()
-opComma = kw COMMA
+equalSign = symbol_ "="
 
 -- | The slash operator @/@.
 opSlash :: Parser ()
-opSlash = kw SLASH
+opSlash = symbol_ "/"
 
 -- | The bang operator @!@.
 opBang :: Parser ()
-opBang = kw BANG
+opBang = symbol_ "!"
 
 -- | The sharp operator @#@.
 opSharp :: Parser ()
-opSharp = kw SHARP
-
--- | The colon operator @:@.
-opColon :: Parser ()
-opColon = kw COLON
+opSharp = symbol_ "#"
 
 -- | The minus operator @-@.
 opMinus :: Parser ()
-opMinus = kw MINUS
+opMinus = symbol_ "-"
 
 -- | The leftarrow operator @<--@.
 opLeftarrow :: Parser ()
-opLeftarrow = kw LEFTARROW
+opLeftarrow = symbol_ "<-"
 
 -- | The rightarrow operator @-->@.
 opRightarrow :: Parser ()
-opRightarrow = kw RIGHTARROW
+opRightarrow = symbol_ "->"
 
 -- | The longleftarrow operator @<--@.
 opLongleftarrow :: Parser ()
-opLongleftarrow = kw LONGLEFTARROW
+opLongleftarrow = symbol_ "<--"
 
 -- | The longrightarrow operator @-->@.
 opLongrightarrow :: Parser ()
-opLongrightarrow = kw LONGRIGHTARROW
+opLongrightarrow = symbol_ "-->"
