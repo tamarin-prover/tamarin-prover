@@ -1,16 +1,19 @@
 * 0.8.0.0
+    - new homepage: http://www.infsec.ethz.ch/research/software/tamarin
+    - mailing list: https://groups.google.com/group/tamarin-prover
+
     - GUI:
         - improved pretty-printing of formulas and constraint systems using
-          Unicode characters. Currently, the parser fails to parse unicode
-          characters. This breaks the property that saved theory files can be
-          parsed again, which is the reason for the major version bump.
+          Unicode characters.
 
         - added shortcuts for bounded autoprover and searching for all
           solutions, which can be used to characterize the set of solutions of
           a constraint system.
 
-    - new homepage: http://www.infsec.ethz.ch/research/software/tamarin
-    - mailing list: https://groups.google.com/group/tamarin-prover
+    - .spthy files:
+        - new: formulas can now use mathematical symbols represented using
+          their Unicode characters.
+        - removed: support for (* ... *) style comments.
 
     - prover:
         - We now use the following additional normal form condition.
@@ -19,10 +22,14 @@
             > i and j.
 
           This removes the need for exponentiation tags and thereby simplifies
-          the constraint-reduction rules, both in theory and in code.
+          the constraint-reduction rules, both in theory and in code. Note
+          that the arity of the 'KU' fact from arity two to arity one.
+          Theories using typing invariants must thus be adapted, which is the
+          reason for the minor version bump.
+
         - improved error messages of wellformedness checks
         - reduced memory usage of the autoprover by a factor 2 to 10.
-        - improved parallelization: 12% speed increase on an i7 Quad-Core
+        - improved parallelization: 10% speed increase on an i7 Quad-Core
 
     - editor support: Tomas Zgraggen contributed a syntax highligthing file
       for .spthy files for Notepad++ (http://notepad-plus-plus.org/).  This is
