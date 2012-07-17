@@ -20,7 +20,7 @@ import           Data.Char                (isUpper, toUpper)
 import           Data.Foldable            (asum)
 import           Data.Label
 import qualified Data.Map                 as M
-import           Data.Monoid
+import           Data.Monoid              hiding (Last)
 import qualified Data.Set                 as S
 
 import           Control.Applicative      hiding (empty, many, optional)
@@ -179,7 +179,7 @@ tupleterm plit = chainr1 (multterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
-fact plit =
+fact plit = try (
     do multi <- option Linear (opBang *> pure Persistent)
        i     <- identifier
        case i of
@@ -188,7 +188,7 @@ fact plit =
                | otherwise -> fail "facts must start with upper-case letters"
        ts    <- parens (commaSep (multterm plit))
        mkProtoFact multi i ts
-    <?> "protocol fact"
+    <?> "fact" )
   where
     singleTerm _ constr [t] = return $ constr t
     singleTerm f _      ts  = fail $ "fact '" ++ f ++ "' used with arity " ++
@@ -357,6 +357,112 @@ transferProto = do
 -}
 
 ------------------------------------------------------------------------------
+-- Parsing Standard and Guarded Formulas
+------------------------------------------------------------------------------
+
+-- | Parse an atom with possibly bound logical variables.
+blatom :: Parser BLAtom
+blatom = (fmap (fmapTerm (fmap Free))) <$> asum
+  [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
+  , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
+  , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
+  , EqE         <$> try (multterm llit <* opEqual) <*> multterm llit <?> "term equality"
+  , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
+  ]
+  where
+    nodevarTerm = (lit . Var) <$> nodevar
+
+-- | Parse an atom of a formula.
+fatom :: Parser LNFormula
+fatom = asum
+  [ pure lfalse <* opLFalse
+  , pure ltrue  <* opLTrue
+  , Ato <$> try blatom
+  , quantification
+  , parens iff
+  ]
+  where
+    quantification = do
+        q <- (pure forall <* opForall) <|> (pure exists <* opExists)
+        vs <- many1 lvar <* dot
+        f  <- iff
+        return $ foldr (hinted q) f vs
+
+    hinted :: ((String, LSort) -> LVar -> a) -> LVar -> a
+    hinted f v@(LVar n s _) = f (n,s) v
+
+
+
+-- | Parse a negation.
+negation :: Parser LNFormula
+negation = opLNot *> (Not <$> fatom) <|> fatom
+
+-- | Parse a left-associative sequence of conjunctions.
+conjuncts :: Parser LNFormula
+conjuncts = chainl1 negation ((.&&.) <$ opLAnd)
+
+-- | Parse a left-associative sequence of disjunctions.
+disjuncts :: Parser LNFormula
+disjuncts = chainl1 conjuncts ((.||.) <$ opLOr)
+
+-- | An implication.
+imp :: Parser LNFormula
+imp = do
+  lhs <- disjuncts
+  asum [ opImplies *> ((lhs .==>.) <$> imp)
+       , pure lhs ]
+
+-- | An logical equivalence.
+iff :: Parser LNFormula
+iff = do
+  lhs <- imp
+  asum [opLEquiv *> ((lhs .<=>.) <$> imp), pure lhs ]
+
+-- | Parse a standard formula.
+standardFormula :: Parser LNFormula
+standardFormula = iff
+
+-- | Parse a guarded formula using the hack of parsing a standard formula and
+-- converting it afterwards.
+--
+-- FIXME: Write a proper parser.
+guardedFormula :: Parser LNGuarded
+guardedFormula = try $ do
+    res <- formulaToGuarded <$> standardFormula
+    case res of
+        Left d   -> fail $ render d
+        Right gf -> return gf
+
+
+------------------------------------------------------------------------------
+-- Parsing Lemmas
+------------------------------------------------------------------------------
+
+-- | Parse a 'LemmaAttribute'.
+lemmaAttribute :: Parser LemmaAttribute
+lemmaAttribute = asum
+  [ symbol "typing"        *> pure TypingLemma
+  , symbol "reuse"         *> pure ReuseLemma
+  , symbol "use_induction" *> pure InvariantLemma
+  ]
+
+-- | Parse a 'TraceQuantifier'.
+traceQuantifier :: Parser TraceQuantifier
+traceQuantifier = asum
+  [ symbol "all-traces" *> pure AllTraces
+  , symbol "exists-trace"  *> pure ExistsTrace
+  ]
+
+-- | Parse a lemma.
+lemma :: Parser (Lemma ProofSkeleton)
+lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
+                      <*> (option [] $ list lemmaAttribute)
+                      <*> (colon *> option AllTraces traceQuantifier)
+                      <*> doubleQuoted standardFormula
+                      <*> (proofSkeleton <|> pure (unproven ()))
+
+
+------------------------------------------------------------------------------
 -- Parsing Proofs
 ------------------------------------------------------------------------------
 
@@ -373,24 +479,31 @@ nodeConc = parens ((,) <$> nodevar
 -- | Parse a goal.
 goal :: Parser Goal
 goal = asum
-  [ -- splitGoal
-    premiseGoal
-  , actionGoal
-  , ChainG <$> nodeConc <*> nodePrem
-  ]
+    [ premiseGoal
+    , actionGoal
+    , chainGoal
+    , disjSplitGoal
+    , eqSplitGoal
+    ]
   where
     actionGoal = do
         fa <- try (fact llit <* opAt)
         i  <- nodevar
         return $ ActionG i fa
+
     premiseGoal = do
         (fa, v) <- try ((,) <$> fact llit <*> opRequires)
         i  <- nodevar
         return $ PremiseG (i, v) fa
-    -- splitGoal = do
-    --     split <- (symbol "splitEqsOn"    *> pure SplitEqs) <|>
-    --              (symbol "splitTypingOn" *> pure SplitTyping)
-    --     SplitGoal split <$> parens natural
+
+    chainGoal = ChainG <$> (try (nodeConc <* opChain)) <*> nodePrem
+
+    disjSplitGoal = (DisjG . Disj) <$> sepBy1 guardedFormula (symbol "∥")
+
+    eqSplitGoal = try $ do
+        symbol_ "split"
+        parens $ (SplitG . SplitId . fromIntegral) <$> natural
+
 
 -- | Parse a proof method.
 proofMethod :: Parser ProofMethod
@@ -399,6 +512,7 @@ proofMethod = asum
   , symbol "simplify"      *> pure Simplify
   , symbol "solve"         *> (SolveGoal <$> parens goal)
   , symbol "contradiction" *> pure (Contradiction Nothing)
+  , symbol "induction"     *> pure Induction
   ]
 
 -- | Parse a proof skeleton.
@@ -422,92 +536,8 @@ proofSkeleton =
     oneCase = (,) <$> (symbol "case" *> identifier) <*> proofSkeleton
 
 ------------------------------------------------------------------------------
--- Parsing Formulas and Lemmas
+-- Parsing Signatures
 ------------------------------------------------------------------------------
-
--- | Parse an atom with possibly bound logical variables.
-blatom :: Parser BLAtom
-blatom = (fmap (fmapTerm (fmap Free))) <$> asum
-  [ flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action"
-  , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less"
-  , EqE         <$> try (multterm llit <* opEqual) <*> multterm llit <?> "term equality"
-  , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
-  ]
-  where
-    nodevarTerm = (lit . Var) <$> nodevar
-    -- nodePrem = annNode PremIdx
-    -- nodeConc = annNode ConcIdx
-    -- annNode mkAnn = parens ((,) <$> (nodevarTerm <* kw COMMA)
-    --                             <*> (mkAnn <$> natural))
-
--- | Parse an atom of a formula.
-fatom :: Parser (LFormula Name)
-fatom = asum
-  [ pure lfalse <* opLFalse
-  , pure ltrue  <* opLTrue
-  , Ato <$> try blatom
-  , quantification
-  , parens iff
-  ]
-  where
-    quantification = do
-        q <- (pure forall <* opForall) <|> (pure exists <* opExists)
-        vs <- many1 lvar <* dot
-        f  <- iff
-        return $ foldr (hinted q) f vs
-
-    hinted :: ((String, LSort) -> LVar -> a) -> LVar -> a
-    hinted f v@(LVar n s _) = f (n,s) v
-
-
-
--- | Parse a negation.
-negation :: Parser (LFormula Name)
-negation = opLNot *> (Not <$> fatom) <|> fatom
-
--- | Parse a left-associative sequence of conjunctions.
-conjuncts :: Parser (LFormula Name)
-conjuncts = chainl1 negation ((.&&.) <$ opLAnd)
-
--- | Parse a left-associative sequence of disjunctions.
-disjuncts :: Parser (LFormula Name)
-disjuncts = chainl1 conjuncts ((.||.) <$ opLOr)
-
--- | An implication.
-imp :: Parser (LFormula Name)
-imp = do
-  lhs <- disjuncts
-  asum [ opImplies *> ((lhs .==>.) <$> imp)
-       , pure lhs ]
-
--- | An logical equivalence.
-iff :: Parser (LFormula Name)
-iff = do
-  lhs <- imp
-  asum [opLEquiv *> ((lhs .<=>.) <$> imp), pure lhs ]
-
--- | Parse a 'LemmaAttribute'.
-lemmaAttribute :: Parser LemmaAttribute
-lemmaAttribute = asum
-  [ symbol "typing"        *> pure TypingLemma
-  , symbol "reuse"         *> pure ReuseLemma
-  , symbol "use_induction" *> pure InvariantLemma
-  ]
-
--- | Parse a 'TraceQuantifier'.
-traceQuantifier :: Parser TraceQuantifier
-traceQuantifier = asum
-  [ symbol "all-traces" *> pure AllTraces
-  , symbol "exists-trace"  *> pure ExistsTrace
-  ]
-
--- | Parse a lemma.
-lemma :: Parser (Lemma ProofSkeleton)
-lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
-                      <*> (option [] $ list lemmaAttribute)
-                      <*> (colon *> option AllTraces traceQuantifier)
-                      <*> doubleQuoted iff
-                      <*> (proofSkeleton <|> pure (unproven ()))
 
 -- | Builtin signatures.
 builtins :: Parser ()
