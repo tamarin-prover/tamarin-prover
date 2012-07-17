@@ -31,16 +31,16 @@ rule Reveal_Key:
  * has not been revealed by the adversary.
  */
 rule Initiator:
-  let msg = senc{~pub,~sec}k
+  let msg = senc{~sec,~pub}k
   in
-    [ !Key(k), Fr(~pub), Fr(~sec) ]
+    [ !Key(k), Fr(~sec), Fr(~pub) ]
   --[ Out_Initiator(msg)
     , Public(~pub)
     ]->
     [ Out( msg ) ]
 
 rule Responder:
-  let msg = senc{pub,sec}key
+  let msg = senc{sec,pub}key
   in
     [ !Key(key), In( msg )
     ]
