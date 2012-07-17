@@ -35,10 +35,9 @@ rule (modulo E) Destroy:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) Use_charn [reuse, use_induction]:
+lemma Use_charn [reuse, use_induction]:
   all-traces
   "∀ x #j. (Use( x ) @ #j) ⇒ (∃ #i. (Create( x ) @ #i) ∧ (#i < #j))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ x #j. (Use( x ) @ #j) ∧ ∀ #i. (Create( x ) @ #i) ⇒ ¬(#i < #j)"
@@ -65,14 +64,13 @@ next
   qed
 qed
 
-lemma (modulo E) Destroy_charn [reuse, use_induction]:
+lemma Destroy_charn [reuse, use_induction]:
   all-traces
   "∀ x #j.
     (Destroy( x ) @ #j) ⇒
     (((∃ #i. (Create( x ) @ #i) ∧ (#i < #j)) ∧
       (∀ #i. (Use( x ) @ #i) ⇒ (#i < #j))) ∧
      (∀ #i. (Destroy( x ) @ #i) ⇒ (#i = #j)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ x #j.
@@ -186,7 +184,7 @@ analyzing: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.145492s
+  processing time: 0.231339s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 
@@ -198,7 +196,7 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.145492s
+  processing time: 0.231339s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 

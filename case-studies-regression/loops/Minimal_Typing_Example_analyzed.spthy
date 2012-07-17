@@ -19,25 +19,24 @@ rule (modulo E) Reveal_Key:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Initiator:
-   [ !Key( k ), Fr( ~pub ), Fr( ~sec ) ]
-  --[ Out_Initiator( senc(<~pub, ~sec>, k) ), Public( ~pub ) ]->
-   [ Out( senc(<~pub, ~sec>, k) ) ]
+   [ !Key( k ), Fr( ~sec ), Fr( ~pub ) ]
+  --[ Out_Initiator( senc(<~sec, ~pub>, k) ), Public( ~pub ) ]->
+   [ Out( senc(<~sec, ~pub>, k) ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Responder:
-   [ !Key( key ), In( senc(<pub, sec>, key) ) ]
-  --[ In_Responder( senc(<pub, sec>, key), pub ), Secret( sec, key ) ]->
+   [ !Key( key ), In( senc(<sec, pub>, key) ) ]
+  --[ In_Responder( senc(<sec, pub>, key), pub ), Secret( sec, key ) ]->
    [ Out( pub ) ]
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) typing_assertion [typing]:
+lemma typing_assertion [typing]:
   all-traces
   "∀ m k #i.
     (In_Responder( m, k ) @ #i) ⇒
     ((∃ #j. (!KU( k ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. Out_Initiator( m ) @ #j))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ m k #i.
@@ -54,17 +53,17 @@ next
   simplify
   solve( (last(#i))  ∥
          (∃ #j. (!KU( k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-         (∃ #j. (Out_Initiator( senc(<k, sec>, key) ) @ #j) ∧ ¬(last(#j))) )
+         (∃ #j. (Out_Initiator( senc(<sec, k>, key) ) @ #j) ∧ ¬(last(#j))) )
     case case_1
     solve( !Key( key ) ▶₀ #i )
       case Setup_Key
-      solve( !KU( senc(<k.1, sec>, ~k) ) @ #vk )
+      solve( !KU( senc(<sec, k.1>, ~k) ) @ #vk )
         case Initiator
         by contradiction // from formulas
       next
         case Responder
         solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
-               (∃ #j. (Out_Initiator( senc(<t, sec.1>, ~k.2) ) @ #j) ∧ ¬(last(#j))) )
+               (∃ #j. (Out_Initiator( senc(<sec.1, t>, ~k.2) ) @ #j) ∧ ¬(last(#j))) )
           case case_1
           by contradiction // cyclic
         next
@@ -85,11 +84,10 @@ next
   qed
 qed
 
-lemma (modulo E) Responder_secrecy:
+lemma Responder_secrecy:
   all-traces
   "∀ sec key #i #j.
     ((Secret( sec, key ) @ #i) ∧ (K( sec ) @ #j)) ⇒ (∃ #r. Rev( key ) @ #r)"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ sec key #i #j.
@@ -100,7 +98,7 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( !Key( key ) ▶₀ #i )
   case Setup_Key
-  solve( !KU( senc(<pub, sec>, ~k) ) @ #vk )
+  solve( !KU( senc(<sec, pub>, ~k) ) @ #vk )
     case Initiator
     solve( !KU( ~sec ) @ #vk.1 )
       case Initiator
@@ -118,11 +116,10 @@ solve( !Key( key ) ▶₀ #i )
   qed
 qed
 
-lemma (modulo E) Public_part_public:
+lemma Public_part_public:
   exists-trace
   "(¬(∃ k #i. Rev( k ) @ #i)) ∧
    (∃ pub #i #j. (Public( pub ) @ #i) ∧ (K( pub ) @ #j))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
 "(∀ k #i. (Rev( k ) @ #i) ⇒ ⊥) ∧
@@ -133,7 +130,7 @@ solve( !Key( k ) ▶₀ #i )
   case Setup_Key
   solve( !KU( ~pub ) @ #vk )
     case Responder
-    solve( !KU( senc(<~pub, ~sec>, ~k) ) @ #vk.1 )
+    solve( !KU( senc(<~sec, ~pub>, ~k) ) @ #vk.1 )
       case Initiator
       SOLVED // trace found
     qed
@@ -155,7 +152,7 @@ analyzing: data/examples/loops/Minimal_Typing_Example.spthy
 analyzed: data/examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.172658s
+  processing time: 0.162299s
   typing_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)
@@ -168,7 +165,7 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.172658s
+  processing time: 0.162299s
   typing_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)

@@ -70,7 +70,7 @@ rule (modulo E) Ltk_reveal:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) JKL2008_1_initiator_key:
+lemma JKL2008_1_initiator_key:
   all-traces
   "(¬(∃ #i x. NotEq( x, x ) @ #i)) ⇒
    (¬(∃ #i1 #i2 ttest I R k hkI hkR.
@@ -82,7 +82,6 @@ lemma (modulo E) JKL2008_1_initiator_key:
          ((SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
           (SesskRev( tpartner ) @ #i4)) ⇒
          (⊥))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∀ #i x. (NotEq( x, x ) @ #i) ⇒ ⊥) ∧
@@ -116,7 +115,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, ~ekI ) ▶₀ #i1 )
   qed
 qed
 
-lemma (modulo E) JKL2008_1_responder_key:
+lemma JKL2008_1_responder_key:
   all-traces
   "(¬(∃ #i x. NotEq( x, x ) @ #i)) ⇒
    (¬(∃ #i1 #i2 ttest I R k hkI hkR.
@@ -128,7 +127,6 @@ lemma (modulo E) JKL2008_1_responder_key:
          ((SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
           (SesskRev( tpartner ) @ #i4)) ⇒
          (⊥))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∀ #i x. (NotEq( x, x ) @ #i) ⇒ ⊥) ∧
@@ -177,7 +175,7 @@ analyzing: data/examples/csf12/JKL_TS1_2004_KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.338342s
+  processing time: 0.3756s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 
@@ -189,7 +187,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.338342s
+  processing time: 0.3756s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 

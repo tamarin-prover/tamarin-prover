@@ -64,7 +64,7 @@ rule (modulo E) Secrecy_claim:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) types [typing]:
+lemma types [typing]:
   all-traces
   "(∀ ni m1 #i.
      (IN_R_1_ni( ni, m1 ) @ #i) ⇒
@@ -72,7 +72,6 @@ lemma (modulo E) types [typing]:
    (∀ nr m2 #i.
      (IN_I_2_nr( nr, m2 ) @ #i) ⇒
      ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_R_1( m2 ) @ #j)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∃ ni m1 #i.
@@ -208,13 +207,12 @@ next
   qed
 qed
 
-lemma (modulo E) nonce_secrecy:
+lemma nonce_secrecy:
   all-traces
   "¬(∃ A B s #i.
       (((Secret( A, B, s ) @ #i) ∧ (∃ #j. K( s ) @ #j)) ∧
        (¬(∃ #r. RevLtk( A ) @ #r))) ∧
       (¬(∃ #r. RevLtk( B ) @ #r)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ A B s #i.
@@ -383,12 +381,11 @@ next
   qed
 qed
 
-lemma (modulo E) session_key_setup_possible:
+lemma session_key_setup_possible:
   exists-trace
   "∃ A B s #i.
     ((Secret( A, B, s ) @ #i) ∧ (¬(∃ #r. RevLtk( A ) @ #r))) ∧
     (¬(∃ #r. RevLtk( B ) @ #r))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
 "∃ A B s #i.
@@ -423,7 +420,7 @@ analyzing: data/examples/classic/NSLPK3.spthy
 analyzed: data/examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.856704s
+  processing time: 1.054978s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   session_key_setup_possible (exists-trace): verified (5 steps)
@@ -436,7 +433,7 @@ summary of summaries:
 analyzed: data/examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.856704s
+  processing time: 1.054978s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   session_key_setup_possible (exists-trace): verified (5 steps)

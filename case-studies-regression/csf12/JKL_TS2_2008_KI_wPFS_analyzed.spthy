@@ -128,7 +128,7 @@ rule (modulo E) Ltk_reveal:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) JKL2008_2_initiator_key:
+lemma JKL2008_2_initiator_key:
   all-traces
   "¬(∃ #i1 #i2 ttest I R k hkI hkR.
       ((((((SidI_2( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
@@ -146,7 +146,6 @@ lemma (modulo E) JKL2008_2_initiator_key:
         (LtkRev( R ) @ #i3) ⇒
         (∃ #i4 tpartner kpartner.
           SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i4)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ #i1 #i2 ttest I R k hkI hkR.
@@ -287,7 +286,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
   qed
 qed
 
-lemma (modulo E) JKL2008_2_responder_key:
+lemma JKL2008_2_responder_key:
   all-traces
   "¬(∃ #i1 #i2 ttest I R k hkI hkR.
       ((((((SidR_1( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
@@ -303,7 +302,6 @@ lemma (modulo E) JKL2008_2_responder_key:
       (∀ #i3.
         (LtkRev( R ) @ #i3) ⇒
         (∃ #i4 tpartner. SidI_1( tpartner, I, R, hkI ) @ #i4)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ #i1 #i2 ttest I R k hkI hkR.
@@ -448,7 +446,7 @@ analyzing: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.103902s
+  processing time: 1.066131s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 
@@ -460,7 +458,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.103902s
+  processing time: 1.066131s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 

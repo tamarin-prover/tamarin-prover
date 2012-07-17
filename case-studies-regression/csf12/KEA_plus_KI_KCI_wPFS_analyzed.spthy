@@ -120,7 +120,7 @@ rule (modulo E) Ltk_reveal:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) keaplus_initiator_key:
+lemma keaplus_initiator_key:
   all-traces
   "¬(∃ #i1 #i2 ttest I R k hkI hkR.
       ((((((SidI_2( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
@@ -139,7 +139,6 @@ lemma (modulo E) keaplus_initiator_key:
         ((#i1 < #i3) ∧
          (∃ #i4 tpartner kpartner.
            SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i4))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ #i1 #i2 ttest I R k hkI hkR.
@@ -200,7 +199,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
   qed
 qed
 
-lemma (modulo E) keaplus_responder_key:
+lemma keaplus_responder_key:
   all-traces
   "¬(∃ #i1 #i2 ttest I R k hkI hkR.
       (((((((SidR_1( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
@@ -220,7 +219,6 @@ lemma (modulo E) keaplus_responder_key:
       (∀ #i3.
         (LtkRev( I ) @ #i3) ⇒
         ((#i1 < #i3) ∧ (∃ #i4 tpartner. SidI_1( tpartner, I, R, hkI ) @ #i4))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ #i1 #i2 ttest I R k hkI hkR.
@@ -292,7 +290,7 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.768556s
+  processing time: 0.820906s
   keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -304,7 +302,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.768556s
+  processing time: 0.820906s
   keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

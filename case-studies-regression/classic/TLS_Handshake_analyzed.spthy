@@ -150,7 +150,7 @@ rule (modulo E) C_3:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) session_key_secrecy:
+lemma session_key_secrecy:
   all-traces
   "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ⇒
    (¬(∃ S C keyS keyC #k.
@@ -158,7 +158,6 @@ lemma (modulo E) session_key_secrecy:
          ((∃ #i. K( keyS ) @ #i) ∨ (∃ #i. K( keyC ) @ #i))) ∧
         (¬(∃ #r. RevLtk( S ) @ #r))) ∧
        (¬(∃ #r. RevLtk( C ) @ #r))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
@@ -502,13 +501,12 @@ next
   qed
 qed
 
-lemma (modulo E) session_key_setup_possible:
+lemma session_key_setup_possible:
   exists-trace
   "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ∧
    (∃ S C keyS keyC #k.
      ((SessionKeys( S, C, keyS, keyC ) @ #k) ∧ (¬(∃ #r. RevLtk( S ) @ #r))) ∧
      (¬(∃ #r. RevLtk( C ) @ #r)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
 "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
@@ -568,7 +566,7 @@ analyzing: data/examples/classic/TLS_Handshake.spthy
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.844618s
+  processing time: 2.882666s
   session_key_secrecy (all-traces): verified (106 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 
@@ -580,7 +578,7 @@ summary of summaries:
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.844618s
+  processing time: 2.882666s
   session_key_secrecy (all-traces): verified (106 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 

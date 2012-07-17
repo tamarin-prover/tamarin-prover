@@ -31,9 +31,8 @@ rule (modulo E) Receive:
   // loop breaker: [0]
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) Secret_reachable [use_induction]:
+lemma Secret_reachable [use_induction]:
   exists-trace "∃ k #i. Secret( k ) @ #i"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
 "∃ k #i. (Secret( k ) @ #i)"
@@ -50,9 +49,8 @@ induction
   qed
 qed
 
-lemma (modulo E) secrecy [use_induction]:
+lemma secrecy [use_induction]:
   all-traces "∀ k #i #j. ((Secret( k ) @ #i) ∧ (!KU( k ) @ #j)) ⇒ (⊥)"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ k #i #j. (Secret( k ) @ #i) ∧ (!KU( k ) @ #j)"
@@ -153,7 +151,7 @@ analyzing: data/examples/loops/Minimal_KeyRenegotiation.spthy
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.118532s
+  processing time: 0.139843s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (28 steps)
 
@@ -165,7 +163,7 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.118532s
+  processing time: 0.139843s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (28 steps)
 

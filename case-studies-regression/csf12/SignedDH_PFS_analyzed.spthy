@@ -122,13 +122,12 @@ rule (modulo E) Resp:
        z     = x.124^(x.126*inv(x.125))
   */
 
-lemma (modulo E) Perfect_Forward_Secrecy:
+lemma Perfect_Forward_Secrecy:
   all-traces
   "∀ I R sessKey #i #k.
     ((SessionKey( I, R, sessKey ) @ #i) ∧ (K( sessKey ) @ #k)) ⇒
     ((∃ #r. (LtkReveal( I ) @ #r) ∧ (#r < #i)) ∨
      (∃ #r. (LtkReveal( R ) @ #r) ∧ (#r < #i)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ I R sessKey #i #k.
@@ -209,7 +208,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.681662s
+  processing time: 0.705226s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -220,7 +219,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.681662s
+  processing time: 0.705226s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

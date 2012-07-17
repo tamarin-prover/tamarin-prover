@@ -185,7 +185,7 @@ rule (modulo E) Sessionkey_Reveal:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) KI_Perfect_Forward_Secrecy_I:
+lemma KI_Perfect_Forward_Secrecy_I:
   all-traces
   "¬(∃ ttest I R sessKey #i1 #k hki hkr.
       (((((AcceptedI( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧
@@ -196,7 +196,6 @@ lemma (modulo E) KI_Perfect_Forward_Secrecy_I:
       (¬(∃ #i3 #i4 tpartner kpartner.
           (SesskRev( tpartner ) @ #i3) ∧
           (AcceptedR( tpartner, I, R, hki, hkr, kpartner ) @ #i4))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ ttest I R sessKey #i1 #k hki hkr.
@@ -246,7 +245,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
   qed
 qed
 
-lemma (modulo E) KI_Perfect_Forward_Secrecy_R:
+lemma KI_Perfect_Forward_Secrecy_R:
   all-traces
   "¬(∃ ttest I R sessKey #i1 #k hki hkr.
       (((((AcceptedR( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧
@@ -257,7 +256,6 @@ lemma (modulo E) KI_Perfect_Forward_Secrecy_R:
       (¬(∃ #i3 #i4 tpartner kpartner.
           (SesskRev( tpartner ) @ #i3) ∧
           (AcceptedI( tpartner, I, R, hki, hkr, kpartner ) @ #i4))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ ttest I R sessKey #i1 #k hki hkr.
@@ -325,7 +323,7 @@ analyzing: data/examples/csf12/STS_MAC.spthy
 analyzed: data/examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.65108s
+  processing time: 3.829311s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)
 
@@ -337,7 +335,7 @@ summary of summaries:
 analyzed: data/examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.65108s
+  processing time: 3.829311s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)
 

@@ -49,14 +49,13 @@ rule (modulo E) Recv:
   // loop breaker: [1]
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) claim_reachable [use_induction]:
+lemma claim_reachable [use_induction]:
   exists-trace
   "(∀ commit #i #j.
      ((AssumeCommitNotExpired( commit ) @ #i) ∧
       (CommitExpired( commit ) @ #j)) ⇒
      (#i < #j)) ⇒
    (∃ m #i. ClaimSent( m ) @ #i)"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
 "(∃ commit #i #j.
@@ -90,14 +89,13 @@ induction
   qed
 qed
 
-lemma (modulo E) authentic2 [use_induction]:
+lemma authentic2 [use_induction]:
   all-traces
   "(∀ commit #i #j.
      ((AssumeCommitNotExpired( commit ) @ #i) ∧
       (CommitExpired( commit ) @ #j)) ⇒
      (#i < #j)) ⇒
    (∀ m #i. (ClaimSent( m ) @ #i) ⇒ (∃ #j. (Sent( m ) @ #j) ∧ (#j < #i)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∀ commit #i #j.
@@ -223,7 +221,7 @@ analyzing: data/examples/loops/TESLA_Scheme1.spthy
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.344206s
+  processing time: 0.371562s
   claim_reachable (exists-trace): verified (8 steps)
   authentic2 (all-traces): verified (31 steps)
 
@@ -235,7 +233,7 @@ summary of summaries:
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.344206s
+  processing time: 0.371562s
   claim_reachable (exists-trace): verified (8 steps)
   authentic2 (all-traces): verified (31 steps)
 

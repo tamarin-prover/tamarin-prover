@@ -61,7 +61,7 @@ rule (modulo E) Secrecy_claim:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) types [typing, reuse]:
+lemma types [typing, reuse]:
   all-traces
   "(∀ ni m1 #i.
      (IN_R_1_ni( ni, m1 ) @ #i) ⇒
@@ -69,7 +69,6 @@ lemma (modulo E) types [typing, reuse]:
    (∀ nr m2 #i.
      (IN_I_2_nr( nr, m2 ) @ #i) ⇒
      ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_R_1( m2 ) @ #j)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∃ ni m1 #i.
@@ -219,13 +218,12 @@ next
   qed
 qed
 
-lemma (modulo E) nonce_secrecy:
+lemma nonce_secrecy:
   all-traces
   "¬(∃ A B s #i.
       (((Secret( A, B, s ) @ #i) ∧ (∃ #j. K( s ) @ #j)) ∧
        (¬(∃ #r. RevLtk( A ) @ #r))) ∧
       (¬(∃ #r. RevLtk( B ) @ #r)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ A B s #i.
@@ -654,12 +652,11 @@ next
   qed
 qed
 
-lemma (modulo E) session_key_setup_possible:
+lemma session_key_setup_possible:
   exists-trace
   "∃ A B s #i.
     ((Secret( A, B, s ) @ #i) ∧ (¬(∃ #r. RevLtk( A ) @ #r))) ∧
     (¬(∃ #r. RevLtk( B ) @ #r))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
 "∃ A B s #i.
@@ -708,7 +705,7 @@ analyzing: data/examples/classic/NSLPK3_untagged.spthy
 analyzed: data/examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.629353s
+  processing time: 2.976485s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -721,7 +718,7 @@ summary of summaries:
 analyzed: data/examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.629353s
+  processing time: 2.976485s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

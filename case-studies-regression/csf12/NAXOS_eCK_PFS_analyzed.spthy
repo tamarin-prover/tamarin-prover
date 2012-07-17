@@ -268,7 +268,7 @@ rule (modulo E) Ephk_reveal:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) eCK_PFS_key_secrecy:
+lemma eCK_PFS_key_secrecy:
   all-traces
   "∀ #i1 #i2 Test A B k.
     ((Accept( Test, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)) ⇒
@@ -285,7 +285,6 @@ lemma (modulo E) eCK_PFS_key_secrecy:
           (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4))) ∧
       ((∃ #i5. (LtkRev( B ) @ #i5) ∧ (#i5 < #i1)) ∨
        (∃ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6)))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ #i1 #i2 Test A B k.
@@ -361,7 +360,7 @@ analyzing: data/examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.027389s
+  processing time: 5.370885s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -372,7 +371,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.027389s
+  processing time: 5.370885s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================

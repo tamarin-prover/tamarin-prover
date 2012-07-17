@@ -67,13 +67,12 @@ rule (modulo E) MkKey:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) types [typing]:
+lemma types [typing]:
   all-traces
   "∀ m d1 d2 #i.
     (PCR_Unbind( d1, d2, m ) @ #i) ⇒
     (((∃ #j. (!KU( m ) @ #j) ∧ (#j < #i)) ∨ (∃ s #j. Secrets( m, s ) @ #j)) ∨
      (∃ s #j. Secrets( s, m ) @ #j))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ m d1 d2 #i.
@@ -133,7 +132,7 @@ next
   qed
 qed
 
-lemma (modulo E) Unbind_PCR_Value [reuse, use_induction]:
+lemma Unbind_PCR_Value [reuse, use_induction]:
   all-traces
   "∀ x sk m #i.
     (PCR_Unbind( x, sk, m ) @ #i) ⇒
@@ -141,7 +140,6 @@ lemma (modulo E) Unbind_PCR_Value [reuse, use_induction]:
       (∃ y xPrev #j. PCR_Extend( xPrev, y, x ) @ #j)) ∨
      (∃ #i.1 #j.
        ((UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i.1)) ∧ (¬(#i.1 = #j))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ x sk m #i.
@@ -255,13 +253,12 @@ next
   qed
 qed
 
-lemma (modulo E) secrecy:
+lemma secrecy:
   all-traces
   "((∀ #i #j. ((UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i)) ⇒ (#i = #j)) ∧
     (∀ t #e. (Ineq( t, t ) @ #e) ⇒ (⊥))) ⇒
    (¬(∃ s0 s1 #i #d0 #d1.
        ((Secrets( s0, s1 ) @ #i) ∧ (K( s0 ) @ #d0)) ∧ (K( s1 ) @ #d1)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∀ #i #j. (UniqueInit( ) @ #j) ∧ (UniqueInit( ) @ #i) ⇒ #i = #j) ∧
@@ -584,7 +581,7 @@ analyzing: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.545769s
+  processing time: 1.523723s
   types (all-traces): verified (16 steps)
   Unbind_PCR_Value (all-traces): verified (29 steps)
   secrecy (all-traces): verified (99 steps)
@@ -597,7 +594,7 @@ summary of summaries:
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.545769s
+  processing time: 1.523723s
   types (all-traces): verified (16 steps)
   Unbind_PCR_Value (all-traces): verified (29 steps)
   secrecy (all-traces): verified (99 steps)

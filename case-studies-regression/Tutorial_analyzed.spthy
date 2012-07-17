@@ -69,13 +69,12 @@ rule (modulo E) Serv_1:
        z.1   = z.12
   */
 
-lemma (modulo E) Client_session_key_secrecy:
+lemma Client_session_key_secrecy:
   all-traces
   "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ⇒
    (¬(∃ S k #i #j.
        ((SessKeyC( S, k ) @ #i) ∧ (K( k ) @ #j)) ∧
        (¬(∃ #r. LtkReveal( S ) @ #r))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
@@ -96,14 +95,13 @@ solve( Client_1( S, k ) ▶₀ #i )
   qed
 qed
 
-lemma (modulo E) Client_auth:
+lemma Client_auth:
   all-traces
   "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ⇒
    (∀ S k #i.
      (SessKeyC( S, k ) @ #i) ⇒
      ((∃ #a. AnswerRequest( S, k ) @ #a) ∨
       (∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #i))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
@@ -143,11 +141,10 @@ solve( Client_1( S, k ) ▶₀ #i )
   qed
 qed
 
-lemma (modulo E) Client_session_key_honest_setup:
+lemma Client_session_key_honest_setup:
   exists-trace
   "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ∧
    (∃ S k #i. (SessKeyC( S, k ) @ #i) ∧ (¬(∃ #r. LtkReveal( S ) @ #r)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
 "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
@@ -180,7 +177,7 @@ analyzing: data/examples/Tutorial.spthy
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.159297s
+  processing time: 0.193336s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)
@@ -193,7 +190,7 @@ summary of summaries:
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.159297s
+  processing time: 0.193336s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)

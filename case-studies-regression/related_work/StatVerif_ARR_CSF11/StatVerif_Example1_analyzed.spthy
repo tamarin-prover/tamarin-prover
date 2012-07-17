@@ -44,14 +44,13 @@ rule (modulo E) UseRightDevice:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) types [typing]:
+lemma types [typing]:
   all-traces
   "∀ m #i.
     (Access( m ) @ #i) ⇒
     (((∃ #j. (!KU( m ) @ #j) ∧ (#j < #i)) ∨
       (∃ x #j. Exclusive( x, m ) @ #j)) ∨
      (∃ y #j. Exclusive( m, y ) @ #j))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ m #i.
@@ -165,9 +164,8 @@ next
   qed
 qed
 
-lemma (modulo E) reachability_left:
+lemma reachability_left:
   exists-trace "∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
 "∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
@@ -184,9 +182,8 @@ solve( !DevicePublicKey( key ) ▶₂ #i )
   qed
 qed
 
-lemma (modulo E) reachability_right:
+lemma reachability_right:
   exists-trace "∃ x y #i #k. (Exclusive( x, y ) @ #i) ∧ (K( y ) @ #k)"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all satisfying traces:
 "∃ x y #i #k. (Exclusive( x, y ) @ #i) ∧ (K( y ) @ #k)"
@@ -203,11 +200,10 @@ solve( !DevicePublicKey( key ) ▶₂ #i )
   qed
 qed
 
-lemma (modulo E) secrecy:
+lemma secrecy:
   all-traces
   "¬(∃ x y #i #k1 #k2.
       ((Exclusive( x, y ) @ #i) ∧ (K( x ) @ #k1)) ∧ (K( y ) @ #k2))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ x y #i #k1 #k2.
@@ -285,7 +281,7 @@ analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spt
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.345458s
+  processing time: 0.359845s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -299,7 +295,7 @@ summary of summaries:
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.345458s
+  processing time: 0.359845s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)

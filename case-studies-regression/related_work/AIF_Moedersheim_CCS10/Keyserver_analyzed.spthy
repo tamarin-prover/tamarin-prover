@@ -36,13 +36,12 @@ rule (modulo E) RenewKey:
   // loop breaker: [1]
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) types [typing]:
+lemma types [typing]:
   all-traces
   "∀ sk #i.
     (Revoked( sk ) @ #i) ⇒
     ((∃ #j. (!KU( sk ) @ #j) ∧ (#j < #i)) ∨
      (∃ #j. (HonestKey( sk ) @ #j) ∧ (#j < #i)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ sk #i.
@@ -259,11 +258,10 @@ next
   qed
 qed
 
-lemma (modulo E) In_Honest_Key_imp_Revoked:
+lemma In_Honest_Key_imp_Revoked:
   all-traces
   "∀ sk #i #d.
     ((HonestKey( sk ) @ #i) ∧ (K( sk ) @ #d)) ⇒ (∃ #r. Revoked( sk ) @ #r)"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ sk #i #d.
@@ -299,7 +297,7 @@ analyzing: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.409556s
+  processing time: 0.362638s
   types (all-traces): verified (67 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
@@ -311,7 +309,7 @@ summary of summaries:
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.409556s
+  processing time: 0.362638s
   types (all-traces): verified (67 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 

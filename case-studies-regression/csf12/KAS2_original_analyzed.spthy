@@ -143,7 +143,7 @@ rule (modulo E) Ephk_reveal:
 
   /* has exactly the trivial AC variant */
 
-lemma (modulo E) KAS_key_secrecy:
+lemma KAS_key_secrecy:
   all-traces
   "¬(∃ #i1 #i2 s A B k.
       ((((Accept( s, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
@@ -159,7 +159,6 @@ lemma (modulo E) KAS_key_secrecy:
            (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5))) ⇒
        ((¬(∃ #i6. EphkRev( s ) @ #i6)) ∧
         (¬(∃ #i6. (LtkRev( B ) @ #i6) ∧ (#i6 < #i1))))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ #i1 #i2 s A B k.
@@ -1186,7 +1185,7 @@ analyzing: data/examples/csf12/KAS2_original.spthy
 analyzed: data/examples/csf12/KAS2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.238383s
+  processing time: 5.396558s
   KAS_key_secrecy (all-traces): verified (290 steps)
 
 ------------------------------------------------------------------------------
@@ -1197,7 +1196,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KAS2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.238383s
+  processing time: 5.396558s
   KAS_key_secrecy (all-traces): verified (290 steps)
 
 ==============================================================================

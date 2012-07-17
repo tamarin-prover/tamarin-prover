@@ -88,12 +88,11 @@ rule (modulo E) Serv_1:
        z.2   = z.25
   */
 
-lemma (modulo E) typing_assertion [typing]:
+lemma typing_assertion [typing]:
   all-traces
   "∀ m v #i.
     (In_Serv_1( m, v ) @ #i) ⇒
     ((∃ #j. (!KU( v ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. Out_Client_1( m ) @ #j))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ m v #i.
@@ -155,13 +154,12 @@ next
   qed
 qed
 
-lemma (modulo E) Client_session_key_secrecy_raw [reuse]:
+lemma Client_session_key_secrecy_raw [reuse]:
   all-traces
   "∀ S C k #i #j.
     ((SessKeyC( C, S, k ) @ #i) ∧ (!KU( k ) @ #j)) ⇒
     ((∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #j)) ∨
      (∃ #r. (LtkReveal( C ) @ #r) ∧ (#r < #j)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ S C k #i #j.
@@ -191,13 +189,12 @@ solve( Client_1( C, S, k ) ▶₀ #i )
   qed
 qed
 
-lemma (modulo E) Client_session_key_secrecy:
+lemma Client_session_key_secrecy:
   all-traces
   "∀ S C k #i #j.
     ((SessKeyC( C, S, k ) @ #i) ∧ (K( k ) @ #j)) ⇒
     ((∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #j)) ∨
      (∃ #r. (LtkReveal( C ) @ #r) ∧ (#r < #j)))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "∃ S C k #i #j.
@@ -216,7 +213,7 @@ next
   by contradiction // from formulas
 qed
 
-lemma (modulo E) Client_auth:
+lemma Client_auth:
   all-traces
   "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ⇒
    (∀ C S k #i.
@@ -224,7 +221,6 @@ lemma (modulo E) Client_auth:
      (((∃ #a. ReceivedKey( C, S, k ) @ #a) ∨
        (∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #i))) ∨
       (∃ #r. (LtkReveal( C ) @ #r) ∧ (#r < #i))))"
-/* proof based on the same lemma modulo AC */
 /*
 guarded formula characterizing all counter-examples:
 "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
@@ -285,7 +281,7 @@ analyzing: data/examples/loops/JCS12_Typing_Example.spthy
 analyzed: data/examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.275487s
+  processing time: 0.331379s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
@@ -299,7 +295,7 @@ summary of summaries:
 analyzed: data/examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.275487s
+  processing time: 0.331379s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
