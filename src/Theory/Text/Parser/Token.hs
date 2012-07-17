@@ -15,7 +15,8 @@ module Theory.Text.Parser.Token (
   , comma
   , colon
 
-  , integer
+  , natural
+  , naturalSubscript
 
   -- ** Formal comments
   , formalComment
@@ -48,6 +49,9 @@ module Theory.Text.Parser.Token (
   , opLNot
   , opLFalse
   , opLTrue
+
+  , opRequires
+  , opChain
 
   -- ** Pseudo operators
   , equalSign
@@ -82,6 +86,7 @@ module Theory.Text.Parser.Token (
 import           Prelude             hiding (id, (.))
 
 import           Data.Foldable       (asum)
+import           Data.List (foldl')
 
 import           Control.Applicative hiding (empty, many, optional)
 import           Control.Category
@@ -186,9 +191,18 @@ comma = void $ T.comma spthy
 colon :: Parser ()
 colon = void $ T.colon spthy
 
--- | Parse an integer.
-integer :: Parser Integer
-integer = T.natural spthy
+-- | Parse an natural.
+natural :: Parser Integer
+natural = T.natural spthy
+
+-- | Parse a Unicode-subscripted natural number.
+naturalSubscript :: Parser Integer
+naturalSubscript = T.lexeme spthy $ do
+    digits <- many1 (oneOf "₀₁₂₃₄₅₆₇₈₉")
+    let n = foldl' (\x d -> 10*x + subscriptDigitToInteger d) 0 digits
+    seq n (return n)
+  where
+    subscriptDigitToInteger d = toInteger $ fromEnum d - fromEnum '₀'
 
 -- | A comma separated list of elements.
 commaSep :: Parser a -> Parser [a]
@@ -227,7 +241,7 @@ identifier = T.identifier spthy
 indexedIdentifier :: Parser (String, Integer)
 indexedIdentifier = do
     (,) <$> identifier
-        <*> option 0 (try (dot *> (fromIntegral <$> integer)))
+        <*> option 0 (try (dot *> (fromIntegral <$> natural)))
 
 -- | Parse a logical variable with the given sorts allowed.
 sortedLVar :: [LSort] -> Parser LVar
@@ -262,7 +276,7 @@ nodevar :: Parser NodeId
 nodevar = asum
   [ sortedLVar [LSortNode]
   , (\(n, i) -> LVar n LSortNode i) <$> indexedIdentifier ]
-  <?> "node"
+  <?> "timepoint variable"
 
 -- | Parse a literal fresh name, e.g., @~'n'@.
 freshName :: Parser String
@@ -331,6 +345,17 @@ opLFalse = symbol_ "⊥" <|> T.reserved spthy "F"
 -- | A logical false, @T@ or @⊥@.
 opLTrue :: Parser  ()
 opLTrue = symbol_ "⊤" <|> T.reserved spthy "T"
+
+-- Operators for constraints
+----------------------------
+
+-- | The requires-a-premise operator, @▶ subscript-idx@.
+opRequires :: Parser PremIdx
+opRequires = (PremIdx . fromIntegral) <$> (symbol "▶" *> naturalSubscript)
+
+-- | The chain operator @~~>@.
+opChain :: Parser ()
+opChain = symbol_ "~~>"
 
 
 -- Pseudo operators (to be replaced by usage of proper tokens)

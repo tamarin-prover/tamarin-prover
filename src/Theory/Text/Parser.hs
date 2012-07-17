@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -361,50 +360,37 @@ transferProto = do
 -- Parsing Proofs
 ------------------------------------------------------------------------------
 
-{-
 -- | Parse a node premise.
 nodePrem :: Parser NodePrem
-nodePrem = NodePrem <$> parens ((,) <$> nodevar <*> (kw COMMA *> integer))
+nodePrem = parens ((,) <$> nodevar
+                       <*> (comma *> fmap (PremIdx . fromIntegral) natural))
 
 -- | Parse a node conclusion.
 nodeConc :: Parser NodeConc
-nodeConc = NodeConc <$> parens ((,) <$> nodevar <*> (kw COMMA *> integer))
--}
-
-
-{-
--- | Parse the @<@ temporal less operator.
-edgeOp :: Parser ()
-edgeOp = try (kw GREATER *> kw RIGHTARROW)
-
--- | Parse the @~~>@ chain operator.
-chainOp :: Parser ()
-chainOp = symbol "~~~>"
--}
+nodeConc = parens ((,) <$> nodevar
+                       <*> (comma *> fmap (ConcIdx .fromIntegral) natural))
 
 -- | Parse a goal.
 goal :: Parser Goal
-goal = fail "SM: reimplement goal parsing" {- asum
-  [ splitGoal
-  , premiseGoal
-  , chainGoal
+goal = asum
+  [ -- splitGoal
+    premiseGoal
+  , actionGoal
+  , ChainG <$> nodeConc <*> nodePrem
   ]
   where
-    premiseGoal = try $ do
-        v  <- nodevar
-        i  <- brackets integer <* requiresOp
-        fa <- fact llit
-        return $ PremiseGoal fa (NodePrem (v, i))
-
-    chainGoal = ChainGoal
-        <$> (try $ term llit <* colon)
-        <*> (Chain <$> (nodeConc <* chainOp) <*> nodePrem)
-
-    splitGoal = do
-        split <- (symbol "splitEqsOn"    *> pure SplitEqs) <|>
-                 (symbol "splitTypingOn" *> pure SplitTyping)
-        SplitGoal split <$> parens integer
--}
+    actionGoal = do
+        fa <- try (fact llit <* opAt)
+        i  <- nodevar
+        return $ ActionG i fa
+    premiseGoal = do
+        (fa, v) <- try ((,) <$> fact llit <*> opRequires)
+        i  <- nodevar
+        return $ PremiseG (i, v) fa
+    -- splitGoal = do
+    --     split <- (symbol "splitEqsOn"    *> pure SplitEqs) <|>
+    --              (symbol "splitTypingOn" *> pure SplitTyping)
+    --     SplitGoal split <$> parens natural
 
 -- | Parse a proof method.
 proofMethod :: Parser ProofMethod
@@ -418,8 +404,11 @@ proofMethod = asum
 -- | Parse a proof skeleton.
 proofSkeleton :: Parser ProofSkeleton
 proofSkeleton =
-    finalProof <|> interProof
+    solvedProof <|> finalProof <|> interProof
   where
+    solvedProof =
+        symbol "SOLVED" *> pure (LNode (ProofStep Solved ()) M.empty)
+
     finalProof = do
         method <- symbol "by" *> proofMethod
         return (LNode (ProofStep method ()) M.empty)
@@ -427,7 +416,7 @@ proofSkeleton =
     interProof = do
         method <- proofMethod
         cases  <- (sepBy oneCase (symbol "next") <* symbol "qed") <|>
-                  ((return . ("",)) <$> proofSkeleton           )
+                  ((return . (,) "") <$> proofSkeleton          )
         return (LNode (ProofStep method ()) (M.fromList cases))
 
     oneCase = (,) <$> (symbol "case" *> identifier) <*> proofSkeleton
@@ -449,7 +438,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
     -- nodePrem = annNode PremIdx
     -- nodeConc = annNode ConcIdx
     -- annNode mkAnn = parens ((,) <$> (nodevarTerm <* kw COMMA)
-    --                             <*> (mkAnn <$> integer))
+    --                             <*> (mkAnn <$> natural))
 
 -- | Parse an atom of a formula.
 fatom :: Parser (LFormula Name)
@@ -545,7 +534,7 @@ functions =
   where
     functionSymbol = do
         f   <- BC.pack <$> identifier <* opSlash
-        k   <- fromIntegral <$> integer
+        k   <- fromIntegral <$> natural
         sig <- getState
         case lookup f (S.toList $ allFunctionSymbols sig) of
           Just k' | k' /= k ->
