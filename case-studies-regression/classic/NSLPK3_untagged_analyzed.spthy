@@ -708,7 +708,7 @@ analyzing: data/examples/classic/NSLPK3_untagged.spthy
 analyzed: data/examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.540902s
+  processing time: 2.629353s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -721,7 +721,7 @@ summary of summaries:
 analyzed: data/examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.540902s
+  processing time: 2.629353s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

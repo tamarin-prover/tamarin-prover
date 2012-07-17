@@ -46,7 +46,7 @@ import           Control.DeepSeq
 import           System.IO.Unsafe     (unsafePerformIO)
 
 import           Term.Maude.Process   (MaudeHandle, mhFilePath, mhMaudeSig, startMaude)
-import           Term.Maude.Signature (MaudeSig, enableDH, minimalMaudeSig, prettyMaudeSig)
+import           Term.Maude.Signature (MaudeSig, minimalMaudeSig, prettyMaudeSig)
 import           Theory.Text.Pretty
 
 
@@ -162,12 +162,8 @@ instance NFData SignatureWithMaude where
 
 -- | Pretty-print a signature with maude.
 prettySignaturePure :: HighlightDocument d => SignaturePure -> d
-prettySignaturePure sig = vsep $ map combine $
-    -- FIXME: Print Maude signature completely, this is only used for
-    -- intruder-variants for now.
-    [ ("builtin", text "diffie-hellman" ) | enableDH . L.get sigpMaudeSig $ sig ]
-  where
-    combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
+prettySignaturePure sig =
+    prettyMaudeSig $ L.get sigpMaudeSig sig
 
 -- | Pretty-print a pure signature.
 prettySignatureWithMaude :: HighlightDocument d => SignatureWithMaude -> d

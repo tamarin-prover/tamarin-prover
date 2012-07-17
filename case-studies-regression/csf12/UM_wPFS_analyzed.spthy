@@ -2,7 +2,7 @@ theory UM_wPFS begin
 
 // Function signature and definition of the equational theory E
 
-builtin: diffie-hellman
+builtins: diffie-hellman
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
@@ -419,7 +419,7 @@ analyzing: data/examples/csf12/UM_wPFS.spthy
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.928473s
+  processing time: 1.032508s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 
@@ -431,7 +431,7 @@ summary of summaries:
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.928473s
+  processing time: 1.032508s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 

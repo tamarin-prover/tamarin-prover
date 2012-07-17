@@ -2,7 +2,7 @@ theory SignedDH_PFS begin
 
 // Function signature and definition of the equational theory E
 
-builtin: diffie-hellman
+builtins: diffie-hellman
 functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
@@ -209,7 +209,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.692311s
+  processing time: 0.681662s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -220,7 +220,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.692311s
+  processing time: 0.681662s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

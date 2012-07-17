@@ -2,7 +2,7 @@ theory NAXOS_eCK begin
 
 // Function signature and definition of the equational theory E
 
-builtin: diffie-hellman
+builtins: diffie-hellman
 functions: fst/1, h1/1, h2/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
@@ -1143,7 +1143,7 @@ analyzing: data/examples/csf12/NAXOS_eCK.spthy
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.97481s
+  processing time: 7.170775s
   eCK_key_secrecy (all-traces): verified (270 steps)
 
 ------------------------------------------------------------------------------
@@ -1154,7 +1154,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.97481s
+  processing time: 7.170775s
   eCK_key_secrecy (all-traces): verified (270 steps)
 
 ==============================================================================

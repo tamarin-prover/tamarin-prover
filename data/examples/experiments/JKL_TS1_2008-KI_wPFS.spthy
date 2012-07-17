@@ -93,11 +93,11 @@ lemma JKL2008_2_initiator_key:
 	       (We model wpfs, for pfs, add i1 < i3 to conclusion) */
             & (All #i3. LtkRev( I ) @ i3 ==>
 	          (Ex #i4 tpartner kpartner.
-                      (* (i1 < i3) | *)
+                      /* (i1 < i3) | */
                       SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i4))
             & (All #i3. LtkRev( R ) @ i3 ==>
 	          (Ex #i4 tpartner kpartner.
-                      (* (i1 < i3) | *)
+                      /* (i1 < i3) | */
                       SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i4))
     )"
 
@@ -127,11 +127,11 @@ lemma JKL2008_2_responder_key:
 	       */
             & (All #i3. LtkRev( I ) @ i3 ==>
 	          (Ex #i4 tpartner.
-                       (* (i1 < i3) | *)
+                       /* (i1 < i3) | */
                        SidI_1( tpartner,I,R,hkI ) @i4))
             & (All #i3. LtkRev( R ) @ i3 ==>
 	          (Ex #i4 tpartner.
-                       (* (i1 < i3) | *)
+                       /* (i1 < i3) | */
                        SidI_1( tpartner,I,R,hkI ) @i4))
     )"
 

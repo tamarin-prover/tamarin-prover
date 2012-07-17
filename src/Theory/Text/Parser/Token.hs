@@ -1,0 +1,373 @@
+{-# LANGUAGE TupleSections #-}
+-- |
+-- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
+-- License     : GPL v3 (see LICENSE)
+--
+-- Maintainer  : Simon Meier <iridcode@gmail.com>
+-- Portability : portable
+--
+-- Tokenizing infrastructure
+module Theory.Text.Parser.Token (
+  -- * Symbols
+    symbol
+  , symbol_
+  , dot
+  , comma
+  , colon
+
+  , integer
+
+  -- ** Formal comments
+  , formalComment
+
+  -- * Identifiers and Variables
+  , identifier
+  , indexedIdentifier
+
+  , freshName
+  , pubName
+
+  , sortedLVar
+  , lvar
+  , msgvar
+  , nodevar
+
+  -- * Operators
+  , opExp
+  , opMult
+
+  , opEqual
+  , opLess
+  , opAt
+  , opForall
+  , opExists
+  , opImplies
+  , opLEquiv
+  , opLAnd
+  , opLOr
+  , opLNot
+  , opLFalse
+  , opLTrue
+
+  -- ** Pseudo operators
+  , equalSign
+  , opSharp
+  , opBang
+  , opSlash
+  , opMinus
+  , opLeftarrow
+  , opRightarrow
+  , opLongleftarrow
+  , opLongrightarrow
+
+  -- * Parentheses/quoting
+  , braced
+  , parens
+  , angled
+  , brackets
+  , singleQuoted
+  , doubleQuoted
+
+  -- * List parsing
+  , commaSep
+  , commaSep1
+  , list
+
+    -- * Basic Parsing
+  , Parser
+  , parseFile
+  , parseFromString
+  ) where
+
+import           Prelude             hiding (id, (.))
+
+import           Data.Foldable       (asum)
+
+import           Control.Applicative hiding (empty, many, optional)
+import           Control.Category
+import           Control.Monad
+
+import           Text.Parsec         hiding ((<|>))
+import qualified Text.Parsec.Token   as T
+
+import           Theory
+
+
+
+
+
+
+------------------------------------------------------------------------------
+-- Parser
+------------------------------------------------------------------------------
+
+-- | A parser for a stream of tokens.
+type Parser a = Parsec String MaudeSig a
+
+-- Use Parsec's support for defining token parsers.
+spthy :: T.TokenParser MaudeSig
+spthy =
+    T.makeTokenParser spthyStyle
+  where
+    spthyStyle = T.LanguageDef
+      { T.commentStart   = "/*"
+      , T.commentEnd     = "*/"
+      , T.commentLine    = "//"
+      , T.nestedComments = True
+      , T.identStart     = alphaNum
+      , T.identLetter    = alphaNum <|> oneOf "_"
+      , T.reservedNames  = ["in","let","rule"]
+      , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-"
+      , T.opLetter       = oneOf ":!$%&*+./<=>?@\\^|-"
+      , T.reservedOpNames= []
+      , T.caseSensitive  = True
+      }
+
+-- | Parse a file.
+parseFile :: Parser a -> FilePath -> IO a
+parseFile parser f = do
+  s <- readFile f
+  case runParser (T.whiteSpace spthy *> parser) minimalMaudeSig f s of
+    Right p -> return p
+    Left err -> error $ show err
+
+-- | Run a given parser on a given string.
+parseFromString :: Parser a -> String -> Either ParseError a
+parseFromString parser =
+    runParser (T.whiteSpace spthy *> parser) minimalMaudeSig dummySource
+  where
+    dummySource = "<interactive>"
+
+
+-- Token parsers
+----------------
+
+-- | Parse a symbol.
+symbol :: String -> Parser String
+symbol = try . T.symbol spthy
+
+-- | Parse a symbol without returning the parsed string.
+symbol_ :: String -> Parser ()
+symbol_ = void . symbol
+
+-- | Between braces.
+braced :: Parser a -> Parser a
+braced = T.braces spthy
+
+-- | Between brackets.
+brackets :: Parser a -> Parser a
+brackets = T.brackets spthy
+
+-- | Between parentheses.
+parens :: Parser a -> Parser a
+parens = T.parens spthy
+
+-- | Between angular brackets.
+angled :: Parser a -> Parser a
+angled = T.angles spthy
+
+-- | Between single quotes.
+singleQuoted :: Parser a -> Parser a
+singleQuoted = between (symbol "'") (symbol "'")
+
+-- | Between double quotes.
+doubleQuoted :: Parser a -> Parser a
+doubleQuoted = between (symbol "\"") (symbol "\"")
+
+-- | A dot @.@.
+dot :: Parser ()
+dot = void $ T.dot spthy
+
+-- | A comma @,@.
+comma :: Parser ()
+comma = void $ T.comma spthy
+
+-- | A colon @:@.
+colon :: Parser ()
+colon = void $ T.colon spthy
+
+-- | Parse an integer.
+integer :: Parser Integer
+integer = T.natural spthy
+
+-- | A comma separated list of elements.
+commaSep :: Parser a -> Parser [a]
+commaSep = T.commaSep spthy
+
+-- | A comma separated non-empty list of elements.
+commaSep1 :: Parser a -> Parser [a]
+commaSep1 = T.commaSep1 spthy
+
+-- | Parse a list of items '[' item ',' ... ',' item ']'
+list :: Parser a -> Parser [a]
+list = brackets . commaSep
+
+-- | A formal comment; i.e., (header, body)
+formalComment :: Parser (String, String)
+formalComment = T.lexeme spthy $ do
+    header <- try (many1 letter <* string "{*")
+    body   <- many bodyChar <* string "*}"
+    return (header, body)
+  where
+    bodyChar = try $ do
+      c <- anyChar
+      case c of
+        '\\' -> char '\\' <|> char '*'
+        '*'  -> mzero
+        _    -> return c
+
+-- Identifiers and Variables
+----------------------------
+
+-- | Parse an identifier as a string
+identifier :: Parser String
+identifier = T.identifier spthy
+
+-- | Parse an identifier possibly indexed with a number.
+indexedIdentifier :: Parser (String, Integer)
+indexedIdentifier = do
+    (,) <$> identifier
+        <*> option 0 (try (dot *> (fromIntegral <$> integer)))
+
+-- | Parse a logical variable with the given sorts allowed.
+sortedLVar :: [LSort] -> Parser LVar
+sortedLVar ss =
+    asum $ map (try . mkSuffixParser) ss ++ map mkPrefixParser ss
+  where
+    mkSuffixParser s = do
+        (n, i) <- indexedIdentifier <* colon
+        symbol_ (sortSuffix s)
+        return (LVar n s i)
+
+    mkPrefixParser s = do
+        case s of
+          LSortMsg   -> pure ()
+          LSortPub   -> void $ char '$'
+          LSortFresh -> void $ char '~'
+          LSortNode  -> void $ char '#'
+          LSortMSet  -> void $ char '%'
+        (n, i) <- indexedIdentifier
+        return (LVar n s i)
+
+-- | An arbitrary logical variable.
+lvar :: Parser LVar
+lvar = sortedLVar [minBound..]
+
+-- | Parse a non-node variable.
+msgvar :: Parser LVar
+msgvar = sortedLVar [LSortFresh, LSortPub, LSortMsg, LSortMSet]
+
+-- | Parse a graph node variable.
+nodevar :: Parser NodeId
+nodevar = asum
+  [ sortedLVar [LSortNode]
+  , (\(n, i) -> LVar n LSortNode i) <$> indexedIdentifier ]
+  <?> "node"
+
+-- | Parse a literal fresh name, e.g., @~'n'@.
+freshName :: Parser String
+freshName = try (symbol "~" *> singleQuoted identifier)
+
+-- | Parse a literal public name, e.g., @'n'@.
+pubName :: Parser String
+pubName = singleQuoted identifier
+
+
+-- Term Operators
+------------
+
+-- | The exponentiation operator @^@.
+opExp :: Parser ()
+opExp = symbol_ "^"
+
+-- | The multiplication operator @*@.
+opMult :: Parser ()
+opMult = symbol_ "*"
+
+-- | The timepoint comparison operator @<@.
+opLess :: Parser ()
+opLess = symbol_ "<"
+
+-- | The action-at-timepoint operator \@.
+opAt :: Parser ()
+opAt = symbol_ "@"
+
+-- | The equality operator @=@.
+opEqual :: Parser ()
+opEqual = symbol_ "="
+
+-- | The logical-forall operator @All@ or @∀@.
+opForall :: Parser ()
+opForall = symbol_ "All" <|> symbol_ "∀"
+
+-- | The logical-exists operator @Ex@ or @∃@.
+opExists :: Parser ()
+opExists = symbol_ "Ex" <|> symbol_ "∃"
+
+-- | The logical-implies operator @==>@.
+opImplies :: Parser ()
+opImplies = symbol_ "==>" <|> symbol_ "⇒"
+
+-- | The logical-equivalence operator @<=>@.
+opLEquiv :: Parser  ()
+opLEquiv = symbol_ "<=>" <|> symbol_ "⇔"
+
+-- | The logical-and operator @&@ or @∧@.
+opLAnd :: Parser ()
+opLAnd = symbol_ "&" <|> symbol_ "∧"
+
+-- | The logical-or operator @|@ or @∨@.
+opLOr :: Parser ()
+opLOr = symbol_ "|" <|> symbol_ "∨"
+
+-- | The logical not operator @not@ or @¬@.
+opLNot :: Parser  ()
+opLNot = symbol_ "¬" <|> symbol_ "not"
+
+-- | A logical false, @F@ or @⊥@.
+opLFalse :: Parser  ()
+opLFalse = symbol_ "⊥" <|> T.reserved spthy "F"
+
+-- | A logical false, @T@ or @⊥@.
+opLTrue :: Parser  ()
+opLTrue = symbol_ "⊤" <|> T.reserved spthy "T"
+
+
+-- Pseudo operators (to be replaced by usage of proper tokens)
+--------------------------------------------------------------
+
+-- | The equal sign @=@.
+equalSign :: Parser ()
+equalSign = symbol_ "="
+
+-- | The slash operator @/@.
+opSlash :: Parser ()
+opSlash = symbol_ "/"
+
+-- | The bang operator @!@.
+opBang :: Parser ()
+opBang = symbol_ "!"
+
+-- | The sharp operator @#@.
+opSharp :: Parser ()
+opSharp = symbol_ "#"
+
+-- | The minus operator @-@.
+opMinus :: Parser ()
+opMinus = symbol_ "-"
+
+-- | The leftarrow operator @<--@.
+opLeftarrow :: Parser ()
+opLeftarrow = symbol_ "<-"
+
+-- | The rightarrow operator @-->@.
+opRightarrow :: Parser ()
+opRightarrow = symbol_ "->"
+
+-- | The longleftarrow operator @<--@.
+opLongleftarrow :: Parser ()
+opLongleftarrow = symbol_ "<--"
+
+-- | The longrightarrow operator @-->@.
+opLongrightarrow :: Parser ()
+opLongrightarrow = symbol_ "-->"

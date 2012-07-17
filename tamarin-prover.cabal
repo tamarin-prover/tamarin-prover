@@ -78,6 +78,9 @@ data-files:
   examples/loops/Minimal_Crypto_API.spthy
   examples/loops/Minimal_KeyRenegotiation.spthy
   examples/loops/Minimal_Create_Use_Destroy.spthy
+  examples/loops/Minimal_Typing_Example.spthy
+  examples/loops/Minimal_Loop_Example.spthy
+  examples/loops/JCS12_Typing_Example.spthy
   examples/loops/TESLA_Scheme1.spthy
 
   -- related work
@@ -124,7 +127,6 @@ data-files:
 extra-source-files:
   .ghci
   interactive-only-src/Paths_tamarin_prover.hs
-  interactive-only-src/Lexer.x
 
 
 --------------
@@ -261,8 +263,9 @@ executable tamarin-prover
       Theory.Model.Rule
       Theory.Model.Signature
 
-      Theory.Text.Lexer
       Theory.Text.Parser
+      Theory.Text.Parser.Token
+      Theory.Text.Parser.UnitTests
       Theory.Text.Pretty
 
       Theory.Tools.AbstractInterpretation
