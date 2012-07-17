@@ -34,7 +34,7 @@ rule Init_2:
    [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]
    --[SidI_2( ~ekI, $I, $R, hkI, Y,
        h( < $I, $R, hkI, Y, Y^~ekI, ('g'^~lkR)^~lkI > ) ) ]->
-   [ !Sessk( ~ekI, 
+   [ !Sessk( ~ekI,
        h( < $I, $R, hkI, Y, Y^~ekI, ('g'^~lkR)^~lkI > ) ) ]
 
 rule Resp_1:
@@ -43,10 +43,10 @@ rule Resp_1:
        h( < $I, $R, X, 'g'^~ekR, X^~ekR, ('g'^~lkI)^~lkR > ) ) ]->
    [ Out( 'g'^~ekR ),
      !Ephk(~ekR),
-     !Sessk( ~ekR, 
+     !Sessk( ~ekR,
        h( < $I, $R, X, 'g'^~ekR, X^~ekR, ('g'^~lkI)^~lkR > ) ) ]
 
-rule Sessk_reveal: 
+rule Sessk_reveal:
    [ !Sessk(~tid, k) ]
    --[ SesskRev(~tid) ]->
    [ Out(k) ]
@@ -94,11 +94,11 @@ lemma JKL2008_2_initiator_key:
 	       (We model wpfs, for pfs, add i1 < i3 to conclusion) */
             & (All #i3. LtkRev( I ) @ i3 ==>
 	          (Ex #i4 tpartner kpartner.
-                      (* (i1 < i3) | *)
+                      /* (i1 < i3) | */
                       SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i4))
             & (All #i3. LtkRev( R ) @ i3 ==>
 	          (Ex #i4 tpartner kpartner.
-                      (* (i1 < i3) | *)
+                      /* (i1 < i3) | */
                       SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i4))
     )"
 
@@ -128,11 +128,11 @@ lemma JKL2008_2_responder_key:
 	       */
             & (All #i3. LtkRev( I ) @ i3 ==>
 	          (Ex #i4 tpartner.
-                       (* (i1 < i3) | *)
+                       /* (i1 < i3) | */
                        SidI_1( tpartner,I,R,hkI ) @i4))
             & (All #i3. LtkRev( R ) @ i3 ==>
 	          (Ex #i4 tpartner.
-                       (* (i1 < i3) | *)
+                       /* (i1 < i3) | */
                        SidI_1( tpartner,I,R,hkI ) @i4))
     )"
 

@@ -99,7 +99,7 @@ lemma eCK_initiator_key:
 	    /* (We model eCK-wpfs, for eCK-pfs, add i1 < i3 to conclusion) */
             & (All #i3. LtkRev( R ) @ i3 ==>
 	          (Ex #i4 tpartner kpartner.
-                      (* (i1 < i3) | *)
+                      /* (i1 < i3) | */
                       SidR_1( tpartner,I,R,hkI,hkR,kpartner ) @i4)))"
 
 /* An attack is valid in eCK if the session key of the test session is deduced and
@@ -134,7 +134,7 @@ lemma eCK_responder_key:
 	       */
             & (All #i3. LtkRev( I ) @ i3 ==>
 	          (Ex #i4 tpartner.
-                       (* (i1 < i3) | *)
+                       /* (i1 < i3) | */
                        SidI_1( tpartner,I,R,hkI ) @i4)))"
 
 end

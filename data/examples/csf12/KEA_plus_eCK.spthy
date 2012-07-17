@@ -105,7 +105,7 @@ lemma eCK_initiator_key:
 	     * matching session. */
 	    /* (We model eCK-wpfs, for eCK-pfs, add i1 < i3 to conclusion) */
             & (All #i3. LtkRev( R ) @ i3 ==>
-                  (* (i1 < i3) | *)
+                  /* (i1 < i3) | */
 	          (Ex #i4 ekR kpartner.
                       SidR_1( ekR,I,R,hkI,hkR,kpartner ) @i4))
 
@@ -147,7 +147,7 @@ lemma eCK_responder_key:
 	       (We model eCK-wpfs, for eCK-pfs, add i1 < i3 to conclusion)
 	       */
             & (All #i3. LtkRev( I ) @ i3 ==>
-                  (* (i1 < i3) | *)
+                  /* (i1 < i3) | */
 	          (Ex #i4 ekI.
                        SidI_1( ekI,I,R,hkI ) @i4) )
     ) )"
