@@ -11,8 +11,14 @@
           a constraint system.
 
     - .spthy files:
+        - new: proof checking support! This allows you to save interactive
+          proofs from the GUI for later verification. Just copy the proof or a
+          prefix of the proof into your input file. 'sorry' steps are
+          then automatically expanded when using 'tamarin-prover --prove'.
+
         - new: formulas can now use mathematical symbols represented using
           their Unicode characters.
+
         - removed: support for (* ... *) style comments.
 
     - prover:
