@@ -2,7 +2,7 @@
  **************/
 
 html, body {
-    font-family: 
+    font-family:
         'DejaVu Sans',      /* Linux */
         'Liberation Sans',  /* Linux/RedHat */
         'Geneva',           /* Mac OS X */
@@ -59,7 +59,7 @@ p.loading {
     background-image: url(/static/img/ajax-loader.gif);
     background-repeat: no-repeat;
     background-position: 0.4em;
-    background-size: 1.2em; 
+    background-size: 1.2em;
 }
 
 div.content {
@@ -117,8 +117,7 @@ div.warning {
 }
 
 .hl_superfluous {
-    color: #ff0000;
-    text-decoration: line-through;
+    color: #907070;
 }
 
 .keys {

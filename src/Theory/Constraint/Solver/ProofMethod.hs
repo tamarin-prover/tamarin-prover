@@ -132,7 +132,9 @@ execProofMethod ctxt method sys =
         Solved
           | null (openGoals sys) -> return M.empty
           | otherwise            -> Nothing
-        SolveGoal goal           -> execSolveGoal goal
+        SolveGoal goal
+          | goal `M.member` L.get sGoals sys -> execSolveGoal goal
+          | otherwise                      -> Nothing
         Simplify                 -> singleCase (/=) simplifySystem
         Induction                -> execInduction
         Contradiction _

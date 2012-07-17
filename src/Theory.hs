@@ -498,9 +498,8 @@ getCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists . thyCache)
 -- lemmaToGuarded :: Lemma p -> Maybe LNGuarded
 -- lemmaToGuarded lem =
 
--- | Close a theory by closing its associated rule set and converting the proof
--- skeletons to unannotated incremental proofs and caching AC variants as well
--- as precomputed case distinctions.
+-- | Close a theory by closing its associated rule set and checking the proof
+-- skeletons and caching AC variants as well as precomputed case distinctions.
 --
 -- This function initializes the relation to the Maude process with the
 -- correct signature. This is the right place to do that because in a closed
@@ -516,15 +515,18 @@ closeTheory maudePath thy0 = do
 -- the given theory.
 closeTheoryWithMaude :: SignatureWithMaude -> OpenTheory -> ClosedTheory
 closeTheoryWithMaude sig thy0 = do
-    proveTheory addSorrys $ Theory (L.get thyName thy0) sig cache items
+    proveTheory checkProof $ Theory (L.get thyName thy0) sig cache items
   where
-    cache     = closeRuleCache typAsms sig rules $ L.get thyCache thy0
-    addSorrys = checkAndExtendProver (sorryProver "not yet proven")
+    cache      = closeRuleCache typAsms sig rules $ L.get thyCache thy0
+    checkProof = checkAndExtendProver (sorryProver "not yet proven")
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
 
-    -- close all theory items: in parallel
+    -- Close all theory items: in parallel (especially useful for variants)
+    --
+    -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
+    -- and therefore no constraint systems will be unnecessarily cached.
     (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
        ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
     closeTheoryItem = foldTheoryItem
@@ -782,9 +784,11 @@ prettyOpenProtoRule = prettyProtoRuleE
 prettyIncrementalProof :: HighlightDocument d => IncrementalProof -> d
 prettyIncrementalProof = prettyProofWith ppStep (const id)
   where
-    ppStep step =
-       (if isNothing (psInfo step) then text "!" else emptyDoc) <->
-       prettyProofMethod (psMethod step)
+    ppStep step = sep
+      [ prettyProofMethod (psMethod step)
+      , if isNothing (psInfo step) then multiComment_ ["unannotated"]
+                                   else emptyDoc
+      ]
 
 -- | Pretty print an closed rule together with its assertion soundness proof.
 prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d

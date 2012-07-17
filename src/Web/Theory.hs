@@ -137,7 +137,7 @@ proofIndex :: HtmlDocument d
 proofIndex renderUrl mkRoute =
     prettyProofWith ppStep ppCase . insertPaths
   where
-    ppCase step = markStatus (snd $ fst $ psInfo step)
+    ppCase step = markStatus (fst $ psInfo step)
 
     ppStep step = case fst $ psInfo step of
         (Nothing, _)    -> superfluousStep
@@ -166,7 +166,7 @@ lemmaIndex :: HtmlDocument d
            -> Lemma IncrementalProof      -- ^ The lemma
            -> d
 lemmaIndex renderUrl tidx l =
-    ( markStatus (snd $ psInfo $ root annPrf) $
+    ( markStatus (psInfo $ root annPrf) $
         (kwLemmaModulo "E" <-> prettyLemmaName l <> colon)
         -- FIXME: Reactivate theory editing.
         -- <->
@@ -776,10 +776,11 @@ getPrevElement f (x:xs) = go x xs
 
 -- | Translate a proof status returned by 'annotateLemmaProof' to a
 -- corresponding CSS class.
-markStatus :: HtmlDocument d => Maybe Bool -> d -> d
-markStatus Nothing      = id
-markStatus (Just True)  = withTag "span" [("class","hl_good")]
-markStatus (Just False) = withTag "span" [("class","hl_bad")]
+markStatus :: HtmlDocument d => (Maybe System, Maybe Bool) -> d -> d
+markStatus (Nothing, _         ) = withTag "span" [("class","hl_superfluous")]
+markStatus (Just _,  Just True ) = withTag "span" [("class","hl_good")]
+markStatus (Just _,  Just False) = withTag "span" [("class","hl_bad")]
+markStatus (Just _,  Nothing   ) = id
 
 -- | Annotate a proof for pretty printing.
 -- The boolean flag indicates that the given proof step's children
@@ -798,9 +799,10 @@ annotateLemmaProof lem =
         incomplete = if isNothing (psInfo step) then [IncompleteProof] else []
 
     interpret status = case (get lTraceQuantifier lem, status) of
-      (_,           IncompleteProof) -> Nothing
-      (AllTraces,   TraceFound)      -> Just False
-      (AllTraces,   CompleteProof)   -> Just True
-      (ExistsTrace, TraceFound)      -> Just True
-      (ExistsTrace, CompleteProof)   -> Just False
+      (_,           IncompleteProof)   -> Nothing
+      (_,           UndeterminedProof) -> Nothing
+      (AllTraces,   TraceFound)        -> Just False
+      (AllTraces,   CompleteProof)     -> Just True
+      (ExistsTrace, TraceFound)        -> Just True
+      (ExistsTrace, CompleteProof)     -> Just False
 

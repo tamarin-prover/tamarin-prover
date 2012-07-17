@@ -76,7 +76,6 @@ import qualified Data.Map                         as M
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Traversable
-import           Safe
 
 import           Debug.Trace
 
@@ -261,24 +260,30 @@ annotateProof f =
 
 -- | The status of a 'Proof'.
 data ProofStatus =
-         CompleteProof   -- ^ The proof is complete: no sorry, no attack
-       | IncompleteProof -- ^ There is a sorry, but no attack.
-       | TraceFound     -- ^ There is an attack
+         UndeterminedProof  -- ^ All steps are unannotated
+       | CompleteProof      -- ^ The proof is complete: no annotated sorry,
+                            --  no annotated solved step
+       | IncompleteProof    -- ^ There is a annotated sorry,
+                            --   but no annotatd solved step.
+       | TraceFound         -- ^ There is an annotated solved step
 
 instance Monoid ProofStatus where
     mempty = CompleteProof
 
-    mappend TraceFound _               = TraceFound
-    mappend _ TraceFound               = TraceFound
-    mappend IncompleteProof _           = IncompleteProof
-    mappend _ IncompleteProof           = IncompleteProof
-    mappend CompleteProof CompleteProof = CompleteProof
+    mappend TraceFound _                        = TraceFound
+    mappend _ TraceFound                        = TraceFound
+    mappend IncompleteProof _                   = IncompleteProof
+    mappend _ IncompleteProof                   = IncompleteProof
+    mappend _ CompleteProof                     = CompleteProof
+    mappend CompleteProof _                     = CompleteProof
+    mappend UndeterminedProof UndeterminedProof = UndeterminedProof
 
 -- | The status of a 'ProofStep'.
-proofStepStatus :: ProofStep a -> ProofStatus
-proofStepStatus (ProofStep Solved _)    = TraceFound
-proofStepStatus (ProofStep (Sorry _) _) = IncompleteProof
-proofStepStatus (ProofStep _ _)         = CompleteProof
+proofStepStatus :: ProofStep (Maybe a) -> ProofStatus
+proofStepStatus (ProofStep _         Nothing ) = UndeterminedProof
+proofStepStatus (ProofStep Solved    (Just _)) = TraceFound
+proofStepStatus (ProofStep (Sorry _) (Just _)) = IncompleteProof
+proofStepStatus (ProofStep _         (Just _)) = CompleteProof
 
 
 {- TODO: Test and probably improve
@@ -314,18 +319,19 @@ checkProof :: ProofContext
            -> System
            -> Proof a
            -> Proof (Maybe a, Maybe System)
-checkProof ctxt prover d se (LNode (ProofStep method info) cs) =
-    fromMaybe (node method (M.map noSystemPrf cs)) $ headMay $ do
-        cases <- maybe mzero return $ execProofMethod ctxt method se
-        return $ node method $ checkChildren cases
-
+checkProof ctxt prover d sys prf@(LNode (ProofStep method info) cs) =
+    case (method, execProofMethod ctxt method sys) of
+        (Sorry reason, _         ) -> sorryNode reason cs
+        (_           , Just cases) -> node method $ checkChildren cases
+        (_           , Nothing   ) ->
+            sorryNode "invalid proof step encountered" (M.singleton "" prf)
   where
-    node m = LNode (ProofStep m (Just info, Just se))
+    node m                 = LNode (ProofStep m (Just info, Just sys))
+    sorryNode reason cases = node (Sorry reason) (M.map noSystemPrf cases)
+    noSystemPrf            = mapProofInfo (\i -> (Just i, Nothing))
 
-    noSystemPrf = mapProofInfo (\i -> (Just i, Nothing))
-
-    checkChildren cases =
-        mergeMapsWith unhandledCase noSystemPrf (checkProof ctxt prover (d + 1)) cases cs
+    checkChildren cases = mergeMapsWith
+        unhandledCase noSystemPrf (checkProof ctxt prover (d + 1)) cases cs
       where
         unhandledCase = mapProofInfo ((,) Nothing) . prover d
 
@@ -425,7 +431,7 @@ checkAndExtendProver prover0 = Prover $ \ctxt d se prf ->
     prover ctxt d se =
         fromMaybe unhandledCase $ runProver prover0 ctxt d se unhandledCase
 
--- | Replace all annotated sorry steps with
+-- | Replace all annotated sorry steps using the given prover.
 replaceSorryProver :: Prover -> Prover
 replaceSorryProver prover0 = Prover prover
   where
@@ -504,7 +510,7 @@ instance Monoid IterDeepRes where
 --
 -- FIXME: Note that this function may use a lot of space, as it holds onto the
 -- whole proof tree.
-cutOnSolvedDFS :: Proof a -> Proof a
+cutOnSolvedDFS :: Proof (Maybe a) -> Proof (Maybe a)
 cutOnSolvedDFS prf0 =
     go (4 :: Integer) $ insertPaths prf0
   where
@@ -516,8 +522,10 @@ cutOnSolvedDFS prf0 =
         findSolved d node
           | d >= dMax = MaybeNoSolution
           | otherwise = case node of
-              LNode (ProofStep Solved (_,path)) _ -> Solution path
-              LNode _ cs                          ->
+              -- do not search in nodes that are not annotated
+              LNode (ProofStep _      (Nothing, _   )) _  -> NoSolution
+              LNode (ProofStep Solved (Just _ , path)) _  -> Solution path
+              LNode (ProofStep _      (Just _ , _   )) cs ->
                   foldMap (findSolved (succ d))
                       (cs `using` parTraversable nfProofMethod)
 
@@ -535,7 +543,7 @@ cutOnSolvedDFS prf0 =
           error "Theory.Constraint.cutOnSolvedDFS: impossible, extractSolved failed, invalid path"
 
 -- | Search for attacks in a BFS manner.
-cutOnSolvedBFS :: Proof a -> Proof a
+cutOnSolvedBFS :: Proof (Maybe a) -> Proof (Maybe a)
 cutOnSolvedBFS =
     go (1::Int)
   where
@@ -543,12 +551,13 @@ cutOnSolvedBFS =
       -- FIXME: See if that poor man's logging could be done better.
       trace ("searching for attacks at depth: " ++ show l) $
         case S.runState (checkLevel l prf) CompleteProof of
-          (_, CompleteProof)   -> prf
-          (_, IncompleteProof) -> go (l+1) prf
-          (prf', TraceFound)  ->
+          (_, UndeterminedProof) -> error "cutOnSolvedBFS: impossible"
+          (_, CompleteProof)     -> prf
+          (_, IncompleteProof)   -> go (l+1) prf
+          (prf', TraceFound)     ->
               trace ("attack found at depth: " ++ show l) prf'
 
-    checkLevel 0 (LNode  step@(ProofStep Solved _) _) =
+    checkLevel 0 (LNode  step@(ProofStep Solved (Just _)) _) =
         S.put TraceFound >> return (LNode step M.empty)
     checkLevel 0 prf@(LNode (ProofStep _ x) cs)
       | M.null cs = return prf
@@ -558,8 +567,9 @@ cutOnSolvedBFS =
               TraceFound -> return $ "ignored (attack exists)"
               _           -> S.put IncompleteProof >> return "bound reached"
           return $ LNode (ProofStep (Sorry msg) x) M.empty
-    checkLevel l (LNode step cs) =
-         LNode step <$> traverse (checkLevel (l-1)) cs
+    checkLevel l prf@(LNode step cs)
+      | isNothing (psInfo step) = return prf
+      | otherwise               = LNode step <$> traverse (checkLevel (l-1)) cs
 
 
 -- | @proveSystemDFS rules se@ explores all solutions of the initial
@@ -615,11 +625,12 @@ prettyProofWith prettyStep prettyCase =
 
 -- | Convert a proof status to a redable string.
 showProofStatus :: SystemTraceQuantifier -> ProofStatus -> String
-showProofStatus ExistsNoTrace   TraceFound      = "falsified - found trace"
-showProofStatus ExistsNoTrace   CompleteProof   = "verified"
-showProofStatus ExistsSomeTrace CompleteProof   = "falsified - no trace found"
-showProofStatus ExistsSomeTrace TraceFound      = "verified"
-showProofStatus _               IncompleteProof = "analysis incomplete"
+showProofStatus ExistsNoTrace   TraceFound        = "falsified - found trace"
+showProofStatus ExistsNoTrace   CompleteProof     = "verified"
+showProofStatus ExistsSomeTrace CompleteProof     = "falsified - no trace found"
+showProofStatus ExistsSomeTrace TraceFound        = "verified"
+showProofStatus _               IncompleteProof   = "analysis incomplete"
+showProofStatus _               UndeterminedProof = "analysis undetermined"
 
 
 -- Derived instances

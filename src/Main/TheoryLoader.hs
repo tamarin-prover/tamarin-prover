@@ -176,8 +176,10 @@ closeThy as =
       noteWellformedness
         (checkWellformedness thy) thy
 
+    -- replace all annotated sorrys with the configured autoprover.
     prover :: Prover
-    prover | argExists "addProofs" as = runAutoProver $ constructAutoProver as
+    prover | argExists "addProofs" as =
+                 replaceSorryProver $ runAutoProver $ constructAutoProver as
            | otherwise                = mempty
 
 -- | Construct an 'AutoProver' from the given arguments (--bound,
