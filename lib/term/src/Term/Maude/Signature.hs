@@ -5,7 +5,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Euqatiuonal signatures for Maude.
@@ -147,9 +147,9 @@ minimalMaudeSig = pairMaudeSig
 
 prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
 prettyMaudeSig sig = P.vcat
-    [ ppNonEmptyList' "builtin:"   P.text      builtIns
+    [ ppNonEmptyList' "builtins:"  P.text      builtIns
     , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (functionSymbols sig)
-    , ppNonEmptyList  
+    , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyStRule $ S.toList (stRules sig)
     ]
