@@ -2,7 +2,7 @@ theory DH2_original begin
 
 // Function signature and definition of the equational theory E
 
-builtin: diffie-hellman
+builtins: diffie-hellman
 functions: KDF/1, MAC/2, fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
@@ -1019,7 +1019,7 @@ analyzing: data/examples/csf12/DH2_original.spthy
 analyzed: data/examples/csf12/DH2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 8.973045s
+  processing time: 9.291698s
   KAS_key_secrecy (all-traces): verified (251 steps)
 
 ------------------------------------------------------------------------------
@@ -1030,7 +1030,7 @@ summary of summaries:
 analyzed: data/examples/csf12/DH2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 8.973045s
+  processing time: 9.291698s
   KAS_key_secrecy (all-traces): verified (251 steps)
 
 ==============================================================================

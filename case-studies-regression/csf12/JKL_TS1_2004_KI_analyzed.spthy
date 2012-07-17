@@ -2,7 +2,7 @@ theory JKL_TS1_2004_KI begin
 
 // Function signature and definition of the equational theory E
 
-builtin: diffie-hellman
+builtins: diffie-hellman
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
@@ -177,7 +177,7 @@ analyzing: data/examples/csf12/JKL_TS1_2004_KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.352526s
+  processing time: 0.338342s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 
@@ -189,7 +189,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.352526s
+  processing time: 0.338342s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 
