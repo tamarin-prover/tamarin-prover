@@ -825,6 +825,21 @@ prettyClosedSummary thy =
   where
     lemmaSummaries = do
         LemmaItem lem  <- L.get thyItems thy
+        -- Note that here we are relying on the invariant that all proof steps
+        -- with a 'Just' annotation follow from the application of
+        -- 'execProofMethod' to their parent and are valid in the sense that
+        -- the application of 'execProofMethod' to their method and constraint
+        -- system is guaranteed to succeed.
+        --
+        -- This is guaranteed initially by 'closeTheory' and is (must be)
+        -- maintained by the provers being applied to the theory using
+        -- 'modifyLemmaProof' or 'proveTheory'. Note that we could check the
+        -- proof right before computing its status. This is however quite
+        -- expensive, as it requires recomputing all intermediate constraint
+        -- systems.
+        --
+        -- TODO: The whole consruction seems a bit hacky. Think of a more
+        -- principled constrution with better correctness guarantees.
         let (status, Sum siz) = foldProof proofStepSummary $ L.get lProof lem
             quantifier = (toSystemTraceQuantifier $ L.get lTraceQuantifier lem)
             analysisType = parens $ prettyTraceQuantifier $ L.get lTraceQuantifier lem
