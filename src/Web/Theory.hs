@@ -161,14 +161,14 @@ lemmaIndex :: HtmlDocument d
            -> d
 lemmaIndex renderUrl tidx l =
     ( markStatus (psInfo $ root annPrf) $
-        (kwLemmaModulo "E" <-> prettyLemmaName l <> colon)
+        (kwLemma <-> prettyLemmaName l <> colon)
         -- FIXME: Reactivate theory editing.
         -- <->
         -- (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->
         -- linkToPath renderUrl lemmaRoute ["delete-link"] deletePng)
         $-$
         nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
-                     , doubleQuotes $ prettyLNFormula $ get lFormulaE l
+                     , doubleQuotes $ prettyLNFormula $ get lFormula l
                      ] )
     ) $-$
     proofIndex renderUrl mkRoute annPrf

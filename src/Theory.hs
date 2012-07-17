@@ -19,8 +19,7 @@ module Theory (
   , Lemma
   , lName
   , lTraceQuantifier
-  , lFormulaE
-  , lFormulaAC
+  , lFormula
   , lAttributes
   , lProof
   , unprovenLemma
@@ -197,7 +196,7 @@ closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.
-closeRuleCache :: [FormulaAC]        -- ^ Typing lemmas.
+closeRuleCache :: [LNFormula]        -- ^ Typing lemmas.
                -> SignatureWithMaude -- ^ Signature of theory.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
@@ -257,8 +256,7 @@ data TraceQuantifier = ExistsTrace | AllTraces
 data Lemma p = Lemma
        { _lName            :: String
        , _lTraceQuantifier :: TraceQuantifier
-       , _lFormulaE        :: FormulaE
-       , _lFormulaAC       :: Maybe FormulaAC
+       , _lFormula         :: LNFormula
        , _lAttributes      :: [LemmaAttribute]
        , _lProof           :: p
        }
@@ -271,13 +269,13 @@ $(mkLabels [''Lemma])
 ------------
 
 instance Functor Lemma where
-    fmap f (Lemma n qua fE fAC atts prf) = Lemma n qua fE fAC atts (f prf)
+    fmap f (Lemma n qua fm atts prf) = Lemma n qua fm atts (f prf)
 
 instance Foldable Lemma where
     foldMap f = f . L.get lProof
 
 instance Traversable Lemma where
-    traverse f (Lemma n qua fE fAC atts prf) = Lemma n qua fE fAC atts <$> f prf
+    traverse f (Lemma n qua fm atts prf) = Lemma n qua fm atts <$> f prf
 
 
 -- Lemma queries
@@ -299,13 +297,13 @@ isTypingLemma lem =
 ----------------------------------
 
 -- | Create a new unproven lemma from a formula modulo E.
-unprovenLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> FormulaE
+unprovenLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
               -> Lemma ProofSkeleton
-unprovenLemma name atts qua fmE = Lemma name qua fmE Nothing atts (unproven ())
+unprovenLemma name atts qua fm = Lemma name qua fm atts (unproven ())
 
-skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> FormulaE
+skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
               -> ProofSkeleton -> Lemma ProofSkeleton
-skeletonLemma name atts qua fmE = Lemma name qua fmE Nothing atts
+skeletonLemma name atts qua fm = Lemma name qua fm atts
 
 -- | The case-distinction kind allowed for a lemma
 lemmaCaseDistKind :: Lemma p -> CaseDistKind
@@ -453,9 +451,7 @@ normalizeTheory =
       item <- items
       return $ case item of
           LemmaItem lem ->
-              LemmaItem $
-              L.set lFormulaAC Nothing $
-              L.modify lProof stripProofAnnotations $ lem
+              LemmaItem $ L.modify lProof stripProofAnnotations $ lem
           RuleItem _    -> item
           TextItem _    -> item)
   where
@@ -560,14 +556,14 @@ closeTheoryWithMaude sig thy0 = do
        ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
     closeTheoryItem = foldTheoryItem
        (RuleItem . closeProtoRule hnd)
-       (LemmaItem . ensureFormulaAC . fmap skeletonToIncrementalProof)
+       (LemmaItem . fmap skeletonToIncrementalProof)
        TextItem
 
     -- extract typing lemmas
     typAsms = do
         LemmaItem lem <- items
         guard (isTypingLemma lem)
-        maybe [] return $ L.get lFormulaAC lem
+        return $ L.get lFormula lem
 
     -- extract protocol rules
     rules = theoryRules (Theory errClose errClose errClose items)
@@ -637,16 +633,15 @@ proveTheory prover thy =
                          return l
       _            -> do return item
 
-    proveLemma l0 preItems =
-        modify lProof add l
+    proveLemma lem preItems =
+        modify lProof add lem
       where
-        l       = ensureFormulaAC l0
-        ctxt    = getProofContext l thy
-        sys     = mkSystem ctxt preItems $ fromJust $ L.get lFormulaAC l
+        ctxt    = getProofContext lem thy
+        sys     = mkSystem ctxt preItems $ L.get lFormula lem
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
 -- | Construct a constraint system for verifying the given formula.
-mkSystem :: ProofContext -> [TheoryItem r p] -> FormulaAC -> System
+mkSystem :: ProofContext -> [TheoryItem r p] -> LNFormula -> System
 mkSystem ctxt lems =
     addLemmasToSystem lems
   . formulaToSystem (L.get pcCaseDistKind ctxt) (L.get pcTraceQuantifier ctxt)
@@ -663,16 +658,7 @@ gatherReusableLemmas kind items = do
     LemmaItem lem <- items
     guard $ lemmaCaseDistKind lem <= kind &&
             ReuseLemma `elem` L.get lAttributes lem
-    maybe [] return $ L.get lFormulaAC lem
-
--- | Ensure that the AC variant of a formula is present.
-ensureFormulaAC :: Lemma p -> Lemma p
-ensureFormulaAC l =
-    set lFormulaAC (Just fmAC) l
-  where
-    -- FIXME: AC-variant of formula is formula itself.
-    --        This must be ensured by well-formed check (not implemented yet).
-    fmAC = fromMaybe (L.get lFormulaE l) $ L.get lFormulaAC l
+    return $ L.get lFormula lem
 
 
 ------------------------------------------------------------------------------
@@ -695,12 +681,11 @@ modifyLemmaProof prover name thy =
     findLemma (LemmaItem lem) = name == L.get lName lem
     findLemma _               = False
 
-    change preItems (LemmaItem l0) = do
-         let l1   = ensureFormulaAC l0
-             ctxt = getProofContext l1 thy
-         sys <- mkSystem ctxt preItems <$> L.get lFormulaAC l1
-         l2  <- modA lProof (runProver prover ctxt 0 sys) l1
-         return $ LemmaItem l2
+    change preItems (LemmaItem lem) = do
+         let ctxt = getProofContext lem thy
+             sys  = mkSystem ctxt preItems $ L.get lFormula lem
+         lem' <- modA lProof (runProver prover ctxt 0 sys) lem
+         return $ LemmaItem lem'
     change _ _ = error "LemmaProof: change: impossible"
 
     changeItems items = case break findLemma items of
@@ -748,34 +733,23 @@ prettyLemmaName l = case L.get lAttributes l of
 
 -- | Pretty print a lemma.
 prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d
-prettyLemma ppPrf l =
-    kwLemmaModulo "E" <-> prettyLemmaName l <> colon $-$
+prettyLemma ppPrf lem =
+    kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
-      sep [ prettyTraceQuantifier $ L.get lTraceQuantifier l
-          , doubleQuotes $ prettyLNFormula $ L.get lFormulaE l
+      sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
+          , doubleQuotes $ prettyLNFormula $ L.get lFormula lem
           ]
     )
     $-$
-    maybe emptyDoc ppFormulaAC (L.get lFormulaAC l)
+    ppLNFormulaGuarded (L.get lFormula lem)
     $-$
-    maybe emptyDoc ppFormulaACGuarded (L.get lFormulaAC l)
-    -- $-$
-    -- maybe emptyDoc ppFormulaACInduction (L.get lFormulaAC l)
-    $-$
-    ppPrf (L.get lProof l)
+    ppPrf (L.get lProof lem)
   where
-    ppFormulaAC fmAC
-      | fmAC == L.get lFormulaE l = multiComment_ ["proof based on the same lemma modulo AC"]
-      | otherwise               =
-          multiComment
-              ( text "proof based on the following equivalent lemma modulo AC:" $-$
-                doubleQuotes (prettyLNFormula fmAC) )
-
-    ppFormulaACGuarded fmAC = case formulaToGuarded fmAC of
+    ppLNFormulaGuarded fm = case formulaToGuarded fm of
         Left err -> multiComment $
             text "conversion to guarded formula failed:" $$
             nest 2 err
-        Right gf -> case toSystemTraceQuantifier $ L.get lTraceQuantifier l of
+        Right gf -> case toSystemTraceQuantifier $ L.get lTraceQuantifier lem of
           ExistsNoTrace -> multiComment
             ( text "guarded formula characterizing all counter-examples:" $-$
               doubleQuotes (prettyGuarded (gnot gf)) )
@@ -783,16 +757,6 @@ prettyLemma ppPrf l =
             ( text "guarded formula characterizing all satisfying traces:" $-$
               doubleQuotes (prettyGuarded gf) )
 
-    {-
-    ppFormulaACInduction fmAC = case fmInd of
-        Left err -> multiComment_
-            ["formula cannot be proven by induction:", err]
-        Right gf -> multiComment
-            ( text "proof by induction possible over the formula:" $-$
-              doubleQuotes (prettyGuarded gf) )
-      where
-        fmInd = applyInduction =<< fromFormulaNegate fmAC
-    -}
 
 -- | Pretty-print a non-empty bunch of intruder rules.
 prettyIntruderVariants :: HighlightDocument d => [IntrRuleAC] -> d

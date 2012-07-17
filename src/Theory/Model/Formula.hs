@@ -21,8 +21,6 @@ module Theory.Model.Formula (
   , Formula(..)
   , LNFormula
   , LFormula
-  , FormulaE
-  , FormulaAC
 
   , quantify
   , openFormula
@@ -243,9 +241,6 @@ instance Apply LNFormula where
 ------------------------------------------------------------------------------
 -- Formulas modulo E and modulo AC
 ------------------------------------------------------------------------------
-
-type FormulaE  = LFormula Name
-type FormulaAC = LFormula Name
 
 -- | Introduce a bound variable for a free variable.
 quantify :: (Ord c, Ord v, Eq v) => v -> Formula s c v -> Formula s c v

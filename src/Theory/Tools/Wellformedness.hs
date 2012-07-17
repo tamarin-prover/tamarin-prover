@@ -236,7 +236,7 @@ factReports thy = concat
              return $ ruleFacts ru
       <|> do LemmaItem l <- get thyItems thy
              return $ (,) ("lemma " ++ quote (get lName l)) $ do
-                 fa <- formulaFacts (get lFormulaE l)
+                 fa <- formulaFacts (get lFormula l)
                  return $ (text (show fa), factInfo fa)
 
     -- we must compute all important information up-front in order to
@@ -311,7 +311,7 @@ factReports thy = concat
 
     inexistentActions = do
         LemmaItem l <- get thyItems thy
-        fa <- sortednub $ formulaFacts (get lFormulaE l)
+        fa <- sortednub $ formulaFacts (get lFormula l)
         let info = factInfo fa
             name = get lName l
         if info `S.member` ruleActions
@@ -354,10 +354,10 @@ formulaReports :: OpenTheory -> WfErrorReport
 formulaReports thy = do
     LemmaItem l <- get thyItems thy
     let header = "lemma " ++ quote (get lName l)
-        fmE    = get lFormulaE l
-    msum [ ((,) "quantifier sorts") <$> checkQuantifiers header fmE
-         , ((,) "formula terms")    <$> checkTerms header fmE
-         , ((,) "guardedness")      <$> checkGuarded header fmE
+        fm     = get lFormula l
+    msum [ ((,) "quantifier sorts") <$> checkQuantifiers header fm
+         , ((,) "formula terms")    <$> checkTerms header fm
+         , ((,) "guardedness")      <$> checkGuarded header fm
          ]
   where
     -- check that only message and node variables are used

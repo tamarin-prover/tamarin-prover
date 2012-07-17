@@ -29,9 +29,9 @@ module Theory.Text.Pretty (
   , kwCase
   , kwNext
   , kwQED
+  , kwLemma
 
   -- ** Composed forms
-  , kwLemmaModulo
   , kwRuleModulo
   , kwInstanceModulo
   , kwVariantsModulo
@@ -89,12 +89,13 @@ multiComment_ ls = comment $ fsep [text "/*", vcat $ map text ls, text "*/"]
 kwTheoryHeader :: HighlightDocument d => d -> d
 kwTheoryHeader name = keyword_ "theory" <-> name <-> keyword_ "begin"
 
-kwEnd, kwBy, kwCase, kwNext, kwQED :: HighlightDocument d => d
-kwEnd    = keyword_ "end"
-kwBy     = keyword_ "by"
-kwCase   = keyword_ "case"
-kwNext   = keyword_ "next"
-kwQED    = keyword_ "qed"
+kwEnd, kwBy, kwCase, kwNext, kwQED, kwLemma :: HighlightDocument d => d
+kwEnd   = keyword_ "end"
+kwBy    = keyword_ "by"
+kwCase  = keyword_ "case"
+kwNext  = keyword_ "next"
+kwQED   = keyword_ "qed"
+kwLemma = keyword_ "lemma"
 
 kwModulo :: HighlightDocument d
          => String  -- ^ What
@@ -102,9 +103,8 @@ kwModulo :: HighlightDocument d
          -> d
 kwModulo what thy = keyword_ what <-> parens (keyword_ "modulo" <-> text thy)
 
-kwLemmaModulo, kwRuleModulo, kwInstanceModulo, kwTypesModulo, kwVariantsModulo
+kwRuleModulo, kwInstanceModulo, kwTypesModulo, kwVariantsModulo
   :: HighlightDocument d => String -> d
-kwLemmaModulo    = kwModulo "lemma"
 kwRuleModulo     = kwModulo "rule"
 kwInstanceModulo = kwModulo "instance"
 kwTypesModulo    = kwModulo "type assertions"

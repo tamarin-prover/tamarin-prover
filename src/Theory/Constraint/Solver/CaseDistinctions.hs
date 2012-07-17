@@ -295,7 +295,7 @@ precomputeCaseDistinctions ctxt typAsms =
 -- | Refine a set of case distinction by exploiting additional typing
 -- assumptions.
 refineWithTypingAsms
-    :: [FormulaAC]        -- ^ Typing assumptions to use.
+    :: [LNFormula]        -- ^ Typing assumptions to use.
     -> ProofContext       -- ^ Proof context to use.
     -> [CaseDistinction]  -- ^ Original, untyped case distinctions.
     -> [CaseDistinction]  -- ^ Refined, typed case distinctions.
