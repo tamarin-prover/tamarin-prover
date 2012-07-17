@@ -11,29 +11,42 @@ module Theory.Text.Parser (
   , parseOpenTheoryString
   , parseLemma
   , parseIntruderRulesDH
+
+  -- * Cached Message Deduction Rule Variants
+  , intruderVariantsFile
+  , addMessageDeductionRuleVariants
   ) where
 
-import           Prelude                  hiding (id, (.))
+import           Prelude                    hiding (id, (.))
 
-import qualified Data.ByteString.Char8    as BC
-import           Data.Char                (isUpper, toUpper)
-import           Data.Foldable            (asum)
+import qualified Data.ByteString.Char8      as BC
+import           Data.Char                  (isUpper, toUpper)
+import           Data.Foldable              (asum)
 import           Data.Label
-import qualified Data.Map                 as M
-import           Data.Monoid              hiding (Last)
-import qualified Data.Set                 as S
+import qualified Data.Map                   as M
+import           Data.Monoid                hiding (Last)
+import qualified Data.Set                   as S
 
-import           Control.Applicative      hiding (empty, many, optional)
+import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
 
-import           Text.Parsec              hiding ((<|>))
-import           Text.PrettyPrint.Class   (render)
+import           Extension.Prelude          (ifM)
+
+import           Text.Parsec                hiding ((<|>))
+import           Text.PrettyPrint.Class     (render)
+
+import           Paths_tamarin_prover
+import           System.Directory
 
 import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
 import           Theory.Text.Parser.Token
+import           Theory.Tools.IntruderRules
+
+
+
 
 
 
@@ -508,7 +521,7 @@ goal = asum
 -- | Parse a proof method.
 proofMethod :: Parser ProofMethod
 proofMethod = asum
-  [ symbol "sorry"         *> pure (Sorry "not yet proven")
+  [ symbol "sorry"         *> pure (Sorry Nothing)
   , symbol "simplify"      *> pure Simplify
   , symbol "solve"         *> (SolveGoal <$> parens goal)
   , symbol "contradiction" *> pure (Contradiction Nothing)
@@ -648,3 +661,31 @@ theory flags0 = do
     liftedAddLemma thy l = case addLemma l thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate lemma: " ++ get lName l
+
+
+------------------------------------------------------------------------------
+-- Message deduction variants cached in files
+------------------------------------------------------------------------------
+
+-- | The name of the intruder variants file.
+intruderVariantsFile :: FilePath
+intruderVariantsFile = "intruder_variants_dh.spthy"
+
+-- | Add the variants of the message deduction rule. Uses the cached version
+-- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
+-- deduction rules for Diffie-Hellman exponentiation.
+addMessageDeductionRuleVariants :: OpenTheory -> IO OpenTheory
+addMessageDeductionRuleVariants thy0
+  | enableDH msig = do
+      variantsFile <- getDataFileName intruderVariantsFile
+      ifM (doesFileExist variantsFile)
+          (do dhVariants <- parseIntruderRulesDH variantsFile
+              return $ addIntrRuleACs dhVariants thy
+          )
+          (error $ "could not find intruder message deduction theory '"
+                     ++ variantsFile ++ "'")
+  | otherwise = return thy
+  where
+    msig         = get (sigpMaudeSig . thySignature) thy0
+    rules        = subtermIntruderRules msig ++ specialIntruderRules
+    thy          = addIntrRuleACs rules thy0

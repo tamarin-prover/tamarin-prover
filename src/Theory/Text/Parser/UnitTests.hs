@@ -18,25 +18,48 @@ import           Control.Basics
 import           System.Directory
 import           System.FilePath
 
-import           Theory             (prettyOpenTheory)
+import           Theory
 import           Theory.Text.Parser
 import           Theory.Text.Pretty (render)
 
 -- | Test wether a given file exists, can be parsed, and can still be parsed
 -- after being pretty printed.
-testParseFile :: FilePath -> Test
-testParseFile inpFile = TestLabel inpFile $ TestCase $ do
+testParseFile :: Maybe (FilePath, Prover)
+              -- ^ Path to maude and prover for testing whether proof parsing
+              -- works properly.
+              -> FilePath
+              -- ^ File on which to test parsing (and proving)
+              -> Test
+testParseFile optionalProver inpFile = TestLabel inpFile $ TestCase $ do
     thyString <- readFile inpFile
-    thy  <- parse "original file:"         thyString
-    thy' <- parse "pretty printed theory:" (render $ prettyOpenTheory thy)
-    assertEqual "parse . pretty" thy thy'
+    thy0      <- parse "original file:" thyString
+    -- add proofs and pretty print closed theory, if desired
+    (thy, thyPretty) <- case optionalProver of
+        Nothing                  ->
+            return  (thy0, prettyOpenTheory thy0)
+        Just (maudePath, prover) -> do
+            closedThy <- proveTheory prover <$> closeTheory maudePath thy0
+            return $ ( normalizeTheory $ openTheory closedThy
+                     , prettyClosedTheory closedThy)
+    thy' <- parse "pretty printed theory:" (render thyPretty)
+    unless (thy == thy') $ do
+        let (diff1, diff2) =
+                unzip $ dropWhile (uncurry (==)) $ zip (show thy) (show thy')
+        assertFailure $ unlines
+          [ "Original theory",            "",  render (prettyOpenTheory thy), ""
+          , "Pretty printed and parsed" , "", render (prettyOpenTheory thy'), ""
+          , "Original theory (diff)",            "", indent diff1, ""
+          , "Pretty printed and parsed (diff)" , "", indent diff2, "", "DIFFER"
+          ]
+    return ()
   where
+    indent = unlines . map (' ' :) . lines
+
     parse msg str = case parseOpenTheoryString [] str  of
         Left err  -> do assertFailure $ withLineNumbers $ indent $ show err
-                        return (error "testParseFile: not used")
-        Right thy -> do return thy
+                        return (error "testParseFile: dead code")
+        Right thy -> normalizeTheory <$> addMessageDeductionRuleVariants thy
       where
-        indent = unlines . map (' ' :) . lines
         withLineNumbers err =
             unlines $ zipWith (\i l -> nr (show i) ++ l) [(1::Int)..] ls
                       ++ ["", "Parse error when parsing the " ++ msg, err]
@@ -47,8 +70,11 @@ testParseFile inpFile = TestLabel inpFile $ TestCase $ do
 
 -- | Create the test whether 'testParseFile' succeeds on all @*.spthy@ files
 -- in a given directory and all its subdirectories of depth n.
-testParseDirectory :: Int -> FilePath -> IO [Test]
-testParseDirectory n dir
+testParseDirectory :: (FilePath -> Test)  -- ^ Test creation function.
+                   -> Int                 -- ^ Maximal depth of traversal.
+                   -> FilePath            -- ^ Starting directory.
+                   -> IO [Test]
+testParseDirectory mkTest n dir
   | n < 0     = return []
   | otherwise = do
       rawContents <- getDirectoryContents dir
@@ -56,10 +82,10 @@ testParseDirectory n dir
                      | content <- rawContents
                      , content /= ".", content /= ".." ]
       subDirs     <- filterM doesDirectoryExist contents
-      innerTests  <- mapM (testParseDirectory (n - 1)) subDirs
+      innerTests  <- mapM (testParseDirectory mkTest (n - 1)) subDirs
       let tests = [ file
                   | file <- contents, takeExtension file == ".spthy" ]
       mapM_ (putStrLn . (" peparing: " ++)) tests
-      return $ map testParseFile tests ++ map TestList innerTests
+      return $ map mkTest tests ++ map TestList innerTests
 
 

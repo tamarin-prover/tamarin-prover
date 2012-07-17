@@ -21,7 +21,6 @@ module Web.Theory
   , prevThyPath
   , nextSmartThyPath
   , prevSmartThyPath
-  , checkProofs
   , applyMethodAtPath
   , applyProverAtPath
   )
@@ -66,11 +65,6 @@ import           Web.Types
 ------------------------------------------------------------------------------
 -- Various other functions
 ------------------------------------------------------------------------------
-
-checkProofs :: ClosedTheory -> ClosedTheory
-checkProofs = proveTheory checkedProver
-  where
-    checkedProver = checkAndExtendProver (sorryProver "not yet proven")
 
 applyMethodAtPath :: ClosedTheory -> String -> ProofPath
                   -> Heuristic             -- ^ How to extract/order the proof methods.

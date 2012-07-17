@@ -9,8 +9,7 @@
 -- Theory loading infrastructure.
 module Main.TheoryLoader (
   -- * Static theory loading settings
-    intruderVariantsFile
-  , theoryLoadFlags
+    theoryLoadFlags
 
   -- ** Loading open theories
   , loadOpenThy
@@ -30,7 +29,6 @@ module Main.TheoryLoader (
 import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
-import           Data.Label
 import           Data.Monoid
 
 import           Control.Basics
@@ -38,30 +36,20 @@ import           Control.Category
 import           Control.DeepSeq (rnf)
 
 import           System.Console.CmdArgs.Explicit
-import           System.Directory
-
-import           Extension.Prelude
 
 import           Theory
 import           Theory.Text.Parser
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
-import           Theory.Tools.IntruderRules
 import           Theory.Tools.Wellformedness
 
 import           Main.Console
 import           Main.Environment
 
-import           Paths_tamarin_prover                (getDataFileName)
-
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
 ------------------------------------------------------------------------------
-
--- | The name of the intruder variants file.
-intruderVariantsFile :: FilePath
-intruderVariantsFile = "intruder_variants_dh.spthy"
 
 
 -- | Flags for loading a theory.
@@ -134,23 +122,7 @@ loadGenericThy :: (a -> IO OpenTheory)
                -> Arguments
                -> (a -> IO OpenTheory, OpenTheory -> IO ClosedTheory)
 loadGenericThy loader as =
-    (loader, (closeThy as) <=< tryAddIntrVariants)
-  where
-    -- intruder variants
-    --------------------
-    tryAddIntrVariants :: OpenTheory -> IO OpenTheory
-    tryAddIntrVariants thy0 = do
-      let msig = get (sigpMaudeSig . thySignature) thy0
-          thy  = addIntrRuleACs (subtermIntruderRules msig ++ specialIntruderRules) thy0
-      if (enableDH msig) then
-         do variantsFile <- getDataFileName intruderVariantsFile
-            ifM (doesFileExist variantsFile)
-                (do intrVariants <- parseIntruderRulesDH variantsFile
-                    return $ addIntrRuleACs intrVariants thy
-                )
-                (error $ "could not find intruder message deduction theory '"
-                           ++ variantsFile ++ "'")
-         else return thy
+    (loader, (closeThy as) <=< addMessageDeductionRuleVariants)
 
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory

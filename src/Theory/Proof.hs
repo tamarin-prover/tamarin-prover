@@ -181,12 +181,12 @@ type Proof a = LTree CaseName (ProofStep a)
 --------------------
 
 -- | A proof using the 'sorry' proof method.
-sorry :: String -> a -> Proof a
+sorry :: Maybe String -> a -> Proof a
 sorry reason ann = LNode (ProofStep (Sorry reason) ann) M.empty
 
 -- | A proof denoting an unproven part of the proof.
 unproven :: a -> Proof a
-unproven = sorry "not yet proven"
+unproven = sorry Nothing
 
 
 -- Paths in proofs
@@ -235,7 +235,7 @@ boundProofDepth bound =
   where
     go n (LNode ps@(ProofStep _ info) cs)
       | 0 < n     = LNode ps                     $ M.map (go (pred n)) cs
-      | otherwise = sorry ("bound " ++ show bound ++ " hit") info
+      | otherwise = sorry (Just $ "bound " ++ show bound ++ " hit") info
 
 -- | Fold a proof.
 foldProof :: Monoid m => (ProofStep a -> m) -> Proof a -> m
@@ -324,7 +324,8 @@ checkProof ctxt prover d sys prf@(LNode (ProofStep method info) cs) =
         (Sorry reason, _         ) -> sorryNode reason cs
         (_           , Just cases) -> node method $ checkChildren cases
         (_           , Nothing   ) ->
-            sorryNode "invalid proof step encountered" (M.singleton "" prf)
+            sorryNode (Just "invalid proof step encountered")
+                      (M.singleton "" prf)
   where
     node m                 = LNode (ProofStep m (Just info, Just sys))
     sorryNode reason cases = node (Sorry reason) (M.map noSystemPrf cases)
@@ -408,7 +409,7 @@ oneStepProver method = Prover $ \ctxt _ se _ -> do
     return $ LNode (ProofStep method (Just se)) (M.map (unproven . Just) cases)
 
 -- | Replace the current proof with a sorry step and the given reason.
-sorryProver :: String -> Prover
+sorryProver :: Maybe String -> Prover
 sorryProver reason = Prover $ \_ _ se _ -> return $ sorry reason (Just se)
 
 -- | Apply a prover only to a sub-proof, fails if the subproof doesn't exist.
@@ -427,7 +428,7 @@ checkAndExtendProver :: Prover -> Prover
 checkAndExtendProver prover0 = Prover $ \ctxt d se prf ->
     return $ mapProofInfo snd $ checkProof ctxt (prover ctxt) d se prf
   where
-    unhandledCase   = sorry "unhandled case" Nothing
+    unhandledCase   = sorry (Just "unhandled case") Nothing
     prover ctxt d se =
         fromMaybe unhandledCase $ runProver prover0 ctxt d se unhandledCase
 
@@ -461,7 +462,6 @@ contradictionProver = Prover $ \ctxt d sys prf ->
 
 data SolutionExtractor = CutDFS | CutBFS | CutNothing
     deriving( Eq, Ord, Show, Read )
-
 
 data AutoProver = AutoProver
     { apHeuristic :: Heuristic
@@ -566,7 +566,7 @@ cutOnSolvedBFS =
           msg <- case st of
               TraceFound -> return $ "ignored (attack exists)"
               _           -> S.put IncompleteProof >> return "bound reached"
-          return $ LNode (ProofStep (Sorry msg) x) M.empty
+          return $ LNode (ProofStep (Sorry (Just msg)) x) M.empty
     checkLevel l prf@(LNode step cs)
       | isNothing (psInfo step) = return prf
       | otherwise               = LNode step <$> traverse (checkLevel (l-1)) cs

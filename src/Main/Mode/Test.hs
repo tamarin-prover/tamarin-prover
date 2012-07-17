@@ -12,7 +12,6 @@ module Main.Mode.Test (
     testMode
   ) where
 
-import           Control.Applicative
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.Exit
 import           Test.HUnit                      (Counts(..), Test(..), runTestTT)
@@ -23,7 +22,8 @@ import           Main.Console
 import           Main.Environment
 
 import qualified Term.UnitTests                  as Term (tests)
-import qualified Theory.Text.Parser.UnitTests    as Parser (testParseDirectory)
+import           Theory
+import qualified Theory.Text.Parser.UnitTests    as Parser
 
 
 -- | Self-test mode.
@@ -55,19 +55,41 @@ run _thisMode as = do
 #else
     let successGraphVizDot = True
 #endif
+    --------------------------------------------------------------------------
     nextTopic "Testing the parser on our examples"
     examplePath   <- getDataFileName "examples"
-    parseTests    <- TestList <$> Parser.testParseDirectory 2 examplePath
-    successParser <- runUnitTest parseTests
+    let mkParseTest = Parser.testParseFile Nothing
+    parseTests    <- Parser.testParseDirectory mkParseTest 2 examplePath
+    successParser <- runUnitTest $ TestList parseTests
 
+    --------------------------------------------------------------------------
+    nextTopic "Testing the prover on some of our examples"
+
+    let heuristic  = roundRobinHeuristic [SmartRanking False]
+        autoProver = AutoProver heuristic Nothing CutDFS
+        prover = Just ( maudePath as
+                      , replaceSorryProver $ runAutoProver autoProver
+                      )
+        mkProverTest file = do
+            fullFile <- getDataFileName file
+            return $ Parser.testParseFile prover fullFile
+
+    nslEx    <- mkProverTest "examples/classic/NSLPK3.spthy"
+    loopEx   <- mkProverTest "examples/loops/Minimal_Loop_Example.spthy"
+    diffieEx <- mkProverTest "examples/csf12/JKL_TS1_2008_KI.spthy"
+
+    successProver <- runUnitTest $ TestList [ nslEx, loopEx, diffieEx ]
+
+    --------------------------------------------------------------------------
     nextTopic "Testing the unification infrastructure"
     successTerm  <- runUnitTest =<< Term.tests (maudePath as)
 
+    --------------------------------------------------------------------------
     -- FIXME: Implement regression testing.
     --
     nextTopic "TEST SUMMARY"
     let success = and [ successMaude, successGraphVizDot
-                      , successTerm, successParser ]
+                      , successTerm, successParser, successProver ]
     if success
       then do putStrLn $ "All tests successful."
               putStrLn $ "The " ++ programName ++ " should work as intended."

@@ -92,7 +92,7 @@ type CaseName = String
 
 -- | Sound transformations of sequents.
 data ProofMethod =
-    Sorry String                         -- ^ Proof was not completed
+    Sorry (Maybe String)                 -- ^ Proof was not completed
   | Solved                               -- ^ An attack was fond
   | Simplify                             -- ^ A simplification step.
   | SolveGoal Goal                       -- ^ A goal that was solved.
@@ -384,7 +384,8 @@ prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
     Solved               -> keyword_ "SOLVED" <-> lineComment_ "trace found"
     Induction            -> keyword_ "induction"
-    Sorry reason         -> fsep [keyword_ "sorry", lineComment_ reason]
+    Sorry reason         ->
+        fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
     SolveGoal goal       ->
         keyword_ "solve(" <-> prettyGoal goal <-> keyword_ ")"
     Simplify             -> keyword_ "simplify"

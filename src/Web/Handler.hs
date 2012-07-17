@@ -641,7 +641,7 @@ getDeleteStepR idx path = do
 
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
       (\thy -> return $
-          applyProverAtPath thy lemma proofPath (sorryProver "removed"))
+          applyProverAtPath thy lemma proofPath (sorryProver (Just "removed")))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")
 

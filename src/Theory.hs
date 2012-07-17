@@ -1,5 +1,9 @@
-{-# LANGUAGE TemplateHaskell, TupleSections, DeriveFunctor #-}
-{-# LANGUAGE StandaloneDeriving, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE DeriveFunctor        #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TupleSections        #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -42,8 +46,9 @@ module Theory (
   , OpenTheory
   , defaultOpenTheory
   , addProtoRule
-  , addIntrRuleACs
   , applyPartialEvaluation
+  , addIntrRuleACs
+  , normalizeTheory
 
   -- ** Closed theories
   , ClosedTheory
@@ -88,7 +93,7 @@ module Theory (
 
   ) where
 
-import           Prelude                             hiding ( (.), id )
+import           Prelude                             hiding (id, (.))
 
 import           Data.Binary
 import           Data.DeriveTH
@@ -113,10 +118,9 @@ import           Theory.Model
 import           Theory.Proof
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation
+import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
-import           Theory.Tools.InjectiveFactInstances
-
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -439,6 +443,31 @@ addProtoRule ruE thy = do
 addIntrRuleACs :: [IntrRuleAC] -> OpenTheory -> OpenTheory
 addIntrRuleACs rs' = modify (thyCache) (\rs -> nub $ rs ++ rs')
 
+-- | Normalize the theory representation such that they remain semantically
+-- equivalent. Use this function when you want to compare two theories (quite
+-- strictly) for semantic equality; e.g., when testing the parser.
+normalizeTheory :: OpenTheory -> OpenTheory
+normalizeTheory =
+    L.modify thyCache sort
+  . L.modify thyItems (\items -> do
+      item <- items
+      return $ case item of
+          LemmaItem lem ->
+              LemmaItem $
+              L.set lFormulaAC Nothing $
+              L.modify lProof stripProofAnnotations $ lem
+          RuleItem _    -> item
+          TextItem _    -> item)
+  where
+    stripProofAnnotations :: ProofSkeleton -> ProofSkeleton
+    stripProofAnnotations = fmap stripProofStepAnnotations
+    stripProofStepAnnotations (ProofStep method ()) =
+        ProofStep (case method of
+                     Sorry _         -> Sorry Nothing
+                     Contradiction _ -> Contradiction Nothing
+                     _               -> method)
+                  ()
+
 
 ------------------------------------------------------------------------------
 -- Closed theory querying / construction / modification
@@ -518,7 +547,7 @@ closeTheoryWithMaude sig thy0 = do
     proveTheory checkProof $ Theory (L.get thyName thy0) sig cache items
   where
     cache      = closeRuleCache typAsms sig rules $ L.get thyCache thy0
-    checkProof = checkAndExtendProver (sorryProver "not yet proven")
+    checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
