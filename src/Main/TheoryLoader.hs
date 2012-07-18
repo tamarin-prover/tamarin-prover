@@ -90,8 +90,16 @@ loadClosedWfThy as file = do
     case checkWellformedness thy of
       []     -> close thy
       report -> do
-          putStrLn $ "WARNING: ignoring the following errors"
+          putStrLn ""
+          putStrLn $ replicate 78 '-'
+          putStrLn $ "Theory file '" ++ file ++ "'"
+          putStrLn $ replicate 78 '-'
+          putStrLn ""
+          putStrLn $ "WARNING: ignoring the following wellformedness errors"
+          putStrLn ""
           putStrLn $ renderDoc $ prettyWfErrorReport report
+          putStrLn $ replicate 78 '-'
+          putStrLn ""
           close thy
       -- report -> error $ renderDoc $ prettyWfErrorReport report
   where

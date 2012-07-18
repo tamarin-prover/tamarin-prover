@@ -79,8 +79,8 @@ import           Control.Monad.Bind
 import           Extension.Prelude
 import           Term.LTerm
 import           Term.Maude.Signature
-import           Text.PrettyPrint.Class
 import           Theory
+import           Theory.Text.Pretty
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -91,12 +91,8 @@ type WfError       = (Topic, Doc)
 type WfErrorReport = [WfError]
 
 prettyWfErrorReport :: WfErrorReport -> Doc
-prettyWfErrorReport []     = text "All well-formedness checks were successful."
-prettyWfErrorReport report = foldr1 ($-$)
-  [ text "WARNING: the following wellformedness checks failed!"
-  , text ""
-  , vcat . intersperse (text "") . map ppTopic $ groupOn fst report
-  ]
+prettyWfErrorReport =
+    vcat . intersperse (text "") . map ppTopic . groupOn fst
   where
     ppTopic []                 = error "prettyWfErrorReport: groupOn returned empty list"
     ppTopic errs@((topic,_):_) =
@@ -492,5 +488,13 @@ checkWellformedness thy = concatMap ($ thy)
 
 -- | Adds a note to the end of the theory, if it is not well-formed.
 noteWellformedness :: WfErrorReport -> OpenTheory -> OpenTheory
-noteWellformedness report thy = addComment (prettyWfErrorReport report) thy
+noteWellformedness report thy =
+    addComment wfErrorReport thy
+  where
+    wfErrorReport
+      | null report = text "All well-formedness checks were successful."
+      | otherwise   = vsep
+          [ text "WARNING: the following wellformedness checks failed!"
+          , prettyWfErrorReport report
+          ]
 
