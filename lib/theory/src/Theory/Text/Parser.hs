@@ -127,7 +127,7 @@ term plit = asum
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Parser (Term l) -> Parser (Term l)
-expterm plit = chainl1 (term plit) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm plit = chainl1 (msetterm plit) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -135,6 +135,14 @@ multterm plit = do
     dh <- enableDH <$> getState
     if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm plit) ((\a b -> fAppMult [a,b]) <$ opMult)
+        else msetterm plit
+
+-- | A left-associative sequence of multiset unions.
+msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
+msetterm plit = do
+    mset <- enableMultiset <$> getState
+    if mset -- if multiset is not enabled, do not accept 'msetterms's
+        then chainl1 (term plit) ((\a b -> fAppUnion [a,b]) <$ opPlus)
         else term plit
 
 -- | A right-associative sequence of tuples.
@@ -524,6 +532,8 @@ builtins =
     builtinTheory = asum
       [ try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
+      , try (symbol "multiset")
+          *> extendSig msetMaudeSig
       , try (symbol "symmetric-encryption")
           *> extendSig symEncMaudeSig
       , try (symbol "asymmetric-encryption")
@@ -630,5 +640,3 @@ theory flags0 = do
     liftedAddAxiom thy ax = case addAxiom ax thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
-
-

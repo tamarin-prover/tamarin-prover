@@ -59,6 +59,7 @@ module Theory.Text.Parser.Token (
   , opBang
   , opSlash
   , opMinus
+  , opPlus
   , opLeftarrow
   , opRightarrow
   , opLongleftarrow
@@ -296,6 +297,10 @@ opExp = symbol_ "^"
 -- | The multiplication operator @*@.
 opMult :: Parser ()
 opMult = symbol_ "*"
+
+-- | The multiplication operator @*@.
+opPlus :: Parser ()
+opPlus = symbol_ "+"
 
 -- | The timepoint comparison operator @<@.
 opLess :: Parser ()
