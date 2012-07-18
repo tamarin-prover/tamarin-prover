@@ -81,6 +81,11 @@ protocols. We normally use the following workflow to do that.
      protocol. If something is wrong with your model, then it is likely that
      you can see it already from the precomputed case distinctions.
 
+  5. If you have constructed a proof by hand and want to store it for later
+     usage, then you can just copy it from the GUI to your input file. The
+     Tamarin prover will parse and re-check this proof when loading this
+     security protocol theory.
+
 
 
 Additional Theory
