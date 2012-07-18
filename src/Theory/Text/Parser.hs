@@ -5,7 +5,8 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
--- Parsing protocol theories.
+-- Parsing protocol theories. See the MANUAL for a high-level description of
+-- the syntax.
 module Theory.Text.Parser (
     parseOpenTheory
   , parseOpenTheoryString
@@ -71,46 +72,6 @@ parseOpenTheoryString flags = parseFromString (theory flags)
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (Lemma ProofSkeleton)
 parseLemma = parseFromString lemma
-
-------------------------------------------------------------------------------
--- Parsing Terms
-------------------------------------------------------------------------------
-
-
-{-
-BNF:  Not completely up to date...
-
-theory      := 'theory' ident 'begin' protocol 'end'
-protocol    := rules
-rules       := rule | rule rules
-intrrule    := ident '[' intrinfo ']' ':' terms '-->' terms
-intrinfo    := 'Destr' | 'Constr'
-protorule   := ident ':' factList '-->' factList
-factList    := '[' [facts] ']'
-facts       := fact | fact ',' facts
-protoFact   := ident '(' terms ')'
-terms       := term | term ',' terms
-term        := lit | application | '<' term ',' terms '>'  -- right assoc pairing
-application := ident '(' terms ')'
-lit        := ident | '\'' ident '\''
-ident       := <a-zA-Z> (<a-zA-Z0-9-_)
-
-
-// example protocol rule
-
-  Init_1:
-    [ Pub(I), Pub(R), Fresh(ni) ]
-    -->
-    [ Init_1(I,R,ni), Send(encA(pk(R), <I,R,ni>)) ]
-
-// example intruder rule
-
-  Exp [Constr]:
-    [ (x^_((x1*x2))), ((x3*x1)*_x4) ]
-    -->
-    [ (x^(x3*_((x4*x2)))) ]
-
--}
 
 ------------------------------------------------------------------------------
 -- Parsing Terms

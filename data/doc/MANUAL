@@ -77,7 +77,7 @@ protocols. We normally use the following workflow to do that.
      Note that you can also use the GUI to sanity check your model. Just go
      through the message theory and check that it really models what you
      intent to model. Moreover, the precomputed case distinctions, described
-     below, give a good overview about the behaviour/specification of your
+     below, give a good overview about the behavior/specification of your
      protocol. If something is wrong with your model, then it is likely that
      you can see it already from the precomputed case distinctions.
 
@@ -205,25 +205,61 @@ case distinctions. A typing invariant achieves its goal, if the typed
 precomputed case distinctions are marked with "all chains solved".
 
 
-Reasoning about Exclusivity
----------------------------
+Reasoning about Exclusivity: Facts Symbols with Injective Instances
+-----------------------------------------------------------
 
-We say that a fact symbol 'f' has `unique instances with respect to a security
-protocol 'P', if all instances of 'f' occur with cardinality <= 1 in all
-reachable states of 'P'. As computing the set of fact symbols with unique
-instances with respect to a security protocol 'P' is undecidable, we use a
-simple under-approximation to this set. We gather all linear fact symbols that
-occur in all conclusions either as a copy of themselves or a copy of the term
-of a Fr-fact.
+We say that a fact symbol 'f' has *injective instances* with respect to a
+multiset rewriting system 'R', if there is no reachable state of
+the multiset rewriting system 'R' with more than one instance of an f-fact
+with the same term as a first argument. Injective facts typically arise from
+modeling databases using linear facts. An example of an fact with injective
+instances, is the 'Store'-fact in the following multiset rewriting system.
 
-For facts with unique instances, we can use a further constraint reduction
-rule. This rule states that it is impossible that there is a node 'i' with a
-premise with a unique fact instance and an edge with the same fact instance
-from a node 'j' to a node 'k' such that 'j' < 'i' < 'k'.
+  rule CreateKey: [ Fr(handle), Fr(key) ] --> [ Store(handle, key) ]
 
-Together with inductive strengthening, this simple construction suffices for
-many protocols to reason about their exclusive use of a linear fact symbol to
-model locked access to a resource.
+  rule NextKey:   [ Store(handle, key) ] --> [ Store(handle, h(key)) ]
+
+  rule DelKey:    [ Store(handle,key) ] --> []
+
+When reasoning about the above multiset rewriting system, we exploit that
+'Store' has injective instances to prove that after the 'DelKey' rule no other
+rule using the same handle can be applied. This proof uses trace induction and
+the following constraint-reduction rule that exploits facts with unique
+instances.
+
+Let 'f' be a fact symbol with injective instances. Let i, j, and k be temporal
+variables ordered according to
+
+  i < j < k
+
+and let there be an edge from (i,u) to (k,w) for some indices u and v.
+Then, we have a contradiction, if the premise (k,w) requires a fact 'f(t,...)'
+and there is a premise (j,v) requiring a fact 'f(t,...)'.  These two premises
+must be merged because the edge (i,u) >-> (k,w) crosses 'j' and the state at
+'j' therefore contains 'f(t,...)'. This merging is not possible due to the
+ordering constraints 'i < j < k'.
+
+Note that computing the set of fact symbols with injective instances is
+undecidable in general. We therefore compute an under-approximation to this
+set using the following simple heuristic. A fact tag is guaranteed to have
+injective instance, if
+
+  1. the fact-symbol is linear,
+  2. every introduction of such a fact is protected by a Fr-fact of the
+     first term, and
+  3. every rule has at most one copy of this fact-tag in the conclusion and
+     the first term arguments agree.
+
+We exclude facts that are not copied in a rule, as they are already handled
+properly by the naive backwards reasoning.
+
+Note that this support for reasoning about exclusivity was sufficient for our
+case studies, but it is likely that more complicated case studies require
+additional support. For example, that fact symbols with injective instances
+can be specified by the user and the soundness proof that these symbols have
+injective instances is constructed explicitly using the Tamarin prover.
+Please tell us, if you encounter limitations in your case studies:
+https://github.com/tamarin-prover/tamarin-prover/issues?state=open.
 
 
 Equation Store
@@ -339,8 +375,10 @@ quantifier.
     lemma := 'lemma' ident [lemma_attrs] ':'
              [trace_quantifier]
              '"' formula '"'
-    lemma_attrs := '[' ('typing' | 'reuse' | 'use_induction') ']'
+             proof
+    lemma_attrs      := '[' ('typing' | 'reuse' | 'use_induction') ']'
     trace_quantifier := 'all-traces' | 'exists-trace'
+    proof            := ... a proof as output by the Tamarin prover ..
 
 
 Formal comments are used to make the input more readable. In contrast
@@ -400,12 +438,12 @@ Formulas are trace formulas as described in our paper. Note that we are a bit
 more liberal with respect to guardedness. We accept a conjunction of atoms as
 guards.
 
-    formula     := atom | '(' iff ')' | ( 'All' | 'Ex' ) ident+ '.' iff
-    iff         := imp '<=>' imp
-    imp         := disjuncts '==>' disjuncts
-    disjuctions := conjuncts ('|' disjuncts)+  // left-associative
-    conjuncts   := negation  ('|' disjuncts)+  // left-associative
-    negation    := 'not' formula
+    formula   := atom | '(' iff ')' | ( 'All' | 'Ex' ) ident+ '.' iff
+    iff       := imp '<=>' imp
+    imp       := disjuncts '==>' disjuncts
+    disjuncts := conjuncts ('|' disjuncts)+  // left-associative
+    conjuncts := negation  ('|' conjuncts)+  // left-associative
+    negation  := 'not' formula
 
     atom := tvar '<' tvar              // ordering of temporal variables
           | '#' ident '=' '#' ident    // equality between temporal variables
