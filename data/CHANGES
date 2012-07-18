@@ -16,7 +16,7 @@
           checks using actions and a corresponding axiom. See the 'Tutorial'
           for more information.
 
-        - new: proof checking support! This allows you to save interactive
+        - new: proof checking support. This allows you to save interactive
           proofs from the GUI for later verification. Just copy the proof or a
           prefix of the proof into your input file. 'sorry' steps are
           then automatically expanded when using 'tamarin-prover --prove'.
