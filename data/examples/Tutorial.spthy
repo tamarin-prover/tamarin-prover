@@ -289,16 +289,23 @@ an action constraint right after the quantifier and that the outermost logical
 operator inside the quantifier is a conjunction.
 Note also that currently the precedence of the logical connectives is not
 specified. We therefore recommend to use parentheses, when in doubt.
+*/
 
+/*
+Note that you can specify additional axioms that restrict the set of
+considered traces. In this example, we restrict our attention to traces where
+all equality checks succeed. */
 
+axiom Equality_Checks_Succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
+
+/*
 The following two properties should be self-explanatory.
+Note that the order between axioms and lemmas does not matter. All axioms are
+always available/assumed in the proofs of all security properties.
 */
 
 lemma Client_session_key_secrecy:
-  "  /* For all traces, where all equality checks succeed, */
-    (All x y #i. Eq(x,y) @ i ==> x = y)
-  ==>
-    /* it cannot be that a  */
+  " /* It cannot be that a  */
     not(
       Ex S k #i #j.
         /* client setup a session key 'k' with a server'S' */
@@ -312,10 +319,7 @@ lemma Client_session_key_secrecy:
 
 
 lemma Client_auth:
-  " /* For all traces, where all equality checks succeed, */
-    (All x y #i. Eq(x,y) @ i ==> x = y)
-  ==>
-    /* for all session keys 'k' setup by clients with a server 'S' */
+  " /* For all session keys 'k' setup by clients with a server 'S' */
     ( All S k #i.  SessKeyC(S, k) @ #i
        ==>
          /* there is a server that answered the request */
@@ -336,23 +340,19 @@ lemma Client_auth:
   Tutorial security protocol theory with the lemmas and their attached
   (dis)proofs.
 
-  Finding attacks is very useful, to check that a security property is not
-  trivial due to too strong preconditions. The following property must not be
-  provable, as otherwise there would be no possibility to setup a session key
-  with a honest sever.
+  Note that when adding inconsistent axioms, you can prove any property. To
+  check that there still exist traces, you can state an 'exists-trace' lemma.
+  When modeling protocols such existence proofs are very useful sanity checks.
 
-  We can check for the existence of a trace using the 'exists-trace'
-  quantifier in front of the trace formula. When modeling protocols such
-  existence proof are very useful sanity checks.
+  The following property must be provable, as otherwise there would be no
+  possibility to setup a session key with a honest sever.
 */
+
 lemma Client_session_key_honest_setup:
   exists-trace
-  " (All x y #i. Eq(x,y) @ i ==> x = y)
-  & (
-      Ex S k #i.
+  " Ex S k #i.
         SessKeyC(S, k) @ #i
       & not(Ex #r. LtkReveal(S) @ r)
-    )
   "
 
 /*

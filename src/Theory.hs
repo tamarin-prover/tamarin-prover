@@ -13,8 +13,13 @@
 --
 -- Theory datatype and transformations on it.
 module Theory (
+  -- * Axioms
+    Axiom(..)
+  , axName
+  , axFormula
+
   -- * Lemmas
-    LemmaAttribute(..)
+  , LemmaAttribute(..)
   , TraceQuantifier(..)
   , Lemma
   , lName
@@ -33,6 +38,8 @@ module Theory (
   , thyCache
   , thyItems
   , theoryRules
+  , theoryAxioms
+  , addAxiom
   , addLemma
   , removeLemma
   , lookupLemma
@@ -77,6 +84,7 @@ module Theory (
   -- * Pretty printing
   , prettyFormalComment
   , prettyLemmaName
+  , prettyAxiom
   , prettyLemma
   , prettyClosedTheory
   , prettyOpenTheory
@@ -196,12 +204,13 @@ closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.
-closeRuleCache :: [LNFormula]        -- ^ Typing lemmas.
+closeRuleCache :: [LNFormula]        -- ^ Axioms to use.
+               -> [LNFormula]        -- ^ Typing lemmas to use.
                -> SignatureWithMaude -- ^ Signature of theory.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache typingAsms sig protoRules intrRulesAC =
+closeRuleCache axioms typAsms sig protoRules intrRulesAC =
     ClosedRuleCache
         classifiedRules untypedCaseDists typedCaseDists injFactInstances
   where
@@ -214,9 +223,8 @@ closeRuleCache typingAsms sig protoRules intrRulesAC =
         simpleInjectiveFactInstances $ L.get cprRuleE <$> protoRules
 
     -- precomputing the case distinctions
-    untypedCaseDists = precomputeCaseDistinctions ctxt0 []
-    typedCaseDists   =
-        refineWithTypingAsms typingAsms ctxt0 untypedCaseDists
+    untypedCaseDists = precomputeCaseDistinctions ctxt0 axioms
+    typedCaseDists   = refineWithTypingAsms typAsms ctxt0 untypedCaseDists
 
     -- classifying the rules
     rulesAC = (fmap IntrInfo                      <$> intrRulesAC) <|>
@@ -234,6 +242,20 @@ closeRuleCache typingAsms sig protoRules intrRulesAC =
       , _crProtocol   = proto
       }
 
+
+------------------------------------------------------------------------------
+-- Axioms (Trace filters)
+------------------------------------------------------------------------------
+
+-- | An axiom describes a property that must hold for all traces. Axioms are
+-- always used as lemmas in proofs.
+data Axiom = Axiom
+       { _axName    :: String
+       , _axFormula :: LNFormula
+       }
+       deriving( Eq, Ord, Show )
+
+$(mkLabels [''Axiom])
 
 
 ------------------------------------------------------------------------------
@@ -323,6 +345,7 @@ type FormalComment = (String, String)
 data TheoryItem r p =
        RuleItem r
      | LemmaItem (Lemma p)
+     | AxiomItem Axiom
      | TextItem FormalComment
      deriving( Show, Eq, Ord, Functor )
 
@@ -359,24 +382,40 @@ type ClosedTheory =
 ---------------------------------------
 
 -- | Fold a theory item.
-foldTheoryItem :: (r -> a) -> (Lemma p -> a) -> (FormalComment -> a)
-               -> TheoryItem r p -> a
-foldTheoryItem fRule fLemma fText i = case i of
-    RuleItem r  -> fRule r
-    LemmaItem l -> fLemma l
-    TextItem t  -> fText t
+foldTheoryItem
+    :: (r -> a) -> (Axiom -> a) -> (Lemma p -> a) -> (FormalComment -> a)
+    -> TheoryItem r p -> a
+foldTheoryItem fRule fAxiom fLemma fText i = case i of
+    RuleItem ru   -> fRule ru
+    LemmaItem lem -> fLemma lem
+    TextItem txt  -> fText txt
+    AxiomItem ax  -> fAxiom ax
 
 -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p -> TheoryItem r' p'
-mapTheoryItem f g = foldTheoryItem (RuleItem . f) (LemmaItem . fmap g) TextItem
+mapTheoryItem f g =
+    foldTheoryItem (RuleItem . f) AxiomItem (LemmaItem . fmap g) TextItem
 
 -- | All rules of a theory.
 theoryRules :: Theory sig c r p -> [r]
-theoryRules = foldTheoryItem return (const []) (const []) <=< L.get thyItems
+theoryRules =
+    foldTheoryItem return (const []) (const []) (const []) <=< L.get thyItems
+
+-- | All axioms of a theory.
+theoryAxioms :: Theory sig c r p -> [Axiom]
+theoryAxioms =
+    foldTheoryItem (const []) return (const []) (const []) <=< L.get thyItems
 
 -- | All lemmas of a theory.
 theoryLemmas :: Theory sig c r p -> [Lemma p]
-theoryLemmas = foldTheoryItem (const []) return (const []) <=< L.get thyItems
+theoryLemmas =
+    foldTheoryItem (const []) (const []) return (const []) <=< L.get thyItems
+
+-- | Add a new axiom. Fails, if axiom with the same name exists.
+addAxiom :: Axiom -> Theory sig c r p -> Maybe (Theory sig c r p)
+addAxiom l thy = do
+    guard (isNothing $ lookupAxiom (L.get axName l) thy)
+    return $ modify thyItems (++ [AxiomItem l]) thy
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
 addLemma :: Lemma p -> Theory sig c r p -> Maybe (Theory sig c r p)
@@ -390,8 +429,15 @@ removeLemma lemmaName thy = do
     _ <- lookupLemma lemmaName thy
     return $ modify thyItems (concatMap fItem) thy
   where
-    fItem   = foldTheoryItem (return . RuleItem) check (return . TextItem)
+    fItem   = foldTheoryItem (return . RuleItem)
+                             (return . AxiomItem)
+                             check
+                             (return . TextItem)
     check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
+
+-- | Find the axiom with the given name.
+lookupAxiom :: String -> Theory sig c r p -> Maybe Axiom
+lookupAxiom name = find ((name ==) . L.get axName) . theoryAxioms
 
 -- | Find the lemma with the given name.
 lookupLemma :: String -> Theory sig c r p -> Maybe (Lemma p)
@@ -453,7 +499,8 @@ normalizeTheory =
           LemmaItem lem ->
               LemmaItem $ L.modify lProof stripProofAnnotations $ lem
           RuleItem _    -> item
-          TextItem _    -> item)
+          TextItem _    -> item
+          AxiomItem _   -> item)
   where
     stripProofAnnotations :: ProofSkeleton -> ProofSkeleton
     stripProofAnnotations = fmap stripProofStepAnnotations
@@ -542,7 +589,7 @@ closeTheoryWithMaude :: SignatureWithMaude -> OpenTheory -> ClosedTheory
 closeTheoryWithMaude sig thy0 = do
     proveTheory checkProof $ Theory (L.get thyName thy0) sig cache items
   where
-    cache      = closeRuleCache typAsms sig rules $ L.get thyCache thy0
+    cache      = closeRuleCache axioms typAsms sig rules (L.get thyCache thy0)
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
@@ -556,14 +603,15 @@ closeTheoryWithMaude sig thy0 = do
        ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
     closeTheoryItem = foldTheoryItem
        (RuleItem . closeProtoRule hnd)
+       AxiomItem
        (LemmaItem . fmap skeletonToIncrementalProof)
        TextItem
 
-    -- extract typing lemmas
-    typAsms = do
-        LemmaItem lem <- items
-        guard (isTypingLemma lem)
-        return $ L.get lFormula lem
+    -- extract typing axioms and lemmas
+    axioms  = [ L.get axFormula ax | AxiomItem ax <- items ]
+    typAsms = do LemmaItem lem <- items
+                 guard (isTypingLemma lem)
+                 return $ L.get lFormula lem
 
     -- extract protocol rules
     rules = theoryRules (Theory errClose errClose errClose items)
@@ -637,28 +685,25 @@ proveTheory prover thy =
         modify lProof add lem
       where
         ctxt    = getProofContext lem thy
-        sys     = mkSystem ctxt preItems $ L.get lFormula lem
+        sys     = mkSystem ctxt (theoryAxioms thy) preItems $ L.get lFormula lem
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
 -- | Construct a constraint system for verifying the given formula.
-mkSystem :: ProofContext -> [TheoryItem r p] -> LNFormula -> System
-mkSystem ctxt lems =
-    addLemmasToSystem lems
+mkSystem :: ProofContext -> [Axiom] -> [TheoryItem r p] -> LNFormula -> System
+mkSystem ctxt axioms preItems =
+    addAxiomsAndLemmasToSystem
   . formulaToSystem (L.get pcCaseDistKind ctxt) (L.get pcTraceQuantifier ctxt)
+  where
+    addAxiomsAndLemmasToSystem sys =
+        (`insertLemmas` sys) $
+            map (L.get axFormula) axioms ++
+            gatherReusableLemmas (L.get sCaseDistKind sys)
 
--- | Add the lemmas that have an associated AC variant to this sequent.
-addLemmasToSystem :: [TheoryItem r p] -> System -> System
-addLemmasToSystem items sys =
-    foldl' (flip insertLemma) sys $
-    gatherReusableLemmas (L.get sCaseDistKind sys) items
-
--- | Gather reusable lemmas to be added to a sequent.
-gatherReusableLemmas :: CaseDistKind -> [TheoryItem r p] -> [LNFormula]
-gatherReusableLemmas kind items = do
-    LemmaItem lem <- items
-    guard $ lemmaCaseDistKind lem <= kind &&
-            ReuseLemma `elem` L.get lAttributes lem
-    return $ L.get lFormula lem
+    gatherReusableLemmas kind = do
+        LemmaItem lem <- preItems
+        guard $ lemmaCaseDistKind lem <= kind &&
+                ReuseLemma `elem` L.get lAttributes lem
+        return $ L.get lFormula lem
 
 
 ------------------------------------------------------------------------------
@@ -683,7 +728,7 @@ modifyLemmaProof prover name thy =
 
     change preItems (LemmaItem lem) = do
          let ctxt = getProofContext lem thy
-             sys  = mkSystem ctxt preItems $ L.get lFormula lem
+             sys  = mkSystem ctxt (theoryAxioms thy) preItems $ L.get lFormula lem
          lem' <- modA lProof (runProver prover ctxt 0 sys) lem
          return $ LemmaItem lem'
     change _ _ = error "LemmaProof: change: impossible"
@@ -718,7 +763,7 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     [ kwEnd ]
   where
     ppItem = foldTheoryItem
-        ppRule (prettyLemma ppPrf) (\(h,c) -> prettyFormalComment h c)
+        ppRule prettyAxiom (prettyLemma ppPrf) (uncurry prettyFormalComment)
 
 -- | Pretty print the lemma name together with its attributes.
 prettyLemmaName :: HighlightDocument d => Lemma p -> d
@@ -730,6 +775,12 @@ prettyLemmaName l = case L.get lAttributes l of
     prettyLemmaAttribute TypingLemma    = text "typing"
     prettyLemmaAttribute ReuseLemma     = text "reuse"
     prettyLemmaAttribute InvariantLemma = text "use_induction"
+
+-- | Pretty print an axiom.
+prettyAxiom :: HighlightDocument d => Axiom -> d
+prettyAxiom ax =
+    kwAxiom <-> text (L.get axName ax) <> colon $-$
+    (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get axFormula ax)
 
 -- | Pretty print a lemma.
 prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d
@@ -862,6 +913,7 @@ prettyTraceQuantifier AllTraces   = text "all-traces"
 $( derive makeBinary ''TheoryItem)
 $( derive makeBinary ''LemmaAttribute)
 $( derive makeBinary ''TraceQuantifier)
+$( derive makeBinary ''Axiom)
 $( derive makeBinary ''Lemma)
 $( derive makeBinary ''ClosedProtoRule)
 $( derive makeBinary ''ClosedRuleCache)
@@ -870,6 +922,7 @@ $( derive makeBinary ''Theory)
 $( derive makeNFData ''TheoryItem)
 $( derive makeNFData ''LemmaAttribute)
 $( derive makeNFData ''TraceQuantifier)
+$( derive makeNFData ''Axiom)
 $( derive makeNFData ''Lemma)
 $( derive makeNFData ''ClosedProtoRule)
 $( derive makeNFData ''ClosedRuleCache)

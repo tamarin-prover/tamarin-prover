@@ -409,6 +409,16 @@ guardedFormula = try $ do
 
 
 ------------------------------------------------------------------------------
+-- Parsing Axioms
+------------------------------------------------------------------------------
+
+-- | Parse an axiom.
+axiom :: Parser Axiom
+axiom = Axiom <$> (symbol "axiom" *> identifier <* colon)
+              <*> doubleQuoted standardFormula
+
+
+------------------------------------------------------------------------------
 -- Parsing Lemmas
 ------------------------------------------------------------------------------
 
@@ -587,6 +597,8 @@ theory flags0 = do
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
+      , do thy' <- liftedAddAxiom thy =<< axiom
+           addItems flags thy'
       , do thy' <- liftedAddLemma thy =<< lemma
            addItems flags thy'
       , do ru <- protoRule
@@ -619,9 +631,13 @@ theory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
 
-    liftedAddLemma thy l = case addLemma l thy of
+    liftedAddLemma thy lem = case addLemma lem thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate lemma: " ++ get lName l
+        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+
+    liftedAddAxiom thy ax = case addAxiom ax thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
 
 
 ------------------------------------------------------------------------------

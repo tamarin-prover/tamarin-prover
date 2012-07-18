@@ -74,7 +74,7 @@ module Theory.Constraint.System (
 
   -- ** Lemmas
   , sLemmas
-  , insertLemma
+  , insertLemmas
 
   -- ** Keeping track of typing assumptions
   , CaseDistKind(..)
@@ -100,6 +100,7 @@ import           Prelude                              hiding (id, (.))
 import           Data.Binary
 import qualified Data.DAG.Simple                      as D
 import           Data.DeriveTH
+import           Data.List                            (foldl')
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe)
 import           Data.Monoid                          (Monoid(..))
@@ -219,6 +220,9 @@ insertLemma fm0 =
     go (GConj conj) = foldr (.) id $ map go $ getConj conj
     go fm           = L.modify sLemmas (S.insert fm)
 
+-- | Add lemmas / additional assumptions to a constraint system.
+insertLemmas :: [LNFormula] -> System -> System
+insertLemmas fms sys = foldl' (flip insertLemma) sys fms
 
 ------------------------------------------------------------------------------
 -- Queries

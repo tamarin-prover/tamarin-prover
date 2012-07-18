@@ -67,19 +67,18 @@ unsolvedChainConstraints =
 -- given typing assumptions are justified.
 initialCaseDistinction
     :: ProofContext
-    -> [LNGuarded]  -- ^ Typing assumptions. PRE: Must be closed formulas!
+    -> [LNFormula] -- ^ Axioms.
     -> Goal
     -> CaseDistinction
-initialCaseDistinction ctxt typAsms goal =
+initialCaseDistinction ctxt axioms goal =
     CaseDistinction goal cases
   where
     polish ((name, se), _) = ([name], se)
-    se0   = emptySystem UntypedCaseDist
-    cases =
-        fmap polish $ runReduction instantiate ctxt se0 (avoid (goal, typAsms))
+    se0   = insertLemmas axioms $ emptySystem UntypedCaseDist
+    cases = fmap polish $
+        runReduction instantiate ctxt se0 (avoid (goal, se0))
     instantiate = do
         insertGoal goal False
-        mapM_ insertFormula typAsms
         solveGoal goal
 
 -- | Refine a source case distinction by applying the additional proof step.
@@ -241,9 +240,9 @@ saturateCaseDistinctions ctxt =
 -- | Precompute a saturated set of case distinctions.
 precomputeCaseDistinctions
     :: ProofContext
-    -> [LNGuarded] -- ^ Typing assumptions.
+    -> [LNFormula]       -- ^ Axioms.
     -> [CaseDistinction]
-precomputeCaseDistinctions ctxt typAsms =
+precomputeCaseDistinctions ctxt axioms =
     map cleanupCaseNames $ saturateCaseDistinctions ctxt rawCaseDists
   where
     cleanupCaseNames = modify cdCases $ fmap $ first $
@@ -251,7 +250,7 @@ precomputeCaseDistinctions ctxt typAsms =
       . map (filter (`elem` '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']))
 
     rawCaseDists =
-      initialCaseDistinction ctxt typAsms <$> (protoGoals ++ msgGoals)
+        initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals)
 
     -- construct case distinction starting from facts from non-special rules
     protoGoals = someProtoGoal <$> absProtoFacts
@@ -299,16 +298,17 @@ refineWithTypingAsms
     -> ProofContext       -- ^ Proof context to use.
     -> [CaseDistinction]  -- ^ Original, untyped case distinctions.
     -> [CaseDistinction]  -- ^ Refined, typed case distinctions.
-refineWithTypingAsms typAsms0 ctxt cases0 =
+refineWithTypingAsms assumptions0 ctxt cases0 =
     fmap (modifySystems removeFormulas) $
     saturateCaseDistinctions ctxt $
     modifySystems updateSystem <$> cases0
   where
-    typAsms = map (either (error . render) id . formulaToGuarded) typAsms0
-    modifySystems = modify cdCases . fmap . second
+    assumptions =
+        map (either (error . render) id . formulaToGuarded) assumptions0
+    modifySystems   = modify cdCases . fmap . second
     updateSystem se =
-        modify sFormulas (S.union (S.fromList typAsms)) $
-        set sCaseDistKind TypedCaseDist                 $ se
+        modify sFormulas (S.union (S.fromList assumptions)) $
+        set sCaseDistKind TypedCaseDist                     $ se
     removeFormulas =
         modify sGoals (M.filterWithKey isNoDisjGoal)
       . set sFormulas S.empty

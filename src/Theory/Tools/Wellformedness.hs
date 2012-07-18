@@ -348,14 +348,21 @@ formulaTerms =
 -- of facts, term, and atom constructors explicit.
 formulaReports :: OpenTheory -> WfErrorReport
 formulaReports thy = do
-    LemmaItem l <- get thyItems thy
-    let header = "lemma " ++ quote (get lName l)
-        fm     = get lFormula l
+    (header, fm) <- annFormulas
     msum [ ((,) "quantifier sorts") <$> checkQuantifiers header fm
          , ((,) "formula terms")    <$> checkTerms header fm
          , ((,) "guardedness")      <$> checkGuarded header fm
          ]
   where
+    annFormulas = do LemmaItem l <- get thyItems thy
+                     let header = "lemma " ++ quote (get lName l)
+                         fm     = get lFormula l
+                     return (header, fm)
+              <|> do AxiomItem ax <- get thyItems thy
+                     let header = "axiom " ++ quote (get axName ax)
+                         fm     = get axFormula ax
+                     return (header, fm)
+
     -- check that only message and node variables are used
     checkQuantifiers header fm
       | null disallowed = []

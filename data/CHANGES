@@ -11,6 +11,11 @@
           a constraint system.
 
     - .spthy files:
+        - new: support for restricting the set of considered traces using
+          axioms. This allows for example to conveniently model equality
+          checks using actions and a corresponding axiom. See the 'Tutorial'
+          for more information.
+
         - new: proof checking support! This allows you to save interactive
           proofs from the GUI for later verification. Just copy the proof or a
           prefix of the proof into your input file. 'sorry' steps are

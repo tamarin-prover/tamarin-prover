@@ -218,7 +218,7 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     bold                = withTag "strong" [] . text
     overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
     messageLink         = overview "Message theory" (text "") TheoryMessage
-    ruleLink            = overview "Multiset rewriting rules" rulesInfo TheoryRules
+    ruleLink            = overview "Multiset rewriting rules and axioms" rulesInfo TheoryRules
     reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
 
 {-
@@ -343,7 +343,9 @@ rulesSnippet thy = vcat
     [ ppWithHeader "Fact Symbols with Injective Instances" $
         fsepList (text . showFactTagArity) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
-        vcat $ intersperse (text "") $ map prettyRuleAC msrRules
+        vsep $ map prettyRuleAC msrRules
+    , ppWithHeader "Axioms Restricting the Set of Traces" $
+        vsep $ map prettyAxiom $ theoryAxioms thy
     ]
   where
     msrRules   = get crProtocol $ getClassifiedRules thy
@@ -580,7 +582,7 @@ titleThyPath :: ClosedTheory -> TheoryPath -> String
 titleThyPath thy path = go path
   where
     go TheoryHelp                           = "Theory: " ++ get thyName thy
-    go TheoryRules                          = "Multiset rewriting rules"
+    go TheoryRules                          = "Multiset rewriting rules and axioms"
     go TheoryMessage                        = "Message theory"
     go (TheoryCaseDist UntypedCaseDist _ _) = "Untyped case distinctions"
     go (TheoryCaseDist TypedCaseDist _ _)   = "Typed case distinctions"

@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:     DH-proto-proof Security Protocol Theory Files
-" Maintainer:   
+" Maintainer:
 " Last Change:  2010 12 17
 " based on Claudio Fleiner's <claudio@fleiner.com> spthy syntax highlighting
 " file.
@@ -51,7 +51,7 @@ syn match spthyConstr           "\<diffie-hellman"
 syn match spthyConstr           "\<symmetric-encryption"
 syn match spthyConstr           "\<asymmetric-encryption"
 
-syn keyword spthyDecl           lemma assert equations functions builtins protocol property properties in let theory begin end subsection section text note
+syn keyword spthyDecl           axiom lemma equations functions builtins protocol property in let theory begin end subsection section text
 syn match spthyDecl             "\<exists-trace"
 syn match spthyDecl             "\<all-traces"
 syn match spthyDecl             "\<enable"
@@ -106,10 +106,10 @@ syn cluster spthyTop add=spthyComment,spthyLineComment
 " syn match   spthyNumber		 "\(\<\d\+\.\d*\|\.\d\+\)\([eE][-+]\=\d\+\)\=[fFdD]\="
 " syn match   spthyNumber		 "\<\d\+[eE][-+]\=\d\+[fFdD]\=\>"
 " syn match   spthyNumber		 "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
-" 
+"
 " " unicode characters
 " syn match   spthySpecial "\\u\+\d\{4\}"
-" 
+"
 " syn cluster spthyTop add=spthyString,spthyCharacter,spthyNumber,spthySpecial,spthyStringError
 
 " catch errors caused by wrong parenthesis
@@ -122,7 +122,7 @@ syn cluster spthyTop add=spthyComment,spthyLineComment
 " syn region  spthyParenT1 transparent matchgroup=spthyParen1 start="\[" end="\]" contains=@spthyTop,spthyParenT2 contained
 " syn region  spthyParenT2 transparent matchgroup=spthyParen2 start="\[" end="\]" contains=@spthyTop,spthyParenT  contained
 " syn match   spthyParenError       "\]"
-" 
+"
 " SpthyHiLink spthyParenError       spthyError
 
 if !exists("spthy_minlines")
