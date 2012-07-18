@@ -99,7 +99,7 @@ contradictions ctxt sys = F.asum
     -- system.
     (NonInjectiveFactInstance <$> nonInjectiveFactInstances ctxt sys)
     ++
-    -- TODO: Document corresponding constratint reduction rule.
+    -- TODO: Document corresponding constraint reduction rule.
     (NodeAfterLast <$> nodesAfterLast sys)
   where
     sig = L.get pcSignature ctxt

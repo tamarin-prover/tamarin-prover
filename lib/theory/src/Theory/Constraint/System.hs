@@ -174,7 +174,7 @@ data System = System
     , _sNextGoalNr     :: Integer
     , _sCaseDistKind   :: CaseDistKind
     }
-    -- NOTE: Don't forget the update 'substSystem' in
+    -- NOTE: Don't forget to update 'substSystem' in
     -- "Constraint.Solver.Reduction" when adding further fields to the
     -- constraint system.
     deriving( Eq, Ord )
