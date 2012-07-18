@@ -574,7 +574,7 @@ prettyNamedRule prefix ppInfo ru =
                 , if null (L.get rActs ru)
                     then operator_ "-->"
                     else fsep [operator_ "--[", ppFacts rActs, operator_ "]->"]
-                , nest 1 $ ppFactsList rConcs]) $--$
+                , nest 1 $ ppFactsList rConcs]) $-$
     nest 2 (ppInfo $ L.get rInfo ru)
   where
     ppList pp        = fsep . punctuate comma . map pp

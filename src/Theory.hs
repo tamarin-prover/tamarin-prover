@@ -783,7 +783,7 @@ prettyIncrementalProof = prettyProofWith ppStep (const id)
                                    else emptyDoc
       ]
 
--- | Pretty print an closed rule together with its assertion soundness proof.
+-- | Pretty print an closed rule.
 prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d
 prettyClosedProtoRule cru =
     (prettyProtoRuleE ruE) $--$
