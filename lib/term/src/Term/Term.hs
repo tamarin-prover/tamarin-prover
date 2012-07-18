@@ -52,7 +52,7 @@ module Term.Term (
     , fAppXor
     , fAppZero
     , fAppUnion
-    , fAppEmpty
+--    , fAppEmpty
     , fAppPair
     , fAppFst
     , fAppSnd
@@ -128,7 +128,7 @@ expSymString = "exp"
 invSymString :: ByteString
 invSymString = "inv"
 
-pairSym, expSym, invSym, oneSym, zeroSym, emptySym, fstSym, sndSym :: NonACSym
+pairSym, expSym, invSym, oneSym, zeroSym, fstSym, sndSym :: NonACSym
 -- | Pairing.
 pairSym  = ("pair",2)
 -- | Exponentiation.
@@ -139,8 +139,10 @@ invSym   = (invSymString,1)
 oneSym   = ("one", 0)
 -- | The zero for Xor.
 zeroSym  = ("zero",0)
+{- disabled
 -- | The empty multiset.
 emptySym = ("empty",0)
+-}
 -- | Projection of first component of pair. Only required for pairFunSig.
 fstSym     = ("fst",1)
 -- | Projection of second component of pair. Only required for pairFunSig.
@@ -157,7 +159,7 @@ xorFunSig = S.fromList [ zeroSym ]
 
 -- | The signature for then non-AC multiset function symbols.
 msetFunSig :: FunSig
-msetFunSig = S.fromList [ emptySym ]
+msetFunSig = S.fromList [] -- [ emptySym ]
 
 -- | The signature for pairing.
 pairFunSig :: FunSig
@@ -290,7 +292,7 @@ unsafefApp fsym as = FAPP fsym as
 -- | View on terms that distinguishes function application of builtin symbols like exp.
 data TermView2 a = FExp (Term a) (Term a) | FInv (Term a) | FMult [Term a] | One
                  | FXor [Term a] | Zero
-                 | FUnion [Term a] | Empty
+                 | FUnion [Term a] -- | Empty
                  | FPair (Term a) (Term a)
                  | FAppNonAC NonACSym [Term a]
                  | FList [Term a]
@@ -314,12 +316,12 @@ viewTerm2 t@(FAPP (NonAC o) ts) = case ts of
     [ t1 ]     | o == invSym    -> FInv  t1
     []         | o == oneSym    -> One
     []         | o == zeroSym   -> Zero
-    []         | o == emptySym  -> Empty
+--    []         | o == emptySym  -> Empty
     _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"
     _                           -> FAppNonAC o ts
   where
     -- special symbols
-    ssyms = [ expSym, pairSym, invSym, oneSym, zeroSym, emptySym ]
+    ssyms = [ expSym, pairSym, invSym, oneSym, zeroSym ] --, emptySym ]
 
 
 -- | Smart constructors for mult, union, and xor.
@@ -328,11 +330,11 @@ fAppMult ts  = fApp (AC Mult)  ts
 fAppUnion ts = fApp (AC Union) ts
 fAppXor ts   = fApp (AC Xor)   ts
 
--- | Smart constructors for one, zero, and empty.
-fAppOne, fAppZero, fAppEmpty :: Term a
+-- | Smart constructors for one, zero.
+fAppOne, fAppZero :: Term a
 fAppOne   = fAppNonAC oneSym   []
 fAppZero  = fAppNonAC zeroSym  []
-fAppEmpty = fAppNonAC emptySym []
+-- fAppEmpty = fAppNonAC emptySym []
 
 -- | Smart constructors for pair and exp.
 fAppPair, fAppExp :: (Term a, Term a) -> Term a

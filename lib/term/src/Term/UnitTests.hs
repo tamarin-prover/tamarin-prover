@@ -264,11 +264,11 @@ testsVariant hnd =
                                 , [(lx1, x2 +: x3), (lx2, x1 +: x3)]
                                 ])
 
-      , testEqual "d" (computeVariantsCheck (fAppList [x1, x2, x1  #  x2]) `runReader` hnd)
+{-      , testEqual "d" (computeVariantsCheck (fAppList [x1, x2, x1  #  x2]) `runReader` hnd)
                       (toSubsts [ []
                                 , [(lx1, emptyMSet)]
                                 , [(lx2, emptyMSet) ] ])
-
+-}
       , testTrue "e" $ not (checkComplete (sdec(x1, p1)) (toSubsts [[]]) `runReader` hnd)
       , testTrue "f" $ (checkComplete (sdec(x1, p1)) (toSubsts [[], [(lx1, senc(x1,p1))]])
                         `runReader` hnd)
@@ -369,7 +369,7 @@ xor   = fAppXor
 union = fAppUnion
 mult  = fAppMult
 
-one, zero, emptyMSet :: Term a
+one, zero :: Term a
 one       = fAppOne
 zero      = fAppZero
-emptyMSet = fAppEmpty
+-- emptyMSet = fAppEmpty

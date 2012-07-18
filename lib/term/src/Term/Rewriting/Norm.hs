@@ -65,7 +65,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FList ts                                  -> all go ts
             FPair t1 t2                               -> go t1 && go t2
             One                                       -> True
-            Empty                                     -> True
+--            Empty                                     -> True
             Zero                                      -> True
             Lit2 _                                    -> True
             -- subterm rules
@@ -82,7 +82,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             -- xor
             FXor ts | fAppZero `elem` ts || any isXor ts || not (noDuplicates ts) -> False
             -- multiset union
-            FUnion ts | fAppEmpty `elem` ts || any isUnion ts                     -> False
+--            FUnion ts | fAppEmpty `elem` ts || any isUnion ts                     -> False
 
             -- topmost position not reducible, check subterms
             FExp        t1 t2 -> go t1 && go t2
