@@ -1,0 +1,9 @@
+Page thumbnails:
+
+Resize to height 160px
+Drop shadow:
+  transparency 80%
+  offset 6x6
+  blur 12
+
+
