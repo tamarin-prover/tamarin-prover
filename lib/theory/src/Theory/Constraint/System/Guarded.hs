@@ -279,7 +279,7 @@ unbindAtom = traverse (traverseTerm (traverse (foldBVar (const Nothing) Just)))
 ------------------------------------------------------------------------------
 
 -- | @openGuarded gf@ returns @Just (qua,vs,ats,gf')@ if @gf@ is a guarded
--- clause and @Nothing@ otherwise. In the first case, @quao@ is the quantifier,
+-- clause and @Nothing@ otherwise. In the first case, @qua@ is the quantifier,
 -- @vs@ is a list of fresh variables, @ats@ is the antecedent, and @gf'@ is the
 -- succedent. In both antecedent and succedent, the bound variables are
 -- replaced by @vs@.
@@ -351,7 +351,7 @@ gdisj gfs0 = case concatMap flatten gfs0 of
     gfs | any (gtrue ==) gfs -> gtrue
         -- FIXME: Consider using 'sortednub' here. This yields stronger
         -- normalizaton for formulas. However, it also means that we loose
-        -- invariance under renaming free variables, as the order changes,
+        -- invariance under renaming of free variables, as the order changes,
         -- when they are renamed.
         | otherwise          -> GDisj $ Disj $ nub gfs
   where
@@ -446,21 +446,19 @@ formulaToGuarded fmOrig =
 
         convEx qua = do
             (xs,_,f) <- openFormulaPrefix f0
-            case partitionEithers $ conjActions f of
-              (as, fs) -> do
-                -- all existentially quantified variables must be guarded
-                noUnguardedVars (xs \\ frees as)
-                -- convert all other formulas
-                gf <- (if polarity then gdisj else gconj)
-                        <$> mapM (convert polarity) fs
-                return $ closeGuarded qua xs as gf
-          where
+            let (as, fs) = partitionEithers $ conjActions f
+            -- all existentially quantified variables must be guarded
+            noUnguardedVars (xs \\ frees as)
+            -- convert all other formulas
+            gf <- (if polarity then gdisj else gconj)
+                    <$> mapM (convert polarity) fs
+            return $ closeGuarded qua xs as gf
 
         convAll qua = do
             (xs,_,f) <- openFormulaPrefix f0
             case f of
-              Conn Imp ante suc -> case partitionEithers $ conjActions ante of
-                (as, fs) -> do
+              Conn Imp ante suc -> do
+                  let (as, fs) = partitionEithers $ conjActions ante
                   -- all universally quantified variables must be guarded
                   noUnguardedVars (xs \\ frees as)
                   -- negate formulas in antecedent and combine with body
@@ -484,7 +482,7 @@ formulaToGuarded fmOrig =
 
 -- | Negate a guarded formula.
 gnot :: (Ord s, Ord c, Ord v)
-              => Guarded s c v -> Guarded s c v
+     => Guarded s c v -> Guarded s c v
 gnot =
     go
   where
@@ -535,7 +533,7 @@ toInductionHypothesis =
 
 -- | Try to prove the formula by applying induction over the trace.
 -- Returns @'Left' errMsg@ if this is not possible. Returns a tuple of
--- formulas: one formalzing the proof obligation of the base-case and one
+-- formulas: one formalizing the proof obligation of the base-case and one
 -- formalizing the proof obligation of the step-case.
 ginduct :: Ord c => LGuarded c -> Either String (LGuarded c, LGuarded c)
 ginduct gf = do
@@ -587,7 +585,7 @@ simplifyGuarded valuation fm0
         annAtos = (\x -> (x, valuation =<< unbindAtom x)) <$> atos
 
     -- Note that existentials without quantifiers are already eliminated by
-    -- 'gex'. Moreover, we dealay simplification inside guarded all
+    -- 'gex'. Moreover, we delay simplification inside guarded all
     -- quantification and guarded existential quantifiers. Their body will be
     -- simplified once the quantifiers are gone.
     simp fm@(GGuarded _ _ _ _) = fm
