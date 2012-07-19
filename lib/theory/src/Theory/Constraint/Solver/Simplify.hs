@@ -322,25 +322,35 @@ impliedFormulas :: MaudeHandle -> System -> LNGuarded -> [LNGuarded]
 impliedFormulas hnd sys gf0 =
     case openGuarded gf `evalFresh` avoid gf of
       Just (All, _vs, antecedent, succedent) -> do
-        let (actions, otherAtoms) = partitionEithers $ map prepare antecedent
-            succedent'             = gall [] otherAtoms succedent
-        subst <- candidateSubsts emptySubst actions
+        let (actionsEqs, otherAtoms) = first sortGAtoms . partitionEithers $
+                                        map prepare antecedent
+            succedent'               = gall [] otherAtoms succedent
+        subst <- candidateSubsts emptySubst actionsEqs
         return $ unskolemizeLNGuarded $ applySkGuarded subst succedent'
       _ -> []
   where
     gf = skolemizeGuarded gf0
 
-    prepare (Action i fa) = Left (i, fa)
+    prepare (Action i fa) = Left  (GAction (i,fa))
+    prepare (EqE s t)     = Left  (GEqE (s,t))
     prepare ato           = Right (fmap (fmapTerm (fmap Free)) ato)
 
     sysActions = do (i, fa) <- allActions sys
                     return (skolemizeTerm (varTerm i), skolemizeFact fa)
 
-    candidateSubsts subst []     = do
-        return subst
-    candidateSubsts subst (a:as) = do
+    candidateSubsts subst []               = return subst
+    candidateSubsts subst ((GAction a):as) = do
         sysAct <- sysActions
         subst' <- (`runReader` hnd) $ matchAction sysAct (applySkAction subst a)
+        candidateSubsts (compose subst' subst) as
+    candidateSubsts subst ((GEqE eq):as)   = do
+        let (s,t) = applySkTerm subst <$> eq
+            (term,pat) | frees s == [] = (s,t)
+                       | frees t == [] = (t,s)
+                       | otherwise     = error $ "impliedFormulas: impossible, "
+                                           ++ "equality not guarded as checked"
+                                           ++"by 'Guarded.formulaToGuarded'."
+        subst' <- (`runReader` hnd) $ matchTerm term pat
         candidateSubsts (compose subst' subst) as
 
 
@@ -451,6 +461,13 @@ applySkGuarded subst = mapGuardedAtoms (const $ applyBSkAtom subst)
 matchAction :: (SkTerm, SkFact) ->  (SkTerm, SkFact) -> WithMaude [SkSubst]
 matchAction (i1, fa1) (i2, fa2) =
     solveMatchLTerm sortOfSkol (i1 `matchWith` i2 <> fa1 `matchFact` fa2)
+  where
+    sortOfSkol (SkName  n) = sortOfName n
+    sortOfSkol (SkConst v) = lvarSort v
+
+matchTerm :: SkTerm ->  SkTerm -> WithMaude [SkSubst]
+matchTerm s t =
+    solveMatchLTerm sortOfSkol (s `matchWith` t)
   where
     sortOfSkol (SkName  n) = sortOfName n
     sortOfSkol (SkConst v) = lvarSort v

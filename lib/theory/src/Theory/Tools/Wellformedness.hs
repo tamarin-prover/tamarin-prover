@@ -399,9 +399,15 @@ formulaReports thy = do
             \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
             \ this is unambiguous."
       where
+        irreducible = irreducibleFunctionSymbols $ get (sigpMaudeSig . thySignature) thy
+
         offenders = filter (not . allowed) $ formulaTerms fm
         allowed (viewTerm -> Lit (Var (Bound _)))        = True
         allowed (viewTerm -> Lit (Con (Name PubName _))) = True
+        -- we allow multiset union
+        allowed (viewTerm2 -> FUnion args)                = all allowed args
+        -- we allow reducible function symbols
+        allowed (viewTerm -> FApp (NonAC f) args) | f `S.member` irreducible = all allowed args
         allowed _                                        = False
 
     -- check that the formula can be converted to a guarded formula
