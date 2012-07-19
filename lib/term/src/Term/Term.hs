@@ -57,9 +57,11 @@ module Term.Term (
     , fAppFst
     , fAppSnd
 
-    -- ** exp symbol
+    -- ** symbols
     , expSymString
     , invSymString
+
+    , unionSymString
 
     -- ** Destructors and classifiers
     , destPair
@@ -127,6 +129,9 @@ expSymString = "exp"
 
 invSymString :: ByteString
 invSymString = "inv"
+
+unionSymString :: ByteString
+unionSymString = "union"
 
 pairSym, expSym, invSym, oneSym, zeroSym, fstSym, sndSym :: NonACSym
 -- | Pairing.
@@ -230,7 +235,7 @@ isXor = isJust . destXor
 
 -- | 'True' iff the term is a well-formed xor'ing.
 isUnion :: Term a -> Bool
-isUnion = isJust . destXor
+isUnion = isJust . destUnion
 
 -- | 'True' iff the term is a nullary, public function.
 isNullaryFunction :: Term a -> Bool
@@ -416,8 +421,8 @@ prettyTerm ppLit = ppTerm
         FAPP List               ts      -> ppFun "LIST" ts
 
     ppACOp Mult  = "*"
-    ppACOp Union = "#"
-    ppACOp Xor   = "+"
+    ppACOp Union = "+"
+    ppACOp Xor   = "|+|"
 
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .

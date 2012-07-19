@@ -14,7 +14,7 @@ module Term.Maude.Signature (
     MaudeSig
   , enableDH
   , enableXor
-  , enableMSet
+  , enableMultiset
   , functionSymbols
   , stRules
   , allFunctionSymbols
@@ -68,12 +68,12 @@ import qualified Text.PrettyPrint.Highlight as P
 data MaudeSig = MaudeSig
     { enableDH        :: Bool
     , enableXor       :: Bool
-    , enableMSet      :: Bool
+    , enableMultiset  :: Bool
     , functionSymbols :: Set NonACSym    -- ^ function signature not including the function
-                                         --   symbols for DH, Xor, and MSet
+                                         --   symbols for DH, Xor, and Multiset
     , stRules         :: Set StRule
     , allFunctionSymbols :: Set NonACSym -- ^ function signature including the
-                                         --   nonAC function symbols for DH, Xor, and MSet
+                                         --   nonAC function symbols for DH, Xor, and Multiset
                                          --   can be computed from enableX and functionSymbols
     , irreducibleFunctionSymbols :: Set NonACSym
     }
@@ -113,11 +113,11 @@ addStRule str msig =
 -- | @rrulesForMaudeSig msig@ returns all rewriting rules including the rules
 --   for xor, dh, and multiset.
 rrulesForMaudeSig :: MaudeSig -> Set (RRule LNTerm)
-rrulesForMaudeSig (MaudeSig {enableXor, enableDH, enableMSet, stRules}) =
+rrulesForMaudeSig (MaudeSig {enableXor, enableDH, enableMultiset, stRules}) =
     (S.map stRuleToRRule stRules)
-    `S.union` (if enableDH   then dhRules   else S.empty)
-    `S.union` (if enableXor  then xorRules  else S.empty)
-    `S.union` (if enableMSet then msetRules else S.empty)
+    `S.union` (if enableDH       then dhRules   else S.empty)
+    `S.union` (if enableXor      then xorRules  else S.empty)
+    `S.union` (if enableMultiset then msetRules else S.empty)
 
 ------------------------------------------------------------------------------
 -- Builtin maude signatures
@@ -159,9 +159,9 @@ prettyMaudeSig sig = P.vcat
     ppNonEmptyList hdr pp xs = hdr $ P.punctuate P.comma $ map pp xs
 
     builtIns = asum $ map (\(f, x) -> guard (f sig) *> pure x)
-      [ (enableDH,   "diffie-hellman")
-      , (enableXor,  "xor")
-      , (enableMSet, "multiset")
+      [ (enableDH,       "diffie-hellman")
+      , (enableXor,      "xor")
+      , (enableMultiset, "multiset")
       ]
 
     ppFunSymb (f,k) = P.text $ BC.unpack f ++ "/" ++ show k

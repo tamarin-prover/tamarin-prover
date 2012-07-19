@@ -35,7 +35,7 @@ module Term.Unification (
   , MaudeSig
   , enableDH
   , enableXor
-  , enableMSet
+  , enableMultiset
   , minimalMaudeSig
   , dhMaudeSig
   , xorMaudeSig

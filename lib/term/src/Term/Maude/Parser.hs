@@ -113,7 +113,7 @@ ppTheory msig = BC.unlines $
     [ "fmod MSG is"
     , "  protecting NAT ." ]
     ++
-    (if enableMSet msig
+    (if enableMultiset msig
      then [ "  sort Pub Fresh Msg Node TOP ."
           , "  op " <> funSymPrefix <> "mun : Msg Msg -> Msg [comm assoc] ."
           , "  op " <> funSymPrefix <> "empty : -> Msg ."

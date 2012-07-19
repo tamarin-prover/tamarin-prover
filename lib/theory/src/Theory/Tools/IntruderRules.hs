@@ -12,6 +12,8 @@
 module Theory.Tools.IntruderRules (
     subtermIntruderRules
   , dhIntruderRules
+  , multisetIntruderRules
+  , mkDUnionRule
   , specialIntruderRules
   ) where
 
@@ -172,7 +174,7 @@ dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
         Rule (mkInfo invSymString) [bfact] [concfact] (mkAction concfact)
       where
         bfact    = kudFact x_var_0
-        conc = fAppInv x_var_0
+        conc     = fAppInv x_var_0
         concfact = kudFact conc
 
 
@@ -203,3 +205,18 @@ normRule' :: IntrRuleAC -> WithMaude IntrRuleAC
 normRule' (Rule i ps cs as) = reader $ \hnd ->
     let normFactTerms = map (fmap (\t -> norm' t `runReader` hnd)) in
     Rule i (normFactTerms ps) (normFactTerms cs) (normFactTerms as)
+
+------------------------------------------------------------------------------
+-- Multiset intruder rules
+------------------------------------------------------------------------------
+
+multisetIntruderRules ::  [IntrRuleAC]
+multisetIntruderRules = [mkDUnionRule [x_var, y_var] x_var]
+  where x_var = varTerm (LVar "x"  LSortMsg   0)
+        y_var = varTerm (LVar "y"  LSortMsg   0)
+
+mkDUnionRule :: [LNTerm] -> LNTerm -> IntrRuleAC
+mkDUnionRule t_prems t_conc =
+    Rule (DestrRule unionSymString)
+         [kdFact $ fAppUnion t_prems]
+         [kdFact t_conc] []

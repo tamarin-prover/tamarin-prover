@@ -41,6 +41,7 @@ import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalT
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
+import           Theory.Tools.IntruderRules (mkDUnionRule)
 import           Theory.Model
 
 
@@ -79,7 +80,7 @@ openGoals sys = do
                 || isMsgVar m || sortOfLNTerm m == LSortPub
                 -- handled by 'insertAction'
                 || isPair m || isInverse m || isProduct m
-                || isNullaryFunction m
+                || isUnion m || isNullaryFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
         -- Technically the 'False' disj would be a solvable goal. However, we
@@ -89,8 +90,10 @@ openGoals sys = do
 
         ChainG c _     ->
           case kFactView (nodeConcFact c sys) of
-              Just (DnK,  m) | isMsgVar m -> False
-                             | otherwise  -> not solved
+              Just (DnK, viewTerm2 -> FUnion args) ->
+                  not solved && allMsgVarsKnownEarlier c args
+              Just (DnK,  m) | isMsgVar m          -> False
+                             | otherwise           -> not solved
               fa -> error $ "openChainGoals: impossible fact: " ++ show fa
 
         -- FIXME: Split goals may be duplicated, we always have to check
@@ -145,12 +148,19 @@ openGoals sys = do
         return $ m `elem` derivedMsgs &&
                  not (D.cyclic ((j, i) : existingDeps))
 
+{-
     toplevelTerms t@(destPair -> Just (t1, t2)) =
         t : toplevelTerms t1 ++ toplevelTerms t2
     toplevelTerms t@(destInverse -> Just t1) = t : toplevelTerms t1
     toplevelTerms t = [t]
+-}
 
 
+    allMsgVarsKnownEarlier (i,_) args =
+        all (`elem` earlierMsgVars) (filter isMsgVar args)
+      where earlierMsgVars = do (j, _, t) <- allKUActions sys
+                                guard $ isMsgVar t && alwaysBefore sys j i
+                                return t
 
 
 ------------------------------------------------------------------------------
@@ -169,7 +179,9 @@ solveGoal goal = do
       ActionG i fa  -> solveAction  (nonSilentRules rules) (i, fa)
       PremiseG p fa ->
            solvePremise (get crProtocol rules ++ get crConstruct rules) p fa
+
       ChainG c p    -> solveChain (get crDestruct  rules) (c, p)
+
       SplitG i      -> solveSplit i
       DisjG disj    -> solveDisjunction disj
 
@@ -231,27 +243,46 @@ solveChain rules (c, p) = do
     (do -- solve it by a direct edge
         faPrem <- gets $ nodePremFact p
         insertEdges [(c, faConc, faPrem, p)]
-        let m = case kFactView faConc of
-                  Just (DnK, m') -> m'
-                  _              -> error $ "solveChain: impossible"
-            caseName (viewTerm -> FApp o _) = showFunSymName o
+        let mPrem = case kFactView faConc of
+                      Just (DnK, m') -> m'
+                      _              -> error $ "solveChain: impossible"
+            caseName (viewTerm -> FApp o _) = show o
             caseName t                      = show t
-        return $ caseName m
+        return $ caseName mPrem
      `disjunction`
-     do -- extend it with one step
-        cRule <- gets $ nodeRule (nodeConcNode c)
-        (i, ru)     <- insertFreshNode rules
-        -- contradicts normal form condition:
-        -- no edge from dexp to dexp KD premise
-        -- (this condition replaces the exp/noexp tags)
-        contradictoryIf (isDexpRule cRule && isDexpRule ru)
-        (v, faPrem) <- disjunctionOfList $ enumPrems ru
+     -- extend it with one step
+     case kFactView faConc of
+         Just (DnK, viewTerm2 -> FUnion args) ->
+             do -- If the chain starts with a union message, we
+                -- compute the applicable destruction rules directly.
+                i <- freshLVar "vr" LSortNode
+                let rus = map (ruleACIntrToRuleACInst . mkDUnionRule args)
+                              (filter (not . isMsgVar) args)
+                -- NOTE: We rely on the check that the chain is open here.
+                ru <- disjunctionOfList rus
+                modM sNodes (M.insert i ru)
+                let v = PremIdx 0
+                faPrem <- gets $ nodePremFact (i,v)
+                extendAndMark i ru v faPrem faConc
+         _ ->
+             do -- If the chain does not start with a union message,
+                -- the usual *DG2_chain* extension is perfomed.
+                cRule <- gets $ nodeRule (nodeConcNode c)
+                (i, ru)     <- insertFreshNode rules
+                -- contradicts normal form condition:
+                -- no edge from dexp to dexp KD premise
+                -- (this condition replaces the exp/noexp tags)
+                contradictoryIf (isDexpRule cRule && isDexpRule ru)
+                (v, faPrem) <- disjunctionOfList $ enumPrems ru
+                extendAndMark i ru v faPrem faConc
+     )
+  where
+    extendAndMark i ru v faPrem faConc = do
         insertEdges [(c, faConc, faPrem, (i, v))]
         markGoalAsSolved "directly" (PremiseG (i, v) faPrem)
         insertChain (i, ConcIdx 0) p
         return $ showRuleCaseName ru
-     )
-  where
+
     isDexpRule ru = case get rInfo ru of
         IntrInfo (DestrRule n) | n == expSymString -> True
         _                                          -> False

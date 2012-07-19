@@ -72,6 +72,7 @@ module Theory.Model.Rule (
   -- ** Conversion
   , ruleACToIntrRuleAC
   , ruleACIntrToRuleAC
+  , ruleACIntrToRuleACInst
 
   -- ** Construction
   , someRuleACInst
@@ -326,6 +327,10 @@ ruleACToIntrRuleAC _                            = Nothing
 -- | Converts between these two types of rules.
 ruleACIntrToRuleAC :: IntrRuleAC -> RuleAC
 ruleACIntrToRuleAC (Rule ri ps cs as) = Rule (IntrInfo ri) ps cs as
+
+-- | Converts between these two types of rules.
+ruleACIntrToRuleACInst :: IntrRuleAC -> RuleACInst
+ruleACIntrToRuleACInst (Rule ri ps cs as) = Rule (IntrInfo ri) ps cs as
 
 -- Instances
 ------------
