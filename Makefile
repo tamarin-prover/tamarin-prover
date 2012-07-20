@@ -36,7 +36,7 @@ force-install-ghc-7.4.1:
 #
 #
 #
-VERSION=0.8.0.0
+VERSION=0.9.0.0
 
 source-dists:
 	cd lib/utils; cabal sdist
