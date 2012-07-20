@@ -53,17 +53,21 @@ instance (Functor m, Monad m) => MonadFresh (Precise.FreshT m) where
 -- TODO: Add remaining ones
 
 instance MonadFresh m => MonadFresh (MaybeT m) where
-    freshIdent  = lift . freshIdent
-    freshIdents = lift . freshIdents
+    freshIdent       = lift . freshIdent
+    freshIdents      = lift . freshIdents
+    scopeFreshness m = MaybeT $ scopeFreshness (runMaybeT m)
 
 instance MonadFresh m => MonadFresh (StateT s m) where
     freshIdent  = lift . freshIdent
     freshIdents = lift . freshIdents
+    scopeFreshness m = StateT $ \s -> scopeFreshness (runStateT m s)
 
 instance MonadFresh m => MonadFresh (ReaderT r m) where
-    freshIdent  = lift . freshIdent
-    freshIdents = lift . freshIdents
+    freshIdent       = lift . freshIdent
+    freshIdents      = lift . freshIdents
+    scopeFreshness m = ReaderT $ \r -> scopeFreshness (runReaderT m r)
 
 instance (Monoid w, MonadFresh m) => MonadFresh (WriterT w m) where
-    freshIdent  = lift . freshIdent
-    freshIdents = lift . freshIdents
+    freshIdent       = lift . freshIdent
+    freshIdents      = lift . freshIdents
+    scopeFreshness m = WriterT $ scopeFreshness (runWriterT m)
