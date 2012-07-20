@@ -35,7 +35,6 @@ rule (modulo E) Init_2:
     --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<$I, $R, hkI, Y, z, 'g'^(~lkI*~x)>) )
     ]->
      [ !Sessk( ~ekI, h(<$I, $R, hkI, Y, z, 'g'^(~lkI*~x)>) ) ]
-  
     variants (modulo AC)
     1. ~ekI  = ~ekI.31
        Y     = Y.34
@@ -86,7 +85,6 @@ rule (modulo E) Resp_1:
      Out( 'g'^~ekR ), !Ephk( ~ekR ),
      !Sessk( ~ekR, h(<$I, $R, X, 'g'^~ekR, z, 'g'^(~lkR*~x)>) )
      ]
-  
     variants (modulo AC)
     1. ~ekR  = ~ekR.34
        X     = X.37
@@ -446,7 +444,7 @@ analyzing: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.066131s
+  processing time: 1.672479s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 
@@ -458,7 +456,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.066131s
+  processing time: 1.672479s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 

@@ -44,7 +44,6 @@ rule (modulo E) Init_2:
      ]
     --[ SidI_2( ~ekI, $I, $R, hkI, Y, z ) ]->
      [ !Sessk( ~ekI, z ) ]
-  
     variants (modulo AC)
     1. ~ekI  = ~ekI.10
        Y     = Y.11
@@ -93,7 +92,6 @@ rule (modulo E) Resp:
      !Ephk( ~ekR ), !Sessk( ~ekR, z ),
      Out( <$R, $I, 'g'^~ekR, sign(<'2', $R, $I, 'g'^~ekR>, ltkR)> )
      ]
-  
     variants (modulo AC)
     1. ~ekR  = ~ekR.11
        X     = X.12
@@ -277,7 +275,7 @@ analyzing: data/examples/csf12/SignedDH_eCK.spthy
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.409289s
+  processing time: 12.337517s
   eCK_initiator_key (all-traces): falsified - found trace (10 steps)
   eCK_responder_key (all-traces): falsified - found trace (8 steps)
 
@@ -289,7 +287,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.409289s
+  processing time: 12.337517s
   eCK_initiator_key (all-traces): falsified - found trace (10 steps)
   eCK_responder_key (all-traces): falsified - found trace (8 steps)
 

@@ -61,7 +61,6 @@ rule (modulo E) Resp_1:
           >
      )
      ]
-  
     variants (modulo AC)
     1. ~lkR  = ~lkR.11
        c1    = c1.13
@@ -107,7 +106,6 @@ rule (modulo E) Init_2:
      Out( MAC(KDF(<~m1, z, $I, $R, c1, c2>), <'Init', $I, $R, c1, c2>) ),
      !Sessk( ~m1, KDF(<~m1, z, $I, $R, c1, c2>) )
      ]
-  
     variants (modulo AC)
     1. ~lkI  = ~lkI.12
        c2    = c2.15
@@ -243,7 +241,7 @@ analyzing: data/examples/csf12/KAS2_eCK.spthy
 analyzed: data/examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.262963s
+  processing time: 2.612137s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ------------------------------------------------------------------------------
@@ -254,7 +252,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.262963s
+  processing time: 2.612137s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

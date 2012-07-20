@@ -57,7 +57,6 @@ rule (modulo E) Serv_1:
     --[ Eq( z.2, '1' ), ReceivedKey( z, $S, z.1 ), In_Serv_1( request, z.1 )
     ]->
      [ Out( aenc(<'2', z.1>, pkC) ) ]
-  
     variants (modulo AC)
     1. ~ltkS = ~ltkS.12
        request
@@ -281,7 +280,7 @@ analyzing: data/examples/loops/JCS12_Typing_Example.spthy
 analyzed: data/examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.331379s
+  processing time: 0.274634s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
@@ -295,7 +294,7 @@ summary of summaries:
 analyzed: data/examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.331379s
+  processing time: 0.274634s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)

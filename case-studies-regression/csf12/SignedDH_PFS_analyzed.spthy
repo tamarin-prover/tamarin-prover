@@ -52,7 +52,6 @@ rule (modulo E) Init_2:
      ]
     --[ SessionKey( $I, $R, z ) ]->
      [ ]
-  
     variants (modulo AC)
     1. ~ekI  = ~ekI.9
        Y     = Y.10
@@ -95,7 +94,6 @@ rule (modulo E) Resp:
      ]
     --[ SessionKey( $I, $R, z ) ]->
      [ Out( <$R, $I, 'g'^~ekR, sign(<'2', $R, $I, 'g'^~ekR>, ltkR)> ) ]
-  
     variants (modulo AC)
     1. ~ekR  = ~ekR.13
        X     = X.14
@@ -208,7 +206,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.705226s
+  processing time: 0.787397s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -219,7 +217,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.705226s
+  processing time: 0.787397s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

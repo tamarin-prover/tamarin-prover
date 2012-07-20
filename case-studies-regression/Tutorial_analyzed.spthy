@@ -48,7 +48,6 @@ rule (modulo E) Serv_1:
      [ !Ltk( $S, ~ltkS ), In( request ) ]
     --[ Eq( z.1, '1' ), AnswerRequest( $S, z ) ]->
      [ Out( h(z) ) ]
-  
     variants (modulo AC)
     1. ~ltkS = ~ltkS.7
        request
@@ -69,19 +68,20 @@ rule (modulo E) Serv_1:
        z.1   = z.12
   */
 
+axiom Equality_Checks_Succeed:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
 lemma Client_session_key_secrecy:
   all-traces
-  "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ⇒
-   (¬(∃ S k #i #j.
-       ((SessKeyC( S, k ) @ #i) ∧ (K( k ) @ #j)) ∧
-       (¬(∃ #r. LtkReveal( S ) @ #r))))"
+  "¬(∃ S k #i #j.
+      ((SessKeyC( S, k ) @ #i) ∧ (K( k ) @ #j)) ∧
+      (¬(∃ #r. LtkReveal( S ) @ #r)))"
 /*
 guarded formula characterizing all counter-examples:
-"(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
- (∃ S k #i #j.
-   (SessKeyC( S, k ) @ #i) ∧ (K( k ) @ #j)
-  ∧
-   ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥)"
+"∃ S k #i #j.
+  (SessKeyC( S, k ) @ #i) ∧ (K( k ) @ #j)
+ ∧
+  ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥"
 */
 simplify
 solve( Client_1( S, k ) ▶₀ #i )
@@ -97,19 +97,17 @@ qed
 
 lemma Client_auth:
   all-traces
-  "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ⇒
-   (∀ S k #i.
-     (SessKeyC( S, k ) @ #i) ⇒
-     ((∃ #a. AnswerRequest( S, k ) @ #a) ∨
-      (∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #i))))"
+  "∀ S k #i.
+    (SessKeyC( S, k ) @ #i) ⇒
+    ((∃ #a. AnswerRequest( S, k ) @ #a) ∨
+     (∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #i)))"
 /*
 guarded formula characterizing all counter-examples:
-"(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
- (∃ S k #i.
-   (SessKeyC( S, k ) @ #i)
-  ∧
-   (∀ #a. (AnswerRequest( S, k ) @ #a) ⇒ ⊥) ∧
-   (∀ #r. (LtkReveal( S ) @ #r) ⇒ ¬(#r < #i)))"
+"∃ S k #i.
+  (SessKeyC( S, k ) @ #i)
+ ∧
+  (∀ #a. (AnswerRequest( S, k ) @ #a) ⇒ ⊥) ∧
+  (∀ #r. (LtkReveal( S ) @ #r) ⇒ ¬(#r < #i))"
 */
 simplify
 solve( Client_1( S, k ) ▶₀ #i )
@@ -143,12 +141,10 @@ qed
 
 lemma Client_session_key_honest_setup:
   exists-trace
-  "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ∧
-   (∃ S k #i. (SessKeyC( S, k ) @ #i) ∧ (¬(∃ #r. LtkReveal( S ) @ #r)))"
+  "∃ S k #i. (SessKeyC( S, k ) @ #i) ∧ (¬(∃ #r. LtkReveal( S ) @ #r))"
 /*
 guarded formula characterizing all satisfying traces:
-"(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
- (∃ S k #i. (SessKeyC( S, k ) @ #i) ∧ ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥)"
+"∃ S k #i. (SessKeyC( S, k ) @ #i) ∧ ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥"
 */
 simplify
 solve( Client_1( S, k ) ▶₀ #i )
@@ -177,7 +173,7 @@ analyzing: data/examples/Tutorial.spthy
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.193336s
+  processing time: 0.262521s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)
@@ -190,7 +186,7 @@ summary of summaries:
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.193336s
+  processing time: 0.262521s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)

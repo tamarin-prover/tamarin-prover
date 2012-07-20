@@ -281,7 +281,7 @@ analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spt
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.359845s
+  processing time: 0.359343s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -295,7 +295,7 @@ summary of summaries:
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.359845s
+  processing time: 0.359343s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)

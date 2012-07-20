@@ -31,7 +31,6 @@ rule (modulo E) Init_2:
      [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~x ) ]
     --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<z, 'g'^(~lkI*~x)>) ) ]->
      [ !Sessk( ~ekI, h(<z, 'g'^(~lkI*~x)>) ) ]
-  
     variants (modulo AC)
     1. ~ekI  = ~ekI.31
        Y     = Y.34
@@ -71,7 +70,6 @@ rule (modulo E) Resp_1:
      [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~x ) ]
     --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<z, 'g'^(~lkR*~x)>) ) ]->
      [ Out( 'g'^~ekR ), !Ephk( ~ekR ), !Sessk( ~ekR, h(<z, 'g'^(~lkR*~x)>) ) ]
-  
     variants (modulo AC)
     1. ~ekR  = ~ekR.34
        X     = X.37
@@ -417,7 +415,7 @@ analyzing: data/examples/csf12/UM_wPFS.spthy
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.96764s
+  processing time: 1.345907s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 
@@ -429,7 +427,7 @@ summary of summaries:
 analyzed: data/examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.96764s
+  processing time: 1.345907s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 

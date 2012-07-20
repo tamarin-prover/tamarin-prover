@@ -50,7 +50,6 @@ rule (modulo E) Init_2:
     Match( ~eskI, <'Resp', $R, $I, hkI, Y> )
     ]->
      [ !Sessk( ~eskI, h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>) ) ]
-  
     variants (modulo AC)
      1. ~eskI = ~eskI.31
         ~lkI  = ~lkI.32
@@ -166,7 +165,6 @@ rule (modulo E) Resp_1:
      Out( 'g'^h1(<~eskR, ~lkR>) ), !Ephk( ~eskR, ~eskR ),
      !Sessk( ~eskR, h2(<'g'^(~x*h1(<~eskR, ~lkR>)), z, z.1, $I, $R>) )
      ]
-  
     variants (modulo AC)
      1. ~eskR = ~eskR.38
         ~lkR  = ~lkR.40
@@ -360,7 +358,7 @@ analyzing: data/examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.370885s
+  processing time: 6.349611s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -371,7 +369,7 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.370885s
+  processing time: 6.349611s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================

@@ -59,7 +59,6 @@ rule (modulo E) Init_2:
      ),
      !SessionKey( ~ekI, $I, $R, KDF(z) )
      ]
-  
     variants (modulo AC)
     1. ~ekI  = ~ekI.14
        Y     = Y.17
@@ -106,7 +105,6 @@ rule (modulo E) Resp_1:
            mac(z, sign(<'1', $I, $R, 'g'^~ekR, X>, ~ltkR))>
      )
      ]
-  
     variants (modulo AC)
     1. ~ekR  = ~ekR.12
        X     = X.14
@@ -153,7 +151,6 @@ rule (modulo E) Resp_2:
      ]
     --[ AcceptedR( ~ekR, $I, $R, X, 'g'^~ekR, KDF(z) ) ]->
      [ !SessionKey( ~ekR, $I, $R, KDF(z) ) ]
-  
     variants (modulo AC)
     1. ~ekR  = ~ekR.14
        X     = X.17
@@ -444,7 +441,7 @@ analyzing: data/examples/csf12/STS_MAC_fix2.spthy
 analyzed: data/examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.779465s
+  processing time: 2.314758s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (28 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (36 steps)
 
@@ -456,7 +453,7 @@ summary of summaries:
 analyzed: data/examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.779465s
+  processing time: 2.314758s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (28 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (36 steps)
 

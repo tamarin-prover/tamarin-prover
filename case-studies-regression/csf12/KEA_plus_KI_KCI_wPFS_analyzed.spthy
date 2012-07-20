@@ -32,7 +32,6 @@ rule (modulo E) Init_2:
      [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~x ) ]
     --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<z, 'g'^(~ekI*~x), $I, $R>) ) ]->
      [ !Sessk( ~ekI, h(<z, 'g'^(~ekI*~x), $I, $R>) ) ]
-  
     variants (modulo AC)
     1. ~lkI  = ~lkI.30
        Y     = Y.32
@@ -78,7 +77,6 @@ rule (modulo E) Resp_1:
      Out( 'g'^~ekR ), !Ephk( ~ekR ),
      !Sessk( ~ekR, h(<'g'^(~ekR*~x), z, $I, $R>) )
      ]
-  
     variants (modulo AC)
     1. ~lkR  = ~lkR.32
        X     = X.33
@@ -290,7 +288,7 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.820906s
+  processing time: 1.064677s
   keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -302,7 +300,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.820906s
+  processing time: 1.064677s
   keaplus_initiator_key (all-traces): falsified - found trace (13 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

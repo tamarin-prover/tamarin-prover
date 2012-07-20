@@ -114,7 +114,6 @@ rule (modulo E) S_2:
                h(<'serverKey', nc, ns, PRF(<pms, nc, ns>)>))
      )
      ]
-  
     variants (modulo AC)
     1. S     = S.28
        ns    = ns.31
@@ -566,7 +565,7 @@ analyzing: data/examples/classic/TLS_Handshake.spthy
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.882666s
+  processing time: 3.226025s
   session_key_secrecy (all-traces): verified (106 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 
@@ -578,7 +577,7 @@ summary of summaries:
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.882666s
+  processing time: 3.226025s
   session_key_secrecy (all-traces): verified (106 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 
