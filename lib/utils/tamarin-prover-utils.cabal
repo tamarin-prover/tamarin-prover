@@ -29,6 +29,7 @@ source-repository head
 ----------------------
 
 library
+    ghc-options:       -Wall -fwarn-tabs
     ghc-prof-options:  -auto-all
 
     build-depends:

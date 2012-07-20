@@ -30,7 +30,6 @@ module Theory.Model.Atom(
   , isEqAtom
 
   -- * LFormula
-  , BLVar
   , BLAtom
 
   -- * Pretty-Printing

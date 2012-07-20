@@ -7,8 +7,7 @@
 --
 -- Security protocol model.
 module Theory.Model (
-    module Term.LTerm
-  , module Term.Unification
+    module Term.Unification
   , module Theory.Model.Atom
   , module Theory.Model.Fact
   , module Theory.Model.Formula
