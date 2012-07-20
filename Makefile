@@ -36,10 +36,19 @@ force-install-ghc-7.4.1:
 #
 #
 #
+VERSION=0.8.0.0
+
 source-dists:
 	cd lib/utils; cabal sdist
 	cd lib/term; cabal sdist
 	cabal sdist
+
+source-dists-tests: source-dists
+	mkdir -p /tmp/dist-test-$(VERSION)/
+	cp lib/utils/dist/tamarin-prover-utils-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+	cp lib/term/dist/tamarin-prover-term-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+	cp dist/tamarin-prover-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+	cd /tmp/dist-test-$(VERSION)/; cabal install *.tar.gz
 
 # For profiling, we use the cabal-dev tool and do not build the GUI. This
 # simplifies installing all required libraries with profiling support enabled.
