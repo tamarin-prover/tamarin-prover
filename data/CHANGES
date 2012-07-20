@@ -1,14 +1,15 @@
 * 0.8.0.0
-    - new homepage: http://www.infsec.ethz.ch/research/software/tamarin
-    - mailing list: https://groups.google.com/group/tamarin-prover
+    - new homepage:  http://www.infsec.ethz.ch/research/software/tamarin
+    - mailing list:  https://groups.google.com/group/tamarin-prover
+    - issue tracker: https://github.com/tamarin-prover/tamarin-prover/issues
 
     - GUI:
-        - improved pretty-printing of formulas and constraint systems using
-          Unicode characters.
-
-        - added shortcuts for bounded autoprover and searching for all
+        - new: added shortcuts for bounded autoprover and searching for all
           solutions, which can be used to characterize the set of solutions of
           a constraint system.
+
+        - improved: pretty-printing of formulas and constraint systems using
+          Unicode characters.
 
     - .spthy files:
         - new: support for restricting the set of considered traces using
@@ -34,12 +35,12 @@
 
           This removes the need for exponentiation tags and thereby simplifies
           the constraint-reduction rules, both in theory and in code. Note
-          that the arity of the 'KU' fact from arity two to arity one.
+          that the arity of the 'KU' fact changed from arity two to arity one.
           Theories using typing invariants must thus be adapted, which is the
           reason for the minor version bump.
 
-        - improved error messages of wellformedness checks
-        - reduced memory usage of the autoprover by a factor 2 to 10.
+        - improved: error messages of wellformedness checks
+        - reduced: memory usage of the autoprover by a factor 2 to 10.
         - improved parallelization: 10% speed increase on an i7 Quad-Core
 
     - editor support: Tomas Zgraggen contributed a syntax highligthing file
