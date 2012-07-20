@@ -122,12 +122,10 @@ filterMaximalBy alreadyFiltered cmp xs0 =
     -- x is maximal, start comparing a new element to the others
     go x ([],y:done)   = x:(go y (reverse done,[]))
 
-
 -- | This is used to sort narrowing steps such that similar steps are close
 narrowSeqStepComplexity :: (Bool,Variant) -> (Bool,Int,Int,Int)
 narrowSeqStepComplexity (checked, var@(Variant _ subst)) =
     (not checked, length (varPos var), size subst, length (varsRangeVFresh subst))
-
 
 -- | @computeVariants t d@ compute the variants of term @t@ with bound @d@.
 --   The rewriting rules are taken from the Maude context.

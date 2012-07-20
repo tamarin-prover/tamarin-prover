@@ -77,9 +77,6 @@ theoryLoadFlags =
   , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|c|C)+"
       "Sequence of goal rankings to use (default 's')"
 
-  --, flagOpt "" ["intruder","i"] (updateArg "intruderVariants") "FILE"
-  --    "Cached intruder rules to use"
-
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
       "SUMMARY|VERBOSE"
       "Partially evaluate multiset rewriting system"
