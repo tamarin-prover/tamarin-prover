@@ -2,4 +2,4 @@
 -- :set -ilib/term/src
 -- :set -ilib/utils/src
 :set -isrc
-:set -Wall
+:set -Wall -fwarn-tabs

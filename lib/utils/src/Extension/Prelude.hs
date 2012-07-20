@@ -1,7 +1,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
 -- Functions that could/should have made it into the Prelude or one of the
@@ -50,7 +50,7 @@ sortednub = sortednubBy compare
 -- duplicates.
 {-# INLINABLE sortednubBy #-}
 sortednubBy :: (a -> a -> Ordering) -> [a] -> [a]
-sortednubBy cmp = 
+sortednubBy cmp =
     -- Adapted from GHC's Data.List module
     -- Copyright:  (c) The University of Glasgow 2001
     mergeAll . sequences
@@ -83,7 +83,7 @@ sortednubBy cmp =
       LT -> a : merge as' bs
 
 -- | //O(n*log n).// Sort list and remove duplicates with respect to a
--- projection. 
+-- projection.
 {-# INLINE sortednubOn #-}
 sortednubOn :: Ord b => (a -> b) -> [a] -> [a]
 sortednubOn proj = sortednubBy (comparing proj)
@@ -127,8 +127,8 @@ splitBy :: (a -> Bool) -> [a] -> [[a]]
 splitBy p = unfoldr split
   where split [] = Nothing
         split xs = let ~(w,r) = break p xs in case r of
-	  []       -> Just $ (w,[])
-	  (_:rest) -> Just $ (w,rest)
+          []       -> Just $ (w,[])
+          (_:rest) -> Just $ (w,rest)
 
 
 -- | the list of all permutations of a given list
@@ -138,17 +138,17 @@ splitBy p = unfoldr split
   -- where aux [] _ = []
         -- aux (x:xs) ys = [x:p | p <- permutations (xs++ys)] ++ aux xs (x:ys)
 
--- | the list of all combinations of n elements of a list. 
+-- | the list of all combinations of n elements of a list.
 -- E.g. choose 2 [1,2,3] = [[1,2],[1,3],[2,3]]
 choose :: Int -> [a] -> [[a]]
 choose 0 _      = [[]]
 choose _ []     = []
 choose n (x:xs) = [x:xs' | xs' <- choose (n-1) xs] ++ choose n xs
 
--- | build the list of lists each leaving another element out. 
+-- | build the list of lists each leaving another element out.
 -- (From left to right)
 leaveOneOut :: [a] -> [[a]]
-leaveOneOut xs = 
+leaveOneOut xs =
   zipWith (++) (map init . tail . inits $ xs) (map tail . init . tails $ xs)
 
 
@@ -161,12 +161,12 @@ keepFirst mask (x:xs) = x : keepFirst mask (filter (not . mask x) xs)
 -- Pairs --
 -----------
 
--- | These functions were inspired by the ML library accompanying the 
+-- | These functions were inspired by the ML library accompanying the
 --   Isabelle theorem prover (<http://isabelle.in.tum.de/>)
 
 -- | swap the elements of a pair
 swap :: (a, b) -> (b, a)
-swap (x, y)	 = (y, x)
+swap (x, y)      = (y, x)
 
 -- | sort the elements of a pair
 sortPair :: Ord a => (a,a) -> (a,a)
@@ -250,7 +250,7 @@ ifM p pos neg = do
 
 -- | Gather all error free computations.
 errorFree :: MonadPlus m => [m a] -> m [a]
-errorFree ms = 
+errorFree ms =
   catMaybes `liftM` sequence [(Just `liftM` m) `mplus` return Nothing | m <- ms]
 
 -- | Gather all error free computations and ensure that at least one was error

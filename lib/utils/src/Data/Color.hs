@@ -4,7 +4,7 @@
 -- |
 -- Copyright   : (c) 2010 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
 -- A simple color module for handling RGB and HSV representations of colors.
@@ -19,7 +19,7 @@ module Data.Color (
   , red
   , green
   , blue
-  
+
   -- ** Conversions
   , rgbToGray
   , hsvToGray
@@ -91,7 +91,7 @@ rgbToHSV (RGB r g b) = HSV h' s v
      | ub == g   = 60 * (2 + (b-r)/(ub-lb))
      | otherwise = 60 * (4 + (r-g)/(ub-lb))
 
-  h' | h < 0 = h + 360 
+  h' | h < 0 = h + 360
      | otherwise = h
 
   s  | ub == 0   = 0
@@ -132,9 +132,9 @@ rgbToGray (RGB r g b) = max r (max g b)
 rgbToHex :: RealFrac t => RGB t -> String
 rgbToHex (RGB r g b) = ('#':) . showHex' r . showHex' g . showHex' b $ ""
   where showHex' f
-	  | i <= 15   = ('0':) . showHex i
-	  | otherwise = showHex i
-	  where 
+          | i <= 15   = ('0':) . showHex i
+          | otherwise = showHex i
+          where
           i :: Int
           i = max 0 (min 255 (floor (256 * f)))
 
@@ -161,23 +161,23 @@ data ColorParams t = ColorParams {
 -- | From a list of group sizes build a function assigning every element a
 -- unique color, nicely distributed such that they are well differentiated both
 -- using color and monochrome displays.
-genColorGroups :: RealFrac t => 
-                  ColorParams t 
+genColorGroups :: RealFrac t =>
+                  ColorParams t
                -> [Int]                -- ^ List of group sizes.
                -> [((Int,Int),(HSV t))]
-genColorGroups (ColorParams { 
-	      cpScale = scale 
-	    , cpZeroHue = zeroHue 
-	    , cpVBottom = vBot, cpVRange = vRan
-	    , cpSBottom = sBot, cpSRange = sRan
-	    }) groups = 
+genColorGroups (ColorParams {
+              cpScale = scale
+            , cpZeroHue = zeroHue
+            , cpVBottom = vBot, cpVRange = vRan
+            , cpSBottom = sBot, cpSRange = sRan
+            }) groups =
   do
     (groupIdx, groupSize) <- zip [0.. ] groups
     elemIdx <- [0..groupSize - 1]
     let h = toShiftedGroupHue groupIdx (fromIntegral elemIdx / fromIntegral groupSize)
         v = vBot + vRan * toGroupHue groupIdx (fromIntegral elemIdx / fromIntegral groupSize)
         s = sBot + sRan * toGroupHue groupIdx (fromIntegral elemIdx / fromIntegral groupSize)
-        color = HSV (360*h) s v 
+        color = HSV (360*h) s v
     return ((groupIdx, elemIdx), color)
   where
     nGroups :: Int
@@ -188,9 +188,9 @@ genColorGroups (ColorParams {
       0.5 * (1 - scale) + -- left margin
             (h * scale)   -- position in margin
       ) / (fromIntegral nGroups)
-   
+
     toShiftedGroupHue g h =
-      snd . properFraction $ toGroupHue g h + 1 + 
+      snd . properFraction $ toGroupHue g h + 1 +
       (zeroHue/360) - toGroupHue 0 0.5
 
 
@@ -234,7 +234,7 @@ lightColorGroups zeroHue = genColorGroups (lightColorGroupStyle zeroHue)
 {-
 
 colorTable :: Double -> (HSV Double -> HSV Double) -> [Int] -> Html
-colorTable zeroHue conv groups = 
+colorTable zeroHue conv groups =
   table . toHtml . besides $ map col [0..length groups-1]
   where
   col i = aboves [cell $ (td ! [getStyle i j]) (stringToHtml (show (i,j)))

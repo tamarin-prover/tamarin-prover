@@ -98,9 +98,9 @@ freshIdents k = do
 -- | Restrict the scope of the freshness requests.
 scopeFreshness :: Monad m => FreshT m a -> FreshT m a
 scopeFreshness scoped = do
-    state <- FreshT get -- save state before scoped action
+    st <- FreshT get -- save state before scoped action
     x <- scoped
-    FreshT (put state) -- restore freshness state
+    FreshT (put st)  -- restore freshness state
     return x
 
 
