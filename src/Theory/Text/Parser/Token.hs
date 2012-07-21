@@ -149,7 +149,7 @@ parseFromString parser =
 
 -- | Parse a symbol.
 symbol :: String -> Parser String
-symbol = try . T.symbol spthy
+symbol sym = try (T.symbol spthy sym) <?> ("\"" ++ sym ++ "\"")
 
 -- | Parse a symbol without returning the parsed string.
 symbol_ :: String -> Parser ()
