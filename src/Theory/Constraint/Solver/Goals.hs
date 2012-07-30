@@ -80,6 +80,7 @@ openGoals sys = do
                 || isMsgVar m || sortOfLNTerm m == LSortPub
                 -- handled by 'insertAction'
                 || isPair m || isInverse m || isProduct m
+                || isNullaryFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
         -- Technically the 'False' disj would be a solvable goal. However, we
