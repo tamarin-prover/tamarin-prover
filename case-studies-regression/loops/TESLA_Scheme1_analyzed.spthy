@@ -401,7 +401,7 @@ analyzing: data/examples/loops/TESLA_Scheme1.spthy
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.224744s
+  processing time: 0.97998s
   authentic (all-traces): verified (62 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
@@ -413,7 +413,7 @@ summary of summaries:
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.224744s
+  processing time: 0.97998s
   authentic (all-traces): verified (62 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 

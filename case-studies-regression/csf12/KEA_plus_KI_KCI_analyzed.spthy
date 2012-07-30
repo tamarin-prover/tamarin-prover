@@ -162,7 +162,10 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
   solve( !Pk( $R, 'g'^~x ) ▶₂ #i1 )
     case generate_ltk
     solve( !KU( h(<z, 'g'^(~ekI*~x), $I, $R>) ) @ #vk.1 )
-      case Sessk_reveal
+      case Sessk_reveal_case_1
+      by contradiction // from formulas
+    next
+      case Sessk_reveal_case_2
       by contradiction // from formulas
     next
       case ch
@@ -238,7 +241,10 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
   solve( !Pk( $I, 'g'^~x ) ▶₃ #i1 )
     case generate_ltk
     solve( !KU( h(<'g'^(~ekR*~x), z, $I, $R>) ) @ #vk.1 )
-      case Sessk_reveal
+      case Sessk_reveal_case_1
+      by contradiction // from formulas
+    next
+      case Sessk_reveal_case_2
       by contradiction // from formulas
     next
       case ch
@@ -280,9 +286,9 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.855747s
-  keaplus_initiator_key (all-traces): verified (12 steps)
-  keaplus_responder_key (all-traces): verified (12 steps)
+  processing time: 0.646969s
+  keaplus_initiator_key (all-traces): verified (13 steps)
+  keaplus_responder_key (all-traces): verified (13 steps)
 
 ------------------------------------------------------------------------------
 
@@ -292,9 +298,9 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.855747s
-  keaplus_initiator_key (all-traces): verified (12 steps)
-  keaplus_responder_key (all-traces): verified (12 steps)
+  processing time: 0.646969s
+  keaplus_initiator_key (all-traces): verified (13 steps)
+  keaplus_responder_key (all-traces): verified (13 steps)
 
 ==============================================================================
 */

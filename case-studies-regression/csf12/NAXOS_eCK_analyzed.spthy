@@ -1051,8 +1051,35 @@ next
       solve( !Pk( $R, 'g'^~x ) ▶₁ #i1 )
         case generate_ltk
         solve( !KU( h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>) ) @ #vk )
-          case Sessk_reveal
+          case Sessk_reveal_case_1
           by contradiction // from formulas
+        next
+          case Sessk_reveal_case_2
+          solve( splitEqs(0) )
+            case split_case_1
+            by contradiction // from formulas
+          next
+            case split_case_2
+            solve( !KU( 'g'^(~x*h1(<~tid, ~lkI>)*inv(~lkI)) ) @ #vk.1 )
+              case Resp_1
+              solve( !KU( ~x ) @ #vk.4 )
+                case Ltk_reveal
+                by contradiction // from formulas
+              qed
+            next
+              case cexp
+              solve( !KU( ~x ) @ #vk.5 )
+                case Ltk_reveal
+                by contradiction // from formulas
+              qed
+            next
+              case generate_ltk
+              solve( !KU( ~lkI ) @ #vk.6 )
+                case Ltk_reveal
+                by contradiction // from formulas
+              qed
+            qed
+          qed
         next
           case ch2
           solve( !KU( 'g'^(~x*h1(<~eskI, ~lkI>)) ) @ #vk.5 )
@@ -1090,7 +1117,34 @@ next
       solve( !Pk( $I, 'g'^~x ) ▶₂ #i1 )
         case generate_ltk
         solve( !KU( h2(<'g'^(~x*h1(<~eskR, ~lkR>)), z, z.1, $I, $R>) ) @ #vk )
-          case Sessk_reveal
+          case Sessk_reveal_case_1
+          solve( splitEqs(0) )
+            case split_case_1
+            by contradiction // from formulas
+          next
+            case split_case_2
+            solve( !KU( 'g'^(~x*h1(<~tid, ~lkI>)*inv(~lkI)) ) @ #vk.1 )
+              case Init_1
+              solve( !KU( ~x ) @ #vk.4 )
+                case Ltk_reveal
+                by contradiction // from formulas
+              qed
+            next
+              case cexp
+              solve( !KU( ~x ) @ #vk.5 )
+                case Ltk_reveal
+                by contradiction // from formulas
+              qed
+            next
+              case generate_ltk
+              solve( !KU( ~lkI ) @ #vk.6 )
+                case Ltk_reveal
+                by contradiction // from formulas
+              qed
+            qed
+          qed
+        next
+          case Sessk_reveal_case_2
           by contradiction // from formulas
         next
           case ch2
@@ -1140,8 +1194,8 @@ analyzing: data/examples/csf12/NAXOS_eCK.spthy
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.914843s
-  eCK_key_secrecy (all-traces): verified (270 steps)
+  processing time: 7.206077s
+  eCK_key_secrecy (all-traces): verified (288 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1151,8 +1205,8 @@ summary of summaries:
 analyzed: data/examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.914843s
-  eCK_key_secrecy (all-traces): verified (270 steps)
+  processing time: 7.206077s
+  eCK_key_secrecy (all-traces): verified (288 steps)
 
 ==============================================================================
 */
