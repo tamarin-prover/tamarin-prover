@@ -80,6 +80,7 @@ openGoals sys = do
                 || isMsgVar m || sortOfLNTerm m == LSortPub
                 -- handled by 'insertAction'
                 || isPair m || isInverse m || isProduct m
+                || isNullaryFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
         -- Technically the 'False' disj would be a solvable goal. However, we
@@ -216,7 +217,7 @@ solveChain rules (c, p) = do
         let m = case kFactView faConc of
                   Just (DnK, m') -> m'
                   _              -> error $ "solveChain: impossible"
-            caseName (viewTerm -> FApp o _) = show o
+            caseName (viewTerm -> FApp o _) = showFunSymName o
             caseName t                      = show t
         return $ caseName m
      `disjunction`

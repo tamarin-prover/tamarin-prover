@@ -6,7 +6,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Term Algebra and related notions.
@@ -34,8 +34,9 @@ module Term.Term (
     , fmapTerm
     , bindTerm
     , lits
+    , showFunSymName
     , prettyTerm
-    
+
     -- ** Smart constructors
     , lit
     , fApp
@@ -72,6 +73,7 @@ module Term.Term (
     , isProduct
     , isXor
     , isUnion
+    , isNullaryFunction
 
     , module Term.Classes
     ) where
@@ -228,6 +230,11 @@ isXor = isJust . destXor
 isUnion :: Term a -> Bool
 isUnion = isJust . destXor
 
+-- | 'True' iff the term is a nullary, public function.
+isNullaryFunction :: Term a -> Bool
+isNullaryFunction (viewTerm -> FApp (NonAC (_, 0)) _) = True
+isNullaryFunction _                                   = False
+
 -- | View on terms that corresponds to representation.
 data TermView a = Lit a
                 | FApp FunSym [Term a]
@@ -236,7 +243,7 @@ data TermView a = Lit a
 {-# INLINE viewTerm #-}
 -- | Return the 'TermView' of the given term.
 viewTerm :: Term a -> TermView a
-viewTerm (LIT l) = Lit l
+viewTerm (LIT l)       = Lit l
 viewTerm (FAPP sym ts) = FApp sym ts
 
 -- | @fApp fsym as@ creates an application of @fsym@ to @as@. The function
@@ -388,6 +395,12 @@ lits = foldMap return
 -- Pretty printing
 ----------------------------------------------------------------------
 
+-- | Convert a function symbol to its name.
+showFunSymName :: FunSym -> String
+showFunSymName (NonAC (bs, _)) = BC.unpack bs
+showFunSymName (AC op)         = show op
+showFunSymName List            = "List"
+
 -- | Pretty print a term.
 prettyTerm :: Document d => (l -> d) -> Term l -> d
 prettyTerm ppLit = ppTerm
@@ -405,7 +418,7 @@ prettyTerm ppLit = ppTerm
     ppACOp Xor   = "+"
 
     ppTerms sepa n lead finish ts =
-        fcat . (text lead :) . (++[text finish]) . 
+        fcat . (text lead :) . (++[text finish]) .
             map (nest n) . punctuate (text sepa) . map ppTerm $ ts
 
     split (FAPP (NonAC ("pair",2)) [t1,t2]) = t1 : split t2

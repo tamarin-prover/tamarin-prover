@@ -221,7 +221,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( ~lkI ) @ #vk.12 )
+        solve( !KU( ~x ) @ #vk.12 )
           case Ltk_reveal
           solve( !Ltk( $R, ~lkR ) ▶₂ #i4 )
             case generate_ltk
@@ -251,7 +251,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( ~x ) @ #vk.12 )
+        solve( !KU( ~lkI ) @ #vk.12 )
           case Ltk_reveal
           solve( !Ltk( $R, ~lkR ) ▶₂ #i4 )
             case generate_ltk
@@ -372,7 +372,7 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( ~lkR ) @ #vk.12 )
+        solve( !KU( ~x ) @ #vk.12 )
           case Ltk_reveal
           solve( !Ltk( $I, ~lkI ) ▶₁ #i4 )
             case generate_ltk
@@ -399,7 +399,7 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( ~x ) @ #vk.12 )
+        solve( !KU( ~lkR ) @ #vk.12 )
           case Ltk_reveal
           solve( !Ltk( $I, ~lkI ) ▶₁ #i4 )
             case generate_ltk
@@ -444,7 +444,7 @@ analyzing: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.672479s
+  processing time: 1.067355s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 
@@ -456,7 +456,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.672479s
+  processing time: 1.067355s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 

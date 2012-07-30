@@ -1,3 +1,13 @@
+* 0.8.1.0
+    - fixed: no more case names containing spaces,
+        when solving deconstruction chains.
+    - fixed: avoid solving KU-goals for nullary function symbols
+    - fixed: fresh name generation was not always handled properly when
+        applying a precomputed case distinction to a goal that uses
+        DH-exponentiation. Security protocol models that use DH-exponentiation
+        should be checked again. Some of our case studies were indeed missing
+        a few cases, but no property changed its validity.
+
 * 0.8.0.0
     - new homepage:  http://www.infsec.ethz.ch/research/software/tamarin
     - mailing list:  https://groups.google.com/group/tamarin-prover

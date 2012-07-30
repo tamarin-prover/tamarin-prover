@@ -297,10 +297,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
         case cKDF
         solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.18 )
           case Init_1_case_1
-          by solve( !KU( ~ekI ) @ #vk.19 )
+          by solve( !KU( ~ekI.1 ) @ #vk.19 )
         next
           case Init_1_case_2
-          by solve( !KU( ~ekI.1 ) @ #vk.19 )
+          by solve( !KU( ~ekI ) @ #vk.19 )
         next
           case cexp
           by solve( !KU( ~ekI ) @ #vk.21 )
@@ -317,10 +317,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
             case cmac
             solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.29 )
               case Init_1_case_1
-              by solve( !KU( ~ekI ) @ #vk.30 )
+              by solve( !KU( ~ekI.1 ) @ #vk.30 )
             next
               case Init_1_case_2
-              by solve( !KU( ~ekI.1 ) @ #vk.30 )
+              by solve( !KU( ~ekI ) @ #vk.30 )
             next
               case cexp
               by solve( !KU( ~ekI ) @ #vk.32 )
@@ -336,10 +336,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
             case cmac
             solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.30 )
               case Init_1_case_1
-              by solve( !KU( ~ekI ) @ #vk.31 )
+              by solve( !KU( ~ekI.1 ) @ #vk.31 )
             next
               case Init_1_case_2
-              by solve( !KU( ~ekI.1 ) @ #vk.31 )
+              by solve( !KU( ~ekI ) @ #vk.31 )
             next
               case cexp
               by solve( !KU( ~ekI ) @ #vk.33 )
@@ -355,10 +355,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
             case cmac
             solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.30 )
               case Init_1_case_1
-              by solve( !KU( ~ekI ) @ #vk.31 )
+              by solve( !KU( ~ekI.1 ) @ #vk.31 )
             next
               case Init_1_case_2
-              by solve( !KU( ~ekI.1 ) @ #vk.31 )
+              by solve( !KU( ~ekI ) @ #vk.31 )
             next
               case cexp
               by solve( !KU( ~ekI ) @ #vk.33 )
@@ -374,10 +374,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
             case cmac
             solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.31 )
               case Init_1_case_1
-              by solve( !KU( ~ekI ) @ #vk.32 )
+              by solve( !KU( ~ekI.1 ) @ #vk.32 )
             next
               case Init_1_case_2
-              by solve( !KU( ~ekI.1 ) @ #vk.32 )
+              by solve( !KU( ~ekI ) @ #vk.32 )
             next
               case cexp
               by solve( !KU( ~ekI ) @ #vk.34 )
@@ -393,10 +393,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
             case cmac
             solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.30 )
               case Init_1_case_1
-              by solve( !KU( ~ekI ) @ #vk.31 )
+              by solve( !KU( ~ekI.1 ) @ #vk.31 )
             next
               case Init_1_case_2
-              by solve( !KU( ~ekI.1 ) @ #vk.31 )
+              by solve( !KU( ~ekI ) @ #vk.31 )
             next
               case cexp
               by solve( !KU( ~ekI ) @ #vk.33 )
@@ -412,10 +412,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
             case cmac
             solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.31 )
               case Init_1_case_1
-              by solve( !KU( ~ekI ) @ #vk.32 )
+              by solve( !KU( ~ekI.1 ) @ #vk.32 )
             next
               case Init_1_case_2
-              by solve( !KU( ~ekI.1 ) @ #vk.32 )
+              by solve( !KU( ~ekI ) @ #vk.32 )
             next
               case cexp
               by solve( !KU( ~ekI ) @ #vk.34 )
@@ -431,10 +431,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
             case cmac
             solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.31 )
               case Init_1_case_1
-              by solve( !KU( ~ekI ) @ #vk.32 )
+              by solve( !KU( ~ekI.1 ) @ #vk.32 )
             next
               case Init_1_case_2
-              by solve( !KU( ~ekI.1 ) @ #vk.32 )
+              by solve( !KU( ~ekI ) @ #vk.32 )
             next
               case cexp
               by solve( !KU( ~ekI ) @ #vk.34 )
@@ -450,10 +450,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
             case cmac
             solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.32 )
               case Init_1_case_1
-              by solve( !KU( ~ekI ) @ #vk.33 )
+              by solve( !KU( ~ekI.1 ) @ #vk.33 )
             next
               case Init_1_case_2
-              by solve( !KU( ~ekI.1 ) @ #vk.33 )
+              by solve( !KU( ~ekI ) @ #vk.33 )
             next
               case cexp
               by solve( !KU( ~ekI ) @ #vk.35 )
@@ -464,10 +464,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
         case cKDF
         solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.19 )
           case Init_1_case_1
-          by solve( !KU( ~ekI ) @ #vk.20 )
+          by solve( !KU( ~ekI.1 ) @ #vk.20 )
         next
           case Init_1_case_2
-          by solve( !KU( ~ekI.1 ) @ #vk.20 )
+          by solve( !KU( ~ekI ) @ #vk.20 )
         next
           case cexp
           by solve( !KU( ~ekI ) @ #vk.22 )
@@ -1248,10 +1248,10 @@ next
             case cmac
             solve( !KU( 'g'^(~ekR*~ekR.1) ) @ #vk.27 )
               case Resp_1_case_1
-              by solve( !KU( ~ekR ) @ #vk.28 )
+              by solve( !KU( ~ekR.1 ) @ #vk.28 )
             next
               case Resp_1_case_2
-              by solve( !KU( ~ekR.1 ) @ #vk.28 )
+              by solve( !KU( ~ekR ) @ #vk.28 )
             next
               case cexp
               by solve( !KU( ~ekR ) @ #vk.30 )
@@ -1285,10 +1285,10 @@ next
             case cmac
             solve( !KU( 'g'^(~ekR*~ekR.1) ) @ #vk.28 )
               case Resp_1_case_1
-              by solve( !KU( ~ekR ) @ #vk.29 )
+              by solve( !KU( ~ekR.1 ) @ #vk.29 )
             next
               case Resp_1_case_2
-              by solve( !KU( ~ekR.1 ) @ #vk.29 )
+              by solve( !KU( ~ekR ) @ #vk.29 )
             next
               case cexp
               by solve( !KU( ~ekR ) @ #vk.31 )
@@ -1330,10 +1330,10 @@ next
               case cmac
               solve( !KU( 'g'^(~ekR*~tid) ) @ #vk.19 )
                 case Resp_1_case_1
-                by solve( !KU( ~ekR ) @ #vk.20 )
+                by solve( !KU( ~tid ) @ #vk.20 )
               next
                 case Resp_1_case_2
-                by solve( !KU( ~tid ) @ #vk.20 )
+                by solve( !KU( ~ekR ) @ #vk.20 )
               next
                 case cexp
                 by solve( !KU( ~ekR ) @ #vk.22 )
@@ -1386,10 +1386,10 @@ next
             case cmac
             solve( !KU( 'g'^(~ekR*~ekR.1) ) @ #vk.28 )
               case Resp_1_case_1
-              by solve( !KU( ~ekR ) @ #vk.29 )
+              by solve( !KU( ~ekR.1 ) @ #vk.29 )
             next
               case Resp_1_case_2
-              by solve( !KU( ~ekR.1 ) @ #vk.29 )
+              by solve( !KU( ~ekR ) @ #vk.29 )
             next
               case cexp
               by solve( !KU( ~ekR ) @ #vk.31 )
@@ -1423,10 +1423,10 @@ next
             case cmac
             solve( !KU( 'g'^(~ekR*~ekR.1) ) @ #vk.29 )
               case Resp_1_case_1
-              by solve( !KU( ~ekR ) @ #vk.30 )
+              by solve( !KU( ~ekR.1 ) @ #vk.30 )
             next
               case Resp_1_case_2
-              by solve( !KU( ~ekR.1 ) @ #vk.30 )
+              by solve( !KU( ~ekR ) @ #vk.30 )
             next
               case cexp
               by solve( !KU( ~ekR ) @ #vk.32 )
@@ -1437,10 +1437,10 @@ next
         case cKDF
         solve( !KU( 'g'^(~ekR*~ekR.1) ) @ #vk.15 )
           case Resp_1_case_1
-          by solve( !KU( ~ekR ) @ #vk.16 )
+          by solve( !KU( ~ekR.1 ) @ #vk.16 )
         next
           case Resp_1_case_2
-          by solve( !KU( ~ekR.1 ) @ #vk.16 )
+          by solve( !KU( ~ekR ) @ #vk.16 )
         next
           case cexp
           by solve( !KU( ~ekR ) @ #vk.18 )
@@ -1471,7 +1471,7 @@ analyzing: data/examples/csf12/STS_MAC_fix1.spthy
 analyzed: data/examples/csf12/STS_MAC_fix1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 13.476603s
+  processing time: 9.99521s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (164 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (235 steps)
 
@@ -1483,7 +1483,7 @@ summary of summaries:
 analyzed: data/examples/csf12/STS_MAC_fix1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 13.476603s
+  processing time: 9.99521s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (164 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (235 steps)
 
