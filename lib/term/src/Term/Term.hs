@@ -34,6 +34,7 @@ module Term.Term (
     , fmapTerm
     , bindTerm
     , lits
+    , showFunSymName
     , prettyTerm
 
     -- ** Smart constructors
@@ -393,6 +394,12 @@ lits = foldMap return
 ----------------------------------------------------------------------
 -- Pretty printing
 ----------------------------------------------------------------------
+
+-- | Convert a function symbol to its name.
+showFunSymName :: FunSym -> String
+showFunSymName (NonAC (bs, _)) = BC.unpack bs
+showFunSymName (AC op)         = show op
+showFunSymName List            = "List"
 
 -- | Pretty print a term.
 prettyTerm :: Document d => (l -> d) -> Term l -> d

@@ -217,7 +217,7 @@ solveChain rules (c, p) = do
         let m = case kFactView faConc of
                   Just (DnK, m') -> m'
                   _              -> error $ "solveChain: impossible"
-            caseName (viewTerm -> FApp o _) = show o
+            caseName (viewTerm -> FApp o _) = showFunSymName o
             caseName t                      = show t
         return $ caseName m
      `disjunction`
