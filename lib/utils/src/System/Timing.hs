@@ -1,7 +1,7 @@
 -- |
 -- Copyright   : (c) 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
@@ -11,8 +11,8 @@ module System.Timing (
   , timed_
 ) where
 
-import Control.Monad
-import Data.Time.Clock
+import           Control.Monad
+import           Data.Time.Clock
 
 -- | Execute an IO action and return its result plus the time it took to execute it.
 timed :: IO a -> IO (a, NominalDiffTime)
