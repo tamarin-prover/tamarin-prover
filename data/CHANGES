@@ -1,4 +1,8 @@
 * 0.8.1.0
+    - enabled parallelization by default when compiling `tamarin-prover` with
+      GHC 7.4 and higher. It uses as many threads as there are CPU cores on
+      the system. Use `tamarin-prover +RTS -N1 -RTS` to use only one thread.
+
     - fixed: no more case names containing spaces,
         when solving deconstruction chains.
     - fixed: avoid solving KU-goals for nullary function symbols
