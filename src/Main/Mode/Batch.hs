@@ -12,6 +12,8 @@ module Main.Mode.Batch (
   ) where
 
 import           Control.Basics
+import           Control.DeepSeq                 (force)
+import           Control.Exception               (evaluate)
 import           Data.List
 import           Data.Maybe
 import           System.Console.CmdArgs.Explicit as CmdArgs
@@ -142,7 +144,8 @@ run thisMode as
               (thySummary, t) <- timed $ do
                   thy <- load
                   writeFileWithDirs outFile $ renderDoc $ fullDoc thy
-                  return $ summaryDoc thy
+                  -- ensure that the summary is in normal form
+                  evaluate $ force $ summaryDoc thy
               let summary = Pretty.vcat
                     [ ppAnalyzed
                     , Pretty.text $ ""

@@ -165,6 +165,13 @@ executable tamarin-prover
 
     ghc-options:       -Wall -fwarn-tabs -rtsopts
     ghc-prof-options:  -auto-all
+
+    -- Parallelize by default. Only activated for GHC 7.4, as this flag was
+    -- unstable in earlier -- versions; i.e., it resulted in command-line
+    -- parsing errors.
+    if impl(ghc >= 7.4)
+        ghc-options:   -with-rtsopts=-N
+
     hs-source-dirs:    src
     main-is:           Main.hs
 
