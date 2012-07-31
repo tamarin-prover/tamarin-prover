@@ -80,6 +80,7 @@ data-files:
   examples/loops/Minimal_Create_Use_Destroy.spthy
   examples/loops/Minimal_Typing_Example.spthy
   examples/loops/Minimal_Loop_Example.spthy
+  examples/loops/Typing_and_Destructors.spthy
   examples/loops/JCS12_Typing_Example.spthy
   examples/loops/TESLA_Scheme1.spthy
 

@@ -1,0 +1,122 @@
+theory Typing_and_Destructors
+begin
+
+/*
+   Protocol:    Demonstration of the interaction between typing and
+                destructors
+   Modeler:     Simon Meier
+   Date:        July 2012
+
+   Status:      working / misses theory extension (see issue #104)
+
+   This protocol is a variant of 'Minimal_Typing_Example' that uses explicit
+   destructors. Its verification does not yet work out of the box, as the
+   implemented definition of guarded trace properties is too restrictive to
+   allow formalizing the required type invariant.
+
+   NOTE that it seems that the best option is to explicitly state in a rule
+   that it does not continue in case the application of a deconstructor was
+   not successful using an axiom like 'No_failure_terms'. This considerably
+   simplifies the verification.
+*/
+
+
+builtins: symmetric-encryption, hashing
+
+// Shared keys that can be compromised.
+rule Setup_Key:
+  [ Fr(~k) ] --[ IsKey(~k) ]-> [ !Key(~k) ]
+
+rule Reveal_Key:
+  [ !Key(k) ] --[ Rev(k) ]-> [ Out(k) ]
+
+rule Initiator:
+  let msg = senc{~sec,~pub}k
+  in
+    [ !Key(k), Fr(~sec), Fr(~pub) ]
+  --[ Out_Initiator(msg)
+    , Public(~pub)
+    ]->
+    [ Out( msg ) ]
+
+rule Responder:
+  // We use explicit destructors instead of the pattern matching
+  //
+  //     msg = senc{sec,pub}key
+  //
+  // This explicit use of destructors is more permissive (i.e., allows more
+  // traces), as it allows the rule to fire even if an failure term is sent.
+  //
+  let body = sdec{msg}key
+      sec  = fst(body)
+      pub  = snd(body)
+  in
+    [ !Key(key), In( msg )
+    ]
+  --[ In_Responder(msg, pub)
+    , Secret(sec, key)
+    // We can simulate pattern matching by logging that the 'pub' term must
+    // not be an failure term.
+    , NoFailureTerm(pub)
+    ]->
+    [ Out( pub ) ]
+
+// Commented out to test the type assertion.
+//
+// // This axiom then filters all traces with disallowed failure terms.
+// // Note that we interpret its formula modulo AC.
+// axiom No_failure_terms:
+//     "(All x #i. NoFailureTerm(snd(x)) @ i ==> F)"
+//     // Here we should also exclude all other possible shapes of failure terms.
+
+// This type assertion does not hold, as 'pub' could be an failure term. See the
+// case marked below for the missing piece of the puzzle.
+// Note that we interpret its formula modulo AC.
+lemma type_assertion [typing]:
+  /* For all messages received by the responder */
+  "(All m pub #i. In_Responder(m, pub) @ i ==>
+        /* they either came from the adversary and he therefore knows the
+         * contained 'k' variable before it was instantiated */
+      ( (Ex #j. KU(pub) @ j & j < i)
+        /* or there is an initiator that sent 'm'. */
+      | (Ex #j. Out_Initiator(m) @ j)
+      // These two cases cover the failure cases and make the type assertion
+      // valid. They are also sufficient to prove the statements below.
+      // They are currently not wellformed because 'snd' and 'sdec' are not
+      // allowed in formulas.
+      | (Ex body #j. KU(body) @ j
+                   & pub = snd(body) & j < i)
+      | (Ex body key #j #k. IsKey(key)@k & KU(body) @ j
+                          & pub = snd(sdec{body}key) & j < i)
+      // Note that I thinkg that these two cases might be sufficient. They
+      // would however require that equalities can also be guarding.
+      // | (Ex body.     pub = snd(body))
+      // | (Ex body key. pub = snd(sdec{body}key))
+      )
+   )
+  "
+
+/* The secret part of the message received by Responder is secret provided the
+ * key has not been compromised.
+ */
+lemma Responder_secrecy:
+  " All sec key #i #j.
+        Secret(sec, key) @ #i
+      & K(sec) @ #j
+      ==>
+       (Ex #r. Rev(key) @ r)
+  "
+
+/* Sanity check: the public part is accessible to the adversary without
+ * performing a key reveal.
+ */
+lemma Public_part_public:
+  exists-trace
+  "  /* No key reveal has been performed */
+    not (Ex k #i. Rev(k) @ i)
+    /* and the public part of a message is known to the adversary. */
+  & (Ex pub #i #j. Public(pub) @ i & K(pub) @ j )
+  "
+
+
+end
