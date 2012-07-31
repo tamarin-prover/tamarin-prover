@@ -177,13 +177,14 @@ enumConcs = zip [(ConcIdx 0)..] . L.get rConcs
 instance Functor Rule where
     fmap f (Rule i ps cs as) = Rule (f i) ps cs as
 
-instance HasFrees i => HasFrees (Rule i) where
+instance (Show i, HasFrees i) => HasFrees (Rule i) where
     foldFrees f (Rule i ps cs as) =
         (foldFrees f i  `mappend`) $
         (foldFrees f ps `mappend`) $
         (foldFrees f cs `mappend`) $
         (foldFrees f as)
-
+    foldFreesOcc f c (Rule i ps cs as) =
+        foldFreesOcc f ((show i):c) (ps, cs, as)
     mapFrees f (Rule i ps cs as) =
         Rule <$> mapFrees f i
              <*> mapFrees f ps <*> mapFrees f cs <*> mapFrees f as
@@ -217,7 +218,7 @@ ruleInfo _     intr (IntrInfo  x) = intr x
 
 instance (HasFrees p, HasFrees i) => HasFrees (RuleInfo p i) where
     foldFrees  f = ruleInfo (foldFrees f) (foldFrees f)
-
+    foldFreesOcc _ _ = const mempty
     mapFrees   f = ruleInfo (fmap ProtoInfo . mapFrees   f)
                             (fmap IntrInfo . mapFrees   f)
 
@@ -266,6 +267,7 @@ instance Apply ProtoRuleName where
 
 instance HasFrees ProtoRuleName where
     foldFrees  _ = const mempty
+    foldFreesOcc  _ _ = const mempty
     mapFrees   _ = pure
 
 instance Apply PremIdx where
@@ -273,6 +275,7 @@ instance Apply PremIdx where
 
 instance HasFrees PremIdx where
     foldFrees  _ = const mempty
+    foldFreesOcc  _ _ = const mempty
     mapFrees   _ = pure
 
 instance Apply ConcIdx where
@@ -280,13 +283,14 @@ instance Apply ConcIdx where
 
 instance HasFrees ConcIdx where
     foldFrees  _ = const mempty
+    foldFreesOcc  _ _ = const mempty
     mapFrees   _ = pure
 
 instance HasFrees ProtoRuleACInfo where
     foldFrees f (ProtoRuleACInfo na vari breakers) =
         foldFrees f na `mappend` foldFrees f vari
                        `mappend` foldFrees f breakers
-
+    foldFreesOcc  _ _ = const mempty
     mapFrees f (ProtoRuleACInfo na vari breakers) =
         ProtoRuleACInfo na <$> mapFrees f vari <*> mapFrees f breakers
 
@@ -296,6 +300,8 @@ instance Apply ProtoRuleACInstInfo where
 instance HasFrees ProtoRuleACInstInfo where
     foldFrees f (ProtoRuleACInstInfo na breakers) =
         foldFrees f na `mappend` foldFrees f breakers
+
+    foldFreesOcc  _ _ = const mempty
 
     mapFrees f (ProtoRuleACInstInfo na breakers) =
         ProtoRuleACInstInfo na <$> mapFrees f breakers
@@ -340,6 +346,7 @@ instance Apply IntrRuleACInfo where
 
 instance HasFrees IntrRuleACInfo where
     foldFrees _ = const mempty
+    foldFreesOcc  _ _ = const mempty
     mapFrees _  = pure
 
 

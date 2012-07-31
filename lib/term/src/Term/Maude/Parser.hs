@@ -1,6 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, TupleSections #-}
-{-# LANGUAGE ViewPatterns, NamedFieldPuns #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
@@ -74,15 +72,17 @@ funSymPrefix = "tamX"
 -- | Pretty print an AC symbol for Maude.
 ppMaudeACSym :: ACSym -> ByteString
 ppMaudeACSym o =
-    funSymPrefix <> obs
-  where obs = case o of
-                  Mult  -> "mult"
-                  Union -> "mun"
-                  Xor   -> "xor"
+    funSymPrefix <> case o of
+                      Mult  -> "mult"
+                      Union -> "mun"
 
--- | Pretty print an AC symbol for Maude.
-ppMaudeNonACSym :: NonACSym -> ByteString
-ppMaudeNonACSym (o,_) = funSymPrefix <> o
+-- | Pretty print a non-AC symbol for Maude.
+ppMaudeNoEqSym :: NoEqSym -> ByteString
+ppMaudeNoEqSym (o,_) = funSymPrefix <> o
+
+-- | Pretty print a C symbol for Maude.
+ppMaudeCSym :: CSym -> ByteString
+ppMaudeCSym EMap = funSymPrefix <> emapSymString
 
 
 -- | @ppMaude t@ pretty prints the term @t@ for Maude.
@@ -91,17 +91,16 @@ ppMaude t = case viewTerm t of
     Lit (MaudeVar i lsort)   -> "x" <> ppInt i <> ":" <> ppLSort lsort
     Lit (MaudeConst i lsort) -> ppLSortSym lsort <> "(" <> ppInt i <> ")"
     Lit (FreshVar _ _)       -> error "Term.Maude.Types.ppMaude: FreshVar not allowed"
-    FApp (NonAC fsym) [] -> ppMaudeNonACSym fsym
-    FApp (NonAC fsym) as ->
-        ppMaudeNonACSym fsym <> "(" <> (B.intercalate "," (map ppMaude as)) <> ")"
-    FApp (AC op) as          ->
-        ppMaudeACSym op <> "(" <> (B.intercalate "," (map ppMaude as)) <> ")"
-    FApp List as             ->
-        funSymPrefix <> "list(" <> ppList as <> ")"
+    FApp (NoEq fsym) []      -> ppMaudeNoEqSym fsym
+    FApp (NoEq fsym) as      -> ppMaudeNoEqSym fsym <> ppArgs as
+    FApp (C fsym) as         -> ppMaudeCSym fsym    <> ppArgs as
+    FApp (AC op) as          -> ppMaudeACSym op     <> ppArgs as
+    FApp List as             -> "list(" <> ppList as <> ")"
   where
+    ppArgs as     = "(" <> (B.intercalate "," (map ppMaude as)) <> ")"
     ppInt         = BC.pack . show
-    ppList []     = funSymPrefix <> "nil"
-    ppList (x:xs) = funSymPrefix <> "cons(" <> ppMaude x <> "," <> ppList xs <> ")"
+    ppList []     = "nil"
+    ppList (x:xs) = "cons(" <> ppMaude x <> "," <> ppList xs <> ")"
 
 ------------------------------------------------------------------------------
 -- Pretty printing a 'MaudeSig' as a Maude functional module.
@@ -111,16 +110,9 @@ ppMaude t = case viewTerm t of
 ppTheory :: MaudeSig -> ByteString
 ppTheory msig = BC.unlines $
     [ "fmod MSG is"
-    , "  protecting NAT ." ]
-    ++
-    (if enableMultiset msig
-     then [ "  sort Pub Fresh Msg Node TOP ."
-          , "  op " <> funSymPrefix <> "mun : Msg Msg -> Msg [comm assoc] ."
-          , "  op " <> funSymPrefix <> "empty : -> Msg ."
-          ]
-     else [ "  sort Pub Fresh Msg Node TOP ."])
-    ++
-    [ "  subsort Pub < Msg ."
+    , "  protecting NAT ."
+    , "  sort Pub Fresh Msg Node TOP ."
+    , "  subsort Pub < Msg ."
     , "  subsort Fresh < Msg ."
     , "  subsort Msg < TOP ."
     , "  subsort Node < TOP ."
@@ -131,32 +123,38 @@ ppTheory msig = BC.unlines $
     , "  op n : Nat -> Node ."
     -- used for encoding FApp List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
-    , "  op " <> funSymPrefix <> "list : TOP -> TOP ."
-    , "  op " <> funSymPrefix <> "cons : TOP TOP -> TOP ."
-    , "  op " <> funSymPrefix <> "nil  : -> TOP ." ]
+    , "  op list : TOP -> TOP ."
+    , "  op cons : TOP TOP -> TOP ."
+    , "  op nil  : -> TOP ." ]
+    ++
+    (if enableMSet msig
+       then
+       [ theoryOp "mun : Msg Msg -> Msg [comm assoc]" ]
+       else [])
     ++
     (if enableDH msig
        then
-       [ "  op " <> funSymPrefix <> "one : -> Msg ."
-       , "  op " <> funSymPrefix <> "exp : Msg Msg -> Msg ."
-       , "  op " <> funSymPrefix <> "mult : Msg Msg -> Msg [comm assoc] ."
-       , "  op " <> funSymPrefix <> "inv : Msg -> Msg ." ]
+       [ theoryOp "one : -> Msg"
+       , theoryOp "exp : Msg Msg -> Msg"
+       , theoryOp "mult : Msg Msg -> Msg [comm assoc]"
+       , theoryOp "inv : Msg -> Msg" ]
        else [])
     ++
-    (if enableXor msig
+    (if enableBP msig
        then
-       [ "  op " <> funSymPrefix <> "zero : -> Msg ."
-       , "  op " <> funSymPrefix <> "xor : Msg Msg -> Msg [comm assoc] ."]
+       [ theoryOp "pmult : Msg Msg -> Msg"
+       , theoryOp "em : Msg Msg -> Msg [comm]" ]
        else [])
     ++
-    map theoryFunSym (S.toList $ functionSymbols msig)
+    map theoryFunSym (S.toList $ stFunSyms msig)
     ++
     map theoryRule (S.toList $ rrulesForMaudeSig msig)
     ++
     [ "endfm" ]
   where
+    theoryOp fsort = "  op " <> funSymPrefix <> fsort <>" ."
     theoryFunSym (s,ar) =
-        "  op " <> funSymPrefix <> s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg ."
+        theoryOp (s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
@@ -191,29 +189,26 @@ parseSubstitution msig = do
     parseEntry = (,) <$> (flip (,) <$> (string "x" *> decimal <* string ":") <*> parseSort)
                      <*> (string " --> " *> parseTerm msig <* endOfLine)
 
-
 -- | @parseReduceReply l@ parses a single solution returned by Maude.
 parseReduceReply :: MaudeSig -> ByteString -> Either String MTerm
 parseReduceReply msig reply = flip parseOnly reply $ do
     string "result " *> choice [ string "TOP" *> pure LSortMsg, parseSort ] -- we ignore the sort
         *> string ": " *> parseTerm msig <* endOfLine <* endOfInput
 
-
 -- | Parse an 'MSort'.
 parseSort :: Parser LSort
 parseSort =  string "Pub"      *> return LSortPub
          <|> string "Fresh"    *> return LSortFresh
          <|> string "Node"     *> return LSortNode
-         <|> string "M"        *>
+         <|> string "M"        *> -- FIXME: why?
                (    string "sg"  *> return LSortMsg )
-
 
 -- | @parseTerm@ is a parser for Maude terms.
 parseTerm :: MaudeSig -> Parser MTerm
 parseTerm msig = choice
    [ string "#" *> (lit <$> (FreshVar <$> (decimal <* string ":") <*> parseSort))
    , do ident <- takeWhile1 (`BC.notElem` (":(,)\n " :: B.ByteString))
-        choice [ do string "("
+        choice [ do _ <- string "("
                     case parseLSortSym ident of
                       Just s  -> parseConst s
                       Nothing -> parseFApp ident
@@ -222,33 +217,41 @@ parseTerm msig = choice
                ]
    ]
   where
+    consSym = ("cons",2)
+    nilSym  = ("nil",0)
+
+    parseFunSym ident args
+      | op `elem` allowedfunSyms = op
+      | otherwise                =
+          error $ "Maude.Parser.parseTerm: unknown function "
+                  ++ "symbol `"++ show op ++"', not in "
+                  ++show allowedfunSyms
+      where prefixLen      = BC.length funSymPrefix
+            op             = (if ident `elem` ["list", "cons", "nil" ]
+                                then ident
+                                else BC.drop prefixLen ident
+                             ,length args)
+            allowedfunSyms = [consSym, nilSym]++(S.toList $ noEqFunSyms msig)
+
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
 
     parseFApp ident =
         appIdent <$> sepBy1 (parseTerm msig) (string ", ") <* string ")"
       where
-        appIdent args  | ident == ppMaudeACSym Mult      = fAppAC Mult  args
-                       | ident == ppMaudeACSym Xor       = fAppAC Xor   args
-                       | ident == ppMaudeACSym Union     = fAppAC Union args
-        appIdent [arg] | ident == funSymPrefix <> "list" = fAppList (flattenCons arg)
-        appIdent args                                    =
-            ensureValidOp op (fAppNonAC op args)
-          where op = (BC.drop prefixLen ident, length args)
+        appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult  args
+                       | ident == ppMaudeACSym Union      = fAppAC Union args
+                       | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
+        appIdent [arg] | ident == "list"                  = fAppList (flattenCons arg)
+        appIdent args                                     = fAppNoEq op args
+          where op = parseFunSym ident args
 
-        flattenCons (viewTerm -> FApp (NonAC ("cons",2)) [x,xs]) = x:flattenCons xs
-        flattenCons (viewTerm -> FApp (NonAC ("nil",0))  [])     = []
-        flattenCons t                                            = [t]
+        flattenCons (viewTerm -> FApp (NoEq s) [x,xs]) | s == consSym = x:flattenCons xs
+        flattenCons (viewTerm -> FApp (NoEq s)  [])    | s == nilSym  = []
+        flattenCons t                                                 = [t]
 
-    parseFAppConst ident = return $ ensureValidOp op (fAppNonAC op [])
-      where op = (BC.drop prefixLen ident,0)
+    parseFAppConst ident = return $ fAppNoEq (parseFunSym ident []) []
 
     parseMaudeVariable ident =
         case BC.uncons ident of
             Just ('x', num) -> lit <$> (MaudeVar (read (BC.unpack num)) <$> parseSort)
             _               -> fail "invalid variable"
-
-    prefixLen = BC.length funSymPrefix
-    ensureValidOp op x | op `elem` [("cons",2), ("nil",0)]      = x
-                       | op `S.member` allFunctionSymbols msig  = x
-                       | otherwise = error $ "Maude.Parser.parseTerm: unknown function"
-                                             ++ "symbol `"++ show op ++"'"

@@ -31,7 +31,20 @@ import qualified Data.Map                         as M
 import qualified Data.Set                         as S
 import           Data.Traversable                 (traverse)
 
-import           Debug.Trace.Ignore
+import           Utils.Misc (stringSHA256)
+ 
+import           System.IO.Unsafe
+import           System.IO
+import           System.Directory
+import qualified Data.Binary as B
+import qualified Data.ByteString.Lazy as BS
+
+import           Debug.Trace.Ignore 
+
+ 
+tmpdir :: FilePath
+tmpdir = "/tmp/tamarin/"
+
 
 -- Variants of protocol rules
 ----------------------------------------------------------------------
@@ -52,7 +65,7 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
         let eqsAbstr         = map swap (M.toList bindings)
             abstractedTerms  = map snd eqsAbstr
             abstractionSubst = substFromList eqsAbstr
-            variantSubsts    = computeVariants (fAppList abstractedTerms) `runReader` hnd
+            variantSubsts    = computeVariantsCached (fAppList abstractedTerms) hnd
             substs           = [ restrictVFresh (frees abstrPsCsAs) $
                                    removeRenamings $ ((`runReader` hnd) . normSubstVFresh')  $
                                    composeVFresh vsubst abstractionSubst
@@ -62,7 +75,7 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
           [] -> error $ "variantsProtoRule: rule has no variants `"++show ru++"'"
           _  -> do
               -- x <- return (emptySubst, Just substs) --
-              x <- simpDisjunction hnd (const False) (Disj substs)
+              x <- simpDisjunction hnd (const (const False)) (Disj substs)
               case trace (show ("SIMP",abstractedTerms,
                                 "abstr", abstrPsCsAs,
                                 "substs", substs,
@@ -80,10 +93,10 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
              <*> mapM abstrFact concs0
              <*> mapM abstrFact acts0
 
-    irreducible = irreducibleFunctionSymbols (mhMaudeSig hnd)
+    irreducible = irreducibleFunSyms (mhMaudeSig hnd)
     abstrFact = traverse abstrTerm
-    abstrTerm (viewTerm -> FApp (NonAC o) args) | o `S.member` irreducible =
-        fAppNonAC o <$> mapM abstrTerm args
+    abstrTerm (viewTerm -> FApp o args) | o `S.member` irreducible =
+        fApp o <$> mapM abstrTerm args
     abstrTerm t = do
         at :: LNTerm <- varTerm <$> importBinding (`LVar` sortOfLNTerm t) t (getHint t)
         return at
@@ -98,3 +111,16 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
             freshSubsts = map (restrictVFresh (frees (prems, concs, acts))) freshSubsts0
 
     trueDisj = [ emptySubstVFresh ]
+
+computeVariantsCached :: LNTerm -> MaudeHandle -> [LNSubstVFresh]
+computeVariantsCached inp hnd = unsafePerformIO $ do
+    createDirectoryIfMissing True tmpdir
+    let hashInput = tmpdir ++ stringSHA256 (show inp)
+    fEx <- doesFileExist hashInput
+    if fEx
+      then B.decodeFile hashInput
+      else do let result = computeVariants inp `runReader` hnd
+              (tmpFile,tmpHnd) <- openBinaryTempFile tmpdir "variants.tmp"
+              BS.hPut tmpHnd $ B.encode result
+              renameFile tmpFile hashInput
+              return result

@@ -12,9 +12,15 @@
 module Theory.Tools.IntruderRules (
     subtermIntruderRules
   , dhIntruderRules
+  , bpIntruderRules
   , multisetIntruderRules
   , mkDUnionRule
   , specialIntruderRules
+
+  -- ** Classifiers
+  , isDExpRule
+  , isDEMapRule
+  , isDPMultRule
   ) where
 
 import           Control.Basics
@@ -22,6 +28,7 @@ import           Control.Monad.Reader
 
 import           Data.List
 import qualified Data.Set                        as S
+import           Data.ByteString (ByteString)
 
 import           Extension.Data.Label
 
@@ -32,6 +39,7 @@ import           Term.Narrowing.Variants.Compute
 import           Term.Rewriting.Norm
 import           Term.SubtermRule
 import           Term.Positions
+import           Term.Subsumption
 
 import           Theory.Model
 
@@ -48,20 +56,20 @@ import           Theory.Model
 {-
 These are the special intruder that are always included.
 
-rule (modulo AC) coerce:
-   [ KD( f_, x ) ] --[ KU( f_, x) ]-> [ KU( f_, x ) ]
+rule coerce:
+   [ KD( x ) ] --[ KU( x ) ]-> [ KU( x ) ]
 
-rule (modulo AC) pub:
-   [ ] --[ KU( f_, $x) ]-> [ KU( f_, $x ) ]
+rule pub:
+   [ ] --[ KU( $x ) ]-> [ KU( $x ) ]
 
-rule (modulo AC) gen_fresh:
-   [ Fr( ~x ) ] --[ KU( 'noexp', ~x ) ]-> [ KU( 'noexp', ~x ) ]
+rule gen_fresh:
+   [ Fr( ~x ) ] --[ KU( ~x ) ]-> [ KU( ~x ) ]
 
-rule (modulo AC) isend:
-   [ KU( f_, x) ] --[ K(x) ]-> [ In(x) ]
+rule isend:
+   [ KU( x) ] --[ K( x ) ]-> [ In( x ) ]
 
-rule (modulo AC) irecv:
-   [ Out( x) ] --> [ KD( 'exp', x) ]
+rule irecv:
+   [ Out( x) ] --> [ KD( x ) ]
 
 -}
 -- | @specialIntruderRules@ returns the special intruder rules that are
@@ -89,7 +97,7 @@ specialIntruderRules =
 -- | @destuctionRules st@ returns the destruction rules for the given
 -- subterm rule @st@
 destructionRules :: StRule -> [IntrRuleAC]
-destructionRules (StRule lhs@(viewTerm -> FApp (NonAC (f,_)) _) (RhsPosition pos)) =
+destructionRules (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)) =
     go [] lhs pos
   where
     rhs = lhs `atPos` pos
@@ -130,17 +138,17 @@ minimizeIntruderRules rules =
 subtermIntruderRules :: MaudeSig -> [IntrRuleAC]
 subtermIntruderRules maudeSig =
      minimizeIntruderRules $ concatMap destructionRules (S.toList $ stRules maudeSig)
-     ++ constructionRules (functionSymbols maudeSig)
+     ++ constructionRules (stFunSyms maudeSig)
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@
-constructionRules :: FunSig -> [IntrRuleAC]
+constructionRules :: NoEqFunSig -> [IntrRuleAC]
 constructionRules fSig =
     [ createRule s k | (s,k) <- S.toList fSig ]
   where
     createRule s k = Rule (ConstrRule s) (map kuFact vars) [concfact] [concfact]
-      where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i<- [0..] ]
-            m        = fApp (NonAC (s,k)) vars
+      where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
+            m        = fAppNoEq (s,k) vars
             concfact = kuFact m
 
 
@@ -154,7 +162,7 @@ dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
     [ expRule ConstrRule kuFact return
     , invRule ConstrRule kuFact return
     ] ++
-    concatMap (variantsIntruder hnd)
+    concatMap (variantsIntruder hnd id)
       [ expRule DestrRule kdFact (const [])
       , invRule DestrRule kdFact (const [])
       ]
@@ -180,11 +188,11 @@ dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
 
 -- | @variantsIntruder mh irule@ computes the deconstruction-variants
 -- of a given intruder rule @irule@
-variantsIntruder :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
-variantsIntruder hnd ru = do
+variantsIntruder :: MaudeHandle -> ([LNSubstVFresh] -> [LNSubstVFresh]) -> IntrRuleAC -> [IntrRuleAC]
+variantsIntruder hnd minimizeVariants ru = do
     let ruleTerms = concatMap factTerms
                               (get rPrems ru++get rConcs ru++get rActs ru)
-    fsigma <- computeVariants (fAppList ruleTerms) `runReader` hnd
+    fsigma <- minimizeVariants $ computeVariants (fAppList ruleTerms) `runReader` hnd
     let sigma     = freshToFree fsigma `evalFreshAvoiding` ruleTerms
         ruvariant = normRule' (apply sigma ru) `runReader` hnd
     guard (frees (get rConcs ruvariant) /= [] &&
@@ -198,7 +206,7 @@ variantsIntruder hnd ru = do
     case concatMap factTerms $ get rConcs ruvariant of
         [viewTerm -> FApp (AC Mult) _] ->
             fail "Rules with product conclusion are redundant"
-        _                                 -> return ruvariant
+        _                              -> return ruvariant
 
 -- | @normRule irule@ computes the normal form of @irule@
 normRule' :: IntrRuleAC -> WithMaude IntrRuleAC
@@ -218,5 +226,79 @@ multisetIntruderRules = [mkDUnionRule [x_var, y_var] x_var]
 mkDUnionRule :: [LNTerm] -> LNTerm -> IntrRuleAC
 mkDUnionRule t_prems t_conc =
     Rule (DestrRule unionSymString)
-         [kdFact $ fAppUnion t_prems]
+         [kdFact $ fAppAC Union t_prems]
          [kdFact t_conc] []
+
+------------------------------------------------------------------------------
+-- Bilinear Pairing Intruder rules.
+------------------------------------------------------------------------------
+
+bpIntruderRules :: WithMaude [IntrRuleAC]
+bpIntruderRules = reader $ \hnd -> minimizeIntruderRules $
+    [ pmultRule ConstrRule kuFact return
+    , emapRule  ConstrRule kuFact return
+    ]
+    ++ -- pmult is similar to exp
+    (variantsIntruder hnd id $ pmultRule DestrRule kdFact (const []))
+    ++ -- emap is different
+    (bpVariantsIntruder hnd $ emapRule DestrRule kdFact (const []) )
+
+  where
+
+    x_var_0 = varTerm (LVar "x" LSortMsg 0)
+    x_var_1 = varTerm (LVar "x" LSortMsg 1)
+
+    pmultRule mkInfo kudFact mkAction =
+        Rule (mkInfo pmultSymString) [bfact, efact] [concfact] (mkAction concfact)
+      where
+        bfact = kudFact x_var_0
+        efact = kuFact  x_var_1
+        conc = fAppPMult (x_var_1, x_var_0)
+        concfact = kudFact conc
+
+    emapRule mkInfo kudFact mkAction =
+        Rule (mkInfo emapSymString) [bfact, efact] [concfact] (mkAction concfact)
+      where
+        bfact = kudFact x_var_0
+        efact = kudFact  x_var_1
+        conc  = fAppEMap (x_var_0, x_var_1)
+        concfact = kudFact conc
+
+bpVariantsIntruder :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
+bpVariantsIntruder hnd ru = do
+    ruvariant <- variantsIntruder hnd minimizeVariants ru
+
+    -- For the rules "x, pmult(y,z) -> em(x,z)^y" and
+    -- "pmult(y,z),x -> em(z,x)^y", we
+    -- have to make x a KU premise. Here we rely on the
+    -- fact that all other variants are of the form
+    -- "pmult(..), pmult(..) -> em(..)"
+    case ruvariant of
+      Rule i [Fact KDFact args@[viewTerm -> Lit (Var _)], yfact] concs actions ->
+        return $ Rule i [Fact KUFact args, yfact] concs actions
+      Rule i [yfact, Fact KDFact args@[viewTerm -> Lit (Var _)]] concs actions ->
+        return $ Rule i [yfact, Fact KUFact args] concs actions
+      _ -> return ruvariant
+
+  where
+    minimizeVariants = nub . map canonize
+    canonize subst = canonizeSubst . substFromListVFresh $ zip doms (sort rngs)
+      where
+        mappings = substToListVFresh subst
+        doms     = map fst mappings
+        rngs     = map snd mappings
+
+------------------------------------------------------------------------------
+-- Classification functions
+------------------------------------------------------------------------------
+
+isDRule :: ByteString -> Rule (RuleInfo t IntrRuleACInfo) -> Bool
+isDRule ruString ru = case get rInfo ru of
+    IntrInfo (DestrRule n) | n == ruString -> True
+    _                                      -> False
+
+isDExpRule, isDPMultRule, isDEMapRule
+    :: Rule (RuleInfo t IntrRuleACInfo) -> Bool
+isDExpRule   = isDRule expSymString
+isDPMultRule = isDRule pmultSymString
+isDEMapRule  = isDRule emapSymString

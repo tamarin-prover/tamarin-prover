@@ -1,9 +1,6 @@
-{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, TupleSections #-}
-{-# LANGUAGE ViewPatterns, NamedFieldPuns #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -25,20 +22,20 @@ module Term.Maude.Types (
 
   ) where
 
-import Term.Term
-import Term.LTerm
-import Term.Substitution
+import           Term.Term
+import           Term.LTerm
+import           Term.Substitution
 
-import Utils.Misc
+import           Utils.Misc
 
-import Control.Monad.Fresh
-import Control.Monad.Bind
-import Control.Applicative
+import           Control.Monad.Fresh
+import           Control.Monad.Bind
+import           Control.Applicative
 
-import Data.Traversable hiding (mapM)
-import Data.Maybe
+import           Data.Traversable hiding (mapM)
+import           Data.Maybe
 import qualified Data.Map as M
-import Data.Map ( Map )
+import           Data.Map (Map)
 
 -- Maude Terms
 ----------------------------------------------------------------------

@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 -- |
 -- Copyright   : (c) 2012 Benedikt Schmidt
@@ -7,7 +7,8 @@
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Unit tests for the functions dealing with term algebra and related notions.
-module Term.UnitTests (tests) where
+module Term.UnitTests -- (tests)
+ where
 
 import Term.Substitution
 import Term.Subsumption
@@ -63,11 +64,11 @@ propMatchSound mhnd t1 p = all (\s -> applyVTerm s t1 == applyVTerm s p) substs
 testsUnify :: MaudeHandle -> Test
 testsUnify mhnd = TestLabel "Tests for Unify" $
     TestList
-      [ testTrue "a" (propUnifySound mhnd f1 f2)
-      , testTrue "b" (propUnifySound mhnd (pair(f1,inv(f2))) (pair(f1,inv(f2))))
-      , testTrue "c" (propUnifySound mhnd t1 t2)
-      , testTrue "d" (propUnifySound mhnd u1 u2)
-      , testTrue "f" (propUnifySound mhnd (sdec(x1,y1)) (sdec(senc(x2,x3), x4)))
+      [ testTrue "a" (propUnifySound mhnd (pair(f1,inv(f2))) (pair(f1,inv(f2))))
+      , testTrue "b" (propUnifySound mhnd t1 t2)
+      , testTrue "c" (propUnifySound mhnd u1 u2)
+      , testTrue "d" (propUnifySound mhnd (sdec(x1,y1)) (sdec(senc(x2,x3), x4)))
+      , testTrue "e" (propUnifySound mhnd (fAppEMap (p2,x1)) (fAppEMap (p1,x2)))
     ]
   where
     t1 = expo (inv(pair(f1,f2)), f2 *: (inv f2) *: f3 *: f4 *: x2)
@@ -76,8 +77,9 @@ testsUnify mhnd = TestLabel "Tests for Unify" $
     u2 = (f3 *: (inv f2) *: f2 *: f4 *: f5 *: f2)
 
 propUnifySound :: MaudeHandle -> LNTerm -> LNTerm -> Bool
-propUnifySound hnd t1 t2 = all (\s -> let s' = freshToFreeAvoiding s [t1,t2]in
+propUnifySound hnd t1 t2 = all (\s -> let s' = freshToFreeAvoiding s [t1,t2] in
                                   applyVTerm s' t1 == applyVTerm s' t2) substs
+                               && not (null substs)
   where
     substs = unifyLNTerm [Equal t1 t2] `runReader` hnd
 
@@ -253,22 +255,6 @@ testsVariant hnd =
                                 , [(lx1, x1 *:  inv(p1 *: x2))]
                                 ])
 
-      , testEqual "c" (sort $ computeVariantsCheck (fAppList [x1, x2, x1  +:  x2]) `runReader` hnd)
-                      (sort $ toSubsts
-                                [ []
-                                , [(lx1, x1), (lx2,x1) ]
-                                , [(lx2,zero)]
-                                , [(lx1,zero)]
-                                , [(lx2, x1 +: x2), (lx1, x2)]
-                                , [(lx1, x1 +: x2), (lx2, x2)]
-                                , [(lx1, x2 +: x3), (lx2, x1 +: x3)]
-                                ])
-
-{-      , testEqual "d" (computeVariantsCheck (fAppList [x1, x2, x1  #  x2]) `runReader` hnd)
-                      (toSubsts [ []
-                                , [(lx1, emptyMSet)]
-                                , [(lx2, emptyMSet) ] ])
--}
       , testTrue "e" $ not (checkComplete (sdec(x1, p1)) (toSubsts [[]]) `runReader` hnd)
       , testTrue "f" $ (checkComplete (sdec(x1, p1)) (toSubsts [[], [(lx1, senc(x1,p1))]])
                         `runReader` hnd)
@@ -299,7 +285,7 @@ tests maudePath = do
 -- | Maude signatures with all builtin symbols.
 allMaudeSig :: MaudeSig
 allMaudeSig = mconcat
-    [ dhMaudeSig, xorMaudeSig, msetMaudeSig
+    [ bpMaudeSig, msetMaudeSig
     , pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, hashMaudeSig ]
 
 
@@ -325,25 +311,6 @@ runTest m = do
     hnd <- startMaude "maude" allMaudeSig
     return $ m `runReader` hnd
 
-
-ts1 :: LNSubstVFresh
-ts1 = substFromListVFresh [(lx1, xor [x2,x3]), (lx2, xor [x1,x2,x3]) ]
-
-ts2 :: LNSubstVFresh
-ts2 = substFromListVFresh [(lx1, x2), (lx2, xor [x1,x2]) ]
-
-ts1' :: LNSubst
-ts1' = substFromList [(lx1, xor [x5,x6]), (lx2, xor [x4,x5,x6]) ]
-
-ts2' :: LNSubst
-ts2' = substFromList [(lx1, y2), (lx2, xor [y1, y2]) ]
-
-ts2'' :: LNSubst
-ts2'' = substFromList [(lx1, x5), (lx2, xor [x5, x6]) ]
-
-tterm :: LNTerm
-tterm = fAppList [x1, x2, (x1 +: x2)]
-
 {-
 
 runTest $ matchLNTerm [ pair(xor [x5,x6],xor [x4,x5,x6]) `MatchWith` pair(x5,xor [x5,x4]) ]
@@ -357,19 +324,16 @@ runTest $ matchLNTerm [ pair(xor [x5,x6],xor [x4,x5,x6]) `MatchWith` pair(x5,xor
 -- convenience abbreviations
 ----------------------------------------------------------------------------------
 
-pair, expo :: (Term a, Term a) -> Term a
+pair, expo :: Ord a => (Term a, Term a) -> Term a
 expo = fAppExp
 pair = fAppPair
 
 inv :: Term a -> Term a
 inv = fAppInv
 
-xor, union, mult :: Ord a => [Term a] -> Term a
-xor   = fAppXor
-union = fAppUnion
-mult  = fAppMult
+union, mult :: Ord a => [Term a] -> Term a
+union = fAppAC Union
+mult  = fAppAC Mult
 
-one, zero :: Term a
-one       = fAppOne
-zero      = fAppZero
--- emptyMSet = fAppEmpty
+one :: Term a
+one = fAppOne

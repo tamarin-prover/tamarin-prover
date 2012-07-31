@@ -19,6 +19,9 @@ module Theory.Constraint.Solver.CaseDistinctions (
   -- ** Application
   , solveWithCaseDistinction
 
+  -- ** Redundant cases
+  , removeRedundantCases
+
   ) where
 
 import           Prelude                                 hiding (id, (.))
@@ -26,7 +29,6 @@ import           Safe
 
 import           Data.Foldable                           (asum)
 import qualified Data.Map                                as M
-import           Data.Maybe                              (isJust)
 import qualified Data.Set                                as S
 
 import           Control.Basics
@@ -49,6 +51,7 @@ import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 
+import           Control.Monad.Bind
 
 ------------------------------------------------------------------------------
 -- Precomputing case distinctions
@@ -89,8 +92,14 @@ refineCaseDistinction
     -> ([a], CaseDistinction)
 refineCaseDistinction ctxt proofStep th =
     ( map fst $ getDisj refinement
-    , set cdCases (snd <$> refinement) th )
+    , set cdCases newCases th )
   where
+    newCases =   Disj . removeRedundantCases ctxt stableVars snd
+               . map (second (modify sSubst (restrict stableVars)))
+               . getDisj $ snd <$> refinement
+
+    stableVars = frees (get cdGoal th)
+
     fs         = avoid th
     refinement = do
         (names, se)   <- get cdCases th
@@ -125,6 +134,11 @@ solveAllSafeGoals ths =
     usefulGoal (_, (_, Useful)) = True
     usefulGoal _                = False
 
+    isKDPrem (PremiseG _ fa,_) = isKDFact fa
+    isKDPrem _                 = False
+    isChainPrem1 (ChainG _ (_,PremIdx 1),_) = True
+    isChainPrem1 _                          = False
+
     solve caseNames = do
         simplifySystem
         ctxt <- ask
@@ -139,8 +153,10 @@ solveAllSafeGoals ths =
             -- open goal.
             splitAllowed = noChainGoals && not (null chains)
             safeGoals    = fst <$> filter (safeGoal splitAllowed) goals
+            kdPremGoals  = fst <$> filter (\g -> isKDPrem g || isChainPrem1 g) goals
             usefulGoals  = fst <$> filter usefulGoal goals
-            nextStep        =
+            nextStep     =
+                ((fmap return . solveGoal) <$> headMay kdPremGoals) <|>
                 ((fmap return . solveGoal) <$> headMay safeGoals) <|>
                 (asum $ map (solveWithCaseDistinction ctxt ths) usefulGoals)
         case nextStep of
@@ -148,53 +164,101 @@ solveAllSafeGoals ths =
           Just step -> solve . (caseNames ++) =<< step
 
 
+
+------------------------------------------------------------------------------
+-- Redundant Case Distinctions                                              --
+------------------------------------------------------------------------------
+
+-- | Given a list of stable variables (that are referenced from outside and cannot be simply
+-- renamed) and a list containing systems, this function returns a subsequence of the list
+-- such that for all removed systems, there is a remaining system that is equal modulo
+-- renaming of non-stable variables.
+removeRedundantCases :: ProofContext -> [LVar] -> (a -> System) ->  [a] -> [a]
+removeRedundantCases ctxt stableVars getSys cases0 =
+    -- usually, redundant cases only occur with the multiset and bilinear pairing theories
+    if enableBP msig || enableMSet msig then cases else cases0
+  where
+    -- decorate with index and normed version of the system
+    decoratedCases = map (second addNormSys) $  zip [(0::Int)..] cases0
+    -- drop cases where the normed systems coincide
+    cases          =   map (fst . snd) . sortOn fst . sortednubOn (snd . snd) $ decoratedCases
+
+    addNormSys = id &&& ((modify sEqStore dropNameHintsBound) . renameDropNameHints . getSys)
+
+    -- this is an ordering that works well in the cases we tried
+    orderedVars sys =
+        filter ((/= LSortNode) . lvarSort) $ map fst . sortOn snd . varOccurences $ sys
+
+    -- rename except for stable variables, drop name hints, and import ordered vars first
+    renameDropNameHints sys =
+      (`evalFresh` avoid stableVars) . (`evalBindT` stableVarBindings) $ do
+          _ <- renameDropNamehint (orderedVars sys)
+          renameDropNamehint sys
+      where
+        stableVarBindings = M.fromList (map (\v -> (v, v)) stableVars)
+
+    msig = mhMaudeSig . get pcMaudeHandle $ ctxt
+
 ------------------------------------------------------------------------------
 -- Applying precomputed case distinctions
 ------------------------------------------------------------------------------
 
--- | Match a precomputed 'CaseDistinction' to a goal.
+-- | Match a precomputed 'CaseDistinction' to a goal. Returns the instantiated
+-- 'CaseDistinction' with the given goal if possible
 matchToGoal
     :: ProofContext     -- ^ Proof context used for refining the case distinction.
     -> CaseDistinction  -- ^ Case distinction to use.
     -> Goal             -- ^ Goal to match
-    -> Maybe (Reduction [String])
-    -- ^ A constraint reduction step to apply the resulting case distinction.
-    -- Note that this step assumes that the theorem has been imported using
-    -- 'someInst' into the context that this reduction is executed in.
-    --
-    -- FIXME: This is a mess. Factor code such that this inter-dependency
-    -- between 'applyCaseDistinction' and 'matchToGoal' goes away.
-matchToGoal ctxt th goalTerm =
+    -> Maybe CaseDistinction
+    -- ^ An adapted version of the case distinction with the given goal
+matchToGoal ctxt th0 goalTerm =
+  if not $ maybeMatcher (goalTerm, get cdGoal th0) then Nothing else
   case (goalTerm, get cdGoal th) of
+    -- FIXME: factor out common actions
     ( PremiseG      (iTerm, premIdxTerm) faTerm
      ,PremiseG pPat@(iPat,  _          ) faPat  ) ->
         let match = faTerm `matchFact` faPat <> iTerm `matchLVar` iPat in
         case runReader (solveMatchLNTerm match) (get pcMaudeHandle ctxt) of
             []      -> Nothing
-            subst:_ -> Just $ genericApply subst $
-                -- add the missing edge to each case of the theorem
-                modify sEdges (substNodePrem pPat (iPat, premIdxTerm))
+            subst:_ ->
+                let refine = do
+                        modM sEdges (substNodePrem pPat (iPat, premIdxTerm))
+                        void (solveSubstEqs SplitNow subst)
+                        void substSystem
+                        return ((), [])
+                in Just $ snd $ refineCaseDistinction ctxt refine (set cdGoal goalTerm th)
 
     (ActionG iTerm faTerm, ActionG iPat faPat) ->
         let match = faTerm `matchFact` faPat <> iTerm `matchLVar` iPat in
         case runReader (solveMatchLNTerm match) (get pcMaudeHandle ctxt) of
             []      -> Nothing
-            subst:_ -> Just $ genericApply subst id
+            subst:_ ->
+                let refine = do
+                        void (solveSubstEqs SplitNow subst)
+                        void substSystem
+                        return ((), [])
+                in Just $ snd $ refineCaseDistinction ctxt refine (set cdGoal goalTerm th)
 
     -- No other matches possible, as we only precompute case distinctions for
     -- premises and KU-actions.
     _ -> Nothing
   where
-    genericApply subst systemModifier = do
-        void (solveSubstEqs SplitNow subst)
-        (names, sysTh) <- disjunctionOfList $ getDisj $ get cdCases th
-        conjoinSystem (systemModifier sysTh)
-        return names
+    -- this code reflects the precomputed cases in 'precomputeCaseDistinctions'
+    maybeMatcher (PremiseG _ faTerm, PremiseG _ faPat)  = factTag faTerm == factTag faPat
+    maybeMatcher ( ActionG _ (Fact KUFact [tTerm])
+                 , ActionG _ (Fact KUFact [tPat]))      =
+        case (viewTerm tPat, viewTerm tTerm) of
+            (Lit  (Var v),_) | lvarSort v == LSortFresh -> sortOfLNTerm tPat == LSortFresh
+            (FApp o _, FApp o' _)                       -> o == o'
+            _                                           -> True
+    maybeMatcher _                                      = False
+
+    th = (`evalFresh` avoid goalTerm) . rename $ th0
 
     substNodePrem from to = S.map
         (\ e@(Edge c p) -> if p == from then Edge c to else e)
 
--- | Try to solve a premise goal or 'Ded' action using the first precomputed
+-- | Try to solve a premise goal or 'KU' action using the first precomputed
 -- case distinction with a matching premise.
 solveWithCaseDistinction :: ProofContext
                          -> [CaseDistinction]
@@ -209,14 +273,16 @@ applyCaseDistinction :: ProofContext
                      -> CaseDistinction    -- ^ Case distinction theorem.
                      -> Goal               -- ^ Required goal
                      -> Maybe (Reduction [String])
-applyCaseDistinction ctxt th goal
-  | isJust $ matchToGoal ctxt th goal = Just $ do
+applyCaseDistinction ctxt th0 goal = case matchToGoal ctxt th0 goal of
+    Just th -> Just $ do
         markGoalAsSolved "precomputed" goal
-        thRenamed <- rename th
-        fromJustNote "applyCaseDistinction: impossible" $
-            matchToGoal ctxt thRenamed goal
-
-  | otherwise = Nothing
+        (names, sysTh0) <- disjunctionOfList $ getDisj $ get cdCases th
+        sysTh <- (`evalBindT` keepVarBindings) . someInst $ sysTh0
+        conjoinSystem sysTh
+        return names
+    Nothing -> Nothing
+  where
+    keepVarBindings = M.fromList (map (\v -> (v, v)) (frees goal))
 
 -- | Saturate the case distinctions with respect to each other such that no
 -- additional splitting is introduced; i.e., only rules with a single or no
@@ -283,12 +349,14 @@ precomputeCaseDistinctions ctxt axioms =
 
     absMsgFacts :: [LNTerm]
     absMsgFacts = asum $ sortednub $
-      [ do return $ lit $ Var (LVar "t" LSortFresh 1)
-
-      , [ fAppNonAC (s,k) $ nMsgVars k
-        | (s,k) <- S.toList . allFunctionSymbols  . mhMaudeSig . get sigmMaudeHandle . get pcSignature $ ctxt
-        , (s,k) `S.notMember` implicitFunSig, k > 0 ]
+      [ return $ varTerm (LVar "t" LSortFresh 1)
+      , if enableBP msig then return $ fAppC EMap $ nMsgVars (2::Int) else []
+      , [ fAppNoEq o $ nMsgVars k
+        | o@(_,k) <- S.toList . noEqFunSyms  $ msig
+        , NoEq o `S.notMember` implicitFunSig, k > 0 ]
       ]
+
+    msig = mhMaudeSig . get pcMaudeHandle $ ctxt
 
 -- | Refine a set of case distinction by exploiting additional typing
 -- assumptions.
@@ -297,7 +365,9 @@ refineWithTypingAsms
     -> ProofContext       -- ^ Proof context to use.
     -> [CaseDistinction]  -- ^ Original, untyped case distinctions.
     -> [CaseDistinction]  -- ^ Refined, typed case distinctions.
-refineWithTypingAsms assumptions ctxt cases0 =
+refineWithTypingAsms [] _ cases0 =
+    fmap ((modify cdCases . fmap . second) (set sCaseDistKind TypedCaseDist)) $ cases0
+refineWithTypingAsms assumptions0 ctxt cases0 =
     fmap (modifySystems removeFormulas) $
     saturateCaseDistinctions ctxt $
     modifySystems updateSystem <$> cases0

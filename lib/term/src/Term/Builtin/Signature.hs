@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -11,44 +11,47 @@ module Term.Builtin.Signature where
 import Term.LTerm
 import qualified Data.Set as S
 
+----------------------------------------------------------------------
 -- Builtin symbols (pair and inv are defined in Term.Term)
 ----------------------------------------------------------------------
 
--- | Binary builtin non-ac function symbols.
-sdecSym, sencSym, adecSym, aencSym, signSym :: NonACSym
-sdecSym   = ("sdec",2)
-sencSym   = ("senc",2)
-adecSym   = ("adec",2)
-aencSym   = ("aenc",2)
-signSym   = ("sign",2)
+-- | Binary builtin function symbols.
+sdecSym, sencSym, adecSym, aencSym, signSym :: NoEqSym
+sdecSym = ("sdec",2)
+sencSym = ("senc",2)
+adecSym = ("adec",2)
+aencSym = ("aenc",2)
+signSym = ("sign",2)
 
-verifySym :: NonACSym
+-- | Ternary builtin function symbols.
+verifySym :: NoEqSym
 verifySym = ("verify",3)
 
--- | Unary builtin non-ac function symbols.
-pkSym, hashSym :: NonACSym
-pkSym      = ("pk",1)
-hashSym    = ("h",1)
+-- | Unary builtin function symbols.
+pkSym, hashSym :: NoEqSym
+pkSym = ("pk",1)
+hashSym = ("h",1)
 
--- | Nullary builtin non-ac function symbols.
-trueSym :: NonACSym
+-- | Nullary builtin function symbols.
+trueSym :: NoEqSym
 trueSym = ("true",0)
 
+----------------------------------------------------------------------
 -- Builtin signatures
 ----------------------------------------------------------------------
 
 -- | The signature for symmetric encryption.
-symEncFunSig :: FunSig
-symEncFunSig = S.fromList [ sdecSym, sencSym ]
+symEncFunSig :: NoEqFunSig
+symEncFunSig = S.fromList $ [ sdecSym, sencSym ]
 
 -- | The signature for asymmetric encryption.
-asymEncFunSig :: FunSig
-asymEncFunSig = S.fromList [ adecSym, aencSym, pkSym ]
+asymEncFunSig :: NoEqFunSig
+asymEncFunSig = S.fromList $ [ adecSym, aencSym, pkSym ]
 
 -- | The signature for cryptographic signatures.
-signatureFunSig :: FunSig
-signatureFunSig = S.fromList [ signSym, verifySym, trueSym, pkSym ]
+signatureFunSig :: NoEqFunSig
+signatureFunSig = S.fromList $ [ signSym, verifySym, trueSym, pkSym ]
 
 -- | The signature for hashing.
-hashFunSig :: FunSig
+hashFunSig :: NoEqFunSig
 hashFunSig = S.fromList [ hashSym ]

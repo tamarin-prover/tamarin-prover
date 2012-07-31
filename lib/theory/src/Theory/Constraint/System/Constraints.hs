@@ -81,6 +81,7 @@ instance Apply Edge where
 
 instance HasFrees Edge where
     foldFrees f (Edge x y) = foldFrees f x `mappend` foldFrees f y
+    foldFreesOcc  f c (Edge x y) = foldFreesOcc f ("edge":c) (x, y)
     mapFrees  f (Edge x y) = Edge <$> mapFrees f x <*> mapFrees f y
 
 
@@ -143,6 +144,11 @@ instance HasFrees Goal where
         ChainG c p    -> foldFrees f c <> foldFrees f p
         SplitG i      -> foldFrees f i
         DisjG x       -> foldFrees f x
+
+    foldFreesOcc  f c goal = case goal of
+        ActionG i fa -> foldFreesOcc f ("ActionG":c) (i, fa)
+        ChainG co p  -> foldFreesOcc f ("ChainG":c)  (co, p)
+        _            -> mempty
 
     mapFrees f goal = case goal of
         ActionG i fa  -> ActionG  <$> mapFrees f i <*> mapFrees f fa

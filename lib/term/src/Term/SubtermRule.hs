@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |
--- Copyright   : (c) 2011, 2012 Benedikt Schmidt
+-- Copyright   : (c) 2011-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -57,13 +57,6 @@ stRuleToRRule :: StRule -> RRule LNTerm
 stRuleToRRule (StRule lhs rhs) = case rhs of
                                      RhsGround t   -> lhs `RRule` t
                                      RhsPosition p -> lhs `RRule` (lhs `atPos` p)
-
-{-
-
-test:
-xorRules == map (stRuleToRRule . fromJust .  rRuleToStRule) xorRules
-
--}
 
 ------------------------------------------------------------------------------
 -- Pretty Printing

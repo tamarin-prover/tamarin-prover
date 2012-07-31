@@ -92,7 +92,9 @@ library
 
     other-modules:
       Term.Term
-      Term.Classes
+      Term.Term.Classes
+      Term.Term.Raw
+      Term.Term.FunctionSymbols
 
       Term.Narrowing.Narrow
 

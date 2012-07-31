@@ -43,6 +43,8 @@ module Theory.Constraint.Solver.Types (
   , cdGoal
   , cdCases
 
+  , prettyCaseDistinction
+
   ) where
 
 import           Prelude                  hiding (id, (.))
@@ -60,6 +62,7 @@ import           Control.DeepSeq
 
 import           Logic.Connectives
 import           Theory.Constraint.System
+import           Theory.Text.Pretty
 import           Theory.Model
 
 
@@ -134,8 +137,21 @@ instance HasFrees CaseDistinction where
         foldFrees f (L.get cdGoal th)   `mappend`
         foldFrees f (L.get cdCases th)
 
+    foldFreesOcc  _ _ = const mempty
+
     mapFrees f th = CaseDistinction <$> mapFrees f (L.get cdGoal th)
                                     <*> mapFrees f (L.get cdCases th)
+
+-- Pretty printing
+------------------
+
+-- | Pretty print a case distinction
+prettyCaseDistinction :: HighlightDocument d => CaseDistinction -> d
+prettyCaseDistinction th = vcat $
+   [ prettyGoal $ L.get cdGoal th ]
+   ++ map combine (zip [(1::Int)..] $ map snd . getDisj $ (L.get cdCases th))
+  where
+    combine (i, sys) = fsep [keyword_ ("Case " ++ show i) <> colon, nest 2 (prettySystem sys)]
 
 
 -- NFData

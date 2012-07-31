@@ -1,5 +1,5 @@
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -9,7 +9,7 @@ module Term.Builtin.Rules (
   -- * Rewriting rules
     RRule(..)
   , dhRules
-  , xorRules
+  , bpRules
   , msetRules
   , pairRules
   , symEncRules
@@ -54,20 +54,26 @@ dhRules = S.fromList
     inv  = fAppInv
     one  = fAppOne
 
--- | The rewriting rules for Xor.
-xorRules :: Set (RRule LNTerm)
-xorRules = S.fromList
-    [ x1 +: x1 `RRule` zero
-    , x1 +: zero `RRule` x1
-    , x1 +: (x1 +: x2) `RRule` x2 ]
+-- | The rewriting rules for bilinear pairing. These rules extend the
+--   the rules for Diffie-Hellman.
+bpRules :: Set (RRule LNTerm)
+bpRules = S.fromList
+    [ pmult(one,x1) `RRule` x1
+      -- x1 and x2 are scalars, x3 is a point on an elliptic curve
+    , pmult(x3,pmult(x2,x1)) `RRule` pmult(x3 *: x2, x1)
+
+    -- em is commutative, so this rule is sufficient
+    , em(x1, pmult(x2,x3)) `RRule` expo(em(x1,x3), x2)
+    ]
   where
-    zero = fAppZero
+    one   = fAppOne
+    expo  = fAppExp
+    pmult = fAppPMult
+    em    = fAppEMap
 
 -- | The rewriting rules for multisets.
 msetRules :: Set (RRule LNTerm)
 msetRules = S.empty
--- msetRules = S.fromList [ x1 # fAppEmpty `RRule` x1 ]
-
 
 -- | The rewriting rules for standard subterm operators that are builtin.
 pairRules, symEncRules, asymEncRules, signatureRules :: Set (StRule)

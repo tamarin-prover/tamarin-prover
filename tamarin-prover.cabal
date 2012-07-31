@@ -48,8 +48,9 @@ data-files:
   AUTHORS
   CHANGES
 
-  -- cached intruder variants for DH-exponentiation
+  -- cached intruder variants for DH and BP
   intruder_variants_dh.spthy
+  intruder_variants_bp.spthy
 
   -- files for the web-frontend
   img/*.ico

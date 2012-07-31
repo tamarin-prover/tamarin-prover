@@ -1,17 +1,10 @@
-{-# LANGUAGE TupleSections
-           , TypeSynonymInstances
-           , GADTs
-           , FlexibleContexts
-           , EmptyDataDecls
-           , StandaloneDeriving
-           , DeriveDataTypeable
-           , FlexibleInstances
-           , MultiParamTypeClasses
-           , GeneralizedNewtypeDeriving
-           , ScopedTypeVariables
- #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -57,23 +50,24 @@ module Term.Substitution.SubstVFresh (
 ) where
 
 
-import Term.LTerm
-import Text.PrettyPrint.Highlight
+import           Term.LTerm
+import           Text.PrettyPrint.Highlight
 
-import Control.Applicative
-import Control.Monad.Fresh
-import Control.DeepSeq
+import           Control.Applicative
+import           Control.Monad.Fresh
+import           Control.DeepSeq
 
-import Logic.Connectives
+import           Logic.Connectives
 
-import Utils.Misc
+import           Utils.Misc
 
-import Data.Map ( Map )
+import           Data.Map ( Map )
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Data.List
-import Data.Traversable hiding ( mapM )
-import Data.Binary
+import           Data.List
+import           Data.Traversable hiding ( mapM )
+import           Data.Binary
+import           Data.Monoid ( mempty )
 
 ----------------------------------------------------------------------
 -- Substitutions
@@ -92,9 +86,6 @@ type LSubstVFresh c = SubstVFresh c LVar
 -- | Fresh substitution with logical variables and names
 type LNSubstVFresh = SubstVFresh Name LVar
 
--- Instances
-------------
-
 -- Smart constructors for substitutions
 ----------------------------------------------------------------------
 
@@ -105,7 +96,6 @@ substFromListVFresh xs = SubstVFresh (M.fromList xs)
 -- | @emptySubstVFresh@ is the fresh substitution with empty domain.
 emptySubstVFresh :: SubstVFresh c v
 emptySubstVFresh = SubstVFresh M.empty
-
 
 -- Operations
 ----------------------------------------------------------------------
@@ -131,7 +121,6 @@ extendWithRenaming vs0 s =
       substToListVFresh s ++ substToListVFresh (renameFreshAvoiding s2 (varsRangeVFresh s))
   where s2 = substFromListVFresh [(v, lit (Var v)) | v <- vs ]
         vs = vs0 \\ domVFresh s
-
 
 -- Queries
 ----------------------------------------------------------------------
@@ -208,6 +197,7 @@ instance Sized (SubstVFresh c v) where
 
 instance HasFrees (SubstVFresh n LVar) where
     foldFrees f = foldFrees f . M.keys . svMap
+    foldFreesOcc _ _ = const mempty -- we ignore occurences in substitutions for now
     mapFrees   f = 
         (substFromListVFresh <$>) . traverse mapDomain   . substToListVFresh
       where
@@ -218,7 +208,7 @@ instance HasFrees (SubstVFresh n LVar) where
 ----------------------------------------------------------------------
 
 -- | Pretty print a substitution.
-prettySubstVFresh :: (Ord c, Ord v, HighlightDocument d)
+prettySubstVFresh :: (Ord c, Ord v, HighlightDocument d, Show c, Show v)
                   => (v -> d) -> (Lit c v -> d) -> SubstVFresh c v -> [d]
 prettySubstVFresh ppVar ppLit =
     map pp . M.toList . equivClasses . substToListVFresh
@@ -227,7 +217,8 @@ prettySubstVFresh ppVar ppLit =
         (fsep $ punctuate comma $ map ppVar $ S.toList vs) <> operator_ "}"
 
 -- | Pretty print a substitution with logical variables.
-prettyLSubstVFresh :: (Show (Lit c LVar), Ord c, HighlightDocument d) => LSubstVFresh c -> d
+prettyLSubstVFresh :: (Show (Lit c LVar), Ord c, HighlightDocument d, Show c)
+                   => LSubstVFresh c -> d
 prettyLSubstVFresh = vcat . prettySubstVFresh (text . show) (text . show)
 
 -- | Pretty print a disjunction of substitutions.

@@ -1,5 +1,5 @@
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -11,35 +11,37 @@ import Term.Term
 import Term.LTerm
 import Term.Builtin.Signature
 
---
+----------------------------------------------------------------------
 -- Shorter syntax for Term constructors
 ----------------------------------------------------------------------
 
 (*:) :: Ord a => Term a -> Term a -> Term a
-b *: e = fAppMult [b,e]
+b *: e = fAppAC Mult [b,e]
 (#) :: Ord a => Term a -> Term a -> Term a
-b # e  = fAppUnion [b,e]
-(+:) :: Ord a => Term a -> Term a -> Term a
-b +: e = fAppXor [b,e]
+b # e  = fAppAC Union [b,e]
 
 adec, aenc, sdec, senc, sign :: Ord a => (Term a,Term a) -> Term a
-adec (a,b)   = fAppNonAC adecSym [a,b]
-aenc (a,b)   = fAppNonAC aencSym [a,b]
-sdec (a,b)   = fAppNonAC sdecSym [a,b]
-senc (a,b)   = fAppNonAC sencSym [a,b]
-sign (a,b)   = fAppNonAC signSym [a,b]
+adec (a,b)   = fAppNoEq adecSym [a,b]
+aenc (a,b)   = fAppNoEq aencSym [a,b]
+sdec (a,b)   = fAppNoEq sdecSym [a,b]
+senc (a,b)   = fAppNoEq sencSym [a,b]
+sign (a,b)   = fAppNoEq signSym [a,b]
 
 verify :: Ord a => (Term a,Term a,Term a) -> Term a
-verify (a,b,c) = fAppNonAC verifySym [a,b,c]
+verify (a,b,c) = fAppNoEq verifySym [a,b,c]
 
 pk :: Ord a => Term a -> Term a
-pk a = fAppNonAC pkSym [a]
+pk a = fAppNoEq pkSym [a]
 
 trueC :: Ord a => Term a
-trueC = fAppNonAC trueSym []
+trueC = fAppNoEq trueSym []
 
 var :: String -> Integer -> LNTerm
 var s i = varTerm $ LVar s LSortMsg i
+
+----------------------------------------------------------------------
+-- Predefined variables and names
+----------------------------------------------------------------------
 
 x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10 :: LNTerm
 x0 = var "x" 0

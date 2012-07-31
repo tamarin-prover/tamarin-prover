@@ -1,5 +1,5 @@
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -18,7 +18,7 @@ module Term.Narrowing.Variants.Check (
 import Term.Substitution
 import Term.Unification
 import Term.Rewriting.Norm
-import Term.Subsumption ( factorSubstVia, canonizeSubst )
+import Term.Subsumption (factorSubstVia,canonizeSubst)
 import Term.Narrowing.Narrow
 
 import Extension.Prelude
@@ -94,7 +94,8 @@ variantsFrom t substFrom0 = reader $ \hnd -> (\res -> trace (show ("variantsFrom
 --   in substs with s' <=_Var^t s.
 isMaximalIn :: LNSubstVFresh -> [LNSubstVFresh] -> LNTerm -> WithMaude Bool
 isMaximalIn s substs t = reader $ \hnd ->
-    all (\s' -> (\res -> trace (show ("isMaximal:", not res , "=", s, "<=", s')) res ) $not (leqSubstVariant t s s' `runReader` hnd)) substs
+    all (\s' -> (\res -> trace (show ("isMaximal:", not res , "=", s, "<=", s')) res ) $
+        not (leqSubstVariant t s s' `runReader` hnd)) substs
 
 -- Minimality checking for a set of variants
 ----------------------------------------------------------------------
@@ -105,4 +106,5 @@ isMaximalIn s substs t = reader $ \hnd ->
 checkMinimal :: LNTerm -> [LNSubstVFresh] -> WithMaude Bool
 checkMinimal t substs = reader $ \hnd ->
     noDuplicates substs && 
-    all (\s -> (\res -> trace (show (s,substs,res)) res) $ (`runReader` hnd) $ isMaximalIn s (delete s substs) t) substs
+    all (\s -> (\res -> trace (show (s,substs,res)) res) $
+        (`runReader` hnd) $ isMaximalIn s (delete s substs) t) substs

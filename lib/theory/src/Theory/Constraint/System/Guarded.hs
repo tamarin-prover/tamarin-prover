@@ -242,8 +242,9 @@ traverseGuarded f = foldGuarded (liftA GAto . traverse (traverseTerm (traverse (
                                 (\qua ss as gf -> GGuarded qua ss <$> traverse (traverse (traverseTerm (traverse (traverse f)))) as <*> gf)
 
 instance Ord c => HasFrees (Guarded (String, LSort) c LVar) where
-    foldFrees f = foldMap  (foldFrees f)
-    mapFrees  f = traverseGuarded (mapFrees f)
+    foldFrees    f   = foldMap  (foldFrees f)
+    foldFreesOcc _ _ = const mempty
+    mapFrees     f   = traverseGuarded (mapFrees f)
 
 
 -- FIXME: remove name hints for variables for saturation?

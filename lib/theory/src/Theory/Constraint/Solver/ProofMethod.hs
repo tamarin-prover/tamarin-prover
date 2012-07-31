@@ -44,7 +44,6 @@ import           Extension.Prelude                         (sortOn)
 
 import           Control.Basics
 import           Control.DeepSeq
-import           Control.Monad.Bind
 import qualified Control.Monad.Trans.PreciseFresh          as Precise
 
 import           Theory.Constraint.Solver.CaseDistinctions
@@ -56,7 +55,6 @@ import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
-
 
 ------------------------------------------------------------------------------
 -- Utilities
@@ -108,6 +106,8 @@ instance HasFrees ProofMethod where
     foldFrees f (Contradiction c) = foldFrees f c
     foldFrees _ _                 = mempty
 
+    foldFreesOcc  _ _ = const mempty
+
     mapFrees f (SolveGoal g)     = SolveGoal <$> mapFrees f g
     mapFrees f (Contradiction c) = Contradiction <$> mapFrees f c
     mapFrees _ method            = pure method
@@ -126,7 +126,6 @@ instance HasFrees ProofMethod where
 execProofMethod :: ProofContext
                 -> ProofMethod -> System -> Maybe (M.Map CaseName System)
 execProofMethod ctxt method sys =
-    M.map cleanupSystem <$>
       case method of
         Sorry _                  -> return M.empty
         Solved
@@ -134,9 +133,9 @@ execProofMethod ctxt method sys =
           | otherwise            -> Nothing
         SolveGoal goal
           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
-          | otherwise                      -> Nothing
-        Simplify                 -> singleCase (/=) simplifySystem
-        Induction                -> execInduction
+          | otherwise                        -> Nothing
+        Simplify                 -> singleCase simplifySystem
+        Induction                -> M.map cleanupSystem <$> execInduction
         Contradiction _
           | null (contradictions ctxt sys) -> Nothing
           | otherwise                      -> Just M.empty
@@ -146,25 +145,27 @@ execProofMethod ctxt method sys =
     -- simplifySystem). We also reset the variable indices here.
     cleanupSystem =
          (`Precise.evalFresh` Precise.nothingUsed)
-       . (`evalBindT` noBindings)
-       . someInst
+       . renamePrecise
        . set sSubst emptySubst
 
 
     -- expect only one or no subcase in the given case distinction
-    singleCase check m =
-        case map fst $ getDisj $ execReduction m ctxt sys (avoid sys) of
-          []                      -> return $ M.empty
-          [sys'] | check sys sys' -> return $ M.singleton "" sys'
-                 | otherwise      -> mzero
-          syss                    ->
+    singleCase m =
+        case    removeRedundantCases ctxt [] id . map cleanupSystem
+              . map fst . getDisj $ execReduction m ctxt sys (avoid sys) of
+          []                  -> return $ M.empty
+          [sys'] | check sys' -> return $ M.singleton "" sys'
+                 | otherwise  -> mzero
+          syss                ->
                return $ M.fromList (zip (map show [(1::Int)..]) syss)
+      where check sys' = cleanupSystem sys /= sys'
 
     -- solve the given goal
     -- PRE: Goal must be valid in this system.
-    execSolveGoal goal = do
-        return $ makeCaseNames $ map fst $ getDisj $
-            runReduction solver ctxt sys (avoid sys)
+    execSolveGoal goal =
+        return . makeCaseNames . removeRedundantCases ctxt [] snd
+               . map (second cleanupSystem) . map fst . getDisj
+               $ runReduction solver ctxt sys (avoid sys)
       where
         ths    = L.get pcCaseDists ctxt
         solver = do name <- maybe (solveGoal goal)

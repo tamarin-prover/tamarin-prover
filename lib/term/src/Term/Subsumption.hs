@@ -1,8 +1,6 @@
-{-# LANGUAGE GADTs, FlexibleContexts, ViewPatterns #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
-  -- spurious warnings for view patterns
+{-# LANGUAGE ViewPatterns #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -13,9 +11,8 @@ module Term.Subsumption (
   , eqTermSubs
 
   , factorSubstVia
---  , factorSubstOnVFresh
 
-  -- * canonical representations for substitutions
+  -- * Canonical representations for substitutions
   --   modulo renaming
   , canonizeSubst
 
@@ -28,13 +25,9 @@ import Control.Basics
 import Data.Monoid
 
 import Extension.Prelude
--- import Utils.Misc
 
-
-import Term.Term
 import Term.LTerm
 import Term.Unification
-import Term.Positions
 
 
 ----------------------------------------------------------------------
@@ -68,28 +61,6 @@ factorSubstVia vs s1 s2 =
     matches :: [Match LNTerm]
     matches = zipWith matchWith (substToListOn vs s1) (substToListOn vs s2)
 
-
-{-
--- | @factorSubstOnVFresh s1 s2 vs@ factors the fresh substitution @s1@
---   through the free substitution @s2@ on @vs@,
---   i.e., it returns a complete set of fresh substitutions s such that
---   s1 is equivalent to s.s2 modulo renaming.
-factorSubstViaVFresh :: [LVar] -> LNSubstVFresh -> LNSubst
-                    -> WithMaude [LNSubstVFresh]
-factorSubstViaVFresh vs s1_0 s2 = do
-    matchers <- matchLNTerm (zipWith MatchWith l1 l2)
-    return $ do
-        s <- matchers
-        when (not $ varsRange s `subsetOf` varsRange s1) $
-            error $ "factorSubstOnVFresh " ++ show s1 ++ " " ++ show s2
-                    ++ " => " ++ show s ++ " contains new variables"
-        return $ freeToFreshRaw s
-  where
-    s1 = freshToFreeAvoiding s1_0 (vs, varsRange s2)
-    l1 = substToListOn vs s1
-    l2 = substToListOn vs s2
--}
-
 ----------------------------------------------------------------------
 -- Equality of substitutions modulo AC and renaming
 ----------------------------------------------------------------------
@@ -99,21 +70,8 @@ canonizeSubst :: LNSubstVFresh -> LNSubstVFresh
 canonizeSubst subst =
     mapRangeVFresh (applyVTerm renaming) subst
   where
-    vrangeSorted = sortOn (varOccurences subst) (varsRangeVFresh subst)
+    occs         = varOccurences $ rangeVFresh subst
+    vrangeSorted = sortOn (`lookup` occs) (varsRangeVFresh subst)
     renaming = substFromList $
                  zipWith (\lv i -> (lv, varTerm $ LVar "x" (lvarSort lv) i))
                          vrangeSorted [1..]
-
--- | @varOccurences v t@ returns a sorted list of positions where the
---   variable @v@ occurs in @t@. The function returns the same result for
---   terms that are equal modulo AC since the flattened term representation
---   is used.
-varOccurences :: LNSubstVFresh -> LVar  -> [[Position]]
-varOccurences subst v = map (go []) $ rangeVFresh subst
-  where
-    go pos (viewTerm -> Lit (Var v')) | v == v' = [pos]
-                          | otherwise = []
-    go _   (viewTerm -> Lit (Con _))  = []
-    go pos (viewTerm -> FApp (AC _) as) = concatMap (go (0:pos)) as
-    go pos (viewTerm -> FApp _ as) =
-        concat (zipWith (\i -> go (i:pos)) [0 .. ] as)

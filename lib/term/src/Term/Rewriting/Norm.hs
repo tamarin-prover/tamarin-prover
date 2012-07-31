@@ -1,20 +1,13 @@
-{-# LANGUAGE ExplicitForAll      #-}
 {-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE PatternGuards       #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
-  -- spurious warnings for view patterns
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
--- This module implements normalization with respect to DH u AC using class
--- rewriting and an ad-hoc function that uses the @TermAC@ representation of
--- terms modulo AC.
+-- This module implements normalization and normal-form checks of terms.
 module Term.Rewriting.Norm (
---    norm
     norm'
   , nf'
   , nfSubstVFresh'
@@ -39,6 +32,7 @@ import qualified Data.Set             as S
 
 import           System.IO.Unsafe     (unsafePerformIO)
 
+----------------------------------------------------------------------
 -- Normalization using Maude
 ----------------------------------------------------------------------
 
@@ -53,6 +47,10 @@ norm' :: LNTerm -> WithMaude LNTerm
 norm' = norm sortOfName
 
 
+----------------------------------------------------------------------
+-- Normal-form check using Maude and Haskell
+----------------------------------------------------------------------
+
 -- | @nfViaHaskell t@ returns @True@ if the term @t@ is in normal form.
 nfViaHaskell :: LNTerm -> WithMaude Bool
 nfViaHaskell t0 = reader $ \hnd -> check hnd
@@ -61,36 +59,38 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
       where
         go t = case viewTerm2 t of
             -- irreducible function symbols
-            FAppNonAC o ts | o `S.member` irreducible -> all go ts
-            FList ts                                  -> all go ts
-            FPair t1 t2                               -> go t1 && go t2
-            One                                       -> True
---            Empty                                     -> True
-            Zero                                      -> True
-            Lit2 _                                    -> True
+            FAppNoEq o ts | (NoEq o) `S.member` irreducible -> all go ts
+            FList ts                                        -> all go ts
+            FPair t1 t2                                     -> go t1 && go t2
+            One                                             -> True
+            Lit2 _                                          -> True
             -- subterm rules
-            FAppNonAC _ _ | setAny (struleApplicable t) strules     -> False
+            FAppNoEq _ _ | setAny (struleApplicable t) strules -> False
             -- exponentiation
-            FExp (viewTerm2 -> FExp _ _) _                  | dh -> False
-            FExp _                       (viewTerm2 -> One) | dh -> False
+            FExp (viewTerm2 -> FExp _ _) _                  -> False
+            FExp _                       (viewTerm2 -> One) -> False
             -- inverses
-            FInv (viewTerm2 -> FInv _)   | dh                     -> False
-            FInv (viewTerm2 -> FMult ts) | dh && any isInverse ts -> False
-            FInv (viewTerm2 -> One)      | dh                     -> False
+            FInv (viewTerm2 -> FInv _)                      -> False
+            FInv (viewTerm2 -> FMult ts) | any isInverse ts -> False
+            FInv (viewTerm2 -> One)                         -> False
             -- multiplication
             FMult ts | fAppOne `elem` ts  || any isProduct ts || invalidMult ts   -> False
-            -- xor
-            FXor ts | fAppZero `elem` ts || any isXor ts || not (noDuplicates ts) -> False
-            -- multiset union
---            FUnion ts | fAppEmpty `elem` ts || any isUnion ts                     -> False
+            -- point multiplication
+            FPMult _                  (viewTerm2 -> FPMult _ _) -> False
+            FPMult (viewTerm2 -> One) _                         -> False
+            -- bilinear map
+            FEMap _                         (viewTerm2 -> FPMult _ _) -> False
+            FEMap (viewTerm2 -> FPMult _ _) _                         -> False
 
             -- topmost position not reducible, check subterms
-            FExp        t1 t2 -> go t1 && go t2
-            FInv        t1    -> go t1
-            FMult       ts    -> all go ts
-            FXor        ts    -> all go ts
-            FUnion      ts    -> all go ts
-            FAppNonAC _ ts    -> all go ts
+            FExp       t1 t2 -> go t1 && go t2
+            FPMult     t1 t2 -> go t1 && go t2
+            FEMap      t1 t2 -> go t1 && go t2
+            FInv       t1    -> go t1
+            FMult      ts    -> all go ts
+            FUnion     ts    -> all go ts
+            FAppNoEq _ ts    -> all go ts
+            FAppC _    ts    -> all go ts
 
         struleApplicable t (StRule lhs rhs) =
             case solveMatchLNTerm (t `matchWith` lhs) `runReader` hnd of
@@ -110,9 +110,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
 
         msig        = mhMaudeSig hnd
         strules     = stRules msig
-        irreducible = irreducibleFunctionSymbols msig
-        dh          = enableDH msig
-
+        irreducible = irreducibleFunSyms msig
 
 -- | @nf' t@ returns @True@ if the term @t@ is in normal form.
 nf' :: LNTerm -> WithMaude Bool
@@ -135,19 +133,12 @@ _nfCompare' t0 = reader $ \hnd ->
                   ++" maude: " ++ show x ++ " haskell: "++show y
 
 
--- Normalization
-----------------------------------------------------
+-- Utility functions for normalization and normal-form checks
+------------------------------------------------------------
 
 -- | @nfSubst s@ returns @True@ if the substitution @s@ is in normal form.
 nfSubstVFresh' ::  LNSubstVFresh -> WithMaude Bool
 nfSubstVFresh' s = reader $ \hnd -> all (\t -> runReader (nf' t) hnd) (rangeVFresh s)
-
-{-
--- | @normSubst s@ normalizes the substitution @s@.
-normSubst :: (IsConst c, IsVar v, Show (Lit c v)) => Subst c v -> Subst c v
-normSubst s = mapRange norm s
-
--}
 
 -- | @normSubst s@ normalizes the substitution @s@.
 normSubstVFresh' :: LNSubstVFresh -> WithMaude LNSubstVFresh
@@ -156,7 +147,8 @@ normSubstVFresh' s = reader $ \hnd -> mapRangeVFresh (\t -> norm' t `runReader` 
 -- | Returns all subterms that may be not in normal form.
 maybeNotNfSubterms :: MaudeSig -> LNTerm -> [LNTerm]
 maybeNotNfSubterms msig t0 = go t0
-  where irreducible = irreducibleFunctionSymbols msig
-        go (viewTerm -> Lit _)                                        = []
-        go (viewTerm -> FApp (NonAC o) as) | o `S.member` irreducible = concatMap go as
-        go t                                                          = [t]
+  where irreducible = irreducibleFunSyms msig
+        go t = case viewTerm t of
+            Lit (Con _)                            -> []
+            (FApp o as) | o `S.member` irreducible -> concatMap go as
+            _                                      -> [t]

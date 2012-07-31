@@ -1,6 +1,5 @@
-{-# LANGUAGE FlexibleInstances #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -17,7 +16,7 @@ module Term.Narrowing.Variants.Compute (
 import Term.LTerm
 import Term.Substitution
 import Term.Unification
-import Term.Narrowing.Variants.Check (leqSubstVariant, variantsFrom)
+import Term.Narrowing.Variants.Check (leqSubstVariant,variantsFrom)
 
 import Extension.Prelude
 

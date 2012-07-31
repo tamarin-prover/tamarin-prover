@@ -380,8 +380,6 @@ isInTrace sys i =
 isLast :: System -> NodeId -> Bool
 isLast sys i = Just i == L.get sLastAtom sys
 
-
-
 ------------------------------------------------------------------------------
 -- Pretty printing                                                          --
 ------------------------------------------------------------------------------
@@ -426,7 +424,6 @@ prettyGoals solved sys = vsep $ do
                     | otherwise                  = ""
     return $ prettyGoal goal <-> lineComment_ ("nr: " ++ show nr ++ loopBreaker)
 
-
 -- Additional instances
 -----------------------
 
@@ -437,10 +434,12 @@ instance Apply CaseDistKind where
 
 instance HasFrees CaseDistKind where
     foldFrees = const mempty
+    foldFreesOcc  _ _ = const mempty
     mapFrees  = const pure
 
 instance HasFrees GoalStatus where
     foldFrees = const mempty
+    foldFreesOcc  _ _ = const mempty
     mapFrees  = const pure
 
 instance HasFrees System where
@@ -456,6 +455,20 @@ instance HasFrees System where
         foldFrees fun i `mappend`
         foldFrees fun j `mappend`
         foldFrees fun k
+
+    foldFreesOcc fun ctx (System a _b _c _d _e _f _g _h _i _j _k) =
+        foldFreesOcc fun ("a":ctx') a {- `mappend`
+        foldFreesCtx fun ("b":ctx') b `mappend`
+        foldFreesCtx fun ("c":ctx') c `mappend`
+        foldFreesCtx fun ("d":ctx') d `mappend`
+        foldFreesCtx fun ("e":ctx') e `mappend`
+        foldFreesCtx fun ("f":ctx') f `mappend`
+        foldFreesCtx fun ("g":ctx') g `mappend`
+        foldFreesCtx fun ("h":ctx') h `mappend`
+        foldFreesCtx fun ("i":ctx') i `mappend`
+        foldFreesCtx fun ("j":ctx') j `mappend`
+        foldFreesCtx fun ("k":ctx') k -}
+      where ctx' = "system":ctx
 
     mapFrees fun (System a b c d e f g h i j k) =
         System <$> mapFrees fun a

@@ -1,6 +1,5 @@
-{-# LANGUAGE FlexibleInstances #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -10,15 +9,15 @@ module Term.Narrowing.Narrow (
     narrowSubsts
   ) where
 
-import Term.Unification
-import Term.Positions
+import           Term.Unification
+import           Term.Positions
 
-import Control.Monad.Reader
+import           Control.Monad.Reader
 
-import Extension.Prelude
+import           Extension.Prelude
 import qualified Data.Set as S
 
-import Debug.Trace.Ignore
+import           Debug.Trace.Ignore
 
 -- Narrowing
 ----------------------------------------------------------------------

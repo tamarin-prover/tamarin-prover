@@ -11,13 +11,15 @@ module Main.Mode.Intruder (
     intruderMode
   ) where
 
-import           Control.Basics
 import           Control.Monad.Reader
 
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 
 import           Theory
+
+import           Theory.Text.Parser (dhIntruderVariantsFile,bpIntruderVariantsFile)
+
 import           Theory.Tools.IntruderRules
 
 import           Main.Console
@@ -39,33 +41,28 @@ intruderMode = tamarinMode
       }
 
     outputFlags =
-      [ flagOpt "" ["output","o"] (updateArg "outFile") "FILE" "Output file"
-      , flagOpt "" ["Output","O"] (updateArg "outDir") "DIR"  "Output directory"
+      [ flagOpt "" ["Output","O"] (updateArg "outDir") "DIR"  "Output directory"
       ]
 
 -- | Compute the intruder variants.
 run :: TamarinMode -> Arguments -> IO ()
 run _thisMode as = do
     _ <- ensureMaude as
-    hnd <- startMaude (maudePath as) dhMaudeSig
-    let rules       = dhIntruderRules `runReader` hnd
-        rulesString = renderDoc $ prettyIntruderVariants rules
-    putStrLn rulesString
-    writeRules rulesString
+    dhHnd <- startMaude (maudePath as) dhMaudeSig
+    bpHnd <- startMaude (maudePath as) bpMaudeSig
+    let dhRules    = dhIntruderRules `runReader` dhHnd
+        bpRules    = bpIntruderRules `runReader` bpHnd
+        dhS = renderDoc . prettyIntruderVariants $ dhRules
+        bpS = renderDoc . prettyIntruderVariants $ bpRules
+
+    putStrLn (dhS++bpS)
+    writeRules dhS bpS
   where
     -- output generation
     --------------------
 
-    writeRules rulesString = case optOutPath of
-      Just outPath -> writeFileWithDirs outPath rulesString
-      Nothing      -> return ()
-
-    -- Output file name, if output is desired.
-    optOutPath :: Maybe FilePath
-    optOutPath =
-      do outFile <- findArg "outFile" as
-         guard (outFile /= "")
-         return outFile
-      <|>
-      do outDir <- findArg "outDir" as
-         return $ outDir </> intruderVariantsFile
+    writeRules dhS bpS = case findArg "outDir" as of
+      Just outDir ->
+          do writeFileWithDirs (outDir </> dhIntruderVariantsFile) dhS
+             writeFileWithDirs (outDir </> bpIntruderVariantsFile) bpS
+      Nothing     -> return ()
