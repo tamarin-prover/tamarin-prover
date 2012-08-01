@@ -1,0 +1,66 @@
+theory Joux_Private_Channels
+begin
+
+section{* The Joux Protocol using Private Channels *}
+
+/*
+ * Protocol:	Joux Protocols
+ * Modeler: 	Benedikt Schmidt
+ * Date: 	July 2012
+ *
+ * Status: 	working
+ */
+
+builtins: bilinear-pairing, multiset
+
+// Protocol
+rule First:
+  // pmult(s,P) denotes the multiplication of the point
+  // P with the scalar s (sometimes written [s]P or P^s). 
+  let epkA = pmult(~ekA ,'P')
+  in
+  [ Fr(~ekA) ]
+  --[ ]->
+  [ P1( $A ,$B + $C, ~ekA )
+  , Out( epkA )
+  // The message denotes:
+  // This is $A's public ephemeral key epkA
+  // for establishing a key with $B and $C.
+  , !PrivChan(<$A, $B + $C, epkA>)
+  ]
+
+
+rule Second:
+    // This is what they are doing in the Proverif version.
+    // let XB = pmult(~ekB, 'P')
+    //      XC = pmult(~ekc, 'P')
+    // in
+    [ P1( $A, $B + $C, ~ekA)
+    // receive $B's contribution
+    , !PrivChan(<$B, $A + $C, XB>)
+    // receive $C's contribution
+    , !PrivChan(<$C, $A + $B, XC>)
+    ]
+  --[ SessionKey($A, $B + $C,
+                 // em denotes the bilinear pairing
+                 em(XB,XC) ^ ~ekA) ]->
+    []
+
+
+lemma session_key_establish:
+  exists-trace
+  "Ex A B C #ia #ib #ic k.
+      ( SessionKey(A, B + C, k) @ ia &
+        SessionKey(B, A + C, k) @ ib &
+        SessionKey(C, A + B, k) @ ic &
+        not (A = B) &
+        not (B = C) &
+        not (A = C) )"
+
+
+lemma Session_Key_Secrecy:
+  "not (Ex A B C sessKey #i #k. 
+           SessionKey(A, B + C,sessKey) @ i &
+           K(sessKey) @ k)"
+
+end

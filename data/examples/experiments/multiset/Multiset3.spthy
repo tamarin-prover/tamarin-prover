@@ -1,0 +1,17 @@
+theory Multiset3 begin
+
+builtins: multiset
+
+
+rule A:
+  [ Fr(~x), Fr(~y), Fr(~z), In(u) ] --[]-> [ Out(<~x + ~y + u, ~x + ~z + u>), S(~x,~y,~z) ]
+
+rule B:
+  [ S(~x,~y,~z), In(~x + ~y + ~z) ] --[ Reach() ]-> []
+
+
+lemma Reachable:
+  exists-trace
+  "Ex #i. Reach() @ i"
+
+end
