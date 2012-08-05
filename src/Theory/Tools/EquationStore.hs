@@ -157,7 +157,7 @@ splits :: EqStore -> [SplitId]
 splits eqs = map fst $ nub $ sortOn snd
     [ (idx, S.size conj) | (idx, conj) <- getConj $ L.get eqsConj eqs ]
 
--- | Returns the number of cases for a given 'SplitId'.
+-- | Returns 'True' if the 'SplitId' is valid.
 splitExists :: EqStore -> SplitId -> Bool
 splitExists eqs = isJust . splitSize eqs
 

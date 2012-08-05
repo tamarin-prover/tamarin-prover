@@ -266,7 +266,7 @@ insertEdges edges = do
     modM sEdges (\es -> foldr S.insert es [ Edge c p | (c,_,_,p) <- edges])
 
 -- | Insert an 'Action' atom. Ensures that (almost all) trivial *KU* actions
--- are solved immediatly using rule *S_{at,u,triv}*. We currently avoid
+-- are solved immediately using rule *S_{at,u,triv}*. We currently avoid
 -- adding intermediate products. Indicates whether nodes other than the given
 -- action have been added to the constraint system.
 --
@@ -292,7 +292,7 @@ insertAction i fa = do
   where
     goal = ActionG i fa
     -- Here we rely on the fact that the action is new. Otherwise, we might
-    -- loop due to generating new KU-nodes that are merged immediatly.
+    -- loop due to generating new KU-nodes that are merged immediately.
     requiresKU t = do
       j <- freshLVar "vk" LSortNode
       let faKU = kuFact t
@@ -571,8 +571,6 @@ conjoinSystem sys = do
   where
     joinSets :: Ord a => (System :-> S.Set a) -> Reduction ()
     joinSets proj = modM proj (`S.union` get proj sys)
-
-
 
 -- Unification via the equation store
 -------------------------------------
