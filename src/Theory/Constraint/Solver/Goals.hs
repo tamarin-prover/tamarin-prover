@@ -26,6 +26,7 @@ import           Prelude                                 hiding (id, (.))
 
 import qualified Data.DAG.Simple                         as D (cyclic)
 import qualified Data.Map                                as M
+import qualified Data.Set                                as S
 
 import           Control.Basics
 import           Control.Category
@@ -45,7 +46,15 @@ import           Theory.Model
 -- Extracting Goals
 ------------------------------------------------------------------------------
 
-data Usefulness = Useful | Useless
+data Usefulness =
+    Useful
+  -- ^ A goal that is likely to result in progress.
+  | LoopBreaker
+  -- ^ A goal that is delayed to avoid immediate termination. Needs to be
+  -- handled fairly.
+  | ProbablySolvable
+  -- ^ A goal that is very likely to be solvable without introducing further
+  -- interesting constraints. These goals are delayed until the very end.
   deriving (Show, Eq)
 
 -- | Goals annotated with their number and usefulness.
@@ -60,11 +69,14 @@ instance Ord Usefulness where
         compare a b =
             check a b
           where
-            check Useful Useful   = EQ
-            check Useless Useless = EQ
-            check x y             = compare (tag x) (tag y)
-            tag (Useful)          = 0 :: Int
-            tag (Useless)         = 1 :: Int
+            check Useful           Useful           = EQ
+            check LoopBreaker      LoopBreaker      = EQ
+            check ProbablySolvable ProbablySolvable = EQ
+            check x y                               = compare (tag x) (tag y)
+
+            tag (Useful)           = 0 :: Int
+            tag (LoopBreaker)      = 1
+            tag (ProbablySolvable) = 2
 
 
 -- | The list of goals that must be solved before a solution can be extracted.
@@ -98,17 +110,20 @@ openGoals sys = do
         -- explicitly if they still exist.
         SplitG idx -> splitExists (get sEqStore sys) idx
 
-    let useful = case goal of
-          -- Note that 'solveAllSafeGoals' in "CaseDistinctions" relies on
-          -- looping goals being classified as 'Useless'.
-          _ | get gsLoopBreaker status              -> Useless
+    let
+        useful = case goal of
+          _ | get gsLoopBreaker status              -> LoopBreaker
           ActionG i (kFactView -> Just (UpK, m))
-            | isSimpleTerm m || deducible i m       -> Useless
+              -- if there are KU-guards then all knowledge goals are useful
+            | hasKUGuards                           -> Useful
+            | isSimpleTerm m || deducible i m       -> ProbablySolvable
           _                                         -> Useful
 
     return (goal, (get gsNr status, useful))
   where
     existingDeps = rawLessRel sys
+    hasKUGuards  =
+        any ((KUFact `elem`) . guardFactTags) $ S.toList $ get sFormulas sys
 
     -- We use the following heuristic for marking KU-actions as useful (worth
     -- solving now) or useless (to be delayed until no more useful goals
