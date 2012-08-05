@@ -32,6 +32,7 @@ module Theory.Tools.EquationStore (
   -- ** Adding equalities
   , addEqs
   , addRuleVariants
+  , addDisj
 
   -- ** Case splitting
   , performSplit
