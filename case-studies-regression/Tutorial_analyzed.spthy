@@ -173,7 +173,7 @@ analyzing: data/examples/Tutorial.spthy
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.228154s
+  processing time: 0.188845s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)
@@ -186,7 +186,7 @@ summary of summaries:
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.228154s
+  processing time: 0.188845s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)
