@@ -111,9 +111,8 @@ solveAllSafeGoals :: [CaseDistinction] -> Reduction [String]
 solveAllSafeGoals ths =
     solve []
   where
-    -- safeGoal _ _ = False
-    safeGoal _       (_,   (_, Useless)) = False
-    safeGoal doSplit (goal, _          ) =
+    safeGoal _       (_,   (_, LoopBreaker)) = False
+    safeGoal doSplit (goal, _              ) =
       case goal of
         ChainG _ _    -> True
         ActionG _ fa  -> not (isKUFact fa)

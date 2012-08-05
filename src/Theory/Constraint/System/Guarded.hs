@@ -41,6 +41,8 @@ module Theory.Constraint.System.Guarded (
   , isAllGuarded
   , isExGuarded
 
+  , guardFactTags
+
   -- ** Conversions to non-bound representations
   , bvarToLVar
   , openGuarded
@@ -70,6 +72,7 @@ import           Data.DeriveTH
 import           Data.Either                      (partitionEithers)
 import           Data.Foldable                    (Foldable(..), foldMap)
 import           Data.List
+import qualified Data.DList as D
 import           Data.Monoid                      (Monoid(..))
 import           Data.Traversable                 hiding (mapM, sequence)
 
@@ -110,9 +113,19 @@ isAllGuarded :: Guarded t t1 t2 -> Bool
 isAllGuarded (GGuarded All _ _ _) = True
 isAllGuarded _                    = False
 
+-- | All 'FactTag's that are used in guards.
+guardFactTags :: Guarded s c v -> [FactTag]
+guardFactTags =
+    D.toList .
+    foldGuarded mempty (mconcat . getDisj) (mconcat . getConj) getTags
+  where
+    getTags _qua _ss atos inner =
+        mconcat [ D.singleton tag | Action _ (Fact tag _) <- atos ] <> inner
+
 ------------------------------------------------------------------------------
 -- Folding
 ------------------------------------------------------------------------------
+
 
 -- | Fold a guarded formula.
 foldGuarded :: (Atom (VTerm c (BVar v)) -> b)

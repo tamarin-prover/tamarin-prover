@@ -258,8 +258,9 @@ rankProofMethods ranking ctxt sys = do
     solveGoalMethod (goal, (nr, usefulness)) =
       ( SolveGoal goal
       , "nr. " ++ show nr ++ case usefulness of
-                               Useful -> ""
-                               Useless -> " (marked useless)"
+                               Useful           -> ""
+                               LoopBreaker      -> " (loop breaker)"
+                               ProbablySolvable -> " (probably solvable)"
       )
 
 newtype Heuristic = Heuristic [GoalRanking]
@@ -320,9 +321,9 @@ smartRanking :: Bool   -- True if PremiseG loop-breakers should not be delayed
              -> System
              -> [AnnotatedGoal] -> [AnnotatedGoal]
 smartRanking allowPremiseGLoopBreakers sys =
-    delayUseless . unmark . sortDecisionTree solveFirst . goalNrRanking
+    sortOnUsefulness . unmark . sortDecisionTree solveFirst . goalNrRanking
   where
-    delayUseless = sortOn (snd . snd)
+    sortOnUsefulness = sortOn (snd . snd)
 
     unmark | allowPremiseGLoopBreakers = map unmarkPremiseG
            | otherwise                 = id
@@ -338,9 +339,11 @@ smartRanking allowPremiseGLoopBreakers sys =
         , isFreshKnowsGoal . fst
         , isSplitGoalSmall . fst
         , isDoubleExpGoal . fst
-        , isLoopBreakerGoal ]
-          -- prefer knowledge goals and loop-breaker premises
-          -- before expensive equation splits
+        , isNoLargeSplitGoal . fst ]
+        -- move the rest (mostly more expensive KU-goals) before expensive
+        -- equation splits
+
+    smallSplitGoalSize = 2
 
     isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) = not $ isKFact fa
     isNonLoopBreakerProtoFactGoal _                            = False
@@ -356,14 +359,13 @@ smartRanking allowPremiseGLoopBreakers sys =
         Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
         _                                                  -> False
 
-    isLoopBreakerGoal (ActionG _ fa, _           ) = isKUFact fa
-    isLoopBreakerGoal (PremiseG _ _, (_, Useless)) = True
-    isLoopBreakerGoal _                            = False
-
     -- Be conservative on splits that don't exist.
     isSplitGoalSmall (SplitG sid) =
-        maybe False (< 3) $ splitSize (L.get sEqStore sys) sid
+        maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
     isSplitGoalSmall _            = False
+
+    isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
+    isNoLargeSplitGoal _               = True
 
     -- | @sortDecisionTree xs ps@ returns a reordering of @xs@
     -- such that the sublist satisfying @ps!!0@ occurs first,
