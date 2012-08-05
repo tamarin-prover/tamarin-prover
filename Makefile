@@ -170,7 +170,7 @@ CLASSIC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/class
 
 # case studies
 classic-case-studies:	$(CLASSIC_CS_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/stable/*.spthy
+	grep "verified\|falsified\|processing time" case-studies/classic/*.spthy
 
 
 ## All case studies
