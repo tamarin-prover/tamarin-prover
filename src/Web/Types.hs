@@ -101,7 +101,7 @@ data WebUI = WebUI
   , workDir     :: FilePath
     -- ^ The working directory (for storing/loading theories).
   -- , parseThy    :: MonadIO m => String -> GenericHandler m ClosedTheory
-  , parseThy    :: String -> IO ClosedTheory
+  , parseThy    :: String -> IO (Either String ClosedTheory)
     -- ^ Parse a closed theory according to command-line arguments.
   , closeThy    :: OpenTheory -> IO ClosedTheory
     -- ^ Close an open theory according to command-line arguments.

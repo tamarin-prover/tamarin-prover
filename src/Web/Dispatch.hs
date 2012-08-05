@@ -70,7 +70,8 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> Bool                            -- ^ Load last proof state if present
           -> Bool                            -- ^ Automatically save proof state
           -> (FilePath -> IO ClosedTheory)   -- ^ Theory loader (from file).
-          -> (String -> IO ClosedTheory)     -- ^ Theory loader (from string).
+          -> (String -> IO (Either String ClosedTheory))
+          -- ^ Theory loader (from string).
           -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
           -> FilePath                        -- ^ Path to static content directory

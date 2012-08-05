@@ -105,30 +105,37 @@ loadClosedWfThy as file = do
   where
     (loadOpen, close) = loadThy as
 
-loadClosedThyString :: Arguments -> String -> IO ClosedTheory
-loadClosedThyString = uncurry (>=>) . loadThyString
+loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
+loadClosedThyString as file = do
+    let (loader, closer) = loadThyString as
+    openThy <- loader file
+    case openThy of
+      Right thy -> Right <$> closer thy
+      Left  err -> return $ Left err
 
 -- | Load an open/closed theory from a file.
 loadThy :: Arguments -> (FilePath -> IO OpenTheory, OpenTheory -> IO ClosedTheory)
 loadThy as = loadGenericThy (parseOpenTheory (defines as)) as
 
 -- | Load an open/closed theory from a string.
-loadThyString :: Arguments -> (String -> IO OpenTheory, OpenTheory -> IO ClosedTheory)
+loadThyString :: Arguments -> ( String -> IO (Either String OpenTheory)
+                              , OpenTheory -> IO ClosedTheory)
 loadThyString as = loadGenericThy loader as
   where
     loader str =
       case parseOpenTheoryString (defines as) str of
-        Right thy -> return thy
-        Left err -> error $ show err
+        Right thy -> return $ Right thy
+        Left err  -> return $ Left $ "parse error: " ++ show err
 
 -- | The defined pre-processor flags in the argument.
 defines :: Arguments -> [String]
 defines = findArg "defines"
 
+-- FIXME: SM: This naming, tupling, blah is a mess and can be done more
+-- cleanly. DO IT!
+
 -- | Load an open/closed theory given a loader function.
-loadGenericThy :: (a -> IO OpenTheory)
-               -> Arguments
-               -> (a -> IO OpenTheory, OpenTheory -> IO ClosedTheory)
+loadGenericThy :: a -> Arguments -> (a, OpenTheory -> IO ClosedTheory)
 loadGenericThy loader as =
     (loader, (closeThy as) <=< addMessageDeductionRuleVariants)
 
