@@ -186,15 +186,15 @@ var ui = {
         });
 
         // Enable context menu
-        $("#proof a.proof-step").contextMenu(
-            { menu: "contextMenu" },
-            function(action, el, pos) {
-                var theoryPath = theory.extractTheoryPath($(el).attr("href"));
-                mainDisplay.loadTarget(
-                    theory.absolutePath(action,theoryPath),
-                    null
-                    );
-            });
+        // $("#proof a.proof-step").contextMenu(
+        //     { menu: "contextMenu" },
+        //     function(action, el, pos) {
+        //        var theoryPath = theory.extractTheoryPath($(el).attr("href"));
+        //        mainDisplay.loadTarget(
+        //            theory.absolutePath(action,theoryPath),
+        //            null
+        //            );
+        //    });
 
         // Click handler for save link
         events.installAbsoluteClickHandler("a.save-link", server.handleJson);
@@ -252,11 +252,12 @@ var ui = {
             "main",
             null);
 
+        // FIXME: delete is disabled
         // Install handlers on delete links
-        events.installRelativeClickHandler(
-            "div#proof a.internal-link.delete-link",
-            "del/path",
-            null);
+        // events.installRelativeClickHandler(
+        //     "div#proof a.internal-link.delete-link",
+        //    "del/path",
+        //    null);
 
         // Install handlers on proof-step links
         events.installRelativeClickHandler(
@@ -335,7 +336,7 @@ var ui = {
             // callback function and pass keycode
             if(map[key]) {
                 // Hide context menu
-                $("ul#contextMenu").hide();
+                // $("ul#contextMenu").hide();
                 // Call callback
                 var callback = map[key];
                 callback(key);
@@ -379,7 +380,7 @@ var events = {
     installScrollHandler: function(name, selector) {
         $(selector).scroll(function(ev) {
             // Hide context menu
-            $("ul#contextMenu").hide();
+            // $("ul#contextMenu").hide();
             // Record position in cookie
             var pos = $(this).scrollTop();
             $.cookie(name + "-position", pos, { path: "/" });
@@ -419,10 +420,13 @@ var events = {
         // Add new click handler
         $(selector).click(function(ev) {
             ev.preventDefault();
-            var element = $(this);
+
+            // set section in path
+            elementPath = $(this).attr("href").split("/");
+            elementPath[3] = section;
+
             mainDisplay.loadTarget(
-                // section,
-                element.attr("href"),
+                elementPath.join("/"),
                 function() {
                     if(callback) callback(element);
                 });
