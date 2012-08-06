@@ -249,7 +249,7 @@ var ui = {
         // Install handlers on plain internal links
         events.installRelativeClickHandler(
             "div#proof a.internal-link",
-            "main",
+            null,
             null);
 
         // FIXME: delete is disabled
@@ -421,12 +421,18 @@ var events = {
         $(selector).click(function(ev) {
             ev.preventDefault();
 
-            // set section in path
-            elementPath = $(this).attr("href").split("/");
-            elementPath[3] = section;
+            // FIXME: always set the right link on the Haskell side
+            //        and get rid of section
+            path = $(this).attr("href");
+            if(section) {
+              // replace section in path
+              elementPath = $(this).attr("href").split("/");
+              elementPath[3] = section;
+              path = elementPath.join("/");
+            }
 
             mainDisplay.loadTarget(
-                elementPath.join("/"),
+                path,
                 function() {
                     if(callback) callback(element);
                 });
@@ -669,7 +675,7 @@ var mainDisplay = {
         // Re-install click handlers on main
         events.installRelativeClickHandler(
             "div#ui-main-display a.internal-link",
-            "main",
+            null,
             null);
     },
 
