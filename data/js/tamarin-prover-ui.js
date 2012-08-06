@@ -262,14 +262,14 @@ var ui = {
         // Install handlers on proof-step links
         events.installRelativeClickHandler(
             "div#proof a.internal-link.proof-step",
-            "main",
+            null,
             null
             );
 
         // Install click handlers on main
         events.installRelativeClickHandler(
             "div#ui-main-display a.internal-link",
-            "main",
+            null,
             null);
 
         // Install handlers on removal links
