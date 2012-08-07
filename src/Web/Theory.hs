@@ -133,14 +133,15 @@ proofIndex renderUrl mkRoute =
   where
     ppCase step = markStatus (fst $ psInfo step)
 
-    ppStep step = case fst $ psInfo step of
-        (Nothing, _)    -> superfluousStep
-        (_, Nothing)    -> stepLink ["sorry-step"] <>
-                           case psMethod step of
-                             Sorry _ -> emptyDoc
-                             _       -> removeStep
-        (_, Just True)  -> stepLink ["hl_good"]
-        (_, Just False) -> stepLink ["hl_bad"]
+    ppStep step =
+           case fst $ psInfo step of
+               (Nothing, _)    -> superfluousStep
+               (_, Nothing)    -> stepLink ["sorry-step"]
+               (_, Just True)  -> stepLink ["hl_good"]
+               (_, Just False) -> stepLink ["hl_bad"]
+        <> case psMethod step of
+               Sorry _ -> emptyDoc
+               _       -> removeStep
       where
         ppMethod = prettyProofMethod $ psMethod step
         stepLink cls = linkToPath renderUrl
