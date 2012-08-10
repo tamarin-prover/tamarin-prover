@@ -1,0 +1,151 @@
+theory Yubikey
+begin
+
+section{* The Yubikey-Protocol *}
+
+/*
+ * Protocol:	Yubikey Protocol
+ * Modeler: 	Robert Kunnemann, Graham Steel
+ * Date: 	August 2012
+ *
+ * Status: 	working
+ */
+
+builtins: symmetric-encryption
+
+functions: S/1,zero/0
+
+/* We to model the Yubikey protocol, described in
+*  http://www.yubico.com/documentation
+*  http://www.yubico.com/developers-intro
+*  This is simplified version, in particular:
+*  - timestamps are not modelled
+*  - we do not distinguish the session and token counter. We described them
+*    as one single counter, that represents the pair (session counter, token
+*    counter) with a lexicographical oder on the pair.
+*/
+
+
+/* The following rules model two binary relations between integers. !Succ
+ * is functional. If !Succ(a,b), then the adversary was able to show that b
+ * is the successor of b. Similarly, albeit !Smaller is not functional, if
+ * !Smaller(a,b), then the adversary was able to show that a is smaller
+ * than b 
+*/
+rule InitSucc:
+        [In(zero),In(S(zero))] --[IsSucc(zero,S(zero)),IsZero(zero)]-> [!Succ(zero,S(zero))]
+rule StepSucc:
+        [In(y),In(S(y)), !Succ(x,y)] --[ IsSucc(y,S(y)) ]-> [!Succ(y,S(y))]
+rule SimpleSmaller:
+        [ !Succ(x,y)] --[ IsSmaller(x,y)]-> [!Smaller(x,y)]
+rule ZExtendedSmaller:
+        [!Smaller(x,y),!Succ(y,z)] --[ IsSmaller(x,z)]-> [!Smaller(x,z)]
+
+/* A Yubikey is initialised with a zero counter, a key and a public, as well as a
+ * secret identifier, ~pid and ~sid. This information is shared with the
+ * Authentication Server, so we assume a trusted way of installing a
+ * Yubikey
+*/
+rule BuyANewYubikey:
+        [Fr(~k),Fr(~pid),Fr(~sid)]
+        --[Init(~pid,~k),ExtendedInit(~pid,~sid,~k),IsZero(zero) ]->
+        [!Y(~pid,~sid), Y_counter(~pid,zero),Server(~pid,~sid,zero),!SharedKey(~pid,~k)
+        ,Out(~pid)]
+
+//On plugin, the session counter is increased and the token counter reset
+rule Yubikey_Plugin:
+        [!Y(~pid,~sid), Y_counter(~pid,sc),!Smaller(sc, Ssc) ] 
+        --[ Yubi(~pid,Ssc) ]-> 
+        [Y_counter(~pid, Ssc)]
+
+//If the Button is pressed, the token counter is increased
+rule Yubikey_PressButton:
+        [!Y(~pid,~sid), Y_counter(~pid,tc),Fr(~npr),!SharedKey(~pid,~k),!Succ(tc,Stc),Fr(~nonce) ]
+        --[ YubiPress(~pid,tc), YubiOTP(~pid,senc(<~sid,tc,~npr>,~k)), YubiSid(~pid,~sid,~k) ]->
+        [  Y_counter(~pid, Stc), Out(<~pid,~nonce,senc(<~sid,tc,~npr>,~k)>) ]
+
+/* Upon receiving an encrypted OTP, the Server compares the (unencrypted)
+ * public id to his data base to identify the key to decrypt the OTP. After
+ * making sure that the secret id is correct, the Server verifies that the
+ * received counter value is larger than the last one stored. If the Login
+ * is successful, i.e., the previous conditions were fulfilled, the counter
+ * value on the Server that is associated to the Yubikey is updated.
+ */
+
+rule Server_ReceiveOTP_NewSession:
+        [Server(pid,sid,otc), In(<pid,nonce,senc(<sid,tc,~pr>,~k)>),
+        !SharedKey(pid,~k), !Smaller(otc,tc) ]
+         --[ Login(pid,sid,tc,senc(<sid,tc,~pr>,~k)),
+                LoginCounter(pid,otc,tc)
+        ]->
+        [Server(pid,sid,tc)]
+
+/* The following two axioms are conditions on the traces that make sure
+ * that : */
+
+//a) the !Smaller relation is transitive
+axiom transitivity: //axiomatic
+        "All #t1 #t2 a b c. IsSmaller(a,b)@t1 & IsSmaller(b,c)@t2
+        ==> Ex #t3 . IsSmaller(a,c)@t3 "
+
+//b) !Smaller implies unequality
+axiom smaller_implies_unequal: //axiomatic
+        "not (Ex a #t . IsSmaller(a,a)@t)"
+
+// For sanity: Ensure that a successful login is reachable.
+lemma Login_reachable:
+  exists-trace
+  "Ex #i pid sid x otp1. Login(pid,sid,x,otp1)@i"
+
+// Each succesful login with counter value x was preceeded by a PressButton
+// event with the same counter value
+lemma one_count_foreach_login[reuse,use_induction]:
+        "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
+         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
+
+// If a succesful Login happens before a second sucesfull Login, the
+// counter value of the first is smaller than the counter value of the
+// second
+lemma slightly_weaker_invariant[reuse, use_induction]:
+        "(All pid otc1 tc1 otc2 tc2 #t1 #t2 . LoginCounter(pid,otc1,tc1)@#t1 & LoginCounter(pid,otc2,tc2)@#t2
+        ==> ( #t1<#t2
+                & ( Ex #t3 . IsSmaller(tc1,tc2)@t3 )
+                )
+         |       #t2<#t1 | #t1=#t2)
+        "
+induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
+  simplify
+  solve( Server( ~pid, sid, otc1 ) ▶₀ #t1 )
+    case BuyANewYubikey
+    solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+      by sorry
+  next
+    case Server_ReceiveOTP_NewSession_case_1
+    solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+      by sorry
+  next
+    case Server_ReceiveOTP_NewSession_case_2
+    solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+      by sorry
+  next
+    case Server_ReceiveOTP_NewSession_case_3
+    solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+      by sorry
+  next
+    case Server_ReceiveOTP_NewSession_case_4
+    solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+      by sorry
+  qed
+qed
+
+// It is not possible to have to distinct logins with the same counter
+// value
+lemma no_replay:
+        "not (Ex #i #j pid sid x otp1 otp2 . Login(pid,sid,x,otp1)@i &  Login(pid,sid,x,otp2)@j &
+          not(#i=#j))"
+end
+
