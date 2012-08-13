@@ -93,8 +93,9 @@ rule Gen_Stop:
 
 rule Gen_Stop:
   [ GenChain(x) ]
-  --[ KeyExpired(x) ]->
-  [ Sender1(x) , !Receiver0(x), Out(x) ]
+  // --[ KeyExpired(x) ]->
+  -->
+  [ Sender1(x) , !Receiver0(x) ] //, Out(x) ]
 
 rule New_Receiver:
   [ !Receiver0(x) ]
@@ -140,10 +141,12 @@ rule Send1:
   let data = ~m1
       mac  = MAC{data}k
   in
-    [ Sender1(k)
+    [ Sender1(kOld)
+    , NextKey(kOld, k)
     , Fr(~m1)
     ]
-  --[ Sent(data)
+  --[ Sent1(data)
+    , KeyExpired(kOld)
     ]->
     [ Out( < data, mac > )
     , Sender(k, mac)
@@ -173,8 +176,21 @@ rule Receive1:
     ]
   --[ KeyNotExpiredHere(~claimId) ]->
     [
-      Receiver( S, ~claimId, kOld, data, mac )
+      Receiver2( S, ~claimId, kOld, data, mac )
     ]
+
+rule Receive2:
+  let data   = <m, kOld>
+  in
+    [ In( <data, mac> )
+    , Receiver2( S, oldClaimId, h(kOld), dataOld, MAC{dataOld}kOld )
+    , Fr(~claimId)
+    ]
+  --[ CheckKeyNotExpired(oldClaimId, kOld)
+    , FromSender1(S, dataOld)
+    , KeyNotExpiredHere(~claimId)
+    ]->
+    [ Receiver( S, ~claimId, kOld, data, mac ) ]
 
 rule ReceiveN:
   let data   = <m, kOld>
@@ -201,18 +217,29 @@ lemma secrecy [use_induction, reuse]:
   " All k #i #j. Key(k) @ i & KU(k) @ j
       ==> Ex #e. KeyExpired(k) @ e & e < j"
 
-// The desired security property: received messages are authentic.
-lemma authentic [use_induction]:
+axiom No_expired_keys_used:
   " (All claimId k #i #j #l.
          KeyNotExpiredHere(claimId) @ i
        & CheckKeyNotExpired(claimId, k) @ j
        & KeyExpired(k) @ l
        ==>
          i < l
-    ) ==>
-    (All S m #i. FromSender(S, m) @ i ==>
+    ) "
+
+// The desired security property: received messages are authentic.
+lemma authentic1 [use_induction]:
+  " (All S m #i. FromSender1(S, m) @ i ==>
+       ( (Ex #j. Sent1(m) @ j      & j < i)
+       // | (Ex #j. RevealLtk(S) @ j & j < i)
+       )
+    )
+  "
+
+// The desired security property: received messages are authentic.
+lemma authentic [use_induction]:
+  " (All S m #i. FromSender(S, m) @ i ==>
        ( (Ex #j. Sent(m) @ j      & j < i)
-       | (Ex #j. RevealLtk(S) @ j & j < i)
+       // | (Ex #j. RevealLtk(S) @ j & j < i)
        )
     )
   "
