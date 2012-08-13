@@ -219,8 +219,12 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     bold                = withTag "strong" [] . text
     overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
     messageLink         = overview "Message theory" (text "") TheoryMessage
-    ruleLink            = overview "Multiset rewriting rules and axioms" rulesInfo TheoryRules
+    ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
+    ruleLinkMsg         = "Multiset rewriting rules" ++
+                          if null(theoryAxioms thy) then "" else " and axioms"
+
     reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
+
 
 {-
 -- | A snippet that explains a sequent using a rendered graph and the pretty

@@ -20,6 +20,10 @@ rule Stop:  [ B(x) ]  --[ Stop(x)  ]-> [ ]
 axiom Start_implies_Stop:
   "All x #i. Start(x) @ i ==> Ex #j. Stop(x) @ j"
 
+lemma Exists_test [reuse]:
+  exists-trace
+  "All x #i. Step(x) @ i ==> F"
+
 // Thus we cannot just add the axiom to the proof obligation resulting after
 // the application of induction. We have to add the axiom before the
 // transformation. This results in a wrong proof of the lemma.

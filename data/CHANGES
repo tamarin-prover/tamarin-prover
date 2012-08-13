@@ -3,14 +3,18 @@
       GHC 7.4 and higher. It uses as many threads as there are CPU cores on
       the system. Use `tamarin-prover +RTS -N1 -RTS` to use only one thread.
 
-    - fixed: no more case names containing spaces,
-        when solving deconstruction chains.
-    - fixed: avoid solving KU-goals for nullary function symbols
+    - fixed: lemmas proven for some trace ('exists-trace') and marked with
+        the [reuse] attribute were wrongly used in the proof of other lemmas.
+    - fixed: axioms that are not safety formulas were not transformed
+        properly when applying induction.
     - fixed: fresh name generation was not always handled properly when
         applying a precomputed case distinction to a goal that uses
         DH-exponentiation. Security protocol models that use DH-exponentiation
         should be checked again. Some of our case studies were indeed missing
         a few cases, but no property changed its validity.
+    - fixed: no more case names containing spaces,
+        when solving deconstruction chains.
+    - fixed: avoid solving KU-goals for nullary function symbols
 
 * 0.8.0.0
     - new homepage:  http://www.infsec.ethz.ch/research/software/tamarin

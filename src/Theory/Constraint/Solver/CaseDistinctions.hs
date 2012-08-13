@@ -67,7 +67,7 @@ unsolvedChainConstraints =
 -- given typing assumptions are justified.
 initialCaseDistinction
     :: ProofContext
-    -> [LNFormula] -- ^ Axioms.
+    -> [LNGuarded] -- ^ Axioms.
     -> Goal
     -> CaseDistinction
 initialCaseDistinction ctxt axioms goal =
@@ -239,7 +239,7 @@ saturateCaseDistinctions ctxt =
 -- | Precompute a saturated set of case distinctions.
 precomputeCaseDistinctions
     :: ProofContext
-    -> [LNFormula]       -- ^ Axioms.
+    -> [LNGuarded]       -- ^ Axioms.
     -> [CaseDistinction]
 precomputeCaseDistinctions ctxt axioms =
     map cleanupCaseNames $ saturateCaseDistinctions ctxt rawCaseDists
@@ -293,17 +293,15 @@ precomputeCaseDistinctions ctxt axioms =
 -- | Refine a set of case distinction by exploiting additional typing
 -- assumptions.
 refineWithTypingAsms
-    :: [LNFormula]        -- ^ Typing assumptions to use.
+    :: [LNGuarded]        -- ^ Typing assumptions to use.
     -> ProofContext       -- ^ Proof context to use.
     -> [CaseDistinction]  -- ^ Original, untyped case distinctions.
     -> [CaseDistinction]  -- ^ Refined, typed case distinctions.
-refineWithTypingAsms assumptions0 ctxt cases0 =
+refineWithTypingAsms assumptions ctxt cases0 =
     fmap (modifySystems removeFormulas) $
     saturateCaseDistinctions ctxt $
     modifySystems updateSystem <$> cases0
   where
-    assumptions =
-        map (either (error . render) id . formulaToGuarded) assumptions0
     modifySystems   = modify cdCases . fmap . second
     updateSystem se =
         modify sFormulas (S.union (S.fromList assumptions)) $

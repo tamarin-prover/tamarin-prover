@@ -341,6 +341,17 @@ formulaTerms =
     atomTerms (Less i j)      = [i, j]
     atomTerms (Last i)        = [i]
 
+-- TODO: Perhaps a lot of errors would be captured when making the signature
+-- of facts, term, and atom constructors explicit.
+lemmaAttributeReport :: OpenTheory -> WfErrorReport
+lemmaAttributeReport thy = do
+    lem <- theoryLemmas thy
+    guard $    get lTraceQuantifier lem == ExistsTrace
+            && ReuseLemma `elem` get lAttributes lem
+    return ( "attributes"
+           , text "lemma" <-> (text $ quote $ get lName lem) <> colon <->
+             text "cannot reuse 'exists-trace' lemmas"
+           )
 
 -- | Check for mistakes in lemmas.
 --
@@ -490,6 +501,7 @@ checkWellformedness thy = concatMap ($ thy)
     , ruleSortsReport
     , factReports
     , formulaReports
+    , lemmaAttributeReport
     , multRestrictedReport
     ]
 
