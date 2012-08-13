@@ -323,7 +323,7 @@ analyzing: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.395849s
+  processing time: 0.436344s
   types (all-traces): verified (75 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
@@ -335,7 +335,7 @@ summary of summaries:
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.395849s
+  processing time: 0.436344s
   types (all-traces): verified (75 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
