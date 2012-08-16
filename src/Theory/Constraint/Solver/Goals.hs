@@ -25,7 +25,9 @@ module Theory.Constraint.Solver.Goals (
 import           Prelude                                 hiding (id, (.))
 
 import qualified Data.DAG.Simple                         as D (cyclic)
+import           Data.Foldable                           (foldMap)
 import qualified Data.Map                                as M
+import qualified Data.Monoid                             as Mono
 import qualified Data.Set                                as S
 
 import           Control.Basics
@@ -50,12 +52,12 @@ data Usefulness =
     Useful
   -- ^ A goal that is likely to result in progress.
   | LoopBreaker
-  -- ^ A goal that is delayed to avoid immediate termination. Needs to be
-  -- handled fairly.
-  | ProbablySolvable
-  -- ^ A goal that is very likely to be solvable without introducing further
-  -- interesting constraints. These goals are delayed until the very end.
-  deriving (Show, Eq)
+  -- ^ A goal that is delayed to avoid immediate termination.
+  | ProbablyConstructible
+  -- ^ A goal that is likely to be constructible by the adversary.
+  | CurrentlyDeducible
+  -- ^ A message that is deducible for the current solution.
+  deriving (Show, Eq, Ord)
 
 -- | Goals annotated with their number and usefulness.
 type AnnotatedGoal = (Goal, (Integer, Usefulness))
@@ -63,21 +65,6 @@ type AnnotatedGoal = (Goal, (Integer, Usefulness))
 
 -- Instances
 ------------
-
--- We need a custom 'Ord' instance that guarantees that @Useful < Useless@.
-instance Ord Usefulness where
-        compare a b =
-            check a b
-          where
-            check Useful           Useful           = EQ
-            check LoopBreaker      LoopBreaker      = EQ
-            check ProbablySolvable ProbablySolvable = EQ
-            check x y                               = compare (tag x) (tag y)
-
-            tag (Useful)           = 0 :: Int
-            tag (LoopBreaker)      = 1
-            tag (ProbablySolvable) = 2
-
 
 -- | The list of goals that must be solved before a solution can be extracted.
 -- Each goal is annotated with its age and an indicator for its usefulness.
@@ -115,9 +102,10 @@ openGoals sys = do
           _ | get gsLoopBreaker status              -> LoopBreaker
           ActionG i (kFactView -> Just (UpK, m))
               -- if there are KU-guards then all knowledge goals are useful
-            | hasKUGuards                           -> Useful
-            | isSimpleTerm m || deducible i m       -> ProbablySolvable
-          _                                         -> Useful
+            | hasKUGuards             -> Useful
+            | currentlyDeducible i m  -> CurrentlyDeducible
+            | probablyConstructible m -> ProbablyConstructible
+          _                           -> Useful
 
     return (goal, (get gsNr status, useful))
   where
@@ -125,19 +113,26 @@ openGoals sys = do
     hasKUGuards  =
         any ((KUFact `elem`) . guardFactTags) $ S.toList $ get sFormulas sys
 
-    -- We use the following heuristic for marking KU-actions as useful (worth
-    -- solving now) or useless (to be delayed until no more useful goals
-    -- remain). We ignore all goals that are simple terms or where there
-    -- exists a node, not after the premise or the last node, providing an Out
-    -- or KD conclusion that provides the message we are looking for as a
-    -- toplevel term. If such a node exist, then solving the goal will result
-    -- in at least one case where we didn't make real progress except.
-    toplevelTerms t@(destPair -> Just (t1, t2)) =
-        t : toplevelTerms t1 ++ toplevelTerms t2
-    toplevelTerms t@(destInverse -> Just t1) = t : toplevelTerms t1
-    toplevelTerms t = [t]
+    checkTermLits :: (LSort -> Bool) -> LNTerm -> Bool
+    checkTermLits p =
+        Mono.getAll . foldMap (Mono.All . p . sortOfLit)
+      where
+        sortOfLit (Con n) = sortOfName n
+        sortOfLit (Var v) = lvarSort v
 
-    deducible i m = or $ do
+    -- KU goals of messages that are likely to be constructible by the
+    -- adversary. These are terms that do not contain a fresh name or a fresh
+    -- name variable. For protocols without loops they are very likely to be
+    -- constructible. For protocols with loops, such terms have to be given
+    -- similar priority as loop-breakers.
+    probablyConstructible  = checkTermLits (LSortFresh /=)
+
+    -- KU goals of messages that are currently deducible. Either because they
+    -- are composed of public names only or because they can be extracted from
+    -- a sent message using unpairing or inversion only.
+    currentlyDeducible i m = checkTermLits (LSortPub ==) m || extractible i m
+
+    extractible i m = or $ do
         (j, ru) <- M.toList $ get sNodes sys
         -- We cannot deduce a message from a last node.
         guard (not $ isLast sys j)
@@ -149,6 +144,13 @@ openGoals sys = do
         -- not make the graph cyclic.
         return $ m `elem` derivedMsgs &&
                  not (D.cyclic ((j, i) : existingDeps))
+
+    toplevelTerms t@(destPair -> Just (t1, t2)) =
+        t : toplevelTerms t1 ++ toplevelTerms t2
+    toplevelTerms t@(destInverse -> Just t1) = t : toplevelTerms t1
+    toplevelTerms t = [t]
+
+
 
 
 ------------------------------------------------------------------------------

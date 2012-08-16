@@ -258,9 +258,10 @@ rankProofMethods ranking ctxt sys = do
     solveGoalMethod (goal, (nr, usefulness)) =
       ( SolveGoal goal
       , "nr. " ++ show nr ++ case usefulness of
-                               Useful           -> ""
-                               LoopBreaker      -> " (loop breaker)"
-                               ProbablySolvable -> " (probably solvable)"
+                               Useful                -> ""
+                               LoopBreaker           -> " (loop breaker)"
+                               ProbablyConstructible -> " (probably constructible)"
+                               CurrentlyDeducible    -> " (currently deducible)"
       )
 
 newtype Heuristic = Heuristic [GoalRanking]
@@ -323,7 +324,12 @@ smartRanking :: Bool   -- True if PremiseG loop-breakers should not be delayed
 smartRanking allowPremiseGLoopBreakers sys =
     sortOnUsefulness . unmark . sortDecisionTree solveFirst . goalNrRanking
   where
-    sortOnUsefulness = sortOn (snd . snd)
+    sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
+
+    tagUsefulness Useful                = 0 :: Int
+    tagUsefulness ProbablyConstructible = 1
+    tagUsefulness LoopBreaker           = 1
+    tagUsefulness CurrentlyDeducible    = 2
 
     unmark | allowPremiseGLoopBreakers = map unmarkPremiseG
            | otherwise                 = id
