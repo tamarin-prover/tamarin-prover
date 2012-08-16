@@ -155,7 +155,13 @@ isForbiddenExp ru = fromMaybe False $ do
     -- sort 'pub' and the required inputs for c are already required by b
     return $    sortOfLNTerm g == LSortPub
              && (inputTerms c \\ inputTerms b == [])
-
+  where
+    -- The required components to construct the message.
+    inputTerms :: LNTerm -> [LNTerm]
+    inputTerms (viewTerm2 -> FMult ts)    = concatMap inputTerms ts
+    inputTerms (viewTerm2 -> FInv t1)     = inputTerms t1
+    inputTerms (viewTerm2 -> FPair t1 t2) = inputTerms t1 ++ inputTerms t2
+    inputTerms t                          = [t]
 
 -- | Compute all contradictions to injective fact instances.
 --

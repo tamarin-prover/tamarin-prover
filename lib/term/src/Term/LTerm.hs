@@ -48,8 +48,6 @@ module Term.LTerm (
   , sortOfLNTerm
   , isMsgVar
   , isFreshVar
-  , isSimpleTerm
-  , inputTerms
 
   -- ** Destructors
   , ltermVar
@@ -278,35 +276,6 @@ isFreshVar :: LNTerm -> Bool
 isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
 isFreshVar _                         = False
 
--- | The required components to construct the message.
-inputTerms :: LNTerm -> [LNTerm]
-inputTerms (viewTerm2 -> FMult ts)    = concatMap inputTerms ts
-inputTerms (viewTerm2 -> FInv t1)     = inputTerms t1
-inputTerms (viewTerm2 -> FPair t1 t2) = inputTerms t1 ++ inputTerms t2
-inputTerms t                          = [t]
-
-{-
--- | Is a message trivial; i.e., can for sure be instantiated with something
--- known to the intruder?
-trivial :: LNTerm -> Bool
-trivial (viewTerm -> FApp _ [])                  = True
-trivial (viewTerm -> Lit (Con (Name PubName _))) = True
-trivial (viewTerm -> Lit (Var v))                = case lvarSort v of
-                                                     LSortPub -> True
-                                                     LSortMsg -> True
-                                                     _        -> False
-trivial _                                        = False
--}
-
--- | A term is *simple* iff there is an instance of this term that can be
--- constructed from public names only. i.e., the term does not contain any
--- fresh names or fresh variables.
-isSimpleTerm :: LNTerm -> Bool
-isSimpleTerm =
-    getAll . foldMap (All . (LSortFresh /=) . sortOfLit)
-  where
-    sortOfLit (Con n) = sortOfName n
-    sortOfLit (Var v) = lvarSort v
 
 
 -- Destructors
