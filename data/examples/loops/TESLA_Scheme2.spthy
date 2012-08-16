@@ -41,7 +41,7 @@ theory TESLA_Scheme2 begin
 
 builtins: signing
 
-functions: MAC/2, h/1
+functions: MAC/2, f/1
 
 // PKI
 //////
@@ -58,220 +58,143 @@ rule Reveal_Ltk:
     [ Out(ltk) ]
 
 
-// Setup phase
-//////////////
+// Chain setup phase
+////////////////////
 
 // Hash chain generation
 rule Gen_Start:
-  [ Fr(~x0) ]
-  -->
-  [ GenChain(~x0) ]
+  [ Fr(~seed) ] --> [ Gen(~seed) ]
 
 // The NextKey-facts are used by the sender rules to store the link between
 // the keys in the chain.
 rule Gen_Step:
-    [ GenChain(x)
-    ]
-  --[ Key(h(x))
-    ]->
-    [ GenChain( h(x) )
-    , NextKey( h(x), x )
-    ]
+    [ Gen(chain) ]
+  --[ ChainKey(f(chain)) ]->
+    [ Gen( f(chain) ) , NextKey( f(chain) , chain ) ]
 
-/*
 // At some point the sender decides to stop the hash-chain precomputation.
 rule Gen_Stop:
-  [ GenChain(x) ]
-  -->
-  [ NextKey( h(x), x )
-  , Sender1(h(x))
-  , !Sender0a(h(x)) ]
-*/
+    [ Gen(kZero) ]
+  --[ Expired(kZero) ]->
+    [ Sender1( kZero) , !Sender0($S, kZero) ]
 
-/* The following rule would allow skiping the verification that the PKI works
- * properly */
+// Intial chain key distribution
+////////////////////////////////
 
-rule Gen_Stop:
-  [ GenChain(x) ]
-  // --[ KeyExpired(x) ]->
-  -->
-  [ Sender1(x) , !Receiver0(x) ] //, Out(x) ]
+// Everybody can listen in by sending a request for k_0.
+rule Sender0:
+  let msgZero = <nR, kZero>
+  in
+    [ !Sender0(S, kZero), !Ltk(S, ltkS), In(nR) ]
+    -->
+    [ Out( <msgZero, sign{msgZero}ltkS> ) ]
 
-rule New_Receiver:
-  [ !Receiver0(x) ]
-  -->
-  [ Receiver1($S, x) ]
-
-/*
-// Everybody can listen in by sending a request for the commitment to the
-// first key.
-rule Sender0a:
-    [ !Sender0a(k0)
-    , In( < R, S, nR> )
-    , !Ltk(S, ltkS)
-    ]
-  -->
-    [ Out( <S, R, k0, sign{ k0, nR}ltkS> ) ]
-
-// Receivers start by requesting the commitment to the first key and verifying
-// the signature on this commitment.
+// Receivers start by requesting key k_0 adn verifying the signature on this
+// response.
 rule Receiver0a:
-    [ Fr( ~nR ) ]
-  -->
-    [ Out( < $R, $S, ~nR > )
-    , Receiver0b( $R, $S, ~nR ) ]
+    [ Fr(~nR) ] --> [ Receiver0b($S, ~nR), Out(<$S, ~nR>) ]
 
 rule Receiver0b:
-    [ Receiver0b ( R, S, nR )
-    , !Pk( S, pkS)
-    , In( <S, R, k0, signature> )
-    ]
-  -->
-    [ Receiver0b_check(S, k0, verify(signature, <k0, nR>, pkS)) ]
-
-rule Receiver0b_check:
-    [ Receiver0b_check(S, k0, true) ]
-  -->
-    [ Receiver1( S, k0 ) ]
-*/
-
-
-// Authenticated broadcast
-rule Send1:
-  let data = ~m1
-      mac  = MAC{data}k
+  let msgZero = <nR, kZero>
   in
-    [ Sender1(kOld)
-    , NextKey(kOld, k)
-    , Fr(~m1)
-    ]
-  --[ Sent1(data)
-    , KeyExpired(kOld)
-    ]->
-    [ Out( < data, mac > )
-    , Sender(k, mac)
-    ]
+    [ Receiver0b(S,nR), !Pk(S, pkS), In(<msgZero, signature>) ]
+  --[ Eq( verify(signature, msgZero, pkS), true() ) ]->
+    [ Receiver1(S,kZero) ]
 
-rule SendN:
-  let data = <~m, kOld>
-      mac  = MAC{data}k
+// Sending
+//////////
+
+rule Sender1:
+  let msgOne = <mOne, MAC(kOne, mOne)>
   in
-    [ Sender(kOld, macOld)
-    , NextKey(kOld, k)      // Descend the chain by one step.
-                            // Note that we will stop before the
-                            // Sending the first key of the chain.
-    , Fr(~m)
-    ]
-  --[ Sent(data)
-    , KeyExpired(kOld)
-    ]->
-    [ Out( <data, mac> )
-    , Sender(k, mac)
-    ]
+    [ Sender1( kZero ), NextKey( kZero, kOne ), Fr(mOne) ]
+  --[ Sent(msgOne) ]->
+    [ SenderN( kOne ), Out( msgOne ) ]
 
-rule Receive1:
-    [ Receiver1(S, kOld)
-    , In( <data, mac> )
-    , Fr(~claimId)
-    ]
-  --[ KeyNotExpiredHere(~claimId) ]->
-    [
-      Receiver2( S, ~claimId, kOld, data, mac )
-    ]
-
-rule Receive2:
-  let data   = <m, kOld>
+// We use the convention that k_{n-1} is denoted as kNp, where the 'p' stands
+// for predecessor.
+rule SenderN:
+  let msgN = <kNp, mN, MAC( kN, mN )>
   in
-    [ In( <data, mac> )
-    , Receiver2( S, oldClaimId, h(kOld), dataOld, MAC{dataOld}kOld )
-    , Fr(~claimId)
-    ]
-  --[ CheckKeyNotExpired(oldClaimId, kOld)
-    , FromSender1(S, dataOld)
-    , KeyNotExpiredHere(~claimId)
+    [ SenderN( kNp ), NextKey( kNp, kN), Fr(mN) ]
+  --[ Expired( kNp )
+    , Sent( msgN )
     ]->
-    [ Receiver( S, ~claimId, kOld, data, mac ) ]
+    [ SenderN( kN ), Out(msgN) ]
 
-rule ReceiveN:
-  let data   = <m, kOld>
+// Receiving
+////////////
+
+rule Receiver1:
+  let msgOne = <mOne, macOne>
   in
-    [ In( <data, mac> )
-    , Receiver( S, oldClaimId, h(kOld), dataOld, MAC{dataOld}kOld )
-    , Fr(~claimId)
+    [ Receiver1(S, kZero), In( msgOne ), Fr(expiryCheckOne) ]
+  --[ NotExpiredHere(expiryCheckOne) ]->
+    [ ReceiverN(S, kZero, expiryCheckOne, msgOne, mOne, macOne ) ]
+
+rule ReceiverN:
+  let msgN = <kNp, mN, macN>
+  in
+    [ ReceiverN(S, kNpp, expiryCheckNp, msgNp, mNp, macNp), In( msgN )
+    , Fr(expiryCheckN)
     ]
-  --[ CheckKeyNotExpired(oldClaimId, kOld)
-    , FromSender(S, dataOld)
-    , KeyNotExpiredHere(~claimId)
+  --[ Eq( kNpp, f(kNp) ), Eq( macNp, MAC(kNp, mNp) )
+      // This action claims that 'msgNp' was sent by the sender provided that
+      // the longterm-key of 'S' was not revealed before and the key 'kNp'
+      // expired after the expiry check denoted by 'expiryCheckNp'.
+    , FromSender(msgNp, S, kNp, expiryCheckNp)
+    , NotExpiredHere( expiryCheckN )
     ]->
-    [ Receiver( S, ~claimId, kOld, data, mac ) ]
+    [ ReceiverN(S, kNp, expiryCheckN, msgN, mN, macN ) ]
+
+
+// Axioms; i.e., universal restrictions on the traces of interest
+/////////////////////////////////////////////////////////////////
+
+// We are only interested in traces where all equality checks succeed.
+axiom Eq_checks_succeed: "(All x y #j. Eq(x, y) @ j ==> x = y)"
+
+// The security condition of TESLA guarantees that
+axiom Security_condition:
+  "All m S k check #i #j #e.
+         FromSender(m, S, k, check) @ i
+       & NotExpiredHere(check) @ j
+       & Expired(k) @ e
+     ==>
+         j < e"
+
+
+// Security properties
+//////////////////////
+
+// Sanity check: there is a honest execution where no key expired too early.
+lemma honestly_executable:
+  exists-trace
+  " ( Ex m S k check #i #j.
+          FromSender(m, S, k, check) @ i
+        & Sent(m) @ j
+    )
+  & (All S #r. RevealLtk(S) @ r ==> F)   // no longterm key was revealed
+  "
 
 // The following two lemmas constraint the search space strongly enough to
 // allow reasoning about the authenticity of the received messages.
 
-// Every key in a hash-chain is unique.
-lemma keys_inj [use_induction, reuse]:
-  " All k #i #j. Key(k) @ i & Key(k) @j ==> #i = #j "
+lemma chain_keys_unique [use_induction, reuse]:
+  "All k #i #j. ChainKey(k) @ i & ChainKey(k) @ j ==> #i = #j"
 
-// Keys are only known to the adversary once they are expired.
-lemma secrecy [use_induction, reuse]:
-  " All k #i #j. Key(k) @ i & KU(k) @ j
-      ==> Ex #e. KeyExpired(k) @ e & e < j"
-
-axiom No_expired_keys_used:
-  " (All claimId k #i #j #l.
-         KeyNotExpiredHere(claimId) @ i
-       & CheckKeyNotExpired(claimId, k) @ j
-       & KeyExpired(k) @ l
-       ==>
-         i < l
-    ) "
-
-// The desired security property: received messages are authentic.
-lemma authentic1 [use_induction]:
-  " (All S m #i. FromSender1(S, m) @ i ==>
-       ( (Ex #j. Sent1(m) @ j      & j < i)
-       // | (Ex #j. RevealLtk(S) @ j & j < i)
-       )
-    )
-  "
+lemma knows_only_expired_chain_keys [use_induction, reuse]:
+  "All k #i #j. ChainKey(k) @i & KU(k) @ j ==>
+      (Ex #e. Expired(k) @ e & e < j)"
 
 // The desired security property: received messages are authentic.
 lemma authentic [use_induction]:
-  " (All S m #i. FromSender(S, m) @ i ==>
-       ( (Ex #j. Sent(m) @ j      & j < i)
-       // | (Ex #j. RevealLtk(S) @ j & j < i)
-       )
-    )
-  "
-
-// To ensure that the above security property is not vacuously true due to the
-// filtering, we show that there exists a trace satisfying the filtering
-// condition and containing a 'FromSender'-action.
-lemma authentic_reachable [use_induction]:
-  exists-trace
-  " (All claimId k #i #j #e.
-         KeyNotExpiredHere(claimId) @ i
-       & CheckKeyNotExpired(claimId, k) @ j
-       & KeyExpired(k) @ e
-       ==>
-         i < e
-    ) &
-    (Ex S m #i. FromSender(S, m) @ i)
-  "
-
-// Just to make sure that everything is as expected, we also check that there
-// is no trace satisfying the filtering condition that excludes send steps
-// from happening before the corresponding receive steps.
-lemma wrong_filter_empty [use_induction]:
-  exists-trace
-  " (All claimId k #i #j #e.
-         KeyNotExpiredHere(claimId) @ i
-       & CheckKeyNotExpired(claimId, k) @ j
-       & KeyExpired(k) @ e
-       ==>
-         j < e
-    ) &
-    (Ex S m #i. FromSender(S, m) @ i)
+  "  (All m S k check #i.
+           FromSender(m, S, k, check) @ i
+         ==>
+           (Ex #j. Sent(m) @ j      & j < i)
+         | (Ex #j. RevealLtk(S) @ j & j < i)
+     )
   "
 
 end
