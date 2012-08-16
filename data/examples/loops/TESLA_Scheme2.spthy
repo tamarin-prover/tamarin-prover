@@ -5,7 +5,11 @@ theory TESLA_Scheme2 begin
   Modeler:     Simon Meier
   Date:        May 2012
 
-  Status:      working
+  Status:      WIP
+               (We have trouble reasoning about the authenticity check. More
+               precisely, we cannot prove that a successful check implies that
+               the key is a key of the hash-chain. See Minimal_HashChain.spthy
+               for an example of the core problem.)
 
   Original descrption in [1]. This model is based on the following description
   from [2].
@@ -69,8 +73,8 @@ rule Gen_Start:
 // the keys in the chain.
 rule Gen_Step:
     [ Gen(seed, chain) ]
-  --[ ChainKey(seed, f(chain))
-    , ChainKeys(chain, f(chain))
+  --[ ChainKey(f(chain))
+    // , ChainKeys(chain, f(chain))
     ]->
     [ Gen(seed, f(chain) ) , NextKey( f(chain) , chain ) ]
 
@@ -130,26 +134,27 @@ rule Receiver:
     [ CheckAuth(expiryCheck, S, kZero, msg ) ]
 
 rule CheckAuth0:
+  let args = <kZero, expiryCheck, S, k, msg>
+  in
     [ CheckAuth(expiryCheck, S, kZero, msg)
     , In(k)
     , Fr(loopId)
     ]
-    -->
-    [ CheckAuthLoop(loopId, expiryCheck, S, kZero, k,     k,    msg) ]
+  --[ CheckStart(loopId, args)
+    ]->
+    [ CheckAuthLoop(loopId, k, args) ]
 
 rule CheckAuth:
-    [ CheckAuthLoop(loopId, expiryCheck, S, kZero, k,     kRef, msg) ]
-  --[ // IsKeyZero(k             Zero)
-    //, HashesTo(exp             iryCheck, k, kZero)
-      MaybeChainKeys(loopId, k, f(k))
+    [ CheckAuthLoop(loopId, k, args) ]
+  --[ CheckLoop( loopId, f(k), args )
     ]->
-    [ CheckAuthLoop(loopId, expiryCheck, S, kZero, f(k),  kRef, msg) ]
+    [ CheckAuthLoop(loopId, f(k), args) ]
 
 
 rule CheckAuthClaim:
   let msg = <m, MAC(kRef,m)>
   in
-    [ CheckAuthLoop(loopId, expiryCheck, S, kZero, kZero, kRef, msg) ]
+    [ CheckAuthLoop(loopId, kZero, <kZero, expiryCheck, S, kRef, msg>) ]
   --[ FromSender(msg, S, kRef, expiryCheck)
     , Success(loopId)
     ]-> []
@@ -179,16 +184,105 @@ axiom Security_condition:
 // allow reasoning about the authenticity of the received messages.
 
 lemma chain_keys_unique [use_induction, reuse]:
-  "All s1 s2 k #i #j. ChainKey(s1, k) @ i & ChainKey(s2, k) @ j ==> #i = #j"
+  "All k #i #j. ChainKey(k) @ i & ChainKey(k) @ j ==> #i = #j"
 
 lemma knows_only_expired_chain_keys [use_induction, reuse]:
-  "All s k #i #j. ChainKey(s, k) @i & KU(k) @ j ==>
+  "All k #i #j. ChainKey(k) @i & KU(k) @ j ==>
       (Ex #e. Expired(k) @ e & e < j)"
+
+/*
+lemma CheckAuth_charn [use_induction, reuse]:
+  "All m S k check #i.
+         CheckAuth(m, S, k, check) @ i
+     ==>
+     ( Ex #j1 #j2 .
+           NotExpiredHere(check) @ j2
+         & KU(m) @ j1
+         // & ChainKey(k) @ j3
+         & j1 < j2
+     )
+  "
+*/
+
+lemma CheckAuth_start [use_induction, reuse]:
+  "All lid k args #i1 .
+         CheckLoop(lid, k, args) @ i1
+      ==>
+         Ex #i2 . CheckStart(lid, args) @ i2 & i2 < i1"
+
+
+/*
+lemma CheckAuth_unique:
+  "All lid args1 args2 #i1 #i2.
+         CheckLoop(lid, args1) @ i1
+       & CheckLoop(lid, args2) @ i2
+      ==>
+         args1 = args2"
+*/
+
+/*
+lemma FromSender_unique [use_induction]:
+  "All m1 m2 S1 S2 k1 k2 check #i1 #i2.
+         FromSender(m1, S1, k1, check) @ i1
+       & FromSender(m2, S2, k2, check) @ i2
+      ==>
+         #i1 = #i2"
+*/
+lemma FromSender_charn [use_induction]:
+  // "All m S k0 lid k args check #i.
+  "All lid k args #i #j.
+         // FromSender(m, S, k0, check) @ i
+         Success(lid) @ i
+       & CheckLoop(lid, k, args) @ j
+     ==>
+       (Ex #c. ChainKey(k) @ c)
+     // (All lid k args #j.
+     //     CheckLoop(lid, k, args) @ j
+     //       ==>
+     //         (Ex #j3. ChainKey(k) @ j3)
+     // ) &
+     // ( Ex #j1 #j2 #j3.
+     //       NotExpiredHere(check) @ j2
+     //     & KU(m) @ j1
+     //     & ChainKey(k) @ j3
+     //     & j1 < j2
+     // )
+  "
+
+/*
+lemma FromSender_charn [use_induction]:
+  "All m S k check #i.
+         FromSender(m, S, k, check) @ i
+     ==>
+     // (All lid k args #j.
+     //     CheckLoop(lid, k, args) @ j
+     //       ==>
+     //         (Ex #j3. ChainKey(k) @ j3)
+     // ) &
+     ( Ex #j1 #j2 #j3.
+           NotExpiredHere(check) @ j2
+         & KU(m) @ j1
+         & ChainKey(k) @ j3
+         & j1 < j2
+     )
+  "
+*/
+
+/*
+// The desired security property: received messages are authentic.
+lemma authentic [use_induction]:
+  "  (All m S k check #i.
+           FromSender(m, S, k, check) @ i
+         ==>
+           (Ex #j. Sent(m) @ j      & j < i)
+         // | (Ex #j. RevealLtk(S) @ j & j < i)
+     )
+  "
+*/
 
 /*
 lemma IsKeyZero_charn [use_induction, reuse]:
    "All k #i. IsKeyZero(k) @ i ==> (Ex s #j. KeyZero(s, k) @ j & j < i)"
-*/
 
 lemma IsChainKey_charn [use_induction, reuse]:
    "All k kNext check #i #j.
@@ -197,6 +291,7 @@ lemma IsChainKey_charn [use_induction, reuse]:
      ==>
      ( Ex #c .  ChainKeys(k, kNext) @ c)
    "
+*/
 
 /*
 lemma HashesTo_charn [use_induction, reuse]:
@@ -220,9 +315,11 @@ lemma honestly_executable [use_induction]:
            FromSender(m, S, k, check) @ i
          & Sent(m) @ j
     )
-  & (All S #r. RevealLtk(S) @ r ==> F)   // no longterm key was revealed
+  // & (All S #r. RevealLtk(S) @ r ==> F)   // no longterm key was revealed
   "
+*/
 
+/*
 // The desired security property: received messages are authentic.
 lemma authentic [use_induction]:
   "  (All m S k check #i.
