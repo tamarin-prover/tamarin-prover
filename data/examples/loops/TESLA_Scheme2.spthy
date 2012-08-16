@@ -52,10 +52,10 @@ rule Generate_Keypair:
     [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk(~ltk)) ]
 
 // We assume an active adversary.
-rule Reveal_Ltk:
-    [ !Ltk(A, ltk) ]
-  --[ RevealLtk(A) ]->
-    [ Out(ltk) ]
+// rule Reveal_Ltk:
+//     [ !Ltk(A, ltk) ]
+//   --[ RevealLtk(A) ]->
+//     [ Out(ltk) ]
 
 
 // Chain setup phase
@@ -63,20 +63,22 @@ rule Reveal_Ltk:
 
 // Hash chain generation
 rule Gen_Start:
-  [ Fr(~seed) ] --> [ Gen(~seed) ]
+  [ Fr(~seed) ] --> [ Gen(~seed, ~seed) ]
 
 // The NextKey-facts are used by the sender rules to store the link between
 // the keys in the chain.
 rule Gen_Step:
-    [ Gen(chain) ]
-  --[ ChainKey(f(chain)) ]->
-    [ Gen( f(chain) ) , NextKey( f(chain) , chain ) ]
+    [ Gen(seed, chain) ]
+  --[ ChainKey(seed, f(chain))
+    , ChainKeys(chain, f(chain))
+    ]->
+    [ Gen(seed, f(chain) ) , NextKey( f(chain) , chain ) ]
 
 // At some point the sender decides to stop the hash-chain precomputation.
 rule Gen_Stop:
-    [ Gen(kZero) ]
-  --[ Expired(kZero) ]->
-    [ Sender1( kZero) , !Sender0($S, kZero) ]
+    [ Gen(seed, kZero) ]
+  --[ Expired(kZero), KeyZero(seed, kZero) ]->
+    [ Sender(kZero) , !Sender0($S, kZero) ]
 
 // Intial chain key distribution
 ////////////////////////////////
@@ -99,60 +101,66 @@ rule Receiver0b:
   in
     [ Receiver0b(S,nR), !Pk(S, pkS), In(<msgZero, signature>) ]
   --[ Eq( verify(signature, msgZero, pkS), true() ) ]->
-    [ Receiver1(S,kZero) ]
+    [ !Receiver(S, kZero) ]
 
 // Sending
 //////////
 
-rule Sender1:
-  let msgOne = <mOne, MAC(kOne, mOne)>
-  in
-    [ Sender1( kZero ), NextKey( kZero, kOne ), Fr(mOne) ]
-  --[ Sent(msgOne) ]->
-    [ SenderN( kOne ), Out( msgOne ) ]
-
 // We use the convention that k_{n-1} is denoted as kNp, where the 'p' stands
 // for predecessor.
-rule SenderN:
-  let msgN = <kNp, mN, MAC( kN, mN )>
+rule Sender:
+  let msgN = <mN, MAC( kN, mN )>
   in
-    [ SenderN( kNp ), NextKey( kNp, kN), Fr(mN) ]
+    [ Sender( kNp ), NextKey( kNp, kN), Fr(mN) ]
   --[ Expired( kNp )
     , Sent( msgN )
     ]->
-    [ SenderN( kN ), Out(msgN) ]
+    [ Sender( kN ), Out(kNp), Out(msgN) ]
 
 // Receiving
 ////////////
 
-rule Receiver1:
-  let msgOne = <mOne, macOne>
+rule Receiver:
+  let msg = <m, mac>
   in
-    [ Receiver1(S, kZero), In( msgOne ), Fr(expiryCheckOne) ]
-  --[ NotExpiredHere(expiryCheckOne) ]->
-    [ ReceiverN(S, kZero, expiryCheckOne, msgOne, mOne, macOne ) ]
-
-rule ReceiverN:
-  let msgN = <kNp, mN, macN>
-  in
-    [ ReceiverN(S, kNpp, expiryCheckNp, msgNp, mNp, macNp), In( msgN )
-    , Fr(expiryCheckN)
+    [ !Receiver(S, kZero), In( msg )
+    , Fr(expiryCheck)
     ]
-  --[ Eq( kNpp, f(kNp) ), Eq( macNp, MAC(kNp, mNp) )
-      // This action claims that 'msgNp' was sent by the sender provided that
-      // the longterm-key of 'S' was not revealed before and the key 'kNp'
-      // expired after the expiry check denoted by 'expiryCheckNp'.
-    , FromSender(msgNp, S, kNp, expiryCheckNp)
-    , NotExpiredHere( expiryCheckN )
+  --[ NotExpiredHere( expiryCheck ) ]->
+    [ CheckAuth(expiryCheck, S, kZero, msg ) ]
+
+rule CheckAuth0:
+    [ CheckAuth(expiryCheck, S, kZero, msg)
+    , In(k)
+    , Fr(loopId)
+    ]
+    -->
+    [ CheckAuthLoop(loopId, expiryCheck, S, kZero, k,     k,    msg) ]
+
+rule CheckAuth:
+    [ CheckAuthLoop(loopId, expiryCheck, S, kZero, k,     kRef, msg) ]
+  --[ // IsKeyZero(k             Zero)
+    //, HashesTo(exp             iryCheck, k, kZero)
+      MaybeChainKeys(loopId, k, f(k))
     ]->
-    [ ReceiverN(S, kNp, expiryCheckN, msgN, mN, macN ) ]
+    [ CheckAuthLoop(loopId, expiryCheck, S, kZero, f(k),  kRef, msg) ]
+
+
+rule CheckAuthClaim:
+  let msg = <m, MAC(kRef,m)>
+  in
+    [ CheckAuthLoop(loopId, expiryCheck, S, kZero, kZero, kRef, msg) ]
+  --[ FromSender(msg, S, kRef, expiryCheck)
+    , Success(loopId)
+    ]-> []
 
 
 // Axioms; i.e., universal restrictions on the traces of interest
 /////////////////////////////////////////////////////////////////
 
-// We are only interested in traces where all equality checks succeed.
 axiom Eq_checks_succeed: "(All x y #j. Eq(x, y) @ j ==> x = y)"
+
+axiom Neq_checks_succeed: "(All x #j. Neq(x, x) @ j ==> F)"
 
 // The security condition of TESLA guarantees that
 axiom Security_condition:
@@ -167,25 +175,53 @@ axiom Security_condition:
 // Security properties
 //////////////////////
 
-// Sanity check: there is a honest execution where no key expired too early.
-lemma honestly_executable:
-  exists-trace
-  " ( Ex m S k check #i #j.
-          FromSender(m, S, k, check) @ i
-        & Sent(m) @ j
-    )
-  & (All S #r. RevealLtk(S) @ r ==> F)   // no longterm key was revealed
-  "
-
 // The following two lemmas constraint the search space strongly enough to
 // allow reasoning about the authenticity of the received messages.
 
 lemma chain_keys_unique [use_induction, reuse]:
-  "All k #i #j. ChainKey(k) @ i & ChainKey(k) @ j ==> #i = #j"
+  "All s1 s2 k #i #j. ChainKey(s1, k) @ i & ChainKey(s2, k) @ j ==> #i = #j"
 
 lemma knows_only_expired_chain_keys [use_induction, reuse]:
-  "All k #i #j. ChainKey(k) @i & KU(k) @ j ==>
+  "All s k #i #j. ChainKey(s, k) @i & KU(k) @ j ==>
       (Ex #e. Expired(k) @ e & e < j)"
+
+/*
+lemma IsKeyZero_charn [use_induction, reuse]:
+   "All k #i. IsKeyZero(k) @ i ==> (Ex s #j. KeyZero(s, k) @ j & j < i)"
+*/
+
+lemma IsChainKey_charn [use_induction, reuse]:
+   "All k kNext check #i #j.
+       MaybeChainKeys(check, k, kNext) @ i
+     & Success(check) @ j
+     ==>
+     ( Ex #c .  ChainKeys(k, kNext) @ c)
+   "
+
+/*
+lemma HashesTo_charn [use_induction, reuse]:
+   "All k kZero check #i #j.
+       HashesTo(check, k, kZero) @ i
+     & Success(check, kZero) @ j
+     ==>
+     ( Ex seed #c1 #c2 .
+          ChainKey(seed,  kZero) @ c1
+        & KeyZero(seed, kZero) @ c2
+        & c1 < c2
+     )
+   "
+*/
+
+/*
+// Sanity check: there is a honest execution where no key expired too early.
+lemma honestly_executable [use_induction]:
+  exists-trace
+  " ( Ex m S k check #i #j. // #v.
+           FromSender(m, S, k, check) @ i
+         & Sent(m) @ j
+    )
+  & (All S #r. RevealLtk(S) @ r ==> F)   // no longterm key was revealed
+  "
 
 // The desired security property: received messages are authentic.
 lemma authentic [use_induction]:
@@ -196,5 +232,45 @@ lemma authentic [use_induction]:
          | (Ex #j. RevealLtk(S) @ j & j < i)
      )
   "
+*/
+
+/*
+rule Receiver1:
+  let msgOne = <mOne, macOne>
+  in
+    [ Receiver1(S, kZero), In( msgOne ), Fr(expiryCheckOne) ]
+  --[ NotExpiredHere(expiryCheckOne) ]->
+    [ ReceiverN(S, kZero, expiryCheckOne, msgOne, mOne, macOne ) ]
+
+rule ReceiverN:
+  let msgN = <kNp, mN, macN>
+  in
+    [ ReceiverN(S, kZero, expiryCheckNp, msgNp, mNp, macNp), In( msgN )
+    , Fr(expiryCheckN)
+    ]
+  --[ Eq( macNp, MAC(kNp, mNp) )
+      // This action claims that 'msgNp' was sent by the sender provided that
+      // the longterm-key of 'S' was not revealed before and the key 'kNp'
+      // expired after the expiry check denoted by 'expiryCheckNp'.
+    , FromSender(msgNp, S, kNp, expiryCheckNp)
+    , NotExpiredHere( expiryCheckN )
+    ]->
+    [ ReceiverN(S, kZero, expiryCheckN, msgN, mN, macN )
+    , CheckAuth(kZero, kNp, kNp)
+    ]
+
+rule CheckAuth_Step:
+    [ CheckAuth(kZero, k, kOrig) ]
+  --[ Neq(kZero, k) ]->
+    [ CheckAuth(kZero, f(k), kOrig) ]
+
+rule CheckAuth_Ok:
+    [ CheckAuth(kZero, kZero, kOrig) ]
+  --[ // Eq(kZero, k)
+      ValidKey(kOrig)
+    ]->
+    []
+*/
+
 
 end
