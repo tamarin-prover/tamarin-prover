@@ -70,6 +70,7 @@ rule (modulo E) Serv_1:
 
 axiom Equality_Checks_Succeed:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
 
 lemma Client_session_key_secrecy:
   all-traces
@@ -173,7 +174,7 @@ analyzing: data/examples/Tutorial.spthy
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.228154s
+  processing time: 0.151159s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)
@@ -186,7 +187,7 @@ summary of summaries:
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.228154s
+  processing time: 0.151159s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)

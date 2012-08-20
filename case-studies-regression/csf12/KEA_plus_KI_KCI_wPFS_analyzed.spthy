@@ -170,15 +170,15 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
       case Sessk_reveal_case_2
       solve( splitEqs(0) )
         case split_case_2
-        solve( !KU( 'g'^(~tid*~x*inv(~lkI)) ) @ #vk.1 )
-          case Resp_1
-          solve( !KU( ~x ) @ #vk.4 )
-            case Ltk_reveal
-            solve( !KU( ~lkI ) @ #vk.6 )
+        solve( splitEqs(1) )
+          case split_case_1
+          solve( !KU( 'g'^(~tid*~x*inv(~lkI)) ) @ #vk.1 )
+            case Resp_1
+            solve( !KU( ~x ) @ #vk.4 )
               case Ltk_reveal
-              solve( splitEqs(1) )
-                case split_case_1
-                solve( !KU( 'g'^~ekI ) @ #vk.6 )
+              solve( !KU( ~lkI ) @ #vk.6 )
+                case Ltk_reveal
+                solve( !KU( 'g'^~ekI ) @ #vk.5 )
                   case Init_1
                   SOLVED // trace found
                 qed
@@ -282,7 +282,7 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.043245s
+  processing time: 1.014248s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -294,7 +294,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.043245s
+  processing time: 1.014248s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

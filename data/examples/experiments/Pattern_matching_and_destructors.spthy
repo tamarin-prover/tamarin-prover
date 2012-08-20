@@ -1,0 +1,104 @@
+theory Pattern_matching_and_Destructors
+begin
+
+/*
+   Protocol:    Demonstration how pattern matching can be described by
+                destructor functions
+   Modeler:     Simon Meier, Benedikt Schmidt
+   Date:        July 2012
+
+   Status:      working (warning that constant 'true' is not allowed)
+
+   This protocol is a variant of 'Minimal_Typing_Example' that uses explicit
+   destructors.
+*/
+
+
+builtins: symmetric-encryption, hashing
+functions: isPair/1, true/0, encSucc/2, and/2
+
+equations: isPair( pair(x, y) ) = true
+equations: encSucc(senc(x,y),y) = true
+equations: and(true,true) = true
+
+// Shared keys that can be compromised.
+rule Setup_Key:
+  [ Fr(~k) ] --[ IsKey(~k) ]-> [ !Key(~k) ]
+
+rule Reveal_Key:
+  [ !Key(k) ] --[ Rev(k) ]-> [ Out(k) ]
+
+rule Initiator:
+  let msg = senc{~sec,~pub}k
+  in
+    [ !Key(k), Fr(~sec), Fr(~pub) ]
+  --[ Out_Initiator(msg)
+    , Public(~pub)
+    ]->
+    [ Out( msg ) ]
+
+rule Responder:
+  // We use explicit destructors instead of the pattern matching
+  //
+  //     msg = senc{sec,pub}key
+  //
+  // Since we also check that the destructors succeed, this is trace-equivalent to
+  // the pattern-matching version.
+  // This can be seen after checking the variants of the rule and removing all variants
+  // with isTrue(t) such that there is no sigma with t\sigma =AC true.
+  // Note that using isEq(x,x) -> true, equality checks can also be handled with IsTrue.
+  //
+  let body = sdec{msg}key
+      sec  = fst(body)
+      pub  = snd(body)
+  in
+    [ !Key(key), In( msg )
+    ]
+  --[ In_Responder(msg, pub)
+    , Secret(sec, key)
+    , IsTrue( and( encSucc(msg,key), isPair(body) ) )
+    ]->
+    [ Out( pub ) ]
+
+axiom True_is_true:
+      "All x #i. IsTrue(x) @ i ==> x = true()"
+
+// This type assertion does not hold, as 'pub' could be an failure term. See the
+// case marked below for the missing piece of the puzzle.
+// Note that we interpret its formula modulo AC.
+lemma type_assertion [typing]:
+  /* For all messages received by the responder */
+  "(All m pub #i. In_Responder(m, pub) @ i ==>
+        /* they either came from the adversary and he therefore knows the
+         * contained 'k' variable before it was instantiated */
+      ( (Ex #j. KU(pub) @ j & j < i)
+        /* or there is an initiator that sent 'm'. */
+      | (Ex #j. Out_Initiator(m) @ j)
+      )
+   )
+  "
+
+/* The secret part of the message received by Responder is secret provided the
+ * key has not been compromised.
+ */
+lemma Responder_secrecy:
+  " All sec key #i #j.
+        Secret(sec, key) @ #i
+      & K(sec) @ #j
+      ==>
+       (Ex #r. Rev(key) @ r)
+  "
+
+/* Sanity check: the public part is accessible to the adversary without
+ * performing a key reveal.
+ */
+lemma Public_part_public:
+  exists-trace
+  "  /* No key reveal has been performed */
+    not (Ex k #i. Rev(k) @ i)
+    /* and the public part of a message is known to the adversary. */
+  & (Ex pub #i #j. Public(pub) @ i & K(pub) @ j )
+  "
+
+
+end

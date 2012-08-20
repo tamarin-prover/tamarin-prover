@@ -100,7 +100,7 @@ import           Prelude                              hiding (id, (.))
 import           Data.Binary
 import qualified Data.DAG.Simple                      as D
 import           Data.DeriveTH
-import           Data.List                            (foldl')
+import           Data.List                            (foldl', partition)
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe)
 import           Data.Monoid                          (Monoid(..))
@@ -134,11 +134,17 @@ data SystemTraceQuantifier = ExistsSomeTrace | ExistsNoTrace
 -- | Case dinstinction kind that are allowed. The order of the kinds
 -- corresponds to the subkinding relation: untyped < typed.
 data CaseDistKind = UntypedCaseDist | TypedCaseDist
-       deriving( Eq, Ord )
+       deriving( Eq )
 
 instance Show CaseDistKind where
     show UntypedCaseDist = "untyped"
     show TypedCaseDist   = "typed"
+
+instance Ord CaseDistKind where
+    compare UntypedCaseDist UntypedCaseDist = EQ
+    compare UntypedCaseDist TypedCaseDist   = LT
+    compare TypedCaseDist   UntypedCaseDist = GT
+    compare TypedCaseDist   TypedCaseDist   = EQ
 
 -- | The status of a 'Goal'. Use its 'Semigroup' instance to combine the
 -- status info of goals that collapse.
@@ -203,25 +209,35 @@ emptySystem = System
 
 -- | Returns the constraint system that has to be proven to show that given
 -- formula holds in the context of the given theory.
-formulaToSystem :: CaseDistKind -> SystemTraceQuantifier -> LNFormula -> System
-formulaToSystem kind traceQuantifier fm =
-    L.set sFormulas (S.singleton gf) (emptySystem kind)
+formulaToSystem :: [LNGuarded]           -- ^ Axioms to add
+                -> CaseDistKind          -- ^ Case distinction kind
+                -> SystemTraceQuantifier -- ^ Trace quantifier
+                -> LNFormula
+                -> System
+formulaToSystem axioms kind traceQuantifier fm =
+      insertLemmas safetyAxioms
+    $ L.set sFormulas (S.singleton gf2)
+    $ (emptySystem kind)
   where
-    adapt = case traceQuantifier of
-      ExistsSomeTrace -> id
-      ExistsNoTrace   -> gnot
-    gf = either (error . render) id (adapt <$> formulaToGuarded fm)
+    (safetyAxioms, otherAxioms) = partition isSafetyFormula axioms
+    gf0 = formulaToGuarded_ fm
+    gf1 = case traceQuantifier of
+      ExistsSomeTrace -> gf0
+      ExistsNoTrace   -> gnot gf0
+    -- Non-safety axioms must be added to the formula, as they render the set
+    -- of traces non-prefix-closed, which makes the use of induction unsound.
+    gf2 = gconj $ gf1 : otherAxioms
 
 -- | Add a lemma / additional assumption to a constraint system.
-insertLemma :: LNFormula -> System -> System
-insertLemma fm0 =
-    go (either (error . render) id $ formulaToGuarded fm0)
+insertLemma :: LNGuarded -> System -> System
+insertLemma =
+    go
   where
     go (GConj conj) = foldr (.) id $ map go $ getConj conj
     go fm           = L.modify sLemmas (S.insert fm)
 
 -- | Add lemmas / additional assumptions to a constraint system.
-insertLemmas :: [LNFormula] -> System -> System
+insertLemmas :: [LNGuarded] -> System -> System
 insertLemmas fms sys = foldl' (flip insertLemma) sys fms
 
 ------------------------------------------------------------------------------

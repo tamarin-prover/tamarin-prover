@@ -257,217 +257,506 @@ solve( (∃ ss #i4 #i5 C D ms.
               case Init_2
               solve( Init_1( ~m1, $I.1, $R.1, ~ltkI.1, X, XB ) ▶₀ #i5 )
                 case Init_1
-                solve( !KU( MAC(KDF(<'g'^~m1, 'g'^x.1, $I, $R, 'g'^(~ltkR*~m1), 
-                                     'g'^(~m2*~x)>),
-                                <'Resp', $R, $I, 'g'^(~m2*~x), 'g'^(~ltkR*~m1)>)
-                       ) @ #vk.3 )
-                  case Resp_1
-                  solve( !KU( KDF(<'g'^~m1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 
-                                   'g'^(~ltkI*~m2)>)
-                         ) @ #vk.1 )
-                    case Sessk_reveal_case_1
-                    by contradiction // from formulas
-                  next
-                    case Sessk_reveal_case_2
-                    by contradiction // from formulas
-                  next
-                    case cKDF
-                    solve( !KU( 'g'^~m1 ) @ #vk.7 )
-                      case Init_1
-                      solve( !KU( ~ltkR ) @ #vk.15 )
-                        case Ltk_reveal
-                        solve( !KU( 'g'^~m2 ) @ #vk.12 )
-                          case Resp_1
-                          solve( !KU( ~ltkI ) @ #vk.17 )
-                            case Ltk_reveal
-                            by contradiction // from formulas
+                solve( splitEqs(0) )
+                  case split_case_1
+                  solve( splitEqs(1) )
+                    case split_case_1
+                    solve( !KU( KDF(<'g'^~m1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 
+                                     'g'^(~ltkI*~m2)>)
+                           ) @ #vk )
+                      case Sessk_reveal_case_1
+                      by contradiction // from formulas
+                    next
+                      case Sessk_reveal_case_2
+                      by contradiction // from formulas
+                    next
+                      case cKDF
+                      solve( !KU( 'g'^~m1 ) @ #vk.7 )
+                        case Init_1
+                        solve( !KU( ~ltkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          solve( !KU( 'g'^~m2 ) @ #vk.12 )
+                            case Resp_1
+                            solve( !KU( ~ltkI ) @ #vk.17 )
+                              case Ltk_reveal
+                              by contradiction // from formulas
+                            qed
+                          next
+                            case cexp
+                            solve( !KU( ~m2 ) @ #vk.17 )
+                              case Ephk_reveal
+                              by contradiction // from formulas
+                            qed
                           qed
-                        next
-                          case cexp
-                          solve( !KU( ~m2 ) @ #vk.17 )
-                            case Ephk_reveal
-                            by contradiction // from formulas
+                        qed
+                      next
+                        case Init_2
+                        solve( !KU( ~ltkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          solve( !KU( 'g'^(~ltkI*~m2) ) @ #vk.5 )
+                            case Init_1
+                            solve( !KU( ~m1.1 ) @ #vk.19 )
+                              case Ephk_reveal
+                              solve( !KU( ~m2 ) @ #vk.18 )
+                                case Ephk_reveal
+                                by contradiction // cyclic
+                              qed
+                            qed
+                          next
+                            case Init_2
+                            solve( !KU( ~m1.1 ) @ #vk.22 )
+                              case Ephk_reveal
+                              solve( !KU( ~m2 ) @ #vk.21 )
+                                case Ephk_reveal
+                                by contradiction // cyclic
+                              qed
+                            qed
+                          next
+                            case Register_pk
+                            solve( !KU( ~m2 ) @ #vk.16 )
+                              case Ephk_reveal
+                              by contradiction // cyclic
+                            qed
+                          next
+                            case Resp_1_case_1
+                            by contradiction // cyclic
+                          next
+                            case Resp_1_case_2
+                            solve( !KU( ~m2.1 ) @ #vk.20 )
+                              case Ephk_reveal
+                              solve( !KU( ~m2 ) @ #vk.19 )
+                                case Ephk_reveal
+                                by contradiction // cyclic
+                              qed
+                            qed
+                          next
+                            case cexp
+                            solve( !KU( ~ltkI ) @ #vk.18 )
+                              case Ltk_reveal
+                              by contradiction // from formulas
+                            qed
+                          qed
+                        qed
+                      next
+                        case cexp
+                        solve( !KU( ~m1 ) @ #vk.15 )
+                          case Ephk_reveal
+                          solve( !KU( 'g'^~m2 ) @ #vk.12 )
+                            case Resp_1
+                            solve( !KU( ~ltkI ) @ #vk.17 )
+                              case Ltk_reveal
+                              by contradiction // from formulas
+                            qed
+                          next
+                            case cexp
+                            solve( !KU( ~m2 ) @ #vk.16 )
+                              case Ephk_reveal
+                              by contradiction // from formulas
+                            qed
                           qed
                         qed
                       qed
-                    next
-                      case Init_2
-                      by contradiction // cyclic
-                    next
-                      case cexp
-                      solve( !KU( ~m1 ) @ #vk.15 )
-                        case Ephk_reveal
-                        solve( !KU( 'g'^~m2 ) @ #vk.12 )
-                          case Resp_1
-                          solve( !KU( ~ltkI ) @ #vk.17 )
+                    qed
+                  next
+                    case split_case_2
+                    solve( !KU( MAC(KDF(<'g'^~m1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 
+                                         'g'^(~ltkI*~m2)>),
+                                    <'Resp', $R, $I, 'g'^(~ltkI*~m2), 'g'^(~ltkR*~m1)>)
+                           ) @ #vk.3 )
+                      case cMAC
+                      solve( !KU( KDF(<'g'^~m1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 
+                                       'g'^(~ltkI*~m2)>)
+                             ) @ #vk.1 )
+                        case Sessk_reveal
+                        by contradiction // cyclic
+                      next
+                        case cKDF
+                        solve( !KU( 'g'^~m1 ) @ #vk.16 )
+                          case Init_1
+                          solve( !KU( ~ltkR ) @ #vk.20 )
                             case Ltk_reveal
-                            by contradiction // from formulas
+                            solve( !KU( 'g'^~m2 ) @ #vk.19 )
+                              case Resp_1
+                              solve( !KU( ~ltkI ) @ #vk.22 )
+                                case Ltk_reveal
+                                by contradiction // from formulas
+                              qed
+                            next
+                              case cexp
+                              solve( !KU( ~m2 ) @ #vk.22 )
+                                case Ephk_reveal
+                                by contradiction // from formulas
+                              qed
+                            qed
                           qed
                         next
+                          case Init_2
+                          by contradiction // cyclic
+                        next
                           case cexp
-                          solve( !KU( ~m2 ) @ #vk.16 )
+                          solve( !KU( ~m1 ) @ #vk.20 )
                             case Ephk_reveal
-                            by contradiction // from formulas
+                            solve( !KU( 'g'^~m2 ) @ #vk.19 )
+                              case Resp_1
+                              solve( !KU( ~ltkI ) @ #vk.22 )
+                                case Ltk_reveal
+                                by contradiction // from formulas
+                              qed
+                            next
+                              case cexp
+                              solve( !KU( ~m2 ) @ #vk.21 )
+                                case Ephk_reveal
+                                by contradiction // from formulas
+                              qed
+                            qed
                           qed
                         qed
                       qed
                     qed
                   qed
                 next
-                  case cMAC
-                  solve( !KU( KDF(<'g'^~m1, 'g'^x.1, $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)
-                                  >)
-                         ) @ #vk.1 )
-                    case Sessk_reveal_case_1
-                    by contradiction // cyclic
-                  next
-                    case Sessk_reveal_case_2
-                    by contradiction // from formulas
-                  next
-                    case cKDF
-                    solve( !KU( 'g'^~m1 ) @ #vk.16 )
-                      case Init_1
-                      solve( !KU( ~ltkR ) @ #vk.20 )
-                        case Ltk_reveal
-                        solve( splitEqs(0) )
-                          case split_case_1
-                          solve( !KU( 'g'^~m2 ) @ #vk.20 )
-                            case Resp_1
-                            solve( !KU( ~ltkI ) @ #vk.22 )
-                              case Ltk_reveal
-                              by contradiction // from formulas
-                            qed
-                          next
-                            case cexp
-                            solve( !KU( ~m2 ) @ #vk.22 )
+                  case split_case_2
+                  solve( splitEqs(1) )
+                    case split_case_1
+                    solve( !KU( MAC(KDF(<'g'^~m1, 'g'^(~m2*~x*inv(~ltkI)), $I, $R, 
+                                         'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
+                                    <'Resp', $R, $I, 'g'^(~m2*~x), 'g'^(~ltkR*~m1)>)
+                           ) @ #vk.3 )
+                      case cMAC
+                      solve( !KU( KDF(<'g'^~m1, 'g'^(~m2*~x*inv(~ltkI)), $I, $R, 
+                                       'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                             ) @ #vk.1 )
+                        case Sessk_reveal
+                        by contradiction // cyclic
+                      next
+                        case cKDF
+                        solve( !KU( 'g'^(~m2*~x*inv(~ltkI)) ) @ #vk.18 )
+                          case Init_1
+                          solve( !KU( ~m1.1 ) @ #vk.23 )
+                            case Ephk_reveal
+                            solve( !KU( ~m2 ) @ #vk.21 )
                               case Ephk_reveal
-                              by contradiction // from formulas
+                              solve( !KU( ~ltkI ) @ #vk.24 )
+                                case Ltk_reveal
+                                solve( !KU( 'g'^~m1 ) @ #vk.24 )
+                                  case Init_1
+                                  solve( !KU( ~ltkR ) @ #vk.26 )
+                                    case Ltk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                next
+                                  case Init_2
+                                  by contradiction // cyclic
+                                next
+                                  case cexp
+                                  solve( !KU( ~m1 ) @ #vk.26 )
+                                    case Ephk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                qed
+                              qed
                             qed
                           qed
                         next
-                          case split_case_2
-                          solve( !KU( 'g'^(~m2*~x*inv(~ltkI)) ) @ #vk.20 )
-                            case Init_1
-                            solve( !KU( ~m1.1 ) @ #vk.25 )
+                          case Init_2
+                          solve( !KU( ~m1.1 ) @ #vk.26 )
+                            case Ephk_reveal
+                            solve( !KU( ~m2 ) @ #vk.24 )
                               case Ephk_reveal
-                              solve( !KU( ~m2 ) @ #vk.23 )
-                                case Ephk_reveal
-                                by contradiction // from formulas
+                              solve( !KU( ~ltkI ) @ #vk.27 )
+                                case Ltk_reveal
+                                solve( !KU( 'g'^~m1 ) @ #vk.24 )
+                                  case Init_1
+                                  solve( !KU( ~ltkR ) @ #vk.29 )
+                                    case Ltk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                next
+                                  case Init_2
+                                  by contradiction // cyclic
+                                next
+                                  case cexp
+                                  solve( !KU( ~m1 ) @ #vk.29 )
+                                    case Ephk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                qed
                               qed
                             qed
-                          next
-                            case Init_2
-                            solve( !KU( ~m1.1 ) @ #vk.28 )
-                              case Ephk_reveal
-                              solve( !KU( ~m2 ) @ #vk.26 )
-                                case Ephk_reveal
-                                by contradiction // from formulas
-                              qed
-                            qed
-                          next
-                            case Register_pk
-                            solve( !KU( ~m2 ) @ #vk.22 )
-                              case Ephk_reveal
-                              by contradiction // from formulas
-                            qed
-                          next
-                            case Resp_1_case_1
+                          qed
+                        next
+                          case Register_pk
+                          solve( !KU( ~m2 ) @ #vk.20 )
+                            case Ephk_reveal
                             solve( !KU( ~ltkI ) @ #vk.22 )
                               case Ltk_reveal
-                              by contradiction // from formulas
+                              solve( !KU( 'g'^~m1 ) @ #vk.21 )
+                                case Init_1
+                                solve( !KU( ~ltkR ) @ #vk.24 )
+                                  case Ltk_reveal
+                                  by contradiction // from formulas
+                                qed
+                              next
+                                case Init_2
+                                by contradiction // cyclic
+                              next
+                                case cexp
+                                solve( !KU( ~m1 ) @ #vk.24 )
+                                  case Ephk_reveal
+                                  by contradiction // from formulas
+                                qed
+                              qed
                             qed
-                          next
-                            case Resp_1_case_2
-                            by contradiction // non-normal terms
-                          next
-                            case Resp_1_case_3
-                            solve( !KU( ~m2.1 ) @ #vk.26 )
-                              case Ephk_reveal
-                              solve( !KU( ~m2 ) @ #vk.24 )
+                          qed
+                        next
+                          case Resp_1_case_1
+                          solve( !KU( ~ltkI ) @ #vk.20 )
+                            case Ltk_reveal
+                            solve( !KU( 'g'^~m1 ) @ #vk.19 )
+                              case Init_1
+                              solve( !KU( ~ltkR ) @ #vk.22 )
+                                case Ltk_reveal
+                                by contradiction // from formulas
+                              qed
+                            next
+                              case Init_2
+                              by contradiction // cyclic
+                            next
+                              case cexp
+                              solve( !KU( ~m1 ) @ #vk.22 )
                                 case Ephk_reveal
                                 by contradiction // from formulas
                               qed
                             qed
-                          next
-                            case cexp
-                            solve( !KU( ~m2 ) @ #vk.23 )
+                          qed
+                        next
+                          case Resp_1_case_2
+                          by contradiction // non-normal terms
+                        next
+                          case Resp_1_case_3
+                          solve( !KU( ~m2.1 ) @ #vk.24 )
+                            case Ephk_reveal
+                            solve( !KU( ~m2 ) @ #vk.22 )
                               case Ephk_reveal
-                              by contradiction // from formulas
+                              solve( !KU( ~ltkI ) @ #vk.25 )
+                                case Ltk_reveal
+                                solve( !KU( 'g'^~m1 ) @ #vk.24 )
+                                  case Init_1
+                                  solve( !KU( ~ltkR ) @ #vk.27 )
+                                    case Ltk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                next
+                                  case Init_2
+                                  by contradiction // cyclic
+                                next
+                                  case cexp
+                                  solve( !KU( ~m1 ) @ #vk.27 )
+                                    case Ephk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        next
+                          case cexp
+                          solve( !KU( ~m2 ) @ #vk.21 )
+                            case Ephk_reveal
+                            solve( !KU( ~x ) @ #vk.22 )
+                              case Ltk_reveal
+                              solve( !KU( ~ltkI ) @ #vk.24 )
+                                case Ltk_reveal
+                                solve( !KU( 'g'^~m1 ) @ #vk.22 )
+                                  case Init_1
+                                  solve( !KU( ~ltkR ) @ #vk.26 )
+                                    case Ltk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                next
+                                  case Init_2
+                                  by contradiction // cyclic
+                                next
+                                  case cexp
+                                  solve( !KU( ~m1 ) @ #vk.25 )
+                                    case Ephk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                qed
+                              qed
                             qed
                           qed
                         qed
                       qed
-                    next
-                      case Init_2
-                      by contradiction // cyclic
-                    next
-                      case cexp
-                      solve( !KU( ~m1 ) @ #vk.20 )
-                        case Ephk_reveal
-                        solve( splitEqs(0) )
-                          case split_case_1
-                          solve( !KU( 'g'^~m2 ) @ #vk.19 )
-                            case Resp_1
-                            solve( !KU( ~ltkI ) @ #vk.22 )
-                              case Ltk_reveal
-                              by contradiction // from formulas
-                            qed
-                          next
-                            case cexp
+                    qed
+                  next
+                    case split_case_2
+                    solve( !KU( MAC(KDF(<'g'^~m1, 'g'^(~m2*~x*inv(~ltkI)), $I, $R, 
+                                         'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
+                                    <'Resp', $R, $I, 'g'^(~m2*~x), 'g'^(~ltkR*~m1)>)
+                           ) @ #vk.3 )
+                      case cMAC
+                      solve( !KU( KDF(<'g'^~m1, 'g'^(~m2*~x*inv(~ltkI)), $I, $R, 
+                                       'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                             ) @ #vk.1 )
+                        case Sessk_reveal
+                        by contradiction // cyclic
+                      next
+                        case cKDF
+                        solve( !KU( 'g'^(~m2*~x*inv(~ltkI)) ) @ #vk.18 )
+                          case Init_1
+                          solve( !KU( ~m1.1 ) @ #vk.23 )
+                            case Ephk_reveal
                             solve( !KU( ~m2 ) @ #vk.21 )
                               case Ephk_reveal
-                              by contradiction // from formulas
+                              solve( !KU( ~ltkI ) @ #vk.24 )
+                                case Ltk_reveal
+                                solve( !KU( 'g'^~m1 ) @ #vk.24 )
+                                  case Init_1
+                                  solve( !KU( ~ltkR ) @ #vk.26 )
+                                    case Ltk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                next
+                                  case Init_2
+                                  by contradiction // cyclic
+                                next
+                                  case cexp
+                                  solve( !KU( ~m1 ) @ #vk.26 )
+                                    case Ephk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                qed
+                              qed
                             qed
                           qed
                         next
-                          case split_case_2
-                          solve( !KU( 'g'^(~m2*~x*inv(~ltkI)) ) @ #vk.19 )
-                            case Init_1
-                            solve( !KU( ~m1.1 ) @ #vk.25 )
+                          case Init_2
+                          solve( !KU( ~m1.1 ) @ #vk.26 )
+                            case Ephk_reveal
+                            solve( !KU( ~m2 ) @ #vk.24 )
                               case Ephk_reveal
-                              solve( !KU( ~m2 ) @ #vk.23 )
-                                case Ephk_reveal
-                                by contradiction // from formulas
+                              solve( !KU( ~ltkI ) @ #vk.27 )
+                                case Ltk_reveal
+                                solve( !KU( 'g'^~m1 ) @ #vk.24 )
+                                  case Init_1
+                                  solve( !KU( ~ltkR ) @ #vk.29 )
+                                    case Ltk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                next
+                                  case Init_2
+                                  by contradiction // cyclic
+                                next
+                                  case cexp
+                                  solve( !KU( ~m1 ) @ #vk.29 )
+                                    case Ephk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                qed
                               qed
                             qed
-                          next
-                            case Init_2
-                            solve( !KU( ~m1.1 ) @ #vk.28 )
-                              case Ephk_reveal
-                              solve( !KU( ~m2 ) @ #vk.26 )
-                                case Ephk_reveal
-                                by contradiction // from formulas
-                              qed
-                            qed
-                          next
-                            case Register_pk
-                            solve( !KU( ~m2 ) @ #vk.22 )
-                              case Ephk_reveal
-                              by contradiction // from formulas
-                            qed
-                          next
-                            case Resp_1_case_1
+                          qed
+                        next
+                          case Register_pk
+                          solve( !KU( ~m2 ) @ #vk.20 )
+                            case Ephk_reveal
                             solve( !KU( ~ltkI ) @ #vk.22 )
                               case Ltk_reveal
-                              by contradiction // from formulas
+                              solve( !KU( 'g'^~m1 ) @ #vk.21 )
+                                case Init_1
+                                solve( !KU( ~ltkR ) @ #vk.24 )
+                                  case Ltk_reveal
+                                  by contradiction // from formulas
+                                qed
+                              next
+                                case Init_2
+                                by contradiction // cyclic
+                              next
+                                case cexp
+                                solve( !KU( ~m1 ) @ #vk.24 )
+                                  case Ephk_reveal
+                                  by contradiction // from formulas
+                                qed
+                              qed
                             qed
-                          next
-                            case Resp_1_case_2
-                            by contradiction // non-normal terms
-                          next
-                            case Resp_1_case_3
-                            solve( !KU( ~m2.1 ) @ #vk.26 )
-                              case Ephk_reveal
-                              solve( !KU( ~m2 ) @ #vk.24 )
+                          qed
+                        next
+                          case Resp_1_case_1
+                          solve( !KU( ~ltkI ) @ #vk.20 )
+                            case Ltk_reveal
+                            solve( !KU( 'g'^~m1 ) @ #vk.19 )
+                              case Init_1
+                              solve( !KU( ~ltkR ) @ #vk.22 )
+                                case Ltk_reveal
+                                by contradiction // from formulas
+                              qed
+                            next
+                              case Init_2
+                              by contradiction // cyclic
+                            next
+                              case cexp
+                              solve( !KU( ~m1 ) @ #vk.22 )
                                 case Ephk_reveal
                                 by contradiction // from formulas
                               qed
                             qed
-                          next
-                            case cexp
+                          qed
+                        next
+                          case Resp_1_case_2
+                          by contradiction // non-normal terms
+                        next
+                          case Resp_1_case_3
+                          solve( !KU( ~m2.1 ) @ #vk.24 )
+                            case Ephk_reveal
                             solve( !KU( ~m2 ) @ #vk.22 )
                               case Ephk_reveal
-                              by contradiction // from formulas
+                              solve( !KU( ~ltkI ) @ #vk.25 )
+                                case Ltk_reveal
+                                solve( !KU( 'g'^~m1 ) @ #vk.24 )
+                                  case Init_1
+                                  solve( !KU( ~ltkR ) @ #vk.27 )
+                                    case Ltk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                next
+                                  case Init_2
+                                  by contradiction // cyclic
+                                next
+                                  case cexp
+                                  solve( !KU( ~m1 ) @ #vk.27 )
+                                    case Ephk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        next
+                          case cexp
+                          solve( !KU( ~m2 ) @ #vk.21 )
+                            case Ephk_reveal
+                            solve( !KU( ~x ) @ #vk.22 )
+                              case Ltk_reveal
+                              solve( !KU( ~ltkI ) @ #vk.24 )
+                                case Ltk_reveal
+                                solve( !KU( 'g'^~m1 ) @ #vk.22 )
+                                  case Init_1
+                                  solve( !KU( ~ltkR ) @ #vk.26 )
+                                    case Ltk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                next
+                                  case Init_2
+                                  by contradiction // cyclic
+                                next
+                                  case cexp
+                                  solve( !KU( ~m1 ) @ #vk.25 )
+                                    case Ephk_reveal
+                                    by contradiction // from formulas
+                                  qed
+                                qed
+                              qed
                             qed
                           qed
                         qed
@@ -493,278 +782,373 @@ solve( (∃ ss #i4 #i5 C D ms.
             case Register_pk
             solve( Match( ~m2, <$I.1, $R.1, 'Init', 'g'^(~ltkR*~m1)> ) @ #i5 )
               case Resp_1
-              solve( !KU( KDF(<'g'^x.1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)
-                              >)
-                     ) @ #vk )
-                case Sessk_reveal_case_1
-                by contradiction // from formulas
-              next
-                case Sessk_reveal_case_2
-                by contradiction // from formulas
-              next
-                case cKDF
-                solve( !KU( MAC(KDF(<'g'^x.1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 
-                                     'g'^(~m2*~x)>),
-                                <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
-                       ) @ #vk.6 )
-                  case Init_2
-                  solve( !KU( 'g'^~m1 ) @ #vk.10 )
-                    case Init_1
-                    solve( !KU( ~ltkR ) @ #vk.18 )
-                      case Ltk_reveal
-                      solve( !KU( 'g'^~m2 ) @ #vk.14 )
-                        case Resp_1
-                        solve( !KU( ~ltkI ) @ #vk.20 )
-                          case Ltk_reveal
-                          by contradiction // from formulas
-                        qed
-                      next
-                        case cexp
-                        solve( !KU( ~m2 ) @ #vk.20 )
-                          case Ephk_reveal
-                          by contradiction // from formulas
-                        qed
-                      qed
-                    qed
-                  next
+              solve( splitEqs(1) )
+                case split_case_1
+                solve( !KU( KDF(<'g'^~m1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)
+                                >)
+                       ) @ #vk )
+                  case Sessk_reveal_case_1
+                  by contradiction // from formulas
+                next
+                  case Sessk_reveal_case_2
+                  by contradiction // from formulas
+                next
+                  case cKDF
+                  solve( !KU( MAC(KDF(<'g'^~m1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 
+                                       'g'^(~m2*~x)>),
+                                  <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                         ) @ #vk.6 )
                     case Init_2
-                    solve( !KU( ~ltkR ) @ #vk.18 )
-                      case Ltk_reveal
-                      solve( !KU( 'g'^(~ltkI*~m2) ) @ #vk.7 )
-                        case Init_1
-                        solve( !KU( ~m1.1 ) @ #vk.22 )
-                          case Ephk_reveal
-                          solve( !KU( ~m2 ) @ #vk.21 )
+                    solve( !KU( 'g'^~m1 ) @ #vk.10 )
+                      case Init_1
+                      solve( !KU( ~ltkR ) @ #vk.18 )
+                        case Ltk_reveal
+                        solve( !KU( 'g'^~m2 ) @ #vk.14 )
+                          case Resp_1
+                          solve( !KU( ~ltkI ) @ #vk.20 )
+                            case Ltk_reveal
+                            by contradiction // from formulas
+                          qed
+                        next
+                          case cexp
+                          solve( !KU( ~m2 ) @ #vk.20 )
+                            case Ephk_reveal
+                            by contradiction // from formulas
+                          qed
+                        qed
+                      qed
+                    next
+                      case Init_2
+                      solve( !KU( ~ltkR ) @ #vk.18 )
+                        case Ltk_reveal
+                        solve( !KU( 'g'^(~ltkI*~m2) ) @ #vk.7 )
+                          case Init_1
+                          solve( !KU( ~m1.1 ) @ #vk.22 )
+                            case Ephk_reveal
+                            solve( !KU( ~m2 ) @ #vk.21 )
+                              case Ephk_reveal
+                              by contradiction // cyclic
+                            qed
+                          qed
+                        next
+                          case Init_2
+                          solve( !KU( ~m1.1 ) @ #vk.25 )
+                            case Ephk_reveal
+                            solve( !KU( ~m2 ) @ #vk.24 )
+                              case Ephk_reveal
+                              by contradiction // cyclic
+                            qed
+                          qed
+                        next
+                          case Register_pk
+                          solve( !KU( ~m2 ) @ #vk.19 )
                             case Ephk_reveal
                             by contradiction // cyclic
                           qed
-                        qed
-                      next
-                        case Init_2
-                        solve( !KU( ~m1.1 ) @ #vk.25 )
-                          case Ephk_reveal
-                          solve( !KU( ~m2 ) @ #vk.24 )
-                            case Ephk_reveal
-                            by contradiction // cyclic
-                          qed
-                        qed
-                      next
-                        case Register_pk
-                        solve( !KU( ~m2 ) @ #vk.19 )
-                          case Ephk_reveal
+                        next
+                          case Resp_1_case_1
                           by contradiction // cyclic
-                        qed
-                      next
-                        case Resp_1_case_1
-                        by contradiction // cyclic
-                      next
-                        case Resp_1_case_2
-                        solve( !KU( ~m2.1 ) @ #vk.23 )
-                          case Ephk_reveal
-                          solve( !KU( ~m2 ) @ #vk.22 )
+                        next
+                          case Resp_1_case_2
+                          solve( !KU( ~m2.1 ) @ #vk.23 )
                             case Ephk_reveal
-                            by contradiction // cyclic
+                            solve( !KU( ~m2 ) @ #vk.22 )
+                              case Ephk_reveal
+                              by contradiction // cyclic
+                            qed
+                          qed
+                        next
+                          case cexp
+                          solve( !KU( ~ltkI ) @ #vk.21 )
+                            case Ltk_reveal
+                            by contradiction // from formulas
                           qed
                         qed
-                      next
-                        case cexp
-                        solve( !KU( ~ltkI ) @ #vk.21 )
-                          case Ltk_reveal
-                          by contradiction // from formulas
+                      qed
+                    next
+                      case cexp
+                      solve( !KU( ~m1 ) @ #vk.18 )
+                        case Ephk_reveal
+                        solve( !KU( 'g'^~m2 ) @ #vk.14 )
+                          case Resp_1
+                          solve( !KU( ~ltkI ) @ #vk.20 )
+                            case Ltk_reveal
+                            by contradiction // from formulas
+                          qed
+                        next
+                          case cexp
+                          solve( !KU( ~m2 ) @ #vk.19 )
+                            case Ephk_reveal
+                            by contradiction // from formulas
+                          qed
                         qed
                       qed
                     qed
                   next
-                    case cexp
-                    solve( !KU( ~m1 ) @ #vk.18 )
-                      case Ephk_reveal
-                      solve( !KU( 'g'^~m2 ) @ #vk.14 )
-                        case Resp_1
-                        solve( !KU( ~ltkI ) @ #vk.20 )
-                          case Ltk_reveal
-                          by contradiction // from formulas
+                    case cMAC
+                    solve( !KU( 'g'^~m1 ) @ #vk.9 )
+                      case Init_1
+                      solve( !KU( ~ltkR ) @ #vk.18 )
+                        case Ltk_reveal
+                        solve( !KU( 'g'^~m2 ) @ #vk.14 )
+                          case Resp_1
+                          solve( !KU( ~x ) @ #vk.20 )
+                            case Ltk_reveal
+                            by contradiction // from formulas
+                          qed
+                        next
+                          case cexp
+                          solve( !KU( ~m2 ) @ #vk.20 )
+                            case Ephk_reveal
+                            by contradiction // from formulas
+                          qed
                         qed
-                      next
-                        case cexp
-                        solve( !KU( ~m2 ) @ #vk.19 )
-                          case Ephk_reveal
-                          by contradiction // from formulas
+                      qed
+                    next
+                      case Init_2
+                      solve( !KU( ~ltkR ) @ #vk.21 )
+                        case Ltk_reveal
+                        solve( !KU( 'g'^~m2 ) @ #vk.14 )
+                          case Resp_1
+                          solve( !KU( ~x ) @ #vk.23 )
+                            case Ltk_reveal
+                            by contradiction // from formulas
+                          qed
+                        next
+                          case cexp
+                          solve( !KU( ~m2 ) @ #vk.23 )
+                            case Ephk_reveal
+                            by contradiction // from formulas
+                          qed
+                        qed
+                      qed
+                    next
+                      case cexp
+                      solve( !KU( ~m1 ) @ #vk.18 )
+                        case Ephk_reveal
+                        solve( !KU( 'g'^~m2 ) @ #vk.14 )
+                          case Resp_1
+                          solve( !KU( ~x ) @ #vk.20 )
+                            case Ltk_reveal
+                            by contradiction // from formulas
+                          qed
+                        next
+                          case cexp
+                          solve( !KU( ~m2 ) @ #vk.19 )
+                            case Ephk_reveal
+                            by contradiction // from formulas
+                          qed
                         qed
                       qed
                     qed
                   qed
+                qed
+              next
+                case split_case_2
+                solve( !KU( KDF(<'g'^(~ltkR*~m1*inv(~ltkR.1)), 'g'^~m2, $I, $R, 
+                                 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                       ) @ #vk )
+                  case Sessk_reveal
+                  by contradiction // from formulas
                 next
-                  case cMAC
-                  solve( !KU( 'g'^~m2 ) @ #vk.11 )
-                    case Resp_1
-                    solve( !KU( ~x ) @ #vk.18 )
+                  case cKDF
+                  solve( !KU( 'g'^(~ltkR*~m1*inv(~ltkR.1)) ) @ #vk.8 )
+                    case Init_1_case_1
+                    solve( !KU( ~ltkR.1 ) @ #vk.16 )
                       case Ltk_reveal
-                      solve( splitEqs(0) )
-                        case split_case_1
-                        solve( !KU( 'g'^~m1 ) @ #vk.15 )
-                          case Init_1
-                          solve( !KU( ~ltkR ) @ #vk.20 )
-                            case Ltk_reveal
-                            by contradiction // from formulas
-                          qed
-                        next
-                          case Init_2
-                          solve( !KU( ~ltkR ) @ #vk.23 )
-                            case Ltk_reveal
-                            by contradiction // from formulas
-                          qed
-                        next
-                          case cexp
-                          solve( !KU( ~m1 ) @ #vk.20 )
-                            case Ephk_reveal
-                            by contradiction // from formulas
-                          qed
-                        qed
-                      next
-                        case split_case_2
-                        solve( !KU( 'g'^(~ltkR*~m1*inv(~ltkR.1)) ) @ #vk.15 )
-                          case Init_1_case_1
-                          solve( !KU( ~ltkR.1 ) @ #vk.20 )
-                            case Ltk_reveal
-                            by contradiction // from formulas
-                          qed
-                        next
-                          case Init_1_case_2
-                          solve( !KU( ~m1.1 ) @ #vk.23 )
-                            case Ephk_reveal
-                            solve( !KU( ~m1 ) @ #vk.21 )
-                              case Ephk_reveal
-                              by contradiction // from formulas
-                            qed
-                          qed
-                        next
-                          case Init_1_case_3
-                          by contradiction // non-normal terms
-                        next
-                          case Init_2_case_1
-                          solve( !KU( ~ltkR.1 ) @ #vk.23 )
-                            case Ltk_reveal
-                            by contradiction // from formulas
-                          qed
-                        next
-                          case Init_2_case_2
-                          by contradiction // non-normal terms
-                        next
-                          case Init_2_case_3
-                          solve( !KU( ~m1.1 ) @ #vk.26 )
-                            case Ephk_reveal
-                            solve( !KU( ~m1 ) @ #vk.24 )
-                              case Ephk_reveal
-                              by contradiction // from formulas
-                            qed
-                          qed
-                        next
-                          case Register_pk
-                          solve( !KU( ~m1 ) @ #vk.20 )
-                            case Ephk_reveal
-                            by contradiction // from formulas
-                          qed
-                        next
+                      solve( !KU( MAC(KDF(<'g'^(~ltkR*~m1*inv(~ltkR.1)), 'g'^~m2, $I, $R, 
+                                           'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
+                                      <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                             ) @ #vk.11 )
+                        case cMAC
+                        solve( !KU( 'g'^~m2 ) @ #vk.15 )
                           case Resp_1
-                          solve( !KU( ~m2.1 ) @ #vk.24 )
-                            case Ephk_reveal
-                            solve( !KU( ~m1 ) @ #vk.22 )
-                              case Ephk_reveal
-                              by contradiction // from formulas
-                            qed
+                          solve( !KU( ~x ) @ #vk.20 )
+                            case Ltk_reveal
+                            by contradiction // from formulas
                           qed
                         next
                           case cexp
-                          solve( !KU( ~ltkR ) @ #vk.21 )
-                            case Ltk_reveal
+                          solve( !KU( ~m2 ) @ #vk.20 )
+                            case Ephk_reveal
                             by contradiction // from formulas
                           qed
                         qed
                       qed
                     qed
                   next
-                    case cexp
-                    solve( !KU( ~m2 ) @ #vk.18 )
+                    case Init_1_case_2
+                    solve( !KU( ~m1.1 ) @ #vk.19 )
                       case Ephk_reveal
-                      solve( splitEqs(0) )
-                        case split_case_1
-                        solve( !KU( 'g'^~m1 ) @ #vk.14 )
-                          case Init_1
-                          solve( !KU( ~ltkR ) @ #vk.20 )
-                            case Ltk_reveal
-                            by contradiction // from formulas
+                      solve( !KU( ~m1 ) @ #vk.17 )
+                        case Ephk_reveal
+                        solve( !KU( ~ltkR.1 ) @ #vk.20 )
+                          case Ltk_reveal
+                          solve( !KU( MAC(KDF(<'g'^(~ltkR*~m1*inv(~ltkR.1)), 'g'^~m2, $I, $R, 
+                                               'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
+                                          <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                                 ) @ #vk.17 )
+                            case cMAC
+                            solve( !KU( 'g'^~m2 ) @ #vk.19 )
+                              case Resp_1
+                              solve( !KU( ~x ) @ #vk.24 )
+                                case Ltk_reveal
+                                by contradiction // from formulas
+                              qed
+                            next
+                              case cexp
+                              solve( !KU( ~m2 ) @ #vk.24 )
+                                case Ephk_reveal
+                                by contradiction // from formulas
+                              qed
+                            qed
                           qed
-                        next
-                          case Init_2
-                          solve( !KU( ~ltkR ) @ #vk.23 )
+                        qed
+                      qed
+                    qed
+                  next
+                    case Init_1_case_3
+                    by contradiction // non-normal terms
+                  next
+                    case Init_2_case_1
+                    solve( !KU( ~ltkR.1 ) @ #vk.19 )
+                      case Ltk_reveal
+                      solve( !KU( MAC(KDF(<'g'^(~ltkR*~m1*inv(~ltkR.1)), 'g'^~m2, $I, $R, 
+                                           'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
+                                      <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                             ) @ #vk.11 )
+                        case cMAC
+                        solve( !KU( 'g'^~m2 ) @ #vk.15 )
+                          case Resp_1
+                          solve( !KU( ~x ) @ #vk.23 )
                             case Ltk_reveal
                             by contradiction // from formulas
                           qed
                         next
                           case cexp
-                          solve( !KU( ~m1 ) @ #vk.19 )
+                          solve( !KU( ~m2 ) @ #vk.23 )
                             case Ephk_reveal
                             by contradiction // from formulas
                           qed
                         qed
-                      next
-                        case split_case_2
-                        solve( !KU( 'g'^(~ltkR*~m1*inv(~ltkR.1)) ) @ #vk.14 )
-                          case Init_1_case_1
-                          solve( !KU( ~ltkR.1 ) @ #vk.20 )
-                            case Ltk_reveal
-                            by contradiction // from formulas
+                      qed
+                    qed
+                  next
+                    case Init_2_case_2
+                    by contradiction // non-normal terms
+                  next
+                    case Init_2_case_3
+                    solve( !KU( ~m1.1 ) @ #vk.22 )
+                      case Ephk_reveal
+                      solve( !KU( ~m1 ) @ #vk.20 )
+                        case Ephk_reveal
+                        solve( !KU( ~ltkR.1 ) @ #vk.23 )
+                          case Ltk_reveal
+                          solve( !KU( MAC(KDF(<'g'^(~ltkR*~m1*inv(~ltkR.1)), 'g'^~m2, $I, $R, 
+                                               'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
+                                          <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                                 ) @ #vk.17 )
+                            case cMAC
+                            solve( !KU( 'g'^~m2 ) @ #vk.19 )
+                              case Resp_1
+                              solve( !KU( ~x ) @ #vk.27 )
+                                case Ltk_reveal
+                                by contradiction // from formulas
+                              qed
+                            next
+                              case cexp
+                              solve( !KU( ~m2 ) @ #vk.27 )
+                                case Ephk_reveal
+                                by contradiction // from formulas
+                              qed
+                            qed
                           qed
-                        next
-                          case Init_1_case_2
-                          solve( !KU( ~m1.1 ) @ #vk.23 )
-                            case Ephk_reveal
-                            solve( !KU( ~m1 ) @ #vk.21 )
+                        qed
+                      qed
+                    qed
+                  next
+                    case Register_pk
+                    solve( !KU( ~m1 ) @ #vk.16 )
+                      case Ephk_reveal
+                      solve( !KU( ~ltkR.1 ) @ #vk.18 )
+                        case Ltk_reveal
+                        solve( !KU( MAC(KDF(<'g'^(~ltkR*~m1*inv(~ltkR.1)), 'g'^~m2, $I, $R, 
+                                             'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
+                                        <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                               ) @ #vk.14 )
+                          case cMAC
+                          solve( !KU( 'g'^~m2 ) @ #vk.17 )
+                            case Resp_1
+                            solve( !KU( ~x ) @ #vk.22 )
+                              case Ltk_reveal
+                              by contradiction // from formulas
+                            qed
+                          next
+                            case cexp
+                            solve( !KU( ~m2 ) @ #vk.22 )
                               case Ephk_reveal
                               by contradiction // from formulas
                             qed
                           qed
-                        next
-                          case Init_1_case_3
-                          by contradiction // non-normal terms
-                        next
-                          case Init_2_case_1
-                          solve( !KU( ~ltkR.1 ) @ #vk.23 )
-                            case Ltk_reveal
-                            by contradiction // from formulas
-                          qed
-                        next
-                          case Init_2_case_2
-                          by contradiction // non-normal terms
-                        next
-                          case Init_2_case_3
-                          solve( !KU( ~m1.1 ) @ #vk.26 )
-                            case Ephk_reveal
-                            solve( !KU( ~m1 ) @ #vk.24 )
-                              case Ephk_reveal
-                              by contradiction // from formulas
+                        qed
+                      qed
+                    qed
+                  next
+                    case Resp_1
+                    solve( !KU( ~m2.1 ) @ #vk.20 )
+                      case Ephk_reveal
+                      solve( !KU( ~m1 ) @ #vk.18 )
+                        case Ephk_reveal
+                        solve( !KU( ~ltkR.1 ) @ #vk.21 )
+                          case Ltk_reveal
+                          solve( !KU( MAC(KDF(<'g'^(~ltkR*~m1*inv(~ltkR.1)), 'g'^~m2, $I, $R, 
+                                               'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
+                                          <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                                 ) @ #vk.17 )
+                            case cMAC
+                            solve( !KU( 'g'^~m2 ) @ #vk.19 )
+                              case Resp_1
+                              solve( !KU( ~x ) @ #vk.25 )
+                                case Ltk_reveal
+                                by contradiction // from formulas
+                              qed
+                            next
+                              case cexp
+                              solve( !KU( ~m2 ) @ #vk.25 )
+                                case Ephk_reveal
+                                by contradiction // from formulas
+                              qed
                             qed
                           qed
-                        next
-                          case Register_pk
-                          solve( !KU( ~m1 ) @ #vk.20 )
-                            case Ephk_reveal
-                            by contradiction // from formulas
-                          qed
-                        next
-                          case Resp_1
-                          solve( !KU( ~m2.1 ) @ #vk.24 )
-                            case Ephk_reveal
-                            solve( !KU( ~m1 ) @ #vk.22 )
-                              case Ephk_reveal
-                              by contradiction // from formulas
+                        qed
+                      qed
+                    qed
+                  next
+                    case cexp
+                    solve( !KU( ~ltkR ) @ #vk.17 )
+                      case Ltk_reveal
+                      solve( !KU( ~m1 ) @ #vk.18 )
+                        case Ephk_reveal
+                        solve( !KU( ~ltkR.1 ) @ #vk.20 )
+                          case Ltk_reveal
+                          solve( !KU( MAC(KDF(<'g'^(~ltkR*~m1*inv(~ltkR.1)), 'g'^~m2, $I, $R, 
+                                               'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
+                                          <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
+                                 ) @ #vk.15 )
+                            case cMAC
+                            solve( !KU( 'g'^~m2 ) @ #vk.18 )
+                              case Resp_1
+                              solve( !KU( ~x ) @ #vk.24 )
+                                case Ltk_reveal
+                                by contradiction // from formulas
+                              qed
+                            next
+                              case cexp
+                              solve( !KU( ~m2 ) @ #vk.23 )
+                                case Ephk_reveal
+                                by contradiction // from formulas
+                              qed
                             qed
-                          qed
-                        next
-                          case cexp
-                          solve( !KU( ~ltkR ) @ #vk.20 )
-                            case Ltk_reveal
-                            by contradiction // from formulas
                           qed
                         qed
                       qed
@@ -1016,8 +1400,8 @@ analyzing: data/examples/csf12/DH2_original.spthy
 analyzed: data/examples/csf12/DH2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 8.83424s
-  KAS_key_secrecy (all-traces): verified (251 steps)
+  processing time: 13.621004s
+  KAS_key_secrecy (all-traces): verified (368 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1027,8 +1411,8 @@ summary of summaries:
 analyzed: data/examples/csf12/DH2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 8.83424s
-  KAS_key_secrecy (all-traces): verified (251 steps)
+  processing time: 13.621004s
+  KAS_key_secrecy (all-traces): verified (368 steps)
 
 ==============================================================================
 */

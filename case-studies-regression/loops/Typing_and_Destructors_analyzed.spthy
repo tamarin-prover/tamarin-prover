@@ -1,0 +1,460 @@
+theory Typing_and_Destructors begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Setup_Key:
+   [ Fr( ~k ) ] --[ IsKey( ~k ) ]-> [ !Key( ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_Key:
+   [ !Key( k ) ] --[ Rev( k ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Initiator:
+   [ !Key( k ), Fr( ~sec ), Fr( ~pub ) ]
+  --[ Out_Initiator( senc(<~sec, ~pub>, k) ), Public( ~pub ) ]->
+   [ Out( senc(<~sec, ~pub>, k) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Responder:
+   [ !Key( key ), In( msg ) ]
+  --[
+  In_Responder( msg, snd(sdec(msg, key)) ),
+  Secret( fst(sdec(msg, key)), key ), NoFailureTerm( snd(sdec(msg, key)) )
+  ]->
+   [ Out( snd(sdec(msg, key)) ) ]
+
+  /*
+  rule (modulo AC) Responder:
+     [ !Key( key ), In( msg ) ]
+    --[ In_Responder( msg, z ), Secret( z.1, key ), NoFailureTerm( z ) ]->
+     [ Out( z ) ]
+    variants (modulo AC)
+    1. key   = key.5
+       msg   = msg.5
+       z     = snd(sdec(msg.5, key.5))
+       z.1   = fst(sdec(msg.5, key.5))
+    
+    2. key   = x.6
+       msg   = senc(x.5, x.6)
+       z     = snd(x.5)
+       z.1   = fst(x.5)
+    
+    3. key   = x.7
+       msg   = senc(<x.5, x.6>, x.7)
+       z     = x.6
+       z.1   = x.5
+  */
+
+lemma type_assertion [typing]:
+  all-traces
+  "∀ m pub #i.
+    (In_Responder( m, pub ) @ #i) ⇒
+    ((((∃ #j. (!KU( pub ) @ #j) ∧ (#j < #i)) ∨
+       (∃ #j. Out_Initiator( m ) @ #j)) ∨
+      (∃ body #j. ((!KU( body ) @ #j) ∧ (pub = snd(body))) ∧ (#j < #i))) ∨
+     (∃ body key #j #k.
+       (((IsKey( key ) @ #k) ∧ (!KU( body ) @ #j)) ∧
+        (pub = snd(sdec(body, key)))) ∧
+       (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ m pub #i.
+  (In_Responder( m, pub ) @ #i)
+ ∧
+  (∀ #j. (!KU( pub ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (Out_Initiator( m ) @ #j) ⇒ ⊥) ∧
+  (∀ body #j. (!KU( body ) @ #j) ⇒ (¬(pub = snd(body))) ∨ (¬(#j < #i))) ∧
+  (∀ body key #j #k.
+    (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j)
+   ⇒
+    (¬(pub = snd(sdec(body, key)))) ∨ (¬(#j < #i)))"
+*/
+induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∃ #j. (!KU( pub ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j. (Out_Initiator( m ) @ #j) ∧ ¬(last(#j)))  ∥
+         (∃ body #j.
+           (!KU( body ) @ #j) ∧ (¬(last(#j))) ∧ (pub = snd(body)) ∧ (#j < #i))  ∥
+         (∃ body key #j #k.
+           (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j)
+          ∧
+           (¬(last(#k))) ∧
+           (¬(last(#j))) ∧
+           (pub = snd(sdec(body, key))) ∧
+           (#j < #i)) )
+    case case_1
+    solve( !Key( key ) ▶₀ #i )
+      case Setup_Key
+      solve( splitEqs(0) )
+        case split_case_1
+        solve( !KU( senc(x, ~k) ) @ #vk )
+          case Initiator
+          by contradiction // non-normal terms
+        next
+          case Responder
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
+                 (∃ #j. (Out_Initiator( msg ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ body #j.
+                   (!KU( body ) @ #j) ∧ (¬(last(#j))) ∧ (t = snd(body)) ∧ (#j < #vr.1))  ∥
+                 (∃ body key #j #k.
+                   (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j)
+                  ∧
+                   (¬(last(#k))) ∧
+                   (¬(last(#j))) ∧
+                   (t = snd(sdec(body, key))) ∧
+                   (#j < #vr.1)) )
+            case case_1
+            by contradiction // cyclic
+          next
+            case case_2
+            solve( !Key( k.2 ) ▶₀ #j )
+              case Setup_Key
+              solve( splitEqs(2) )
+                case split_case_1
+                by solve( (#vl, 0) ~~> (#vk, 0) )
+              next
+                case split_case_2
+                by contradiction // non-normal terms
+              next
+                case split_case_3
+                by solve( (#vl, 0) ~~> (#vk, 0) )
+              qed
+            qed
+          next
+            case case_3
+            by solve( (#vl, 0) ~~> (#vk, 0) )
+          next
+            case case_4
+            by solve( (#vl, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case csenc
+          by contradiction // from formulas
+        qed
+      next
+        case split_case_2
+        by contradiction // from formulas
+      next
+        case split_case_3
+        solve( !KU( senc(<z, pub>, ~k) ) @ #vk )
+          case Initiator
+          by contradiction // from formulas
+        next
+          case Responder
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
+                 (∃ #j. (Out_Initiator( msg ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ body #j.
+                   (!KU( body ) @ #j) ∧ (¬(last(#j))) ∧ (t = snd(body)) ∧ (#j < #vr.1))  ∥
+                 (∃ body key #j #k.
+                   (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j)
+                  ∧
+                   (¬(last(#k))) ∧
+                   (¬(last(#j))) ∧
+                   (t = snd(sdec(body, key))) ∧
+                   (#j < #vr.1)) )
+            case case_1
+            by contradiction // cyclic
+          next
+            case case_2
+            solve( !Key( k.2 ) ▶₀ #j )
+              case Setup_Key
+              solve( splitEqs(2) )
+                case split_case_1
+                by solve( (#vl, 0) ~~> (#vk, 0) )
+              next
+                case split_case_2
+                by contradiction // non-normal terms
+              next
+                case split_case_3
+                by solve( (#vl, 0) ~~> (#vk, 0) )
+              qed
+            qed
+          next
+            case case_3
+            by solve( (#vl, 0) ~~> (#vk, 0) )
+          next
+            case case_4
+            by solve( (#vl, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case csenc
+          by contradiction // from formulas
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction // from formulas
+  next
+    case case_3
+    by contradiction // from formulas
+  next
+    case case_4
+    by contradiction // from formulas
+  next
+    case case_5
+    by contradiction // from formulas
+  qed
+qed
+
+lemma Responder_secrecy:
+  all-traces
+  "∀ sec key #i #j.
+    ((Secret( sec, key ) @ #i) ∧ (K( sec ) @ #j)) ⇒ (∃ #r. Rev( key ) @ #r)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ sec key #i #j.
+  (Secret( sec, key ) @ #i) ∧ (K( sec ) @ #j)
+ ∧
+  ∀ #r. (Rev( key ) @ #r) ⇒ ⊥"
+*/
+simplify
+solve( !Key( key ) ▶₀ #i )
+  case Setup_Key
+  solve( splitEqs(0) )
+    case split_case_1
+    solve( !KU( fst(sdec(msg, ~k)) ) @ #vk.1 )
+      case Responder
+      solve( splitEqs(2) )
+        case split_case_1
+        by solve( (#vl, 0) ~~> (#vk, 0) )
+      next
+        case split_case_2
+        by contradiction // non-normal terms
+      next
+        case split_case_3
+        by solve( (#vl, 0) ~~> (#vk, 0) )
+      qed
+    next
+      case cfst
+      solve( !KU( sdec(msg, ~k) ) @ #vk.2 )
+        case Responder
+        solve( splitEqs(2) )
+          case split_case_1
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
+        next
+          case split_case_2
+          by contradiction // non-normal terms
+        next
+          case split_case_3
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
+        qed
+      next
+        case csdec
+        solve( !KU( ~k ) @ #vk.3 )
+          case Responder
+          solve( splitEqs(2) )
+            case split_case_1
+            by solve( (#vl, 0) ~~> (#vk.2, 0) )
+          next
+            case split_case_2
+            by contradiction // non-normal terms
+          next
+            case split_case_3
+            by solve( (#vl, 0) ~~> (#vk.2, 0) )
+          qed
+        next
+          case Reveal_Key
+          by contradiction // from formulas
+        qed
+      qed
+    qed
+  next
+    case split_case_2
+    solve( !KU( senc(<sec, z>, ~k) ) @ #vk )
+      case Initiator
+      solve( !KU( ~sec ) @ #vk.1 )
+        case Initiator
+        solve( !KU( ~k ) @ #vk.2 )
+          case Responder
+          solve( splitEqs(2) )
+            case split_case_1
+            by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+          next
+            case split_case_2
+            by contradiction // non-normal terms
+          next
+            case split_case_3
+            by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+          qed
+        next
+          case Reveal_Key
+          by contradiction // from formulas
+        qed
+      next
+        case Responder
+        solve( splitEqs(2) )
+          case split_case_1
+          by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+        next
+          case split_case_2
+          by contradiction // non-normal terms
+        next
+          case split_case_3
+          by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+        qed
+      qed
+    next
+      case Responder
+      solve( splitEqs(2) )
+        case split_case_1
+        by solve( (#vl, 0) ~~> (#vk, 0) )
+      next
+        case split_case_2
+        by contradiction // non-normal terms
+      next
+        case split_case_3
+        by solve( (#vl, 0) ~~> (#vk, 0) )
+      qed
+    next
+      case csenc
+      solve( !KU( ~k ) @ #vk.3 )
+        case Responder
+        solve( splitEqs(2) )
+          case split_case_1
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
+        next
+          case split_case_2
+          by contradiction // non-normal terms
+        next
+          case split_case_3
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
+        qed
+      next
+        case Reveal_Key
+        by contradiction // from formulas
+      qed
+    qed
+  next
+    case split_case_3
+    solve( !KU( senc(x, ~k) ) @ #vk )
+      case Initiator
+      by contradiction // non-normal terms
+    next
+      case Responder
+      solve( splitEqs(2) )
+        case split_case_1
+        by solve( (#vl, 0) ~~> (#vk, 0) )
+      next
+        case split_case_2
+        by contradiction // non-normal terms
+      next
+        case split_case_3
+        by solve( (#vl, 0) ~~> (#vk, 0) )
+      qed
+    next
+      case csenc
+      solve( !KU( ~k ) @ #vk.3 )
+        case Responder
+        solve( splitEqs(2) )
+          case split_case_1
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
+        next
+          case split_case_2
+          by contradiction // non-normal terms
+        next
+          case split_case_3
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
+        qed
+      next
+        case Reveal_Key
+        by contradiction // from formulas
+      qed
+    qed
+  qed
+qed
+
+lemma Public_part_public:
+  exists-trace
+  "(¬(∃ k #i. Rev( k ) @ #i)) ∧
+   (∃ pub #i #j. (Public( pub ) @ #i) ∧ (K( pub ) @ #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ k #i. (Rev( k ) @ #i) ⇒ ⊥) ∧
+ (∃ pub #i #j. (Public( pub ) @ #i) ∧ (K( pub ) @ #j))"
+*/
+simplify
+solve( !Key( k ) ▶₀ #i )
+  case Setup_Key
+  solve( !KU( ~pub ) @ #vk )
+    case Responder
+    solve( splitEqs(1) )
+      case split_case_1
+      solve( (#vl, 0) ~~> (#vk, 0) )
+        case ~t
+        solve( !KU( senc(<~sec, ~pub>, ~k) ) @ #vk.1 )
+          case Initiator
+          SOLVED // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+/*
+WARNING: the following wellformedness checks failed!
+
+formula terms:
+  lemma `type_assertion' uses terms of the wrong form:
+    `snd(Bound 1)', `snd(sdec(Bound 3,Bound 2))'
+  
+  The only allowed terms are public names and bound node and message
+  variables. If you encounter free message variables, then you might
+  have forgotten a #-prefix. Sort prefixes can only be dropped where
+  this is unambiguous.
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.6. OK.
+ checking installation: OK.
+
+
+analyzing: data/examples/loops/Typing_and_Destructors.spthy
+
+------------------------------------------------------------------------------
+analyzed: data/examples/loops/Typing_and_Destructors.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.436252s
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  type_assertion (all-traces): verified (35 steps)
+  Responder_secrecy (all-traces): verified (53 steps)
+  Public_part_public (exists-trace): verified (7 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: data/examples/loops/Typing_and_Destructors.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.436252s
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  type_assertion (all-traces): verified (35 steps)
+  Responder_secrecy (all-traces): verified (53 steps)
+  Public_part_public (exists-trace): verified (7 steps)
+
+==============================================================================
+*/

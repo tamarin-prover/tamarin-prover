@@ -76,6 +76,7 @@ import           Prelude                                 hiding (id, (.))
 import qualified Data.Foldable                           as F
 import qualified Data.Map                                as M
 import qualified Data.Set                                as S
+import           Data.List                               (mapAccumL)
 import           Safe
 
 import           Control.Basics
@@ -266,7 +267,7 @@ insertEdges edges = do
     modM sEdges (\es -> foldr S.insert es [ Edge c p | (c,_,_,p) <- edges])
 
 -- | Insert an 'Action' atom. Ensures that (almost all) trivial *KU* actions
--- are solved immediatly using rule *S_{at,u,triv}*. We currently avoid
+-- are solved immediately using rule *S_{at,u,triv}*. We currently avoid
 -- adding intermediate products. Indicates whether nodes other than the given
 -- action have been added to the constraint system.
 --
@@ -292,7 +293,7 @@ insertAction i fa = do
   where
     goal = ActionG i fa
     -- Here we rely on the fact that the action is new. Otherwise, we might
-    -- loop due to generating new KU-nodes that are merged immediatly.
+    -- loop due to generating new KU-nodes that are merged immediately.
     requiresKU t = do
       j <- freshLVar "vk" LSortNode
       let faKU = kuFact t
@@ -558,12 +559,17 @@ conjoinSystem sys = do
     joinSets sEdges
     F.mapM_ insertLast                 $ get sLastAtom    sys
     F.mapM_ (uncurry insertLess)       $ get sLessAtoms   sys
-    mapM_   (uncurry insertGoalStatus) $ M.toList $ get sGoals sys
+    -- split-goals are not valid anymore
+    mapM_   (uncurry insertGoalStatus) $ filter (not . isSplitGoal . fst) $ M.toList $ get sGoals sys
     F.mapM_ insertFormula $ get sFormulas sys
     -- update nodes
     _ <- (setNodes . (M.toList (get sNodes sys) ++) . M.toList) =<< getM sNodes
     -- conjoin equation store
-    modM sConjDisjEqs (`mappend` get sConjDisjEqs sys)
+    eqs <- getM sEqStore
+    let (eqs',splitIds) = (mapAccumL addDisj eqs (map snd . getConj $ get sConjDisjEqs sys))
+    setM sEqStore eqs'
+    -- add split-goals for all disjunctions of sys
+    mapM_  (`insertGoal` False) $ SplitG <$> splitIds
     void (solveSubstEqs SplitNow $ get sSubst sys)
     -- Propagate substitution changes. Ignore change indicator, as it is
     -- assumed to be 'Changed' by default.
@@ -571,8 +577,6 @@ conjoinSystem sys = do
   where
     joinSets :: Ord a => (System :-> S.Set a) -> Reduction ()
     joinSets proj = modM proj (`S.union` get proj sys)
-
-
 
 -- Unification via the equation store
 -------------------------------------

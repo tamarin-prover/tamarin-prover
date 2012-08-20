@@ -133,14 +133,15 @@ proofIndex renderUrl mkRoute =
   where
     ppCase step = markStatus (fst $ psInfo step)
 
-    ppStep step = case fst $ psInfo step of
-        (Nothing, _)    -> superfluousStep
-        (_, Nothing)    -> stepLink ["sorry-step"] <>
-                           case psMethod step of
-                             Sorry _ -> emptyDoc
-                             _       -> removeStep
-        (_, Just True)  -> stepLink ["hl_good"]
-        (_, Just False) -> stepLink ["hl_bad"]
+    ppStep step =
+           case fst $ psInfo step of
+               (Nothing, _)    -> superfluousStep
+               (_, Nothing)    -> stepLink ["sorry-step"]
+               (_, Just True)  -> stepLink ["hl_good"]
+               (_, Just False) -> stepLink ["hl_bad"]
+        <> case psMethod step of
+               Sorry _ -> emptyDoc
+               _       -> removeStep
       where
         ppMethod = prettyProofMethod $ psMethod step
         stepLink cls = linkToPath renderUrl
@@ -218,8 +219,12 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     bold                = withTag "strong" [] . text
     overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
     messageLink         = overview "Message theory" (text "") TheoryMessage
-    ruleLink            = overview "Multiset rewriting rules and axioms" rulesInfo TheoryRules
+    ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
+    ruleLinkMsg         = "Multiset rewriting rules" ++
+                          if null(theoryAxioms thy) then "" else " and axioms"
+
     reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
+
 
 {-
 -- | A snippet that explains a sequent using a rendered graph and the pretty

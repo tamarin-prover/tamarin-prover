@@ -83,12 +83,50 @@ next
         solve( (∃ #j. (!KU( sk.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                (∃ #j. (HonestKey( sk.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1)) )
           case case_1
-          solve( ClientKey( $A, sk ) ▶₀ #vr )
+          solve( !KU( sign(<'renew', $A, pk(sk)>, sk.1) ) @ #vk.1 )
+            case RenewKey
+            solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2)) )
+              case case_1
+              by contradiction // cyclic
+            next
+              case case_2
+              solve( HonestKey( t ) @ #j.1 )
+                case RequestRenewKey
+                by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              next
+                case SetupHonestKey
+                by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              qed
+            qed
+          next
             case RequestRenewKey
             by contradiction // from formulas
           next
-            case SetupHonestKey
-            by contradiction // from formulas
+            case csign
+            solve( !KU( pk(sk) ) @ #vk.6 )
+              case RenewKey
+              solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                     (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2)) )
+                case case_1
+                by contradiction // cyclic
+              next
+                case case_2
+                solve( HonestKey( t ) @ #j.1 )
+                  case RequestRenewKey
+                  by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                next
+                  case SetupHonestKey
+                  by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                qed
+              qed
+            next
+              case SetupHonestKey
+              by contradiction // from formulas
+            next
+              case cpk
+              by contradiction // from formulas
+            qed
           qed
         next
           case case_2
@@ -127,7 +165,7 @@ next
                     case RequestRenewKey
                     solve( (#vl.1, 0) ~~> (#vk.2, 0) )
                       case ~skNew.2
-                      solve( !KU( sign(<'renew', A.2, pk(skNew.2)>, ~skNew.1) ) @ #vk.8 )
+                      solve( !KU( pk(sk) ) @ #vk.7 )
                         case RenewKey
                         solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                                (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3)) )
@@ -144,17 +182,11 @@ next
                           qed
                         qed
                       next
-                        case RequestRenewKey
-                        solve( ClientKey( $A, sk ) ▶₀ #vr )
-                          case RequestRenewKey
-                          by contradiction // from formulas
-                        next
-                          case SetupHonestKey
-                          by contradiction // from formulas
-                        qed
+                        case SetupHonestKey
+                        by contradiction // from formulas
                       next
-                        case csign
-                        by contradiction // cyclic
+                        case cpk
+                        by contradiction // from formulas
                       qed
                     qed
                   next
@@ -202,7 +234,7 @@ next
                     case SetupHonestKey
                     solve( (#vl.1, 0) ~~> (#vk.2, 0) )
                       case ~sk.2
-                      solve( !KU( sign(<'renew', A.2, pk(skNew.1)>, ~sk.1) ) @ #vk.8 )
+                      solve( !KU( pk(sk) ) @ #vk.7 )
                         case RenewKey
                         solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
                                (∃ #j. (HonestKey( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3)) )
@@ -219,17 +251,11 @@ next
                           qed
                         qed
                       next
-                        case RequestRenewKey
-                        solve( ClientKey( $A, sk ) ▶₀ #vr )
-                          case RequestRenewKey
-                          by contradiction // from formulas
-                        next
-                          case SetupHonestKey
-                          by contradiction // from formulas
-                        qed
+                        case SetupHonestKey
+                        by contradiction // from formulas
                       next
-                        case csign
-                        by contradiction // cyclic
+                        case cpk
+                        by contradiction // from formulas
                       qed
                     qed
                   qed
@@ -297,8 +323,8 @@ analyzing: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.363814s
-  types (all-traces): verified (67 steps)
+  processing time: 0.436344s
+  types (all-traces): verified (75 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -309,8 +335,8 @@ summary of summaries:
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.363814s
-  types (all-traces): verified (67 steps)
+  processing time: 0.436344s
+  types (all-traces): verified (75 steps)
   In_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ==============================================================================

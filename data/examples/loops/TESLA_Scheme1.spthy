@@ -60,17 +60,18 @@ rule Reveal_Ltk:
 // Setup phase
 //////////////
 
-// We choose a fresh start key and provide facts for sending and answering
-// receiver connection requests.
+// A sender knows is own identity $S. He chooses a fresh key to start sending
+// a new authenticated stream. We provide facts for sending the stream and for
+// answering receiver connection requests.
 rule Sender_Setup:
     [ Fr(~k1) ]
   -->
-    [ Sender1(~k1), !Sender0a(~k1) ]
+    [ Sender1($S, ~k1), !Sender0a($S, ~k1) ]
 
 // Everybody can listen in by sending a request for the commitment to the
 // first key.
 rule Sender0a:
-    [ !Sender0a(k1)
+    [ !Sender0a(S, k1)
     , In( < R, S, nR> )
     , !Ltk(S, ltkS)
     ]
@@ -78,73 +79,64 @@ rule Sender0a:
     [ Out( <S, R, f(k1), sign{ f(k1), nR}ltkS> ) ]
 
 // Receivers start by requesting the commitment to the first key and verifying
-// the signature on this commitment.
+// the signature on this commitment. We use the receiver nonce to identify
+// receivers.
 rule Receiver0a:
-    [ Fr( ~nR ) ]
+    [ Fr( ~rid ) ]
   -->
-    [ Out( < $R, $S, ~nR > )
-    , Receiver0b( $R, $S, ~nR ) ]
+    [ Out( < $R, $S, ~rid > )
+    , Receiver0b( ~rid, $R, $S ) ]
 
 rule Receiver0b:
-    [ Receiver0b ( R, S, nR )
+    [ Receiver0b ( rid, R, S )
     , !Pk( S, pkS)
-    , In( <S, R, k2, signature> )
+    , In( <S, R, commit_k1, signature> )
     ]
   -->
-    [ Receiver0b_check(S, k2, verify(signature, <k2, nR>, pkS)) ]
+    [ Receiver0b_check( rid, S, commit_k1
+                      , verify(signature, <commit_k1, rid>, pkS)) ]
 
 rule Receiver0b_check:
-    [ Receiver0b_check(S, k2, true) ]
+    [ Receiver0b_check(rid, S, commit_k1, true) ]
   -->
-    [ Receiver1( S, k2 ) ]
+    [ Receiver1( rid, S, commit_k1 ) ]
 
-
-/* The following setup-phase allows for a simpler proof.
-
-rule Setup:
-    [ Fr(~k1) ]
-  -->
-    [ Sender1(~k1)
-    , Receiver1(f(~k1))
-    ]
-
-*/
 
 // Authenticated broadcasting
 rule Send1:
   let data1 = <'1', ~m1, f(~k2)>
   in
-    [ Sender1(~k1)
+    [ Sender1(S, ~k1)
     , Fr(~m1)
     , Fr(~k2)
     ]
-  --[ Sent(data1)
+  --[ Sent(S, data1)
     ]->
-    [ Sender(~k1, ~k2)
+    [ Sender(S, ~k1, ~k2)
     , Out( < data1, MAC{data1}~k1 > )
     ]
 
 rule Recv1:
   let data1 = <'1', m1, commit_k2>
   in
-    [ Receiver1(S, commit_k1)
+    [ Receiver1(rid, S, commit_k1)
     , In( <data1, mac1> )
     ]
-  --[ AssumeCommitNotExpired(commit_k1)
+  --[ AssumeCommitNotExpired(rid, commit_k1)
     ]->
-    [ Receiver(S, data1, mac1, commit_k1, commit_k2) ]
+    [ Receiver(rid, S, data1, mac1, commit_k1, commit_k2) ]
 
 rule SendN:
   let data = <'N', ~m, f(~kNew), ~kOld>
   in
-    [ Sender(~kOld, ~k)
+    [ Sender(S, ~kOld, ~k)
     , Fr(~m)
     , Fr(~kNew)
     ]
-  --[ Sent(data)
+  --[ Sent(S, data)
     , CommitExpired(f(~kOld))
     ]->
-    [ Sender(~k, ~kNew)
+    [ Sender(S, ~k, ~kNew)
     , Out( <data, MAC{data}~k> )
     ]
 
@@ -152,31 +144,32 @@ rule RecvN:
   let data = <'N', m, commit_kNew, kOld>
   in
     [ In(< data, mac >)
-    , Receiver(S, dataOld, MAC{dataOld}kOld, f(kOld), commit_k)
+    , Receiver(rid, S, dataOld, MAC{dataOld}kOld, f(kOld), commit_k)
     ]
-  --[ FromSender(S, dataOld)
-    , AssumeCommitNotExpired(commit_k)
+  --[ FromSender(rid, S, dataOld)
+    , AssumeCommitNotExpired(rid, commit_k)
     ]->
-    [ Receiver(S, data, mac, commit_k, commit_kNew) ]
+    [ Receiver(rid, S, data, mac, commit_k, commit_kNew) ]
 
 
-// The desired security property: if all commits expired after all asumptions
-// that they are not expired, then we have message authentication provided the
-// long-term key of the server was not revealed.
-//
-// Note that we could strengthen this property such that only expiredness of
-// commits in this broadcasting session before the 'FromSender'-claim is
-// required.
+/*
+The desired security property: if all expiredness assumptions of the test
+thread are given and the server that is sending was not compromised before,
+then received data was sent by the server.
+*/
 lemma authentic [use_induction]:
-  "(All commit #i #j .
-        AssumeCommitNotExpired(commit) @ i
-      & CommitExpired(commit) @ j
-        ==> i < j
-   )
-   ==>
-   (All S m #i. FromSender(S, m) @ i ==>
-       ( (Ex #j. Sent(m) @ j & j < i)
+  /* For every reciever claiming that it received data 'm' from the server, */
+  "(All rid S m #i. FromSender(rid, S, m) @ i ==>
+       /* the server actually sent that data */
+       ( (Ex #j. Sent(S, m) @ j & j < i)
+       /* or the server's longterm key was compromised before the claim */
        | (Ex #j. RevealLtk(S) @ j & j < i)
+       /* or one of the receivers expiredness assumptions before the claim
+          was not met. */
+       | (Ex commit #ne #e. AssumeCommitNotExpired(rid, commit) @ ne
+                          & CommitExpired(commit) @ e
+                          & e < ne
+                          & ne < i)
        )
    )
   "
@@ -184,14 +177,12 @@ lemma authentic [use_induction]:
 // Ensure that the above lemma is not vacuous due to the filtering condition.
 lemma authentic_reachable [use_induction]:
   exists-trace
-  "(All commit #i #j .
-        AssumeCommitNotExpired(commit) @ i
+  "(All rid commit #i #j .
+        AssumeCommitNotExpired(rid, commit) @ i
       & CommitExpired(commit) @ j
         ==> i < j
-   )
-   &
-   (Ex S m #i. FromSender(S, m) @ i)
-  "
+   ) &
+   (Ex rid S m #i. FromSender(rid, S, m) @ i) "
 
 
 end

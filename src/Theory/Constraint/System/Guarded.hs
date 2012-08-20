@@ -1,5 +1,6 @@
 {-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
@@ -29,6 +30,7 @@ module Theory.Constraint.System.Guarded (
   , ginduct
 
   , formulaToGuarded
+  , formulaToGuarded_
 
   -- ** Transformation
   , simplifyGuarded
@@ -40,6 +42,9 @@ module Theory.Constraint.System.Guarded (
   , isDisjunction
   , isAllGuarded
   , isExGuarded
+  , isSafetyFormula
+
+  , guardFactTags
 
   -- ** Conversions to non-bound representations
   , bvarToLVar
@@ -70,6 +75,7 @@ import           Data.DeriveTH
 import           Data.Either                      (partitionEithers)
 import           Data.Foldable                    (Foldable(..), foldMap)
 import           Data.List
+import qualified Data.DList as D
 import           Data.Monoid                      (Monoid(..))
 import           Data.Traversable                 hiding (mapM, sequence)
 
@@ -94,25 +100,49 @@ data Guarded s c v = GAto  (Atom (VTerm c (BVar v)))
                     -- f@i atoms in as.
                    deriving (Eq, Ord, Show)
 
-isConjunction :: Guarded t t1 t2 -> Bool
+isConjunction :: Guarded s c v -> Bool
 isConjunction (GConj _)  = True
 isConjunction _          = False
 
-isDisjunction :: Guarded t t1 t2 -> Bool
+isDisjunction :: Guarded s c v -> Bool
 isDisjunction (GDisj _)  = True
 isDisjunction _          = False
 
-isExGuarded :: Guarded t t1 t2 -> Bool
+isExGuarded :: Guarded s c v -> Bool
 isExGuarded (GGuarded Ex _ _ _) = True
 isExGuarded _                   = False
 
-isAllGuarded :: Guarded t t1 t2 -> Bool
+isAllGuarded :: Guarded s c v -> Bool
 isAllGuarded (GGuarded All _ _ _) = True
 isAllGuarded _                    = False
+
+-- | Check whether the guarded formula is closed and does not contain an
+-- existential quantifier. This under-approximates the question whether the
+-- formula is a safety formula. A safety formula @phi@ has the property that a
+-- trace violating it can never be extended to a trace satisfying it.
+isSafetyFormula :: HasFrees (Guarded s c v) => Guarded s c v -> Bool
+isSafetyFormula gf0 =
+    null (frees [gf0]) && noExistential gf0
+  where
+    noExistential (GAto _ )             = True
+    noExistential (GGuarded Ex _ _ _)   = False
+    noExistential (GGuarded All _ _ gf) = noExistential gf
+    noExistential (GDisj disj)          = all noExistential $ getDisj disj
+    noExistential (GConj conj)          = all noExistential $ getConj conj
+
+-- | All 'FactTag's that are used in guards.
+guardFactTags :: Guarded s c v -> [FactTag]
+guardFactTags =
+    D.toList .
+    foldGuarded mempty (mconcat . getDisj) (mconcat . getConj) getTags
+  where
+    getTags _qua _ss atos inner =
+        mconcat [ D.singleton tag | Action _ (Fact tag _) <- atos ] <> inner
 
 ------------------------------------------------------------------------------
 -- Folding
 ------------------------------------------------------------------------------
+
 
 -- | Fold a guarded formula.
 foldGuarded :: (Atom (VTerm c (BVar v)) -> b)
@@ -355,6 +385,13 @@ newtype ErrorDoc d = ErrorDoc { unErrorDoc :: d }
 instance Document d => Error (ErrorDoc d) where
     noMsg  = emptyDoc
     strMsg = text
+
+
+-- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
+-- equivalent to @fm@ under the assumption that this is possible.
+-- If not, then 'error' is called.
+formulaToGuarded_ :: LNFormula  -> LNGuarded
+formulaToGuarded_ = either (error . render) id . formulaToGuarded
 
 -- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
 -- equivalent to @fm@ if possible.

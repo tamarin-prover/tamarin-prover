@@ -408,7 +408,7 @@ solve( (∃ ss #i4 #i5 C D ms.
             solve( Match( ~m2, <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1))>
                    ) @ #i5 )
               case Resp_1
-              solve( splitEqs(0) )
+              solve( splitEqs(1) )
                 case split_case_1
                 solve( !KU( MAC(KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
                                      aenc(~m2, pk(~ltkA))>),
@@ -551,7 +551,7 @@ solve( (∃ ss #i4 #i5 C D ms.
           solve( Match( ~m2, <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1)), c2>
                  ) @ #i5 )
             case Resp_1_case_1
-            solve( splitEqs(1) )
+            solve( splitEqs(2) )
               case split_case_1
               solve( !KU( MAC(KDF(<
                                    adec(<aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, ~lkR), ~m2, $I, $R, 
@@ -597,7 +597,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                         qed
                       next
                         case Resp_1
-                        solve( splitEqs(0) )
+                        solve( splitEqs(6) )
                           case split_case_1
                           solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m2.1, pk(~lkI))>, ~lkR)
                                  ) @ #vk.22 )
@@ -661,7 +661,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                           qed
                         next
                           case Resp_1
-                          solve( splitEqs(0) )
+                          solve( splitEqs(6) )
                             case split_case_1
                             solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m2.1, pk(~lkI))>, ~lkR)
                                    ) @ #vk.23 )
@@ -751,9 +751,9 @@ solve( (∃ ss #i4 #i5 C D ms.
             qed
           next
             case Resp_1_case_2
-            solve( splitEqs(0) )
+            solve( splitEqs(1) )
               case split_case_1
-              solve( splitEqs(1) )
+              solve( splitEqs(2) )
                 case split_case_1
                 solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
                                  aenc(~m2, pk(~lkI))>)
@@ -847,7 +847,7 @@ solve( (∃ ss #i4 #i5 C D ms.
               qed
             next
               case split_case_2
-              solve( splitEqs(1) )
+              solve( splitEqs(2) )
                 case split_case_1
                 solve( !KU( MAC(KDF(<adec(aenc(~m1, pk(~ltkA)), ~lkR), ~m2, $I, $R, 
                                      aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~lkI))>),
@@ -1068,7 +1068,7 @@ next
     case Resp_2
     solve( Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 ) ▶₀ #i1 )
       case Resp_1
-      solve( splitEqs(0) )
+      solve( splitEqs(1) )
         case split_case_1
         solve( !KU( MAC(KDF(<adec(c1, ~lkR), ~m2, $I, $R, c1, 
                              aenc(~m2, pk(~ltkA))>),
@@ -1183,7 +1183,7 @@ analyzing: data/examples/csf12/KAS2_original.spthy
 analyzed: data/examples/csf12/KAS2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.887011s
+  processing time: 5.007316s
   KAS_key_secrecy (all-traces): verified (290 steps)
 
 ------------------------------------------------------------------------------
@@ -1194,7 +1194,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KAS2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.887011s
+  processing time: 5.007316s
   KAS_key_secrecy (all-traces): verified (290 steps)
 
 ==============================================================================

@@ -337,12 +337,17 @@ postRootR = do
     case result of
       Nothing ->
         setMessage "Post request failed."
-      Just fileinfo -> do
-        yesod <- getYesod
-        closedThy <- liftIO $ parseThy yesod (BS.unpack $ fileContent fileinfo)
-        void $ putTheory Nothing
-          (Just $ Upload $ T.unpack $ fileName fileinfo) closedThy
-        setMessage "Loaded new theory!"
+      Just fileinfo
+        | BS.null $ fileContent fileinfo -> setMessage "No theory file given."
+        | otherwise                      -> do
+            yesod <- getYesod
+            closedThy <- liftIO $ parseThy yesod (BS.unpack $ fileContent fileinfo)
+            case closedThy of
+              Left err  -> setMessage $ "Theory loading failed:\n" <> toHtml err
+              Right thy -> do
+                  void $ putTheory Nothing
+                           (Just $ Upload $ T.unpack $ fileName fileinfo) thy
+                  setMessage "Loaded new theory!"
     theories <- getTheories
     defaultLayout $ do
       setTitle "Welcome to the Tamarin prover"

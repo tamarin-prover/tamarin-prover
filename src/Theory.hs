@@ -38,6 +38,7 @@ module Theory (
   , thyCache
   , thyItems
   , theoryRules
+  , theoryLemmas
   , theoryAxioms
   , addAxiom
   , addLemma
@@ -201,11 +202,10 @@ openProtoRule = L.get cprRuleE
 -- soundness sequent, if required.
 closeProtoRule :: MaudeHandle -> OpenProtoRule -> ClosedProtoRule
 closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
-
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.
-closeRuleCache :: [LNFormula]        -- ^ Axioms to use.
-               -> [LNFormula]        -- ^ Typing lemmas to use.
+closeRuleCache :: [LNGuarded]        -- ^ Axioms to use.
+               -> [LNGuarded]        -- ^ Typing lemmas to use.
                -> SignatureWithMaude -- ^ Signature of theory.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
@@ -222,8 +222,11 @@ closeRuleCache axioms typAsms sig protoRules intrRulesAC =
     injFactInstances =
         simpleInjectiveFactInstances $ L.get cprRuleE <$> protoRules
 
-    -- precomputing the case distinctions
-    untypedCaseDists = precomputeCaseDistinctions ctxt0 axioms
+    -- precomputing the case distinctions: we make sure to only add safety
+    -- axioms. Otherwise, it wouldn't be sound to use the precomputed case
+    -- distinctions for properties proven using induction.
+    safetyAxioms     = filter isSafetyFormula axioms
+    untypedCaseDists = precomputeCaseDistinctions ctxt0 safetyAxioms
     typedCaseDists   = refineWithTypingAsms typAsms ctxt0 untypedCaseDists
 
     -- classifying the rules
@@ -608,10 +611,11 @@ closeTheoryWithMaude sig thy0 = do
        TextItem
 
     -- extract typing axioms and lemmas
-    axioms  = [ L.get axFormula ax | AxiomItem ax <- items ]
+    axioms  = do AxiomItem ax <- items
+                 return $ formulaToGuarded_ $ L.get axFormula ax
     typAsms = do LemmaItem lem <- items
                  guard (isTypingLemma lem)
-                 return $ L.get lFormula lem
+                 return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
     rules = theoryRules (Theory errClose errClose errClose items)
@@ -689,21 +693,26 @@ proveTheory prover thy =
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
 -- | Construct a constraint system for verifying the given formula.
-mkSystem :: ProofContext -> [Axiom] -> [TheoryItem r p] -> LNFormula -> System
-mkSystem ctxt axioms preItems =
-    addAxiomsAndLemmasToSystem
-  . formulaToSystem (L.get pcCaseDistKind ctxt) (L.get pcTraceQuantifier ctxt)
+mkSystem :: ProofContext -> [Axiom] -> [TheoryItem r p]
+         -> LNFormula -> System
+mkSystem ctxt axioms previousItems =
+    -- Note that it is OK to add reusable lemmas directly to the system, as
+    -- they do not change the considered set of traces. This is the key
+    -- difference between lemmas and axioms.
+    addLemmas
+  . formulaToSystem (map (formulaToGuarded_ . L.get axFormula) axioms)
+                    (L.get pcCaseDistKind ctxt)
+                    (L.get pcTraceQuantifier ctxt)
   where
-    addAxiomsAndLemmasToSystem sys =
-        (`insertLemmas` sys) $
-            map (L.get axFormula) axioms ++
-            gatherReusableLemmas (L.get sCaseDistKind sys)
+    addLemmas sys =
+        insertLemmas (gatherReusableLemmas $ L.get sCaseDistKind sys) sys
 
     gatherReusableLemmas kind = do
-        LemmaItem lem <- preItems
-        guard $ lemmaCaseDistKind lem <= kind &&
-                ReuseLemma `elem` L.get lAttributes lem
-        return $ L.get lFormula lem
+        LemmaItem lem <- previousItems
+        guard $    lemmaCaseDistKind lem <= kind
+                && ReuseLemma `elem` L.get lAttributes lem
+                && AllTraces == L.get lTraceQuantifier lem
+        return $ formulaToGuarded_ $ L.get lFormula lem
 
 
 ------------------------------------------------------------------------------
@@ -780,7 +789,10 @@ prettyLemmaName l = case L.get lAttributes l of
 prettyAxiom :: HighlightDocument d => Axiom -> d
 prettyAxiom ax =
     kwAxiom <-> text (L.get axName ax) <> colon $-$
-    (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get axFormula ax)
+    (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get axFormula ax) $-$
+    (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
+  where
+    safety = isSafetyFormula $ formulaToGuarded_ $ L.get axFormula ax
 
 -- | Pretty print a lemma.
 prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d

@@ -65,30 +65,21 @@ next
     case case_1
     solve( Secret( k ) @ #i )
       case Receive
-      solve( Receiver( k0 ) ▶₀ #i )
-        case Receive
-        solve( !KU( senc(k, k0) ) @ #vk )
+      solve( !KU( senc(k, k0) ) @ #vk )
+        case Send
+        solve( !KU( ~k ) @ #j )
           case Send
-          solve( !KU( ~k ) @ #j )
-            case Send
+          solve( Receiver( k0 ) ▶₀ #i )
+            case Receive
             by contradiction // from formulas
-          qed
-        next
-          case csenc
-          by contradiction // from formulas
-        qed
-      next
-        case Setup
-        solve( !KU( senc(k.1, ~k) ) @ #vk )
-          case Send
-          solve( !KU( ~k.1 ) @ #j )
-            case Send
+          next
+            case Setup
             by solve( !KU( ~k ) @ #vk.1 )
           qed
-        next
-          case csenc
-          by contradiction // node #i after last node #j
         qed
+      next
+        case csenc
+        by contradiction // node #i after last node #j
       qed
     next
       case Send
@@ -107,22 +98,16 @@ next
     case case_2
     solve( Secret( k ) @ #i )
       case Receive
-      solve( Receiver( k0 ) ▶₀ #i )
-        case Receive
-        solve( !KU( senc(k, k0) ) @ #vk )
-          case Send
-          by solve( !KU( ~k ) @ #i )
-        next
-          case csenc
-          by contradiction // from formulas
-        qed
+      solve( !KU( senc(k, k0) ) @ #vk )
+        case Send
+        by solve( !KU( ~k ) @ #i )
       next
-        case Setup
-        solve( !KU( senc(k.1, ~k) ) @ #vk )
-          case Send
-          by solve( !KU( ~k.1 ) @ #i )
+        case csenc
+        solve( Receiver( k0 ) ▶₀ #i )
+          case Receive
+          by contradiction // from formulas
         next
-          case csenc
+          case Setup
           by solve( !KU( ~k ) @ #vk.1 )
         qed
       qed
@@ -151,9 +136,9 @@ analyzing: data/examples/loops/Minimal_KeyRenegotiation.spthy
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.136022s
+  processing time: 0.107395s
   Secret_reachable (exists-trace): verified (5 steps)
-  secrecy (all-traces): verified (28 steps)
+  secrecy (all-traces): verified (23 steps)
 
 ------------------------------------------------------------------------------
 
@@ -163,9 +148,9 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.136022s
+  processing time: 0.107395s
   Secret_reachable (exists-trace): verified (5 steps)
-  secrecy (all-traces): verified (28 steps)
+  secrecy (all-traces): verified (23 steps)
 
 ==============================================================================
 */
