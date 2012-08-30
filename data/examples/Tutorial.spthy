@@ -332,6 +332,31 @@ lemma Client_auth:
   "
 
 /*
+Note that we can also strengthen the authentication property to a version of
+injective authentication. Our formulation is stronger than the standard
+formulation of injective authentication, as it is based on uniqueness instead
+of counting. For most protocols, that guarantee injective authentication one
+can also prove such a uniqueness claim, as they agree on appropriate fresh
+data.
+*/
+
+lemma Client_auth_injective:
+  " /* For all session keys 'k' setup by clients with a server 'S' */
+    ( All S k #i.  SessKeyC(S, k) @ #i
+       ==>
+         /* there is a server that answered the request */
+       ( (Ex #a. AnswerRequest(S, k) @ a
+           /* and there is no other client that had the same request */
+           & (All #j. SessKeyC(S, k) @ #j ==> #i = #j)
+       )
+         /* or the intruder performed a long-term key reveal on 'S'
+            before the key was setup. */
+       | (Ex #r. LtkReveal(S) @ r & r < i)
+       )
+    )
+  "
+
+/*
   You can verify them by calling
 
     tamarin-prover --prove Tutorial.spthy
