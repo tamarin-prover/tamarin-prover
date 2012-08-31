@@ -1,7 +1,7 @@
 theory YubikeyHSM
 begin
 
-section{* The Yubikey-Protocol with a YubiHSM*}
+section{* The Yubikey-Protocol with a YubiHSM *}
 
 /*
  * Protocol:    Yubikey Protocol with a YubiHSM
@@ -21,8 +21,8 @@ functions: S/1,zero/0
 *  In this version, we assume the Authentication Server to be under the
 *  control of the attacker. We investigate the secrecy of keys in case the
 *  Authentication Server can protect the keys by encrypting them using a
-*  Hardware Token called YubiHSM see:
-*  TODO URL
+*  Hardware Token called YubiHSM, see:
+*  TODO URL will follow
 *  This is simplified version, in particular:
 *  - timestamps are not modelled
 *  - we do not distinguish the session and token counter. We described them
@@ -33,7 +33,7 @@ functions: S/1,zero/0
 *  - we assume the YubiHSM to be in a configuration where only the flags
 *    YSM_AEAD_RANDOM_GENERATE and
 *    YSM_AEAD_YUBIKEY_OTP_DECODE
-     are activated.
+*    are activated.
 */
 
 
@@ -46,37 +46,53 @@ functions: S/1,zero/0
  * demac.)
 */
 functions: keystream/2,  keystream_kh/1, keystream_n/1,
-            xor/2, dexor1/2, dexor2/2,
+            xorc/2, dexor1/2, dexor2/2,
             mac/2, demac/2
 equations: keystream_kh(keystream(kh,n))=kh,
             keystream_n(keystream(n,n))=n,
 /* an incomplete way of modelling the algebraic properties of the XOR
  * operator */
-            dexor1(xor(a,b),a)=b,
-            dexor2(xor(a,b),b)=a,
+            dexor1(xorc(a,b),a)=b,
+            dexor2(xorc(a,b),b)=a,
 /* using mac, adv might find out *something* about the message, we
  * overapproximate */
             demac(mac(m,k),k)=m
 
-
-/* Note that the Adversary has to provide all numbers that are used. This
- * way, we can formulate that a number used by the protocol is known to the
- * adversary. If we would just send it out, he is free to ignore it. 
- */
+/* The following rules model two binary relations between integers. !Succ
+ * is functional. If !Succ(a,b), then the adversary was able to show that b
+ * is the successor of b. Similarly, albeit !Smaller is not functional, if
+ * !Smaller(a,b), then the adversary was able to show that a is smaller
+ * than b.
+ * The Theory() action is used to enforce that this relation (to the extend
+ * it is needed in this trace) has to be build up before running the first
+ * protocol actions.
+*/
 rule InitSucc:
-    [In(zero),In(S(zero))] --[IsSucc(zero,S(zero))]-> [!Succ(zero,S(zero))]
-rule StepSucc:
-    [In(y),In(S(y)), !Succ(x,y)] --[ IsSucc(y,S(y)) ]-> [!Succ(y,S(y))]
-rule SimpleSmaller:
-    [ !Succ(x,y)] --[ IsSmaller(x,y)]-> [!Smaller(x,y)]
-rule ExtendedSmaller:
-    [!Smaller(x,y),!Succ(y,z)] --[ IsSmaller(x,z)]-> [!Smaller(x,z)]
+    [In(zero),In(S(zero))]
+	 --[Theory(), IsSucc(zero,S(zero)),IsZero(zero)]->
+	[!Succ(zero,S(zero))]
 
-//Rules for intruder's control over Server
+rule StepSucc:
+    [In(y),In(S(y)), !Succ(x,y)]
+	--[Theory(), IsSucc(y,S(y)) ]->
+	[!Succ(y,S(y))]
+
+rule SimpleSmaller:
+    [!Succ(x,y)]
+	--[Theory(), IsSmaller(x,y)]->
+	[!Smaller(x,y)]
+
+rule ZExtendedSmaller:
+    [!Smaller(x,y),!Succ(y,z)]
+	--[Theory(), IsSmaller(x,z)]->
+	[!Smaller(x,z)]
+
+// Rules for intruder's control over Server
 
 /* The attacker can send messages to the HSM, i.e., on behalf of the
  * authentication server. Likewise, he can receive messages.
- * /
+ */
+
 rule isendHSM:
    [ In( x ) ] --[ HSMWrite(x) ]-> [ InHSM( x ) ]
 rule irecv:
@@ -86,7 +102,7 @@ rule irecv:
  * This database contains a list of public ideas and corresponding AEADs
  */
 rule read_AEAD:
-    [ !S_AEAD(~pid,aead)  ] --[ AEADRead(aead),HSMRead(aead) ]-> [Out(aead)]
+    [ !S_AEAD(pid,aead)  ] --[ AEADRead(aead),HSMRead(aead) ]-> [Out(aead)]
 rule write_AEAD:
     [ In(aead), In(pid) ] --[ AEADWrite(aead),HSMWrite(aead) ]-> [!S_AEAD(pid,aead) ]
 
@@ -107,7 +123,7 @@ rule HSMInit:
 //Some commands on the HSM:
 rule YSM_AEAD_RANDOM_GENERATE:
     let ks=keystream(kh,N)
-        aead=<xor(senc(ks,k),~data),mac(~data,k)>
+        aead=<xorc(senc(ks,k),~data),mac(~data,k)>
     in
     [Fr(~data), InHSM(<N,kh>),!HSM(kh,k),!YSM_AEAD_RANDOM_GENERATE(kh)]
     --[GenerateRandomAEAD(~data)]->
@@ -116,7 +132,7 @@ rule YSM_AEAD_RANDOM_GENERATE:
 
 rule YSM_AEAD_GENERATE:
     let ks=keystream(kh,N)
-        aead=<xor(senc(ks,k),data),mac(data,k)>
+        aead=<xorc(senc(ks,k),data),mac(data,k)>
     in
     [InHSM(<N,kh,data>),!HSM(kh,k),!YSM_AEAD_GENERATE(kh)]
     --[GenerateAEAD(data,aead )]->
@@ -129,13 +145,13 @@ rule YSM_AES_ESC_BLOCK_ENCRYPT:
 
 rule YSM_AEAD_YUBIKEY_OTP_DECODE:
     let ks=keystream(kh,N)
-        aead=<xor(senc(ks,k),<k2,did>),mac(<k2,did>,k)>
+        aead=<xorc(senc(ks,k),<k2,did>),mac(<k2,did>,k)>
         otp=senc(<did,sc,rand>,k2)
     in
     [InHSM(<did,kh,aead,otp>), !HSM(kh,k), !YSM_AEAD_YUBIKEY_OTP_DECODE(kh)
     ]
     --[
-    OtpDecode(k2,k,<did,sc,rand>,sc,xor(senc(ks,k),<k2,did>),mac(<k2,did>,k)),
+    OtpDecode(k2,k,<did,sc,rand>,sc,xorc(senc(ks,k),<k2,did>),mac(<k2,did>,k)),
     OtpDecodeMaster(k2,k)
     ]->
     [OutHSM(sc)]
@@ -144,9 +160,8 @@ rule YSM_AEAD_YUBIKEY_OTP_DECODE:
 //(see Yubikey.spthy for more detailed comments)
 rule BuyANewYubikey:
     let ks=keystream(kh,~pid)
-        aead=<xor(senc(ks,~k),<~k2,~sid>),mac(<~k2,~sid>,~k)>
+        aead=<xorc(senc(ks,~k),<~k2,~sid>),mac(<~k2,~sid>,~k)>
     in
-    [
 /* This rule implicitly uses YSM_AEAD_GENERATE to produce the AEAD that
  * stores the secret identity and shared key of a Yubikey. By disabling the
  * YSM_AEAD_GENERATE flag but nevertheless permitting this operation, we
@@ -158,40 +173,37 @@ rule BuyANewYubikey:
  * YSM_AEAD_GENERATE flag set.
  */
 //!YSM_AEAD_GENERATE(kh), 
-Fr(~k2),Fr(~pid),Fr(~sid),
-!HSM(kh,~k),
-!Succ(zero,one)
-]
- --[Init(~pid,~k2)]-> 
-    [Y_Counter(~pid,one),
-    !Y_Key(~pid,~k2),
-    !Y_sid(~pid,~sid),
-    S_Counter(~pid,zero),
-    !S_AEAD(~pid,aead),
-    !S_sid(~pid,~sid),
-    Out(~pid)
-    ]
+    [ Fr(~k2),Fr(~pid),Fr(~sid),
+    !HSM(kh,~k),
+    !Succ(zero,one) ]
+     --[Init(~pid,~k2)]-> 
+    [Y_counter(~pid,one), !Y_Key(~pid,~k2), !Y_sid(~pid,~sid),
+    S_Counter(~pid,zero), !S_AEAD(~pid,aead), !S_sid(~pid,~sid),
+    Out(~pid) ]
 
 //On plugin, the session counter is increased and the token counter reset
-//If the Button is pressed, the token counter is increased
 rule Yubikey_Plugin:
-    [Y_Counter(~pid,sc),!Succ(sc, Ssc) ] --[ Yubi(~pid,Ssc) ]-> [Y_Counter(~pid,Ssc)]
+        [Y_counter(pid,sc),!Smaller(sc, Ssc) ] 
+        //The old counter value sc is removed
+        --[ Yubi(pid,Ssc) ]-> 
+        [Y_counter(pid, Ssc)]
+        //and substituted by a new counter value, larger, Ssc
     
 rule Yubikey_PressButton:
-    [Y_Counter(~pid,tc),!Y_Key(~pid,~k2),!Y_sid(~pid,~sid),
+    [Y_counter(pid,tc),!Y_Key(pid,k2),!Y_sid(pid,sid),
      !Succ(tc,Stc),Fr(~pr),Fr(~nonce) ] 
-    --[ YubiPress(~pid,tc),
-        YubiPressOtp(~pid,<~sid,tc,~pr>,tc,~k2) ]-> 
-    [ Y_Counter(~pid,Stc), Out(<~pid,~nonce,senc(<~sid,tc,~pr>,~k2)>)]
+    --[ YubiPress(pid,tc),
+        YubiPressOtp(pid,<sid,tc,~pr>,tc,k2) ]-> 
+    [Y_counter(pid,Stc), Out(<pid,~nonce,senc(<sid,tc,~pr>,k2)>)]
 
 rule Server_ReceiveOTP_NewSession:
     let ks=keystream(kh,pid)
-        aead=<xor(senc(ks,~k),<~k2,sid>),mac(<~k2,sid>,~k)>
+        aead=<xorc(senc(ks,k),<k2,sid>),mac(<k2,sid>,k)>
     in
-    [In(<pid,nonce,senc(<sid,tc,~pr>,~k2)>) , 
-        !HSM(kh,~k), !S_AEAD(pid,aead), S_Counter(pid,otc),
+    [In(<pid,nonce,senc(<sid,tc,~pr>,k2)>) , 
+        !HSM(kh,k), !S_AEAD(pid,aead), S_Counter(pid,otc),
         !S_sid(pid,sid), !Smaller(otc,tc) ]
-     --[ Login(pid,tc,senc(<sid,tc,~pr>,~k2)) ]-> 
+     --[ Login(pid,tc,senc(<sid,tc,~pr>,k2)) ]-> 
     [ S_Counter(pid,tc) ]
 
 //LEMMAS:
