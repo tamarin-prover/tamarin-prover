@@ -73,7 +73,7 @@ rule BuyANewYubikey:
 
 //On plugin, the session counter is increased and the token counter reset
 rule Yubikey_Plugin:
-        [!Y(pid,sid), Y_counter(pid,sc),!Smaller(sc, Ssc) ] 
+        [Y_counter(pid,sc),!Smaller(sc, Ssc) ] 
         //The old counter value sc is removed
         --[ Yubi(pid,Ssc) ]-> 
         [Y_counter(pid, Ssc)]
@@ -112,7 +112,7 @@ rule Server_ReceiveOTP_NewSession:
           ]->
         [Server(pid,sid,tc)] //..and the counter value updated.
 
-/* The following two axioms are conditions on the traces that make sure
+/* The following three axioms are conditions on the traces that make sure
  * that : */
 
 //a) the !Smaller relation is transitive
