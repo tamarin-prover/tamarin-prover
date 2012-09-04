@@ -7,115 +7,185 @@ theory Keyserver begin
  *
  * Status: 	working
 
+
  [1] Sebastian Moedersheim: Abstraction by set-membership: verifying security
  protocols and web services with databases. ACM Conference on Computer and
  Communications Security 2010: 351-360
- */
 
-/* Original input file from [1]
+ The original model from [1].
 
-Problem: zebsKeyserver;
+    Problem: zebsKeyserver;
 
-Types:
-Agent  : {a,b,c,i,s};
-U      : {a,b,c};
-S      : {s};
-H      : {a,b};
-D      : {c,i};
-DU     : {c};
-Sts    : {valid,revoked};
-PK,NPK : value;
-M1,M2  : untyped;
+    Types:
+    Agent  : {a,b,c,i,s};
+    U      : {a,b,c};
+    S      : {s};
+    H      : {a,b};
+    D      : {c,i};
+    DU     : {c};
+    Sts    : {valid,revoked};
+    PK,NPK : value;
+    M1,M2  : untyped;
 
-Sets:
-ring(U), db(S,U,Sts);
+    Sets:
+    ring(U), db(S,U,Sts);
 
-Functions:
-public sign/2, pair/2;
-private inv/1;
+    Functions:
+    public sign/2, pair/2;
+    private inv/1;
 
-Facts:
-iknows/1, attack/0;
+    Facts:
+    iknows/1, attack/0;
 
-Rules:
+    Rules:
 
-\Agent. => iknows(Agent);
-iknows(sign(M1,M2)) => iknows(M2);
-iknows(M1).iknows(M2) => iknows(sign(M1,M2));
-iknows(pair(M1,M2)) => iknows(M1).iknows(M2);
-iknows(M1).iknows(M2) => iknows(pair(M1,M2));
+    \Agent. => iknows(Agent);
+    iknows(sign(M1,M2)) => iknows(M2);
+    iknows(M1).iknows(M2) => iknows(sign(M1,M2));
+    iknows(pair(M1,M2)) => iknows(M1).iknows(M2);
+    iknows(M1).iknows(M2) => iknows(pair(M1,M2));
+
+    \H,S. =[PK]=>iknows(PK).PK in ring(H).PK in db(S,H,valid);
+
+    \S,DU. =[PK]=>iknows(PK).iknows(inv(PK)).PK in db(S,DU,valid);
+
+    \H.
+    iknows(PK).PK in ring(H)
+    =[NPK]=>NPK in ring(H).iknows(sign(inv(PK),pair(H,NPK)));
+
+    \S,U.
+    iknows(sign(inv(PK),pair(U,NPK))).PK in db(S,U,valid).
+    forall U,Sts. NPK notin db(S,U,Sts)
+    =>PK in db(S,U,revoked).NPK in db(S,U,valid).iknows(inv(PK));
+
+    \S,H.
+    iknows(inv(PK)).PK in db(S,H,valid)
+    =>attack;
+
+  Unfortunately, there are no comments. Moreover, public keys are converted
+  freely to private keys, which is not always faithful. We comment on this
+  below.
 */
 
 builtins: signing
 
-// The non-deterministic choice between the rules SetupHonestKey and
-// SetupDishonestKey determines whether an agent is honest or not.
+/* We also setup a server key to allow server signatures. */
+rule SetupServerKey:
+    [ Fr(~sk) ]
+  -->
+    [ !ServerSK(~sk), !ServerPK(pk(~sk)), Out(pk(~sk)) ]
 
-// \H,S. =[PK]=>iknows(PK).PK in ring(H).PK in db(S,H,valid);
+/*
+  The non-deterministic choice between the rules SetupHonestKey and
+  SetupDishonestKey determines whether an agent is honest or not.
+
+  The rule below models
+
+    \H,S. =[PK]=>iknows(PK).PK in ring(H).PK in db(S,H,valid);
+
+  Note that servers store public keys and clients store their private key.
+  There may be several registered keys at the same time, as there may be
+  multiple ServerKey-facts in the state at the same time.
+*/
 rule SetupHonestKey:
     [ Fr(~sk) ]
   --[ HonestKey(~sk) ]->
-    [ Out(pk(~sk)), ClientKey($A, ~sk), ServerDB($A, ~sk) ]
+    [ Out(pk(~sk)) , ClientKey($A, ~sk) , ServerDB($A, pk(~sk)) ]
 
-// \S,DU. =[PK]=>iknows(PK).iknows(inv(PK)).PK in db(S,DU,valid);
+
+/* The intruder may register any private key for any agent.
+
+    \S,DU. =[PK]=>iknows(PK).iknows(inv(PK)).PK in db(S,DU,valid);
+
+*/
 rule SetupDishonestKey:
-    [ In(sk) ]
-  -->
-    [ ServerDB($A, sk) ]
+    [ In(sk) ] --> [ ServerDB($A, pk(sk)) ]
 
-// \H.
-// iknows(PK).PK in ring(H)
-// =[NPK]=>NPK in ring(H).iknows(sign(inv(PK),pair(H,NPK)));
-rule RequestRenewKey:
-    [ ClientKey($A, sk), Fr(~skNew) ]
+/* A client may renew one of his keys by sending a renew request. In [1], the
+   server then leaks the corresponding private key. This is not really
+   possible, as the server does not know the private keys corresponding to
+   newly setup keys. We model that the key waits for a confirmation of his
+   request and only then leaks his key
+
+   The original client request rule was:
+
+     \H.
+     iknows(PK).PK in ring(H)
+     =[NPK]=>NPK in ring(H).iknows(sign(inv(PK),pair(H,NPK)));
+*/
+rule Client_RenewKey:
+  let pkNew      = pk(~skNew)
+      request    = <'renew', $A, pkNew>
+      requestSig = sign{request}~sk
+  in
+    [ ClientKey($A, ~sk), Fr(~skNew) ]
   --[ HonestKey(~skNew) ]->
-    [ Out( sign{'renew', $A, pk(~skNew)}sk )
+    [ Out( <request, requestSig> )
     , ClientKey($A, ~skNew)
+    , AwaitConfirmation(requestSig,~sk)
     ]
 
-// \S,U.
-// iknows(sign(inv(PK),pair(U,NPK))).PK in db(S,U,valid).
-// forall U,Sts. NPK notin db(S,U,Sts)
-// =>PK in db(S,U,revoked).NPK in db(S,U,valid).iknows(inv(PK));
-rule RenewKey:
-    [ In( sign{'renew', A, pk(skNew)}sk )
-    , ServerDB(A, sk)
+rule Client_LeakKey:
+    [ AwaitConfirmation(request,sk)
+    , !ServerPK(pkServer)
+    , In(sig)
     ]
-  --[ Revoked(sk) ]->
-    [ ServerDB(A, skNew)
-    , Out( sk )
+  --[ Eq(verify(sig, <'confirm', request>, pkServer), true)
+    , Revoked(sk)
+    ]->
+    [ Out(sk) ]
+
+/* The server updating his database. See the comment above for the change in
+   leaking the private key. The original rule in [1] is
+
+     \S,U.
+     iknows(sign(inv(PK),pair(U,NPK))).PK in db(S,U,valid).
+     forall U,Sts. NPK notin db(S,U,Sts)
+     =>PK in db(S,U,revoked).NPK in db(S,U,valid).iknows(inv(PK));
+
+   The leaking of 'inv(PK)' is unrealistic as the server only learns the
+   public key of new messages.
+*/
+rule Server_RenewKey:
+  let request = <'renew', A, pkNew>
+  in
+    [ In( <request, requestSig> )
+    , ServerDB(A, pk(sk))
+    , !ServerSK(skServer)
+    ]
+  --[ Eq(verify(requestSig, request, pk(sk)), true)
+    ]->
+    [ ServerDB(A, pkNew)
+    , Out(sign{'confirm', requestSig}skServer)
     ]
 
-// Typing lemma: it can be proven, but not with the current heuristic. It
-// focuses too much on the first-order part and neglects solving the
-// signature. Moreover, it should use an age-based strategy for the goals to
-// ensure that it always makes at least some progress.
-lemma types [typing]:
-  "All sk #i. Revoked(sk) @ i ==>
-     ( (Ex #j. KU(sk) @ j & j < i)
-     | (Ex #j. HonestKey(sk) @ j & j < i)
-     )
-  "
-/*
-The following property proven in Moedersheim's paper is rather easy to
-prove, as it depends only on the fact that secret keys are not leaked by
-any other means than the "RenewKey" rule. The "RenewKey" rule always log's
-that the key is "Revoked", which directly implies the lemma below.
+// We assume that rule's are only executed if their equality checks succeed.
+axiom Eq_checks_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
 
-TODO: Prove property that depends on ordering of revocation. For example,
-DH-key exchange always succeeds for a protocol with an online key-server. This
-crucially depends on the client not sending a renewal message while he's
-waiting for the key confirmation.
+/* The following property proven in Moedersheim's paper is rather easy to
+   prove, as it depends only on the fact that secret keys are not leaked by
+   any other means than the "RenewKey" rule. The "RenewKey" rule always log's
+   that the key is "Revoked", which directly implies the lemma below.
+
+     \S,H.
+     iknows(inv(PK)).PK in db(S,H,valid)
+     =>attack;
 */
 
-
-// \S,H.
-// iknows(inv(PK)).PK in db(S,H,valid)
-// =>attack;
-lemma In_Honest_Key_imp_Revoked:
+lemma Knows_Honest_Key_imp_Revoked:
   "All sk #i #d. HonestKey(sk) @ i & K(sk) @ d ==>
       (Ex #r. Revoked(sk) @ r)
   "
 
+/*
+/* Sanity check. Commented out for runtime comparison to [1]. */
+lemma Honest_Revoked_Known_Reachable:
+  exists-trace
+  "(Ex sk #i #j #r. HonestKey(sk) @ i
+                  & K(sk) @ j
+                  & Revoked(sk) @ r
+   )"
+*/
 
 end
+
