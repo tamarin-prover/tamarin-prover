@@ -81,6 +81,7 @@ data-files:
   examples/loops/Minimal_Create_Use_Destroy.spthy
   examples/loops/Minimal_Typing_Example.spthy
   examples/loops/Minimal_Loop_Example.spthy
+  examples/loops/Minimal_HashChain.spthy
   examples/loops/Typing_and_Destructors.spthy
   examples/loops/JCS12_Typing_Example.spthy
   examples/loops/TESLA_Scheme1.spthy
@@ -88,6 +89,9 @@ data-files:
   -- related work
   examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
   examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
+  examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
+  examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
+  examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
   examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
   examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 

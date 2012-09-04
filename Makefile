@@ -130,8 +130,10 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 	mkdir -p case-studies/loops
 	mkdir -p case-studies/related_work/AIF_Moedersheim_CCS10
 	mkdir -p case-studies/related_work/StatVerif_ARR_CSF11
+	mkdir -p case-studies/related_work/YubiSecure_KS_STM12
 	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
-	tamarin-prover $< --prove --stop-on-trace=dfs +RTS -N -RTS -o$(TMPRES) >$(TMPOUT)
+	# Use -N3, as the fourth core is used by the OS and the console
+	tamarin-prover $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	echo "\n/* Output" >>$(TMPRES)
@@ -146,13 +148,17 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 
 TPM=related_work/TPM_DKRS_CSF11/RunningExample.spthy
 # Envelope.spthy (not yet working automatically)
-STATVERIF=related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
-# GM_Contract.spthy (not finished)
+
+STATVERIF=related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
+
 AIF=related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
+
+YUBIKEY=related_work/YubiSecure_KS_STM12/Yubikey.spthy related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
+
 LOOPS=loops/TESLA_Scheme1.spthy loops/Minimal_KeyRenegotiation.spthy loops/Minimal_Create_Use_Destroy.spthy loops/RFID_Simple.spthy loops/Minimal_Create_Use_Destroy.spthy loops/Minimal_Crypto_API.spthy loops/Minimal_Loop_Example.spthy loops/JCS12_Typing_Example.spthy loops/Minimal_Typing_Example.spthy loops/Typing_and_Destructors.spthy
 # TESLA_Scheme2.spthy (not finished)
 
-IND_CASE_STUDIES=$(TPM) $(AIF) $(LOOPS) $(STATVERIF)
+IND_CASE_STUDIES=$(TPM) $(AIF) $(LOOPS) $(STATVERIF) $(YUBIKEY)
 IND_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(IND_CASE_STUDIES)))
 
 # case studies

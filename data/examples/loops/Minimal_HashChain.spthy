@@ -5,12 +5,12 @@ theory Minimal_HashChain begin
   Modeler:     Simon Meier
   Date:        August 2012
 
-  Status:      WIP
+  Status:      note yet working
+               (requires multiset or repeated exponentiation reasoning)
 
-  This models the key difficulty in the proof of the TESLA 2 protocol. The
-  verification that the key checking process is sufficient to guarantee that
-  the key is a key of the hash-chain.
-
+  This models the key difficulty in the proof of the TESLA 2 protocol with
+  re-authentication: the verification that the key checking process is
+  sufficient to guarantee that the key is a key of the hash-chain.
 */
 
 functions: f/1
