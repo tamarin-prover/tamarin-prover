@@ -1,0 +1,123 @@
+theory Minimal_HashChain begin
+
+/*
+  Protocol:    A minimal HashChain example (inspired by TESLA 2)
+  Modeler:     Simon Meier
+  Date:        August 2012
+
+  Status:      WIP
+
+  This models the key difficulty in the proof of the TESLA 2 protocol. The
+  verification that the key checking process is sufficient to guarantee that
+  the key is a key of the hash-chain.
+
+*/
+
+functions: f/1
+
+// Chain setup phase
+////////////////////
+
+// Hash chain generation
+rule Gen_Start:
+  [ Fr(seed) ] --> [ Gen(seed, seed), Out(seed) ]
+
+// The NextKey-facts are used by the sender rules to store the link between
+// the keys in the chain.
+rule Gen_Step:
+    [ Gen(seed, chain) ]
+  --[ ChainKey(chain)
+    ]->
+    [ Gen(seed, f(chain) ) ]
+
+// At some point the sender decides to stop the hash-chain precomputation.
+rule Gen_Stop:
+    [ Gen(seed, kZero) ]
+  --[ ChainKey(kZero) ]->
+    [ !Final(kZero) ]
+
+// Key checking
+///////////////
+
+// Start checking an arbitrary key. Use a loop-id to allow connecting
+// different statements about the same loop.
+rule Check0:
+    [ In(kOrig)
+    , Fr(loopId)
+    ]
+  --[ Start(loopId, kOrig)
+    ]->
+    [ Loop(loopId, kOrig, kOrig) ]
+
+rule Check:
+    [ Loop(loopId, k,    kOrig) ]
+  --[ Loop(loopId, k,    kOrig) ]->
+    [ Loop(loopId, f(k), kOrig) ]
+
+rule Success:
+    [ Loop(loopId, kZero, kOrig), !Final(kZero) ]
+  --[ Success(loopId, kOrig)
+    ]-> []
+
+
+// Provable: restricts the search space
+lemma Loop_Start [use_induction, reuse]:
+  "All lid k kOrig #i. Loop(lid, k, kOrig) @ i ==>
+    Ex #j. Start(lid, kOrig) @ j & j < i"
+
+// Provable: restricts the search space
+lemma Loop_Success_ord [use_induction, reuse]:
+  "All lid k kOrig1 kOrig2 #i #j.
+       Loop(lid, k, kOrig1) @ i
+     & Success(lid, kOrig2) @ j
+    ==>
+     ( i < j)
+  "
+
+// Provable: connects an arbitrary loop step with its start.
+lemma Loop_charn [use_induction]:
+  "All lid k kOrig #i. Loop(lid, k, kOrig) @ i ==>
+     Ex #j. Loop(lid, kOrig, kOrig) @ j"
+
+// Not yet provable: the problem is that we cannot express the relation
+// between the keys on two different segments of the same loop.
+// @BS: Do you have an idea on how we could use multisets to formulate a
+// strong enough invariant?
+lemma Loop_and_success [use_induction]:
+  "All lid k kOrig1 kOrig2 #i #j.
+       Loop(lid, k, kOrig1) @ i
+     & Success(lid, kOrig2) @ j
+    ==>
+     (Ex #j. ChainKey(k) @ j)
+  "
+
+// The ultimate goal! A successful check implies that the starting key is a
+// key of the chain.
+lemma Success_charn:
+  "All lid k #i. Success(lid, k) @ i ==>
+    Ex #j. ChainKey(k) @ j"
+
+
+
+/* A try on building the required 'smaller' relation in an axiomatic fashion.
+   This interacts too strongly with
+
+   Does not really work! We need a better way to express this stuff.
+
+rule Succ_to_Smaller:
+    [ !Succ(x, y) ] --[ IsSmaller(x, y) ]-> [!Smaller(x, y)]
+
+rule Smaller_Extend:
+    [ !Succ(x, y), !Smaller(y, z) ]
+  --[ IsSmaller(x, z) ]->
+    [ !Smaller(x, z) ]
+
+axiom force_succ_smaller:
+    "All #t1 2 a b c. IsSucc(a,b)@t1
+       ==> Ex #t2 . IsSmaller(a,b)@t2 "
+
+axiom transitivity:
+    "All #t1 #t2 a b c. IsSmaller(a,b)@t1 & IsSmaller(b,c)@t2
+       ==> Ex #t3 . IsSmaller(a,c)@t3 "
+*/
+end

@@ -1,0 +1,200 @@
+theory TESLA_Scheme2_lossless begin
+
+/*
+  Protocol:    The TESLA protocol, scheme 2 (no re-authentication)
+  Modeler:     Simon Meier
+  Date:        May 2012
+
+  Status:      working
+
+  Original descrption in [1]. This model is based on the following description
+  from [2].
+
+    Msg 0a. R -> S : nR
+    Msg 0b. S -> R : {k0 , nR }SK (S )
+    Msg 1.  S -> R : m1 , MAC (k1 , m1 ).
+
+  And for n > 1:
+    Msg n. S -> R : Dn , MAC (kn , Dn ) where Dn = mn , kn-1 .
+
+  Here, we model a simplified version of Scheme 2, which does not allow a
+  receiver to re-authenticate once it missed a packet. We have not yet managed
+  to verify a model that allows this re-authentication.
+
+  We verify that the use of cryptography is correct under the assumption that
+  the security condition holds. We do not verify that the timing schedule
+  works, as we do not have a notion of time. For a manual, but machine-checked
+  verification of the Scheme 2 of the TESLA protocol with time see [3].
+
+
+  [1] Perrig, Adrian, Ran Canetti, Dawn Song, and Doug Tygar. "The TESLA
+  Broadcast Authentication Protocol." In RSA Cryptobytes, Summer 2002.
+
+  [2] Philippa J. Hopcroft, Gavin Lowe: Analysing a stream authentication
+  protocol using model checking. Int. J. Inf. Sec. 3(1): 2-13 (2004)
+
+  [3] David A. Basin, Srdjan Capkun, Patrick Schaller, Benedikt Schmidt:
+  Formal Reasoning about Physical Properties of Security Protocols. ACM Trans.
+  Inf. Syst. Secur. 14(2): 16 (2011)
+
+*/
+
+builtins: signing
+
+functions: MAC/2, f/1
+
+// PKI
+//////
+
+rule Generate_Keypair:
+    [ Fr(~ltk) ]
+  -->
+    [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk(~ltk)) ]
+
+// We assume an active adversary.
+rule Reveal_Ltk:
+    [ !Ltk(A, ltk) ]
+  --[ RevealLtk(A) ]->
+    [ Out(ltk) ]
+
+
+// Chain setup phase
+////////////////////
+
+// Hash chain generation
+rule Gen_Start:
+  [ Fr(~seed) ] --> [ Gen(~seed) ]
+
+// The NextKey-facts are used by the sender rules to store the link between
+// the keys in the chain.
+rule Gen_Step:
+    [ Gen(chain) ]
+  --[ ChainKey(f(chain)) ]->
+    [ Gen( f(chain) ) , NextKey( f(chain) , chain ) ]
+
+// At some point the sender decides to stop the hash-chain precomputation.
+rule Gen_Stop:
+    [ Gen(kZero) ]
+  --[ Expired(kZero) ]->
+    [ Sender1( $S, kZero) , !Sender0($S, kZero) ]
+
+// Intial chain key distribution
+////////////////////////////////
+
+// Everybody can listen in by sending a request for k_0.
+rule Sender0:
+  let msgZero = <nR, kZero>
+  in
+    [ !Sender0(S, kZero), !Ltk(S, ltkS), In(nR) ]
+    -->
+    [ Out( <msgZero, sign{msgZero}ltkS> ) ]
+
+// Receivers start by requesting key k_0 adn verifying the signature on this
+// response.
+rule Receiver0a:
+    [ Fr(~nR) ] --> [ Receiver0b($S, ~nR), Out(<$S, ~nR>) ]
+
+rule Receiver0b:
+  let msgZero = <nR, kZero>
+  in
+    [ Receiver0b(S,nR), !Pk(S, pkS), In(<msgZero, signature>) ]
+  --[ Eq( verify(signature, msgZero, pkS), true() ) ]->
+    [ Receiver1(S,kZero) ]
+
+// Sending
+//////////
+
+rule Sender1:
+  let msgOne = <mOne, MAC(kOne, mOne)>
+  in
+    [ Sender1( S, kZero ), NextKey( kZero, kOne ), Fr(mOne) ]
+  --[ Sent(S, msgOne) ]->
+    [ SenderN( S, kOne ), Out( msgOne ) ]
+
+// We use the convention that k_{n-1} is denoted as kNp, where the 'p' stands
+// for predecessor.
+rule SenderN:
+  let msgN = <kNp, mN, MAC( kN, mN )>
+  in
+    [ SenderN( S, kNp ), NextKey( kNp, kN), Fr(mN) ]
+  --[ Expired( kNp )
+    , Sent( S, msgN )
+    ]->
+    [ SenderN( S, kN ), Out(msgN) ]
+
+// Receiving
+////////////
+
+rule Receiver1:
+  let msgOne = <mOne, macOne>
+  in
+    [ Receiver1(S, kZero), In( msgOne ), Fr(expiryCheckOne) ]
+  --[ NotExpiredHere(expiryCheckOne) ]->
+    [ ReceiverN(S, kZero, expiryCheckOne, msgOne, mOne, macOne ) ]
+
+rule ReceiverN:
+  let msgN = <kNp, mN, macN>
+  in
+    [ ReceiverN(S, kNpp, expiryCheckNp, msgNp, mNp, macNp), In( msgN )
+    , Fr(expiryCheckN)
+    ]
+  --[ Eq( kNpp, f(kNp) ), Eq( macNp, MAC(kNp, mNp) )
+      // This action claims that 'msgNp' was sent by the sender provided that
+      // the longterm-key of 'S' was not revealed before and the key 'kNp'
+      // expired after the expiry check denoted by 'expiryCheckNp'.
+    , FromSender(msgNp, S, kNp, expiryCheckNp)
+    , NotExpiredHere( expiryCheckN )
+    ]->
+    [ ReceiverN(S, kNp, expiryCheckN, msgN, mN, macN ) ]
+
+
+// Axioms; i.e., universal restrictions on the traces of interest
+/////////////////////////////////////////////////////////////////
+
+// We are only interested in traces where all equality checks succeed.
+axiom Eq_checks_succeed: "(All x y #j. Eq(x, y) @ j ==> x = y)"
+
+// The security condition of TESLA guarantees that
+axiom Security_condition:
+  "All m S k check #i #j #e.
+         FromSender(m, S, k, check) @ i
+       & NotExpiredHere(check) @ j
+       & Expired(k) @ e
+     ==>
+         j < e"
+
+
+// Security properties
+//////////////////////
+
+// Sanity check: there is a honest execution where no key expired too early.
+lemma honestly_executable:
+  exists-trace
+  " ( Ex m S k check #i #j.
+          FromSender(m, S, k, check) @ i
+        & Sent(S, m) @ j
+    )
+  & (All S #r. RevealLtk(S) @ r ==> F)   // no longterm key was revealed
+  "
+
+// The following two lemmas constraint the search space strongly enough to
+// allow reasoning about the authenticity of the received messages.
+
+lemma chain_keys_unique [use_induction, reuse]:
+  "All k #i #j. ChainKey(k) @ i & ChainKey(k) @ j ==> #i = #j"
+
+lemma knows_only_expired_chain_keys [use_induction, reuse]:
+  "All k #i #j. ChainKey(k) @i & KU(k) @ j ==>
+      (Ex #e. Expired(k) @ e & e < j)"
+
+// The desired security property: received messages are authentic.
+lemma authentic [use_induction]:
+  "  (All m S k check #i.
+           FromSender(m, S, k, check) @ i
+         ==>
+           (Ex #j. Sent(S, m) @ j   & j < i)
+         | (Ex #j. RevealLtk(S) @ j & j < i)
+     )
+  "
+
+end
