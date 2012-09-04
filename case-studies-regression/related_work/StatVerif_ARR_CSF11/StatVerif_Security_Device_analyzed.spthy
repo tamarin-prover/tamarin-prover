@@ -1,4 +1,4 @@
-theory StatVerif_Example1 begin
+theory StatVerif_Security_Device begin
 
 // Function signature and definition of the equational theory E
 
@@ -275,13 +275,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
+analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
+analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.381379s
+  processing time: 0.383217s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -292,10 +292,10 @@ analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spth
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
+analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.381379s
+  processing time: 0.383217s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
