@@ -5,11 +5,14 @@ builtins: asymmetric-encryption
 
 /*
    Protocol:    The classic three message version of the
-                Needham-Schroeder-Lowe Public Key Protocol
+                flawed Needham-Schroeder Public Key Protocol
    Modeler:     Simon Meier
-   Date:        June 2012
-   Source:      Modeled after the description by Paulson in
-                Isabelle/HOL/Auth/NS_Public.thy.
+   Date:        September 2012
+
+   Source:      Gavin Lowe. Breaking and fixing the Needham-Schroeder
+                public-key protocol using FDR. In Tiziana Margaria and
+                Bernhard Steffen, editors, TACAS, volume 1055 of Lecture Notes
+                in Computer Science, pages 147–166.  Springer, 1996.
 
    Status:      working
 
@@ -30,9 +33,9 @@ rule Reveal_ltk:
 
 /* We formalize the following protocol
 
-  protocol NSLPK3 {
+  protocol NSPK3 {
     1. I -> R: {'1',ni,I}pk(R)
-    2. I <- R: {'2',ni,nr,R}pk(I)
+    2. I <- R: {'2',ni,nr}pk(I)
     3. I -> R: {'3',nr}pk(R)
   }
 */
@@ -51,7 +54,7 @@ rule I_1:
 
 rule R_1:
   let m1 = aenc{'1', ni, I}pk(ltkR)
-      m2 = aenc{'2', ni, ~nr, $R}pkI
+      m2 = aenc{'2', ni, ~nr}pkI
   in
     [ !Ltk($R, ltkR)
     , In( m1 )
@@ -67,7 +70,7 @@ rule R_1:
     ]
 
 rule I_2:
-  let m2 = aenc{'2', ni, nr, R}pk(ltkI)
+  let m2 = aenc{'2', ni, nr}pk(ltkI)
       m3 = aenc{'3', nr}pkR
   in
     [ St_I_1(I, R, ni)
@@ -102,18 +105,13 @@ rule Secrecy_claim:
 
 
 
-/* Note that we are using an untyped protocol model.
-The contents of the 'ni' variable in rule R_1 may therefore in general be any
-message. This leads to unsolved chain constraints when checking what message
-can be extracted from the message sent by rule R_1. In order to get rid of
-these constraints, we require the following typing invariant that relates the
-point of instantiation to the point of sending by either the adversary or the
-initiator.
+/* Note that we are using an untyped protocol model. For proofs, we therefore
+require a protocol specific type invariant for proof construction. In
+principle, such an invariant is not required for attack search, but does help
+a lot.
 
-In order to understand the use of this typing invariant you might try the
-follwing experiment. Comment out this typing invariant and then check the
-precomputed case distinctions in the GUI. Try to complete the proof of the
-'nonce_secrecy' lemma.
+See 'NSLPK3.spthy' for a detailed explanation of the construction of this
+invariant.
 */
 lemma types [typing]:
   " (All ni m1 #i.

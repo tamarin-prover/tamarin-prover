@@ -87,6 +87,7 @@ rule C_2:
   let
       MS   = PRF(~pms, nc, ns)
       Ckey = h('clientKey', nc, ns, MS)
+      Skey = h('serverKey', nc, ns, MS)
   in
     [ St_C_1(C, nc, sid, pc)
     , In(
@@ -96,7 +97,8 @@ rule C_2:
     , !Pk(S, pkS)
     , !Ltk(C, ltkC)
     ]
-  --[]->
+  --[ Running(S, C, <'server', MS, Skey, Ckey>)
+    ]->
     [ Out(
         < aenc{ '31', ~pms }pkS
         , sign{ '32', h('32', ns, S, ~pms) }ltkC
@@ -125,6 +127,8 @@ rule S_2:
     /* Explicit equality check, enforced as part of the property. */
   --[ Eq(verify(signature, <'32', h('32', ns, S, pms)>, pkC), true )
     , SessionKeys( S, C, Skey, Ckey )
+    , Running(C, S, <'client', MS, Skey, Ckey>)
+    , Commit(S, C, <'server', MS, Skey, Ckey>)
     ]->
     [ Out(
         senc{ '4', sid, MS, nc, pc, C, ns, ps, S}Skey
@@ -140,23 +144,23 @@ rule C_3:
     [ St_C_2(S, C, sid, nc, pc, ns, ps, pms)
     , In( senc{ '4', sid, MS, nc, pc, C, ns, ps, S}Skey )
     ]
-  --[ SessionKeys( S, C, Skey, Ckey ) ]->
+  --[ Commit(C, S, <'client', MS, Skey, Ckey>)
+    , SessionKeys( S, C, Skey, Ckey )
+    ]->
     []
 
 
 /* TODO: Also model session-key reveals and adapt security properties. */
+
+axiom Eq_check_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
 
 
 /* Session key secrecy from the perspective of both the server and the client
  * for both the key of the server and the key of the client. Note that this
  * lemma thus captures four security properties at once. */
 lemma session_key_secrecy:
-  " /* If all equality checks succeeded */
-    (All x y #i. Eq(x,y) @ i ==> x = y)
-  ==>
-    /* then there is no attack */
-    (not(
-         /* It cannot be that */
+     /* It cannot be that */
+   "not(
          Ex S C keyS keyC #k.
            /* somebody claims to have setup session keys, */
            SessionKeys(S, C, keyS, keyC) @ k
@@ -167,7 +171,25 @@ lemma session_key_secrecy:
            /* without having performed a long-term key reveal. */
          & not (Ex #r. RevLtk(S) @ r)
          & not (Ex #r. RevLtk(C) @ r)
-    )   )"
+       )"
+
+// Injective agreement from the perspective of both the initiator and the responder.
+lemma injective_agree:
+  " /* Whenever somebody commits to running a session, then*/
+    All actor peer params #i.
+        Commit(actor, peer, params) @ i
+      ==>
+        /* there is somebody running a session with the same parameters */
+          (Ex #j. Running(actor, peer, params) @ j & j < i
+            /* and there is no other commit on the same parameters */
+            & not(Ex actor2 peer2 #i2.
+                    Commit(actor2, peer2, params) @ i2 & not(#i = #i2)
+                 )
+          )
+        /* or the adversary perform a long-term key reveal on actor or peer */
+        | (Ex #r. RevLtk(actor) @ r)
+        | (Ex #r. RevLtk(peer)  @ r)
+  "
 
 /* Consistency check: ensure that session-keys can be setup between honest
  * agents. */
