@@ -110,7 +110,7 @@ rule write_AEAD:
 /* Initialisation of HSM and Authentication Server. OneTime() Assures that
  * this can only happen a single time in a trace */
 rule HSMInit:
-    [Fr(~k), Fr(~kh)] --[GenerateRole1(~k),MasterKey(~k), OneTime()]-> 
+    [Fr(~k), Fr(~kh)] --[Protocol(), GenerateRole1(~k),MasterKey(~k), OneTime()]-> 
     [ !HSM(~kh,~k), Out(~kh), 
 /* If the following line is uncommented, we are able to reproduce the
  * attack described in
@@ -203,10 +203,37 @@ rule Server_ReceiveOTP_NewSession:
     [In(<pid,nonce,senc(<sid,tc,~pr>,k2)>) , 
         !HSM(kh,k), !S_AEAD(pid,aead), S_Counter(pid,otc),
         !S_sid(pid,sid), !Smaller(otc,tc) ]
-     --[ Login(pid,tc,senc(<sid,tc,~pr>,k2)) ]-> 
+     --[ Login(pid,sid,tc,senc(<sid,tc,~pr>,k2)) ]-> 
     [ S_Counter(pid,tc) ]
 
+/* The following three axioms are conditions on the traces that make sure
+ * that : */
+//
+//a) the !Smaller relation is transitive
+axiom transitivity: //axiomatic
+        "All #t1 #t2 a b c. IsSmaller(a,b)@t1 & IsSmaller(b,c)@t2
+        ==> Ex #t3 . IsSmaller(a,c)@t3 "
+
+//b) !Smaller implies unequality
+axiom smaller_implies_unequal: //axiomatic
+        "not (Ex a #t . IsSmaller(a,a)@t)"
+
+/*c) The protocol runs only after the IsSmaller and IsSuccessor relation is
+ *   build up
+ */
+axiom theory_before_protocol: 
+    "All #i #j. Theory() @ i & Protocol() @ j ==> i < j"
+
+axiom onetime:
+    "All #t3 #t4 . OneTime()@#t3 & OneTime()@t4 ==> #t3=#t4"
+
 //LEMMAS:
+
+// For sanity: Ensure that a successful login is reachable.
+//TODO reactivate
+//lemma Login_reachable:
+//  exists-trace
+//  "Ex #i pid sid x otp1. Login(pid,sid, x, otp1)@i"
 
 /* Every counter produced by a Yubikey could be computed by the adversary
  * anyway. (This saves a lot of steps in the backwards induction of the
@@ -221,10 +248,8 @@ lemma adv_can_guess_counter[reuse,use_induction]:
 */
 lemma otp_decode_does_not_help_adv_use_induction[reuse,use_induction]: 
     "All #t3 k2 k m sc enc mac . OtpDecode(k2,k,m,sc,enc,mac)@t3 
-    ==> 
-      ( Ex #t1 pid . YubiPress(pid,sc)@#t1 & #t1<#t3)
-    | (Ex #t1 #t2 . OneTime()@#t1 & OneTime()@t2 & not(#t1=#t2))
-"
+    ==> Ex #t1 pid . YubiPress(pid,sc)@#t1 & #t1<#t3"
+
 /* All keys shared between the YubiHSM and the Authentication Server are
  * either not known to the adversary, or the adversary learned the key used
  * to encrypt said keys in form of AEADs.
@@ -232,16 +257,21 @@ lemma otp_decode_does_not_help_adv_use_induction[reuse,use_induction]:
 lemma k2_is_secret_use_induction[use_induction,reuse]: 
     "All #t1 #t2 pid k2 . Init(pid,k2)@t1 & K(k2)@t2  
     ==> 
-     (Ex #t3 #t4 k . K(k)@t3 & MasterKey(k)@t4 & #t3<#t2)
-    |(Ex #t3 #t4 . OneTime()@#t3 & OneTime()@t4 & not(#t3=#t4)) "
+     (Ex #t3 #t4 k . K(k)@t3 & MasterKey(k)@t4 & #t3<#t2)"
 
 /* Neither of those kinds of keys are ever learned by the adversary */
 lemma neither_k_nor_k2_are_ever_leaked_inv[use_induction,reuse]: 
-    "(Ex #t3 #t4 . OneTime()@#t3 & OneTime()@t4 & not(#t3=#t4)) 
-| (
+    " 
 not( Ex #t1 #t2 k . MasterKey(k)@t1 & K(k)@t2 )
 & not (Ex  #t5 #t6 k6 pid . Init(pid,k6)@t5 & K(k6)@t6 )
-)
     "
+
+// Each succesful login with counter value x was preceeded by a PressButton
+// event with the same counter value
+// This lemma cannot be proven at the moment, but it would be a first step
+// to reach the no_replay result present in Yubikey.spthy
+//lemma one_count_foreach_login[reuse,use_induction]:
+//        "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
+//         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
 
 end
