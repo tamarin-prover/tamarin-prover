@@ -85,15 +85,17 @@ data-files:
   examples/loops/Typing_and_Destructors.spthy
   examples/loops/JCS12_Typing_Example.spthy
   examples/loops/TESLA_Scheme1.spthy
+  examples/loops/TESLA_Scheme2_lossless.spthy
+  examples/loops/TESLA_Scheme2.spthy
 
   -- related work
   examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
   examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
   examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
+  examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
+  examples/related_work/TPM_DKRS_CSF11/TPM_Exclusive_Secrets.spthy
   examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
   examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
-  examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
-  examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 
   -- CSF'12 case studies
   examples/csf12/Artificial.spthy
