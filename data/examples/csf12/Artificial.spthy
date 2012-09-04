@@ -5,10 +5,11 @@ begin
    Protocol:	Example
    Modeler: 	Simon Meier, Benedikt Schmidt
    Date: 	January 2012
-  
+
    Status: 	working
-  
-   This is the artificial protocol from our CSF'12 paper, which we use to
+
+   This is the example protocol P_{Ex2} in Simon Meier's PhD thesis.
+   It is also the artificial protocol from our CSF'12 paper, which we use to
    illustrate constraint solving and characterization. Note that, for
    characerization, you have to call the tamarin-prover as follows.
 
@@ -43,23 +44,25 @@ begin
 builtins: symmetric-encryption
 
 rule Step1:
-  [ Fr(~x), Fr(~k) ] 
-  --> 
-  [ St(~x, ~k), Out(senc{~x}~k), Key(~k) ]
+  [ Fr(x), Fr(k) ] --> [ St(x, k), Out(senc(x,k)), Key(k) ]
 
 rule Step2:
-  [ St(x, k), In(<x,x>) ] 
-  --[ Fin(x, k) ]-> 
-  [ ]
+  [ St(x, k), In(x) ] --[ Fin(x, k) ]-> [ ]
 
 rule Reveal_key:
-    [ Key(k) ]
-  --[ Rev(k) ]->
-    [ Out(k) ]
+    [ Key(k) ] --[ Rev(k) ]-> [ Out(k) ]
 
 // We search for trace-existence, as we want to characterize the possible
 // traces satisfying the given formula.
 lemma Characterize_Fin:
-  exists-trace "Ex k S #i.  Fin(S, k) @ i"
+  exists-trace
+  "Ex k S #i.  Fin(S, k) @ i"
+
+lemma Fin_unique:
+  "All S k #i #j. Fin(S, k) @ i & Fin(S, k) @ j ==> #i = #j"
+
+lemma Keys_must_be_revealed:
+  "All k S #i.  Fin(S, k) @ i ==> Ex #j. Rev(k) @ j & j < i"
+
 
 end
