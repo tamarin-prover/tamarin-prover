@@ -187,9 +187,54 @@ next
           by contradiction // from formulas
         next
           case SendN
-          solve( Sender( S.1, ~ltk, ~k ) ▶₀ #vr.5 )
-            case SendN
-            by solve( Sender( S.1, ~kOld.1, ~ltk ) ▶₀ #vr.10 )
+          solve( !KU( MAC(<'1', m1, commit_k>, kOld) ) @ #vk.18 )
+            case Send1
+            solve( !KU( ~k1 ) @ #vk.12 )
+              case SendN
+              solve( !KU( f(~k1) ) @ #vk.23 )
+                case Sender0a
+                solve( Sender( S.1, ~ltk, ~k ) ▶₀ #vr.5 )
+                  case SendN
+                  solve( Sender( S.3, ~k1, ~k.1 ) ▶₀ #vr.13 )
+                    case Send1
+                    by solve( Sender( S.2, ~kOld, ~ltk ) ▶₀ #vr.23 )
+                  next
+                    case SendN
+                    by solve( Sender( S.2, ~kOld, ~ltk ) ▶₀ #vr.23 )
+                  qed
+                qed
+              next
+                case cf
+                by contradiction // cyclic
+              qed
+            qed
+          next
+            case cMAC
+            solve( !KU( f(kOld) ) @ #vk.23 )
+              case Send1
+              solve( !KU( ~k2 ) @ #vk.15 )
+                case SendN
+                by contradiction // from formulas
+              qed
+            next
+              case SendN
+              solve( !KU( ~kNew ) @ #vk.15 )
+                case SendN
+                by contradiction // from formulas
+              qed
+            next
+              case Sender0a
+              solve( !KU( ~k1 ) @ #vk.15 )
+                case SendN
+                by contradiction // from formulas
+              qed
+            next
+              case cf
+              solve( Sender( S.1, ~ltk, ~k ) ▶₀ #vr.5 )
+                case SendN
+                by solve( Sender( S.1, ~kOld.1, ~ltk ) ▶₀ #vr.10 )
+              qed
+            qed
           qed
         qed
       qed
@@ -741,8 +786,8 @@ analyzing: data/examples/loops/TESLA_Scheme1.spthy
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.748534s
-  authentic (all-traces): verified (144 steps)
+  processing time: 3.064111s
+  authentic (all-traces): verified (159 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
 ------------------------------------------------------------------------------
@@ -753,8 +798,8 @@ summary of summaries:
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.748534s
-  authentic (all-traces): verified (144 steps)
+  processing time: 3.064111s
+  authentic (all-traces): verified (159 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
 ==============================================================================

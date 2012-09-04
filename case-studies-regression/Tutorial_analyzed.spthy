@@ -140,6 +140,67 @@ solve( Client_1( S, k ) ▶₀ #i )
   qed
 qed
 
+lemma Client_auth_injective:
+  all-traces
+  "∀ S k #i.
+    (SessKeyC( S, k ) @ #i) ⇒
+    ((∃ #a.
+       (AnswerRequest( S, k ) @ #a) ∧
+       (∀ #j. (SessKeyC( S, k ) @ #j) ⇒ (#i = #j))) ∨
+     (∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S k #i.
+  (SessKeyC( S, k ) @ #i)
+ ∧
+  (∀ #a.
+    (AnswerRequest( S, k ) @ #a)
+   ⇒
+    ∃ #j. (SessKeyC( S, k ) @ #j) ∧ ¬(#i = #j)) ∧
+  (∀ #r. (LtkReveal( S ) @ #r) ⇒ ¬(#r < #i))"
+*/
+simplify
+solve( Client_1( S, k ) ▶₀ #i )
+  case Client_1
+  solve( !KU( h(~k) ) @ #vk )
+    case Serv_1
+    solve( !KU( aenc(<'1', ~k>, pk(~ltkS)) ) @ #vk.1 )
+      case Client_1
+      solve( (#i < #j)  ∥ (#j < #i) )
+        case case_1
+        solve( Client_1( $S, ~k ) ▶₀ #j )
+          case Client_1
+          by contradiction // cyclic
+        qed
+      next
+        case case_2
+        solve( Client_1( $S, ~k ) ▶₀ #j )
+          case Client_1
+          by contradiction // cyclic
+        qed
+      qed
+    next
+      case caenc
+      solve( !KU( ~k ) @ #vk.5 )
+        case Client_1
+        solve( !KU( ~ltk ) @ #vk.6 )
+          case Reveal_ltk
+          by contradiction // from formulas
+        qed
+      qed
+    qed
+  next
+    case ch
+    solve( !KU( ~k ) @ #vk.1 )
+      case Client_1
+      solve( !KU( ~ltk ) @ #vk.2 )
+        case Reveal_ltk
+        by contradiction // from formulas
+      qed
+    qed
+  qed
+qed
+
 lemma Client_session_key_honest_setup:
   exists-trace
   "∃ S k #i. (SessKeyC( S, k ) @ #i) ∧ (¬(∃ #r. LtkReveal( S ) @ #r))"
@@ -174,9 +235,10 @@ analyzing: data/examples/Tutorial.spthy
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.151159s
+  processing time: 0.235457s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
+  Client_auth_injective (all-traces): verified (15 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)
 
 ------------------------------------------------------------------------------
@@ -187,9 +249,10 @@ summary of summaries:
 analyzed: data/examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.151159s
+  processing time: 0.235457s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
+  Client_auth_injective (all-traces): verified (15 steps)
   Client_session_key_honest_setup (exists-trace): verified (5 steps)
 
 ==============================================================================

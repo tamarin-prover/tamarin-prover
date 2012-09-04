@@ -73,6 +73,7 @@ data-files:
   -- classic security protocols
   examples/classic/TLS_Handshake.spthy
   examples/classic/NSLPK3.spthy
+  examples/classic/NSPK3.spthy
 
   -- loops
   examples/loops/Minimal_Crypto_API.spthy
