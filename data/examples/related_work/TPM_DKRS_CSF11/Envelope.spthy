@@ -1,21 +1,32 @@
 theory TPM_Envelope begin
 
-text{* Envelope protocol example from:
+/*
+  Protocol: The Envelope protocol modeled according to [1]
+  Modeler: Simon Meier
+  Date:    September 2012
+  Status:  Working
 
-[1] Stephanie Delaune, Steve Kremer, Mark D. Ryan, Graham Steel, "Formal
-Analysis of Protocols Based on TPM State Registers," csf, pp.66-80, 2011 IEEE
-24th Computer Security Foundations Symposium, 2011.
+  [1] Stephanie Delaune, Steve Kremer, Mark D. Ryan, Graham Steel, "Formal
+  Analysis of Protocols Based on TPM State Registers," csf, pp.66-80, 2011
+  IEEE 24th Computer Security Foundations Symposium, 2011.
 
-Modeler: Simon Meier
-Date:    June 2012
-Status:  No automatic proof (interactive proof possible)
+  Note that this model can also be verified for an arbitrary number of
+  reboots. This is an open problem in [1]. The verification relies on the
+  construction that we track all writes to the PCR-fact using the additional
+  PCR_Write-fact. This allows us then to descend in the hash chain by solving
+  PCR_Write-premises.
 
-Note that this model incorporates an arbitrary number of reboots, which is an
-open problem in [1]. The verification relies on the construction that we track
-all writes to the PCR-fact using the additional PCR_Write-fact. This allows us
-then to descend in the hash chain by solving PCR_Write-premises.
+  Note also that verification without a reboot takes 19 seconds on an Intel i7
+  Quad Core laptop with 4GB RAM. This is two orders of magnitude faster than
+  the time reported for [1]; 35min according to
+  http://www.lsv.ens-cachan.fr/~delaune/TPM-PCR/.
 
-*}
+  The verification with reboot takes 75 seconds on this Intel i7 laptop. The
+  key reason why both of these times are so high is that the heuristic has
+  trouble discerning between the useful looping goals and the useless ones. A
+  manual proof can be much shorter than the one automatically produced.
+  Investigating a better heuristic is future work.
+*/
 
 builtins: signing, asymmetric-encryption, hashing
 
@@ -35,16 +46,19 @@ rule PCR_Init:
     , Out(pk(~aik))        // publish the public key of the auth. id. key
     ]
 
-// reset the PCR to 'pcr0'
-rule PCR_Reboot:
-    [ PCR(x)
-    , PCR_Write(x)
-    ]
-  --[ PCR_Write('pcr0')
-    ]->
-    [ PCR_Write('pcr0')
-    , PCR('pcr0')
-    ]
+// reset the PCR to 'pcr0'. The proof goes also through with reboot, but takes
+// considerably longer: about 1m 20sec on my i7 laptop.
+/*
+ rule PCR_Reboot:
+     [ PCR(x)
+     , PCR_Write(x)
+     ]
+   --[ PCR_Write('pcr0')
+     ]->
+     [ PCR_Write('pcr0')
+     , PCR('pcr0')
+     ]
+*/
 
 // Extend the hash-chain in the PCR
 rule PCR_Extend:
@@ -146,7 +160,16 @@ rule CreateLockedKey:
     , Out(pk(~sk))
     ]
 
-// Automatically proven
+// Axioms; i.e., restrictions on the traces of interest
+///////////////////////////////////////////////////////
+
+axiom PCR_Init_unique:
+  " All #i #j. PCR_Init() @ i & PCR_Init() @ j ==> #i = #j "
+
+// Security Properties
+//////////////////////
+
+// Characterizing the values extractible via unbinding.
 lemma types [typing]:
     // Values created by the PCR_Unbind rule
   " (All m d1 d2 #i. PCR_Unbind(d1, d2, m) @ i ==>
@@ -155,7 +178,8 @@ lemma types [typing]:
     )
   "
 
-// Automatically proven
+// Every read value was written once. This allows us to reason backwards and
+// ensure that the PCR value becomes smaller.
 lemma PCR_Write_charn [reuse, use_induction]:
     // Values read from the PCR have been written to it beforehand.
   " (All x #i. PCR_Read(x) @ i ==>
@@ -163,17 +187,10 @@ lemma PCR_Write_charn [reuse, use_induction]:
     )
   "
 
-// Assuming that there is at most one instance of the PCR,
-// the adversary (playing Bob) must not know a secret that Alice created and
-// thinks that access to it was denied.
-//
-// Currently, we have to construct its proof manually. The key argument relies
-// on following the PCR_Write-premises once their presence has been
-// established via the PCR_Write_charn lemma.
-lemma reachable_Denied:
-  "(All #i #j. PCR_Init() @ i & PCR_Init() @ j ==> #i = #j)
-   ==>
-   not(Ex s #i #j #k. Secret(s) @ i & Denied(s) @ j & K(s) @ k)"
+// The desired security property: the adversary (Bob) cannot know a secret to
+// which he officially denied having access.
+lemma Secret_and_Denied_exclusive:
+   " not(Ex s #i #j #k. Secret(s) @ i & Denied(s) @ j & K(s) @ k)"
 
 
 end
