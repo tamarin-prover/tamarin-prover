@@ -3,7 +3,7 @@ theory TESLA_Scheme2_lossless begin
 /*
   Protocol:    The TESLA protocol, scheme 2 (no re-authentication)
   Modeler:     Simon Meier
-  Date:        May 2012
+  Date:        September 2012
 
   Status:      working
 
@@ -19,7 +19,8 @@ theory TESLA_Scheme2_lossless begin
 
   Here, we model a simplified version of Scheme 2, which does not allow a
   receiver to re-authenticate once it missed a packet. We have not yet managed
-  to verify a model that allows this re-authentication.
+  to verify a model that allows this re-authentication. See
+  TESLA_Scheme2.spthy for more information on the problem.
 
   We verify that the use of cryptography is correct under the assumption that
   the security condition holds. We do not verify that the timing schedule
@@ -147,14 +148,16 @@ rule ReceiverN:
     ]->
     [ ReceiverN(S, kNp, expiryCheckN, msgN, mN, macN ) ]
 
-
 // Axioms; i.e., universal restrictions on the traces of interest
 /////////////////////////////////////////////////////////////////
 
 // We are only interested in traces where all equality checks succeed.
 axiom Eq_checks_succeed: "(All x y #j. Eq(x, y) @ j ==> x = y)"
 
-// The security condition of TESLA guarantees that
+// The security condition of TESLA guarantees that a key never expires
+// before the receiver considers it to be expired. This means that we assume
+// that the clocks are synchronized. Then, the clock checks are sufficient to
+// guarantee this property.
 axiom Security_condition:
   "All m S k check #i #j #e.
          FromSender(m, S, k, check) @ i
@@ -187,14 +190,17 @@ lemma knows_only_expired_chain_keys [use_induction, reuse]:
   "All k #i #j. ChainKey(k) @i & KU(k) @ j ==>
       (Ex #e. Expired(k) @ e & e < j)"
 
-// The desired security property: received messages are authentic.
+// The desired security property:
 lemma authentic [use_induction]:
-  "  (All m S k check #i.
-           FromSender(m, S, k, check) @ i
-         ==>
-           (Ex #j. Sent(S, m) @ j   & j < i)
-         | (Ex #j. RevealLtk(S) @ j & j < i)
-     )
+  " (All m S k check #i.
+         /* Whenever the reciever states that it received an authentic message, */
+         FromSender(m, S, k, check) @ i
+       ==>
+         /* the sender sent it */
+         (Ex #j. Sent(S, m) @ j   & j < i)
+         /* or the adversary revealed the longterm key of the sender. */
+       | (Ex #j. RevealLtk(S) @ j & j < i)
+   )
   "
 
 end
