@@ -1,4 +1,4 @@
-theory StatVerif_Example1 begin
+theory StatVerif_Security_Device begin
 
 /*
    Protocol:    Simple security device (Example 1 from [1])

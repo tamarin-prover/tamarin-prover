@@ -87,7 +87,7 @@ data-files:
 
   -- related work
   examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
-  examples/related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
+  examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
   examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
   examples/related_work/TPM_DKRS_CSF11/RunningExample.spthy
 

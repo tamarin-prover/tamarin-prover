@@ -146,7 +146,7 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 
 TPM=related_work/TPM_DKRS_CSF11/RunningExample.spthy
 # Envelope.spthy (not yet working automatically)
-STATVERIF=related_work/StatVerif_ARR_CSF11/StatVerif_Example1.spthy
+STATVERIF=related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 # GM_Contract.spthy (not finished)
 AIF=related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 LOOPS=loops/TESLA_Scheme1.spthy loops/Minimal_KeyRenegotiation.spthy loops/Minimal_Create_Use_Destroy.spthy loops/RFID_Simple.spthy loops/Minimal_Create_Use_Destroy.spthy loops/Minimal_Crypto_API.spthy loops/Minimal_Loop_Example.spthy loops/JCS12_Typing_Example.spthy loops/Minimal_Typing_Example.spthy loops/Typing_and_Destructors.spthy
