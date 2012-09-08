@@ -47,9 +47,11 @@ rule PCR_Init:
     ]
 
 // reset the PCR to 'pcr0'. The proof goes also through with reboot, but takes
-// considerably longer: about 1m 20sec on my i7 laptop.
+// considerably longer: about 1m 20sec on my i7 laptop. However, this is only
+// a problem with the heuristic. The interactively constructed proof given
+// below requires only 28 steps and 0.5 seconds to check.
 /*
- rule PCR_Reboot:
+rule PCR_Reboot:
      [ PCR(x)
      , PCR_Write(x)
      ]
@@ -191,6 +193,103 @@ lemma PCR_Write_charn [reuse, use_induction]:
 // which he officially denied having access.
 lemma Secret_and_Denied_exclusive:
    " not(Ex s #i #j #k. Secret(s) @ i & Denied(s) @ j & K(s) @ k)"
+/* Note that the 28 steps of the proof below suffices to justify this lemma
+   even with the reboot rule enabled. The heuristic is stymied by the looping
+   PCR facts and acts too conservatively, thereby using significantly more
+   proof steps (7136) and time (74 seconds).
+*/
+/*
+simplify
+solve( Alice1( n ) ▶₀ #i )
+  case Alice1
+  solve( !AIK( aik ) ▶₂ #i )
+    case PCR_Init
+    solve( Alice2( n.1, ~s ) ▶₀ #j )
+      case Alice2
+      solve( !AIK( aik.1 ) ▶₁ #j )
+        case PCR_Init
+        solve( !KU( sign(<'certkey',
+                          h(<h(<'pcr0', ~n>), 'obtain'>), pk>,
+                         ~aik)
+               ) @ #vk )
+          case PCR_CertKey
+          solve( !KU( sign(<'certpcr',
+                            h(<h(<'pcr0', ~n>), 'deny'>)>,
+                           ~aik)
+                 ) @ #vk.1 )
+            case PCR_Quote
+            solve( PCR_Write( h(<h(<'pcr0', ~n>),
+                                 'deny'>)
+                   ) @ #j.2 )
+              case PCR_Extend
+              solve( !KU( ~s ) @ #vk.2 )
+                case Alice2
+                by solve( !KU( ~sk ) @ #vk.5 )
+              next
+                case PCR_Unbind
+                solve( !KU( aenc(~s, pk(~sk.1)) ) @ #vk.5 )
+                  case Alice2
+                  solve( PCR_Write( h(<h(<'pcr0', ~n>),
+                                       'obtain'>)
+                         ) @ #j.3 )
+                    case PCR_Extend
+                    solve( PCR_Write( h(<'pcr0', ~n>) ) @ #j.4 )
+                      case Alice1
+                      solve( PCR_Write( h(<'pcr0', ~n>) ) @ #j.3 )
+                        case Alice1
+                        solve( PCR_Write( 'pcr0' ) ▶₂ #vr )
+                          case PCR_Init
+                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                            case Alice1
+                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                              case PCR_Extend
+                              by solve( !KU( ~n ) @ #vk.6 )
+                            qed
+                          next
+                            case PCR_Extend
+                            by solve( !KU( ~n ) @ #vk.6 )
+                          qed
+                        next
+                          case PCR_Reboot
+                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                            case Alice1
+                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                              case PCR_Extend
+                              by solve( !KU( ~n ) @ #vk.6 )
+                            qed
+                          next
+                            case PCR_Extend
+                            by solve( !KU( ~n ) @ #vk.6 )
+                          qed
+                        qed
+                      next
+                        case PCR_Extend
+                        by solve( !KU( ~n ) @ #vk.6 )
+                      qed
+                    next
+                      case PCR_Extend
+                      by solve( !KU( ~n ) @ #vk.6 )
+                    qed
+                  qed
+                next
+                  case caenc
+                  by contradiction
+                qed
+              qed
+            qed
+          next
+            case csign
+            by solve( !KU( ~aik ) @ #vk.5 )
+          qed
+        next
+          case csign
+          by solve( !KU( ~aik ) @ #vk.4 )
+        qed
+      qed
+    qed
+  qed
+qed
+*/
 
 
 end
