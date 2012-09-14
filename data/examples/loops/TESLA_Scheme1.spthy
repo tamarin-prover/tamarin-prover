@@ -104,7 +104,7 @@ rule Receiver0b_check:
 
 // Authenticated broadcasting
 rule Send1:
-  let data1 = <'1', ~m1, f(~k2)>
+  let data1 = <~m1, f(~k2)>
   in
     [ Sender1(S, ~k1)
     , Fr(~m1)
@@ -117,7 +117,7 @@ rule Send1:
     ]
 
 rule Recv1:
-  let data1 = <'1', m1, commit_k2>
+  let data1 = <m1, commit_k2>
   in
     [ Receiver1(rid, S, commit_k1)
     , In( <data1, mac1> )
@@ -127,7 +127,7 @@ rule Recv1:
     [ Receiver(rid, S, data1, mac1, commit_k1, commit_k2) ]
 
 rule SendN:
-  let data = <'N', ~m, f(~kNew), ~kOld>
+  let data = <~m, f(~kNew), ~kOld>
   in
     [ Sender(S, ~kOld, ~k)
     , Fr(~m)
@@ -141,7 +141,7 @@ rule SendN:
     ]
 
 rule RecvN:
-  let data = <'N', m, commit_kNew, kOld>
+  let data = <m, commit_kNew, kOld>
   in
     [ In(< data, mac >)
     , Receiver(rid, S, dataOld, MAC{dataOld}kOld, f(kOld), commit_k)
