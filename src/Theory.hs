@@ -590,7 +590,8 @@ closeTheory maudePath thy0 = do
 -- the given theory.
 closeTheoryWithMaude :: SignatureWithMaude -> OpenTheory -> ClosedTheory
 closeTheoryWithMaude sig thy0 = do
-    proveTheory checkProof $ Theory (L.get thyName thy0) sig cache items
+      proveTheory (const True) checkProof
+    $ Theory (L.get thyName thy0) sig cache items
   where
     cache      = closeRuleCache axioms typAsms sig rules (L.get thyCache thy0)
     checkProof = checkAndExtendProver (sorryProver Nothing)
@@ -675,8 +676,11 @@ applyPartialEvaluation evalStyle thy0 =
 
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.
-proveTheory :: Prover -> ClosedTheory -> ClosedTheory
-proveTheory prover thy =
+proveTheory :: (Lemma IncrementalProof -> Bool)   -- ^ Lemma selector.
+            -> Prover
+            -> ClosedTheory
+            -> ClosedTheory
+proveTheory selector prover thy =
     modify thyItems ((`MS.evalState` []) . mapM prove) thy
   where
     prove item = case item of
@@ -685,8 +689,9 @@ proveTheory prover thy =
                          return l
       _            -> do return item
 
-    proveLemma lem preItems =
-        modify lProof add lem
+    proveLemma lem preItems
+      | selector lem = modify lProof add lem
+      | otherwise    = lem
       where
         ctxt    = getProofContext lem thy
         sys     = mkSystem ctxt (theoryAxioms thy) preItems $ L.get lFormula lem

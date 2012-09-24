@@ -29,11 +29,13 @@ module Main.TheoryLoader (
 import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
+import           Data.Label
+import           Data.List                           (isPrefixOf)
 import           Data.Monoid
 
 import           Control.Basics
 import           Control.Category
-import           Control.DeepSeq (rnf)
+import           Control.DeepSeq                     (rnf)
 
 import           System.Console.CmdArgs.Explicit
 
@@ -55,8 +57,8 @@ import           Main.Environment
 -- | Flags for loading a theory.
 theoryLoadFlags :: [Flag Arguments]
 theoryLoadFlags =
-  [ flagNone ["prove"] (addEmptyArg "addProofs")
-      "Attempt to prove all security properties"
+  [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX"
+      "Attempt to prove a lemma "
 
   , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|NONE"
       "How to search for traces (default DFS)"
@@ -142,7 +144,7 @@ loadGenericThy loader as =
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
 closeThy as =
-      fmap (proveTheory prover . partialEvaluation)
+      fmap (proveTheory lemmaSelector prover . partialEvaluation)
     . closeTheory (maudePath as)
     -- FIXME: wf-check is at the wrong position here. Needs to be more
     -- fine-grained.
@@ -163,11 +165,17 @@ closeThy as =
       noteWellformedness
         (checkWellformedness thy) thy
 
+    lemmaSelector :: Lemma p -> Bool
+    lemmaSelector lem =
+        any (`isPrefixOf` get lName lem) lemmaNames
+      where
+        lemmaNames = findArg "prove" as
+
     -- replace all annotated sorrys with the configured autoprover.
     prover :: Prover
-    prover | argExists "addProofs" as =
+    prover | argExists "prove" as =
                  replaceSorryProver $ runAutoProver $ constructAutoProver as
-           | otherwise                = mempty
+           | otherwise            = mempty
 
 -- | Construct an 'AutoProver' from the given arguments (--bound,
 -- --stop-on-trace).
