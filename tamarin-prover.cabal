@@ -164,7 +164,7 @@ flag build-tests
 
 executable tamarin-prover
     if flag(threaded)
-        ghc-options:   -threaded
+        ghc-options:   -threaded -eventlog
 
     -- Note that eager blackholing lead to segfaults: See GHC Ticket #6146
     -- Morevoer, it seems that the bug is not fully fixed on GHC 7.4.2, as we
@@ -190,23 +190,20 @@ executable tamarin-prover
       -- To help the top-down solver we put the more difficult to solve yesod
       -- dependencies up front.
       build-depends:
-        -- not direct dependencies, but wai-extra specifies its dependencies
-        -- to lax and thus breaks due to the upgrade of fast-logger
-          fast-logger       == 0.0.2
-        , wai-logger        == 0.1.*
 
-        , bytestring        == 0.9.*
-        , blaze-html        == 0.4.*
-        , http-types        == 0.6.*
+          bytestring        >= 0.9
+        , blaze-html        == 0.5.*
+        , http-types        == 0.7.*
         , blaze-builder     == 0.3.*
-        , yesod-core        == 1.0.*
-        , yesod-json        == 1.0.*
-        , yesod-static      == 1.0.*
+        , yesod-core        == 1.1.*
+        , yesod-json        == 1.1.*
+        , yesod-static      == 1.1.*
+        , conduit           == 0.5.*
         -- , yesod-form        == 0.4.*   -- required once we reactivate editing
         , text              == 0.11.*
-        , wai               == 1.2.*
-        , hamlet            == 1.0.*
-        , warp              == 1.2.*
+        , wai               == 1.3.*
+        , hamlet            == 1.1.*
+        , warp              == 1.3.*
         , aeson             == 0.6.*
         , old-locale        == 1.0.*
         , monad-control     == 0.3.*

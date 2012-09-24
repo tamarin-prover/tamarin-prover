@@ -44,7 +44,7 @@ import           System.Locale                (defaultTimeLocale)
 
 import           Extension.Data.Label
 
-import           Text.Blaze.Html5             (preEscapedString, toHtml)
+import           Text.Blaze.Html              (toHtml, preEscapedToMarkup)
 import qualified Text.Dot                     as D
 import           Text.Hamlet                  (Html, hamlet)
 import           Text.PrettyPrint.Html
@@ -391,7 +391,7 @@ htmlThyPath renderUrl info path =
     pp :: HtmlDoc Doc -> Html
     pp d = case renderHtmlDoc d of
       [] -> toHtml "Trying to render document yielded empty string. This is a bug."
-      cs -> preEscapedString cs
+      cs -> preEscapedToMarkup cs
 
     go (TheoryMethod _ _ _)      = pp $ text "Cannot display theory method."
 
@@ -408,6 +408,7 @@ htmlThyPath renderUrl info path =
     go (TheoryLemma _)      = pp $ text "Implement lemma pretty printing!"
 
     go TheoryHelp           = [hamlet|
+        $newline never
         <p>
           Theory: #{get thyName $ tiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}

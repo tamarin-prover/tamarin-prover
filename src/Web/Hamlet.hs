@@ -32,7 +32,7 @@ import qualified Data.Map               as M
 import           Data.Ord
 import           Data.Time.Format
 import           Data.Version           (showVersion)
-import           Text.Blaze.Html5       (preEscapedString)
+import           Text.Blaze.Html        (preEscapedToMarkup)
 
 import           System.Locale
 
@@ -60,6 +60,7 @@ rootTpl :: TheoryMap      -- ^ Map of loaded theories
         -> Widget
 -- rootTpl theories form enctype nonce = [whamlet|
 rootTpl theories = [whamlet|
+    $newline never
     <div class="ui-layout-container">
       <div class="ui-layout-north">
         <div class="ui-layout-pane">
@@ -88,6 +89,7 @@ rootTpl theories = [whamlet|
 -- | Template for listing theories.
 theoriesTpl :: TheoryMap -> Widget
 theoriesTpl thmap = [whamlet|
+    $newline never
     $if M.null thmap
       <strong>No theories loaded!</strong>
     $else
@@ -118,6 +120,7 @@ theoriesTpl thmap = [whamlet|
 -- | Template for single line in table on root page.
 theoryTpl :: (TheoryIdx, TheoryInfo) -> Widget
 theoryTpl th = [whamlet|
+    $newline never
     <tr>
       <td>
         <a href=@{OverviewR (fst th) TheoryHelp}>
@@ -139,6 +142,7 @@ theoryTpl th = [whamlet|
 -- threadsTpl :: (HamletValue h, HamletUrl h ~ WebUIRoute) => [T.Text] -> h
 {-
 threadsTpl threads = [whamlet|
+    $newline never
     <h2>Threads
     <p>
       This page lists all threads that are currently registered as
@@ -161,6 +165,7 @@ threadsTpl threads = [whamlet|
 -- | Template for header frame (various information)
 headerTpl :: TheoryInfo -> Widget
 headerTpl info = [whamlet|
+    $newline never
     <div class="layout-pane-north">
       <div #header-info>
         Running
@@ -200,7 +205,9 @@ headerTpl info = [whamlet|
 proofStateTpl :: RenderUrl -> TheoryInfo -> IO Widget
 proofStateTpl renderUrl ti = do
     let res = renderHtmlDoc $ theoryIndex renderUrl (tiIndex ti) (tiTheory ti)
-    return [whamlet| #{preEscapedString res} |]
+    return [whamlet|
+              $newline never
+              #{preEscapedToMarkup res} |]
 
 -- | Framing/UI-layout template (based on JavaScript/JQuery)
 overviewTpl :: RenderUrl
@@ -211,6 +218,7 @@ overviewTpl renderUrl info path = do
   proofState <- proofStateTpl renderUrl info
   mainView <- pathTpl renderUrl info path
   return [whamlet|
+    $newline never
     <div .ui-layout-north>
       ^{headerTpl info}
     <div .ui-layout-west>
@@ -235,11 +243,14 @@ pathTpl :: RenderUrl
         -> TheoryPath   -- ^ Path to display on load
         -> IO Widget
 pathTpl renderUrl info path =
-    return $ [whamlet| #{htmlThyPath renderUrl info path} |]
+    return $ [whamlet|
+                $newline never
+                #{htmlThyPath renderUrl info path} |]
 
 -- | Template for introduction.
 introTpl :: Widget
 introTpl = [whamlet|
+    $newline never
       <div id="logo">
         <p>
           <img src="/static/img/tamarin-logo-3-0-0.png">
@@ -278,6 +289,7 @@ introTpl = [whamlet|
 --         -> Html        -- ^ Nonce field
 --         -> h
 formTpl action label form enctype nonce = [whamlet|
+    $newline never
     <form action=@{action} method=POST enctype=#{enctype}>
       ^{form}
       <div .submit-form>

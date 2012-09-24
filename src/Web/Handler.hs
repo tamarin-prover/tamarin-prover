@@ -63,9 +63,11 @@ import           Data.Maybe
 import           Data.String                  (fromString)
 import           Data.List                    (intersperse)
 import           Data.Monoid                  (mconcat)
+import           Data.Conduit                 as C ( ($$), runResourceT)
+import           Data.Conduit.List            (consume)
 
 import qualified Blaze.ByteString.Builder     as B
-import qualified Data.ByteString.Lazy.Char8   as BS
+import qualified Data.ByteString.Char8        as BS
 import qualified Data.Map                     as M
 import qualified Data.Text                    as T
 import           Data.Text.Encoding
@@ -326,7 +328,7 @@ getRootR = do
     theories <- getTheories
     defaultLayout $ do
       setTitle "Welcome to the Tamarin prover"
-      addWidget (rootTpl theories)
+      rootTpl theories
 
 data File = File T.Text
   deriving Show
@@ -337,21 +339,24 @@ postRootR = do
     case result of
       Nothing ->
         setMessage "Post request failed."
-      Just fileinfo
-        | BS.null $ fileContent fileinfo -> setMessage "No theory file given."
-        | otherwise                      -> do
-            yesod <- getYesod
-            closedThy <- liftIO $ parseThy yesod (BS.unpack $ fileContent fileinfo)
-            case closedThy of
-              Left err  -> setMessage $ "Theory loading failed:\n" <> toHtml err
-              Right thy -> do
-                  void $ putTheory Nothing
-                           (Just $ Upload $ T.unpack $ fileName fileinfo) thy
-                  setMessage "Loaded new theory!"
+      Just fileinfo -> do
+          -- content <- liftIO $ LBS.fromChunks <$> (fileSource fileinfo $$ consume)
+          content <- liftIO $ runResourceT (fileSource fileinfo C.$$ consume)
+          if null content
+            then setMessage "No theory file given."
+            else do
+              yesod <- getYesod
+              closedThy <- liftIO $ parseThy yesod (concatMap BS.unpack content)
+              case closedThy of
+                Left err  -> setMessage $ "Theory loading failed:\n" <> toHtml err
+                Right thy -> do
+                    void $ putTheory Nothing
+                             (Just $ Upload $ T.unpack $ fileName fileinfo) thy
+                    setMessage "Loaded new theory!"
     theories <- getTheories
     defaultLayout $ do
       setTitle "Welcome to the Tamarin prover"
-      addWidget (rootTpl theories)
+      rootTpl theories
 
 
 -- | Show overview over theory (framed layout).
@@ -361,7 +366,7 @@ getOverviewR idx path = withTheory idx $ \ti -> do
   defaultLayout $ do
     overview <- liftIO $ overviewTpl renderF ti path
     setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
-    addWidget overview
+    overview
 
 -- | Show source (pretty-printed open theory).
 getTheorySourceR :: TheoryIdx -> Handler RepPlain

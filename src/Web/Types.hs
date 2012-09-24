@@ -4,7 +4,7 @@ Description :  Central data type and Yesod typeclass instances.
 Copyright   :  (c) 2011 Cedric Staub
 License     :  GPL-3
 
-Maintainer  :  Cedric Staub <cstaub@ethz.ch>
+Maintainer  :  Simon Meier <iridcode@gmail.com>
 Stability   :  experimental
 Portability :  non-portable
 -}
@@ -239,16 +239,6 @@ type RenderUrl = Route WebUI -> T.Text
 -- Routing
 ------------------------------------------------------------------------------
 
--- Quasi-quotation syntax changed from GHC 6 to 7,
--- so we need this switch in order to support both.
-#if __GLASGOW_HASKELL__ >= 700
-#define HAMLET hamlet
-#define PARSE_ROUTES parseRoutes
-#else
-#define HAMLET $hamlet
-#define PARSE_ROUTES $parseRoutes
-#endif
-
 -- This is a hack we need to work around a bug (?) in the
 -- C pre-processor. In order to define multi-pieces we need
 -- the asterisk symbol, but the C pre-processor always chokes
@@ -329,7 +319,8 @@ defaultLayout' :: Yesod master =>
 defaultLayout' w = do
   page <- widgetToPageContent w
   message <- getMessage
-  hamletToRepHtml [HAMLET|
+  hamletToRepHtml [hamlet|
+    $newline never
     !!!
     <html>
       <head>
