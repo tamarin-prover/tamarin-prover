@@ -26,6 +26,8 @@ module Web.Theory
   )
 where
 
+import           Debug.Trace                  (trace)
+
 import           Data.Char                    (toUpper)
 import           Data.List
 import qualified Data.Map                     as M
@@ -44,7 +46,7 @@ import           System.Locale                (defaultTimeLocale)
 
 import           Extension.Data.Label
 
-import           Text.Blaze.Html              (toHtml, preEscapedToMarkup)
+import           Text.Blaze.Html              (preEscapedToMarkup, toHtml)
 import qualified Text.Dot                     as D
 import           Text.Hamlet                  (Html, hamlet)
 import           Text.PrettyPrint.Html
@@ -564,7 +566,8 @@ imgThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
           ]
       if imgGenerated
         then return imgPath
-        else return $ imageDir ++ "/img/delete.png"
+        else trace ("WARNING: failed to convert:\n  '" ++ dotPath ++ "'")
+                   (return imgPath)
 
     dotToImg dotMode dotFile imgFile = do
       (ecode,_out,err) <- readProcessWithExitCode dotCommand

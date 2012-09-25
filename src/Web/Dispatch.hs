@@ -138,18 +138,11 @@ loadTheories :: String
              -> AutoProver
              -> IO TheoryMap
 loadTheories readyMsg thDir thLoader autoProver = do
-    mkImageDir
     thPaths <- filter (".spthy" `isSuffixOf`) <$> getDirectoryContents thDir
     theories <- catMaybes <$> mapM loadThy (zip [1..] (map (thDir </>) thPaths))
     putStrLn readyMsg
     return $ M.fromList theories
   where
-    -- Create image directory
-    mkImageDir = do
-      let dir = thDir </> imageDir
-      existsDir <- doesDirectoryExist dir
-      unless existsDir (createDirectory dir)
-
     -- Load theories
     loadThy (idx, path) = E.handle catchEx $ do
         thy <- thLoader path
