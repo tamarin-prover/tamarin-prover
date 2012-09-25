@@ -25,13 +25,13 @@ install-term:
 # In case some dependencies cannot be resolved and should be forced use this
 # target. NOTE that this may break other libraries installed on your system.
 force-install:
-	cabal install $(CABAL_OPTS) --force-reinstalls lib/utils lib/term ./
+	cabal install $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
 
 force-install-ghc-7.0.4:
-	cabal install -wghc-7.0.4 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term ./
+	cabal install -wghc-7.0.4 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
 
 force-install-ghc-7.4.1:
-	cabal install -wghc-7.4.1 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term ./
+	cabal install -wghc-7.4.1 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
 
 force-install-theory:
 	cabal install $(CABAL_OPTS) --force-reinstalls lib/theory ./
