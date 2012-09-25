@@ -63,6 +63,7 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise
 import           Theory.Model.Atom
 
 import           Text.PrettyPrint.Highlight
+import           Theory.Text.Pretty
 
 import           Term.LTerm
 import           Term.Substitution
@@ -285,25 +286,25 @@ prettyLFormula ppAtom =
     pp (Conn op p q) = do
         p' <- pp p
         q' <- pp q
-        return $ sep [opParens p' <-> operator_ (ppOp op), opParens q']
+        return $ sep [opParens p' <-> ppOp op, opParens q']
       where
-        ppOp And = "∧" -- "&"
-        ppOp Or  = "∨" -- "|"
-        ppOp Imp = "⇒" -- "==>"
-        ppOp Iff = "⇔" -- "<=>"
+        ppOp And = opLAnd
+        ppOp Or  = opLOr
+        ppOp Imp = opImp
+        ppOp Iff = opIff
 
     pp fm@(Qua _ _ _) =
         scopeFreshness $ do
             (vs,qua,fm') <- openFormulaPrefix fm
             d' <- pp fm'
             return $ sep
-                     [ operator_ (ppQuant qua) <> ppVars vs <> operator_ "."
+                     [ ppQuant qua <> ppVars vs <> operator_ "."
                      , nest 1 d']
       where
         ppVars       = fsep . map (text . show)
 
-        ppQuant All = "∀ " -- "All "
-        ppQuant Ex  = "∃ " -- "Ex "
+        ppQuant All = opForall
+        ppQuant Ex  = opExists
 
 
 -- | Pretty print a logical formula

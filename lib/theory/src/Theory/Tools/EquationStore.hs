@@ -538,22 +538,26 @@ foreachDisj hnd f =
 
 -- | Pretty print an 'EqStore'.
 prettyEqStore :: HighlightDocument d => EqStore -> d
-prettyEqStore eqs@(EqStore subst (Conj disjs) _nextSplitId) = vcat $
+prettyEqStore eqs@(EqStore substFree (Conj disjs) _nextSplitId) = vcat $
   [if eqsIsFalse eqs then text "CONTRADICTORY" else emptyDoc] ++
   map combine
-    [ ("subst", vcat $ prettySubst (text . show) (text . show) subst)
+    [ ("subst", vcat $ prettySubst (text . show) (text . show) substFree)
     , ("conj",  vcat $ map ppDisj disjs)
     ]
   where
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
     ppDisj (idx, substs) =
-        text (show (unSplitId idx)) <-> numbered' conjs
+        text (show (unSplitId idx) ++ ".") <-> numbered' conjs
       where
-        conjs  = map ppConj (S.toList substs)
-        ppConj = vcat . map prettyEq . substToListVFresh
-        prettyEq (a,b) =
-          prettyNTerm (lit (Var a)) $$ nest (6::Int) (opEqual <-> prettyNTerm b)
+        conjs  = map ppSubst $ S.toList substs
 
+    ppEq (a,b) =
+      prettyNTerm (lit (Var a)) $$ nest (6::Int) (opEqual <-> prettyNTerm b)
+
+    ppSubst subst = sep
+      [ hsep (opExists : map prettyLVar (varsRangeVFresh subst)) <> opDot
+      , nest 2 $ fsep $ intersperse opLAnd $ map ppEq $ substToListVFresh subst
+      ]
 
 
 -- Derived and delayed instances

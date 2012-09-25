@@ -48,6 +48,14 @@ module Theory.Text.Pretty (
   , opDedBefore
   , opEdge
 
+  , opExists
+  , opForall
+  , opLAnd
+  , opLOr
+  , opImp
+  , opIff
+  , opDot
+
   ) where
 
 import Text.PrettyPrint.Highlight
@@ -117,8 +125,9 @@ kwVariantsModulo = kwModulo "variants"
 -- Operators
 ------------------------------------------------------------------------------
 
-opProvides, opRequires, opAction, opPath, opLess, opEqual, opDedBefore, opEdge
-  :: HighlightDocument d => d
+opProvides, opRequires, opAction, opPath, opLess, opEqual, opDedBefore, opEdge,
+  opExists, opForall, opLAnd, opLOr, opImp, opIff, opDot
+    :: HighlightDocument d => d
 opProvides  = operator_ ":>"
 opRequires  = operator_ "<:"
 opAction    = operator_ "@"
@@ -127,4 +136,11 @@ opLess      = operator_ "<"
 opEqual     = operator_ "="
 opDedBefore = operator_ "--|"
 opEdge      = operator_ ">->"
+opExists    = operator_ "∃ " -- "Ex "
+opForall    = operator_ "∀ " -- "All "
+opLAnd      = operator_ "∧" -- "&"
+opLOr       = operator_ "∨" -- "|"
+opImp       = operator_ "⇒" -- "==>"
+opIff       = operator_ "⇔" -- "<=>"
+opDot       = operator_ "."
 
