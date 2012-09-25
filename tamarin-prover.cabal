@@ -234,8 +234,9 @@ executable tamarin-prover
       , parallel          == 3.2.*
       , HUnit             == 1.2.*
 
-      , tamarin-prover-utils == 0.9.*
-      , tamarin-prover-term  == 0.9.*
+      , tamarin-prover-utils  == 0.9.*
+      , tamarin-prover-term   == 0.9.*
+      , tamarin-prover-theory == 0.9.*
 
 
     other-modules:
@@ -252,42 +253,6 @@ executable tamarin-prover
       Main.Mode.Interactive
       Main.Mode.Intruder
       Main.Mode.Test
-
-      Theory
-      Theory.Proof
-
-      Theory.Constraint.Solver
-      Theory.Constraint.Solver.CaseDistinctions
-      Theory.Constraint.Solver.Contradictions
-      Theory.Constraint.Solver.Goals
-      Theory.Constraint.Solver.Reduction
-      Theory.Constraint.Solver.Simplify
-      Theory.Constraint.Solver.ProofMethod
-      Theory.Constraint.Solver.Types
-      Theory.Constraint.System
-      Theory.Constraint.System.Dot
-      Theory.Constraint.System.Guarded
-      Theory.Constraint.System.Constraints
-
-      Theory.Model
-      Theory.Model.Atom
-      Theory.Model.Fact
-      Theory.Model.Formula
-      Theory.Model.Rule
-      Theory.Model.Signature
-
-      Theory.Text.Parser
-      Theory.Text.Parser.Token
-      Theory.Text.Parser.UnitTests
-      Theory.Text.Pretty
-
-      Theory.Tools.AbstractInterpretation
-      Theory.Tools.IntruderRules
-      Theory.Tools.LoopBreakers
-      Theory.Tools.RuleVariants
-      Theory.Tools.Wellformedness
-      Theory.Tools.EquationStore
-      Theory.Tools.InjectiveFactInstances
 
       Web.Dispatch
       Web.Hamlet

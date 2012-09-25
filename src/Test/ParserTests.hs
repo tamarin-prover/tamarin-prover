@@ -5,7 +5,7 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
 -- Unit tests for checking that all examples parse properly.
-module Theory.Text.Parser.UnitTests (
+module Test.ParserTests (
 
    testParseFile
  , testParseDirectory
@@ -21,6 +21,7 @@ import           System.FilePath
 import           Theory
 import           Theory.Text.Parser
 import           Theory.Text.Pretty (render)
+import           Main.TheoryLoader (addMessageDeductionRuleVariants)
 
 -- | Test wether a given file exists, can be parsed, and can still be parsed
 -- after being pretty printed.

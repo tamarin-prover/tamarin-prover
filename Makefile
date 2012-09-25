@@ -14,7 +14,13 @@ CABAL_OPTS=
 
 # This is the only target that an end-user will use
 install:
-	cabal install $(CABAL_OPTS) lib/utils lib/term ./
+	cabal install $(CABAL_OPTS) lib/utils lib/term lib/theory ./
+
+install-theory:
+	cabal install $(CABAL_OPTS) lib/theory ./
+
+install-term:
+	cabal install $(CABAL_OPTS) lib/term lib/theory ./
 
 # In case some dependencies cannot be resolved and should be forced use this
 # target. NOTE that this may break other libraries installed on your system.
@@ -26,6 +32,13 @@ force-install-ghc-7.0.4:
 
 force-install-ghc-7.4.1:
 	cabal install -wghc-7.4.1 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term ./
+
+force-install-theory:
+	cabal install $(CABAL_OPTS) --force-reinstalls lib/theory ./
+
+force-install-term:
+	cabal install $(CABAL_OPTS) --force-reinstalls lib/term lib/theory ./
+
 
 #
 #
@@ -41,12 +54,14 @@ VERSION=0.9.0.0
 source-dists:
 	cd lib/utils; cabal sdist
 	cd lib/term; cabal sdist
+	cd lib/theory; cabal sdist
 	cabal sdist
 
 source-dists-tests: source-dists
 	mkdir -p /tmp/dist-test-$(VERSION)/
 	cp lib/utils/dist/tamarin-prover-utils-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
 	cp lib/term/dist/tamarin-prover-term-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+	cp lib/theory/dist/tamarin-prover-theory-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
 	cp dist/tamarin-prover-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
 	cd /tmp/dist-test-$(VERSION)/; cabal install *.tar.gz
 

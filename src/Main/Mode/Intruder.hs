@@ -18,11 +18,11 @@ import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 
 import           Theory
-import           Theory.Text.Parser              (intruderVariantsFile)
 import           Theory.Tools.IntruderRules
 
 import           Main.Console
 import           Main.Environment
+import           Main.TheoryLoader               (intruderVariantsFile)
 import           Main.Utils
 
 

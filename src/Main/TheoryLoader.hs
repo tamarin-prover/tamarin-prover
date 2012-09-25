@@ -24,6 +24,10 @@ module Main.TheoryLoader (
 
   , closeThy
 
+  -- ** Message deduction variants
+  , intruderVariantsFile
+  , addMessageDeductionRuleVariants
+
   ) where
 
 import           Prelude                             hiding (id, (.))
@@ -36,17 +40,21 @@ import           Data.Monoid
 import           Control.Basics
 import           Control.Category
 import           Control.DeepSeq                     (rnf)
+import           Extension.Prelude                   (ifM)
 
 import           System.Console.CmdArgs.Explicit
+import           System.Directory                    (doesFileExist)
 
 import           Theory
 import           Theory.Text.Parser
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
+import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules)
 import           Theory.Tools.Wellformedness
 
 import           Main.Console
 import           Main.Environment
+import           Paths_tamarin_prover                (getDataFileName)
 
 
 ------------------------------------------------------------------------------
@@ -211,3 +219,31 @@ constructAutoProver as =
       Just "none" -> CutNothing
       Just "bfs"  -> CutBFS
       Just other  -> error $ "unknown stop-on-trace method: " ++ other
+
+
+------------------------------------------------------------------------------
+-- Message deduction variants cached in files
+------------------------------------------------------------------------------
+
+-- | The name of the intruder variants file.
+intruderVariantsFile :: FilePath
+intruderVariantsFile = "intruder_variants_dh.spthy"
+
+-- | Add the variants of the message deduction rule. Uses the cached version
+-- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
+-- deduction rules for Diffie-Hellman exponentiation.
+addMessageDeductionRuleVariants :: OpenTheory -> IO OpenTheory
+addMessageDeductionRuleVariants thy0
+  | enableDH msig = do
+      variantsFile <- getDataFileName intruderVariantsFile
+      ifM (doesFileExist variantsFile)
+          (do dhVariants <- parseIntruderRulesDH variantsFile
+              return $ addIntrRuleACs dhVariants thy
+          )
+          (error $ "could not find intruder message deduction theory '"
+                     ++ variantsFile ++ "'")
+  | otherwise = return thy
+  where
+    msig         = get (sigpMaudeSig . thySignature) thy0
+    rules        = subtermIntruderRules msig ++ specialIntruderRules
+    thy          = addIntrRuleACs rules thy0

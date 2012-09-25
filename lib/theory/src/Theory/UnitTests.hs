@@ -7,8 +7,8 @@
 --
 module Theory.UnitTests where
 
-import           Term.LTerm.Convenience
-import           Theory.IntruderRules
+import           Term.Builtin.Convenience
+import           Theory.Tools.IntruderRules
 
 {-
 -- EquationStore

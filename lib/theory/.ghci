@@ -1,0 +1,4 @@
+-- :set -i../term/src
+-- :set -i../utils/src
+:set -isrc
+:set -Wall -fwarn-tabs

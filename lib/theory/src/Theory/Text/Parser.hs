@@ -12,10 +12,6 @@ module Theory.Text.Parser (
   , parseOpenTheoryString
   , parseLemma
   , parseIntruderRulesDH
-
-  -- * Cached Message Deduction Rule Variants
-  , intruderVariantsFile
-  , addMessageDeductionRuleVariants
   ) where
 
 import           Prelude                    hiding (id, (.))
@@ -37,14 +33,12 @@ import           Extension.Prelude          (ifM)
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 
-import           Paths_tamarin_prover
 import           System.Directory
 
 import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
 import           Theory.Text.Parser.Token
-import           Theory.Tools.IntruderRules
 
 
 
@@ -640,29 +634,3 @@ theory flags0 = do
         Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
 
 
-------------------------------------------------------------------------------
--- Message deduction variants cached in files
-------------------------------------------------------------------------------
-
--- | The name of the intruder variants file.
-intruderVariantsFile :: FilePath
-intruderVariantsFile = "intruder_variants_dh.spthy"
-
--- | Add the variants of the message deduction rule. Uses the cached version
--- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
--- deduction rules for Diffie-Hellman exponentiation.
-addMessageDeductionRuleVariants :: OpenTheory -> IO OpenTheory
-addMessageDeductionRuleVariants thy0
-  | enableDH msig = do
-      variantsFile <- getDataFileName intruderVariantsFile
-      ifM (doesFileExist variantsFile)
-          (do dhVariants <- parseIntruderRulesDH variantsFile
-              return $ addIntrRuleACs dhVariants thy
-          )
-          (error $ "could not find intruder message deduction theory '"
-                     ++ variantsFile ++ "'")
-  | otherwise = return thy
-  where
-    msig         = get (sigpMaudeSig . thySignature) thy0
-    rules        = subtermIntruderRules msig ++ specialIntruderRules
-    thy          = addIntrRuleACs rules thy0

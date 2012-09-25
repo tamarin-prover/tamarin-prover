@@ -23,7 +23,7 @@ import           Main.Environment
 
 import qualified Term.UnitTests                  as Term (tests)
 import           Theory
-import qualified Theory.Text.Parser.UnitTests    as Parser
+import qualified Test.ParserTests                as Parser
 
 
 -- | Self-test mode.
