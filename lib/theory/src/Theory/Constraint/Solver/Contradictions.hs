@@ -78,7 +78,7 @@ contradictorySystem ctxt = not . null . contradictions ctxt
 -- | All CR-rules reducing a constraint system to *⟂* represented as a list of
 -- trivial contradictions. Note that some constraint systems are also removed
 -- because they have no unifier. This is part of unification. Note also that
--- *S_{¬,@}* is handled as part of *S_∀*.
+-- *S_{¬,\@}* is handled as part of *S_∀*.
 contradictions :: ProofContext -> System -> [Contradiction]
 contradictions ctxt sys = F.asum
     -- CR-rule **
@@ -137,12 +137,14 @@ hasForbiddenExp se =
 
 -- | @isForbiddenExp ru@ returns @True@ if @ru@ is not allowed in
 -- a normal dependency graph.
+--
 -- > isForbiddenExp (Rule () [undefined, Fact KUFact [undefined, Mult (Inv x1) x2]]
---                           [Fact KDFact [expTagToTerm IsExp, Exp p1 (Mult x2 x3)]] [])
+-- >                         [Fact KDFact [expTagToTerm IsExp, Exp p1 (Mult x2 x3)]] [])
 -- > False
 -- > isForbiddenExp (Rule () [undefined, Fact KUFact [undefined, Mult (Inv x1) x2]]
---                           [Fact KDFact [expTagToTerm IsExp, Exp p1 x2]] [])
+-- >                         [Fact KDFact [expTagToTerm IsExp, Exp p1 x2]] [])
 -- > True
+--
 isForbiddenExp :: Rule a -> Bool
 isForbiddenExp ru = fromMaybe False $ do
     [p1,p2] <- return $ L.get rPrems ru

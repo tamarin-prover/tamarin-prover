@@ -421,7 +421,7 @@ simpAbstractFun (subst:others) = case commonOperators of
 
 -- | If all substitutions @si@ map a variable @v@ to the same name @n@,
 --   then they all contain the common factor
---   @{v |-> n}@ and we can remove @{v -> n} from all substitutions @si@
+--   @{v |-> n}@ and we can remove @{v -> n}@ from all substitutions @si@
 simpAbstractName :: MonadFresh m
                  => [LNSubstVFresh]
                  -> m (Maybe (Maybe LNSubst, [S.Set LNSubstVFresh]))
@@ -442,7 +442,7 @@ simpAbstractName (subst:others) = case commonNames of
 -- | If all substitutions @si@ map a variable @v@ to variables @xi@ of the same
 --   sort @s@ then they all contain the common factor
 --   @{v |-> y}@ for a fresh variable of sort @s@
---   and we can replace @{v -> xi}@ by @{y -> xi} in all substitutions @si@
+--   and we can replace @{v -> xi}@ by @{y -> xi}@ in all substitutions @si@
 simpAbstractSortedVar :: MonadFresh m
                       => [LNSubstVFresh]
                       -> m (Maybe (Maybe LNSubst, [S.Set LNSubstVFresh]))
@@ -467,7 +467,7 @@ simpAbstractSortedVar (subst:others) = case commonSortedVar of
         substFromListVFresh $ (filter ((/=v) . fst) $ substToListVFresh sigma) ++ [(fv, varTerm lv)]
 
 -- | If all substitutions @si@ map two variables @x@ and @y@ to identical terms @ti@,
---   then they all contain the common factor @{x |-> y} for a fresh variable @z@
+--   then they all contain the common factor @{x |-> y}@ for a fresh variable @z@
 --   and we can remove @{x |-> ti}@ from all @si@.
 simpIdentify :: MonadFresh m
              => [LNSubstVFresh]

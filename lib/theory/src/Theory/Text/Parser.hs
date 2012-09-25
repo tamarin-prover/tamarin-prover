@@ -28,12 +28,8 @@ import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
 
-import           Extension.Prelude          (ifM)
-
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
-
-import           System.Directory
 
 import           Term.Substitution
 import           Term.SubtermRule

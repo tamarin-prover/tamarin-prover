@@ -130,7 +130,6 @@ partialEvaluation evalStyle ruEs = reader $ \hnd ->
           Lit (Con _)                   -> pure t
           FApp (sym@(NonAC (_f,_k))) ts
                                         -> fApp sym <$> traverse absTerm ts
-          -- | "p" `isPrefixOf` f        -> FApp sym <$> traverse absTerm ts
           _                             -> importBinding mkVar t (varName t)
           where
             mkVar name idx        = varTerm (LVar name (sortOfLNTerm t) idx)
