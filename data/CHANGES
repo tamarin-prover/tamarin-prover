@@ -1,3 +1,41 @@
+* 0.8.2.0
+    documentation:
+      - The submitted draft of the Meier's PhD thesis on "Advancing Automated
+        Security Protocol Analysis" is now available online at
+
+          http://www.infsec.ethz.ch/research/software/tamarin
+
+        It explains the theory underlying Tamarin in much more detail than our
+        CSF'12 paper. It also explains the theory underlying trace induction
+        and type assertions.
+
+    user interface:
+      - allow lemma selection with '--prove': The lemmas being analyzed are the
+        ones whose name is an extension of one of the prefixes given with a
+        '--prove' flag.
+      - disallow parsing of reserved rule names:
+        Fresh, irecv, isend, coerce, fresh, pub
+
+    new protocol models (referenced in Meier's PhD thesis):
+      - models of TESLA Scheme 1 and 2
+      - modeled the
+      - injective agreement for TLS and NSLPK
+
+      - include the contributed YubiKey models from:
+        "R. Kuennemann and G. Steel. Yubisecure? formal security analysis
+        results for the Yubikey and YubiHSM. In Proc. of the 8th Workshop on
+        Security and Trust Management (STM 2012), Pisa, Italy, September 2012."
+
+      - minimal hash chain example: this demonstrates a short-coming in our
+        current proof calculus. It does not suffice to reason about iterated
+        function application.
+
+    architectural changes:
+      - upgraded the GUI to use version 1.1 of the Yesod web-framework
+      - split off Theory module hierarchy as a separate library called
+        'tamarin-prover-theory'
+
+
 * 0.8.1.0
     - enabled parallelization by default when compiling `tamarin-prover` with
       GHC 7.4 and higher. It uses as many threads as there are CPU cores on
