@@ -262,6 +262,9 @@ executable tamarin-prover
       Web.Theory
       Web.Types
 
+      Test.ParserTests
+
+
 source-repository head
   type:     git
   location: https://github.com/tamarin-prover/tamarin-prover.git
