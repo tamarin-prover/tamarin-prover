@@ -34,78 +34,76 @@ rule (modulo E) Sender0a:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Receiver0a:
-   [ Fr( ~rid ) ] --> [ Out( <$R, $S, ~rid> ), Receiver0b( ~rid, $R, $S ) ]
+   [ Fr( ~nR ) ] --> [ Out( <$R, $S, ~nR> ), Receiver0b( ~nR, $R, $S ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Receiver0b:
    [
-   Receiver0b( rid, R, S ), !Pk( S, pkS ),
-   In( <S, R, commit_k1, signature> )
+   Receiver0b( nR, R, S ), !Pk( S, pkS ),
+   In( <S, R, commit_k1, signature> ), Fr( ~rid )
    ]
-  -->
+  --[ Setup( ~rid ) ]->
    [
-   Receiver0b_check( rid, S, commit_k1,
-                     verify(signature, <commit_k1, rid>, pkS)
+   Receiver0b_check( ~rid, S, commit_k1,
+                     verify(signature, <commit_k1, nR>, pkS)
    )
    ]
 
   /*
   rule (modulo AC) Receiver0b:
      [
-     Receiver0b( rid, R, S ), !Pk( S, pkS ),
-     In( <S, R, commit_k1, signature> )
+     Receiver0b( nR, R, S ), !Pk( S, pkS ),
+     In( <S, R, commit_k1, signature> ), Fr( ~rid )
      ]
-    -->
-     [ Receiver0b_check( rid, S, commit_k1, z ) ]
+    --[ Setup( ~rid ) ]->
+     [ Receiver0b_check( ~rid, S, commit_k1, z ) ]
     variants (modulo AC)
     1. commit_k1
-             = commit_k1.8
-       pkS   = pkS.8
-       rid   = rid.8
+             = commit_k1.9
+       nR    = nR.9
+       pkS   = pkS.9
        signature
-             = signature.8
-       z     = verify(signature.8, <commit_k1.8, rid.8>, pkS.8)
+             = signature.9
+       z     = verify(signature.9, <commit_k1.9, nR.9>, pkS.9)
     
     2. commit_k1
-             = x.10
+             = x.11
+       nR    = x.10
        pkS   = pk(x.9)
-       rid   = x.8
        signature
-             = sign(<x.10, x.8>, x.9)
+             = sign(<x.11, x.10>, x.9)
        z     = true()
   */
 
 rule (modulo E) Receiver0b_check:
-   [ Receiver0b_check( rid, S, commit_k1, true() ) ]
+   [ Receiver0b_check( nR, S, commit_k1, true() ), Fr( ~rid ) ]
   -->
-   [ Receiver1( rid, S, commit_k1 ) ]
+   [ Receiver1( nR, S, commit_k1 ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Send1:
    [ Sender1( S, ~k1 ), Fr( ~m1 ), Fr( ~k2 ) ]
-  --[ Sent( S, <'1', ~m1, f(~k2)> ) ]->
-   [
-   Sender( S, ~k1, ~k2 ),
-   Out( <<'1', ~m1, f(~k2)>, MAC(<'1', ~m1, f(~k2)>, ~k1)> )
+  --[ Sent( S, <~m1, f(~k2)> ) ]->
+   [ Sender( S, ~k1, ~k2 ), Out( <<~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~k1)> )
    ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Recv1:
-   [ Receiver1( rid, S, commit_k1 ), In( <<'1', m1, commit_k2>, mac1> ) ]
+   [ Receiver1( rid, S, commit_k1 ), In( <<m1, commit_k2>, mac1> ) ]
   --[ AssumeCommitNotExpired( rid, commit_k1 ) ]->
-   [ Receiver( rid, S, <'1', m1, commit_k2>, mac1, commit_k1, commit_k2 ) ]
+   [ Receiver( rid, S, <m1, commit_k2>, mac1, commit_k1, commit_k2 ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) SendN:
    [ Sender( S, ~kOld, ~k ), Fr( ~m ), Fr( ~kNew ) ]
-  --[ Sent( S, <'N', ~m, f(~kNew), ~kOld> ), CommitExpired( f(~kOld) ) ]->
+  --[ Sent( S, <~m, f(~kNew), ~kOld> ), CommitExpired( f(~kOld) ) ]->
    [
    Sender( S, ~k, ~kNew ),
-   Out( <<'N', ~m, f(~kNew), ~kOld>, MAC(<'N', ~m, f(~kNew), ~kOld>, ~k)> )
+   Out( <<~m, f(~kNew), ~kOld>, MAC(<~m, f(~kNew), ~kOld>, ~k)> )
    ]
 
   // loop breaker: [0]
@@ -113,15 +111,13 @@ rule (modulo E) SendN:
 
 rule (modulo E) RecvN:
    [
-   In( <<'N', m, commit_kNew, kOld>, mac> ),
+   In( <<m, commit_kNew, kOld>, mac> ),
    Receiver( rid, S, dataOld, MAC(dataOld, kOld), f(kOld), commit_k )
    ]
   --[
   FromSender( rid, S, dataOld ), AssumeCommitNotExpired( rid, commit_k )
   ]->
-   [
-   Receiver( rid, S, <'N', m, commit_kNew, kOld>, mac, commit_k, commit_kNew
-   )
+   [ Receiver( rid, S, <m, commit_kNew, kOld>, mac, commit_k, commit_kNew )
    ]
 
   // loop breaker: [1]
@@ -132,7 +128,7 @@ lemma authentic [use_induction]:
   "∀ rid S m #i.
     (FromSender( rid, S, m ) @ #i) ⇒
     (((∃ #j. (Sent( S, m ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. (RevealLtk( S ) @ #j) ∧ (#j < #i))) ∨
+      (∃ #s #j. ((Setup( rid ) @ #s) ∧ (RevealLtk( S ) @ #j)) ∧ (#j < #s))) ∨
      (∃ commit #ne #e.
        (((AssumeCommitNotExpired( rid, commit ) @ #ne) ∧
          (CommitExpired( commit ) @ #e)) ∧
@@ -144,7 +140,7 @@ guarded formula characterizing all counter-examples:
   (FromSender( rid, S, m ) @ #i)
  ∧
   (∀ #j. (Sent( S, m ) @ #j) ⇒ ¬(#j < #i)) ∧
-  (∀ #j. (RevealLtk( S ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #s #j. (Setup( rid ) @ #s) ∧ (RevealLtk( S ) @ #j) ⇒ ¬(#j < #s)) ∧
   (∀ commit #ne #e.
     (AssumeCommitNotExpired( rid, commit ) @ #ne) ∧
     (CommitExpired( commit ) @ #e)
@@ -159,7 +155,10 @@ next
   simplify
   solve( (last(#i))  ∥
          (∃ #j. (Sent( S, m.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-         (∃ #j. (RevealLtk( S ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #s #j.
+           (Setup( rid ) @ #s) ∧ (RevealLtk( S ) @ #j)
+          ∧
+           (¬(last(#j))) ∧ (¬(last(#s))) ∧ (#j < #s))  ∥
          (∃ commit #ne #e.
            (AssumeCommitNotExpired( rid, commit ) @ #ne) ∧
            (CommitExpired( commit ) @ #e)
@@ -168,13 +167,22 @@ next
     case case_1
     solve( Receiver( rid, S, m.1, MAC(m.1, kOld), f(kOld), commit_k ) ▶₁ #i )
       case Recv1
-      solve( !KU( sign(<f(kOld), ~rid>, ~ltk) ) @ #vk.22 )
+      solve( !KU( sign(<f(kOld), ~nR>, ~ltk) ) @ #vk.18 )
         case Sender0a
-        solve( !KU( ~k1 ) @ #vk.8 )
+        solve( !KU( ~k1 ) @ #vk.6 )
           case SendN
-          solve( !KU( MAC(<'1', m1, commit_k>, ~k1) ) @ #vk.17 )
+          solve( !KU( MAC(<m1, commit_k>, ~k1) ) @ #vk.13 )
             case Send1
             by contradiction // from formulas
+          next
+            case SendN
+            solve( Sender( S.1, ~k1, ~k ) ▶₀ #vr.10 )
+              case Send1
+              by solve( Sender( S.1, ~kOld, ~k1 ) ▶₀ #vr.14 )
+            next
+              case SendN
+              by solve( Sender( S.2, ~kOld, ~k1 ) ▶₀ #vr.14 )
+            qed
           next
             case cMAC
             by contradiction // cyclic
@@ -182,25 +190,25 @@ next
         qed
       next
         case csign
-        solve( !KU( ~ltk ) @ #vk.24 )
+        solve( !KU( ~ltk ) @ #vk.20 )
           case Reveal_Ltk
           by contradiction // from formulas
         next
           case SendN
-          solve( !KU( MAC(<'1', m1, commit_k>, kOld) ) @ #vk.18 )
+          solve( !KU( MAC(<m1, commit_k>, kOld) ) @ #vk.14 )
             case Send1
-            solve( !KU( ~k1 ) @ #vk.12 )
+            solve( !KU( ~k1 ) @ #vk.10 )
               case SendN
-              solve( !KU( f(~k1) ) @ #vk.23 )
+              solve( !KU( f(~k1) ) @ #vk.19 )
                 case Sender0a
                 solve( Sender( S.1, ~ltk, ~k ) ▶₀ #vr.5 )
                   case SendN
-                  solve( Sender( S.3, ~k1, ~k.1 ) ▶₀ #vr.13 )
+                  solve( Sender( S.3, ~k1, ~k.1 ) ▶₀ #vr.12 )
                     case Send1
-                    by solve( Sender( S.2, ~kOld, ~ltk ) ▶₀ #vr.23 )
+                    by solve( Sender( S.2, ~kOld, ~ltk ) ▶₀ #vr.21 )
                   next
                     case SendN
-                    by solve( Sender( S.2, ~kOld, ~ltk ) ▶₀ #vr.23 )
+                    by solve( Sender( S.2, ~kOld, ~ltk ) ▶₀ #vr.21 )
                   qed
                 qed
               next
@@ -209,22 +217,112 @@ next
               qed
             qed
           next
-            case cMAC
-            solve( !KU( f(kOld) ) @ #vk.23 )
+            case SendN
+            solve( !KU( ~k ) @ #vk.10 )
+              case Receiver0a
+              solve( !KU( f(~k) ) @ #vk.19 )
+                case cf
+                solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.5 )
+                  case SendN
+                  by solve( Sender( S.3, ~kOld, ~k ) ▶₀ #vr.9 )
+                qed
+              qed
+            next
+              case Reveal_Ltk
+              solve( !KU( f(~k) ) @ #vk.19 )
+                case cf
+                solve( Sender( S.1, ~ltk, ~k.1 ) ▶₀ #vr.5 )
+                  case SendN
+                  by solve( Sender( S.2, ~kOld, ~k ) ▶₀ #vr.9 )
+                qed
+              qed
+            next
               case Send1
-              solve( !KU( ~k2 ) @ #vk.15 )
+              solve( !KU( f(~k) ) @ #vk.19 )
+                case cf
+                solve( Sender( S.1, ~ltk, ~k.1 ) ▶₀ #vr.5 )
+                  case SendN
+                  by solve( Sender( S.2, ~kOld, ~k ) ▶₀ #vr.9 )
+                qed
+              qed
+            next
+              case SendN_case_1
+              solve( !KU( f(~k) ) @ #vk.19 )
+                case cf
+                solve( Sender( S.1, ~ltk, ~k.1 ) ▶₀ #vr.5 )
+                  case SendN
+                  by solve( Sender( S.2, ~kOld, ~k ) ▶₀ #vr.9 )
+                qed
+              qed
+            next
+              case SendN_case_2
+              solve( !KU( f(~k) ) @ #vk.19 )
+                case Send1
+                solve( Sender( S.1, ~ltk, ~k.1 ) ▶₀ #vr.5 )
+                  case SendN
+                  solve( Sender( S.2, ~kOld, ~k ) ▶₀ #vr.9 )
+                    case Send1
+                    solve( Sender( S.3, ~k, ~k.2 ) ▶₀ #vr.11 )
+                      case SendN
+                      by solve( Sender( S.1, ~kOld, ~ltk ) ▶₀ #vr.19 )
+                    qed
+                  qed
+                qed
+              next
+                case SendN
+                solve( Sender( S.1, ~ltk, ~k.1 ) ▶₀ #vr.5 )
+                  case SendN
+                  solve( Sender( S.2, ~kOld, ~k ) ▶₀ #vr.9 )
+                    case SendN
+                    solve( Sender( S.3, ~k, ~k.2 ) ▶₀ #vr.11 )
+                      case SendN
+                      solve( Sender( S.2, ~kOld.1, ~kOld ) ▶₀ #vr.15 )
+                        case Send1
+                        by solve( Sender( S.1, ~kOld.2, ~ltk ) ▶₀ #vr.19 )
+                      next
+                        case SendN
+                        by solve( Sender( S.1, ~kOld.2, ~ltk ) ▶₀ #vr.19 )
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case Sender0a
+                solve( Sender( S.1, ~ltk, ~k.1 ) ▶₀ #vr.5 )
+                  case SendN
+                  by solve( Sender( S.3, ~kOld, ~k ) ▶₀ #vr.9 )
+                qed
+              next
+                case cf
+                by contradiction // cyclic
+              qed
+            next
+              case fresh
+              solve( !KU( f(~k) ) @ #vk.19 )
+                case cf
+                solve( Sender( S.1, ~ltk, ~k.1 ) ▶₀ #vr.5 )
+                  case SendN
+                  by solve( Sender( S.2, ~kOld, ~k ) ▶₀ #vr.9 )
+                qed
+              qed
+            qed
+          next
+            case cMAC
+            solve( !KU( f(kOld) ) @ #vk.19 )
+              case Send1
+              solve( !KU( ~k2 ) @ #vk.13 )
                 case SendN
                 by contradiction // from formulas
               qed
             next
               case SendN
-              solve( !KU( ~kNew ) @ #vk.15 )
+              solve( !KU( ~kNew ) @ #vk.13 )
                 case SendN
                 by contradiction // from formulas
               qed
             next
               case Sender0a
-              solve( !KU( ~k1 ) @ #vk.15 )
+              solve( !KU( ~k1 ) @ #vk.13 )
                 case SendN
                 by contradiction // from formulas
               qed
@@ -232,7 +330,7 @@ next
               case cf
               solve( Sender( S.1, ~ltk, ~k ) ▶₀ #vr.5 )
                 case SendN
-                by solve( Sender( S.1, ~kOld.1, ~ltk ) ▶₀ #vr.10 )
+                by solve( Sender( S.1, ~kOld.1, ~ltk ) ▶₀ #vr.9 )
               qed
             qed
           qed
@@ -241,7 +339,10 @@ next
     next
       case RecvN
       solve( (∃ #j. (Sent( S, dataOld ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr))  ∥
-             (∃ #j. (RevealLtk( S ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr))  ∥
+             (∃ #s #j.
+               (Setup( rid ) @ #s) ∧ (RevealLtk( S ) @ #j)
+              ∧
+               (¬(last(#j))) ∧ (¬(last(#s))) ∧ (#j < #s))  ∥
              (∃ commit #ne #e.
                (AssumeCommitNotExpired( rid, commit ) @ #ne) ∧
                (CommitExpired( commit ) @ #e)
@@ -252,93 +353,93 @@ next
           case Send1
           solve( Sender1( S, ~k1 ) ▶₀ #j )
             case Sender_Setup
-            solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                             MAC(<'1', ~m1, f(~k2)>, kOld.1), f(kOld.1), f(kOld)
+            solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, kOld.1),
+                             f(kOld.1), f(kOld)
                    ) ▶₁ #vr )
               case Recv1
-              solve( !KU( ~k2 ) @ #vk.9 )
+              solve( !KU( ~k2 ) @ #vk.5 )
                 case SendN
-                solve( !KU( MAC(<'N', m.1, commit_k, kOld>, ~k2) ) @ #vk.16 )
+                solve( !KU( MAC(<m.1, commit_k, kOld>, ~k2) ) @ #vk.13 )
                   case SendN
-                  solve( !KU( sign(<f(~kOld), ~rid>, ~ltk) ) @ #vk.30 )
+                  solve( !KU( sign(<f(~kOld), ~nR>, ~ltk) ) @ #vk.25 )
                     case Sender0a
-                    solve( !KU( MAC(<'1', ~m1, f(~k2)>, ~kOld) ) @ #vk.24 )
+                    solve( !KU( MAC(<~m1, f(~k2)>, ~kOld) ) @ #vk.19 )
                       case Send1
                       solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                         case SendN
-                        solve( Sender( S.2, ~k1, ~k2 ) ▶₀ #vr.12 )
+                        solve( Sender( S.2, ~k1, ~k2 ) ▶₀ #vr.11 )
                           case Send1
                           by contradiction // from formulas
                         qed
                       qed
                     next
                       case cMAC
-                      solve( !KU( ~kOld ) @ #vk.19 )
+                      solve( !KU( ~kOld ) @ #vk.16 )
                         case SendN
                         by contradiction // from formulas
                       qed
                     qed
                   next
                     case csign
-                    solve( !KU( ~ltk ) @ #vk.32 )
+                    solve( !KU( ~ltk ) @ #vk.27 )
                       case Reveal_Ltk
                       by contradiction // from formulas
                     next
                       case SendN
-                      solve( !KU( MAC(<'1', ~m1, f(~k2)>, ~kOld) ) @ #vk.26 )
+                      solve( !KU( MAC(<~m1, f(~k2)>, ~kOld) ) @ #vk.21 )
                         case Send1
-                        solve( !KU( f(~k1) ) @ #vk.31 )
+                        solve( !KU( f(~k1) ) @ #vk.26 )
                           case Sender0a
                           solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                             case SendN
-                            solve( Sender( S.2, ~k1, ~k2 ) ▶₀ #vr.12 )
+                            solve( Sender( S.2, ~k1, ~k2 ) ▶₀ #vr.11 )
                               case Send1
                               by contradiction // from formulas
                             qed
                           qed
                         next
                           case cf
-                          solve( !KU( ~k1 ) @ #vk.24 )
+                          solve( !KU( ~k1 ) @ #vk.21 )
                             case SendN
                             by contradiction // from formulas
                           qed
                         qed
                       next
                         case cMAC
-                        solve( !KU( ~kOld ) @ #vk.21 )
+                        solve( !KU( ~kOld ) @ #vk.18 )
                           case Receiver0a
-                          solve( !KU( f(~kOld) ) @ #vk.31 )
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
                             case cf
                             solve( Sender( S.2, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
-                              by solve( Sender( S.3, ~kOld, ~k2 ) ▶₀ #vr.12 )
+                              by solve( Sender( S.3, ~kOld, ~k2 ) ▶₀ #vr.11 )
                             qed
                           qed
                         next
                           case Reveal_Ltk
-                          solve( !KU( f(~kOld) ) @ #vk.31 )
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
                             case cf
                             solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
-                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.12 )
+                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.11 )
                             qed
                           qed
                         next
                           case Send1
-                          solve( !KU( f(~kOld) ) @ #vk.31 )
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
                             case cf
                             solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
-                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.12 )
+                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.11 )
                             qed
                           qed
                         next
                           case SendN_case_1
-                          solve( !KU( f(~kOld) ) @ #vk.31 )
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
                             case cf
                             solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
-                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.12 )
+                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.11 )
                             qed
                           qed
                         next
@@ -346,11 +447,11 @@ next
                           by contradiction // from formulas
                         next
                           case fresh
-                          solve( !KU( f(~kOld) ) @ #vk.31 )
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
                             case cf
                             solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
-                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.12 )
+                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.11 )
                             qed
                           qed
                         qed
@@ -366,13 +467,16 @@ next
           qed
         next
           case SendN
-          solve( Receiver( rid, S, <'N', ~m.2, f(~kNew), ~kOld.2>,
-                           MAC(<'N', ~m.2, f(~kNew), ~kOld.2>, kOld.1), f(kOld.1), f(kOld)
+          solve( Receiver( rid, S, <~m.2, f(~kNew), ~kOld.2>,
+                           MAC(<~m.2, f(~kNew), ~kOld.2>, kOld.1), f(kOld.1), f(kOld)
                  ) ▶₁ #vr )
             case RecvN
             solve( (∃ #j.
                      (Sent( S, dataOld ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
-                   (∃ #j. (RevealLtk( S ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
+                   (∃ #s #j.
+                     (Setup( rid ) @ #s) ∧ (RevealLtk( S ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (¬(last(#s))) ∧ (#j < #s))  ∥
                    (∃ commit #ne #e.
                      (AssumeCommitNotExpired( rid, commit ) @ #ne) ∧
                      (CommitExpired( commit ) @ #e)
@@ -383,46 +487,46 @@ next
                 case Send1
                 solve( Sender1( S, ~k1 ) ▶₀ #j.1 )
                   case Sender_Setup
-                  solve( !KU( ~kNew ) @ #vk.11 )
+                  solve( !KU( ~kNew ) @ #vk.5 )
                     case SendN
-                    solve( !KU( MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.18 )
+                    solve( !KU( MAC(<m.1, commit_k, kOld>, ~kNew) ) @ #vk.13 )
                       case SendN
-                      solve( !KU( MAC(<'N', ~m.2, f(~kNew), ~kOld.1>, ~kOld) ) @ #vk.24 )
+                      solve( !KU( MAC(<~m.2, f(~kNew), ~kOld.1>, ~kOld) ) @ #vk.20 )
                         case SendN
                         solve( Sender( $S, ~kOld, ~k ) ▶₀ #j )
                           case Send1
-                          solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                           MAC(<'1', ~m1, f(~k2)>, ~kOld), f(~kOld), f(~k)
+                          solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld),
+                                           f(~kOld), f(~k)
                                  ) ▶₁ #vr.1 )
                             case Recv1
-                            solve( !KU( sign(<f(~k1), ~rid>, ~ltk) ) @ #vk.38 )
+                            solve( !KU( sign(<f(~k1), ~nR>, ~ltk) ) @ #vk.32 )
                               case Sender0a
                               solve( Sender( S.1, ~kNew, ~k.1 ) ▶₀ #vr.3 )
                                 case SendN
-                                solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.8 )
+                                solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.7 )
                                   case SendN
                                   by contradiction // from formulas
                                 qed
                               qed
                             next
                               case csign
-                              solve( !KU( ~ltk ) @ #vk.40 )
+                              solve( !KU( ~ltk ) @ #vk.34 )
                                 case Reveal_Ltk
                                 by contradiction // from formulas
                               next
                                 case SendN
-                                solve( !KU( f(~k1) ) @ #vk.39 )
+                                solve( !KU( f(~k1) ) @ #vk.33 )
                                   case Sender0a
                                   solve( Sender( S.1, ~kNew, ~k.1 ) ▶₀ #vr.3 )
                                     case SendN
-                                    solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.8 )
+                                    solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.7 )
                                       case SendN
                                       by contradiction // from formulas
                                     qed
                                   qed
                                 next
                                   case cf
-                                  solve( !KU( ~k1 ) @ #vk.29 )
+                                  solve( !KU( ~k1 ) @ #vk.25 )
                                     case SendN
                                     by contradiction // from formulas
                                   qed
@@ -432,62 +536,62 @@ next
                           qed
                         next
                           case SendN
-                          by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                              MAC(<'1', ~m1, f(~k2)>, ~kOld), f(~kOld), f(~k)
+                          by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld),
+                                              f(~kOld), f(~k)
                                     ) ▶₁ #vr.1 )
                         qed
                       next
                         case cMAC
-                        solve( !KU( ~kOld ) @ #vk.19 )
+                        solve( !KU( ~kOld ) @ #vk.14 )
                           case Receiver0a
                           solve( Sender( $S, ~kOld.1, ~k ) ▶₀ #j )
                             case Send1
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           next
                             case SendN
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           qed
                         next
                           case Reveal_Ltk
                           solve( Sender( $S, ~kOld.1, ~k ) ▶₀ #j )
                             case Send1
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           next
                             case SendN
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           qed
                         next
                           case Send1
                           solve( Sender( $S, ~kOld.1, ~k ) ▶₀ #j )
                             case Send1
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           next
                             case SendN
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           qed
                         next
                           case SendN_case_1
                           solve( Sender( $S, ~kOld.1, ~k ) ▶₀ #j )
                             case Send1
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           next
                             case SendN
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           qed
                         next
@@ -497,13 +601,13 @@ next
                           case fresh
                           solve( Sender( $S, ~kOld.1, ~k ) ▶₀ #j )
                             case Send1
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           next
                             case SendN
-                            by solve( Receiver( rid, $S, <'1', ~m1, f(~k2)>,
-                                                MAC(<'1', ~m1, f(~k2)>, ~kOld.1), f(~kOld.1), f(~kOld)
+                            by solve( Receiver( rid, $S, <~m1, f(~k2)>, MAC(<~m1, f(~k2)>, ~kOld.1),
+                                                f(~kOld.1), f(~kOld)
                                       ) ▶₁ #vr.1 )
                           qed
                         qed
@@ -516,31 +620,34 @@ next
                 qed
               next
                 case SendN
-                solve( !KU( ~kNew ) @ #vk.11 )
+                solve( !KU( ~kNew ) @ #vk.5 )
                   case SendN
-                  solve( !KU( MAC(<'N', m.1, commit_k, kOld>, ~kNew) ) @ #vk.18 )
+                  solve( !KU( MAC(<m.1, commit_k, kOld>, ~kNew) ) @ #vk.13 )
                     case SendN
-                    solve( !KU( MAC(<'N', ~m.2, f(~kNew), ~kOld.1>, ~kOld) ) @ #vk.24 )
+                    solve( !KU( MAC(<~m.2, f(~kNew), ~kOld.1>, ~kOld) ) @ #vk.20 )
                       case SendN
                       solve( Sender( S, ~kOld, ~k ) ▶₀ #j )
                         case Send1
-                        by solve( Receiver( rid, $S, <'N', ~m.4, f(~kNew.3), ~kOld.1>,
-                                            MAC(<'N', ~m.4, f(~kNew.3), ~kOld.1>, ~kOld), f(~kOld), f(~k)
+                        by solve( Receiver( rid, $S, <~m.4, f(~kNew.3), ~kOld.1>,
+                                            MAC(<~m.4, f(~kNew.3), ~kOld.1>, ~kOld), f(~kOld), f(~k)
                                   ) ▶₁ #vr.1 )
                       next
                         case SendN
-                        solve( Receiver( rid, S, <'N', ~m.4, f(~kNew.3), ~kOld.1>,
-                                         MAC(<'N', ~m.4, f(~kNew.3), ~kOld.1>, ~kOld), f(~kOld), f(~k)
+                        solve( Receiver( rid, S, <~m.4, f(~kNew.3), ~kOld.1>,
+                                         MAC(<~m.4, f(~kNew.3), ~kOld.1>, ~kOld), f(~kOld), f(~k)
                                ) ▶₁ #vr.1 )
                           case RecvN
                           solve( (∃ #j.
-                                   (Sent( S, dataOld ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
-                                 (∃ #j. (RevealLtk( S ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                                   (Sent( S, dataOld ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.9))  ∥
+                                 (∃ #s #j.
+                                   (Setup( rid ) @ #s) ∧ (RevealLtk( S ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (¬(last(#s))) ∧ (#j < #s))  ∥
                                  (∃ commit #ne #e.
                                    (AssumeCommitNotExpired( rid, commit ) @ #ne) ∧
                                    (CommitExpired( commit ) @ #e)
                                   ∧
-                                   (¬(last(#e))) ∧ (¬(last(#ne))) ∧ (#e < #ne) ∧ (#ne < #vr.10)) )
+                                   (¬(last(#e))) ∧ (¬(last(#ne))) ∧ (#e < #ne) ∧ (#ne < #vr.9)) )
                             case case_1
                             solve( Sent( S, dataOld ) @ #j.2 )
                               case Send1
@@ -550,7 +657,7 @@ next
                                   case Send1
                                   solve( Sender( S.1, ~kNew, ~k.1 ) ▶₀ #vr.2 )
                                     case SendN
-                                    solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.7 )
+                                    solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.6 )
                                       case SendN
                                       by contradiction // from formulas
                                     qed
@@ -559,7 +666,7 @@ next
                                   case SendN
                                   solve( Sender( S.1, ~kNew, ~k.1 ) ▶₀ #vr.2 )
                                     case SendN
-                                    solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.7 )
+                                    solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.6 )
                                       case SendN
                                       by contradiction // from formulas
                                     qed
@@ -572,7 +679,7 @@ next
                                 case Send1
                                 solve( Sender( S.1, ~kNew, ~k.1 ) ▶₀ #vr.2 )
                                   case SendN
-                                  solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.7 )
+                                  solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.6 )
                                     case SendN
                                     by contradiction // from formulas
                                   qed
@@ -581,7 +688,7 @@ next
                                 case SendN
                                 solve( Sender( S.1, ~kNew, ~k.1 ) ▶₀ #vr.2 )
                                   case SendN
-                                  solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.7 )
+                                  solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.6 )
                                     case SendN
                                     by contradiction // from formulas
                                   qed
@@ -599,64 +706,56 @@ next
                       qed
                     next
                       case cMAC
-                      solve( !KU( ~kOld ) @ #vk.19 )
+                      solve( !KU( ~kOld ) @ #vk.14 )
                         case Receiver0a
                         solve( Sender( S, ~kOld.1, ~k ) ▶₀ #j )
                           case Send1
-                          by solve( Receiver( rid, $S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, $S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         next
                           case SendN
-                          by solve( Receiver( rid, S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         qed
                       next
                         case Reveal_Ltk
                         solve( Sender( S, ~kOld.1, ~k ) ▶₀ #j )
                           case Send1
-                          by solve( Receiver( rid, $S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, $S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         next
                           case SendN
-                          by solve( Receiver( rid, S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         qed
                       next
                         case Send1
                         solve( Sender( S, ~kOld.1, ~k ) ▶₀ #j )
                           case Send1
-                          by solve( Receiver( rid, $S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, $S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         next
                           case SendN
-                          by solve( Receiver( rid, S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         qed
                       next
                         case SendN_case_1
                         solve( Sender( S, ~kOld.1, ~k ) ▶₀ #j )
                           case Send1
-                          by solve( Receiver( rid, $S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, $S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         next
                           case SendN
-                          by solve( Receiver( rid, S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         qed
                       next
@@ -666,15 +765,13 @@ next
                         case fresh
                         solve( Sender( S, ~kOld.1, ~k ) ▶₀ #j )
                           case Send1
-                          by solve( Receiver( rid, $S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, $S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         next
                           case SendN
-                          by solve( Receiver( rid, S, <'N', ~m.4, f(~kNew.3), ~kOld.2>,
-                                              MAC(<'N', ~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1),
-                                              f(~kOld)
+                          by solve( Receiver( rid, S, <~m.4, f(~kNew.3), ~kOld.2>,
+                                              MAC(<~m.4, f(~kNew.3), ~kOld.2>, ~kOld.1), f(~kOld.1), f(~kOld)
                                     ) ▶₁ #vr.1 )
                         qed
                       qed
@@ -742,21 +839,21 @@ induction
     case case_2
     solve( Receiver( rid, S, m.1, MAC(m.1, kOld), f(kOld), commit_k ) ▶₁ #i )
       case Recv1
-      solve( !KU( sign(<f(kOld), ~rid>, ~ltk) ) @ #vk.22 )
+      solve( !KU( sign(<f(kOld), ~nR>, ~ltk) ) @ #vk.18 )
         case Sender0a
-        solve( !KU( ~k1 ) @ #vk.8 )
+        solve( !KU( ~k1 ) @ #vk.6 )
           case SendN
-          solve( !KU( MAC(<'1', m1, commit_k>, ~k1) ) @ #vk.17 )
+          solve( !KU( MAC(<m1, commit_k>, ~k1) ) @ #vk.13 )
             case Send1
             solve( Sender( S.1, ~k1, ~k ) ▶₀ #vr.10 )
               case Send1
-              solve( !KU( ~rid ) @ #vk.26 )
+              solve( !KU( ~nR ) @ #vk.22 )
                 case Receiver0a
-                solve( !KU( ~m1 ) @ #vk.19 )
+                solve( !KU( ~m1 ) @ #vk.15 )
                   case Send1
-                  solve( !KU( f(~k1) ) @ #vk.25 )
+                  solve( !KU( f(~k1) ) @ #vk.21 )
                     case Sender0a
-                    solve( !KU( f(~k) ) @ #vk.23 )
+                    solve( !KU( f(~k) ) @ #vk.19 )
                       case Send1
                       SOLVED // trace found
                     qed
@@ -786,8 +883,8 @@ analyzing: data/examples/loops/TESLA_Scheme1.spthy
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.718141s
-  authentic (all-traces): verified (159 steps)
+  processing time: 2.958824s
+  authentic (all-traces): verified (192 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
 ------------------------------------------------------------------------------
@@ -798,8 +895,8 @@ summary of summaries:
 analyzed: data/examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.718141s
-  authentic (all-traces): verified (159 steps)
+  processing time: 2.958824s
+  authentic (all-traces): verified (192 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
 ==============================================================================

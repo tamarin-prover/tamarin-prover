@@ -95,7 +95,7 @@ rule ZExtendedSmaller:
 
 rule isendHSM:
    [ In( x ) ] --[ HSMWrite(x) ]-> [ InHSM( x ) ]
-rule irecv:
+rule irecvHSM:
    [ OutHSM( x ) ] --[ HSMRead(x) ]-> [Out(x)]
 
 /* The attacker can write and read the Authentication Server's database.
@@ -110,8 +110,8 @@ rule write_AEAD:
 /* Initialisation of HSM and Authentication Server. OneTime() Assures that
  * this can only happen a single time in a trace */
 rule HSMInit:
-    [Fr(~k), Fr(~kh)] --[Protocol(), GenerateRole1(~k),MasterKey(~k), OneTime()]-> 
-    [ !HSM(~kh,~k), Out(~kh), 
+    [Fr(~k), Fr(~kh)] --[Protocol(), GenerateRole1(~k),MasterKey(~k), OneTime()]->
+    [ !HSM(~kh,~k), Out(~kh),
 /* If the following line is uncommented, we are able to reproduce the
  * attack described in
  * http://static.yubico.com/var/uploads/pdfs/Security%20Advisory.pdf
@@ -172,38 +172,38 @@ rule BuyANewYubikey:
  * Uncomment the following line to require the HSM to have the
  * YSM_AEAD_GENERATE flag set.
  */
-//!YSM_AEAD_GENERATE(kh), 
+//!YSM_AEAD_GENERATE(kh),
     [ Fr(~k2),Fr(~pid),Fr(~sid),
     !HSM(kh,~k),
     !Succ(zero,one) ]
-     --[Init(~pid,~k2)]-> 
+     --[Init(~pid,~k2)]->
     [Y_counter(~pid,one), !Y_Key(~pid,~k2), !Y_sid(~pid,~sid),
     S_Counter(~pid,zero), !S_AEAD(~pid,aead), !S_sid(~pid,~sid),
     Out(~pid) ]
 
 //On plugin, the session counter is increased and the token counter reset
 rule Yubikey_Plugin:
-        [Y_counter(pid,sc),!Smaller(sc, Ssc) ] 
+        [Y_counter(pid,sc),!Smaller(sc, Ssc) ]
         //The old counter value sc is removed
-        --[ Yubi(pid,Ssc) ]-> 
+        --[ Yubi(pid,Ssc) ]->
         [Y_counter(pid, Ssc)]
         //and substituted by a new counter value, larger, Ssc
-    
+
 rule Yubikey_PressButton:
     [Y_counter(pid,tc),!Y_Key(pid,k2),!Y_sid(pid,sid),
-     !Succ(tc,Stc),Fr(~pr),Fr(~nonce) ] 
+     !Succ(tc,Stc),Fr(~pr),Fr(~nonce) ]
     --[ YubiPress(pid,tc),
-        YubiPressOtp(pid,<sid,tc,~pr>,tc,k2) ]-> 
+        YubiPressOtp(pid,<sid,tc,~pr>,tc,k2) ]->
     [Y_counter(pid,Stc), Out(<pid,~nonce,senc(<sid,tc,~pr>,k2)>)]
 
 rule Server_ReceiveOTP_NewSession:
     let ks=keystream(kh,pid)
         aead=<xorc(senc(ks,k),<k2,sid>),mac(<k2,sid>,k)>
     in
-    [In(<pid,nonce,senc(<sid,tc,~pr>,k2)>) , 
+    [In(<pid,nonce,senc(<sid,tc,~pr>,k2)>) ,
         !HSM(kh,k), !S_AEAD(pid,aead), S_Counter(pid,otc),
         !S_sid(pid,sid), !Smaller(otc,tc) ]
-     --[ Login(pid,sid,tc,senc(<sid,tc,~pr>,k2)) ]-> 
+     --[ Login(pid,sid,tc,senc(<sid,tc,~pr>,k2)) ]->
     [ S_Counter(pid,tc) ]
 
 /* The following three axioms are conditions on the traces that make sure
@@ -221,7 +221,7 @@ axiom smaller_implies_unequal: //axiomatic
 /*c) The protocol runs only after the IsSmaller and IsSuccessor relation is
  *   build up
  */
-axiom theory_before_protocol: 
+axiom theory_before_protocol:
     "All #i #j. Theory() @ i & Protocol() @ j ==> i < j"
 
 axiom onetime:
@@ -246,22 +246,22 @@ lemma adv_can_guess_counter[reuse,use_induction]:
 /* Everything that can be learned by using OtpDecode is the counter of a
  * Yubikey, which can be computed according to the previous lemma.
 */
-lemma otp_decode_does_not_help_adv_use_induction[reuse,use_induction]: 
-    "All #t3 k2 k m sc enc mac . OtpDecode(k2,k,m,sc,enc,mac)@t3 
+lemma otp_decode_does_not_help_adv_use_induction[reuse,use_induction]:
+    "All #t3 k2 k m sc enc mac . OtpDecode(k2,k,m,sc,enc,mac)@t3
     ==> Ex #t1 pid . YubiPress(pid,sc)@#t1 & #t1<#t3"
 
 /* All keys shared between the YubiHSM and the Authentication Server are
  * either not known to the adversary, or the adversary learned the key used
  * to encrypt said keys in form of AEADs.
  */
-lemma k2_is_secret_use_induction[use_induction,reuse]: 
-    "All #t1 #t2 pid k2 . Init(pid,k2)@t1 & K(k2)@t2  
-    ==> 
+lemma k2_is_secret_use_induction[use_induction,reuse]:
+    "All #t1 #t2 pid k2 . Init(pid,k2)@t1 & K(k2)@t2
+    ==>
      (Ex #t3 #t4 k . K(k)@t3 & MasterKey(k)@t4 & #t3<#t2)"
 
 /* Neither of those kinds of keys are ever learned by the adversary */
-lemma neither_k_nor_k2_are_ever_leaked_inv[use_induction,reuse]: 
-    " 
+lemma neither_k_nor_k2_are_ever_leaked_inv[use_induction,reuse]:
+    "
 not( Ex #t1 #t2 k . MasterKey(k)@t1 & K(k)@t2 )
 & not (Ex  #t5 #t6 k6 pid . Init(pid,k6)@t5 & K(k6)@t6 )
     "

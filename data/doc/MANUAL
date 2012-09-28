@@ -1,7 +1,7 @@
 User manual for the Tamarin prover
 ==================================
 
-Date:    2012/06/04
+Date:    2012/09/28
 Authors: Simon Meier <iridcode@gmail.com>,
          Benedikt Schmidt <beschmi@gmail.com>
 
@@ -140,122 +140,26 @@ the GUI to see what information that is.
 Additional Theory
 =================
 
-Most of the theory behind the Tamarin prover is described in our CSF 2012
-paper, whose extended version is available from
+Most of the theory underlying the Tamarin prover is described in the submitted
+draft of Meier's PhD thesis available from
 
   http://www.infsec.ethz.ch/research/software/tamarin
 
-The implementation exploits a slightly more restricted definition of normal
-dependency graphs and adapted versions of the constraint solving rules that
-also allow security properties to refer to the conclusions of normal
-construction rules. A technical report documenting this version of the
-constraint solver is under preparation. From a usage perspective, the changes
-are minor and explained below in the sections on
-`Induction` and `Typing Invariants over the Extended Traces`.
+Some of the missing pieces will be described in Schmidt's PhD thesis. His
+thesis explains the notion of an equation store and design of the normal form
+message deduction rules used to reason about Diffie-Hellman explanation,
+bilinear pairings, and multiset union. Note that this version of Tamarin does
+not yet support bilinear pairings and multiset union. It does support
+Diffie-Hellman exponentiation as described in our CSF'12 paper,
+and it uses equation stores as explained below.
 
-Moreover, we added a constraint solving rule that allows to reason about
-protocols that make use of exclusive access to linear facts. A typical example
-is 'loops/Minimal_Create_Use_Destroy.spthy'. The corresponding constraint
-reduction rule is explained below.
-
-Apart from the above changes to the constraint solving rules, we also refined
-the theory in two ways that allow to share work between different constraint
-reduction steps. First, we store multiple constraint reduction steps in the
-form of *precomputed case distinctions*. Second, we delay the enumeration of
-the finite variants of multiset rewriting rules using an *equation store*. We
-explain both of these refinements below.
-
-
-Precomputed Case Distinctions
------------------------------
-
-Apart from unification, the most common step performed by Tamarin is the
-enumeration of the possible origins of an open premise. Most of these
-backwards steps result in a number of trivial further constraint reduction
-steps being applied immediately. Instead of applying them over and over during
-proof/counter-example construction, we precompute the result of doing one
-backwards step and use the resulting precomputed case distinctions during
-proof/counter-example search.
-
-This precomputation is sound because the applicability of all our constraint
-reduction rules is invariant under set union and instantiation. We precompute
-cases for an arbitrary instance of every protocol fact and every outermost
-constructor of a message.
-
-
-Inductive Strengthening
------------------------
-
-The normal form conditions that we impose on dependency graphs can be seen as
-a strong invariant on security protocol execution. As we have shown in our
-case studies many security properties follow from these normal form
-conditions. For some protocols, we must however strengthen security properties
-before being able to prove them using our backwards reasoning technique. This
-strengthening works by transforming the security property according to the
-induction scheme associated with the set of traces of a protocol. Intuitively,
-this strengthening amounts to searching for traces that violate the security
-property, but do not contain any prefix that violates the security property.
-Stated differently, we focus on first violations of security properties with
-respect to the prefix-order on traces.
-
-Properties that should be proven using induction can be marked with the
-attribute [use_induction]. In the interactive GUI, one can just select
-`induction` as a proof method provided the constraint system contains just one
-guarded trace property.
-
-For examples of protocols where inductive strengthening is required for a
-successful proof, see the directories `examples/loops` and
-`examples/related_work`.
-
-
-Typing Invariants over the Extended Traces
-------------------------------------------
-
-Note that every protocol communicating via the public network/adversary
-implicitly contains loops. The adversary may send messages received from a
-later step of one instance a role to an earlier step of another instance of
-the same role. These loops manifest themselves during backwards reasoning as
-infinite proof branches. For trivial loops where all messages are also
-received as plain-text, we can prune these branches using the constraint
-reduction rule N6. To prune more complicated loops, e.g., loops stemming from
-receiving an encrypted message and sending out some of its contents, we need
-so called typing invariants.
-
-A typing invariant specifies the possible instantiations of a message variable
-sent to the adversary. We describe these instantiations by relating an action
-logging the instantiation in the rule sending the variable to actions logging
-the possible instantiations in the rules sending the contents of this
-variable. See the 'classic/NSLPK3.spthy' file for an example of a typing
-invariant.
-
-To enable the specification of the case that the intruder constructed the
-message that a variable is instantiated with, we changed every construction
-rule such that a KU-action logs the rule's conclusion. Properties referring to
-this KU-actions can only be evaluated over the traces of normal dependency
-graphs of a protocol. We call these traces the 'extended traces of a protocol'.
-Note that we cannot transfer the validity of properties over extended traces
-to the validity of these properties over standard traces stemming from the
-multiset rewriting semantics. However, we can use these properties over
-extended traces as lemmas during the proof of a property over standard traces
-using the lemma attribute [reuse] or [typing].
-
-The goal of typing invariants is to ensure that all chain-constraints are
-solved during the precomputation of the case distinctions. We use a two-step
-process to achieve this. We first precompute the so-called *untyped case
-distinctions* without the assumption of the validity of any typing invariant.
-These untyped precomputed case are used during the proof of a typing
-invariant. We then use the typing invariants to refine the untyped case
-distinctions to typed case distinctions. They are used during the proofs of
-properties other than typing invariants.
-
-In the input file, all typing invariants are marked with the [typing]
-attribute. In the GUI, you can inspect both the untyped and typed precomputed
-case distinctions. A typing invariant achieves its goal, if the typed
-precomputed case distinctions are marked with "all chains solved".
+Our preliminary support for reasoning about protocols that make use of
+exclusive access to linear facts is not yet described as part of a research
+paper. It is explained in the following subsection.
 
 
 Reasoning about Exclusivity: Facts Symbols with Injective Instances
------------------------------------------------------------
+-------------------------------------------------------------------
 
 We say that a fact symbol 'f' has *injective instances* with respect to a
 multiset rewriting system 'R', if there is no reachable state of
@@ -354,8 +258,8 @@ Security Protocol Theories
 
 A security protocol theory specifies a signature, an equational theory, a
 security protocol, and several lemmas, which formalize security properties.
-The paper explaining the theory behind Tamarin has been published at CSF 2012
-and its extended version is available from
+The formal definition of security protocol theories is given in Meier's thesis
+available from
 
   http://www.infsec.ethz.ch/research/software/tamarin
 

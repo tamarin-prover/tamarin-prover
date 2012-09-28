@@ -482,9 +482,12 @@ lookupOpenProtoRule name =
 -- exists.
 addProtoRule :: ProtoRuleE -> OpenTheory -> Maybe OpenTheory
 addProtoRule ruE thy = do
-    guard (maybe True ((ruE ==)) $
-        lookupOpenProtoRule (L.get rInfo ruE) thy)
+    guard nameNotUsedForDifferentRule
     return $ modify thyItems (++ [RuleItem ruE]) thy
+  where
+    nameNotUsedForDifferentRule =
+        maybe True ((ruE ==)) $ lookupOpenProtoRule (L.get rInfo ruE) thy
+
 
 -- | Add intruder proof rules.
 addIntrRuleACs :: [IntrRuleAC] -> OpenTheory -> OpenTheory

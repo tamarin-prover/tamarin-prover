@@ -5,15 +5,20 @@ Before a release, the following things should be checked:
 
 2. run 'tamarin-prover test'
 
+3. call 'tamarin-prover' and copy CSF'12 automatic command and
+   check whether verification succeeds.
+
 3. generate 'intruder_variants_dh.spthy' and diff with version in data/
 
-4. run 'tamarin-prover interactive examples/csf12' and:
-   (a) open one of the presented theories
-   (b) try shortcuts (J,K,j,k,1,2,..,a)
-   (c) try different graph/sequent options
-   (d) try Download
+4. call 'tamarin-prover' and copy CSF'12 interactive command and
+   execute the following steps
 
-   (e) try 'Loading a new theory' from the start page
+     (a) open one of the presented theories
+     (b) try shortcuts (J,K,j,k,1,2,..,a)
+     (c) try different graph/sequent options
+     (d) try Download
+
+     (e) try 'Loading a new theory' from the start page
 
 5. Bump version number to even minor version and
    (a) make source-dists
