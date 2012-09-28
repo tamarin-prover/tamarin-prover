@@ -190,29 +190,56 @@ data TheoryPath
   | TheoryMessage                       -- ^ Theory message deduction
   deriving (Eq, Show, Read)
 
--- | Render a theory path to a list of strings.
+-- | Render a theory path to a list of strings. Note that we prefix an
+-- underscore to the empty string and strings starting with an underscore.
+-- This avoids empty path segments, which seem to trip up certain versions of
+-- Yesod.
 renderTheoryPath :: TheoryPath -> [String]
-renderTheoryPath TheoryHelp = ["help"]
-renderTheoryPath TheoryRules = ["rules"]
-renderTheoryPath TheoryMessage = ["message"]
-renderTheoryPath (TheoryLemma name) = ["lemma", name]
-renderTheoryPath (TheoryCaseDist k i j) = ["cases", show k, show i, show j]
-renderTheoryPath (TheoryProof lemma path) = "proof" : lemma : path
-renderTheoryPath (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
+renderTheoryPath =
+    map prefixWithUnderscore . go
+  where
+    go TheoryHelp = ["help"]
+    go TheoryRules = ["rules"]
+    go TheoryMessage = ["message"]
+    go (TheoryLemma name) = ["lemma", name]
+    go (TheoryCaseDist k i j) = ["cases", show k, show i, show j]
+    go (TheoryProof lemma path) = "proof" : lemma : path
+    go (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
+
+-- | Prefix an underscore to the empty string and strings starting with an
+-- underscore.
+prefixWithUnderscore :: String -> String
+prefixWithUnderscore ""         = "_"
+prefixWithUnderscore cs@('_':_) = '_' : cs
+prefixWithUnderscore cs         = cs
+
+-- | Remove an underscore prefix. It holds that
+--
+-- > unprefixUnderscore . prefixWithUnderscore = id
+--
+-- The inverted composition holds for all strings except the empty string and
+-- strings starting with an underscore.
+unprefixUnderscore :: String -> String
+unprefixUnderscore "_"              = ""
+unprefixUnderscore ('_':cs@('_':_)) = cs
+unprefixUnderscore cs               = cs
 
 -- | Parse a list of strings into a theory path.
 parseTheoryPath :: [String] -> Maybe TheoryPath
-parseTheoryPath []     = Nothing
-parseTheoryPath (x:xs) = case x of
-  "help"    -> Just TheoryHelp
-  "rules"   -> Just TheoryRules
-  "message" -> Just TheoryMessage
-  "lemma"   -> parseLemma xs
-  "cases"   -> parseCases xs
-  "proof"   -> parseProof xs
-  "method"  -> parseMethod xs
-  _         -> Nothing
+parseTheoryPath =
+    parse . map unprefixUnderscore
   where
+    parse []     = Nothing
+    parse (x:xs) = case x of
+      "help"    -> Just TheoryHelp
+      "rules"   -> Just TheoryRules
+      "message" -> Just TheoryMessage
+      "lemma"   -> parseLemma xs
+      "cases"   -> parseCases xs
+      "proof"   -> parseProof xs
+      "method"  -> parseMethod xs
+      _         -> Nothing
+
     safeRead = listToMaybe . map fst . reads
 
     parseLemma ys = TheoryLemma <$> listToMaybe ys

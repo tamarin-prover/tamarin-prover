@@ -1,3 +1,6 @@
+* 0.8.2.1 bugfix release
+    Should fix the ominous "no such lemma or proof path" GUI bug.
+
 * 0.8.2.0
     documentation:
       - The submitted draft of the Meier's PhD thesis on "Advancing Automated

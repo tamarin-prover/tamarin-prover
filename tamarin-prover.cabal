@@ -1,7 +1,7 @@
 cabal-version:      >= 1.8
 build-type:         Simple
 name:               tamarin-prover
-version:            0.8.2.0
+version:            0.8.2.1
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
