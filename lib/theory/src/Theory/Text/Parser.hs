@@ -201,6 +201,8 @@ typeAssertions = fmap TypingE $
 protoRule :: Parser (ProtoRuleE)
 protoRule = do
     name  <- try (symbol "rule" *> optional moduloE *> identifier <* colon)
+    when (name `elem` reservedRuleNames) $
+        fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
     (ps,as,cs) <- genericRule
     return $ apply subst $ Rule (StandRule name) ps cs as

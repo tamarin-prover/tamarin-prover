@@ -81,6 +81,7 @@ module Theory.Model.Rule (
   , unifiableRuleACInsts
 
   -- * Pretty-Printing
+  , reservedRuleNames
   , showRuleCaseName
   , prettyProtoRuleName
   , prettyRuleName
@@ -533,13 +534,19 @@ unifiableRuleACInsts ru1 ru2 =
 ------------------------------------------------------------------------------
 
 -- | Prefix the name if it is equal to a reserved name.
+--
+-- NOTE: We maintain the invariant that a theory does not contain standard
+-- rules with a reserved name. This is a last ressort. The pretty-printed
+-- theory can then not be parsed anymore.
 prefixIfReserved :: String -> String
 prefixIfReserved n
-  | n `elem` reserved  = "_" ++ n
-  | "_" `isPrefixOf` n = "_" ++ n
-  | otherwise          = n
-  where
-    reserved = ["Fresh", "irecv", "isend", "coerce", "fresh", "pub"]
+  | n `elem` reservedRuleNames = "_" ++ n
+  | "_" `isPrefixOf` n         = "_" ++ n
+  | otherwise                  = n
+
+-- | List of all reserved rule names.
+reservedRuleNames :: [String]
+reservedRuleNames = ["Fresh", "irecv", "isend", "coerce", "fresh", "pub"]
 
 prettyProtoRuleName :: Document d => ProtoRuleName -> d
 prettyProtoRuleName rn = text $ case rn of
