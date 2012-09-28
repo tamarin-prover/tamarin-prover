@@ -367,7 +367,7 @@ analyzing: data/examples/classic/NSPK3.spthy
 analyzed: data/examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.038622s
+  processing time: 1.697538s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)
@@ -381,7 +381,7 @@ summary of summaries:
 analyzed: data/examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.038622s
+  processing time: 1.697538s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)

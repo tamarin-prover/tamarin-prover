@@ -206,7 +206,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.689435s
+  processing time: 0.691604s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.689435s
+  processing time: 0.691604s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

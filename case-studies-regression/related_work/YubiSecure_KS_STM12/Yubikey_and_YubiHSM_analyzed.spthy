@@ -54,7 +54,7 @@ rule (modulo E) isendHSM:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) _irecv:
+rule (modulo E) irecvHSM:
    [ OutHSM( x ) ] --[ HSMRead( x ) ]-> [ Out( x ) ]
 
   /* has exactly the trivial AC variant */
@@ -323,25 +323,22 @@ next
           solve( !YSM_AEAD_YUBIKEY_OTP_DECODE( ~kh ) ▶₂ #t3 )
             case HSMInit
             solve( !KU( xorc(senc(keystream(~kh, N), ~k), <k2, did>) ) @ #vk.6 )
-              case _irecv
-              by contradiction // cyclic
-            next
               case cxorc
               solve( !KU( mac(<k2, did>, ~k) ) @ #vk.8 )
-                case _irecv
-                by contradiction // cyclic
-              next
                 case cmac
                 solve( !KU( ~k ) @ #vk.12 )
-                  case _irecv
+                  case irecvHSM
                   by contradiction // cyclic
                 qed
+              next
+                case irecvHSM
+                by contradiction // cyclic
               next
                 case read_AEAD_case_1
                 solve( !KU( ~sid ) @ #vk.4 )
                   case Yubikey_PressButton_case_1
                   solve( !KU( ~k2 ) @ #vk.11 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   next
                     case read_AEAD_case_1
@@ -352,23 +349,20 @@ next
                       case Yubikey_PressButton_case_2
                       by contradiction // from formulas
                     next
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
-                        case _irecv
-                        by contradiction // cyclic
-                      next
                         case csenc
                         solve( !KU( ~k ) @ #vk.20 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         qed
                       next
+                        case irecvHSM
+                        by contradiction // cyclic
+                      next
                         case read_AEAD_case_1
                         solve( !KU( ~k2.1 ) @ #vk.20 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         next
                           case read_AEAD_case_1
@@ -376,14 +370,14 @@ next
                         next
                           case read_AEAD_case_2
                           solve( !KU( ~k ) @ #vk.22 )
-                            case _irecv
+                            case irecvHSM
                             by contradiction // cyclic
                           qed
                         qed
                       next
                         case read_AEAD_case_2
                         solve( !KU( ~k2.1 ) @ #vk.20 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         next
                           case read_AEAD_case_1
@@ -391,23 +385,26 @@ next
                         next
                           case read_AEAD_case_2
                           solve( !KU( ~k ) @ #vk.22 )
-                            case _irecv
+                            case irecvHSM
                             by contradiction // cyclic
                           qed
                         qed
                       qed
+                    next
+                      case irecvHSM
+                      by contradiction // cyclic
                     qed
                   next
                     case read_AEAD_case_2
                     solve( !KU( ~k ) @ #vk.14 )
-                      case _irecv
+                      case irecvHSM
                       by contradiction // cyclic
                     qed
                   qed
                 next
                   case Yubikey_PressButton_case_2
                   solve( !KU( ~k2 ) @ #vk.11 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   next
                     case read_AEAD_case_1
@@ -418,23 +415,20 @@ next
                       case Yubikey_PressButton_case_2
                       by contradiction // from formulas
                     next
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
-                        case _irecv
-                        by contradiction // cyclic
-                      next
                         case csenc
                         solve( !KU( ~k ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         qed
                       next
+                        case irecvHSM
+                        by contradiction // cyclic
+                      next
                         case read_AEAD_case_1
                         solve( !KU( ~k2.1 ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         next
                           case read_AEAD_case_1
@@ -442,14 +436,14 @@ next
                         next
                           case read_AEAD_case_2
                           solve( !KU( ~k ) @ #vk.24 )
-                            case _irecv
+                            case irecvHSM
                             by contradiction // cyclic
                           qed
                         qed
                       next
                         case read_AEAD_case_2
                         solve( !KU( ~k2.1 ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         next
                           case read_AEAD_case_1
@@ -457,21 +451,24 @@ next
                         next
                           case read_AEAD_case_2
                           solve( !KU( ~k ) @ #vk.24 )
-                            case _irecv
+                            case irecvHSM
                             by contradiction // cyclic
                           qed
                         qed
                       qed
+                    next
+                      case irecvHSM
+                      by contradiction // cyclic
                     qed
                   next
                     case read_AEAD_case_2
                     solve( !KU( ~k ) @ #vk.16 )
-                      case _irecv
+                      case irecvHSM
                       by contradiction // cyclic
                     qed
                   qed
                 next
-                  case _irecv
+                  case irecvHSM
                   by contradiction // cyclic
                 next
                   case read_AEAD_case_1
@@ -482,23 +479,20 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction // from formulas
                   next
-                    case _irecv
-                    by contradiction // cyclic
-                  next
                     case csenc
                     solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.11 )
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( ~k ) @ #vk.20 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       qed
                     next
+                      case irecvHSM
+                      by contradiction // cyclic
+                    next
                       case read_AEAD_case_1
                       solve( !KU( ~k2.1 ) @ #vk.20 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       next
                         case read_AEAD_case_1
@@ -506,14 +500,14 @@ next
                       next
                         case read_AEAD_case_2
                         solve( !KU( ~k ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         qed
                       qed
                     next
                       case read_AEAD_case_2
                       solve( !KU( ~k2.1 ) @ #vk.20 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       next
                         case read_AEAD_case_1
@@ -521,16 +515,19 @@ next
                       next
                         case read_AEAD_case_2
                         solve( !KU( ~k ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         qed
                       qed
                     qed
+                  next
+                    case irecvHSM
+                    by contradiction // cyclic
                   qed
                 next
                   case read_AEAD_case_2
                   solve( !KU( ~k ) @ #vk.14 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   qed
                 qed
@@ -539,7 +536,7 @@ next
                 solve( !KU( ~sid ) @ #vk.4 )
                   case Yubikey_PressButton_case_1
                   solve( !KU( ~k2 ) @ #vk.11 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   next
                     case read_AEAD_case_1
@@ -550,23 +547,20 @@ next
                       case Yubikey_PressButton_case_2
                       by contradiction // from formulas
                     next
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
-                        case _irecv
-                        by contradiction // cyclic
-                      next
                         case csenc
                         solve( !KU( ~k ) @ #vk.20 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         qed
                       next
+                        case irecvHSM
+                        by contradiction // cyclic
+                      next
                         case read_AEAD_case_1
                         solve( !KU( ~k2.1 ) @ #vk.20 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         next
                           case read_AEAD_case_1
@@ -574,14 +568,14 @@ next
                         next
                           case read_AEAD_case_2
                           solve( !KU( ~k ) @ #vk.22 )
-                            case _irecv
+                            case irecvHSM
                             by contradiction // cyclic
                           qed
                         qed
                       next
                         case read_AEAD_case_2
                         solve( !KU( ~k2.1 ) @ #vk.20 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         next
                           case read_AEAD_case_1
@@ -589,23 +583,26 @@ next
                         next
                           case read_AEAD_case_2
                           solve( !KU( ~k ) @ #vk.22 )
-                            case _irecv
+                            case irecvHSM
                             by contradiction // cyclic
                           qed
                         qed
                       qed
+                    next
+                      case irecvHSM
+                      by contradiction // cyclic
                     qed
                   next
                     case read_AEAD_case_2
                     solve( !KU( ~k ) @ #vk.14 )
-                      case _irecv
+                      case irecvHSM
                       by contradiction // cyclic
                     qed
                   qed
                 next
                   case Yubikey_PressButton_case_2
                   solve( !KU( ~k2 ) @ #vk.11 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   next
                     case read_AEAD_case_1
@@ -616,23 +613,20 @@ next
                       case Yubikey_PressButton_case_2
                       by contradiction // from formulas
                     next
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
-                        case _irecv
-                        by contradiction // cyclic
-                      next
                         case csenc
                         solve( !KU( ~k ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         qed
                       next
+                        case irecvHSM
+                        by contradiction // cyclic
+                      next
                         case read_AEAD_case_1
                         solve( !KU( ~k2.1 ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         next
                           case read_AEAD_case_1
@@ -640,14 +634,14 @@ next
                         next
                           case read_AEAD_case_2
                           solve( !KU( ~k ) @ #vk.24 )
-                            case _irecv
+                            case irecvHSM
                             by contradiction // cyclic
                           qed
                         qed
                       next
                         case read_AEAD_case_2
                         solve( !KU( ~k2.1 ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         next
                           case read_AEAD_case_1
@@ -655,21 +649,24 @@ next
                         next
                           case read_AEAD_case_2
                           solve( !KU( ~k ) @ #vk.24 )
-                            case _irecv
+                            case irecvHSM
                             by contradiction // cyclic
                           qed
                         qed
                       qed
+                    next
+                      case irecvHSM
+                      by contradiction // cyclic
                     qed
                   next
                     case read_AEAD_case_2
                     solve( !KU( ~k ) @ #vk.16 )
-                      case _irecv
+                      case irecvHSM
                       by contradiction // cyclic
                     qed
                   qed
                 next
-                  case _irecv
+                  case irecvHSM
                   by contradiction // cyclic
                 next
                   case read_AEAD_case_1
@@ -680,23 +677,20 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction // from formulas
                   next
-                    case _irecv
-                    by contradiction // cyclic
-                  next
                     case csenc
                     solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.11 )
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( ~k ) @ #vk.20 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       qed
                     next
+                      case irecvHSM
+                      by contradiction // cyclic
+                    next
                       case read_AEAD_case_1
                       solve( !KU( ~k2.1 ) @ #vk.20 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       next
                         case read_AEAD_case_1
@@ -704,14 +698,14 @@ next
                       next
                         case read_AEAD_case_2
                         solve( !KU( ~k ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         qed
                       qed
                     next
                       case read_AEAD_case_2
                       solve( !KU( ~k2.1 ) @ #vk.20 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       next
                         case read_AEAD_case_1
@@ -719,26 +713,32 @@ next
                       next
                         case read_AEAD_case_2
                         solve( !KU( ~k ) @ #vk.22 )
-                          case _irecv
+                          case irecvHSM
                           by contradiction // cyclic
                         qed
                       qed
                     qed
+                  next
+                    case irecvHSM
+                    by contradiction // cyclic
                   qed
                 next
                   case read_AEAD_case_2
                   solve( !KU( ~k ) @ #vk.14 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   qed
                 qed
               qed
             next
+              case irecvHSM
+              by contradiction // cyclic
+            next
               case read_AEAD_case_1
               solve( !KU( ~sid ) @ #vk.2 )
                 case Yubikey_PressButton_case_1
                 solve( !KU( ~k2 ) @ #vk.11 )
-                  case _irecv
+                  case irecvHSM
                   by contradiction // cyclic
                 next
                   case read_AEAD_case_1
@@ -749,35 +749,35 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction // from formulas
                   next
-                    case _irecv
-                    by contradiction // cyclic
-                  next
                     case csenc
                     solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.13 )
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( ~k ) @ #vk.18 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       qed
+                    next
+                      case irecvHSM
+                      by contradiction // cyclic
                     next
                       case read_AEAD
                       by contradiction // cyclic
                     qed
+                  next
+                    case irecvHSM
+                    by contradiction // cyclic
                   qed
                 next
                   case read_AEAD_case_2
                   solve( !KU( ~k ) @ #vk.12 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   qed
                 qed
               next
                 case Yubikey_PressButton_case_2
                 solve( !KU( ~k2 ) @ #vk.11 )
-                  case _irecv
+                  case irecvHSM
                   by contradiction // cyclic
                 next
                   case read_AEAD_case_1
@@ -788,33 +788,33 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction // from formulas
                   next
-                    case _irecv
-                    by contradiction // cyclic
-                  next
                     case csenc
                     solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.15 )
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( ~k ) @ #vk.20 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       qed
+                    next
+                      case irecvHSM
+                      by contradiction // cyclic
                     next
                       case read_AEAD
                       by contradiction // cyclic
                     qed
+                  next
+                    case irecvHSM
+                    by contradiction // cyclic
                   qed
                 next
                   case read_AEAD_case_2
                   solve( !KU( ~k ) @ #vk.14 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   qed
                 qed
               next
-                case _irecv
+                case irecvHSM
                 by contradiction // cyclic
               next
                 case read_AEAD_case_1
@@ -825,28 +825,28 @@ next
                   case Yubikey_PressButton_case_2
                   by contradiction // from formulas
                 next
-                  case _irecv
-                  by contradiction // cyclic
-                next
                   case csenc
                   solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.12 )
-                    case _irecv
-                    by contradiction // cyclic
-                  next
                     case csenc
                     solve( !KU( ~k ) @ #vk.18 )
-                      case _irecv
+                      case irecvHSM
                       by contradiction // cyclic
                     qed
+                  next
+                    case irecvHSM
+                    by contradiction // cyclic
                   next
                     case read_AEAD
                     by contradiction // cyclic
                   qed
+                next
+                  case irecvHSM
+                  by contradiction // cyclic
                 qed
               next
                 case read_AEAD_case_2
                 solve( !KU( ~k ) @ #vk.11 )
-                  case _irecv
+                  case irecvHSM
                   by contradiction // cyclic
                 qed
               qed
@@ -855,7 +855,7 @@ next
               solve( !KU( ~sid ) @ #vk.2 )
                 case Yubikey_PressButton_case_1
                 solve( !KU( ~k2 ) @ #vk.11 )
-                  case _irecv
+                  case irecvHSM
                   by contradiction // cyclic
                 next
                   case read_AEAD_case_1
@@ -866,35 +866,35 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction // from formulas
                   next
-                    case _irecv
-                    by contradiction // cyclic
-                  next
                     case csenc
                     solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.13 )
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( ~k ) @ #vk.18 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       qed
+                    next
+                      case irecvHSM
+                      by contradiction // cyclic
                     next
                       case read_AEAD
                       by contradiction // cyclic
                     qed
+                  next
+                    case irecvHSM
+                    by contradiction // cyclic
                   qed
                 next
                   case read_AEAD_case_2
                   solve( !KU( ~k ) @ #vk.12 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   qed
                 qed
               next
                 case Yubikey_PressButton_case_2
                 solve( !KU( ~k2 ) @ #vk.11 )
-                  case _irecv
+                  case irecvHSM
                   by contradiction // cyclic
                 next
                   case read_AEAD_case_1
@@ -905,33 +905,33 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction // from formulas
                   next
-                    case _irecv
-                    by contradiction // cyclic
-                  next
                     case csenc
                     solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.15 )
-                      case _irecv
-                      by contradiction // cyclic
-                    next
                       case csenc
                       solve( !KU( ~k ) @ #vk.20 )
-                        case _irecv
+                        case irecvHSM
                         by contradiction // cyclic
                       qed
+                    next
+                      case irecvHSM
+                      by contradiction // cyclic
                     next
                       case read_AEAD
                       by contradiction // cyclic
                     qed
+                  next
+                    case irecvHSM
+                    by contradiction // cyclic
                   qed
                 next
                   case read_AEAD_case_2
                   solve( !KU( ~k ) @ #vk.14 )
-                    case _irecv
+                    case irecvHSM
                     by contradiction // cyclic
                   qed
                 qed
               next
-                case _irecv
+                case irecvHSM
                 by contradiction // cyclic
               next
                 case read_AEAD_case_1
@@ -942,28 +942,28 @@ next
                   case Yubikey_PressButton_case_2
                   by contradiction // from formulas
                 next
-                  case _irecv
-                  by contradiction // cyclic
-                next
                   case csenc
                   solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.12 )
-                    case _irecv
-                    by contradiction // cyclic
-                  next
                     case csenc
                     solve( !KU( ~k ) @ #vk.18 )
-                      case _irecv
+                      case irecvHSM
                       by contradiction // cyclic
                     qed
+                  next
+                    case irecvHSM
+                    by contradiction // cyclic
                   next
                     case read_AEAD
                     by contradiction // cyclic
                   qed
+                next
+                  case irecvHSM
+                  by contradiction // cyclic
                 qed
               next
                 case read_AEAD_case_2
                 solve( !KU( ~k ) @ #vk.11 )
-                  case _irecv
+                  case irecvHSM
                   by contradiction // cyclic
                 qed
               qed
@@ -1176,19 +1176,19 @@ next
         solve( !Succ( zero(), one ) ▶₄ #t1 )
           case InitSucc
           solve( !KU( ~k2 ) @ #vk )
-            case _irecv
+            case irecvHSM
             by contradiction // cyclic
           next
             case read_AEAD_case_1
             solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.3 )
-              case _irecv
-              by contradiction // cyclic
-            next
               case csenc
               solve( !KU( ~k ) @ #vk.5 )
-                case _irecv
+                case irecvHSM
                 by contradiction // cyclic
               qed
+            next
+              case irecvHSM
+              by contradiction // cyclic
             next
               case read_AEAD
               by contradiction // cyclic
@@ -1196,26 +1196,26 @@ next
           next
             case read_AEAD_case_2
             solve( !KU( ~k ) @ #vk.3 )
-              case _irecv
+              case irecvHSM
               by contradiction // cyclic
             qed
           qed
         next
           case StepSucc
           solve( !KU( ~k2 ) @ #vk )
-            case _irecv
+            case irecvHSM
             by contradiction // cyclic
           next
             case read_AEAD_case_1
             solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.3 )
-              case _irecv
-              by contradiction // cyclic
-            next
               case csenc
               solve( !KU( ~k ) @ #vk.5 )
-                case _irecv
+                case irecvHSM
                 by contradiction // cyclic
               qed
+            next
+              case irecvHSM
+              by contradiction // cyclic
             next
               case read_AEAD
               by contradiction // cyclic
@@ -1223,7 +1223,7 @@ next
           next
             case read_AEAD_case_2
             solve( !KU( ~k ) @ #vk.3 )
-              case _irecv
+              case irecvHSM
               by contradiction // cyclic
             qed
           qed
@@ -1236,7 +1236,7 @@ next
         solve( !Succ( zero(), one ) ▶₄ #t1 )
           case InitSucc
           solve( !KU( ~k2 ) @ #vk )
-            case _irecv
+            case irecvHSM
             by contradiction // cyclic
           next
             case read_AEAD_case_1
@@ -1248,7 +1248,7 @@ next
         next
           case StepSucc
           solve( !KU( ~k2 ) @ #vk )
-            case _irecv
+            case irecvHSM
             by contradiction // cyclic
           next
             case read_AEAD_case_1
@@ -1588,13 +1588,13 @@ next
       solve( (last(#t2))  ∥ (last(#t1)) )
         case case_1
         solve( !KU( ~k ) @ #vk )
-          case _irecv
+          case irecvHSM
           by contradiction // cyclic
         qed
       next
         case case_2
         solve( !KU( ~k ) @ #vk )
-          case _irecv
+          case irecvHSM
           by contradiction // cyclic
         qed
       qed
@@ -2063,7 +2063,7 @@ analyzing: data/examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.sp
 analyzed: data/examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.735524s
+  processing time: 11.808348s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   k2_is_secret_use_induction (all-traces): verified (132 steps)
@@ -2077,7 +2077,7 @@ summary of summaries:
 analyzed: data/examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.735524s
+  processing time: 11.808348s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   k2_is_secret_use_induction (all-traces): verified (132 steps)

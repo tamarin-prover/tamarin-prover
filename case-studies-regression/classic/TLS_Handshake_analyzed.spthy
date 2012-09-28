@@ -798,7 +798,7 @@ analyzing: data/examples/classic/TLS_Handshake.spthy
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.04012s
+  processing time: 2.636129s
   session_key_secrecy (all-traces): verified (106 steps)
   injective_agree (all-traces): verified (48 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
@@ -811,7 +811,7 @@ summary of summaries:
 analyzed: data/examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.04012s
+  processing time: 2.636129s
   session_key_secrecy (all-traces): verified (106 steps)
   injective_agree (all-traces): verified (48 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
