@@ -14,6 +14,11 @@ We use Linux and Mac OS X during the development of Tamarin. Windows can be
 used for development, but the directory layout simplification introduced via
 symbolic links will not work.
 
+As of October 1st, 2012, we started organizing our branches according to
+http://nvie.com/posts/a-successful-git-branching-model/.
+We moreover use the Haskell coding style from
+https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md.
+
 The simplest way to start developing is to call `make force-install` in the
 root directory of this repository. This installs the repository versions of
 the `tamarin-prover` package and its supporting libraries
