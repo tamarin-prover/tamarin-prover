@@ -3,15 +3,14 @@ Tutorial for the Tamarin prover for security protocol analysis
 ==============================================================
 
 Authors: 	Simon Meier, Benedikt Schmidt
-Date: 	        April 2012
+Date: 	        September 2012
 
 
 Introduction
 ------------
 
-This user guide assumes that you have a copy of our CSF'12 paper on
-"Automated Analysis of Diffie-Hellman Protocols and Advanced Security
-Properties", whose extended version is available from
+This user guide assumes that you have a copy of the submitted draft of Meier's
+PhD thesis, which is  available from
 http://www.infsec.ethz.ch/research/software/tamarin.
 
 The input files for the Tamarin prover have the extension .spthy, which is
@@ -20,8 +19,8 @@ short for 'security protocol theory'. A security protocol theory specifies
   1. the signature and equational theory to use for the message algebra,
   2. the set of set of multiset rewriting rules modeling the protocol and
      the adversary capabilities, and
-  3. the guarded trace properties whose validity we wish to check for this
-     set of multiset rewriting rules.
+  3. the guarded trace properties whose satisfiability or validity we wish to
+     check for this set of multiset rewriting rules.
 
 We explain each of these parts where they occur in the following security
 protocol theory. Before we start, a few notes on the syntax.
@@ -407,16 +406,16 @@ the 'autoprover' and '--prove'.
 Conclusion
 ----------
 
-By now, you should have enough knowledge to understand the case studies from
-our CSF'12 paper. Recall that you can find them in the directory listed at the
-bottom of the help message, when calling 'tamarin-prover' without any
+By now, you should have enough knowledge to understand the case studies
+included with Tamarin. Recall that you can find them in the directory listed
+at the bottom of the help message, when calling 'tamarin-prover' without any
 arguments. Note that Tamarin also outputs the path to the reference MANUAL
 specifying and explaining the grammar of security protocol theories and giving
-some additional hints on additional theory exploited by Tamarin.  If you have
+some additional hints on additional theory exploited by Tamarin. If you have
 further questions, please do not hesitate to contact either
 
   Benedikt Schmidt    benedikt.schmidt@inf.ethz.ch
-  Simon Meier         simon.meier@inf.ethz.ch
+  Simon Meier         iridcode@gmail.com
   Cas Cremers         cas.cremers@inf.ethz.ch
 
 
