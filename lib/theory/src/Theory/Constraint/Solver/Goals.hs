@@ -112,20 +112,26 @@ openGoals sys = do
     return (goal, (get gsNr status, useful))
   where
     existingDeps = rawLessRel sys
+    hasKUGuards  =
+        any ((KUFact `elem`) . guardFactTags) $ S.toList $ get sFormulas sys
 
-    -- We use the following heuristic for marking KU-actions as useful (worth
-    -- solving now) or useless (to be delayed until no more useful goals
-    -- remain). We ignore all goals that are simple terms or where there
-    -- exists a node, not after the premise or the last node, providing an Out
-    -- or KD conclusion that provides the message we are looking for as a
-    -- toplevel term. If such a node exist, then solving the goal will result
-    -- in at least one case where we didn't make real progress except.
-    toplevelTerms t@(viewTerm2 -> FPair t1 t2) =
-        t : toplevelTerms t1 ++ toplevelTerms t2
-    toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
-    toplevelTerms t = [t]
+    checkTermLits :: (LSort -> Bool) -> LNTerm -> Bool
+    checkTermLits p =
+        Mono.getAll . foldMap (Mono.All . p . sortOfLit)
 
-    deducible i m = or $ do
+    -- KU goals of messages that are likely to be constructible by the
+    -- adversary. These are terms that do not contain a fresh name or a fresh
+    -- name variable. For protocols without loops they are very likely to be
+    -- constructible. For protocols with loops, such terms have to be given
+    -- similar priority as loop-breakers.
+    probablyConstructible  = checkTermLits (LSortFresh /=)
+
+    -- KU goals of messages that are currently deducible. Either because they
+    -- are composed of public names only or because they can be extracted from
+    -- a sent message using unpairing or inversion only.
+    currentlyDeducible i m = checkTermLits (LSortPub ==) m || extractible i m
+
+    extractible i m = or $ do
         (j, ru) <- M.toList $ get sNodes sys
         -- We cannot deduce a message from a last node.
         guard (not $ isLast sys j)
@@ -138,12 +144,10 @@ openGoals sys = do
         return $ m `elem` derivedMsgs &&
                  not (D.cyclic ((j, i) : existingDeps))
 
-{-
-    toplevelTerms t@(destPair -> Just (t1, t2)) =
+    toplevelTerms t@(viewTerm2 -> FPair t1 t2) =
         t : toplevelTerms t1 ++ toplevelTerms t2
-    toplevelTerms t@(destInverse -> Just t1) = t : toplevelTerms t1
+    toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
     toplevelTerms t = [t]
--}
 
 
     allMsgVarsKnownEarlier (i,_) args =
@@ -169,9 +173,7 @@ solveGoal goal = do
       ActionG i fa  -> solveAction  (nonSilentRules rules) (i, fa)
       PremiseG p fa ->
            solvePremise (get crProtocol rules ++ get crConstruct rules) p fa
-
       ChainG c p    -> solveChain (get crDestruct  rules) (c, p)
-
       SplitG i      -> solveSplit i
       DisjG disj    -> solveDisjunction disj
 

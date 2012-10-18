@@ -367,7 +367,7 @@ refineWithTypingAsms
     -> [CaseDistinction]  -- ^ Refined, typed case distinctions.
 refineWithTypingAsms [] _ cases0 =
     fmap ((modify cdCases . fmap . second) (set sCaseDistKind TypedCaseDist)) $ cases0
-refineWithTypingAsms assumptions0 ctxt cases0 =
+refineWithTypingAsms assumptions ctxt cases0 =
     fmap (modifySystems removeFormulas) $
     saturateCaseDistinctions ctxt $
     modifySystems updateSystem <$> cases0

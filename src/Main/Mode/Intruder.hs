@@ -18,13 +18,11 @@ import           System.FilePath
 
 import           Theory
 
-import           Theory.Text.Parser (dhIntruderVariantsFile,bpIntruderVariantsFile)
-
 import           Theory.Tools.IntruderRules
 
 import           Main.Console
 import           Main.Environment
-import           Main.TheoryLoader               (intruderVariantsFile)
+import           Main.TheoryLoader               (dhIntruderVariantsFile,bpIntruderVariantsFile)
 import           Main.Utils
 
 

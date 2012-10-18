@@ -11,11 +11,7 @@ module Theory.Text.Parser (
     parseOpenTheory
   , parseOpenTheoryString
   , parseLemma
-
-  -- * Cached Message Deduction Rule Variants
-  , dhIntruderVariantsFile
-  , bpIntruderVariantsFile
-  , addMessageDeductionRuleVariants
+  , parseIntruderRules
   ) where
 
 import           Prelude                    hiding (id, (.))
@@ -646,46 +642,4 @@ theory flags0 = do
 
     liftedAddAxiom thy ax = case addAxiom ax thy of
         Just thy' -> return thy'
-<<<<<<< HEAD
         Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
-=======
-        Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
-
-
-------------------------------------------------------------------------------
--- Message deduction variants cached in files
-------------------------------------------------------------------------------
-
--- | The name of the intruder variants file.
-dhIntruderVariantsFile :: FilePath
-dhIntruderVariantsFile = "intruder_variants_dh.spthy"
-
--- | The name of the intruder variants file.
-bpIntruderVariantsFile :: FilePath
-bpIntruderVariantsFile = "intruder_variants_bp.spthy"
-
--- | Add the variants of the message deduction rule. Uses the cached version
--- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
--- deduction rules for Diffie-Hellman exponentiation.
-addMessageDeductionRuleVariants :: OpenTheory -> IO OpenTheory
-addMessageDeductionRuleVariants thy0
-  | enableBP msig = addIntruderVariants [ dhIntruderVariantsFile
-                                        , bpIntruderVariantsFile ]
-  | enableDH msig = addIntruderVariants [ dhIntruderVariantsFile ]
-  | otherwise     = return thy
-  where
-    msig         = get (sigpMaudeSig . thySignature) thy0
-    rules        = subtermIntruderRules msig ++ specialIntruderRules
-                   ++ if enableMSet msig then multisetIntruderRules else []
-    thy          = addIntrRuleACs rules thy0
-    addIntruderVariants files = do
-        ruless <- mapM loadRules files
-        return $ addIntrRuleACs (concat ruless) thy
-      where
-        loadRules file = do
-            variantsFile <- getDataFileName file
-            ifM (doesFileExist variantsFile)
-                (parseIntruderRules msig variantsFile)
-                (error $ "could not find intruder message deduction theory '"
-                           ++ variantsFile ++ "'")
->>>>>>> add support for bilinear pairing
