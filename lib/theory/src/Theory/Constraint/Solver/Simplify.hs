@@ -196,7 +196,11 @@ solveUniqueActions = do
         ruleActions   = [ (tag, length ts)
                         | ru <- rules, Fact tag ts <- get rActs ru ]
 
-        isUnique (Fact tag ts) = (tag, length ts) `elem` uniqueActions
+        isUnique (Fact tag ts) =
+           (tag, length ts) `elem` uniqueActions
+           -- multiset union leads to case-splits because there
+           -- are multiple unifiers
+           && null [ () | t <- ts, FUnion _ <- return (viewTerm2 t) ]
 
         trySolve (i, fa)
           | isUnique fa = solveGoal (ActionG i fa) >> return Changed
