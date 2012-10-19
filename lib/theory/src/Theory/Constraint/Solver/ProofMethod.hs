@@ -352,7 +352,7 @@ smartRanking allowPremiseGLoopBreakers sys =
 
     -- FIXME: This small split goal preferral is quite hacky when using
     -- induction. The problem is that we may end up solving message premise
-    -- goals all the time instead performing a necessary split. We should make
+    -- goals all the time instead of performing a necessary split. We should make
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
