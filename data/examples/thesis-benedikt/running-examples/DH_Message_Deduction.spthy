@@ -1,0 +1,38 @@
+theory DH_Message_Deduction
+begin
+
+
+section{* P_Msg *}
+
+/*
+ * Protocol:	P_Msg
+ * Modeler: 	Benedikt Schmidt
+ * Date: 	October 2012
+ * Source:	"Ph.D. Thesis: Formal Analysis of
+ *               Key Exchange Protocols and Physical
+ *               Protocols"
+ *
+ * Status: 	Working
+ */
+
+/* This is an example protocols that is used in the
+   the thesis to demonstrate various concepts */
+
+builtins: diffie-hellman
+
+rule Start:
+  [ Fr(~x), Fr(~y) ]
+  --[ Start() ]->
+  [ S(~x), Out(<('g'^~x)^~y,inv(~y)>)]
+
+rule Fin:
+  [ S(~x), In(('g'^~x)) ] --[ Fin() ]-> [ ]
+
+lemma key_deducible:
+  exists-trace
+  "Ex #i #j.
+     Start() @ i & Fin() @ j
+   & (All #k. Start() @ k ==> #k = #i)
+   & (All #k. Fin() @ k   ==> #k = #j)"
+
+end
