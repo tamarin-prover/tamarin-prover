@@ -113,7 +113,9 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
     trueDisj = [ emptySubstVFresh ]
 
 computeVariantsCached :: LNTerm -> MaudeHandle -> [LNSubstVFresh]
-computeVariantsCached inp hnd = unsafePerformIO $ do
+computeVariantsCached inp hnd = computeVariants inp `runReader` hnd
+{-
+  unsafePerformIO $ do
     createDirectoryIfMissing True tmpdir
     let hashInput = tmpdir ++ stringSHA256 (show inp)
     fEx <- doesFileExist hashInput
@@ -124,3 +126,4 @@ computeVariantsCached inp hnd = unsafePerformIO $ do
               BS.hPut tmpHnd $ B.encode result
               renameFile tmpFile hashInput
               return result
+-}
