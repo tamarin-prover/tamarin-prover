@@ -223,5 +223,17 @@ lemma no_replay:
         "not (Ex #i #j pid sid x otp1 otp2 .
          Login(pid,sid,x,otp1)@i &  Login(pid,sid,x,otp2)@j 
          & not(#i=#j))"
+
+lemma injective_correspondance:
+    "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
+         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 
+        & All otp2 #t3 . Login(pid,sid,x,otp2)@t3 ==> #t3=#t2
+        )"
+
+lemma Login_invalidates_smaller_counters:
+        "All pid otc1 tc1 otc2 tc2 #t1 #t2 #t3 .
+             LoginCounter(pid,otc1,tc1)@#t1 & LoginCounter(pid,otc2,tc2)@#t2
+			 & IsSmaller(tc1,tc2)@t3
+         	==>  #t1<#t2 "
 end
 

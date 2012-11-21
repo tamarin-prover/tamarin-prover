@@ -13,8 +13,6 @@ section{* The Yubikey-Protocol *}
 
 builtins: symmetric-encryption, multiset
 
-functions: S/1,zero/0
-
 /* We to model the Yubikey protocol, described in
 *  http://www.yubico.com/documentation
 *  http://www.yubico.com/developers-intro
