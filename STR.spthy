@@ -1,0 +1,229 @@
+theory STR0
+begin
+
+section{* *}
+
+/*
+ * Protocol: STR with JOIN only	
+ * Source:      Communication-Efficient Group Key Agreement
+ *              
+ * Modeler: 	
+ * Date: 	
+ *
+ * Model:       
+ * Status: 	
+ */
+
+builtins: diffie-hellman, multiset
+
+functions: participant/1, group/1, bk/1, br/1, upTo/1
+
+
+//setup step for initiator, sends blinded random, step0-equiv
+rule GroupInitiatorStarts:
+  let blra = 'g'^~x
+      NAME = participant('i')
+  in
+  [ Fr(~x) ,
+    Fr(~gid)]
+  --[ Actor(~x, NAME),
+      Key(~x, ~gid, ~x, group(NAME))
+    ]->
+  [ HaveKey(NAME , ~x     , ~gid     , group(NAME)              , ~x        , upTo('i')), 
+    //      name , random , group id , current group members    , group key , key computed up to here
+    Out(< NAME, ~gid, br('i'), blra >),
+    Out(< NAME, ~gid, bk('i'), blra , group(NAME) >),
+    !AuthOut(NAME, ~gid, br('i'), blra, 'none'),
+    !AuthOut(NAME, ~gid, bk('i'), blra, group(NAME)),
+    CreatedElementsUpTo(~x, ~gid, 'i'),
+    GenSize(~x, ~gid, 'i')
+  ]
+
+//additional setup
+rule IncreaseSize:
+  [ GenSize(~init, ~gid, X) ]
+  --[IncreaseSize(~init, ~gid)
+    ]->
+  [ GenSize(~init, ~gid, X + 'i') ]
+
+//additional setup
+// This is the original size of the group. Members can be added by join, 
+// but this size does not change.
+rule FixSize:
+  [ GenSize(~init, ~gid, X) ]
+  --[FixSize(~init, ~gid)
+    ]->
+  [ !Size(~init, ~gid, X) ] 
+
+//step0
+rule CreateParticipant:
+  let NUMBER = X + 'i'
+      NAME = participant(NUMBER)
+      blra = 'g'^~r
+  in
+  [ !Size(~init, ~gid, X  + Y), // removed + 'i' here; make it "X + 'i' + Y" instead when uncommenting "CreateLastParticipant"
+    CreatedElementsUpTo(~init, ~gid, X),
+    Fr(~r)
+  ]
+  --[ Actor(~r, NAME),
+      Key(~r, ~gid, ~r, group(NAME))
+    ]->
+  [ WaitBKey(NUMBER , ~r, ~gid), 
+    Out(< NAME, ~gid, br(NUMBER), blra >),
+    !AuthOut(NAME, ~gid, br(NUMBER), blra, 'none'),
+    CreatedElementsUpTo(~init, ~gid, NUMBER)
+  ]
+
+// for the auto-prover to be able to solve the 2-element key_reachable_2 
+// lemma the above "CreateParticipant" needs to get the "+'i'" added back
+// and the below special case "CreateLastParticipant" needs to be uncommented
+// need to use "stop-on-trace=BFS" option for that.
+/*
+// ******** this *somehow* automagically help us in showing existance of traces... - no idea why though
+//step0
+rule CreateLastParticipant:
+  let NUMBER = X + 'i'
+      NAME = participant(NUMBER)
+      blra = 'g'^~r
+  in
+  [ !Size(~init, ~gid, X + 'i'),
+    CreatedElementsUpTo(~init, ~gid, X),
+    Fr(~r)
+  ]
+  --[ Actor(~r, NAME),
+      Key(~r, ~gid, ~r, group(NAME))
+    ]->
+  [ WaitBKey(NUMBER , ~r, ~gid), 
+    Out(< NAME, ~gid, br(NUMBER), blra >),
+    !AuthOut(NAME, ~gid, br(NUMBER), blra, 'none'),
+    CreatedElementsUpTo(~init, ~gid, NUMBER)
+  ]
+*/
+
+//part of setup
+rule AllCreated:
+  [ CreatedElementsUpTo(~init, ~gid, X),
+    !Size(~init, ~gid, X) ]
+  --[ CreationComplete(~init, ~gid, X) ]->
+  [ Expandable(~init, ~gid, X) ]
+
+//step1 and step2 (also sends bk_n)
+rule InitiatorSteps:
+  let NAME = participant('i')
+      NUMBER = Y + 'i'
+      newkey = yiblind^key
+      blindednewkey = 'g'^newkey
+      newG = group(GNAMES + participant(NUMBER))
+  in
+  [ HaveKey(NAME, ~r, ~gid, group(GNAMES), key, upTo(Y)), 
+    !Size(~r, ~gid, Y + X),
+    !AuthOut(participant(NUMBER), ~gid, br(NUMBER), yiblind, 'none')
+  ]
+  --[ Key(~r, ~gid, newkey, newG)
+  ]->
+  [ HaveKey(NAME, ~r, ~gid, newG, newkey, upTo(NUMBER)),
+    !AuthOut(participant('i'), ~gid, bk(NUMBER), blindednewkey, newG),
+    Out(< participant('i'), ~gid, bk(NUMBER), blindednewkey, newG >)
+  ]
+
+//step3
+rule ParticipantStart:
+  let NUMBER = X + 'i'
+      newG = group(NAMES + participant(NUMBER))
+      newkey = blindkey^~r
+  in
+  [ WaitBKey(NUMBER , ~r, ~gid),
+    !AuthOut(participant('i'), ~gid, bk(X), blindkey, group(NAMES))
+  ]
+  --[ Key(~r, ~gid, newkey, newG)
+  ]->
+  [ HaveKey(participant(NUMBER), ~r, ~gid, newG, newkey, upTo(NUMBER))
+  ]
+
+//step4
+rule ParticipantStep:
+  let newG = group(NAMES + participant(X+'i'))
+      newkey = xiblind^gkey
+  in
+  [ HaveKey(NM, ~r, ~gid, group(NAMES), gkey, upTo(X)),
+    !AuthOut(participant(X + 'i'), ~gid, br(X + 'i'), xiblind, 'none')
+  ]
+  --[ Key(~r, ~gid, newkey, newG)
+  ]->
+  [ HaveKey(NM, ~r, ~gid, newG, newkey, upTo(X + 'i')) 
+  ]
+
+
+
+lemma simple_existence:
+  exists-trace
+  "Ex #i2 init gid.
+         CreationComplete(init, gid, 'i' + 'i' + 'i' + 'i' ) @ i2
+"
+
+lemma key_reachable_2:
+  exists-trace
+  "Ex #i2 x 
+      #j2 y
+      #k2 p1 p2 gid
+      key.
+         Key(x, gid, key, group(participant(p1)+participant(p2))) @ i2
+       & Key(y, gid, key, group(participant(p1)+participant(p2))) @ j2
+       & not (p1 = p2)
+       & not (x = y)
+       & CreationComplete(x, gid, 'i' + 'i') @ k2
+       & (k2 < i2)
+       & (i2 < j2)
+"
+
+
+lemma key_reachable_3:
+  exists-trace
+  "Ex #i2 x 
+      #j2 y
+      #k2 z
+      #l2 gid
+      key.
+         Key(x, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i'))) @ i2
+       & Key(y, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i'))) @ j2
+       & Key(z, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i'))) @ k2
+       & not (x = y)
+       & not (x = z)
+       & not (y = z)
+       & CreationComplete(x, gid, 'i' + 'i' + 'i') @ l2
+       & (l2 < i2)
+       & (i2 < j2)
+       & (j2 < k2)
+"
+
+
+/*
+// SANITY CHECK ADDITION
+rule BreakKeyAgreement:
+  [ Fr(~k),
+    HaveKey(N, ~r, ~gid, G, gkey, upTo(X))
+  ]
+  --[ Key(~r, ~gid, ~k, G),
+      Key(~r, ~gid, gkey, G) // not even needed, this exact action happens when the 'HaveKey' gets memorized
+  ]->
+  [ HaveKey(N, ~r, ~gid, G, gkey, upTo(X)) 
+  ]
+ */
+
+
+// lemmas below not proven!
+
+lemma key_agreement:
+  all-traces
+  "All #i #j X Y gid G key1 key2.
+    ( ( Key(X, gid, key1, G) @ i
+      & Key(Y, gid, key2, G) @ j)
+    ==> (key1 = key2) )
+"
+
+lemma key_secret [use_induction]:
+   "not (Ex #i #j x key gid group.
+      Key(x, gid, key, group) @ #i & 
+      KU(key) @ #j)"
+
+end
