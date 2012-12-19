@@ -74,7 +74,7 @@ lemma key_always_secret [use_induction]:
       Key(x, G, key) @ #i & 
       KU(key) @ #j)"
 
-
+/*
 lemma key_reachable:
   exists-trace
   "Ex #i2 x $A $B $C
@@ -90,5 +90,6 @@ lemma key_reachable:
        & not (x = y)
        & not (x = z)
        & not (y = z)"
+*/
 
 end

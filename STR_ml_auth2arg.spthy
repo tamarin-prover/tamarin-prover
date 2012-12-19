@@ -1,10 +1,10 @@
-theory STR_ml_authentic_channel
+theory STR_ml_authentic_channel_2args
 begin
 
 section{* *}
 
 /*
- * Protocol: STR with authentic channel (manual translation from ML code)
+ * Protocol: STR with authentic channel and 2 arguments (manual translation from ML code)
  * Source:      Communication-Efficient Group Key Agreement
  *              
  * Modeler: 	
@@ -22,7 +22,7 @@ functions: te/1, te_inv/1  // convert group element to exponent
 equations: te_inv(te(x)) = x // te is not hiding
 
 rule AuthOut:
-  [ !AuthOut(x) ]
+  [ !AuthOut(A, x) ]
   -->
   [ Out(x) ]
 
@@ -81,12 +81,12 @@ rule Responder:
   [ Responder($R1, $I, j, below, above, ~gid)
   , Fr(~r) ]
   -->
-  [ !AuthOut( < blindedRandomOf(j,~gid), 'g'^~r > )
+  [ !AuthOut($R1, < blindedRandomOf(j,~gid), 'g'^~r > )
   , ResponderBRSent($R1, $I, j, below + <j,$R1>, above, ~gid, ~r) ]
 
 rule ResponderBKRecv:
   [ ResponderBRSent($R1, $I, j, below, above, ~gid, ~r)
-  , !AuthOut( < blindedKeyFor(j,~gid), bk > )
+  , !AuthOut($I, < blindedKeyFor(j,~gid), bk > )
   ]
   --> 
   [ ResponderLoop( $R1
@@ -101,7 +101,7 @@ rule ResponderBKRecv:
 
 rule ResponderLoop:
     [ ResponderLoop( $R1, $I, j, k, below, <k, $R2> + above, ~gid, key )
-    , !AuthOut( < blindedRandomOf(k, ~gid), br > ) 
+    , !AuthOut($R2, < blindedRandomOf(k, ~gid), br > ) 
     ]
     --[ IKey( $I, below + <'zero',$I>, ~gid, key ) ]->
     [ ResponderLoop($R1, $I, j, k + 1, <k, $R2> + below, above, ~gid, br ^ te(key)) ]
@@ -117,7 +117,7 @@ rule Initiator:
   in
   [ Initiator($I, resps + <1,$R1>, ~gid)
   , Fr(~r)
-  , !AuthOut( < blindedRandomOf(1, ~gid), br> ) ]
+  , !AuthOut($R1, < blindedRandomOf(1, ~gid), br> ) ]
   -->
   [ InitiatorLoop( $I
                  , 1 + 1            // index of first not-done
@@ -125,16 +125,16 @@ rule Initiator:
                  , resps            // not-done
                  , ~gid
                  , key)
-  , !AuthOut( < blindedKeyFor(1, ~gid), 'g'^~r> ) ]
+  , !AuthOut($I, < blindedKeyFor(1, ~gid), 'g'^~r> ) ]
 
 rule InitiatorLoop:
   let newkey = br^te(key) // here, key is a group element and has to be converted to
                          //
   in
   [ InitiatorLoop($I, j, handled, <j,$R1> + notHandled, ~gid, key)
-  , !AuthOut( < blindedRandomOf(j, ~gid), br> ) ]
+  , !AuthOut($R1, < blindedRandomOf(j, ~gid), br> ) ]
   --[ IKey($I, handled + <'zero',$I>, ~gid, key ) ]->
-  [ !AuthOut( < blindedKeyFor(j, ~gid), 'g'^te(key)> )
+  [ !AuthOut($I, < blindedKeyFor(j, ~gid), 'g'^te(key)> )
   , InitiatorLoop($I, j + 1, <j,$R1> + handled, notHandled, ~gid, newkey) ]
 
 rule InitiatorDone:
