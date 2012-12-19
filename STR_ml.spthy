@@ -100,10 +100,10 @@ rule ResponderBKRecv:
   
 
 rule ResponderLoop:
-    [ ResponderLoop($R1, $I, j, k, below, <k, $R2> + above, ~gid, key)
+    [ ResponderLoop( $R1, $I, j, k, below, <k, $R2> + above, ~gid, key )
     , !AuthOut( < blindedRandomOf(k, ~gid), br > ) 
     ]
-    -->
+    --[ IKey( $I, below + <'zero',$I>, ~gid, key ) ]->
     [ ResponderLoop($R1, $I, j, k + 1, <k, $R2> + below, above, ~gid, br ^ te(key)) ]
 
 rule ResponderDone:
@@ -133,13 +133,15 @@ rule InitiatorLoop:
   in
   [ InitiatorLoop($I, j, handled, <j,$R1> + notHandled, ~gid, key)
   , !AuthOut( < blindedRandomOf(j, ~gid), br> ) ]
-  -->
+  --[ IKey($I, handled + <'zero',$I>, ~gid, key ) ]->
   [ !AuthOut( < blindedKeyFor(j, ~gid), 'g'^te(key)> )
   , InitiatorLoop($I, j + 1, <j,$R1> + handled, notHandled, ~gid, newkey) ]
 
 rule InitiatorDone:
-  [ InitiatorLoop($I, j_, done, 'nil', ~gid, key) ]
-  --[ Key($I, done + <'zero',$I>, ~gid, key ) ]-> []
+  [ InitiatorLoop($I, j_, handled, 'nil', ~gid, key) ]
+  --[ Key($I, handled + <'zero',$I>, ~gid, key )
+    , IKey($I, handled + <'zero',$I>, ~gid, key )
+  ]-> []
 
 
 lemma key_reachable_2:
@@ -176,6 +178,12 @@ lemma key_reachable_4:
        & not (R1 = R3)
        & not (R2 = R3)
 " 
+
+
+lemma key_sececy[use_induction]:
+  all-traces
+  "not (Ex #i1 I group gid key #i2.
+          IKey( I,  group, gid, key ) @ i1 & KU( key ) @ i2)"
 
 
 end
