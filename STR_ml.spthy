@@ -101,7 +101,7 @@ rule ResponderBKRecv:
 
 rule ResponderLoop:
     [ ResponderLoop($R1, $I, j, k, below, <k, $R2> + above, ~gid, key)
-    , !AuthOut( < blindedRandomOf(j + 1, ~gid), br > )
+    , !AuthOut( < blindedRandomOf(k, ~gid), br > ) 
     ]
     -->
     [ ResponderLoop($R1, $I, j, k + 1, <k, $R2> + below, above, ~gid, br ^ te(key)) ]
@@ -172,7 +172,10 @@ lemma key_reachable_4:
        & not (I = R1)
        & not (R1 = R2)
        & not (I = R2)
-"
+       & not (I = R3)
+       & not (R1 = R3)
+       & not (R2 = R3)
+" 
 
 
 end
