@@ -1,4 +1,4 @@
-theory STR_ml_authentic_channel_2args
+theory STR_ml_authentic_channel_2args_intruder_can_corrupt
 begin
 
 section{* *}
@@ -108,7 +108,8 @@ rule ResponderLoop:
 
 rule ResponderDone:
   [ ResponderLoop($R1, $I, j, k_, below, 'nil', ~gid, key) ]
-  --[ Key($R1, below + <'zero',$I>, ~gid, key ) ]-> []
+  --[  Key($R1, below + <'zero',$I>, ~gid, key )
+    , IKey($R1, below + <'zero',$I>, ~gid, key ) ]-> []
 
 /* Initiator */
 
@@ -185,6 +186,27 @@ lemma key_reachable_4:
        & not (R1 = R3)
        & not (R2 = R3)
        & not (Ex A #i5. Corrupt(A) @ i5) 
+" 
+
+lemma key_reachable_5:
+  exists-trace
+  "Ex #i1 I R1 R2 R3 R4 gid key #i2 #i3 #i4 #i5.
+         Key( I,  <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i1
+       & Key( R1, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i2
+       & Key( R2, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i3
+       & Key( R3, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i4
+       & Key( R4, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i5
+       & not (I = R1)
+       & not (R1 = R2)
+       & not (I = R2)
+       & not (I = R3)
+       & not (R1 = R3)
+       & not (R2 = R3)
+       & not (I = R4)
+       & not (R1 = R4)
+       & not (R2 = R4)
+       & not (R3 = R4)
+       & not (Ex A #i6. Corrupt(A) @ i6) 
 " 
 
 lemma key_secrecy_with_corruption[use_induction]:

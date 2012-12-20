@@ -108,7 +108,8 @@ rule ResponderLoop:
 
 rule ResponderDone:
   [ ResponderLoop($R1, $I, j, k_, below, 'nil', ~gid, key) ]
-  --[ Key($R1, below + <'zero',$I>, ~gid, key ) ]-> []
+  --[  Key($R1, below + <'zero',$I>, ~gid, key )
+    , IKey($R1, below + <'zero',$I>, ~gid, key ) ]-> []
 
 /* Initiator */
 
