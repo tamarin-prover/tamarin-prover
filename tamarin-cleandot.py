@@ -145,7 +145,7 @@ def getRuleName(N):
 
 def getPrefix(N):
     """
-    Get node prefix up to digit or None
+    Get node prefix up to digit or None from a Node
     """
     from string import digits
 
@@ -153,7 +153,7 @@ def getPrefix(N):
     if fullname == None:
         return None
 
-    print "@@@%s@@@" % fullname
+    #print "@@@%s@@@" % fullname
 
     for i in range(0,len(fullname)):
         if fullname[i] in digits:
@@ -163,6 +163,160 @@ def getPrefix(N):
             else:
                 return None
     return None
+
+
+def incomingEdges(G,N):
+    """
+    Collect incoming edges of node N
+    """
+    l = G.get_edge_list()
+    res = []
+    n = N.get_name()
+    for e in l:
+        if e.get_destination() == n:
+            res.append(e)
+    return res
+
+
+def outgoingEdges(G,N):
+    """
+    Collect outgoing edges of node N
+    """
+    l = G.get_edge_list()
+    res = []
+    n = N.get_name()
+    for e in l:
+        if e.get_source() == n:
+            res.append(e)
+    return res
+
+
+def areConnected(G,src,dst):
+    """
+    src and dst are node names
+    return True if they are connected by an edge
+    """
+    l = G.get_edge_list()
+    for e in l:
+        if e.get_source() == src and e.get_destination() == dst:
+            return True
+    return False
+
+
+
+def del_node(G, name, index=None):
+        """Delete a node from the graph.
+       
+        Given a node's name all node(s) with that same name
+        will be deleted if 'index' is not specified or set
+        to None.
+        If there are several nodes with that same name and
+        'index' is given, only the node in that position
+        will be deleted.
+       
+        'index' should be an integer specifying the position
+        of the node to delete. If index is larger than the
+        number of nodes with that name, no action is taken.
+       
+        If nodes are deleted it returns True. If no action
+        is taken it returns False.
+        """
+   
+        if isinstance(name, Node):
+            name = name.get_name()
+       
+        if G.obj_dict['nodes'].has_key(name):
+       
+            if index is not None and index < len(G.obj_dict['nodes'][name]):
+                del G.obj_dict['nodes'][name][index]
+                return True
+            else:
+                del G.obj_dict['nodes'][name]
+                return True
+       
+        return False
+                       
+def del_edge(G, src_or_list, dst=None, index=None):
+        """Delete an edge from the graph.
+       
+        Given an edge's (source, destination) node names all
+        matching edges(s) will be deleted if 'index' is not
+        specified or set to None.
+        If there are several matching edges and 'index' is
+        given, only the edge in that position will be deleted.
+       
+        'index' should be an integer specifying the position
+        of the edge to delete. If index is larger than the
+        number of matching edges, no action is taken.
+       
+        If edges are deleted it returns True. If no action
+        is taken it returns False.
+        """
+
+        if isinstance( src_or_list, (list, tuple)):
+            if dst is not None and isinstance(dst, (int, long)):
+                index = dst
+            src, dst = src_or_list
+        else:
+            src, dst = src_or_list, dst
+   
+        if isinstance(src, Node):
+            src = src.get_name()
+
+        if isinstance(dst, Node):
+            dst = dst.get_name()
+       
+        if G.obj_dict['edges'].has_key( (src, dst) ):
+       
+            if index is not None and index < len(G.obj_dict['edges'][(src, dst)]):
+                del G.obj_dict['edges'][(src, dst)][index]
+                return True
+            else:
+                del G.obj_dict['edges'][(src, dst)]
+                return True
+       
+        return False
+        
+
+
+def removeNode(G,N):
+    """
+    Remove node N from the graph.
+    Keep edge structure intact:
+    
+    We hook up incoming and outgoing edges, replacing them by the product.
+
+    (flow left-to-right)
+    a   d      a    a
+     \ /        \    \
+      c    ==>   d    e
+     / \        /    /
+    b   e      b    b
+
+    Of course, we should only add edges that don't exist yet.
+    """
+
+    # Collect
+    incoming = incomingEdges(G,N)
+    outgoing = outgoingEdges(G,N)
+
+    # We first create new things before we remove old ones
+    for Ein in incoming:
+        src = Ein.get_source()
+        for Eout in outgoing:
+            dst = Eout.get_destination()
+            if not areConnected(G,src,dst):
+                G.add_edge(Edge(src,dst))
+
+    # Remove old edges
+    for edge in incoming + outgoing:
+        del_edge(G,edge.get_source(),edge.get_destination())
+    
+    # Remove node
+    del_node(G,N)
+
+    return G
+
 
 
 def noPort(nn):
@@ -221,6 +375,17 @@ def findConnected(G,NL,prefix=""):
 
     return NL
 
+
+def isDerivationNode(G,N):
+    """
+    Returns True iff the node N seems to be a derivation node.
+    """
+    sh = N.get("shape")
+    if sh != None:
+        if "record" in sh:
+            # Only record nodes are 'regular' rule instances
+            return False
+    return True
 
 def sanitizePrefix(s):
     """
@@ -325,12 +490,67 @@ def makeColorList(n,c1,c2):
     return l
 
 
+def isRedundantDerivation(G,N):
+    """
+    See collapseDerivations for the purpose of this check
+    """
+    if not isDerivationNode(G,N):
+        return False
+    incoming = incomingEdges(G,N)
+    outgoing = outgoingEdges(G,N)
+    if len(incoming) == 0 or len(outgoing) == 0:
+        return False
+
+    # TODO: check for non-derivation nodes "inbetween"
+    
+    return True
+
+
+def collapseDerivations(G):
+    """
+    Collapse multiple term derivations into summary nodes.
+
+    Derivation nodes are ellipses and not boxes or records, so they can be identified.
+
+    If we have two derivation nodes connected by an edge, and no non-derivation node "inbetween" them, we can collapse them.
+    This is similar to what Scyther does.
+
+    Some side cases:
+
+    - Derivation node with only outgoing edges.
+      * We keep it
+    - Derivation node with only incoming edges.
+      * We keep it.
+      
+    Essentially we want to "summarize" all other derivation edges into single ones.
+
+    """
+
+    while True:
+        # Try to find a derivation node that fits the bill
+        found = False
+        for N in G.get_node_list():
+            if isRedundantDerivation(G,N):
+                removeNode(G,N)
+                found = True
+                break
+        if not found:
+            return G
+
+
 def showClusters(G):
     """
-    Make clusters visible on the basis of rule prefixes
+    Make clusters visible on the basis of rule prefixes.
+
+    This function determines what should be clustered, clusters them, and provides them with a cluster background color. This makes some graphs significantly easier to grasp.
+
+    TODO: For consistency, we could also simply compute the color off of the concrete prefix. Maybe easier during a proof (no color switches!)
+
+    TODO: Facts connected between in-cluster edges can simply be emptied. Basis: edge between two nodes within a single cluster needs to annotation. Nodes/ports from which all edges are not needed can be collapsed. In other words: inspect all incoming and outgoing edges. If there is none from outside the cluster, then collapse the node:port. Nodes in clusters are records anyway.
     """
 
     (prefixes, clusters) = findClusters(G)
+    prefixes.sort()
 
     CL = makeColorList(len(prefixes),CLUSTERCOLOR1,CLUSTERCOLOR2)
 
@@ -339,13 +559,16 @@ def showClusters(G):
         CLwhite = makeColorList(3,CL[i],[255,255,255])
         createCluster(G,cl,prefix=pf,color=hexColor(CLwhite[1]),fillcolor=hexColor(CL[i]))
 
+    return G
+
 
 def improveGraph(G):
     """
     Improve a graph
     """
 
-    showClusters(G)
+    G = showClusters(G)
+    G = collapseDerivations(G)
     return G
 
 
