@@ -1,17 +1,18 @@
-theory TLS_Handshake
+theory TLS_Handshake_renegotiation
 begin
 
 builtins: hashing, symmetric-encryption, asymmetric-encryption, signing
 
-section{* TLS Handshake *}
+section{* TLS Handshake with renegotiation *}
 
 /*
- * Protocol:	TLS Handshake
- * Modeler: 	Simon Meier, minor update by Cas Cremers
- * Date: 	January 2012
- * Source:	Modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy.
+ * Protocol:	TLS Handshake with mutual authentication and renegotiation
+ * Modeler: 	Simon Meier (handshake)
+ * 		Cas Cremers (renegotiation)
+ * Date: 	January 2012; December 2012
+ * Source:	Handshake modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy.
  *
- * Status: 	working (2.5 seconds on an i7 Quad-Core CPU with +RTS -N)
+ * Status: 	Modeling
  */
 
 text{*
@@ -25,6 +26,7 @@ text{*
        Due to our support for composed keys, we do not need any custom
        axiomatization as Paulson does.
 
+  The renegotiation is based on the bachelor thesis of Rati Gelashvili.
 *}
 
 functions: PRF/1
@@ -38,6 +40,27 @@ rule Register_pk:
 rule Reveal_ltk:
   [ !Ltk(A, ltkA) ] --[ RevLtk(A)    ]-> [ Out(ltkA) ]
 
+
+/* Model of the record layer */
+rule recordlayer_send_NULL:
+  [ Rsend('NULL',m) ]
+  -->
+  [ Out(m) ]
+
+rule recordlayer_send_key:
+  [ Rsend(k,m) ]
+  --[ NotEq('NULL',k) ]->
+  [ Out( senc{m}k ) ]
+
+rule recordlayer_recv_NULL:
+  [ In(m) ]
+  -->
+  [ Rrecv('NULL',m) ]
+
+rule recordlayer_recv_key:
+  [ In( senc{m}k ) ]
+  --[ NotEq('NULL',k) ]->
+  [ Rrecv(k,m) ]
 
 /* We formalize the following signature based TLS handshake.
 
@@ -59,28 +82,41 @@ rule Reveal_ltk:
   }
 */
 
+// Start for record layer init
+// The key pair denotes: Client write key, Server write key.
+rule C_0:
+    [ Fr(~sid) ]
+    -->
+    [ St_C_0(~sid, $C, 'NULL', 'NULL') ]
+
+rule S_0:
+    [ Fr(~sid) ]
+    -->
+    [ St_S_0(~sid, $S, 'NULL', 'NULL') ]
+
+// Handshake protocols
 rule C_1:
     [ Fr(~nc)
-    , Fr(~sid)
+    , St_C_0(~sid, $C, Ckey, Skey)
     ]
   --[]->
-    [ Out(
+    [ Rsend(Ckey, 
         <$C, ~nc, ~sid, $pc>
       )
-    , St_C_1($C, ~nc, ~sid, $pc)
+    , St_C_1($C, ~nc, ~sid, $pc, Ckey, Skey)
     ]
 
 rule S_1:
-    [ In(
+    [ Rrecv(Ckey,
         <$C, nc, sid, pc>
       )
-    , Fr(~ns)
+    , St_S_0(~ns, $S, Ckey, Skey)
     ]
   --[]->
-    [ Out(
+    [ Rsend(Skey,
         <$S, ~ns, sid, $ps>
       )
-    , St_S_1($S, $C, sid, nc, pc, ~ns, $ps)
+    , St_S_1($S, $C, sid, nc, pc, ~ns, $ps, Ckey, Skey)
     ]
 
 rule C_2:
@@ -89,8 +125,8 @@ rule C_2:
       Ckey = h('clientKey', nc, ns, MS)
       Skey = h('serverKey', nc, ns, MS)
   in
-    [ St_C_1(C, nc, sid, pc)
-    , In(
+    [ St_C_1(C, nc, sid, pc, OldCkey, OldSkey)
+    , Rrecv(OldSkey,
         <S, ns, sid, ps>
       )
     , Fr(~pms)
@@ -99,13 +135,10 @@ rule C_2:
     ]
   --[ Running(S, C, <'server', MS, Skey, Ckey>)
     ]->
-    [ Out(
-        < aenc{ '31', ~pms }pkS
-        , sign{ '32', h('32', ns, S, ~pms) }ltkC
-        , senc{ '33', sid, MS, nc, pc, C, ns, ps, S}Ckey
-        >
-      )
-    , St_C_2(S, C, sid, nc, pc, ns, ps, ~pms)
+    [ Rsend(OldCkey, aenc{ '31', ~pms }pkS )
+    , Rsend(OldCkey, sign{ '32', h('32', ns, S, ~pms) }ltkC )
+    , Rsend(Ckey,    h( '33', sid, MS, nc, pc, C, ns, ps, S ) )
+    , St_C_2(S, C, sid, nc, pc, ns, ps, ~pms, Ckey, Skey)
     ]
 
 rule S_2:
@@ -114,13 +147,10 @@ rule S_2:
       Ckey = h('clientKey', nc, ns, MS)
       Skey = h('serverKey', nc, ns, MS)
   in
-    [ St_S_1(S, C, sid, nc, pc, ns, ps)
-    , In(
-        < aenc{ '31', pms }pk(ltkS)
-        , signature
-        , senc{ '33', sid, MS, nc, pc, C, ns, ps, S}Ckey
-        >
-      )
+    [ St_S_1(S, C, sid, nc, pc, ns, ps, OldCkey, OldSkey)
+    , Rrecv(OldCkey, aenc{ '31', pms }pk(ltkS) )
+    , Rrecv(OldCkey, signature )
+    , Rrecv(Ckey,    h('33', sid, MS, nc, pc, C, ns, ps, S ) )
     , !Pk(C, pkC)
     , !Ltk(S, ltkS)
     ]
@@ -130,30 +160,30 @@ rule S_2:
     , Running(C, S, <'client', MS, Skey, Ckey>)
     , Commit(S, C, <'server', MS, Skey, Ckey>)
     ]->
-    [ Out(
-        senc{ '4', sid, MS, nc, pc, C, ns, ps, S}Skey
-      )
+    [ Rsend(Skey, < '4', sid, MS, nc, pc, C, ns, ps, S >)
+    , St_S_0(ns, S, Ckey, Skey)
     ]
 
 rule C_3:
   let
       MS   = PRF(pms, nc, ns)
-      Ckey = h('clientKey', nc, ns, MS)
-      Skey = h('serverKey', nc, ns, MS)
+      // Ckey = h('clientKey', nc, ns, MS)
+      // Skey = h('serverKey', nc, ns, MS)
   in
-    [ St_C_2(S, C, sid, nc, pc, ns, ps, pms)
-    , In( senc{ '4', sid, MS, nc, pc, C, ns, ps, S}Skey )
+    [ St_C_2(S, C, sid, nc, pc, ns, ps, pms, Ckey, Skey)
+    , Rrecv(Skey, < '4', sid, MS, nc, pc, C, ns, ps, S > )
     ]
   --[ Commit(C, S, <'client', MS, Skey, Ckey>)
     , SessionKeys( S, C, Skey, Ckey )
     ]->
-    []
+    [ St_C_0(sid, C, Ckey, Skey) ]
 
 
 /* TODO: Also model session-key reveals and adapt security properties. */
 
 axiom Eq_check_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
 
+axiom NotEq_check_succeed: "All x y #i. NotEq(x,y) @ i ==> not (x = y)"
 
 /* Session key secrecy from the perspective of both the server and the client
  * for both the key of the server and the key of the client. Note that this
