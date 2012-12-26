@@ -10,7 +10,7 @@ from pyparsing import \
 import pprint
 
 
-inibnf = None
+labelbnf = None
 
 class rules(object):
 
@@ -201,25 +201,12 @@ def abbreviate(O):
 
 
 
-def inifile_BNF():
+def label_BNF():
 
-    global inibnf
+    global labelbnf
     
-    if not inibnf:
+    if not labelbnf:
         
-        # Special conventions at the end:
-        #
-        # Sublists that start with a string element of the form "<...>" (i.e., ending with smaller than/greater than) denote port fields. We might simplify/abbreviate them later if the ports are connected within the cluster)
-        #
-        # Nodes are also returned as part of the dict of the parsed object. That makes it easier to reason about them.
-        #
-        # Sublists that start/end with curly bracket strings are the RECORD lists, and should not be considered for abbreviations
-        #
-        # Strings that start with '#' are timepoints and we don't want to abbreviate them either.
-        #
-        # We'll make a function to cover this.
-        #
-        #
         # punctuation
         lparen = Literal("(")
         rparen = Literal(")")
@@ -241,25 +228,20 @@ def inifile_BNF():
         dotnewline  = Literal("\l")
 
         quote = "'"
-        
-        comment = semi + Optional( restOfLine )
 
         def exceptfor(x):
             return "".join( [ c for c in printables if c not in x ] ) + " \t"
 
         CONST = Combine(Literal(quote) + Word(exceptfor(quote)) + Literal(quote))
 
-        nonrbrack = exceptfor("]")
-        nonequals = exceptfor("=")
-
+        BASICID = Combine(Word( alphanums + "_-") + Optional(Literal(".") + Word(nums)))
         senc = Literal("senc")
         aenc = Literal("aenc")
         KEYWORD = senc | aenc
-
-        TERM = Forward()
-        BASICID = Combine(Word( alphanums + "_-") + Optional(Literal(".") + Word(nums)))
         ID = ~KEYWORD + Combine(Optional(dollar | tilde | sharp) + BASICID)
         TIME = Group(akrol + Combine(sharp + BASICID))
+
+        TERM = Forward()
         TERMLIST = TERM + ZeroOrMore(comma + TERM)
         TUPLE1 = Group(Literal('<') + TERMLIST + Literal('>'))
         TUPLE2 = Group(Literal('\<') + TERMLIST + Literal('\>'))
@@ -270,36 +252,24 @@ def inifile_BNF():
         TERM << (ENC | FUNC | TUPLE | CONST )
 
         TPAREN = lparen + TERMLIST + rparen
-
         TBRACK = Literal('[]')
-
         FACT = Group(Combine(Optional(bang) + ID) + Optional(TPAREN | TBRACK) + Optional(TIME))
 
+        PORT = Combine(Literal("<") + BASICID + Literal(">"))
         SINGLE = Optional(sharp + ID + colon) + (FACT | TERM)
-
-        PORT = (Combine(Literal("<") + BASICID + Literal(">"))).setResultsName("port")
-
         FIELDID = Group(Optional(PORT) + SINGLE)
 
         LABEL = Forward()
         FIELD = (lcbrack + LABEL + rcbrack) | FIELDID
         LABEL << FIELD + ZeroOrMore(rvsep + FIELD)
 
-        inibnf = LABEL
-
-        #sectionDef = lbrack + Word( nonrbrack ) + rbrack
-        #keyDef = ~lbrack + Word( nonequals ) + equals + restOfLine
+        labelbnf = LABEL
         
-        # using Dict will allow retrieval of named data fields as attributes of the parsed results
-        #inibnf = Dict( ZeroOrMore( Group( sectionDef + Dict( ZeroOrMore( Group( keyDef ) ) ) ) ) )
+        labelbnf.ignore( nbsp  )
+        labelbnf.ignore( dotnewline  )
         
-        inibnf.ignore( nbsp  )
-        inibnf.ignore( dotnewline  )
-        
-    return inibnf
+    return labelbnf
 
-
-pp = pprint.PrettyPrinter(2)
 
 def render(tokens):
     try:
@@ -392,8 +362,10 @@ def subterms(tokens):
 def test( strng ):
 
     print strng
+
+    pp = pprint.PrettyPrinter(2)
     try:
-        bnf = inifile_BNF()
+        bnf = label_BNF()
         tokens = bnf.parseString( strng ).asList()
         #pp.pprint(tokens)
         ###pp.pprint( tokens.asList() )
