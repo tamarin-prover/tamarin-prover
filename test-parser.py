@@ -12,6 +12,195 @@ import pprint
 
 inibnf = None
 
+class rules(object):
+
+    def __init__(self,D):
+        # The init is a dict of lists. We can later use this to reinsert data.
+        self.data = D
+        self.abbreviations = []
+        self.dirty = True
+
+    def checkDirty(self):
+        if self.dirty:
+            l = []
+            for k in self.data.keys():
+                l += subsequences(self.data[k])
+            self.subs = l
+            self.renders = map(render,self.subs)
+            self.dirty = False
+
+    def getTerms(self):
+        self.checkDirty()
+        return self.subs
+
+    def exists(self,string):
+        for (ta,sa) in self.abbreviations:
+            if string == sa:
+                return True
+        self.checkDirty()
+        return (string in self.renders)
+
+    def size(self,term):
+        return len(render(term))
+
+    def ignore(self,term):
+        # returns true iff TERM should not be considered for abbreviations
+        if isIgnored(term):
+            return True
+        if isTermlist(term):
+            return False
+        else:
+            return True
+        
+
+    def subst(self,l,tt,string):
+        if render(l) == tt:
+            return string
+        else:
+            if isinstance(l,list):
+                nl = []
+                for x in l:
+                    nl.append(self.subst(x,tt,string))
+                return nl
+            else:
+                return l
+
+    def abbreviate(self,term,string):
+        tt = render(term)
+
+        print "Abbreviating '%s' by '%s'" % (tt,string)
+
+        # Replace data
+        for k in self.data.keys():
+            self.data[k] = self.subst(self.data[k],tt,string)
+        self.dirty = True
+        
+        # Replace existing abbreviations
+        for i in range(0,len(self.abbreviations)):
+            (ta,sa) = self.abbreviations[i]
+            self.abbreviations[i] = (self.subst(ta,tt,string),sa)
+        
+        # abbreviate TERM by string
+        self.abbreviations.append((term,string))
+
+        
+
+    def prefix(self,term):
+        # Returns a string: if we want to abbreviate TERM, what would be an appropriate prefix string?
+        allowed = alphanums + "_-!$~"
+        i = 0
+        tt = render(term)
+        prefix = ""
+        while i < len(tt) and len(prefix) < 3:
+            if tt[i] in allowed:
+                if tt[i] in alphanums:
+                    prefix += tt[i]
+                i += 1
+            else:
+                break
+
+        if len(prefix) == 0:
+            if tt[0] in "({[<" or tt.startswith("\<"):
+                prefix = "S"
+            else:
+                prefix = "M"
+        return prefix.upper()
+
+    def isDone(self):
+        # Returns true if we are done. No need to call this, usually.
+        return False
+
+    def summary(self):
+        return (self.data, self.abbreviations)
+
+
+def abbreviate(O):
+    """
+    Abbreviate some terms
+
+    The input object should provide the following methods:
+
+    getTerms()
+        return a list of term-like objects of unspecified type, say TERM
+
+    exists(string)
+        returns true iff this string already occurs in the term list (renderings). Needed to compute a unique new string.
+
+    size(TERM)
+        returns a size indicator for the term
+
+    ignore(TERM)
+        returns true iff TERM should not be considered for abbreviations
+
+    abbreviate(TERM,string)
+        abbreviate TERM by string
+
+    prefix(TERM)
+        Returns a string: if we want to abbreviate TERM, what would be an appropriate prefix string?
+
+    isDone()
+        Returns true if we are done. No need to call this, usually.
+
+    """
+
+    def mightAbbreviate(O,t,occ):
+        # Returns a "benefit" larger than 0, or -1 if no need to abbreviate
+        if O.ignore(t):
+            return -1
+        if O.size(t) < 7:
+            return -1
+        if O.size(t) < 20 and occ == 1:
+            return -1
+        return ((2+occ) ** 2) * O.size(t)
+
+    count = 0
+    while True:
+        # Termination conditions
+        if O.isDone():
+            return
+
+        seen = []
+        bestterm = None
+        bestgain = -1
+        terms = O.getTerms()
+        for i in range(0,len(terms)):
+            t = terms[i]
+            if not (O.ignore(t) or t in seen):
+                seen.append(t)
+                occ = 1
+                for j in range(i+1,len(terms)):
+                    if terms[j] == t:
+                        occ += 1
+                print "Occurrences:",occ,render(t)
+                gain = mightAbbreviate(O,t,occ)
+                if gain > bestgain:
+                    bestterm = t
+                    bestgain = gain
+
+        if bestgain <= 0:
+            return 
+
+        # We could do a complex thing here relating bestgain to count, but we keep it simple for now
+        if count >= 7:
+            return
+
+        # Now come up with a name for it
+        nr = 0
+        prefix = O.prefix(bestterm)
+        while True:
+            nr += 1
+            short = "%s%i" % (prefix,nr)
+            if not O.exists(short):
+                break
+
+        # Propagate
+        O.abbreviate(bestterm,short)
+        count += 1
+
+        # Iterate
+
+
+
 def inifile_BNF():
 
     global inibnf
@@ -112,11 +301,11 @@ def inifile_BNF():
 
 pp = pprint.PrettyPrinter(2)
 
-def reconstitute(tokens):
+def render(tokens):
     try:
         s = ""
         for x in tokens:
-            s += reconstitute(x)
+            s += render(x)
     except:
         s = str(tokens)
         pass
@@ -216,18 +405,29 @@ def test( strng ):
     
     print "*" * 40
     print "Original: ", strng
-    print "New     : ", reconstitute(tokens)
+    print "New     : ", render(tokens)
     print "Ports   : ", ports(tokens)
     print "Subterms: "
-    for s in subterms(tokens):
-        print "  ", reconstitute(s)
+    for s in sorted(subterms(tokens)):
+        print "  ", render(s)
     print "*" * 40
     return tokens
     
-ini = test("{x}")
-ini = test("{{<n30> !Ltk( $A.26, ~ltkA.26 )|<n31> !Pk( $A.26, pk(~ltkA.26) )|<n32> Out( pk(~ltkA.26) )}}")
-ini = test("{{<n28> Fr( ~ltkA.26 )}|{<n29> #vr.25 : Register_pk[]}|{<n30> !Ltk( $A.26, ~ltkA.26 )|<n31> !Pk( $A.26, pk(~ltkA.26) )|<n32> Out( pk(~ltkA.26) )}}")
-ini = test("!KU( senc(<'4', ~sid.4, PRF(<~pms.9, nc.7, ns.7>), nc.7, pc.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$C.4, ns.7, ps.7, $A.26>,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(<'serverKey', nc.7, ns.7, PRF(<~pms.9, nc.7, ns.7>)>))\l) @ #vk.14\l")
-ini = test("{{<n0> Fr( ~nc.4 )|<n1> St_C_0( ~sid.4, $C.4, h(\<'clientKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'serverKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>)\l)\l}|{<n2> #vr.3 : C_1[]}|{<n3> Rsend( h(\<'clientKey', nc.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<$C.4, ~nc.4, ~sid.4, $pc.4\>\l)\l|<n4> St_C_1( $C.4, ~nc.4, ~sid.4, $pc.4,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'clientKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'serverKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\>)\l)\l}}")
+# ini = test("{x}")
+# ini = test("{{<n30> !Ltk( $A.26, ~ltkA.26 )|<n31> !Pk( $A.26, pk(~ltkA.26) )|<n32> Out( pk(~ltkA.26) )}}")
+# ini = test("{{<n28> Fr( ~ltkA.26 )}|{<n29> #vr.25 : Register_pk[]}|{<n30> !Ltk( $A.26, ~ltkA.26 )|<n31> !Pk( $A.26, pk(~ltkA.26) )|<n32> Out( pk(~ltkA.26) )}}")
+# ini = test("!KU( senc(<'4', ~sid.4, PRF(<~pms.9, nc.7, ns.7>), nc.7, pc.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$C.4, ns.7, ps.7, $A.26>,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(<'serverKey', nc.7, ns.7, PRF(<~pms.9, nc.7, ns.7>)>))\l) @ #vk.14\l")
+TEST = "{{<n0> Fr( ~nc.4 )|<n1> St_C_0( ~sid.4, $C.4, h(\<'clientKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'serverKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>)\l)\l}|{<n2> #vr.3 : C_1[]}|{<n3> Rsend( h(\<'clientKey', nc.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<$C.4, ~nc.4, ~sid.4, $pc.4\>\l)\l|<n4> St_C_1( $C.4, ~nc.4, ~sid.4, $pc.4,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'clientKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'serverKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\>)\l)\l}}"
+
+L = test(TEST)
+
+O = rules({ '1': L})
+abbreviate(O)
+(D,S) = O.summary()
+
+print "*" * 70
+print render(L)
+print render(D['1'])
+print "*" * 70
 
 
