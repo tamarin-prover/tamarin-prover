@@ -33,6 +33,7 @@ Where [options] is one of:
 from pydot import *
 import os
 import sys
+from string import digits, whitespace
 
 
 CCOUNT = 0
@@ -89,7 +90,10 @@ def getSubfield(s,location):
     count = 1
     i = 0
     while i < len(s):
-        if s[i] == "{":
+        if s[i] == "\\":
+            # Simply skip the escaped characters
+            i += 2
+        elif s[i] == "{":
             horizontal = not(horizontal)
             loc.append(count)
             count = 1
@@ -147,7 +151,6 @@ def getPrefix(N):
     """
     Get node prefix up to digit or None from a Node
     """
-    from string import digits
 
     fullname = getRuleName(N)
     if fullname == None:
@@ -536,6 +539,48 @@ def collapseDerivations(G):
                 break
         if not found:
             return G
+
+
+class Label(object):
+
+    """
+    This object encapsulates all label attributes for Tamarin graphs, except for record structures. These will need their own encapsulation for now.
+
+    Its purpose is to allow for scanning, and applying, substitutions.
+    """
+
+    def __init__(self,label):
+
+        self.seq = []      # Sequence of Labels and strings. Spaces are also considered and stored.
+        self.parse(label)
+
+        #if isinstance(name, Node):
+
+    def parse(self,label):
+        # Maybe we need to preprocess the label for record/html type stuff
+        self.seq = []
+        self.label = label
+
+        splitters = [",",":"]
+        delimleft = ["("]
+        delimright = [")"]
+
+
+
+    def substrings(self):
+        """
+        Yield all substrings (including the label itself) for abbreviation purposes.
+
+        Currently:
+
+        Sequence splitters : ',' ':'
+        Sequence delimiter : '(' ')'         (included in sequence)
+        Sequence wrapper   : '[' ']' '{' '}' (excluded from sequence)
+        """
+
+
+
+
 
 
 def showClusters(G):
