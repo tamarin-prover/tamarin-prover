@@ -47,11 +47,8 @@ def inifile_BNF():
 
         CONST = Combine(Literal(quote) + Word(exceptfor(quote)) + Literal(quote))
 
-        print "Well..."
         nonrbrack = exceptfor("]")
         nonequals = exceptfor("=")
-
-        print "defining ID"
 
         senc = Literal("senc")
         aenc = Literal("aenc")
@@ -76,17 +73,15 @@ def inifile_BNF():
 
         FACT = Optional(bang) + ID + Optional(TPAREN | TBRACK) + Optional(TIME)
 
-        PORT = Combine(Literal("<") + BASICID + Literal(">")).setResultsName("node")
+        SINGLE = Optional(sharp + ID + colon) + (FACT | TERM)
 
-        SINGLE = Optional(PORT) + Optional(sharp + ID + colon) + (FACT | TERM)
+        PORT = (Combine(Literal("<") + BASICID + Literal(">"))).setResultsName("port")
+
+        FIELDID = Optional(PORT) + SINGLE
 
         LABEL = Forward()
-        #RECORDFLIP = nestedExpr(opener = lcbrack, closer = rcbrack, content = LABEL)
-        RECORDFLIP = lcbrack + LABEL + rcbrack
-        RECORDLINE = ~lcbrack + ((RECORDFLIP | SINGLE) + ZeroOrMore(rvsep + (RECORDFLIP | SINGLE)))
-        LABEL << ( RECORDFLIP | RECORDLINE)
-
-        print "defined ID and TERM"
+        FIELD = (lcbrack + LABEL + rcbrack) | FIELDID
+        LABEL << FIELD + ZeroOrMore(rvsep + FIELD)
 
         inibnf = LABEL
 
@@ -99,8 +94,6 @@ def inifile_BNF():
         inibnf.ignore( nbsp  )
         inibnf.ignore( dotnewline  )
         
-        print "Defined inibnf"
-
     return inibnf
 
 
@@ -136,7 +129,7 @@ def test( strng ):
     print "*" * 40
     return tokens
     
-
+ini = test("{x}")
 ini = test("{{<n30> !Ltk( $A.26, ~ltkA.26 )|<n31> !Pk( $A.26, pk(~ltkA.26) )|<n32> Out( pk(~ltkA.26) )}}")
 ini = test("{{<n28> Fr( ~ltkA.26 )}|{<n29> #vr.25 : Register_pk[]}|{<n30> !Ltk( $A.26, ~ltkA.26 )|<n31> !Pk( $A.26, pk(~ltkA.26) )|<n32> Out( pk(~ltkA.26) )}}")
 ini = test("!KU( senc(<'4', ~sid.4, PRF(<~pms.9, nc.7, ns.7>), nc.7, pc.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$C.4, ns.7, ps.7, $A.26>,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(<'serverKey', nc.7, ns.7, PRF(<~pms.9, nc.7, ns.7>)>))\l) @ #vk.14\l")
