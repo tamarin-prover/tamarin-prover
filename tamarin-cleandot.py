@@ -61,6 +61,8 @@ class rules(object):
             l = []
             for k in self.data.keys():
                 l += subsequences(self.data[k])
+            for (ta,sa) in self.abbreviations:
+                l += subsequences(ta)
             self.subs = l
             self.renders = map(render,self.subs)
             self.dirty = False
@@ -79,9 +81,33 @@ class rules(object):
     def size(self,term):
         return len(render(term))
 
+    def isIgnored(self,L):
+        if len(L) == 1:
+            # Too small, will not abbreviate
+            return True
+        if isPort(L[0]):
+            # Ignoring port spec + following
+            return True
+
+        if matchEnds(L,'"','"'):
+            # Outer
+            return True
+
+        if matchEnds(L,"{","}"):
+            # Record
+            return True
+
+        for (ta,sa) in self.abbreviations:
+            # Check existing abbreviations
+            if ta == L:
+                # Already abbreviated
+                return True
+
+        return False
+
     def ignore(self,term):
         # returns true iff TERM should not be considered for abbreviations
-        if isIgnored(term):
+        if self.isIgnored(term):
             return True
         if isTermlist(term):
             return False
@@ -109,13 +135,15 @@ class rules(object):
         # Replace data
         for k in self.data.keys():
             self.data[k] = self.subst(self.data[k],tt,string)
-        self.dirty = True
         
         # Replace existing abbreviations
         for i in range(0,len(self.abbreviations)):
             (ta,sa) = self.abbreviations[i]
             self.abbreviations[i] = (self.subst(ta,tt,string),sa)
         
+        # We changed things
+        self.dirty = True
+
         # abbreviate TERM by string
         self.abbreviations.append((term,string))
 
@@ -388,34 +416,6 @@ def isTermlist(L):
         return False
     return True
 
-def isIgnored(L):
-    if len(L) == 1:
-        # Too small, will not abbreviate
-        return True
-    if isPort(L[0]):
-        # Ignoring port spec + following
-        return True
-
-    if matchEnds(L,'"','"'):
-        # Outer
-        return True
-
-    if matchEnds(L,"{","}"):
-        # Record
-        return True
-    return False
-
-def subterms(tokens):
-    """
-    Extract all subterms that may be candidates for abbreviations
-    """
-    subterms = []
-    L = subsequences(tokens)
-    for l in L:
-        if isTermlist(l):
-            subterms.append(l)
-    return subterms
-    
 
 def parseLabel( strng ):
 
