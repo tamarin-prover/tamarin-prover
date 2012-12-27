@@ -1027,6 +1027,8 @@ def newDot(infile):
     return outfile
 
 def main():
+    if "--version" in sys.argv[1:] or "-V" in sys.argv[1:]:
+        execDot(sys.argv[1:])
     infile = findInputFile()
     nargs = findArgs(infile)
     outfile = newDot(infile)
