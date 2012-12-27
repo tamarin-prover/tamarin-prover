@@ -371,6 +371,8 @@ def isTermlist(L):
         return False
     if L[0] == "@":
         return False
+    if L[0] == "#":
+        return False
     return True
 
 def isIgnored(L):
