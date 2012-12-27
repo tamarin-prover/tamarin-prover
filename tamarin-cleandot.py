@@ -39,7 +39,7 @@ from string import digits, whitespace
 from pyparsing import \
         Literal, Word, ZeroOrMore, OneOrMore, oneOf, Group, Dict, Optional, \
         printables, alphanums, nums, ParseException, restOfLine, Forward, delimitedList, \
-        nestedExpr, Keyword, Combine
+        nestedExpr, Keyword, Combine, replaceWith
 import pprint
 
 
@@ -301,6 +301,14 @@ def label_BNF():
         dollar = Literal("$")
         comma = Literal(",")
         nbsp  = Literal("&nbsp;")
+        langle = Literal("<")
+        rangle = Literal(">")
+        langleX = Literal("\<")
+        rangleX = Literal("\>")
+        langleBug = Literal("<").setParseAction(replaceWith("\<"))
+        rangleBug = Literal(">").setParseAction(replaceWith("\>"))
+        langleEsc = langleBug | langleX
+        rangleEsc = rangleBug | rangleX
         dotnewline  = Literal("\l")
 
         quote = "'"
@@ -319,21 +327,20 @@ def label_BNF():
 
         TERM = Forward()
         TERMLIST = TERM + ZeroOrMore(comma + TERM)
-        TUPLE1 = Group(Literal('<') + TERMLIST + Literal('>'))
-        TUPLE2 = Group(Literal('\<') + TERMLIST + Literal('\>'))
-        TUPLE3 = Group(lparen + TERMLIST + rparen)
-        TUPLE = TUPLE1 | TUPLE2 | TUPLE3
+        TUPLE1 = langleEsc + TERMLIST + rangleEsc
+        TUPLE2 = lparen + TERMLIST + rparen
+        TUPLE = TUPLE1 | TUPLE2
         ARG = lparen + TERMLIST + rparen
-        FUNC = Group(ID + Optional(ARG))
-        ENC = Group((senc | aenc) + ARG)
-        OPERAND = ENC | FUNC | TUPLE | CONST
+        FUNC = ID + Optional(ARG)
+        ENC = (senc | aenc) + ARG
+        OPERAND = Group(ENC | FUNC | TUPLE | CONST)
         TERM << OPERAND + ZeroOrMore(oneOf("^ *") + OPERAND)
 
         TPAREN = lparen + TERMLIST + rparen
         TBRACK = lbrack + Optional(TERMLIST) + rbrack
         FACT = Group(Combine(Optional(bang) + ID) + Optional(TPAREN | TBRACK) + Optional(TIME))
 
-        PORT = Combine(Literal("<") + BASICID + Literal(">"))
+        PORT = Combine(langle + BASICID + rangle)
         SINGLE = Optional(sharp + ID + colon) + (FACT | TERM)
         FIELDID = Group(Optional(PORT) + SINGLE)
 
