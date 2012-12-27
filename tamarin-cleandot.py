@@ -128,6 +128,11 @@ class rules(object):
                 return l
 
     def abbreviate(self,term,string):
+        # abbreviate TERM by string
+        # Note that we might be abbreviating some subterm of an existing definition.
+        # We therefore want to insert the new abbreviation at a suitable point:
+        # before it is first used.
+        
         tt = render(term)
 
         print "Abbreviating '%s' by '%s'" % (tt,string)
@@ -137,17 +142,25 @@ class rules(object):
             self.data[k] = self.subst(self.data[k],tt,string)
         
         # Replace existing abbreviations
+        # compute firstUse as the first usage point
+        firstUse = None
         for i in range(0,len(self.abbreviations)):
             (ta,sa) = self.abbreviations[i]
-            self.abbreviations[i] = (self.subst(ta,tt,string),sa)
+            tb = self.subst(ta,tt,string)
+            self.abbreviations[i] = (tb,sa)
+            if ta != tb and firstUse == None:
+                firstUse = i
         
         # We changed things
         self.dirty = True
-
-        # abbreviate TERM by string
-        self.abbreviations.append((term,string))
-
         
+        # insert the new abbreviation before firstUse
+        if firstUse == None:
+            firstUse = len(self.abbreviations)
+        pre = self.abbreviations[:firstUse]
+        post = self.abbreviations[firstUse:]
+        self.abbreviations = pre + [(term,string)] + post
+
 
     def prefix(self,term):
         # Returns a string: if we want to abbreviate TERM, what would be an appropriate prefix string?
@@ -982,6 +995,7 @@ def abbreviateGraph(G):
 
     Currently we assume only nodes have labels
     """
+    # Collect labels for abbreviations into a dictionary so we can later know which label belongs to which node.
     NL = G.get_node_list()
     D = {}
     for N in NL:
@@ -990,19 +1004,23 @@ def abbreviateGraph(G):
         if label != None:
             D[nn] = parseLabel(label)
 
+    # Compute abbreviations
     R = rules(D)
     abbreviate(R)
     (D,S) = R.summary()
 
+    # Propagate the abbreviations: overwrite node labels with their new labels.
     for N in NL:
         nn = N.get_name()
         if nn in D.keys():
             N.set_label(render(D[nn]))
 
+    # Construct a legend text
     l = "Abbreviations\l\l"
     for (x,y) in S:
         l += "%s = %s\l" % (y,render(x))
 
+    # Add the legend to the graph
     N = Node("Legend")
     N.set_label("\"%s\"" % (l))
     N.set_shape("box")
