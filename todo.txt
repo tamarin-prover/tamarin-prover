@@ -7,6 +7,9 @@ Todo:
 
 - Work on 'hiding' in-cluster connecting state facts.
 
+- Edges that have been added as a result should have a unique style, as
+  to avoid confusion with the "semantics" of existing edge styles.
+
 - Maybe do dependency sort on abbreviations for order in the end.
 
 - Would be nice if legend appears at bottom.
