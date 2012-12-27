@@ -28,6 +28,8 @@ Where [options] is one of:
     -K dotmode
     -o imgfile
 
+If [options] contains '-V' or '--version', the input is handled directly by graphviz.
+
 """
 
 from pydot import *
@@ -237,11 +239,22 @@ def abbreviate(O):
 
 
 def label_BNF():
+    """
+    BNF for anything that occurs as a label in dot files produced by
+    Tamarin.
+
+    This has to cover timepoints, facts, terms, as well as dot-specifics
+    for record nodes (and node ports).
+
+    Currently it is a rough overapproximation, and for example, facts are
+    considered more or less interchangeable with terms. We could be more
+    precise there, which would help for, e.g., not abbreviating facts but
+    only their arguments.
+    """
 
     global labelbnf
     
     if not labelbnf:
-        
         # punctuation
         lparen = Literal("(")
         rparen = Literal(")")
@@ -280,9 +293,9 @@ def label_BNF():
         TERMLIST = TERM + ZeroOrMore(comma + TERM)
         TUPLE1 = Group(Literal('<') + TERMLIST + Literal('>'))
         TUPLE2 = Group(Literal('\<') + TERMLIST + Literal('\>'))
-        TUPLE3 = Group(Literal('(') + TERMLIST + Literal(')'))
+        TUPLE3 = Group(lparen + TERMLIST + rparen)
         TUPLE = TUPLE1 | TUPLE2 | TUPLE3
-        ARG = Literal('(') + TERMLIST + Literal(')')
+        ARG = lparen + TERMLIST + rparen
         FUNC = Group(ID + Optional(ARG))
         ENC = Group((senc | aenc) + ARG)
         OPERAND = ENC | FUNC | TUPLE | CONST
