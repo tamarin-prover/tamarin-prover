@@ -285,7 +285,8 @@ def label_BNF():
         ARG = Literal('(') + TERMLIST + Literal(')')
         FUNC = Group(ID + Optional(ARG))
         ENC = Group((senc | aenc) + ARG)
-        TERM << (ENC | FUNC | TUPLE | CONST )
+        OPERAND = ENC | FUNC | TUPLE | CONST
+        TERM << OPERAND + ZeroOrMore(oneOf("^ *") + OPERAND)
 
         TPAREN = lparen + TERMLIST + rparen
         TBRACK = lbrack + Optional(TERMLIST) + rbrack
