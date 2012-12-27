@@ -196,7 +196,7 @@ def abbreviate(O):
         seen = []
         bestterm = None
         bestgain = -1
-        terms = O.getTerms()
+        terms = sorted(O.getTerms())    # Need the sorting
         for i in range(0,len(terms)):
             t = terms[i]
             if not (O.ignore(t) or t in seen):
@@ -205,7 +205,8 @@ def abbreviate(O):
                 for j in range(i+1,len(terms)):
                     if terms[j] == t:
                         occ += 1
-                print "Occurrences:",occ,render(t)
+                    else:
+                        break
                 gain = mightAbbreviate(O,t,occ)
                 if gain > bestgain:
                     bestterm = t
@@ -307,6 +308,8 @@ def label_BNF():
 
 
 def render(tokens):
+    if isinstance(tokens,str):
+        return tokens
     try:
         s = ""
         for x in tokens:
