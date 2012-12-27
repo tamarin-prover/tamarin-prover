@@ -1,0 +1,14 @@
+Todo:
+
+- Fix cluster coloring to be consistent (derive from prefix name)
+
+- Check that abbreviator code also considers substrings of already
+  abbreviated strings when counting occurrences.
+
+- Work on 'hiding' in-cluster connecting state facts.
+
+- Maybe do dependency sort on abbreviations for order in the end.
+
+- Would be nice if legend appears at bottom.
+
+

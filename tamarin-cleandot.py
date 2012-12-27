@@ -279,14 +279,15 @@ def label_BNF():
         TERMLIST = TERM + ZeroOrMore(comma + TERM)
         TUPLE1 = Group(Literal('<') + TERMLIST + Literal('>'))
         TUPLE2 = Group(Literal('\<') + TERMLIST + Literal('\>'))
-        TUPLE = TUPLE1 | TUPLE2
+        TUPLE3 = Group(Literal('(') + TERMLIST + Literal(')'))
+        TUPLE = TUPLE1 | TUPLE2 | TUPLE3
         ARG = Literal('(') + TERMLIST + Literal(')')
         FUNC = Group(ID + Optional(ARG))
         ENC = Group((senc | aenc) + ARG)
         TERM << (ENC | FUNC | TUPLE | CONST )
 
         TPAREN = lparen + TERMLIST + rparen
-        TBRACK = Literal('[]')
+        TBRACK = lbrack + Optional(TERMLIST) + rbrack
         FACT = Group(Combine(Optional(bang) + ID) + Optional(TPAREN | TBRACK) + Optional(TIME))
 
         PORT = Combine(Literal("<") + BASICID + Literal(">"))
@@ -297,7 +298,7 @@ def label_BNF():
         FIELD = (lcbrack + LABEL + rcbrack) | FIELDID
         LABEL << FIELD + ZeroOrMore(rvsep + FIELD)
 
-        labelbnf = LABEL
+        labelbnf = Optional(Literal('"')) + LABEL + Optional(Literal('"'))
         
         labelbnf.ignore( nbsp  )
         labelbnf.ignore( dotnewline  )
@@ -374,6 +375,10 @@ def isIgnored(L):
         return True
     if isPort(L[0]):
         # Ignoring port spec + following
+        return True
+
+    if matchEnds(L,'"','"'):
+        # Outer
         return True
 
     if matchEnds(L,"{","}"):
@@ -956,11 +961,33 @@ def abbreviateGraph(G):
     for N in NL:
         nn = N.get_name()
         label = N.get_label()
-        if label == None:
-            D[nn] = None
-        else:
+        if label != None:
             D[nn] = parseLabel(label)
 
+    R = rules(D)
+    abbreviate(R)
+    (D,S) = R.summary()
+
+    for N in NL:
+        nn = N.get_name()
+        if nn in D.keys():
+            N.set_label(render(D[nn]))
+
+    l = "Abbreviations\l\l"
+    for (x,y) in S:
+        l += "%s = %s\l" % (y,render(x))
+
+    N = Node()
+    N.set_label("\"%s\"" % (l))
+    N.set_shape("box")
+
+    S = Subgraph()
+    S.set("rank","sink")
+    S.set("style","invis")
+    S.add_node(N)
+    G.add_subgraph(S)
+
+    return G
 
 
 def improveGraph(G):

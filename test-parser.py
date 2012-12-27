@@ -225,7 +225,7 @@ def label_BNF():
         dollar = Literal("$")
         comma = Literal(",")
         nbsp  = Literal("&nbsp;")
-        dotnewline  = Literal("\l")
+        dotnewline  = (Literal("\l") | Literal("\\l"))
 
         quote = "'"
 
@@ -252,7 +252,8 @@ def label_BNF():
         TERM << (ENC | FUNC | TUPLE | CONST )
 
         TPAREN = lparen + TERMLIST + rparen
-        TBRACK = Literal('[]')
+        #TBRACK = Literal('[]')
+        TBRACK = lbrack + Optional(TERMLIST) + rbrack
         FACT = Group(Combine(Optional(bang) + ID) + Optional(TPAREN | TBRACK) + Optional(TIME))
 
         PORT = Combine(Literal("<") + BASICID + Literal(">"))
@@ -389,7 +390,7 @@ def test( strng ):
 # ini = test("{{<n30> !Ltk( $A.26, ~ltkA.26 )|<n31> !Pk( $A.26, pk(~ltkA.26) )|<n32> Out( pk(~ltkA.26) )}}")
 # ini = test("{{<n28> Fr( ~ltkA.26 )}|{<n29> #vr.25 : Register_pk[]}|{<n30> !Ltk( $A.26, ~ltkA.26 )|<n31> !Pk( $A.26, pk(~ltkA.26) )|<n32> Out( pk(~ltkA.26) )}}")
 # ini = test("!KU( senc(<'4', ~sid.4, PRF(<~pms.9, nc.7, ns.7>), nc.7, pc.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$C.4, ns.7, ps.7, $A.26>,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(<'serverKey', nc.7, ns.7, PRF(<~pms.9, nc.7, ns.7>)>))\l) @ #vk.14\l")
-TEST = "{{<n0> Fr( ~nc.4 )|<n1> St_C_0( ~sid.4, $C.4, h(\<'clientKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'serverKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>)\l)\l}|{<n2> #vr.3 : C_1[]}|{<n3> Rsend( h(\<'clientKey', nc.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<$C.4, ~nc.4, ~sid.4, $pc.4\>\l)\l|<n4> St_C_1( $C.4, ~nc.4, ~sid.4, $pc.4,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'clientKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'serverKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\>)\l)\l}}"
+TEST = "{{<n6> St_C_2( $A.26, $C.4, ~sid.4, nc.7, pc.7, ns.7,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ps.7, ~pms.9,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'clientKey', nc.7, ns.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'serverKey', nc.7, ns.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRF(\<~pms.9, nc.7, ns.7\>)\>)\l)\l|<n7> Rrecv( h(\<'serverKey', nc.7, ns.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<'4', ~sid.4, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRF(\<~pms.9, nc.7, ns.7\>), nc.7, pc.7, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$C.4, ns.7, ps.7, $A.26\>\l)\l}|{<n8> #vr.6 : C_3[Commit( $C.4, $A.26,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<'client', PRF(\<~pms.9, nc.7, ns.7\>), \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'serverKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>), \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'clientKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>)\>\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SessionKeys( $A.26, $C.4, h(\<'serverKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'clientKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)]\l}|{<n9> St_C_0( ~sid.4, $C.4, h(\<'clientKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h(\<'serverKey', nc.7, ns.7, PRF(\<~pms.9, nc.7, ns.7\>)\>)\l)\l}}"
 
 L = test(TEST)
 
