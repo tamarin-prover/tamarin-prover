@@ -38,7 +38,7 @@ import sys
 from string import digits, whitespace
 from pyparsing import \
         Literal, Word, ZeroOrMore, OneOrMore, oneOf, Group, Dict, Optional, \
-        printables, alphanums, nums, ParseException, restOfLine, Forward, delimitedList, \
+        printables, alphas, alphanums, nums, ParseException, restOfLine, Forward, delimitedList, \
         nestedExpr, Keyword, Combine, replaceWith
 import pprint
 
@@ -163,12 +163,17 @@ class rules(object):
 
 
     def prefix(self,term):
-        # Returns a string: if we want to abbreviate TERM, what would be an appropriate prefix string?
+        """
+        Returns a non-empty string: if we want to abbreviate TERM, what would be an appropriate prefix string?
+        """
+        preflen = 3     # Desired prefix length
+        
+        # First check first bit
         allowed = alphanums + "_-!$~"
         i = 0
         tt = render(term)
         prefix = ""
-        while i < len(tt) and len(prefix) < 3:
+        while i < len(tt) and len(prefix) < preflen:
             if tt[i] in allowed:
                 if tt[i] in alphanums:
                     prefix += tt[i]
@@ -176,6 +181,30 @@ class rules(object):
             else:
                 break
 
+        # Is there a lone digit left?
+        lone_digit = None
+        if len(tt) > 0:
+            j = i
+            while j < len(tt):
+                if not tt[j] in allowed:
+                    break
+                j += 1
+            j -= 1
+            while j >= i:
+                if tt[j] in nums:
+                    break
+                j -= 1
+            if j > i:
+                if not tt[j-1] in nums:
+                    lone_digit = tt[j]
+        # Then add the lone digit (or even overwrite)
+        if lone_digit and len(prefix) > 0:
+            if len(prefix) < preflen:
+                prefix += lone_digit
+            else:
+                prefix = prefix[:-1] + lone_digit
+
+        # Isolate special cases and default to simple conventions
         if len(prefix) == 0:
             if tt[0] in "({[<" or tt.startswith("\<"):
                 prefix = "S"
@@ -220,6 +249,24 @@ def abbreviate(O):
 
     """
 
+    def niceName(prefix):
+        # Now come up with a name for it
+        #
+        # If ends in a digit, then we want alphas
+        if prefix[-1] in nums:
+            for c in alphas.lower():
+                short = "%s%s" % (prefix,c)
+                if not O.exists(short):
+                    return short
+        # Otherwise find a number
+        nr = 0
+        while True:
+            nr += 1
+            short = "%s%i" % (prefix,nr)
+            if not O.exists(short):
+                return short
+
+
     def mightAbbreviate(O,t,occ):
         # Returns a "benefit" larger than 0, or -1 if no need to abbreviate
         if O.ignore(t):
@@ -263,13 +310,8 @@ def abbreviate(O):
             return
 
         # Now come up with a name for it
-        nr = 0
         prefix = O.prefix(bestterm)
-        while True:
-            nr += 1
-            short = "%s%i" % (prefix,nr)
-            if not O.exists(short):
-                break
+        short = niceName(prefix)
 
         # Propagate
         O.abbreviate(bestterm,short)
@@ -817,6 +859,7 @@ def sanitizePrefix(s):
     if len(s) == 0:
         return s
 
+    # Filter what we need
     while s[-1] in "-=+*_":
         s = s[:-1]
         if len(s) == 0:
