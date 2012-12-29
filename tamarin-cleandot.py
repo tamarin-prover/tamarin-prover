@@ -53,8 +53,76 @@ class rules(object):
     def __init__(self,D):
         # The init is a dict of lists. We can later use this to reinsert data.
         self.data = D
-        self.abbreviations = []
+        self.abbreviations = []     # Will contain (bigterm,abbreviation) pairs
+        self.prefixes = {}          # Will map prefixes to (firstabbreviation,count) tuples; its purpose is to determine later what was only used once.
         self.dirty = True
+
+    def subst(self,l,tt,string):
+        if render(l) == tt:
+            if isinstance(l,list):
+                return [string]
+            else:
+                return string
+        else:
+            if isinstance(l,list):
+                nl = []
+                for x in l:
+                    nl.append(self.subst(x,tt,string))
+                return nl
+            else:
+                return l
+
+    def replaceAll(self,src,dst):
+        """
+        Return 'firstUse' usage point (or None) in existing abbreviation sequence
+        """
+        # Replace data
+        for k in self.data.keys():
+            self.data[k] = self.subst(self.data[k],src,dst)
+        
+        # Replace existing abbreviations
+        # compute firstUse as the first usage point
+        firstUse = None
+        for i in range(0,len(self.abbreviations)):
+            (ta,sa) = self.abbreviations[i]
+            tb = self.subst(ta,src,dst)
+            if sa == src:
+                sa = dst
+            self.abbreviations[i] = (tb,sa)
+            if ta != tb and firstUse == None:
+                firstUse = i
+
+        self.dirty = True
+        return firstUse
+
+
+    def simplifySinglePrefix(self,prefix):
+        """
+        """
+        (firstab,count) = self.prefixes[prefix]
+        print "Trying to simplify %s to %s" % (firstab,prefix)
+        if not self.exists(prefix):
+            # The isolated prefix is available, so we can replace 'firstab' by 'prefix'
+            self.replaceAll(firstab,prefix)
+            return True
+        return False
+
+
+    def simplify(self):
+        """
+        Simplify single prefix occurrences, if possible, by removing the counter
+        """
+        deleted = []
+        for prefix in self.prefixes.keys():
+            (first,count) = self.prefixes[prefix]
+            if count == 1:
+                # Possibly simplify
+                if self.simplifySinglePrefix(prefix):
+                    deleted.append(prefix)
+
+        for prefix in deleted:
+            del self.prefixes[prefix]
+
 
     def checkDirty(self):
         if self.dirty:
@@ -64,7 +132,7 @@ class rules(object):
             for (ta,sa) in self.abbreviations:
                 l += subsequences(ta)
             self.subs = l
-            self.renders = map(render,self.subs)
+            self.renders = map(render,self.subs)    # Maybe replace by list comprehension
             self.dirty = False
 
     def getTerms(self):
@@ -115,20 +183,8 @@ class rules(object):
             return True
         
 
-    def subst(self,l,tt,string):
-        if render(l) == tt:
-            return string
-        else:
-            if isinstance(l,list):
-                nl = []
-                for x in l:
-                    nl.append(self.subst(x,tt,string))
-                return nl
-            else:
-                return l
-
-    def abbreviate(self,term,string):
-        # abbreviate TERM by string
+    def abbreviate(self,term,string,prefix):
+        # abbreviate TERM by string based on prefix
         # Note that we might be abbreviating some subterm of an existing definition.
         # We therefore want to insert the new abbreviation at a suitable point:
         # before it is first used.
@@ -137,22 +193,7 @@ class rules(object):
 
         print "Abbreviating '%s' by '%s'" % (tt,string)
 
-        # Replace data
-        for k in self.data.keys():
-            self.data[k] = self.subst(self.data[k],tt,string)
-        
-        # Replace existing abbreviations
-        # compute firstUse as the first usage point
-        firstUse = None
-        for i in range(0,len(self.abbreviations)):
-            (ta,sa) = self.abbreviations[i]
-            tb = self.subst(ta,tt,string)
-            self.abbreviations[i] = (tb,sa)
-            if ta != tb and firstUse == None:
-                firstUse = i
-        
-        # We changed things
-        self.dirty = True
+        firstUse = self.replaceAll(tt,string)
         
         # insert the new abbreviation before firstUse
         if firstUse == None:
@@ -160,6 +201,12 @@ class rules(object):
         pre = self.abbreviations[:firstUse]
         post = self.abbreviations[firstUse:]
         self.abbreviations = pre + [(term,string)] + post
+
+        if prefix in self.prefixes.keys():
+            (firstab,count) = self.prefixes[prefix]
+            self.prefixes[prefix] = (firstab,count+1)
+        else:
+            self.prefixes[prefix] = (string,1)
 
 
     def prefix(self,term):
@@ -206,8 +253,12 @@ class rules(object):
 
         # Isolate special cases and default to simple conventions
         if len(prefix) == 0:
-            if tt[0] in "({[<" or tt.startswith("\<"):
+            if tt[0] == "[":
                 prefix = "S"
+            elif tt[0] == "(":
+                prefix = "P"
+            elif tt[0] == "<" or tt.startswith("\<"):
+                prefix = "T"
             else:
                 prefix = "M"
         return prefix.upper()
@@ -281,7 +332,7 @@ def abbreviate(O):
     while True:
         # Termination conditions
         if O.isDone():
-            return
+            break
 
         seen = []
         bestterm = None
@@ -303,21 +354,24 @@ def abbreviate(O):
                     bestgain = gain
 
         if bestgain <= 0:
-            return 
+            break
 
         # We could do a complex thing here relating bestgain to count, but we keep it simple for now
         if count >= 7:
-            return
+            break
 
         # Now come up with a name for it
         prefix = O.prefix(bestterm)
         short = niceName(prefix)
 
         # Propagate
-        O.abbreviate(bestterm,short)
+        O.abbreviate(bestterm,short,prefix)
         count += 1
 
         # Iterate
+       
+    # close
+    O.simplify()
 
 
 
@@ -972,6 +1026,21 @@ def isRedundantDerivation(G,N):
     return True
 
 
+def collapseNode(G,N):
+    """
+    collapse a single node
+    """
+    N.set("label","")
+    N.set("shape","point")
+
+
+def isCollapsed(G,N):
+    """
+    Check if collapsed
+    """
+    return (N.get("shape") == "point")
+
+
 def collapseDerivations(G):
     """
     Collapse multiple term derivations into summary nodes.
@@ -996,10 +1065,15 @@ def collapseDerivations(G):
         # Try to find a derivation node that fits the bill
         found = False
         for N in G.get_node_list():
-            if isRedundantDerivation(G,N):
-                removeNode(G,N)
-                found = True
-                break
+            if not isCollapsed(G,N):
+                if isRedundantDerivation(G,N):
+                    """
+                    We choose to collapse it into a point or remove it.
+                    """
+                    #collapseNode(G,N)
+                    removeNode(G,N)
+                    found = True
+                    break
         if not found:
             return G
 
@@ -1044,7 +1118,7 @@ def abbreviateGraph(G):
     for N in NL:
         nn = N.get_name()
         label = N.get_label()
-        if label != None:
+        if label not in ["",None]:
             D[nn] = parseLabel(label)
 
     # Compute abbreviations
