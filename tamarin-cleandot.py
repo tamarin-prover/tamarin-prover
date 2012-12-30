@@ -30,12 +30,25 @@ Where [options] is one of:
 
 If [options] contains '-V' or '--version', the input is handled directly by graphviz.
 
+
+***********
+
+Wish list:
+
+- Fix cluster coloring to be consistent (derive from prefix name)
+
+- Work on 'hiding' in-cluster connecting state facts.
+
+- When removing nodes, new edges are often introduced. They should have a
+  distinct style to avoid confusion with the "semantics" of existing edge
+  styles.
+
 """
 
-from pydot import *
 import os
 import sys
 from string import digits, whitespace
+from pydot import *
 from pyparsing import \
         Literal, Word, ZeroOrMore, OneOrMore, oneOf, Group, Dict, Optional, \
         printables, alphas, alphanums, nums, ParseException, restOfLine, Forward, delimitedList, \
@@ -43,12 +56,27 @@ from pyparsing import \
 import pprint
 
 
-CCOUNT = 0
+# Clusters
+CCOUNT = 0                      # Cluster count (used for naming)
 CLUSTERCOLOR1 = [140,220,255]
 CLUSTERCOLOR2 = [220,180,255]
+
+# Global variable to store the pyparsing BNF.
 labelbnf = None
 
+
 class rules(object):
+    """
+    Rules object class for abbreviations purposes.
+
+    Objects from this class store all the labels from nodes in a dict.
+
+    The object serves as an interface for the abbreviation function, but it is
+    not so cleanly split as we would want.
+
+    My initial idea was to have a "generic" abbreviation function that I could
+    directly use in Scyther as well, but that's not done yet.
+    """
 
     def __init__(self,D):
         # The init is a dict of lists. We can later use this to reinsert data.
@@ -58,6 +86,10 @@ class rules(object):
         self.dirty = True
 
     def subst(self,l,tt,string):
+        """
+        Substitute a single string in the data type that we use.
+        (which is the nested list structure coming out of pyparsing)
+        """
         if render(l) == tt:
             if isinstance(l,list):
                 return [string]
@@ -74,6 +106,8 @@ class rules(object):
 
     def replaceAll(self,src,dst):
         """
+        Replace src by dst throughout the object.
+
         Return 'firstUse' usage point (or None) in existing abbreviation sequence
         """
         # Replace data
@@ -98,13 +132,19 @@ class rules(object):
 
     def simplifySinglePrefix(self,prefix):
         """
+        Try to simplify the abbreviation starting with the prefix.
+
+        Use case: we often generate "hash1" when only one hash occurs.  In such
+        cases we would have wanted to abbreviate it just by "hash".
         """
         (firstab,count) = self.prefixes[prefix]
-        print "Trying to simplify %s to %s" % (firstab,prefix)
-        if not self.exists(prefix):
-            # The isolated prefix is available, so we can replace 'firstab' by 'prefix'
-            self.replaceAll(firstab,prefix)
-            return True
+        if count == 1:
+            print "Trying to simplify %s to %s" % (firstab,prefix)
+            if not self.exists(prefix):
+                # The isolated prefix is available, so we can replace 'firstab' by 'prefix'
+                self.replaceAll(firstab,prefix)
+                return True
+
         return False
 
 
@@ -114,17 +154,17 @@ class rules(object):
         """
         deleted = []
         for prefix in self.prefixes.keys():
-            (first,count) = self.prefixes[prefix]
-            if count == 1:
-                # Possibly simplify
-                if self.simplifySinglePrefix(prefix):
-                    deleted.append(prefix)
+            if self.simplifySinglePrefix(prefix):
+                deleted.append(prefix)
 
         for prefix in deleted:
             del self.prefixes[prefix]
 
 
     def checkDirty(self):
+        """
+        We only unfold subsequences and renders when needed.
+        """
         if self.dirty:
             l = []
             for k in self.data.keys():
