@@ -55,9 +55,9 @@ import pprint
 
 
 # Clusters
-CCOUNT = 0                      # Cluster count (used for naming)
-CLUSTERCOLOR1 = (0.5,0.4,0.83)   # HSL
-CLUSTERCOLOR2 = (1.0,0.4,0.83)   # HSL
+CCOUNT = 0                       # Cluster count (used for naming)
+CLUSTERCOLOR1 = (0.5,0.3,0.83)   # HSL
+CLUSTERCOLOR2 = (1.2,0.3,0.83)   # HSL
 
 # Global variable to store the pyparsing BNF.
 labelbnf = None
@@ -1125,7 +1125,7 @@ def showClusters(G):
             x1 = CLUSTERCOLOR1[i]
             x2 = CLUSTERCOLOR2[i]
             d = x2 - x1
-            l.append(x1 + (d*v))
+            l.append((x1 + (d*v)) % 1)
 
         color1 = hexColor(hls_to_rgb(l[0],l[2],l[1]))
         color2 = hexColor(hls_to_rgb(l[0],0.5 + 0.5* l[2],l[1]))
