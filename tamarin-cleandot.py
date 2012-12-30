@@ -33,9 +33,7 @@ If [options] contains '-V' or '--version', the input is handled directly by grap
 
 ***********
 
-Wish list:
-
-- Fix cluster coloring to be consistent (derive from prefix name)
+Short-term wish list:
 
 - Work on 'hiding' in-cluster connecting state facts.
 
@@ -58,8 +56,8 @@ import pprint
 
 # Clusters
 CCOUNT = 0                      # Cluster count (used for naming)
-CLUSTERCOLOR1 = [140,220,255]
-CLUSTERCOLOR2 = [220,180,255]
+CLUSTERCOLOR1 = (0.5,0.4,0.83)   # HSL
+CLUSTERCOLOR2 = (1.0,0.4,0.83)   # HSL
 
 # Global variable to store the pyparsing BNF.
 labelbnf = None
@@ -139,7 +137,7 @@ class rules(object):
         """
         (firstab,count) = self.prefixes[prefix]
         if count == 1:
-            print "Trying to simplify %s to %s" % (firstab,prefix)
+            #print "Trying to simplify %s to %s" % (firstab,prefix)
             if not self.exists(prefix):
                 # The isolated prefix is available, so we can replace 'firstab' by 'prefix'
                 self.replaceAll(firstab,prefix)
@@ -231,7 +229,7 @@ class rules(object):
         
         tt = render(term)
 
-        print "Abbreviating '%s' by '%s'" % (tt,string)
+        #print "Abbreviating '%s' to '%s'" % (tt,string)
 
         firstUse = self.replaceAll(tt,string)
         
@@ -575,8 +573,8 @@ def isTermlist(L):
 
 def parseLabel( strng ):
 
-    print "*" * 40
-    print "Original: ", strng
+    #print "*" * 40
+    #print "Original: ", strng
 
     pp = pprint.PrettyPrinter(2)
     try:
@@ -590,9 +588,9 @@ def parseLabel( strng ):
         print " "*(err.column-1) + "^"
         print err
     
-    print "New     : ", render(tokens)
-    print "Ports   : ", ports(tokens)
-    print "*" * 40
+    #print "New     : ", render(tokens)
+    #print "Ports   : ", ports(tokens)
+    #print "*" * 40
     return tokens
 
 
@@ -1022,32 +1020,14 @@ def hexColor(c):
     """
     Turn a RGB [0-255] triplet into a hex code
     """
-    cstring = "#"
-    for i in [0,1,2]:
-        cstring += "%02X" % c[i]
+    def ST(x):
+        if x >= 0 and x <= 1:
+            return int(255 * x)
+        return 0
+
+    (r,g,b) = c
+    cstring = '#%02x%02x%02x' % (ST(r),ST(g),ST(b))
     return cstring
-
-
-def makeColorList(n,c1,c2):
-    """
-    Create a list of colors of length n, ranging from c1 to c2.
-    c1 and c2 are RGB sequences where each component is in [0,255].
-    """
-    def colorrange(n, i, c):
-        if n <= 1:
-            return c1[c]
-        else:
-            d = (c2[c] - c1[c]) / float(n-1)
-            return int(c1[c] + (i * d))
-
-    l = []
-    for i in range(0,n):
-        cc  = []
-        for c in [0,1,2]:
-            cc.append(colorrange(n, i, c))
-        l.append(cc)
-
-    return l
 
 
 def isRedundantDerivation(G,N):
@@ -1132,16 +1112,28 @@ def showClusters(G):
 
     TODO: Facts connected between in-cluster edges can simply be emptied. Basis: edge between two nodes within a single cluster needs to annotation. Nodes/ports from which all edges are not needed can be collapsed. In other words: inspect all incoming and outgoing edges. If there is none from outside the cluster, then collapse the node:port. Nodes in clusters are records anyway.
     """
+    from colorsys import hls_to_rgb
 
     (prefixes, clusters) = findClusters(G)
     prefixes.sort()
 
-    CL = makeColorList(len(prefixes),CLUSTERCOLOR1,CLUSTERCOLOR2)
-
     for (pf,cl) in clusters:
-        i = prefixes.index(pf)
-        CLwhite = makeColorList(3,CL[i],[255,255,255])
-        createCluster(G,cl,prefix=pf,color=hexColor(CLwhite[1]),fillcolor=hexColor(CL[i]))
+        v = Trick(pf)
+        print pf, v
+        l = []
+        for i in range(0,3):
+            x1 = CLUSTERCOLOR1[i]
+            x2 = CLUSTERCOLOR2[i]
+            d = x2 - x1
+            l.append(x1 + (d*v))
+
+        color1 = hexColor(hls_to_rgb(l[0],l[2],l[1]))
+        color2 = hexColor(hls_to_rgb(l[0],0.5 + 0.5* l[2],l[1]))
+        print l
+        print color1
+        print color2
+
+        createCluster(G,cl,prefix=pf,color=color2,fillcolor=color1)
 
     return G
 
@@ -1239,7 +1231,92 @@ def main():
     execDot(nargs + [outfile])
 
 
-if __name__ == '__main__':
-    main()
+def TrickFilter(s):
+    """
+    Filter stuff we don't like and uppercase.
+    """
+    res = ""
+    ignore = "()[]{}<>.-_="
+    for c in s:
+        if not c in ignore:
+            res += c
+    if len(res) == 0:
+        res = s
 
+    return res.upper()
+
+def Trick(s,mfactor=9.3):
+    """
+    Convert a string into a float in the [0..1] range.
+    """
+    N = 6
+    TN = 2**N
+
+    s = TrickFilter(s)
+
+    # value
+    v = 0
+    f = 1.1
+    for i in range(0,len(s)):
+        c = s[-(i+1)].upper()
+        v += f * ord(c) 
+        f = f * mfactor
+    v = v % TN
+
+    # reverse
+    rv = 0
+    for i in range(0,N):
+        rv = 2 * rv
+        if (v % 2) == 1:
+            rv += 1
+        v = int(v/2)
+
+    # Convert back
+    res = float(rv) / (TN-1)
+
+    #print s,"\t",res
+
+    return res
+
+
+def OptimTrick(a,b,mfactor):
+    v1 = Trick(a,mfactor=mfactor)
+    v2 = Trick(b,mfactor=mfactor)
+    return abs(v1-v2)
+
+
+def experiment(L):
+    mfactor = 1.0
+    step = 0.05
+    bestf = None
+    bestd = 0
+    while mfactor < 10:
+
+        worstd = 1
+        for (a,b) in L:
+            d = OptimTrick(a,b,mfactor)
+            if d < worstd:
+                worstd = d
+
+        if worstd > bestd or bestf == None:
+            bestd = worstd
+            bestf = mfactor
+            
+        mfactor += step
+
+    print "Best we can do:"
+    print "mfactor", bestf
+    print "delta", bestd
+
+if __name__ == '__main__':
+    # L = [ ("A","B"), \
+    #     ("Role_1","Role_2"), \
+    #     ("Role1","Role2"), \
+    #     ("Initiator","Responder"), \
+    #     ("Init","Resp"), \
+    #     ("C","S"), 
+    #     ("Client","Server") ]
+    # experiment(L)
+
+    main()
 
