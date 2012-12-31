@@ -35,11 +35,7 @@ If [options] contains '-V' or '--version', the input is handled directly by grap
 
 Short-term wish list:
 
-- Work on 'hiding' in-cluster connecting state facts.
-
-- When removing nodes, new edges are often introduced. They should have a
-  distinct style to avoid confusion with the "semantics" of existing edge
-  styles.
+- Work on 'hiding' in-cluster connecting state facts, or collapse multiple such nodes into a single record.
 
 - If Tamarin can output the rule names in the dotfile's comments, we can do a nicer color distribution.
 
@@ -865,7 +861,8 @@ def removeNode(G,N):
         for Eout in outgoing:
             dst = Eout.get_destination()
             if not areConnected(G,src,dst):
-                G.add_edge(Edge(src,dst))
+                # Unique style for newly added edges (to compensate for collapsed nodes)
+                G.add_edge(Edge(src,dst,style="dashed",penwidth="2",color="#000000"))
 
     # Remove old edges
     for edge in incoming + outgoing:
