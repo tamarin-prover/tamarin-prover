@@ -41,6 +41,8 @@ Short-term wish list:
   distinct style to avoid confusion with the "semantics" of existing edge
   styles.
 
+- If Tamarin can output the rule names in the dotfile's comments, we can do a nicer color distribution.
+
 """
 
 import os
@@ -56,8 +58,8 @@ import pprint
 
 # Clusters
 CCOUNT = 0                       # Cluster count (used for naming)
-CLUSTERCOLOR1 = (0.5,0.3,0.83)   # HSL
-CLUSTERCOLOR2 = (1.2,0.3,0.83)   # HSL
+CLUSTERCOLOR1 = (0.5,0.6,0.83)   # HSL
+CLUSTERCOLOR2 = (1.2,0.6,0.83)   # HSL
 
 # Global variable to store the pyparsing BNF.
 labelbnf = None
@@ -974,7 +976,7 @@ def makeNewWithPrefix(G,prefix=""):
 
 
 
-def createCluster(G,NL,prefix="",color=None,fillcolor=None):
+def createCluster(G,NL,prefix="",color=None,fillcolor=None,nodecolor=None):
     """
     Given a list of node names, add a cluster for them.
     """
@@ -983,6 +985,8 @@ def createCluster(G,NL,prefix="",color=None,fillcolor=None):
     cluster = Cluster(clustername,label=label,style="filled",fillcolor=fillcolor,color=color)
     for nn in NL:
         n = findNode(G,nn)
+        if nodecolor != None:
+            n.set("fillcolor",nodecolor)
         cluster.add_node(n)
 
     G.add_subgraph(cluster)
@@ -1108,8 +1112,6 @@ def showClusters(G):
 
     This function determines what should be clustered, clusters them, and provides them with a cluster background color. This makes some graphs significantly easier to grasp.
 
-    TODO: For consistency, we could also simply compute the color off of the concrete prefix. Maybe easier during a proof (no color switches!)
-
     TODO: Facts connected between in-cluster edges can simply be emptied. Basis: edge between two nodes within a single cluster needs to annotation. Nodes/ports from which all edges are not needed can be collapsed. In other words: inspect all incoming and outgoing edges. If there is none from outside the cluster, then collapse the node:port. Nodes in clusters are records anyway.
     """
     from colorsys import hls_to_rgb
@@ -1119,7 +1121,6 @@ def showClusters(G):
 
     for (pf,cl) in clusters:
         v = Trick(pf)
-        print pf, v
         l = []
         for i in range(0,3):
             x1 = CLUSTERCOLOR1[i]
@@ -1127,13 +1128,11 @@ def showClusters(G):
             d = x2 - x1
             l.append((x1 + (d*v)) % 1)
 
-        color1 = hexColor(hls_to_rgb(l[0],l[2],l[1]))
-        color2 = hexColor(hls_to_rgb(l[0],0.5 + 0.5* l[2],l[1]))
-        print l
-        print color1
-        print color2
+        nodecolor = hexColor(hls_to_rgb(l[0],l[2],l[1]))
+        backcolor = hexColor(hls_to_rgb(l[0],0.25 + 0.75 * l[2],0.5 * l[1]))
+        edgecolor = hexColor(hls_to_rgb(l[0],0.6 + 0.4* l[2],0.5 * l[1]))
 
-        createCluster(G,cl,prefix=pf,color=color2,fillcolor=color1)
+        createCluster(G,cl,prefix=pf,color=edgecolor,fillcolor=backcolor,nodecolor=nodecolor)
 
     return G
 
