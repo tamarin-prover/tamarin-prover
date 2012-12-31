@@ -23,9 +23,12 @@ Installation
 ------------
 
 Currently, we are installing this program by effectively locally
-replacing `dot`. (There should be some discussion on how to handle this
-in the official releases, because the additional dependencies introduced
-are not so nice.)
+replacing `dot`.
+
+The program now assumes the "real" `dot` program resides in
+`/usr/bin/dot`. If this is not the case for your setup, you should
+change the appropriate line in the `execDot` function (as of writing,
+the path is specified on line 603 of `tamarin-cleandot.py`).
 
  1. Make a softlink called `dot` to `tamarin-cleandot.py` in a local
     directory.
