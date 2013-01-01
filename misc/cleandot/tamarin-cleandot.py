@@ -600,7 +600,7 @@ def execDot(args):
     """
     import subprocess
 
-    cmd = "/usr/bin/dot"
+    cmd = "dot"
     retcode = subprocess.call([cmd] + args)
     sys.exit(retcode)
 

@@ -19,30 +19,15 @@ running:
 
 	sudo apt-get install python-pyparsing python-pydot
 
-Installation
-------------
+Usage
+-----
 
-Currently, we are installing this program by effectively locally
-replacing `dot`.
+Currently, we are connecting this program to Tamarin by effectively
+replacing `dot`, by using Tamarin's `--with-dot` option.
 
-The program now assumes the "real" `dot` program resides in
-`/usr/bin/dot`. If this is not the case for your setup, you should
-change the appropriate line in the `execDot` function (as of writing,
-the path is specified on line 603 of `tamarin-cleandot.py`).
+For example,
 
- 1. Make a softlink called `dot` to `tamarin-cleandot.py` in a local
-    directory.
-    For example, 
-    `ln -s tamarin-cleandot.py ~/bin/dot`
-
- 2. Add the local directory to your path in a shell. E.g.,
-    `export PATH="$HOME/bin:$PATH"`
-
- 3. Invoke Tamarin from the same shell, e.g.,
-    `tamarin-prover interactive .`
-
-
-
-
-
+    tamarin-prover interactive \
+    --with-dot=/home/cas/src/tamarin-prover/misc/cleandot/tamarin-cleandot.py \
+    ~/src/tamarin-prover/data/examples/csf12/
 
