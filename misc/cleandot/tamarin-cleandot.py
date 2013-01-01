@@ -201,6 +201,10 @@ class rules(object):
             # Record
             return True
 
+        if "[" in render(L) and "]" in render(L):
+            # Rule names 'Init[...]' are never abbreviated (but of course their inner parts might)
+            return True
+
         for (ta,sa) in self.abbreviations:
             # Check existing abbreviations
             if ta == L:
