@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Wrapper script for using Tamarin with the cleandot graph renderer.
+#
+# Jan 2013, Cas Cremers
+#
+# Assumes that `tamarin-prover` and `tamarin-cleandot.py` are in the
+# executable paths.
+#
+tamarin-prover interactive --with-dot=tamarin-cleandot.py $*

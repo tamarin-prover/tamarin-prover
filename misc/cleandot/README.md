@@ -31,3 +31,8 @@ For example,
     --with-dot=/home/cas/src/tamarin-prover/misc/cleandot/tamarin-cleandot.py \
     ~/src/tamarin-prover/data/examples/csf12/
 
+If `tamarin-prover` and `tamarin-cleandot.py` are in your executable
+paths, the following wrapper script can be used:
+
+    tamarin-prover-cleandot PROTOCOL_DIRECTORY
+
