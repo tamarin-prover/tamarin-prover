@@ -60,6 +60,9 @@ CLUSTERCOLOR2 = (1.2,0.6,0.83)   # HSL
 # Global variable to store the pyparsing BNF.
 labelbnf = None
 
+# DEBUG mode
+DEBUGMODE = False
+
 
 class rules(object):
     """
@@ -592,6 +595,7 @@ def parseLabel( strng ):
         print err.line
         print " "*(err.column-1) + "^"
         print err
+        raise
     
     #print "New     : ", render(tokens)
     #print "Ports   : ", ports(tokens)
@@ -1241,11 +1245,16 @@ def main():
         nargs = findArgs(infile)
         outfile = newDot(infile)
         execDot(nargs + [outfile],raiseErrors=True)
-    except:
+    except SystemExit:
         pass
+    except:
+        global DEBUGMODE
 
-    # Something went wrong, fall back to default rendering method.
-    execDot(sys.argv[1:])
+        if DEBUGMODE:
+            print "Unexpected error:", sys.exc_info()[0]
+
+        # Something went wrong, fall back to default rendering method.
+        execDot(sys.argv[1:])
 
 
 def TrickFilter(s):
