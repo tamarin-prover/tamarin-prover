@@ -1167,30 +1167,31 @@ def abbreviateGraph(G):
         if nn in D.keys():
             N.set_label(render(D[nn]))
 
-    # Construct a legend text
-    l = "Abbreviations\l\l"
-    for (x,y) in S:
-        l += "%s = %s\l" % (y,render(x))
+    if len(S) > 0:
+        # Construct a legend text
+        l = "Abbreviations\l\l"
+        for (x,y) in S:
+            l += "%s = %s\l" % (y,render(x))
 
-    # Add the legend to the graph
-    N = Node("Legend")
-    N.set_label("\"%s\"" % (l))
-    N.set_shape("box")
+        # Add the legend to the graph
+        N = Node("Legend")
+        N.set_label("\"%s\"" % (l))
+        N.set_shape("box")
 
-    S = Subgraph("LegendCluster")
-    S.set("rank","sink")
-    S.set("style","invis")
-    S.add_node(N)
-    G.add_subgraph(S)
+        S = Subgraph("LegendCluster")
+        S.set("rank","sink")
+        S.set("style","invis")
+        S.add_node(N)
+        G.add_subgraph(S)
 
-    # Drawing invisible edges from each node to the legend tends to force it to
-    # the bottom, which is what we want.
-    n = N.get_name()
-    for X in NL:
-        x = X.get_name()
-        if x not in ["edge","node"]:    # Strange pydot behaviour considers these as nodes
-            E = Edge(x,n,style="invis")
-            G.add_edge(E)
+        # Drawing invisible edges from each node to the legend tends to force it to
+        # the bottom, which is what we want.
+        n = N.get_name()
+        for X in NL:
+            x = X.get_name()
+            if x not in ["edge","node"]:    # Strange pydot behaviour considers these as nodes
+                E = Edge(x,n,style="invis")
+                G.add_edge(E)
 
     return G
 
