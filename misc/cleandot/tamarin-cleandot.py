@@ -186,7 +186,7 @@ class rules(object):
         return len(render(term))
 
     def isIgnored(self,L):
-        if len(L) == 1:
+        if len(L) <= 1:
             # Too small, will not abbreviate
             return True
         if isPort(L[0]):
@@ -552,14 +552,17 @@ def isPort(tokens):
 def ports(tokens):
     res = []
     for l in subsequences(tokens):
-        if isPort(l[0]):
-            res.append(l[0])
+        if len(l) > 0:
+            if isPort(l[0]):
+                res.append(l[0])
     return res
 
 def isTermlist(L):
     """
     Check if something is possibly a term (or a fact even)
     """
+    if len(L) == 0:
+        return False
     if isPort(L[0]):
         # Ignoring port spec + following
         return False
