@@ -599,7 +599,7 @@ def parseLabel( strng ):
     return tokens
 
 
-def execDot(args):
+def execDot(args,raiseErrors=False):
     """
     Invoke the real dot program
 
@@ -608,7 +608,10 @@ def execDot(args):
     import subprocess
 
     cmd = "dot"
-    retcode = subprocess.call([cmd] + args)
+    if raiseErrors:
+        retcode = subprocess.check_call([cmd] + args)
+    else:
+        retcode = subprocess.call([cmd] + args)
     sys.exit(retcode)
 
 
@@ -1227,12 +1230,22 @@ def newDot(infile):
     return outfile
 
 def main():
+    # Special case for Tamarin's version check of dot
     if "--version" in sys.argv[1:] or "-V" in sys.argv[1:]:
         execDot(sys.argv[1:])
-    infile = findInputFile()
-    nargs = findArgs(infile)
-    outfile = newDot(infile)
-    execDot(nargs + [outfile])
+
+    # Normal case
+    try:
+        # Try to improve the graph and run dot on the result.
+        infile = findInputFile()
+        nargs = findArgs(infile)
+        outfile = newDot(infile)
+        execDot(nargs + [outfile],raiseErrors=True)
+    except:
+        pass
+
+    # Something went wrong, fall back to default rendering method.
+    execDot(sys.argv[1:])
 
 
 def TrickFilter(s):
