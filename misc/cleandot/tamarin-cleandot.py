@@ -479,7 +479,7 @@ def label_BNF():
         TUPLE1 = langleEsc + TERMLIST + rangleEsc
         TUPLE2 = lparen + TERMLIST + rparen
         TUPLE = TUPLE1 | TUPLE2
-        ARG = lparen + TERMLIST + rparen
+        ARG = lparen + Optional(TERMLIST) + rparen
         FUNC = ID + Optional(ARG)
         ENC = (senc | aenc) + ARG
         OPERAND = Group(ENC | FUNC | TUPLE | CONST)
