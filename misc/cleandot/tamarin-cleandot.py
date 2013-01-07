@@ -486,7 +486,7 @@ def label_BNF():
         FUNC = ID + Optional(ARG)
         ENC = (senc | aenc) + ARG
         OPERAND = Group(ENC | FUNC | TUPLE | CONST)
-        TERM << OPERAND + ZeroOrMore(oneOf("^ *") + OPERAND)
+        TERM << OPERAND + ZeroOrMore(oneOf("^ * +") + OPERAND)
 
         TPAREN = lparen + TERMLIST + rparen
         TBRACK = lbrack + Optional(TERMLIST) + rbrack
