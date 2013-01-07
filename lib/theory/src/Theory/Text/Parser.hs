@@ -73,18 +73,18 @@ llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
-lookupArity :: String -> Parser Int
+lookupArity :: String -> Parser (Int, Privacy)
 lookupArity op = do
     maudeSig <- getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig)++ [(emapSymString, 2)]) of
-        Nothing -> fail $ "unknown operator `" ++ op ++ "'"
-        Just k  -> return k
+    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public))]) of
+        Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
+        Just (k,priv) -> return (k,priv)
 
 -- | Parse an n-ary operator application for arbitrary n.
 naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
 naryOpApp plit = do
     op <- identifier
-    k  <- lookupArity op
+    (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm plit
                      else commaSep (multterm plit)
@@ -93,18 +93,18 @@ naryOpApp plit = do
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
     let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
-    return $ app (BC.pack op, k') ts
+    return $ app (BC.pack op, (k,priv)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
 binaryAlgApp plit = do
     op <- identifier
-    k <- lookupArity op
+    (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit
     when (k /= 2) $ fail $
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNoEq (BC.pack op, 2) [arg1, arg2]
+    return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
 -- | Parse a term.
 term :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -123,8 +123,8 @@ term plit = asum
     nullaryApp = do
       maudeSig <- getState
       -- FIXME: This try should not be necessary.
-      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,0)) [])
-           | NoEq (sym,0) <- S.toList $ funSyms maudeSig ]
+      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
+           | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -554,13 +554,14 @@ functions =
     functionSymbol = do
         f   <- BC.pack <$> identifier <* opSlash
         k   <- fromIntegral <$> natural
+        priv <- option Public (symbol "[private]" *> pure Private)
         sig <- getState
         case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
-          Just k' | k' /= k ->
-            fail $ "conflicting arities " ++
-                   show k' ++ " and " ++ show k ++
+          Just kp' | kp' /= (k,priv) ->
+            fail $ "conflicting arities/private " ++
+                   show kp' ++ " and " ++ show (k,priv) ++
                    " for `" ++ BC.unpack f
-          _ -> setState (addFunSym (f,k) sig)
+          _ -> setState (addFunSym (f,(k,priv)) sig)
 
 equations :: Parser ()
 equations =

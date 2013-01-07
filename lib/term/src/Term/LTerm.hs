@@ -51,7 +51,7 @@ module Term.LTerm (
   , isFreshVar
   , isSimpleTerm
   , niFactors
-  , neverContainsFresh
+  , neverContainsFreshPriv
 
   -- ** Destructors
   , ltermVar
@@ -112,7 +112,7 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise
 import           Data.Binary
 import qualified Data.DList                       as D
 import           Data.DeriveTH
-import           Data.Foldable                    hiding (concatMap, elem, notElem)
+import           Data.Foldable                    hiding (concatMap, elem, notElem, any)
 import           Data.Generics                    hiding (GT)
 import qualified Data.Map                         as M
 import           Data.Monoid
@@ -285,17 +285,26 @@ niFactors t = case viewTerm2 t of
                 FInv t1  -> niFactors t1
                 _        -> [t]
 
+-- | @containsPrivate t@ returns @True@ if @t@ contains private function symbols.
+containsPrivate :: Term t -> Bool
+containsPrivate t = case viewTerm t of
+    Lit _                          -> False
+    FApp (NoEq (_,(_,Private))) _  -> True
+    FApp _                      as -> any containsPrivate as
+
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any
--- fresh names or fresh variables.
+-- fresh names, fresh variables, or private function symbols.
 isSimpleTerm :: LNTerm -> Bool
-isSimpleTerm =
-    getAll . foldMap (All . (LSortFresh /=) . sortOfLit)
+isSimpleTerm t =
+    not (containsPrivate t) && 
+    (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
 
--- | 'True' iff no instance of this term contains fresh names.
-neverContainsFresh :: LNTerm -> Bool
-neverContainsFresh =
-    getAll . foldMap (All . (`notElem` [LSortMsg, LSortFresh]) . sortOfLit)
+-- | 'True' iff no instance of this term contains fresh names or private function symbols.
+neverContainsFreshPriv :: LNTerm -> Bool
+neverContainsFreshPriv t =
+    not (containsPrivate t) && 
+    (getAll . foldMap (All . (`notElem` [LSortMsg, LSortFresh]) . sortOfLit) $ t)
 
 -- Destructors
 --------------

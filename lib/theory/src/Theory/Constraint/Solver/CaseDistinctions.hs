@@ -352,8 +352,8 @@ precomputeCaseDistinctions ctxt axioms =
       [ return $ varTerm (LVar "t" LSortFresh 1)
       , if enableBP msig then return $ fAppC EMap $ nMsgVars (2::Int) else []
       , [ fAppNoEq o $ nMsgVars k
-        | o@(_,k) <- S.toList . noEqFunSyms  $ msig
-        , NoEq o `S.notMember` implicitFunSig, k > 0 ]
+        | o@(_,(k,priv)) <- S.toList . noEqFunSyms  $ msig
+        , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]
       ]
 
     msig = mhMaudeSig . get pcMaudeHandle $ ctxt

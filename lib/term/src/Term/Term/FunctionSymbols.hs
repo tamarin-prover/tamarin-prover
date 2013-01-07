@@ -14,6 +14,7 @@ module Term.Term.FunctionSymbols (
       FunSym(..)
     , ACSym(..)
     , CSym(..)
+    , Privacy(..)
     , NoEqSym
 
     -- ** Signatures
@@ -68,8 +69,12 @@ import qualified Data.Set as S
 data ACSym = Union | Mult
   deriving (Eq, Ord, Typeable, Data, Show)
 
+-- | A function symbol can be either Private (unknown to adversary) or Public.
+data Privacy = Private | Public
+  deriving (Eq, Ord, Typeable, Data, Show)
+
 -- | NoEq function symbols (with respect to the background theory).
-type NoEqSym = (ByteString, Int)
+type NoEqSym = (ByteString, (Int, Privacy)) -- ^ operator name, arity, private
 
 -- | C(ommutative) function symbols
 data CSym = EMap
@@ -105,19 +110,19 @@ pmultSymString = "pmult"
 
 pairSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym :: NoEqSym
 -- | Pairing.
-pairSym  = ("pair",2)
+pairSym  = ("pair",(2,Public))
 -- | Exponentiation.
-expSym   = (expSymString,2)
+expSym   = (expSymString,(2,Public))
 -- | The inverse in the groups of exponents.
-invSym   = (invSymString,1)
+invSym   = (invSymString,(1,Public))
 -- | The one in the group of exponents.
-oneSym   = ("one", 0)
+oneSym   = ("one",(0,Public))
 -- | Projection of first component of pair.
-fstSym   = ("fst",1)
+fstSym   = ("fst",(1,Public))
 -- | Projection of second component of pair.
-sndSym   = ("snd",1)
+sndSym   = ("snd",(1,Public))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
-pmultSym = (pmultSymString,2)
+pmultSym = (pmultSymString,(2,Public))
 
 ----------------------------------------------------------------------
 -- Fixed signatures
@@ -156,10 +161,12 @@ implicitFunSig = S.fromList [ NoEq invSym, NoEq pairSym
 -- Derived instances
 ----------------------------------------------------------------------
 
+$( derive makeNFData ''Privacy)
 $( derive makeNFData ''CSym)
 $( derive makeNFData ''FunSym)
 $( derive makeNFData ''ACSym)
 
+$( derive makeBinary ''Privacy)
 $( derive makeBinary ''CSym)
 $( derive makeBinary ''FunSym)
 $( derive makeBinary ''ACSym)

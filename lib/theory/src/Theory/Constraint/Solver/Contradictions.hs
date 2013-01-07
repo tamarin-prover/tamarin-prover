@@ -126,7 +126,7 @@ hasForbiddenKD sys =
     isForbiddenKD ru = fromMaybe False $ do
         [conc] <- return $ L.get rConcs ru
         (DnK, t) <- kFactView conc
-        return $ neverContainsFresh t
+        return $ neverContainsFreshPriv t
 
 
 -- | True iff there are terms in the node constraints that are not in normal form wrt.
@@ -235,7 +235,7 @@ hasImpossibleChain sys =
                   -- a public or fresh name or variable
 
     possibleRootSyms :: LNTerm -> Maybe [Either LSort FunSym]
-    possibleRootSyms t | neverContainsFresh t = return []
+    possibleRootSyms t | neverContainsFreshPriv t = return []
       -- this is an 'isForbiddenDeconstruction'
     possibleRootSyms t = case viewTerm2 t of
         FExp   a _b -> -- cannot obtain a subterm of the exponents @_b@
@@ -299,7 +299,7 @@ isForbiddenDPMult ru = fromMaybe False $ do
 
     -- For a forbidden dpmult, the following conditions must hold: p does not
     -- contain fresh names and the factors of c are already factors of b
-    return $    neverContainsFresh p
+    return $    neverContainsFreshPriv p
              && (niFactors c \\ niFactors b == [])
 
 -- | We detect many scenarios where a 'dem' rule followed
@@ -335,7 +335,7 @@ isForbiddenDEMap sys (i, ruExp) = fromMaybe False $ do
     return (overComplicated s p ke || overComplicated r q ke)
   where
     overComplicated scalar point ke =
-        (niFactors scalar \\ niFactors ke == []) && neverContainsFresh point
+        (niFactors scalar \\ niFactors ke == []) && neverContainsFreshPriv point
 
 -- | We enforce that if both premises of the @Emap-down@ rule
 -- KD([s]p), KD([r]q) --> KD(em(p,q)^(s*r) (where s,r are not
