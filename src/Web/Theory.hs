@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE QuasiQuotes   #-}
 {-# LANGUAGE TupleSections #-}
@@ -521,15 +522,25 @@ imgThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
     go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
     go _                      = error "Unhandled theory path. This is a bug."
 
+    -- Prefix dot code with comment mentioning all protocol rule names
+    prefixedShowDot dot = unlines
+        [ "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
+        , "// message deduction rules: " ++ ruleList (getIntrVariants thy)
+        , D.showDot dot
+        ]
+      where
+        ruleList :: HasRuleName (Rule i) => [Rule i] -> String
+        ruleList = concat . intersperse ", " . nub . map showRuleCaseName
+
     -- Get dot code for required cases
-    casesDotCode k i j = D.showDot $
+    casesDotCode k i j = prefixedShowDot $
         compact $ snd $ cases !! (i-1) !! (j-1)
       where
         cases = map (getDisj . get cdCases) (getCaseDistinction k thy)
 
     -- Get dot code for proof path in lemma
     proofPathDotCode lemma proofPath =
-      D.showDot $ fromMaybe (return ()) $ do
+      prefixedShowDot $ fromMaybe (return ()) $ do
         subProof <- resolveProofPath thy lemma proofPath
         sequent <- psInfo $ root subProof
         return $ compact sequent
