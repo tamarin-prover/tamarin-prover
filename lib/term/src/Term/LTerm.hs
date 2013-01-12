@@ -51,6 +51,7 @@ module Term.LTerm (
   , isFreshVar
   , isSimpleTerm
   , niFactors
+  , containsPrivate
   , neverContainsFreshPriv
 
   -- ** Destructors

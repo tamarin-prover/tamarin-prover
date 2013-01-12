@@ -124,12 +124,16 @@ openGoals sys = do
     -- name variable. For protocols without loops they are very likely to be
     -- constructible. For protocols with loops, such terms have to be given
     -- similar priority as loop-breakers.
-    probablyConstructible  = checkTermLits (LSortFresh /=)
+    probablyConstructible  m = checkTermLits (LSortFresh /=) m
+                               && not (containsPrivate m)
 
     -- KU goals of messages that are currently deducible. Either because they
-    -- are composed of public names only or because they can be extracted from
-    -- a sent message using unpairing or inversion only.
-    currentlyDeducible i m = checkTermLits (LSortPub ==) m || extractible i m
+    -- are composed of public names only and do not contain private function
+    -- symbols or because they can be extracted from a sent message using
+    -- unpairing or inversion only.
+    currentlyDeducible i m = (checkTermLits (LSortPub ==) m
+                              && not (containsPrivate m))
+                          || extractible i m
 
     extractible i m = or $ do
         (j, ru) <- M.toList $ get sNodes sys

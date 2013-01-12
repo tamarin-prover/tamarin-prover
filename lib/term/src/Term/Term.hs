@@ -32,6 +32,7 @@ module Term.Term (
     , isUnion
     , isEMap
     , isNullaryPublicFunction
+    , isPrivateFunction
 
     -- * AC, C, and NonAC funcion symbols
     , FunSym(..)
@@ -139,6 +140,10 @@ isUnion _                       = False
 isNullaryPublicFunction :: Term a -> Bool
 isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public))) _) = True
 isNullaryPublicFunction _                                            = False
+
+isPrivateFunction :: Term a -> Bool
+isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private))) _) = True
+isPrivateFunction _                                            = False
 
 ----------------------------------------------------------------------
 -- Pretty printing
