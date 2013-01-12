@@ -230,12 +230,12 @@ goalRankingName ranking =
 
 -- | Use a 'GoalRanking' to sort a list of 'AnnotatedGoal's stemming from the
 -- given constraint 'System'.
-rankGoals :: GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
-rankGoals ranking = case ranking of
+rankGoals :: ProofContext -> GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+rankGoals ctxt ranking = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
-    SmartRanking useLoopsBreakers -> smartRanking useLoopsBreakers
+    SmartRanking useLoopsBreakers -> smartRanking ctxt useLoopsBreakers
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
@@ -250,7 +250,7 @@ rankProofMethods ranking ctxt sys = do
                AvoidInduction -> [(Simplify, ""), (Induction, "")]
                UseInduction   -> [(Induction, ""), (Simplify, "")]
             )
-        <|> (solveGoalMethod <$> (rankGoals ranking sys $ openGoals sys))
+        <|> (solveGoalMethod <$> (rankGoals ctxt ranking sys $ openGoals sys))
     case execProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
@@ -319,12 +319,15 @@ goalNrRanking = sortOn (fst . snd)
 -- | A ranking function tuned for the automatic verification of
 -- classical security protocols that exhibit a well-founded protocol premise
 -- fact flow.
-smartRanking :: Bool   -- True if PremiseG loop-breakers should not be delayed
+smartRanking :: ProofContext
+             -> Bool   -- True if PremiseG loop-breakers should not be delayed
              -> System
              -> [AnnotatedGoal] -> [AnnotatedGoal]
-smartRanking allowPremiseGLoopBreakers sys =
+smartRanking ctxt allowPremiseGLoopBreakers sys =
     sortOnUsefulness . unmark . sortDecisionTree solveFirst . goalNrRanking
   where
+    irred = irreducibleFunSyms . mhMaudeSig . L.get pcMaudeHandle $ ctxt
+
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
 
     tagUsefulness Useful                = 0 :: Int
@@ -345,6 +348,7 @@ smartRanking allowPremiseGLoopBreakers sys =
         , isStandardActionGoal . fst
         , isPrivateKnowsGoal . fst
         , isFreshKnowsGoal . fst
+        , isOneWayKnowsGoal . fst
         , isSplitGoalSmall . fst
         , isDoubleExpGoal . fst
         , isNoLargeSplitGoal . fst ]
@@ -366,6 +370,10 @@ smartRanking allowPremiseGLoopBreakers sys =
     isFreshKnowsGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
         _                                                           -> False
+
+    isOneWayKnowsGoal goal = case msgPremise goal of
+        Just (viewTerm -> FApp o _) | o `S.member` irred -> True
+        _                                                  -> False
 
     isPrivateKnowsGoal goal = case msgPremise goal of
         Just t -> isPrivateFunction t
