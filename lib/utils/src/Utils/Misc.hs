@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, RankNTypes, ScopedTypeVariables, BangPatterns #-}
+{-# LANGUAGE DeriveDataTypeable, RankNTypes, ScopedTypeVariables, BangPatterns, MagicHash #-}
 module Utils.Misc (
   -- * Environment
     envIsSet
@@ -20,6 +20,9 @@ module Utils.Misc (
 
   -- * Map operations
   , invertMap
+
+  -- * unsafeEq
+  , unsafeEq
 ) where
 
 import Data.List
@@ -37,6 +40,8 @@ import qualified Data.ByteString.Char8              as C8
 import qualified Data.ByteString.Lazy               as L
 import qualified Data.ByteString.Base64             as B64  (encode)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8 (fromString)
+
+import GHC.Exts (reallyUnsafePtrEquality#, Int (I#))
 
 -- | @noDuplicates xs@ returns @True@ if the list @xs@ contains no duplicates
 noDuplicates :: (Ord a) => [a] -> Bool
@@ -87,3 +92,8 @@ stringSHA256 =
 
 setAny :: (a -> Bool) -> Set a -> Bool
 setAny f = S.foldr (\x b -> f x || b) False
+
+
+unsafeEq :: a -> a -> Bool
+unsafeEq a b =
+  (I# (reallyUnsafePtrEquality# a b)) == 1
