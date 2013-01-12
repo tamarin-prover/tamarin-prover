@@ -343,6 +343,7 @@ smartRanking allowPremiseGLoopBreakers sys =
         , isDisjGoal . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoal . fst
+        , isPrivateKnowsGoal . fst
         , isFreshKnowsGoal . fst
         , isSplitGoalSmall . fst
         , isDoubleExpGoal . fst
@@ -365,6 +366,10 @@ smartRanking allowPremiseGLoopBreakers sys =
     isFreshKnowsGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
         _                                                           -> False
+
+    isPrivateKnowsGoal goal = case msgPremise goal of
+        Just t -> isPrivateFunction t
+        _      -> False
 
     isDoubleExpGoal goal = case msgPremise goal of
         Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
