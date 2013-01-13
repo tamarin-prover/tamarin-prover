@@ -348,8 +348,8 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
         , isStandardActionGoal . fst
         , isPrivateKnowsGoal . fst
         , isFreshKnowsGoal . fst
-        , isOneWayKnowsGoal . fst
         , isSplitGoalSmall . fst
+        , isOneWayKnowsGoal . fst
         , isDoubleExpGoal . fst
         , isNoLargeSplitGoal . fst ]
         -- move the rest (mostly more expensive KU-goals) before expensive
