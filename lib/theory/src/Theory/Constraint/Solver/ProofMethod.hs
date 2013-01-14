@@ -37,6 +37,7 @@ import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
 import           Data.List
 import qualified Data.Map                                  as M
+import           Data.Maybe                                (catMaybes)
 import           Data.Monoid
 import           Data.Ord                                  (comparing)
 import qualified Data.Set                                  as S
@@ -326,7 +327,12 @@ smartRanking :: ProofContext
 smartRanking ctxt allowPremiseGLoopBreakers sys =
     sortOnUsefulness . unmark . sortDecisionTree solveFirst . goalNrRanking
   where
-    irred = irreducibleFunSyms . mhMaudeSig . L.get pcMaudeHandle $ ctxt
+    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
+
+    getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
+      Just (viewTerm -> FApp o _)
+        | length (getDisj (L.get cdCases cd)) == 1 -> Just o
+      _                                            -> Nothing
 
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
 
@@ -349,7 +355,7 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
         , isPrivateKnowsGoal . fst
         , isFreshKnowsGoal . fst
         , isSplitGoalSmall . fst
-        , isOneWayKnowsGoal . fst
+        , isMsgOneCaseGoal . fst
         , isDoubleExpGoal . fst
         , isNoLargeSplitGoal . fst ]
         -- move the rest (mostly more expensive KU-goals) before expensive
@@ -371,8 +377,8 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
         Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
         _                                                           -> False
 
-    isOneWayKnowsGoal goal = case msgPremise goal of
-        Just (viewTerm -> FApp o _) | o `S.member` irred -> True
+    isMsgOneCaseGoal goal = case msgPremise goal of
+        Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
         _                                                  -> False
 
     isPrivateKnowsGoal goal = case msgPremise goal of
