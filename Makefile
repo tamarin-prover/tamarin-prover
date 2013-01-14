@@ -77,7 +77,7 @@ source-dists-tests: source-dists
 #
 # in the working directory.
 profiling-install:
-	cabal-dev install -fno-gui --force-reinstalls --enable-library-profiling --enable-executable-profiling ./lib/term ./lib/utils ./
+	cabal-dev install --flags="-threaded no-gui" --force-reinstalls --enable-library-profiling --enable-executable-profiling ./lib/term ./lib/utils ./lib/theory  ./
 
 # requires the cabal-dev tool. Install it using the 'cabal-dev'
 dev-install:
