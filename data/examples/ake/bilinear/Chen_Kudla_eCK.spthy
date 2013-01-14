@@ -1,0 +1,251 @@
+theory Chen_Kudla
+begin
+
+builtins: bilinear-pairing
+
+functions: kdf/1, hp/1, h/1
+
+section{* A variant of the Chen-Kudla protocol that uses ordered concatenation instead 
+          addition of points *}
+
+/*
+ * Protocol:	Chen-Kudla (with concatenation)
+ * Modeler: 	Benedikt Schmidt
+ * Date: 	May 2012
+ * Source:	Boyd overview identity based key exchange protocols
+ *
+ * Status: 	Working
+ */
+
+
+// Key generation center
+
+rule KGC_Setup:
+  let mpk = pmult(~msk,'P')
+  in
+  [ Fr(~msk) ]
+  --[ KGCSetup() ]->
+  [ !MSK( ~msk )
+  , !MPK( mpk )
+  , Out( mpk )
+  ]
+
+rule KGC_request:
+  [ !MSK( ~msk ) ]
+  -->
+  [ !LTK( $ID, pmult(~msk, hp($ID)) ) ]
+
+
+// Reveals
+
+rule Reveal_ltk:
+  [ !LTK( $ID, skID ) ]
+  --[ LtkRev($ID) ]->
+  [ Out(skID) ]
+
+rule Reveal_master_key:
+  [ !MSK( ~msk ) ]
+  --[ MskRev() ]->
+  [ Out( ~msk ) ]
+
+
+rule Reveal_session_key:
+  [ !Sessk( ~ey, kdf(sek) ) ]
+  --[ SesskRev( ~ey ) ]->
+  [ Out( kdf(sek) ) ]
+
+
+rule Reveal_ephemeral_key:
+  [ !Ephk( ~ex ) ]
+  --[ EphkRev( ~ex ) ]->
+  [ Out( ~ex ) ]
+
+// Protocol
+
+rule Init_1:
+  let X   = pmult(~ex,'P')
+  in
+  [ Fr( ~ex )
+  ]
+  -->
+  [ Init( ~ex, $A, $B )
+  , Out( X )
+  , !Ephk( ~ex )
+  ]
+
+rule Init_2:
+  let skA = pmult(~s1, hp($A))
+      mpk = pmult(~s2,'P')
+      X   = pmult(~ex,'P')
+      sessKey = kdf( em(hp($B), mpk)^~ex, em(skA, Y), pmult(~ex,Y), $A, $B, X, Y )
+  in
+  [ Init( ~ex, $A, $B )
+  , !MPK( mpk )
+  , !LTK( $A, skA )
+  , In( Y )
+  ]
+  --[ Accept( ~ex, $A, $B, sessKey )
+    , Sid( ~ex, <'Init',$A,$B,X,Y> )
+    // a matching session for ~ex has the following sid
+    , Match( ~ex, <'Resp',$B,$A,X,Y> )
+    ]->
+  [ !Sessk( ~ex, sessKey ) ]
+
+rule Resp_1:
+  let skB = pmult(~msk, hp($B))
+      mpk = pmult(~msk, 'P')
+      Y = pmult(~ey,'P')
+      // instead of multiplying the two em-terms, we concatenate them
+      sessKey = kdf( em(skB, X), em(hp($A), mpk)^~ey, pmult(~ey,X), $A, $B, X, Y)
+  in
+  [ Fr( ~ey )
+  , !LTK( $B, skB )
+  , !MPK( mpk )
+  , In( X )
+  ]
+  --[ Accept( ~ey, $B, $A, sessKey )
+    , Sid( ~ey, <'Resp',$B,$A,X,Y> )
+    // a matching session for ~ey has the following sid
+    , Match( ~ey, <'Init',$A,$B,X,Y> )
+    ]->
+  [ Out( Y )
+  , !Sessk( ~ey, sessKey )
+  , !Ephk(~ey)
+  ]
+
+/*
+lemma key_agreement_reachable:
+  exists-trace
+  "Ex #i #j A B SID t1 t2 k.
+        Accept(t1, A, B, k)  @ i
+      & Match(t1,  SID) @ i
+      & Accept(t2, B, A, k)  @ j
+      & Sid(t2, SID)   @ j"
+*/
+
+/*
+lemma key_secrecy_ephemeral_no_WPFS:
+  /* 
+   * If there exists a Test session whose key k is known to the
+   * Adversary, then...
+   */
+  "(All #i1 #i2 test A B k.
+    Accept(test, A, B, k) @ i1 & K( k ) @ i2
+    ==> ( 
+    // ... the test session must be "not clean".
+    // test is not clean if one of the following has happened:
+    //
+    // session-key-reveal of test thread.
+      (Ex #i3. SesskRev( test ) @ i3 )
+    
+    // more than one KGCSetup
+    | (Ex #i3 #i4. KGCSetup() @ i3 & KGCSetup() @ i4 & not (#i3 = #i4))
+    
+    // there is a matching session
+    | (Ex matching #i3 #i4 sid.
+    	   // matching's 'sid' info matches with test
+           ( Sid ( matching, sid ) @ i3 & Match( test, sid ) @ i4)
+	   & ( 
+             // matching's session key was revealed
+	       (Ex #i5. SesskRev( matching ) @ i5 )
+
+             // (matching's longterm key or master key) and ephemeral key was revealed
+             | (  ((Ex #i5. LtkRev( B ) @ i5 ) | (Ex #i5. MskRev() @ i5 ))
+                & (Ex #i5. EphkRev( matching ) @ i5 ))
+
+             // both ephemeral keys are revealed, this is allowed in eCK
+             // the corresponding attack uses em(hp(A),mpk)^ekmatch ...
+             | (  (Ex #i5. EphkRev( matching ) @ i5 )
+                & (Ex #i5. EphkRev( test ) @ i5 )
+               )
+
+             // (test's longterm key or master key) and ephemeral key was revealed
+             | (  ((Ex #i5. LtkRev( A ) @ i5 ) | (Ex #i5. MskRev() @ i5 ))
+                & (Ex #i5. EphkRev( test ) @ i5 ))
+
+	   )
+      )
+
+    // there is no matching session
+    | (  (not (Ex matching #i3 #i4 sid.
+    	   // matching's 'sid' info matches with test
+           ( Sid ( matching, sid ) @ i3 & Match( test, sid ) @ i4)))
+
+        & (  
+          // the longterm key of test.peer was revealed
+            (Ex #i5. LtkRev( B ) @ i5 )
+
+          // the ephemeral key of test was revealed
+          // in eCK, this would be allowed as long as the longterm key of test is not revealed.
+          | (Ex #i3. EphkRev( test ) @ i3 )
+          
+          // the master key was revealed
+          | (Ex #i3. MskRev() @ i3)
+          )
+      )
+
+    )
+  )"
+*/
+
+/* For this property, there is an attack where
+   both ephemeral keys are revealed.
+*/
+lemma key_secrecy_eCK_like:
+  /* 
+   * If there exists a Test session whose key k is known to the
+   * Adversary, then...
+   */
+  "(All #i1 #i2 test A B k.
+    Accept(test, A, B, k) @ i1 & K( k ) @ i2
+    ==> ( 
+    // ... the test session must be "not clean".
+    // test is not clean if one of the following has happened:
+    //
+    // session-key-reveal of test thread.
+      (Ex #i3. SesskRev( test ) @ i3 )
+    
+    // more than one KGCSetup
+    | (Ex #i3 #i4. KGCSetup() @ i3 & KGCSetup() @ i4 & not (#i3 = #i4))
+    
+    // there is a matching session
+    | (Ex matching #i3 #i4 sid.
+    	   // matching's 'sid' info matches with test
+           ( Sid ( matching, sid ) @ i3 & Match( test, sid ) @ i4)
+	   & ( 
+             // matching's session key was revealed
+	       (Ex #i5. SesskRev( matching ) @ i5 )
+
+             // (matching's longterm key or master key) and ephemeral key was revealed
+             | (  ((Ex #i5. LtkRev( B ) @ i5 ) | (Ex #i5. MskRev() @ i5 ))
+                & (Ex #i5. EphkRev( matching ) @ i5 ))
+
+             // (test's longterm key or master key) and ephemeral key was revealed
+             | (  ((Ex #i5. LtkRev( A ) @ i5 ) | (Ex #i5. MskRev() @ i5 ))
+                & (Ex #i5. EphkRev( test ) @ i5 ))
+
+	   )
+      )
+
+    // there is no matching session
+    | (  (not (Ex matching #i3 #i4 sid.
+    	   // matching's 'sid' info matches with test
+           ( Sid ( matching, sid ) @ i3 & Match( test, sid ) @ i4)))
+
+        & (  
+          // the longterm key of test.peer was revealed
+            (Ex #i5. LtkRev( B ) @ i5 )
+
+          // the ephemeral key of test was revealed
+          // in eCK, this would be allowed as long as the longterm key of test is not revealed.
+          | (Ex #i3. EphkRev( test ) @ i3 )
+          
+          // the master key was revealed
+          | (Ex #i3. MskRev() @ i3)
+          )
+      )
+
+    )
+  )"
+
+end

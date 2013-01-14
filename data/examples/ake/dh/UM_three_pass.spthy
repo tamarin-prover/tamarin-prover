@@ -1,0 +1,244 @@
+theory UM_three_pass
+begin
+
+/*
+    The three-pass UM protocol. See
+    "Combined Security Analysis of the One- and Three-Pass Unified Model Key Agreement Protocols"
+    Sanjit Chatterjee, Alfred Menezes and Berkant Ustaoglu
+*/
+
+builtins: diffie-hellman, hashing, multiset
+functions: MAC/2, first/1, second/1, concat/2
+equations: concat(first(x), second(x)) = x
+
+/* Key registration */
+
+rule Register_key_honest:
+  let pkA = 'g'^~ea
+  in
+  [ Fr( ~ea ) ]         // select random longterm private
+  --[ KeyReg( $A ) ]->  // a key for A has been registered
+  [ !Ltk( $A, ~ea )     // ~ea is the longterm private key of A
+  , !Pk( $A, pkA )      // pkA = 'g'^~ea is the longterm public key of A
+  , Out( pkA ) ]        // the adversary can learn the public key 
+
+
+/* Initiator */
+
+// UM3 session creation for initiator:
+//     choose ephemeral private key, compute ephemeral public key X, and send
+rule I_Activate:
+  let X   = 'g'^~ex             // the ephemeral public key
+      sid = <'UM3', $A, $B, X>  // the session id is unique
+  in
+  [ Fr( ~ex ) ]                    // select random ephemeral private key
+  --[ Activate( sid )
+    , Sid( sid )
+    , Agents($A,$B) ]->          // sid is 'Activate'd after this step
+  [ I_Act( ~ex, $A, $B )           // the state of this session, identified by ~ex (unique)
+  , !SessionState( sid, $A, ~ex )  // the session state of sid with actor $A consists only of ex,
+                                   // available for reveals
+  , Out( X )                       // send message
+  ]
+
+// UM3 session update for initiator:
+//    receive key confirmation and Y, compute key, check key confirmation.
+rule I_Complete:
+  let X       = 'g'^~ex                    // recompute X                                           
+      pB      = 'g'^~eb                    // we do not model key registration by adversary,
+                                           // hence key always of this form
+      kstring = h(Y^~ex, pB^~ea, $A, $B, X, Y)   // we do not include the public string Lambda
+      key     = second(kstring)
+      conf    = MAC(first(kstring), <'R', $B, $A, Y, X>) // we do not include Lambda_1
+      confB   = MAC(first(kstring), <'I', $A, $B, X, Y>) // we do not include Lambda_2
+      sidOld  = <'UM3',$A, $B, <'1',X>>
+      sid     = <'UM3',$A, $B, <'1',X> + <'2', <Y,confB>> + <'3', conf> >  // new sid
+  in
+  [ I_Act( ~ex, $A, $B )                   // this session was activated
+  , In( <Y, confB> )
+  , !Ltk( $A, ~ea )                        // lookup own longterm private key
+  , !Pk( $B, pB ) ]                        // lookup peer's public key
+  --[ Complete( sid, 'I', key )            // sid is 'Complete'd after this step
+    , SidUpdated( sidOld )
+    , Sid( sid ) ]->                      
+  [ I_Comp( sid )                          // state of this session
+  , Out( conf )
+  , !SessionKey( sid, $A, key ) ]          // the session key of sid with actor $A, available
+                                           // for reveals
+// UM3 session expiration
+rule I_Expire:
+  [ I_Comp( sid ) ]
+  --[ Expire( sid ) ]->  // sid is expired after this step
+  [ ]
+
+
+/* Responder */
+// Session creation:
+rule R_Activate:
+  let pA  = 'g'^~ea                      // we do not model key registration by adversary,
+                                         // hence key always of this form
+      Y   = 'g'^~ey
+      kstring = h(X^~ey, pA^~eb, $A, $B, X, Y )
+      key     = second(kstring)
+      conf    = MAC(first(kstring), <'I', $A, $B, X, Y>) // we do not include Lambda_2
+      sid = <'UM3', $B, $A, <'1',X> + <'2',<Y, conf>> >  // sid is unique
+
+
+  in
+  [ Fr( ~ey )
+  , In( X )
+  , !Ltk( $B, ~eb )
+  , !Pk( $A, pA ) ]
+  --[ Activate(sid)
+    , Sid( sid )
+    , Agents($A,$B) ]-> 
+  [ Out( <Y,conf>)
+  , R_Act( ~ey, $B, $A, X )
+  , !SessionState( sid, $A, ~ey )
+  ]
+
+// Session update:
+rule R_Complete:
+  let pA  = 'g'^~ea
+      Y   = 'g'^~ey
+      kstring = h(X^~ey, pA^~eb, $A, $B, X, Y )
+      key     = second(kstring)
+      confA   = MAC(first(kstring), <'R', $B, $A, Y, X>) // we do not include Lambda_1
+      conf    = MAC(first(kstring), <'I', $A, $B, X, Y>) // we do not include Lambda_2
+      sidOld  = <'UM3', $B, $A, <'1',X> + <'2', <Y, conf>>> // sid is unique
+      sid = <'UM3', $B, $A, <'1',X> + <'2', <Y, conf>> + <'3', confA> > // sid is unique
+  in
+  [ R_Act( ~ey, $B, $A, X )
+  , In( confA )
+  , !Ltk( $B, ~eb )
+  , !Pk( $A, pA )
+  ]
+  --[ Complete( sid, 'R', key )             // sid is 'Complete'd after this step
+    , SidUpdated( sidOld )
+    , Sid( sid ) ]->
+  [ R_Comp( sid )
+  , !SessionKey( sid, $B, key ) ]          // the session key of sid with actor $B, available
+                                           // for reveals
+  
+
+rule R_Expire:
+  [ R_Comp( sid ) ]
+  --[ Expire( sid ) ]->
+  [ ]
+
+/* Corrupt an agent:
+   We model corruption by three different rules.
+   We do not model static key selection for corrupted agents.
+*/
+
+// Corrupt and obtain longterm key
+rule Corrupt_Ltk:
+  [ !Ltk( $A, ~ea ) ]
+  --[ Corrupt( $A ) ]->
+  [ Out( ~ea ) ]
+
+// Corrupt and obtain session state. Must occur before complete which
+// we ensure with BeforeComplete action and axiom.
+rule Corrupt_SessionState:
+  [ !SessionState( sid, ~x, $A ) ]
+  --[ Corrupt( $A ), BeforeComplete( sid ) ]->
+  [ Out( ~x ) ]
+
+// Corrupt and obtain session key. Must occur before expire which
+// we ensure with BeforeExpire action and axiom.
+rule Corrupt_SessionKey:
+  [ !SessionKey( sid, $A, k ) ]
+  --[ Corrupt( $A ), BeforeExpire( sid ) ]->
+  [ Out( k ) ]
+
+/* Reveals for session state and session key */
+
+rule Reveal_SessionState:
+  [ !SessionState( sid, ~x, $A ) ]
+  --[SessionStateReveal( sid ), BeforeComplete( sid ) ]->
+  [ Out( ~x ) ]
+
+rule Reveal_SessionKey:
+  [ !SessionKey( sid, $A, k) ]
+  --[ SessionKeyReveal( sid ), BeforeExpire( sid ) ]->
+  [ Out( k ) ]
+
+/* We only consider traces which satisfy these axioms */
+
+// we enforce unique sids since the paper states that "At any point in time a session is
+// in exactly one of the following states: active, completed, aborted, expired."
+axiom sid_unique:
+   "All #i #j sid. Activate(sid) @ i & Activate(sid) @ j ==> #i = #j"
+
+// every agent has at most one registered key
+axiom keyreg_unique:
+   "All #i #j A. KeyReg(A) @ i & KeyReg(A) @ j ==> #i = #j"
+
+// this assumption is used in the proof. Without this restriction, a completed
+// session with actor and peer A is its own matching session.
+//axiom actor_ineq_peer:
+//   "not (Ex #i A. Agents(A,A) @ i)"
+
+// The reveals and the corrupt rules that reveal session state and session key are not performed
+// too late.
+axiom corrupt_and_reveal_not_too_early:
+   "  (All #i #j s role_ k_. BeforeComplete( s ) @ i & Complete(s, role_, k_ ) @ j ==> #i < #j)
+    & (All #i #j s.          BeforeExpire( s )   @ i & Expire( s ) @ j ==> #i < #j)"
+
+// Key agreement for initiator and responder is reachable without any adversary interaction.
+lemma key_agreement_reachable:
+  exists-trace
+  "Ex #i #j sid sidm k.
+       Complete( sid , 'I', k ) @ i
+     & Complete( sidm, 'R', k ) @ j
+     & (not (Ex #j C. Corrupt( C ) @ j))
+     & (not (Ex #j s. SessionKeyReveal( s ) @ j))
+     & (not (Ex #j s. SessionStateReveal( s ) @ j))"
+
+
+lemma CK_secure_UM3:
+  "(All #i #j role A B k s comm.
+       /* The key of a complete session 's' is known */
+       Complete( <'UM3',A,B,comm> , role,  k ) @ i & K( k ) @ j & s = <'UM3',A,B,comm>
+       /* then one of the following must have happened */
+       ==>
+       /* 1. (a) The session key of s was revealed  (see 4. for 1. (b)) */
+         (Ex #k. SessionKeyReveal( s ) @ k)
+
+      /* 2. Corrupt(A) before Expire(s) */
+      |  (Ex #k. Corrupt(A) @ k &
+                 ( not (Ex #l. Expire(s) @ l & l < k)))
+      
+      /* 3. SessionStateReveal(s) and either Corrupt(A) or Corrupt(B) */
+      |  (Ex #k. SessionStateReveal(s) @ k
+          & ((Ex #l. Corrupt(A) @ l) | (Ex #l. Corrupt(B) @ l)))
+
+      /* 4. s* exists and */
+      |  (Ex #l ms matchingComm.
+           Sid(<'UM3',B,A,matchingComm>) @ l
+           & ms = <'UM3',B,A,matchingComm>
+           & ((Ex rest. matchingComm + rest = comm) | matchingComm = comm)
+           // the session has not been updated
+           & not (Ex #v. SidUpdated(ms) @ v)
+
+         & (
+           /* SessionKeyReveal(s*) (see 1. (b)) */
+             (Ex #k. SessionKeyReveal( ms ) @ k)
+           /* (a) Corrupt(B) before Expire(s*) */
+           | (Ex #k. Corrupt(B) @ k &
+                 (not (Ex #l. Expire(ms) @ l & l < k)))
+           /* (b) SessionStateReveal(s*) and either Corrupt(A) or Corrupt(B) */
+           | (Ex #k. SessionStateReveal(ms) @ k
+              & ((Ex #l. Corrupt(A) @ l) | (Ex #l. Corrupt(B) @ l)))))
+
+      /* 5. s* does not exist and Corrupt(B) before Expire(s) */
+      |  ((not (Ex #l matchingComm.
+                Sid(<'UM3',B,A,matchingComm>) @ l
+                & ((Ex rest. matchingComm + rest = comm) | matchingComm = comm)
+                // the session has not been updated
+                & not (Ex #v. SidUpdated(<'UM3',B,A,matchingComm>) @ v)))
+                
+          & (Ex #k. Corrupt(B) @ k &
+               (not (Ex #l. Expire(s) @ l & l < k)))))"
+       
+end
