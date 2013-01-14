@@ -143,6 +143,11 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 	mkdir -p case-studies/csf12
 	mkdir -p case-studies/classic
 	mkdir -p case-studies/loops
+	mkdir -p case-studies/ake/bilinear
+	mkdir -p case-studies/ake/dh
+	mkdir -p case-studies/features/private_function_symbols
+	mkdir -p case-studies/features/multiset
+	mkdir -p case-studies/cav13
 	mkdir -p case-studies/related_work/AIF_Moedersheim_CCS10
 	mkdir -p case-studies/related_work/StatVerif_ARR_CSF11
 	mkdir -p case-studies/related_work/YubiSecure_KS_STM12
@@ -193,11 +198,48 @@ classic-case-studies:	$(CLASSIC_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/classic/*.spthy
 
 
+## AKE Diffie-Hellman
+####################
+
+AKE_DH_CASE_STUDIES=DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy UM_one_pass_fix.spthy UM_three_pass.spthy NAXOS_eCK.spthy UM_three_pass_combined.spthy NAXOS_eCK_PFS.spthy UM_three_pass_combined_fixed.spthy UM_one_pass_attack.spthy
+
+AKE_DH_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/ake/dh/,$(AKE_DH_CASE_STUDIES)))
+
+# case studies
+ake-dh-case-studies:	$(AKE_DH_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/ake/dh/*.spthy
+
+
+## Bilinear Pairing
+####################
+
+AKE_BP_CASE_STUDIES=Chen_Kudla.spthy Chen_Kudla_eCK.spthy Joux.spthy Joux_EphkRev.spthy RYY.spthy RYY_PFS.spthy Scott.spthy Scott_EphkRev.spthy TAK1.spthy TAK1_eCK_like.spthy
+
+AKE_BP_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/ake/bilinear/,$(AKE_BP_CASE_STUDIES)))
+
+# case studies
+ake-bp-case-studies:	$(AKE_BP_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/ake/dh/*.spthy
+
+
+## Features
+###########
+
+FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy
+
+FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(FEATURES_CASE_STUDIES)))
+
+# case studies
+features-case-studies:	$(FEATURES_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy
+
+
+
 ## All case studies
 ###################
 
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS)
 
 case-studies: 	$(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/
