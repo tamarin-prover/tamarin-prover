@@ -162,6 +162,7 @@ tamarinMode name help adaptMode run0 = TamarinMode
       , modeNames      = [name]
       , modeValue      = []
       , modeCheck      = updateArg "mode" name
+      , modeExpandAt   = False
       , modeReform     = const Nothing-- no reform possibility
       , modeHelp       = help
       , modeHelpSuffix = []
