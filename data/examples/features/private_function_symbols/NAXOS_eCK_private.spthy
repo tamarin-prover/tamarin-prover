@@ -22,6 +22,7 @@ functions: h2/1
 /* We use the private function symbol sk to model the longterm secret key of an
    agent. For example, sk('A') is 'A's longterm secret key. The corresponding
    longterm public key is 'g'^sk('A').
+*/
 functions: sk/1 [private]
 
 /* Protocol rules */
