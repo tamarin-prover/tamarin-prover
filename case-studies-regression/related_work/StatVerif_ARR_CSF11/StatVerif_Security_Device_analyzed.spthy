@@ -87,10 +87,10 @@ next
             by contradiction // cyclic
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction // impossible chain
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction // impossible chain
           qed
         next
           case UseRightDevice
@@ -101,10 +101,10 @@ next
             by contradiction // cyclic
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction // impossible chain
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction // impossible chain
           qed
         next
           case caenc
@@ -127,10 +127,10 @@ next
             by contradiction // cyclic
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction // impossible chain
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction // impossible chain
           qed
         next
           case UseRightDevice
@@ -141,10 +141,10 @@ next
             by contradiction // cyclic
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction // impossible chain
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction // impossible chain
           qed
         next
           case caenc
@@ -281,7 +281,7 @@ analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Dev
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.356007s
+  processing time: 0.413362s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -295,7 +295,7 @@ summary of summaries:
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.356007s
+  processing time: 0.413362s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)

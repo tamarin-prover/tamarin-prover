@@ -68,7 +68,7 @@ next
           by contradiction // cyclic
         next
           case case_2
-          by solve( (#vl, 0) ~~> (#vk, 0) )
+          by contradiction // impossible chain
         qed
       next
         case csenc
@@ -152,7 +152,7 @@ analyzing: data/examples/loops/Minimal_Typing_Example.spthy
 analyzed: data/examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.135579s
+  processing time: 0.161697s
   typing_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)
@@ -165,7 +165,7 @@ summary of summaries:
 analyzed: data/examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.135579s
+  processing time: 0.161697s
   typing_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)

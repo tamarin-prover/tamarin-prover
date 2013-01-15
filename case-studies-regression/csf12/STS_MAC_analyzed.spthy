@@ -8,7 +8,7 @@ functions: KDF/1, fst/1, h/1, mac/2, pair/2, pk/1, sign/2, snd/1, true/0,
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
-    verify(sign(x.1, x.2), x.1, pk(x.2)) = true()
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
 section{* The Station-To-Station Protocol (MAC version) *}
 
@@ -72,17 +72,17 @@ rule (modulo E) Init_2:
        Y     = x.73^x.74
        z     = x.73^(~ekI.39*x.74)
     
-    4. ~ekI  = ~ekI.39
-       Y     = x.73^inv((~ekI.39*x.74))
-       z     = x.73^inv(x.74)
+    4. ~ekI  = ~ekI.40
+       Y     = x.75^inv((~ekI.40*x.76))
+       z     = x.75^inv(x.76)
     
-    5. ~ekI  = ~ekI.39
-       Y     = x.73^(x.74*inv(~ekI.39))
-       z     = x.73^x.74
+    5. ~ekI  = ~ekI.40
+       Y     = x.75^(x.76*inv(~ekI.40))
+       z     = x.75^x.76
     
-    6. ~ekI  = ~ekI.40
-       Y     = x.74^(x.76*inv((~ekI.40*x.75)))
-       z     = x.74^(x.76*inv(x.75))
+    6. ~ekI  = ~ekI.41
+       Y     = x.76^(x.78*inv((~ekI.41*x.77)))
+       z     = x.76^(x.78*inv(x.77))
   */
 
 rule (modulo E) Resp_1:
@@ -118,17 +118,17 @@ rule (modulo E) Resp_1:
        X     = x.65^x.66
        z     = x.65^(~ekR.35*x.66)
     
-    4. ~ekR  = ~ekR.35
-       X     = x.65^inv((~ekR.35*x.66))
-       z     = x.65^inv(x.66)
+    4. ~ekR  = ~ekR.36
+       X     = x.67^inv((~ekR.36*x.68))
+       z     = x.67^inv(x.68)
     
-    5. ~ekR  = ~ekR.35
-       X     = x.65^(x.66*inv(~ekR.35))
-       z     = x.65^x.66
+    5. ~ekR  = ~ekR.36
+       X     = x.67^(x.68*inv(~ekR.36))
+       z     = x.67^x.68
     
-    6. ~ekR  = ~ekR.36
-       X     = x.66^(x.68*inv((~ekR.36*x.67)))
-       z     = x.66^(x.68*inv(x.67))
+    6. ~ekR  = ~ekR.37
+       X     = x.68^(x.70*inv((~ekR.37*x.69)))
+       z     = x.68^(x.70*inv(x.69))
   */
 
 rule (modulo E) Resp_2:
@@ -164,17 +164,17 @@ rule (modulo E) Resp_2:
        X     = x.73^x.74
        z     = x.73^(~ekR.39*x.74)
     
-    4. ~ekR  = ~ekR.39
-       X     = x.73^inv((~ekR.39*x.74))
-       z     = x.73^inv(x.74)
+    4. ~ekR  = ~ekR.40
+       X     = x.75^inv((~ekR.40*x.76))
+       z     = x.75^inv(x.76)
     
-    5. ~ekR  = ~ekR.39
-       X     = x.73^(x.74*inv(~ekR.39))
-       z     = x.73^x.74
+    5. ~ekR  = ~ekR.40
+       X     = x.75^(x.76*inv(~ekR.40))
+       z     = x.75^x.76
     
-    6. ~ekR  = ~ekR.40
-       X     = x.74^(x.76*inv((~ekR.40*x.75)))
-       z     = x.74^(x.76*inv(x.75))
+    6. ~ekR  = ~ekR.41
+       X     = x.76^(x.78*inv((~ekR.41*x.77)))
+       z     = x.76^(x.78*inv(x.77))
   */
 
 rule (modulo E) Sessionkey_Reveal:
@@ -216,17 +216,17 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
       case Resp_1
       solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.10 )
         case Sessionkey_Reveal_case_4
-        solve( !KU( sign(<x^x.1, 'g'^~tid>, ~ltkI.1) ) @ #vk.21 )
-          case Init_2_case_1
-          solve( splitEqs(3) )
-            case split
+        solve( splitEqs(2) )
+          case split_case_1
+          solve( !KU( sign(<'g'^~ekI, 'g'^~ekR>, ~ltkI.1) ) @ #vk.17 )
+            case Init_2
             solve( !KU( mac('g'^(~ekI*~ekR), sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR))
                    ) @ #vk.14 )
               case Resp_1
-              solve( !KU( 'g'^~ekR ) @ #vk.15 )
-                case Resp_1
-                solve( !KU( 'g'^~ekI ) @ #vk.17 )
-                  case Init_1
+              solve( !KU( 'g'^~ekI ) @ #vk.17 )
+                case Init_1
+                solve( !KU( 'g'^~ekR ) @ #vk.16 )
+                  case Resp_1
                   solve( !KU( mac('g'^(~ekI*~ekR), sign(<'g'^~ekI, 'g'^~ekR>, ~ltkI))
                          ) @ #vk.18 )
                     case Init_2
@@ -276,20 +276,20 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
       case Init_2_case_2
       solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.10 )
         case Sessionkey_Reveal_case_2
-        solve( !KU( sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.17 )
-          case Resp_1
-          solve( splitEqs(3) )
-            case split_case_1
+        solve( splitEqs(2) )
+          case split_case_1
+          solve( !KU( sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.17 )
+            case Resp_1
             solve( !KU( mac('g'^(~ekI*~ekR), sign(<'g'^~ekI, 'g'^~ekR>, ~ltkI))
-                   ) @ #vk.13 )
+                   ) @ #vk.12 )
               case Init_2
-              solve( !KU( mac('g'^(~ekI*~ekR), sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR))
-                     ) @ #vk.18 )
+              solve( !KU( 'g'^~ekR ) @ #vk.17 )
                 case Resp_1
-                solve( !KU( 'g'^~ekI ) @ #vk.16 )
-                  case Init_1
-                  solve( !KU( 'g'^~ekR ) @ #vk.18 )
-                    case Resp_1
+                solve( !KU( mac('g'^(~ekI*~ekR), sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR))
+                       ) @ #vk.18 )
+                  case Resp_1
+                  solve( !KU( 'g'^~ekI ) @ #vk.17 )
+                    case Init_1
                     SOLVED // trace found
                   qed
                 qed
@@ -317,7 +317,7 @@ analyzing: data/examples/csf12/STS_MAC.spthy
 analyzed: data/examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.413101s
+  processing time: 4.582101s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (12 steps)
 
@@ -329,7 +329,7 @@ summary of summaries:
 analyzed: data/examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.413101s
+  processing time: 4.582101s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (12 steps)
 

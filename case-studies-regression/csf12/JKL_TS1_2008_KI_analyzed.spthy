@@ -123,13 +123,13 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, ~ekI ) ▶₀ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( ~lkR ) @ #vk.10 )
+        solve( !KU( ~lkI ) @ #vk.10 )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( ~lkI ) @ #vk.10 )
+        solve( !KU( ~lkR ) @ #vk.10 )
           case Ltk_reveal
           by contradiction // from formulas
         qed
@@ -190,13 +190,13 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( ~lkR ) @ #vk.10 )
+        solve( !KU( ~lkI ) @ #vk.10 )
           case Ltk_reveal
           by contradiction // from formulas
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( ~lkI ) @ #vk.10 )
+        solve( !KU( ~lkR ) @ #vk.10 )
           case Ltk_reveal
           by contradiction // from formulas
         qed
@@ -220,7 +220,7 @@ analyzing: data/examples/csf12/JKL_TS1_2008_KI.spthy
 analyzed: data/examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.373515s
+  processing time: 0.384309s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 
@@ -232,7 +232,7 @@ summary of summaries:
 analyzed: data/examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.373515s
+  processing time: 0.384309s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 

@@ -6,7 +6,7 @@ functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
-    verify(sign(x.1, x.2), x.1, pk(x.2)) = true()
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
 rule (modulo E) SetupServerKey:
    [ Fr( ~sk ) ]
@@ -42,14 +42,14 @@ rule (modulo E) Client_RenewKey:
 rule (modulo E) Client_LeakKey:
    [ AwaitConfirmation( request, sk ), !ServerPK( pkServer ), In( sig ) ]
   --[
-  Eq( verify(sig, <'confirm', request>, pkServer), true() ), Revoked( sk )
+  Eq( verify(sig, <'confirm', request>, pkServer), true ), Revoked( sk )
   ]->
    [ Out( sk ) ]
 
   /*
   rule (modulo AC) Client_LeakKey:
      [ AwaitConfirmation( request, sk ), !ServerPK( pkServer ), In( sig ) ]
-    --[ Eq( z, true() ), Revoked( sk ) ]->
+    --[ Eq( z, true ), Revoked( sk ) ]->
      [ Out( sk ) ]
     variants (modulo AC)
     1. pkServer
@@ -60,11 +60,11 @@ rule (modulo E) Client_LeakKey:
        z     = verify(sig.6, <'confirm', request.6>, pkServer.6)
     
     2. pkServer
-             = pk(x.7)
+             = pk(x.6)
        request
-             = x.6
-       sig   = sign(<'confirm', x.6>, x.7)
-       z     = true()
+             = x.7
+       sig   = sign(<'confirm', x.7>, x.6)
+       z     = true
   */
 
 rule (modulo E) Server_RenewKey:
@@ -72,7 +72,7 @@ rule (modulo E) Server_RenewKey:
    In( <<'renew', A, pkNew>, requestSig> ), ServerDB( A, pk(sk) ),
    !ServerSK( skServer )
    ]
-  --[ Eq( verify(requestSig, <'renew', A, pkNew>, pk(sk)), true() ) ]->
+  --[ Eq( verify(requestSig, <'renew', A, pkNew>, pk(sk)), true ) ]->
    [ ServerDB( A, pkNew ), Out( sign(<'confirm', requestSig>, skServer) ) ]
 
   // loop breaker: [1]
@@ -82,7 +82,7 @@ rule (modulo E) Server_RenewKey:
      In( <<'renew', A, pkNew>, requestSig> ), ServerDB( A, pk(sk) ),
      !ServerSK( skServer )
      ]
-    --[ Eq( z, true() ) ]->
+    --[ Eq( z, true ) ]->
      [ ServerDB( A, pkNew ), Out( sign(<'confirm', requestSig>, skServer) ) ]
     variants (modulo AC)
     1. A     = A.13
@@ -97,7 +97,7 @@ rule (modulo E) Server_RenewKey:
        requestSig
              = sign(<'renew', A.13, pkNew.14>, sk.16)
        sk    = sk.16
-       z     = true()
+       z     = true
     // loop breaker: [1]
   */
 
@@ -144,7 +144,7 @@ analyzing: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.143769s
+  processing time: 0.100299s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -155,7 +155,7 @@ summary of summaries:
 analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.143769s
+  processing time: 0.100299s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ==============================================================================

@@ -129,7 +129,7 @@ next
               by contradiction // cyclic
             next
               case case_2
-              by solve( (#vr.3, 0) ~~> (#vk, 0) )
+              by contradiction // impossible chain
             qed
           next
             case R_1
@@ -139,7 +139,7 @@ next
               by contradiction // cyclic
             next
               case case_2
-              by solve( (#vr.4, 0) ~~> (#vk, 0) )
+              by contradiction // impossible chain
             qed
           next
             case caenc
@@ -186,7 +186,7 @@ next
                 by contradiction // cyclic
               next
                 case case_2
-                by solve( (#vr.5, 0) ~~> (#vk, 0) )
+                by contradiction // impossible chain
               qed
             next
               case R_1_case_1
@@ -199,7 +199,7 @@ next
                 by contradiction // cyclic
               next
                 case case_2
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by contradiction // impossible chain
               qed
             next
               case caenc
@@ -705,7 +705,7 @@ analyzing: data/examples/classic/NSLPK3_untagged.spthy
 analyzed: data/examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.165469s
+  processing time: 3.372649s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -718,7 +718,7 @@ summary of summaries:
 analyzed: data/examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.165469s
+  processing time: 3.372649s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
