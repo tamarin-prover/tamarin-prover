@@ -41,8 +41,8 @@ import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalT
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
+import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule)
 import           Theory.Model
-
 
 ------------------------------------------------------------------------------
 -- Extracting Goals
@@ -79,7 +79,7 @@ openGoals sys = do
                 || isMsgVar m || sortOfLNTerm m == LSortPub
                 -- handled by 'insertAction'
                 || isPair m || isInverse m || isProduct m
-                || isNullaryFunction m
+                || isUnion m || isNullaryPublicFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
         -- Technically the 'False' disj would be a solvable goal. However, we
@@ -89,8 +89,10 @@ openGoals sys = do
 
         ChainG c _     ->
           case kFactView (nodeConcFact c sys) of
-              Just (DnK,  m) | isMsgVar m -> False
-                             | otherwise  -> not solved
+              Just (DnK, viewTerm2 -> FUnion args) ->
+                  not solved && allMsgVarsKnownEarlier c args
+              Just (DnK,  m) | isMsgVar m          -> False
+                             | otherwise           -> not solved
               fa -> error $ "openChainGoals: impossible fact: " ++ show fa
 
         -- FIXME: Split goals may be duplicated, we always have to check
@@ -116,21 +118,22 @@ openGoals sys = do
     checkTermLits :: (LSort -> Bool) -> LNTerm -> Bool
     checkTermLits p =
         Mono.getAll . foldMap (Mono.All . p . sortOfLit)
-      where
-        sortOfLit (Con n) = sortOfName n
-        sortOfLit (Var v) = lvarSort v
 
     -- KU goals of messages that are likely to be constructible by the
     -- adversary. These are terms that do not contain a fresh name or a fresh
     -- name variable. For protocols without loops they are very likely to be
     -- constructible. For protocols with loops, such terms have to be given
     -- similar priority as loop-breakers.
-    probablyConstructible  = checkTermLits (LSortFresh /=)
+    probablyConstructible  m = checkTermLits (LSortFresh /=) m
+                               && not (containsPrivate m)
 
     -- KU goals of messages that are currently deducible. Either because they
-    -- are composed of public names only or because they can be extracted from
-    -- a sent message using unpairing or inversion only.
-    currentlyDeducible i m = checkTermLits (LSortPub ==) m || extractible i m
+    -- are composed of public names only and do not contain private function
+    -- symbols or because they can be extracted from a sent message using
+    -- unpairing or inversion only.
+    currentlyDeducible i m = (checkTermLits (LSortPub ==) m
+                              && not (containsPrivate m))
+                          || extractible i m
 
     extractible i m = or $ do
         (j, ru) <- M.toList $ get sNodes sys
@@ -145,12 +148,17 @@ openGoals sys = do
         return $ m `elem` derivedMsgs &&
                  not (D.cyclic ((j, i) : existingDeps))
 
-    toplevelTerms t@(destPair -> Just (t1, t2)) =
+    toplevelTerms t@(viewTerm2 -> FPair t1 t2) =
         t : toplevelTerms t1 ++ toplevelTerms t2
-    toplevelTerms t@(destInverse -> Just t1) = t : toplevelTerms t1
+    toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
     toplevelTerms t = [t]
 
 
+    allMsgVarsKnownEarlier (i,_) args =
+        all (`elem` earlierMsgVars) (filter isMsgVar args)
+      where earlierMsgVars = do (j, _, t) <- allKUActions sys
+                                guard $ isMsgVar t && alwaysBefore sys j i
+                                return t
 
 
 ------------------------------------------------------------------------------
@@ -229,32 +237,59 @@ solveChain :: [RuleAC]              -- ^ All destruction rules.
 solveChain rules (c, p) = do
     faConc  <- gets $ nodeConcFact c
     (do -- solve it by a direct edge
+        cRule <- gets $ nodeRule (nodeConcNode c)
+        pRule <- gets $ nodeRule (nodePremNode p)
         faPrem <- gets $ nodePremFact p
+        contradictoryIf (forbiddenEdge cRule pRule)
         insertEdges [(c, faConc, faPrem, p)]
-        let m = case kFactView faConc of
-                  Just (DnK, m') -> m'
-                  _              -> error $ "solveChain: impossible"
+        let mPrem = case kFactView faConc of
+                      Just (DnK, m') -> m'
+                      _              -> error $ "solveChain: impossible"
             caseName (viewTerm -> FApp o _) = showFunSymName o
             caseName t                      = show t
-        return $ caseName m
+        return $ caseName mPrem
      `disjunction`
-     do -- extend it with one step
-        cRule <- gets $ nodeRule (nodeConcNode c)
-        (i, ru)     <- insertFreshNode rules
-        -- contradicts normal form condition:
-        -- no edge from dexp to dexp KD premise
-        -- (this condition replaces the exp/noexp tags)
-        contradictoryIf (isDexpRule cRule && isDexpRule ru)
-        (v, faPrem) <- disjunctionOfList $ enumPrems ru
+     -- extend it with one step
+     case kFactView faConc of
+         Just (DnK, viewTerm2 -> FUnion args) ->
+             do -- If the chain starts at a union message, we
+                -- compute the applicable destruction rules directly.
+                i <- freshLVar "vr" LSortNode
+                let rus = map (ruleACIntrToRuleACInst . mkDUnionRule args)
+                              (filter (not . isMsgVar) args)
+                -- NOTE: We rely on the check that the chain is open here.
+                ru <- disjunctionOfList rus
+                modM sNodes (M.insert i ru)
+                -- FIXME: Do we have to add the PremiseG here so it
+                -- marked as solved?
+                let v = PremIdx 0
+                faPrem <- gets $ nodePremFact (i,v)
+                extendAndMark i ru v faPrem faConc
+         _ ->
+             do -- If the chain does not start at a union message,
+                -- the usual *DG2_chain* extension is perfomed.
+                cRule <- gets $ nodeRule (nodeConcNode c)
+                (i, ru) <- insertFreshNode rules
+                contradictoryIf (forbiddenEdge cRule ru)
+                -- This requires a modified chain constraint def:
+                -- path via first destruction premise of rule ...
+                (v, faPrem) <- disjunctionOfList $ take 1 $ enumPrems ru
+                extendAndMark i ru v faPrem faConc
+     )
+  where
+    extendAndMark i ru v faPrem faConc = do
         insertEdges [(c, faConc, faPrem, (i, v))]
         markGoalAsSolved "directly" (PremiseG (i, v) faPrem)
         insertChain (i, ConcIdx 0) p
         return $ showRuleCaseName ru
-     )
-  where
-    isDexpRule ru = case get rInfo ru of
-        IntrInfo (DestrRule n) | n == expSymString -> True
-        _                                          -> False
+
+    -- contradicts normal form condition:
+    -- no edge from dexp to dexp KD premise, no edge from dpmult
+    -- to dpmult KD premise, and no edge from dpmult to demap KD premise
+    -- (this condition replaces the exp/noexp tags)
+    forbiddenEdge cRule pRule = isDExpRule   cRule && isDExpRule  pRule  ||
+                                isDPMultRule cRule && isDPMultRule pRule ||
+                                isDPMultRule cRule && isDEMapRule  pRule
 
 -- | Solve an equation split. There is no corresponding CR-rule in the rule
 -- system on paper because there we eagerly split over all variants of a rule.

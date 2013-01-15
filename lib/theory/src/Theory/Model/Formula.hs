@@ -234,6 +234,7 @@ deriving instance Ord      LNFormula
 
 instance HasFrees LNFormula where
     foldFrees  f = foldMap  (foldFrees  f)
+    foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
     mapFrees   f = traverseFormula (mapFrees   f)
 
 instance Apply LNFormula where

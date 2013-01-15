@@ -11,7 +11,7 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -46,8 +46,13 @@ module Term.LTerm (
   , sortCompare
   , sortOfLTerm
   , sortOfLNTerm
+  , sortOfLit
   , isMsgVar
   , isFreshVar
+  , isSimpleTerm
+  , niFactors
+  , containsPrivate
+  , neverContainsFreshPriv
 
   -- ** Destructors
   , ltermVar
@@ -74,6 +79,8 @@ module Term.LTerm (
   , renameAvoiding
   , avoidPrecise
   , renamePrecise
+  , renameDropNamehint
+  , varOccurences
 
   -- * BVar
   , BVar(..)
@@ -106,12 +113,13 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise
 import           Data.Binary
 import qualified Data.DList                       as D
 import           Data.DeriveTH
-import           Data.Foldable                    hiding (concatMap, elem)
+import           Data.Foldable                    hiding (concatMap, elem, notElem, any)
 import           Data.Generics                    hiding (GT)
 import qualified Data.Map                         as M
 import           Data.Monoid
 import qualified Data.Set                         as S
 import           Data.Traversable
+import qualified Data.ByteString.Char8            as BC
 
 import           Safe                             (fromJustNote)
 
@@ -126,21 +134,17 @@ import           Logic.Connectives
 
 -- | Sorts for logical variables. They satisfy the following sub-sort relation:
 --
--- >  LSortMsg   < LSortMSet
 -- >  LSortFresh < LSortMsg
 -- >  LSortPub   < LSortMsg
 --
 data LSort = LSortPub   -- ^ Arbitrary public names.
            | LSortFresh -- ^ Arbitrary fresh names.
            | LSortMsg   -- ^ Arbitrary messages.
-           | LSortMSet  -- ^ Sort for multisets.
            | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
            deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data )
 
 -- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
---   Partial order: Node      MSet
---                             |
---                            Msg
+--   Partial order: Node      Msg
 --                           /   \
 --                         Pub  Fresh
 sortCompare :: LSort -> LSort -> Maybe Ordering
@@ -149,10 +153,7 @@ sortCompare s1 s2 = case (s1, s2) of
     -- Node is incomparable to all other sorts, invalid input
     (LSortNode,  _        )  -> Nothing
     (_,          LSortNode)  -> Nothing
-    -- MSet is greater than all except Node
-    (LSortMSet,  _        )  -> Just GT
-    (_,          LSortMSet)  -> Just LT
-    -- Msg is greater than all sorts except Node and MSet
+    -- Msg is greater than all sorts except Node
     (LSortMsg,   _        )  -> Just GT
     (_,          LSortMsg )  -> Just LT
     -- The remaining combinations (Pub/Fresh) are incomparable
@@ -164,7 +165,6 @@ sortPrefix LSortMsg   = ""
 sortPrefix LSortFresh = "~"
 sortPrefix LSortPub   = "$"
 sortPrefix LSortNode  = "#"
-sortPrefix LSortMSet  = "%"
 
 -- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
 sortSuffix :: LSort -> String
@@ -172,7 +172,6 @@ sortSuffix LSortMsg   = "msg"
 sortSuffix LSortFresh = "fresh"
 sortSuffix LSortPub   = "pub"
 sortSuffix LSortNode  = "node"
-sortSuffix LSortMSet  = "mset"
 
 
 ------------------------------------------------------------------------------
@@ -258,13 +257,17 @@ sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Con c)  -> sortOfConst c
     Lit2 (Var lv) -> lvarSort lv
-    Empty         -> LSortMSet
-    FUnion _      -> LSortMSet
     _             -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.
 sortOfLNTerm :: LNTerm -> LSort
 sortOfLNTerm = sortOfLTerm sortOfName
+
+-- | Returns the most precise sort of a 'Lit'.
+sortOfLit :: Lit Name LVar -> LSort
+sortOfLit (Con n) = sortOfName n
+sortOfLit (Var v) = lvarSort v
+
 
 -- | Is a term a message variable?
 isMsgVar :: LNTerm -> Bool
@@ -276,7 +279,33 @@ isFreshVar :: LNTerm -> Bool
 isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
 isFreshVar _                         = False
 
+-- | The non-inverse factors of a term.
+niFactors :: LNTerm -> [LNTerm]
+niFactors t = case viewTerm2 t of
+                FMult ts -> concatMap niFactors ts
+                FInv t1  -> niFactors t1
+                _        -> [t]
 
+-- | @containsPrivate t@ returns @True@ if @t@ contains private function symbols.
+containsPrivate :: Term t -> Bool
+containsPrivate t = case viewTerm t of
+    Lit _                          -> False
+    FApp (NoEq (_,(_,Private))) _  -> True
+    FApp _                      as -> any containsPrivate as
+
+-- | A term is *simple* iff there is an instance of this term that can be
+-- constructed from public names only. i.e., the term does not contain any
+-- fresh names, fresh variables, or private function symbols.
+isSimpleTerm :: LNTerm -> Bool
+isSimpleTerm t =
+    not (containsPrivate t) && 
+    (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
+
+-- | 'True' iff no instance of this term contains fresh names or private function symbols.
+neverContainsFreshPriv :: LNTerm -> Bool
+neverContainsFreshPriv t =
+    not (containsPrivate t) && 
+    (getAll . foldMap (All . (`notElem` [LSortMsg, LSortFresh]) . sortOfLit) $ t)
 
 -- Destructors
 --------------
@@ -301,7 +330,6 @@ ltermNodeId = ltermVar LSortNode
 -- | Extract a node-id variable from a term that must be a node-id variable.
 ltermNodeId' :: Show c => LTerm c -> LVar
 ltermNodeId' = ltermVar' LSortNode
-
 
 
 -- BVar: Bound variables
@@ -369,7 +397,7 @@ bltermNodeId' t =
 instance Eq LVar where
   (LVar n1 s1 i1) == (LVar n2 s2 i2) = i1 == i2 && s1 == s2 && n1 == n2
 
--- An ord instane that prefers the 'lvarIdx' over the 'lvarName'.
+-- An ord instance that prefers the 'lvarIdx' over the 'lvarName'.
 instance Ord LVar where
     compare (LVar x1 x2 x3) (LVar y1 y2 y3) =
         compare x3 y3 & compare x2 y2 & compare x1 y1 & EQ
@@ -392,27 +420,34 @@ instance IsVar LVar where
 -- Managing bound and free LVars
 ------------------------------------------------------------------------------
 
+
+-- | This type captures the occurence of a variable in a certain context.
+type Occurence = [String]
+
 -- | For performance reasons, we distinguish between monotone functions on
--- 'LVar's and arbitrary functions. The monotone functions much map 'LVar's to
--- equal or larger 'LVar's. This ensures that the AC-normal form does not have
+-- 'LVar's and arbitrary functions. For a monotone f, if @x <= y@, then
+-- @f x <= f y@. This ensures that the AC-normal form does not have
 -- to be recomputed. If you are unsure about what to use, then use the
 -- 'Arbitrary' function.
 data MonotoneFunction f = Monotone (LVar -> f LVar )
                         | Arbitrary (LVar -> f LVar )
 
 -- | @HasFree t@ denotes that the type @t@ has free @LVar@ variables. They can
--- be collected using 'foldFrees' and mapped in the context of an applicative
--- functor using 'mapFrees'.
+-- be collected using 'foldFrees' and 'foldFreesOcc' and mapped in the context
+-- of an applicative functor using 'mapFrees'.
 --
 -- When defining instances of this class, you have to ensure that only the free
 -- LVars are collected and mapped and no others. The instances for standard
 -- Haskell types assume that all variables free in all type arguments are free.
+-- The 'foldFreesOcc' is only used to define the function 'varOccurences'. See
+-- below for required properties of the instance methods.
 --
 -- Once we need it, we can use type synonym instances to parametrize over the
 -- variable type.
 --
 class HasFrees t where
     foldFrees  :: Monoid m      => (LVar -> m      ) -> t -> m
+    foldFreesOcc :: Monoid m => (Occurence -> LVar -> m) -> Occurence -> t -> m
     mapFrees   :: Applicative f => MonotoneFunction f -> t -> f t
 
 -- | @v `occurs` t@ iff variable @v@ occurs as a free variable in @t@.
@@ -431,6 +466,17 @@ freesList = D.toList . freesDList
 -- @t@.
 frees :: HasFrees t => t -> [LVar]
 frees = sortednub . freesList
+
+-- | Returns the variables occuring in @t@ together with the contexts they appear in.
+-- Note that certain contexts (and variables only occuring in such contexts) are
+-- ignored by this function.
+-- The function is used to "guess" renamings of variables, i.e., if t is a renaming of s,
+-- then variables that occur in equal contexts in t and s are probably renamings of
+-- each other.
+varOccurences :: HasFrees a => a -> [(LVar, S.Set Occurence)]
+varOccurences t =
+    map (\((v,ctx1):rest) -> (v, S.fromList (ctx1:(map snd rest)))) . groupOn fst . sortOn fst
+    . foldFreesOcc (\ c v -> [(v,c)]) [] $ t
 
 -- | @someInst t@ returns an instance of @t@ where all free variables whose
 -- binding is not yet determined by the caller are replaced with fresh
@@ -502,17 +548,27 @@ avoidPrecise =
 renamePrecise :: (MonadFresh m, HasFrees a) => a -> m a
 renamePrecise x = evalBindT (someInst x) noBindings
 
+
+renameDropNamehint :: (MonadFresh m, MonadBind LVar LVar m, HasFrees a) => a -> m a
+renameDropNamehint =
+    mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x "")
+
+
 -- Instances
 ------------
 
 instance HasFrees LVar where
     foldFrees = id
-    mapFrees  (Arbitrary f) = f
-    mapFrees  (Monotone f)  = f
+    foldFreesOcc f c v = f c v
+    mapFrees (Arbitrary f) = f
+    mapFrees (Monotone f)  = f
 
 instance HasFrees v => HasFrees (Lit c v) where
     foldFrees f (Var x) = foldFrees f x
     foldFrees _ _       = mempty
+
+    foldFreesOcc f c (Var x) = foldFreesOcc f c x
+    foldFreesOcc _ _ _       = mempty
 
     mapFrees f (Var x) = Var <$> mapFrees f x
     mapFrees _ l       = pure l
@@ -521,86 +577,117 @@ instance HasFrees v => HasFrees (BVar v) where
     foldFrees _ (Bound _) = mempty
     foldFrees f (Free v)  = foldFrees f v
 
+    foldFreesOcc _ _ (Bound _) = mempty
+    foldFreesOcc f c (Free v)  = foldFreesOcc f c v
+
     mapFrees _ b@(Bound _) = pure b
     mapFrees f   (Free v)  = Free <$> mapFrees f v
 
 instance (HasFrees l, Ord l) => HasFrees (Term l) where
-    foldFrees  f = foldMap (foldFrees f)
-    mapFrees   f (viewTerm -> Lit l)    = lit <$> mapFrees f l
-    mapFrees   f@(Arbitrary _) (viewTerm -> FApp o l) = fApp o <$> mapFrees f l
-    mapFrees   f@(Monotone _)  (viewTerm -> FApp o l) = unsafefApp o <$> mapFrees f l
+    foldFrees f = foldMap (foldFrees f)
+
+    foldFreesOcc f c t = case viewTerm t of
+        Lit  l             -> foldFreesOcc f c l
+        FApp (NoEq o) as -> foldFreesOcc f ((BC.unpack . fst $ o):c) as
+        FApp o        as -> mconcat $ map (foldFreesOcc f (show o:c)) as
+          -- AC or C symbols
+
+    mapFrees f (viewTerm -> Lit l)                  = lit <$> mapFrees f l
+    mapFrees f@(Arbitrary _) (viewTerm -> FApp o l) = fApp o <$> mapFrees f l
+    mapFrees f@(Monotone _)  (viewTerm -> FApp o l) = unsafefApp o <$> mapFrees f l
 
 instance HasFrees a => HasFrees (Equal a) where
-    foldFrees f = foldMap (foldFrees f)
-    mapFrees  f = traverse (mapFrees f)
+    foldFrees    f               = foldMap (foldFrees f)
+    foldFreesOcc f p (Equal a b) = foldFreesOcc f p (a,b)
+    mapFrees     f               = traverse (mapFrees f)
 
 instance HasFrees a => HasFrees (Match a) where
-    foldFrees f = foldMap (foldFrees f)
-    mapFrees  f = traverse (mapFrees f)
+    foldFrees    f                       = foldMap (foldFrees f)
+    foldFreesOcc _ _ NoMatch             = mempty
+    foldFreesOcc f p (DelayedMatches ms) = foldFreesOcc f p ms
+    mapFrees     f                       = traverse (mapFrees f)
 
 instance HasFrees a => HasFrees (RRule a) where
-    foldFrees f = foldMap (foldFrees f)
-    mapFrees  f = traverse (mapFrees f)
-
+    foldFrees    f               = foldMap (foldFrees f)
+    foldFreesOcc f p (RRule a b) = foldFreesOcc f p (a,b)
+    mapFrees     f               = traverse (mapFrees f)
 
 instance HasFrees () where
-    foldFrees  _ = const mempty
-    mapFrees   _ = pure
+    foldFrees    _   = const mempty
+    foldFreesOcc _ _ = const mempty
+    mapFrees     _   = pure
 
 instance HasFrees Int where
-    foldFrees  _ = const mempty
-    mapFrees   _ = pure
+    foldFrees    _   = const mempty
+    foldFreesOcc _ _ = const mempty
+    mapFrees     _   = pure
 
 instance HasFrees Integer where
-    foldFrees  _ = const mempty
-    mapFrees   _ = pure
+    foldFrees    _   = const mempty
+    foldFreesOcc _ _ = const mempty
+    mapFrees     _   = pure
 
 instance HasFrees Bool where
-    foldFrees  _ = const mempty
-    mapFrees   _ = pure
+    foldFrees    _   = const mempty
+    foldFreesOcc _ _ = const mempty
+    mapFrees     _   = pure
 
 instance HasFrees Char where
-    foldFrees  _ = const mempty
-    mapFrees   _ = pure
+    foldFrees    _   = const mempty
+    foldFreesOcc _ _ = const mempty
+    mapFrees     _   = pure
 
 instance HasFrees a => HasFrees (Maybe a) where
-    foldFrees  f = foldMap (foldFrees f)
-    mapFrees   f = traverse (mapFrees f)
+    foldFrees    f            = foldMap (foldFrees f)
+    foldFreesOcc _ _ Nothing  = mempty
+    foldFreesOcc f p (Just x) = foldFreesOcc f p x
+    mapFrees     f            = traverse (mapFrees f)
 
 instance (HasFrees a, HasFrees b) => HasFrees (Either a b) where
-    foldFrees  f = either (foldFrees f) (foldFrees f)
-    mapFrees   f = either (fmap Left . mapFrees   f) (fmap Right . mapFrees   f)
+    foldFrees    f   = either (foldFrees f) (foldFrees f)
+    foldFreesOcc f p = either (foldFreesOcc f ("0":p)) (foldFreesOcc f ("1":p))
+    mapFrees     f   = either (fmap Left . mapFrees   f) (fmap Right . mapFrees   f)
 
 instance (HasFrees a, HasFrees b) => HasFrees (a, b) where
-    foldFrees  f (x, y) = foldFrees f x `mappend` foldFrees f y
-    mapFrees   f (x, y) = (,) <$> mapFrees   f x <*> mapFrees   f y
+    foldFrees    f   (x, y) = foldFrees f x `mappend` foldFrees f y
+    foldFreesOcc f p (x, y) = foldFreesOcc f ("0":p) x `mappend` foldFreesOcc f ("1":p) y
+    mapFrees     f   (x, y) = (,) <$> mapFrees   f x <*> mapFrees   f y
 
 instance (HasFrees a, HasFrees b, HasFrees c) => HasFrees (a, b, c) where
-    foldFrees  f (x, y, z)    = foldFrees f (x, (y, z))
-    mapFrees   f (x0, y0, z0) =
+    foldFrees    f (x, y, z)    = foldFrees f (x, (y, z))
+    foldFreesOcc f p (x, y, z)  =
+        foldFreesOcc f ("0":p) x `mappend` foldFreesOcc f ("1":p) y `mappend` foldFreesOcc f ("2":p) z
+    mapFrees     f (x0, y0, z0) =
         (\(x, (y, z)) -> (x, y, z)) <$> mapFrees f (x0, (y0, z0))
 
 instance HasFrees a => HasFrees [a] where
-    foldFrees  f = foldMap  (foldFrees f)
-    mapFrees   f = traverse (mapFrees f)
+    foldFrees    f      = foldMap  (foldFrees f)
+    foldFreesOcc f c xs = mconcat $ (map (\(i,x) -> foldFreesOcc f (show i:c) x)) $ zip [(0::Int)..] xs
+    mapFrees     f      = traverse (mapFrees f)
 
 instance HasFrees a => HasFrees (Disj a) where
-    foldFrees  f = foldMap  (foldFrees f)
-    mapFrees   f = traverse (mapFrees f)
+    foldFrees    f     = foldMap  (foldFrees f)
+    foldFreesOcc f p d = foldFreesOcc f p (getDisj d)
+    mapFrees     f     = traverse (mapFrees f)
 
 instance HasFrees a => HasFrees (Conj a) where
-    foldFrees  f = foldMap  (foldFrees f)
-    mapFrees   f = traverse (mapFrees f)
+    foldFrees    f     = foldMap  (foldFrees f)
+    foldFreesOcc f p c = foldFreesOcc f p (getConj c)
+    mapFrees     f     = traverse (mapFrees f)
 
 instance (Ord a, HasFrees a) => HasFrees (S.Set a) where
-    foldFrees  f = foldMap  (foldFrees f)
-    mapFrees   f = fmap S.fromList . mapFrees f . S.toList
+    foldFrees   f    = foldMap  (foldFrees f)
+    foldFreesOcc f p = foldMap (foldFreesOcc f ("0":p))
+    mapFrees     f   = fmap S.fromList . mapFrees f . S.toList
 
 instance (Ord k, HasFrees k, HasFrees v) => HasFrees (M.Map k v) where
-    foldFrees  f = M.foldrWithKey combine mempty
+    foldFrees f = M.foldrWithKey combine mempty
       where
         combine k v m = foldFrees f k `mappend` (foldFrees f v `mappend` m)
-    mapFrees   f = fmap M.fromList . mapFrees f . M.toList
+    foldFreesOcc f p = M.foldrWithKey combine mempty
+      where
+        combine k v m = foldFreesOcc f p (k,v) `mappend` m
+    mapFrees f = fmap M.fromList . mapFrees f . M.toList
 
 
 ------------------------------------------------------------------------------

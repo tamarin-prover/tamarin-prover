@@ -125,7 +125,7 @@ next
               by contradiction // cyclic
             next
               case case_2
-              by solve( (#vr.4, 0) ~~> (#vk, 0) )
+              by contradiction // impossible chain
             qed
           next
             case R_1
@@ -136,7 +136,7 @@ next
               by contradiction // cyclic
             next
               case case_2
-              by solve( (#vr.5, 0) ~~> (#vk, 0) )
+              by contradiction // impossible chain
             qed
           next
             case caenc
@@ -172,7 +172,7 @@ next
                 by contradiction // cyclic
               next
                 case case_2
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by contradiction // impossible chain
               qed
             next
               case R_1_case_1
@@ -186,7 +186,7 @@ next
                 by contradiction // cyclic
               next
                 case case_2
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
+                by contradiction // impossible chain
               qed
             next
               case caenc
@@ -367,7 +367,7 @@ analyzing: data/examples/classic/NSPK3.spthy
 analyzed: data/examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.697538s
+  processing time: 2.599761s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)
@@ -381,7 +381,7 @@ summary of summaries:
 analyzed: data/examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.697538s
+  processing time: 2.599761s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)

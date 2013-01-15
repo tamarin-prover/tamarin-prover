@@ -24,8 +24,9 @@ module Main.TheoryLoader (
 
   , closeThy
 
-  -- ** Message deduction variants
-  , intruderVariantsFile
+  -- ** Cached Message Deduction Rule Variants
+  , dhIntruderVariantsFile
+  , bpIntruderVariantsFile
   , addMessageDeductionRuleVariants
 
   ) where
@@ -49,7 +50,8 @@ import           Theory
 import           Theory.Text.Parser
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
-import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules)
+import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
+                                                     , multisetIntruderRules)
 import           Theory.Tools.Wellformedness
 
 import           Main.Console
@@ -76,9 +78,6 @@ theoryLoadFlags =
 
   , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|c|C)+"
       "Sequence of goal rankings to use (default 's')"
-
-  --, flagOpt "" ["intruder","i"] (updateArg "intruderVariants") "FILE"
-  --    "Cached intruder rules to use"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
       "SUMMARY|VERBOSE"
@@ -221,6 +220,44 @@ constructAutoProver as =
       Just other  -> error $ "unknown stop-on-trace method: " ++ other
 
 
+
+------------------------------------------------------------------------------
+-- Message deduction variants cached in files
+------------------------------------------------------------------------------
+
+-- | The name of the intruder variants file.
+dhIntruderVariantsFile :: FilePath
+dhIntruderVariantsFile = "intruder_variants_dh.spthy"
+
+-- | The name of the intruder variants file.
+bpIntruderVariantsFile :: FilePath
+bpIntruderVariantsFile = "intruder_variants_bp.spthy"
+
+-- | Add the variants of the message deduction rule. Uses the cached version
+-- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
+-- deduction rules for Diffie-Hellman exponentiation.
+addMessageDeductionRuleVariants :: OpenTheory -> IO OpenTheory
+addMessageDeductionRuleVariants thy0
+  | enableBP msig = addIntruderVariants [ dhIntruderVariantsFile
+                                        , bpIntruderVariantsFile ]
+  | enableDH msig = addIntruderVariants [ dhIntruderVariantsFile ]
+  | otherwise     = return thy
+  where
+    msig         = get (sigpMaudeSig . thySignature) thy0
+    rules        = subtermIntruderRules msig ++ specialIntruderRules
+                   ++ if enableMSet msig then multisetIntruderRules else []
+    thy          = addIntrRuleACs rules thy0
+    addIntruderVariants files = do
+        ruless <- mapM loadRules files
+        return $ addIntrRuleACs (concat ruless) thy
+      where
+        loadRules file = do
+            variantsFile <- getDataFileName file
+            ifM (doesFileExist variantsFile)
+                (parseIntruderRules msig variantsFile)
+                (error $ "could not find intruder message deduction theory '"
+                           ++ variantsFile ++ "'")
+{-
 ------------------------------------------------------------------------------
 -- Message deduction variants cached in files
 ------------------------------------------------------------------------------
@@ -247,3 +284,4 @@ addMessageDeductionRuleVariants thy0
     msig         = get (sigpMaudeSig . thySignature) thy0
     rules        = subtermIntruderRules msig ++ specialIntruderRules
     thy          = addIntrRuleACs rules thy0
+-}

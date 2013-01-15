@@ -1,8 +1,7 @@
-{-# LANGUAGE TupleSections, TypeSynonymInstances, GADTs,FlexibleContexts,EmptyDataDecls #-}
-{-# LANGUAGE StandaloneDeriving, DeriveDataTypeable, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, DeriveFunctor, ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE FlexibleContexts #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -67,13 +66,11 @@ freshToFree subst = (`evalBindT` noBindings) $ do
             Lit (Var _) -> lvarName lv -- keep name of oldvar
             _           -> lvarName v
 
-
 -- | @freshToFreeAvoiding s t@ converts all fresh variables in the range of
 --   @s@ to free variables avoiding free variables in @t@. This function tries
 --   to reuse variable names from the domain of the substitution if possible.
 freshToFreeAvoiding :: (HasFrees t, IsConst c) => SubstVFresh c LVar -> t -> Subst c LVar
 freshToFreeAvoiding s t = freshToFree s `evalFreshAvoiding` t
-
 
 -- | @freshToFreeAvoidingFast s t@ converts all fresh variables in the range of
 --   @s@ to free variables avoiding free variables in @t@. This function does
@@ -83,7 +80,6 @@ freshToFreeAvoidingFast s t =
     substFromList . renameMappings . substToListVFresh $ s
   where
     renameMappings l = zip (map fst l) (rename (map snd l) `evalFreshAvoiding` t)
-
 
 -- | @freeToFreshRaw s@ considers all variables in the range of @s@ as fresh.
 freeToFreshRaw :: Subst c LVar -> SubstVFresh c LVar

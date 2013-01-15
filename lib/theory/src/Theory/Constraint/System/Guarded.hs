@@ -18,6 +18,7 @@ module Theory.Constraint.System.Guarded (
     Guarded(..)
   , LGuarded
   , LNGuarded
+  , GAtom(..)
 
   -- ** Smart constructors
   , gfalse
@@ -36,6 +37,9 @@ module Theory.Constraint.System.Guarded (
   , simplifyGuarded
 
   , mapGuardedAtoms
+
+  , atomToGAtom
+  , sortGAtoms
 
   -- ** Queries
   , isConjunction
@@ -116,6 +120,7 @@ isAllGuarded :: Guarded s c v -> Bool
 isAllGuarded (GGuarded All _ _ _) = True
 isAllGuarded _                    = False
 
+
 -- | Check whether the guarded formula is closed and does not contain an
 -- existential quantifier. This under-approximates the question whether the
 -- formula is a safety formula. A safety formula @phi@ has the property that a
@@ -138,6 +143,28 @@ guardFactTags =
   where
     getTags _qua _ss atos inner =
         mconcat [ D.singleton tag | Action _ (Fact tag _) <- atos ] <> inner
+
+
+-- | Atoms that are allowed as guards.
+data GAtom t = GEqE (t,t) | GAction (t,Fact t)
+    deriving (Eq, Show, Ord)
+
+isGAction :: GAtom t -> Bool
+isGAction (GAction _) = True
+isGAction _           = False
+
+-- | Convert 'Atom's to 'GAtom's, if possible.
+atomToGAtom :: Show t => Atom t -> GAtom t
+atomToGAtom = conv
+  where conv (EqE s t)     = GEqE (s,t)
+        conv (Action i f)  = GAction (i,f)
+        conv a             = error $ "atomsToGAtom: "++ show a
+                                 ++ "is not a guarded atom."
+
+-- | Stable sort that ensures that actions occur before equations.
+sortGAtoms :: [GAtom t] -> [GAtom t]
+sortGAtoms = uncurry (++) . partition isGAction
+
 
 ------------------------------------------------------------------------------
 -- Folding
@@ -215,8 +242,9 @@ traverseGuarded f = foldGuarded (liftA GAto . traverse (traverseTerm (traverse (
                                 (\qua ss as gf -> GGuarded qua ss <$> traverse (traverse (traverseTerm (traverse (traverse f)))) as <*> gf)
 
 instance Ord c => HasFrees (Guarded (String, LSort) c LVar) where
-    foldFrees f = foldMap  (foldFrees f)
-    mapFrees  f = traverseGuarded (mapFrees f)
+    foldFrees    f   = foldMap  (foldFrees f)
+    foldFreesOcc _ _ = const mempty
+    mapFrees     f   = traverseGuarded (mapFrees f)
 
 
 -- FIXME: remove name hints for variables for saturation?
@@ -279,7 +307,7 @@ unbindAtom = traverse (traverseTerm (traverse (foldBVar (const Nothing) Just)))
 ------------------------------------------------------------------------------
 
 -- | @openGuarded gf@ returns @Just (qua,vs,ats,gf')@ if @gf@ is a guarded
--- clause and @Nothing@ otherwise. In the first case, @quao@ is the quantifier,
+-- clause and @Nothing@ otherwise. In the first case, @qua@ is the quantifier,
 -- @vs@ is a list of fresh variables, @ats@ is the antecedent, and @gf'@ is the
 -- succedent. In both antecedent and succedent, the bound variables are
 -- replaced by @vs@.
@@ -351,7 +379,7 @@ gdisj gfs0 = case concatMap flatten gfs0 of
     gfs | any (gtrue ==) gfs -> gtrue
         -- FIXME: Consider using 'sortednub' here. This yields stronger
         -- normalizaton for formulas. However, it also means that we loose
-        -- invariance under renaming free variables, as the order changes,
+        -- invariance under renaming of free variables, as the order changes,
         -- when they are renamed.
         | otherwise          -> GDisj $ Disj $ nub gfs
   where
@@ -440,35 +468,50 @@ formulaToGuarded fmOrig =
           , ppFormula f0
           ]
 
-        conjActions (Conn And f1 f2)     = conjActions f1 ++ conjActions f2
-        conjActions (Ato a@(Action _ _)) = [Left $ bvarToLVar a]
-        conjActions f                    = [Right f]
+        conjActionsEqs (Conn And f1 f2)     = conjActionsEqs f1 ++ conjActionsEqs f2
+        conjActionsEqs (Ato a@(Action _ _)) = [Left $ bvarToLVar a]
+        conjActionsEqs (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]
+        conjActionsEqs f                    = [Right f]
+
+        -- Given a list of unguarded variables and a list of atoms, compute the
+        -- remaining unguarded variables that are not guarded by the given atoms.
+        remainingUnguarded ug0 atoms =
+            go ug0 (sortGAtoms . map atomToGAtom $ atoms)
+          where go ug []                       = ug
+                go ug ((GAction a) :gatoms) = go (ug \\ frees a) gatoms
+                -- FIXME: We do not consider the terms, e.g., for ug=[x,y],
+                -- s=pair(x,a), and t=pair(b,y), we could define ug'=[].
+                go ug ((GEqE (s,t)):gatoms) = go ug' gatoms
+                  where ug' | covered s ug = ug \\ frees t 
+                            | covered t ug = ug \\ frees s
+                            | otherwise    = ug
+                covered a vs = frees a `intersect` vs == []
 
         convEx qua = do
             (xs,_,f) <- openFormulaPrefix f0
-            case partitionEithers $ conjActions f of
-              (as, fs) -> do
-                -- all existentially quantified variables must be guarded
-                noUnguardedVars (xs \\ frees as)
-                -- convert all other formulas
-                gf <- (if polarity then gdisj else gconj)
-                        <$> mapM (convert polarity) fs
-                return $ closeGuarded qua xs as gf
-          where
+            let (as_eqs, fs) = partitionEithers $ conjActionsEqs f
+
+            -- all existentially quantified variables must be guarded
+            noUnguardedVars (remainingUnguarded xs as_eqs)
+            -- convert all other formulas
+            gf <- (if polarity then gdisj else gconj)
+                    <$> mapM (convert polarity) fs
+            return $ closeGuarded qua xs (as_eqs) gf
 
         convAll qua = do
             (xs,_,f) <- openFormulaPrefix f0
             case f of
-              Conn Imp ante suc -> case partitionEithers $ conjActions ante of
-                (as, fs) -> do
+              Conn Imp ante suc -> do
+                  let (as_eqs, fs) = partitionEithers $ conjActionsEqs ante
+
                   -- all universally quantified variables must be guarded
-                  noUnguardedVars (xs \\ frees as)
+                  noUnguardedVars (remainingUnguarded xs (as_eqs))
                   -- negate formulas in antecedent and combine with body
                   gf <- (if polarity then gconj else gdisj)
                           <$> sequence ( map (convert (not polarity)) fs ++
                                          [convert polarity suc] )
 
-                  return $ closeGuarded qua xs as gf
+                  return $ closeGuarded qua xs as_eqs gf
 
               _ -> throwError $
                      text "universal quantifier without toplevel implication" $-$
@@ -484,7 +527,7 @@ formulaToGuarded fmOrig =
 
 -- | Negate a guarded formula.
 gnot :: (Ord s, Ord c, Ord v)
-              => Guarded s c v -> Guarded s c v
+     => Guarded s c v -> Guarded s c v
 gnot =
     go
   where
@@ -535,7 +578,7 @@ toInductionHypothesis =
 
 -- | Try to prove the formula by applying induction over the trace.
 -- Returns @'Left' errMsg@ if this is not possible. Returns a tuple of
--- formulas: one formalzing the proof obligation of the base-case and one
+-- formulas: one formalizing the proof obligation of the base-case and one
 -- formalizing the proof obligation of the step-case.
 ginduct :: Ord c => LGuarded c -> Either String (LGuarded c, LGuarded c)
 ginduct gf = do
@@ -587,7 +630,7 @@ simplifyGuarded valuation fm0
         annAtos = (\x -> (x, valuation =<< unbindAtom x)) <$> atos
 
     -- Note that existentials without quantifiers are already eliminated by
-    -- 'gex'. Moreover, we dealay simplification inside guarded all
+    -- 'gex'. Moreover, we delay simplification inside guarded all
     -- quantification and guarded existential quantifiers. Their body will be
     -- simplified once the quantifiers are gone.
     simp fm@(GGuarded _ _ _ _) = fm

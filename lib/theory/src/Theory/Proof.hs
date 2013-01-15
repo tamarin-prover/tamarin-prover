@@ -165,6 +165,7 @@ instance Traversable ProofStep where
 
 instance HasFrees a => HasFrees (ProofStep a) where
     foldFrees f (ProofStep m i) = foldFrees f m `mappend` foldFrees f i
+    foldFreesOcc  _ _ = const mempty
     mapFrees f (ProofStep m i)  = ProofStep <$> mapFrees f m <*> mapFrees f i
 
 ------------------------------------------------------------------------------

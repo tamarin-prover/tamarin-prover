@@ -37,6 +37,7 @@ import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
 import           Data.List
 import qualified Data.Map                                  as M
+import           Data.Maybe                                (catMaybes)
 import           Data.Monoid
 import           Data.Ord                                  (comparing)
 import qualified Data.Set                                  as S
@@ -44,7 +45,6 @@ import           Extension.Prelude                         (sortOn)
 
 import           Control.Basics
 import           Control.DeepSeq
-import           Control.Monad.Bind
 import qualified Control.Monad.Trans.PreciseFresh          as Precise
 
 import           Theory.Constraint.Solver.CaseDistinctions
@@ -56,7 +56,6 @@ import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
-
 
 ------------------------------------------------------------------------------
 -- Utilities
@@ -108,6 +107,8 @@ instance HasFrees ProofMethod where
     foldFrees f (Contradiction c) = foldFrees f c
     foldFrees _ _                 = mempty
 
+    foldFreesOcc  _ _ = const mempty
+
     mapFrees f (SolveGoal g)     = SolveGoal <$> mapFrees f g
     mapFrees f (Contradiction c) = Contradiction <$> mapFrees f c
     mapFrees _ method            = pure method
@@ -126,7 +127,6 @@ instance HasFrees ProofMethod where
 execProofMethod :: ProofContext
                 -> ProofMethod -> System -> Maybe (M.Map CaseName System)
 execProofMethod ctxt method sys =
-    M.map cleanupSystem <$>
       case method of
         Sorry _                  -> return M.empty
         Solved
@@ -134,9 +134,9 @@ execProofMethod ctxt method sys =
           | otherwise            -> Nothing
         SolveGoal goal
           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
-          | otherwise                      -> Nothing
-        Simplify                 -> singleCase (/=) simplifySystem
-        Induction                -> execInduction
+          | otherwise                        -> Nothing
+        Simplify                 -> singleCase simplifySystem
+        Induction                -> M.map cleanupSystem <$> execInduction
         Contradiction _
           | null (contradictions ctxt sys) -> Nothing
           | otherwise                      -> Just M.empty
@@ -146,25 +146,27 @@ execProofMethod ctxt method sys =
     -- simplifySystem). We also reset the variable indices here.
     cleanupSystem =
          (`Precise.evalFresh` Precise.nothingUsed)
-       . (`evalBindT` noBindings)
-       . someInst
+       . renamePrecise
        . set sSubst emptySubst
 
 
     -- expect only one or no subcase in the given case distinction
-    singleCase check m =
-        case map fst $ getDisj $ execReduction m ctxt sys (avoid sys) of
-          []                      -> return $ M.empty
-          [sys'] | check sys sys' -> return $ M.singleton "" sys'
-                 | otherwise      -> mzero
-          syss                    ->
+    singleCase m =
+        case    removeRedundantCases ctxt [] id . map cleanupSystem
+              . map fst . getDisj $ execReduction m ctxt sys (avoid sys) of
+          []                  -> return $ M.empty
+          [sys'] | check sys' -> return $ M.singleton "" sys'
+                 | otherwise  -> mzero
+          syss                ->
                return $ M.fromList (zip (map show [(1::Int)..]) syss)
+      where check sys' = cleanupSystem sys /= sys'
 
     -- solve the given goal
     -- PRE: Goal must be valid in this system.
-    execSolveGoal goal = do
-        return $ makeCaseNames $ map fst $ getDisj $
-            runReduction solver ctxt sys (avoid sys)
+    execSolveGoal goal =
+        return . makeCaseNames . removeRedundantCases ctxt [] snd
+               . map (second cleanupSystem) . map fst . getDisj
+               $ runReduction solver ctxt sys (avoid sys)
       where
         ths    = L.get pcCaseDists ctxt
         solver = do name <- maybe (solveGoal goal)
@@ -229,12 +231,12 @@ goalRankingName ranking =
 
 -- | Use a 'GoalRanking' to sort a list of 'AnnotatedGoal's stemming from the
 -- given constraint 'System'.
-rankGoals :: GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
-rankGoals ranking = case ranking of
+rankGoals :: ProofContext -> GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+rankGoals ctxt ranking = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
-    SmartRanking useLoopsBreakers -> smartRanking useLoopsBreakers
+    SmartRanking useLoopsBreakers -> smartRanking ctxt useLoopsBreakers
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
@@ -249,7 +251,7 @@ rankProofMethods ranking ctxt sys = do
                AvoidInduction -> [(Simplify, ""), (Induction, "")]
                UseInduction   -> [(Induction, ""), (Simplify, "")]
             )
-        <|> (solveGoalMethod <$> (rankGoals ranking sys $ openGoals sys))
+        <|> (solveGoalMethod <$> (rankGoals ctxt ranking sys $ openGoals sys))
     case execProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
@@ -318,12 +320,20 @@ goalNrRanking = sortOn (fst . snd)
 -- | A ranking function tuned for the automatic verification of
 -- classical security protocols that exhibit a well-founded protocol premise
 -- fact flow.
-smartRanking :: Bool   -- True if PremiseG loop-breakers should not be delayed
+smartRanking :: ProofContext
+             -> Bool   -- True if PremiseG loop-breakers should not be delayed
              -> System
              -> [AnnotatedGoal] -> [AnnotatedGoal]
-smartRanking allowPremiseGLoopBreakers sys =
+smartRanking ctxt allowPremiseGLoopBreakers sys =
     sortOnUsefulness . unmark . sortDecisionTree solveFirst . goalNrRanking
   where
+    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
+
+    getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
+      Just (viewTerm -> FApp o _)
+        | length (getDisj (L.get cdCases cd)) == 1 -> Just o
+      _                                            -> Nothing
+
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
 
     tagUsefulness Useful                = 0 :: Int
@@ -342,8 +352,10 @@ smartRanking allowPremiseGLoopBreakers sys =
         , isDisjGoal . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoal . fst
+        , isPrivateKnowsGoal . fst
         , isFreshKnowsGoal . fst
         , isSplitGoalSmall . fst
+        , isMsgOneCaseGoal . fst
         , isDoubleExpGoal . fst
         , isNoLargeSplitGoal . fst ]
         -- move the rest (mostly more expensive KU-goals) before expensive
@@ -351,7 +363,7 @@ smartRanking allowPremiseGLoopBreakers sys =
 
     -- FIXME: This small split goal preferral is quite hacky when using
     -- induction. The problem is that we may end up solving message premise
-    -- goals all the time instead performing a necessary split. We should make
+    -- goals all the time instead of performing a necessary split. We should make
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
@@ -364,6 +376,14 @@ smartRanking allowPremiseGLoopBreakers sys =
     isFreshKnowsGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
         _                                                           -> False
+
+    isMsgOneCaseGoal goal = case msgPremise goal of
+        Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
+        _                                                  -> False
+
+    isPrivateKnowsGoal goal = case msgPremise goal of
+        Just t -> isPrivateFunction t
+        _      -> False
 
     isDoubleExpGoal goal = case msgPremise goal of
         Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True

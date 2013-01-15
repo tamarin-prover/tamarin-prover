@@ -44,15 +44,15 @@ rule (modulo E) Responder:
        z     = snd(sdec(msg.5, key.5))
        z.1   = fst(sdec(msg.5, key.5))
     
-    2. key   = x.6
-       msg   = senc(x.5, x.6)
-       z     = snd(x.5)
-       z.1   = fst(x.5)
+    2. key   = x.5
+       msg   = senc(x.6, x.5)
+       z     = snd(x.6)
+       z.1   = fst(x.6)
     
-    3. key   = x.7
-       msg   = senc(<x.5, x.6>, x.7)
-       z     = x.6
-       z.1   = x.5
+    3. key   = x.5
+       msg   = senc(<x.6, x.7>, x.5)
+       z     = x.7
+       z.1   = x.6
   */
 
 lemma type_assertion [typing]:
@@ -73,11 +73,11 @@ guarded formula characterizing all counter-examples:
  ∧
   (∀ #j. (!KU( pub ) @ #j) ⇒ ¬(#j < #i)) ∧
   (∀ #j. (Out_Initiator( m ) @ #j) ⇒ ⊥) ∧
-  (∀ body #j. (!KU( body ) @ #j) ⇒ (¬(pub = snd(body))) ∨ (¬(#j < #i))) ∧
+  (∀ body #j. (!KU( body ) @ #j) ∧ (pub = snd(body)) ⇒ ¬(#j < #i)) ∧
   (∀ body key #j #k.
-    (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j)
+    (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j) ∧ (pub = snd(sdec(body, key)))
    ⇒
-    (¬(pub = snd(sdec(body, key)))) ∨ (¬(#j < #i)))"
+    ¬(#j < #i))"
 */
 induction
   case empty_trace
@@ -89,14 +89,11 @@ next
          (∃ #j. (!KU( pub ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j. (Out_Initiator( m ) @ #j) ∧ ¬(last(#j)))  ∥
          (∃ body #j.
-           (!KU( body ) @ #j) ∧ (¬(last(#j))) ∧ (pub = snd(body)) ∧ (#j < #i))  ∥
+           (!KU( body ) @ #j) ∧ (pub = snd(body)) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ body key #j #k.
-           (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j)
+           (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j) ∧ (pub = snd(sdec(body, key)))
           ∧
-           (¬(last(#k))) ∧
-           (¬(last(#j))) ∧
-           (pub = snd(sdec(body, key))) ∧
-           (#j < #i)) )
+           (¬(last(#k))) ∧ (¬(last(#j))) ∧ (#j < #i)) )
     case case_1
     solve( !Key( key ) ▶₀ #i )
       case Setup_Key
@@ -110,14 +107,11 @@ next
           solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                  (∃ #j. (Out_Initiator( msg ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ body #j.
-                   (!KU( body ) @ #j) ∧ (¬(last(#j))) ∧ (t = snd(body)) ∧ (#j < #vr.1))  ∥
+                   (!KU( body ) @ #j) ∧ (t = snd(body)) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                  (∃ body key #j #k.
-                   (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j)
+                   (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j) ∧ (t = snd(sdec(body, key)))
                   ∧
-                   (¬(last(#k))) ∧
-                   (¬(last(#j))) ∧
-                   (t = snd(sdec(body, key))) ∧
-                   (#j < #vr.1)) )
+                   (¬(last(#k))) ∧ (¬(last(#j))) ∧ (#j < #vr.1)) )
             case case_1
             by contradiction // cyclic
           next
@@ -126,12 +120,9 @@ next
               case Setup_Key
               solve( splitEqs(2) )
                 case split_case_1
-                by solve( (#vl, 0) ~~> (#vk, 0) )
+                by contradiction // impossible chain
               next
                 case split_case_2
-                by contradiction // non-normal terms
-              next
-                case split_case_3
                 by solve( (#vl, 0) ~~> (#vk, 0) )
               qed
             qed
@@ -159,14 +150,11 @@ next
           solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                  (∃ #j. (Out_Initiator( msg ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ body #j.
-                   (!KU( body ) @ #j) ∧ (¬(last(#j))) ∧ (t = snd(body)) ∧ (#j < #vr.1))  ∥
+                   (!KU( body ) @ #j) ∧ (t = snd(body)) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                  (∃ body key #j #k.
-                   (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j)
+                   (IsKey( key ) @ #k) ∧ (!KU( body ) @ #j) ∧ (t = snd(sdec(body, key)))
                   ∧
-                   (¬(last(#k))) ∧
-                   (¬(last(#j))) ∧
-                   (t = snd(sdec(body, key))) ∧
-                   (#j < #vr.1)) )
+                   (¬(last(#k))) ∧ (¬(last(#j))) ∧ (#j < #vr.1)) )
             case case_1
             by contradiction // cyclic
           next
@@ -175,12 +163,9 @@ next
               case Setup_Key
               solve( splitEqs(2) )
                 case split_case_1
-                by solve( (#vl, 0) ~~> (#vk, 0) )
+                by contradiction // impossible chain
               next
                 case split_case_2
-                by contradiction // non-normal terms
-              next
-                case split_case_3
                 by solve( (#vl, 0) ~~> (#vk, 0) )
               qed
             qed
@@ -232,13 +217,10 @@ solve( !Key( key ) ▶₀ #i )
       case Responder
       solve( splitEqs(2) )
         case split_case_1
-        by solve( (#vl, 0) ~~> (#vk, 0) )
+        by contradiction // impossible chain
       next
         case split_case_2
-        by contradiction // non-normal terms
-      next
-        case split_case_3
-        by solve( (#vl, 0) ~~> (#vk, 0) )
+        by contradiction // impossible chain
       qed
     next
       case cfst
@@ -246,12 +228,9 @@ solve( !Key( key ) ▶₀ #i )
         case Responder
         solve( splitEqs(2) )
           case split_case_1
-          by solve( (#vl, 0) ~~> (#vk.1, 0) )
+          by contradiction // impossible chain
         next
           case split_case_2
-          by contradiction // non-normal terms
-        next
-          case split_case_3
           by solve( (#vl, 0) ~~> (#vk.1, 0) )
         qed
       next
@@ -263,9 +242,6 @@ solve( !Key( key ) ▶₀ #i )
             by solve( (#vl, 0) ~~> (#vk.2, 0) )
           next
             case split_case_2
-            by contradiction // non-normal terms
-          next
-            case split_case_3
             by solve( (#vl, 0) ~~> (#vk.2, 0) )
           qed
         next
@@ -287,9 +263,6 @@ solve( !Key( key ) ▶₀ #i )
             by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
           next
             case split_case_2
-            by contradiction // non-normal terms
-          next
-            case split_case_3
             by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
           qed
         next
@@ -303,9 +276,6 @@ solve( !Key( key ) ▶₀ #i )
           by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
         next
           case split_case_2
-          by contradiction // non-normal terms
-        next
-          case split_case_3
           by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
         qed
       qed
@@ -313,12 +283,9 @@ solve( !Key( key ) ▶₀ #i )
       case Responder
       solve( splitEqs(2) )
         case split_case_1
-        by solve( (#vl, 0) ~~> (#vk, 0) )
+        by contradiction // impossible chain
       next
         case split_case_2
-        by contradiction // non-normal terms
-      next
-        case split_case_3
         by solve( (#vl, 0) ~~> (#vk, 0) )
       qed
     next
@@ -330,9 +297,6 @@ solve( !Key( key ) ▶₀ #i )
           by solve( (#vl, 0) ~~> (#vk.1, 0) )
         next
           case split_case_2
-          by contradiction // non-normal terms
-        next
-          case split_case_3
           by solve( (#vl, 0) ~~> (#vk.1, 0) )
         qed
       next
@@ -349,12 +313,9 @@ solve( !Key( key ) ▶₀ #i )
       case Responder
       solve( splitEqs(2) )
         case split_case_1
-        by solve( (#vl, 0) ~~> (#vk, 0) )
+        by contradiction // impossible chain
       next
         case split_case_2
-        by contradiction // non-normal terms
-      next
-        case split_case_3
         by solve( (#vl, 0) ~~> (#vk, 0) )
       qed
     next
@@ -366,9 +327,6 @@ solve( !Key( key ) ▶₀ #i )
           by solve( (#vl, 0) ~~> (#vk.1, 0) )
         next
           case split_case_2
-          by contradiction // non-normal terms
-        next
-          case split_case_3
           by solve( (#vl, 0) ~~> (#vk.1, 0) )
         qed
       next
@@ -432,12 +390,12 @@ analyzing: data/examples/loops/Typing_and_Destructors.spthy
 analyzed: data/examples/loops/Typing_and_Destructors.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.359152s
+  processing time: 0.410244s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  type_assertion (all-traces): verified (35 steps)
-  Responder_secrecy (all-traces): verified (53 steps)
+  type_assertion (all-traces): verified (33 steps)
+  Responder_secrecy (all-traces): verified (44 steps)
   Public_part_public (exists-trace): verified (7 steps)
 
 ------------------------------------------------------------------------------
@@ -448,12 +406,12 @@ summary of summaries:
 analyzed: data/examples/loops/Typing_and_Destructors.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.359152s
+  processing time: 0.410244s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  type_assertion (all-traces): verified (35 steps)
-  Responder_secrecy (all-traces): verified (53 steps)
+  type_assertion (all-traces): verified (33 steps)
+  Responder_secrecy (all-traces): verified (44 steps)
   Public_part_public (exists-trace): verified (7 steps)
 
 ==============================================================================

@@ -203,7 +203,9 @@ rule Server_ReceiveOTP_NewSession:
     [In(<pid,nonce,senc(<sid,tc,~pr>,k2)>) ,
         !HSM(kh,k), !S_AEAD(pid,aead), S_Counter(pid,otc),
         !S_sid(pid,sid), !Smaller(otc,tc) ]
-     --[ Login(pid,sid,tc,senc(<sid,tc,~pr>,k2)) ]->
+     --[ Login(pid,sid,tc,senc(<sid,tc,~pr>,k2)),
+LoginCounter(pid,otc,tc)
+ ]-> 
     [ S_Counter(pid,tc) ]
 
 /* The following three axioms are conditions on the traces that make sure
@@ -260,18 +262,51 @@ lemma k2_is_secret_use_induction[use_induction,reuse]:
      (Ex #t3 #t4 k . K(k)@t3 & MasterKey(k)@t4 & #t3<#t2)"
 
 /* Neither of those kinds of keys are ever learned by the adversary */
-lemma neither_k_nor_k2_are_ever_leaked_inv[use_induction,reuse]:
-    "
-not( Ex #t1 #t2 k . MasterKey(k)@t1 & K(k)@t2 )
-& not (Ex  #t5 #t6 k6 pid . Init(pid,k6)@t5 & K(k6)@t6 )
+lemma neither_k_nor_k2_are_ever_leaked_inv[use_induction,reuse]: 
+    " 
+not( Ex #t1 #t2 k . MasterKey(k)@t1 & KU(k)@t2 )
+& not (Ex  #t5 #t6 k6 pid . Init(pid,k6)@t5 & KU(k6)@t6 )
     "
 
 // Each succesful login with counter value x was preceeded by a PressButton
 // event with the same counter value
 // This lemma cannot be proven at the moment, but it would be a first step
 // to reach the no_replay result present in Yubikey.spthy
-//lemma one_count_foreach_login[reuse,use_induction]:
-//        "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
-//         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
+lemma one_count_foreach_login[reuse,use_induction]:
+        "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
+         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
+induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
+  simplify
+  solve( !S_AEAD( pid,
+                  <xorc(senc(keystream(kh, pid), k), <k2, sid>), mac(<k2, sid>, k)>
+         ) ▶₂ #t2 )
+    case BuyANewYubikey_case_1
+    by sorry
+  next
+    case BuyANewYubikey_case_2
+    by sorry
+  next
+    case write_AEAD
+    solve( !KU( xorc(senc(keystream(kh, pid), k), <k2, sid>)
+           ) @ #vk.6 )
+      case irecv
+      by contradiction // cyclic
+    next
+      case cxorc
+      by sorry
+    next
+      case read_AEAD_case_1
+      by sorry
+    next
+      case read_AEAD_case_2
+      by sorry
+    qed
+  qed
+qed
+
 
 end

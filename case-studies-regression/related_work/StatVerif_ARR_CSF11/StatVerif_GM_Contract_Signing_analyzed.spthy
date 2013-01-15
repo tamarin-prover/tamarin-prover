@@ -6,7 +6,7 @@ functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1, pair/2,
            pcs/3, pk/1, sign/2, snd/1, true/0
 equations:
     check_getmsg(pk(xsk), sign(xsk, xm)) = xm,
-    checkpcs(xc, pk(xsk), ypk, zpk, pcs(sign(xsk, xc), ypk, zpk)) = true(),
+    checkpcs(xc, pk(xsk), ypk, zpk, pcs(sign(xsk, xc), ypk, zpk)) = true,
     convertpcs(zsk, pcs(sign(xsk, xc), ypk, pk(zsk))) = sign(xsk, xc),
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
@@ -19,7 +19,7 @@ rule (modulo E) Setup_TTP:
 rule (modulo E) Abort1:
    [ !TTP( skT ), In( <'abort', ct, pk1, pk2, pcsig1> ) ]
   --[
-  Answered( ct ), Eq( checkpcs(ct, pk1, pk2, pk(skT), pcsig1), true() ),
+  Answered( ct ), Eq( checkpcs(ct, pk1, pk2, pk(skT), pcsig1), true ),
   Abort1( ct )
   ]->
    [ Out( sign(skT, pcsig1) ) ]
@@ -27,7 +27,7 @@ rule (modulo E) Abort1:
   /*
   rule (modulo AC) Abort1:
      [ !TTP( skT ), In( <'abort', ct, pk1, pk2, pcsig1> ) ]
-    --[ Answered( ct ), Eq( z, true() ), Abort1( ct ) ]->
+    --[ Answered( ct ), Eq( z, true ), Abort1( ct ) ]->
      [ Out( sign(skT, pcsig1) ) ]
     variants (modulo AC)
     1. ct    = ct.9
@@ -40,25 +40,25 @@ rule (modulo E) Abort1:
     
     2. ct    = ct.12
        pcsig1
-             = pcs(sign(x.19, ct.12), pk2.15, pk(skT.16))
-       pk1   = pk(x.19)
+             = pcs(sign(x.20, ct.12), pk2.15, pk(skT.16))
+       pk1   = pk(x.20)
        pk2   = pk2.15
        skT   = skT.16
-       z     = true()
+       z     = true
   */
 
 rule (modulo E) Resolve2:
    [ !TTP( skT ), In( <'resolve2', ct, pk1, pk2, pcsig1, sig2> ) ]
   --[
   Answered( ct ), Eq( check_getmsg(pk2, sig2), ct ),
-  Eq( checkpcs(ct, pk1, pk2, pk(skT), pcsig1), true() ), Resolve2( ct )
+  Eq( checkpcs(ct, pk1, pk2, pk(skT), pcsig1), true ), Resolve2( ct )
   ]->
    [ Out( sign(skT, <convertpcs(skT, pcsig1), sig2>) ) ]
 
   /*
   rule (modulo AC) Resolve2:
      [ !TTP( skT ), In( <'resolve2', ct, pk1, pk2, pcsig1, sig2> ) ]
-    --[ Answered( ct ), Eq( z.1, ct ), Eq( z.2, true() ), Resolve2( ct ) ]->
+    --[ Answered( ct ), Eq( z.1, ct ), Eq( z.2, true ), Resolve2( ct ) ]->
      [ Out( sign(skT, <z, sig2>) ) ]
     variants (modulo AC)
     1. ct    = ct.12
@@ -76,72 +76,72 @@ rule (modulo E) Resolve2:
        pcsig1
              = pcsig1.15
        pk1   = pk1.16
-       pk2   = pk(x.25)
-       sig2  = sign(x.25, z.22)
+       pk2   = pk(x.24)
+       sig2  = sign(x.24, z.22)
        skT   = skT.19
        z     = convertpcs(skT.19, pcsig1.15)
        z.1   = z.22
-       z.2   = checkpcs(ct.14, pk1.16, pk(x.25), pk(skT.19), pcsig1.15)
+       z.2   = checkpcs(ct.14, pk1.16, pk(x.24), pk(skT.19), pcsig1.15)
     
     3. ct    = ct.16
        pcsig1
-             = pcs(sign(x.26, ct.16), pk2.19, pk(skT.21))
-       pk1   = pk(x.26)
+             = pcs(sign(x.27, ct.16), pk2.19, pk(skT.21))
+       pk1   = pk(x.27)
        pk2   = pk2.19
        sig2  = sig2.20
        skT   = skT.21
-       z     = sign(x.26, ct.16)
+       z     = sign(x.27, ct.16)
        z.1   = check_getmsg(pk2.19, sig2.20)
-       z.2   = true()
+       z.2   = true
     
     4. ct    = ct.16
        pcsig1
-             = pcs(sign(x.26, x.29), x.28, pk(skT.21))
+             = pcs(sign(x.27, x.29), x.28, pk(skT.21))
        pk1   = pk1.18
        pk2   = pk2.19
        sig2  = sig2.20
        skT   = skT.21
-       z     = sign(x.26, x.29)
+       z     = sign(x.27, x.29)
        z.1   = check_getmsg(pk2.19, sig2.20)
        z.2   = checkpcs(ct.16, pk1.18, pk2.19, pk(skT.21),
-                        pcs(sign(x.26, x.29), x.28, pk(skT.21)))
+                        pcs(sign(x.27, x.29), x.28, pk(skT.21)))
     
     5. ct    = ct.16
        pcsig1
-             = pcs(sign(x.27, ct.16), pk(x.28), pk(skT.21))
-       pk1   = pk(x.27)
-       pk2   = pk(x.28)
-       sig2  = sign(x.28, z.24)
+             = pcs(sign(x.28, ct.16), pk(x.27), pk(skT.21))
+       pk1   = pk(x.28)
+       pk2   = pk(x.27)
+       sig2  = sign(x.27, z.24)
        skT   = skT.21
-       z     = sign(x.27, ct.16)
+       z     = sign(x.28, ct.16)
        z.1   = z.24
-       z.2   = true()
+       z.2   = true
     
     6. ct    = ct.18
        pcsig1
-             = pcs(sign(x.30, x.33), x.32, pk(skT.23))
+             = pcs(sign(x.30, x.32), x.31, pk(skT.23))
        pk1   = pk1.20
-       pk2   = pk(x.29)
-       sig2  = sign(x.29, z.26)
+       pk2   = pk(x.28)
+       sig2  = sign(x.28, z.26)
        skT   = skT.23
-       z     = sign(x.30, x.33)
+       z     = sign(x.30, x.32)
        z.1   = z.26
-       z.2   = checkpcs(ct.18, pk1.20, pk(x.29), pk(skT.23),
-                        pcs(sign(x.30, x.33), x.32, pk(skT.23)))
+       z.2   = checkpcs(ct.18, pk1.20, pk(x.28), pk(skT.23),
+                        pcs(sign(x.30, x.32), x.31, pk(skT.23)))
   */
 
 rule (modulo E) Resolve1:
    [ !TTP( skT ), In( <'resolve1', ct, pk1, pk2, sig1, pcsig2> ) ]
   --[
   Answered( ct ), Eq( check_getmsg(pk1, sig1), ct ),
-  Eq( checkpcs(ct, pk2, pk1, pk(skT), pcsig2), true() ), Resolve1( ct )
+  Eq( checkpcs(ct, pk2, pk1, pk(skT), pcsig2), true ), Resolve1( ct )
   ]->
    [ Out( sign(skT, <sig1, convertpcs(skT, pcsig2)>) ) ]
 
   /*
   rule (modulo AC) Resolve1:
      [ !TTP( skT ), In( <'resolve1', ct, pk1, pk2, sig1, pcsig2> ) ]
-    --[ Answered( ct ), Eq( z.1, ct ), Eq( z.2, true() ), Resolve1( ct ) ]->
+    --[ Answered( ct ), Eq( z.1, ct ), Eq( z.2, true ), Resolve1( ct ) ]->
      [ Out( sign(skT, <sig1, z>) ) ]
     variants (modulo AC)
     1. ct    = ct.12
@@ -158,59 +158,59 @@ rule (modulo E) Resolve1:
     2. ct    = ct.14
        pcsig2
              = pcsig2.15
-       pk1   = pk(x.25)
+       pk1   = pk(x.24)
        pk2   = pk2.17
-       sig1  = sign(x.25, z.22)
+       sig1  = sign(x.24, z.22)
        skT   = skT.19
        z     = convertpcs(skT.19, pcsig2.15)
        z.1   = z.22
-       z.2   = checkpcs(ct.14, pk2.17, pk(x.25), pk(skT.19), pcsig2.15)
+       z.2   = checkpcs(ct.14, pk2.17, pk(x.24), pk(skT.19), pcsig2.15)
     
     3. ct    = ct.16
        pcsig2
-             = pcs(sign(x.26, ct.16), pk1.18, pk(skT.21))
-       pk1   = pk1.18
-       pk2   = pk(x.26)
-       sig1  = sig1.20
-       skT   = skT.21
-       z     = sign(x.26, ct.16)
-       z.1   = check_getmsg(pk1.18, sig1.20)
-       z.2   = true()
-    
-    4. ct    = ct.16
-       pcsig2
-             = pcs(sign(x.26, x.29), x.28, pk(skT.21))
+             = pcs(sign(x.27, x.29), x.28, pk(skT.21))
        pk1   = pk1.18
        pk2   = pk2.19
        sig1  = sig1.20
        skT   = skT.21
-       z     = sign(x.26, x.29)
+       z     = sign(x.27, x.29)
        z.1   = check_getmsg(pk1.18, sig1.20)
        z.2   = checkpcs(ct.16, pk2.19, pk1.18, pk(skT.21),
-                        pcs(sign(x.26, x.29), x.28, pk(skT.21)))
+                        pcs(sign(x.27, x.29), x.28, pk(skT.21)))
+    
+    4. ct    = ct.16
+       pcsig2
+             = pcs(sign(x.28, ct.16), pk1.18, pk(skT.21))
+       pk1   = pk1.18
+       pk2   = pk(x.28)
+       sig1  = sig1.20
+       skT   = skT.21
+       z     = sign(x.28, ct.16)
+       z.1   = check_getmsg(pk1.18, sig1.20)
+       z.2   = true
     
     5. ct    = ct.16
        pcsig2
-             = pcs(sign(x.27, ct.16), pk(x.28), pk(skT.21))
-       pk1   = pk(x.28)
-       pk2   = pk(x.27)
-       sig1  = sign(x.28, z.24)
+             = pcs(sign(x.29, ct.16), pk(x.27), pk(skT.21))
+       pk1   = pk(x.27)
+       pk2   = pk(x.29)
+       sig1  = sign(x.27, z.24)
        skT   = skT.21
-       z     = sign(x.27, ct.16)
+       z     = sign(x.29, ct.16)
        z.1   = z.24
-       z.2   = true()
+       z.2   = true
     
     6. ct    = ct.18
        pcsig2
-             = pcs(sign(x.30, x.33), x.32, pk(skT.23))
-       pk1   = pk(x.29)
+             = pcs(sign(x.30, x.32), x.31, pk(skT.23))
+       pk1   = pk(x.28)
        pk2   = pk2.21
-       sig1  = sign(x.29, z.26)
+       sig1  = sign(x.28, z.26)
        skT   = skT.23
-       z     = sign(x.30, x.33)
+       z     = sign(x.30, x.32)
        z.1   = z.26
-       z.2   = checkpcs(ct.18, pk2.21, pk(x.29), pk(skT.23),
-                        pcs(sign(x.30, x.33), x.32, pk(skT.23)))
+       z.2   = checkpcs(ct.18, pk2.21, pk(x.28), pk(skT.23),
+                        pcs(sign(x.30, x.32), x.31, pk(skT.23)))
   */
 
 rule (modulo E) Witness_Aborted:
@@ -280,12 +280,12 @@ solve( !TTP( skT ) ▶₁ #i )
   case Setup_TTP
   solve( !KU( sign(~n, pcs(sign(sk1, ct), pk(ysk), pk(~n))) ) @ #vk )
     case Abort1
-    solve( !KU( pk(sk1) ) @ #vk.7 )
+    solve( !KU( pk(sk1) ) @ #vk.8 )
       case cpk
-      solve( !KU( sign(sk1, ct) ) @ #vk.10 )
-        case csign
-        solve( !KU( pk(ysk) ) @ #vk.10 )
-          case Setup_TTP
+      solve( !KU( pk(ysk) ) @ #vk.9 )
+        case Setup_TTP
+        solve( !KU( sign(sk1, ct) ) @ #vk.10 )
+          case csign
           solve( !KU( pk(~n) ) @ #vk.11 )
             case Setup_TTP
             SOLVED // trace found
@@ -316,13 +316,13 @@ solve( !TTP( skT ) ▶₁ #i )
   case Setup_TTP
   solve( !KU( sign(~n, <sign(sk1, ct), sign(sk2, ct)>) ) @ #vk )
     case Resolve1
-    solve( !KU( pk(sk2) ) @ #vk.9 )
+    solve( !KU( pk(sk1) ) @ #vk.8 )
       case cpk
-      solve( !KU( sign(sk2, ct) ) @ #vk.12 )
-        case csign
-        solve( !KU( pk(sk1) ) @ #vk.11 )
-          case cpk
-          solve( !KU( sign(sk1, ct) ) @ #vk.12 )
+      solve( !KU( pk(sk2) ) @ #vk.10 )
+        case cpk
+        solve( !KU( sign(sk1, ct) ) @ #vk.11 )
+          case csign
+          solve( !KU( sign(sk2, ct) ) @ #vk.12 )
             case csign
             solve( !KU( pk(~n) ) @ #vk.13 )
               case Setup_TTP
@@ -355,13 +355,13 @@ solve( !TTP( skT ) ▶₁ #i )
   case Setup_TTP
   solve( !KU( sign(~n, <sign(sk1, ct), sign(sk2, ct)>) ) @ #vk )
     case Resolve2
-    solve( !KU( pk(sk1) ) @ #vk.7 )
+    solve( !KU( pk(sk1) ) @ #vk.8 )
       case cpk
-      solve( !KU( sign(sk1, ct) ) @ #vk.12 )
-        case csign
-        solve( !KU( pk(sk2) ) @ #vk.11 )
-          case cpk
-          solve( !KU( sign(sk2, ct) ) @ #vk.12 )
+      solve( !KU( pk(sk2) ) @ #vk.10 )
+        case cpk
+        solve( !KU( sign(sk2, ct) ) @ #vk.11 )
+          case csign
+          solve( !KU( sign(sk1, ct) ) @ #vk.12 )
             case csign
             solve( !KU( pk(~n) ) @ #vk.13 )
               case Setup_TTP
@@ -389,7 +389,7 @@ analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.531908s
+  processing time: 0.760052s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)
@@ -403,7 +403,7 @@ summary of summaries:
 analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.531908s
+  processing time: 0.760052s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

@@ -44,7 +44,7 @@ import           Data.Binary
 import           Data.DeriveTH
 import           Data.Foldable      (Foldable, foldMap)
 import           Data.Generics
-import           Data.Monoid        (mappend)
+import           Data.Monoid        (mappend, mempty)
 import           Data.Traversable
 
 import           Term.LTerm
@@ -100,6 +100,7 @@ instance Traversable Atom where
 
 instance HasFrees t => HasFrees (Atom t) where
     foldFrees f = foldMap (foldFrees f)
+    foldFreesOcc _ _ = const mempty -- we ignore occurences in atoms for now
     mapFrees  f = traverse (mapFrees f)
 
 instance Apply LNAtom where

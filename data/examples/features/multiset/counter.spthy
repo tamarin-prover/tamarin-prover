@@ -1,0 +1,38 @@
+theory counter begin
+
+builtins: multiset, symmetric-encryption, hashing
+
+rule Create:
+  [ Fr(~s) ]
+  --[ Start(~s) ]->
+  [ Counter(~s, '1')]
+
+rule Inc:
+  [ Counter( ~s, x ), In( x ) ] // The In(x) could be nicely prevented by ensuring
+  --[ Counter( ~s, x ) ]->      // that x never contains names by using the sort
+  [ Counter( ~s, x + '1' )      // system.
+  , Out( senc( x,  ~s ) ) ]
+
+
+/* How can I ensure this lemma directly? */
+lemma counters_linear_order[reuse,use_induction]:
+  "All x y #i #j s.
+      Counter(s,x) @ i & Counter(s,y) @ j
+      ==> (Ex z. x + z = y) | (Ex z. y + z = x) | y = x"
+
+lemma counter_start[reuse,use_induction]:
+  "All #i x s.
+      Counter(s,x) @ i  ==> Ex #j. Start(s) @ j & #j < #i"
+
+lemma counter_increases[reuse,use_induction]:
+  "All x y #i #j s.
+      Counter(s,x) @ i & Counter(s,y) @ j ==> #i < #j
+      ==> Ex z. x + z = y"
+
+lemma lesser_senc_secret[use_induction]:
+  "All x y #i #j s.
+      Counter(s,x) @ i & K(senc(h(y),s)) @ j
+      ==> (#i < #j | Ex z. y + z = x)"
+
+end
+

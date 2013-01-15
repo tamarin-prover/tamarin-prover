@@ -128,6 +128,7 @@ instance Sized t => Sized (Fact t) where
 
 instance HasFrees t => HasFrees (Fact t) where
     foldFrees  f = foldMap  (foldFrees f)
+    foldFreesOcc f c fa = foldFreesOcc f ((show $ factTag fa):c) (factTerms fa)
     mapFrees   f = traverse (mapFrees f)
 
 instance Apply t => Apply (Fact t) where

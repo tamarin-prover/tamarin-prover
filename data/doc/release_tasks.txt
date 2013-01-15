@@ -8,7 +8,7 @@ Before a release, the following things should be checked:
 3. call 'tamarin-prover' and copy CSF'12 automatic command and
    check whether verification succeeds.
 
-3. generate 'intruder_variants_dh.spthy' and diff with version in data/
+3. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions in data/
 
 4. call 'tamarin-prover' and copy CSF'12 interactive command and
    execute the following steps
@@ -26,14 +26,15 @@ Before a release, the following things should be checked:
 
          lib/utils/dist/tamarin-prover-utils.tar.gz
          lib/term/dist/tamarin-prover-termXXXX.tar.gz
+         lib/term/dist/tamarin-prover-theoryXXXX.tar.gz
          dist/tamarin-prover-XXXX.tar.gz
 
        to a fresh temporary directory and check that
-       theese three compile using
+       these four compile using
 
          'cabal-dev install *.tar.gz'
 
 6. Commit version bump, add tag 'tamarin-prover-XXXX' to repository, and merge
    into 'main' branch.
 
-7. Upload all three packages to hackage.
+7. Upload all four packages to hackage.

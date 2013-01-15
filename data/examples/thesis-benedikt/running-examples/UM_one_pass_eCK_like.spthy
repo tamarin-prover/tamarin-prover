@@ -1,0 +1,93 @@
+theory UM_one_pass_eCK_like
+begin
+
+/*
+ * Protocol:	UM one-pass protocol
+ *              See
+ *              "Combined Security Analysis of the One- and Three-Pass Unified Model Key Agreement Protocols"
+ *               Sanjit Chatterjee, Alfred Menezes, and Berkant Ustaoglu
+ *              Note that we use a different adversary model.
+ *
+ * Modeler: 	Benedikt Schmidt
+ * Date: 	October 2012
+ * Source:	"Ph.D. Thesis: Formal Analysis of
+ *               Key Exchange Protocols and Physical
+ *               Protocols"
+ *
+ * Status: 	Working
+ * Comment:     This is the P_UM example that is used as a running example for my thesis.
+ */
+
+
+builtins: diffie-hellman, hashing
+
+rule Generate_key:
+  let pkA = 'g'^~ea
+  in
+  [ Fr( ~ea ) ] 
+  --[ ]-> 
+  [ !Ltk( $A, ~ea ), !Pk( $A, pkA ), Out( pkA ) ]
+
+rule Initiator:
+  let pB = 'g'^~eb
+      X  = 'g'^~ex
+      sid = <$A, $B, X, 'I'>
+      key  = h(pB^~ex, pB^~ea, $A, $B, X)
+  in
+  [ Fr( ~ex ), !Ltk( $A, ~ea ), !Pk( $B, pB ) ]
+  --[ Accept( sid, key ) ]->
+  [ Out( X ), !Ephk( sid, ~ex ) ]
+
+rule Responder:
+  let pA  = 'g'^~ea
+      sid = <$B, $A, X, 'R'>
+      key  = h(X^~eb, pA^~eb, $A, $B, X)
+  in
+  [ In( X ), !Ltk( $B, ~eb ), !Pk( $A, pA ) ]
+  --[ Accept( sid, key ) ]->
+  []
+
+rule Ephemeral_Reveal:
+  [ !Ephk( sid, ~x ) ]
+  --[ RevealEphk( sid ) ]->
+  [ Out( ~x ) ]
+
+rule Ltk_Reveal:
+  [ !Ltk( $A, ~ea ) ]
+  --[ RevealLtk( $A ) ]->
+  [ Out( ~ea ) ]
+
+/*
+
+lemma UM_executable:
+  exists-trace
+  "Ex #i #j A B X key.
+     // An initiator and session
+       Accept( <A,B,X,'I'>, key ) @ i
+     // and a matching responder session accept key
+     & Accept( <B,A,X,'R'>, key ) @ j
+     // and the the adversary did not perform any reveals.
+     & (not (Ex #j C. RevealLtk( C ) @ j))
+     & (not (Ex #j s. RevealEphk( s ) @ j))"
+*/
+
+
+lemma UM_secure_responder:
+  "All #i #j A B X key msid.
+       // If the key of a responder session with matching session msid is known
+       Accept( <B,A,X,'R'>,  key ) @ i & K( key ) @ j & msid = <A,B,X,'I'>
+       // the the session is not clean, i.e., one of the following happened:
+       ==>
+            // 1. B's longterm key was revealed
+            (Ex #k. RevealLtk(B) @ k )
+
+          | // 2. There is am ephemeral key reveal for a matching session and a
+            //    longterm key reveal for its actor */
+            (Ex #k #l. RevealEphk(msid) @ k & RevealLtk(A) @ l)
+
+          | // 3. There is no matching session and a long-term key reveal for the peer
+            //    of the responder session.
+            ((not (Ex #k key_. Accept( msid, key_) @ k)) & (Ex #k. RevealLtk(A) @ k))"
+
+
+end

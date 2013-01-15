@@ -1,10 +1,9 @@
-{-# LANGUAGE TupleSections, GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE ViewPatterns, TypeSynonymInstances, FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
-  -- spurious warnings for view patterns
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -41,7 +40,7 @@ module Term.Substitution.SubstVFree (
   , substToListOn
   , substToList
 
-  -- *
+  -- *Apply class
   , Apply(..)
 
   -- * Pretty printing
@@ -54,23 +53,24 @@ module Term.Substitution.SubstVFree (
 ) where
 
 
-import Term.LTerm
-import Term.Rewriting.Definitions
--- import Term.Rewriting.NormAC
-import Text.PrettyPrint.Highlight
-import Logic.Connectives
+import           Term.LTerm
+import           Term.Rewriting.Definitions
 
-import Utils.Misc
+import           Text.PrettyPrint.Highlight
+import           Logic.Connectives
 
-import Data.Maybe
-import Data.Map ( Map )
+import           Utils.Misc
+
+import           Data.Maybe
+import           Data.Map ( Map )
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Data.List
-import Data.Binary
+import           Data.List
+import           Data.Binary
+import           Data.Monoid (mempty)
 
-import Control.Applicative
-import Control.DeepSeq
+import           Control.Applicative
+import           Control.DeepSeq
 
 ----------------------------------------------------------------------
 -- Substitutions
@@ -101,10 +101,11 @@ applyLit _     c@(Con _)  = lit c
 -- | @applyVTerm subst t@ applies the substitution @subst@ to the term @t@.
 applyVTerm :: (IsConst c, IsVar v, Ord c) => Subst c v -> VTerm c v -> VTerm c v
 applyVTerm subst t = case viewTerm t of
-    Lit l             -> applyLit subst l
-    FApp (AC o) ts    -> fAppAC    o (map (applyVTerm subst) ts)
-    FApp (NonAC o) ts -> fAppNonAC o (map (applyVTerm subst) ts)
-    FApp List ts      -> fAppList    (map (applyVTerm subst) ts)
+    Lit l            -> applyLit subst l
+    FApp (AC o) ts   -> fAppAC   o (map (applyVTerm subst) ts)
+    FApp (C o)  ts   -> fAppC    o (map (applyVTerm subst) ts)
+    FApp (NoEq o) ts -> fAppNoEq o (map (applyVTerm subst) ts)
+    FApp List ts     -> fAppList   (map (applyVTerm subst) ts)
 
 
 -- Construction
@@ -213,6 +214,7 @@ instance Sized (Subst c v) where
 
 instance Ord c => HasFrees (LSubst c) where
     foldFrees  f = foldFrees f . sMap
+    foldFreesOcc = mempty -- we ignore occurences in substitutions for now
     mapFrees   f = (substFromList <$>) . mapFrees   f . substToList
 
 -- | Types that support the application of 'LSubst's.
@@ -289,7 +291,7 @@ instance Apply t => Apply (Equal t) where
 ----------------------------------------------------------------------
 
 -- | Pretty print a substitution.
-prettySubst :: (Ord c, Ord v, HighlightDocument d)
+prettySubst :: (Ord c, Ord v, HighlightDocument d, Show c, Show v)
             => (v -> d) -> (Lit c v -> d) -> Subst c v -> [d]
 prettySubst ppVar ppLit =
     map pp . M.toList . equivClasses . substToList
@@ -298,6 +300,6 @@ prettySubst ppVar ppLit =
         (fsep $ punctuate comma $ map ppVar $ S.toList vs) <> operator_ "}"
 
 -- | Pretty print a substitution with logical variables.
-prettyLNSubst :: (Show (Lit c LVar), Ord c, HighlightDocument d)
+prettyLNSubst :: (Show (Lit c LVar), Ord c, HighlightDocument d, Show c)
               => LSubst c -> d
 prettyLNSubst = vcat . prettySubst (text . show) (text . show)

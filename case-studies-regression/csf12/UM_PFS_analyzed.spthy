@@ -44,17 +44,17 @@ rule (modulo E) Init_2:
        Y     = x.281^x.282
        z     = x.281^(~ekI.143*x.282)
     
-    4. ~ekI  = ~ekI.143
-       Y     = x.281^inv((~ekI.143*x.282))
-       z     = x.281^inv(x.282)
+    4. ~ekI  = ~ekI.144
+       Y     = x.283^inv((~ekI.144*x.284))
+       z     = x.283^inv(x.284)
     
-    5. ~ekI  = ~ekI.143
-       Y     = x.281^(x.282*inv(~ekI.143))
-       z     = x.281^x.282
+    5. ~ekI  = ~ekI.144
+       Y     = x.283^(x.284*inv(~ekI.144))
+       z     = x.283^x.284
     
-    6. ~ekI  = ~ekI.144
-       Y     = x.282^(x.284*inv((~ekI.144*x.283)))
-       z     = x.282^(x.284*inv(x.283))
+    6. ~ekI  = ~ekI.145
+       Y     = x.284^(x.286*inv((~ekI.145*x.285)))
+       z     = x.284^(x.286*inv(x.285))
   */
 
 rule (modulo E) Resp_1:
@@ -83,17 +83,17 @@ rule (modulo E) Resp_1:
        X     = x.431^x.432
        z     = x.431^(~ekR.218*x.432)
     
-    4. ~ekR  = ~ekR.218
-       X     = x.431^inv((~ekR.218*x.432))
-       z     = x.431^inv(x.432)
+    4. ~ekR  = ~ekR.219
+       X     = x.433^inv((~ekR.219*x.434))
+       z     = x.433^inv(x.434)
     
-    5. ~ekR  = ~ekR.218
-       X     = x.431^(x.432*inv(~ekR.218))
-       z     = x.431^x.432
+    5. ~ekR  = ~ekR.219
+       X     = x.433^(x.434*inv(~ekR.219))
+       z     = x.433^x.434
     
-    6. ~ekR  = ~ekR.219
-       X     = x.432^(x.434*inv((~ekR.219*x.433)))
-       z     = x.432^(x.434*inv(x.433))
+    6. ~ekR  = ~ekR.220
+       X     = x.434^(x.436*inv((~ekR.220*x.435)))
+       z     = x.434^(x.436*inv(x.435))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -216,7 +216,7 @@ analyzing: data/examples/csf12/UM_PFS.spthy
 analyzed: data/examples/csf12/UM_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.824921s
+  processing time: 1.017911s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
@@ -228,7 +228,7 @@ summary of summaries:
 analyzed: data/examples/csf12/UM_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.824921s
+  processing time: 1.017911s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 

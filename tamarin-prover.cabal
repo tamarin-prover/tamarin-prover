@@ -1,7 +1,7 @@
 cabal-version:      >= 1.8
 build-type:         Simple
 name:               tamarin-prover
-version:            0.8.2.1
+version:            0.8.4.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -48,8 +48,9 @@ data-files:
   AUTHORS
   CHANGES
 
-  -- cached intruder variants for DH-exponentiation
+  -- cached intruder variants for DH and BP
   intruder_variants_dh.spthy
+  intruder_variants_bp.spthy
 
   -- files for the web-frontend
   img/*.ico
@@ -74,6 +75,40 @@ data-files:
   examples/classic/TLS_Handshake.spthy
   examples/classic/NSLPK3.spthy
   examples/classic/NSPK3.spthy
+
+  -- features
+  examples/features/multiset/counter.spthy
+  examples/features/private_function_symbols/NAXOS_eCK_PFS_private.spthy
+  examples/features/private_function_symbols/NAXOS_eCK_private.spthy
+
+  -- newer AKE examples
+  examples/ake/dh/client_session_key.aes
+  examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
+  examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
+  examples/ake/dh/NAXOS_eCK.spthy
+  examples/ake/dh/NAXOS_eCK_PFS.spthy
+  examples/ake/dh/UM_one_pass_attack.spthy
+  examples/ake/dh/UM_one_pass_fix.spthy
+  examples/ake/dh/UM_three_pass.spthy
+  examples/ake/dh/UM_three_pass_combined.spthy
+  examples/ake/dh/UM_three_pass_combined_fixed.spthy
+  examples/ake/bilinear/Chen_Kudla.spthy
+  examples/ake/bilinear/Chen_Kudla_eCK.spthy
+  examples/ake/bilinear/Joux.spthy
+  examples/ake/bilinear/Joux_EphkRev.spthy
+  examples/ake/bilinear/README
+  examples/ake/bilinear/RYY.spthy
+  examples/ake/bilinear/RYY_PFS.spthy
+  examples/ake/bilinear/Scott.spthy
+  examples/ake/bilinear/Scott_EphkRev.spthy
+  examples/ake/bilinear/TAK1.spthy
+  examples/ake/bilinear/TAK1_eCK_like.spthy
+
+  -- running examples from papers/documentation
+  examples/cav13/DH_example.spthy
+  examples/thesis-benedikt/running-examples/DH_Message_Deduction.spthy
+  examples/thesis-benedikt/running-examples/UM_one_pass_eCK_like.spthy
+  examples/thesis-benedikt/running-examples/UM_one_pass_private.spthy
 
   -- loops
   examples/loops/Minimal_Crypto_API.spthy
@@ -177,7 +212,7 @@ executable tamarin-prover
     -- Parallelize by default. Only activated for GHC 7.4, as this flag was
     -- unstable in earlier -- versions; i.e., it resulted in command-line
     -- parsing errors.
-    if impl(ghc >= 7.4)
+    if impl(ghc >= 7.4) && flag(threaded)
         ghc-options:   -with-rtsopts=-N
 
     hs-source-dirs:    src
@@ -218,7 +253,7 @@ executable tamarin-prover
       , containers        >= 0.4.2 && < 0.5
       , dlist             == 0.5.*
       , mtl               == 2.0.*
-      , cmdargs           == 0.9.*
+      , cmdargs           == 0.10.*
       , filepath          >= 1.1   && < 1.4
       , directory         >= 1.0   && < 1.2
       , process           == 1.1.*
@@ -234,9 +269,9 @@ executable tamarin-prover
       , parallel          == 3.2.*
       , HUnit             == 1.2.*
 
-      , tamarin-prover-utils  >= 0.8.2  && < 0.9
-      , tamarin-prover-term   >= 0.8.2  && < 0.9
-      , tamarin-prover-theory >= 0.8.2  && < 0.9
+      , tamarin-prover-utils  >= 0.8.4  && < 0.9
+      , tamarin-prover-term   >= 0.8.4  && < 0.9
+      , tamarin-prover-theory >= 0.8.4  && < 0.9
 
 
     other-modules:

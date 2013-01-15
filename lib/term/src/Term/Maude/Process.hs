@@ -1,8 +1,8 @@
-{-# LANGUAGE TemplateHaskell, DeriveDataTypeable, DeriveFunctor #-}
-{-# LANGUAGE FlexibleContexts, NamedFieldPuns, BangPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -182,7 +182,6 @@ computeViaMaude hnd updateStats toMaude fromMaude inp = do
         Left    e -> fail $ "\ncomputeViaMaude:\nParse error: `" ++ e ++"'"++
                             "\nFor Maude Output: `" ++ BC.unpack reply ++"'"++
                             "\nFor query: `" ++ BC.unpack cmd++"'"
-
 
 ------------------------------------------------------------------------------
 -- Unification modulo AC

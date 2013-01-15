@@ -1,6 +1,5 @@
-{-# LANGUAGE FlexibleInstances #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -17,7 +16,7 @@ module Term.Narrowing.Variants.Compute (
 import Term.LTerm
 import Term.Substitution
 import Term.Unification
-import Term.Narrowing.Variants.Check (leqSubstVariant, variantsFrom)
+import Term.Narrowing.Variants.Check (leqSubstVariant,variantsFrom)
 
 import Extension.Prelude
 
@@ -122,12 +121,10 @@ filterMaximalBy alreadyFiltered cmp xs0 =
     -- x is maximal, start comparing a new element to the others
     go x ([],y:done)   = x:(go y (reverse done,[]))
 
-
 -- | This is used to sort narrowing steps such that similar steps are close
 narrowSeqStepComplexity :: (Bool,Variant) -> (Bool,Int,Int,Int)
 narrowSeqStepComplexity (checked, var@(Variant _ subst)) =
     (not checked, length (varPos var), size subst, length (varsRangeVFresh subst))
-
 
 -- | @computeVariants t d@ compute the variants of term @t@ with bound @d@.
 --   The rewriting rules are taken from the Maude context.

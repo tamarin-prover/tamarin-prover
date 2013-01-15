@@ -1,0 +1,17 @@
+theory minimal_multiset begin
+
+builtins: multiset
+
+rule A:
+  [ Fr(~x) ] --[]-> [ Out(~x + $A), S(~x) ]
+
+rule B:
+  [ S(~x), In(~x) ] --[ Reach() ]-> []
+
+lemma Reachable:
+  exists-trace
+  "Ex #i. Reach() @ i"
+
+
+end
+

@@ -1,6 +1,8 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, DeriveDataTypeable, ViewPatterns #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ViewPatterns #-}
 -- |
--- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -48,7 +50,6 @@ import Term.Term
 ----------------------------------------------------------------------
 -- Terms with constants and variables
 ----------------------------------------------------------------------
-
 
 -- | A Lit is either a constant or a variable. (@Const@ is taken by Control.Applicative)
 data Lit c v = Con c | Var v

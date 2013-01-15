@@ -1,6 +1,5 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, DeriveDataTypeable #-}
 -- |
--- Copyright   : (c) 2010 - 2012 Benedikt Schmidt, Simon Meier
+-- Copyright   : (c) 2010-2012 Benedikt Schmidt, Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
@@ -11,13 +10,13 @@ module Term.Rewriting.Definitions (
       Equal (..)
     , evalEqual
 
-    -- * Matching Problems
+    -- * Matching problems
     , Match(..)
     , flattenMatch
     , matchWith
     , matchOnlyIf
 
-    -- * Rewriting Rules
+    -- * Rewriting rules
     , RRule(..)
 
     ) where

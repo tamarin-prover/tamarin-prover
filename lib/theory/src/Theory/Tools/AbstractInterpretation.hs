@@ -41,7 +41,7 @@ import           Theory.Text.Pretty
 
 -- | Higher-order combinator to construct abstract interpreters.
 interpretAbstractly
-    :: (Eq s, HasFrees i, Apply i)
+    :: (Eq s, HasFrees i, Apply i, Show i)
     => ([Equal LNFact] -> [LNSubstVFresh])
     -- ^ Unification  of equalities over facts. We assume that facts with
     -- different tags are never unified.
@@ -128,7 +128,7 @@ partialEvaluation evalStyle ruEs = reader $ \hnd ->
 
         absTerm t = case viewTerm t of
           Lit (Con _)                   -> pure t
-          FApp (sym@(NonAC (_f,_k))) ts
+          FApp (sym@(NoEq _)) ts
                                         -> fApp sym <$> traverse absTerm ts
           _                             -> importBinding mkVar t (varName t)
           where

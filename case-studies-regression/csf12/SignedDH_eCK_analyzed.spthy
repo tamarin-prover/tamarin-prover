@@ -7,7 +7,7 @@ functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
-    verify(sign(x.1, x.2), x.1, pk(x.2)) = true()
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
 section{* The Signed Diffie-Hellman Protocol in the eCK model *}
 
@@ -58,16 +58,16 @@ rule (modulo E) Init_2:
        z     = x.18^(~ekI.12*x.19)
     
     4. ~ekI  = ~ekI.12
-       Y     = x.18^inv((~ekI.12*x.19))
-       z     = x.18^inv(x.19)
+       Y     = x.19^inv((~ekI.12*x.20))
+       z     = x.19^inv(x.20)
     
     5. ~ekI  = ~ekI.12
-       Y     = x.18^(x.19*inv(~ekI.12))
-       z     = x.18^x.19
+       Y     = x.19^(x.20*inv(~ekI.12))
+       z     = x.19^x.20
     
     6. ~ekI  = ~ekI.13
-       Y     = x.19^(x.21*inv((~ekI.13*x.20)))
-       z     = x.19^(x.21*inv(x.20))
+       Y     = x.20^(x.22*inv((~ekI.13*x.21)))
+       z     = x.20^(x.22*inv(x.21))
   */
 
 rule (modulo E) Resp:
@@ -105,17 +105,17 @@ rule (modulo E) Resp:
        X     = x.119^x.120
        z     = x.119^(~ekR.62*x.120)
     
-    4. ~ekR  = ~ekR.62
-       X     = x.119^inv((~ekR.62*x.120))
-       z     = x.119^inv(x.120)
+    4. ~ekR  = ~ekR.63
+       X     = x.121^inv((~ekR.63*x.122))
+       z     = x.121^inv(x.122)
     
-    5. ~ekR  = ~ekR.62
-       X     = x.119^(x.120*inv(~ekR.62))
-       z     = x.119^x.120
+    5. ~ekR  = ~ekR.63
+       X     = x.121^(x.122*inv(~ekR.63))
+       z     = x.121^x.122
     
-    6. ~ekR  = ~ekR.63
-       X     = x.120^(x.122*inv((~ekR.63*x.121)))
-       z     = x.120^(x.122*inv(x.121))
+    6. ~ekR  = ~ekR.64
+       X     = x.122^(x.124*inv((~ekR.64*x.123)))
+       z     = x.122^(x.124*inv(x.123))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -275,7 +275,7 @@ analyzing: data/examples/csf12/SignedDH_eCK.spthy
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 9.375328s
+  processing time: 9.697416s
   eCK_initiator_key (all-traces): falsified - found trace (10 steps)
   eCK_responder_key (all-traces): falsified - found trace (8 steps)
 
@@ -287,7 +287,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 9.375328s
+  processing time: 9.697416s
   eCK_initiator_key (all-traces): falsified - found trace (10 steps)
   eCK_responder_key (all-traces): falsified - found trace (8 steps)
 

@@ -72,19 +72,19 @@ rule (modulo E) Serv_1:
        z.1   = z.21
        z.2   = z.22
     
-    3. ~ltkS = ~ltkS.18
+    3. ~ltkS = ~ltkS.19
        request
-             = aenc(x.33, pk(~ltkS.18))
-       z     = fst(snd(x.33))
-       z.1   = snd(snd(x.33))
-       z.2   = fst(x.33)
+             = aenc(x.35, pk(~ltkS.19))
+       z     = fst(snd(x.35))
+       z.1   = snd(snd(x.35))
+       z.2   = fst(x.35)
     
-    4. ~ltkS = ~ltkS.19
+    4. ~ltkS = ~ltkS.20
        request
-             = aenc(<z.25, x.35>, pk(~ltkS.19))
-       z     = fst(x.35)
-       z.1   = snd(x.35)
-       z.2   = z.25
+             = aenc(<z.26, x.37>, pk(~ltkS.20))
+       z     = fst(x.37)
+       z.1   = snd(x.37)
+       z.2   = z.26
   */
 
 lemma typing_assertion [typing]:
@@ -136,7 +136,7 @@ next
             by contradiction // cyclic
           next
             case case_2
-            by solve( (#vr.4, 0) ~~> (#vk, 0) )
+            by contradiction // impossible chain
           qed
         next
           case caenc
@@ -280,7 +280,7 @@ analyzing: data/examples/loops/JCS12_Typing_Example.spthy
 analyzed: data/examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.271892s
+  processing time: 0.256599s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
@@ -294,7 +294,7 @@ summary of summaries:
 analyzed: data/examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.271892s
+  processing time: 0.256599s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)

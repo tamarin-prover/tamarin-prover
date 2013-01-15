@@ -22,11 +22,12 @@ https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md.
 The simplest way to start developing is to call `make force-install` in the
 root directory of this repository. This installs the repository versions of
 the `tamarin-prover` package and its supporting libraries
-`tamarin-prover-utils` and `tamarin-prover-term` in the global package
-database. Once this succeeded, compatible versions of all libraries required
-by the `tamarin-prover` are also installed in the global package database.
-Thus, you can load the `Main` module of the Tamarin prover by typing `ghci
-Main` in the root directory of this repository. Note that, if GHCi prints
+`tamarin-prover-utils`, `tamarin-prover-term`, and `tamarin-prover-theory`
+in the global package database. Once this succeeded, compatible versions of
+all libraries required by the `tamarin-prover` are also installed in the
+global package database. Thus, you can load the `Main` module of the Tamarin
+prover by typing `ghci Main` in the root directory of this repository. Note
+that, if GHCi prints
 
 ~~~~
 *** WARNING: /home/repositories/git/github/meiersi/tamarin-prover/.ghci is writable by someone else, IGNORING!
@@ -35,8 +36,8 @@ Main` in the root directory of this repository. Note that, if GHCi prints
 , then you have to `chmod g-w` the directory `.` and the GHCi configuration
 file `.ghci`.
 
-Note that welcome all contributions, e.g., further protocol models. Just send
-us a pull request.
+Note that we welcome all contributions, e.g., further protocol models. Just
+send us a pull request.
 
 
 Version Numbering Policy
@@ -89,6 +90,9 @@ loops/         experiments for testing loop-invariants and protocols with
 related_work/  examples from related work on protocols with loops or
                non-monotonic state
 experiments/   all other experiments
+ake/           more AKE examples including ID-based and tripartite group KE
+               protocols based on bilinear pairing
+features/      (small) models that demonstrate a given feature
 ~~~~
 
 Feel free to add more sub-directories and describe them here.

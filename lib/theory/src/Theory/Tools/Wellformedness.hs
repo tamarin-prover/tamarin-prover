@@ -399,10 +399,16 @@ formulaReports thy = do
             \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
             \ this is unambiguous."
       where
+        irreducible = irreducibleFunSyms $ get (sigpMaudeSig . thySignature) thy
+
         offenders = filter (not . allowed) $ formulaTerms fm
         allowed (viewTerm -> Lit (Var (Bound _)))        = True
         allowed (viewTerm -> Lit (Con (Name PubName _))) = True
-        allowed _                                        = False
+        -- we allow multiset union
+        allowed (viewTerm2 -> FUnion args)                = all allowed args
+        -- we allow reducible function symbols
+        allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
+        allowed _                                                    = False
 
     -- check that the formula can be converted to a guarded formula
     checkGuarded header fm = case formulaToGuarded fm of
@@ -447,8 +453,8 @@ multRestrictedReport thy = do
                <*> mapM (traverse replaceAbstracted) acts
                <*> mapM (traverse replaceAbstracted) rhs
 
-    abstractTerm (viewTerm -> FApp (NonAC o) args) | o `S.member` irreducible =
-        fAppNonAC o <$> mapM abstractTerm args
+    abstractTerm (viewTerm -> FApp o args) | o `S.member` irreducible =
+        fApp o <$> mapM abstractTerm args
     abstractTerm (viewTerm -> Lit l) = return $ lit l
     abstractTerm t = varTerm <$> importBinding (`LVar` sortOfLNTerm t) t "x"
 
@@ -476,7 +482,7 @@ multRestrictedReport thy = do
                  , lvarSort v /= LSortPub ]
 
 
-    irreducible = irreducibleFunctionSymbols $ get (sigpMaudeSig . thySignature) thy
+    irreducible = irreducibleFunSyms $ get (sigpMaudeSig . thySignature) thy
 
 
 

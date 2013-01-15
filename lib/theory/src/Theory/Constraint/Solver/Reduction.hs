@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns  #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
@@ -289,6 +290,9 @@ insertAction i fa = do
                 Just (UpK, viewTerm2 -> FMult ms) ->
                     mapM_ requiresKU ms *> return Changed
 
+                Just (UpK, viewTerm2 -> FUnion ms) ->
+                    mapM_ requiresKU ms *> return Changed
+
                 _ -> return Unchanged
   where
     goal = ActionG i fa
@@ -534,7 +538,7 @@ substGoals = do
     changes <- forM goals $ \(goal, status) -> case goal of
         -- Look out for KU-actions that might need to be solved again.
         ActionG i fa@(kFactView -> Just (UpK, m))
-          | (isMsgVar m || isProduct m) && (apply subst m /= m) ->
+          | (isMsgVar m || isProduct m || isUnion m) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
         _ -> do modM sGoals $
                   M.insertWith' combineGoalStatus (apply subst goal) status
@@ -659,7 +663,7 @@ solveRuleConstraints (Just eqConstr) = do
     (eqs, splitId) <- addRuleVariants eqConstr <$> getM sEqStore
     insertGoal (SplitG splitId) False
     -- do not use expensive substCreatesNonNormalTerms here
-    setM sEqStore =<< simp hnd (const False) eqs
+    setM sEqStore =<< simp hnd (const (const False)) eqs
     noContradictoryEqStore
 solveRuleConstraints Nothing = return ()
 

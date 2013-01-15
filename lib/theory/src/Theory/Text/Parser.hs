@@ -11,7 +11,7 @@ module Theory.Text.Parser (
     parseOpenTheory
   , parseOpenTheoryString
   , parseLemma
-  , parseIntruderRulesDH
+  , parseIntruderRules
   ) where
 
 import           Prelude                    hiding (id, (.))
@@ -51,8 +51,8 @@ parseOpenTheory :: [String] -- ^ Defined flags
 parseOpenTheory flags = parseFile (theory flags)
 
 -- | Parse DH intruder rules.
-parseIntruderRulesDH :: FilePath -> IO [IntrRuleAC]
-parseIntruderRulesDH = parseFile (setState dhMaudeSig >> many intrRule)
+parseIntruderRules :: MaudeSig -> FilePath -> IO [IntrRuleAC]
+parseIntruderRules msig = parseFile (setState msig >> many intrRule)
 
 -- | Parse a security protocol theory from a string.
 parseOpenTheoryString :: [String]  -- ^ Defined flags.
@@ -73,18 +73,18 @@ llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
-lookupNonACArity :: String -> Parser Int
-lookupNonACArity op = do
+lookupArity :: String -> Parser (Int, Privacy)
+lookupArity op = do
     maudeSig <- getState
-    case lookup (BC.pack op) (S.toList $ allFunctionSymbols maudeSig) of
-        Nothing -> fail $ "unknown operator `" ++ op ++ "'"
-        Just k  -> return k
+    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public))]) of
+        Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
+        Just (k,priv) -> return (k,priv)
 
 -- | Parse an n-ary operator application for arbitrary n.
 naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
 naryOpApp plit = do
     op <- identifier
-    k  <- lookupNonACArity op
+    (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm plit
                      else commaSep (multterm plit)
@@ -92,18 +92,19 @@ naryOpApp plit = do
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
-    return $ fAppNonAC (BC.pack op, k') ts
+    let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
+    return $ app (BC.pack op, (k,priv)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
 binaryAlgApp plit = do
     op <- identifier
-    k <- lookupNonACArity op
+    (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit
     when (k /= 2) $ fail $
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNonAC (BC.pack op, 2) [arg1, arg2]
+    return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
 -- | Parse a term.
 term :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -122,19 +123,27 @@ term plit = asum
     nullaryApp = do
       maudeSig <- getState
       -- FIXME: This try should not be necessary.
-      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NonAC (sym,0)) [])
-           | (sym,0) <- S.toList $ allFunctionSymbols maudeSig ]
+      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
+           | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Parser (Term l) -> Parser (Term l)
-expterm plit = chainl1 (term plit) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm plit = chainl1 (msetterm plit) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Parser (Term l) -> Parser (Term l)
 multterm plit = do
     dh <- enableDH <$> getState
     if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
-        then chainl1 (expterm plit) ((\a b -> fAppMult [a,b]) <$ opMult)
+        then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
+        else msetterm plit
+
+-- | A left-associative sequence of multiset unions.
+msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
+msetterm plit = do
+    mset <- enableMSet <$> getState
+    if mset -- if multiset is not enabled, do not accept 'msetterms's
+        then chainl1 (term plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
         else term plit
 
 -- | A right-associative sequence of tuples.
@@ -524,6 +533,10 @@ builtins =
     builtinTheory = asum
       [ try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
+      , try (symbol "bilinear-pairing")
+          *> extendSig bpMaudeSig
+      , try (symbol "multiset")
+          *> extendSig msetMaudeSig
       , try (symbol "symmetric-encryption")
           *> extendSig symEncMaudeSig
       , try (symbol "asymmetric-encryption")
@@ -541,13 +554,14 @@ functions =
     functionSymbol = do
         f   <- BC.pack <$> identifier <* opSlash
         k   <- fromIntegral <$> natural
+        priv <- option Public (symbol "[private]" *> pure Private)
         sig <- getState
-        case lookup f (S.toList $ allFunctionSymbols sig) of
-          Just k' | k' /= k ->
-            fail $ "conflicting arities " ++
-                   show k' ++ " and " ++ show k ++
+        case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
+          Just kp' | kp' /= (k,priv) ->
+            fail $ "conflicting arities/private " ++
+                   show kp' ++ " and " ++ show (k,priv) ++
                    " for `" ++ BC.unpack f
-          _ -> setState (addFunctionSymbol (f,k) sig)
+          _ -> setState (addFunSym (f,(k,priv)) sig)
 
 equations :: Parser ()
 equations =
@@ -630,5 +644,3 @@ theory flags0 = do
     liftedAddAxiom thy ax = case addAxiom ax thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
-
-
