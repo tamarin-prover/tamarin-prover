@@ -82,7 +82,6 @@ data-files:
   examples/features/private_function_symbols/NAXOS_eCK_private.spthy
 
   -- newer AKE examples
-  examples/ake/dh/client_session_key.aes
   examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
   examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
   examples/ake/dh/NAXOS_eCK.spthy
