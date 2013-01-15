@@ -103,7 +103,7 @@ rule ResponderLoop:
     [ ResponderLoop( $R1, $I, j, k, below, <k, $R2> + above, ~gid, key )
     , !AuthOut($R2, < blindedRandomOf(k, ~gid), br > ) 
     ]
-    --[ IKey( $I, below + <'zero',$I>, ~gid, key ) ]->
+    --[ IKey( $R1, below + <'zero',$I>, ~gid, key ) ]->
     [ ResponderLoop($R1, $I, j, k + 1, <k, $R2> + below, above, ~gid, br ^ te(key)) ]
 
 rule ResponderDone:

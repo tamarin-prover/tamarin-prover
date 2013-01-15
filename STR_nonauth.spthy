@@ -99,7 +99,7 @@ rule Responder_2: //Loop:
     [ ResponderLoop( $R1, $I, j, k, below, <k, $R2> + above, ~gid, key )
     , In(< $R2, < blindedRandomOf(k, ~gid), br > >) 
     ]
-    --[ IKey( $I, below + <'zero',$I>, ~gid, key ) ]->
+    --[ IKey( $R1, below + <'zero',$I>, ~gid, key ) ]->
     [ ResponderLoop($R1, $I, j, k + 1, <k, $R2> + below, above, ~gid, br ^ te(key)) ]
 
 rule Responder_3: //Done:

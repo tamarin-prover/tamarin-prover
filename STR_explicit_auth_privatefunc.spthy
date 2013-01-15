@@ -1,10 +1,10 @@
-theory STR_ml_authentic_channel_2args_intruder_can_corrupt_rulenamechange
+theory STR_explicit_auth_privatefunc // based on: ml_authentic_channel_2args_intruder_can_corrupt_rulenamechange
 begin
 
 section{* *}
 
 /*
- * Protocol: STR with authentic channel and 2 arguments (manual translation from ML code)
+ * Protocol: STR with explicit authentication, "using a PKI" modeled by private functions
  * Source:      Communication-Efficient Group Key Agreement
  *              
  * Modeler: 	
@@ -18,13 +18,15 @@ builtins: diffie-hellman, multiset
 
 functions: blindedRandomOf/1, blindedKeyFor/1
 functions: te/1, te_inv/1  // convert group element to exponent
-
 equations: te_inv(te(x)) = x // te is not hiding
 
-rule AuthOut:
-  [ !AuthOut(A, x) ]
-  -->
-  [ Out(x) ]
+/* We use the private function symbol sk to model the longterm secret
+   key of an agent. For example, sk('A') is 'A's longterm secret key.
+   We also allow recipients to check who the sender was in the form of
+   matching for "m, sign(sk(A),m)" for expected sender A. */
+functions: sk/1 [private]
+functions: sign/2
+
 
 /* Determine group participants */
 rule StartGroup_1: //Init:
@@ -77,16 +79,21 @@ rule StartGroup_3: //Responders:
 
 /* Responders */
 
+
 rule Responder_0: //:
+  let mOut = < blindedRandomOf(j,~gid), 'g'^~r >
+  in 
   [ Responder($R1, $I, j, below, above, ~gid)
   , Fr(~r) ]
   -->
-  [ !AuthOut($R1, < blindedRandomOf(j,~gid), 'g'^~r > )
+  [ Out(< sign(sk($R1), mOut), mOut > )
   , ResponderBRSent($R1, $I, j, below + <j,$R1>, above, ~gid, ~r) ]
 
 rule Responder_1: //BKRecv:
+  let mIn = < blindedKeyFor(j,~gid), bk >
+  in
   [ ResponderBRSent($R1, $I, j, below, above, ~gid, ~r)
-  , !AuthOut($I, < blindedKeyFor(j,~gid), bk > )
+  , In(< sign(sk($I), mIn), mIn > )
   ]
   -->
   [ ResponderLoop( $R1
@@ -100,8 +107,10 @@ rule Responder_1: //BKRecv:
   
 
 rule Responder_2: //Loop:
+    let mIn  = < blindedRandomOf(k, ~gid), br >
+    in
     [ ResponderLoop( $R1, $I, j, k, below, <k, $R2> + above, ~gid, key )
-    , !AuthOut($R2, < blindedRandomOf(k, ~gid), br > ) 
+    , In(< sign(sk($R2), mIn), mIn >  ) 
     ]
     --[ IKey( $R1, below + <'zero',$I>, ~gid, key ) ]->
     [ ResponderLoop($R1, $I, j, k + 1, <k, $R2> + below, above, ~gid, br ^ te(key)) ]
@@ -114,11 +123,13 @@ rule Responder_3: //Done:
 /* Initiator */
 
 rule Initiator_0: //:
-  let key = br^~r  // here, ~r is an exponent and can be directly used
+  let key  = br^~r  // here, ~r is an exponent and can be directly used
+      mIn  = < blindedRandomOf(1, ~gid), br>
+      mOut = < blindedKeyFor(1, ~gid), 'g'^~r> 
   in
   [ Initiator($I, resps + <1,$R1>, ~gid)
   , Fr(~r)
-  , !AuthOut($R1, < blindedRandomOf(1, ~gid), br> ) ]
+  , In(< sign(sk($R1), mIn), mIn > ) ]
   -->
   [ InitiatorLoop( $I
                  , 1 + 1            // index of first not-done
@@ -126,16 +137,17 @@ rule Initiator_0: //:
                  , resps            // not-done
                  , ~gid
                  , key)
-  , !AuthOut($I, < blindedKeyFor(1, ~gid), 'g'^~r> ) ]
+  , Out(< sign(sk($I), mOut), mOut > ) ]
 
 rule Initiator_1: //Loop:
   let newkey = br^te(key) // here, key is a group element and has to be converted to
-                         //
+      mIn  = < blindedRandomOf(j, ~gid), br>
+      mOut = < blindedKeyFor(j, ~gid), 'g'^te(key)>
   in
   [ InitiatorLoop($I, j, handled, <j,$R1> + notHandled, ~gid, key)
-  , !AuthOut($R1, < blindedRandomOf(j, ~gid), br> ) ]
+  , In(< sign(sk($R1), mIn), mIn >  ) ]
   --[ IKey($I, handled + <'zero',$I>, ~gid, key ) ]->
-  [ !AuthOut($I, < blindedKeyFor(j, ~gid), 'g'^te(key)> )
+  [ Out(< sign(sk($I), mOut), mOut > )
   , InitiatorLoop($I, j + 1, <j,$R1> + handled, notHandled, ~gid, newkey) ]
 
 rule Initiator_2: //Done:
@@ -145,9 +157,9 @@ rule Initiator_2: //Done:
   ]-> []
 
 rule IntruderCorrupts:
-  [ In(x) ] 
-  --[ Corrupt($A) ]-> 
-  [ !AuthOut($A,x) ] 
+  [] 
+  --[Corrupt($A)]-> 
+  [Out(sk($A))]
 
 
 lemma key_reachable_2:
@@ -160,6 +172,7 @@ lemma key_reachable_2:
 "
 
 
+// takes 3 minutes instead of 25 seconds to get done; _4 below aborted
 lemma key_reachable_3:
   exists-trace
   "Ex #i1 I R1 R2 gid key #i2 #i3.
