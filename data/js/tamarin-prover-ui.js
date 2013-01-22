@@ -1,6 +1,10 @@
 /**
  * Tamarin ui controller
  * @author Cedric Staub
+ *
+ * Cas Cremers, Jan 2013: 
+ * 	Added functionaly to control graph detail level and toggle for
+ * 	abbreviations.
  */
 
 /*-----------------------------------------------------------*
@@ -215,30 +219,42 @@ var ui = {
             mainDisplay.toggleOption(debug_toggle);
         });
 
-        // Click handler for graph toggle
-        var graph_toggle = $('a#graph-toggle');
-        graph_toggle.click(function(ev) {
-            ev.preventDefault();
-            if($.cookie("uncompact-graphs")) {
-                $.cookie("uncompact-graphs", null, { path: '/' });
-            } else {
-                $.cookie("uncompact-graphs", true, { path: '/' });
-            }
-            $("a.active-link").click();
-            mainDisplay.toggleOption(graph_toggle);
-        });
+        // Click handlers for graph simplication handlers
+        var f = {};
+        f.makeHandler = function (obj,i) {
+            obj.click(function(ev) {
+                ev.preventDefault();
+                $.cookie("simplification", i, { path: '/' });
+	        for (var j=0;j<10;j++) {
+	            var olink = "a#lvl"+j+"-toggle";
+		    var obj = $(olink);
+	            if (i == j) {
+    		        obj.removeClass('inactive-option');
+		        obj.addClass('active-option');
+		    } else {
+		        obj.removeClass('active-option');
+		        obj.addClass('inactive-option');
+		    }
+	        }
+                $("a.active-link").click();
+            });
+        }
+	for (var i=0;i<10;i++) {
+	    var linkname = "a#lvl"+i+"-toggle";
+            f.makeHandler($(linkname),i);
+	}
 
-        // Click handler for sequent compression toggle
-        var sequent_toggle = $('a#seqnt-toggle');
-        sequent_toggle.click(function(ev) {
+        // Click handler for abbreviation toggle
+        var abbrv_toggle = $('a#abbrv-toggle');
+        abbrv_toggle.click(function(ev) {
             ev.preventDefault();
-            if($.cookie("uncompress-sequents")) {
-                $.cookie("uncompress-sequents", null, { path: '/' });
+            if ($.cookie("abbreviate")) {
+                $.cookie("abbreviate", null, { path: '/' });
             } else {
-                $.cookie("uncompress-sequents", true, { path: '/' });
+                $.cookie("abbreviate", true, { path: '/' });
             }
             $("a.active-link").click();
-            mainDisplay.toggleOption(sequent_toggle);
+            mainDisplay.toggleOption(abbrv_toggle);
         });
 
         // Install event handlers
@@ -293,7 +309,7 @@ var ui = {
             $("a#debug-toggle").addClass("active-option");
         } else {
             layout.close("east");
-            $("a#debug-toggle").addClass("inactive-option");
+            $("a#debug-toggle").addClass("disabled-option");
         }
 
         if($.cookie("west-size")) {
@@ -307,16 +323,24 @@ var ui = {
             $("div.ui-layout-west div.scroll-wrapper").scrollTop(pos);
         }
 
-        if($.cookie("uncompress-sequents")) {
-            $("a#seqnt-toggle").addClass("inactive-option");
-        } else {
-            $("a#seqnt-toggle").addClass("active-option");
-        }
+	/* If no simplification level specified yet, default to 1 */
+	if ($.cookie("simplification") == null) {
+	    $.cookie("simplification", 10, { path: '/' });
+	}
+	/* Add buttons for each of the simplification levels */
+	for (var i=0;i<10;i++) {
+	    var linkname = "a#lvl"+i+"-toggle";
+	    if (parseInt($.cookie("simplification")) == i) {
+                $(linkname).addClass("active-option");
+	    } else {
+                $(linkname).addClass("inactive-option");
+	    }
+	}
 
-        if($.cookie("uncompact-graphs")) {
-            $("a#graph-toggle").addClass("inactive-option");
+        if($.cookie("abbreviate")) {
+            $("a#abbrv-toggle").addClass("active-option");
         } else {
-            $("a#graph-toggle").addClass("active-option");
+            $("a#abbrv-toggle").addClass("disabled-option");
         }
     },
 
@@ -721,9 +745,9 @@ var mainDisplay = {
     toggleOption: function(obj) {
         if(obj.hasClass('active-option')) {
             obj.removeClass('active-option');
-            obj.addClass('inactive-option');
+            obj.addClass('disabled-option');
         } else {
-            obj.removeClass('inactive-option');
+            obj.removeClass('disabled-option');
             obj.addClass('active-option');
         }
     }
