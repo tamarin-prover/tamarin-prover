@@ -60,6 +60,9 @@ CLUSTERCOLOR2 = (1.2,0.6,0.83)   # HSL
 # Global variable to store the pyparsing BNF.
 labelbnf = None
 
+# Global variable for storing dictionary with special parameters
+PARAMETERS = {}
+
 # DEBUG mode
 DEBUGMODE = False
 
@@ -1148,6 +1151,29 @@ def showClusters(G):
     return G
 
 
+def addLegend(G,l):
+    # Add the legend to the graph
+    N = Node("Legend")
+    N.set_label("\"%s\"" % (l))
+    N.set_shape("box")
+
+    S = Subgraph("LegendCluster")
+    S.set("rank","sink")
+    S.set("style","invis")
+    S.add_node(N)
+    G.add_subgraph(S)
+
+    # Drawing invisible edges from each node to the legend tends to force it to
+    # the bottom, which is what we want.
+    n = N.get_name()
+    NL = G.get_node_list()
+    for X in NL:
+        x = X.get_name()
+        if x not in ["edge","node"]:    # Strange pydot behaviour considers these as nodes
+            E = Edge(x,n,style="invis")
+            G.add_edge(E)
+    return G
+
 def abbreviateGraph(G):
     """
     Add abbreviatios to a graph
@@ -1179,40 +1205,66 @@ def abbreviateGraph(G):
         l = "Abbreviations\l\l"
         for (x,y) in S:
             l += "%s = %s\l" % (y,render(x))
+    else:
+        l = ""
 
-        # Add the legend to the graph
-        N = Node("Legend")
-        N.set_label("\"%s\"" % (l))
-        N.set_shape("box")
+    return (G,l)
 
-        S = Subgraph("LegendCluster")
-        S.set("rank","sink")
-        S.set("style","invis")
-        S.add_node(N)
-        G.add_subgraph(S)
 
-        # Drawing invisible edges from each node to the legend tends to force it to
-        # the bottom, which is what we want.
-        n = N.get_name()
-        for X in NL:
-            x = X.get_name()
-            if x not in ["edge","node"]:    # Strange pydot behaviour considers these as nodes
-                E = Edge(x,n,style="invis")
-                G.add_edge(E)
+def showParameters():
+    """
+    Parse comments dict into a text suitable for a node.
+    """
+    global PARAMETERS
 
-    return G
-
+    l = ""
+    for k in PARAMETERS.keys():
+        dt = PARAMETERS[k]
+        dt = dt.replace("\"","\\\"")
+        l += "%s: %s\\l" % (k,dt)
+    if len(l) > 0:
+        l = "\\lParsed PARAMETERS:\\l" + l
+    return l
 
 def improveGraph(G):
     """
     Improve a graph
     """
+    global DEBUGMODE
+
+    legend = ""
 
     G = showClusters(G)
     G = collapseDerivations(G)
-    G = abbreviateGraph(G)
+    (G,l) = abbreviateGraph(G)
+    legend += l
+
+    if DEBUGMODE:
+        legend += showParameters()
+
+    # Add legend if needed
+    if len(legend) >= 0:
+        G = addLegend(G,legend)
+
     return G
 
+
+def extractParameters(infile):
+    """
+    Try to extract special parameters from the file in a dict.
+    """
+    global PARAMETERS
+
+    PARAMETERS = {}
+    fp = open(infile,'r')
+    for ll in fp.xreadlines():
+        i = ll.find(":")
+        if ll.startswith("// ") and i >= 0:
+            key = ll[3:i].strip()
+            data = ll[i+1:].strip()
+            PARAMETERS[key] = data
+
+    fp.close()
 
 def newDot(infile):
     """
@@ -1220,9 +1272,11 @@ def newDot(infile):
     """
     from tempfile import mkstemp
 
+    extractParameters(infile)
+
     (fpint,outfile) = mkstemp(suffix=".dot")
     fp = os.fdopen(fpint,'w')
-    
+
     G = graph_from_dot_file(infile)
 
     G = improveGraph(G)
@@ -1251,7 +1305,10 @@ def main():
         global DEBUGMODE
 
         if DEBUGMODE:
+            import traceback
+
             print "Unexpected error:", sys.exc_info()[0]
+            print traceback.format_exc()
 
         # Something went wrong, fall back to default rendering method.
         execDot(sys.argv[1:])
