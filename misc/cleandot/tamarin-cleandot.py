@@ -10,12 +10,19 @@ Its first aim is to provide more structure in the graphs by clustering possible
 threads by using a heuristic. For now, this is done by searching for connected
 nodes whose names share a prefix that is followed by a digit.
 
-Future possibilites:
-    - Abbreviations (as Scyther-compromise is doing now)
-    - Node collapsing / simplification with a switch (but would need change in the Tamarin code to propagate)
+The comments in the dot file are used by Tamarin to guide tamarin-cleandot. In
+particular, this is how the GUI switches are propagated: they end up in the
+global PARAMETERS dict:
 
+- simplification : [0..3]
+- abbreviate : True/False
 
-December 2012, Cas Cremers
+To do:
+    The parameters now still include the static set of rules names. These
+    should be used to determine a nice colour distribution.
+
+December 2012 -- January 2013
+Cas Cremers
 
 
 Usage:
@@ -497,7 +504,7 @@ def label_BNF():
 
         PORT = Combine(langle + BASICID + rangle)
         SINGLE = Optional(sharp + ID + colon) + (FACT | TERM)
-        FIELDID = Group(Optional(PORT) + SINGLE)
+        FIELDID = Group(Optional(PORT) + Optional(SINGLE))
 
         LABEL = Forward()
         FIELD = (lcbrack + LABEL + rcbrack) | FIELDID
@@ -634,16 +641,90 @@ def findArgs(infile=None):
     return args
 
 
+def appendLog(l):
+    global DEBUGMODE
+
+    if DEBUGMODE:
+        fp = open("/tmp/tamarin-cleandot.log","a")
+        fp.write(l)
+        fp.close()
+
 def findInputFile():
-    fp = open("/tmp/tamarin-cleandot.log","a")
-    fp.write("cleandot: Scanning for input file in: "+ str(sys.argv[1:])+ "\n")
-    fp.close()
+
+    appendLog("Scanning for input file in: "+ str(sys.argv[1:])+ "\n")
 
     # Currently, the Tamarin implementation is such that the filename is always the last argument.
     # This may change in the future, so a more robust parsing is maybe in order.
     infile = sys.argv[-1]
 
     return infile
+
+
+def stripQuotes(s):
+    """
+    Strip single or double quotes
+    """
+
+    if len(s) > 0:
+        if s[0] == s[-1] and s[0] in "'\"":
+            return s[1:-1]
+    return s
+
+
+def recordToList(s,start=0):
+
+    """
+    Consider s as an html-formatted record type string.
+    Use brackets etc. to convert to "fliplist"
+
+    Returns (fliplist,index) to just after the end of the parsed string
+    """
+    fl = []
+    i = start
+    while i < len(s):
+        if s[i] == "\\":
+            # Simply skip the escaped characters
+            i += 2
+        elif s[i] == "{":
+            (fl2,i) = recordToList(s,i+1)
+            fl.append(["<recordflip>"] + fl2)
+            if i >= len(s):
+                raise ValueError, "Cannot parse record node (missing closing parenthesis? ) [%s]" % s
+            if s[i] != "}":
+                raise ValueError, "Cannot parse record node (missing closing parenthesis? ) [%s]" % s
+            i += 1
+            start = i
+        elif s[i] == "|":
+            part = s[start:i].strip()
+            if len(part) > 0:
+                fl.append(part)
+            i += 1
+            start = i
+        elif s[i] == "}":
+            break
+        else:
+            i += 1
+
+    part = s[start:i].strip()
+    if len(part) > 0:
+        fl.append(part)
+    return (fl, i)
+
+
+def listToRecord(fl):
+
+    if isinstance(fl,str):
+        return fl
+
+    left = ""
+    right = ""
+    if fl[0] == "<recordflip>":
+        fl = fl[1:]
+        left = "{"
+        right = "}"
+
+    inner = "|".join([listToRecord(x) for x in fl])
+    return "%s%s%s" % (left,inner,right)
 
 
 def getSubfield(s,location):
@@ -703,9 +784,8 @@ def getRuleName(N):
         return None
 
     label = N.get("label")
-    ruleField = getSubfield(label,[1,2])
-
     try:
+        ruleField = getSubfield(label,[1,2])
         i = ruleField.index(":")
         j = ruleField.index("[",i)
 
@@ -902,6 +982,190 @@ def noPort(nn):
     return nn
 
 
+def leavePortAddress(t,coord=None):
+    """
+    Strip text from (non-record) label, but leave port address.
+    """
+    t = t.strip()
+    if not t.startswith("<"):
+        return ""
+    i = t.find(">")
+    if i < 0:
+        raise ValueError, "Could not find port name end marker in [%s]" % (t)
+    return t[:i+1]
+
+
+def leavePortAddressExceptString(t,coord,s):
+    if t == s:
+        return t
+    else:
+        return leavePortAddress(t)
+
+
+def strmap(fl,f,coord=[]):
+    """
+    Apply f to a strings that occur in the (nested) sequence list
+    """
+    if isinstance(fl,str):
+        return f(fl,coord)
+
+    nfl = []
+    cnt = 0
+    for x in fl:
+        nfl.append(strmap(x,f,coord + [cnt]))
+        cnt += 1
+    return nfl
+
+
+def extractStrings(fl):
+
+    if isinstance(fl,str):
+        return [fl]
+
+    strings = []
+    for x in fl:
+        strings += extractStrings(x)
+    return strings
+
+
+def collectPorts(label):
+
+    (fl,i) = recordToList(stripQuotes(label))
+    fl = strmap(fl,leavePortAddress)
+    strings = extractStrings(fl)
+    ports = []
+    for s in strings:
+        if s != "<recordflip>":
+            ports.append(s[1:-1])
+    return ports
+
+
+def recordSimplifyClauses(N):
+    """
+    Given a record node, collapse text except for rule name.
+    Note that we need to leave the port names intact for the edges.
+    """
+
+    label = N.get_label()
+    ruleField = getSubfield(label,[1,2]).strip()
+    (fl,i) = recordToList(stripQuotes(label))
+    fl = strmap(fl,lambda x,y: leavePortAddressExceptString(x,y,ruleField))
+    N.set_label('"%s"' % (listToRecord(fl)))
+
+
+def recordToSimpleHTML(N):
+    """
+    Precondition: must be a record node
+    """
+
+    label = N.get_label()
+    ruleField = getSubfield(label,[1,2]).strip()
+    if ruleField.startswith("<"):
+        i = ruleField.find(">")
+        if i > 0:
+            ruleField = ruleField[i+1:].strip()
+
+    ports = collectPorts(label)
+
+    newlabel = "<<TABLE>\n"
+    if len(ports) > 0:
+        newlabel += "<TR>\n"
+        for p in ports:
+            newlabel += "<TD PORT=\"%s\">x</TD>\n" % (p)
+        newlabel += "</TR>\n"
+    newlabel += "<TR>\n"
+    newlabel += "<TD COLSPAN=\"%i\">\n" % (min(1,len(ports)))
+    newlabel += ruleField
+    newlabel += "</TD>\n"
+    newlabel += "</TR>\n"
+    newlabel += "</TABLE>>"
+
+    newlabel = "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD>x</TD></TR><TR><TD>y</TD></TR></TABLE>>"
+    N.set_label(newlabel)
+    print "Set ", newlabel
+    N.set_shape("plaintext")
+
+
+def nodeNameStripPort(nn):
+    """
+    Given a node name, strip the port
+    """
+    i = nn.find(":")
+    if i < 0:
+        return nn
+    else:
+        return nn[:i]
+
+
+def getPortLabel(G,nn):
+    """
+    From a compound node+port spec, get the label
+    """
+    if not ":" in nn:
+        return None
+    nxs = nn.split(":")
+    nNode = nxs[0]
+    nPort = "<" + nxs[1] + ">"
+    for N in G.get_nodes():
+        if N.get_name() == nNode:
+            ss = extractStrings(recordToList(N.get_label())[0])
+            for s in ss:
+                sl = s.strip()
+                if sl.startswith(nPort):
+                    return sl[len(nPort):].strip()
+    return None
+
+
+def collapseRules(G,removeFacts=False):
+    """
+    Simplify rules
+
+    If removeFacts == False, we move some things to the edges
+    """
+    newEdges = []
+    delEdges = []
+    for e in G.get_edges():
+        attr = e.get_attributes()
+        dstn = e.get_destination()
+        srcn = e.get_source()
+        if ":" in dstn + srcn:
+            # Special case: do we need to retain the fact?
+            if not removeFacts:
+                # We retain the fact, but move it to the edge
+                newlabel = getPortLabel(G,dstn)
+                if newlabel == None:
+                    newlabel = getPortLabel(G,srcn)
+                if newlabel != None:
+                    if "label" in attr.keys():
+                        newlabel = attr["label"] + ", " + newlabel
+                        del attr["label"]
+                    attr["label"] = newlabel
+            e2 = Edge(nodeNameStripPort(srcn),nodeNameStripPort(dstn),**attr)
+
+            newEdges.append(e2)
+            delEdges.append((srcn,dstn))
+
+    for (srcn,dstn) in delEdges:
+        del_edge(G,srcn,dstn)
+
+    for e in newEdges:
+        G.add_edge(e)
+        
+    for N in G.get_nodes():
+        if isRecordNode(G,N):
+            # Rewrite to simplify
+            label = N.get_label()
+            ruleField = getSubfield(label,[1,2]).strip()
+            if ruleField.startswith("<"):
+                i = ruleField.find(">")
+                if i >= 0:
+                    ruleField = ruleField[i+1:]
+            N.set_label('"%s"' % (ruleField))
+            N.set_shape("box")
+
+    return G
+
+
 def findNode(G,nn):
     """
     Given a node name, get the node
@@ -949,16 +1213,34 @@ def findConnected(G,NL,prefix=""):
     return NL
 
 
-def isDerivationNode(G,N):
+def isRecordNode(G,N):
     """
-    Returns True iff the node N seems to be a derivation node.
+    Is this a record node?
     """
     sh = N.get("shape")
     if sh != None:
         if "record" in sh:
-            # Only record nodes are 'regular' rule instances
-            return False
-    return True
+            return True
+    return False
+
+
+def isRuleNode(G,N):
+    """
+    Returns True iff the node N seems to be a rule node.
+
+    Only record nodes are 'regular' rule instances.
+    """
+    return isRecordNode(G,N)
+
+
+def isDerivationNode(G,N):
+    """
+    Returns True iff the node N seems to be a derivation node.
+
+    Only record nodes are 'regular' rule instances.
+    """
+    return not(isRuleNode(G,N))
+
 
 def sanitizePrefix(s):
     """
@@ -1188,6 +1470,12 @@ def abbreviateGraph(G):
         label = N.get_label()
         if label not in ["",None]:
             D[nn] = parseLabel(label)
+    EL = G.get_edge_list()
+    for E in EL:
+        en = "%s -- %s" % (E.get_source(),E.get_destination())
+        label = E.get_label()
+        if label not in ["",None]:
+            D[en] = parseLabel(label)
 
     # Compute abbreviations
     R = rules(D)
@@ -1199,6 +1487,10 @@ def abbreviateGraph(G):
         nn = N.get_name()
         if nn in D.keys():
             N.set_label(render(D[nn]))
+    for E in EL:
+        en = "%s -- %s" % (E.get_source(),E.get_destination())
+        if en in D.keys():
+            E.set_label(render(D[en]))
 
     if len(S) > 0:
         # Construct a legend text
@@ -1226,18 +1518,47 @@ def showParameters():
         l = "\\lParsed PARAMETERS:\\l" + l
     return l
 
+
+def getSimplificationLevel():
+    """
+    Find simplification level from parameters, default to 1
+    """
+    global PARAMETERS
+
+    if "simplification" in PARAMETERS.keys():
+        sl = PARAMETERS["simplification"]
+        if sl.startswith("\"") and sl.endswith("\""):
+            sl = sl[1:-1]
+        return int(sl)
+    return 1
+
+
 def improveGraph(G):
     """
     Improve a graph
     """
     global DEBUGMODE
+    global PARAMETERS
 
     legend = ""
 
-    G = showClusters(G)
-    G = collapseDerivations(G)
-    (G,l) = abbreviateGraph(G)
-    legend += l
+    sl = getSimplificationLevel()
+    
+
+    if sl >= 1:
+        # ShowClusters must go early as it needs much information
+        G = showClusters(G)
+        G = collapseDerivations(G)
+
+    if sl >= 2:
+        # CollapseRules throws away a lot of information
+        G = collapseRules(G,removeFacts=(sl >= 3))
+
+    # Abbreviate must go last, so that we don't abbreviate things that are later collapsed
+    if "abbreviate" in PARAMETERS.keys():
+        if PARAMETERS["abbreviate"] == "True":
+            (G,l) = abbreviateGraph(G)
+            legend += l
 
     if DEBUGMODE:
         legend += showParameters()
@@ -1308,7 +1629,9 @@ def main():
             import traceback
 
             print "Unexpected error:", sys.exc_info()[0]
-            print traceback.format_exc()
+            report = traceback.format_exc()
+            appendLog(report)
+            print report
 
         # Something went wrong, fall back to default rendering method.
         execDot(sys.argv[1:])

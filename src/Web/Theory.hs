@@ -513,10 +513,12 @@ imgThyPath :: ImageFormat
            -> FilePath               -- ^ 'dot' command
            -> FilePath               -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())
+           -> String                 -- ^ Simplification level of graph (string representation of integer >= 0)
+           -> Bool                   -- ^ True iff we want abbreviations
            -> ClosedTheory
            -> TheoryPath
            -> IO FilePath
-imgThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
+imgThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate thy path = go path
   where
     go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j)
     go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
@@ -524,8 +526,10 @@ imgThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
 
     -- Prefix dot code with comment mentioning all protocol rule names
     prefixedShowDot dot = unlines
-        [ "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
+        [ "// simplification: "          ++ simplificationLevel
+        , "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
         , "// message deduction rules: " ++ ruleList (getIntrVariants thy)
+        , "// abbreviate: "              ++ show abbreviate
         , D.showDot dot
         ]
       where

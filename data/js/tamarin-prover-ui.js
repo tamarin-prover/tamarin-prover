@@ -672,16 +672,23 @@ var mainDisplay = {
 
         // Get image settings from cookie
         var params = []
-        if($.cookie("uncompact-graphs")) {
+        // If level == 0, do not compact and compress
+        if (parseInt($.cookie("simplification")) == 0) {
             params = params.concat(
                 { name: "uncompact", value: "" }
             );
-        }
-        if($.cookie("uncompress-sequents")) {
             params = params.concat(
                 { name: "uncompress", value: "" }
             );
         }
+        if ($.cookie("abbreviate") == null) {
+            params = params.concat(
+                { name: "unabbreviate", value: "" }
+            );
+        }
+        params = params.concat(
+            { name: "simplification", value: $.cookie("simplification") }
+        );
 
         // Rewrite image paths (if necessary)
         if(params.length > 0) {

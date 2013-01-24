@@ -1,4 +1,6 @@
 // blaat: niet
+// abbreviate: True
+// simplification: "2"
 digraph G {
 nodesep="0.3";
 ranksep="0.3";
