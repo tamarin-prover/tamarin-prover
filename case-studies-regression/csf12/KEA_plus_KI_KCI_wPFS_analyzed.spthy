@@ -45,17 +45,17 @@ rule (modulo E) Init_2:
        Y     = x.276^x.277
        z     = x.276^(~lkI.141*x.277)
     
-    4. ~lkI  = ~lkI.141
-       Y     = x.276^inv((~lkI.141*x.277))
-       z     = x.276^inv(x.277)
+    4. ~lkI  = ~lkI.142
+       Y     = x.278^inv((~lkI.142*x.279))
+       z     = x.278^inv(x.279)
     
-    5. ~lkI  = ~lkI.141
-       Y     = x.276^(x.277*inv(~lkI.141))
-       z     = x.276^x.277
+    5. ~lkI  = ~lkI.142
+       Y     = x.278^(x.279*inv(~lkI.142))
+       z     = x.278^x.279
     
-    6. ~lkI  = ~lkI.142
-       Y     = x.277^(x.279*inv((~lkI.142*x.278)))
-       z     = x.277^(x.279*inv(x.278))
+    6. ~lkI  = ~lkI.143
+       Y     = x.279^(x.281*inv((~lkI.143*x.280)))
+       z     = x.279^(x.281*inv(x.280))
   */
 
 rule (modulo E) Resp_1:
@@ -90,17 +90,17 @@ rule (modulo E) Resp_1:
        X     = x.421^x.422
        z     = x.421^(~lkR.214*x.422)
     
-    4. ~lkR  = ~lkR.214
-       X     = x.421^inv((~lkR.214*x.422))
-       z     = x.421^inv(x.422)
+    4. ~lkR  = ~lkR.215
+       X     = x.423^inv((~lkR.215*x.424))
+       z     = x.423^inv(x.424)
     
-    5. ~lkR  = ~lkR.214
-       X     = x.421^(x.422*inv(~lkR.214))
-       z     = x.421^x.422
+    5. ~lkR  = ~lkR.215
+       X     = x.423^(x.424*inv(~lkR.215))
+       z     = x.423^x.424
     
-    6. ~lkR  = ~lkR.215
-       X     = x.422^(x.424*inv((~lkR.215*x.423)))
-       z     = x.422^(x.424*inv(x.423))
+    6. ~lkR  = ~lkR.216
+       X     = x.424^(x.426*inv((~lkR.216*x.425)))
+       z     = x.424^(x.426*inv(x.425))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -282,7 +282,7 @@ analyzing: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.960053s
+  processing time: 1.097503s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -294,7 +294,7 @@ summary of summaries:
 analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.960053s
+  processing time: 1.097503s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

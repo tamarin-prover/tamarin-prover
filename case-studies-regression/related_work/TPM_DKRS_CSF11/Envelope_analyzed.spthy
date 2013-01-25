@@ -8,7 +8,7 @@ equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
-    verify(sign(x.1, x.2), x.1, pk(x.2)) = true()
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
 rule (modulo E) PCR_Init:
    [ Fr( ~aik ) ]
@@ -123,7 +123,7 @@ next
           by contradiction // cyclic
         next
           case case_2
-          by solve( (#vl, 0) ~~> (#vk, 0) )
+          by contradiction // impossible chain
         qed
       next
         case caenc
@@ -6138,7 +6138,7 @@ analyzing: data/examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 19.894217s
+  processing time: 35.284322s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
@@ -6151,7 +6151,7 @@ summary of summaries:
 analyzed: data/examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 19.894217s
+  processing time: 35.284322s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)

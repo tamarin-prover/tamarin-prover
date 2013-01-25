@@ -214,30 +214,21 @@ matchToGoal
 matchToGoal ctxt th0 goalTerm =
   if not $ maybeMatcher (goalTerm, get cdGoal th0) then Nothing else
   case (goalTerm, get cdGoal th) of
-    -- FIXME: factor out common actions
     ( PremiseG      (iTerm, premIdxTerm) faTerm
      ,PremiseG pPat@(iPat,  _          ) faPat  ) ->
-        let match = faTerm `matchFact` faPat <> iTerm `matchLVar` iPat in
-        case runReader (solveMatchLNTerm match) (get pcMaudeHandle ctxt) of
+        case doMatch (faTerm `matchFact` faPat <> iTerm `matchLVar` iPat) of
             []      -> Nothing
             subst:_ ->
                 let refine = do
                         modM sEdges (substNodePrem pPat (iPat, premIdxTerm))
-                        void (solveSubstEqs SplitNow subst)
-                        void substSystem
-                        return ((), [])
+                        refineSubst subst
                 in Just $ snd $ refineCaseDistinction ctxt refine (set cdGoal goalTerm th)
 
     (ActionG iTerm faTerm, ActionG iPat faPat) ->
-        let match = faTerm `matchFact` faPat <> iTerm `matchLVar` iPat in
-        case runReader (solveMatchLNTerm match) (get pcMaudeHandle ctxt) of
+        case doMatch (faTerm `matchFact` faPat <> iTerm `matchLVar` iPat) of
             []      -> Nothing
-            subst:_ ->
-                let refine = do
-                        void (solveSubstEqs SplitNow subst)
-                        void substSystem
-                        return ((), [])
-                in Just $ snd $ refineCaseDistinction ctxt refine (set cdGoal goalTerm th)
+            subst:_ -> Just $ snd $ refineCaseDistinction ctxt
+                                        (refineSubst subst) (set cdGoal goalTerm th)
 
     -- No other matches possible, as we only precompute case distinctions for
     -- premises and KU-actions.
@@ -257,6 +248,13 @@ matchToGoal ctxt th0 goalTerm =
 
     substNodePrem from to = S.map
         (\ e@(Edge c p) -> if p == from then Edge c to else e)
+
+    doMatch match = runReader (solveMatchLNTerm match) (get pcMaudeHandle ctxt)
+
+    refineSubst subst = do
+        void (solveSubstEqs SplitNow subst)
+        void substSystem
+        return ((), [])
 
 -- | Try to solve a premise goal or 'KU' action using the first precomputed
 -- case distinction with a matching premise.

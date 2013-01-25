@@ -8,7 +8,7 @@ category:           Theorem Provers
 author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
                     Simon Meier <simon.meier@inf.ethz.ch>
 maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
-copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2012
+copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2013
 synopsis:           The Tamarin prover for security protocol analysis.
 description:
 
@@ -211,7 +211,7 @@ executable tamarin-prover
     -- Parallelize by default. Only activated for GHC 7.4, as this flag was
     -- unstable in earlier -- versions; i.e., it resulted in command-line
     -- parsing errors.
-    if impl(ghc >= 7.4)
+    if impl(ghc >= 7.4) && flag(threaded)
         ghc-options:   -with-rtsopts=-N
 
     hs-source-dirs:    src
@@ -252,7 +252,7 @@ executable tamarin-prover
       , containers        >= 0.4.2 && < 0.5
       , dlist             == 0.5.*
       , mtl               == 2.0.*
-      , cmdargs           == 0.9.*
+      , cmdargs           == 0.10.*
       , filepath          >= 1.1   && < 1.4
       , directory         >= 1.0   && < 1.2
       , process           == 1.1.*

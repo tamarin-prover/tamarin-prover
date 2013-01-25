@@ -73,7 +73,7 @@ versionStr licensePath = unlines
     [ programName
     , " "
     , showVersion version
-    , ", (C) Benedikt Schmidt, Simon Meier, ETH Zurich 2010-2012"
+    , ", (C) Benedikt Schmidt, Simon Meier, ETH Zurich 2010-2013"
     ]
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"
@@ -162,6 +162,7 @@ tamarinMode name help adaptMode run0 = TamarinMode
       , modeNames      = [name]
       , modeValue      = []
       , modeCheck      = updateArg "mode" name
+      , modeExpandAt   = False
       , modeReform     = const Nothing-- no reform possibility
       , modeHelp       = help
       , modeHelpSuffix = []

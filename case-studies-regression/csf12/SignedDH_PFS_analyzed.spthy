@@ -7,7 +7,7 @@ functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
-    verify(sign(x.1, x.2), x.1, pk(x.2)) = true()
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
 section{* The Signed Diffie-Hellman Protocol *}
 
@@ -66,16 +66,16 @@ rule (modulo E) Init_2:
        z     = x.16^(~ekI.11*x.17)
     
     4. ~ekI  = ~ekI.11
-       Y     = x.16^inv((~ekI.11*x.17))
-       z     = x.16^inv(x.17)
+       Y     = x.17^inv((~ekI.11*x.18))
+       z     = x.17^inv(x.18)
     
     5. ~ekI  = ~ekI.11
-       Y     = x.16^(x.17*inv(~ekI.11))
-       z     = x.16^x.17
+       Y     = x.17^(x.18*inv(~ekI.11))
+       z     = x.17^x.18
     
     6. ~ekI  = ~ekI.12
-       Y     = x.17^(x.19*inv((~ekI.12*x.18)))
-       z     = x.17^(x.19*inv(x.18))
+       Y     = x.18^(x.20*inv((~ekI.12*x.19)))
+       z     = x.18^(x.20*inv(x.19))
   */
 
 rule (modulo E) Resp:
@@ -107,17 +107,17 @@ rule (modulo E) Resp:
        X     = x.123^x.124
        z     = x.123^(~ekR.64*x.124)
     
-    4. ~ekR  = ~ekR.64
-       X     = x.123^inv((~ekR.64*x.124))
-       z     = x.123^inv(x.124)
+    4. ~ekR  = ~ekR.65
+       X     = x.125^inv((~ekR.65*x.126))
+       z     = x.125^inv(x.126)
     
-    5. ~ekR  = ~ekR.64
-       X     = x.123^(x.124*inv(~ekR.64))
-       z     = x.123^x.124
+    5. ~ekR  = ~ekR.65
+       X     = x.125^(x.126*inv(~ekR.65))
+       z     = x.125^x.126
     
-    6. ~ekR  = ~ekR.65
-       X     = x.124^(x.126*inv((~ekR.65*x.125)))
-       z     = x.124^(x.126*inv(x.125))
+    6. ~ekR  = ~ekR.66
+       X     = x.126^(x.128*inv((~ekR.66*x.127)))
+       z     = x.126^(x.128*inv(x.127))
   */
 
 lemma Perfect_Forward_Secrecy:
@@ -206,7 +206,7 @@ analyzing: data/examples/csf12/SignedDH_PFS.spthy
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.691604s
+  processing time: 0.532613s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ summary of summaries:
 analyzed: data/examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.691604s
+  processing time: 0.532613s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

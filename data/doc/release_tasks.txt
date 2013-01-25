@@ -8,7 +8,7 @@ Before a release, the following things should be checked:
 3. call 'tamarin-prover' and copy CSF'12 automatic command and
    check whether verification succeeds.
 
-3. generate 'intruder_variants_dh.spthy' and diff with version in data/
+3. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions in data/
 
 4. call 'tamarin-prover' and copy CSF'12 interactive command and
    execute the following steps
