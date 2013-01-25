@@ -1,3 +1,37 @@
+* 0.8.4
+    features:
+      1. irreducible function symbols are now allowed in formulas
+      2. Support for an AC operator "+" which can also be used
+         in formulas.
+         See the examples
+           - "ake/bilinear/{Joux,TAK1}.spthy" for modeling multisets,
+           - "features/multiset/counter.spthy" for modeling natural
+             numbers as counters, and
+           - "ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy" for
+             modeling lists with an "isPrefixOf" operation.
+         See below for documentation.
+      3. Support for reasoning about protocols that use bilinear pairing
+         (see "ake/bilinear/" for examples).
+      4. Support for private function symbols (see "cav13/DH_example" and
+         "features/private_function_symbols/" for examples.
+
+    documentation:
+      - Schmidt's PhD thesis on "Formal Analysis of Key Exchange and Physical
+        Protocols" is now available online at
+
+          http://www.infsec.ethz.ch/research/software/tamarin
+
+        provides a detailed explanation of the theory and application of Tamarin
+        including the reasoning about Diffie-Hellman exponentiation and bilinear
+        pairing.
+
+    new protocol models (most of them referenced in Schmidt's thesis):
+      - Identity-based key exchange protocols (RYY, Scott, Chen-Kudla)
+      - tripartite group key exchange protocols (Joux, TAK1)
+      - multiprotocol scenarios for 3-pass AKE protocols (DHKEA+NAXOS-C, UM-C+UM-1)
+      - new Yubikey models that model counters with multisets (contributed by
+        Robert Künnemann).
+
 * 0.8.2.1 bugfix release
     Should fix the ominous "no such lemma or proof path" GUI bug.
 

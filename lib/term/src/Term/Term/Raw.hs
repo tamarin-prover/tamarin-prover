@@ -180,12 +180,12 @@ instance Foldable Term where
 instance Show a => Show (Term a) where
     show t =
       case viewTerm t of
-        Lit l                              -> show l
+        Lit l                  -> show l
         FApp   (NoEq (s,_)) [] -> BC.unpack s
         FApp   (NoEq (s,_)) as -> BC.unpack s++"("++(intercalate "," (map show as))++")"
-        FApp   (C EMap) as      -> BC.unpack emapSymString++"("++(intercalate "," (map show as))++")"
-        FApp   List as          -> "LIST"++"("++(intercalate "," (map show as))++")"
-        FApp   (AC o) as        -> show o++"("++(intercalate "," (map show as))++")"
+        FApp   (C EMap) as     -> BC.unpack emapSymString++"("++(intercalate "," (map show as))++")"
+        FApp   List as         -> "LIST"++"("++(intercalate "," (map show as))++")"
+        FApp   (AC o) as       -> show o++"("++(intercalate "," (map show as))++")"
 
 -- | The fold function for @Term a@.
 {-# INLINE foldTerm #-}

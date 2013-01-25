@@ -90,6 +90,9 @@ loops/         experiments for testing loop-invariants and protocols with
 related_work/  examples from related work on protocols with loops or
                non-monotonic state
 experiments/   all other experiments
+ake/           more AKE examples including ID-based and tripartite group KE
+               protocols based on bilinear pairing
+features/      (small) models that demonstrate a given feature
 ~~~~
 
 Feel free to add more sub-directories and describe them here.

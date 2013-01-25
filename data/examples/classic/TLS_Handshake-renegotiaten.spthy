@@ -1,0 +1,239 @@
+theory TLS_Handshake_renegotiation
+begin
+
+builtins: hashing, symmetric-encryption, asymmetric-encryption, signing
+
+section{* TLS Handshake with renegotiation *}
+
+/*
+ * Protocol:	TLS Handshake with mutual authentication and renegotiation
+ * Modeler: 	Simon Meier (handshake)
+ * 		Cas Cremers (renegotiation)
+ * Date: 	January 2012; December 2012
+ * Source:	Handshake modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy.
+ *
+ * Status: 	Modeling
+ */
+
+text{*
+  Modeled after Paulson`s TLS model in Isabelle/src/HOL/Auth/TLS.thy. Notable
+  differences are:
+
+    1. We use explicit global constants to differentiate between different
+       encryptions instead of implicit typing.
+
+    2. We model session keys directly as hashes of the relevant information.
+       Due to our support for composed keys, we do not need any custom
+       axiomatization as Paulson does.
+
+  The renegotiation is based on the bachelor thesis of Rati Gelashvili.
+*}
+
+functions: PRF/1
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltkA) ]
+  -->
+  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+
+rule Reveal_ltk:
+  [ !Ltk(A, ltkA) ] --[ RevLtk(A)    ]-> [ Out(ltkA) ]
+
+
+/* Model of the record layer */
+rule recordlayer_send_NULL:
+  [ Rsend('NULL',m) ]
+  -->
+  [ Out(m) ]
+
+rule recordlayer_send_key:
+  [ Rsend(k,m) ]
+  --[ NotEq('NULL',k) ]->
+  [ Out( senc{m}k ) ]
+
+rule recordlayer_recv_NULL:
+  [ In(m) ]
+  -->
+  [ Rrecv('NULL',m) ]
+
+rule recordlayer_recv_key:
+  [ In( senc{m}k ) ]
+  --[ NotEq('NULL',k) ]->
+  [ Rrecv(k,m) ]
+
+/* We formalize the following signature based TLS handshake.
+
+  protocol TLS {
+    1. C -> S: C, nc, sid, pc
+    2. C <- S: ns, sid, ps
+
+    3. C -> S: { '31', pms                     }pk(S) ,
+               sign{ '32', h('32', ns, S, pms) }pk(C) ,
+               { '33', sid, PRF(pms, nc, ns),
+                 nc, pc, C, ns, ps, S
+               }
+               h('clientKey', nc, ns, PRF(pms, nc, ns))
+
+    4. C <- S: { '4', sid, PRF(pms, nc, ns),
+                 nc, pc, C, ns, ps, S
+               }
+               h('serverKey', nc, ns, PRF(pms, nc, ns))
+  }
+*/
+
+// Start for record layer init
+// The key pair denotes: Client write key, Server write key.
+rule C_0:
+    [ Fr(~sid) ]
+    -->
+    [ St_C_0(~sid, $C, 'NULL', 'NULL') ]
+
+rule S_0:
+    [ Fr(~sid) ]
+    -->
+    [ St_S_0(~sid, $S, 'NULL', 'NULL') ]
+
+// Handshake protocols
+rule C_1:
+    [ Fr(~nc)
+    , St_C_0(~sid, $C, Ckey, Skey)
+    ]
+  --[]->
+    [ Rsend(Ckey, 
+        <$C, ~nc, ~sid, $pc>
+      )
+    , St_C_1($C, ~nc, ~sid, $pc, Ckey, Skey)
+    ]
+
+rule S_1:
+    [ Rrecv(Ckey,
+        <$C, nc, sid, pc>
+      )
+    , St_S_0(~ns, $S, Ckey, Skey)
+    ]
+  --[]->
+    [ Rsend(Skey,
+        <$S, ~ns, sid, $ps>
+      )
+    , St_S_1($S, $C, sid, nc, pc, ~ns, $ps, Ckey, Skey)
+    ]
+
+rule C_2:
+  let
+      MS   = PRF(~pms, nc, ns)
+      Ckey = h('clientKey', nc, ns, MS)
+      Skey = h('serverKey', nc, ns, MS)
+  in
+    [ St_C_1(C, nc, sid, pc, OldCkey, OldSkey)
+    , Rrecv(OldSkey,
+        <S, ns, sid, ps>
+      )
+    , Fr(~pms)
+    , !Pk(S, pkS)
+    , !Ltk(C, ltkC)
+    ]
+  --[ Running(S, C, <'server', MS, Skey, Ckey>)
+    ]->
+    [ Rsend(OldCkey, aenc{ '31', ~pms }pkS )
+    , Rsend(OldCkey, sign{ '32', h('32', ns, S, ~pms) }ltkC )
+    , Rsend(Ckey,    h( '33', sid, MS, nc, pc, C, ns, ps, S ) )
+    , St_C_2(S, C, sid, nc, pc, ns, ps, ~pms, Ckey, Skey)
+    ]
+
+rule S_2:
+  let
+      MS   = PRF(pms, nc, ns)
+      Ckey = h('clientKey', nc, ns, MS)
+      Skey = h('serverKey', nc, ns, MS)
+  in
+    [ St_S_1(S, C, sid, nc, pc, ns, ps, OldCkey, OldSkey)
+    , Rrecv(OldCkey, aenc{ '31', pms }pk(ltkS) )
+    , Rrecv(OldCkey, signature )
+    , Rrecv(Ckey,    h('33', sid, MS, nc, pc, C, ns, ps, S ) )
+    , !Pk(C, pkC)
+    , !Ltk(S, ltkS)
+    ]
+    /* Explicit equality check, enforced as part of the property. */
+  --[ Eq(verify(signature, <'32', h('32', ns, S, pms)>, pkC), true )
+    , SessionKeys( S, C, Skey, Ckey )
+    , Running(C, S, <'client', MS, Skey, Ckey>)
+    , Commit(S, C, <'server', MS, Skey, Ckey>)
+    ]->
+    [ Rsend(Skey, < '4', sid, MS, nc, pc, C, ns, ps, S >)
+    , St_S_0(ns, S, Ckey, Skey)
+    ]
+
+rule C_3:
+  let
+      MS   = PRF(pms, nc, ns)
+      // Ckey = h('clientKey', nc, ns, MS)
+      // Skey = h('serverKey', nc, ns, MS)
+  in
+    [ St_C_2(S, C, sid, nc, pc, ns, ps, pms, Ckey, Skey)
+    , Rrecv(Skey, < '4', sid, MS, nc, pc, C, ns, ps, S > )
+    ]
+  --[ Commit(C, S, <'client', MS, Skey, Ckey>)
+    , SessionKeys( S, C, Skey, Ckey )
+    ]->
+    [ St_C_0(sid, C, Ckey, Skey) ]
+
+
+/* TODO: Also model session-key reveals and adapt security properties. */
+
+axiom Eq_check_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
+
+axiom NotEq_check_succeed: "All x y #i. NotEq(x,y) @ i ==> not (x = y)"
+
+/* Session key secrecy from the perspective of both the server and the client
+ * for both the key of the server and the key of the client. Note that this
+ * lemma thus captures four security properties at once. */
+lemma session_key_secrecy:
+     /* It cannot be that */
+   "not(
+         Ex S C keyS keyC #k.
+           /* somebody claims to have setup session keys, */
+           SessionKeys(S, C, keyS, keyC) @ k
+           /* but the adversary knows one of them */
+         & ( (Ex #i. K(keyS) @ i)
+           | (Ex #i. K(keyC) @ i)
+           )
+           /* without having performed a long-term key reveal. */
+         & not (Ex #r. RevLtk(S) @ r)
+         & not (Ex #r. RevLtk(C) @ r)
+       )"
+
+// Injective agreement from the perspective of both the initiator and the responder.
+lemma injective_agree:
+  " /* Whenever somebody commits to running a session, then*/
+    All actor peer params #i.
+        Commit(actor, peer, params) @ i
+      ==>
+        /* there is somebody running a session with the same parameters */
+          (Ex #j. Running(actor, peer, params) @ j & j < i
+            /* and there is no other commit on the same parameters */
+            & not(Ex actor2 peer2 #i2.
+                    Commit(actor2, peer2, params) @ i2 & not(#i = #i2)
+                 )
+          )
+        /* or the adversary perform a long-term key reveal on actor or peer */
+        | (Ex #r. RevLtk(actor) @ r)
+        | (Ex #r. RevLtk(peer)  @ r)
+  "
+
+/* Consistency check: ensure that session-keys can be setup between honest
+ * agents. */
+lemma session_key_setup_possible:
+  exists-trace
+  " /* There is a trace satisfying all equality checks */
+     (All x y #i. Eq(x,y) @ i ==> x = y)
+  &  /* Session keys have been setup */
+     (Ex S C keyS keyC #k.  SessionKeys(S, C, keyS, keyC) @ k
+      /* without having performed a long-term key reveal. */
+      & not (Ex #r. RevLtk(S) @ r)
+      & not (Ex #r. RevLtk(C) @ r)
+      )
+   "
+
+end
+

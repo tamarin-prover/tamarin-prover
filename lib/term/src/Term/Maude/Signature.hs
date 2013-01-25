@@ -172,7 +172,9 @@ prettyMaudeSig sig = P.vcat
       , (enableMSet, "multiset")
       ]
 
-    ppFunSymb (f,k) = P.text $ BC.unpack f ++ "/" ++ show k
+    ppFunSymb (f,(k,priv)) = P.text $ BC.unpack f ++ "/" ++ show k ++ showPriv priv
+      where showPriv Private = " [private]"
+            showPriv Public  = ""
 
 
 -- derived instances

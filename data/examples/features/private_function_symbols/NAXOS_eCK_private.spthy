@@ -1,0 +1,146 @@
+theory NAXOS_eCK
+begin
+
+builtins: diffie-hellman
+
+section{* NAXOS *}
+
+/*
+ * Protocol:	NAXOS
+ * Modeler: 	Cas Cremers, Benedikt Schmidt
+ * Date: 	January 2012/April 2012/October 2012
+ * Source:	"Stronger Security of Authenticated Key Exchange"
+ * 		LaMacchia, Lauter, Mityagin, 2007
+ * Property: 	eCK security
+ *
+ * Status: 	Working
+ */
+
+functions: h1/1
+functions: h2/1
+
+/* We use the private function symbol sk to model the longterm secret key of an
+   agent. For example, sk('A') is 'A's longterm secret key. The corresponding
+   longterm public key is 'g'^sk('A').
+*/
+functions: sk/1 [private]
+
+/* Protocol rules */
+
+/* In the description in the paper, we omitted the sorts. 
+ * In this description they are made explicit.
+ * '$A' is equivalent to 'A:pub'
+ * '~x' is equivalent to 'x:fresh'
+ */
+
+/* Initiator */
+rule Init_1:
+  let X = 'g'^h1(<~ex, sk($A) >)  // $A uses its own longterm secret key
+  in
+  [ Fr( ~ex ) ]
+  -->
+  [ Init_1( ~ex, $A, $B )
+  , !Ephk(~ex, ~ex)
+  , Out( X ) ]
+
+rule Init_2:
+  let KB  = 'g'^sk($B)           // $A uses $B's longterm public key
+      exp = h1(< ~ex, sk($A) >)  // and its own longterm secret key
+      X = 'g'^exp
+      key = h2(< Y^sk($A), KB^exp, Y^exp, $A, $B >) 
+  in
+  [ Init_1( ~ex, $A, $B )
+  , In( Y ) ]
+  --[ Accept( ~ex, key)
+    , Sid( ~ex, < $A, $B, X, Y, 'Init' >)
+    ]->
+   [ !Sessk( ~ex, key) ]
+
+/* Responder */
+rule Resp_1:
+  let KA  = 'g'^sk($A)           // $B uses $A's longterm public key
+      exp = h1(< ~ey, sk($B) >)  // and its own longterm secret key
+      Y   = 'g'^exp
+      key = h2(< KA^exp, X^sk($B), X^exp, $A, $B >) 
+  in
+   [   Fr( ~ey ), In( X ) ]
+   --[ Accept( ~ey, key )
+     , Sid( ~ey, < $B, $A, Y, X, 'Resp' > )
+     ]->
+   [   Out( Y ),
+       !Ephk(~ey, ~ey),
+       !Sessk( ~ey, key) ]
+
+/* Key Reveals for the eCK model */
+rule Sessk_reveal: 
+   [ !Sessk(~s, k) ] --[ RevealSessk(~s) ]-> [ Out(k) ]
+
+rule Ltk_reveal:
+   [  ] --[ RevealLtk($A) ]-> [ Out(sk($A)) ]
+
+rule Ephk_reveal:
+   [ !Ephk(~s, ~ek) ] --[ RevealEphk(~s) ]-> [ Out(~ek) ]
+
+
+/* Security properties */
+/*
+lemma eCK_same_key:
+  " // If every agent registered at most one public key
+  (All A #i #j. RegKey(A)@i & RegKey(A)@j ==> (#i = #j))
+  ==> // then matching sessions accept the same key
+  (not (Ex #i1 #i2 #i3 #i4 s ss k kk A B minfo .
+              Accept(s, A, B, k ) @ i1
+	    & Accept(ss, B, A, kk) @ i2
+	    & Sid(s, minfo) @ i3
+	    & Match(ss, minfo) @i4
+	    & not( k = kk )
+  ) )"
+*/
+
+lemma eCK_key_secrecy:
+  /* 
+   * The property specification is a (logically equivalent) simplified
+   * version of the one in the original eCK (ProvSec) paper:
+   *
+   * If there exists a test session whose key k is known to the
+   * Adversary with some session-id, then...
+   */
+  "(All #i1 #i2 #i3 test A B k sent recvd role.
+    Accept(test, k) @ i1 & K( k ) @ i2 & Sid(test, < A, B, sent, recvd, role> ) @ i3
+    ==> ( 
+    /* ... the test session must be "not clean".
+     * test is not clean if one of the following has happened:
+     */
+    /* 1. The adversary has revealed the session key of the test session. */
+      (Ex #i3. RevealSessk( test ) @ i3 )
+    
+    /* 2. The adversary has revealed both the longterm key of A and the
+          ephemeral key of the test session */
+    |  (Ex #i5 #i6. RevealLtk  ( A ) @ i5  & RevealEphk ( test  ) @ i6 )
+
+    /* 3. There is a matching session and */
+    | (Ex matchingSession #i3 matchingRole.
+           (   Sid ( matchingSession, < B, A, recvd, sent, matchingRole > ) @ i3 
+             & not ( matchingRole = role ) )
+	   & (
+             /* (a) the adversary has revealed the session key of the matching session, or */
+	       (Ex #i5. RevealSessk( matchingSession ) @ i5 )
+
+             /* (b) the adversary has revealed the longterm key of B and the ephemeral
+                    key of the matching session. */
+             | (Ex #i5 #i6. RevealLtk  ( B ) @ i5  & RevealEphk ( matchingSession ) @ i6 )
+	   )
+      )
+    /* 4. There is no matching session and */
+    | ( ( not(Ex matchingSession #i3 matchingRole.
+           ( Sid ( matchingSession, < B, A, recvd, sent, matchingRole > ) @ i3 
+             & not ( matchingRole = role ) )))
+
+           /* the adversary has revealed the longterm key of B. */
+	   & ( (Ex #i5. RevealLtk (B) @ i5 )
+	   )
+      )
+    )
+  )"
+
+end
