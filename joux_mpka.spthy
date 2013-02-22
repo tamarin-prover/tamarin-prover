@@ -28,10 +28,11 @@ builtins: bilinear-pairing, multiset
 
 // the intruder is allowed to see all messages
 rule AuthOut:
-  [ !AuthOut(x) ]
+  [ !AuthOut(A, x) ]
   -->
   [ Out(x) ]
 
+// below is the BIG COMMENT
 
 /* Determine group participants */
 rule GenerateParticipants_1: //Init:
@@ -216,6 +217,8 @@ rule GenerateGroup_0: //:
 /// ***************************************************************** ///
 /// ***************************************************************** ///
 
+/*
+
 // pick D first, then fully solve before touching E; always pick the bottom rule application choice, and here is the cases to choose:
 // 4; 1
 // now on solving E, simply go throug, choice points are 1;1 
@@ -299,6 +302,7 @@ lemma create_5_participants:
         not (D = E) 
        )"
 
+*/
 
 /// ***************************************************************** ///
 /// ***************************************************************** ///
@@ -310,44 +314,230 @@ lemma create_5_participants:
 /// ***************************************************************** ///
 
 // Let us now define the protocol, there are 3 possible cases:
-// (i)   grouping of 3 participants, just use the regular joux's protocol
-// (ii)  grouping of 2 participants, use joux where the first participant
+// (i)   grouping of 3 participants, just use the regular joux's protocol 
+//         (<pass,A+B+C>)
+// (ii)  grouping of 2 participants, use joux where the first participant A
 //       creates 2 of the nonces
+//       (<pass,A,B>)
 // (iii) grouping of 1 participant, no protocol usage, just pass along 
 //       information of current key 
+//       (<pass,A>)
+
+    //*** Participant(num,                          // participant index
+    //***             A,                            // participant name
+    //***             resps+ <num, A> + generated,  // list of all participants
+    //***             ~gid,                         // group identifier
+    //***             pN,                           // number of passes needed
+    //***             1,                            // current pass number, initialized to 1 
+    //***             subGMS) // participant stores list of other participants, including self
+
+
+////// above is the BIG COMMENT
+
+rule PickNonce_0:
+  [ Fr(~ekA),
+    Participant(num, A, particList, ~gid, totalPassN, 1, GMS)
+  ]
+  --[ Secret(~ekA, // secret info 
+             A,    // set of participants this secret is shared with
+             ~gid, // group identifier
+             A)    // principal name
+  ]->
+  [ PReady(A,           // name 
+           ~ekA,        // nonce, will later on be the joint secret key at some pass level 
+           A,           // set of participants the current secret is shared with
+           ~gid,        // group identifier
+           totalPassN,  // number of total passes needed - maybe drop this, probably not needed
+           1,           // current pass number
+           GMS)         // group membership info
+  ]
+
+
+// hash function - hides the content!
+functions: h/1
+
+functions: destination/1
+
+//Send+Receive for 3 - 13 minutes proc time on load
+rule SendGroup_3:
+  let hkA = pmult(h(secret) ,'P')
+  in
+  [ PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A+B+C>) 
+  ]
+  --[ ]->
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A+B+C>),
+    !AuthOut(A, <hkA, destination(currPassN, ~gid, B + C)> )
+  ]
+
+rule ReceiveGroup_3:
+  let newsecret = em(XB,XC)^ h(secret)
+      newSharedPartners = sharedPartners + B + C
+  in
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A+B+C>),
+    !AuthOut(B, < XB, destination(currPassN, ~gid, A + C)> ),
+    !AuthOut(C, < XC, destination(currPassN, ~gid, A + B)> )
+  ]
+  --[ Secret(newsecret, newSharedPartners, ~gid, A)
+    ]->
+  [ PReady(A,
+           newsecret,
+           newSharedPartners,
+           ~gid, totalPassN, currPassN + 1, GMS+<currPassN,A+B+C>)
+  ]
 
 
 /*
-// Protocol
-rule Proto1:
-  let hkA = pmult(~ekA ,'P')
+//// send+receive for 2_double at the same time - 30 min proc time on load
+rule SendGroup_2_double:
+  let hkA = pmult(h(secret) ,'P')
+      dummy = pmult(~extra, 'P')
   in
-  [ Fr(~ekA) ]
+  [ Fr(~extra),
+    PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A,B>) 
+  ]
   --[ ]->
-  [ PState( $A, $B + $C, ~ekA )
-  , !AuthOut( <hkA, <$A, $B + $C>> )
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A,B>),
+    !AuthOut(A, <hkA,   destination(currPassN, ~gid, <B,1>)> ),
+    !AuthOut(A, <dummy, destination(currPassN, ~gid, <B,1+1>)> )
   ]
 
-rule Proto2:
-    [ PState( $A, $B + $C, ~ekA)
-    , !AuthOut( < XB, <$B, $A + $C>> )
-    , !AuthOut( < XC, <$C, $A + $B>> )
-    ]
-  --[ SessionKey($A, $B + $C, em(XB,XC) ^ ~ekA) ]->
-    []
-
-
-
-lemma session_key_establish:
-  exists-trace
-  "Ex A B C #ia #ib #ic k.
-      ( SessionKey(A,B + C, k) @ ia &
-        SessionKey(B,C + A, k) @ ib &
-        SessionKey(C,B + A, k) @ ic &
-        not (A = B) &
-        not (B = C) &
-        not (A = C)
-       )"
+rule ReceiveGroup_2_double:
+  let newsecret = em(XB,XC)^ h(secret)
+      newSharedPartners = sharedPartners + B
+  in
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A,B>),
+    !AuthOut(B, <XB, destination(currPassN, ~gid, A)> ),
+    !AuthOut(A, <XC, destination(currPassN, ~gid, <B,1+1>)> )
+  ]
+  --[ Secret(newsecret, newSharedPartners, ~gid, A)
+    ]->
+  [ PReady(A,
+           newsecret,
+           newSharedPartners,
+           ~gid, totalPassN, currPassN + 1, GMS+<currPassN,A,B>)
+  ]
 */
+
+// send+receive for 2_single! 13 minutes proc time on load
+/*
+rule SendGroup_2_single:
+  let hkA = pmult(h(secret) ,'P')
+  in
+  [ PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,B,A>) 
+  ]
+  --[ ]->
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,B,A>),
+    !AuthOut(A, <hkA,   destination(currPassN, ~gid, B)> )
+  ]
+
+rule ReceiveGroup_2_single:
+  let newsecret = em(XB,XC)^ h(secret)
+      newSharedPartners = sharedPartners + B
+  in
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,B,A>),
+    !AuthOut(B, <XB, destination(currPassN, ~gid, <A,1>)> ),
+    !AuthOut(B, <XC, destination(currPassN, ~gid, <A,1+1>)> )
+  ]
+  --[ Secret(newsecret, newSharedPartners, ~gid, A)
+    ]->
+  [ PReady(A,
+           newsecret,
+           newSharedPartners,
+           ~gid, totalPassN, currPassN + 1, GMS+<currPassN,B,A>)
+  ]
+*/
+
+/*
+rule StepOver1:
+  [ PReady(A,                  // name 
+           secret,             // joint secret key 
+           sharedPartners,     // set of principals the secret is shared with
+           ~gid,               // group identifier
+           totalPassN,         // number of total passes needed - maybe drop this, probably not needed
+           currPassN,          // current pass number
+           GMS+<currPassN,A> ) // group membership info: A alone at this level
+  ]
+  --[Secret(secret, sharedPartners, ~gid, A)]->
+  [ PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN+1,     // increase current pass number
+           GMS+<currPassN,A>) 
+  ]
+*/
+
+
+lemma key_reachable_3:
+  exists-trace
+  "Ex A B C gid key #ia #ib #ic.
+         Secret(key, A+B+C, gid, A) @ ia
+       & Secret(key, A+B+C, gid, B) @ ib
+       & Secret(key, A+B+C, gid, C) @ ic
+       & not (A = B)
+       & not (A = C)
+       & not (B = C)
+"
+
+lemma key_secrecy[use_induction]:
+  all-traces
+  "not (Ex #i1 I group gid key #i2.
+          Secret( key, group, gid, I ) @ i1 
+        & KU( key ) @ i2)"
 
 end
