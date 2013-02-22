@@ -32,7 +32,6 @@ rule AuthOut:
   -->
   [ Out(x) ]
 
-// below is the BIG COMMENT
 
 /* Determine group participants */
 rule GenerateParticipants_1: //Init:
@@ -332,8 +331,6 @@ lemma create_5_participants:
     //***             subGMS) // participant stores list of other participants, including self
 
 
-////// above is the BIG COMMENT
-
 rule PickNonce_0:
   [ Fr(~ekA),
     Participant(num, A, particList, ~gid, totalPassN, 1, GMS)
@@ -358,7 +355,8 @@ functions: h/1
 
 functions: destination/1
 
-//Send+Receive for 3 - 13 minutes proc time on load
+//Send+Receive for 3 - 13 minutes proc time on load - OLD ITERATION INFO
+//Send+Receive for 3 - 10 minutes proc time on load 
 rule SendGroup_3:
   let hkA = pmult(h(secret) ,'P')
   in
@@ -377,7 +375,9 @@ rule SendGroup_3:
            ~gid,   
            totalPassN,
            currPassN,   
-           GMS+<currPassN,A+B+C>),
+           GMS+<currPassN,A+B+C>,
+           <B,A+C>,   // expecting message from here
+           <C,A+B>),  // and here
     !AuthOut(A, <hkA, destination(currPassN, ~gid, B + C)> )
   ]
 
@@ -391,21 +391,21 @@ rule ReceiveGroup_3:
            ~gid,   
            totalPassN,
            currPassN,   
-           GMS+<currPassN,A+B+C>),
-    !AuthOut(B, < XB, destination(currPassN, ~gid, A + C)> ),
-    !AuthOut(C, < XC, destination(currPassN, ~gid, A + B)> )
+           GMS,
+           <B,A+X1>,
+           <C,A+X2>),
+    !AuthOut(B, < XB, destination(currPassN, ~gid, A + X1)> ),
+    !AuthOut(C, < XC, destination(currPassN, ~gid, A + X2)> )
   ]
   --[ Secret(newsecret, newSharedPartners, ~gid, A)
     ]->
   [ PReady(A,
            newsecret,
            newSharedPartners,
-           ~gid, totalPassN, currPassN + 1, GMS+<currPassN,A+B+C>)
+           ~gid, totalPassN, currPassN + 1, GMS)
   ]
 
-
 /*
-//// send+receive for 2_double at the same time - 30 min proc time on load
 rule SendGroup_2_double:
   let hkA = pmult(h(secret) ,'P')
       dummy = pmult(~extra, 'P')
@@ -426,11 +426,63 @@ rule SendGroup_2_double:
            ~gid,   
            totalPassN,
            currPassN,   
-           GMS+<currPassN,A,B>),
-    !AuthOut(A, <hkA,   destination(currPassN, ~gid, <B,1>)> ),
-    !AuthOut(A, <dummy, destination(currPassN, ~gid, <B,1+1>)> )
+           GMS+<currPassN,A,B>,
+           <B,A+1>,
+           <A,B+A>),
+    !AuthOut(A, <hkA,   destination(currPassN, ~gid, B+1)> ),
+    !AuthOut(A, <dummy, destination(currPassN, ~gid, B+A)> )
   ]
 
+rule SendGroup_2_single:
+  let hkA = pmult(h(secret) ,'P')
+  in
+  [ PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,B,A>) 
+  ]
+  --[ ]->
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,B,A>,
+           <B,A+B>,
+           <B,A+1>),
+    !AuthOut(A, <hkA,   destination(currPassN, ~gid, B+1)> )
+  
+]
+*/
+
+/*
+rule StepOver1:
+  [ PReady(A,                  // name 
+           secret,             // joint secret key 
+           sharedPartners,     // set of principals the secret is shared with
+           ~gid,               // group identifier
+           totalPassN,         // number of total passes needed - maybe drop this, probably not needed
+           currPassN,          // current pass number
+           GMS+<currPassN,A> ) // group membership info: A alone at this level
+  ]
+  --[Secret(secret, sharedPartners, ~gid, A)]->
+  [ PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN+1,     // increase current pass number
+           GMS+<currPassN,A>) 
+  ]
+*/
+
+/*
+//NOT NEEDED ANYMORE
+//// send+receive for 2_double at the same time - 30 min proc time on load
 rule ReceiveGroup_2_double:
   let newsecret = em(XB,XC)^ h(secret)
       newSharedPartners = sharedPartners + B
@@ -456,28 +508,7 @@ rule ReceiveGroup_2_double:
 
 // send+receive for 2_single! 13 minutes proc time on load
 /*
-rule SendGroup_2_single:
-  let hkA = pmult(h(secret) ,'P')
-  in
-  [ PReady(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,B,A>) 
-  ]
-  --[ ]->
-  [ PWaitResponse(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,B,A>),
-    !AuthOut(A, <hkA,   destination(currPassN, ~gid, B)> )
-  ]
-
+//NOT NEEDED ANYMORE
 rule ReceiveGroup_2_single:
   let newsecret = em(XB,XC)^ h(secret)
       newSharedPartners = sharedPartners + B
@@ -498,27 +529,6 @@ rule ReceiveGroup_2_single:
            newsecret,
            newSharedPartners,
            ~gid, totalPassN, currPassN + 1, GMS+<currPassN,B,A>)
-  ]
-*/
-
-/*
-rule StepOver1:
-  [ PReady(A,                  // name 
-           secret,             // joint secret key 
-           sharedPartners,     // set of principals the secret is shared with
-           ~gid,               // group identifier
-           totalPassN,         // number of total passes needed - maybe drop this, probably not needed
-           currPassN,          // current pass number
-           GMS+<currPassN,A> ) // group membership info: A alone at this level
-  ]
-  --[Secret(secret, sharedPartners, ~gid, A)]->
-  [ PReady(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN+1,     // increase current pass number
-           GMS+<currPassN,A>) 
   ]
 */
 
