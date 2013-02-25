@@ -16,13 +16,6 @@ section{* *}
 
 builtins: bilinear-pairing, multiset
 
-//// NEED TO ADD A HASH FUNCTION THAT GETS ELEMENTS OF G_2 BACK TO G_1
-
-//functions: blindedRandomOf/1, blindedKeyFor/1
-//functions: te/1, te_inv/1  // convert group element to exponent
-
-//equations: te_inv(te(x)) = x // te is not hiding
-
 
 //for this we send messages on authentic channels, so that PASSIVE intruder can read, we don't allow it to inject things just yet, nor do we care about WHO sent something on that channel, so things will only be encoded inside the message proper, also we make sent messages persistent, so that everyone who wants to receive them, can do so
 
@@ -350,13 +343,15 @@ rule PickNonce_0:
   ]
 
 
-// hash function - hides the content!
+// hash function - hides the content 
+// h: G_2 -> G_1, i.e., it transforms elements from G_2 back to 
+// elements of G_1 so we can perform another round of Joux
 functions: h/1
 
 functions: destination/1
 
-//Send+Receive for 3 - 13 minutes proc time on load - OLD ITERATION INFO
 //Send+Receive for 3 - 10 minutes proc time on load 
+
 rule SendGroup_3:
   let hkA = pmult(h(secret) ,'P')
   in
@@ -381,7 +376,8 @@ rule SendGroup_3:
     !AuthOut(A, <hkA, destination(currPassN, ~gid, B + C)> )
   ]
 
-rule ReceiveGroup_3:
+
+rule ReceiveGroup:
   let newsecret = em(XB,XC)^ h(secret)
       newSharedPartners = sharedPartners + B + C
   in
@@ -405,6 +401,7 @@ rule ReceiveGroup_3:
            ~gid, totalPassN, currPassN + 1, GMS)
   ]
 
+// both "2"-rules + stepover + receive: 37 minutes proc time for loading - about 22 minutes real time [this is everything except the Send_3 rule!
 /*
 rule SendGroup_2_double:
   let hkA = pmult(h(secret) ,'P')
@@ -457,9 +454,7 @@ rule SendGroup_2_single:
     !AuthOut(A, <hkA,   destination(currPassN, ~gid, B+1)> )
   
 ]
-*/
 
-/*
 rule StepOver1:
   [ PReady(A,                  // name 
            secret,             // joint secret key 
@@ -479,59 +474,6 @@ rule StepOver1:
            GMS+<currPassN,A>) 
   ]
 */
-
-/*
-//NOT NEEDED ANYMORE
-//// send+receive for 2_double at the same time - 30 min proc time on load
-rule ReceiveGroup_2_double:
-  let newsecret = em(XB,XC)^ h(secret)
-      newSharedPartners = sharedPartners + B
-  in
-  [ PWaitResponse(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,A,B>),
-    !AuthOut(B, <XB, destination(currPassN, ~gid, A)> ),
-    !AuthOut(A, <XC, destination(currPassN, ~gid, <B,1+1>)> )
-  ]
-  --[ Secret(newsecret, newSharedPartners, ~gid, A)
-    ]->
-  [ PReady(A,
-           newsecret,
-           newSharedPartners,
-           ~gid, totalPassN, currPassN + 1, GMS+<currPassN,A,B>)
-  ]
-*/
-
-// send+receive for 2_single! 13 minutes proc time on load
-/*
-//NOT NEEDED ANYMORE
-rule ReceiveGroup_2_single:
-  let newsecret = em(XB,XC)^ h(secret)
-      newSharedPartners = sharedPartners + B
-  in
-  [ PWaitResponse(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,B,A>),
-    !AuthOut(B, <XB, destination(currPassN, ~gid, <A,1>)> ),
-    !AuthOut(B, <XC, destination(currPassN, ~gid, <A,1+1>)> )
-  ]
-  --[ Secret(newsecret, newSharedPartners, ~gid, A)
-    ]->
-  [ PReady(A,
-           newsecret,
-           newSharedPartners,
-           ~gid, totalPassN, currPassN + 1, GMS+<currPassN,B,A>)
-  ]
-*/
-
 
 lemma key_reachable_3:
   exists-trace
