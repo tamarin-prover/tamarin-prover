@@ -17,7 +17,11 @@ section{* *}
 builtins: bilinear-pairing, multiset
 
 
-//for this we send messages on authentic channels, so that PASSIVE intruder can read, we don't allow it to inject things just yet, nor do we care about WHO sent something on that channel, so things will only be encoded inside the message proper, also we make sent messages persistent, so that everyone who wants to receive them, can do so
+//for this we send messages on authentic channels, so that PASSIVE
+//intruder can read, we don't allow it to inject things just yet, nor do
+//we care about WHO sent something on that channel, so things will only
+//be encoded inside the message proper, also we make sent messages
+//persistent, so that everyone who wants to receive them, can do so.
 
 // the intruder is allowed to see all messages
 rule AuthOut:
@@ -350,8 +354,8 @@ functions: h/1
 
 functions: destination/1
 
-//Send+Receive for 3 - 10 minutes proc time on load 
-
+//Send3+Receive - 10 minutes proc time on load 
+//[ALL] Send3+Receive + both Send2 + StepOver1 - 63 minutes proc time on load, 35 minutes real (about 10% memory)
 rule SendGroup_3:
   let hkA = pmult(h(secret) ,'P')
   in
@@ -375,7 +379,6 @@ rule SendGroup_3:
            <C,A+B>),  // and here
     !AuthOut(A, <hkA, destination(currPassN, ~gid, B + C)> )
   ]
-
 
 rule ReceiveGroup:
   let newsecret = em(XB,XC)^ h(secret)
@@ -401,8 +404,7 @@ rule ReceiveGroup:
            ~gid, totalPassN, currPassN + 1, GMS)
   ]
 
-// both "2"-rules + stepover + receive: 37 minutes proc time for loading - about 22 minutes real time [this is everything except the Send_3 rule!
-/*
+// both "2"-rules + stepover + receive: 37 minutes proc time for loading - about 22 minutes real time [this is everything except the Send_3 rule!]
 rule SendGroup_2_double:
   let hkA = pmult(h(secret) ,'P')
       dummy = pmult(~extra, 'P')
@@ -455,7 +457,14 @@ rule SendGroup_2_single:
   
 ]
 
+// add a G1->G1 hash for StepOver1, to force the tool to actually evaluate and 
+// realize that the induction hypothesis can be applied, and thus the
+// secret stays secret - otherwise looping behavior was possible
+functions: hashGOne/1
+
 rule StepOver1:
+  let newsecret = hashGOne(secret)
+  in
   [ PReady(A,                  // name 
            secret,             // joint secret key 
            sharedPartners,     // set of principals the secret is shared with
@@ -464,16 +473,16 @@ rule StepOver1:
            currPassN,          // current pass number
            GMS+<currPassN,A> ) // group membership info: A alone at this level
   ]
-  --[Secret(secret, sharedPartners, ~gid, A)]->
+  --[Secret(newsecret, sharedPartners, ~gid, A)]->
   [ PReady(A,       
-           secret,  
+           newsecret,  
            sharedPartners,
            ~gid,   
            totalPassN,
            currPassN+1,     // increase current pass number
            GMS+<currPassN,A>) 
   ]
-*/
+
 
 lemma key_reachable_3:
   exists-trace
