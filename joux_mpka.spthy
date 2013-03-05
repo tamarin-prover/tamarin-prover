@@ -59,7 +59,7 @@ rule ClusterParticipantsStart_1:
                          ~gid, 
                          resps, // participant list, to be cut apart
                          1,     // nextElemCut // index of next element to look for in list that is cut apart
-                         'nil', // subNum // subtract number (needs to be increased by 2 for each subgroup picked, and then reset to 0 for each new pass); note that the lowest available element in the cutList will be nextElemCut+subNum(-'nil')
+                         'nil', // subNum // subtract number (needs to be increased by 2 for each subgroup picked, and then reset to 0 for each new pass); note that the lowest available element in the cutList will be nextElemCut+subNum
                          1,     // current pass number - there will be log_3(n) passes (+1)
                          'nil', // multiset of subgroups (i.e., pairs of <pass#, A+B+C> of size 1-3), to be given to all participants
                          'nil'  // NEXT pass level representative elements of each subgroup, to be copied into the 'cut apart list' once the pass is over,
@@ -144,7 +144,8 @@ rule ClusterParticipants_1:
                         'nil'+<nec1, A>,  // explicit match on nil and 1 element
                         nextElemCut, subNum, passNumber, 
                         subGMS, 
-                        nextCL+<anyNum,anyName>) // there is at least one other element for the next level, so next level has to happen
+                        nextCL+<anyNum,anyName>) // there is at least one other element for the next level, so next level has to happen 
+                                        // note that there can not be any 2-participant combination here, as that is always the last thing happening on a level; so, there is either the 2-case or the 1-case, but if there were 2 and then 1 participants that would make the 3 case!
   ]
   -->
   [ ClusterParticipants(num, 
@@ -152,7 +153,7 @@ rule ClusterParticipants_1:
                         ~gid, 
                         nextCL+<anyNum,anyName>+<'nil'+nextElemCut,A>,  // take the next level representatives, and add the current one
                         1, 'nil', passNumber + 1,    // reset of cut and sub, increase pass number
-                        subGMS + <passNumber, A>,    // A has nothing to do at this level, but needs to realize that the pass number goes up - this helps with not redoing work or looping in the actual protocol exchange (I think...)
+                        subGMS + <passNumber, A>,    // A has nothing to do at this level, but needs to realize that the pass number goes up - this helps with not redoing work or looping in the actual protocol exchange
                         'nil' ) ]
 
 
@@ -163,10 +164,11 @@ rule ClusterParticipants_0:
                         nextElemCut, subNum, passNumber, 
                         subGMS, 
                         nextCL+<anyNum,anyName>) // there is at least one other element for the next level, so next level has to be checked
+                                // note how that must be a 3-participant case, as the 2 and 1-participant cases end the level and do not lead to this 0-participant case!
   ]
   -->
   [ ClusterParticipants(num, resps, ~gid, 
-                       nextCL+<anyNum,anyName>,  //move next level list, to current level list
+                       nextCL+<anyNum,anyName>,  //move next level list to current level list
                        1, 'nil', passNumber + 1, //reset cut and sub, increase pass number
                        subGMS, 
                        'nil' ) ]
@@ -353,9 +355,9 @@ rule PickNonce_0:
 functions: h/1
 
 functions: destination/1
-
 //Send3+Receive - 10 minutes proc time on load 
 //[ALL] Send3+Receive + both Send2 + StepOver1 - 63 minutes proc time on load, 35 minutes real (about 10% memory)
+
 rule SendGroup_3:
   let hkA = pmult(h(secret) ,'P')
   in
