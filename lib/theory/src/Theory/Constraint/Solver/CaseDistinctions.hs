@@ -124,7 +124,7 @@ solveAllSafeGoals ths =
     safeGoal doSplit (goal, _              ) =
       case goal of
         ChainG _ _    -> True
-        ActionG _ fa  -> not (isKUFact fa)
+        ActionG _ fa  -> not (isKUFact fa) && doSplit
         PremiseG _ fa -> not (isKUFact fa) && doSplit
         DisjG _       -> doSplit
         -- Uncomment to get more extensive case splitting
@@ -157,8 +157,8 @@ solveAllSafeGoals ths =
             usefulGoals  = fst <$> filter usefulGoal goals
             nextStep     =
                 ((fmap return . solveGoal) <$> headMay kdPremGoals) <|>
-                ((fmap return . solveGoal) <$> headMay safeGoals) <|>
-                (asum $ map (solveWithCaseDistinction ctxt ths) usefulGoals)
+                ((fmap return . solveGoal) <$> headMay safeGoals) -- <|>
+                -- (asum $ map (solveWithCaseDistinction ctxt ths) usefulGoals)
         case nextStep of
           Nothing   -> return $ caseNames
           Just step -> solve . (caseNames ++) =<< step
