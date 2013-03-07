@@ -31,13 +31,13 @@ import qualified Data.Map                         as M
 import qualified Data.Set                         as S
 import           Data.Traversable                 (traverse)
 
--- import           Utils.Misc (stringSHA256)
+import           Utils.Misc (stringSHA256)
  
--- import           System.IO.Unsafe
--- import           System.IO
--- import           System.Directory
--- import qualified Data.Binary as B
--- import qualified Data.ByteString.Lazy as BS
+import           System.IO.Unsafe
+import           System.IO
+import           System.Directory
+import qualified Data.Binary as B
+import qualified Data.ByteString.Lazy as BS
 
 import           Debug.Trace.Ignore 
 
@@ -113,8 +113,7 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
     trueDisj = [ emptySubstVFresh ]
 
 computeVariantsCached :: LNTerm -> MaudeHandle -> [LNSubstVFresh]
-computeVariantsCached inp hnd = computeVariants inp `runReader` hnd
-{-
+computeVariantsCached inp hnd = -- computeVariants inp `runReader` hnd
   unsafePerformIO $ do
     createDirectoryIfMissing True tmpdir
     let hashInput = tmpdir ++ stringSHA256 (show inp)
@@ -126,4 +125,3 @@ computeVariantsCached inp hnd = computeVariants inp `runReader` hnd
               BS.hPut tmpHnd $ B.encode result
               renameFile tmpFile hashInput
               return result
--}
