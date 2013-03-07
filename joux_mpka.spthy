@@ -354,7 +354,9 @@ rule PickNonce_0:
 // elements of G_1 so we can perform another round of Joux
 functions: h/1
 
+// This one-way function is used to encode the recipient of a message - if we send all the pieces encapsulated by 'destination' in the clear, the amount of unnecessary case distinction and fruitless attempts of changing that by the adversary is too much - recall that we only have a passive adversary, so there is nothing it can do with this information anyway. 
 functions: destination/1
+
 //Send3+Receive - 10 minutes proc time on load 
 //[ALL] Send3+Receive + both Send2 + StepOver1 - 63 minutes proc time on load, 35 minutes real (about 10% memory)
 
@@ -485,7 +487,6 @@ rule StepOver1:
            GMS+<currPassN,A>) 
   ]
 
-
 lemma key_reachable_3:
   exists-trace
   "Ex A B C gid key #ia #ib #ic.
@@ -496,6 +497,7 @@ lemma key_reachable_3:
        & not (A = C)
        & not (B = C)
 "
+
 
 lemma key_secrecy[use_induction]:
   all-traces
