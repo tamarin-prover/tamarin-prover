@@ -7,11 +7,11 @@ section{* *}
  * Protocol: Joux-based unauthenticated multi-party key agreement using ternary trees
  * Source:      Extending Joux's Protocol to Multi Party Key Agreement (Barua, Dutta, Sarkar)
  *              
- * Modeler: 	
- * Date: 	February 2013
+ * Modeler: 	Ralf Sasse and Benedikt Schmidt
+ * Date: 	March 2013
  *
- * Model:       
- * Status: 	
+ * Model:       authentic channels used
+ * Status: 	working
  */
 
 builtins: bilinear-pairing, multiset
@@ -24,8 +24,8 @@ builtins: bilinear-pairing, multiset
 //persistent, so that everyone who wants to receive them, can do so.
 
 // the intruder is allowed to see all messages
-rule AuthOut:
-  [ !AuthOut(A, x) ]
+rule AuthChan:
+  [ !AuthChan(A, x) ]
   -->
   [ Out(x) ]
 
@@ -357,9 +357,6 @@ functions: h/1
 // This one-way function is used to encode the recipient of a message - if we send all the pieces encapsulated by 'destination' in the clear, the amount of unnecessary case distinction and fruitless attempts of changing that by the adversary is too much - recall that we only have a passive adversary, so there is nothing it can do with this information anyway. 
 functions: destination/1
 
-//Send3+Receive - 10 minutes proc time on load 
-//[ALL] Send3+Receive + both Send2 + StepOver1 - 63 minutes proc time on load, 35 minutes real (about 10% memory)
-
 rule SendGroup_3:
   let hkA = pmult(h(secret) ,'P')
   in
@@ -381,8 +378,13 @@ rule SendGroup_3:
            GMS+<currPassN,A+B+C>,
            <B,A+C>,   // expecting message from here
            <C,A+B>),  // and here
-    !AuthOut(A, <hkA, destination(currPassN, ~gid, B + C)> )
+    !Compute(A, <hkA, destination(currPassN, ~gid, B + C)> )
   ]
+
+rule ComputeToAuthChan:
+  [ !Compute(A, <pmult(h(secret) , 'P'), destination(currPassN, ~gid, X)>) ]
+  --[ Secret(secret, 'nil', ~gid, A) ]-> // it *SHOULD* not matter for which group (2nd argument) this is secret, just that it IS secret
+  [ !AuthChan( A, <pmult(h(secret) , 'P'), destination(currPassN, ~gid, X)>) ]
 
 rule ReceiveGroup:
   let newsecret = em(XB,XC)^ h(secret)
@@ -397,8 +399,8 @@ rule ReceiveGroup:
            GMS,
            <B,A+X1>,
            <C,A+X2>),
-    !AuthOut(B, < XB, destination(currPassN, ~gid, A + X1)> ),
-    !AuthOut(C, < XC, destination(currPassN, ~gid, A + X2)> )
+    !AuthChan(B, < XB, destination(currPassN, ~gid, A + X1)> ),
+    !AuthChan(C, < XC, destination(currPassN, ~gid, A + X2)> )
   ]
   --[ Secret(newsecret, newSharedPartners, ~gid, A)
     ]->
@@ -408,10 +410,10 @@ rule ReceiveGroup:
            ~gid, totalPassN, currPassN + 1, GMS)
   ]
 
-// both "2"-rules + stepover + receive: 37 minutes proc time for loading - about 22 minutes real time [this is everything except the Send_3 rule!]
+
 rule SendGroup_2_double:
   let hkA = pmult(h(secret) ,'P')
-      dummy = pmult(~extra, 'P')
+      dummy = pmult(h(~extra), 'P') // gratuitous hashing - needed for the message format in AuthOutToIn!
   in
   [ Fr(~extra),
     PReady(A,       
@@ -432,8 +434,8 @@ rule SendGroup_2_double:
            GMS+<currPassN,A,B>,
            <B,A+1>,
            <A,B+A>),
-    !AuthOut(A, <hkA,   destination(currPassN, ~gid, B+1)> ),
-    !AuthOut(A, <dummy, destination(currPassN, ~gid, B+A)> )
+    !Compute(A, <hkA,   destination(currPassN, ~gid, B+1)> ),
+    !Compute(A, <dummy, destination(currPassN, ~gid, B+A)> )
   ]
 
 rule SendGroup_2_single:
@@ -457,7 +459,7 @@ rule SendGroup_2_single:
            GMS+<currPassN,B,A>,
            <B,A+B>,
            <B,A+1>),
-    !AuthOut(A, <hkA,   destination(currPassN, ~gid, B+1)> )
+    !Compute(A, <hkA,   destination(currPassN, ~gid, B+1)> )
   
 ]
 
@@ -487,6 +489,7 @@ rule StepOver1:
            GMS+<currPassN,A>) 
   ]
 
+
 lemma key_reachable_3:
   exists-trace
   "Ex A B C gid key #ia #ib #ic.
@@ -497,7 +500,6 @@ lemma key_reachable_3:
        & not (A = C)
        & not (B = C)
 "
-
 
 lemma key_secrecy[use_induction]:
   all-traces
