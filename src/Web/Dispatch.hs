@@ -72,7 +72,7 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> (FilePath -> IO ClosedTheory)   -- ^ Theory loader (from file).
           -> (String -> IO (Either String ClosedTheory))
           -- ^ Theory loader (from string).
-          -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
+          -- -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
           -> FilePath                        -- ^ Path to static content directory
           -> FilePath                        -- ^ Path to dot binary
@@ -80,7 +80,7 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
-withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser thCloser debug'
+withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
           stPath dotCmd' imgFormat' defaultAutoProver' f
   = do
     thy    <- getTheos
@@ -95,7 +95,6 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser thCloser
         { workDir            = thDir
         , cacheDir           = cacheDir_
         , parseThy           = liftIO . thParser
-        , closeThy           = thCloser
         , getStatic          = st
         , theoryVar          = thyVar
         , threadVar          = thrVar
