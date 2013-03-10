@@ -70,10 +70,11 @@ import qualified Blaze.ByteString.Builder     as B
 import qualified Data.ByteString.Char8        as BS
 import qualified Data.Map                     as M
 import qualified Data.Text                    as T
-import           Data.Text.Encoding
+import qualified Data.Text.Encoding           as T (encodeUtf8, decodeUtf8)
 import qualified Data.Traversable             as Tr
 import           Network.HTTP.Types           ( urlDecode )
 import           Text.Blaze.Html5             (toHtml)
+
 
 import           Control.Applicative
 import           Control.Concurrent
@@ -346,7 +347,7 @@ postRootR = do
             then setMessage "No theory file given."
             else do
               yesod <- getYesod
-              closedThy <- liftIO $ parseThy yesod (concatMap BS.unpack content)
+              closedThy <- liftIO $ parseThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
               case closedThy of
                 Left err  -> setMessage $ "Theory loading failed:\n" <> toHtml err
                 Right thy -> do
@@ -511,7 +512,7 @@ getKillThreadR = do
     maybeKey <- lookupGetParam "path"
     case maybeKey of
       Just key0 -> do
-        let key = decodeUtf8 . urlDecode True . encodeUtf8 $ key0
+        let key = T.decodeUtf8 . urlDecode True . T.encodeUtf8 $ key0
         tryKillThread key
         return $ RepPlain $ toContent ("Canceled request!" :: T.Text)
       Nothing -> invalidArgs ["No path to kill specified!"]
@@ -586,6 +587,8 @@ postEditTheoryR idx = withTheory idx $ \ti -> formHandler
 -}
 
 {-
+SM: Path editing hs bitrotted. Re-enable/implement once we really need it.
+
 -- | Get the add lemma page.
 getEditPathR :: TheoryIdx -> TheoryPath -> Handler RepJson
 getEditPathR = postEditPathR
@@ -612,6 +615,8 @@ postEditPathR idx (TheoryLemma lemmaName) = withTheory idx $ \ti -> do
                     Nothing -> addLemma newLemma openThy
                     Just _  -> removeLemma lemmaName openThy
                                   >>= addLemma newLemma
+              -- SM: Theory closing has to be implemented again.
+              -- Probably, the whole path editing has to be rethought.
               traverse (closeThy yesod) openThy')
             -- Error response
             (JsonAlert $ T.unwords
