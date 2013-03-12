@@ -125,15 +125,22 @@ ppTheory msig = BC.unlines $
     , "  subsort Pub < Msg ."
     , "  subsort Fresh < Msg ."
     , "  subsort Msg < TOP ."
-    , "  subsort Node < TOP ."
+    , "  subsort Node < TOP ." ]
+    ++
+    -- user-defined sorts
+    map theoryUserSorts (S.toList $ userSortsForMaudeSig msig)
+    ++
     -- constants
-    , "  op f : Nat -> Fresh ."
+    [ "  op f : Nat -> Fresh ."
     , "  op p : Nat -> Pub ."
     , "  op c : Nat -> Msg ."
-    , "  op n : Nat -> Node ."
+    , "  op n : Nat -> Node ." ]
+    ++
+    map theoryUserStOps (S.toList $ userSortsForMaudeSig msig)
+    ++
     -- used for encoding FApp List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
-    , "  op list : TOP -> TOP ."
+    [ "  op list : TOP -> TOP ."
     , "  op cons : TOP TOP -> TOP ."
     , "  op nil  : -> TOP ." ]
     ++
@@ -162,6 +169,11 @@ ppTheory msig = BC.unlines $
     ++
     [ "endfm" ]
   where
+    theoryUserSorts (LSortUser st) = "  subsort U" <> BC.pack st <> " < TOP ."
+    theoryUserSorts _              = ""
+    theoryUserStOps (LSortUser st) = "  op u" <> BC.pack st <> " : Nat -> U" <> BC.pack st <> " ."
+    theoryUserStOps _              = ""
+
     theoryOpNoEq priv fsort =
         "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."
     theoryOp = theoryOpNoEq Public
