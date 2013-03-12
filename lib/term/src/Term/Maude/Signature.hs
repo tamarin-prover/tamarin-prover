@@ -20,6 +20,8 @@ module Term.Maude.Signature (
   , irreducibleFunSyms
   , rrulesForMaudeSig
   , noEqFunSyms
+  , sortsForMaudeSig
+  , userSortsForMaudeSig
 
   -- * predefined maude signatures
   , dhMaudeSig
@@ -126,6 +128,19 @@ rrulesForMaudeSig (MaudeSig {enableDH, enableBP, enableMSet, stRules}) =
     `S.union` (if enableDH   then dhRules   else S.empty)
     `S.union` (if enableBP   then bpRules   else S.empty)
     `S.union` (if enableMSet then msetRules else S.empty)
+
+-- | Extract sorts from maude signature.
+sortsForMaudeSig :: MaudeSig -> Set LSort
+sortsForMaudeSig msig = S.fromList $ map getLSort $ S.toList $ stRules msig
+  where
+    getLSort (StRule lnterm _) = sortOfLNTerm lnterm
+
+-- | Extract user-defined sorts from maude signature.
+userSortsForMaudeSig :: MaudeSig -> Set LSort
+userSortsForMaudeSig = S.filter isUserDefined . sortsForMaudeSig
+  where
+    isUserDefined (LSortUser _) = True
+    isUserDefined _             = False
 
 ------------------------------------------------------------------------------
 -- Builtin maude signatures

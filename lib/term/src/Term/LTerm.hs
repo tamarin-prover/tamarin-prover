@@ -136,12 +136,14 @@ import           Logic.Connectives
 --
 -- >  LSortFresh < LSortMsg
 -- >  LSortPub   < LSortMsg
+-- >  LSortUser  < LSortMsg
 --
-data LSort = LSortPub   -- ^ Arbitrary public names.
-           | LSortFresh -- ^ Arbitrary fresh names.
-           | LSortMsg   -- ^ Arbitrary messages.
-           | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
-           deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data )
+data LSort = LSortPub          -- ^ Arbitrary public names.
+           | LSortFresh        -- ^ Arbitrary fresh names.
+           | LSortMsg          -- ^ Arbitrary messages.
+           | LSortNode         -- ^ Sort for variables denoting nodes of derivation graphs.
+           | LSortUser String  -- ^ Arbitrary user-defined sort.
+           deriving( Eq, Ord, Show, Typeable, Data )
 
 -- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
 --   Partial order: Node      Msg
@@ -161,17 +163,19 @@ sortCompare s1 s2 = case (s1, s2) of
 
 -- | @sortPrefix s@ is the prefix we use for annotating variables of sort @s@.
 sortPrefix :: LSort -> String
-sortPrefix LSortMsg   = ""
-sortPrefix LSortFresh = "~"
-sortPrefix LSortPub   = "$"
-sortPrefix LSortNode  = "#"
+sortPrefix LSortMsg       = ""
+sortPrefix LSortFresh     = "~"
+sortPrefix LSortPub       = "$"
+sortPrefix LSortNode      = "#"
+sortPrefix (LSortUser st) = "!" ++ st
 
 -- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
 sortSuffix :: LSort -> String
-sortSuffix LSortMsg   = "msg"
-sortSuffix LSortFresh = "fresh"
-sortSuffix LSortPub   = "pub"
-sortSuffix LSortNode  = "node"
+sortSuffix LSortMsg       = "msg"
+sortSuffix LSortFresh     = "fresh"
+sortSuffix LSortPub       = "pub"
+sortSuffix LSortNode      = "node"
+sortSuffix (LSortUser st) = st ++ "user"
 
 
 ------------------------------------------------------------------------------

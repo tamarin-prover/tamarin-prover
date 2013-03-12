@@ -44,17 +44,19 @@ import Extension.Data.Monoid
 -- | Pretty print an 'LSort'.
 ppLSort :: LSort -> ByteString
 ppLSort s = case s of
-    LSortPub   -> "Pub"
-    LSortFresh -> "Fresh"
-    LSortMsg   -> "Msg"
-    LSortNode  -> "Node"
+    LSortPub       -> "Pub"
+    LSortFresh     -> "Fresh"
+    LSortMsg       -> "Msg"
+    LSortNode      -> "Node"
+    (LSortUser st) -> B.concat ["User(", BC.pack st, ")"]
 
 ppLSortSym :: LSort -> ByteString
 ppLSortSym lsort = case lsort of
-    LSortFresh -> "f"
-    LSortPub   -> "p"
-    LSortMsg   -> "c"
-    LSortNode  -> "n"
+    LSortFresh     -> "f"
+    LSortPub       -> "p"
+    LSortMsg       -> "c"
+    LSortNode      -> "n"
+    (LSortUser st) -> B.concat ["u(", BC.pack st, ")"]
 
 parseLSortSym :: ByteString -> Maybe LSort
 parseLSortSym s = case s of
@@ -62,7 +64,10 @@ parseLSortSym s = case s of
     "p"  -> Just LSortPub
     "c"  -> Just LSortMsg
     "n"  -> Just LSortNode
-    _    -> Nothing
+    _    ->
+      if BC.head s == 'u'
+        then Just (LSortUser $ BC.unpack $ BC.tail s)
+        else Nothing
 
 -- | Used to prevent clashes with predefined Maude function symbols
 --   like @true@
