@@ -1,0 +1,94 @@
+theory Test
+begin
+
+builtins: diffie-hellman, multiset
+
+
+rule AuthOut:
+  [ !AuthOut(x) ]
+  -->
+  [ Out(x) ]
+
+/* Determine group participants */
+rule StartGroupInit:
+  [ Fr(~gid) ] -->
+  [ StartGroup( $I             // the initiator
+              , 1              // number of responders
+              , <1,$R> + 'nil' // the list of responders (*)
+              , ~gid)          // the group id, not secret
+  //, Out(~gid)
+  ]
+
+// (*) we encode lists [x1,..,xk] as multisets <i,x_1> + <i+1,x_2> + .. + <i+k,x_k> + 'nil'
+// we also use pairs ([x_1, .., x_j], [x_{j+1},..,x_k])  to traverse a list
+
+rule StartGroupExtend:
+  let nextnum = num + 1
+  in
+  [ StartGroup( $I, num,     resps                , ~gid) ]
+  -->
+  [ StartGroup( $I, nextnum, resps + <nextnum, $R>, ~gid) ]
+
+
+
+/* Start one Initiator and Responders */
+
+/* The first member is the Initator, the last member is the Distributor of the keying material,
+   and all the others are contributors.
+*/
+
+rule StartGroup:
+  [ StartGroup( $I, num, resps, ~gid) ]
+  -->
+  [ Initiator($I, resps, ~gid)
+  , StartGroupContributors( 1      // number of responders that have been started
+                          , $I     // the initiator
+                          , 'nil'  // list of started responders
+                          , resps  // list of responders that have not been started yet
+                          , ~gid) ]
+
+rule StartGroupContributors:
+  let newstarted = started + <j,$R>
+  in
+  [ StartGroupContributors(j,     $I, started,    <j,$R> + notStarted, ~gid) ]
+  --[ InEq(notStarted, 'nil') ]->
+  [ StartGroupContributors(j + 1, $I, newstarted, notStarted,          ~gid)
+  , Contributor( $R
+               , $I
+               , j          // the index in the list
+               , started    // below
+               , notStarted // above   
+               , ~gid) ]
+
+rule StartGroupDistributor:
+  let newstarted = started + <j,$R>
+  in
+  [ StartGroupContributors(j,     $I, started,    <j,$R> + 'nil', ~gid) ]
+  --[ ]->
+  [ StartGroupContributors(j + 1, $I, newstarted, notStarted,          ~gid)
+  , Distributor( $R
+               , j          // distributor's index in the list
+               , started    // others
+               , ~gid) ]
+
+
+rule Initiator:
+   [ Initiator($I, <1,$A> + <1+1+Bresps, ~gid) ]
+/*
+Initiator -> WaitKeyMaterial [ send g and g^x]
+Contributor --> Contributor [ not last, receive Y and send contribution Y^x ]
+             \
+              \-> WaitKeyMaterial [ last. receive Y, forward Y, and send Y^x ] 
+
+Distributor --> Distributor [ not last, receive Y, send Y^x ]
+             \
+              \-> Accept [last. receive Y, accept key Y^x
+
+WaitKeyMaterial --> Accept [receive Y, accept key Y^x]
+
+*/
+
+
+axiom InEq_not_eq: "not (Ex x #i. Ineq(x,x)@i)"
+
+end
