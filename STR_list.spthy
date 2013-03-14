@@ -1,4 +1,4 @@
-theory STR_ml_authentic_channel
+theory STR_ml_authentic_channel_list
 begin
 
 section{* *}
@@ -232,10 +232,10 @@ lemma key_reachable_3:
 lemma key_reachable_4:
   exists-trace
   "Ex #i1 I R1 R2 R3 gid key #i2 #i3 #i4.
-         Key( I,  <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + nil, gid, key ) @ i1
-       & Key( R1, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + nil, gid, key ) @ i2
-       & Key( R2, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + nil, gid, key ) @ i3
-       & Key( R3, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + nil, gid, key ) @ i4
+         Key( I,  <I,<R1, <R2, <R3, nil>>>>, gid, key ) @ i1
+       & Key( R1, <I,<R1, <R2, <R3, nil>>>>, gid, key ) @ i2
+       & Key( R2, <I,<R1, <R2, <R3, nil>>>>, gid, key ) @ i3
+       & Key( R3, <I,<R1, <R2, <R3, nil>>>>, gid, key ) @ i4
        & not (I = R1)
        & not (R1 = R2)
        & not (I = R2)
