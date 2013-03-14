@@ -1,0 +1,254 @@
+theory STR_ml_authentic_channel
+begin
+
+section{* *}
+
+/*
+ * Protocol: STR with authentic channel (manual translation from ML code)
+ * Source:      Communication-Efficient Group Key Agreement
+ *              
+ * Modeler: 	
+ * Date: 	
+ *
+ * Model:       
+ * Status: 	
+ */
+
+builtins: diffie-hellman, multiset
+
+functions: blindedRandomOf/1, blindedKeyFor/1
+functions: te/1, te_inv/1  // convert group element to exponent
+functions: nil/0
+
+equations: te_inv(te(x)) = x // te is not hiding
+
+rule AuthOut:
+  [ !AuthOut(x) ]
+  -->
+  [ Out(x) ]
+
+/* Determine group participants */
+rule StartGroupInit:
+  [ Fr(~gid) ] -->
+  [ StartGroup( $I             // the initiator
+              , <$R,nil>     // the list of responders (*)
+              , ~gid)          // the group id, not secret
+  , Out(~gid)
+  ]
+
+rule StartGroupExtend:
+
+  [ StartGroup( $I, resps     , ~gid) ]
+  -->
+  [ StartGroup( $I, <$R,resps>, ~gid) ]
+
+
+
+/* Start one Initiator and Responders */
+
+rule StartGroup:
+  [ StartGroup( $I, resps, ~gid) ]
+  -->
+  [ Initiator($I, resps, ~gid)
+  , StartGroupResponders( $I     // the initiator
+                        , nil    // list of started responders
+                        , resps  // list of responders that have not been started yet
+                        , ~gid) ]
+
+rule StartGroupResponders:
+  let newstarted = <$R, started> // ocaml performs "started @ [$R]"?
+  in
+  [ StartGroupResponders($I, started,    <$R, notStarted>, ~gid) ]
+  -->
+  [ StartGroupResponders($I, newstarted, notStarted,       ~gid)
+  , Responder( $R
+             , $I
+             , started    // below
+             , notStarted // above
+             , ~gid) ]
+
+
+
+/* Responders */
+
+rule Responder:
+  [ Responder($R1, $I, below, above, ~gid)
+  , Fr(~r) ]
+  -->
+  [ !AuthOut( < blindedRandomOf($R1,~gid), 'g'^~r > )
+  // ocaml:                  below @ [$R]
+  , ResponderBRSent($R1, $I, <$R1,below>, above, ~gid, ~r) ]
+
+rule ResponderBKRecv:
+  [ ResponderBRSent($R1, $I, below, above, ~gid, ~r)
+  , !AuthOut( < blindedKeyFor($R1,~gid), bk > )
+  ]
+  --> 
+  [ ResponderLoop( $R1, $I, below, above, ~gid, bk ^ ~r) ]
+
+rule ResponderLoop:
+    [ ResponderLoop( $R1, $I, below, <$R2,above>, ~gid, key )
+    , !AuthOut( < blindedRandomOf($R2, ~gid), br > ) 
+    ]
+    --[ IKey( $I, <$I,below>, ~gid, key ) ]->
+    // ocaml uses:           below @ [R2]                             
+    [ ResponderLoop($R1, $I, <$R2,below>, above, ~gid, br ^ te(key)) ]
+
+rule ResponderDone:
+  [ ResponderLoop($R1, $I, below, nil, ~gid, key) ]
+  --[  Key($R1, <$I,below>, ~gid, key )
+    , IKey($R1, <$I,below>, ~gid, key )  ]-> []
+
+/* Initiator */
+
+rule Initiator:
+  let key = br^~r  // here, ~r is an exponent and can be directly used
+  in
+  [ Initiator($I, <$R1, resps>, ~gid)
+  , Fr(~r)
+  , !AuthOut( < blindedRandomOf($R1, ~gid), br> ) ]
+  -->
+  [ InitiatorLoop( $I
+                 , <$R1,nil>  // done
+                 , resps        // not-done
+                 , ~gid
+                 , key)
+  , !AuthOut( < blindedKeyFor($R1, ~gid), 'g'^~r> ) ]
+
+rule InitiatorLoop:
+  let newkey = br^te(key) // here, key is a group element and has to be converted to
+                          // an exponent
+  in
+  [ InitiatorLoop($I, handled, <$R1, notHandled>, ~gid, key)
+  , !AuthOut( < blindedRandomOf(j, ~gid), br> ) ]
+  --[ IKey($I, <$I, handled>, ~gid, key ) ]->
+  [ !AuthOut( < blindedKeyFor(j, ~gid), 'g'^te(key)> )
+  , InitiatorLoop($I, <$R1,handled>, notHandled, ~gid, newkey) ]
+
+rule InitiatorDone:
+  [ InitiatorLoop($I, handled, nil, ~gid, key) ]
+  --[ Key($I,  <$I,handled>, ~gid, key )
+    , IKey($I, <$I,handled>, ~gid, key )
+  ]-> []
+
+
+/*
+Translation of lists from ocaml to MSR:
+in Haskell, we the following operations on lists:
+- pattern matching
+    a :: b -> .. 
+    [] -> ..
+- singleton list [x]
+- list concat xs @ ys
+
+In tamarin, we also need member(x,L) in our formulas,
+which is why we need to represent lists in some
+way with multisets.
+
+Choice 1: 
+[x1,..,xk] ~~> <i, <i,x_1>+ .. + <i+k> + nil>
+
+x::xs ->  ~~> <i, <i,x> +xs>
+[x]       ~~> <1,<1,x>>
+xs @ ys   ~~> ? would have to increase index of all elements of the second list.
+
+
+Choice 2:
+different views on the same datatype:
+  in MSR:  + is understood as free function symbol cons
+  in Spec: + is understood as function symbol modulo AC
+
+  Lists only occur in protocol data (could be enforced with sorts)
+  and actions. Never sent on the network?
+
+  in Formulas:
+  - member(x,L) :<=> Ex L'. L' :: x =_{E u AC_::} L
+  
+  Seems easy to implement. Views that are abstractions.
+  Allow us to perform verification without ghost state.
+
+  Same for tree:
+  - encode with ::, arbitrary nestings, and NONE.
+  - in formulas, abstract away from tree structure by adding AC equation for ::.
+
+Choice 3:
+All i1 i2. Accept(k,L) @ i1 && K(k) @ i2
+  ==> Ex A i3. Corrupt (A) @i3 && Member(A,L)
+
+When searching for counterexample, we have to prove that
+Member(A,L) holds for some A with Corrupt(A)
+==> simplify Member(A,L) until we get the right equality
+
+Horn theory for user-defined predicates.
+
+All A B L. Member(A,B::L) <=> Member(A,L) | A=B
+All A. Member(A,nil) <=> False
+
+OR convergent rewriting system that specify "undefined function symbols"
+
+member(x,nil)  -> false
+member(x,y::L) -> x = y || member(x::L)
+
+true  || x -> true
+false && x -> false
+
+then change rules:
+a = b
+
+abstract "undefined function symbols" by variables,
+unify, add resulting equations which are now headed
+by undefined function symbols.
+
+simplify undefined functions as they occur by rewriting.
+
+member(x,
+
+
+encode boolean predicates by term rewriting.
+
+*/
+
+
+lemma key_reachable_2:
+  exists-trace
+  "Ex #i1 I R1 gid key #i2.
+         Key(I,  <I,<R1,nil>>, gid, key ) @ i1
+       & Key(R1, <I,<R1,nil>>, gid, key ) @ i2
+       & not (I = R1)
+"
+
+
+lemma key_reachable_3:
+  exists-trace
+  "Ex #i1 I R1 R2 gid key #i2 #i3.
+         Key( I,  <I,<R1, <R2, nil>>>, gid, key ) @ i1
+       & Key( R1, <I,<R1, <R2, nil>>>, gid, key ) @ i2
+       & Key( R2, <I,<R1, <R2, nil>>>, gid, key ) @ i3
+       & not (I = R1)
+       & not (R1 = R2)
+       & not (I = R2)
+"
+
+lemma key_reachable_4:
+  exists-trace
+  "Ex #i1 I R1 R2 R3 gid key #i2 #i3 #i4.
+         Key( I,  <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + nil, gid, key ) @ i1
+       & Key( R1, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + nil, gid, key ) @ i2
+       & Key( R2, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + nil, gid, key ) @ i3
+       & Key( R3, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + nil, gid, key ) @ i4
+       & not (I = R1)
+       & not (R1 = R2)
+       & not (I = R2)
+       & not (I = R3)
+       & not (R1 = R3)
+       & not (R2 = R3)
+" 
+
+
+lemma key_secrecy[use_induction]:
+  all-traces
+  "not (Ex #i1 I group gid key #i2.
+          IKey( I,  group, gid, key ) @ i1 & KU( key ) @ i2)"
+
+
+end
