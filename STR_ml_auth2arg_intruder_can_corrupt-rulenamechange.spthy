@@ -214,8 +214,9 @@ lemma key_secrecy_with_corruption[use_induction]:
   "(All #i1 I group gid key #i2.
           IKey( I,  group, gid, key ) @ i1 
         & KU( key ) @ i2
-   ==> Ex A #i3. (Corrupt(A) @ i3
-               & i3 < i1))"
+   ==> Ex A indexA others #i3. (Corrupt(A) @ i3
+               & i3 < i1
+               & others + <indexA, A> = group))"
 
 
 end
