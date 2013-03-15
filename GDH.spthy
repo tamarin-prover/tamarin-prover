@@ -153,7 +153,7 @@ rule DistComputeLastAndSend:
    let expList = <j, Z> + restExpList
    in 
    [ DistCompute( $R, ~n, j, below, ~gid, j, expList, send) ] // do NOT exponentiate the last element and send it out; accept it as key
-   --[ Accept($R, below + <j, $R>, ~gid, Z^~n), KeyExpLast(gid, j, Z^~n) ]->
+   --[ Accept($R, below + <j, $R>, ~gid, Z^~n), KeyExpLast(~gid, j, Z^~n) ]->
    [ !AuthOut(<'distribute', <~gid, send + <j,Z>>>)] // sending out <j,Z> is not relevant, but does not hurt either
 
 
@@ -190,7 +190,7 @@ lemma No_inverses_nonces_known[use_induction,reuse]:
 ==> All y z. x = y*z ==> Ex ~a w. ~a * w = y | y = ~a
 */
 
-//Ausformulierung des Lemma
+//Ausformulierung
 lemma key_format[use_induction,reuse]:
   all-traces
   "All Z #i l gid. (KeyExp(gid, l, Z) @i
@@ -235,6 +235,6 @@ lemma subKey:
 
 lemma test:
   all-traces
-  "All #i1 gid l x. (KeyExp(gid, l, 'g'^x) @ i1)"
+  "Ex #i1 gid l x. (KeyExp(gid, l, 'g'^x) @ i1)"
 
 end
