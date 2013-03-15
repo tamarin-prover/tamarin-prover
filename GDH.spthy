@@ -45,7 +45,7 @@ rule StartGroup:
   -->
   [ Initiator($I, participants , ~gid)
   , StartGroupContributors( 1      // number of responders that have been started
-                          , <'zero', $I> + nil  // list of started participants ,which is initiator only here
+                          , <'zero', $I> + nil  // list of started participants, which is initiator only here
                           , resps  // list of responders that have not been started yet
                           , ~gid) ]
 
@@ -62,8 +62,8 @@ rule StartGroupContributors:
                , ~gid) ]
 
 rule StartGroupDistributor:
-  let newstarted = started + <j,$R>
-  in
+//  let newstarted = started + <j,$R>
+//  in
   [ StartGroupContributors(j,     started,    <j,$R> + nil, ~gid) ]
   --[ ]->
   [ //// StartGroupContributors(j + 1, newstarted, nil,          ~gid) ,
@@ -79,9 +79,12 @@ rule Initiator:
    in 
    [ Initiator($I, participants, ~gid),
      Fr(~n) ]
-   --[ Nonce(~gid, ~n) ]->
+   --[ Nonce(~gid, 'zero', ~n) ,
+       KeyExp(~gid, 1, 'zero', 'g'),
+       KeyExpLast(~gid, 1, 'g'^~n) ]->
    [ WaitKeyMaterial($I, ~n, 'zero', participants, ~gid),
-     !AuthOut(<$A, <'zero', 'g'> + <1, 'g'^~n>> )     //MSG (send g and g^r to $A)
+     !AuthOut(<1, <'zero', 'g'>>),
+     !AuthOut(<1, <1, 'g'^~n>>  )     //MSG (send g and g^r to $A)
    ]
 
 
@@ -93,37 +96,37 @@ Contributor --> Contributor [ not last, receive Y and send contribution Y^x ]
 */
 rule Contributor:
    [ Fr(~n),
-     !AuthOut(<$R, <'zero', X> + list>),
+     !AuthOut(<j, <'zero', X>>),
      Contributor( $R
                 , j          // the index in the list
                 , started    // below
                 , notStarted // above   
                 , ~gid) ]
-   --[ Nonce(~gid, ~n) , 
-       KeyExp(~gid, j, X^~n)]->
+   --[ Nonce(~gid, j, ~n) , 
+       KeyExp(~gid, j+1, 'zero', X^~n)]->
    [ WaitKeyMaterial($R, ~n, j, started + <j, $R> + notStarted, ~gid),
-     ComputeContribution($R, ~n, j, ~gid, started, notStarted, list, 1, <'zero', X^~n> + nil) ] 
+     ComputeContribution($R, ~n, j, ~gid, started, notStarted, 1),
+     !AuthOut(<j+1, <'zero', X^~n>>) ] 
 
 rule ComputeContribution:
    let below = <i, $R2> + restBelow
-       list  = <i, Z> + restExpList
+       Z = 'g'^x
    in
-   [ ComputeContribution($R, ~n, j, ~gid, below, above, list, i, out) ]
-   --[ KeyExp(~gid, j, Z^~n)]->
-   [ ComputeContribution($R, ~n, j, ~gid, below, above, list, i+1, out + <i,Z^~n>)]
+   [ !AuthOut(<j, <i, Z>>),
+     ComputeContribution($R, ~n, j, ~gid, below, above, i) ]
+   --[ KeyExp(~gid, j+1, i, Z^~n)]->
+   [ ComputeContribution($R, ~n, j, ~gid, below, above, i+1),
+     !AuthOut(<j+1, <i,Z^~n>>) ]
 
 rule ComputeContributionLast:
-   let expList = <j, Z> + restExpList
+   let Z = 'g'^x
    in
-   [ ComputeContribution($R, ~n, j, ~gid, below, above, expList, j, out) ]
-   --[ KeyExp(~gid, j, Z) , KeyExpLast(~gid, j, Z^~n)]->
-   [ SendContribution($R, ~n, j, below, above, expList, j+1, out + <j, Z> + <j+1, Z^~n>) ]
+   [ !AuthOut(<j, <j, Z>>), 
+     ComputeContribution($R, ~n, j, ~gid, below, above, j) ]
+   --[ KeyExp(~gid, j+1, j, Z) , KeyExpLast(~gid, j+1, Z^~n)]->
+   [ !AuthOut(<j+1, <j, Z>>),
+     !AuthOut(<j+1, <j+1, Z^~n>>) ]
  
-rule SendContribution:
-   [ SendContribution($R, ~n, j, below, above + <j+1, $R2>, incExpList, j+1, out) ]
-   --[ ]->
-   [ !AuthOut(<$R2, out>)]
-
 
 
 /*
@@ -132,38 +135,41 @@ Distributor --> Distributor [ not last, receive Y, send Y^x ]
               \-> Accept [last. receive Y, accept key Y^x
 */
 rule Distributor:
-   let expList = <'zero', Z> + restExpList
-   in
    [ Fr(~n),
      Distributor( $R, j, started, ~gid), 
-     !AuthOut(<$R, expList>) ]
-   --[ Nonce(~gid, ~n) ,
-       KeyExp(~gid, j, Z^~n) ]->
-   [ DistCompute( $R, ~n, j, started, ~gid, 1, expList, <'zero', Z^~n> + nil) ] 
+     !AuthOut(<j, <'zero', Z>>) ]
+   --[ Nonce(~gid, j, ~n) ,
+       KeyExp(~gid, j+1, 'zero', Z^~n) ]->
+   [ DistCompute( $R, ~n, j, started, ~gid, 1),
+     !AuthOut(<'distribute', <'zero', Z^~n>>) ] 
 
 rule DistCompute:
    let below = <i,$R2> + restBelow
-       expList = <i, Z> + restExpList
+       Z = 'g'^x
    in
-   [ DistCompute( $R, ~n, j, below, ~gid, i, expList, send) ]
-   --[ KeyExp(~gid, j, Z^~n) ]->
-   [ DistCompute( $R, ~n, j, below, ~gid, i+1, expList, send + <i, Z^~n>) ]
+   [ !AuthOut(<j, <i, Z>>),
+     DistCompute( $R, ~n, j, below, ~gid, i) ]
+   --[ KeyExp(~gid, j+1, i, Z^~n) ]->
+   [ DistCompute( $R, ~n, j, below, ~gid, i+1),
+     !AuthOut(<'distribute', <i, Z^~n>>) ]
 
-rule DistComputeLastAndSend:
-   let expList = <j, Z> + restExpList
-   in 
-   [ DistCompute( $R, ~n, j, below, ~gid, j, expList, send) ] // do NOT exponentiate the last element and send it out; accept it as key
-   --[ Accept($R, below + <j, $R>, ~gid, Z^~n), KeyExpLast(~gid, j, Z^~n) ]->
-   [ !AuthOut(<'distribute', <~gid, send + <j,Z>>>)] // sending out <j,Z> is not relevant, but does not hurt either
+rule DistComputeLast:
+   let Z = 'g'^x
+   in
+   [ !AuthOut(<j, <j, Z>>),
+     DistCompute( $R, ~n, j, below, ~gid, j) ] // do NOT exponentiate the last element and send it out; accept it as key
+   --[ Accept($R, below + <j, $R>, ~gid, Z^~n), 
+       KeyExpLast(~gid, j+1, Z^~n) ]->
+   [ ] // no need to distribute this
 
 
 /*
 WaitKeyMaterial --> Accept [receive Y, accept key Y^x]
 */
 rule ReceiveKeyMaterial:
-   let send = <j, Z> + restSend
+   let Z = 'g'^x
    in
-   [ !AuthOut(<'distribute', <~gid, send>>),
+   [ !AuthOut(<'distribute', <j, Z>>),
      WaitKeyMaterial($R, ~n, j, all, ~gid)
    ]
    --[ Accept($R, all, ~gid, Z^~n) ]->
@@ -233,8 +239,10 @@ lemma subKey:
        )"
 */
 
+
 lemma test:
-  all-traces
-  "Ex #i1 gid l x. (KeyExp(gid, l, 'g'^x) @ i1)"
+  exists-trace
+  "Ex #i1 gid row col x. (KeyExp(gid, row, col, 'g'^x) @ i1)"
+
 
 end
