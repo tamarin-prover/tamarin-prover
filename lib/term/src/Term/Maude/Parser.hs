@@ -172,7 +172,6 @@ ppTheory msig = BC.unlines $
     theoryUserSorts sort =
       [ "  subsort " <> ppLSort sort <> " < Msg ."
       , "  op " <> ppLSortSym sort <> " : Nat -> " <> ppLSort sort <> " ." ]
-    theoryUserSorts _              = []
 
     theoryOpNoEq priv fsort =
         "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."

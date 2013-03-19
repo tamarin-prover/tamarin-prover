@@ -168,7 +168,7 @@ sortPrefix LSortMsg       = ""
 sortPrefix LSortFresh     = "~"
 sortPrefix LSortPub       = "$"
 sortPrefix LSortNode      = "#"
-sortPrefix (LSortUser st) = "!" ++ st
+sortPrefix (LSortUser st) = "%" ++ st ++ "%"
 
 -- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
 sortSuffix :: LSort -> String
@@ -176,7 +176,7 @@ sortSuffix LSortMsg       = "msg"
 sortSuffix LSortFresh     = "fresh"
 sortSuffix LSortPub       = "pub"
 sortSuffix LSortNode      = "node"
-sortSuffix (LSortUser st) = st ++ "user"
+sortSuffix (LSortUser st) = "u" ++ st
 
 
 ------------------------------------------------------------------------------

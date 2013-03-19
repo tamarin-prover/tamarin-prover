@@ -29,6 +29,7 @@ module Theory.Text.Parser.Token (
   , pubName
 
   , sortedLVar
+  , userSortedLVar
   , lvar
   , msgvar
   , nodevar
@@ -256,20 +257,46 @@ sortedLVar ss =
 
     mkPrefixParser s = do
         case s of
-          LSortMsg   -> pure ()
-          LSortPub   -> void $ char '$'
-          LSortFresh -> void $ char '~'
-          LSortNode  -> void $ char '#'
+          LSortMsg       -> pure ()
+          LSortPub       -> void $ char '$'
+          LSortFresh     -> void $ char '~'
+          LSortNode      -> void $ char '#'
+          (LSortUser st) -> do
+              void $ char '%'
+              symbol_ st
+              void $ char '%'
         (n, i) <- indexedIdentifier
         return (LVar n s i)
 
+-- | Parse a logical variable of an arbitrary user-defined sort.
+userSortedLVar :: Parser LVar
+userSortedLVar =
+    asum $ map try [suffixParser, prefixParser]
+  where
+    suffixParser = do
+        (n, i) <- indexedIdentifier <* colon
+        symbol_ "u"
+        sort <- identifier
+        return (LVar n (LSortUser sort) i)
+
+    prefixParser = do
+        void $ char '%'
+        sort <- identifier
+        void $ char '%'
+        (n, i) <- indexedIdentifier
+        return (LVar n (LSortUser sort) i)
+
 -- | An arbitrary logical variable.
 lvar :: Parser LVar
-lvar = sortedLVar [LSortFresh, LSortPub, LSortMsg, LSortNode]
+lvar = asum $ map try
+  [ sortedLVar [LSortFresh, LSortPub, LSortMsg, LSortNode]
+  , userSortedLVar ]
 
 -- | Parse a non-node variable.
 msgvar :: Parser LVar
-msgvar = sortedLVar [LSortFresh, LSortPub, LSortMsg]
+msgvar = asum $ map try
+  [ sortedLVar [LSortFresh, LSortPub, LSortMsg]
+  , userSortedLVar ]
 
 -- | Parse a graph node variable.
 nodevar :: Parser NodeId
