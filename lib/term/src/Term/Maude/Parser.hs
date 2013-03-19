@@ -48,7 +48,7 @@ ppLSort s = case s of
     LSortFresh     -> "Fresh"
     LSortMsg       -> "Msg"
     LSortNode      -> "Node"
-    (LSortUser st) -> B.concat ["User(", BC.pack st, ")"]
+    (LSortUser st) -> B.concat ["U", BC.pack st]
 
 ppLSortSym :: LSort -> ByteString
 ppLSortSym lsort = case lsort of
@@ -56,7 +56,7 @@ ppLSortSym lsort = case lsort of
     LSortPub       -> "p"
     LSortMsg       -> "c"
     LSortNode      -> "n"
-    (LSortUser st) -> B.concat ["u(", BC.pack st, ")"]
+    (LSortUser st) -> B.concat ["u", BC.pack st]
 
 parseLSortSym :: ByteString -> Maybe LSort
 parseLSortSym s = case s of
