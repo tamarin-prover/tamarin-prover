@@ -32,6 +32,7 @@ module Term.LTerm (
   -- ** Construction
   , freshTerm
   , pubTerm
+  , userTerm
 
   -- * LVar
   , LSort(..)
@@ -187,7 +188,7 @@ newtype NameId = NameId { getNameId :: String }
     deriving( Eq, Ord, Typeable, Data, NFData, Binary )
 
 -- | Tags for names.
-data NameTag = FreshName | PubName
+data NameTag = FreshName | PubName | UserName String
     deriving( Eq, Ord, Show, Typeable, Data )
 
 -- | Names.
@@ -204,8 +205,9 @@ type NTerm v = VTerm Name v
 instance IsConst Name where
 
 instance Show Name where
-  show (Name FreshName n) = "~'" ++ show n ++ "'"
-  show (Name PubName   n) = "'"  ++ show n ++ "'"
+  show (Name FreshName     n) = "~'" ++ show n ++ "'"
+  show (Name PubName       n) = "'"  ++ show n ++ "'"
+  show (Name (UserName st) n) = "u" ++ st ++ "'" ++ show n ++ "'"
 
 instance Show NameId where
   show = getNameId
@@ -221,10 +223,15 @@ freshTerm = lit . Con . Name FreshName . NameId
 pubTerm :: String -> NTerm v
 pubTerm = lit . Con . Name PubName . NameId
 
+-- | @userTerm s f@ represents the user name @f@ of sort @s@.
+userTerm :: String -> String -> NTerm v
+userTerm s = lit . Con . Name (UserName s) . NameId
+
 -- | Return 'LSort' for given 'Name'.
 sortOfName :: Name -> LSort
-sortOfName (Name FreshName _) = LSortFresh
-sortOfName (Name PubName   _) = LSortPub
+sortOfName (Name FreshName _)     = LSortFresh
+sortOfName (Name PubName   _)     = LSortPub
+sortOfName (Name (UserName st) _) = LSortUser st
 
 ------------------------------------------------------------------------------
 -- LVar: logical variables

@@ -121,22 +121,19 @@ ppTheory :: MaudeSig -> ByteString
 ppTheory msig = BC.unlines $
     [ "fmod MSG is"
     , "  protecting NAT ."
-    , "  sort Pub Fresh Msg Node TOP ."
+    , "  sort Pub Fresh Msg Node" <> theoryUserSortIds userSorts <> " TOP ."
     , "  subsort Pub < Msg ."
     , "  subsort Fresh < Msg ."
     , "  subsort Msg < TOP ."
-    , "  subsort Node < TOP ." ]
-    ++
-    -- user-defined sorts
-    map theoryUserSorts (S.toList $ userSortsForMaudeSig msig)
-    ++
+    , "  subsort Node < TOP ."
     -- constants
-    [ "  op f : Nat -> Fresh ."
+    , "  op f : Nat -> Fresh ."
     , "  op p : Nat -> Pub ."
     , "  op c : Nat -> Msg ."
     , "  op n : Nat -> Node ." ]
     ++
-    map theoryUserStOps (S.toList $ userSortsForMaudeSig msig)
+    -- user-defined sorts
+    concatMap theoryUserSorts userSorts
     ++
     -- used for encoding FApp List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
@@ -169,10 +166,16 @@ ppTheory msig = BC.unlines $
     ++
     [ "endfm" ]
   where
-    theoryUserSorts (LSortUser st) = "  subsort U" <> BC.pack st <> " < TOP ."
-    theoryUserSorts _              = ""
-    theoryUserStOps (LSortUser st) = "  op u" <> BC.pack st <> " : Nat -> U" <> BC.pack st <> " ."
-    theoryUserStOps _              = ""
+    userSorts = S.toList $ userSortsForMaudeSig msig
+
+    theoryUserSortIds = BC.unwords . concatMap sortId
+      where sortId (LSortUser st) = [" U" <> BC.pack st]
+            sortId _              = []
+
+    theoryUserSorts (LSortUser st) = 
+      [ "  subsort U" <> BC.pack st <> " < Msg ."
+      , "  op u" <> BC.pack st <> " : Nat -> U" <> BC.pack st <> " ." ]
+    theoryUserSorts _              = []
 
     theoryOpNoEq priv fsort =
         "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."

@@ -265,7 +265,7 @@ sortedLVar ss =
 
 -- | An arbitrary logical variable.
 lvar :: Parser LVar
-lvar = sortedLVar [minBound..]
+lvar = sortedLVar [LSortFresh, LSortPub, LSortMsg, LSortNode]
 
 -- | Parse a non-node variable.
 msgvar :: Parser LVar
