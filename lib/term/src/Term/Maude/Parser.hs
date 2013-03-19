@@ -121,7 +121,7 @@ ppTheory :: MaudeSig -> ByteString
 ppTheory msig = BC.unlines $
     [ "fmod MSG is"
     , "  protecting NAT ."
-    , "  sort Pub Fresh Msg Node" <> theoryUserSortIds userSorts <> " TOP ."
+    , "  sort Pub Fresh Msg Node " <> theoryUserSortIds userSorts <> " TOP ."
     , "  subsort Pub < Msg ."
     , "  subsort Fresh < Msg ."
     , "  subsort Msg < TOP ."
@@ -168,13 +168,10 @@ ppTheory msig = BC.unlines $
   where
     userSorts = S.toList $ userSortsForMaudeSig msig
 
-    theoryUserSortIds = BC.unwords . concatMap sortId
-      where sortId (LSortUser st) = [" U" <> BC.pack st]
-            sortId _              = []
-
-    theoryUserSorts (LSortUser st) = 
-      [ "  subsort U" <> BC.pack st <> " < Msg ."
-      , "  op u" <> BC.pack st <> " : Nat -> U" <> BC.pack st <> " ." ]
+    theoryUserSortIds = BC.unwords . map ppLSort
+    theoryUserSorts sort =
+      [ "  subsort " <> ppLSort sort <> " < Msg ."
+      , "  op " <> ppLSortSym sort <> " : Nat -> " <> ppLSort sort <> " ." ]
     theoryUserSorts _              = []
 
     theoryOpNoEq priv fsort =
