@@ -60,14 +60,14 @@ rule Initiator:
   [ Initiator1(~gid, $I, responders)
   , Fr(~ei) ]
  --[ Step() ]->
-  [ Initiator2(~gid, $I, responders)
+  [ Initiator2(~gid, ~ei, $I, responders)
   , AuthOut(<~gid, $I, $I, g   >)    // from $I, key for $I
   , AuthOut(<~gid, $I, $R, g^~ei>)   // from $I, key for first responder $R
   , Out(g^~ei) ]
 
 rule Initiator2:
   let Y = g^y in
-  [ Initiator2(~gid, $I, responders)
+  [ Initiator2(~gid, ~ei, $I, responders)
   , AuthOut(<~gid, $S, $I, Y>) ]  // $S unspecified, should be last(responders)
  --[ Key(~gid, $I, list_to_mset(responders) + $I)
    , IsLast(~gid, $S)
@@ -78,15 +78,30 @@ rule Initiator2:
 /* Responders                                                          */
 /*************************************************************************/
 
+// $I does not need to be carried through, only need it for Responder1 fact for rule Responder1_init, for Responder2+ can just drop it 
 rule Responder1:
   let Y = g^y
       before = <$S, before_missing>
   in
   [ Responder1(~gid, $R, $I, before, after)
-  , Fr(~ec)
-  , AuthOut(<~gid, $S, $S, Y>) ] // key for $I sent by $S
+  , Fr(~ec) 
+  , AuthOut(<~gid, $S, $S, Y>) ] // key for $I sent by $S 
  --[ Step() ]->
-  [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, nil, after) ]
+  [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, <$S, nil>, after) 
+  , AuthOut(<~gid, $R, $S, Y^~ec>) ] //RALF: the above received Y needs to  be kept and exponentiated - the comment there is weird though; also for the very first message <~gid, I, I, g> this is problematic, as it does not match! - may need to duplicate this rule for that special case???
+
+// special case for first responder that gets 'naked' g from $I, so the match Y = g^y would fail!
+rule Responder1_init:
+  let Y = g
+      before = <$I, before_missing>
+  in
+  [ Responder1(~gid, $R, $I, before, after)
+  , Fr(~ec) 
+  , AuthOut(<~gid, $I, $I, Y>) ] // key for $I sent by $I 
+ --[ Step() ]->
+  [ Responder2(~gid, ~ec, $R, $I, $I, before_missing, <$I, nil>, after) 
+  , AuthOut(<~gid, $R, $I, Y^~ec>) ]
+
 
 // Responder R2, before=nil,  after=[R1]
 // Responder R1, before=[R2], after=[]
@@ -106,33 +121,35 @@ rule Responder2:
 // Responder R1, started=[R2], notstarted=[]
 
 rule Responder3:
-  let Y = g^y in
+  let Y = g^y 
+      after = <$KR, after_missing>
+  in
   [ Responder2(~gid, ~ec, $R, $I, $S, nil, before_rcvd, after)
   , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
  --[ InEq(after,nil), Step() ]->
   [ Responder3(~gid, ~ec, $R, $I, before_rcvd, after)
-  , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key for this round
+  , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key for this round - sent to the next participant 
   , AuthOut(<~gid, $R, $R, Y>)     ]  // key for $R sent by $R
 
 rule Responder3_last:
   let Y = g^y in
   [ Responder2(~gid, ~ec, $R, $I, $S, nil, before_rcvd, nil)
   , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
- --[ Key(~gid, $R, list_to_mset(before_rcvd) + $R +$I), Step() ]->
+ --[ Key(~gid, $R, list_to_mset(before_rcvd) + $R ), Step() ]->
   [ ]
 
 rule Responder4:
   let Y = g^y in
   [ Responder3(~gid, ~ec, $R, $I, p1, p2)
-  , AuthOut(<~gid, $S, $C, Y>) ] // $S should be last ...
- --[ Key(~gid, $C, list_to_mset(p1) + list_to_mset(p2) + $R)
+  , AuthOut(<~gid, $S, $R, Y>) ] // $S should be last ... 
+ --[ Key(~gid, $R, list_to_mset(p1) + list_to_mset(p2) + $R ) 
    , IsLast(~gid, $S)
    , Step() ]->
   [ ]
 
 lemma test3:
   exists-trace
-  "Ex #j A B C id. Key(id, C, list_to_mset(<A,nil>) + C + B) @ j"
+  "Ex #j A B C id. Key(id, C, list_to_mset(<B,nil>) + list_to_mset(<A,nil>) + C) @ j"
 /*
        & (All #i1 #i2 #i3 #i4 #i5. (StepR() @ i1 & StepR() @ i2 & StepR() @ i3 &
                                     StepR() @ i4 & StepR() @ i5)
