@@ -35,7 +35,7 @@ rule ChooseParticipants2:
 
 rule StartGroup1:
   [ StartGroup(~gid, $I, responders) ]
- --[ Step() ]->
+ --[ Step() , Started(~gid, $I) ]->
   [ Initiator1(~gid, $I, responders)             // fork initiator
   , StartResponders(~gid, $I, responders, <$I,nil>) ] // loop for starting responders
 
@@ -44,12 +44,24 @@ rule StartGroup1:
 
 rule StartGroup2:
   [ StartResponders(~gid, $I, <$R,notstarted>, started) ]
- --[ Step(), StepS() ]->
+ --[ Step(), StepS() , Started(~gid, $R) ]->
   [ Responder1(~gid, $R, $I, started, notstarted)
   , StartResponders(~gid, $I, notstarted, <$R,started>) ]
 
 // Responder R2, started=nil, notstarted=[R1]
 // Responder R1, started=[R2], notstarted=[]
+
+//auto proof succeeds
+lemma startTest3:
+  exists-trace
+  "Ex #j1 #j2 #j3 A B C id. Started(id,A) @ j1 & Started(id,B) @ j2 & Started(id,C) @ j3 & not (A = B) & not (A=C) & not (B=C)"
+
+//test this?
+lemma startTest4:
+  exists-trace
+  "Ex #j1 #j2 #j3 #j4 A B C D id. Started(id,A) @ j1 & Started(id,B) @ j2 & Started(id,C) @ j3 & Started(id,D) @ j4
+   & not (A = B) & not (A=C) & not (B=C)
+   & not (A = D) & not (B=D) & not (C=D)"
 
 /*************************************************************************/
 /* Initiator                                                             */
@@ -78,7 +90,7 @@ rule Initiator2:
 /* Responders                                                          */
 /*************************************************************************/
 
-// $I does not need to be carried through, only need it for Responder1 fact for rule Responder1_init, for Responder2+ can just drop it 
+// $I does not need to be carried through, can just drop it - actually drop it in Responder1 above already
 rule Responder1:
   let Y = g^y
       before = <$S, before_missing>
@@ -134,9 +146,32 @@ rule Responder4:
    , Step() ]->
   [ ]
 
+
+lemma key_agreement_2:
+  exists-trace
+  "Ex #j1 #j2 A B  id. Key(id, A, list_to_mset(<B,nil>) + A) @ j1
+                     & Key(id, B, list_to_mset(<A,nil>) + B) @ j2
+                     & not (A = B)"
+
+// A initiator
+// B last
+// C middle
+lemma key_agreement_3:
+  exists-trace
+  "Ex #j1 #j2 #j3 A B C id. 
+      Key(id, A, list_to_mset(<C,B,nil>) + A) @ j1
+    & Key(id, B, list_to_mset(<A,C,nil>) + B) @ j2
+    & Key(id, C, list_to_mset(<A,nil>) + list_to_mset(<B,nil>)+ C) @ j3
+    & not (A = B)
+    & not (A = C)
+    & not (B = C)"
+
+
+/*
 lemma test3:
   exists-trace
   "Ex #j A B C id. Key(id, C, list_to_mset(<B,nil>) + list_to_mset(<A,nil>) + C) @ j"
+*/
 /*
        & (All #i1 #i2 #i3 #i4 #i5. (StepR() @ i1 & StepR() @ i2 & StepR() @ i3 &
                                     StepR() @ i4 & StepR() @ i5)
