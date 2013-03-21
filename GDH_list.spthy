@@ -85,23 +85,10 @@ rule Responder1:
   in
   [ Responder1(~gid, $R, $I, before, after)
   , Fr(~ec) 
-  , AuthOut(<~gid, $S, $S, Y>) ] // key for $I sent by $S 
+  , AuthOut(<~gid, $S, $S, Y>) ] // key for $I sent by $S // ??? weird comment!
  --[ Step() ]->
   [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, <$S, nil>, after) 
-  , AuthOut(<~gid, $R, $S, Y^~ec>) ] //RALF: the above received Y needs to  be kept and exponentiated - the comment there is weird though; also for the very first message <~gid, I, I, g> this is problematic, as it does not match! - may need to duplicate this rule for that special case???
-
-// special case for first responder that gets 'naked' g from $I, so the match Y = g^y would fail!
-rule Responder1_init:
-  let Y = g
-      before = <$I, before_missing>
-  in
-  [ Responder1(~gid, $R, $I, before, after)
-  , Fr(~ec) 
-  , AuthOut(<~gid, $I, $I, Y>) ] // key for $I sent by $I 
- --[ Step() ]->
-  [ Responder2(~gid, ~ec, $R, $I, $I, before_missing, <$I, nil>, after) 
-  , AuthOut(<~gid, $R, $I, Y^~ec>) ]
-
+  , AuthOut(<~gid, $R, $S, Y^~ec>) ] 
 
 // Responder R2, before=nil,  after=[R1]
 // Responder R1, before=[R2], after=[]
