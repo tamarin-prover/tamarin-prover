@@ -13,6 +13,20 @@ axiom MembersUnique: "All x A #i #j. Mem(x,A) @ i & Mem(x,A) @ j ==> #i = #j"
 
 /* axiom LoopUnique: "All y D E F #j #i. Loop(y, D, E, F) @ i & Loop(y, D, E, F) @ j ==> #i = #j" */
 
+/*
+// this axiom uses "NIE", if we disable it then NIE can be dropped
+axiom NoInverseInExponents: "All x y #j. NIE(g^(x*y)) @ j ==> not (Ex z. x = inv(z))"
+*/
+
+
+// This rule creates 5 open chains 
+rule AuthOut:
+  [ AuthOut(X) ]
+  -->
+  [ AuthOut(X) ,
+    Out(X) ]
+
+
 /*************************************************************************/
 /* Setup                                                                 */
 /*************************************************************************/
@@ -71,11 +85,15 @@ rule Initiator:
   let responders = <$R,other> in
   [ Initiator1(~gid, $I, responders)
   , Fr(~ei) ]
- --[ Step() ]->
+ --[ Step() 
+  , NIE(g^~ei)
+  ]->
   [ Initiator2(~gid, ~ei, $I, responders)
   , AuthOut(<~gid, $I, $I, g   >)    // from $I, key for $I
   , AuthOut(<~gid, $I, $R, g^~ei>)   // from $I, key for first responder $R
-  , Out(g^~ei) ]
+//  , Out(g^~ei)
+//  , Out(g) 
+  ]
 
 rule Initiator2:
   let Y = g^y in
@@ -83,6 +101,7 @@ rule Initiator2:
   , AuthOut(<~gid, $S, $I, Y>) ]  // $S unspecified, should be last(responders)
  --[ Key(~gid, $I, list_to_mset(responders) + $I)
    , IsLast(~gid, $S)
+   , NIE(Y)
    , Step() ]->
   [ ]
 
@@ -98,7 +117,10 @@ rule Responder1:
   [ Responder1(~gid, $R, $I, before, after)
   , Fr(~ec) 
   , AuthOut(<~gid, $S, $S, Y>) ] // key for $I sent by $S // ??? weird comment!
- --[ Step() ]->
+ --[ Step()
+  , NIE(Y)
+  , NIE(Y^~ec)
+  ]->
   [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, <$S, nil>, after) 
   , AuthOut(<~gid, $R, $S, Y^~ec>) ] 
 
@@ -111,9 +133,12 @@ rule Responder2:
   in
   [ Responder2(~gid, ~ec, $R, $I, $S, before_missing0, before_rcvd, after)
   , AuthOut(<~gid, $S, $KR, Y>) ] // key for $KR sent by $S
- --[ Loop(~gid, $R, $S, $KR), StepR() ]->  // we need this for cutting the search space in the exists-trace proof
-  [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, <$KR, before_rcvd>, after)
-  , AuthOut(<~gid, $R, $KR, Y^~ec>) ] // key for $KR sent by $R
+ --[ NIE(Y)
+   , NIE(Y^~ec)
+   , Loop(~gid, $R, $S, $KR)
+   , StepR() ]->  // we need this for cutting the search space in the exists-trace proof
+   [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, <$KR, before_rcvd>, after)
+   , AuthOut(<~gid, $R, $KR, Y^~ec>) ] // key for $KR sent by $R
 
 // Responder R2, started=nil, notstarted=[R1] => R1
 //    
@@ -125,7 +150,10 @@ rule Responder3:
   in
   [ Responder2(~gid, ~ec, $R, $I, $S, nil, before_rcvd, after)
   , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
- --[ InEq(after,nil), Step() ]->
+--[ InEq(after,nil), Step()
+  , NIE(Y)
+  , NIE(Y^~ec) 
+  ]->
   [ Responder3(~gid, ~ec, $R, $I, before_rcvd, after)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key for this round - sent to the next participant 
   , AuthOut(<~gid, $R, $R, Y>)     ]  // key for $R sent by $R
@@ -134,7 +162,9 @@ rule Responder3_last:
   let Y = g^y in
   [ Responder2(~gid, ~ec, $R, $I, $S, nil, before_rcvd, nil)
   , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
- --[ Key(~gid, $R, list_to_mset(before_rcvd) + $R ), Step() ]->
+ --[ Key(~gid, $R, list_to_mset(before_rcvd) + $R )
+  , NIE(Y)
+  , Step() ]->
   [ ]
 
 rule Responder4:
@@ -143,6 +173,7 @@ rule Responder4:
   , AuthOut(<~gid, $S, $R, Y>) ] // $S should be last ... 
  --[ Key(~gid, $R, list_to_mset(p1) + list_to_mset(p2) + $R ) 
    , IsLast(~gid, $S)
+   , NIE(Y)
    , Step() ]->
   [ ]
 
