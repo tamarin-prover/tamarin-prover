@@ -18,14 +18,14 @@ axiom MembersUnique: "All x A #i #j. Mem(x,A) @ i & Mem(x,A) @ j ==> #i = #j"
 axiom NoInverseInExponents: "All x y #j. NIE(g^(x*y)) @ j ==> not (Ex z. x = inv(z))"
 */
 
-
+/*
 // This rule creates 5 open chains 
 rule AuthOut:
   [ AuthOut(X) ]
   -->
   [ AuthOut(X) ,
     Out(X) ]
-
+*/
 
 /*************************************************************************/
 /* Setup                                                                 */
@@ -91,8 +91,8 @@ rule Initiator:
   [ Initiator2(~gid, ~ei, $I, responders)
   , AuthOut(<~gid, $I, $I, g   >)    // from $I, key for $I
   , AuthOut(<~gid, $I, $R, g^~ei>)   // from $I, key for first responder $R
-//  , Out(g^~ei)
-//  , Out(g) 
+  , Out(g^~ei)
+  , Out(g) 
   ]
 
 rule Initiator2:
@@ -122,7 +122,8 @@ rule Responder1:
   , NIE(Y^~ec)
   ]->
   [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, <$S, nil>, after) 
-  , AuthOut(<~gid, $R, $S, Y^~ec>) ] 
+  , AuthOut(<~gid, $R, $S, Y^~ec>) 
+  , Out(Y^~ec) ] 
 
 // Responder R2, before=nil,  after=[R1]
 // Responder R1, before=[R2], after=[]
@@ -138,6 +139,7 @@ rule Responder2:
    , Loop(~gid, $R, $S, $KR)
    , StepR() ]->  // we need this for cutting the search space in the exists-trace proof
    [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, <$KR, before_rcvd>, after)
+   , Out(Y^~ec)
    , AuthOut(<~gid, $R, $KR, Y^~ec>) ] // key for $KR sent by $R
 
 // Responder R2, started=nil, notstarted=[R1] => R1
@@ -155,6 +157,7 @@ rule Responder3:
   , NIE(Y^~ec) 
   ]->
   [ Responder3(~gid, ~ec, $R, $I, before_rcvd, after)
+  , Out(Y^~ec)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key for this round - sent to the next participant 
   , AuthOut(<~gid, $R, $R, Y>)     ]  // key for $R sent by $R
 
