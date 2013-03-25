@@ -183,6 +183,7 @@ prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
 prettyMaudeSig sig = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text      builtIns
     , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig)
+    , ppNonEmptyList' "usersorts:" P.text    $ S.toList (userSorts sig)
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyStRule $ S.toList (stRules sig)
