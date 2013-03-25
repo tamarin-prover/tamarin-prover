@@ -1,0 +1,189 @@
+theory GDH_List
+begin
+
+builtins: diffie-hellman, multiset
+
+functions: nil/0, g/0, list_to_mset/1
+
+axiom InEq_not_eq: "not (Ex x #i. Ineq(x,x)@i)"
+
+axiom IsLast: "All x A #i. IsLast(x,A) @ i ==> Ex #j. Last(x,A) @ j"
+
+axiom MembersUnique: "All x A #i #j. Mem(x,A) @ i & Mem(x,A) @ j ==> #i = #j"
+
+
+/*************************************************************************/
+/* Setup                                                                 */
+/*************************************************************************/
+
+rule ChooseParticipants1:
+  [ Fr(~gid) ]
+ --[ Mem(~gid,$I), InEq($I, $R)
+   , Last(~gid, $R)
+ ]-> // groups have initiator (first) and responders
+  [ F_StartGroup(~gid, $I, <$R, nil>) ]
+
+rule ChooseParticipants2:
+  [ F_StartGroup(~gid, $I, responders) ]
+ --[ Mem(~gid,$R), StepC() ]->
+  [ F_StartGroup(~gid, $I, <$R,responders>) ]
+
+rule StartGroup1:
+  [ F_StartGroup(~gid, $I, responders) ]
+ --[ Step() , Started(~gid, $I) ]->
+  [ F_Initiator1(~gid, $I, responders)              // fork initiator
+  , F_StartResponders(~gid, responders, <$I,nil>) ] // loop for starting responders
+
+rule StartGroup2:
+  [ F_StartResponders(~gid, <$R,notstarted>, started) ]
+ --[ Started(~gid, $R) ]->
+  [ F_Responder1(~gid, $R, started, notstarted)
+  , F_StartResponders(~gid, notstarted, <$R,started>) ]
+
+/*************************************************************************/
+/* Initiator                                                             */
+/*************************************************************************/
+
+rule Initiator:
+  let responders = <$R,other> in
+  [ F_Initiator1(~gid, $I, responders)
+  , Fr(~ei) ]
+ --[ AOut(~gid, $I, $I), AOut(~gid, $I, $R) ]->
+  [ F_Initiator2(~gid, ~ei, $I, responders)
+  , AuthOut(<~gid, $I, $I, g   >)    // from $I, key for $I
+  , AuthOut(<~gid, $I, $R, g^~ei>)   // from $I, key for first responder $R
+  , Out(g^~ei)
+  ]
+
+rule Initiator2:
+  let Y = g^y in
+  [ F_Initiator2(~gid, ~ei, $I, responders)
+  , AuthOut(<~gid, $S, $I, Y>) ]  // $S unspecified, should be last(responders)
+ --[ Key(~gid, $I, list_to_mset(responders) + $I)
+   , IsLast(~gid, $S)
+   ]->
+  [ ]
+
+/*************************************************************************/
+/* Responders                                                            */
+/*************************************************************************/
+
+rule Responder1:
+  let Y = g^y in
+  [ F_Responder1(~gid, $R, <$S, before_missing>, after)
+  , Fr(~ec) 
+  , AuthOut(<~gid, $S, $S, Y>) ]     // key for $S sent by $S
+ --[ AOut(~gid, $R, $S) ]->
+  [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$S, nil>, after)
+  , AuthOut(<~gid, $R, $S, Y^~ec>)   // new key for $S sent by $R
+  , Out(Y^~ec) ]
+
+rule Responder2:
+  let Y = g^y in
+  [ F_Responder2(~gid, ~ec, $R, $S, <$KR, before_missing>, before_rcvd, after)
+  , AuthOut(<~gid, $S, $KR, Y>) ]     // key for $KR sent by $S
+ --[ AOut(~gid, $R, $KR) ]->
+  [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$KR, before_rcvd>, after)
+  , AuthOut(<~gid, $R, $KR, Y^~ec>)   // new key for $KR sent by $R
+  , Out(Y^~ec) ]
+
+rule Responder3:
+  let Y = g^y 
+      after = <$KR, after_missing>
+  in
+  [ F_Responder2(~gid, ~ec, $R, $S, nil, before_rcvd, after)
+  , AuthOut(<~gid, $S, $R, Y>) ]      // key for $R sent by $S (groupkey last round)
+ --[ AOut(~gid, $R, $KR), AOut(~gid, $R, $R) ]->
+  [ F_Responder3(~gid, ~ec, $R, before_rcvd, after)
+  , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key this round - sent to next participant
+  , AuthOut(<~gid, $R, $R, Y>)        // key for $R sent by $R
+  , Out(Y^~ec) ]
+  
+rule Responder3_last:
+  let Y = g^y in
+  [ F_Responder2(~gid, ~ec, $R, $S, nil, before_rcvd, nil)
+  , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
+ --[ Key(~gid, $R, list_to_mset(before_rcvd) + $R ) ]->
+  [ ]
+
+rule Responder4:
+  let Y = g^y in
+  [ F_Responder3(~gid, ~ec, $R, p1, p2)
+  , AuthOut(<~gid, $S, $R, Y>) ] // $S should be last ... 
+ --[ Key(~gid, $R, list_to_mset(p1) + list_to_mset(p2) + $R ) 
+   , IsLast(~gid, $S) ]->
+  [ ]
+
+
+// this should be a Lemma
+axiom AOut_unique:
+  "All #i #j id A B. AOut(id,A,B)@i & AOut(id,A,B)@j ==> #i = #j"
+
+lemma key_agreement_2:
+  exists-trace
+  "Ex #j1 #j2 A B  id. Key(id, A, list_to_mset(<B,nil>) + A) @ j1
+                     & Key(id, B, list_to_mset(<A,nil>) + B) @ j2
+                     & not (A = B)"
+
+// A initiator
+// B middle
+// C last
+lemma key_agreement_3:
+  exists-trace
+  "Ex #j1 #j2 #j3 A B C id. 
+      Key(id, A, list_to_mset(<C,B,nil>) + A) @ j1
+    & Key(id, B, list_to_mset(<A,nil>) + list_to_mset(<C,nil>)+ B) @ j2
+    & Key(id, C, list_to_mset(<B,A,nil>) + C) @ j3
+    & not (A = B)
+    & not (A = C)
+    & not (B = C)"
+
+
+lemma key_agreement_4:
+  exists-trace
+  "Ex #j1 #j2 #j3 #j4 A B C D id. 
+      Key(id, A, list_to_mset(<D,C,B,nil>) + A) @ j1
+    & Key(id, B, list_to_mset(<A,nil>) + list_to_mset(<C,D,nil>)+ B) @ j2
+    & Key(id, C, list_to_mset(<B,A,nil>) + list_to_mset(<C,nil>)+ B) @ j3
+    & Key(id, D, list_to_mset(<C,B,A,nil>) + D) @ j4
+    & not (A = B)
+    & not (A = C)
+    & not (A = D)
+    & not (B = C)
+    & not (B = D)
+    & not (C = D)"
+
+
+/*
+lemma test3:
+  exists-trace
+  "Ex #j A B C id. Key(id, C, list_to_mset(<B,nil>) + list_to_mset(<A,nil>) + C) @ j"
+*/
+/*
+       & (All #i1 #i2 #i3 #i4 #i5. (StepR() @ i1 & StepR() @ i2 & StepR() @ i3 &
+                                    StepR() @ i4 & StepR() @ i5)
+                                   ==>  (#i1 = #i2 | #i1 = #i3 | #i1 = #i4 | #i1 = #i5 |
+                                         #i2 = #i3 | #i2 = #i4 | #i2 = #i5 |
+                                         #i3 = #i4 | #i3 = #i5 | #i4 = #i5 ) )
+       & (All #i1 #i2 #i3. StepS() @ i1 & StepS() @ i2 & StepS() @ i3
+                                   ==>  (#i1 = #i2 | #i1 = #i3 | #i2  = #i3))
+       & (All #i1 #i2 #i3. StepC() @ i1 & StepC() @ i2 & StepC() @ i3
+                                   ==>  (#i1 = #i2 | #i1 = #i3 | #i2  = #i3))"
+*/
+/*
+lemma test3:
+  exists-trace
+  "Ex #j A B C id. Key(id, C, list_to_mset(<A,<B,nil>>) + C) @ j
+               & (All y D #j. Mem(y,D) @ j ==> y = id & (D = A | D = B | D = C))
+               & (All y A1 A2 A3 #j. Loop(y, A1, A2, A3) @ j ==> (y =id & (A1 = A | A1 = B | A1 = C)
+                                                                        & (A2 = A | A2 = B | A2 = C)
+                                                                        & (A3 = A | A3 = B | A3 = C)))"
+
+lemma test1:
+  exists-trace
+  "Ex #j I D C1 x. LGroup(x, list_to_mset(<I,<D,<C1, nil>>>)) @ j"
+*/
+
+
+
+end
