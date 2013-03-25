@@ -51,6 +51,7 @@ module Term.LTerm (
   , isMsgVar
   , isFreshVar
   , isSimpleTerm
+  , isUserSort
   , niFactors
   , containsPrivate
   , neverContainsFreshPriv
@@ -311,6 +312,11 @@ isSimpleTerm :: LNTerm -> Bool
 isSimpleTerm t =
     not (containsPrivate t) && 
     (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
+
+-- | Is this a user-defined sort?
+isUserSort :: LSort -> Bool
+isUserSort (LSortUser _) = True
+isUserSort _             = False
 
 -- | 'True' iff no instance of this term contains fresh names or private function symbols.
 neverContainsFreshPriv :: LNTerm -> Bool

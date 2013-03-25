@@ -33,9 +33,9 @@ import           Text.PrettyPrint.Class     (render)
 
 import           Term.Substitution
 import           Term.SubtermRule
+import           Term.Maude.Signature       (addUserSort)
 import           Theory
 import           Theory.Text.Parser.Token
-
 
 
 
@@ -239,7 +239,7 @@ intrRule = do
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
 genericRule :: Parser ([LNFact], [LNFact], [LNFact])
-genericRule =
+genericRule =  
     (,,) <$> list (fact llit)
          <*> ((pure [] <* symbol "-->") <|>
               (symbol "--[" *> commaSep (fact llit) <* symbol "]->"))
@@ -547,6 +547,15 @@ builtins =
           *> extendSig hashMaudeSig
       ]
 
+usersorts :: Parser ()
+usersorts =
+    symbol "usersorts" *> colon *> commaSep1 sortSymbol *> pure ()
+  where
+    sortSymbol = do
+      ident <- identifier
+      sig   <- getState
+      setState (addUserSort ident sig)
+
 functions :: Parser ()
 functions =
     symbol "functions" *> colon *> commaSep1 functionSymbol *> pure ()
@@ -593,6 +602,9 @@ theory flags0 = do
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
     addItems flags thy = asum
       [ do builtins
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+      , do usersorts
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do functions

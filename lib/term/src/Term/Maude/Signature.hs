@@ -20,7 +20,6 @@ module Term.Maude.Signature (
   , irreducibleFunSyms
   , rrulesForMaudeSig
   , noEqFunSyms
-  , sortsForMaudeSig
   , userSortsForMaudeSig
 
   -- * predefined maude signatures
@@ -37,6 +36,7 @@ module Term.Maude.Signature (
   -- * extend maude signatures
   , addFunSym
   , addStRule
+  , addUserSort
 
   -- * pretty printing
   , prettyMaudeSig
@@ -78,12 +78,13 @@ data MaudeSig = MaudeSig
                                           -- function symbols for DH, BP, and Multiset
                                           -- can be computed from enableX and stFunSyms
     , irreducibleFunSyms :: FunSig        -- ^ irreducible function symbols (can be computed)
+    , userSorts          :: S.Set String  -- ^ user-defined sorts
     }
     deriving (Ord, Show, Eq)
 
 -- | Smart constructor for maude signatures. Computes funSyms and irreducibleFunSyms.
 maudeSig :: MaudeSig -> MaudeSig
-maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules}) =
+maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules,userSorts}) =
     msig {enableDH=enableDH||enableBP, funSyms=allfuns, irreducibleFunSyms=irreduciblefuns}
   where
     allfuns = (S.map NoEq stFunSyms)
@@ -97,14 +98,15 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules}) =
 
 -- | A monoid instance to combine maude signatures.
 instance Monoid MaudeSig where
-    (MaudeSig dh1 bp1 mset1 stFunSyms1 stRules1 _ _) `mappend`
-      (MaudeSig dh2 bp2 mset2 stFunSyms2 stRules2 _ _) =
+    (MaudeSig dh1 bp1 mset1 stFunSyms1 stRules1 _ _ uSorts1) `mappend`
+      (MaudeSig dh2 bp2 mset2 stFunSyms2 stRules2 _ _ uSorts2) =
           maudeSig (mempty {enableDH=dh1||dh2
                            ,enableBP=bp1||bp2
                            ,enableMSet=mset1||mset2
                            ,stFunSyms=S.union stFunSyms1 stFunSyms2
-                           ,stRules=S.union stRules1 stRules2})
-    mempty = MaudeSig False False False S.empty S.empty S.empty S.empty
+                           ,stRules=S.union stRules1 stRules2
+                           ,userSorts=S.union uSorts1 uSorts2})
+    mempty = MaudeSig False False False S.empty S.empty S.empty S.empty S.empty
 
 -- | Non-AC function symbols.
 noEqFunSyms :: MaudeSig -> NoEqFunSig
@@ -120,6 +122,11 @@ addStRule :: StRule -> MaudeSig -> MaudeSig
 addStRule str msig =
     msig `mappend` mempty {stRules=S.fromList [str]}
 
+-- | Add a user-defined sort to given maude signature.
+addUserSort :: String -> MaudeSig -> MaudeSig
+addUserSort str msig =
+    msig `mappend` mempty {userSorts=S.fromList [str]}
+
 -- | Returns all rewriting rules including the rules
 --   for DH, BP, and multiset.
 rrulesForMaudeSig :: MaudeSig -> Set (RRule LNTerm)
@@ -129,15 +136,19 @@ rrulesForMaudeSig (MaudeSig {enableDH, enableBP, enableMSet, stRules}) =
     `S.union` (if enableBP   then bpRules   else S.empty)
     `S.union` (if enableMSet then msetRules else S.empty)
 
--- | Extract sorts from maude signature.
+-- | Extract sorts from maude signature substitution rules.
 sortsForMaudeSig :: MaudeSig -> Set LSort
-sortsForMaudeSig msig = S.fromList $ map getLSort $ S.toList $ stRules msig
+sortsForMaudeSig msig =
+    S.fromList $ map getLSort $ S.toList $ stRules msig
   where
     getLSort (StRule lnterm _) = sortOfLNTerm lnterm
 
 -- | Extract user-defined sorts from maude signature.
 userSortsForMaudeSig :: MaudeSig -> Set LSort
-userSortsForMaudeSig = S.filter isUserDefined . sortsForMaudeSig
+userSortsForMaudeSig msig =
+    S.union
+      (S.map LSortUser $ userSorts msig)
+      (S.filter isUserDefined $ sortsForMaudeSig msig)
   where
     isUserDefined (LSortUser _) = True
     isUserDefined _             = False

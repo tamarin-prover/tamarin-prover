@@ -223,8 +223,12 @@ parseSort :: Parser LSort
 parseSort =  string "Pub"      *> return LSortPub
          <|> string "Fresh"    *> return LSortFresh
          <|> string "Node"     *> return LSortNode
+         <|> string "U"        *> -- Sorts with U* are user-defined
+               ( sortIdent    >>= return . LSortUser . BC.unpack )
          <|> string "M"        *> -- FIXME: why?
-               (    string "sg"  *> return LSortMsg )
+               ( string "sg"   *> return LSortMsg )
+  where
+    sortIdent = takeWhile1 (`BC.notElem` (":(,)\n " :: B.ByteString))
 
 -- | @parseTerm@ is a parser for Maude terms.
 parseTerm :: MaudeSig -> Parser MTerm
