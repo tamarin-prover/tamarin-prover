@@ -125,11 +125,11 @@ solveAllSafeGoals ths =
       case goal of
         ChainG _ _    -> True
         ActionG _ fa  -> not (isKUFact fa)
-        PremiseG _ fa -> not (isKUFact fa)
+        PremiseG _ fa -> not (isKUFact fa) && doSplit
         DisjG _       -> doSplit
         -- Uncomment to get more extensive case splitting
-        -- SplitG _   -> doSplit
-        SplitG _      -> False
+        SplitG _   -> doSplit
+        -- SplitG _      -> False
 
     usefulGoal (_, (_, Useful)) = True
     usefulGoal _                = False
