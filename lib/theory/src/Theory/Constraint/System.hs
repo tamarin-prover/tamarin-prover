@@ -312,7 +312,7 @@ allActions sys =
   <|> do (i, ru) <- M.toList $ L.get sNodes sys
          (,) i <$> L.get rActs ru
 
--- | All actions that hold in a sequent.
+-- | All KU actions that hold in a sequent.
 allKUActions :: System -> [(NodeId, LNFact, LNTerm)]
 allKUActions sys = do
     (i, fa@(kFactView -> Just (UpK, m))) <- allActions sys
