@@ -138,20 +138,80 @@ lemma key_agreement_3:
     & not (A = C)
     & not (B = C)"
 
-
+//note that this order is not the one they have been created at; creation order is: A(initiator), C(last), B2, B1, ... (rest in reverse order)
+// A initiator
+// B1 middle (before B2)
+// B2 middle (after B1)
+// C last
 lemma key_agreement_4:
   exists-trace
-  "Ex #j1 #j2 #j3 #j4 A B C D id. 
-      Key(id, A, list_to_mset(<D,C,B,nil>) + A) @ j1
-    & Key(id, B, list_to_mset(<A,nil>) + list_to_mset(<C,D,nil>)+ B) @ j2
-    & Key(id, C, list_to_mset(<B,A,nil>) + list_to_mset(<C,nil>)+ B) @ j3
-    & Key(id, D, list_to_mset(<C,B,A,nil>) + D) @ j4
-    & not (A = B)
+  "Ex #j1 #jb1 #jb2 #j3 A B1 B2 C id. 
+      Key(id, A, list_to_mset(<B1,B2,C,nil>) + A) @ j1
+    & Key(id, B1, list_to_mset(<A,nil>) + list_to_mset(<B2,C,nil>)+ B1) @ jb1 
+    & Key(id, B2, list_to_mset(<A,B1,nil>) + list_to_mset(<C,nil>)+ B2) @ jb2 
+    & Key(id, C, list_to_mset(<A,B1,B2,nil>) + C) @ j3
+    & not (A = B1)
+    & not (A = B2)
     & not (A = C)
-    & not (A = D)
-    & not (B = C)
-    & not (B = D)
-    & not (C = D)"
+    & not (B1 = B2)
+    & not (B1 = C)
+    & not (B2 = C)"
+
+// A initiator
+// B1 middle (before B2)
+// B2 middle (after B1, before B3)
+// B3 middle (after B2)
+// C last
+lemma key_agreement_5:
+  exists-trace
+  "Ex #j1 #jb1 #jb2 #jb3 #j3 A B1 B2 B3 C id. 
+      Key(id, A, list_to_mset(<B1,B2,B3,C,nil>) + A) @ j1
+    & Key(id, B1, list_to_mset(<A,nil>) + list_to_mset(<B2,B3,C,nil>)+ B1) @ jb1 
+    & Key(id, B2, list_to_mset(<A,B1,nil>) + list_to_mset(<B3,C,nil>)+ B2) @ jb2 
+    & Key(id, B3, list_to_mset(<A,B1,B2,nil>) + list_to_mset(<C,nil>)+ B3) @ jb3 
+    & Key(id, C, list_to_mset(<A,B1,B2,B3,nil>) + C) @ j3
+    & not (A = B1)
+    & not (A = B2)
+    & not (A = B3)
+    & not (A = C)
+    & not (B1 = B2)
+    & not (B1 = B3)
+    & not (B1 = C)
+    & not (B2 = B3)
+    & not (B2 = C)
+    & not (B3 = C)"
+
+// A initiator
+// B1 middle (before B2)
+// B2 middle (after B1, before B3)
+// B3 middle (after B2, before B4)
+// B4 middle (after B3)
+// C last
+lemma key_agreement_6:
+  exists-trace
+  "Ex #j1 #jb1 #jb2 #jb3 #jb4 #j3 A B1 B2 B3 B4 C id. 
+      Key(id, A, list_to_mset(<B1,B2,B3,B4,C,nil>) + A) @ j1
+    & Key(id, B1, list_to_mset(<A,nil>) + list_to_mset(<B2,B3,B4,C,nil>)+ B1) @ jb1 
+    & Key(id, B2, list_to_mset(<A,B1,nil>) + list_to_mset(<B3,B4,C,nil>)+ B2) @ jb2 
+    & Key(id, B3, list_to_mset(<A,B1,B2,nil>) + list_to_mset(<B4,C,nil>)+ B3) @ jb3 
+    & Key(id, B4, list_to_mset(<A,B1,B2,B3,nil>) + list_to_mset(<C,nil>)+ B4) @ jb4 
+    & Key(id, C, list_to_mset(<A,B1,B2,B3,B4,nil>) + C) @ j3
+    & not (A = B1)
+    & not (A = B2)
+    & not (A = B3)
+    & not (A = B4)
+    & not (A = C)
+    & not (B1 = B2)
+    & not (B1 = B3)
+    & not (B1 = B4)
+    & not (B1 = C)
+    & not (B2 = B3)
+    & not (B2 = B4)
+    & not (B2 = C)
+    & not (B3 = B4)
+    & not (B3 = C)
+    & not (B4 = C)"
+
 
 
 /*
