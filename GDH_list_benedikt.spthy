@@ -131,9 +131,9 @@ lemma key_agreement_2:
 lemma key_agreement_3:
   exists-trace
   "Ex #j1 #j2 #j3 A B C id. 
-      Key(id, A, list_to_mset(<C,B,nil>) + A) @ j1
+      Key(id, A, list_to_mset(<B,C,nil>) + A) @ j1
     & Key(id, B, list_to_mset(<A,nil>) + list_to_mset(<C,nil>)+ B) @ j2
-    & Key(id, C, list_to_mset(<B,A,nil>) + C) @ j3
+    & Key(id, C, list_to_mset(<A,B,nil>) + C) @ j3
     & not (A = B)
     & not (A = C)
     & not (B = C)"
