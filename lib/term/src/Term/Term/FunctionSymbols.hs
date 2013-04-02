@@ -73,8 +73,11 @@ data ACSym = Union | Mult
 data Privacy = Private | Public
   deriving (Eq, Ord, Typeable, Data, Show)
 
+-- | Some function symbols can be restricted to certain sorts.
+type SymSorts = Maybe [ByteString]
+
 -- | NoEq function symbols (with respect to the background theory).
-type NoEqSym = (ByteString, (Int, Privacy)) -- ^ operator name, arity, private
+type NoEqSym = (ByteString, (Int, (Privacy, SymSorts))) -- ^ operator name, arity, private
 
 -- | C(ommutative) function symbols
 data CSym = EMap
@@ -110,19 +113,19 @@ pmultSymString = "pmult"
 
 pairSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym :: NoEqSym
 -- | Pairing.
-pairSym  = ("pair",(2,Public))
+pairSym  = ("pair",(2,(Public,Nothing)))
 -- | Exponentiation.
-expSym   = (expSymString,(2,Public))
+expSym   = (expSymString,(2,(Public,Nothing)))
 -- | The inverse in the groups of exponents.
-invSym   = (invSymString,(1,Public))
+invSym   = (invSymString,(1,(Public,Nothing)))
 -- | The one in the group of exponents.
-oneSym   = ("one",(0,Public))
+oneSym   = ("one",(0,(Public,Nothing)))
 -- | Projection of first component of pair.
-fstSym   = ("fst",(1,Public))
+fstSym   = ("fst",(1,(Public,Nothing)))
 -- | Projection of second component of pair.
-sndSym   = ("snd",(1,Public))
+sndSym   = ("snd",(1,(Public,Nothing)))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
-pmultSym = (pmultSymString,(2,Public))
+pmultSym = (pmultSymString,(2,(Public,Nothing)))
 
 ----------------------------------------------------------------------
 -- Fixed signatures

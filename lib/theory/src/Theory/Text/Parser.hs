@@ -40,7 +40,6 @@ import           Theory.Text.Parser.Token
 
 
 
-
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
 ------------------------------------------------------------------------------
@@ -76,9 +75,9 @@ llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
 lookupArity :: String -> Parser (Int, Privacy)
 lookupArity op = do
     maudeSig <- getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public))]) of
-        Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
-        Just (k,priv) -> return (k,priv)
+    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,(Public,Nothing)))]) of
+        Nothing           -> fail $ "unknown operator `" ++ op ++ "'"
+        Just (k,(priv,_)) -> return (k,priv)
 
 -- | Parse an n-ary operator application for arbitrary n.
 naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -93,7 +92,7 @@ naryOpApp plit = do
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
     let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
-    return $ app (BC.pack op, (k,priv)) ts
+    return $ app (BC.pack op, (k,(priv,Nothing))) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -104,7 +103,7 @@ binaryAlgApp plit = do
     arg2 <- term plit
     when (k /= 2) $ fail $
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
+    return $ fAppNoEq (BC.pack op, (2,(priv,Nothing))) [arg1, arg2]
 
 -- | Parse a term.
 term :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -564,13 +563,21 @@ functions =
         f   <- BC.pack <$> identifier <* opSlash
         k   <- fromIntegral <$> natural
         priv <- option Public (symbol "[private]" *> pure Private)
+        sorts <- option Nothing (Just <$> functionSorts k)
         sig <- getState
         case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
-          Just kp' | kp' /= (k,priv) ->
+          Just kp' | kp' /= (k,(priv,sorts)) ->
             fail $ "conflicting arities/private " ++
                    show kp' ++ " and " ++ show (k,priv) ++
                    " for `" ++ BC.unpack f
-          _ -> setState (addFunSym (f,(k,priv)) sig)
+          _ -> setState $ addFunSym (f,(k,(priv,sorts))) sig
+
+    functionSorts k = do
+      colon
+      args <- sequence $ replicate k (BC.pack <$> identifier)
+      void $ symbol "->"
+      retv <- BC.pack <$> identifier
+      return $ args ++ [retv]
 
 equations :: Parser ()
 equations =

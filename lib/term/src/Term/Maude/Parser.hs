@@ -86,9 +86,10 @@ ppMaudeACSym o =
                       Union -> "mun"
 
 -- | Pretty print a non-AC symbol for Maude.
+-- TODO: Take into accounts type restrictions.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
-ppMaudeNoEqSym (o,(_,Private)) = funSymPrefixPriv <> o
-ppMaudeNoEqSym (o,(_,Public))  = funSymPrefix     <> o
+ppMaudeNoEqSym (o,(_,(Private,_))) = funSymPrefixPriv <> o
+ppMaudeNoEqSym (o,(_,(Public,_)))  = funSymPrefix     <> o
 
 -- | Pretty print a C symbol for Maude.
 ppMaudeCSym :: CSym -> ByteString
@@ -176,12 +177,19 @@ ppTheory msig = BC.unlines $
     theoryOpNoEq priv fsort =
         "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."
     theoryOp = theoryOpNoEq Public
-    theoryFunSym (s,(ar,priv)) =
-        theoryOpNoEq priv (s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
+    -- TODO: Take into account sort restrictions
+    theoryFunSym (s,(ar,(priv,sorts))) =
+        theoryOpNoEq priv (s <> " : " <> (maybe (theorySorts ar) (B.concat . theoryCustomSorts) sorts))
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
                         `evalFresh` nothingUsed
+
+    theorySorts ar = (B.concat $ replicate ar "Msg ") <> " -> Msg"
+
+    theoryCustomSorts []     = []
+    theoryCustomSorts [x]    = [BC.pack " -> ", x]
+    theoryCustomSorts (x:xs) = [BC.pack " ", x] ++ theoryCustomSorts xs 
 
 -- Parser for Maude output
 ------------------------------------------------------------------------
@@ -244,21 +252,22 @@ parseTerm msig = choice
                ]
    ]
   where
-    consSym = ("cons",(2,Public))
-    nilSym  = ("nil",(0,Public))
+    consSym = ("cons",(2,(Public,Nothing)))
+    nilSym  = ("nil",(0,(Public,Nothing)))
 
     parseFunSym ident args
+      -- TODO: Adjust this to take into account sort restrictions
       | op `elem` allowedfunSyms = op
       | otherwise                =
           error $ "Maude.Parser.parseTerm: unknown function "
-                  ++ "symbol `"++ show op ++"', not in "
+                  ++ "symbol `"++ show (fst op) ++"', not in "
                   ++show allowedfunSyms
       where prefixLen      = BC.length funSymPrefix
             special        = ident `elem` ["list", "cons", "nil" ]
             priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident 
                                then Private else Public
             op             = (if special then ident else BC.drop prefixLen ident
-                             , ( length args, priv))
+                             , ( length args, (priv, Nothing)))
             allowedfunSyms = [consSym, nilSym]++(S.toList $ noEqFunSyms msig)
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"

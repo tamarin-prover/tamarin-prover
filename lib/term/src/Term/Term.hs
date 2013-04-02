@@ -138,12 +138,12 @@ isUnion _                       = False
 
 -- | 'True' iff the term is a nullary, public function.
 isNullaryPublicFunction :: Term a -> Bool
-isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public))) _) = True
-isNullaryPublicFunction _                                            = False
+isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, (Public, _)))) _) = True
+isNullaryPublicFunction _                                                 = False
 
 isPrivateFunction :: Term a -> Bool
-isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private))) _) = True
-isPrivateFunction _                                            = False
+isPrivateFunction (viewTerm -> FApp (NoEq (_, (_, (Private, _)))) _) = True
+isPrivateFunction _                                                  = False
 
 ----------------------------------------------------------------------
 -- Pretty printing

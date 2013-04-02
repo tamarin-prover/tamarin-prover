@@ -301,9 +301,9 @@ niFactors t = case viewTerm2 t of
 -- | @containsPrivate t@ returns @True@ if @t@ contains private function symbols.
 containsPrivate :: Term t -> Bool
 containsPrivate t = case viewTerm t of
-    Lit _                          -> False
-    FApp (NoEq (_,(_,Private))) _  -> True
-    FApp _                      as -> any containsPrivate as
+    Lit _                              -> False
+    FApp (NoEq (_,(_,(Private,_)))) _  -> True
+    FApp _                          as -> any containsPrivate as
 
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any

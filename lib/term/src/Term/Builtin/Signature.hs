@@ -17,24 +17,24 @@ import qualified Data.Set as S
 
 -- | Binary builtin function symbols.
 sdecSym, sencSym, adecSym, aencSym, signSym :: NoEqSym
-sdecSym = ("sdec",(2, Public))
-sencSym = ("senc",(2, Public))
-adecSym = ("adec",(2, Public))
-aencSym = ("aenc",(2, Public))
-signSym = ("sign",(2, Public))
+sdecSym = ("sdec",(2, (Public, Nothing)))
+sencSym = ("senc",(2, (Public, Nothing)))
+adecSym = ("adec",(2, (Public, Nothing)))
+aencSym = ("aenc",(2, (Public, Nothing)))
+signSym = ("sign",(2, (Public, Nothing)))
 
 -- | Ternary builtin function symbols.
 verifySym :: NoEqSym
-verifySym = ("verify",(3, Public))
+verifySym = ("verify",(3, (Public, Nothing)))
 
 -- | Unary builtin function symbols.
 pkSym, hashSym :: NoEqSym
-pkSym = ("pk",(1, Public))
-hashSym = ("h",(1, Public))
+pkSym = ("pk",(1, (Public, Nothing)))
+hashSym = ("h",(1, (Public, Nothing)))
 
 -- | Nullary builtin function symbols.
 trueSym :: NoEqSym
-trueSym = ("true",(0, Public))
+trueSym = ("true",(0, (Public, Nothing)))
 
 ----------------------------------------------------------------------
 -- Builtin signatures

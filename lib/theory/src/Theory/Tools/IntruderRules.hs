@@ -142,13 +142,14 @@ subtermIntruderRules maudeSig =
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@
+-- TODO: Take into account sort restrictions on function signatures?
 constructionRules :: NoEqFunSig -> [IntrRuleAC]
 constructionRules fSig =
-    [ createRule s k | (s,(k,Public)) <- S.toList fSig ]
+    [ createRule s k | (s,(k,(Public,_))) <- S.toList fSig ]
   where
     createRule s k = Rule (ConstrRule s) (map kuFact vars) [concfact] [concfact]
       where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
-            m        = fAppNoEq (s,(k,Public)) vars
+            m        = fAppNoEq (s,(k,(Public,Nothing))) vars
             concfact = kuFact m
 
 
