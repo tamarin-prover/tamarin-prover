@@ -16,6 +16,7 @@ module Term.Term.FunctionSymbols (
     , CSym(..)
     , Privacy(..)
     , NoEqSym
+    , SymSorts
 
     -- ** Signatures
     , FunSig

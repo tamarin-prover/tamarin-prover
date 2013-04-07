@@ -77,6 +77,7 @@ module Theory.Text.Parser.Token (
   -- * List parsing
   , commaSep
   , commaSep1
+  , commaSepN
   , list
 
     -- * Basic Parsing
@@ -213,6 +214,20 @@ commaSep = T.commaSep spthy
 commaSep1 :: Parser a -> Parser [a]
 commaSep1 = T.commaSep1 spthy
 
+-- | A comma separated list of elements.
+commaSepN :: [Parser a] -> Parser [a]
+commaSepN [] = return []
+commaSepN (p:ps) = do
+  r <- p
+  T.whiteSpace spthy
+  if (null ps) 
+    then do
+      void $ T.comma spthy
+      rs <- commaSepN ps
+      return $ r : rs
+    else
+      return [r]
+
 -- | Parse a list of items '[' item ',' ... ',' item ']'
 list :: Parser a -> Parser [a]
 list = brackets . commaSep
@@ -274,9 +289,10 @@ userSortedLVar =
   where
     suffixParser = do
         (n, i) <- indexedIdentifier <* colon
-        symbol_ "u"
         sort <- identifier
-        return (LVar n (LSortUser sort) i)
+        if elem sort $ map sortSuffix [LSortFresh, LSortPub, LSortNode, LSortMsg ]
+          then fail "Invalid user-sort"
+          else return (LVar n (LSortUser sort) i)
 
     prefixParser = do
         void $ char '%'
@@ -288,14 +304,14 @@ userSortedLVar =
 -- | An arbitrary logical variable.
 lvar :: Parser LVar
 lvar = asum $ map try
-  [ sortedLVar [LSortFresh, LSortPub, LSortMsg, LSortNode]
-  , userSortedLVar ]
+  [ userSortedLVar
+  , sortedLVar [LSortFresh, LSortPub, LSortMsg, LSortNode] ]
 
 -- | Parse a non-node variable.
 msgvar :: Parser LVar
 msgvar = asum $ map try
-  [ sortedLVar [LSortFresh, LSortPub, LSortMsg]
-  , userSortedLVar ]
+  [ userSortedLVar
+  , sortedLVar [LSortFresh, LSortPub, LSortMsg] ]
 
 -- | Parse a graph node variable.
 nodevar :: Parser NodeId

@@ -21,6 +21,7 @@ import           Data.Char                  (isUpper, toUpper)
 import           Data.Foldable              (asum)
 import           Data.Label
 import qualified Data.Map                   as M
+import           Data.Maybe
 import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 
@@ -33,7 +34,7 @@ import           Text.PrettyPrint.Class     (render)
 
 import           Term.Substitution
 import           Term.SubtermRule
-import           Term.Maude.Signature       (addUserSort)
+import           Term.Maude.Signature       (addUserSort, userSortsForMaudeSig)
 import           Theory
 import           Theory.Text.Parser.Token
 
@@ -70,43 +71,59 @@ parseLemma = parseFromString lemma
 llit :: Parser LNTerm
 llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
 
+-- | Parse an lit with logical variables of the given sort.
+sortedLlit :: LSort -> Parser LNTerm
+sortedLlit s = varTerm <$> asum
+  [ do (n, i) <- indexedIdentifier
+       return $ LVar n s i
+  , sortedLVar [s] ]
+
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
-lookupArity :: String -> Parser (Int, Privacy)
+lookupArity :: String -> Parser (Int, Privacy, Maybe [BC.ByteString])
 lookupArity op = do
     maudeSig <- getState
     case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,(Public,Nothing)))]) of
-        Nothing           -> fail $ "unknown operator `" ++ op ++ "'"
-        Just (k,(priv,_)) -> return (k,priv)
+        Nothing             -> fail $ "unknown operator `" ++ op ++ "'"
+        Just (k,(priv,sts)) -> return (k,priv,sts)
 
 -- | Parse an n-ary operator application for arbitrary n.
-naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
+naryOpApp :: Parser LNTerm -> Parser LNTerm
 naryOpApp plit = do
     op <- identifier
-    (k,priv) <- lookupArity op
-    ts <- parens $ if k == 1
-                     then return <$> tupleterm plit
-                     else commaSep (multterm plit)
+    (k,priv,sts) <- lookupArity op
+    ts <- parens $ arguments k sts
+    -- Verify arity
     let k' = length ts
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
     let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
-    return $ app (BC.pack op, (k,(priv,Nothing))) ts
+    return $ app (BC.pack op, (k, (priv, sts))) ts
+  where
+    -- Functions on built-in sorts
+    arguments 0 _       = return []
+    arguments 1 Nothing = return <$> tupleterm plit
+    arguments _ Nothing = commaSep (multterm plit)
+
+    -- Functions on user-defined sorts (with type signature)
+    -- TODO: Make sure to only accept arguments of matching sorts.
+    arguments _ (Just xs) = commaSepN $
+      map (\sort -> multterm $ asum [sortedLlit (LSortUser $ BC.unpack sort), llit]) xs
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
-binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
+binaryAlgApp :: Parser LNTerm -> Parser LNTerm
 binaryAlgApp plit = do
     op <- identifier
-    (k,priv) <- lookupArity op
+    (k,priv,sts) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit
     when (k /= 2) $ fail $
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNoEq (BC.pack op, (2,(priv,Nothing))) [arg1, arg2]
+    return $ fAppNoEq (BC.pack op, (2, (priv, sts))) [arg1, arg2]
 
 -- | Parse a term.
-term :: Ord l => Parser (Term l) -> Parser (Term l)
+term :: Parser LNTerm -> Parser LNTerm
 term plit = asum
     [ pairing       <?> "pairs"
     , parens (multterm plit)
@@ -126,11 +143,11 @@ term plit = asum
            | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
-expterm :: Ord l => Parser (Term l) -> Parser (Term l)
+expterm :: Parser LNTerm -> Parser LNTerm
 expterm plit = chainl1 (msetterm plit) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
-multterm :: Ord l => Parser (Term l) -> Parser (Term l)
+multterm :: Parser LNTerm -> Parser LNTerm
 multterm plit = do
     dh <- enableDH <$> getState
     if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
@@ -138,7 +155,7 @@ multterm plit = do
         else msetterm plit
 
 -- | A left-associative sequence of multiset unions.
-msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
+msetterm :: Parser LNTerm -> Parser LNTerm
 msetterm plit = do
     mset <- enableMSet <$> getState
     if mset -- if multiset is not enabled, do not accept 'msetterms's
@@ -146,11 +163,11 @@ msetterm plit = do
         else term plit
 
 -- | A right-associative sequence of tuples.
-tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
+tupleterm :: Parser LNTerm -> Parser LNTerm
 tupleterm plit = chainr1 (multterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
 -- | Parse a fact.
-fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
+fact :: Parser LNTerm -> Parser (Fact LNTerm)
 fact plit = try (
     do multi <- option Linear (opBang *> pure Persistent)
        i     <- identifier
@@ -565,6 +582,9 @@ functions =
         priv <- option Public (symbol "[private]" *> pure Private)
         sorts <- option Nothing (Just <$> functionSorts k)
         sig <- getState
+        -- Check that sorts exist
+        when (isJust sorts) (verifySorts (fromJust sorts) sig)
+        -- Check that arities/private matches
         case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
           Just kp' | kp' /= (k,(priv,sorts)) ->
             fail $ "conflicting arities/private " ++
@@ -578,6 +598,11 @@ functions =
       void $ symbol "->"
       retv <- BC.pack <$> identifier
       return $ args ++ [retv]
+
+    verifySorts xs msig = flip mapM_ xs $ \sort ->
+      if elem (LSortUser $ BC.unpack sort) (S.toList $ userSortsForMaudeSig msig)
+        then return ()
+        else fail $ "Invalid user-defined sort: " ++ BC.unpack sort
 
 equations :: Parser ()
 equations =

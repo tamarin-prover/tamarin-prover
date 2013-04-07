@@ -48,7 +48,7 @@ ppLSort s = case s of
     LSortFresh     -> "Fresh"
     LSortMsg       -> "Msg"
     LSortNode      -> "Node"
-    (LSortUser st) -> B.concat ["U", BC.pack st]
+    (LSortUser st) -> B.concat ["tamU", BC.pack st]
 
 ppLSortSym :: LSort -> ByteString
 ppLSortSym lsort = case lsort of
@@ -56,7 +56,7 @@ ppLSortSym lsort = case lsort of
     LSortPub       -> "p"
     LSortMsg       -> "c"
     LSortNode      -> "n"
-    (LSortUser st) -> B.concat ["u", BC.pack st]
+    (LSortUser st) -> B.concat ["tu", BC.pack st]
 
 parseLSortSym :: ByteString -> Maybe LSort
 parseLSortSym s = case s of
@@ -86,7 +86,6 @@ ppMaudeACSym o =
                       Union -> "mun"
 
 -- | Pretty print a non-AC symbol for Maude.
--- TODO: Take into accounts type restrictions.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
 ppMaudeNoEqSym (o,(_,(Private,_))) = funSymPrefixPriv <> o
 ppMaudeNoEqSym (o,(_,(Public,_)))  = funSymPrefix     <> o
@@ -182,14 +181,14 @@ ppTheory msig = BC.unlines $
         theoryOpNoEq priv (s <> " : " <> (maybe (theorySorts ar) (B.concat . theoryCustomSorts) sorts))
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " ."
-      where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
+      where (lm,rm) = evalBindT ((,) <$> lTermToMTerm' l <*> lTermToMTerm' r) noBindings
                         `evalFresh` nothingUsed
 
-    theorySorts ar = (B.concat $ replicate ar "Msg ") <> " -> Msg"
+    theorySorts ar = (B.concat $ replicate ar "Msg ") <> "-> Msg"
 
     theoryCustomSorts []     = []
-    theoryCustomSorts [x]    = [BC.pack " -> ", x]
-    theoryCustomSorts (x:xs) = [BC.pack " ", x] ++ theoryCustomSorts xs 
+    theoryCustomSorts [x]    = [BC.pack "-> tamU", x]
+    theoryCustomSorts (x:xs) = [BC.pack "tamU", x, BC.pack " "] ++ theoryCustomSorts xs 
 
 -- Parser for Maude output
 ------------------------------------------------------------------------
@@ -231,7 +230,7 @@ parseSort :: Parser LSort
 parseSort =  string "Pub"      *> return LSortPub
          <|> string "Fresh"    *> return LSortFresh
          <|> string "Node"     *> return LSortNode
-         <|> string "U"        *> -- Sorts with U* are user-defined
+         <|> string "tamU"     *> -- Sorts with U* are user-defined
                ( sortIdent    >>= return . LSortUser . BC.unpack )
          <|> string "M"        *> -- FIXME: why?
                ( string "sg"   *> return LSortMsg )

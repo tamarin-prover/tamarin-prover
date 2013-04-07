@@ -177,7 +177,7 @@ sortSuffix LSortMsg       = "msg"
 sortSuffix LSortFresh     = "fresh"
 sortSuffix LSortPub       = "pub"
 sortSuffix LSortNode      = "node"
-sortSuffix (LSortUser st) = "u" ++ st
+sortSuffix (LSortUser st) = st
 
 
 ------------------------------------------------------------------------------
@@ -423,11 +423,12 @@ instance Ord LVar where
         x  & _ = x
 
 instance Show LVar where
-    show (LVar v s i) =
-        sortPrefix s ++ body
+    show (LVar v s i)
+        | isUserSort s = body ++ ":" ++ sortSuffix s
+        | otherwise    = sortPrefix s ++ body
       where
         body | null v           = show i
---             | isDigit (last v) = v ++ "." ++ show i
+--           | isDigit (last v) = v ++ "." ++ show i
              | i == 0           = v
              | otherwise        = v ++ "." ++ show i
 
