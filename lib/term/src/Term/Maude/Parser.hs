@@ -259,15 +259,21 @@ parseTerm msig = choice
       | op `elem` allowedfunSyms = op
       | otherwise                =
           error $ "Maude.Parser.parseTerm: unknown function "
-                  ++ "symbol `"++ show (fst op) ++"', not in "
+                  ++ "symbol `"++ show op ++"', not in "
                   ++show allowedfunSyms
       where prefixLen      = BC.length funSymPrefix
             special        = ident `elem` ["list", "cons", "nil" ]
             priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident 
                                then Private else Public
-            op             = (if special then ident else BC.drop prefixLen ident
-                             , ( length args, (priv, Nothing)))
             allowedfunSyms = [consSym, nilSym]++(S.toList $ noEqFunSyms msig)
+            op_ident       = if special then ident else BC.drop prefixLen ident
+            op             =
+              ( op_ident 
+              , ( length args
+              , ( priv
+              , ( case lookup op_ident (S.toList $ stFunSyms msig) of
+                    Just (_, (_, a)) -> a
+                    Nothing          -> Nothing ))))
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
 
