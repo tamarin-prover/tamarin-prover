@@ -144,8 +144,8 @@ rule Responder4:
 axiom AOut_unique:
   "All #i #j id A B. AOut(id,A,B)@i & AOut(id,A,B)@j ==> #i = #j"
 
-// TODO: not yet proven!
 // get rid of non-trivial variants of rules due to inverses in exponents 
+// works
 lemma No_inverses[use_induction,reuse]:
  all-traces
  "not (  (Ex #i x round id.   Exp(id, round, inv(x)  ) @ i)
