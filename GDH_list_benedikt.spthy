@@ -7,7 +7,8 @@ functions: nil/0, g/0, list_to_mset/1
 
 axiom InEq_not_eq: "not (Ex x #i. Ineq(x,x)@i)"
 
-axiom IsLast: "All x A #i. IsLast(x,A) @ i ==> Ex #j. Last(x,A) @ j"
+// this is a pre-fix closed version of IsLast which does not interfere with the lemma "No_inverses":
+axiom IsLast: "All x A #i. IsLast(x,A) @ i ==> Ex #j. Last(x,A) @ j & j < i"
 
 axiom MembersUnique: "All x A #i #j. Mem(x,A) @ i & Mem(x,A) @ j ==> #i = #j"
 
