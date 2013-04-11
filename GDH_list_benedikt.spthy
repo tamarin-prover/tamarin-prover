@@ -68,6 +68,7 @@ rule Initiator2:
  --[ Key(~gid, $I, list_to_mset(responders) + $I)
    , Secret(~gid, Y^~ei)
 //   , Exp(~gid, 'finalkey', y*~ei) // this seems unnecessary and potentially counter-productive
+   , ExpInLast(~gid, 'final', y) 
    , IsLast(~gid, $S)
    ]->
   [ ]
@@ -84,6 +85,7 @@ rule Responder1:
 --[ AOut(~gid, $R, $S) 
   , Nonce(round,~ec)
   , Exp(~gid, round, y*~ec) 
+  , ExpIn(~gid, round, y)
   ]->
   [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$S, nil>, after, round)
   , AuthOut(<~gid, $R, $S, Y^~ec>)   // new key for $S sent by $R 
@@ -94,7 +96,9 @@ rule Responder2:
   [ F_Responder2(~gid, ~ec, $R, $S, <$KR, before_missing>, before_rcvd, after, round)
   , AuthOut(<~gid, $S, $KR, Y>) ]     // key for $KR sent by $S
 --[ AOut(~gid, $R, $KR) 
+//  , Nonce(round,~ec)
   , Exp(~gid, round, y*~ec)
+  , ExpIn(~gid, round, y)
   ]->
   [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$KR, before_rcvd>, after, round)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // new key for $KR sent by $R
@@ -107,9 +111,11 @@ rule Responder3:
   [ F_Responder2(~gid, ~ec, $R, $S, nil, before_rcvd, after, round)
   , AuthOut(<~gid, $S, $R, Y>) ]      // key for $R sent by $S (groupkey last round)
 --[ AOut(~gid, $R, $KR), AOut(~gid, $R, $R) 
+//  , Nonce(round,~ec)
   , Exp(~gid, round, y)     // this has been stated before (prior round, by sender of the message received here), but it needs to be stated again as otherwise an infinite loop is possible due to the second message (Y) being sent out
   , Exp(~gid, round, y*~ec) // duplicate of ExpLast needed for inductive proof of "no inverses in exponent"
   , ExpLast(~gid, round, y*~ec)
+  , ExpInLast(~gid, round, y)
   ]->
   [ F_Responder3(~gid, ~ec, $R, before_rcvd, after, round)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key this round - sent to next participant
@@ -121,8 +127,11 @@ rule Responder3_last:
   [ F_Responder2(~gid, ~ec, $R, $S, nil, before_rcvd, nil, round)
   , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
 --[ Key(~gid, $R, list_to_mset(before_rcvd) + $R ) 
+//  , Nonce(round,~ec)
   , ExpLast(~gid, round, y*~ec)
-//  , Exp(~gid, round, y*~ec) // duplicate of ExpLast needed for inductive proof of "no inverses in exponent" // this seems unnecessary and potentially counter-productive
+  , Exp(~gid, round, y*~ec) // duplicate of ExpLast (that is actually NOT) needed for inductive proof of "no inverses in exponent"
+  , ExpInLast(~gid, round, y)
+  , ExpInLast(~gid, 'final', y)
   , Secret(~gid, Y^~ec)
   , NonceRecv(~ec)
   ]->
@@ -133,9 +142,11 @@ rule Responder4:
   [ F_Responder3(~gid, ~ec, $R, p1, p2, round)
   , AuthOut(<~gid, $S, $R, Y>) ] // $S should be last ... 
  --[ Key(~gid, $R, list_to_mset(p1) + list_to_mset(p2) + $R )
+//   , Nonce(round,~ec)
    , Secret(~gid, Y^~ec)
    , NonceRecv(~ec) 
-//   , Exp(~gid, 'finalkey', y*~ec) // this seems unnecessary and potentially counter-productive
+//   , Exp(~gid, 'finalkey', y*~ec) // this seems unnecessary and potentially counter-productive 
+   , ExpInLast(~gid, 'final', y)
    , IsLast(~gid, $S) ]->
   [ ]
 
@@ -151,20 +162,60 @@ lemma No_inverses[use_induction,reuse]:
  "not (  (Ex #i x round id.   Exp(id, round, inv(x)  ) @ i)
        | (Ex #i x y round id. Exp(id, round, inv(x)*y) @ i))"
 
+// get rid of non-trivial variants of rules due to inverses in exponents 
+// works
+lemma No_inverses_ExpIn[use_induction,reuse]:
+ all-traces
+ "not (  (Ex #i x round id.   ExpIn(id, round, inv(x)  ) @ i)
+       | (Ex #i x y round id. ExpIn(id, round, inv(x)*y) @ i))"
+
 
 
 // powerful since whenever adv. knows product with factor ~x, then he also knows ~x.
-//works!
+// works currently ; when "Nonce" only given in the rule that creates the fresh nonce, otherwise does NOT work!
 lemma B[reuse]:
  all-traces
  "not (Ex round #i1 x #i2. Nonce(round, x ) @ i1 &  KU( x ) @ i2)"
 
 
-/* TODO: GO ON HERE
+// does NOT yet work
+lemma Exp_equal[reuse,use_induction]:
+ all-traces
+ "All id round x y #ix #iy. 
+   (Exp(id, round, x) @ix & Exp(id, round, y) @iy ==>
+         x = y 
+      | (Ex r1 r2 z1 z2 #i1 #i2.  Nonce(r1, z1) @i1 
+                                & Nonce(r2, z2) @i2 
+                                & x * z1 = y * z2)
+      | ExpLast(id, round, x) @ix
+      | ExpLast(id, round, y) @iy)"
+
+
+// does NOT yet work
+lemma ExpIn_equal[reuse,use_induction]:
+ all-traces
+ "All id round x y #ix #iy. 
+   (ExpIn(id, round, x) @ix & ExpIn(id, round, y) @iy ==>
+         x = y 
+      | (Ex r1 r2 z1 z2 #i1 #i2.  Nonce(r1, z1) @i1 
+                                & Nonce(r2, z2) @i2 
+                                & x * z1 = y * z2))"
+
+
+// does NOT yet work
+lemma LastExpInHasOneMoreNonceThanExpIn[reuse,use_induction]:
+ all-traces
+  "All id round x y #ix #iy. (  ExpInLast(id, round, x) @ix 
+                              & ExpIn    (id, round, y) @iy 
+         ==> (Ex rz z #iz .  Nonce(rz, z) @iz 
+                           & x = y*z) )" 
+
+/* Informal initial descriptions of the above couple of lemmas
 In each round show:
  Exp(~gid, round,x) and Exp(~gid, round,y) ==>
    x = y | (Ex i1 i2 ~z1 ~z2 w. Nonce(i1,~z1) & Nonce(i2,~z2) & x * ~z1 = y * ~z2)
-// for the above lemma consider having "Nonce" action in each of the rules using a fresh nonce
+// for the above lemma consider having "Nonce" action in each of the rules using a fresh nonce - DONE
+// consider adding ~gid to "Nonce" actions!
 
 Show:
    All i x y round. ExpLast(~gid, round, x) & Exp(~gid, round,y) ==> Ex i ~z . Nonce(i,~z). x = y*~z 
