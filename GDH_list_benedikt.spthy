@@ -5,7 +5,7 @@ builtins: diffie-hellman, multiset
 
 functions: nil/0, g/0, list_to_mset/1
 
-axiom InEq_not_eq: "not (Ex x #i. Ineq(x,x)@i)"
+axiom InEq_not_eq: "not (Ex x #i. InEq(x,x)@i)"
 
 // this is a pre-fix closed version of IsLast which does not interfere with the lemma "No_inverses":
 axiom IsLast: "All x A #i. IsLast(x,A) @ i ==> Ex #j. Last(x,A) @ j & j < i"
@@ -66,6 +66,7 @@ rule Initiator2:
   [ F_Initiator2(~gid, ~ei, $I, responders)
   , AuthOut(<~gid, $S, $I, Y>) ]  // $S unspecified, should be last(responders)
  --[ Key(~gid, $I, list_to_mset(responders) + $I)
+   , KeyValue(~gid, Y^~ei)
    , Secret(~gid, Y^~ei)
 //   , Exp(~gid, 'finalkey', y*~ei) // this seems unnecessary and potentially counter-productive
    , ExpInLast(~gid, 'final', y) 
@@ -127,6 +128,7 @@ rule Responder3_last:
   [ F_Responder2(~gid, ~ec, $R, $S, nil, before_rcvd, nil, round)
   , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
 --[ Key(~gid, $R, list_to_mset(before_rcvd) + $R ) 
+  , KeyValue(~gid, Y^~ec)
 //  , Nonce(round,~ec)
   , ExpLast(~gid, round, y*~ec)
   , Exp(~gid, round, y*~ec) // duplicate of ExpLast (that is actually NOT) needed for inductive proof of "no inverses in exponent"
@@ -142,6 +144,7 @@ rule Responder4:
   [ F_Responder3(~gid, ~ec, $R, p1, p2, round)
   , AuthOut(<~gid, $S, $R, Y>) ] // $S should be last ... 
  --[ Key(~gid, $R, list_to_mset(p1) + list_to_mset(p2) + $R )
+   , KeyValue(~gid, Y^~ec)
 //   , Nonce(round,~ec)
    , Secret(~gid, Y^~ec)
    , NonceRecv(~ec) 
@@ -210,7 +213,7 @@ lemma LastExpInHasOneMoreNonceThanExpIn[reuse,use_induction]:
          ==> (Ex rz z #iz .  Nonce(rz, z) @iz 
                            & x = y*z) )" 
 
-/* Informal initial descriptions of the above couple of lemmas
+/* Informal initial descriptions of the prior 3 lemmas
 In each round show:
  Exp(~gid, round,x) and Exp(~gid, round,y) ==>
    x = y | (Ex i1 i2 ~z1 ~z2 w. Nonce(i1,~z1) & Nonce(i2,~z2) & x * ~z1 = y * ~z2)
@@ -220,6 +223,13 @@ In each round show:
 Show:
    All i x y round. ExpLast(~gid, round, x) & Exp(~gid, round,y) ==> Ex i ~z . Nonce(i,~z). x = y*~z 
 */
+
+// Ultimate goal for secrecy:
+// does NOT work
+lemma Key_secrecy:
+ all-traces
+  "All id K #i1. KeyValue(id, K) @i1 
+                 ==> not (Ex #i2. KU(K) @i2)"
 
 
 /*
