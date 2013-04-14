@@ -90,7 +90,8 @@ rule Responder1:
   ]->
   [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$S, nil>, after, round)
   , AuthOut(<~gid, $R, $S, Y^~ec>)   // new key for $S sent by $R 
-  , Out(Y^~ec) ]
+  , Out(Y^~ec)
+  ]
 
 rule Responder2:
   let Y = g^y in
@@ -103,7 +104,8 @@ rule Responder2:
   ]->
   [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$KR, before_rcvd>, after, round)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // new key for $KR sent by $R
-  , Out(Y^~ec) ]
+  , Out(Y^~ec)
+  ]
 
 rule Responder3:
   let Y = g^y 
@@ -121,7 +123,8 @@ rule Responder3:
   [ F_Responder3(~gid, ~ec, $R, before_rcvd, after, round)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key this round - sent to next participant
   , AuthOut(<~gid, $R, $R, Y>)        // key for $R sent by $R
-  , Out(Y^~ec) ]
+  , Out(Y^~ec)
+  ]
   
 rule Responder3_last:
   let Y = g^y in
@@ -160,14 +163,14 @@ axiom AOut_unique:
 
 // get rid of non-trivial variants of rules due to inverses in exponents 
 // works
-lemma No_inverses[use_induction,reuse]:
+lemma No_inverses[use_induction,reuse,typing]:
  all-traces
  "not (  (Ex #i x round id.   Exp(id, round, inv(x)  ) @ i)
        | (Ex #i x y round id. Exp(id, round, inv(x)*y) @ i))"
 
 // get rid of non-trivial variants of rules due to inverses in exponents 
 // works
-lemma No_inverses_ExpIn[use_induction,reuse]:
+lemma No_inverses_ExpIn[use_induction,reuse,typing]:
  all-traces
  "not (  (Ex #i x round id.   ExpIn(id, round, inv(x)  ) @ i)
        | (Ex #i x y round id. ExpIn(id, round, inv(x)*y) @ i))"
