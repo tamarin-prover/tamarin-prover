@@ -83,10 +83,11 @@ rule Responder1:
   [ F_Responder1(~gid, $R, <$S, before_missing>, after, round)
   , Fr(~ec) 
   , AuthOut(<~gid, $S, $S, Y>) ]     // key for $S sent by $S
---[ AOut(~gid, $R, $S) 
+--[ AOut(~gid, $R, $S)
+  , ReceiveFrom(~gid, $R, $S) 
   , Nonce(round,~ec)
   , Exp(~gid, round, y*~ec) 
-  , ExpIn(~gid, round, y)
+  , ExpIn(~gid, $R, y)
   ]->
   [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$S, nil>, after, round)
   , AuthOut(<~gid, $R, $S, Y^~ec>)   // new key for $S sent by $R 
@@ -98,9 +99,10 @@ rule Responder2:
   [ F_Responder2(~gid, ~ec, $R, $S, <$KR, before_missing>, before_rcvd, after, round)
   , AuthOut(<~gid, $S, $KR, Y>) ]     // key for $KR sent by $S
 --[ AOut(~gid, $R, $KR) 
+  , ReceiveFrom(~gid, $R, $S) 
 //  , Nonce(round,~ec)
   , Exp(~gid, round, y*~ec)
-  , ExpIn(~gid, round, y)
+  , ExpIn(~gid, $R, y)
   ]->
   [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$KR, before_rcvd>, after, round)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // new key for $KR sent by $R
@@ -118,7 +120,7 @@ rule Responder3:
   , Exp(~gid, round, y)     // this has been stated before (prior round, by sender of the message received here), but it needs to be stated again as otherwise an infinite loop is possible due to the second message (Y) being sent out
   , Exp(~gid, round, y*~ec) // duplicate of ExpLast needed for inductive proof of "no inverses in exponent"
   , ExpLast(~gid, round, y*~ec)
-  , ExpInLast(~gid, round, y)
+  , ExpInLast(~gid, $R, y)
   ]->
   [ F_Responder3(~gid, ~ec, $R, before_rcvd, after, round)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key this round - sent to next participant
@@ -135,7 +137,7 @@ rule Responder3_last:
 //  , Nonce(round,~ec)
   , ExpLast(~gid, round, y*~ec)
   , Exp(~gid, round, y*~ec) // duplicate of ExpLast (that is actually NOT) needed for inductive proof of "no inverses in exponent"
-  , ExpInLast(~gid, round, y)
+  , ExpInLast(~gid, $R, y)
   , ExpInLast(~gid, 'final', y)
   , Secret(~gid, Y^~ec)
   , NonceRecv(~ec)
@@ -156,6 +158,11 @@ rule Responder4:
    , IsLast(~gid, $S) ]->
   [ ]
 
+axiom Start_unique:
+  "All #i #j id R. Started(id,R) @ i & Started(id,R) @ j ==> #i=#j"
+
+axiom ReceiveFrom_sender_determined:
+  "All #i #j id R S1 S2. ReceiveFrom(id,R,S1) @ i & ReceiveFrom(id,R,S2) @ j ==> S1=S2"
 
 // this should be a Lemma
 axiom AOut_unique:
@@ -185,16 +192,16 @@ lemma B[reuse]:
 
 
 // does NOT yet work
-lemma Exp_equal[reuse,use_induction]:
- all-traces
- "All id round x y #ix #iy. 
-   (Exp(id, round, x) @ix & Exp(id, round, y) @iy ==>
-         x = y 
-      | (Ex r1 r2 z1 z2 #i1 #i2.  Nonce(r1, z1) @i1 
-                                & Nonce(r2, z2) @i2 
-                                & x * z1 = y * z2)
-      | ExpLast(id, round, x) @ix
-      | ExpLast(id, round, y) @iy)"
+// lemma Exp_equal[reuse,use_induction]:
+// all-traces
+// "All id round x y #ix #iy. 
+//   (Exp(id, round, x) @ix & Exp(id, round, y) @iy ==>
+//         x = y 
+//      | (Ex r1 r2 z1 z2 #i1 #i2.  Nonce(r1, z1) @i1 
+//                                & Nonce(r2, z2) @i2 
+//                                & x * z1 = y * z2)
+//      | ExpLast(id, round, x) @ix
+//      | ExpLast(id, round, y) @iy)"
 
 
 // does NOT yet work
