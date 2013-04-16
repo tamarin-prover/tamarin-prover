@@ -55,6 +55,8 @@ rule Initiator:
   , Exp(~gid, $I, 1)   // assuming 1 is the neutral element of the multiplication in the exponents
   , Exp(~gid, $I, ~ei) // duplicate of ExpLast needed for inductive proof of "no inverses in exponent"
 //  , ExpLast(~gid, nil, ~ei)
+  , InvalidGKey(~gid, $I, g^~ei)
+  , IsInitiator(~gid, $I)
   ]->
   [ F_Initiator2(~gid, ~ei, $I, responders)
   , AuthOut(<~gid, $I, $I, g   >)    // from $I, key for $I
@@ -124,6 +126,7 @@ rule Responder3:
   , Exp(~gid, $R, y*~ec) // duplicate of ExpLast needed for inductive proof of "no inverses in exponent"
 //  , ExpLast(~gid, round, y*~ec)
   , ExpInLast(~gid, $R, y)
+  , InvalidGKey(~gid, $R, Y^~ec)
   ]->
   [ F_Responder3(~gid, ~ec, $R, before_rcvd, after, round)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key this round - sent to next participant
@@ -143,6 +146,7 @@ rule Responder3_last:
   , ExpInLast(~gid, $R, y)
 //  , ExpInLast(~gid, 'final', y)
   , Secret(~gid, Y^~ec)
+  , InvalidGKey(~gid, $R, Y^~ec)
   ]->
   [ ]
 
@@ -197,31 +201,79 @@ lemma B[reuse]:
  all-traces
  "not (Ex id round #i1 x #i2. Nonce(id, round, x ) @ i1 &  KU( x ) @ i2)"
 
-
-// for this lemma change the "//Nonce(...)" facts that appear into "NonceUsed(...)"!
 lemma Nonce_used[use_induction,reuse]:
   all-traces
   "All id round #i1 x. NonceUsed(id, round, x) @ i1 ==> (Ex #i2. Nonce(id, round, x) @i2)"
+
+lemma Nonce_used_after[use_induction,reuse]:
+  all-traces
+  "All id round #i1 x. NonceUsed(id, round, x) @ i1 ==> (Ex #i2. Nonce(id, round, x) @i2 & (i2 < i1 | #i2 = #i1))"
+
+lemma Nonce_Unique_issuer[reuse]:
+  all-traces
+  "All id1 id2 r1 r2 X #i1 #i2. Nonce(id1, r1, X) @i1 & Nonce(id2, r2, X) @i2 
+                            ==> (id1 = id2 & r1 = r2)"
+
+lemma NonceUsed_Unique_issuer[reuse]:
+  all-traces
+  "All id1 id2 r1 r2 X #i1 #i2. NonceUsed(id1, r1, X) @i1 & NonceUsed(id2, r2, X) @i2 
+                            ==> (id1 = id2 & r1 = r2)"
+
+// easily provable manually by always picking "Nonce" facts to resolve in a minute or so;
+// automatic proof does work but takes a lot of time, about 8 minutes guesstimated
+lemma NonceUsed_after_nonce[reuse]:  
+  all-traces
+  "All id round #i1 #i2 x. NonceUsed(id, round, x) @ i1 & Nonce(id, round, x) @i2 
+                       ==>  (#i2 = #i1 | #i2 < #i1)"
 
 lemma B_nonce_used[use_induction,reuse]:
   all-traces
   "not (Ex id round #i1 x #i2. NonceUsed(id, round, x ) @ i1 &  KU( x ) @ i2)"
 
-// does NOT yet work
-// lemma Exp_equal[reuse,use_induction]:
-// all-traces
-// "All id round x y #ix #iy. 
-//   (Exp(id, round, x) @ix & Exp(id, round, y) @iy ==>
-//         x = y 
-//      | (Ex r1 r2 z1 z2 #i1 #i2.  Nonce(r1, z1) @i1 
-//                                & Nonce(r2, z2) @i2 
-//                                & x * z1 = y * z2)
-//      | ExpLast(id, round, x) @ix
-//      | ExpLast(id, round, y) @iy)"
 
+// needs 8 minutes with induction (24% mem)
+// needs 15 minutes without induction
+lemma OnlyInitSends_gtotheone[use_induction,reuse]:
+  all-traces
+  "All id R S #i. ExpIn(id, R, 1) @i & ReceiveFrom(id, R, S)@i
+              ==> Ex #j. IsInitiator(id, S) @j & j < i"
+
+lemma OnlyInitSends_gtotheone2[use_induction,reuse]:
+  all-traces
+  "not (Ex id R #i. ExpInLast(id, R, 1) @i)"
 
 // Above WORKS - below DOES NOT
 // TODO: continue here!
+
+
+//"half" this lemma already takes 35 minutes/40% memory, could be problematic... do long-time testrun
+lemma InvalidateGroupKey[use_induction,reuse]:
+  all-traces
+  "All id R X #i #j. InvalidGKey(id, R, X) @i & KU(X) @j 
+                ==> i < j"
+
+/*
+//// Key(~gid, x) ==> Ex stuff. Nonce(z) & sent(Y) & x = Y^z
+
+for each round: [round-group-key = Y^z] where Y is sent out (exclude GK here obv.!) and z is a nonce from a PRIOR round! (then do induction!!!)
+
+Add 'invalidate(key)' at the point of ExpInLast message being sent - and say that the key for that group is secret UNTIL invalidate has happened - that should be useful for the induction at the end...
+
+
+
+wir brauchen eine schleifenbedingung die jedes mal wahr bleibt, aus der sich dann das unwissen des angreifers am ende ableiten laesst
+
+dafuer brauchen wir, dass alle gesendeten g^X unique sind (mit der offensichtlichen ausnahme vom jeweils letzten schritt pro runde, der eh separat behandelt wird) - ggf reicht, dass alle in einer runde verschieden sind? 
+
+ausserdem koennte man zeigen, dass wenn 
+   Fr(n) @i [via nutzung von "Nonce" denke ich]
+ & Sent(g^X)@j [das braucht neuen logging fact, weil wir hier nicht nur vom exponenten (ExpIn/Exp) reden, sondern vom ganzen Term]
+ & j < i 
+==> not (Ex Y. X = Y*n)  
+
+
+*/
+
 
 lemma ExpInLastHasOneMoreFACTORThanExpIn[reuse,use_induction]:
  all-traces
@@ -256,6 +308,27 @@ lemma Key_secrecy:
  all-traces
   "All id K #i1. KeyValue(id, K) @i1 
                  ==> not (Ex #i2. KU(K) @i2)"
+
+
+/*
+// FALSE - due to g^1 being sent, and 1 is obviously known to the intruder...
+lemma ExpIn_exp_secret[use_induction,reuse]:
+  all-traces
+  "not (Ex id round #i1 x #i2. ExpIn(id, round, x ) @ i1 &  KU( x ) @ i2)"
+*/
+
+
+// does NOT yet work
+// lemma Exp_equal[reuse,use_induction]:
+// all-traces
+// "All id round x y #ix #iy. 
+//   (Exp(id, round, x) @ix & Exp(id, round, y) @iy ==>
+//         x = y 
+//      | (Ex r1 r2 z1 z2 #i1 #i2.  Nonce(r1, z1) @i1 
+//                                & Nonce(r2, z2) @i2 
+//                                & x * z1 = y * z2)
+//      | ExpLast(id, round, x) @ix
+//      | ExpLast(id, round, y) @iy)"
 
 
 /*
