@@ -20,6 +20,7 @@ axiom MembersUnique: "All x A #i #j. Mem(x,A) @ i & Mem(x,A) @ j ==> #i = #j"
 rule ChooseParticipants1:
   [ Fr(~gid) ]
  --[ Mem(~gid,$I), InEq($I, $R)
+   , Mem(~gid,$R)
    , Last(~gid, $R)
  ]-> // groups have initiator (first) and responders
   [ F_StartGroup(~gid, $I, <$R, nil>) ]
@@ -57,6 +58,9 @@ rule Initiator:
 //  , ExpLast(~gid, nil, ~ei)
   , InvalidGKey(~gid, $I, g^~ei)
   , IsInitiator(~gid, $I)
+  , Sent(~gid, $I, g)
+  , Sent(~gid, $I, g^~ei)
+  , InEq2($I, $R)
   ]->
   [ F_Initiator2(~gid, ~ei, $I, responders)
   , AuthOut(<~gid, $I, $I, g   >)    // from $I, key for $I
@@ -75,7 +79,7 @@ rule Initiator2:
    , NonceUsed(~gid, $I, ~ei)
    , InEq($S,$I) // the initiator will not accept it's own message from the prior step here
    , IsLast(~gid, $S)
-   ]->
+  ]->
   [ ]
 
 /*************************************************************************/
@@ -93,6 +97,8 @@ rule Responder1:
   , NonceUsed(~gid, $R, ~ec)
   , Exp(~gid, $R, y*~ec) 
   , ExpIn(~gid, $R, y)
+  , Sent(~gid, $R, Y^~ec)
+  , InEq2($R, $S) // the participant will never send a message for itself at this point (only at very end!), the responder list is such that won't happen; also it is a simple check here that leads to failure if the participant itself appears in the list
   ]->
   [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$S, nil>, after, round)
   , AuthOut(<~gid, $R, $S, Y^~ec>)   // new key for $S sent by $R 
@@ -108,6 +114,8 @@ rule Responder2:
   , NonceUsed(~gid, $R, ~ec)
   , Exp(~gid, $R, y*~ec)
   , ExpIn(~gid, $R, y)
+  , Sent(~gid, $R, Y^~ec)
+  , InEq2($R, $KR) // the participant will never send a message for itself at this point (only at very end!), the responder list is such that won't happen; also it is a simple check here that leads to failure if the participant itself appears in the list
   ]->
   [ F_Responder2(~gid, ~ec, $R, $S, before_missing, <$KR, before_rcvd>, after, round)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // new key for $KR sent by $R
@@ -121,12 +129,15 @@ rule Responder3:
   [ F_Responder2(~gid, ~ec, $R, $S, nil, before_rcvd, after, round)
   , AuthOut(<~gid, $S, $R, Y>) ]      // key for $R sent by $S (groupkey last round)
 --[ AOut(~gid, $R, $KR), AOut(~gid, $R, $R) 
+  , ReceiveFrom(~gid, $R, $S) 
   , NonceUsed(~gid, $R, ~ec)
   , Exp(~gid, $R, y)     // this has been stated before (prior round, by sender of the message received here), but it needs to be stated again as otherwise an infinite loop is possible due to the second message (Y) being sent out
   , Exp(~gid, $R, y*~ec) // duplicate of ExpLast needed for inductive proof of "no inverses in exponent"
 //  , ExpLast(~gid, round, y*~ec)
   , ExpInLast(~gid, $R, y)
   , InvalidGKey(~gid, $R, Y^~ec)
+  , Sent(~gid, $R, Y^~ec)
+  , InEq2($R, $KR) // the participant will never send two (different) message for itself, the responder list is such that won't happen; also it is a simple check here that leads to failure if the participant itself appears in the list
   ]->
   [ F_Responder3(~gid, ~ec, $R, before_rcvd, after, round)
   , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key this round - sent to next participant
@@ -139,6 +150,7 @@ rule Responder3_last:
   [ F_Responder2(~gid, ~ec, $R, $S, nil, before_rcvd, nil, round)
   , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
 --[ Key(~gid, $R, list_to_mset(before_rcvd) + $R ) 
+  , ReceiveFrom(~gid, $R, $S) 
   , KeyValue(~gid, Y^~ec)
   , NonceUsed(~gid, $R, ~ec)
 //  , ExpLast(~gid, round, y*~ec)
@@ -160,7 +172,8 @@ rule Responder4:
    , Secret(~gid, Y^~ec)
 //   , Exp(~gid, 'finalkey', y*~ec) // this seems unnecessary and potentially counter-productive 
 //   , ExpInLast(~gid, 'final', y) // make these into ExpInFinal(~gid, y) instead, if they seem useful for anything (not the case now)
-   , IsLast(~gid, $S) ]->
+   , IsLast(~gid, $S) 
+  ]->
   [ ]
 
 axiom Start_unique:
@@ -230,51 +243,103 @@ lemma B_nonce_used[use_induction,reuse]:
   all-traces
   "not (Ex id round #i1 x #i2. NonceUsed(id, round, x ) @ i1 &  KU( x ) @ i2)"
 
+lemma OnlyInitSends_gtotheone2[use_induction,reuse]:
+  all-traces
+  "not (Ex id R #i. ExpInLast(id, R, 1) @i)"
 
 // needs 8 minutes with induction (24% mem)
 // needs 15 minutes without induction
+// OLD numbers above; now very quick, probably due to the $SAME_NAME_2 lemma above!
 lemma OnlyInitSends_gtotheone[use_induction,reuse]:
   all-traces
   "All id R S #i. ExpIn(id, R, 1) @i & ReceiveFrom(id, R, S)@i
               ==> Ex #j. IsInitiator(id, S) @j & j < i"
 
-lemma OnlyInitSends_gtotheone2[use_induction,reuse]:
-  all-traces
-  "not (Ex id R #i. ExpInLast(id, R, 1) @i)"
+
+// The use of the InEq2 axiom is reasonable, in that the participants can otherwise make simple checks and just stop execution. [TODO: get second opinion on this] // could have used InEq also, but wanted to make these clearly identifiably distinct.
+axiom InEq2: "not (Ex x #i. InEq2(x,x)@i)"
+
+lemma NextParticipantStartsAfterPriorFinishes[use_induction,reuse]:
+  "All id R S #i. ReceiveFrom(id, R, S) @i 
+              ==> (Ex X #j. InvalidGKey(id, S, X) @j & j<i)"
 
 // Above WORKS - below DOES NOT
 // TODO: continue here!
 
 
-//"half" this lemma already takes 35 minutes/40% memory, could be problematic... do long-time testrun
+
+
+
+/*
+//All terms that are sent are actually distinct - cannot be proven yet
+lemma SentTermsDistinct[use_induction,reuse]:
+  all-traces
+  "not (Ex id R1 R2 X #i #j. Sent(id, R1, X) @i & Sent(id, R2, X) @j & (not (#i = #j)))"
+//  "All id R1 X1 R2 X2 #i #j. Sent(id, R1, X1) @i & Sent(id, R2, X2) @j ==> not (X1 = X2)"
+*/
+
+
+
+/*
+// UNIQUE appearance of IGK??? cannot be proven yet
+lemma InvalidateGroupKeyUnique[use_induction,reuse]:
+  "All id S X1 #i1 X2 #i2. InvalidGKey(id, S, X1) @i1 & InvalidGKey(id, S, X2) @i2
+                       ==> #i1 = #i2"
+*/
+
+/*
+// cannot be proven yet
+//"half" this lemma already takes 35 minutes/40% memory, could be problematic... do long-time testrun - that longtime run failed (oom)
 lemma InvalidateGroupKey[use_induction,reuse]:
   all-traces
   "All id R X #i #j. InvalidGKey(id, R, X) @i & KU(X) @j 
                 ==> i < j"
+*/
+
+
+// cannot be proven yet
+lemma ConnectExpInLastAndExpInByNonce[use_induction,reuse]:
+  all-traces
+  "All id R x y #i #j. ExpInLast(id, R, x) @i & ExpIn(id, R, y) @j & j < i 
+                   ==> (Ex #k R2 z. NonceUsed(id, R2, z) @k & k < j & x = y * z)"
+
+
 
 /*
-//// Key(~gid, x) ==> Ex stuff. Nonce(z) & sent(Y) & x = Y^z
-
-for each round: [round-group-key = Y^z] where Y is sent out (exclude GK here obv.!) and z is a nonce from a PRIOR round! (then do induction!!!)
-
-Add 'invalidate(key)' at the point of ExpInLast message being sent - and say that the key for that group is secret UNTIL invalidate has happened - that should be useful for the induction at the end...
+for each round: [round-group-key = Y^z] where Y is sent out (exclude GK here obv.!) and z is a nonce from a PRIOR round! (then do induction)
 
 
 
-wir brauchen eine schleifenbedingung die jedes mal wahr bleibt, aus der sich dann das unwissen des angreifers am ende ableiten laesst
+we need some kind of LOCAL invariant that stays true in each iteration
+from one sender to the next - but needs to be in relation to the group
+key at the end - aka "incM ^ missingNonce = groupkey"; the problem for
+this is the disconnect between the sort of local invariant and the
+group key of that round - connecting that over arbitrary many vertical
+and horizontal steps is hard! this might be a case of us getting
+bitten by our choice to deal with each message separately instead of
+having a whole list of it, so each local point has LESS information
+and it is unclear if it is enough
 
-dafuer brauchen wir, dass alle gesendeten g^X unique sind (mit der offensichtlichen ausnahme vom jeweils letzten schritt pro runde, der eh separat behandelt wird) - ggf reicht, dass alle in einer runde verschieden sind? 
 
-ausserdem koennte man zeigen, dass wenn 
-   Fr(n) @i [via nutzung von "Nonce" denke ich]
- & Sent(g^X)@j [das braucht neuen logging fact, weil wir hier nicht nur vom exponenten (ExpIn/Exp) reden, sondern vom ganzen Term]
+Add 'invalidate(key)' at the point of ExpInLast message being sent -
+and say that the key for that group is secret UNTIL invalidate has
+happened - that should be useful for the induction at the end...
+
+
+
+uniqueness of g^X for all such sent? would that help?
+
+
+   Fr(n) @i [by using Nonce]
+ & Sent(g^X)@j 
  & j < i 
-==> not (Ex Y. X = Y*n)  
-
+==> not (Ex Y. X = Y*n)   [need to require that Y cannot be an inverse, otherwise this might not be true]
 
 */
 
 
+
+// does NOT yet work
 lemma ExpInLastHasOneMoreFACTORThanExpIn[reuse,use_induction]:
  all-traces
   "All id round x y #ix #iy. (  ExpInLast(id, round, x) @ix 
