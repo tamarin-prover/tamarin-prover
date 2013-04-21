@@ -38,7 +38,7 @@ import           Term.Maude.Signature       (addUserSort, userSortsForMaudeSig)
 import           Theory
 import           Theory.Text.Parser.Token
 
-
+import           Debug.Trace
 
 
 ------------------------------------------------------------------------------
@@ -74,9 +74,9 @@ llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
 -- | Parse an lit with logical variables of the given sort.
 sortedLlit :: LSort -> Parser LNTerm
 sortedLlit s = varTerm <$> asum
-  [ do (n, i) <- indexedIdentifier
-       return $ LVar n s i
-  , sortedLVar [s] ]
+  [ try $ sortedLVar [s]
+  , do (n, i) <- indexedIdentifier
+       return $ LVar n s i ]
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
@@ -109,7 +109,7 @@ naryOpApp plit = do
     -- Functions on user-defined sorts (with type signature)
     -- TODO: Make sure to only accept arguments of matching sorts.
     arguments _ (Just xs) = commaSepN $
-      map (\sort -> multterm $ asum [sortedLlit (LSortUser $ BC.unpack sort), llit]) xs
+      map (\sort -> multterm $ asum [try $ sortedLlit (LSortUser $ BC.unpack sort), llit]) xs
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Parser LNTerm -> Parser LNTerm

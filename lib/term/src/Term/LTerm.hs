@@ -137,8 +137,8 @@ import           Logic.Connectives
 -- | Sorts for logical variables. They satisfy the following sub-sort relation:
 --
 -- >  LSortFresh < LSortMsg
--- >  LSortPub   < LSortMsg
 -- >  LSortUser  < LSortMsg
+-- >  LSortPub   < LSortMsg
 --
 data LSort = LSortPub          -- ^ Arbitrary public names.
            | LSortFresh        -- ^ Arbitrary fresh names.
@@ -148,9 +148,14 @@ data LSort = LSortPub          -- ^ Arbitrary public names.
            deriving( Eq, Ord, Show, Typeable, Data )
 
 -- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
---   Partial order: Node      Msg
---                           /   \
---                         Pub  Fresh
+--   Partial order: 
+--     Node
+--
+--     Msg
+--     |-- Fresh
+--     |-- User
+--     |-- Pub
+-- 
 sortCompare :: LSort -> LSort -> Maybe Ordering
 sortCompare s1 s2 = case (s1, s2) of
     (a, b) | a == b          -> Just EQ
@@ -267,9 +272,10 @@ freshLVar n s = LVar n s <$> freshIdent n
 -- | Returns the most precise sort of an 'LTerm'.
 sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
-    Lit2 (Con c)  -> sortOfConst c
-    Lit2 (Var lv) -> lvarSort lv
-    _             -> LSortMsg
+    Lit2 (Con c)                       -> sortOfConst c
+    Lit2 (Var lv)                      -> lvarSort lv
+    FAppNoEq (_,(_,(_,Just sorts))) _  -> LSortUser $ BC.unpack $ head sorts
+    _                                  -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.
 sortOfLNTerm :: LNTerm -> LSort

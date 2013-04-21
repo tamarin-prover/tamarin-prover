@@ -53,6 +53,7 @@ import           Theory.Model
 
 import           Control.Monad.Bind
 
+
 ------------------------------------------------------------------------------
 -- Precomputing case distinctions
 ------------------------------------------------------------------------------
@@ -211,7 +212,7 @@ matchToGoal
     -> Goal             -- ^ Goal to match
     -> Maybe CaseDistinction
     -- ^ An adapted version of the case distinction with the given goal
-matchToGoal ctxt th0 goalTerm =
+matchToGoal ctxt th0 goalTerm = 
   if not $ maybeMatcher (goalTerm, get cdGoal th0) then Nothing else
   case (goalTerm, get cdGoal th) of
     ( PremiseG      (iTerm, premIdxTerm) faTerm

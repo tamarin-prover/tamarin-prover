@@ -82,7 +82,7 @@ fApp :: Ord a => FunSym -> [Term a] -> Term a
 fApp (AC acSym)  ts = fAppAC acSym ts
 fApp (C o)       ts = fAppC o ts
 fApp List        ts = FAPP List ts
-fApp s@(NoEq _) ts = FAPP s ts
+fApp s@(NoEq _)  ts = FAPP s ts
 
 -- | Smart constructor for AC terms.
 fAppAC :: Ord a => ACSym -> [Term a] -> Term a

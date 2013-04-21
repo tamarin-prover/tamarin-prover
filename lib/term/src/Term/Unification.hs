@@ -76,7 +76,6 @@ import           Term.Maude.Process
                    (MaudeHandle, WithMaude, startMaude, getMaudeStats, mhMaudeSig, mhFilePath)
 import           Term.Maude.Signature
 import           Debug.Trace.Ignore
--- import qualified Debug.Trace as DT
 
 -- Unification modulo AC
 ----------------------------------------------------------------------
@@ -92,7 +91,7 @@ unifyLTermFactored sortOf eqs = reader $ \h -> (\res -> trace (unlines $ ["unify
     unif = sequence [ unifyRaw t p | Equal t p <- eqs ]
     solve _ Nothing         = (emptySubst, [])
     solve _ (Just (m, []))  = (substFromMap m, [emptySubstVFresh])
-    solve h (Just (m, leqs)) =
+    solve h (Just (m, leqs)) = 
         (subst, unsafePerformIO (UM.unifyViaMaude h sortOf $
                                      map (applyVTerm subst <$>) leqs))
       where subst = substFromMap m
@@ -168,7 +167,7 @@ type UnifyRaw c = RWST (c -> LSort) [Equal (LTerm c)] (Map LVar (VTerm c LVar)) 
 
 -- | Unify two 'LTerm's with delayed AC-unification.
 unifyRaw :: IsConst c => LTerm c -> LTerm c -> UnifyRaw c ()
-unifyRaw l0 r0 = do
+unifyRaw l0 r0 = trace ("unifyRaw on " ++ show (l0, r0)) $ do
     mappings <- get
     sortOf <- ask
     l <- gets ((`applyVTerm` l0) . substFromMap)
@@ -207,9 +206,9 @@ unifyRaw l0 r0 = do
   where
     elim v t
       | v `occurs` t = mzero -- no unifier
-      | otherwise    = do
+      | otherwise    = trace ("Eliminating on " ++ show v ++ " <-> " ++ show t) $ do
           sortOf <- ask
-          guard  (sortGeqLTerm sortOf v t)
+          guard  $ trace ("Sorts: " ++ show v ++ " >=? " ++ show t ++ " = " ++ show (sortGeqLTerm sortOf v t)) $ (sortGeqLTerm sortOf v t)
           modify (M.insert v t . M.map (applyVTerm (substFromList [(v,t)])))
 
 
@@ -255,7 +254,7 @@ matchRaw sortOf t p = do
 -- | @sortGreaterEq v t@ returns @True@ if the sort ensures that the sort of @v@ is greater or equal to
 --   the sort of @t@.
 sortGeqLTerm :: IsConst c => (c -> LSort) -> LVar -> LTerm c -> Bool
-sortGeqLTerm st v t = do
+sortGeqLTerm st v t = trace ("sortGeqLTerm on " ++ show (lvarSort v) ++ ", " ++ show (sortOfLTerm st t)) $ do
     case (lvarSort v, sortOfLTerm st t) of
         (s1, s2) | s1 == s2     -> True
         -- Node is incomparable to all other sorts, invalid input
