@@ -274,7 +274,7 @@ sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Con c)                       -> sortOfConst c
     Lit2 (Var lv)                      -> lvarSort lv
-    FAppNoEq (_,(_,(_,Just sorts))) _  -> LSortUser $ BC.unpack $ head sorts
+    FAppNoEq (_,(_,(_,Just sorts))) _  -> LSortUser $ BC.unpack $ last sorts
     _                                  -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.

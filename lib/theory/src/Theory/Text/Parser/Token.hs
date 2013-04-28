@@ -220,7 +220,7 @@ commaSepN [] = return []
 commaSepN (p:ps) = do
   r <- p
   T.whiteSpace spthy
-  if (null ps) 
+  if not $ null ps
     then do
       void $ T.comma spthy
       rs <- commaSepN ps

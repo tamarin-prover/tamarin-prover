@@ -165,7 +165,7 @@ prettyTerm ppLit = ppTerm
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
-        FApp (NoEq (f, (_, (_, Just [us])))) []   -> text (BC.unpack f) <> text ":" <> text (BC.unpack us)
+--      FApp (NoEq (f, (_, (_, Just [us])))) []   -> text (BC.unpack f) <> text ":" <> text (BC.unpack us)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts

@@ -38,7 +38,6 @@ import           Term.Maude.Signature       (addUserSort, userSortsForMaudeSig)
 import           Theory
 import           Theory.Text.Parser.Token
 
-import           Debug.Trace
 
 
 ------------------------------------------------------------------------------
@@ -109,7 +108,7 @@ naryOpApp plit = do
     -- Functions on user-defined sorts (with type signature)
     -- TODO: Make sure to only accept arguments of matching sorts.
     arguments _ (Just xs) = commaSepN $
-      map (\sort -> multterm $ asum [try $ sortedLlit (LSortUser $ BC.unpack sort), llit]) xs
+      map (\sort -> multterm $ asum [try $ sortedLlit (LSortUser $ BC.unpack sort), llit]) (init xs)
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Parser LNTerm -> Parser LNTerm

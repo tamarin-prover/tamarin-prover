@@ -167,7 +167,7 @@ type UnifyRaw c = RWST (c -> LSort) [Equal (LTerm c)] (Map LVar (VTerm c LVar)) 
 
 -- | Unify two 'LTerm's with delayed AC-unification.
 unifyRaw :: IsConst c => LTerm c -> LTerm c -> UnifyRaw c ()
-unifyRaw l0 r0 = trace ("unifyRaw on " ++ show (l0, r0)) $ do
+unifyRaw l0 r0 = do
     mappings <- get
     sortOf <- ask
     l <- gets ((`applyVTerm` l0) . substFromMap)
