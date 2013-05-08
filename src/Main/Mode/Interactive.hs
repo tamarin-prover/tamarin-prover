@@ -94,7 +94,7 @@ run thisMode as = case findArg "workDir" as of
             ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
             cacheDir
             workDir (argExists "loadstate" as) (argExists "autosave" as)
-            (loadClosedWfThy as) (loadClosedThyString as) (closeThy as)
+            (loadClosedThyWfReport as) (loadClosedThyString as)
             (argExists "debug" as) dataDir (dotPath as) readImageFormat
             (constructAutoProver as)
             (runWarp port)

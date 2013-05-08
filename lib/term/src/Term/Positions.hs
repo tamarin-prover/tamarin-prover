@@ -33,7 +33,7 @@ atPos (viewTerm -> FApp (AC _) [_])         _      =
 atPos (viewTerm -> FApp fsym@(AC _) (_:as)) (1:ps) =
     (fApp fsym as) `atPos` ps
 atPos (viewTerm -> FApp (AC _) [])          _      =
-    error $ "Term.Positions.positionsNonVar: impossible, "
+    error $ "Term.Positions.atPos: impossible, "
             ++"nullary AC symbol appliction"
 atPos (viewTerm -> FApp  _ as)              (i:ps) = case atMay as i of
     Nothing -> error "Term.Positions.atPos: invalid position given"

@@ -1,3 +1,5 @@
+.hsenv
+hsenv.log
 dist
 cabal-dev
 testbed
