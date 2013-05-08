@@ -4,6 +4,9 @@
 {-# LANGUAGE Rank2Types        #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
+
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 {- |
 Module      :  Types.hs
 Description :  Central data type and Yesod typeclass instances.

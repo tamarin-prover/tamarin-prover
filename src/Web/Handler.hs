@@ -57,7 +57,6 @@ import           Web.Types
 import           Yesod.Core
 import           Yesod.Json()
 
-import           Data.Aeson
 import           Data.Label
 import           Data.Maybe
 import           Data.String                  (fromString)
@@ -73,7 +72,6 @@ import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as T (encodeUtf8, decodeUtf8)
 import qualified Data.Traversable             as Tr
 import           Network.HTTP.Types           ( urlDecode )
-import           Text.Blaze.Html5             (toHtml)
 
 
 import           Control.Applicative
@@ -83,8 +81,6 @@ import           Control.DeepSeq
 import           Control.Exception.Base
 import qualified Control.Exception.Lifted     as E
 import           Control.Monad
-import           Control.Monad.IO.Class
-import           Control.Monad.Trans.Control
 import qualified Data.Binary                  as Bin
 import           Data.Time.LocalTime
 import           System.Directory

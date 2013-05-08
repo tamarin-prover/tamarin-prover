@@ -1,3 +1,14 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TupleSections         #-}
+
+-- FIXME: See how we can get rid of the Template Haskell induced warning, such
+-- that we have the warning again for our code.
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 {- |
 Module      :  Web.Dispatch
 Description :  Yesod dispatch functions and default handlers.
@@ -8,12 +19,6 @@ Maintainer  :  Cedric Staub <cstaub@ethz.ch>
 Stability   :  experimental
 Portability :  non-portable
 -}
-
-{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings, TemplateHaskell, TupleSections #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
--- FIXME: See how we can get rid of the Template Haskell induced warning, such
--- that we have the warning again for our code.
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module Web.Dispatch
   ( withWebUI
@@ -39,7 +44,6 @@ import qualified Data.Text              as T
 import           Control.Applicative
 import           Control.Concurrent
 import           Control.Monad
-import           Control.Monad.IO.Class
 import           Data.List
 import           Data.Maybe
 import           Data.Time.LocalTime
