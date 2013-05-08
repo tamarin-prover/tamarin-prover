@@ -49,7 +49,7 @@ force-install-term:
 #
 #
 #
-VERSION=0.8.2.0
+VERSION=0.8.5.0
 
 source-dists:
 	cd lib/utils; cabal sdist
