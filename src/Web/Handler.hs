@@ -231,7 +231,7 @@ traceExceptions info =
       trace (info ++ ": exception `" ++ show e ++ "'") $ E.throwIO e
 
 -- | Helper functions for generating JSON reponses.
-jsonResp :: JsonResponse -> GHandler m WebUI RepJson
+jsonResp :: JsonResponse -> Handler RepJson
 jsonResp = return . RepJson . toContent . responseToJson
 
 responseToJson :: JsonResponse -> Value

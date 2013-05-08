@@ -140,6 +140,18 @@ instance Show CaseDistKind where
     show UntypedCaseDist = "untyped"
     show TypedCaseDist   = "typed"
 
+-- Adapted from the output of 'derive'.
+instance Read CaseDistKind where
+        readsPrec p0 r
+          = readParen (p0 > 10)
+              (\ r0 ->
+                 [(UntypedCaseDist, r1) | ("untyped", r1) <- lex r0])
+              r
+              ++
+              readParen (p0 > 10)
+                (\ r0 -> [(TypedCaseDist, r1) | ("typed", r1) <- lex r0])
+                r
+
 instance Ord CaseDistKind where
     compare UntypedCaseDist UntypedCaseDist = EQ
     compare UntypedCaseDist TypedCaseDist   = LT
