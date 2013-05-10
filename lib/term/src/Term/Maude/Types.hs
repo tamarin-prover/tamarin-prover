@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Types for communicating with Maude.
@@ -62,7 +62,7 @@ lTermToMTerm' = lTermToMTerm sortOfName
 
 
 -- | Convert an @LNTerm@ with arbitrary names to an @MTerm@.
-lTermToMTerm :: (MonadBind (Lit c LVar) MaudeLit m, MonadFresh m, Show (Lit c LVar), Ord c)
+lTermToMTerm :: (MonadBind (Lit c LVar) MaudeLit m, MonadFresh m, Show c, Show (Lit c LVar), Ord c)
              => (c -> LSort) -- ^ A function that returns the sort of a constant.
              -> VTerm c LVar -- ^ The term to translate.
              -> m MTerm

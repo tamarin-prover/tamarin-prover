@@ -1,3 +1,12 @@
+{-# LANGUAGE CPP                  #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE PatternGuards        #-}
+{-# LANGUAGE QuasiQuotes          #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 {- |
 Module      :  Web.Hamlet
 Description :  Hamlet templates.
@@ -8,11 +17,6 @@ Maintainer  :  Cedric Staub <cstaub@ethz.ch>
 Stability   :  experimental
 Portability :  non-portable
 -}
-
-{-# LANGUAGE
-    TypeFamilies, QuasiQuotes, TypeSynonymInstances,
-    PatternGuards, FlexibleInstances, CPP #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Web.Hamlet (
     rootTpl
@@ -28,15 +32,14 @@ import           Web.Types
 import           Yesod.Core
 
 import           Data.List
-import qualified Data.Map               as M
+import qualified Data.Map              as M
 import           Data.Ord
 import           Data.Time.Format
-import           Data.Version           (showVersion)
-import           Text.Blaze.Html        (preEscapedToMarkup)
+import           Data.Version          (showVersion)
 
 import           System.Locale
 
-import           Paths_tamarin_prover   (version)
+import           Paths_tamarin_prover  (version)
 
 --
 -- Templates

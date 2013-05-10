@@ -22,7 +22,7 @@ import Text.PrettyPrint.Class
 
 import Data.List
 import Data.Maybe
-import Prelude hiding ( catch )
+import Prelude
 import Test.HUnit
 import Control.Monad.Reader
 import Data.Monoid

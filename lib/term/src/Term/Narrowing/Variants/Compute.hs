@@ -59,23 +59,22 @@ data Variant = Variant {
 instance Sized Variant where
     size = size . varSubst
 
--- | @narrowVariant rules t maxdepth@ either returns @Left (explored, unexplored)@
+-- | @narrowVariant rules t maxdepth@ either returns @Nothing@
 --   if variant narrrowing hit the bound and there are still unexplored steps
---   or @Right (stepnum, explored)@ if the search finished before hitting the
+--   or @Just explored@ if the search finished before hitting the
 --   bound.
 narrowVariant :: LNTerm -- ^ The term.
               -> Maybe Int -- ^ The step bound.
-              -> WithMaude (Either ([Variant], [Variant]) (Int, [Variant]))
-narrowVariant tstart maxdepth0 =
+              -> WithMaude (Maybe [Variant])
+narrowVariant tstart maxdepth =
     reader $ \hnd -> go maxdepth [ Variant [] emptySubstVFresh ] [] hnd
   where
-    maxdepth = fromMaybe (-1) maxdepth0
-    go :: Int -> [Variant] -> [Variant] -> MaudeHandle
-       -> Either ([Variant], [Variant]) (Int, [Variant])
-    go n []         explored _ = Right (maxdepth-n, explored)
-    go 0 unexplored explored _ = Left (explored, unexplored)
-    go n unexplored explored hnd = (\res -> (trace (show (n,unexplored, explored, res)) res)) $
-        go (n-1) new explored' hnd
+    go :: Maybe Int -> [Variant] -> [Variant] -> MaudeHandle
+       -> Maybe [Variant]
+    go _        []           explored _ = Just explored
+    go (Just 0) _unexplored _explored _ = Nothing
+    go n unexplored explored hnd = (\res -> (trace (show (n, unexplored, explored, res, new0, explored', new)) res)) $
+        go (fmap pred n) new explored' hnd
       where
         runWithMaude = (`runReader` hnd)
         explored0 = explored++unexplored
@@ -108,7 +107,7 @@ filterMaximalBy alreadyFiltered cmp xs0 =
     go x (y:todo,done)
       -- x and y have already been filtered earlier and are therefore incomparable
       | alreadyFiltered x && alreadyFiltered y = go x (todo,y:done)
-      -- either x or y is new, so we have to comparison the two
+      -- either x or y is new, so we have to compare the two
       | otherwise
       = case cmp x y of
           Nothing -> go x (todo,y:done)
@@ -132,8 +131,8 @@ computeVariantsBound :: LNTerm -> Maybe Int
                      -> WithMaude (Maybe [LNSubstVFresh])
 computeVariantsBound t d = reader $ \hnd -> (\res -> trace (show ("ComputeVariantsBound", t, res)) res) $
     case (`runReader` hnd) $ narrowVariant t d of
-      Left _ -> Nothing
-      Right (_,explored) ->
+      Nothing -> Nothing
+      Just explored ->
         Just (map varSubst (sortBy (comparing size) explored))
 
 -- | @variantsList ts@ computes all variants of @ts@ considered as a single term

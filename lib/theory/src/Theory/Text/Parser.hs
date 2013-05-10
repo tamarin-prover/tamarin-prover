@@ -47,7 +47,8 @@ import           Theory.Text.Parser.Token
 
 -- | Parse a security protocol theory file.
 parseOpenTheory :: [String] -- ^ Defined flags
-                -> FilePath -> IO OpenTheory
+                -> FilePath
+                -> IO OpenTheory
 parseOpenTheory flags = parseFile (theory flags)
 
 -- | Parse DH intruder rules.
@@ -57,11 +58,11 @@ parseIntruderRules msig = parseFile (setState msig >> many intrRule)
 -- | Parse a security protocol theory from a string.
 parseOpenTheoryString :: [String]  -- ^ Defined flags.
                       -> String -> Either ParseError OpenTheory
-parseOpenTheoryString flags = parseFromString (theory flags)
+parseOpenTheoryString flags = parseString "<unknown source>" (theory flags)
 
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (Lemma ProofSkeleton)
-parseLemma = parseFromString lemma
+parseLemma = parseString "<unknown source>" lemma
 
 ------------------------------------------------------------------------------
 -- Parsing Terms
