@@ -131,8 +131,9 @@ loadThyString :: Arguments -> ( String -> IO (Either String OpenTheory)
                               , OpenTheory -> IO ClosedTheory)
 loadThyString as = loadGenericThy loader as
   where
-    loader str =
-      case parseOpenTheoryString (defines as) str of
+    loader str = do
+      result <- parseOpenTheoryString (defines as) str 
+      case result of
         Right thy -> return $ Right thy
         Left err  -> return $ Left $ "parse error: " ++ show err
 

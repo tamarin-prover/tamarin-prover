@@ -75,7 +75,7 @@ data Privacy = Private | Public
   deriving (Eq, Ord, Typeable, Data, Show)
 
 -- | Some function symbols can be restricted to certain sorts.
-type SymSorts = Maybe [ByteString]
+type SymSorts = Maybe [String]
 
 -- | NoEq function symbols (with respect to the background theory).
 type NoEqSym = (ByteString, (Int, (Privacy, SymSorts))) -- ^ operator name, arity, private

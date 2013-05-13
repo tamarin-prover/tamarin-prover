@@ -75,6 +75,7 @@ module Theory.Text.Parser.Token (
   , doubleQuoted
 
   -- * List parsing
+  , wsSep
   , commaSep
   , commaSep1
   , commaSepN
@@ -109,10 +110,10 @@ import           Theory
 ------------------------------------------------------------------------------
 
 -- | A parser for a stream of tokens.
-type Parser a = Parsec String MaudeSig a
+type Parser a = ParsecT String MaudeSig IO a
 
 -- Use Parsec's support for defining token parsers.
-spthy :: T.TokenParser MaudeSig
+spthy :: T.GenTokenParser String MaudeSig IO
 spthy =
     T.makeTokenParser spthyStyle
   where
@@ -134,14 +135,15 @@ spthy =
 parseFile :: Parser a -> FilePath -> IO a
 parseFile parser f = do
   s <- readFile f
-  case runParser (T.whiteSpace spthy *> parser) minimalMaudeSig f s of
+  result <- runParserT (T.whiteSpace spthy *> parser) minimalMaudeSig f s
+  case result of
     Right p -> return p
     Left err -> error $ show err
 
 -- | Run a given parser on a given string.
-parseFromString :: Parser a -> String -> Either ParseError a
+parseFromString :: Parser a -> String -> IO (Either ParseError a)
 parseFromString parser =
-    runParser (T.whiteSpace spthy *> parser) minimalMaudeSig dummySource
+    runParserT (T.whiteSpace spthy *> parser) minimalMaudeSig dummySource
   where
     dummySource = "<interactive>"
 
@@ -206,6 +208,10 @@ naturalSubscript = T.lexeme spthy $ do
   where
     subscriptDigitToInteger d = toInteger $ fromEnum d - fromEnum '₀'
 
+-- | A whitespace separated list of elements.
+wsSep :: Parser a -> Parser [a]
+wsSep p = sepBy p (T.whiteSpace spthy)
+
 -- | A comma separated list of elements.
 commaSep :: Parser a -> Parser [a]
 commaSep = T.commaSep spthy
@@ -216,7 +222,7 @@ commaSep1 = T.commaSep1 spthy
 
 -- | A comma separated list of elements.
 commaSepN :: [Parser a] -> Parser [a]
-commaSepN [] = return []
+commaSepN []     = return []
 commaSepN (p:ps) = do
   r <- p
   T.whiteSpace spthy

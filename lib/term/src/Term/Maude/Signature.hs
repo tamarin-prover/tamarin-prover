@@ -200,14 +200,16 @@ prettyMaudeSig sig = P.vcat
       ]
 
     ppFunSymb symb@(f,(k,(priv,sorts))) = P.text $ 
-        BC.unpack f ++ "/" ++ show k ++ showPriv priv ++ maybe "" ((": " ++) . showSorts) sorts
+        case sorts of
+          Nothing  -> BC.unpack f ++ "/" ++ show k ++ showPriv priv
+          Just sts -> BC.unpack f ++ ":" ++ showSorts sts ++ showPriv priv
       where
         showPriv Private = " [private]"
         showPriv Public  = ""
 
         showSorts []     = ""
-        showSorts [x]    = " -> " ++ BC.unpack x
-        showSorts (x:xs) = " " ++ BC.unpack x ++ showSorts xs 
+        showSorts [x]    = " -> " ++ x
+        showSorts (x:xs) = " " ++ x ++ showSorts xs 
 
 
 -- derived instances

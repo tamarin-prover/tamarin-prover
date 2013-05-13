@@ -56,7 +56,9 @@ testParseFile optionalProver inpFile = TestLabel inpFile $ TestCase $ do
   where
     indent = unlines . map (' ' :) . lines
 
-    parse msg str = case parseOpenTheoryString [] str  of
+    parse msg str = do
+      result <- parseOpenTheoryString [] str
+      case result of
         Left err  -> do assertFailure $ withLineNumbers $ indent $ show err
                         return (error "testParseFile: dead code")
         Right thy -> normalizeTheory <$> addMessageDeductionRuleVariants thy

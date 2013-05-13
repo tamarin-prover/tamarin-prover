@@ -187,8 +187,15 @@ ppTheory msig = BC.unlines $
     theorySorts ar = (B.concat $ replicate ar "Msg ") <> "-> Msg"
 
     theoryCustomSorts []     = []
-    theoryCustomSorts [x]    = [BC.pack "-> tamU", x]
-    theoryCustomSorts (x:xs) = [BC.pack "tamU", x, BC.pack " "] ++ theoryCustomSorts xs 
+    theoryCustomSorts [x]    = [BC.pack "-> ", sortMaudeName x]
+    theoryCustomSorts (x:xs) = [sortMaudeName x, BC.pack " "] ++ theoryCustomSorts xs 
+
+    -- Prefix non-builtin sorts with "tamU" prefix to avoid clashes
+    sortMaudeName :: String -> ByteString
+    sortMaudeName "Msg"   = BC.pack "Msg"
+    sortMaudeName "Fresh" = BC.pack "Fresh"
+    sortMaudeName "Pub"   = BC.pack "Pub"
+    sortMaudeName st      = B.concat [BC.pack "tamU", BC.pack st]
 
 -- Parser for Maude output
 ------------------------------------------------------------------------

@@ -28,6 +28,7 @@ import qualified Data.Set                   as S
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
+import           Control.Monad.Trans
 
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
@@ -37,7 +38,6 @@ import           Term.SubtermRule
 import           Term.Maude.Signature       (addUserSort, userSortsForMaudeSig)
 import           Theory
 import           Theory.Text.Parser.Token
-
 
 
 ------------------------------------------------------------------------------
@@ -55,11 +55,11 @@ parseIntruderRules msig = parseFile (setState msig >> many intrRule)
 
 -- | Parse a security protocol theory from a string.
 parseOpenTheoryString :: [String]  -- ^ Defined flags.
-                      -> String -> Either ParseError OpenTheory
+                      -> String -> IO (Either ParseError OpenTheory)
 parseOpenTheoryString flags = parseFromString (theory flags)
 
 -- | Parse a lemma for an open theory from a string.
-parseLemma :: String -> Either ParseError (Lemma ProofSkeleton)
+parseLemma :: String -> IO (Either ParseError (Lemma ProofSkeleton))
 parseLemma = parseFromString lemma
 
 ------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ sortedLlit s = varTerm <$> asum
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
-lookupArity :: String -> Parser (Int, Privacy, Maybe [BC.ByteString])
+lookupArity :: String -> Parser (Int, Privacy, Maybe [String])
 lookupArity op = do
     maudeSig <- getState
     case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,(Public,Nothing)))]) of
@@ -91,7 +91,7 @@ naryOpApp :: Parser LNTerm -> Parser LNTerm
 naryOpApp plit = do
     op <- identifier
     (k,priv,sts) <- lookupArity op
-    ts <- parens $ arguments k sts
+    ts <- parens $ arguments op k sts
     -- Verify arity
     let k' = length ts
     when (k /= k') $
@@ -101,14 +101,30 @@ naryOpApp plit = do
     return $ app (BC.pack op, (k, (priv, sts))) ts
   where
     -- Functions on built-in sorts
-    arguments 0 _       = return []
-    arguments 1 Nothing = return <$> tupleterm plit
-    arguments _ Nothing = commaSep (multterm plit)
+    arguments _  0 _       = return []
+    arguments _  1 Nothing = return <$> tupleterm plit
+    arguments _  _ Nothing = commaSep (multterm plit)
 
     -- Functions on user-defined sorts (with type signature)
-    -- TODO: Make sure to only accept arguments of matching sorts.
-    arguments _ (Just xs) = commaSepN $
-      map (\sort -> multterm $ asum [try $ sortedLlit (LSortUser $ BC.unpack sort), llit]) (init xs)
+    arguments op _ (Just xs) =
+      commaSepN $ map (sortedTerm op) (zip ([1..] :: [Integer]) $ init xs)
+
+    -- Parse a term with the given sort
+    sortedTerm op (idx, sortname) = do
+      let sort = sortFromString sortname
+      lnterm <- multterm $ asum [try $ sortedLlit sort, llit]
+      if sortOfLNTerm lnterm == sort
+        then return lnterm
+        -- XXX: Because of limitations in the way Parsec handles errors,
+        -- the error message from fail will not show up in the output which
+        -- may be confusing to the user. We print an additional error message.
+        else do
+          let err = "Error: Function " ++ op ++ " expects argument of sort "
+                    ++ sortname ++ " at position " ++ show idx ++
+                    ", but found sort " ++ sortTypename (sortOfLNTerm lnterm)
+                    ++ " instead!"
+          liftIO $ putStrLn err
+          fail err
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Parser LNTerm -> Parser LNTerm
@@ -576,10 +592,9 @@ functions =
     symbol "functions" *> colon *> commaSep1 functionSymbol *> pure ()
   where
     functionSymbol = do
-        f   <- BC.pack <$> identifier <* opSlash
-        k   <- fromIntegral <$> natural
+        f   <- BC.pack <$> identifier
+        (k, sorts) <- parseArity
         priv <- option Public (symbol "[private]" *> pure Private)
-        sorts <- option Nothing (Just <$> functionSorts k)
         sig <- getState
         -- Check that sorts exist
         when (isJust sorts) (verifySorts (fromJust sorts) sig)
@@ -591,17 +606,29 @@ functions =
                    " for `" ++ BC.unpack f
           _ -> setState $ addFunSym (f,(k,(priv,sorts))) sig
 
-    functionSorts k = do
-      colon
-      args <- sequence $ replicate k (BC.pack <$> identifier)
+    -- Parse old-style function symbol (such as h/1, f/2, etc) or
+    -- new-style function symbol (with function signature, such as
+    -- f: Msg Msg -> Msg).
+    parseArity = oldStyle <|> newStyle
+    
+    oldStyle = do
+      k <- opSlash *> (fromIntegral <$> natural)
+      return (k, Nothing)
+
+    newStyle = do
+      args <- colon *> wsSep identifier
       void $ symbol "->"
-      retv <- BC.pack <$> identifier
-      return $ args ++ [retv]
+      retv <- identifier
+      let sorts = args ++ [retv]
+      return (length sorts - 1, Just sorts)
 
     verifySorts xs msig = flip mapM_ xs $ \sort ->
-      if elem (LSortUser $ BC.unpack sort) (S.toList $ userSortsForMaudeSig msig)
+      if elem (sortFromString sort) (allSorts msig)
         then return ()
-        else fail $ "Invalid user-defined sort: " ++ BC.unpack sort
+        else fail $ "Invalid sort specified: " ++ sort
+
+    allSorts msig =
+      [LSortMsg, LSortFresh, LSortPub] ++ (S.toList $ userSortsForMaudeSig msig)
 
 equations :: Parser ()
 equations =

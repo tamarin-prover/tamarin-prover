@@ -44,6 +44,8 @@ module Term.LTerm (
   , freshLVar
   , sortPrefix
   , sortSuffix
+  , sortTypename
+  , sortFromString
   , sortCompare
   , sortOfLTerm
   , sortOfLNTerm
@@ -184,6 +186,22 @@ sortSuffix LSortPub       = "pub"
 sortSuffix LSortNode      = "node"
 sortSuffix (LSortUser st) = st
 
+-- | @sortTypename s@ is the string used for representing sort @s@ in function
+-- signatures (when defining custom functions).
+sortTypename :: LSort -> String
+sortTypename LSortMsg       = "Msg"
+sortTypename LSortFresh     = "Fresh"
+sortTypename LSortPub       = "Pub"
+sortTypename (LSortUser st) = st
+sortTypename LSortNode      = error "sortTypename: May not use sort 'Node'."
+
+-- | @sortFromString t@ is the sort for a given typename @t@.
+sortFromString :: String -> LSort
+sortFromString "Msg"   = LSortMsg
+sortFromString "Fresh" = LSortFresh
+sortFromString "Pub"   = LSortPub
+sortFromString "Node"  = error "sortFromString: May not use sort 'Node'."
+sortFromString st      = LSortUser st
 
 ------------------------------------------------------------------------------
 -- Names
@@ -274,7 +292,7 @@ sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Con c)                       -> sortOfConst c
     Lit2 (Var lv)                      -> lvarSort lv
-    FAppNoEq (_,(_,(_,Just sorts))) _  -> LSortUser $ BC.unpack $ last sorts
+    FAppNoEq (_,(_,(_,Just sorts))) _  -> sortFromString $ last sorts
     _                                  -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.
