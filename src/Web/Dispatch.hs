@@ -1,3 +1,14 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TupleSections         #-}
+
+-- FIXME: See how we can get rid of the Template Haskell induced warning, such
+-- that we have the warning again for our code.
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 {- |
 Module      :  Web.Dispatch
 Description :  Yesod dispatch functions and default handlers.
@@ -8,12 +19,6 @@ Maintainer  :  Cedric Staub <cstaub@ethz.ch>
 Stability   :  experimental
 Portability :  non-portable
 -}
-
-{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings, TemplateHaskell, TupleSections #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
--- FIXME: See how we can get rid of the Template Haskell induced warning, such
--- that we have the warning again for our code.
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module Web.Dispatch
   ( withWebUI
@@ -39,7 +44,6 @@ import qualified Data.Text              as T
 import           Control.Applicative
 import           Control.Concurrent
 import           Control.Monad
-import           Control.Monad.IO.Class
 import           Data.List
 import           Data.Maybe
 import           Data.Time.LocalTime
@@ -72,7 +76,7 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> (FilePath -> IO ClosedTheory)   -- ^ Theory loader (from file).
           -> (String -> IO (Either String ClosedTheory))
           -- ^ Theory loader (from string).
-          -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
+          -- -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
           -> FilePath                        -- ^ Path to static content directory
           -> FilePath                        -- ^ Path to dot binary
@@ -80,7 +84,7 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
-withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser thCloser debug'
+withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
           stPath dotCmd' imgFormat' defaultAutoProver' f
   = do
     thy    <- getTheos
@@ -95,7 +99,6 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser thCloser
         { workDir            = thDir
         , cacheDir           = cacheDir_
         , parseThy           = liftIO . thParser
-        , closeThy           = thCloser
         , getStatic          = st
         , theoryVar          = thyVar
         , threadVar          = thrVar

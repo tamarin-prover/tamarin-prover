@@ -61,7 +61,6 @@ module Term.Unification (
 
 import           Control.Applicative
 import           Control.Monad.RWS
-import           Control.Monad.Reader
 import           Control.Monad.Error
 import           Control.Monad.State
 import qualified Data.Map as M

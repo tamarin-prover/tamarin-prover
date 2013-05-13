@@ -1,3 +1,12 @@
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE Rank2Types        #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TypeFamilies      #-}
+
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 {- |
 Module      :  Types.hs
 Description :  Central data type and Yesod typeclass instances.
@@ -9,10 +18,6 @@ Stability   :  experimental
 Portability :  non-portable
 -}
 
-{-# LANGUAGE
-    OverloadedStrings, Rank2Types, QuasiQuotes,
-    TypeFamilies, TemplateHaskell, CPP #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Web.Types
   ( WebUI(..)
@@ -37,37 +42,34 @@ module Web.Types
   )
 where
 
-import           Theory
 
-import           Yesod.Core
-import           Yesod.Static
-
-import           Text.Hamlet
-
+import           Control.Applicative
 import           Control.Concurrent
 import           Data.Label
+import qualified Data.Map            as M
 import           Data.Maybe          (listToMaybe)
 import           Data.Monoid         (mconcat)
 import           Data.Ord            (comparing)
+import qualified Data.Text           as T
 import           Data.Time.LocalTime
 
-import qualified Data.Map            as M
-import qualified Data.Text           as T
+import           Text.Hamlet
+import           Yesod.Core
+import           Yesod.Static
 
--- import Control.Monad.IO.Class
-import           Control.Applicative
+import           Theory
 
 ------------------------------------------------------------------------------
 -- Types
 ------------------------------------------------------------------------------
 
 -- | Type synonym for a generic handler inside our site.
--- type GenericHandler m = GHandler WebUI WebUI m
--- type Handler a = GHandler WebUI WebUI a
+-- type GenericHandler m = Handler WebUI WebUI m
+-- type Handler a = Handler WebUI WebUI a
 
 -- | Type synonym for a generic widget inside our site.
--- type GenericWidget m = GWidget WebUI (GenericHandler m)
--- type Widget a = GWidget WebUI WebUI a
+-- type GenericWidget m = Widget WebUI (GenericHandler m)
+-- type Widget a = Widget WebUI WebUI a
 
 -- | Type synonym representing a numeric index for a theory.
 type TheoryIdx = Int
@@ -94,30 +96,28 @@ imageFormatMIME SVG = "image/svg+xml"
 -- information that can use to keep info that needs to be available to the
 -- handler functions.
 data WebUI = WebUI
-  { getStatic   :: Static
+  { getStatic          :: Static
     -- ^ Settings for static file serving.
-  , cacheDir    :: FilePath
+  , cacheDir           :: FilePath
     -- ^ The caching directory (for storing rendered graphs).
-  , workDir     :: FilePath
+  , workDir            :: FilePath
     -- ^ The working directory (for storing/loading theories).
   -- , parseThy    :: MonadIO m => String -> GenericHandler m ClosedTheory
-  , parseThy    :: String -> IO (Either String ClosedTheory)
-    -- ^ Parse a closed theory according to command-line arguments.
-  , closeThy    :: OpenTheory -> IO ClosedTheory
+  , parseThy           :: String -> IO (Either String ClosedTheory)
     -- ^ Close an open theory according to command-line arguments.
-  , theoryVar  :: MVar TheoryMap
+  , theoryVar          :: MVar TheoryMap
     -- ^ MVar that holds the theory map
-  , threadVar  :: MVar ThreadMap
+  , threadVar          :: MVar ThreadMap
     -- ^ MVar that holds the thread map
   , autosaveProofstate :: Bool
     -- ^ Automatically store theory map
-  , dotCmd :: FilePath
+  , dotCmd             :: FilePath
     -- ^ The dot command
-  , imageFormat :: ImageFormat
+  , imageFormat        :: ImageFormat
     -- ^ The image-format used for rendering graphs
-  , defaultAutoProver :: AutoProver
+  , defaultAutoProver  :: AutoProver
     -- ^ The default prover to use for automatic proving.
-  , debug :: Bool
+  , debug              :: Bool
     -- ^ Output debug messages
   }
 
@@ -165,18 +165,6 @@ instance Eq TheoryInfo where
 
 instance Ord TheoryInfo where
   compare = compareTI
-
--- Adapted from the output of 'derive'.
-instance Read CaseDistKind where
-        readsPrec p0 r
-          = readParen (p0 > 10)
-              (\ r0 ->
-                 [(UntypedCaseDist, r1) | ("untyped", r1) <- lex r0])
-              r
-              ++
-              readParen (p0 > 10)
-                (\ r0 -> [(TypedCaseDist, r1) | ("typed", r1) <- lex r0])
-                r
 
 -- | Simple data type for specifying a path to a specific
 -- item within a theory.
@@ -339,10 +327,9 @@ instance Yesod WebUI where
 -- Note: We define the default layout here even tough it doesn't really
 -- belong in the "types" module in order to avoid mutually recursive modules.
 -- defaultLayout' :: (Yesod master, Route master ~ WebUIRoute)
---                => GWidget sub master ()      -- ^ Widget to embed in layout
---                -> GHandler sub master RepHtml
-defaultLayout' :: Yesod master =>
-                  GWidget sub master () -> GHandler sub master RepHtml
+--                => Widget master ()      -- ^ Widget to embed in layout
+--                -> Handler master RepHtml
+defaultLayout' :: Widget -> Handler RepHtml
 defaultLayout' w = do
   page <- widgetToPageContent w
   message <- getMessage

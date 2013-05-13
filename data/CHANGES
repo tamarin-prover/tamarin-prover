@@ -1,3 +1,9 @@
+* 0.8.5 Dropped support for GHC 7.0.x and GHC 7.2.x in favor of GHC 7.6.x
+
+  - fix: faster and simpler variant computation
+  - fix: parse errors when loading files with non-ASCII characters from GUI
+  - fix: compiles with GHC 7.6.x
+
 * 0.8.4
     features:
       1. irreducible function symbols are now allowed in formulas
