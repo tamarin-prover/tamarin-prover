@@ -210,7 +210,7 @@ prettyMaudeSig sig = P.vcat
       , (enableMSet, "multiset")
       ]
 
-    ppACSym (UserAC f s) = P.text $ f ++ " : " ++ s ++ " " ++ s ++ " -> " ++ s
+    ppACSym (UserAC f s) = P.text $ f ++ ": " ++ s ++ " " ++ s ++ " -> " ++ s
     ppACSym _            = P.text ""
 
     ppFunSymb (f,(k,(priv,sorts))) = P.text $ 
