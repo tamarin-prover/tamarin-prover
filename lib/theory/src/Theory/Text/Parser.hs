@@ -35,7 +35,7 @@ import           Text.PrettyPrint.Class     (render)
 
 import           Term.Substitution
 import           Term.SubtermRule
-import           Term.Maude.Signature       (addUserSort, userSortsForMaudeSig)
+import           Term.Maude.Signature       (addUserSort, addUserACSym, userSortsForMaudeSig)
 import           Theory
 import           Theory.Text.Parser.Token
 
@@ -145,7 +145,7 @@ binaryAlgApp plit = do
 -- | Parse a term.
 term :: Parser LNTerm -> Parser LNTerm
 term plit = asum
-    [ pairing       <?> "pairs"
+    [ pairing     <?> "pairs"
     , parens (multterm plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
@@ -583,6 +583,7 @@ builtins =
           *> extendSig hashMaudeSig
       ]
 
+-- | User-defined sorts.
 usersorts :: Parser ()
 usersorts =
     symbol "usersorts" *> colon *> commaSep1 sortSymbol *> pure ()
@@ -591,6 +592,34 @@ usersorts =
       ident <- identifier
       sig   <- getState
       setState (addUserSort ident sig)
+
+-- | User-defined AC symbols.
+useracsyms :: Parser ()
+useracsyms =
+    symbol "useracsyms" *> colon *> commaSep1 userACSymbol *> pure ()
+  where
+    userACSymbol = do
+        f     <- identifier
+        sorts <- parseSorts
+        sig   <- getState
+        -- Check that this is a valid AC symbol
+        verifySymbol f sorts sig
+        setState $ addUserACSym (UserAC f (head sorts)) sig
+
+    parseSorts = do
+      args <- colon *> wsSep identifier
+      void $ symbol "->"
+      retv <- identifier
+      return $ args ++ [retv]
+
+    verifySymbol f ([x,y,z]) msig | x == y && y == z = do
+      if elem (sortFromString x) (allSorts msig)
+        then return ()
+        else fail $ "Invalid AC symbol: " ++ f
+    verifySymbol f _ _ = fail $ "Invalid AC symbol: " ++ f
+
+    allSorts msig =
+      [LSortMsg, LSortFresh, LSortPub] ++ (S.toList $ userSortsForMaudeSig msig)
 
 functions :: Parser ()
 functions =
@@ -668,6 +697,9 @@ theory flags0 = do
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do usersorts
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+      , do useracsyms
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do functions

@@ -67,7 +67,7 @@ import qualified Data.Set as S
 ----------------------------------------------------------------------
 
 -- | AC function symbols.
-data ACSym = Union | Mult
+data ACSym = Union | Mult | UserAC String String 
   deriving (Eq, Ord, Typeable, Data, Show)
 
 -- | A function symbol can be either Private (unknown to adversary) or Public.

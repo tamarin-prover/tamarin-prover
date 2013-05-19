@@ -17,6 +17,7 @@ module Term.Maude.Signature (
   , stFunSyms
   , stRules
   , funSyms
+  , userACSyms
   , irreducibleFunSyms
   , rrulesForMaudeSig
   , noEqFunSyms
@@ -37,6 +38,7 @@ module Term.Maude.Signature (
   , addFunSym
   , addStRule
   , addUserSort
+  , addUserACSym
 
   -- * pretty printing
   , prettyMaudeSig
@@ -79,14 +81,16 @@ data MaudeSig = MaudeSig
                                           -- can be computed from enableX and stFunSyms
     , irreducibleFunSyms :: FunSig        -- ^ irreducible function symbols (can be computed)
     , userSorts          :: S.Set String  -- ^ user-defined sorts
+    , userACSyms         :: S.Set ACSym   -- ^ user-defined AC symbols
     }
     deriving (Ord, Show, Eq)
 
 -- | Smart constructor for maude signatures. Computes funSyms and irreducibleFunSyms.
 maudeSig :: MaudeSig -> MaudeSig
-maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules,userSorts}) =
+maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules}) =
     msig {enableDH=enableDH||enableBP, funSyms=allfuns, irreducibleFunSyms=irreduciblefuns}
   where
+    -- TODO: Take into accounts user-defined AC function symbols.
     allfuns = (S.map NoEq stFunSyms)
                 `S.union` (if enableDH || enableBP then dhFunSig   else S.empty)
                 `S.union` (if enableBP             then bpFunSig   else S.empty)
@@ -98,15 +102,16 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules,userSort
 
 -- | A monoid instance to combine maude signatures.
 instance Monoid MaudeSig where
-    (MaudeSig dh1 bp1 mset1 stFunSyms1 stRules1 _ _ uSorts1) `mappend`
-      (MaudeSig dh2 bp2 mset2 stFunSyms2 stRules2 _ _ uSorts2) =
+    (MaudeSig dh1 bp1 mset1 stFunSyms1 stRules1 _ _ uSorts1 uSyms1) `mappend`
+      (MaudeSig dh2 bp2 mset2 stFunSyms2 stRules2 _ _ uSorts2 uSyms2) =
           maudeSig (mempty {enableDH=dh1||dh2
                            ,enableBP=bp1||bp2
                            ,enableMSet=mset1||mset2
                            ,stFunSyms=S.union stFunSyms1 stFunSyms2
                            ,stRules=S.union stRules1 stRules2
-                           ,userSorts=S.union uSorts1 uSorts2})
-    mempty = MaudeSig False False False S.empty S.empty S.empty S.empty S.empty
+                           ,userSorts=S.union uSorts1 uSorts2
+                           ,userACSyms=S.union uSyms1 uSyms2})
+    mempty = MaudeSig False False False S.empty S.empty S.empty S.empty S.empty S.empty
 
 -- | Non-AC function symbols.
 noEqFunSyms :: MaudeSig -> NoEqFunSig
@@ -126,6 +131,11 @@ addStRule str msig =
 addUserSort :: String -> MaudeSig -> MaudeSig
 addUserSort str msig =
     msig `mappend` mempty {userSorts=S.fromList [str]}
+
+-- | Add a user-defined AC symbol to given maude signature.
+addUserACSym :: ACSym -> MaudeSig -> MaudeSig
+addUserACSym sym msig =
+    msig `mappend` mempty {userACSyms=S.fromList [sym]}
 
 -- | Returns all rewriting rules including the rules
 --   for DH, BP, and multiset.
@@ -199,7 +209,7 @@ prettyMaudeSig sig = P.vcat
       , (enableMSet, "multiset")
       ]
 
-    ppFunSymb symb@(f,(k,(priv,sorts))) = P.text $ 
+    ppFunSymb (f,(k,(priv,sorts))) = P.text $ 
         case sorts of
           Nothing  -> BC.unpack f ++ "/" ++ show k ++ showPriv priv
           Just sts -> BC.unpack f ++ ":" ++ showSorts sts ++ showPriv priv

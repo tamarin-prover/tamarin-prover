@@ -89,6 +89,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FInv       t1    -> go t1
             FMult      ts    -> all go ts
             FUnion     ts    -> all go ts
+            FUserAC  _ ts    -> all go ts
             FAppNoEq _ ts    -> all go ts
             FAppC _    ts    -> all go ts
 

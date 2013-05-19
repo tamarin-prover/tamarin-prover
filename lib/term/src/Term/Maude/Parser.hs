@@ -48,7 +48,7 @@ ppLSort s = case s of
     LSortFresh     -> "Fresh"
     LSortMsg       -> "Msg"
     LSortNode      -> "Node"
-    (LSortUser st) -> B.concat ["tamU", BC.pack st]
+    (LSortUser st) -> B.concat [funUserSymPrefix, BC.pack st]
 
 ppLSortSym :: LSort -> ByteString
 ppLSortSym lsort = case lsort of
@@ -74,6 +74,10 @@ parseLSortSym s = case s of
 funSymPrefix :: ByteString
 funSymPrefix = "tamX"
 
+-- | Used to prevent clashes of user-defined symbols with built-in ones.
+funUserSymPrefix :: ByteString
+funUserSymPrefix = "tamU"
+
 -- | Prefix for private function symbols.
 funSymPrefixPriv :: ByteString
 funSymPrefixPriv = "tamP"
@@ -82,8 +86,9 @@ funSymPrefixPriv = "tamP"
 ppMaudeACSym :: ACSym -> ByteString
 ppMaudeACSym o =
     funSymPrefix <> case o of
-                      Mult  -> "mult"
-                      Union -> "mun"
+                      Mult       -> "mult"
+                      Union      -> "mun"
+                      UserAC f _ -> BC.concat [funUserSymPrefix, BC.pack f]
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
@@ -195,7 +200,7 @@ ppTheory msig = BC.unlines $
     sortMaudeName "Msg"   = BC.pack "Msg"
     sortMaudeName "Fresh" = BC.pack "Fresh"
     sortMaudeName "Pub"   = BC.pack "Pub"
-    sortMaudeName st      = B.concat [BC.pack "tamU", BC.pack st]
+    sortMaudeName st      = B.concat [funUserSymPrefix, BC.pack st]
 
 -- Parser for Maude output
 ------------------------------------------------------------------------
@@ -237,12 +242,13 @@ parseSort :: Parser LSort
 parseSort =  string "Pub"      *> return LSortPub
          <|> string "Fresh"    *> return LSortFresh
          <|> string "Node"     *> return LSortNode
-         <|> string "tamU"     *> -- Sorts with U* are user-defined
+         <|> userprefix        *> -- Sorts with tamU* are user-defined
                ( sortIdent    >>= return . LSortUser . BC.unpack )
          <|> string "M"        *> -- FIXME: why?
                ( string "sg"   *> return LSortMsg )
   where
     sortIdent = takeWhile1 (`BC.notElem` (":(,)\n " :: B.ByteString))
+    userprefix = string funUserSymPrefix
 
 -- | @parseTerm@ is a parser for Maude terms.
 parseTerm :: MaudeSig -> Parser MTerm
