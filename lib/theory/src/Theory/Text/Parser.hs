@@ -73,10 +73,12 @@ llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
 
 -- | Parse an lit with logical variables of the given sort.
 sortedLlit :: LSort -> Parser LNTerm
-sortedLlit s = varTerm <$> asum
-  [ try $ sortedLVar [s]
-  , do (n, i) <- indexedIdentifier
-       return $ LVar n s i ]
+sortedLlit s@(LSortUser _) =
+    varTerm <$> asum
+      [ try $ sortedLVar [s]
+      , do (n, i) <- indexedIdentifier
+           return $ LVar n s i ]
+sortedLlit _ = llit
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
@@ -114,16 +116,18 @@ naryOpApp plit = do
     sortedTerm op (idx, sortname) = do
       let sort = sortFromString sortname
       lnterm <- multterm $ asum [try $ sortedLlit sort, llit]
-      if sortOfLNTerm lnterm == sort
+      let order = sortCompare (sortOfLNTerm lnterm) sort
+      if order == (Just LT) || order == (Just EQ)
         then return lnterm
         -- XXX: Because of limitations in the way Parsec handles errors,
         -- the error message from fail will not show up in the output which
         -- may be confusing to the user. We print an additional error message.
         else do
+          pos <- getPosition
           let err = "Error: Function " ++ op ++ " expects argument of sort "
                     ++ sortname ++ " at position " ++ show idx ++
                     ", but found sort " ++ sortTypename (sortOfLNTerm lnterm)
-                    ++ " instead!"
+                    ++ " instead! (line " ++ show (sourceLine pos) ++ ")."
           liftIO $ putStrLn err
           fail err
 
