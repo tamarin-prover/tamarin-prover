@@ -35,7 +35,7 @@ import           Text.PrettyPrint.Class     (render)
 
 import           Term.Substitution
 import           Term.SubtermRule
-import           Term.Maude.Signature       (addUserSort, addUserACSym, userSortsForMaudeSig)
+import           Term.Maude.Signature
 import           Theory
 import           Theory.Text.Parser.Token
 
@@ -85,9 +85,18 @@ sortedLlit _ = llit
 lookupArity :: String -> Parser (Int, Privacy, Maybe [String])
 lookupArity op = do
     maudeSig <- getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,(Public,Nothing)))]) of
+    case lookup (BC.pack op) (allSyms maudeSig) of
         Nothing             -> fail $ "unknown operator `" ++ op ++ "'"
         Just (k,(priv,sts)) -> return (k,priv,sts)
+
+  where
+    allSyms maudeSig =
+      S.toList (noEqFunSyms maudeSig)
+      ++ [(emapSymString, (2, (Public, Nothing)))]
+      ++ (catMaybes $ map mapACSym (S.toList $ userACSyms maudeSig))
+      
+    mapACSym (UserAC f s) = Just (BC.pack f, (2, (Public, Just [s,s,s])))
+    mapACSym _            = Nothing
 
 -- | Parse an n-ary operator application for arbitrary n.
 naryOpApp :: Parser LNTerm -> Parser LNTerm
@@ -594,9 +603,9 @@ usersorts =
       setState (addUserSort ident sig)
 
 -- | User-defined AC symbols.
-useracsyms :: Parser ()
-useracsyms =
-    symbol "useracsyms" *> colon *> commaSep1 userACSymbol *> pure ()
+useracsym :: Parser ()
+useracsym =
+    symbol "useracsym" *> colon *> commaSep1 userACSymbol *> pure ()
   where
     userACSymbol = do
         f     <- identifier
@@ -699,10 +708,10 @@ theory flags0 = do
       , do usersorts
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
-      , do useracsyms
+      , do functions
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
-      , do functions
+      , do useracsym
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do equations

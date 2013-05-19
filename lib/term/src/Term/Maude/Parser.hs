@@ -27,6 +27,7 @@ import Control.Monad.Bind
 
 import Control.Basics
 
+import Data.Maybe
 import qualified Data.Set as S
 
 import qualified Data.ByteString as B
@@ -165,6 +166,8 @@ ppTheory msig = BC.unlines $
        , theoryOp "em : Msg Msg -> Msg [comm]" ]
        else [])
     ++
+    (catMaybes $ map theoryUserACSyms (S.toList $ userACSyms msig))
+    ++
     map theoryFunSym (S.toList $ stFunSyms msig)
     ++
     map theoryRule (S.toList $ rrulesForMaudeSig msig)
@@ -194,6 +197,13 @@ ppTheory msig = BC.unlines $
     theoryCustomSorts []     = []
     theoryCustomSorts [x]    = [BC.pack "-> ", sortMaudeName x]
     theoryCustomSorts (x:xs) = [sortMaudeName x, BC.pack " "] ++ theoryCustomSorts xs 
+
+    theoryUserACSyms (UserAC f s) =
+      let sort = sortMaudeName s 
+      in  Just $ BC.concat
+            [ "  op ", funSymPrefix, BC.pack f, " : ", sort, " ", sort
+            , " -> ", sort, " [comm assoc] ."]
+    theoryUserACSyms _            = Nothing
 
     -- Prefix non-builtin sorts with "tamU" prefix to avoid clashes
     sortMaudeName :: String -> ByteString

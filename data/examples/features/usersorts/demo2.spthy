@@ -1,0 +1,15 @@
+theory Demo2
+begin
+
+builtins: multiset
+
+usersorts: NAT
+
+functions: zero: -> NAT,
+           one:  -> NAT
+
+useracsym: plus: NAT NAT -> NAT
+
+equations: plus(x:NAT, zero) = x:NAT 
+
+end

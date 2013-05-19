@@ -192,8 +192,9 @@ minimalMaudeSig = pairMaudeSig
 prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
 prettyMaudeSig sig = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text      builtIns
-    , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig)
     , ppNonEmptyList' "usersorts:" P.text    $ S.toList (userSorts sig)
+    , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig)
+    , ppNonEmptyList' "useracsym:" ppACSym   $ S.toList (userACSyms sig)
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyStRule $ S.toList (stRules sig)
@@ -208,6 +209,9 @@ prettyMaudeSig sig = P.vcat
       , (enableBP,   "bilinear-pairing")
       , (enableMSet, "multiset")
       ]
+
+    ppACSym (UserAC f s) = P.text $ f ++ " : " ++ s ++ " " ++ s ++ " -> " ++ s
+    ppACSym _            = P.text ""
 
     ppFunSymb (f,(k,(priv,sorts))) = P.text $ 
         case sorts of
