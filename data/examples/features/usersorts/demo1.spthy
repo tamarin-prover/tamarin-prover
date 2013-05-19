@@ -1,0 +1,80 @@
+/*
+
+User-defined sorts demo
+-----------------------
+
+Show that when using user-defined sorts, the unification algorithm does/does not
+unify incompatible message terms. 
+ 
+*/
+
+theory Demo1
+begin
+
+usersorts: NAT
+
+functions: h/1,
+           constMSG/0,
+           constNAT: -> NAT
+
+/*
+
+Example 1:
+Rule Emit1 emits a constant of user-defined sort NAT (constNAT), which can be
+received by rule Recv1 since it expects an x of sort NAT (x:NAT). So, there
+exists a trace where the Recv1 rule receives the output of the Emit1 rule.
+
+*/
+
+rule Emit1:
+    [ Fr(~k) ]
+  --[ Emitted1($A, $B, ~k) ]->
+    [ !Ltk($A, $B, ~k)
+    , Out(h(<$A, $B, ~k, constNAT>)) ]
+
+rule Recv1:
+    [ !Ltk($A, $B, ~k)
+    , In(h(<$A, $B, ~k, x:NAT>)) ]
+  --[ Received1($A, $B, ~k) ]->
+    [ ]
+
+lemma Provable:
+    exists-trace
+    "
+    Ex A B k #i #j.
+        Emitted1(A, B, k) @ #i
+        & Received1(A, B, k) @ #j 
+        & i < j
+    "
+
+/*
+
+Example 2:
+Rule Emit2 emits a constant of built-in sort Msg (constMSG), which can not be
+received by rule Recv2 since it expects an x of sort NAT (x:NAT). So, there does
+not exist a trace where the Recv2 rule receives the output of the Emit2 rule.
+
+*/
+
+rule Emit2:
+    [ Fr(~k) ]
+  --[ Emitted2($A, $B, ~k) ]->
+    [ !Ltk($A, $B, ~k)
+    , Out(h(<$A, $B, ~k, constMSG>)) ]
+
+rule Recv2:
+    [ !Ltk($A, $B, ~k)
+    , In(h(<$A, $B, ~k, x:NAT>)) ]
+  --[ Received2($A, $B, ~k) ]->
+    [ ]
+
+lemma Unprovable:
+    exists-trace
+    "
+    Ex A B k #i #j.
+        Emitted2(A, B, k) @ #i
+        & Received2(A, B, k) @ #j 
+        & i < j
+    "
+
+end
