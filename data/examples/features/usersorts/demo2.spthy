@@ -1,8 +1,6 @@
 theory Demo2
 begin
 
-builtins: multiset
-
 usersorts: NAT
 
 functions: h/1,
@@ -20,7 +18,7 @@ rule Test1:
 
 rule Test2:
     [ !Ltk($A, $B, ~k)
-    , In(h($A, $B, ~k, plus(one, plus(one, plus(zero, one))))) ]
+    , In(h($A, $B, ~k, plus(one, x:NAT))) ]
   --[ TF2($A, $B, ~k) ]->
     [ ]
 

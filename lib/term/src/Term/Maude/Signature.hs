@@ -203,7 +203,6 @@ prettyMaudeSig sig = P.vcat
     , ppNonEmptyList' "usersorts:" P.text  $  S.toList (userSorts sig)
     , ppNonEmptyList' "functions:" ppFun   $  (map Left $ S.toList $ stFunSyms sig)
                                            ++ (map Right $ S.toList $ userACSyms sig)
-    , ppNonEmptyList' "useracsym:" ppACSym $  S.toList (userACSyms sig)
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyStRule $ S.toList (stRules sig)

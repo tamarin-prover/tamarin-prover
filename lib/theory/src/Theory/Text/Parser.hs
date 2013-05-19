@@ -133,7 +133,6 @@ naryOpApp plit = do
     lookupUserAC idn [] _ = error $
       "Theory.Text.naryOpApp: error parsing user AC symbol: " ++ idn
 
-
     -- Parse a term with the given sort
     sortedTerm op (idx, sortname) = do
       let sort = sortFromString sortname

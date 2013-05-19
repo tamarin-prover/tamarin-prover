@@ -153,8 +153,8 @@ isPrivateFunction _                                                  = False
 showFunSymName :: FunSym -> String
 showFunSymName (NoEq (bs, _)) = BC.unpack bs
 showFunSymName (AC op)        = show op
-showFunSymName (C op )           = show op
-showFunSymName List              = "List"
+showFunSymName (C op )        = show op
+showFunSymName List           = "List"
 
 -- | Pretty print a term.
 prettyTerm :: (Document d, Show l) => (l -> d) -> Term l -> d
@@ -162,6 +162,7 @@ prettyTerm ppLit = ppTerm
   where
     ppTerm t = case viewTerm t of
         Lit l                                     -> ppLit l
+        FApp (AC (UserAC f _)) ts                 -> ppUserAC f ts
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
@@ -174,6 +175,11 @@ prettyTerm ppLit = ppTerm
     ppACOp Mult  = "*"
     ppACOp Union = "+"
     ppACOp (UserAC sym _) = " `" ++ sym ++ "` "
+
+    ppUserAC f (t:ts) 
+      | null ts   = ppTerm t
+      | otherwise = text f <> text "(" <> ppTerm t <> text ", " <> ppUserAC f ts <> text ")"
+    ppUserAC _ []     = text "" 
 
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .
