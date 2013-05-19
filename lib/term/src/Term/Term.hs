@@ -173,7 +173,7 @@ prettyTerm ppLit = ppTerm
 
     ppACOp Mult  = "*"
     ppACOp Union = "+"
-    ppACOp (UserAC sym _) = "`" ++ sym ++ "`"
+    ppACOp (UserAC sym _) = " `" ++ sym ++ "` "
 
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .

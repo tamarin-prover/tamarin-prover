@@ -293,6 +293,7 @@ sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Con c)                       -> sortOfConst c
     Lit2 (Var lv)                      -> lvarSort lv
     FAppNoEq (_,(_,(_,Just sorts))) _  -> sortFromString $ last sorts
+    FUserAC _ sort _                   -> sortFromString sort
     _                                  -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.

@@ -86,7 +86,8 @@ lookupArity :: String -> Parser (Int, Privacy, Maybe [String])
 lookupArity op = do
     maudeSig <- getState
     case lookup (BC.pack op) (allSyms maudeSig) of
-        Nothing             -> fail $ "unknown operator `" ++ op ++ "'"
+        Nothing             -> do
+          fail $ "unknown operator `" ++ op ++ "'"
         Just (k,(priv,sts)) -> return (k,priv,sts)
 
   where
@@ -109,17 +110,29 @@ naryOpApp plit = do
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
-    let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
-    return $ app (BC.pack op, (k, (priv, sts))) ts
+    msig <- getState
+    let app o = if BC.pack op == emapSymString 
+                  then fAppC EMap
+                  else fAppNoEq o
+    return $ if op `elem` userACSyms' msig
+      then lookupUserAC op (S.toList $ userACSyms msig) ts
+      else app (BC.pack op, (k, (priv, sts))) ts
   where
     -- Functions on built-in sorts
     arguments _  0 _       = return []
     arguments _  1 Nothing = return <$> tupleterm plit
     arguments _  _ Nothing = commaSep (multterm plit)
-
     -- Functions on user-defined sorts (with type signature)
     arguments op _ (Just xs) =
       commaSepN $ map (sortedTerm op) (zip ([1..] :: [Integer]) $ init xs)
+
+    lookupUserAC idn (sym@(UserAC idn' s):syms) as
+      | idn == idn'              = fAppAC sym as
+      | otherwise                = lookupUserAC idn syms as
+    lookupUserAC idn (_:syms) as = lookupUserAC idn syms as
+    lookupUserAC idn [] _ = error $
+      "Theory.Text.naryOpApp: error parsing user AC symbol: " ++ idn
+
 
     -- Parse a term with the given sort
     sortedTerm op (idx, sortname) = do

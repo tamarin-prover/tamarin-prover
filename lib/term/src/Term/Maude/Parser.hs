@@ -89,7 +89,7 @@ ppMaudeACSym o =
     funSymPrefix <> case o of
                       Mult       -> "mult"
                       Union      -> "mun"
-                      UserAC f _ -> BC.concat [funUserSymPrefix, BC.pack f]
+                      UserAC f _ -> BC.pack f
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
@@ -274,11 +274,10 @@ parseTerm msig = choice
                ]
    ]
   where
-    consSym = ("cons",(2,(Public,Nothing)))
-    nilSym  = ("nil",(0,(Public,Nothing)))
+    consSym = ("cons", (2, (Public, Nothing)))
+    nilSym  = ("nil", (0, (Public, Nothing)))
 
     parseFunSym ident args
-      -- TODO: Adjust this to take into account sort restrictions
       | op `elem` allowedfunSyms = op
       | otherwise                =
           error $ "Maude.Parser.parseTerm: unknown function "
@@ -288,7 +287,6 @@ parseTerm msig = choice
             special        = ident `elem` ["list", "cons", "nil" ]
             priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident 
                                then Private else Public
-            allowedfunSyms = [consSym, nilSym]++(S.toList $ noEqFunSyms msig)
             op_ident       = if special then ident else BC.drop prefixLen ident
             op             =
               ( op_ident 
@@ -298,6 +296,8 @@ parseTerm msig = choice
                     Just (_, (_, a)) -> a
                     Nothing          -> Nothing ))))
 
+            allowedfunSyms = [consSym, nilSym] ++ (S.toList $ noEqFunSyms msig)
+
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
 
     parseFApp ident =
@@ -306,6 +306,18 @@ parseTerm msig = choice
         appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult  args
                        | ident == ppMaudeACSym Union      = fAppAC Union args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
+                       | ident `elem` maudeUserACSymbols  = lookupUserAC ident userSyms args
+          where
+            userSyms = S.toList $ userACSyms msig
+            maudeUserACSymbols = map ppMaudeACSym (S.toList $ userACSyms msig)
+
+            lookupUserAC idn (sym:syms) as
+              | idn == ppMaudeACSym sym  = fAppAC sym as
+              | otherwise                = lookupUserAC idn syms as
+            lookupUserAC idn (_:syms) as = lookupUserAC idn syms as
+            lookupUserAC idn [] _ = error $
+              "Maude.Parser.parseTerm: error parsing user AC symbol: " ++ (BC.unpack idn)
+
         appIdent [arg] | ident == "list"                  = fAppList (flattenCons arg)
         appIdent args                                     = fAppNoEq op args
           where op = parseFunSym ident args

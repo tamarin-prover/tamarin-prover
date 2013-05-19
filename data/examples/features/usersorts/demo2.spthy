@@ -5,11 +5,33 @@ builtins: multiset
 
 usersorts: NAT
 
-functions: zero: -> NAT,
+functions: h/1,
+           zero: -> NAT,
            one:  -> NAT
 
 useracsym: plus: NAT NAT -> NAT
 
 equations: plus(x:NAT, zero) = x:NAT 
+
+rule Test1:
+    [ Fr(~k) ]
+  --[ TF1($A, $B, ~k) ]->
+    [ !Ltk($A, $B, ~k)
+    , Out(h($A, $B, ~k, plus(plus(one, one), plus(one, zero)))) ]
+
+rule Test2:
+    [ !Ltk($A, $B, ~k)
+    , In(h($A, $B, ~k, plus(one, plus(one, plus(zero, one))))) ]
+  --[ TF2($A, $B, ~k) ]->
+    [ ]
+
+lemma Provable:
+    exists-trace
+    "
+    Ex A B k #i #j.
+        TF1(A, B, k) @ #i
+        & TF2(A, B, k) @ #j 
+        & i < j
+    "
 
 end

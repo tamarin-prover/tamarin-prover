@@ -18,6 +18,7 @@ module Term.Maude.Signature (
   , stRules
   , funSyms
   , userACSyms
+  , userACSyms'
   , irreducibleFunSyms
   , rrulesForMaudeSig
   , noEqFunSyms
@@ -53,6 +54,7 @@ import Control.Monad.Fresh
 import Control.Applicative
 import Control.DeepSeq
 
+import Data.Maybe
 import Data.DeriveTH
 import Data.Binary
 import Data.Foldable (asum)
@@ -162,6 +164,12 @@ userSortsForMaudeSig msig =
   where
     isUserDefined (LSortUser _) = True
     isUserDefined _             = False
+
+userACSyms' :: MaudeSig -> [String]
+userACSyms' msig = catMaybes $ map sym $ S.toList $ userACSyms msig
+  where 
+    sym (UserAC f _) = Just f
+    sym _            = Nothing
 
 ------------------------------------------------------------------------------
 -- Builtin maude signatures
