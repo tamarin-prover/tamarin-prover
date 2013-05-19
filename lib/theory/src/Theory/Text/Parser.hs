@@ -126,7 +126,7 @@ naryOpApp plit = do
     arguments op _ (Just xs) =
       commaSepN $ map (sortedTerm op) (zip ([1..] :: [Integer]) $ init xs)
 
-    lookupUserAC idn (sym@(UserAC idn' s):syms) as
+    lookupUserAC idn (sym@(UserAC idn' _):syms) as
       | idn == idn'              = fAppAC sym as
       | otherwise                = lookupUserAC idn syms as
     lookupUserAC idn (_:syms) as = lookupUserAC idn syms as
@@ -615,34 +615,6 @@ usersorts =
       sig   <- getState
       setState (addUserSort ident sig)
 
--- | User-defined AC symbols.
-useracsym :: Parser ()
-useracsym =
-    symbol "useracsym" *> colon *> commaSep1 userACSymbol *> pure ()
-  where
-    userACSymbol = do
-        f     <- identifier
-        sorts <- parseSorts
-        sig   <- getState
-        -- Check that this is a valid AC symbol
-        verifySymbol f sorts sig
-        setState $ addUserACSym (UserAC f (head sorts)) sig
-
-    parseSorts = do
-      args <- colon *> wsSep identifier
-      void $ symbol "->"
-      retv <- identifier
-      return $ args ++ [retv]
-
-    verifySymbol f ([x,y,z]) msig | x == y && y == z = do
-      if elem (sortFromString x) (allSorts msig)
-        then return ()
-        else fail $ "Invalid AC symbol: " ++ f
-    verifySymbol f _ _ = fail $ "Invalid AC symbol: " ++ f
-
-    allSorts msig =
-      [LSortMsg, LSortFresh, LSortPub] ++ (S.toList $ userSortsForMaudeSig msig)
-
 functions :: Parser ()
 functions =
     symbol "functions" *> colon *> commaSep1 functionSymbol *> pure ()
@@ -651,16 +623,22 @@ functions =
         f   <- BC.pack <$> identifier
         (k, sorts) <- parseArity
         priv <- option Public (symbol "[private]" *> pure Private)
+        ac <- option False (symbol "[AC]" *> pure True)
         sig <- getState
         -- Check that sorts exist
         when (isJust sorts) (verifySorts (fromJust sorts) sig)
+        when ac (verifySymbol f (fromJust sorts))
         -- Check that arities/private matches
-        case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
-          Just kp' | kp' /= (k,(priv,sorts)) ->
-            fail $ "conflicting arities/private " ++
-                   show kp' ++ " and " ++ show (k,priv) ++
-                   " for `" ++ BC.unpack f
-          _ -> setState $ addFunSym (f,(k,(priv,sorts))) sig
+        if ac
+          then setState $
+            addUserACSym (UserAC (BC.unpack f) (head $ fromJust sorts)) sig
+          else do
+            case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
+              Just kp' | kp' /= (k,(priv,sorts)) ->
+                fail $ "conflicting arities/private " ++
+                       show kp' ++ " and " ++ show (k,priv) ++
+                       " for `" ++ BC.unpack f
+              _ -> setState $ addFunSym (f,(k,(priv,sorts))) sig
 
     -- Parse old-style function symbol (such as h/1, f/2, etc) or
     -- new-style function symbol (with function signature, such as
@@ -682,6 +660,9 @@ functions =
       if elem (sortFromString sort) (allSorts msig)
         then return ()
         else fail $ "Invalid sort specified: " ++ sort
+
+    verifySymbol _ ([x,y,z]) | x == y && y == z = return ()
+    verifySymbol f _ = fail $ "Invalid AC symbol: " ++ (BC.unpack f)
 
     allSorts msig =
       [LSortMsg, LSortFresh, LSortPub] ++ (S.toList $ userSortsForMaudeSig msig)
@@ -722,9 +703,6 @@ theory flags0 = do
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do functions
-           msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
-      , do useracsym
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do equations

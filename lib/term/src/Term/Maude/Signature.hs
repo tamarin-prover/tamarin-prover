@@ -199,10 +199,11 @@ minimalMaudeSig = pairMaudeSig
 
 prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
 prettyMaudeSig sig = P.vcat
-    [ ppNonEmptyList' "builtins:"  P.text      builtIns
-    , ppNonEmptyList' "usersorts:" P.text    $ S.toList (userSorts sig)
-    , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig)
-    , ppNonEmptyList' "useracsym:" ppACSym   $ S.toList (userACSyms sig)
+    [ ppNonEmptyList' "builtins:"  P.text     builtIns
+    , ppNonEmptyList' "usersorts:" P.text  $  S.toList (userSorts sig)
+    , ppNonEmptyList' "functions:" ppFun   $  (map Left $ S.toList $ stFunSyms sig)
+                                           ++ (map Right $ S.toList $ userACSyms sig)
+    , ppNonEmptyList' "useracsym:" ppACSym $  S.toList (userACSyms sig)
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyStRule $ S.toList (stRules sig)
@@ -218,10 +219,13 @@ prettyMaudeSig sig = P.vcat
       , (enableMSet, "multiset")
       ]
 
-    ppACSym (UserAC f s) = P.text $ f ++ ": " ++ s ++ " " ++ s ++ " -> " ++ s
+    ppFun (Left noeq) = ppNoEqFunSymb noeq
+    ppFun (Right acs) = ppACSym acs
+
+    ppACSym (UserAC f s) = P.text $ f ++ ": " ++ s ++ " " ++ s ++ " -> " ++ s ++ " [AC]"
     ppACSym _            = P.text ""
 
-    ppFunSymb (f,(k,(priv,sorts))) = P.text $ 
+    ppNoEqFunSymb (f,(k,(priv,sorts))) = P.text $ 
         case sorts of
           Nothing  -> BC.unpack f ++ "/" ++ show k ++ showPriv priv
           Just sts -> BC.unpack f ++ ":" ++ showSorts sts ++ showPriv priv

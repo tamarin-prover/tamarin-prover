@@ -100,7 +100,6 @@ ppMaudeNoEqSym (o,(_,(Public,_)))  = funSymPrefix     <> o
 ppMaudeCSym :: CSym -> ByteString
 ppMaudeCSym EMap = funSymPrefix <> emapSymString
 
-
 -- | @ppMaude t@ pretty prints the term @t@ for Maude.
 ppMaude :: Term MaudeLit -> ByteString
 ppMaude t = case viewTerm t of
@@ -314,7 +313,6 @@ parseTerm msig = choice
             lookupUserAC idn (sym:syms) as
               | idn == ppMaudeACSym sym  = fAppAC sym as
               | otherwise                = lookupUserAC idn syms as
-            lookupUserAC idn (_:syms) as = lookupUserAC idn syms as
             lookupUserAC idn [] _ = error $
               "Maude.Parser.parseTerm: error parsing user AC symbol: " ++ (BC.unpack idn)
 

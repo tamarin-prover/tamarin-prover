@@ -7,9 +7,8 @@ usersorts: NAT
 
 functions: h/1,
            zero: -> NAT,
-           one:  -> NAT
-
-useracsym: plus: NAT NAT -> NAT
+           one:  -> NAT,
+           plus: NAT NAT -> NAT [AC]
 
 equations: plus(x:NAT, zero) = x:NAT 
 
