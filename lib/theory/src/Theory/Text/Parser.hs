@@ -90,28 +90,29 @@ sortedLlit _ = llit
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
-lookupArity :: String -> Parser (Int, Privacy, Maybe [String])
+lookupArity :: String -> Parser (Int, Privacy, Maybe [String], Bool)
 lookupArity op = do
     maudeSig <- getState
-    case lookup (BC.pack op) (allSyms maudeSig) of
-        Nothing             -> do
+    case lookup (BC.pack op) [ (noEqOp o, o) | o <- allSyms maudeSig ] of
+        Nothing -> do
           fail $ "unknown operator `" ++ op ++ "'"
-        Just (k,(priv,sts)) -> return (k,priv,sts)
+        Just (NoEqSym _ k priv sts iter) -> return (k,priv,sts,iter)
 
   where
     allSyms maudeSig =
       S.toList (noEqFunSyms maudeSig)
-      ++ [(emapSymString, (2, (Public, Nothing)))]
+      ++ [NoEqSym emapSymString 2 Public Nothing False]
       ++ (catMaybes $ map mapACSym (S.toList $ userACSyms maudeSig))
       
-    mapACSym (UserAC f s) = Just (BC.pack f, (2, (Public, Just [s,s,s])))
+    noEqOp (NoEqSym f _ _ _ _) = f
+    mapACSym (UserAC f s) = Just (NoEqSym (BC.pack f) 2 Public (Just [s,s,s]) False)
     mapACSym _            = Nothing
 
 -- | Parse an n-ary operator application for arbitrary n.
 naryOpApp :: Parser LNTerm -> Parser LNTerm
 naryOpApp plit = do
     op <- identifier
-    (k,priv,sts) <- lookupArity op
+    (k,priv,sts,iter) <- lookupArity op
     ts <- parens $ arguments op k sts
     -- Verify arity
     let k' = length ts
@@ -124,7 +125,7 @@ naryOpApp plit = do
                   else fAppNoEq o
     return $ if op `elem` userACSyms' msig
       then lookupUserAC op (S.toList $ userACSyms msig) ts
-      else app (BC.pack op, (k, (priv, sts))) ts
+      else app (NoEqSym (BC.pack op) k priv sts iter) ts
   where
     -- Functions on built-in sorts
     arguments _  0 _       = return []
@@ -164,12 +165,12 @@ naryOpApp plit = do
 binaryAlgApp :: Parser LNTerm -> Parser LNTerm
 binaryAlgApp plit = do
     op <- identifier
-    (k,priv,sts) <- lookupArity op
+    (k,priv,sts,iter) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit
     when (k /= 2) $ fail $
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNoEq (BC.pack op, (2, (priv, sts))) [arg1, arg2]
+    return $ fAppNoEq (NoEqSym (BC.pack op) 2 priv sts iter) [arg1, arg2]
 
 -- | Parse a term.
 term :: Parser LNTerm -> Parser LNTerm
@@ -191,8 +192,8 @@ term plit = asum
     nullaryApp = do
       maudeSig <- getState
       -- FIXME: This try should not be necessary.
-      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
-           | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
+      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (NoEqSym sym 0 priv sts False)) [])
+           | NoEq (NoEqSym sym 0 priv sts False) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Parser LNTerm -> Parser LNTerm
@@ -650,25 +651,27 @@ functions =
     symbol "functions" *> colon *> commaSep1 functionSymbol *> pure ()
   where
     functionSymbol = do
-        f   <- BC.pack <$> identifier
+        f          <- BC.pack <$> identifier
         (k, sorts) <- parseArity
-        priv <- option Public (symbol "[private]" *> pure Private)
-        ac <- option False (symbol "[AC]" *> pure True)
-        sig <- getState
-        -- Check that sorts exist
+        priv       <- option Public (symbol "[private]" *> pure Private)
+        ac         <- option False (symbol "[AC]" *> pure True)
+        iter       <- option False (symbol "[iterated]" *> pure True)
+        sig        <- getState
+        -- Sanity checks for iterated functions
+        when (iter && not (enableNat sig)) $ fail $
+          "Natural numbers must be enabled to use iterated functions, " ++
+          "please activate the natural-numbers builtin!"
+        when iter (verifyIter f sorts)
+        -- Sanity checks for user-sorted functions
         when (isJust sorts) (verifySorts (fromJust sorts) sig)
-        when ac (verifySymbol f (fromJust sorts))
-        -- Check that arities/private matches
         if ac
-          then setState $
-            addUserACSym (UserAC (BC.unpack f) (head $ fromJust sorts)) sig
+          then do
+            verifySymbol f (fromJust sorts)
+            setState $ addUserACSym (UserAC (BC.unpack f) (head $ fromJust sorts)) sig
           else do
-            case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
-              Just kp' | kp' /= (k,(priv,sorts)) ->
-                fail $ "conflicting arities/private " ++
-                       show kp' ++ " and " ++ show (k,priv) ++
-                       " for `" ++ BC.unpack f
-              _ -> setState $ addFunSym (f,(k,(priv,sorts))) sig
+            let noeqsym = NoEqSym f k priv sorts iter
+            verifyArities noeqsym sig
+            setState $ addFunSym noeqsym sig
 
     -- Parse old-style function symbol (such as h/1, f/2, etc) or
     -- new-style function symbol (with function signature, such as
@@ -693,6 +696,18 @@ functions =
 
     verifySymbol _ ([x,y,z]) | x == y && y == z = return ()
     verifySymbol f _ = fail $ "Invalid AC symbol: " ++ (BC.unpack f)
+    
+    verifyIter _ (Just ["Nat", "Msg", "Msg"]) = return ()
+    verifyIter f _ = fail $ "Invalid iterated symbol: " ++ (BC.unpack f)
+
+    verifyArities sym@(NoEqSym f _ _ _ _) sig = 
+      case lookup f [ (noEqOp o, o) | o <- S.toList (stFunSyms sig)] of
+        Just other | other /= sym ->
+          fail $ "conflicting symbols: " ++
+                 show sym ++ " and " ++ show other
+        _ -> return ()
+      where
+        noEqOp (NoEqSym fs _ _ _ _) = fs
 
     allSorts msig =
       [LSortMsg, LSortFresh, LSortPub, LSortNat] ++

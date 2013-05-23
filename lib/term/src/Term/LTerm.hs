@@ -296,12 +296,12 @@ freshLVar n s = LVar n s <$> freshIdent n
 -- | Returns the most precise sort of an 'LTerm'.
 sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
-    Lit2 (Con c)                       -> sortOfConst c
-    Lit2 (Var lv)                      -> lvarSort lv
-    FAppNoEq (_,(_,(_,Just sorts))) _  -> sortFromString $ last sorts
-    FUserAC _ sort _                   -> sortFromString sort
-    FNatPlus _                         -> LSortNat
-    _                                  -> LSortMsg
+    Lit2 (Con c)                            -> sortOfConst c
+    Lit2 (Var lv)                           -> lvarSort lv
+    FAppNoEq (NoEqSym _ _ _ (Just sts) _) _ -> sortFromString $ last sts
+    FUserAC _ sort _                        -> sortFromString sort
+    FNatPlus _                              -> LSortNat
+    _                                       -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.
 sortOfLNTerm :: LNTerm -> LSort
@@ -333,9 +333,9 @@ niFactors t = case viewTerm2 t of
 -- | @containsPrivate t@ returns @True@ if @t@ contains private function symbols.
 containsPrivate :: Term t -> Bool
 containsPrivate t = case viewTerm t of
-    Lit _                              -> False
-    FApp (NoEq (_,(_,(Private,_)))) _  -> True
-    FApp _                          as -> any containsPrivate as
+    Lit _                                    -> False
+    FApp (NoEq (NoEqSym _ _ Private _ _)) _  -> True
+    FApp _                                as -> any containsPrivate as
 
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any
@@ -639,9 +639,11 @@ instance (HasFrees l, Ord l) => HasFrees (Term l) where
 
     foldFreesOcc f c t = case viewTerm t of
         Lit  l             -> foldFreesOcc f c l
-        FApp (NoEq o) as -> foldFreesOcc f ((BC.unpack . fst $ o):c) as
-        FApp o        as -> mconcat $ map (foldFreesOcc f (show o:c)) as
+        FApp (NoEq o) as   -> foldFreesOcc f (noEqOp o:c) as
+        FApp o        as   -> mconcat $ map (foldFreesOcc f (show o:c)) as
           -- AC or C symbols
+      where
+        noEqOp (NoEqSym fs _ _ _ _) = BC.unpack fs
 
     mapFrees f (viewTerm -> Lit l)                  = lit <$> mapFrees f l
     mapFrees f@(Arbitrary _) (viewTerm -> FApp o l) = fApp o <$> mapFrees f l

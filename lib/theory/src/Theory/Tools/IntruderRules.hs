@@ -97,7 +97,7 @@ specialIntruderRules =
 -- | @destuctionRules st@ returns the destruction rules for the given
 -- subterm rule @st@
 destructionRules :: StRule -> [IntrRuleAC]
-destructionRules (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)) =
+destructionRules (StRule lhs@(viewTerm -> FApp (NoEq (NoEqSym f _ _ _ _)) _) (RhsPosition pos)) =
     go [] lhs pos
   where
     rhs = lhs `atPos` pos
@@ -142,14 +142,14 @@ subtermIntruderRules maudeSig =
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@
--- TODO: Take into account sort restrictions on function signatures?
 constructionRules :: NoEqFunSig -> [IntrRuleAC]
 constructionRules fSig =
-    [ createRule s k | (s,(k,(Public,_))) <- S.toList fSig ]
+    [ createRule s k | (NoEqSym s k Public _ _) <- S.toList fSig ]
   where
+    -- TODO: Clarify if changes are needed here re: usersorts.
     createRule s k = Rule (ConstrRule s) (map kuFact vars) [concfact] [concfact]
-      where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
-            m        = fAppNoEq (s,(k,(Public,Nothing))) vars
+      where vars     = take k [ varTerm (LVar "x" LSortMsg i) | i <- [0..] ]
+            m        = fAppNoEq (NoEqSym s k Public Nothing False) vars
             concfact = kuFact m
 
 

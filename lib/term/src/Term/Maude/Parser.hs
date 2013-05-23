@@ -22,6 +22,7 @@ import Term.LTerm
 import Term.Maude.Types
 import Term.Maude.Signature
 import Term.Rewriting.Definitions
+import Term.Term.FunctionSymbols
 
 import Control.Monad.Bind
 
@@ -37,6 +38,7 @@ import qualified Data.ByteString.Char8 as BC
 import Data.Attoparsec.ByteString.Char8
 
 import Extension.Data.Monoid
+
 
 ------------------------------------------------------------------------------
 -- Pretty printing of Maude terms.
@@ -97,8 +99,8 @@ ppMaudeACSym o =
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
-ppMaudeNoEqSym (o,(_,(Private,_))) = funSymPrefixPriv <> o
-ppMaudeNoEqSym (o,(_,(Public,_)))  = funSymPrefix     <> o
+ppMaudeNoEqSym (NoEqSym o _ Private _ _) = funSymPrefixPriv <> o
+ppMaudeNoEqSym (NoEqSym o _ Public  _ _) = funSymPrefix     <> o
 
 -- | Pretty print a C symbol for Maude.
 ppMaudeCSym :: CSym -> ByteString
@@ -180,7 +182,7 @@ ppTheory msig = BC.unlines $
     ++
     (catMaybes $ map theoryUserACSyms (S.toList $ userACSyms msig))
     ++
-    map theoryFunSym (S.toList $ stFunSyms msig)
+    concatMap theoryFunSym (S.toList $ stFunSyms msig)
     ++
     map theoryRule (S.toList $ rrulesForMaudeSig msig)
     ++
@@ -196,9 +198,17 @@ ppTheory msig = BC.unlines $
     theoryOpNoEq priv fsort =
         "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."
     theoryOp = theoryOpNoEq Public
-    -- TODO: Take into account sort restrictions
-    theoryFunSym (s,(ar,(priv,sorts))) =
-        theoryOpNoEq priv (s <> " : " <> (maybe (theorySorts ar) (B.concat . theoryCustomSorts) sorts))
+
+    theoryFunSym (NoEqSym s ar priv sorts False) =
+        [ theoryOpNoEq priv (s <> " : " <> maybeCustomSorts ar sorts) ]
+    theoryFunSym (NoEqSym s ar priv sorts True) =
+        [ theoryOpNoEq priv (s <> " : TamNat " <> maybeCustomSorts ar (tail <$> sorts))
+        , "  eq " <> funSymPrefix <> s <> "(x0:TamNat, " <> funSymPrefix <> s <> "(x1:TamNat, x2:Msg)) = " <>
+                     funSymPrefix <> s <> "(" <> funSymPrefix <> "tplus(x0:TamNat, x1:TamNat), x2:Msg) ." ]
+
+    maybeCustomSorts ar sorts = 
+      maybe (theorySorts ar) (B.concat . theoryCustomSorts) sorts
+
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " ."
       where (lm,rm) = evalBindT ((,) <$> lTermToMTerm' l <*> lTermToMTerm' r) noBindings
@@ -287,38 +297,41 @@ parseTerm msig = choice
                ]
    ]
   where
-    consSym = ("cons", (2, (Public, Nothing)))
-    nilSym  = ("nil", (0, (Public, Nothing)))
+    consSym = NoEqSym "cons" 2 Public Nothing False
+    nilSym  = NoEqSym "nil" 0 Public Nothing False
 
     parseFunSym ident args
-      | op `elem` allowedfunSyms = op
+      | op `elem` allowedFunSyms = op
       | otherwise                =
           error $ "Maude.Parser.parseTerm: unknown function "
                   ++ "symbol `"++ show op ++"', not in "
-                  ++show allowedfunSyms
+                  ++ show allowedFunSyms
       where prefixLen      = BC.length funSymPrefix
-            special        = ident `elem` ["list", "cons", "nil" ]
+            special        = ident `elem` ["list", "cons", "nil"]
             priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident 
                                then Private else Public
             op_ident       = if special then ident else BC.drop prefixLen ident
-            op             =
-              ( op_ident 
-              , ( length args
-              , ( priv
-              , ( case lookup op_ident (S.toList $ stFunSyms msig) of
-                    Just (_, (_, a)) -> a
-                    Nothing          -> Nothing ))))
+            op             = 
+              case lookup op_ident [ (noEqOp o, o) | o <- allowedFunSyms] of
+                Just (NoEqSym _ _ _ sts iter) ->
+                  NoEqSym op_ident (length args) priv sts iter
+                Nothing ->
+                  NoEqSym op_ident (length args) priv Nothing False
 
-            allowedfunSyms = [consSym, nilSym] ++ (S.toList $ noEqFunSyms msig)
+            noEqOp (NoEqSym fs _ _ _ _) = fs
+            allowedFunSyms =
+              [consSym, nilSym, natZeroSym, natOneSym]
+              ++ (S.toList $ noEqFunSyms msig)
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
 
     parseFApp ident =
         appIdent <$> sepBy1 (parseTerm msig) (string ", ") <* string ")"
       where
-        appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult  args
-                       | ident == ppMaudeACSym Union      = fAppAC Union args
-                       | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
+        appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult    args
+                       | ident == ppMaudeACSym Union      = fAppAC Union   args
+                       | ident == ppMaudeACSym NatPlus    = fAppAC NatPlus args
+                       | ident == ppMaudeCSym  EMap       = fAppC  EMap    args
                        | ident `elem` maudeUserACSymbols  = lookupUserAC ident userSyms args
           where
             userSyms = S.toList $ userACSyms msig

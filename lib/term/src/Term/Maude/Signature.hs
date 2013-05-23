@@ -68,6 +68,8 @@ import qualified Data.ByteString.Char8 as BC
 
 import qualified Text.PrettyPrint.Highlight as P
 
+import Debug.Trace
+
 ------------------------------------------------------------------------------
 -- Maude Signatures
 ----------------------------------------------------------------------
@@ -101,10 +103,13 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,enableNat,stFunSyms,stRule
                 `S.union` (if enableBP             then bpFunSig   else S.empty)
                 `S.union` (if enableMSet           then msetFunSig else S.empty)
                 `S.union` (if enableNat            then natFunSig  else S.empty)
-    irreduciblefuns = allfuns `S.difference` reducible
+    irreduciblefuns = trace (show reducible) $ allfuns `S.difference` reducible
     reducible =
-        S.fromList [ o | StRule (viewTerm -> FApp o _) _ <- S.toList stRules ]
-          `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig
+      S.fromList [ o | StRule (viewTerm -> FApp o _) _ <- S.toList stRules ]
+        `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig 
+        `S.union` (S.map NoEq $ S.filter isIter stFunSyms)
+
+    isIter (NoEqSym _ _ _ _ it) = it
 
 -- | A monoid instance to combine maude signatures.
 instance Monoid MaudeSig where
@@ -207,7 +212,7 @@ prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
 prettyMaudeSig sig = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text     builtIns
     , ppNonEmptyList' "usersorts:" P.text  $  S.toList (userSorts sig)
-    , ppNonEmptyList' "functions:" ppFun   $  (map Left $ S.toList $ stFunSyms sig)
+    , ppNonEmptyList' "functions:" ppFun   $  (map Left  $ S.toList $ stFunSyms sig)
                                            ++ (map Right $ S.toList $ userACSyms sig)
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
@@ -230,13 +235,15 @@ prettyMaudeSig sig = P.vcat
     ppACSym (UserAC f s) = P.text $ f ++ ": " ++ s ++ " " ++ s ++ " -> " ++ s ++ " [AC]"
     ppACSym _            = P.text ""
 
-    ppNoEqFunSymb (f,(k,(priv,sorts))) = P.text $ 
+    ppNoEqFunSymb (NoEqSym f k priv sorts iter) = P.text $ 
         case sorts of
-          Nothing  -> BC.unpack f ++ "/" ++ show k ++ showPriv priv
-          Just sts -> BC.unpack f ++ ":" ++ showSorts sts ++ showPriv priv
+          Nothing  -> BC.unpack f ++ "/" ++ show k ++ showPriv priv ++ showIter iter
+          Just sts -> BC.unpack f ++ ":" ++ showSorts sts ++ showPriv priv ++ showIter iter
       where
         showPriv Private = " [private]"
         showPriv Public  = ""
+        showIter True    = " [iterated]"
+        showIter False   = ""
 
         showSorts []     = ""
         showSorts [x]    = " -> " ++ x

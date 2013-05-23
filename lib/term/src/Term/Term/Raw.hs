@@ -185,11 +185,13 @@ instance Show a => Show (Term a) where
     show t =
       case viewTerm t of
         Lit l                  -> show l
-        FApp   (NoEq (s,_)) [] -> BC.unpack s
-        FApp   (NoEq (s,_)) as -> BC.unpack s++"("++(intercalate "," (map show as))++")"
+        FApp   (NoEq sym) []   -> noEqOp sym
+        FApp   (NoEq sym) as   -> noEqOp sym++"("++(intercalate "," (map show as))++")"
         FApp   (C EMap) as     -> BC.unpack emapSymString++"("++(intercalate "," (map show as))++")"
         FApp   List as         -> "LIST"++"("++(intercalate "," (map show as))++")"
         FApp   (AC o) as       -> show o++"("++(intercalate "," (map show as))++")"
+      where
+        noEqOp (NoEqSym f _ _ _ _) = BC.unpack f
 
 -- | The fold function for @Term a@.
 {-# INLINE foldTerm #-}

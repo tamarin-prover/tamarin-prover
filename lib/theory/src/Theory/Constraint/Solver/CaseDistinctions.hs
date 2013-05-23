@@ -346,13 +346,13 @@ precomputeCaseDistinctions ctxt axioms =
         guard (not $ fst fa `elem` [OutFact, InFact, FreshFact])
         return fa
 
+    -- TODO: Clarify if changes are needed here re: usersorts.
     absMsgFacts :: [LNTerm]
-    -- TODO: Take into account sort restrictions on fun syms?
     absMsgFacts = asum $ sortednub $
       [ return $ varTerm (LVar "t" LSortFresh 1)
       , if enableBP msig then return $ fAppC EMap $ nMsgVars (2::Int) else []
       , [ fAppNoEq o $ nMsgVars k
-        | o@(_,(k,(priv,_))) <- S.toList . noEqFunSyms  $ msig
+        | o@(NoEqSym _ k priv _ _) <- S.toList . noEqFunSyms  $ msig
         , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]
       ]
 

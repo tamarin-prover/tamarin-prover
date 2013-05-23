@@ -15,7 +15,7 @@ module Term.Term.FunctionSymbols (
     , ACSym(..)
     , CSym(..)
     , Privacy(..)
-    , NoEqSym
+    , NoEqSym(..)
     , SymSorts
 
     -- ** Signatures
@@ -82,7 +82,13 @@ data Privacy = Private | Public
 type SymSorts = Maybe [String]
 
 -- | NoEq function symbols (with respect to the background theory).
-type NoEqSym = (ByteString, (Int, (Privacy, SymSorts))) -- ^ operator name, arity, private
+data NoEqSym = NoEqSym
+               ByteString -- ^ Operator
+               Int        -- ^ Arity
+               Privacy    -- ^ Privacy (Public/Private)
+               SymSorts   -- ^ Signature (optional) 
+               Bool       -- ^ Iterated function?
+  deriving (Eq, Ord, Typeable, Data, Show)
 
 -- | C(ommutative) function symbols
 data CSym = EMap
@@ -117,27 +123,27 @@ emapSymString  = "em"
 pmultSymString = "pmult"
 
 natPlusSymString :: ByteString
-natPlusSymString = "tnPlus"
+natPlusSymString = "tplus"
 
 pairSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, natZeroSym, natOneSym :: NoEqSym
 -- | Pairing.
-pairSym  = ("pair",(2,(Public,Nothing)))
+pairSym    = NoEqSym "pair" 2 Public Nothing False
 -- | Exponentiation.
-expSym   = (expSymString,(2,(Public,Nothing)))
+expSym     = NoEqSym expSymString 2 Public Nothing False
 -- | The inverse in the groups of exponents.
-invSym   = (invSymString,(1,(Public,Nothing)))
+invSym     = NoEqSym invSymString 1 Public Nothing False
 -- | The one in the group of exponents.
-oneSym   = ("one",(0,(Public,Nothing)))
+oneSym     = NoEqSym "one" 0 Public Nothing False
 -- | Projection of first component of pair.
-fstSym   = ("fst",(1,(Public,Nothing)))
+fstSym     = NoEqSym "fst" 1 Public Nothing False
 -- | Projection of second component of pair.
-sndSym   = ("snd",(1,(Public,Nothing)))
+sndSym     = NoEqSym "snd" 1 Public Nothing False
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
-pmultSym = (pmultSymString,(2,(Public,Nothing)))
+pmultSym   = NoEqSym pmultSymString 2 Public Nothing False
 -- | Zero for natural numbers.
-natZeroSym = ("tzero",(0,(Public,Just ["Nat"])))
+natZeroSym = NoEqSym "tzero" 0 Public (Just ["Nat"]) False
 -- | One for natural numbers.
-natOneSym = ("tone",(0,(Public,Just ["Nat"])))
+natOneSym  = NoEqSym "tone" 0 Public (Just ["Nat"]) False
 
 ----------------------------------------------------------------------
 -- Fixed signatures
@@ -181,11 +187,13 @@ implicitFunSig = S.fromList [ NoEq invSym, NoEq pairSym
 ----------------------------------------------------------------------
 
 $( derive makeNFData ''Privacy)
+$( derive makeNFData ''NoEqSym)
 $( derive makeNFData ''CSym)
 $( derive makeNFData ''FunSym)
 $( derive makeNFData ''ACSym)
 
 $( derive makeBinary ''Privacy)
+$( derive makeBinary ''NoEqSym)
 $( derive makeBinary ''CSym)
 $( derive makeBinary ''FunSym)
 $( derive makeBinary ''ACSym)
