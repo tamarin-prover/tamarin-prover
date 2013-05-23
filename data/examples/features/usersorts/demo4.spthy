@@ -1,0 +1,59 @@
+theory Demo4
+begin
+
+builtins: hashing
+
+usersorts: NAT
+
+functions: one: -> NAT,
+           plus: NAT NAT -> NAT [AC]
+
+rule Init_State:
+    [ Fr(~ltk) ]
+  -->
+    [ !Ltk($A, $B, ~ltk)
+    , Counter_C($A, $B, ~ltk, one)
+    , Counter_S($B, $A, ~ltk, one) ]
+
+rule Reveal_Ltk:
+    [ !Ltk(A, B, ltk) ]
+  --[ LtkReveal(ltk) ]->
+    [ Out(ltk) ]
+
+rule Client_1:
+    [ Counter_C($C, $S, ~ltk, y:NAT)
+    , !Ltk($C, $S, ~ltk) ]
+  --[ Req($C, $S, ~ltk, y:NAT) ]->
+    [ Counter_C($C, $S, ~ltk, plus(one, y:NAT))
+    , Out(h(<$C, $S, ~ltk, y:NAT>))
+    ]
+
+rule Server_1:
+    [ Counter_S($S, $C, ~ltk, y:NAT)
+    , !Ltk($C, $S, ~ltk) 
+    , In(h(<$C, $S, ~ltk, y:NAT>))
+    ]
+  --[ Auth($C, $S, ~ltk, y:NAT) ]->
+    [ Counter_S($S, $C, ~ltk, plus(one, y:NAT))
+    ]
+
+lemma Lemma1:
+    exists-trace
+    "
+    Ex A B ltk #i #j.
+        Auth(A, B, ltk, one) @ #i
+        & Req(A, B, ltk, one) @ #j 
+        & j < i
+    "
+
+lemma Lemma2:
+    "
+    All A B ltk y #i. Auth(A, B, ltk, y) @ #i
+    ==>
+    (
+        (Ex #r. Req(A, B, ltk, y) @ #r & r < i)
+      | (Ex #k. LtkReveal(ltk) @ #k & k < i )
+    )
+    "
+
+end

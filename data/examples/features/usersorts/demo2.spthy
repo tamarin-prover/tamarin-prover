@@ -1,28 +1,26 @@
 theory Demo2
 begin
 
+builtins: hashing
+
 usersorts: NAT
 
-functions: h/1,
-           zero: -> NAT,
-           one:  -> NAT,
+functions: one: -> NAT,
            plus: NAT NAT -> NAT [AC]
 
-equations: plus(x:NAT, zero) = x:NAT 
-
 rule Test1:
-    [ Fr(~k) ]
+    [ Fr(~k), In(y:NAT) ]
   --[ TF1($A, $B, ~k) ]->
     [ !Ltk($A, $B, ~k)
-    , Out(h($A, $B, ~k, plus(plus(one, one), plus(one, zero)))) ]
+    , Out(h($A, $B, ~k, plus(one, plus(plus(one, y:NAT), one)))) ]
 
 rule Test2:
     [ !Ltk($A, $B, ~k)
-    , In(h($A, $B, ~k, plus(one, x:NAT))) ]
+    , In(h($A, $B, ~k, plus(x:NAT, one))) ]
   --[ TF2($A, $B, ~k) ]->
     [ ]
 
-lemma Provable:
+lemma TestLemma:
     exists-trace
     "
     Ex A B k #i #j.
