@@ -32,7 +32,7 @@ module Term.LTerm (
   -- ** Construction
   , freshTerm
   , pubTerm
-  , userTerm
+  , natTerm
 
   -- * LVar
   , LSort(..)
@@ -141,10 +141,12 @@ import           Logic.Connectives
 -- >  LSortFresh < LSortMsg
 -- >  LSortUser  < LSortMsg
 -- >  LSortPub   < LSortMsg
+-- >  LSortNat   < LSortMsg
 --
 data LSort = LSortPub          -- ^ Arbitrary public names.
            | LSortFresh        -- ^ Arbitrary fresh names.
            | LSortMsg          -- ^ Arbitrary messages.
+           | LSortNat          -- ^ Arbitrary natural numbers.
            | LSortNode         -- ^ Sort for variables denoting nodes of derivation graphs.
            | LSortUser String  -- ^ Arbitrary user-defined sort.
            deriving( Eq, Ord, Show, Typeable, Data )
@@ -176,6 +178,7 @@ sortPrefix LSortMsg       = ""
 sortPrefix LSortFresh     = "~"
 sortPrefix LSortPub       = "$"
 sortPrefix LSortNode      = "#"
+sortPrefix LSortNat       = ":"
 sortPrefix (LSortUser st) = "%" ++ st ++ "%"
 
 -- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
@@ -184,6 +187,7 @@ sortSuffix LSortMsg       = "msg"
 sortSuffix LSortFresh     = "fresh"
 sortSuffix LSortPub       = "pub"
 sortSuffix LSortNode      = "node"
+sortSuffix LSortNat       = "nat"
 sortSuffix (LSortUser st) = st
 
 -- | @sortTypename s@ is the string used for representing sort @s@ in function
@@ -192,6 +196,7 @@ sortTypename :: LSort -> String
 sortTypename LSortMsg       = "Msg"
 sortTypename LSortFresh     = "Fresh"
 sortTypename LSortPub       = "Pub"
+sortTypename LSortNat       = "Nat"
 sortTypename (LSortUser st) = st
 sortTypename LSortNode      = error "sortTypename: May not use sort 'Node'."
 
@@ -200,6 +205,7 @@ sortFromString :: String -> LSort
 sortFromString "Msg"   = LSortMsg
 sortFromString "Fresh" = LSortFresh
 sortFromString "Pub"   = LSortPub
+sortFromString "Nat"   = LSortNat
 sortFromString "Node"  = error "sortFromString: May not use sort 'Node'."
 sortFromString st      = LSortUser st
 
@@ -212,7 +218,7 @@ newtype NameId = NameId { getNameId :: String }
     deriving( Eq, Ord, Typeable, Data, NFData, Binary )
 
 -- | Tags for names.
-data NameTag = FreshName | PubName | UserName String
+data NameTag = FreshName | PubName | NatName
     deriving( Eq, Ord, Show, Typeable, Data )
 
 -- | Names.
@@ -229,9 +235,9 @@ type NTerm v = VTerm Name v
 instance IsConst Name where
 
 instance Show Name where
-  show (Name FreshName     n) = "~'" ++ show n ++ "'"
-  show (Name PubName       n) = "'"  ++ show n ++ "'"
-  show (Name (UserName st) n) = "u" ++ st ++ "'" ++ show n ++ "'"
+  show (Name FreshName n) = "~'" ++ show n ++ "'"
+  show (Name NatName   n) = ":'" ++ show n ++ "'"
+  show (Name PubName   n) = "'"  ++ show n ++ "'"
 
 instance Show NameId where
   show = getNameId
@@ -247,15 +253,15 @@ freshTerm = lit . Con . Name FreshName . NameId
 pubTerm :: String -> NTerm v
 pubTerm = lit . Con . Name PubName . NameId
 
--- | @userTerm s f@ represents the user name @f@ of sort @s@.
-userTerm :: String -> String -> NTerm v
-userTerm s = lit . Con . Name (UserName s) . NameId
+-- | @natTerm f@ represents the nat name @f@.
+natTerm :: String -> NTerm v
+natTerm = lit . Con . Name NatName . NameId
 
 -- | Return 'LSort' for given 'Name'.
 sortOfName :: Name -> LSort
-sortOfName (Name FreshName _)     = LSortFresh
-sortOfName (Name PubName   _)     = LSortPub
-sortOfName (Name (UserName st) _) = LSortUser st
+sortOfName (Name FreshName _) = LSortFresh
+sortOfName (Name PubName   _) = LSortPub
+sortOfName (Name NatName   _) = LSortNat
 
 ------------------------------------------------------------------------------
 -- LVar: logical variables
@@ -294,6 +300,7 @@ sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Var lv)                      -> lvarSort lv
     FAppNoEq (_,(_,(_,Just sorts))) _  -> sortFromString $ last sorts
     FUserAC _ sort _                   -> sortFromString sort
+    FNatPlus _                         -> LSortNat
     _                                  -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.
@@ -449,8 +456,9 @@ instance Ord LVar where
 
 instance Show LVar where
     show (LVar v s i)
-        | isUserSort s = body ++ ":" ++ sortSuffix s
-        | otherwise    = sortPrefix s ++ body
+        | isUserSort s  = body ++ ":" ++ sortSuffix s
+        | s == LSortNat = body ++ ":" ++ sortSuffix s
+        | otherwise     = sortPrefix s ++ body
       where
         body | null v           = show i
 --           | isDigit (last v) = v ++ "." ++ show i

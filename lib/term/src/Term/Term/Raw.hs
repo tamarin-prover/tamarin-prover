@@ -125,6 +125,7 @@ unsafefApp fsym as = FAPP fsym as
 data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | One
                  | FPMult (Term a) (Term a) | FEMap (Term a) (Term a)
                  | FUnion [Term a]
+                 | FNatPlus [Term a]
                  | FUserAC String String [Term a]
                  | FPair (Term a) (Term a)
                  | FAppNoEq NoEqSym [Term a]
@@ -141,8 +142,9 @@ viewTerm2 t@(FAPP (AC o) ts)
   | length ts < 2 = error $ "viewTerm2: malformed term `"++show t++"'"
   | otherwise     = (acSymToConstr o) ts
   where
-    acSymToConstr Mult  = FMult
-    acSymToConstr Union = FUnion
+    acSymToConstr Mult    = FMult
+    acSymToConstr Union   = FUnion
+    acSymToConstr NatPlus = FNatPlus
     acSymToConstr (UserAC f s) = FUserAC f s
 viewTerm2 (FAPP (C EMap) [ t1 ,t2 ]) = FEMap t1 t2
 viewTerm2 t@(FAPP (C _)  _)          = error $ "viewTerm2: malformed term `"++show t++"'"

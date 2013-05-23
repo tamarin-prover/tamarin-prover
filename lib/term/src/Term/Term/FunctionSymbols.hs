@@ -28,6 +28,7 @@ module Term.Term.FunctionSymbols (
     , pmultSymString
     , emapSymString
     , unionSymString
+    , natPlusSymString
 
     -- ** concrete symbols
     , expSym
@@ -37,11 +38,14 @@ module Term.Term.FunctionSymbols (
     , pairSym
     , fstSym
     , sndSym
+    , natZeroSym
+    , natOneSym
 
     -- ** concrete signatures
     , dhFunSig
     , bpFunSig
     , msetFunSig
+    , natFunSig
     , pairFunSig
     , dhReducibleFunSig
     , bpReducibleFunSig
@@ -67,7 +71,7 @@ import qualified Data.Set as S
 ----------------------------------------------------------------------
 
 -- | AC function symbols.
-data ACSym = Union | Mult | UserAC String String 
+data ACSym = Union | Mult | NatPlus | UserAC String String 
   deriving (Eq, Ord, Typeable, Data, Show)
 
 -- | A function symbol can be either Private (unknown to adversary) or Public.
@@ -112,7 +116,10 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym :: NoEqSym
+natPlusSymString :: ByteString
+natPlusSymString = "tnPlus"
+
+pairSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, natZeroSym, natOneSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,(Public,Nothing)))
 -- | Exponentiation.
@@ -127,6 +134,10 @@ fstSym   = ("fst",(1,(Public,Nothing)))
 sndSym   = ("snd",(1,(Public,Nothing)))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
 pmultSym = (pmultSymString,(2,(Public,Nothing)))
+-- | Zero for natural numbers.
+natZeroSym = ("tzero",(0,(Public,Just ["Nat"])))
+-- | One for natural numbers.
+natOneSym = ("tone",(0,(Public,Just ["Nat"])))
 
 ----------------------------------------------------------------------
 -- Fixed signatures
@@ -142,7 +153,11 @@ bpFunSig = S.fromList [ NoEq pmultSym, C EMap ]
 
 -- | The signature for the multiset function symbols.
 msetFunSig :: FunSig
-msetFunSig = S.fromList [AC Union]
+msetFunSig = S.fromList [ AC Union ]
+
+-- | The signature for the natural numbers addition function symbols.
+natFunSig :: FunSig
+natFunSig = S.fromList [ NoEq natZeroSym, NoEq natOneSym, AC NatPlus ]
 
 -- | The signature for pairing.
 pairFunSig :: NoEqFunSig

@@ -24,6 +24,8 @@ module Term.Term (
     , fAppPair
     , fAppFst
     , fAppSnd
+    , fAppNatZero
+    , fAppNatOne
 
     -- ** Destructors and classifiers
     , isPair
@@ -60,6 +62,7 @@ module Term.Term (
     , dhFunSig
     , bpFunSig
     , msetFunSig
+    , natFunSig
     , pairFunSig
     , dhReducibleFunSig
     , bpReducibleFunSig
@@ -86,9 +89,14 @@ import           Term.Term.Raw
 -- Smart Constructors
 ----------------------------------------------------------------------
 
--- | Smart constructors for one, zero.
+-- | Smart constructors for one, zero (for DH).
 fAppOne :: Term a
 fAppOne = fAppNoEq oneSym []
+
+-- | Smart constructors for one, zero on naturals.
+fAppNatZero, fAppNatOne :: Term a
+fAppNatZero = fAppNoEq natZeroSym []
+fAppNatOne  = fAppNoEq natOneSym []
 
 -- | Smart constructors for pair, exp, pmult, and emap.
 fAppPair, fAppExp,fAppPMult, fAppEMap :: Ord a => (Term a, Term a) -> Term a
@@ -165,15 +173,19 @@ prettyTerm ppLit = ppTerm
         FApp (AC (UserAC f _)) ts                 -> ppUserAC f ts
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
-        FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
---      FApp (NoEq (f, (_, (_, Just [us])))) []   -> text (BC.unpack f) <> text ":" <> text us
+        FApp (NoEq s)      []   | s == natOneSym  -> text "1"
+        FApp (NoEq s)      []   | s == natZeroSym -> text "0" 
+        FApp (NoEq s)      _    | s == pairSym    -> ppTerms ", " 1 "<" ">" (split t)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
         FApp List          ts                     -> ppFun "LIST" ts
 
-    ppACOp Mult  = "*"
-    ppACOp Union = "+"
+    ppACOp Mult    = "*"
+    ppACOp Union   = "∪"
+    ppACOp NatPlus = "+"
+    -- Note: User AC symbols should not be pretty-printed as infix ops, but
+    -- we specify this for completeness in case this changes in the future.
     ppACOp (UserAC sym _) = " `" ++ sym ++ "` "
 
     ppUserAC f (t:ts) 

@@ -48,6 +48,7 @@ ppLSort s = case s of
     LSortPub       -> "Pub"
     LSortFresh     -> "Fresh"
     LSortMsg       -> "Msg"
+    LSortNat       -> "TamNat"
     LSortNode      -> "Node"
     (LSortUser st) -> B.concat [funUserSymPrefix, BC.pack st]
 
@@ -57,6 +58,7 @@ ppLSortSym lsort = case lsort of
     LSortPub       -> "p"
     LSortMsg       -> "c"
     LSortNode      -> "n"
+    LSortNat       -> "t"
     (LSortUser st) -> B.concat ["tu", BC.pack st]
 
 parseLSortSym :: ByteString -> Maybe LSort
@@ -65,6 +67,7 @@ parseLSortSym s = case s of
     "p"  -> Just LSortPub
     "c"  -> Just LSortMsg
     "n"  -> Just LSortNode
+    "t"  -> Just LSortNat
     _    ->
       if BC.head s == 'u'
         then Just (LSortUser $ BC.unpack $ BC.tail s)
@@ -89,6 +92,7 @@ ppMaudeACSym o =
     funSymPrefix <> case o of
                       Mult       -> "mult"
                       Union      -> "mun"
+                      NatPlus    -> "tplus"
                       UserAC f _ -> BC.pack f
 
 -- | Pretty print a non-AC symbol for Maude.
@@ -126,16 +130,18 @@ ppTheory :: MaudeSig -> ByteString
 ppTheory msig = BC.unlines $
     [ "fmod MSG is"
     , "  protecting NAT ."
-    , "  sort Pub Fresh Msg Node " <> theoryUserSortIds userSorts <> " TOP ."
+    , "  sort Pub Fresh Msg Node TamNat " <> theoryUserSortIds userSorts <> " TOP ."
     , "  subsort Pub < Msg ."
     , "  subsort Fresh < Msg ."
+    , "  subsort TamNat < Msg ."
     , "  subsort Msg < TOP ."
     , "  subsort Node < TOP ."
     -- constants
     , "  op f : Nat -> Fresh ."
     , "  op p : Nat -> Pub ."
     , "  op c : Nat -> Msg ."
-    , "  op n : Nat -> Node ." ]
+    , "  op n : Nat -> Node ."
+    , "  op t : Nat -> TamNat ." ]
     ++
     -- user-defined sorts
     concatMap theoryUserSorts userSorts
@@ -157,6 +163,13 @@ ppTheory msig = BC.unlines $
        , theoryOp "exp : Msg Msg -> Msg"
        , theoryOp "mult : Msg Msg -> Msg [comm assoc]"
        , theoryOp "inv : Msg -> Msg" ]
+       else [])
+    ++
+    (if enableNat msig
+       then
+       [ theoryOp "tzero : -> TamNat"
+       , theoryOp "tone : -> TamNat"
+       , theoryOp $ "tplus : TamNat TamNat -> TamNat [comm assoc id: " <> funSymPrefix <> "tzero]" ]
        else [])
     ++
     (if enableBP msig
@@ -251,6 +264,7 @@ parseSort :: Parser LSort
 parseSort =  string "Pub"      *> return LSortPub
          <|> string "Fresh"    *> return LSortFresh
          <|> string "Node"     *> return LSortNode
+         <|> string "TamNat"   *> return LSortNat
          <|> userprefix        *> -- Sorts with tamU* are user-defined
                ( sortIdent    >>= return . LSortUser . BC.unpack )
          <|> string "M"        *> -- FIXME: why?

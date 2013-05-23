@@ -14,6 +14,7 @@ module Term.Maude.Signature (
   , enableDH
   , enableBP
   , enableMSet
+  , enableNat
   , stFunSyms
   , stRules
   , funSyms
@@ -32,6 +33,7 @@ module Term.Maude.Signature (
   , signatureMaudeSig
   , hashMaudeSig
   , msetMaudeSig
+  , natMaudeSig
   , bpMaudeSig
   , minimalMaudeSig
 
@@ -75,6 +77,7 @@ data MaudeSig = MaudeSig
     { enableDH           :: Bool
     , enableBP           :: Bool
     , enableMSet         :: Bool
+    , enableNat          :: Bool
     , stFunSyms          :: S.Set NoEqSym -- ^ function signature for subterm theory
     , stRules            :: S.Set StRule  -- ^ rewriting rules for subterm theory
 
@@ -89,7 +92,7 @@ data MaudeSig = MaudeSig
 
 -- | Smart constructor for maude signatures. Computes funSyms and irreducibleFunSyms.
 maudeSig :: MaudeSig -> MaudeSig
-maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules}) =
+maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,enableNat,stFunSyms,stRules}) =
     msig {enableDH=enableDH||enableBP, funSyms=allfuns, irreducibleFunSyms=irreduciblefuns}
   where
     -- TODO: Take into accounts user-defined AC function symbols.
@@ -97,6 +100,7 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules}) =
                 `S.union` (if enableDH || enableBP then dhFunSig   else S.empty)
                 `S.union` (if enableBP             then bpFunSig   else S.empty)
                 `S.union` (if enableMSet           then msetFunSig else S.empty)
+                `S.union` (if enableNat            then natFunSig  else S.empty)
     irreduciblefuns = allfuns `S.difference` reducible
     reducible =
         S.fromList [ o | StRule (viewTerm -> FApp o _) _ <- S.toList stRules ]
@@ -104,16 +108,17 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules}) =
 
 -- | A monoid instance to combine maude signatures.
 instance Monoid MaudeSig where
-    (MaudeSig dh1 bp1 mset1 stFunSyms1 stRules1 _ _ uSorts1 uSyms1) `mappend`
-      (MaudeSig dh2 bp2 mset2 stFunSyms2 stRules2 _ _ uSorts2 uSyms2) =
+    (MaudeSig dh1 bp1 mset1 nat1 stFunSyms1 stRules1 _ _ uSorts1 uSyms1) `mappend`
+      (MaudeSig dh2 bp2 mset2 nat2 stFunSyms2 stRules2 _ _ uSorts2 uSyms2) =
           maudeSig (mempty {enableDH=dh1||dh2
                            ,enableBP=bp1||bp2
                            ,enableMSet=mset1||mset2
+                           ,enableNat=nat1||nat2
                            ,stFunSyms=S.union stFunSyms1 stFunSyms2
                            ,stRules=S.union stRules1 stRules2
                            ,userSorts=S.union uSorts1 uSorts2
                            ,userACSyms=S.union uSyms1 uSyms2})
-    mempty = MaudeSig False False False S.empty S.empty S.empty S.empty S.empty S.empty
+    mempty = MaudeSig False False False False S.empty S.empty S.empty S.empty S.empty S.empty
 
 -- | Non-AC function symbols.
 noEqFunSyms :: MaudeSig -> NoEqFunSig
@@ -176,10 +181,11 @@ userACSyms' msig = catMaybes $ map sym $ S.toList $ userACSyms msig
 ------------------------------------------------------------------------------
 
 -- | Maude signatures for the AC symbols.
-dhMaudeSig, bpMaudeSig, msetMaudeSig :: MaudeSig
+dhMaudeSig, bpMaudeSig, msetMaudeSig, natMaudeSig :: MaudeSig
 dhMaudeSig   = maudeSig $ mempty {enableDH=True}
 bpMaudeSig   = maudeSig $ mempty {enableBP=True}
 msetMaudeSig = maudeSig $ mempty {enableMSet=True}
+natMaudeSig  = maudeSig $ mempty {enableNat=True}
 
 -- | Maude signatures for the default subterm symbols.
 pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, hashMaudeSig :: MaudeSig

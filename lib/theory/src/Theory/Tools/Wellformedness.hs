@@ -405,7 +405,9 @@ formulaReports thy = do
         allowed (viewTerm -> Lit (Var (Bound _)))        = True
         allowed (viewTerm -> Lit (Con (Name PubName _))) = True
         -- we allow multiset union
-        allowed (viewTerm2 -> FUnion args)                = all allowed args
+        allowed (viewTerm2 -> FUnion args)               = all allowed args
+        allowed (viewTerm2 -> FUserAC _ _ args)          = all allowed args
+        allowed (viewTerm2 -> FNatPlus args)             = all allowed args
         -- we allow reducible function symbols
         allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
         allowed _                                                    = False

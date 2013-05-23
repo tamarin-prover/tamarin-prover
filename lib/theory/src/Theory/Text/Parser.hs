@@ -39,7 +39,6 @@ import           Term.Maude.Signature
 import           Theory
 import           Theory.Text.Parser.Token
 
-
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
 ------------------------------------------------------------------------------
@@ -69,11 +68,20 @@ parseLemma = parseString "<unknown source>" lemma
 
 -- | Parse an lit with logical variables.
 llit :: Parser LNTerm
-llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
+llit = asum
+    [ freshTerm <$> freshName
+    , pubTerm <$> pubName
+    , natTerm <$> natName 
+    , varTerm <$> msgvar]
 
 -- | Parse an lit with logical variables of the given sort.
 sortedLlit :: LSort -> Parser LNTerm
 sortedLlit s@(LSortUser _) =
+    varTerm <$> asum
+      [ try $ sortedLVar [s]
+      , do (n, i) <- indexedIdentifier
+           return $ LVar n s i ]
+sortedLlit s@LSortNat =
     varTerm <$> asum
       [ try $ sortedLVar [s]
       , do (n, i) <- indexedIdentifier
@@ -166,10 +174,13 @@ binaryAlgApp plit = do
 -- | Parse a term.
 term :: Parser LNTerm -> Parser LNTerm
 term plit = asum
-    [ pairing     <?> "pairs"
+    [ pairing       <?> "pairs"
+    , parens (natterm plit)
     , parens (multterm plit)
-    , symbol "1" *> pure fAppOne
-    , application <?> "function application"
+    , symbol "0:nat" *> pure fAppNatZero
+    , symbol "1:nat" *> pure fAppNatOne
+    , symbol "1"     *> pure fAppOne
+    , application   <?> "function application"
     , nullaryApp
     , plit
     ]
@@ -200,8 +211,25 @@ msetterm :: Parser LNTerm -> Parser LNTerm
 msetterm plit = do
     mset <- enableMSet <$> getState
     if mset -- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (term plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        then chainl1 (term plit) ((\a b -> fAppAC Union [a,b]) <$ opUnion)
         else term plit
+
+-- | A left-associative sequence of multiset unions.
+natterm :: Parser LNTerm -> Parser LNTerm
+natterm plit = do
+    nats <- enableNat <$> getState
+    if nats -- if nat is not enabled, do not accept 'natterms's
+        then chainl1 subnatterm ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
+        else term plit
+  where
+    subnatterm = asum
+      [ symbol "0:nat" *> pure fAppNatZero
+      , symbol "1:nat" *> pure fAppNatOne
+      , symbol "0"     *> pure fAppNatZero
+      , symbol "1"     *> pure fAppNatOne
+      , parens (natterm plit)
+      , sortedLlit LSortNat
+      ]
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Parser LNTerm -> Parser LNTerm
@@ -587,9 +615,12 @@ builtins =
     symbol "builtins" *> colon *> commaSep1 builtinTheory *> pure ()
   where
     extendSig msig = modifyState (`mappend` msig)
+
     builtinTheory = asum
       [ try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
+      , try (symbol "natural-numbers")
+          *> extendSig natMaudeSig
       , try (symbol "bilinear-pairing")
           *> extendSig bpMaudeSig
       , try (symbol "multiset")
@@ -664,7 +695,8 @@ functions =
     verifySymbol f _ = fail $ "Invalid AC symbol: " ++ (BC.unpack f)
 
     allSorts msig =
-      [LSortMsg, LSortFresh, LSortPub] ++ (S.toList $ userSortsForMaudeSig msig)
+      [LSortMsg, LSortFresh, LSortPub, LSortNat] ++
+      (S.toList $ userSortsForMaudeSig msig)
 
 equations :: Parser ()
 equations =

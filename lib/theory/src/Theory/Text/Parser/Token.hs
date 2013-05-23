@@ -27,6 +27,7 @@ module Theory.Text.Parser.Token (
 
   , freshName
   , pubName
+  , natName
 
   , sortedLVar
   , userSortedLVar
@@ -60,6 +61,7 @@ module Theory.Text.Parser.Token (
   , opBang
   , opSlash
   , opMinus
+  , opUnion
   , opPlus
   , opLeftarrow
   , opRightarrow
@@ -280,6 +282,7 @@ sortedLVar ss =
           LSortPub       -> void $ char '$'
           LSortFresh     -> void $ char '~'
           LSortNode      -> void $ char '#'
+          LSortNat       -> void $ char ':'
           (LSortUser st) -> do
               void $ char '%'
               symbol_ st
@@ -295,7 +298,7 @@ userSortedLVar =
     suffixParser = do
         (n, i) <- indexedIdentifier <* colon
         sort <- identifier
-        if elem sort $ map sortSuffix [LSortFresh, LSortPub, LSortNode, LSortMsg ]
+        if elem sort $ map sortSuffix [LSortFresh, LSortPub, LSortNat, LSortNode, LSortMsg]
           then fail "Invalid user-sort"
           else return (LVar n (LSortUser sort) i)
 
@@ -310,13 +313,13 @@ userSortedLVar =
 lvar :: Parser LVar
 lvar = asum $ map try
   [ userSortedLVar
-  , sortedLVar [LSortFresh, LSortPub, LSortMsg, LSortNode] ]
+  , sortedLVar [LSortFresh, LSortPub, LSortNat, LSortMsg, LSortNode] ]
 
 -- | Parse a non-node variable.
 msgvar :: Parser LVar
 msgvar = asum $ map try
   [ userSortedLVar
-  , sortedLVar [LSortFresh, LSortPub, LSortMsg] ]
+  , sortedLVar [LSortFresh, LSortPub, LSortNat, LSortMsg] ]
 
 -- | Parse a graph node variable.
 nodevar :: Parser NodeId
@@ -328,6 +331,10 @@ nodevar = asum
 -- | Parse a literal fresh name, e.g., @~'n'@.
 freshName :: Parser String
 freshName = try (symbol "~" *> singleQuoted identifier)
+
+-- | Parse a literal nat name, e.g. @:'n'@.
+natName :: Parser String
+natName = try (symbol ":" *> singleQuoted identifier)
 
 -- | Parse a literal public name, e.g., @'n'@.
 pubName :: Parser String
@@ -345,9 +352,13 @@ opExp = symbol_ "^"
 opMult :: Parser ()
 opMult = symbol_ "*"
 
--- | The multiplication operator @*@.
+-- | The addition operator @:+:@.
 opPlus :: Parser ()
 opPlus = symbol_ "+"
+
+-- | The multiset union operator @+@.
+opUnion :: Parser ()
+opUnion = symbol_ "∪"
 
 -- | The timepoint comparison operator @<@.
 opLess :: Parser ()
