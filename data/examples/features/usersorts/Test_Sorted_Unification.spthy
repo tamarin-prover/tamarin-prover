@@ -8,13 +8,14 @@ unify incompatible message terms.
  
 */
 
-theory Demo1
+theory Test_Sorted_Unification
 begin
+
+builtins: hashing
 
 usersorts: NAT
 
-functions: h/1,
-           constMSG/0,
+functions: constMSG/0,
            constNAT: -> NAT
 
 /*

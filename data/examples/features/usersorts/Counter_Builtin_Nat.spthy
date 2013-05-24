@@ -1,0 +1,39 @@
+theory Counter_Builtin_Nat
+begin
+
+builtins: symmetric-encryption, natural-numbers
+
+rule Create:
+    [ Fr(~s) ]
+  --[ Start(~s) ]->
+    [ Counter(~s, 0:nat)]
+
+rule Inc:
+    [ Counter( ~s, x:nat ) ]
+  --[ Counter( ~s, x:nat ) ]->
+    [ Counter( ~s, (x:nat + 1) ) 
+    , Out( senc( x:nat,  ~s ) ) ]
+
+
+/*
+lemma counters_linear_order[reuse,use_induction]:
+  "All x:nat y:nat #i #j s.
+      Counter(s,x:nat) @ i & Counter(s,y:nat) @ j
+      ==> (Ex z:nat. (x:nat + z:nat) = y:nat) | (Ex z:nat. (y:nat + z:nat) = x:nat) | y:nat = x:nat"
+*/
+
+lemma counter_start[reuse,use_induction]:
+  "All #i x s.
+      Counter(s,x) @ i  ==> Ex #j. Start(s) @ j & #j < #i"
+
+lemma counter_increases[reuse,use_induction]:
+  "All x:nat y:nat #i #j s.
+      Counter(s,x:nat) @ i & Counter(s,y:nat) @ j ==> #i < #j
+      ==> Ex z:nat. (x:nat + z:nat) = y:nat"
+      
+lemma lesser_senc_secret[use_induction]:
+  "All x:nat y:nat #i #j s.
+      Counter(s,x:nat) @ i & K(senc(y:nat,s)) @ j
+      ==> (#i < #j | Ex z:nat. (y:nat + z:nat) = x:nat)"
+
+end

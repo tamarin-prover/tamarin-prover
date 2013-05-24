@@ -1,11 +1,11 @@
-theory Demo3
+theory Counter_User_AC
 begin
 
-builtins: symmetric-encryption, hashing
+builtins: symmetric-encryption
 
 usersorts: NAT
 
-functions: one:  -> NAT,
+functions: one: -> NAT,
            plus: NAT NAT -> NAT [AC]
 
 rule Create:
@@ -20,26 +20,25 @@ rule Inc:
     , Out( senc( x:NAT,  ~s ) ) ]
 
 
+/*
 lemma counters_linear_order[reuse,use_induction]:
   "All x:NAT y:NAT #i #j s.
       Counter(s,x:NAT) @ i & Counter(s,y:NAT) @ j
       ==> (Ex z:NAT. plus(x:NAT, z:NAT) = y:NAT) | (Ex z:NAT. plus(y:NAT, z:NAT) = x:NAT) | y:NAT = x:NAT"
-
+*/
 
 lemma counter_start[reuse,use_induction]:
   "All #i x s.
       Counter(s,x) @ i  ==> Ex #j. Start(s) @ j & #j < #i"
 
-
 lemma counter_increases[reuse,use_induction]:
   "All x:NAT y:NAT #i #j s.
       Counter(s,x:NAT) @ i & Counter(s,y:NAT) @ j ==> #i < #j
       ==> Ex z:NAT. plus(x:NAT, z:NAT) = y:NAT"
-
       
 lemma lesser_senc_secret[use_induction]:
   "All x:NAT y:NAT #i #j s.
-      Counter(s,x:NAT) @ i & K(senc(h(y:NAT),s)) @ j
+      Counter(s,x:NAT) @ i & K(senc(y:NAT,s)) @ j
       ==> (#i < #j | Ex z:NAT. plus(y:NAT, z:NAT) = x:NAT)"
 
 end

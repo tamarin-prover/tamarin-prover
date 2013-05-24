@@ -1,4 +1,4 @@
-theory Demo6
+theory Test_Iterated_Functions
 begin
 
 builtins: natural-numbers
@@ -14,7 +14,7 @@ rule Hash:
     [ Counter( ~s, x:nat ) ]
   --[ Counter( ~s, x:nat ) ]->
     [ Counter( ~s, (x:nat + 1) ) 
-    , Out( h(1:nat, h( x:nat,  ~s )) ) ]
+    , Out( h(x:nat, h( x:nat,  ~s )) ) ]
 
 rule Recv:
     [ In( h( x, s ) ) ]
@@ -23,6 +23,6 @@ rule Recv:
 
 lemma TestLemma:
     exists-trace
-    "Ex #i . Recv((1 + 1)) @ i"
+    "Ex #i . Recv((1 + 1 + 1 + 1)) @ i"
 
 end

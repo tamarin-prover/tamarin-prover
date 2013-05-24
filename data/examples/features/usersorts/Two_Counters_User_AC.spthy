@@ -1,4 +1,4 @@
-theory Demo4
+theory Two_Counters_User_AC
 begin
 
 builtins: hashing
@@ -41,8 +41,8 @@ lemma Lemma1:
     exists-trace
     "
     Ex A B ltk #i #j.
-        Auth(A, B, ltk, one) @ #i
-        & Req(A, B, ltk, one) @ #j 
+        Auth(A, B, ltk, plus(one, one)) @ #i
+        & Req(A, B, ltk, plus(one, one)) @ #j 
         & j < i
     "
 
