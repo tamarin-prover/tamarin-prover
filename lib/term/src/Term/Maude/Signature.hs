@@ -68,8 +68,6 @@ import qualified Data.ByteString.Char8 as BC
 
 import qualified Text.PrettyPrint.Highlight as P
 
-import Debug.Trace
-
 ------------------------------------------------------------------------------
 -- Maude Signatures
 ----------------------------------------------------------------------
@@ -103,7 +101,7 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,enableNat,stFunSyms,stRule
                 `S.union` (if enableBP             then bpFunSig   else S.empty)
                 `S.union` (if enableMSet           then msetFunSig else S.empty)
                 `S.union` (if enableNat            then natFunSig  else S.empty)
-    irreduciblefuns = trace (show reducible) $ allfuns `S.difference` reducible
+    irreduciblefuns = allfuns `S.difference` reducible
     reducible =
       S.fromList [ o | StRule (viewTerm -> FApp o _) _ <- S.toList stRules ]
         `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig 

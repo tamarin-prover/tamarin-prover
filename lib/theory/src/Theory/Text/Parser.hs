@@ -215,7 +215,7 @@ msetterm plit = do
         then chainl1 (term plit) ((\a b -> fAppAC Union [a,b]) <$ opUnion)
         else term plit
 
--- | A left-associative sequence of multiset unions.
+-- | A left-associative sequence of terms on natural numbers.
 natterm :: Parser LNTerm -> Parser LNTerm
 natterm plit = do
     nats <- enableNat <$> getState
