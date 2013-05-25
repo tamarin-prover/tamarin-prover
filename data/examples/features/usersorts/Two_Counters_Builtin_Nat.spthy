@@ -7,8 +7,8 @@ rule Init_State:
     [ Fr(~ltk) ]
   -->
     [ !Ltk($A, $B, ~ltk)
-    , Counter_C($A, $B, ~ltk, 1:nat)
-    , Counter_S($B, $A, ~ltk, 1:nat) ]
+    , Counter_C($A, $B, ~ltk, 0:nat)
+    , Counter_S($B, $A, ~ltk, 0:nat) ]
 
 rule Reveal_Ltk:
     [ !Ltk(A, B, ltk) ]
@@ -36,8 +36,8 @@ lemma Lemma1:
     exists-trace
     "
     Ex A B ltk #i #j.
-        Auth(A, B, ltk, (1 + 1)) @ #i
-        & Req(A, B, ltk, (1 + 1)) @ #j 
+        Auth(A, B, ltk, 1:nat) @ #i
+        & Req(A, B, ltk, 1:nat) @ #j 
         & j < i
     "
 

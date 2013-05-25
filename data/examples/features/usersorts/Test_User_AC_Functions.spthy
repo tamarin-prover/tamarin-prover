@@ -29,30 +29,4 @@ lemma Provable1:
         & i < j
     "
 
-rule Start2:
-    [ ]
-  -->
-    [ Out(plus(one, one)) ]
-
-rule Emit2:
-    [ Fr(~k), In(y:NAT) ]
-  --[ Emitted2($A, $B, ~k) ]->
-    [ !Ltk($A, $B, ~k)
-    , Out(h($A, $B, ~k, plus(one, plus(plus(one, y:NAT), one)))) ]
-
-rule Recv2:
-    [ !Ltk($A, $B, ~k)
-    , In(h($A, $B, ~k, plus(x:NAT, one))) ]
-  --[ Received2($A, $B, ~k) ]->
-    [ ]
-
-lemma Provable2:
-    exists-trace
-    "
-    Ex A B k #i #j.
-        Emitted2(A, B, k) @ #i
-        & Received2(A, B, k) @ #j 
-        & i < j
-    "
-
 end
