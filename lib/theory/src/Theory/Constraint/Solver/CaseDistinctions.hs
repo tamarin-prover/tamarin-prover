@@ -346,14 +346,18 @@ precomputeCaseDistinctions ctxt axioms =
         guard (not $ fst fa `elem` [OutFact, InFact, FreshFact])
         return fa
 
-    -- TODO: Clarify if changes are needed here re: usersorts.
     absMsgFacts :: [LNTerm]
     absMsgFacts = asum $ sortednub $
       [ return $ varTerm (LVar "t" LSortFresh 1)
       , if enableBP msig then return $ fAppC EMap $ nMsgVars (2::Int) else []
+      , if enableNat msig then
+          [ fAppNoEq natZeroSym []
+          , fAppNoEq natOneSym []
+          , fAppAC NatPlus [varTerm (LVar "t" LSortNat 1), varTerm (LVar "t" LSortNat 2)] ]
+          else [] 
       , [ fAppNoEq o $ nMsgVars k
         | o@(NoEqSym _ k priv _ _) <- S.toList . noEqFunSyms  $ msig
-        , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]
+        , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private ]
       ]
 
     msig = mhMaudeSig . get pcMaudeHandle $ ctxt
