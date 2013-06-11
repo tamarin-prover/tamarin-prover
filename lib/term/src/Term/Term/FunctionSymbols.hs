@@ -29,6 +29,8 @@ module Term.Term.FunctionSymbols (
     , emapSymString
     , unionSymString
     , natPlusSymString
+    , natOneSymString
+    , natZeroSymString
 
     -- ** concrete symbols
     , expSym
@@ -122,8 +124,11 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-natPlusSymString :: ByteString
+natPlusSymString, natZeroSymString, natOneSymString :: ByteString
 natPlusSymString = "tplus"
+natZeroSymString = "tzero"
+natOneSymString = "tone"
+
 
 pairSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, natZeroSym, natOneSym :: NoEqSym
 -- | Pairing.
@@ -141,9 +146,9 @@ sndSym     = NoEqSym "snd" 1 Public Nothing False
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
 pmultSym   = NoEqSym pmultSymString 2 Public Nothing False
 -- | Zero for natural numbers.
-natZeroSym = NoEqSym "tzero" 0 Public (Just ["Nat"]) False
+natZeroSym = NoEqSym natZeroSymString 0 Public (Just ["Nat"]) False
 -- | One for natural numbers.
-natOneSym  = NoEqSym "tone" 0 Public (Just ["Nat"]) False
+natOneSym  = NoEqSym natOneSymString 0 Public (Just ["Nat"]) False
 
 ----------------------------------------------------------------------
 -- Fixed signatures
