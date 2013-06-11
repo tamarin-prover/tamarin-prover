@@ -48,8 +48,10 @@ import           Theory
 import           Theory.Text.Parser                  (parseIntruderRules, parseOpenTheory, parseOpenTheoryString)
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
-import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
-                                                     , multisetIntruderRules)
+import           Theory.Tools.IntruderRules          (specialIntruderRules
+                                                     , subtermIntruderRules
+                                                     , multisetIntruderRules
+                                                     , natIntruderRules)
 import           Theory.Tools.Wellformedness
 
 import           Main.Console
@@ -225,6 +227,7 @@ addMessageDeductionRuleVariants thy0
     msig         = get (sigpMaudeSig . thySignature) thy0
     rules        = subtermIntruderRules msig ++ specialIntruderRules
                    ++ if enableMSet msig then multisetIntruderRules else []
+                   ++ if enableNat msig then natIntruderRules else []
     thy          = addIntrRuleACs rules thy0
     addIntruderVariants files = do
         ruless <- mapM loadRules files

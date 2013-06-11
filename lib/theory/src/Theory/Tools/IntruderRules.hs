@@ -16,6 +16,7 @@ module Theory.Tools.IntruderRules (
   , multisetIntruderRules
   , mkDUnionRule
   , specialIntruderRules
+  , natIntruderRules
 
   -- ** Classifiers
   , isDExpRule
@@ -288,6 +289,34 @@ bpVariantsIntruder hnd ru = do
         mappings = substToListVFresh subst
         doms     = map fst mappings
         rngs     = map snd mappings
+
+------------------------------------------------------------------------------
+-- Natural numbers intruder rules
+------------------------------------------------------------------------------
+
+natIntruderRules :: [IntrRuleAC]
+natIntruderRules =
+    [ mkCPlusRule x_var y_var
+    , mkDPlusRule [x_var, y_var] x_var
+    , kuRule (ConstrRule natZeroSymString) [] (fAppNoEq natZeroSym [])
+    , kuRule (ConstrRule natOneSymString) [] (fAppNoEq natOneSym [])
+    ] 
+  where
+    x_var = varTerm (LVar "x" LSortNat 0)
+    y_var = varTerm (LVar "y" LSortNat 0)
+    kuRule name prems t = Rule name prems [kuFact t] [kuFact t]
+
+mkCPlusRule :: LNTerm -> LNTerm -> IntrRuleAC
+mkCPlusRule x_var y_var =
+    Rule (ConstrRule natPlusSymString)
+         [kuFact x_var, kuFact y_var]
+         [kuFact $ fAppAC NatPlus [x_var, y_var]] []
+
+mkDPlusRule :: [LNTerm] -> LNTerm -> IntrRuleAC
+mkDPlusRule t_prems t_conc =
+    Rule (DestrRule natPlusSymString)
+         [kdFact $ fAppAC NatPlus t_prems]
+         [kdFact t_conc] []
 
 ------------------------------------------------------------------------------
 -- Classification functions
