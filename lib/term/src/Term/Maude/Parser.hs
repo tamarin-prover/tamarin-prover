@@ -22,7 +22,6 @@ import Term.LTerm
 import Term.Maude.Types
 import Term.Maude.Signature
 import Term.Rewriting.Definitions
-import Term.Term.FunctionSymbols
 
 import Control.Monad.Bind
 
@@ -204,7 +203,8 @@ ppTheory msig = BC.unlines $
     theoryFunSym (NoEqSym s ar priv sorts True) =
         [ theoryOpNoEq priv (s <> " : TamNat " <> maybeCustomSorts ar (tail <$> sorts))
         , "  eq " <> funSymPrefix <> s <> "(x0:TamNat, " <> funSymPrefix <> s <> "(x1:TamNat, x2:Msg)) = " <>
-                     funSymPrefix <> s <> "(" <> funSymPrefix <> "tplus(x0:TamNat, x1:TamNat), x2:Msg) ." ]
+                     funSymPrefix <> s <> "(" <> funSymPrefix <> "tplus(x0:TamNat, x1:TamNat), x2:Msg) ."
+        , "  eq " <> funSymPrefix <> s <> "(" <> funSymPrefix <> "tzero, x0:Msg) = x0:Msg ." ]
 
     maybeCustomSorts ar sorts = 
       maybe (theorySorts ar) (B.concat . theoryCustomSorts) sorts
