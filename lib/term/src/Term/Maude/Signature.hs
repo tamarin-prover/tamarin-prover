@@ -225,6 +225,7 @@ prettyMaudeSig sig = P.vcat
       [ (enableDH,   "diffie-hellman")
       , (enableBP,   "bilinear-pairing")
       , (enableMSet, "multiset")
+      , (enableNat,  "natural-numbers")
       ]
 
     ppFun (Left noeq) = ppNoEqFunSymb noeq
