@@ -53,10 +53,15 @@ module Term.Term (
     , pmultSymString
     , emapSymString
     , unionSymString
+    , natPlusSymString
+    , natZeroSymString
+    , natOneSymString
     
     -- ** Function symbols
     , expSym
     , pmultSym
+    , natZeroSym
+    , natOneSym
 
     -- ** concrete signatures
     , dhFunSig
@@ -195,7 +200,7 @@ prettyTerm ppLit = ppTerm
     ppUserAC f (t:ts) 
       | null ts   = ppTerm t
       | otherwise = text f <> text "(" <> ppTerm t <> text ", " <> ppUserAC f ts <> text ")"
-    ppUserAC _ []     = text "" 
+    ppUserAC _ [] = text "" 
 
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .
