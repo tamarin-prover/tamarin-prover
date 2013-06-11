@@ -39,8 +39,8 @@ import           System.IO.Unsafe     (unsafePerformIO)
 -- | @norm t@ normalizes the term @t@ using Maude.
 norm :: (Show (Lit c LVar), Ord c, IsConst c)
      => (c -> LSort) -> LTerm c -> WithMaude (LTerm c)
-norm _      t@(viewTerm -> Lit _) = return t
-norm sortOf t         = reader $ \hnd -> unsafePerformIO $ normViaMaude hnd sortOf t
+norm _ t@(viewTerm -> Lit _) = return t
+norm sortOf t                = reader $ \hnd -> unsafePerformIO $ normViaMaude hnd sortOf t
 
 -- | @norm' t@ normalizes the term @t@ using Maude.
 norm' :: LNTerm -> WithMaude LNTerm
@@ -66,6 +66,8 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             Lit2 _                                          -> True
             -- subterm rules
             FAppNoEq _ _ | setAny (struleApplicable t) strules -> False
+            -- iterated function application
+            FAppNoEq (NoEqSym sym _ _ _ True) [_, ts] -> not (isIter sym ts)
             -- exponentiation
             FExp (viewTerm2 -> FExp _ _) _                  -> False
             FExp _                       (viewTerm2 -> One) -> False
@@ -74,7 +76,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FInv (viewTerm2 -> FMult ts) | any isInverse ts -> False
             FInv (viewTerm2 -> One)                         -> False
             -- multiplication
-            FMult ts | fAppOne `elem` ts  || any isProduct ts || invalidMult ts   -> False
+            FMult ts | fAppOne `elem` ts  || any isProduct ts || invalidMult ts -> False
             -- point multiplication
             FPMult _                  (viewTerm2 -> FPMult _ _) -> False
             FPMult (viewTerm2 -> One) _                         -> False
@@ -109,6 +111,11 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             ([ viewTerm2 -> FInv t ], factors) -> t `elem` factors
             (_:_:_, _) -> True
             _          -> False
+
+        -- Check for nested iterated function application
+        isIter sym1 ts = case viewTerm2 ts of
+            FAppNoEq (NoEqSym sym2 _ _ _ _) _ | sym1 == sym2 -> True
+            _                                                -> False
 
         msig        = mhMaudeSig hnd
         strules     = stRules msig
