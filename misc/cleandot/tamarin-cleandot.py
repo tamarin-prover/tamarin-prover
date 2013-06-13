@@ -484,7 +484,7 @@ def label_BNF():
         senc = Literal("senc")
         aenc = Literal("aenc")
         KEYWORD = senc | aenc
-        ID = ~KEYWORD + Combine(Optional(dollar | tilde | sharp) + BASICID)
+        ID = ~KEYWORD + Combine(Optional(dollar | tilde | sharp | bang) + BASICID)
         TIME = Group(akrol + Combine(sharp + BASICID))
 
         TERM = Forward()
