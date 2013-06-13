@@ -410,7 +410,7 @@ def abbreviate(O):
             break
 
         # We could do a complex thing here relating bestgain to count, but we keep it simple for now
-        if count >= 7:
+        if count >= 10:
             break
 
         # Now come up with a name for it
