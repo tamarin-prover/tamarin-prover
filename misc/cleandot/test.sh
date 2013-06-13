@@ -1,4 +1,7 @@
 #!/bin/sh
 
-/usr/bin/dot -Tpng -o test-original.png test.dot
-./tamarin-cleandot.py -Tpng -o test-improved.png test.dot
+SRC=test.dot
+#SRC="test-big.dot"
+
+/usr/bin/dot -Tpng -o test-original.png $SRC
+./tamarin-cleandot.py -Tpng -o test-improved.png $SRC
