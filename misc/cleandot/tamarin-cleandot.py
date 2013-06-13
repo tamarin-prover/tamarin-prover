@@ -591,20 +591,34 @@ def isTermlist(L):
 
 def parseLabel( strng ):
 
+    global DEBUGMODE
+
     #print "*" * 40
     #print "Original: ", strng
 
+    # First, some cleanup for displaying
+    cs = strng.replace("&nbsp;"," ")
+    cs = cs.replace("  "," ")
+    cs = cs.replace("  "," ")
+    if DEBUGMODE:
+        s =  "  Parsing: %s\n" % (cs)
+        appendLog(s)
+
     pp = pprint.PrettyPrinter(2)
     try:
+
         bnf = label_BNF()
         tokens = bnf.parseString( strng ).asList()
-        #pp.pprint(tokens)
-        ###pp.pprint( tokens.asList() )
+
+        if DEBUGMODE:
+            s = "       as: %s\n" % (tokens)
+            appendLog(s)
 
     except ParseException, err:
-        print err.line
-        print " "*(err.column-1) + "^"
-        print err
+        s = str(err.line) + "\n"
+        s +=  " "*(err.column-1) + "^" + "\n"
+        s += str(err) + "\n"
+        appendLog(s)
         raise
     
     #print "New     : ", render(tokens)
@@ -622,6 +636,11 @@ def execDot(args,raiseErrors=False):
     import subprocess
 
     cmd = "dot"
+
+    l = [cmd] + args
+    s = " ".join(l)
+    appendLog("Executing command: %s\n" % s)
+
     if raiseErrors:
         retcode = subprocess.check_call([cmd] + args)
     else:
@@ -637,6 +656,8 @@ def findArgs(infile=None):
     for x in sys.argv[1:]:
         if (infile == None) or (x != infile):
             args.append(x)
+
+    appendLog("  Using arguments: %s\n" % (str(args)))
 
     return args
 
@@ -656,6 +677,8 @@ def findInputFile():
     # Currently, the Tamarin implementation is such that the filename is always the last argument.
     # This may change in the future, so a more robust parsing is maybe in order.
     infile = sys.argv[-1]
+
+    appendLog("Using input file: %s\n" % str(infile))
 
     return infile
 
@@ -1596,6 +1619,8 @@ def newDot(infile):
     extractParameters(infile)
 
     (fpint,outfile) = mkstemp(suffix=".dot")
+    appendLog("Producing new dot file in %s\n" % outfile)
+
     fp = os.fdopen(fpint,'w')
 
     G = graph_from_dot_file(infile)
@@ -1635,6 +1660,7 @@ def main():
 
         # Something went wrong, fall back to default rendering method.
         execDot(sys.argv[1:])
+        pass
 
 
 def TrickFilter(s):
