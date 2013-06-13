@@ -55,7 +55,7 @@ from pydot import *
 from pyparsing import \
         Literal, Word, ZeroOrMore, OneOrMore, oneOf, Group, Dict, Optional, \
         printables, alphas, alphanums, nums, ParseException, restOfLine, Forward, delimitedList, \
-        nestedExpr, Keyword, Combine, replaceWith
+        nestedExpr, Keyword, Combine, replaceWith, StringEnd
 import pprint
 
 
@@ -510,7 +510,7 @@ def label_BNF():
         FIELD = (lcbrack + LABEL + rcbrack) | FIELDID
         LABEL << FIELD + ZeroOrMore(rvsep + FIELD)
 
-        labelbnf = Optional(Literal('"')) + LABEL + Optional(Literal('"'))
+        labelbnf = Optional(Literal('"')) + LABEL + Optional(Literal('"')) + StringEnd()
         
         labelbnf.ignore( nbsp  )
         labelbnf.ignore( dotnewline  )
