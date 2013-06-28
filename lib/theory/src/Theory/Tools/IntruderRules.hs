@@ -17,6 +17,7 @@ module Theory.Tools.IntruderRules (
   , mkDUnionRule
   , specialIntruderRules
   , natIntruderRules
+  , iterIntruderRules
 
   -- ** Classifiers
   , isDExpRule
@@ -30,6 +31,8 @@ import           Control.Monad.Reader
 import           Data.List
 import qualified Data.Set                        as S
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString                 as B
+import qualified Data.ByteString.Char8           as BC
 
 import           Extension.Data.Label
 
@@ -145,9 +148,8 @@ subtermIntruderRules maudeSig =
 -- function signature @fSig@
 constructionRules :: NoEqFunSig -> [IntrRuleAC]
 constructionRules fSig =
-    [ createRule s k | (NoEqSym s k Public _ _) <- S.toList fSig ]
+    [ createRule s k | (NoEqSym s k Public _ False) <- S.toList fSig ]
   where
-    -- TODO: Clarify if changes are needed here re: usersorts.
     createRule s k = Rule (ConstrRule s) (map kuFact vars) [concfact] [concfact]
       where vars     = take k [ varTerm (LVar "x" LSortMsg i) | i <- [0..] ]
             m        = fAppNoEq (NoEqSym s k Public Nothing False) vars
@@ -297,7 +299,6 @@ bpVariantsIntruder hnd ru = do
 natIntruderRules :: [IntrRuleAC]
 natIntruderRules =
     [ mkCPlusRule x_var y_var
-    , mkDPlusRule [x_var, y_var] x_var
     , kuRule (ConstrRule natZeroSymString) [] (fAppNoEq natZeroSym [])
     , kuRule (ConstrRule natOneSymString) [] (fAppNoEq natOneSym [])
     ] 
@@ -312,11 +313,44 @@ mkCPlusRule x_var y_var =
          [kuFact x_var, kuFact y_var]
          [kuFact $ fAppAC NatPlus [x_var, y_var]] []
 
-mkDPlusRule :: [LNTerm] -> LNTerm -> IntrRuleAC
-mkDPlusRule t_prems t_conc =
-    Rule (DestrRule natPlusSymString)
-         [kdFact $ fAppAC NatPlus t_prems]
-         [kdFact t_conc] []
+-- mkDPlusRule :: [LNTerm] -> LNTerm -> IntrRuleAC
+-- mkDPlusRule t_prems t_conc =
+--     Rule (DestrRule natPlusSymString)
+--          [kdFact $ fAppAC NatPlus t_prems]
+--          [kdFact t_conc] []
+
+------------------------------------------------------------------------------
+-- Iterated function application intruder rules
+------------------------------------------------------------------------------
+
+iterIntruderRules :: NoEqSym -> [IntrRuleAC]
+iterIntruderRules funsym =
+    [ mkC0IterRule funsym x_var m_var
+    , mkC1IterRule funsym x_var y_var m_var
+    , mkDIterRule funsym x_var
+    ]
+  where
+    x_var = varTerm (LVar "x" LSortNat 0)
+    y_var = varTerm (LVar "y" LSortNat 0)
+    m_var = varTerm (LVar "m" LSortMsg 0)
+
+mkC0IterRule :: NoEqSym -> LNTerm -> LNTerm -> IntrRuleAC
+mkC0IterRule sym@(NoEqSym fun _ _ _ _) x_var m_var =
+    Rule (ConstrRule $ B.concat [fun, BC.pack "0"])
+         [kuFact x_var, kuFact m_var]
+         [kuFact $ fAppNoEq sym [x_var, m_var]] []
+
+mkC1IterRule :: NoEqSym -> LNTerm -> LNTerm -> LNTerm -> IntrRuleAC
+mkC1IterRule sym@(NoEqSym fun _ _ _ _) x_var y_var m_var =
+    Rule (ConstrRule $ B.concat [fun, BC.pack "1"])
+         [kuFact x_var, kuFact $ fAppNoEq sym [y_var, m_var] ]
+         [kuFact $ fAppNoEq sym [fAppAC NatPlus [x_var, y_var], m_var]] []
+
+mkDIterRule :: NoEqSym -> LNTerm -> IntrRuleAC
+mkDIterRule sym@(NoEqSym fun _ _ _ _) m_var =
+    Rule (DestrRule fun)
+         [kdFact $ fAppNoEq sym [fAppNoEq natZeroSym [], m_var]]
+         [kdFact m_var] []
 
 ------------------------------------------------------------------------------
 -- Classification functions

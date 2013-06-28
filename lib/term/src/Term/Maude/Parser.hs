@@ -198,13 +198,8 @@ ppTheory msig = BC.unlines $
         "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."
     theoryOp = theoryOpNoEq Public
 
-    theoryFunSym (NoEqSym s ar priv sorts False) =
+    theoryFunSym (NoEqSym s ar priv sorts _) =
         [ theoryOpNoEq priv (s <> " : " <> maybeCustomSorts ar sorts) ]
-    theoryFunSym (NoEqSym s ar priv sorts True) =
-        [ theoryOpNoEq priv (s <> " : TamNat " <> maybeCustomSorts ar (tail <$> sorts))
-        , "  eq " <> funSymPrefix <> s <> "(x0:TamNat, " <> funSymPrefix <> s <> "(x1:TamNat, x2:Msg)) = " <>
-                     funSymPrefix <> s <> "(" <> funSymPrefix <> "tplus(x0:TamNat, x1:TamNat), x2:Msg) ."
-        , "  eq " <> funSymPrefix <> s <> "(" <> funSymPrefix <> "tzero, x0:Msg) = x0:Msg ." ]
 
     maybeCustomSorts ar sorts = 
       maybe (theorySorts ar) (B.concat . theoryCustomSorts) sorts
@@ -232,6 +227,7 @@ ppTheory msig = BC.unlines $
     sortMaudeName "Msg"   = BC.pack "Msg"
     sortMaudeName "Fresh" = BC.pack "Fresh"
     sortMaudeName "Pub"   = BC.pack "Pub"
+    sortMaudeName "Nat"   = BC.pack "TamNat"
     sortMaudeName st      = B.concat [funUserSymPrefix, BC.pack st]
 
 -- Parser for Maude output

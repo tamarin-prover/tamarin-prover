@@ -105,9 +105,6 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,enableNat,stFunSyms,stRule
     reducible =
       S.fromList [ o | StRule (viewTerm -> FApp o _) _ <- S.toList stRules ]
         `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig 
-        `S.union` (S.map NoEq $ S.filter isIter stFunSyms)
-
-    isIter (NoEqSym _ _ _ _ it) = it
 
 -- | A monoid instance to combine maude signatures.
 instance Monoid MaudeSig where

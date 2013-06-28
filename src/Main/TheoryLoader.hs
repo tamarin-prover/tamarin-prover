@@ -35,6 +35,7 @@ import           Data.Char                           (toLower)
 import           Data.Label
 import           Data.List                           (isPrefixOf)
 import           Data.Monoid
+import qualified Data.Set as S
 
 import           Control.Basics
 import           Control.Category
@@ -51,13 +52,16 @@ import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules
                                                      , subtermIntruderRules
                                                      , multisetIntruderRules
-                                                     , natIntruderRules)
+                                                     , natIntruderRules
+                                                     , iterIntruderRules)
 import           Theory.Tools.Wellformedness
 
 import           Main.Console
 import           Main.Environment
 import           Paths_tamarin_prover                (getDataFileName)
 
+import Debug.Trace
+import qualified Data.ByteString.Char8 as BC
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -225,9 +229,15 @@ addMessageDeductionRuleVariants thy0
   | otherwise     = return thy
   where
     msig         = get (sigpMaudeSig . thySignature) thy0
+
     rules        = subtermIntruderRules msig ++ specialIntruderRules
-                   ++ if enableMSet msig then multisetIntruderRules else []
-                   ++ if enableNat msig then natIntruderRules else []
+                   ++ (if enableMSet msig then multisetIntruderRules else [])
+                   ++ (if enableNat msig then natIntruderRules else [])
+                   ++ (concatMap iterIntruderRules iterFuns)
+        
+    iterFuns = S.toList $ S.filter isIter $ stFunSyms msig
+    isIter (NoEqSym f _ _ _ it) = trace (BC.unpack f ++ ": " ++ show it) $ it
+
     thy          = addIntrRuleACs rules thy0
     addIntruderVariants files = do
         ruless <- mapM loadRules files
