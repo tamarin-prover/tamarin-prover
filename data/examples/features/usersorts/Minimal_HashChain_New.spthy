@@ -9,12 +9,14 @@ functions: f: Nat Msg -> Msg [iterated]
 
 // Hash chain generation
 rule Gen_Start:
-    [ Fr(seed) ] --> [ Gen(seed), Out(seed) ]
+    [ Fr(seed) ]
+  --[ ChainKey(seed) ]->
+    [ Gen(f(1:nat, seed)), Out(seed) ]
 
 rule Gen_Step:
-    [ Gen(chain) ]
-  --[ ChainKey(chain) ]->
-    [ Gen(f(1:nat, chain)) ]
+    [ Gen(f(x:nat, seed)) ]
+  --[ ChainKey(f(x:nat, seed)) ]->
+    [ Gen(f((x:nat + 1), seed)) ]
 
 // At some point the sender decides to stop the hash-chain precomputation.
 rule Gen_Stop:
@@ -27,15 +29,27 @@ rule Gen_Stop:
 
 // Start checking an arbitrary key. Use a loop-id to allow connecting
 // different statements about the same loop.
+/*
+rule Check0:
+    [ In(f(x:nat, seed)), Fr(loopId) ]
+  --[ Start(loopId, f(x:nat, seed)) ]->
+    [ Loop(loopId, f(x:nat, seed), f(x:nat, seed)) ]
+
+rule Check:
+    [ Loop(loopId, f(x:nat, seed), kOrig) ]
+  --[ Loop(loopId, f(x:nat, seed), kOrig) ]->
+    [ Loop(loopId,  f((x:nat + 1), seed), kOrig) ]
+*/
+
 rule Check0:
     [ In(kOrig), Fr(loopId) ]
   --[ Start(loopId, kOrig) ]->
     [ Loop(loopId, kOrig, kOrig) ]
 
-rule Check:
-    [ Loop(loopId, k, kOrig) ]
-  --[ Loop(loopId, k, kOrig) ]->
-    [ Loop(loopId,  f(1:nat, k), kOrig) ]
+rule Loop0:
+    [ Loop(loopId, chain, kOrig) ]
+  --[ Loop(loopId, chain, kOrig) ]->
+    [ Loop(loopId, f(1:nat, chain), kOrig) ]
 
 rule Success:
     [ Loop(loopId, kZero, kOrig), !Final(kZero) ]
@@ -74,7 +88,7 @@ lemma Loop_and_success [use_induction]:
        Loop(lid, k, kOrig1) @ i
      & Success(lid, kOrig2) @ j
     ==>
-       (Ex #j. ChainKey(k) @ j)
+       (Ex #j. ChainKey(kOrig2) @ j)
   "
 
 // The ultimate goal! A successful check implies that the starting key is a
