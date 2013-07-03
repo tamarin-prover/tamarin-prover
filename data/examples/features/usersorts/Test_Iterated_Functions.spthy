@@ -14,15 +14,29 @@ rule Hash:
     [ Counter( ~s, x:nat ) ]
   --[ Counter( ~s, x:nat ) ]->
     [ Counter( ~s, (x:nat + 1) ) 
-    , Out( h(x:nat, h( x:nat,  ~s )) ) ]
+    , Out( h((x:nat + x:nat),  ~s) ) ]
 
 rule Recv:
     [ In( h( x, s ) ) ]
   --[ Recv(x:nat) ]->
     [ ]
 
+rule ZeroHash:
+    [ Counter( ~s, x:nat ) ]
+  --[ ZeroHash( ~s ) ]->
+    [ Out( h( 0:nat, ~s ) ) ]
+
+rule SingleHash:
+    [ In( h(x:nat, m) ) ]
+  -->
+    [ Out( h((x:nat + 1), m) ) ]
+
 lemma TestLemma:
     exists-trace
     "Ex #i . Recv((1 + 1 + 1 + 1)) @ i"
+
+lemma TestLemma2:
+    exists-trace
+    "Ex #i #j s . ZeroHash(s) @ #i & KU(s) @ #j & i < j"
 
 end

@@ -1,0 +1,87 @@
+theory Minimal_HashChain_New begin
+
+builtins: natural-numbers
+
+functions: f: Nat Msg -> Msg [iterated]
+
+// Chain setup phase
+////////////////////
+
+// Hash chain generation
+rule Gen_Start:
+    [ Fr(seed) ] --> [ Gen(seed), Out(seed) ]
+
+rule Gen_Step:
+    [ Gen(chain) ]
+  --[ ChainKey(chain) ]->
+    [ Gen(f(1:nat, chain)) ]
+
+// At some point the sender decides to stop the hash-chain precomputation.
+rule Gen_Stop:
+    [ Gen(kZero) ]
+  --[ ChainKey(kZero) ]->
+    [ !Final(kZero) ]
+
+// Key checking
+///////////////
+
+// Start checking an arbitrary key. Use a loop-id to allow connecting
+// different statements about the same loop.
+rule Check0:
+    [ In(kOrig), Fr(loopId) ]
+  --[ Start(loopId, kOrig) ]->
+    [ Loop(loopId, kOrig, kOrig) ]
+
+rule Check:
+    [ Loop(loopId, k, kOrig) ]
+  --[ Loop(loopId, k, kOrig) ]->
+    [ Loop(loopId,  f(1:nat, k), kOrig) ]
+
+rule Success:
+    [ Loop(loopId, kZero, kOrig), !Final(kZero) ]
+  --[ Success(loopId, kOrig) ]->
+    []
+
+
+// Provable: restricts the search space
+lemma Loop_Start [use_induction, reuse]:
+  "All lid k kOrig #i.
+    Loop(lid, k, kOrig) @ i ==>
+    Ex #j. Start(lid, kOrig) @ j & j < i"
+
+// Provable: restricts the search space
+lemma Loop_Success_ord [use_induction, reuse]:
+  "All lid k kOrig1 kOrig2 #i #j.
+       Loop(lid, k, kOrig1) @ i
+     & Success(lid, kOrig2) @ j
+    ==>
+     ( i < j )
+  "
+
+// Provable: shows order on loop segments
+lemma Loop_ord [use_induction]:
+  "All lid x:nat y:nat kOrig0 kOrig1 #i #j .
+       Loop(lid, f(x:nat, kOrig0), kOrig0) @ i
+     & Loop(lid, f(y:nat, kOrig1), kOrig1) @ j
+     & i < j
+    ==>
+     Ex z:nat . (x:nat + z:nat) = y:nat"
+
+// Not yet provable: the problem is that we cannot express the relation
+// between the keys on two different segments of the same loop.
+lemma Loop_and_success [use_induction]:
+  "All lid k kOrig1 kOrig2 #i #j.
+       Loop(lid, k, kOrig1) @ i
+     & Success(lid, kOrig2) @ j
+    ==>
+       (Ex #j. ChainKey(k) @ j)
+  "
+
+// The ultimate goal! A successful check implies that the starting key is a
+// key of the chain.
+lemma Success_chain:
+  "All lid k #i.
+    Success(lid, k) @ i ==>
+    Ex #j. ChainKey(k) @ j"
+
+end

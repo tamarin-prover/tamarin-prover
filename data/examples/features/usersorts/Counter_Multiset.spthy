@@ -16,10 +16,12 @@ rule Inc:
 
 
 /* How can I ensure this lemma directly? */
+/*
 lemma counters_linear_order[reuse,use_induction]:
   "All x y #i #j s.
       Counter(s,x) @ i & Counter(s,y) @ j
       ==> (Ex z. x ∪ z = y) | (Ex z. y ∪ z = x) | y = x"
+*/
 
 lemma counter_start[reuse,use_induction]:
   "All #i x s.
