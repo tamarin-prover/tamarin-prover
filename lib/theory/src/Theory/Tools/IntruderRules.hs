@@ -327,7 +327,7 @@ iterIntruderRules :: NoEqSym -> [IntrRuleAC]
 iterIntruderRules funsym =
     [ mkC0IterRule funsym x_var m_var
     , mkC1IterRule funsym x_var y_var m_var
-    , mkDIterRule funsym x_var
+    , mkDIterRule funsym m_var
     ]
   where
     x_var = varTerm (LVar "x" LSortNat 0)
