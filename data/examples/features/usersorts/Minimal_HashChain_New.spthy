@@ -44,12 +44,12 @@ rule Check:
 rule Check0:
     [ In(kOrig), Fr(loopId) ]
   --[ Start(loopId, kOrig) ]->
-    [ Loop(loopId, kOrig, kOrig) ]
+    [ Loop(loopId, f(1:nat, kOrig), kOrig) ]
 
 rule Loop0:
-    [ Loop(loopId, chain, kOrig) ]
-  --[ Loop(loopId, chain, kOrig) ]->
-    [ Loop(loopId, f(1:nat, chain), kOrig) ]
+    [ Loop(loopId, f(x:nat, kOrig), kOrig) ]
+  --[ Loop(loopId, f(x:nat, kOrig), kOrig) ]->
+    [ Loop(loopId, f((x:nat + 1), kOrig), kOrig) ]
 
 rule Success:
     [ Loop(loopId, kZero, kOrig), !Final(kZero) ]
@@ -73,6 +73,7 @@ lemma Loop_Success_ord [use_induction, reuse]:
   "
 
 // Provable: shows order on loop segments
+/*
 lemma Loop_ord [use_induction]:
   "All lid x:nat y:nat kOrig0 kOrig1 #i #j .
        Loop(lid, f(x:nat, kOrig0), kOrig0) @ i
@@ -80,19 +81,14 @@ lemma Loop_ord [use_induction]:
      & i < j
     ==>
      Ex z:nat . (x:nat + z:nat) = y:nat"
+*/
 
-// Not yet provable: the problem is that we cannot express the relation
-// between the keys on two different segments of the same loop.
-lemma Loop_and_success [use_induction]:
-  "All lid k kOrig1 kOrig2 #i #j.
-       Loop(lid, k, kOrig1) @ i
-     & Success(lid, kOrig2) @ j
-    ==>
-       (Ex #j. ChainKey(kOrig2) @ j)
-  "
+// Provable: If f(x:nat, k) is a key, k must also be a key.
+lemma Chain_Key_ord [use_induction, reuse]:
+  "All x:nat k #i .
+    ChainKey(f(x:nat, k)) @ i ==> Ex #j . ChainKey(k) @ j"
 
-// The ultimate goal! A successful check implies that the starting key is a
-// key of the chain.
+// Provable: A successful check implies that the key was a chain key.
 lemma Success_chain:
   "All lid k #i.
     Success(lid, k) @ i ==>
