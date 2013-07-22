@@ -81,7 +81,7 @@ module Theory.Text.Parser.Token (
     -- * Basic Parsing
   , Parser
   , parseFile
-  , parseFromString
+  , parseString
   ) where
 
 import           Prelude             hiding (id, (.))
@@ -97,10 +97,6 @@ import           Text.Parsec         hiding ((<|>))
 import qualified Text.Parsec.Token   as T
 
 import           Theory
-
-
-
-
 
 
 ------------------------------------------------------------------------------
@@ -129,20 +125,22 @@ spthy =
       , T.caseSensitive  = True
       }
 
--- | Parse a file.
+-- | Run a parser on the contents of a file.
 parseFile :: Parser a -> FilePath -> IO a
-parseFile parser f = do
-  s <- readFile f
-  case runParser (T.whiteSpace spthy *> parser) minimalMaudeSig f s of
-    Right p -> return p
-    Left err -> error $ show err
+parseFile parser inFile = do
+    inp <- readFile inFile
+    case parseString inFile parser inp of
+        Right x  -> return x
+        Left err -> error $ show err
 
 -- | Run a given parser on a given string.
-parseFromString :: Parser a -> String -> Either ParseError a
-parseFromString parser =
-    runParser (T.whiteSpace spthy *> parser) minimalMaudeSig dummySource
-  where
-    dummySource = "<interactive>"
+parseString :: FilePath
+            -- ^ Description of the source file. (For error reporting.)"
+            -> Parser a
+            -> String         -- ^ Input string.
+            -> Either ParseError a
+parseString srcDesc parser =
+    runParser (T.whiteSpace spthy *> parser) minimalMaudeSig srcDesc
 
 
 -- Token parsers

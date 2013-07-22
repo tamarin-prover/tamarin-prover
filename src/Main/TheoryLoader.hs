@@ -16,13 +16,11 @@ module Main.TheoryLoader (
 
   -- ** Loading and closing theories
   , loadClosedThy
-  , loadClosedWfThy
+  , loadClosedThyWfReport
   , loadClosedThyString
 
   -- ** Constructing automatic provers
   , constructAutoProver
-
-  , closeThy
 
   -- ** Cached Message Deduction Rule Variants
   , dhIntruderVariantsFile
@@ -47,7 +45,7 @@ import           System.Console.CmdArgs.Explicit
 import           System.Directory                    (doesFileExist)
 
 import           Theory
-import           Theory.Text.Parser
+import           Theory.Text.Parser                  (parseIntruderRules, parseOpenTheory, parseOpenTheoryString)
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
@@ -87,21 +85,29 @@ theoryLoadFlags =
       "Define flags for pseudo-preprocessor."
   ]
 
+-- | The defined pre-processor flags in the argument.
+defines :: Arguments -> [String]
+defines = findArg "defines"
+
+-- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
-loadOpenThy = fst . loadThy
+loadOpenThy as = parseOpenTheory (defines as)
 
+-- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThy = uncurry (>=>) . loadThy
+loadClosedThy as inFile = loadOpenThy as inFile >>= closeThy as
 
-loadClosedWfThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedWfThy as file = do
-    thy <- loadOpen file
+-- | Load a close theory and report on well-formedness errors.
+loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
+loadClosedThyWfReport as inFile = do
+    thy <- loadOpenThy as inFile
+    -- report
     case checkWellformedness thy of
-      []     -> close thy
+      []     -> return ()
       report -> do
           putStrLn ""
           putStrLn $ replicate 78 '-'
-          putStrLn $ "Theory file '" ++ file ++ "'"
+          putStrLn $ "Theory file '" ++ inFile ++ "'"
           putStrLn $ replicate 78 '-'
           putStrLn ""
           putStrLn $ "WARNING: ignoring the following wellformedness errors"
@@ -109,55 +115,27 @@ loadClosedWfThy as file = do
           putStrLn $ renderDoc $ prettyWfErrorReport report
           putStrLn $ replicate 78 '-'
           putStrLn ""
-          close thy
-      -- report -> error $ renderDoc $ prettyWfErrorReport report
-  where
-    (loadOpen, close) = loadThy as
+    -- return closed theory
+    closeThy as thy
+
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
-loadClosedThyString as file = do
-    let (loader, closer) = loadThyString as
-    openThy <- loader file
-    case openThy of
-      Right thy -> Right <$> closer thy
-      Left  err -> return $ Left err
-
--- | Load an open/closed theory from a file.
-loadThy :: Arguments -> (FilePath -> IO OpenTheory, OpenTheory -> IO ClosedTheory)
-loadThy as = loadGenericThy (parseOpenTheory (defines as)) as
-
--- | Load an open/closed theory from a string.
-loadThyString :: Arguments -> ( String -> IO (Either String OpenTheory)
-                              , OpenTheory -> IO ClosedTheory)
-loadThyString as = loadGenericThy loader as
-  where
-    loader str =
-      case parseOpenTheoryString (defines as) str of
-        Right thy -> return $ Right thy
+loadClosedThyString as input =
+    case parseOpenTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
-
--- | The defined pre-processor flags in the argument.
-defines :: Arguments -> [String]
-defines = findArg "defines"
-
--- FIXME: SM: This naming, tupling, blah is a mess and can be done more
--- cleanly. DO IT!
-
--- | Load an open/closed theory given a loader function.
-loadGenericThy :: a -> Arguments -> (a, OpenTheory -> IO ClosedTheory)
-loadGenericThy loader as =
-    (loader, (closeThy as) <=< addMessageDeductionRuleVariants)
+        Right thy -> fmap Right $ closeThy as thy
 
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
-closeThy as =
-      fmap (proveTheory lemmaSelector prover . partialEvaluation)
-    . closeTheory (maudePath as)
+closeThy as thy0 = do
+    thy1 <- addMessageDeductionRuleVariants thy0
     -- FIXME: wf-check is at the wrong position here. Needs to be more
     -- fine-grained.
-    . wfCheck
+    let thy2 = wfCheck thy1
+    -- close and prove
+    cthy <- closeTheory (maudePath as) thy2
+    return $ proveTheory lemmaSelector prover $ partialEvaluation cthy
   where
-
     -- apply partial application
     ----------------------------
     partialEvaluation = case map toLower <$> findArg "partialEvaluation" as of
@@ -257,31 +235,3 @@ addMessageDeductionRuleVariants thy0
                 (parseIntruderRules msig variantsFile)
                 (error $ "could not find intruder message deduction theory '"
                            ++ variantsFile ++ "'")
-{-
-------------------------------------------------------------------------------
--- Message deduction variants cached in files
-------------------------------------------------------------------------------
-
--- | The name of the intruder variants file.
-intruderVariantsFile :: FilePath
-intruderVariantsFile = "intruder_variants_dh.spthy"
-
--- | Add the variants of the message deduction rule. Uses the cached version
--- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
--- deduction rules for Diffie-Hellman exponentiation.
-addMessageDeductionRuleVariants :: OpenTheory -> IO OpenTheory
-addMessageDeductionRuleVariants thy0
-  | enableDH msig = do
-      variantsFile <- getDataFileName intruderVariantsFile
-      ifM (doesFileExist variantsFile)
-          (do dhVariants <- parseIntruderRulesDH variantsFile
-              return $ addIntrRuleACs dhVariants thy
-          )
-          (error $ "could not find intruder message deduction theory '"
-                     ++ variantsFile ++ "'")
-  | otherwise = return thy
-  where
-    msig         = get (sigpMaudeSig . thySignature) thy0
-    rules        = subtermIntruderRules msig ++ specialIntruderRules
-    thy          = addIntrRuleACs rules thy0
--}
