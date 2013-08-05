@@ -1,0 +1,178 @@
+theory GDH
+begin
+
+builtins: diffie-hellman, multiset
+
+functions: one/0
+
+/* ************************************************************************ */
+/* Axioms                                                                   */
+
+// This rule might cause too many case distinctions.
+axiom IsNat_no_junk:
+  "All #i x. IsNat(x) @ i ==> x = one | (Ex y z. x = y + z)"
+
+// The adversary can start a group member at most once.
+axiom Start_once:
+  "All #i #j gid idx A B.
+     Member( gid, idx, A ) @ i & Member( gid, idx, B ) @ j ==> #i = #j"
+
+// Unique cannot occur twice with the same argument.
+axiom Unique:
+  "All #i #j x. Unique( x ) @ i & Unique( x ) @ j ==> #i = #j"
+
+// The same identity cannot be associated to different indices in a group.
+axiom Participants_unique:
+  "All #i #j gid idx1 idx2 A.
+     Member( gid, idx1, A ) @ i & Member( gid, idx2, A ) @ j ==> #i = #j"
+
+// Arguments of InEq are not equal.
+axiom InEq:
+  "not (Ex #i x. InEq(x,x) @ i)"
+
+// Arguments of InEq are not equal.
+axiom Eq:
+  "All #i x y. Eq(x,y) @ i ==> x = y"
+
+/*
+  // Leq(x,y) implies that x <= y.
+  axiom Leq:
+    "All #i x y. Leq(x,y) @ i ==> Ex z. x + z = y | x = y"
+*/
+
+/* ************************************************************************ */
+/* We model an authentic channel (with replay) using the fact !Authout.     */
+
+// The adversary can overhear messages on the authentic channel
+rule AuthOut:
+  [ !AuthOut(t, x) ]
+  -->
+  [ Out(x) ]
+
+/* ************************************************************************ */
+/* Adversary queries to start group and set participants                    */
+
+rule StartGroup:
+  [ Fr( ~gid ), In( rounds ) ]
+ -->  // --[ IsNat(size) ]->  
+  [ !Group( ~gid, rounds) ]
+  // rounds - 1 = participants, i.e., we count the last round where everyone
+  // receives except for the last participant as a round.
+
+rule StartGroupMember:
+  [ !Group( ~gid, idx + rest ) ]
+ --[ Member( ~gid, idx, $A )
+   ]->
+  [ Start( ~gid, idx )
+  , !Agent( ~gid, idx, $A ) ]
+
+/* ************************************************************************ */
+/* Send rules for group member 1                                            */
+
+rule InitiatorStart:
+  [ Start( ~gid, one )
+  , Fr( ~x ) ]
+ --[ Nonce( ~x ) ]->
+  [ !AuthOut( <~gid, 'ForRound', one + one, 'KeyFor'  , one>, 'g'   )
+  , !AuthOut( <~gid, 'ForRound', one + one, 'RoundKey'>,      'g'^~x )
+  , WaitAccept( ~gid, one, ~x ) ]
+
+
+/* ************************************************************************ */
+/* Send rules for remaining group members                                   */
+
+rule ResponderStart:
+  [ Start( ~gid, idx )
+  , Fr( ~x ) ]
+ --[ InEq(idx, one),  Nonce( ~x ) ]->
+  [ !WaitForKey( ~gid, idx, ~x ) ]
+
+rule ResponderSendKeyFor:
+  let Y = 'g'^y in // think of this as a group element check
+  [ !WaitForKey( ~gid, idx, ~x )
+  , !AuthOut( < ~gid, 'ForRound', idx, 'KeyFor', fidx>, Y )
+  ]
+ --[ Unique( < ~gid, idx, fidx > )
+  , Exp(y) ]->
+  [ !AuthOut( < ~gid, 'ForRound', idx + one, 'KeyFor', fidx>, Y^~x ) ]
+
+rule ResponderSendRoundKey:
+  let Y = 'g'^y in
+  [ !WaitForKey( ~gid, idx, ~x )
+  , !Group( ~gid, rounds )
+  , !AuthOut( < ~gid, 'ForRound', idx, 'RoundKey'>, Y )
+  ]
+ --[ Unique( < ~gid, idx, 'RoundKey' > )
+   , InEq(idx + one, rounds)
+   , Exp(y)]->
+  [ !AuthOut( < ~gid, 'ForRound', idx + one, 'KeyFor', idx>, Y )
+  , !AuthOut( < ~gid, 'ForRound', idx + one, 'RoundKey'>, Y^~x )
+  , WaitAccept( ~gid, idx, ~x )]
+
+rule ResponderLastRoundKey:
+  let Y = 'g'^y in
+  [ !WaitForKey( ~gid, idx, ~x )
+  , !Group( ~gid, rounds )
+  , !AuthOut( < ~gid, 'ForRound', idx, 'RoundKey'>, Y )
+  ]
+ --[ Unique( < ~gid, idx, 'RoundKey' > )
+   , Eq(idx + one, rounds)
+   , Accept( ~gid, rounds, idx, Y^~x )
+   , AcceptLast( ~gid, rounds, idx, Y^~x )   
+   , Exp(y) ]->
+  [ ]
+
+/* ************************************************************************ */
+/* Accept rules for group members                                           */
+
+rule Accept:
+  let Y = 'g'^y in
+  [ WaitAccept( ~gid, idx, ~x )
+  , !Group( ~gid, rounds)
+  , !AuthOut( <~gid, 'ForRound', rounds, 'KeyFor', idx>, Y) ]
+ --[ Accept( ~gid, rounds, idx, Y^~x )
+   , Exp(y) ]->
+  []
+
+/* ************************************************************************ */
+/* Executability lemmas                                                     */
+
+// FIXME: Prove this as a Lemma and make sure it is used in the right places.
+axiom No_Inv_exp1: "not (Ex #i x. Exp(inv(x)) @ i)"
+axiom No_Inv_exp2: "not (Ex #i x y. Exp(x * inv(y)) @ i)"
+
+lemma Accept_2:
+  exists-trace
+  "Ex #i1 #i2 gid k.
+       Accept( gid, one + one + one, one,       k ) @ i1
+     & Accept( gid, one + one + one, one + one, k ) @ i2"
+
+lemma Accept_3:
+  exists-trace
+  "Ex #i1 #i2 #i3 gid k.
+       Accept( gid, one + one + one + one, one,             k ) @ i1
+     & Accept( gid, one + one + one + one, one + one,       k ) @ i2
+     & Accept( gid, one + one + one + one, one + one + one, k ) @ i3"
+
+lemma Accept_4:
+  exists-trace
+  "Ex #i1 #i2 #i3 #i4 gid k.
+       Accept( gid, one + one + one + one + one, one,             k ) @ i1
+     & Accept( gid, one + one + one + one + one, one + one,       k ) @ i2
+     & Accept( gid, one + one + one + one + one, one + one + one, k ) @ i3
+     & Accept( gid, one + one + one + one + one, one + one + one + one, k ) @ i4"
+
+/* ************************************************************************ */
+/* Secrecy and related lemmas                                               */
+
+lemma Nonce_secret[reuse]:
+  all-traces
+  "not (Ex #i #j x. KU(x) @ i & Nonce(x) @ j)"
+
+// We prove the lemma for last participant first
+lemma Key_secret:
+  all-traces
+  "not (Ex #i #j gid rounds idx k. K(k) @ i & AcceptLast( gid, rounds, idx, k) @ j)"
+
+
+end
