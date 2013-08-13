@@ -358,7 +358,7 @@ opPlus = symbol_ "+"
 
 -- | The multiset union operator @+@.
 opUnion :: Parser ()
-opUnion = symbol_ "∪"
+opUnion = symbol_ "++"
 
 -- | The timepoint comparison operator @<@.
 opLess :: Parser ()
