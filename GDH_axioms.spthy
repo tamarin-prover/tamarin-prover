@@ -1,4 +1,4 @@
-theory GDH
+theory GDH_axioms
 begin
 
 builtins: diffie-hellman, multiset
@@ -9,8 +9,8 @@ functions: one/0
 /* Axioms                                                                   */
 
 // This rule might cause too many case distinctions.
-axiom IsNat_no_junk:
-  "All #i x. IsNat(x) @ i ==> x = one | (Ex y z. x = y + z)"
+// axiom IsNat_no_junk:
+//  "All #i x. IsNzNat(x) @ i ==> x = one | (Ex y z. x = y + z)"
 
 // The adversary can start a group member at most once.
 axiom Start_once:
@@ -54,15 +54,14 @@ rule AuthOut:
 
 rule StartGroup:
   [ Fr( ~gid ), In( rounds ) ]
- -->  // --[ IsNat(size) ]->  
+ --[ Unique( 'StartGroup' ), StartGroup( rounds ) ]->  // --[ IsNzNat(rounds) ]->  
   [ !Group( ~gid, rounds) ]
   // rounds - 1 = participants, i.e., we count the last round where everyone
   // receives except for the last participant as a round.
 
 rule StartGroupMember:
   [ !Group( ~gid, idx + rest ) ]
- --[ Member( ~gid, idx, $A )
-   ]->
+ --[ Member( ~gid, idx, $A ) ]->
   [ Start( ~gid, idx )
   , !Agent( ~gid, idx, $A ) ]
 
@@ -72,11 +71,10 @@ rule StartGroupMember:
 rule InitiatorStart:
   [ Start( ~gid, one )
   , Fr( ~x ) ]
- --[ Nonce( ~x ) ]->
+ --[ Nonce(one, ~x ) ]->
   [ !AuthOut( <~gid, 'ForRound', one + one, 'KeyFor'  , one>, 'g'   )
   , !AuthOut( <~gid, 'ForRound', one + one, 'RoundKey'>,      'g'^~x )
   , WaitAccept( ~gid, one, ~x ) ]
-
 
 /* ************************************************************************ */
 /* Send rules for remaining group members                                   */
@@ -84,7 +82,8 @@ rule InitiatorStart:
 rule ResponderStart:
   [ Start( ~gid, idx )
   , Fr( ~x ) ]
- --[ InEq(idx, one),  Nonce( ~x ) ]->
+ --[ InEq(idx, one)
+   , Nonce(idx, ~x ) ]->
   [ !WaitForKey( ~gid, idx, ~x ) ]
 
 rule ResponderSendKeyFor:
@@ -93,7 +92,10 @@ rule ResponderSendKeyFor:
   , !AuthOut( < ~gid, 'ForRound', idx, 'KeyFor', fidx>, Y )
   ]
  --[ Unique( < ~gid, idx, fidx > )
-  , Exp(y) ]->
+   , Exp( idx, y)
+   , ExpKeyFor( idx, y)
+   , ExpR( y )  // we use this for the variants
+   ]->
   [ !AuthOut( < ~gid, 'ForRound', idx + one, 'KeyFor', fidx>, Y^~x ) ]
 
 rule ResponderSendRoundKey:
@@ -104,7 +106,9 @@ rule ResponderSendRoundKey:
   ]
  --[ Unique( < ~gid, idx, 'RoundKey' > )
    , InEq(idx + one, rounds)
-   , Exp(y)]->
+   , Exp( idx, y)
+   , ExpRoundKey( idx, y)
+   , ExpR( y )]->
   [ !AuthOut( < ~gid, 'ForRound', idx + one, 'KeyFor', idx>, Y )
   , !AuthOut( < ~gid, 'ForRound', idx + one, 'RoundKey'>, Y^~x )
   , WaitAccept( ~gid, idx, ~x )]
@@ -117,9 +121,13 @@ rule ResponderLastRoundKey:
   ]
  --[ Unique( < ~gid, idx, 'RoundKey' > )
    , Eq(idx + one, rounds)
+   , LastNonce( ~x )
    , Accept( ~gid, rounds, idx, Y^~x )
    , AcceptLast( ~gid, rounds, idx, Y^~x )   
-   , Exp(y) ]->
+   , ExpRoundKey( idx, y)
+   , Exp( idx, y)
+   , ExpR( y )
+   ]->
   [ ]
 
 /* ************************************************************************ */
@@ -131,15 +139,67 @@ rule Accept:
   , !Group( ~gid, rounds)
   , !AuthOut( <~gid, 'ForRound', rounds, 'KeyFor', idx>, Y) ]
  --[ Accept( ~gid, rounds, idx, Y^~x )
-   , Exp(y) ]->
+   , ExpR( y )
+   ]->
   []
 
 /* ************************************************************************ */
-/* Executability lemmas                                                     */
+/* Secrecy and related lemmas                                               */
 
-// FIXME: Prove this as a Lemma and make sure it is used in the right places.
-axiom No_Inv_exp1: "not (Ex #i x. Exp(inv(x)) @ i)"
-axiom No_Inv_exp2: "not (Ex #i x y. Exp(x * inv(y)) @ i)"
+lemma No_Inv_exp[use_induction,reuse,typing]:
+  "not ((Ex #i x. ExpR( inv(x) ) @ i) | (Ex #i x y. ExpR( x * inv(y) ) @ i))"
+
+lemma Nonce_secret[reuse]:
+  all-traces
+  "not (Ex #i #j x r. KU(x) @ i & Nonce(r, x) @ j)"
+
+/* We can prove this one, but it is too prolific for proving secrecy lemma
+lemma Exp_earlier_Nonce[use_induction, reuse]:
+  "All #i x ~n r1. Exp(r1, x * ~n) @ i
+    ==> Ex r2 r3 #j. Nonce(r2, ~n) @ j & r1 = r2 + r3"
+*/
+
+lemma Exp_earlier_Nonce_2[reuse]:
+  "All #i #j x n r1 r2. Exp(r1, x * n) @ i & Nonce(r2, n) @ j
+    ==> Ex r3. r1 = r2 + r3"
+
+lemma roundkey_keyfor_different[reuse]:
+  "not (Ex #i #j idx y. ExpKeyFor( idx, y) @ i & ExpRoundKey( idx, y) @ j)"
+
+// can be used to prove the following, but confuses secrecy proof
+lemma Exp_nonce_or_product1[use_induction,reuse]:
+  "All #i x. ExpR( x ) @ i ==>
+    (  Ex #j r.  Nonce( r, x ) @ j)
+    | (All y z.
+         x = y * z ==>
+         Ex #j n r w. Nonce( r, n) @ j &  y = w * n)
+    | x = one"
+
+
+// can be used to prove the following, but confuses secrecy proof
+//lemma Exp_nonce_or_product1[use_induction,reuse]:
+//  "All #i x. ExpR( x ) @ i ==>
+//    (Ex #j r.  Nonce( r, x ) @ j) | (Ex #j n y r. Nonce( r, n) @ j &  x = y * n) | x = one"
+
+// can be used to prove the following, but confuses secrecy proof
+lemma Exp_nonce_or_product2[use_induction,reuse]:
+  "All #i x z. ExpR( x * z) @ i ==>
+    (Ex #j r.  Nonce( r, x ) @ j) | (Ex #j n y r. Nonce( r, n) @ j &  x = y * n)"
+
+
+lemma Exp_factor_secret[reuse]:
+  "not (Ex #i #j x y. ExpR( x * y ) @ i & KU( x ) @ j)"
+
+
+// We prove the lemma for last participant first
+lemma Key_secret:
+  all-traces
+  "not (Ex #i #j gid rounds idx k. K(k) @ i & AcceptLast( gid, rounds, idx, k) @ j)"
+
+
+
+/* ************************************************************************ */
+/* Executability lemmas                                                     */
 
 lemma Accept_2:
   exists-trace
@@ -161,18 +221,6 @@ lemma Accept_4:
      & Accept( gid, one + one + one + one + one, one + one,       k ) @ i2
      & Accept( gid, one + one + one + one + one, one + one + one, k ) @ i3
      & Accept( gid, one + one + one + one + one, one + one + one + one, k ) @ i4"
-
-/* ************************************************************************ */
-/* Secrecy and related lemmas                                               */
-
-lemma Nonce_secret[reuse]:
-  all-traces
-  "not (Ex #i #j x. KU(x) @ i & Nonce(x) @ j)"
-
-// We prove the lemma for last participant first
-lemma Key_secret:
-  all-traces
-  "not (Ex #i #j gid rounds idx k. K(k) @ i & AcceptLast( gid, rounds, idx, k) @ j)"
 
 
 end
