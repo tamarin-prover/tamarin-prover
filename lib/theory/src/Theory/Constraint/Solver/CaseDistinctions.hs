@@ -128,8 +128,8 @@ solveAllSafeGoals ths =
         PremiseG _ fa -> not (isKUFact fa)
         DisjG _       -> doSplit
         -- Uncomment to get more extensive case splitting
-        -- SplitG _   -> doSplit
-        SplitG _      -> False
+        SplitG _   -> doSplit
+        -- SplitG _      -> False
 
     usefulGoal (_, (_, Useful)) = True
     usefulGoal _                = False
