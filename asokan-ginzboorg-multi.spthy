@@ -87,8 +87,8 @@ rule Leader_accept:
 
 lemma Shares [typing, reuse, use_induction]:
   "All pw e shares1 shares2 partners ri si #i . LeaderAdd(pw, e, shares1 + shares2, partners, ri, si) @i 
-    ==>   Ex ~n. shares1 = ~n 
-        | Ex u v. shares1 = u + v
+    ==>   (Ex ~n. shares1 = ~n )
+        | (Ex u v. shares1 = u + v)
   "
 
 lemma SecretAKey:
