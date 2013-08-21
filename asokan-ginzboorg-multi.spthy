@@ -84,6 +84,13 @@ rule Leader_accept:
   [ LeaderAccepted(pw, e, si, allshares, K) ]
 
 
+
+lemma Shares [typing, reuse, use_induction]:
+  "All pw e shares1 shares2 partners ri si #i . LeaderAdd(pw, e, shares1 + shares2, partners, ri, si) @i 
+    ==>   Ex ~n. shares1 = ~n 
+        | Ex u v. shares1 = u + v
+  "
+
 lemma SecretAKey:
   "All #i e. SecretAsymmetricKey(e) @ i ==> not (Ex #j. KU(e) @j)"
 
