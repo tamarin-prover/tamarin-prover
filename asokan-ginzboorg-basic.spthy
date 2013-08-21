@@ -1,0 +1,57 @@
+theory Asokan_Ginzboorg_Basic
+begin
+
+builtins: multiset, symmetric-encryption, hashing, asymmetric-encryption        //, signing
+
+functions: f/2 //key derivation function
+
+/*
+axiom Single_pw:
+  "All #i #j pw1 pw2. Initpw(pw1) @ i & Initpw(pw2) @ j ==> #i = #j"
+*/
+
+rule Initial_pw:
+  [ Fr(~pw) ]
+  --[ Initpw(~pw) ]->
+  [ !Password(~pw) ]
+
+rule Initiator_1:
+  [ !Password(pw) , Fr(~ea) ]
+  --[ Initiator1(~ea, pw) ]->
+  [ Out( < $A, senc(pk(~ea), pw) > ) , Initiator_1($A, ~ea, pw) ]
+
+rule Receiver_1:
+  [ !Password(pw), Fr(~r), Fr(~sb) , In( < A, senc(pkea, pw) > ) ]
+  --[ Receiver1(~r, ~sb, pw) ]->
+  [ Receiver_1(A, ~r, ~sb, pw), Out( senc(aenc(<~r,~sb>, pkea), pw)) ]
+
+rule Initiator_2:
+  let K = f(~sa, sb)
+  in 
+  [ In( senc(aenc(<r, sb>, pk(ea)), pw) ) , Initiator_1(A, ea, pw) , Fr(~sa) ]
+  --[ Initiator2(~sa) ]->
+  [ Initiator_2(A, r, ~sa, sb, pw) , Out( senc(~sa ,r)) , Out( senc(<~sa, h(~sa, sb)>, K) ) ]
+
+rule Receiver_2:
+  let K = f(sa, sb)
+  in 
+  [ Receiver_1(A, r, sb, pw), In( senc(sa, r) ) , In( senc(<sa, h(sa, sb)>, K) )]
+  --[ Accept('recv', K, pw) ]->
+  [ Receiver_Accept(A, K, pw) , Out( senc(<sb, h(sa, sb)>, K) ) ] 
+
+rule Initiator_3:
+  let K = f(sa, sb)
+  in
+  [ Initiator_2(A, r, sa, sb, pw), In( senc(<sb, h(sa, sb)>, K) ) ]
+  --[Accept('init', K, pw)]->
+  [ Initiator_Accept(A, K, pw) ]
+
+
+lemma Secret:
+  "All any k pw #i #j. Accept(any, k, pw) @ i & KU(k) @ j ==> F"
+
+lemma Sanity:
+  exists-trace
+  "Ex k pw #i #j. Accept('init', k, pw) @i & Accept('recv', k, pw) @j"
+
+end
