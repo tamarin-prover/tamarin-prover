@@ -147,55 +147,54 @@ rule Accept:
 /* Secrecy and related lemmas                                               */
 
 lemma No_Inv_exp[use_induction,reuse,typing]:
+  all-traces
   "not ((Ex #i x. ExpR( inv(x) ) @ i) | (Ex #i x y. ExpR( x * inv(y) ) @ i))"
 
 lemma Nonce_secret[reuse]:
   all-traces
   "not (Ex #i #j x r. KU(x) @ i & Nonce(r, x) @ j)"
 
-/* We can prove this one, but it is too prolific for proving secrecy lemma
+// check if really required
+lemma nonce_fresh_name[reuse]:
+  "All #i x r. Nonce(r, x) @ i ==> Ex ~n. x = ~n"
+
+/* We can prove this one, but it is too prolific for proving the secrecy lemma. 
 lemma Exp_earlier_Nonce[use_induction, reuse]:
   "All #i x ~n r1. Exp(r1, x * ~n) @ i
-    ==> Ex r2 r3 #j. Nonce(r2, ~n) @ j & r1 = r2 + r3"
+     ==> Ex r2 r3 #j. Nonce(r2, ~n) @ j & r1 = r2 + r3"
 */
 
+/* We can prove this one using the earlier lemma. */
 lemma Exp_earlier_Nonce_2[reuse]:
-  "All #i #j x n r1 r2. Exp(r1, x * n) @ i & Nonce(r2, n) @ j
-    ==> Ex r3. r1 = r2 + r3"
+  all-traces
+  "All #i #j x n r1 r2. Exp(r2, x * n) @ i & Nonce(r1, n) @ j
+     ==> Ex r3. r2 = r1 + r3"
 
-lemma roundkey_keyfor_different[reuse]:
+lemma roundkey_keyfor_different[use_induction,reuse]:
+  all-traces
   "not (Ex #i #j idx y. ExpKeyFor( idx, y) @ i & ExpRoundKey( idx, y) @ j)"
 
-// can be used to prove the following, but confuses secrecy proof
-lemma Exp_nonce_or_product1[use_induction,reuse]:
-  "All #i x. ExpR( x ) @ i ==>
-    (  Ex #j r.  Nonce( r, x ) @ j)
-    | (All y z.
-         x = y * z ==>
-         Ex #j n r w. Nonce( r, n) @ j &  y = w * n)
-    | x = one"
-
-
-// can be used to prove the following, but confuses secrecy proof
-//lemma Exp_nonce_or_product1[use_induction,reuse]:
-//  "All #i x. ExpR( x ) @ i ==>
-//    (Ex #j r.  Nonce( r, x ) @ j) | (Ex #j n y r. Nonce( r, n) @ j &  x = y * n) | x = one"
-
-// can be used to prove the following, but confuses secrecy proof
+/*
+1. first \/ split
+2. spliteq
+3. !Authout
+*/
 lemma Exp_nonce_or_product2[use_induction,reuse]:
+  all-traces
   "All #i x z. ExpR( x * z) @ i ==>
-    (Ex #j r.  Nonce( r, x ) @ j) | (Ex #j n y r. Nonce( r, n) @ j &  x = y * n)"
-
+     (Ex #j r.  Nonce( r, x ) @ j) | (Ex #j ~n r. Nonce( r, ~n ) @ j & Ex y. x = y * ~n)"
+  // It would be sufficient here to have `factorOf(n,x)' instead of
+  // Ex y. x = y * n
+  // we could maybe perform the proof using only introduction rules for factorOf
 
 lemma Exp_factor_secret[reuse]:
+  all-traces
   "not (Ex #i #j x y. ExpR( x * y ) @ i & KU( x ) @ j)"
-
 
 // We prove the lemma for last participant first
 lemma Key_secret:
   all-traces
   "not (Ex #i #j gid rounds idx k. K(k) @ i & AcceptLast( gid, rounds, idx, k) @ j)"
-
 
 
 /* ************************************************************************ */
@@ -222,5 +221,35 @@ lemma Accept_4:
      & Accept( gid, one + one + one + one + one, one + one + one, k ) @ i3
      & Accept( gid, one + one + one + one + one, one + one + one + one, k ) @ i4"
 
+/* ************************************************************************ */
+/* Experiments                                                             */
+
+/*
+lemma FactorOf_intro1[reuse]:
+  all-traces
+  "All #i x y. ExpR(x * y) @ i ==> Ex #j. FactorOf( y, x * y ) @ j"
+
+lemma FactorOf_intro2[reuse]:
+  all-traces
+  "All #i x. ExpR(x) @ i ==> Ex #j. FactorOf( x, x ) @ j"
+
+lemma FactorOf_trans[reuse]:
+  all-traces
+  "All #i #j x y z. FactorOf(y,x) @ i & FactorOf(z,y) @ j ==> Ex #k. FactorOf(z,x) @ k"
+
+lemma FactorOf_destr_one[reuse]:
+  all-traces
+  "All #i x. FactorOf(x,one) @ i ==> x = one"
+
+
+lemma Exp_Factor_nonce[reuse]:
+  all-traces
+  "All #i #j x y. ExpR( x ) @ i & FactorOf( y, x ) @ j ==>
+    (Ex #j r.  Nonce( r, y ) @ j) | (Ex #j #k ~n r. Nonce( r, ~n ) @ j & FactorOf( ~n, y ) @ k )"
+
+lemma Exp_factor_secret2[reuse]:
+  all-traces
+  "not (Ex #i #j #k x y. ExpR( x) @ i & FactorOf(y,x) @ k & KU( y ) @ j)"
+*/
 
 end
