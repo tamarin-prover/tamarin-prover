@@ -84,23 +84,63 @@ rule Leader_accept:
   [ LeaderAccepted(pw, e, si, allshares, K) ]
 
 
+/*
+// NOT provable - as the ri and si are input, we don't know about their type - this also seems to suggest we won't be able to prove the Shares and Shares_stronger lemmas either.
+lemma Input_is_fresh [use_induction]:
+  "All pw e shares partners ri si #i . LeaderAdd(pw, e, shares, partners, ri, si) @i 
+    ==>   (Ex ~n ~m. ri = ~n & si = ~m)
+  "
+*/
 
+/*
+// not proven yet - probably same problem as all the others
 lemma Shares [typing, reuse, use_induction]:
   "All pw e shares1 shares2 partners ri si #i . LeaderAdd(pw, e, shares1 + shares2, partners, ri, si) @i 
     ==>   (Ex ~n. shares1 = ~n )
         | (Ex u v. shares1 = u + v)
   "
 
-lemma SecretAKey:
-  "All #i e. SecretAsymmetricKey(e) @ i ==> not (Ex #j. KU(e) @j)"
-
-/*
-lemma SecretPW:
+//  stronger Shares lemma - auto-proof works [NEEDS 'Shares' lemma abolve], takes 20 minutes and a bit over 2GB memory (55% on RS machine)
+lemma Shares_stronger [typing, reuse, use_induction]:
+  "All pw e shares partners ri si #i . LeaderAdd(pw, e, shares, partners, ri, si) @i 
+    ==>   (Ex ~n. shares = ~n )
+        | (    Ex u v. shares = u + v
+           & (All u v. shares = u + v 
+                ==>   (Ex ~n. u = ~n)
+                    | (Ex x y. u = x + y)) )
+  "
 */
 
+/*
+// similar to the Shares this considers the partner's keys
+lemma Partners_stronger [typing, reuse, use_induction]:
+  "All pw e shares partners ri si #i . LeaderAdd(pw, e, shares, partners, ri, si) @i 
+    ==>   (partners = 'nil' )
+        | (    Ex u v. partners = u + v
+           & (All u v. partners = u + v 
+                ==>   (Ex ~n. u = ~n)
+                    | (Ex x y. u = x + y)) )
+  "
+*/
+
+/*
+// due to open chains, can NOT prove this
+lemma SecretAKey:
+  "All #i e. SecretAsymmetricKey(e) @ i ==> not (Ex #j. KU(e) @j)"
+*/
+
+/*
+// due to open chains, can NOT prove this
+lemma SecretPW:
+  "All #i pw. Initpw(pw) @i ==> not (Ex #j. KU(pw) @j)"
+*/
+
+
+// not proven
 lemma Secret:
   "All any pw e sn allshares k #i #j. Accept(any, pw, e, sn, allshares, k) @ i & KU(k) @ j ==> F"
 
+// proven (by hand)
 lemma Sanity:
   exists-trace
   "Ex k sn e pw #i si1 #j1 si2 #j2. ///// allshares = si1 + si2 + sn
