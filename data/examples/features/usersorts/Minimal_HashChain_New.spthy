@@ -27,35 +27,25 @@ rule Gen_Stop:
 // Key checking
 ///////////////
 
-// Start checking an arbitrary key. Use a loop-id to allow connecting
-// different statements about the same loop.
-/*
-rule Check0:
-    [ In(f(x:nat, seed)), Fr(loopId) ]
-  --[ Start(loopId, f(x:nat, seed)) ]->
-    [ Loop(loopId, f(x:nat, seed), f(x:nat, seed)) ]
+rule Check_Start0:
+    [ In(f(x:nat, k)), Fr(loopId) ]
+  --[ Start(loopId, f(x:nat, k)) ]->
+    [ Loop(loopId, f((x:nat + 1), k), f(x:nat, k)) ]
 
-rule Check:
-    [ Loop(loopId, f(x:nat, seed), kOrig) ]
-  --[ Loop(loopId, f(x:nat, seed), kOrig) ]->
-    [ Loop(loopId,  f((x:nat + 1), seed), kOrig) ]
-*/
-
-rule Check0:
+rule Check_Start1:
     [ In(kOrig), Fr(loopId) ]
   --[ Start(loopId, kOrig) ]->
     [ Loop(loopId, f(1:nat, kOrig), kOrig) ]
 
-rule Loop0:
+rule Check_Step:
     [ Loop(loopId, f(x:nat, kOrig), kOrig) ]
   --[ Loop(loopId, f(x:nat, kOrig), kOrig) ]->
     [ Loop(loopId, f((x:nat + 1), kOrig), kOrig) ]
 
-rule Success:
+rule Check_Stop:
     [ Loop(loopId, kZero, kOrig), !Final(kZero) ]
   --[ Success(loopId, kOrig) ]->
     []
-
 
 // Provable: restricts the search space
 lemma Loop_Start [use_induction, reuse]:
@@ -72,19 +62,8 @@ lemma Loop_Success_ord [use_induction, reuse]:
      ( i < j )
   "
 
-// Provable: shows order on loop segments
-/*
-lemma Loop_ord [use_induction]:
-  "All lid x:nat y:nat kOrig0 kOrig1 #i #j .
-       Loop(lid, f(x:nat, kOrig0), kOrig0) @ i
-     & Loop(lid, f(y:nat, kOrig1), kOrig1) @ j
-     & i < j
-    ==>
-     Ex z:nat . (x:nat + z:nat) = y:nat"
-*/
-
 // Provable: If f(x:nat, k) is a key, k must also be a key.
-lemma Chain_Key_ord [use_induction, reuse]:
+lemma Chain_Key_end [use_induction, reuse]:
   "All x:nat k #i .
     ChainKey(f(x:nat, k)) @ i ==> Ex #j . ChainKey(k) @ j"
 
