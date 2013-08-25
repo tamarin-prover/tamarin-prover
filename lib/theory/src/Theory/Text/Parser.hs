@@ -39,6 +39,7 @@ import           Term.Maude.Signature
 import           Theory
 import           Theory.Text.Parser.Token
 
+
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
 ------------------------------------------------------------------------------
@@ -129,7 +130,7 @@ naryOpApp plit = do
   where
     -- Functions on built-in sorts
     arguments _  0 _       = return []
-    arguments _  1 Nothing = return <$> tupleterm plit
+    arguments _  1 Nothing = return <$> multterm plit
     arguments _  _ Nothing = commaSep (multterm plit)
     -- Functions on user-defined sorts (with type signature)
     arguments op _ (Just xs) =
@@ -176,7 +177,6 @@ binaryAlgApp plit = do
 term :: Parser LNTerm -> Parser LNTerm
 term plit = asum
     [ pairing       <?> "pairs"
-    , parens (natterm plit)
     , parens (multterm plit)
     , symbol "0:nat" *> pure fAppNatZero
     , symbol "1:nat" *> pure fAppNatOne
@@ -205,7 +205,7 @@ multterm plit = do
     dh <- enableDH <$> getState
     if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
-        else msetterm plit
+        else natterm plit
 
 -- | A left-associative sequence of multiset unions.
 msetterm :: Parser LNTerm -> Parser LNTerm
@@ -221,7 +221,7 @@ natterm plit = do
     nats <- enableNat <$> getState
     if nats -- if nat is not enabled, do not accept 'natterms's
         then chainl1 subnatterm ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
-        else term plit
+        else msetterm plit
   where
     subnatterm = asum
       [ symbol "0:nat" *> pure fAppNatZero
