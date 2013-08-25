@@ -35,19 +35,19 @@ rule Proto1:
   in
   [ Fr(~ekA), !Ltk($A, ltkA) ]
   --[ ]->
-  [ PState( $A, $B + $C, ~ekA )
-  , Out( <hkA, sign{$A, $B + $C, hkA }ltkA> )
+  [ PState( $A, $B ++ $C, ~ekA )
+  , Out( <hkA, sign{$A, $B ++ $C, hkA }ltkA> )
   , !Ephk( ~ekA)
   ]
 
 rule Proto2:
-    [ PState( $A, $B + $C, ~ekA)
+    [ PState( $A, $B ++ $C, ~ekA)
     , !Pk($B, pk(ltkB))
     , !Pk($C, pk(ltkC))
-    , In( < XB, sign{$B, $A + $C, XB}ltkB > )
-    , In( < XC, sign{$C, $A + $B, XC}ltkC > )
+    , In( < XB, sign{$B, $A ++ $C, XB}ltkB > )
+    , In( < XC, sign{$C, $A ++ $B, XC}ltkC > )
     ]
-  --[ SessionKey($A, $B + $C, em(XB,XC) ^ ~ekA) ]->
+  --[ SessionKey($A, $B ++ $C, em(XB,XC) ^ ~ekA) ]->
     []
 
 rule EphkRev:
@@ -58,9 +58,9 @@ rule EphkRev:
 lemma session_key_establish:
   exists-trace
   "Ex A B C #ia #ib #ic k.
-      ( SessionKey(A,B + C, k) @ ia &
-        SessionKey(B,C + A, k) @ ib &
-        SessionKey(C,B + A, k) @ ic &
+      ( SessionKey(A,B ++ C, k) @ ia &
+        SessionKey(B,C ++ A, k) @ ib &
+        SessionKey(C,B ++ A, k) @ ic &
         not (A = B) &
         not (B = C) &
         not (A = C) &
@@ -71,7 +71,7 @@ lemma session_key_establish:
 
 lemma Session_Key_Secrecy_PFS:
   "(All A B C sessKey #i #k. 
-           SessionKey(A,B + C,sessKey) @ i &
+           SessionKey(A,B ++ C,sessKey) @ i &
            K(sessKey) @ k
          ==>
              (Ex #l. LtkReveal(A) @ l & l < i )

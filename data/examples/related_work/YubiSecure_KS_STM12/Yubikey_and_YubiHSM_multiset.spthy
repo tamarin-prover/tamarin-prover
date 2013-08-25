@@ -160,10 +160,10 @@ rule Yubikey_Plugin:
 
 rule Yubikey_PressButton:
     [Y_counter(pid,tc),!Y_Key(pid,k2),!Y_sid(pid,sid),
-     Fr(~pr),Fr(~nonce), In(tc+'1')]
+     Fr(~pr),Fr(~nonce), In(tc++'1')]
     --[ YubiPress(pid,tc),
         YubiPressOtp(pid,<sid,tc,~pr>,tc,k2) ]->
-    [Y_counter(pid,tc+'1'), Out(<pid,~nonce,senc(<sid,tc,~pr>,k2)>)]
+    [Y_counter(pid,tc++'1'), Out(<pid,~nonce,senc(<sid,tc,~pr>,k2)>)]
 
 rule Server_ReceiveOTP_NewSession:
     let ks=keystream(kh,pid)
@@ -179,11 +179,11 @@ LoginCounter(pid,otc,tc), Smaller(otc,tc)
 
 //we model the larger relation using the smaller action and excluding all traces where it is not correct
 axiom smaller:
-	"All #i a b. Smaller(a,b)@i ==> Ex z. a+z=b"
+	"All #i a b. Smaller(a,b)@i ==> Ex z. a++z=b"
 
 lemma transitivity: 
         "All #t1 #t2 a b c. Smaller(a,b)@t1 & Smaller(b,c)@t2
-        ==> Ex z . a + z = c"
+        ==> Ex z . a ++ z = c"
 
 
 axiom onetime:
@@ -242,7 +242,7 @@ lemma one_count_foreach_login[reuse,use_induction]:
 lemma slightly_weaker_invariant[reuse, use_induction]:
         "(All pid otc1 tc1 otc2 tc2 #t1 #t2 .
              LoginCounter(pid,otc1,tc1)@#t1 & LoginCounter(pid,otc2,tc2)@#t2
-        ==> ( #t1<#t2 & ( Ex z . tc2=tc1 + z))
+        ==> ( #t1<#t2 & ( Ex z . tc2=tc1 ++ z))
             | #t2<#t1 | #t1=#t2)
         "
 induction
@@ -251,7 +251,7 @@ induction
 next
   case non_empty_trace
   simplify
-  solve( (¬(#t1 < #t2))  ∥ (∀ z.2. ((otc2+z.1) = (otc1+z+z.2)) ⇒ ⊥) )
+  solve( (¬(#t1 < #t2))  ∥ (∀ z.2. ((otc2++z.1) = (otc1++z++z.2)) ⇒ ⊥) )
     case case_1
     solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
       case case_1
@@ -298,7 +298,7 @@ lemma injective_correspondance:
 lemma Login_invalidates_smaller_counters:
         "All pid otc1 tc1 otc2 tc2 #t1 #t2 z .
              LoginCounter(pid,otc1,tc1)@#t1 & LoginCounter(pid,otc2,tc2)@#t2
-			 & tc2=tc1+z
+			 & tc2=tc1++z
          	==>  #t1<#t2 "
 
 end

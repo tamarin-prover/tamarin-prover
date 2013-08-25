@@ -47,8 +47,8 @@ rule BuyANewYubikey:
 rule Yubikey_Plugin:
 	   [Y_counter(pid,sc), In(sc) ] 
         //The old counter value sc is removed
-        --[ Yubi(pid,sc + '1') ]-> 
-        [Y_counter(pid, sc + '1')]
+        --[ Yubi(pid,sc ++ '1') ]-> 
+        [Y_counter(pid, sc ++ '1')]
         //and substituted by a new counter value, larger, Ssc
 
 //If the Button is pressed, the token counter is increased
@@ -58,7 +58,7 @@ rule Yubikey_PressButton:
         //The old countervalue tc is removed
         --[ YubiPress(pid,tc), YubiOTP(pid,senc(<sid,tc,~npr>,k)),
             YubiSid(pid,sid,k) ]->
-        [Y_counter(pid, tc + '1'), //and substituted by its successor
+        [Y_counter(pid, tc ++ '1'), //and substituted by its successor
          Out(<pid,~nonce,senc(<sid,tc,~npr>,k)>) 
         //in addition, an encrypted otp is output along with a nonce and
         //the public id of the Yubikey used.
@@ -87,7 +87,7 @@ rule Server_ReceiveOTP_NewSession:
 
 //we model the larger relation using the smaller action and excluding all traces where it is not correct
 axiom smaller:
-	"All #i a b. Smaller(a,b)@i ==> Ex z. a+z=b"
+	"All #i a b. Smaller(a,b)@i ==> Ex z. a++z=b"
 
 //axiom transitivity: //axiomatic
 //        "All #t1 #t2 a b c. Smaller(a,b)@t1 & Smaller(b,c)@t2
@@ -95,7 +95,7 @@ axiom smaller:
 
 lemma transitivity: //not axiomatic anymore :)
         "All #t1 #t2 a b c. Smaller(a,b)@t1 & Smaller(b,c)@t2
-        ==> Ex z . a + z = c"
+        ==> Ex z . a ++ z = c"
 
 // For sanity: Ensure that a successful login is reachable.
 lemma Login_reachable:
@@ -114,7 +114,7 @@ lemma one_count_foreach_login[reuse,use_induction]:
 lemma slightly_weaker_invariant[reuse, use_induction]:
         "(All pid otc1 tc1 otc2 tc2 #t1 #t2 .
              LoginCounter(pid,otc1,tc1)@#t1 & LoginCounter(pid,otc2,tc2)@#t2
-        ==> ( #t1<#t2 & ( Ex z . tc1+z=tc2))
+        ==> ( #t1<#t2 & ( Ex z . tc1++z=tc2))
             | #t2<#t1 | #t1=#t2)
         "
 

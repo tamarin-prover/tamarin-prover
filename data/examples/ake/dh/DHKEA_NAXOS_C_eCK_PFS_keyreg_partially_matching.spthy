@@ -60,7 +60,7 @@ rule Init_NAXOS_2:
   [ Init_1( ~ex, $A, $B, ~ea, X), !Pk( $B, KB )
   , In( <$B, Y, confB> ) ]
   --[ Accept( ~ex, key)
-    , Sid( ~ex, < $A, $B, (<'1',X> + <'2',Y> + <'3',<$A, conf>>), 'Init' , 'NAXOS_C'>)
+    , Sid( ~ex, < $A, $B, (<'1',X> ++ <'2',Y> ++ <'3',<$A, conf>>), 'Init' , 'NAXOS_C'>)
     ]->
   [ Out( <$A, conf> )
   , !Sessk( ~ex, key) ]
@@ -76,7 +76,7 @@ rule Resp_NAXOS_1:
   in
    [ Fr( ~ey ), !Ltk($B, ~eb), !Pk($A, KA)
    , In( X ) ]
-   --[ Sid( ~ey, < $B, $A, (<'1',X> + <'2',Y>), 'Respo', 'NAXOS_C' > ) ]->
+   --[ Sid( ~ey, < $B, $A, (<'1',X> ++ <'2',Y>), 'Respo', 'NAXOS_C' > ) ]->
    [ Out( <$B,Y,conf> )
    , Resp_1( ~ey, $B, $A, Y , X, confA, key )
    , !Ephk(~ey, ~ey) ]
@@ -85,7 +85,7 @@ rule Resp_NAXOS_2:
      [ Resp_1( ~ey, $B, $A, Y, X, confA, key )
      , In( <$A, confA> ) ]
      --[ Accept( ~ey, key )
-       , Sid( ~ey, < $B, $A, (<'1',X> + <'2',Y>+ <'3',<$A,confA>>), 'Respo', 'NAXOS_C' > )
+       , Sid( ~ey, < $B, $A, (<'1',X> ++ <'2',Y>++ <'3',<$A,confA>>), 'Respo', 'NAXOS_C' > )
        ]->
        [ !Sessk( ~ey, key) ]
 
@@ -113,7 +113,7 @@ rule Init_DHKEA_2:
   [ Init_DHKEA_1( ~ex, $A, $B, ~ea, X), !Pk( $B, KB )
   , In( <$B, Y, confB> ) ]
   --[ Accept( ~ex, key)
-    , Sid( ~ex, < $A, $B, (<'1',X> + <'2',Y> + <'3',<$A, conf>>), 'Init', 'DHKEA' >)
+    , Sid( ~ex, < $A, $B, (<'1',X> ++ <'2',Y> ++ <'3',<$A, conf>>), 'Init', 'DHKEA' >)
     ]->
   [ Out( <$A, conf> )
   , !Sessk( ~ex, key) ]
@@ -130,7 +130,7 @@ rule Resp_DHKEA_1:
   in
    [ Fr( ~ey ), !Ltk($B, ~eb), !Pk($A, KA)
    , In( X ) ]
-   --[ Sid( ~ey, < $B, $A, (<'1',X> + <'2',Y>), 'Respo', 'DHKEA' > )
+   --[ Sid( ~ey, < $B, $A, (<'1',X> ++ <'2',Y>), 'Respo', 'DHKEA' > )
    ]->
    [ Out( <$B,Y,conf> )
    , Resp_DHKEA_1( ~ey, $B, $A, Y , X, confA, key )
@@ -140,7 +140,7 @@ rule Resp_DHKEA_2:
      [ Resp_DHKEA_1( ~ey, $B, $A, Y, X, confA, key )
      , In( <$A, confA> ) ]
      --[ Accept( ~ey, key )
-       , Sid( ~ey, < $B, $A, (<'1',X> + <'2',Y>+ <'3',<$A,confA>>), 'Respo', 'DHKEA' > )
+       , Sid( ~ey, < $B, $A, (<'1',X> ++ <'2',Y>++ <'3',<$A,confA>>), 'Respo', 'DHKEA' > )
        ]->
        [ !Sessk( ~ey, key) ]
 
@@ -200,7 +200,7 @@ lemma eCK_key_secrecy:
     | (Ex matchingSession #i3 matchingRole matchingCom.
            (   Sid ( matchingSession, < B, A, matchingCom, matchingRole, proto > ) @ i3 
              & not ( matchingRole = role )
-             & ((Ex rest. matchingCom + rest = com) | (matchingCom = com))
+             & ((Ex rest. matchingCom ++ rest = com) | (matchingCom = com))
              & not (Ex #i4 sid. Sid ( matchingSession, sid) @ i4 & #i3 < #i4))
 	   & (
              /* (a) the adversary has revealed the session key of the matching session, or */
@@ -215,7 +215,7 @@ lemma eCK_key_secrecy:
     | ( ( not (Ex matchingSession #i3 matchingRole matchingCom.
                   Sid ( matchingSession, < B, A, matchingCom, matchingRole, proto > ) @ i3 
                   & not ( matchingRole = role )
-                  & ((Ex rest. matchingCom + rest = com) | (matchingCom = com))
+                  & ((Ex rest. matchingCom ++ rest = com) | (matchingCom = com))
                   & not (Ex #i4 sid. Sid ( matchingSession, sid) @ i4 & #i3 < #i4)))
 
            /* the adversary has revealed the longterm key of B. */

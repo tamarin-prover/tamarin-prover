@@ -52,7 +52,7 @@ rule I_Complete:
       conf    = MAC(first(kstring), <'R', $B, $A, Y, X>) // we do not include Lambda_1
       confB   = MAC(first(kstring), <'I', $A, $B, X, Y>) // we do not include Lambda_2
       sidOld  = <'UM3',$A, $B, <'1',X>>
-      sid     = <'UM3',$A, $B, <'1',X> + <'2', <Y,confB>> + <'3', conf> >  // new sid
+      sid     = <'UM3',$A, $B, <'1',X> ++ <'2', <Y,confB>> ++ <'3', conf> >  // new sid
   in
   [ I_Act( ~ex, $A, $B )                   // this session was activated
   , In( <Y, confB> )
@@ -81,7 +81,7 @@ rule R_Activate:
       kstring = h(X^~ey, pA^~eb, $A, $B, X, Y, 'UM3')
       key     = second(kstring)
       conf    = MAC(first(kstring), <'I', $A, $B, X, Y>) // we do not include Lambda_2
-      sid = <'UM3', $B, $A, <'1',X> + <'2',<Y, conf>> >  // sid is unique
+      sid = <'UM3', $B, $A, <'1',X> ++ <'2',<Y, conf>> >  // sid is unique
 
 
   in
@@ -105,8 +105,8 @@ rule R_Complete:
       key     = second(kstring)
       confA   = MAC(first(kstring), <'R', $B, $A, Y, X>) // we do not include Lambda_1
       conf    = MAC(first(kstring), <'I', $A, $B, X, Y>) // we do not include Lambda_2
-      sidOld  = <'UM3', $B, $A, <'1',X> + <'2', <Y, conf>>> // sid is unique
-      sid = <'UM3', $B, $A, <'1',X> + <'2', <Y, conf>> + <'3', confA> > // sid is unique
+      sidOld  = <'UM3', $B, $A, <'1',X> ++ <'2', <Y, conf>>> // sid is unique
+      sid = <'UM3', $B, $A, <'1',X> ++ <'2', <Y, conf>> ++ <'3', confA> > // sid is unique
   in
   [ R_Act( ~ey, $B, $A, X )
   , In( confA )
@@ -282,7 +282,7 @@ lemma CK_secure_UM3:
       |  (Ex #l ms matchingComm.
            Sid(<'UM3',B,A,matchingComm>) @ l
            & ms = <'UM3',B,A,matchingComm>
-           & ((Ex rest. matchingComm + rest = comm) | matchingComm = comm)
+           & ((Ex rest. matchingComm ++ rest = comm) | matchingComm = comm)
            // the session has not been updated
            & not (Ex #v. SidUpdated(ms) @ v)
 
@@ -299,7 +299,7 @@ lemma CK_secure_UM3:
       /* 5. s* does not exist and Corrupt(B) before Expire(s) */
       |  ((not (Ex #l matchingComm.
                 Sid(<'UM3',B,A,matchingComm>) @ l
-                & ((Ex rest. matchingComm + rest = comm) | matchingComm = comm)
+                & ((Ex rest. matchingComm ++ rest = comm) | matchingComm = comm)
                 // the session has not been updated
                 & not (Ex #v. SidUpdated(<'UM3',B,A,matchingComm>) @ v)))
                 

@@ -44,7 +44,7 @@ rule Proto1:
   let XA = pmult(~ex,'P')
   in
   [ Fr( ~ex ) ]
-  --[ Origin( ~ex, XA ), Participants($A + $B + $C) ]->
+  --[ Origin( ~ex, XA ), Participants($A ++ $B ++ $C) ]->
   [ PState1( ~ex, $A, $B, $C )
   , Out( XA )
   , !EphKey( ~ex )
@@ -68,8 +68,8 @@ rule Proto3:
       pkC  = pmult(~ec,'P')
       XA   = pmult(~ex,'P')
       sessKey = kdf(emXBXC ^ ~ex, em(pkB,pkC) ^ ~ea,
-                    $A + $B + $C,
-                    tag(XA) + tag(XB) + tag(XC))
+                    $A ++ $B ++ $C,
+                    tag(XA) ++ tag(XB) ++ tag(XC))
   in
   [ PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), emXBXC )
   , !Ltk( $A, ~ea)
@@ -77,8 +77,8 @@ rule Proto3:
   , !Pk( $C, pkC )
   ]
   --[ Accept( ~ex, $A, $B, $C, XA, tag(XB), tag(XC), sessKey )
-    , Match( ~ex, <tag(XA) + tag(XB) + tag(XC), $A + $B + $C> )
-    , Sid( ~ex, <tag(XA) + tag(XB) + tag(XC), $A + $B + $C> ) ]->
+    , Match( ~ex, <tag(XA) ++ tag(XB) ++ tag(XC), $A ++ $B ++ $C> )
+    , Sid( ~ex, <tag(XA) ++ tag(XB) ++ tag(XC), $A ++ $B ++ $C> ) ]->
       // A session matches if the same multiset of messages has
       //  been received and the same multiset of agents has participated
   [ !SessKey( ~ex, sessKey ) ]
