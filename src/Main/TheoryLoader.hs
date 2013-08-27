@@ -60,8 +60,6 @@ import           Main.Console
 import           Main.Environment
 import           Paths_tamarin_prover                (getDataFileName)
 
-import Debug.Trace
-import qualified Data.ByteString.Char8 as BC
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -236,7 +234,7 @@ addMessageDeductionRuleVariants thy0
                    ++ (concatMap iterIntruderRules iterFuns)
         
     iterFuns = S.toList $ S.filter isIter $ stFunSyms msig
-    isIter (NoEqSym f _ _ _ it) = trace (BC.unpack f ++ ": " ++ show it) $ it
+    isIter (NoEqSym _ _ _ _ it) = it
 
     thy          = addIntrRuleACs rules thy0
     addIntruderVariants files = do

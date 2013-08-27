@@ -24,6 +24,7 @@ import qualified Data.Map                   as M
 import           Data.Maybe
 import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
+import           Data.List                  (foldl1')
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -73,7 +74,8 @@ llit = asum
     [ freshTerm <$> freshName
     , pubTerm <$> pubName
     , natTerm <$> natName 
-    , varTerm <$> msgvar]
+    , varTerm <$> msgvar
+    ]
 
 -- | Parse an lit with logical variables of the given sort.
 sortedLlit :: LSort -> Parser LNTerm
@@ -117,21 +119,25 @@ naryOpApp plit = do
     ts <- parens $ arguments op k sts
     -- Verify arity
     let k' = length ts
-    when (k /= k') $
-        fail $ "operator `" ++ op ++"' has arity " ++ show k ++
-               ", but here it is used with arity " ++ show k'
-    msig <- getState
+    when (k /= k' && k > 1) $ do
+        let err = "operator `" ++ op ++"' has arity " ++ show k ++
+                  ", but here it is used with arity " ++ show k'
+        liftIO $ putStrLn err
+        fail err
+    let args  = if k' > k && k == 1
+                  then [foldl1' (curry fAppPair) ts]
+                  else ts
     let app o = if BC.pack op == emapSymString 
                   then fAppC EMap
                   else fAppNoEq o
+    msig <- getState
     return $ if op `elem` userACSyms' msig
-      then lookupUserAC op (S.toList $ userACSyms msig) ts
-      else app (NoEqSym (BC.pack op) k priv sts iter) ts
+      then lookupUserAC op (S.toList $ userACSyms msig) args
+      else app (NoEqSym (BC.pack op) k priv sts iter) args
   where
     -- Functions on built-in sorts
     arguments _  0 _       = return []
-    arguments _  1 Nothing = return <$> multterm plit
-    arguments _  _ Nothing = commaSep (multterm plit)
+    arguments _  _ Nothing = commaSep (natterm plit)
     -- Functions on user-defined sorts (with type signature)
     arguments op _ (Just xs) =
       commaSepN $ map (sortedTerm op) (zip ([1..] :: [Integer]) $ init xs)
@@ -146,7 +152,7 @@ naryOpApp plit = do
     -- Parse a term with the given sort
     sortedTerm op (idx, sortname) = do
       let sort = sortFromString sortname
-      lnterm <- multterm $ asum [try $ sortedLlit sort, llit]
+      lnterm <- natterm $ asum [try $ sortedLlit sort, llit]
       let order = sortCompare (sortOfLNTerm lnterm) sort
       if order == (Just LT) || order == (Just EQ)
         then return lnterm
@@ -177,7 +183,7 @@ binaryAlgApp plit = do
 term :: Parser LNTerm -> Parser LNTerm
 term plit = asum
     [ pairing       <?> "pairs"
-    , parens (multterm plit)
+    , parens (natterm plit)
     , symbol "0:nat" *> pure fAppNatZero
     , symbol "1:nat" *> pure fAppNatOne
     , symbol "1"     *> pure fAppOne
@@ -205,7 +211,7 @@ multterm plit = do
     dh <- enableDH <$> getState
     if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
-        else natterm plit
+        else msetterm plit
 
 -- | A left-associative sequence of multiset unions.
 msetterm :: Parser LNTerm -> Parser LNTerm
@@ -220,21 +226,23 @@ natterm :: Parser LNTerm -> Parser LNTerm
 natterm plit = do
     nats <- enableNat <$> getState
     if nats -- if nat is not enabled, do not accept 'natterms's
-        then chainl1 subnatterm ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
-        else msetterm plit
+        then try (multterm plit) <|> sumterm
+        else multterm plit
   where
-    subnatterm = asum
-      [ symbol "0:nat" *> pure fAppNatZero
+    sumterm = chainl1 subnatterm ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
+
+    subnatterm = try $ asum
+      [ parens sumterm
+      , symbol "0:nat" *> pure fAppNatZero
       , symbol "1:nat" *> pure fAppNatOne
       , symbol "0"     *> pure fAppNatZero
       , symbol "1"     *> pure fAppNatOne
-      , parens (natterm plit)
       , sortedLlit LSortNat
       ]
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Parser LNTerm -> Parser LNTerm
-tupleterm plit = chainr1 (multterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
+tupleterm plit = chainr1 (natterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
 -- | Parse a fact.
 fact :: Parser LNTerm -> Parser (Fact LNTerm)
@@ -245,7 +253,7 @@ fact plit = try (
          []                -> fail "empty identifier"
          (c:_) | isUpper c -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
-       ts    <- parens (commaSep (multterm plit))
+       ts    <- parens (commaSep (natterm plit))
        mkProtoFact multi i ts
     <?> "fact" )
   where
@@ -308,7 +316,7 @@ letBlock = do
     toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
-    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> multterm llit
+    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> natterm llit
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
@@ -413,7 +421,7 @@ transferProto = do
     braced (convTransferProto name <$> abbrevs <*> many1 transfer)
   where
     abbrevs = (symbol "let" *> many1 abbrev) <|> pure []
-    abbrev = (,) <$> try (identifier <* kw EQUAL) <*> multterm tlit
+    abbrev = (,) <$> try (identifier <* kw EQUAL) <*> natterm tlit
 
 -}
 
@@ -427,7 +435,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (multterm llit <* opEqual) <*> multterm llit <?> "term equality"
+  , EqE         <$> try (natterm llit <* opEqual)  <*> natterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
