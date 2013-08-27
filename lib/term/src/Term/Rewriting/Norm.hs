@@ -58,6 +58,9 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
     check hnd = go t0
       where
         go t = case viewTerm2 t of
+            -- iterated function application
+            FAppNoEq (NoEqSym sym _ _ _ True) [_, ts]       -> not (isNestedIter sym ts)
+            FAppNoEq (NoEqSym sym _ _ _ True) [cnt, _]      -> not (isZero cnt)
             -- irreducible function symbols
             FAppNoEq o ts | (NoEq o) `S.member` irreducible -> all go ts
             FList ts                                        -> all go ts
@@ -66,8 +69,6 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             Lit2 _                                          -> True
             -- subterm rules
             FAppNoEq _ _ | setAny (struleApplicable t) strules -> False
-            -- iterated function application
-            FAppNoEq (NoEqSym sym _ _ _ True) [_, ts] -> not (isIter sym ts)
             -- exponentiation
             FExp (viewTerm2 -> FExp _ _) _                  -> False
             FExp _                       (viewTerm2 -> One) -> False
@@ -113,9 +114,13 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             _          -> False
 
         -- Check for nested iterated function application
-        isIter sym1 ts = case viewTerm2 ts of
+        isNestedIter sym1 ts = case viewTerm2 ts of
             FAppNoEq (NoEqSym sym2 _ _ _ _) _ | sym1 == sym2 -> True
             _                                                -> False
+
+        isZero sym = case viewTerm2 sym of
+            FAppNoEq fs [] | fs == natZeroSym -> True
+            _                                 -> False
 
         msig        = mhMaudeSig hnd
         strules     = stRules msig

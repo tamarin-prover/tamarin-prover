@@ -349,15 +349,22 @@ precomputeCaseDistinctions ctxt axioms =
     absMsgFacts :: [LNTerm]
     absMsgFacts = asum $ sortednub $
       [ return $ varTerm (LVar "t" LSortFresh 1)
+      -- Bilinear pairing
       , if enableBP msig then return $ fAppC EMap $ nMsgVars (2::Int) else []
+      -- Natural numbers
       , if enableNat msig then
           [ fAppNoEq natZeroSym []
           , fAppNoEq natOneSym []
           , fAppAC NatPlus [varTerm (LVar "t" LSortNat 1), varTerm (LVar "t" LSortNat 2)] ]
           else [] 
+      -- User-defined functions (non-iterated)
       , [ fAppNoEq o $ nMsgVars k
-        | o@(NoEqSym _ k priv _ _) <- S.toList . noEqFunSyms  $ msig
-        , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private ]
+        | o@(NoEqSym _ k priv _ iter) <- S.toList . noEqFunSyms $ msig
+        , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private, not iter ]
+      -- Iterated functions
+      , [ fAppNoEq o [ varTerm (LVar "n" LSortNat 0), varTerm (LVar "t" LSortMsg 1) ]
+        | o@(NoEqSym _ _ _ _ iter) <- S.toList . noEqFunSyms $ msig
+        , NoEq o `S.notMember` implicitFunSig, iter ]
       ]
 
     msig = mhMaudeSig . get pcMaudeHandle $ ctxt
