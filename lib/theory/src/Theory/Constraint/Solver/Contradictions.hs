@@ -388,8 +388,15 @@ hasInvalidIter sys =
     isInvalidIter ru = fromMaybe False $ do
       guard $ isIntruderRule ru
       [p1, _] <- return $ L.get rPrems ru
+      [conc]  <- return $ L.get rConcs ru
       (UpK, count) <- kFactView p1
-      return $ isZero count
+      (UpK, out)   <- kFactView conc
+      return (isZero count && isIter out)
+
+    isIter conc = 
+      case viewTerm2 conc of
+        FAppNoEq (NoEqSym _ _ _ _ True) _ -> True
+        _                                 -> False
         
     isZero count =
       case viewTerm2 count of
