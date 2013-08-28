@@ -198,8 +198,11 @@ ppTheory msig = BC.unlines $
         "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."
     theoryOp = theoryOpNoEq Public
 
-    theoryFunSym (NoEqSym s ar priv sorts _) =
+    theoryFunSym (NoEqSym s ar priv sorts False) =
         [ theoryOpNoEq priv (s <> " : " <> maybeCustomSorts ar sorts) ]
+    theoryFunSym (NoEqSym s ar priv sorts True) =
+        [ theoryOpNoEq priv (s <> " : " <> maybeCustomSorts ar sorts)
+        , "  eq " <> funSymPrefix <> s <> "(" <> funSymPrefix <> "tzero, m:Msg) = m ."]
 
     maybeCustomSorts ar sorts = 
       maybe (theorySorts ar) (B.concat . theoryCustomSorts) sorts

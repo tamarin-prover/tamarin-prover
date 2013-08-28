@@ -325,7 +325,7 @@ mkCPlusRule x_var y_var =
 
 iterIntruderRules :: NoEqSym -> [IntrRuleAC]
 iterIntruderRules funsym =
-    [ mkC0IterRule funsym m_var
+    [ mkC0IterRule funsym x_var m_var
     , mkC1IterRule funsym x_var y_var m_var
     , mkDIterRule funsym m_var
     ]
@@ -334,12 +334,12 @@ iterIntruderRules funsym =
     y_var = varTerm (LVar "y" LSortNat 0)
     m_var = varTerm (LVar "m" LSortMsg 0)
 
-mkC0IterRule :: NoEqSym -> LNTerm -> IntrRuleAC
-mkC0IterRule sym@(NoEqSym fun _ _ _ _) m_var =
+mkC0IterRule :: NoEqSym -> LNTerm -> LNTerm -> IntrRuleAC
+mkC0IterRule sym@(NoEqSym fun _ _ _ _) x_var m_var =
     Rule (ConstrRule $ B.concat [fun, BC.pack "0"])
-         [kuFact m_var]
-         [kuFact $ fAppNoEq sym [fAppNoEq natOneSym [], m_var]]
-         [kuFact $ fAppNoEq sym [fAppNoEq natOneSym [], m_var]]
+         [kuFact x_var, kuFact m_var]
+         [kuFact $ fAppNoEq sym [x_var, m_var]]
+         [kuFact $ fAppNoEq sym [x_var, m_var]]
 
 mkC1IterRule :: NoEqSym -> LNTerm -> LNTerm -> LNTerm -> IntrRuleAC
 mkC1IterRule sym@(NoEqSym fun _ _ _ _) x_var y_var m_var =

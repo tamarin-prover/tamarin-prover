@@ -53,7 +53,6 @@ import           Theory.Text.Pretty
 import           Term.Rewriting.Norm            (maybeNotNfSubterms, nf')
 
 
-
 ------------------------------------------------------------------------------
 -- Contradictions
 ------------------------------------------------------------------------------
@@ -90,6 +89,8 @@ contradictions ctxt sys = F.asum
     [ guard (D.cyclic $ rawLessRel sys)             *> pure Cyclic
     -- CR-rule *N1*
     , guard (hasNonNormalTerms sig sys)             *> pure NonNormalTerms
+    -- CR-rules for iterated functions
+    , guard (hasInvalidIter sys)                    *> pure NonNormalTerms
     -- FIXME: add CR-rule
     , guard (hasForbiddenKD sys)                    *> pure ForbiddenKD
     -- FIXME: add CR-rule
@@ -376,6 +377,25 @@ isForbiddenDEMapOrder sys (i, ruDEMap) = fromMaybe False $ do
     isStandRule ru = ruleInfo (isStandName . L.get praciName) (const False) $ L.get rInfo ru
     isStandName (StandRule _) = True
     isStandName _             = False
+
+-- Iterated functions
+---------------------
+
+hasInvalidIter :: System -> Bool
+hasInvalidIter sys =
+    any isInvalidIter $ M.elems $ L.get sNodes sys
+  where
+    isInvalidIter ru = fromMaybe False $ do
+      guard $ isIntruderRule ru
+      [p1, _] <- return $ L.get rPrems ru
+      (UpK, count) <- kFactView p1
+      return $ isZero count
+        
+    isZero count =
+      case viewTerm2 count of
+        FAppNoEq fs [] | fs == natZeroSym -> True
+        FNatPlus [t1, t2]                 -> isZero t1 && isZero t2
+        _                                 -> False
 
 
 -- Pretty printing
