@@ -125,7 +125,7 @@ naryOpApp plit = do
         liftIO $ putStrLn err
         fail err
     let args  = if k' > k && k == 1
-                  then [foldl1' (curry fAppPair) ts]
+                  then [foldr1 (curry fAppPair) ts]
                   else ts
     let app o = if BC.pack op == emapSymString 
                   then fAppC EMap
