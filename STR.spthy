@@ -1,0 +1,305 @@
+theory STR0
+begin
+
+section{* *}
+
+/*
+ * Protocol: STR with JOIN only	
+ * Source:      Communication-Efficient Group Key Agreement
+ *              
+ * Modeler: 	
+ * Date: 	
+ *
+ * Model:       
+ * Status: 	
+ */
+
+builtins: diffie-hellman, multiset
+
+functions: participant/1, group/1, bk/1, br/1, upTo/1
+
+rule ReceiveAuthOut:
+  [ !AuthOut(x1,x2,x3,x4,x5) ]
+  -->
+  [ Out(<x1,x2,x3,x4,x5>) ]
+
+
+//setup step for initiator, sends blinded random, step0-equiv
+rule GroupInitiatorStarts:
+  let blra = 'g'^~x
+      NAME = participant('i')
+  in
+  [ Fr(~x) ,
+    Fr(~gid)]
+  --[ Actor(~x, NAME),
+      Key(~x, ~gid, ~x, group(NAME))
+    ]->
+  [ HaveKey(NAME , ~x     , ~gid     , group(NAME)              , ~x        , upTo('i')), 
+    //      name , random , group id , current group members    , group key , key computed up to here
+    !AuthOut(NAME, ~gid, br('i'), blra, 'none'),
+    CreatedElementsUpTo(~gid, 'i'),
+    GenSize(~gid, 'i')
+  ]
+
+// pick one of the following LIMITED number of sizes:
+rule SizePick1:
+  [ GenSize(~gid, 'i') ]
+  --[FixSize(~gid)
+    ]->
+  [ !Size(~gid, 'i') ]
+
+rule SizePick2:
+  [ GenSize(~gid, 'i') ]
+  --[FixSize(~gid)
+    ]->
+  [ !Size(~gid, 'i' + 'i') ]
+
+rule SizePick3:
+  [ GenSize(~gid, 'i') ]
+  --[FixSize(~gid)
+    ]->
+  [ !Size(~gid, 'i' + 'i' + 'i') ]
+
+rule SizePick4:
+  [ GenSize(~gid, 'i') ]
+  --[FixSize(~gid)
+    ]->
+  [ !Size(~gid, 'i' + 'i' + 'i' + 'i') ]
+
+/* for picking any size, use two rules below
+//additional setup
+rule IncreaseSize:
+  [ GenSize(~gid, X) ]
+  --[IncreaseSize(~init, ~gid)
+    ]->
+  [ GenSize(~gid, X + 'i') ]
+
+//additional setup
+// This is the original size of the group. Members can be added by join, 
+// but this size does not change.
+rule FixSize:
+  [ GenSize(~gid, X) ]
+  --[FixSize(~gid)
+    ]->
+  [ !Size(~gid, X) ] 
+*/
+
+//step0
+rule CreateParticipant:
+  let NUMBER = X + 'i'
+      NAME = participant(NUMBER)
+      blra = 'g'^~r
+  in
+  [ !Size(~gid, X  + Y), 
+    CreatedElementsUpTo(~gid, X),
+    Fr(~r)
+  ]
+  --[ Actor(~r, NAME),
+      Key(~r, ~gid, ~r, group(NAME))
+    ]->
+  [ WaitBKey(NUMBER , ~r, ~gid), 
+    !AuthOut(NAME, ~gid, br(NUMBER), blra, 'none'),
+    CreatedElementsUpTo(~gid, NUMBER)
+  ]
+
+
+//part of setup
+rule AllCreated:
+  [ CreatedElementsUpTo(~gid, X),
+    !Size(~gid, X) ]
+  --[ CreationComplete(~gid, X) ]->
+  [ Expandable(~gid, X) ]
+
+
+//step1 and step2 //// does NOT send bk_n anymore!
+rule InitiatorStepsFirst:
+  let NAME = participant('i')
+      NUMBER = 'i' + 'i'
+      key = ~u
+      newkey = yiblind^key
+      blindedkey = 'g'^key
+      oldG = group(GNAMES)
+      newG = group(GNAMES + participant(NUMBER))
+  in
+  [ HaveKey(NAME, ~r, ~gid, oldG, key, upTo('i')), 
+    !Size(~gid, 'i' + X),
+    !AuthOut(participant(NUMBER), ~gid, br(NUMBER), yiblind, 'none')
+  ]
+  --[ Key(~r, ~gid, newkey, newG)
+  ]->
+  [ HaveKey(NAME, ~r, ~gid, newG, newkey, upTo(NUMBER)),
+    !AuthOut(participant('i'), ~gid, bk('i'), blindedkey, oldG)
+  ]
+
+//step1 and step2 //// does NOT send bk_n anymore!
+rule InitiatorStepsNotFirst:
+  let NAME = participant('i')
+      NUMBER = Y + 'i' +'i'
+      key = 'g'^u
+      newkey = yiblind^key
+      blindedkey = 'g'^key
+      oldG = group(GNAMES)
+      newG = group(GNAMES + participant(NUMBER))
+  in
+  [ HaveKey(NAME, ~r, ~gid, oldG, key, upTo(Y + 'i')), 
+    !Size(~gid, Y + X),
+    !AuthOut(participant(NUMBER), ~gid, br(NUMBER), yiblind, 'none')
+  ]
+  --[ Key(~r, ~gid, newkey, newG)
+  ]->
+  [ HaveKey(NAME, ~r, ~gid, newG, newkey, upTo(NUMBER)),
+    !AuthOut(participant('i'), ~gid, bk(Y + 'i'), blindedkey, oldG)
+  ]
+// the formula below is enforced by the split of InitiatorSteps
+// forall i x. Key(..,x)@i ==> Ex y:fr. x = y || Ex u. x = 'g'^u
+
+//step3
+rule ParticipantStart:
+  let NUMBER = X + 'i'
+      newG = group(NAMES + participant(NUMBER))
+      newkey = blindkey^~r
+  in
+  [ WaitBKey(NUMBER , ~r, ~gid),
+    !AuthOut(participant('i'), ~gid, bk(X), blindkey, group(NAMES))
+  ]
+  --[ Key(~r, ~gid, newkey, newG)
+  ]->
+  [ HaveKey(participant(NUMBER), ~r, ~gid, newG, newkey, upTo(NUMBER))
+  ]
+
+//step4
+rule ParticipantStep:
+  let newG = group(NAMES + participant(X+'i'))
+      newkey = xiblind^gkey
+  in
+  [ HaveKey(NM, ~r, ~gid, group(NAMES), gkey, upTo(X)),
+    !AuthOut(participant(X + 'i'), ~gid, br(X + 'i'), xiblind, 'none')
+  ]
+  --[ Key(~r, ~gid, newkey, newG)
+  ]->
+  [ HaveKey(NM, ~r, ~gid, newG, newkey, upTo(X + 'i')) 
+  ]
+
+/*
+lemma multisetmath:
+  "All #i init gid X Y.
+    ((CreationComplete(gid, X + Y) @ i)  
+    ==> (not (X = X + Y))) 
+"
+
+lemma multisetmath:
+  "All #i init gid X Y Z.
+    ((CreationComplete(gid, X) @ i &
+      (X = Y + Z))  
+    ==> (not (X = Y) & not (X = Z))) 
+"
+
+lemma multisetmath:
+  "All X Y.
+    not (X = X + Y)
+"
+*/
+
+lemma simple_existence:
+  exists-trace
+  "Ex #i2 gid.
+         CreationComplete(gid, 'i' + 'i' + 'i' + 'i' ) @ i2
+"
+
+// need to use "--stop-on-trace=BFS" option for some automation
+lemma key_reachable_2:
+  exists-trace
+  "Ex #i2 x 
+      #j2 y
+      #k2 p1 p2 gid
+      key.
+         Key(x, gid, key, group(participant(p1)+participant(p2))) @ i2
+       & Key(y, gid, key, group(participant(p1)+participant(p2))) @ j2
+       & not (p1 = p2)
+       & not (x = y)
+       & CreationComplete(gid, 'i' + 'i') @ k2
+       & (k2 < i2)
+       & (i2 < j2)
+"
+
+
+lemma key_reachable_3:
+  exists-trace
+  "Ex #i2 x 
+      #j2 y
+      #k2 z
+      #l2 gid
+      key.
+         Key(x, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i'))) @ i2
+       & Key(y, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i'))) @ j2
+       & Key(z, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i'))) @ k2
+       & not (x = y)
+       & not (x = z)
+       & not (y = z)
+       & CreationComplete(gid, 'i' + 'i' + 'i') @ l2
+       & (l2 < i2)
+       & (i2 < j2)
+       & (j2 < k2)
+//       & (All #k count id g. CreationComplete(g, count) @ k ==> count = 'i' + 'i' + 'i') // with CreationComplete and init-key solved by hand, the tool needs 21 minutes (used to need 22 minutes without)
+//       & not (Ex #k id g a. CreationComplete(g ,'i'+'i'+'i' + a) @ k) // with CreationComplete and init-key solved by hand, the tool needs 24 minutes (used to need 22 minutes without)
+"
+
+//slightly over 1 minute processor time if done by hand, solving CreationComplete, x, y, z, a one by one in that order
+lemma key_reachable_4:
+  exists-trace
+  "Ex #i2 x 
+      #j2 y
+      #k2 z
+      #l2 gid
+      #m2 a
+      key.
+         Key(x, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i')+participant('i'+'i'+'i'+'i'))) @ i2
+       & Key(y, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i')+participant('i'+'i'+'i'+'i'))) @ j2
+       & Key(z, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i')+participant('i'+'i'+'i'+'i'))) @ k2
+       & Key(a, gid, key, group(participant('i')+participant('i'+'i')+participant('i'+'i'+'i')+participant('i'+'i'+'i'+'i'))) @ m2
+       & not (x = y)
+       & not (x = z)
+       & not (y = z)
+       & not (x = a)
+       & not (y = a)
+       & not (z = a)
+       & CreationComplete(gid, 'i' + 'i' + 'i' + 'i') @ l2
+       & (l2 < i2)
+       & (i2 < j2)
+       & (j2 < k2)
+       & (k2 < m2)
+//       & (All #k count id g. CreationComplete(g, count) @ k ==> count = 'i' + 'i' + 'i' + 'i') // not tested for 4
+//       & not (Ex #k id g a. CreationComplete(g ,'i'+'i'+'i' + a) @ k) // not tested for 4
+"
+
+/*
+// SANITY CHECK ADDITION
+rule BreakKeyAgreement:
+  [ Fr(~k),
+    HaveKey(N, ~r, ~gid, G, gkey, upTo(X))
+  ]
+  --[ Key(~r, ~gid, ~k, G),
+      Key(~r, ~gid, gkey, G) // not even needed, this exact action happens when the 'HaveKey' gets memorized
+  ]->
+  [ HaveKey(N, ~r, ~gid, G, gkey, upTo(X)) 
+  ]
+ */
+
+
+// 16 minutes auto-prove for size 3 (fixed!) - note that JavaScript dies in Firefox with this - just use commandline 
+// >60 minutes auto-prove - not finished - for size 4 (fixed!)
+lemma key_agreement:
+  all-traces
+  "All #i #j X Y gid G key1 key2.
+    ( ( Key(X, gid, key1, G) @ i
+      & Key(Y, gid, key2, G) @ j)
+    ==> (key1 = key2) )
+"
+
+// 2 minutes auto-prove for 3 participants (fixed!), 9 minutes for size 4 (fixed!), 14 minutes for size 1+2+3+4
+lemma key_secret: // [use_induction]:
+   "not (Ex #i #j x key gid group.
+      Key(x, gid, key, group) @ #i & 
+      KU(key) @ #j)"
+
+end

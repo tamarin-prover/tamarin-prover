@@ -1,0 +1,95 @@
+theory STR
+begin
+
+section{* *}
+
+/*
+ * Protocol: The STR protocol.
+ * Source:   
+ *              
+ * Modeler: Ralf Sasse, Benedikt Schmidt
+ * Date:    October 2012
+ *
+ * Model:   Secrecy for authentic channels
+ * Status:  works
+ */
+
+builtins: diffie-hellman, multiset
+
+functions: t/1, H/1
+
+
+/* Group initiator actions */
+rule StartGroup:
+  let key = H(~x)
+  in
+  [ Fr( ~x ) ]
+  --[ Actor( ~x,$A ), Key( ~x, $A, key ) ]->
+  [ HaveKey( ~x, $A, key ) ] // we also hash the initial exponent
+                             // to obtain a more uniform protocol
+                             // description
+
+rule InviteToGroup:
+  let ourKey = H(keyString)
+      hk = 'g'^ourKey
+  in
+  [ HaveKey( ~x, myGroup, ourKey )
+  ]
+  --[ ]->
+  [ !PChan('invite', myGroup, $other, hk )
+  , Out( hk )
+  , WaitReply( ~x, myGroup, $other, ourKey )
+  ]
+
+rule AcceptToGroup:
+  let ourKey = H( keyString )
+      key = H( Y^ourKey )
+  in
+  [ WaitReply( ~x, myGroup, $other, ourKey )
+  , !PChan('accept', $other, myGroup, Y )
+  ]
+  --[   Key( ~x, myGroup+$other, key ) ]->
+  [ HaveKey( ~x, myGroup+$other, key )
+  ]
+
+/* New group member action */
+rule NewJoinGroup:
+  let myKey = H(~x)
+      key = H(Y^myKey)
+      hk = 'g'^myKey
+  in
+  [ Fr(~x)
+  , !PChan('invite', otherGroup, $me, Y)
+  ]
+  --[ Key( ~x, $me+otherGroup, key )
+    , Key( ~x, $me, myKey ) ]->
+  [ HaveKey( ~x, $me+otherGroup, key )
+  , !PChan('accept', $me, otherGroup, hk)
+  , Out(hk)
+  ]
+
+
+lemma key_always_secret [use_induction]:
+   "not (Ex #i #j x key G.
+      Key(x, G, key) @ #i & 
+      KU(key) @ #j)"
+
+/*
+lemma key_reachable:
+  exists-trace
+  "Ex #i2 x $A $B $C
+      #j2 y
+      #k2 z
+      key.
+         Key(x, $A+$B+$C, key) @ i2
+       & Key(y, $A+$B+$C, key) @ j2
+       & Key(z, $A+$B+$C, key) @ k2
+       & not ($A = $B)
+       & not ($A = $C)
+       & not ($B = $C)
+       & not (x = y)
+       & not (x = z)
+       & not (y = z)"
+*/
+
+end

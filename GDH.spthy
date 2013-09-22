@@ -1,0 +1,248 @@
+theory GDHTest
+begin
+
+builtins: diffie-hellman, multiset
+
+functions: nil/0
+
+rule AuthOut:
+  [ !AuthOut(x) ]
+  -->
+  [ Out(x) ]
+
+/* Determine group participants */
+rule StartGroupInit:
+  [ Fr(~gid) ] -->
+  [ StartGroup( $I             // the initiator
+              , 1              // number of responders
+              , <'zero', $I> + <1,$R> + nil   // the list of all participants (*)
+              , ~gid)          // the group id, not secret
+  //, Out(~gid)
+  ]
+
+// (*) we encode lists [x1,..,xk] as multisets <i,x_1> + <i+1,x_2> + .. + <i+k,x_k> + nil
+// we also use pairs ([x_1, .., x_j], [x_{j+1},..,x_k])  to traverse a list
+
+rule StartGroupExtend:
+  let nextnum = num + 1
+  in
+  [ StartGroup( $I, num,     resps                , ~gid) ]
+  -->
+  [ StartGroup( $I, nextnum, resps + <nextnum, $R>, ~gid) ]
+
+
+
+/* Start one Initiator and Responders */
+
+/* The first member is the Initiator, the last member is the Distributor of the keying material,
+   and all the others are contributors.
+*/
+
+rule StartGroup:
+  let participants = <'zero', $I> + resps
+  in 
+  [ StartGroup( $I, num, participants, ~gid) ]
+  -->
+  [ Initiator($I, participants , ~gid)
+  , StartGroupContributors( 1      // number of responders that have been started
+                          , <'zero', $I> + nil  // list of started participants, which is initiator only here
+                          , resps  // list of responders that have not been started yet
+                          , ~gid) ]
+
+rule StartGroupContributors:
+  let newstarted = started + <j,$R>
+  in
+  [ StartGroupContributors(j,     started,    <j,$R> + notStarted, ~gid) ]
+  --[ InEq(notStarted, nil) ]->
+  [ StartGroupContributors(j + 1, newstarted, notStarted,          ~gid)
+  , Contributor( $R
+               , j          // the index in the list
+               , started    // below
+               , notStarted // above   
+               , ~gid) ]
+
+rule StartGroupDistributor:
+//  let newstarted = started + <j,$R>
+//  in
+  [ StartGroupContributors(j,     started,    <j,$R> + nil, ~gid) ]
+  --[ ]->
+  [ //// StartGroupContributors(j + 1, newstarted, nil,          ~gid) ,
+    Distributor( $R
+               , j          // distributor's index in the list
+               , started    // others
+               , ~gid) ]
+
+
+//Initiator -> WaitKeyMaterial [ send g and g^x]
+rule Initiator:
+   let participants = <1, $A> + resps
+   in 
+   [ Initiator($I, participants, ~gid),
+     Fr(~n) ]
+   --[ Nonce(~gid, 'zero', ~n) ,
+       KeyExp(~gid, 1, 'zero', 'g'),
+       KeyExpLast(~gid, 1, 'g'^~n) ]->
+   [ WaitKeyMaterial($I, ~n, 'zero', participants, ~gid),
+     !AuthOut(<1, <'zero', 'g'>>),
+     !AuthOut(<1, <1, 'g'^~n>>  )     //MSG (send g and g^r to $A)
+   ]
+
+
+
+/*
+Contributor --> Contributor [ not last, receive Y and send contribution Y^x ]
+             \
+              \-> WaitKeyMaterial [ last. receive Y, forward Y, and send Y^x ] 
+*/
+rule Contributor:
+   [ Fr(~n),
+     !AuthOut(<j, <'zero', X>>),
+     Contributor( $R
+                , j          // the index in the list
+                , started    // below
+                , notStarted // above   
+                , ~gid) ]
+   --[ Nonce(~gid, j, ~n) , 
+       KeyExp(~gid, j+1, 'zero', X^~n)]->
+   [ WaitKeyMaterial($R, ~n, j, started + <j, $R> + notStarted, ~gid),
+     ComputeContribution($R, ~n, j, ~gid, started, notStarted, 1),
+     !AuthOut(<j+1, <'zero', X^~n>>) ] 
+
+rule ComputeContribution:
+   let below = <i, $R2> + restBelow
+       Z = 'g'^x
+   in
+   [ !AuthOut(<j, <i, Z>>),
+     ComputeContribution($R, ~n, j, ~gid, below, above, i) ]
+   --[ KeyExp(~gid, j+1, i, Z^~n)]->
+   [ ComputeContribution($R, ~n, j, ~gid, below, above, i+1),
+     !AuthOut(<j+1, <i,Z^~n>>) ]
+
+rule ComputeContributionLast:
+   let Z = 'g'^x
+   in
+   [ !AuthOut(<j, <j, Z>>), 
+     ComputeContribution($R, ~n, j, ~gid, below, above, j) ]
+   --[ KeyExp(~gid, j+1, j, Z) , KeyExpLast(~gid, j+1, Z^~n)]->
+   [ !AuthOut(<j+1, <j, Z>>),
+     !AuthOut(<j+1, <j+1, Z^~n>>) ]
+ 
+
+
+/*
+Distributor --> Distributor [ not last, receive Y, send Y^x ]
+             \
+              \-> Accept [last. receive Y, accept key Y^x
+*/
+rule Distributor:
+   [ Fr(~n),
+     Distributor( $R, j, started, ~gid), 
+     !AuthOut(<j, <'zero', Z>>) ]
+   --[ Nonce(~gid, j, ~n) ,
+       KeyExp(~gid, j+1, 'zero', Z^~n) ]->
+   [ DistCompute( $R, ~n, j, started, ~gid, 1),
+     !AuthOut(<'distribute', <'zero', Z^~n>>) ] 
+
+rule DistCompute:
+   let below = <i,$R2> + restBelow
+       Z = 'g'^x
+   in
+   [ !AuthOut(<j, <i, Z>>),
+     DistCompute( $R, ~n, j, below, ~gid, i) ]
+   --[ KeyExp(~gid, j+1, i, Z^~n) ]->
+   [ DistCompute( $R, ~n, j, below, ~gid, i+1),
+     !AuthOut(<'distribute', <i, Z^~n>>) ]
+
+rule DistComputeLast:
+   let Z = 'g'^x
+   in
+   [ !AuthOut(<j, <j, Z>>),
+     DistCompute( $R, ~n, j, below, ~gid, j) ] // do NOT exponentiate the last element and send it out; accept it as key
+   --[ Accept($R, below + <j, $R>, ~gid, Z^~n), 
+       KeyExpLast(~gid, j+1, Z^~n) ]->
+   [ ] // no need to distribute this
+
+
+/*
+WaitKeyMaterial --> Accept [receive Y, accept key Y^x]
+*/
+rule ReceiveKeyMaterial:
+   let Z = 'g'^x
+   in
+   [ !AuthOut(<'distribute', <j, Z>>),
+     WaitKeyMaterial($R, ~n, j, all, ~gid)
+   ]
+   --[ Accept($R, all, ~gid, Z^~n) ]->
+   [ ]
+
+
+
+axiom InEq_not_eq: "not (Ex x #i. Ineq(x,x)@i)"
+
+
+/*
+lemma No_inverses_nonces_known[use_induction,reuse]:
+  all-traces
+  "not (  (Ex #i1 x gid. Nonce(gid, x ) @ i1
+             & (  (Ex #i2 y.   KU( 'g'^(inv(x)*y)  ) @ i2)
+                | (Ex #i2.     KU( 'g'^(inv(x))    ) @ i2)
+                | (Ex #i2 y.   KU( 'g'^(inv(x*y))  ) @ i2)
+                | (Ex #i2 y z. KU( 'g'^(inv(x*y)*z)) @ i2))))"
+
+
+/*
+//Kurzvorschlag:
+ All x i. KeyExp(x) @i
+==> All y z. x = y*z ==> Ex ~a w. ~a * w = y | y = ~a
+*/
+
+//Ausformulierung
+lemma key_format[use_induction,reuse]:
+  all-traces
+  "All Z #i l gid. (KeyExp(gid, l, Z) @i
+          ==> ( Z = 'g' 
+              | (Ex x. Z = 'g'^x 
+                 &   (  Ex #j. Nonce(gid, x) @ j 
+                     | (Ex y z. x = y*z 
+                         ==> Ex n w #j. ((y = n * w | y = n)
+                                        & Nonce(gid, n) @ j))))))"
+
+
+/*
+// Vorschlag
+lemma D[reuse]:
+  all-traces
+  "All #i1 #i2 x y. ( ExpLast( x ) @ i1
+                    & ExpLast( y ) @ i2 )
+      ==> (x = y | (Ex ~a ~b z. x = ~a * z & y = ~b * z))"
+*/
+//Ausformulierung
+lemma D[reuse]:
+  all-traces
+  "All #i1 #i2 x y gid l. 
+          ( KeyExp(gid, l, 'g'^x ) @ i1
+          & KeyExp(gid, l, 'g'^y ) @ i2 )
+             ==> (x = y | (Ex a b z #i3 #i4. x = a * z & y = b * z & Nonce(gid, a) @  i3& Nonce(gid, b) @ i4))"
+
+
+
+/* 
+// Vorschlag:
+in row k,for all j < k,  Y_j^xj = Y_k
+*/
+lemma subKey:
+  all-traces
+  "All #i1 gid l x. 
+      (KeyExpLast(gid, l, 'g'^x)
+        ==> All #i2 y. (KeyExp(gid, l, 'g'^y) @ i2
+                        ==> Ex #i3 n. (Nonce(gid, n) @ i3 & i3 < i1 & x = y * n))
+       )"
+*/
+
+
+lemma test:
+  exists-trace
+  "Ex #i1 gid row col x. (KeyExp(gid, row, col, 'g'^x) @ i1)"
+
+
+end

@@ -1,0 +1,1887 @@
+theory STR_JOIN begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman, multiset
+functions: blindedKeyFor/1, blindedRandomOf/1, fst/1, pair/2,
+           snd/1, te/1, te_inv/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    te_inv(te(x)) = x
+
+section{* *}
+
+rule (modulo E) AuthOut:
+   [ !AuthOut( A, x ) ] --> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) StartGroup_1:
+   [ Fr( ~gid ) ]
+  -->
+   [ StartGroup( $I, one(), ('nil'+<one(), $R>), ~gid ), Out( ~gid ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) StartGroup_2:
+   [ StartGroup( $I, num, resps, ~gid ) ]
+  -->
+   [ StartGroup( $I, (num+one()), (resps+<(num+one()), $R>), ~gid ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) StartGroup_0:
+   [ StartGroup( $I, num, resps, ~gid ) ]
+  -->
+   [
+   Initiator( $I, resps, ~gid ),
+   StartGroupResponders( one(), $I, 'nil', resps, ~gid )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) StartGroup_3:
+   [
+   StartGroupResponders( j, $I, started, (notStarted+<j, $R>), ~gid )
+   ]
+  -->
+   [
+   StartGroupResponders( (j+one()), $I, (started+<j, $R>), notStarted,
+                         ~gid
+   ),
+   Responder( $R, $I, j, started, notStarted, ~gid )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Responder_0:
+   [ Responder( $R1, $I, j, below, above, ~gid ), Fr( ~r ) ]
+  -->
+   [
+   !AuthOut( $R1, <blindedRandomOf(<j, ~gid>), 'g'^~r> ),
+   ResponderBRSent( $R1, $I, j, (below+<j, $R1>), above, ~gid, ~r )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Responder_1:
+   [
+   ResponderBRSent( $R1, $I, j, below, above, ~gid, ~r ),
+   !AuthOut( $I, <blindedKeyFor(<j, ~gid>), bk> )
+   ]
+  -->
+   [ ResponderLoop( $R1, $I, j, (j+one()), below, above, ~gid, bk^~r )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) Responder_1:
+     [
+     ResponderBRSent( $R1, $I, j, below, above, ~gid, ~r ),
+     !AuthOut( $I, <blindedKeyFor(<j, ~gid>), bk> )
+     ]
+    -->
+     [ ResponderLoop( $R1, $I, j, (j+one()), below, above, ~gid, z ) ]
+    variants (modulo AC)
+    1. ~r    = ~r.10
+       bk    = bk.10
+       z     = bk.10^~r.10
+    
+    2. ~r    = ~x.10
+       bk    = x.11^inv(~x.10)
+       z     = x.11
+    
+    3. ~r    = ~x.10
+       bk    = x.11^inv((~x.10*x.12))
+       z     = x.11^inv(x.12)
+    
+    4. ~r    = ~x.10
+       bk    = x.11^(x.12*inv(~x.10))
+       z     = x.11^x.12
+    
+    5. ~r    = ~x.10
+       bk    = x.11^(x.13*inv((~x.10*x.12)))
+       z     = x.11^(x.13*inv(x.12))
+    
+    6. ~r    = ~r.12
+       bk    = x.10^x.11
+       z     = x.10^(x.11*~r.12)
+    // loop breaker: [1]
+  */
+
+rule (modulo E) Responder_2:
+   [
+   ResponderLoop( $R1, $I, j, k, below, (above+<k, $R2>), ~gid, key ),
+   !AuthOut( $R2, <blindedRandomOf(<k, ~gid>), br> )
+   ]
+  --[ IKey( $I, (below+<'zero', $I>), ~gid, key ) ]->
+   [
+   ResponderLoop( $R1, $I, j, (k+one()), (below+<k, $R2>), above,
+                  ~gid, br^te(key)
+   )
+   ]
+
+  // loop breakers: [0,1]
+  /*
+  rule (modulo AC) Responder_2:
+     [
+     ResponderLoop( $R1, $I, j, k, below, (above+<k, $R2>), ~gid, key ),
+     !AuthOut( $R2, <blindedRandomOf(<k, ~gid>), br> )
+     ]
+    --[ IKey( $I, (below+<'zero', $I>), ~gid, key ) ]->
+     [
+     ResponderLoop( $R1, $I, j, (k+one()), (below+<k, $R2>), above,
+                    ~gid, z
+     )
+     ]
+    variants (modulo AC)
+    1. br    = br.13
+       key   = key.16
+       z     = br.13^te(key.16)
+    
+    2. br    = z.15^inv(te(key.14))
+       key   = key.14
+       z     = z.15
+    
+    3. br    = x.17^x.18
+       key   = key.15
+       z     = x.17^(x.18*te(key.15))
+    
+    4. br    = x.17^inv((x.19*te(key.15)))
+       key   = key.15
+       z     = x.17^inv(x.19)
+    
+    5. br    = x.17^(x.19*inv(te(key.15)))
+       key   = key.15
+       z     = x.17^x.19
+    
+    6. br    = x.18^(x.21*inv((x.20*te(key.16))))
+       key   = key.16
+       z     = x.18^(x.21*inv(x.20))
+    // loop breakers: [0,1]
+  */
+
+rule (modulo E) Responder_3:
+   [ ResponderLoop( $R1, $I, j, k_, below, 'nil', ~gid, key ) ]
+  --[
+  Key( $R1, (below+<'zero', $I>), ~gid, key ),
+  IKey( $R1, (below+<'zero', $I>), ~gid, key )
+  ]->
+   [ Participant( $R1, j, k_, (below+<'zero', $I>), ~gid, key ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Initiator_0:
+   [
+   Initiator( $I, (resps+<one(), $R1>), ~gid ), Fr( ~r ),
+   !AuthOut( $R1, <blindedRandomOf(<one(), ~gid>), br> )
+   ]
+  -->
+   [
+   InitiatorLoop( $I, (one()+one()), ('nil'+<one(), $R1>), resps,
+                  ~gid, br^~r
+   ),
+   !AuthOut( $I, <blindedKeyFor(<one(), ~gid>), 'g'^~r> )
+   ]
+
+  /*
+  rule (modulo AC) Initiator_0:
+     [
+     Initiator( $I, (resps+<one(), $R1>), ~gid ), Fr( ~r ),
+     !AuthOut( $R1, <blindedRandomOf(<one(), ~gid>), br> )
+     ]
+    -->
+     [
+     InitiatorLoop( $I, (one()+one()), ('nil'+<one(), $R1>), resps,
+                    ~gid, z
+     ),
+     !AuthOut( $I, <blindedKeyFor(<one(), ~gid>), 'g'^~r> )
+     ]
+    variants (modulo AC)
+    1. ~r    = ~r.11
+       br    = br.12
+       z     = br.12^~r.11
+    
+    2. ~r    = ~r.14
+       br    = z.18^inv(~r.14)
+       z     = z.18
+    
+    3. ~r    = ~r.45
+       br    = x.84^x.85
+       z     = x.84^(~r.45*x.85)
+    
+    4. ~r    = ~r.46
+       br    = x.86^inv((~r.46*x.87))
+       z     = x.86^inv(x.87)
+    
+    5. ~r    = ~r.46
+       br    = x.86^(x.87*inv(~r.46))
+       z     = x.86^x.87
+    
+    6. ~r    = ~r.47
+       br    = x.87^(x.89*inv((~r.47*x.88)))
+       z     = x.87^(x.89*inv(x.88))
+  */
+
+rule (modulo E) Initiator_1:
+   [
+   InitiatorLoop( $I, j, handled, (notHandled+<j, $R1>), ~gid, key ),
+   !AuthOut( $R1, <blindedRandomOf(<j, ~gid>), br> )
+   ]
+  --[ IKey( $I, (handled+<'zero', $I>), ~gid, key ) ]->
+   [
+   !AuthOut( $I, <blindedKeyFor(<j, ~gid>), 'g'^te(key)> ),
+   InitiatorLoop( $I, (j+one()), (handled+<j, $R1>), notHandled, ~gid,
+                  br^te(key)
+   )
+   ]
+
+  // loop breaker: [0]
+  /*
+  rule (modulo AC) Initiator_1:
+     [
+     InitiatorLoop( $I, j, handled, (notHandled+<j, $R1>), ~gid, key ),
+     !AuthOut( $R1, <blindedRandomOf(<j, ~gid>), br> )
+     ]
+    --[ IKey( $I, (handled+<'zero', $I>), ~gid, key ) ]->
+     [
+     !AuthOut( $I, <blindedKeyFor(<j, ~gid>), 'g'^te(key)> ),
+     InitiatorLoop( $I, (j+one()), (handled+<j, $R1>), notHandled, ~gid,
+                    z
+     )
+     ]
+    variants (modulo AC)
+    1. br    = br.19
+       key   = key.22
+       z     = br.19^te(key.22)
+    
+    2. br    = z.22^inv(te(key.19))
+       key   = key.19
+       z     = z.22
+    
+    3. br    = x.85^x.86
+       key   = key.47
+       z     = x.85^(x.86*te(key.47))
+    
+    4. br    = x.86^inv((x.88*te(key.48)))
+       key   = key.48
+       z     = x.86^inv(x.88)
+    
+    5. br    = x.86^(x.88*inv(te(key.48)))
+       key   = key.48
+       z     = x.86^x.88
+    
+    6. br    = x.87^(x.90*inv((x.89*te(key.49))))
+       key   = key.49
+       z     = x.87^(x.90*inv(x.89))
+    // loop breaker: [0]
+  */
+
+rule (modulo E) Initiator_2:
+   [ InitiatorLoop( $I, j_, handled, 'nil', ~gid, key ) ]
+  --[
+  Key( $I, (handled+<'zero', $I>), ~gid, key ),
+  IKey( $I, (handled+<'zero', $I>), ~gid, key )
+  ]->
+   [ Participant( $I, 'zero', j_, (handled+<'zero', $I>), ~gid, key )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) IntruderCorrupts:
+   [ In( x ) ] --[ Corrupt( $A ) ]-> [ !AuthOut( $A, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Join_0:
+   [ StartGroupResponders( j, $I, allstarted, 'nil', ~gid ) ]
+  --[ JoinEnabled( ~gid, (allstarted+<'zero', $I>) ) ]->
+   [ JoinReady( j, (allstarted+<'zero', $I>), ~gid ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Join_1:
+   [
+   JoinReady( (j+one()), allstarted, ~gid ),
+   Participant( $R1, j, (j+one()), allstarted, ~gid, key ), Fr( ~r )
+   ]
+  -->
+   [
+   JoinReady( (j+one()+one()), (allstarted+<(j+one()), $N1>), ~gid ),
+   SponsorParticipant( $R1, (j+one()), (allstarted+<(j+one()), $N1>),
+                       ~gid, key
+   ),
+   NewParticipantBRSent( $N1, $R1, (j+one()),
+                         (allstarted+<(j+one()), $N1>), ~gid, ~r
+   ),
+   !AuthOut( $N1, <blindedRandomOf(<(j+one()), ~gid>), 'g'^~r> )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Join_2:
+   [
+   SponsorParticipant( $R1, (j+one()), (oldstarted+<(j+one()), $N1>),
+                       ~gid, key
+   ),
+   !AuthOut( $N1, <blindedRandomOf(<(j+one()), ~gid>), br> )
+   ]
+  --[ IKey( $R1, (oldstarted+<(j+one()), $N1>), ~gid, br^te(key) )
+  ]->
+   [
+   Participant( $R1, j, (j+one()+one()),
+                (oldstarted+<(j+one()), $N1>), ~gid, br^te(key)
+   ),
+   !AuthOut( $R1, <blindedKeyFor(<(j+one()), ~gid>), 'g'^te(key)> )
+   ]
+
+  /*
+  rule (modulo AC) Join_2:
+     [
+     SponsorParticipant( $R1, (j+one()), (oldstarted+<(j+one()), $N1>),
+                         ~gid, key
+     ),
+     !AuthOut( $N1, <blindedRandomOf(<(j+one()), ~gid>), br> )
+     ]
+    --[ IKey( $R1, (oldstarted+<(j+one()), $N1>), ~gid, z ) ]->
+     [
+     Participant( $R1, j, (j+one()+one()),
+                  (oldstarted+<(j+one()), $N1>), ~gid, z
+     ),
+     !AuthOut( $R1, <blindedKeyFor(<(j+one()), ~gid>), 'g'^te(key)> )
+     ]
+    variants (modulo AC)
+    1. br    = br.16
+       key   = key.18
+       z     = br.16^te(key.18)
+    
+    2. br    = z.18^inv(te(key.16))
+       key   = key.16
+       z     = z.18
+    
+    3. br    = x.60^x.61
+       key   = key.34
+       z     = x.60^(x.61*te(key.34))
+    
+    4. br    = x.61^inv((x.63*te(key.35)))
+       key   = key.35
+       z     = x.61^inv(x.63)
+    
+    5. br    = x.61^(x.63*inv(te(key.35)))
+       key   = key.35
+       z     = x.61^x.63
+    
+    6. br    = x.62^(x.65*inv((x.64*te(key.36))))
+       key   = key.36
+       z     = x.62^(x.65*inv(x.64))
+  */
+
+rule (modulo E) Join_3:
+   [
+   NewParticipantBRSent( $N1, $R1, (j+one()),
+                         (oldstarted+<j, $R1>+<(j+one()), $N1>), ~gid, ~r
+   ),
+   !AuthOut( $R1, <blindedKeyFor(<(j+one()), ~gid>), bk> )
+   ]
+  --[
+  IKey( $N1, (oldstarted+<j, $R1>+<(j+one()), $N1>), ~gid, bk^~r ),
+  Joined( $N1, (oldstarted+<j, $R1>+<(j+one()), $N1>), ~gid, bk^~r ),
+  JoinEnabled( ~gid, (oldstarted+<j, $R1>+<(j+one()), $N1>) )
+  ]->
+   [
+   Participant( $N1, (j+one()), (j+one()+one()),
+                (oldstarted+<j, $R1>+<(j+one()), $N1>), ~gid, bk^~r
+   )
+   ]
+
+  // loop breakers: [0,1]
+  /*
+  rule (modulo AC) Join_3:
+     [
+     NewParticipantBRSent( $N1, $R1, (j+one()),
+                           (oldstarted+<j, $R1>+<(j+one()), $N1>), ~gid, ~r
+     ),
+     !AuthOut( $R1, <blindedKeyFor(<(j+one()), ~gid>), bk> )
+     ]
+    --[
+    IKey( $N1, (oldstarted+<j, $R1>+<(j+one()), $N1>), ~gid, z ),
+    Joined( $N1, (oldstarted+<j, $R1>+<(j+one()), $N1>), ~gid, z ),
+    JoinEnabled( ~gid, (oldstarted+<j, $R1>+<(j+one()), $N1>) )
+    ]->
+     [
+     Participant( $N1, (j+one()), (j+one()+one()),
+                  (oldstarted+<j, $R1>+<(j+one()), $N1>), ~gid, z
+     )
+     ]
+    variants (modulo AC)
+    1. ~r    = ~r.9
+       bk    = bk.9
+       z     = bk.9^~r.9
+    
+    2. ~r    = ~x.9
+       bk    = x.10^inv(~x.9)
+       z     = x.10
+    
+    3. ~r    = ~x.9
+       bk    = x.10^inv((~x.9*x.11))
+       z     = x.10^inv(x.11)
+    
+    4. ~r    = ~x.9
+       bk    = x.10^(x.11*inv(~x.9))
+       z     = x.10^x.11
+    
+    5. ~r    = ~x.9
+       bk    = x.10^(x.12*inv((~x.9*x.11)))
+       z     = x.10^(x.12*inv(x.11))
+    
+    6. ~r    = ~r.11
+       bk    = x.9^x.10
+       z     = x.9^(x.10*~r.11)
+    // loop breakers: [0,1]
+  */
+
+rule (modulo E) Join_4:
+   [
+   Participant( $R1, k_, j, started, ~gid, key ),
+   !AuthOut( $N1, <blindedRandomOf(<j, ~gid>), br> )
+   ]
+  --[ IKey( $R1, (started+<j, $N1>), ~gid, br^te(key) ) ]->
+   [
+   Participant( $R1, k_, (j+one()), (started+<j, $N1>), ~gid,
+                br^te(key)
+   )
+   ]
+
+  // loop breakers: [0,1]
+  /*
+  rule (modulo AC) Join_4:
+     [
+     Participant( $R1, k_, j, started, ~gid, key ),
+     !AuthOut( $N1, <blindedRandomOf(<j, ~gid>), br> )
+     ]
+    --[ IKey( $R1, (started+<j, $N1>), ~gid, z ) ]->
+     [ Participant( $R1, k_, (j+one()), (started+<j, $N1>), ~gid, z ) ]
+    variants (modulo AC)
+    1. br    = br.10
+       key   = key.10
+       z     = br.10^te(key.10)
+    
+    2. br    = x.10^x.11
+       key   = key.12
+       z     = x.10^(x.11*te(key.12))
+    
+    3. br    = x.10^inv(te(x.11))
+       key   = x.11
+       z     = x.10
+    
+    4. br    = x.10^inv((x.12*te(x.11)))
+       key   = x.11
+       z     = x.10^inv(x.12)
+    
+    5. br    = x.10^(x.12*inv(te(x.11)))
+       key   = x.11
+       z     = x.10^x.12
+    
+    6. br    = x.10^(x.13*inv((x.12*te(x.11))))
+       key   = x.11
+       z     = x.10^(x.13*inv(x.12))
+    // loop breakers: [0,1]
+  */
+
+lemma key_reachable_2:
+  exists-trace
+  "∃ #i1 I R1 gid key #i2.
+    (((Key( I, ('nil'+<'zero', I>+<one(), R1>), gid, key ) @ #i1) ∧
+      (Key( R1, ('nil'+<'zero', I>+<one(), R1>), gid, key ) @ #i2)) ∧
+     (¬(I = R1))) ∧
+    (¬(∃ A #i5. Corrupt( A ) @ #i5))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i1 I R1 gid key #i2.
+  (Key( I, ('nil'+<'zero', I>+<one(), R1>), gid, key ) @ #i1) ∧
+  (Key( R1, ('nil'+<'zero', I>+<one(), R1>), gid, key ) @ #i2)
+ ∧
+  (¬(I = R1)) ∧ (∀ A #i5. (Corrupt( A ) @ #i5) ⇒ ⊥)"
+*/
+by sorry
+
+lemma key_reachable_2_plus_1_joiner:
+  exists-trace
+  "∃ #i1 I R1 gid key #i2 #i3 N1 #i4 jkey #i6 #i7 #i8.
+    ((((((((((Key( I, ('nil'+<'zero', I>+<one(), R1>), gid, key
+              ) @ #i1) ∧
+             (Key( R1, ('nil'+<'zero', I>+<one(), R1>), gid, key ) @ #i2)) ∧
+            (¬(I = R1))) ∧
+           (¬(∃ A #i5. Corrupt( A ) @ #i5))) ∧
+          (JoinEnabled( gid, ('nil'+<'zero', I>+<one(), R1>) ) @ #i3)) ∧
+         (Joined( N1, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), N1>),
+                  gid, jkey
+          ) @ #i4)) ∧
+        (IKey( I, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), N1>), gid,
+               jkey
+         ) @ #i6)) ∧
+       (IKey( R1, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), N1>),
+              gid, jkey
+        ) @ #i7)) ∧
+      (IKey( N1, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), N1>),
+             gid, jkey
+       ) @ #i8)) ∧
+     (¬(N1 = I))) ∧
+    (¬(N1 = R1))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i1 I R1 gid key #i2 #i3 N1 #i4 jkey #i6 #i7 #i8.
+  (Key( I, ('nil'+<'zero', I>+<one(), R1>), gid, key ) @ #i1) ∧
+  (Key( R1, ('nil'+<'zero', I>+<one(), R1>), gid, key ) @ #i2) ∧
+  (JoinEnabled( gid, ('nil'+<'zero', I>+<one(), R1>) ) @ #i3) ∧
+  (Joined( N1, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), N1>),
+           gid, jkey
+   ) @ #i4) ∧
+  (IKey( I, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), N1>), gid,
+         jkey
+   ) @ #i6) ∧
+  (IKey( R1, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), N1>),
+         gid, jkey
+   ) @ #i7) ∧
+  (IKey( N1, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), N1>),
+         gid, jkey
+   ) @ #i8)
+ ∧
+  (¬(I = R1)) ∧
+  (∀ A #i5. (Corrupt( A ) @ #i5) ⇒ ⊥) ∧
+  (¬(N1 = I)) ∧
+  (¬(N1 = R1))"
+*/
+simplify
+solve( Key( I, ('nil'+<'zero', I>+<one(), R1>), gid, key ) @ #i1 )
+  case Initiator_2
+  solve( Key( R1, ('nil'+<'zero', $I>+<one(), R1>), ~gid, key
+         ) @ #i2 )
+    case Initiator_2
+    by contradiction // from formulas
+  next
+    case Responder_3
+    solve( ResponderLoop( $R1, $I, j, k_, ('nil'+<one(), $R1>), 'nil',
+                          ~gid, key
+           ) ▶₀ #i2 )
+      case Responder_1
+      solve( splitEqs(6) )
+        case split_case_1
+        solve( InitiatorLoop( $I, j_, ('nil'+<one(), $R1>), 'nil', ~gid,
+                              bk^~r
+               ) ▶₀ #i1 )
+          case Initiator_0
+          by contradiction // from formulas
+        next
+          case Initiator_1
+          by contradiction // from formulas
+        qed
+      next
+        case split_case_2
+        solve( InitiatorLoop( $I, j_, ('nil'+<one(), $R1>), 'nil', ~gid,
+                              key
+               ) ▶₀ #i1 )
+          case Initiator_0_case_1
+          by contradiction // non-normal terms
+        next
+          case Initiator_0_case_2
+          by contradiction // from formulas
+        next
+          case Initiator_1_case_1
+          by contradiction // non-normal terms
+        next
+          case Initiator_1_case_2
+          by contradiction // from formulas
+        qed
+      next
+        case split_case_3
+        solve( InitiatorLoop( $I, j_, ('nil'+<one(), $R1>), 'nil', ~gid,
+                              x^(~r*x.1)
+               ) ▶₀ #i1 )
+          case Initiator_0_case_1
+          solve( !AuthOut( $I, <blindedKeyFor(<one(), ~gid>), 'g'^~x>
+                 ) ▶₁ #vr )
+            case Initiator_0
+            solve( StartGroupResponders( one(), $I, 'nil',
+                                         ('nil'+<one(), $R1>), ~gid
+                   ) ▶₀ #vr.2 )
+              case StartGroup_0
+              solve( JoinEnabled( ~gid, ('nil'+<'zero', $I>+<one(), $R1>)
+                     ) @ #i3 )
+                case Join_0
+                solve( StartGroupResponders( j, $I, ('nil'+<one(), $R1>), 'nil',
+                                             ~gid
+                       ) ▶₀ #i3 )
+                  case StartGroup_3
+                  solve( StartGroupResponders( one(), $I, 'nil',
+                                               ('nil'+<one(), $R1>), ~gid
+                         ) ▶₀ #vr.6 )
+                    case StartGroup_0
+                    solve( Joined( N1,
+                                   ('nil'+<'zero', $I>+<one(), $R1>+<(one()+one()), N1>), ~gid, jkey
+                           ) @ #i4 )
+                      case Join_3
+                      solve( splitEqs(11) )
+                        case split_case_1
+                        solve( !AuthOut( $R1, <blindedKeyFor(<(one()+one()), ~gid>), bk>
+                               ) ▶₁ #i4 )
+                          case Initiator_1_case_1
+                          by contradiction // non-normal terms
+                        next
+                          case Initiator_1_case_2
+                          by contradiction // non-normal terms
+                        next
+                          case Initiator_1_case_3
+                          by contradiction // non-normal terms
+                        next
+                          case Initiator_1_case_4
+                          by contradiction // non-normal terms
+                        next
+                          case IntruderCorrupts
+                          by contradiction // from formulas
+                        qed
+                      next
+                        case split_case_2
+                        solve( !AuthOut( $R1,
+                                         <blindedKeyFor(<(one()+one()), ~gid>), jkey^inv(~r.1)>
+                               ) ▶₁ #i4 )
+                          case IntruderCorrupts
+                          by contradiction // from formulas
+                        qed
+                      next
+                        case split_case_3
+                        solve( !AuthOut( $R1,
+                                         <blindedKeyFor(<(one()+one()), ~gid>), x.1^x.2>
+                               ) ▶₁ #i4 )
+                          case Initiator_1_case_1
+                          solve( InitiatorLoop( $R1, (one()+one()), handled,
+                                                (notHandled+<(one()+one()), $R1.1>), ~gid, key
+                                 ) ▶₀ #vr.6 )
+                            case Initiator_0_case_1
+                            solve( StartGroupResponders( (one()+one()), $I.1, below,
+                                                         (above+<(one()+one()), $R1.2>), ~gid
+                                   ) ▶₀ #vr.8 )
+                              case StartGroup_3
+                              by solve( StartGroup( $R1, one(), (notHandled+<one(), $R1.1>), ~gid
+                                        ) ▶₀ #vr.12 )
+                            qed
+                          next
+                            case Initiator_0_case_2
+                            solve( StartGroupResponders( (one()+one()), $I.1, below,
+                                                         (above+<(one()+one()), $R1.2>), ~gid
+                                   ) ▶₀ #vr.8 )
+                              case StartGroup_3
+                              solve( StartGroup( $R1, num,
+                                                 (<one(), $R1.1>+<(one()+one()), $R1.2>), ~gid
+                                     ) ▶₀ #vr.12 )
+                                case StartGroup_2
+                                solve( NewParticipantBRSent( $N1, $R1, (one()+one()),
+                                                             ('nil'+<'zero', $I>+<one(), $R1>+
+                                                              <(one()+one()), $N1>),
+                                                             ~gid, ~r.1
+                                       ) ▶₀ #i4 )
+                                  case Join_1_case_1
+                                  solve( splitEqs(15) )
+                                    case split_case_1
+                                    solve( StartGroupResponders( one(), $I.2, below,
+                                                                 (above.1+<one(), $R1.1>), ~gid
+                                           ) ▶₀ #vr.13 )
+                                      case StartGroup_0_case_1
+                                      solve( StartGroupResponders( one(), $I.1, started,
+                                                                   (above+<one(), $R.1>+
+                                                                    <(one()+one()), $R1.1>),
+                                                                   ~gid
+                                             ) ▶₀ #vr.12 )
+                                        case StartGroup_0_case_1
+                                        by solve( StartGroup( $R1, one(), <one(), $R1>, ~gid
+                                                  ) ▶₀ #vr.13 )
+                                      next
+                                        case StartGroup_0_case_2
+                                        solve( JoinReady( (one()+one()),
+                                                          ('nil'+<'zero', $I>+<one(), $R1>), ~gid
+                                               ) ▶₀ #vr.14 )
+                                          case Join_0
+                                          solve( !AuthOut( $I, <blindedKeyFor(<one(), ~gid>), bk>
+                                                 ) ▶₁ #vr.16 )
+                                            case Initiator_0_case_1
+                                            by contradiction // non-normal terms
+                                          next
+                                            case Initiator_0_case_2
+                                            by contradiction // non-normal terms
+                                          next
+                                            case Initiator_0_case_3
+                                            by contradiction // non-normal terms
+                                          next
+                                            case Initiator_1
+                                            by contradiction // non-normal terms
+                                          next
+                                            case IntruderCorrupts
+                                            by contradiction // from formulas
+                                          qed
+                                        qed
+                                      next
+                                        case StartGroup_0_case_3
+                                        solve( JoinReady( (one()+one()),
+                                                          ('nil'+<'zero', $I>+<one(), $R1>), ~gid
+                                               ) ▶₀ #vr.14 )
+                                          case Join_0
+                                          solve( !AuthOut( $I, <blindedKeyFor(<one(), ~gid>), bk>
+                                                 ) ▶₁ #vr.16 )
+                                            case Initiator_0_case_1
+                                            by contradiction // non-normal terms
+                                          next
+                                            case Initiator_0_case_2
+                                            by contradiction // non-normal terms
+                                          next
+                                            case Initiator_0_case_3
+                                            by contradiction // non-normal terms
+                                          next
+                                            case Initiator_1
+                                            by contradiction // non-normal terms
+                                          next
+                                            case IntruderCorrupts
+                                            by contradiction // from formulas
+                                          qed
+                                        qed
+                                      qed
+                                    next
+                                      case StartGroup_0_case_2
+                                      solve( JoinReady( (one()+one()),
+                                                        ('nil'+<'zero', $I>+<one(), $R1>), ~gid
+                                             ) ▶₀ #vr.16 )
+                                        case Join_0
+                                        solve( !AuthOut( $I, <blindedKeyFor(<one(), ~gid>), bk>
+                                               ) ▶₁ #vr.18 )
+                                          case Initiator_0_case_1
+                                          by contradiction // non-normal terms
+                                        next
+                                          case Initiator_0_case_2
+                                          by contradiction // non-normal terms
+                                        next
+                                          case Initiator_0_case_3
+                                          by contradiction // non-normal terms
+                                        next
+                                          case Initiator_1
+                                          by contradiction // non-normal terms
+                                        next
+                                          case IntruderCorrupts
+                                          by contradiction // from formulas
+                                        qed
+                                      qed
+                                    next
+                                      case StartGroup_0_case_3
+                                      solve( JoinReady( (one()+one()),
+                                                        ('nil'+<'zero', $I>+<one(), $R1>), ~gid
+                                             ) ▶₀ #vr.16 )
+                                        case Join_0
+                                        solve( !AuthOut( $I, <blindedKeyFor(<one(), ~gid>), bk>
+                                               ) ▶₁ #vr.18 )
+                                          case Initiator_0_case_1
+                                          by contradiction // non-normal terms
+                                        next
+                                          case Initiator_0_case_2
+                                          by contradiction // non-normal terms
+                                        next
+                                          case Initiator_0_case_3
+                                          by contradiction // non-normal terms
+                                        next
+                                          case Initiator_1
+                                          by contradiction // non-normal terms
+                                        next
+                                          case IntruderCorrupts
+                                          by contradiction // from formulas
+                                        qed
+                                      qed
+                                    qed
+                                  next
+                                    case split_case_2
+                                    solve( JoinReady( (one()+one()),
+                                                      ('nil'+<'zero', $I>+<one(), $R1>), ~gid
+                                           ) ▶₀ #vr.16 )
+                                      case Join_0
+                                      solve( !AuthOut( $I,
+                                                       <blindedKeyFor(<one(), ~gid>), key^inv(~r.5)>
+                                             ) ▶₁ #vr.18 )
+                                        case IntruderCorrupts
+                                        by contradiction // from formulas
+                                      qed
+                                    qed
+                                  next
+                                    case split_case_3
+                                    solve( JoinReady( (one()+one()),
+                                                      ('nil'+<'zero', $I>+<one(), $R1>), ~gid
+                                           ) ▶₀ #vr.16 )
+                                      case Join_0
+                                      solve( !AuthOut( $I, <blindedKeyFor(<one(), ~gid>), x.1^x.2>
+                                             ) ▶₁ #vr.18 )
+                                        case Initiator_0_case_1
+                                        by sorry
+                                      next
+                                        case Initiator_0_case_2
+                                        by sorry
+                                      next
+                                        case Initiator_0_case_3
+                                        by sorry
+                                      next
+                                        case Initiator_0_case_4
+                                        by contradiction // from formulas
+                                      next
+                                        case Initiator_0_case_5
+                                        by contradiction // from formulas
+                                      next
+                                        case Initiator_1_case_1
+                                        by sorry
+                                      next
+                                        case Initiator_1_case_2
+                                        by contradiction // from formulas
+                                      next
+                                        case IntruderCorrupts
+                                        by contradiction // from formulas
+                                      qed
+                                    qed
+                                  next
+                                    case split_case_4
+                                    by sorry
+                                  next
+                                    case split_case_5
+                                    by sorry
+                                  next
+                                    case split_case_6
+                                    by sorry
+                                  qed
+                                next
+                                  case Join_1_case_2
+                                  by sorry
+                                next
+                                  case Join_1_case_3
+                                  by sorry
+                                qed
+                              qed
+                            qed
+                          next
+                            case Initiator_0_case_3
+                            by sorry
+                          next
+                            case Initiator_0_case_4
+                            by contradiction // from formulas
+                          next
+                            case Initiator_0_case_5
+                            by contradiction // from formulas
+                          next
+                            case Initiator_0_case_6
+                            by contradiction // from formulas
+                          next
+                            case Initiator_1_case_1
+                            by sorry
+                          next
+                            case Initiator_1_case_2
+                            by contradiction // from formulas
+                          qed
+                        next
+                          case Initiator_1_case_2
+                          by contradiction // from formulas
+                        next
+                          case Initiator_1_case_3
+                          by sorry
+                        next
+                          case Initiator_1_case_4
+                          by sorry
+                        next
+                          case Initiator_1_case_5
+                          by sorry
+                        next
+                          case IntruderCorrupts
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_01
+                          by sorry
+                        next
+                          case Join_2_case_02
+                          solve( JoinReady( (one()+one()),
+                                            (below+<'zero', $I.1>+<one(), $R2>), ~gid
+                                 ) ▶₀ #vr.7 )
+                            case Join_0_case_1
+                            by solve( ResponderLoop( $R1, $I.1, one(), one(), <one(), $R>,
+                                                     ('nil'+<one(), $R2>), ~gid, key.1
+                                      ) ▶₀ #vr.11 )
+                          next
+                            case Join_0_case_2
+                            solve( StartGroupResponders( (one()+one()), $I.2, below.1,
+                                                         (above+<(one()+one()), $N1.1>), ~gid
+                                   ) ▶₀ #vr.10 )
+                              case StartGroup_3
+                              solve( !AuthOut( $R2, <blindedRandomOf(<one(), ~gid>), br>
+                                     ) ▶₁ #vr.11 )
+                                case IntruderCorrupts
+                                by contradiction // from formulas
+                              next
+                                case Responder_0
+                                solve( StartGroupResponders( one(), $I.2, started,
+                                                             (above+<one(), $R>+
+                                                              <(one()+one()), $N1.1>),
+                                                             ~gid
+                                       ) ▶₀ #vr.14 )
+                                  case StartGroup_0_case_1
+                                  by solve( ResponderLoop( $R1, $I.1, one(), one(), below,
+                                                           ('nil'+<one(), $R2>), ~gid, key
+                                            ) ▶₀ #vr.11 )
+                                next
+                                  case StartGroup_0_case_2
+                                  by solve( ResponderLoop( $R1, $I.1, one(), one(), below,
+                                                           ('nil'+<one(), $R2>), ~gid, key
+                                            ) ▶₀ #vr.11 )
+                                next
+                                  case StartGroup_0_case_3
+                                  by solve( ResponderLoop( $R1, $I.1, one(), one(), below,
+                                                           ('nil'+<one(), $R2>), ~gid, key
+                                            ) ▶₀ #vr.11 )
+                                qed
+                              qed
+                            qed
+                          next
+                            case Join_0_case_3
+                            by solve( ResponderLoop( $R1, $I.1, one(), one(), <'zero', $I.2>,
+                                                     ('nil'+<one(), $R2>), ~gid, key.1
+                                      ) ▶₀ #vr.11 )
+                          next
+                            case Join_0_case_4
+                            by solve( ResponderLoop( $R1, $I.1, one(), one(),
+                                                     (x.1+<one(), $R>), ('nil'+<one(), $R2>), ~gid,
+                                                     key.1
+                                      ) ▶₀ #vr.11 )
+                          next
+                            case Join_0_case_5
+                            by solve( ResponderLoop( $R1, $I.1, one(), one(),
+                                                     (<'zero', $I.2>+<one(), $R>),
+                                                     ('nil'+<one(), $R2>), ~gid, key.1
+                                      ) ▶₀ #vr.11 )
+                          next
+                            case Join_0_case_6
+                            by solve( ResponderLoop( $R1, $I.1, one(), one(),
+                                                     (x.1+<'zero', $I.2>), ('nil'+<one(), $R2>),
+                                                     ~gid, key.1
+                                      ) ▶₀ #vr.11 )
+                          next
+                            case Join_0_case_7
+                            by solve( ResponderLoop( $R1, $I.1, one(), one(),
+                                                     (x.1+<'zero', $I.2>+<one(), $R>),
+                                                     ('nil'+<one(), $R2>), ~gid, key.1
+                                      ) ▶₀ #vr.11 )
+                          qed
+                        next
+                          case Join_2_case_03
+                          solve( JoinReady( (one()+one()), (started+<one(), $N1.1>), ~gid
+                                 ) ▶₀ #vr.7 )
+                            case Join_0_case_1
+                            solve( !AuthOut( $N1.1, <blindedRandomOf(<one(), ~gid>), br>
+                                   ) ▶₁ #vr.9 )
+                              case IntruderCorrupts
+                              by contradiction // from formulas
+                            next
+                              case Responder_0
+                              by solve( Participant( $R1, one(), one(), (started+<'zero', $I.1>),
+                                                     ~gid, key
+                                        ) ▶₀ #vr.9 )
+                            qed
+                          next
+                            case Join_0_case_2
+                            by solve( Participant( $R1, one(), one(),
+                                                   (x.1+<'zero', $I.1>+<one(), $R>), ~gid, key.1
+                                      ) ▶₀ #vr.9 )
+                          next
+                            case Join_0_case_3
+                            by solve( Participant( $R1, one(), one(),
+                                                   (<'zero', $I.1>+<one(), $R>), ~gid, key.1
+                                      ) ▶₀ #vr.9 )
+                          qed
+                        next
+                          case Join_2_case_04
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_05
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_06
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_07
+                          solve( !AuthOut( $I.1, <blindedKeyFor(<one(), ~gid>), bk>
+                                 ) ▶₁ #vr.11 )
+                            case Initiator_0_case_1
+                            solve( JoinReady( (one()+one()), (below+<'zero', $I>+<one(), $R1>),
+                                              ~gid
+                                   ) ▶₀ #vr.7 )
+                              case Join_0_case_1
+                              solve( JoinReady( (one()+one()),
+                                                (below+<'zero', $I.2>+<one(), $R1.1>), ~gid
+                                     ) ▶₀ #vr.8 )
+                                case Join_0_case_1
+                                solve( !AuthOut( $I.2, <blindedKeyFor(<one(), ~gid>), bk>
+                                       ) ▶₁ #vr.12 )
+                                  case Initiator_0_case_1
+                                  by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                  ('nil'+<one(), $R1>), ~gid
+                                            ) ▶₀ #vr.15 )
+                                next
+                                  case Initiator_0_case_2
+                                  by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                  ('nil'+<one(), $R1>), ~gid
+                                            ) ▶₀ #vr.15 )
+                                next
+                                  case Initiator_0_case_3
+                                  by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                  ('nil'+<one(), $R1>), ~gid
+                                            ) ▶₀ #vr.15 )
+                                next
+                                  case Initiator_0_case_4
+                                  by contradiction // from formulas
+                                next
+                                  case Initiator_0_case_5
+                                  by contradiction // from formulas
+                                next
+                                  case Initiator_1_case_1
+                                  by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                  ('nil'+<one(), $R1>), ~gid
+                                            ) ▶₀ #vr.15 )
+                                next
+                                  case Initiator_1_case_2
+                                  by contradiction // from formulas
+                                next
+                                  case IntruderCorrupts
+                                  by contradiction // from formulas
+                                qed
+                              next
+                                case Join_0_case_2
+                                by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                ('nil'+<one(), $R1>), ~gid
+                                          ) ▶₀ #vr.15 )
+                              next
+                                case Join_0_case_3
+                                by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                ('nil'+<one(), $R1>), ~gid
+                                          ) ▶₀ #vr.15 )
+                              next
+                                case Join_0_case_4
+                                by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                ('nil'+<one(), $R1>), ~gid
+                                          ) ▶₀ #vr.15 )
+                              next
+                                case Join_0_case_5
+                                by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                ('nil'+<one(), $R1>), ~gid
+                                          ) ▶₀ #vr.15 )
+                              next
+                                case Join_0_case_6
+                                by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                ('nil'+<one(), $R1>), ~gid
+                                          ) ▶₀ #vr.15 )
+                              next
+                                case Join_0_case_7
+                                by solve( StartGroupResponders( one(), $I, <'zero', $I.1>,
+                                                                ('nil'+<one(), $R1>), ~gid
+                                          ) ▶₀ #vr.15 )
+                              qed
+                            next
+                              case Join_0_case_2
+                              by solve( StartGroupResponders( one(), $I,
+                                                              (<'zero', $I.1>+<one(), $R>),
+                                                              ('nil'+<one(), $R1>), ~gid
+                                        ) ▶₀ #vr.15 )
+                            next
+                              case Join_0_case_3
+                              by solve( StartGroupResponders( one(), $I, (x.1+<'zero', $I.1>),
+                                                              ('nil'+<one(), $R1>), ~gid
+                                        ) ▶₀ #vr.15 )
+                            next
+                              case Join_0_case_4
+                              by solve( StartGroupResponders( one(), $I,
+                                                              (x.1+<'zero', $I.1>+<one(), $R>),
+                                                              ('nil'+<one(), $R1>), ~gid
+                                        ) ▶₀ #vr.15 )
+                            next
+                              case Join_0_case_5
+                              by solve( StartGroupResponders( one(), $I, <one(), $R>,
+                                                              ('nil'+<one(), $R1>), ~gid
+                                        ) ▶₀ #vr.15 )
+                            next
+                              case Join_0_case_6
+                              solve( StartGroupResponders( one(), $I, below,
+                                                           ('nil'+<one(), $R1>), ~gid
+                                     ) ▶₀ #vr.15 )
+                                case StartGroup_0
+                                solve( StartGroupResponders( one(), $I.1, below,
+                                                             ('nil'+<one(), $R1.1>), ~gid
+                                       ) ▶₀ #vr.12 )
+                                  case StartGroup_0
+                                  solve( StartGroupResponders( one(), $I, 'nil',
+                                                               ('nil'+<one(), $R1>), ~gid
+                                         ) ▶₀ #vr.9 )
+                                    case StartGroup_0
+                                    solve( NewParticipantBRSent( $N1, $R1, (one()+one()),
+                                                                 ('nil'+<'zero', $I>+<one(), $R1>+
+                                                                  <(one()+one()), $N1>),
+                                                                 ~gid, ~r.1
+                                           ) ▶₀ #i4 )
+                                      case Join_1_case_1
+                                      solve( JoinReady( (one()+one()),
+                                                        ('nil'+<'zero', $I>+<one(), $R1>), ~gid
+                                             ) ▶₀ #vr.8 )
+                                        case Join_0
+                                        solve( !AuthOut( $I, <blindedKeyFor(<one(), ~gid>), bk>
+                                               ) ▶₁ #vr.10 )
+                                          case Initiator_0_case_1
+                                          solve( StartGroupResponders( one(), $I, 'nil',
+                                                                       ('nil'+<one(), $R1>), ~gid
+                                                 ) ▶₀ #vr.12 )
+                                            case StartGroup_0
+                                            solve( IKey( $N1,
+                                                         ('nil'+<'zero', $I>+<one(), $R1>+
+                                                          <(one()+one()), $N1>),
+                                                         ~gid, 'g'^(~r.1*te('g'^(~r*~x)))
+                                                   ) @ #i8 )
+                                              case Initiator_1
+                                              by contradiction // from formulas
+                                            next
+                                              case Initiator_2
+                                              by contradiction // from formulas
+                                            next
+                                              case Join_2
+                                              solve( SponsorParticipant( $N1, (one()+one()),
+                                                                         ('nil'+<'zero', $I>+
+                                                                          <one(), $R1>+
+                                                                          <(one()+one()), $N1>),
+                                                                         ~gid, key
+                                                     ) ▶₀ #i8 )
+                                                case Join_1_case_1
+                                                by contradiction // from formulas
+                                              next
+                                                case Join_1_case_2
+                                                solve( !AuthOut( $N1,
+                                                                 <
+                                                                  blindedRandomOf(<(one()+one()), 
+                                                                                   ~gid>), 
+                                                                  'g'^x.1>
+                                                       ) ▶₁ #i8 )
+                                                  case IntruderCorrupts
+                                                  by contradiction // from formulas
+                                                next
+                                                  case Join_1
+                                                  solve( JoinReady( (one()+one()),
+                                                                    ('nil'+<'zero', $I>+<one(), $R1>
+                                                                    ),
+                                                                    ~gid
+                                                         ) ▶₀ #vr.8 )
+                                                    case Join_0
+                                                    by solve( ResponderLoop( $N1, $I, one(), one(),
+                                                                             'nil',
+                                                                             ('nil'+<one(), $R1>),
+                                                                             ~gid, key
+                                                              ) ▶₀ #vr.10 )
+                                                  qed
+                                                qed
+                                              next
+                                                case Join_1_case_3
+                                                solve( !AuthOut( $N1,
+                                                                 <
+                                                                  blindedRandomOf(<(one()+one()), 
+                                                                                   ~gid>), 
+                                                                  'g'^x.1>
+                                                       ) ▶₁ #i8 )
+                                                  case IntruderCorrupts
+                                                  by contradiction // from formulas
+                                                next
+                                                  case Join_1
+                                                  solve( JoinReady( (one()+one()),
+                                                                    ('nil'+<'zero', $I>+<one(), $R1>
+                                                                    ),
+                                                                    ~gid
+                                                         ) ▶₀ #vr.8 )
+                                                    case Join_0
+                                                    solve( !AuthOut( $R1,
+                                                                     <
+                                                                      blindedRandomOf(<one(), ~gid
+                                                                                      >), 
+                                                                      'g'^(~r*~x*inv(te(key)))>
+                                                           ) ▶₁ #vr.9 )
+                                                      case IntruderCorrupts
+                                                      by contradiction // from formulas
+                                                    qed
+                                                  qed
+                                                qed
+                                              qed
+                                            next
+                                              case Join_3
+                                              solve( NewParticipantBRSent( $N1, $R1, (one()+one()),
+                                                                           ('nil'+<'zero', $I>+
+                                                                            <one(), $R1>+
+                                                                            <(one()+one()), $N1>),
+                                                                           ~gid, ~r.2
+                                                     ) ▶₀ #i8 )
+                                                case Join_1_case_1
+                                                solve( !AuthOut( $R1,
+                                                                 <
+                                                                  blindedKeyFor(<(one()+one()), ~gid
+                                                                                >), 
+                                                                  'g'^x.1>
+                                                       ) ▶₁ #i8 )
+                                                  case IntruderCorrupts
+                                                  by contradiction // from formulas
+                                                next
+                                                  case Join_2
+                                                  solve( IKey( $R1,
+                                                               ('nil'+<'zero', $I>+<one(), $R1>+
+                                                                <(one()+one()), $N1>),
+                                                               ~gid, 'g'^(~r.1*te('g'^(~r*~x)))
+                                                         ) @ #i7 )
+                                                    case Initiator_1
+                                                    by contradiction // from formulas
+                                                  next
+                                                    case Initiator_2
+                                                    by contradiction // from formulas
+                                                  next
+                                                    case Join_2
+                                                    solve( !AuthOut( $N1,
+                                                                     <
+                                                                      blindedRandomOf(<
+                                                                                       (one()+one()
+                                                                                       ), 
+                                                                                       ~gid>), 
+                                                                      'g'^x.1>
+                                                           ) ▶₁ #i7 )
+                                                      case IntruderCorrupts
+                                                      by contradiction // from formulas
+                                                    next
+                                                      case Join_1
+                                                      solve( SponsorParticipant( $R1, (one()+one()),
+                                                                                 ('nil'+
+                                                                                  <'zero', $I>+
+                                                                                  <one(), $R1>+
+                                                                                  <(one()+one()), 
+                                                                                   $N1>
+                                                                                 ),
+                                                                                 ~gid, 'g'^(~r*~x)
+                                                             ) ▶₀ #i7 )
+                                                        case Join_1_case_1
+                                                        solve( JoinReady( (one()+one()),
+                                                                          ('nil'+<'zero', $I>+
+                                                                           <one(), $R1>),
+                                                                          ~gid
+                                                               ) ▶₀ #vr.8 )
+                                                          case Join_0
+                                                          solve( !AuthOut( $I,
+                                                                           <
+                                                                            blindedKeyFor(<one(), 
+                                                                                           ~gid>), 
+                                                                            'g'^x.1>
+                                                                 ) ▶₁ #vr.10 )
+                                                            case Initiator_0_case_1
+                                                            solve( IKey( $I,
+                                                                         ('nil'+<'zero', $I>+
+                                                                          <one(), $R1>+
+                                                                          <(one()+one()), $N1>),
+                                                                         ~gid,
+                                                                         'g'^(~r.1*te('g'^(~r*~x)))
+                                                                   ) @ #i6 )
+                                                              case Initiator_1
+                                                              by sorry
+                                                            next
+                                                              case Initiator_2
+                                                              by sorry
+                                                            next
+                                                              case Join_2
+                                                              by sorry
+                                                            next
+                                                              case Join_3
+                                                              by contradiction // from formulas
+                                                            next
+                                                              case Join_4_case_1
+                                                              solve( Participant( $I, k_, one(),
+                                                                                  ('nil'+
+                                                                                   <'zero', $I>+
+                                                                                   <(one()+one()), 
+                                                                                    $N1>
+                                                                                  ),
+                                                                                  ~gid, key
+                                                                     ) ▶₀ #i6 )
+                                                                case Initiator_2
+                                                                solve( !AuthOut( $R1,
+                                                                                 <
+                                                                                  blindedRandomOf(<
+                                                                                                   one(), 
+                                                                                                   ~gid
+                                                                                                  >), 
+                                                                                  'g'^x.1>
+                                                                       ) ▶₁ #i6 )
+                                                                  case IntruderCorrupts
+                                                                  by contradiction // from formulas
+                                                                qed
+                                                              qed
+                                                            next
+                                                              case Join_4_case_2
+                                                              by solve( Participant( $I, k_, 'zero',
+                                                                                     ('nil'+
+                                                                                      <one(), $R1>+
+                                                                                      <
+                                                                                       (one()+one()
+                                                                                       ), 
+                                                                                       $N1>
+                                                                                     ),
+                                                                                     ~gid, key
+                                                                        ) ▶₀ #i6 )
+                                                            next
+                                                              case Join_4_case_3
+                                                              solve( Participant( $I, k_,
+                                                                                  (one()+one()),
+                                                                                  ('nil'+
+                                                                                   <'zero', $I>+
+                                                                                   <one(), $R1>),
+                                                                                  ~gid, key
+                                                                     ) ▶₀ #i6 )
+                                                                case Initiator_2
+                                                                solve( InitiatorLoop( $I,
+                                                                                      (one()+one()),
+                                                                                      ('nil'+
+                                                                                       <one(), $R1>
+                                                                                      ),
+                                                                                      'nil', ~gid,
+                                                                                      key
+                                                                       ) ▶₀ #vr.7 )
+                                                                  case Initiator_0
+                                                                  solve( !AuthOut( $N1,
+                                                                                   <
+                                                                                    blindedRandomOf(<
+                                                                                                     (
+                                                                                                      one()+
+                                                                                                      one()
+                                                                                                     ), 
+                                                                                                     ~gid
+                                                                                                    >), 
+                                                                                    'g'^~r.1>
+                                                                         ) ▶₁ #i6 )
+                                                                    case IntruderCorrupts
+                                                                    by contradiction
+                                                                       // from formulas
+                                                                  next
+                                                                    case Join_1
+                                                                    SOLVED // trace found
+                                                                  qed
+                                                                next
+                                                                  case Initiator_1_case_1
+                                                                  by sorry
+                                                                next
+                                                                  case Initiator_1_case_2
+                                                                  by contradiction // from formulas
+                                                                qed
+                                                              next
+                                                                case Join_4
+                                                                by sorry
+                                                              next
+                                                                case Responder_3_case_1
+                                                                by contradiction // from formulas
+                                                              next
+                                                                case Responder_3_case_2
+                                                                by sorry
+                                                              qed
+                                                            next
+                                                              case Responder_2
+                                                              by sorry
+                                                            next
+                                                              case Responder_3
+                                                              by sorry
+                                                            qed
+                                                          next
+                                                            case Initiator_0_case_2
+                                                            by sorry
+                                                          next
+                                                            case Initiator_0_case_3
+                                                            by sorry
+                                                          next
+                                                            case Initiator_0_case_4
+                                                            by contradiction // from formulas
+                                                          next
+                                                            case Initiator_0_case_5
+                                                            by contradiction // from formulas
+                                                          next
+                                                            case IntruderCorrupts
+                                                            by contradiction // from formulas
+                                                          qed
+                                                        qed
+                                                      next
+                                                        case Join_1_case_2
+                                                        by sorry
+                                                      next
+                                                        case Join_1_case_3
+                                                        by sorry
+                                                      qed
+                                                    qed
+                                                  next
+                                                    case Join_3
+                                                    by contradiction // from formulas
+                                                  next
+                                                    case Join_4_case_1
+                                                    by sorry
+                                                  next
+                                                    case Join_4_case_2
+                                                    by sorry
+                                                  next
+                                                    case Join_4_case_3
+                                                    by sorry
+                                                  next
+                                                    case Responder_2
+                                                    by contradiction // from formulas
+                                                  next
+                                                    case Responder_3
+                                                    by sorry
+                                                  qed
+                                                qed
+                                              next
+                                                case Join_1_case_2
+                                                by sorry
+                                              next
+                                                case Join_1_case_3
+                                                by sorry
+                                              qed
+                                            next
+                                              case Join_4_case_1
+                                              by sorry
+                                            next
+                                              case Join_4_case_2
+                                              by sorry
+                                            next
+                                              case Join_4_case_3
+                                              by sorry
+                                            next
+                                              case Responder_2
+                                              by contradiction // from formulas
+                                            next
+                                              case Responder_3
+                                              by sorry
+                                            qed
+                                          qed
+                                        next
+                                          case Initiator_0_case_2
+                                          by sorry
+                                        next
+                                          case Initiator_0_case_3
+                                          by sorry
+                                        next
+                                          case Initiator_0_case_4
+                                          by contradiction // from formulas
+                                        next
+                                          case Initiator_0_case_5
+                                          by contradiction // from formulas
+                                        next
+                                          case Initiator_1_case_1
+                                          by sorry
+                                        next
+                                          case Initiator_1_case_2
+                                          by contradiction // from formulas
+                                        next
+                                          case IntruderCorrupts
+                                          by contradiction // from formulas
+                                        qed
+                                      qed
+                                    next
+                                      case Join_1_case_2
+                                      by sorry
+                                    next
+                                      case Join_1_case_3
+                                      by sorry
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            next
+                              case Join_0_case_7
+                              by sorry
+                            qed
+                          next
+                            case Initiator_0_case_2
+                            by sorry
+                          next
+                            case Initiator_0_case_3
+                            by sorry
+                          next
+                            case Initiator_0_case_4
+                            by contradiction // from formulas
+                          next
+                            case Initiator_0_case_5
+                            by contradiction // from formulas
+                          next
+                            case Initiator_1_case_1
+                            by sorry
+                          next
+                            case Initiator_1_case_2
+                            by contradiction // from formulas
+                          next
+                            case IntruderCorrupts
+                            by contradiction // from formulas
+                          qed
+                        next
+                          case Join_2_case_08
+                          by sorry
+                        next
+                          case Join_2_case_09
+                          by sorry
+                        next
+                          case Join_2_case_10
+                          by sorry
+                        next
+                          case Join_2_case_11
+                          by sorry
+                        next
+                          case Join_2_case_12
+                          by sorry
+                        next
+                          case Join_2_case_13
+                          by sorry
+                        next
+                          case Join_2_case_14
+                          by sorry
+                        next
+                          case Join_2_case_15
+                          by sorry
+                        next
+                          case Join_2_case_16
+                          by sorry
+                        next
+                          case Join_2_case_17
+                          by sorry
+                        next
+                          case Join_2_case_18
+                          by sorry
+                        next
+                          case Join_2_case_19
+                          by sorry
+                        next
+                          case Join_2_case_20
+                          by sorry
+                        next
+                          case Join_2_case_21
+                          by sorry
+                        next
+                          case Join_2_case_22
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_23
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_24
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_25
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_26
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_27
+                          by contradiction // from formulas
+                        next
+                          case Join_2_case_28
+                          by sorry
+                        next
+                          case Join_2_case_29
+                          by sorry
+                        next
+                          case Join_2_case_30
+                          by sorry
+                        next
+                          case Join_2_case_31
+                          by sorry
+                        next
+                          case Join_2_case_32
+                          by sorry
+                        next
+                          case Join_2_case_33
+                          by sorry
+                        next
+                          case Join_2_case_34
+                          by sorry
+                        next
+                          case Join_2_case_35
+                          by sorry
+                        next
+                          case Join_2_case_36
+                          by sorry
+                        next
+                          case Join_2_case_37
+                          by sorry
+                        next
+                          case Join_2_case_38
+                          by sorry
+                        next
+                          case Join_2_case_39
+                          by sorry
+                        next
+                          case Join_2_case_40
+                          by sorry
+                        next
+                          case Join_2_case_41
+                          by sorry
+                        next
+                          case Join_2_case_42
+                          by sorry
+                        next
+                          case Join_2_case_43
+                          by sorry
+                        next
+                          case Join_2_case_44
+                          by sorry
+                        next
+                          case Join_2_case_45
+                          by sorry
+                        qed
+                      next
+                        case split_case_4
+                        by sorry
+                      next
+                        case split_case_5
+                        by sorry
+                      next
+                        case split_case_6
+                        by sorry
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          next
+            case IntruderCorrupts
+            by contradiction // from formulas
+          qed
+        next
+          case Initiator_0_case_2
+          by contradiction // from formulas
+        next
+          case Initiator_1_case_1
+          by sorry
+        next
+          case Initiator_1_case_2
+          by contradiction // from formulas
+        qed
+      next
+        case split_case_4
+        by sorry
+      next
+        case split_case_5
+        by sorry
+      next
+        case split_case_6
+        by sorry
+      qed
+    next
+      case Responder_2
+      by sorry
+    qed
+  qed
+next
+  case Responder_3
+  by sorry
+qed
+
+lemma key_reachable_3:
+  exists-trace
+  "∃ #i1 I R1 R2 gid key #i2 #i3.
+    ((((((Key( I, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>),
+               gid, key
+          ) @ #i1) ∧
+         (Key( R1, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>), gid,
+               key
+          ) @ #i2)) ∧
+        (Key( R2, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>), gid,
+              key
+         ) @ #i3)) ∧
+       (¬(I = R1))) ∧
+      (¬(R1 = R2))) ∧
+     (¬(I = R2))) ∧
+    (¬(∃ A #i5. Corrupt( A ) @ #i5))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i1 I R1 R2 gid key #i2 #i3.
+  (Key( I, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>), gid,
+        key
+   ) @ #i1) ∧
+  (Key( R1, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>), gid,
+        key
+   ) @ #i2) ∧
+  (Key( R2, ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>), gid,
+        key
+   ) @ #i3)
+ ∧
+  (¬(I = R1)) ∧
+  (¬(R1 = R2)) ∧
+  (¬(I = R2)) ∧
+  (∀ A #i5. (Corrupt( A ) @ #i5) ⇒ ⊥)"
+*/
+by sorry
+
+lemma key_reachable_4:
+  exists-trace
+  "∃ #i1 I R1 R2 R3 gid key #i2 #i3 #i4.
+    ((((((((((Key( I,
+                   ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+                    <(one()+one()+one()), R3>),
+                   gid, key
+              ) @ #i1) ∧
+             (Key( R1,
+                   ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+                    <(one()+one()+one()), R3>),
+                   gid, key
+              ) @ #i2)) ∧
+            (Key( R2,
+                  ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+                   <(one()+one()+one()), R3>),
+                  gid, key
+             ) @ #i3)) ∧
+           (Key( R3,
+                 ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+                  <(one()+one()+one()), R3>),
+                 gid, key
+            ) @ #i4)) ∧
+          (¬(I = R1))) ∧
+         (¬(R1 = R2))) ∧
+        (¬(I = R2))) ∧
+       (¬(I = R3))) ∧
+      (¬(R1 = R3))) ∧
+     (¬(R2 = R3))) ∧
+    (¬(∃ A #i5. Corrupt( A ) @ #i5))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i1 I R1 R2 R3 gid key #i2 #i3 #i4.
+  (Key( I,
+        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+         <(one()+one()+one()), R3>),
+        gid, key
+   ) @ #i1) ∧
+  (Key( R1,
+        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+         <(one()+one()+one()), R3>),
+        gid, key
+   ) @ #i2) ∧
+  (Key( R2,
+        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+         <(one()+one()+one()), R3>),
+        gid, key
+   ) @ #i3) ∧
+  (Key( R3,
+        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+         <(one()+one()+one()), R3>),
+        gid, key
+   ) @ #i4)
+ ∧
+  (¬(I = R1)) ∧
+  (¬(R1 = R2)) ∧
+  (¬(I = R2)) ∧
+  (¬(I = R3)) ∧
+  (¬(R1 = R3)) ∧
+  (¬(R2 = R3)) ∧
+  (∀ A #i5. (Corrupt( A ) @ #i5) ⇒ ⊥)"
+*/
+by sorry
+
+lemma key_reachable_5:
+  exists-trace
+  "∃ #i1 I R1 R2 R3 R4 gid key #i2 #i3 #i4 #i5.
+    (((((((((((((((Key( I,
+                        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+                         <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+                        gid, key
+                   ) @ #i1) ∧
+                  (Key( R1,
+                        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+                         <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+                        gid, key
+                   ) @ #i2)) ∧
+                 (Key( R2,
+                       ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+                        <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+                       gid, key
+                  ) @ #i3)) ∧
+                (Key( R3,
+                      ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+                       <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+                      gid, key
+                 ) @ #i4)) ∧
+               (Key( R4,
+                     ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+                      <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+                     gid, key
+                ) @ #i5)) ∧
+              (¬(I = R1))) ∧
+             (¬(R1 = R2))) ∧
+            (¬(I = R2))) ∧
+           (¬(I = R3))) ∧
+          (¬(R1 = R3))) ∧
+         (¬(R2 = R3))) ∧
+        (¬(I = R4))) ∧
+       (¬(R1 = R4))) ∧
+      (¬(R2 = R4))) ∧
+     (¬(R3 = R4))) ∧
+    (¬(∃ A #i6. Corrupt( A ) @ #i6))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i1 I R1 R2 R3 R4 gid key #i2 #i3 #i4 #i5.
+  (Key( I,
+        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+         <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+        gid, key
+   ) @ #i1) ∧
+  (Key( R1,
+        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+         <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+        gid, key
+   ) @ #i2) ∧
+  (Key( R2,
+        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+         <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+        gid, key
+   ) @ #i3) ∧
+  (Key( R3,
+        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+         <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+        gid, key
+   ) @ #i4) ∧
+  (Key( R4,
+        ('nil'+<'zero', I>+<one(), R1>+<(one()+one()), R2>+
+         <(one()+one()+one()), R3>+<(one()+one()+one()+one()), R4>),
+        gid, key
+   ) @ #i5)
+ ∧
+  (¬(I = R1)) ∧
+  (¬(R1 = R2)) ∧
+  (¬(I = R2)) ∧
+  (¬(I = R3)) ∧
+  (¬(R1 = R3)) ∧
+  (¬(R2 = R3)) ∧
+  (¬(I = R4)) ∧
+  (¬(R1 = R4)) ∧
+  (¬(R2 = R4)) ∧
+  (¬(R3 = R4)) ∧
+  (∀ A #i6. (Corrupt( A ) @ #i6) ⇒ ⊥)"
+*/
+by sorry
+
+lemma key_secrecy_with_corruption [use_induction]:
+  all-traces
+  "∀ #i1 I group gid key #i2.
+    ((IKey( I, group, gid, key ) @ #i1) ∧ (!KU( key ) @ #i2)) ⇒
+    (∃ A #i3. (Corrupt( A ) @ #i3) ∧ (#i3 < #i1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i1 I group gid key #i2.
+  (IKey( I, group, gid, key ) @ #i1) ∧ (!KU( key ) @ #i2)
+ ∧
+  ∀ A #i3. (Corrupt( A ) @ #i3) ⇒ ¬(#i3 < #i1)"
+*/
+by sorry
+
+/* All well-formedness checks were successful. */
+
+end
