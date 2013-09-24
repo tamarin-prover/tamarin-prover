@@ -4,20 +4,46 @@ import re
 import os
 import sys
 
+last_re = re.compile(u'[0-9]+:.*(last|\u2225).*')
+xfour_re = re.compile('.*x\.4.*')
 authout_re = re.compile('.*AuthOut.*')
 split_re = re.compile('.*splitEqs.*')
 
 lines = sys.stdin.readlines()
-# first splitEqs
+
+# uncomment for all lemmas except 'Exp_nonce_or_product2'
+# exit(0)
+
+disjs = []
+splits = []
+authouts = []
+
+# first last disjunctions,
+for line in lines:
+  if last_re.match(line) and not (xfour_re.match(line)): # this is the wrong disjunction with x.4
+    disjs.append(line.split(':')[0])
+
+# then splitEqs,
 for line in lines:
   if split_re.match(line):
-    # print "FOOO"
-    print line.split(':')[0]
+    splits.append(line.split(':')[0])
 
-# then AuthOut
+# afterwards AuthOut
 for line in lines:
   if authout_re.match(line):
-    # print "BAR"
-    print line.split(':')[0]
+    authouts.append(line.split(':')[0])
+
+# we don't perform disjunction splits if there are too many of them
+# otherwise, the chances that we get stuck/choose the wrong ones
+# are too big.
+if len(disjs) < 3:
+  for i in disjs:
+    print i
+
+for i in splits:
+  print i
+
+for i in authouts:
+  print i
 
 # the remaining goals will be added back by Tamarin
