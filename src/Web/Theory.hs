@@ -277,7 +277,7 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
           ]
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
-          bound     = fromMaybe 5 $ apBound $ tiAutoProver ti
+          bound     = fromMaybe 1 $ apBound $ tiAutoProver ti
 
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")

@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+import re
+import os
+import sys
+
+authout_re = re.compile('.*AuthOut.*')
+split_re = re.compile('.*splitEqs.*')
+
+lines = sys.stdin.readlines()
+# first splitEqs
+for line in lines:
+  if split_re.match(line):
+    # print "FOOO"
+    print line.split(':')[0]
+
+# then AuthOut
+for line in lines:
+  if authout_re.match(line):
+    # print "BAR"
+    print line.split(':')[0]
+
+# the remaining goals will be added back by Tamarin

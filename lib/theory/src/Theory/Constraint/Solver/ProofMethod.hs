@@ -47,6 +47,11 @@ import           Control.Basics
 import           Control.DeepSeq
 import qualified Control.Monad.Trans.PreciseFresh          as Precise
 
+import           Debug.Trace
+import           Safe
+import           System.IO.Unsafe
+import           System.Process
+
 import           Theory.Constraint.Solver.CaseDistinctions
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.Goals
@@ -214,6 +219,7 @@ execProofMethod ctxt method sys =
 -- order of solving in a constraint system.
 data GoalRanking =
     GoalNrRanking
+  | OracleRanking
   | UsefulGoalNrRanking
   | SmartRanking Bool
   deriving( Eq, Ord, Show )
@@ -224,6 +230,7 @@ goalRankingName ranking =
     "Goals sorted according to " ++ case ranking of
         GoalNrRanking                -> "their order of creation"
         UsefulGoalNrRanking          -> "their usefulness and order of creation"
+        OracleRanking                -> "an oracle for ranking"
         SmartRanking useLoopBreakers -> smart useLoopBreakers
    where
      smart b = "the 'smart' heuristic (loop breakers " ++
@@ -236,6 +243,7 @@ rankGoals ctxt ranking = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
+    OracleRanking -> oracleRanking ctxt
     SmartRanking useLoopsBreakers -> smartRanking ctxt useLoopsBreakers
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
@@ -316,6 +324,29 @@ roundRobinHeuristic rankings =
 -- | Sort annotated goals according to their number.
 goalNrRanking :: [AnnotatedGoal] -> [AnnotatedGoal]
 goalNrRanking = sortOn (fst . snd)
+
+oracleRanking :: ProofContext
+              -> System
+              -> [AnnotatedGoal] -> [AnnotatedGoal]
+oracleRanking ctxt sys ags0 =
+    unsafePerformIO $ do
+      let ags = goalNrRanking ags0
+      let inp = unlines
+                  (map (\(i,ag) -> show i ++": "++ render (pgoal ag))
+                       (zip [(0::Int)..] ags))
+      outp <- readProcess "./oracle" [] inp
+      let indices = catMaybes . map readMay . lines $ outp
+          ranked = catMaybes . map (atMay ags) $ indices
+          remaining = filter (`notElem` ranked) ags
+          log =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n" 
+                ++ inp
+                ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
+                ++ outp
+                ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
+      guard $ trace log True
+      return (ranked ++ remaining)
+  where
+    pgoal (g,(nr,usefulness)) = prettyGoal g
 
 -- | A ranking function tuned for the automatic verification of
 -- classical security protocols that exhibit a well-founded protocol premise
