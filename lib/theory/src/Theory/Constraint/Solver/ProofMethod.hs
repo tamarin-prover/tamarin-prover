@@ -264,7 +264,7 @@ rankProofMethods ranking ctxt sys = do
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
   where
-    contradiction c                    = (Contradiction (Just c), "")
+    contradiction c                          = (Contradiction (Just c), "")
     solveGoalMethod (goal, (nr, usefulness)) =
       ( SolveGoal goal
       , "nr. " ++ show nr ++ case usefulness of
