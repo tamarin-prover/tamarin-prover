@@ -15,13 +15,6 @@ module Term.Rewriting.Norm (
   , maybeNotNfSubterms
 ) where
 
-import           Term.LTerm
-import           Term.Maude.Process
-import           Term.Maude.Signature
-import           Term.Substitution
-import           Term.SubtermRule
-import           Term.Unification
-
 import           Utils.Misc
 
 import           Control.Basics
@@ -31,6 +24,14 @@ import           Data.List
 import qualified Data.Set             as S
 
 import           System.IO.Unsafe     (unsafePerformIO)
+
+
+import           Term.LTerm
+import           Term.Maude.Process
+import           Term.Maude.Signature
+import           Term.Substitution
+import           Term.SubtermRule
+import           Term.Unification
 
 ----------------------------------------------------------------------
 -- Normalization using Maude
