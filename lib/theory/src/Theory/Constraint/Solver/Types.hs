@@ -27,6 +27,8 @@ module Theory.Constraint.Solver.Types (
   , pcUseInduction
   , pcTraceQuantifier
   , pcMaudeHandle
+  , pcLemmaName
+  , pcHiddenLemmas
 
   -- ** Classified rules
   , ClassifiedRules(..)
@@ -119,6 +121,8 @@ data ProofContext = ProofContext
        , _pcCaseDists          :: [CaseDistinction]
        , _pcUseInduction       :: InductionHint
        , _pcTraceQuantifier    :: SystemTraceQuantifier
+       , _pcLemmaName          :: String
+       , _pcHiddenLemmas       :: [String]
        }
        deriving( Eq, Ord, Show )
 

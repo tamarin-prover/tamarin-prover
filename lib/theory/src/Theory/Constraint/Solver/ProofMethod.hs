@@ -328,25 +328,30 @@ goalNrRanking = sortOn (fst . snd)
 oracleRanking :: ProofContext
               -> System
               -> [AnnotatedGoal] -> [AnnotatedGoal]
-oracleRanking ctxt sys ags0 =
+oracleRanking ctxt _sys ags0
+--  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
+  | otherwise =
     unsafePerformIO $ do
       let ags = goalNrRanking ags0
       let inp = unlines
-                  (map (\(i,ag) -> show i ++": "++ render (pgoal ag))
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      outp <- readProcess "./oracle" [] inp
+      outp <- readProcess "./oracle" [ L.get pcLemmaName ctxt ] inp
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
           remaining = filter (`notElem` ranked) ags
-          log =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n" 
-                ++ inp
-                ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                ++ outp
-                ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
-      guard $ trace log True
+          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n" 
+                   ++ inp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
+                   ++ outp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
+      guard $ trace logMsg True
+      -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
+      -- guard $ trace sd True
+      
       return (ranked ++ remaining)
   where
-    pgoal (g,(nr,usefulness)) = prettyGoal g
+    pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
 -- | A ranking function tuned for the automatic verification of
 -- classical security protocols that exhibit a well-founded protocol premise
