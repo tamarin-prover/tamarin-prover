@@ -28,7 +28,7 @@ import           Main.Utils
 
 intruderMode :: TamarinMode
 intruderMode = tamarinMode
-    "variants"
+    "intruder"
     "Compute the variants of the intruder rules for DH-exponentiation."
     setupFlags
     run
