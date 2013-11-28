@@ -1,0 +1,10 @@
+functions: pair/2, fst/1, snd/1
+equations: fst(pair(x,y)) = x, snd(pair(x,y)) = y
+functions: nil/0
+equations: ( x + x) = nil
+equations: ( x + nil) = x
+equations: (( x + y) + x) = y
+.
+fst(x)
+x + y
+.
