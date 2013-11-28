@@ -14,6 +14,10 @@ module Theory.Text.Parser (
   , parseOpenDiffTheoryString
   , parseLemma
   , parseIntruderRules
+  , multterm
+  , llit
+  , equations
+  , functions
   ) where
 
 import           Prelude                    hiding (id, (.))
