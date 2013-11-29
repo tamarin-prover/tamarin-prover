@@ -5,6 +5,10 @@ equations: ( x + x) = nil
 equations: ( x + nil) = x
 equations: (( x + y) + x) = y
 .
-fst(x)
-x + y
+variants fst(x)
+variants x + y
+unify x + y = z + 'a'
+match x + y = z + 'a'
+match x + 'a' = x + y
+norm ('a' + 'a' + 'z')
 .
