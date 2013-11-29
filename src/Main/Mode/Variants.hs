@@ -20,7 +20,8 @@ import           Theory
 import           Main.Console
 import           Main.Environment
 import           Term.Narrowing.Variants
-import           Text.PrettyPrint.Class
+import           Term.Rewriting.Norm
+import           Text.PrettyPrint.Class (render)
 import           Data.List
 import           Theory.Text.Parser
 import           Theory.Text.Parser.Token
@@ -46,13 +47,20 @@ variantsMode = tamarinMode
       [ -- flagOpt "" ["Input","I"] (updateArg "outDir") "DIR"  "Output directory"
       ]
 
+data Cmd =
+    Variants LNTerm
+  | Unify LNTerm LNTerm
+  | Match LNTerm LNTerm
+  | Norm LNTerm
+  | Quit
+
 -- | Read-eval-print mode for computing variants.
 run :: TamarinMode -> Arguments -> IO ()
 run _thisMode as = do
     _ <- ensureMaude as
     sig <- evalSignature msetMaudeSig -- only AC symbol +
     maudeHnd <- startMaude (maudePath as) sig
-    evalVariants maudeHnd sig
+    evalCmds maudeHnd sig
   where
     evalSignature sig = do
       putStr "# " >> hFlush stdout
@@ -64,21 +72,52 @@ run _thisMode as = do
         (_, Right sig') -> do
           putStrLn $ "added "++ ps
           evalSignature sig'
+
+    parseCmd sig = do
+      setState sig
+      cmd <- asum
+        [ Variants <$> (symbol "variants" *> multterm llit)
+        , Norm <$> (symbol "norm" *> multterm llit)
+        , Unify <$> (symbol "unify" *> multterm llit) <*> (equalSign *> multterm llit)
+        , Match <$> (symbol "match" *> multterm llit) <*> (equalSign *> multterm llit)
+        , pure Quit <* dot
+        ]
+      eof
+      return cmd
       
-    evalVariants hnd sig = do
+    evalCmds hnd sig = do
       putStr "> " >> hFlush stdout
       ps <- getLine
-      case (ps, parseString "<unknown source>" (setState sig *> multterm llit <* eof) ps) of
-        (".",_)     -> putStrLn "Finished."
-        (_,Left  e) -> putStrLn ("parsing failed: "++(show e)) >> evalVariants hnd sig
-        (_,Right t) -> do
-          putStrLn $ "variants of " ++(render $ prettyLNTerm t)++":"
+      case parseString "<unknown source>" (parseCmd sig) ps of
+        Left  e -> putStrLn ("parsing failed: "++(show e)) >> evalCmds hnd sig
+        Right Quit -> putStrLn "Finished."
+        Right (Variants t) -> do
+          putStrLn $ "variants of " ++ppTerm t++":"
           let substs = computeVariants t `runReader` hnd
           forM_ substs $ \s ->
-            putStrLn $ "{"++ppSubst s++"}"
-          evalVariants hnd sig
+            putStrLn $ "{"++ppSubst (substToListVFresh s)++"}"
+          evalCmds hnd sig
+        Right (Norm t) -> do
+          putStrLn $ "Norm :" ++ppTerm t
+          let t' = norm' t `runReader` hnd
+          putStrLn $ ppTerm t'
+          evalCmds hnd sig
+        Right (Unify t t') -> do
+          putStrLn $ "unify " ++ppTerm t++" with "++ppTerm t'
+          let substs = unifyLNTerm [Equal t t'] `runReader` hnd
+          forM_ substs $ \s ->
+            putStrLn $ "{"++ppSubst (substToListVFresh s)++"}"
+          evalCmds hnd sig
+        Right (Match t p) -> do
+          putStrLn $ "match term " ++ppTerm t++" with pattern "++ppTerm p
+          let substs = solveMatchLNTerm (t `matchWith` p) `runReader` hnd
+          forM_ substs $ \s ->
+            putStrLn $ "{"++ppSubst (substToList s)++"}"
 
-    ppSubst s = intercalate ", "
-                 $ map (\(v,t) -> (render (prettyLNTerm t))++"/"++render (prettyLVar v))
-                 $ substToListVFresh s
+          evalCmds hnd sig
+
+    ppTerm = render . prettyLNTerm
+    ppSubst sl = intercalate ", "
+                 $ map (\(v,t) -> ppTerm t++"/"++render (prettyLVar v))
+                 $ sl
 
