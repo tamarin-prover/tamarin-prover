@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE QuasiQuotes   #-}
 {-# LANGUAGE TupleSections #-}
@@ -512,24 +513,38 @@ imgThyPath :: ImageFormat
            -> FilePath               -- ^ 'dot' command
            -> FilePath               -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())
+           -> String                 -- ^ Simplification level of graph (string representation of integer >= 0)
+           -> Bool                   -- ^ True iff we want abbreviations
            -> ClosedTheory
            -> TheoryPath
            -> IO FilePath
-imgThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
+imgThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate thy path = go path
   where
     go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j)
     go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
     go _                      = error "Unhandled theory path. This is a bug."
 
+    -- Prefix dot code with comment mentioning all protocol rule names
+    prefixedShowDot dot = unlines
+        [ "// simplification: "          ++ simplificationLevel
+        , "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
+        , "// message deduction rules: " ++ ruleList (getIntrVariants thy)
+        , "// abbreviate: "              ++ show abbreviate
+        , D.showDot dot
+        ]
+      where
+        ruleList :: HasRuleName (Rule i) => [Rule i] -> String
+        ruleList = concat . intersperse ", " . nub . map showRuleCaseName
+
     -- Get dot code for required cases
-    casesDotCode k i j = D.showDot $
+    casesDotCode k i j = prefixedShowDot $
         compact $ snd $ cases !! (i-1) !! (j-1)
       where
         cases = map (getDisj . get cdCases) (getCaseDistinction k thy)
 
     -- Get dot code for proof path in lemma
     proofPathDotCode lemma proofPath =
-      D.showDot $ fromMaybe (return ()) $ do
+      prefixedShowDot $ fromMaybe (return ()) $ do
         subProof <- resolveProofPath thy lemma proofPath
         sequent <- psInfo $ root subProof
         return $ compact sequent

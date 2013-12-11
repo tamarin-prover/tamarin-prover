@@ -374,7 +374,7 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
 
     tagUsefulness Useful                = 0 :: Int
     tagUsefulness ProbablyConstructible = 1
-    tagUsefulness LoopBreaker           = 1
+    tagUsefulness LoopBreaker           = 0
     tagUsefulness CurrentlyDeducible    = 2
 
     unmark | allowPremiseGLoopBreakers = map unmarkPremiseG
@@ -386,8 +386,10 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     solveFirst =
         [ isChainGoal . fst
         , isDisjGoal . fst
+        , isFirstProtoFact . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoal . fst
+        , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
         , isFreshKnowsGoal . fst
         , isSplitGoalSmall . fst
@@ -403,8 +405,18 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
-    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) = not $ isKFact fa
+    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) =
+       not (isKFact fa) && not (isAuthOutFact fa)
     isNonLoopBreakerProtoFactGoal _                            = False
+
+    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _) = True
+    isAuthOutFact  _                                 = False
+
+    isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
+    isFirstProtoFact _                                                 = False
+
+    isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
+    isNotAuthOut _               = False
 
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing

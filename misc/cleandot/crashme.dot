@@ -1,0 +1,4 @@
+digraph G {
+n47 [shape="record", style="filled", fillcolor="#ceb9ed", label="{{<n43>StartGroup($I,P1,P3,~gid)}|{<n44>#vr.6:StartGroup_0[]}|{<n45>Initiator($I,P3,~gid)|<n46>StartGroupResponders(one(),$I,'nil',P3,~gid)}}"];
+}
+
