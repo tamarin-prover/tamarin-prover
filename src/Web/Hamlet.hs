@@ -266,7 +266,7 @@ introTpl = [whamlet|
         \ <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>,
         \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a><br>
         Contributors:
-        \ <a href="http://people.inf.ethz.ch/cremersc/index.html">Cas Cremers</a>,
+        \ <a href="http://www.cs.ox.ac.uk/people/cas.cremers/">Cas Cremers</a>,
         \ <a href="http://cssx.ch">Cedric Staub</a>
       <p>
         <span class="tamarin">Tamarin</span> was developed at the
