@@ -187,7 +187,8 @@ nonInjectiveFactInstances ctxt se = do
         -- FIXME: There should be a weaker version of the rule that just
         -- introduces the constraint 'k < j || k == j' here.
         checkRule jRu    = any conflictingFact (L.get rPrems jRu) &&
-                           k `S.member` D.reachableSet [j] less
+                           (k `S.member` D.reachableSet [j] less
+                             || isLast se k)
 
     guard isCounterExample
     return (i, j, k) -- counter-example to unique fact instances
