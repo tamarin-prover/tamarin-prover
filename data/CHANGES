@@ -1,3 +1,9 @@
+* 0.8.5.1
+  - Added KEA+ models with adversarial key registration.
+  - Make case splitting more extensive. This possibly increases precomputation
+    time, but in some cases it enables proving more properties.
+  - fix: restrict aeson depedency to 0.6.*
+
 * 0.8.5 Dropped support for GHC 7.0.x and GHC 7.2.x in favor of GHC 7.6.x
 
   - fix: faster and simpler variant computation

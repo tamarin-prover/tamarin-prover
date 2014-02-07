@@ -49,7 +49,7 @@ force-install-term:
 #
 #
 #
-VERSION=0.8.5.0
+VERSION=0.8.5.1
 
 source-dists:
 	cd lib/utils; cabal sdist
@@ -63,7 +63,7 @@ source-dists-tests: source-dists
 	cp lib/term/dist/tamarin-prover-term-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
 	cp lib/theory/dist/tamarin-prover-theory-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
 	cp dist/tamarin-prover-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-	cd /tmp/dist-test-$(VERSION)/; cabal install *.tar.gz
+	cd /tmp/dist-test-$(VERSION)/; cabal install *.tar.gz --force-reinstalls
 
 # For profiling, we use the cabal-dev tool and do not build the GUI. This
 # simplifies installing all required libraries with profiling support enabled.

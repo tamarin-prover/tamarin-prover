@@ -1,7 +1,7 @@
 cabal-version:      >= 1.8
 build-type:         Simple
 name:               tamarin-prover
-version:            0.8.5.0
+version:            0.8.5.1
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -166,6 +166,9 @@ data-files:
   examples/csf12/JKL_TS3_2004_KI_wPFS.spthy_nonterm
   examples/csf12/JKL_TS3_2008_KI_wPFS.spthy_nonterm
 
+  examples/csf12/KEA_plus_AdvKey-fix.spthy
+  examples/csf12/KEA_plus_AdvKey.spthy
+
 extra-source-files:
   .ghci
   interactive-only-src/Paths_tamarin_prover.hs
@@ -268,9 +271,9 @@ executable tamarin-prover
       , parallel          == 3.2.*
       , HUnit             == 1.2.*
 
-      , tamarin-prover-utils  >= 0.8.5  && < 0.9
-      , tamarin-prover-term   >= 0.8.5  && < 0.9
-      , tamarin-prover-theory >= 0.8.5  && < 0.9
+      , tamarin-prover-utils  >= 0.8.5.1  && < 0.9
+      , tamarin-prover-term   >= 0.8.5.1  && < 0.9
+      , tamarin-prover-theory >= 0.8.5.1  && < 0.9
 
 
     other-modules:
