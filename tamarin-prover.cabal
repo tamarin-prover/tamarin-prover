@@ -229,9 +229,9 @@ executable tamarin-prover
         , blaze-html        >= 0.5
         , http-types        >= 0.7
         , blaze-builder     >= 0.3
-        , yesod-core        >= 1.1
-        , yesod-json        >= 1.1
-        , yesod-static      >= 1.1
+        , yesod-core        >= 1.2.6.6
+        , yesod-json        >= 1.2
+        , yesod-static      >= 1.2
         , conduit           >= 0.5
         -- , yesod-form        == 0.4.*   -- required once we reactivate editing
         , text              == 0.11.*

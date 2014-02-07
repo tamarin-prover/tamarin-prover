@@ -328,12 +328,12 @@ instance Yesod WebUI where
 -- belong in the "types" module in order to avoid mutually recursive modules.
 -- defaultLayout' :: (Yesod master, Route master ~ WebUIRoute)
 --                => Widget master ()      -- ^ Widget to embed in layout
---                -> Handler master RepHtml
-defaultLayout' :: Widget -> Handler RepHtml
+--                -> Handler master Html
+defaultLayout' :: Widget -> Handler Html
 defaultLayout' w = do
   page <- widgetToPageContent w
   message <- getMessage
-  hamletToRepHtml [hamlet|
+  giveUrlRenderer [hamlet|
     $newline never
     !!!
     <html>
