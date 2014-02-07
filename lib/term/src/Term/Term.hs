@@ -76,8 +76,8 @@ import           Data.Foldable (Foldable, foldMap)
 import qualified Data.ByteString.Char8 as BC
 import           Extension.Data.ByteString ()
 
-
 import           Text.PrettyPrint.Class
+
 import           Term.Term.Classes
 import           Term.Term.FunctionSymbols
 import           Term.Term.Raw

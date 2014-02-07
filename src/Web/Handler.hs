@@ -320,7 +320,7 @@ modifyTheory ti f fpath errResponse = do
 
 -- | The root handler lists all theories by default,
 -- or load a new theory if the corresponding form was submitted.
-getRootR :: Handler RepHtml
+getRootR :: Handler Html
 getRootR = do
     theories <- getTheories
     defaultLayout $ do
@@ -330,7 +330,7 @@ getRootR = do
 data File = File T.Text
   deriving Show
 
-postRootR :: Handler RepHtml
+postRootR :: Handler Html
 postRootR = do
     result <- lookupFile "uploadedTheory"
     case result of
@@ -357,7 +357,7 @@ postRootR = do
 
 
 -- | Show overview over theory (framed layout).
-getOverviewR :: TheoryIdx -> TheoryPath -> Handler RepHtml
+getOverviewR :: TheoryIdx -> TheoryPath -> Handler Html
 getOverviewR idx path = withTheory idx $ \ti -> do
   renderF <- getUrlRender
   defaultLayout $ do
@@ -456,7 +456,7 @@ getAutoProverR idx extractor bound =
 
 {-
 -- | Show a given path within a theory (debug view).
-getTheoryPathDR :: TheoryIdx -> TheoryPath -> Handler RepHtml
+getTheoryPathDR :: TheoryIdx -> TheoryPath -> Handler Html
 getTheoryPathDR idx path = withTheory idx $ \ti -> ajaxLayout $ do
   -- let maybeDebug = htmlThyDbgPath (tiTheory ti) path
   -- let maybeWidget = wrapHtmlDoc <$> maybeDebug
@@ -700,7 +700,7 @@ getUnloadTheoryR idx = do
 
 {-
 -- | Show a list of all currently running threads.
-getThreadsR :: Handler RepHtml
+getThreadsR :: Handler Html
 getThreadsR = do
     threads <- getThreads
     defaultLayout $ do

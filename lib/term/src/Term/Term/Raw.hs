@@ -82,7 +82,7 @@ fApp :: Ord a => FunSym -> [Term a] -> Term a
 fApp (AC acSym)  ts = fAppAC acSym ts
 fApp (C o)       ts = fAppC o ts
 fApp List        ts = FAPP List ts
-fApp s@(NoEq _) ts = FAPP s ts
+fApp s@(NoEq _)  ts = FAPP s ts
 
 -- | Smart constructor for AC terms.
 fAppAC :: Ord a => ACSym -> [Term a] -> Term a
@@ -97,11 +97,11 @@ fAppAC acsym as  =
     (o_as0, non_o_as) = partition isOTerm as
     o_as              = [ a | FAPP _ ts <- o_as0, a <- ts ]
 
--- | Smart constructor for AC terms.
+-- | Smart constructor for C terms.
 fAppC :: Ord a => CSym -> [Term a] -> Term a
 fAppC nacsym as = FAPP (C nacsym) (sort as)
 
--- | Smart constructor for non-AC terms.
+-- | Smart constructor for non-AC/C terms.
 {-# INLINE fAppNoEq #-}
 fAppNoEq :: NoEqSym -> [Term a] -> Term a
 fAppNoEq freesym = FAPP (NoEq freesym)

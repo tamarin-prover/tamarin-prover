@@ -68,6 +68,7 @@ import           Data.Map (Map)
 
 import           System.IO.Unsafe (unsafePerformIO)
 
+
 import           Term.Rewriting.Definitions
 import           Term.Substitution
 import qualified Term.Maude.Process as UM
@@ -75,7 +76,6 @@ import           Term.Maude.Process
                    (MaudeHandle, WithMaude, startMaude, getMaudeStats, mhMaudeSig, mhFilePath)
 import           Term.Maude.Signature
 import           Debug.Trace.Ignore
--- import qualified Debug.Trace as DT
 
 -- Unification modulo AC
 ----------------------------------------------------------------------
@@ -112,7 +112,6 @@ unifyLTerm sortOf eqs = flattenUnif <$> unifyLTermFactored sortOf eqs
 
 -- | @unifyLNTerm eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
 unifyLNTerm :: [Equal LNTerm] -> WithMaude [SubstVFresh Name LVar]
--- unifyLNTerm eqs = reader $ \hnd -> (\res -> DT.trace (show ("unify", res, eqs)) res) $ unifyLTerm sortOfName eqs `runReader` hnd
 unifyLNTerm = unifyLTerm sortOfName
 
 -- | 'True' iff the terms are unifiable.
@@ -121,7 +120,8 @@ unifiableLNTerms t1 t2 = (not . null) <$> unifyLNTerm [Equal t1 t2]
 
 -- | Flatten a factored substitution to a list of substitutions.
 flattenUnif :: IsConst c => (LSubst c, [LSubstVFresh c]) -> [LSubstVFresh c]
-flattenUnif (subst, substs) =  (\res -> trace (show ("flattenUnif",subst, substs,res )) res) $ map (`composeVFresh` subst) substs
+flattenUnif (subst, substs) = 
+    (\res -> trace (show ("flattenUnif",subst, substs,res )) res) $ map (`composeVFresh` subst) substs
 
 -- Matching modulo AC
 ----------------------------------------------------------------------

@@ -99,9 +99,6 @@ module Term.LTerm (
   , module Term.VTerm
 ) where
 
-import           Term.Rewriting.Definitions
-import           Term.VTerm
-
 import           Text.PrettyPrint.Class
 
 import           Control.Applicative
@@ -126,7 +123,11 @@ import           Safe                             (fromJustNote)
 import           Extension.Data.Monoid
 import           Extension.Prelude
 
+
 import           Logic.Connectives
+
+import           Term.Rewriting.Definitions
+import           Term.VTerm
 
 ------------------------------------------------------------------------------
 -- Sorts.
@@ -278,6 +279,10 @@ isMsgVar _                         = False
 isFreshVar :: LNTerm -> Bool
 isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
 isFreshVar _                         = False
+
+
+-- Utility functions for constraint solving
+-------------------------------------------
 
 -- | The non-inverse factors of a term.
 niFactors :: LNTerm -> [LNTerm]

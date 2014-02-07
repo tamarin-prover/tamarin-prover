@@ -37,6 +37,7 @@ syn match spthyLAtom	        ">->"
 syn match spthyLAtom	        "="
 syn match spthyLAtom	        "@"
 syn match spthyLAtom	        "<"
+syn match spthyLAtom	        ">"
 
 syn keyword spthyConstr         aenc sdec senc sdec sign verify hashing signing
 syn match spthyConstr           "\<h("he=e-1
