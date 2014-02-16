@@ -1,3 +1,7 @@
+* 0.8.6.0
+  - Incorporate a patch contributed by Ognjen Maric that improves reasoning
+    about injective facts in inductive proofs.
+
 * 0.8.5.1
   - Added KEA+ models with adversarial key registration.
   - Make case splitting more extensive. This possibly increases precomputation
