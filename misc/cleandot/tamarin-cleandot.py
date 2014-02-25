@@ -27,7 +27,7 @@ Cas Cremers
 
 Usage:
 
-    tamarin-cleandot.py file [options]
+    tamarin-cleandot.py [options] file
 
 Where [options] is one of:
 
