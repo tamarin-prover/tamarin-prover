@@ -71,7 +71,7 @@ labelbnf = None
 PARAMETERS = {}
 
 # DEBUG mode
-DEBUGMODE = False
+DEBUGMODE = True
 
 
 class rules(object):
@@ -666,7 +666,7 @@ def appendLog(l):
     global DEBUGMODE
 
     if DEBUGMODE:
-        fp = open("/tmp/tamarin-cleandot.log","a")
+        fp = open("/tmp/tamarin-cleandot.log",'a')
         fp.write(l)
         fp.close()
 
@@ -1556,6 +1556,78 @@ def getSimplificationLevel():
     return 1
 
 
+def joinSimilar(G):
+    """
+    Simplify graph by joining 'similar' leaf nodes and their edges.
+
+    A common case is the following:
+
+    (!KU(t1)@vkI) --[somelabel]--> X
+    (!KU(t2)@vkJ) --[somelabel]--> X
+
+    where the LHS have no other incoming/outgoing edges, but X might.
+
+    We want to collapse these to:
+
+    (!KU(t1)@vkI !KU(t2)@vkJ) --[somelabel]--> X
+    """
+    NL = G.get_node_list()
+    NLI = []
+    for N in NL:
+        if incomingEdges(G,N) == []:
+            NLI.append(N)
+
+    # Determine if we can merge some edges
+    joiners = []
+    for (i,N1) in enumerate(NLI):
+        OE1 = outgoingEdges(G,N1)
+        similars = [N1]
+        for N2 in NLI[i+1:]:
+            same = True
+            OE2 = outgoingEdges(G,N2)
+            if len(OE1) == len(OE2):
+                for E1 in OE1:
+                    found = False
+                    for E2 in OE2:
+                        if E1.get_destination() == E2.get_destination():
+                            if E1.get_label() == E2.get_label():
+                                found = True
+                    if not found:
+                        same = False
+                        break
+            if same:
+                similars.append(N2)
+        if len(similars) > 1:
+            joiners.append(similars)
+    
+    # The set of joiners will be merged
+    toremove = []
+    for l in joiners:
+        N1 = l[0]
+
+        labels = []
+        for N2 in l:
+            lb = N2.get_label()
+            if lb != None:
+                if lb not in labels:
+                    labels.append(lb)
+
+        for N2 in l[1:]:
+            if N2 not in toremove:
+                toremove.append(N2)
+
+        lb = (" ".join(labels)).strip()
+        lb = "REPLACED"
+        if len(lb) > 0:
+            N1.set_label(lb)
+
+    for N2 in toremove:
+        del_edge(G,N2)
+        del_node(G,N2)
+
+    return G
+
+
 def improveGraph(G):
     """
     Improve a graph
@@ -1576,6 +1648,8 @@ def improveGraph(G):
     if sl >= 2:
         # CollapseRules throws away a lot of information
         G = collapseRules(G,removeFacts=(sl >= 3))
+
+    G = joinSimilar(G)
 
     # Abbreviate must go last, so that we don't abbreviate things that are later collapsed
     if "abbreviate" in PARAMETERS.keys():
