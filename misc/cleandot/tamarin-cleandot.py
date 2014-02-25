@@ -1557,6 +1557,30 @@ def getSimplificationLevel():
     return 1
 
 
+def containsOutgoingEdges(G,N1,N2):
+    """
+    Check if the outgoing edges of N1 are contained in those of N2
+    """
+    for OE1 in outgoingEdges(G,N1):
+        found = False
+        for OE2 in outgoingEdges(G,N2):
+            if OE1.get_destination() == OE2.get_destination():
+                if OE1.get_label() == OE2.get_label():
+                    found = True
+                    break
+        if not found:
+            return False
+
+    return True
+
+
+def sameOutgoingEdges(G,N1,N2):
+    if containsOutgoingEdges(G,N1,N2):
+        if containsOutgoingEdges(G,N2,N1):
+            return True
+    return False
+
+
 def joinSimilar(G):
     """
     Simplify graph by joining 'similar' leaf nodes and their edges.
@@ -1576,30 +1600,24 @@ def joinSimilar(G):
     NLI = []
     for N in NL:
         if incomingEdges(G,N) == []:
-            NLI.append(N)
+            NLI.append((N,True))
 
     # Determine if we can merge some edges
     joiners = []
-    for (i,N1) in enumerate(NLI):
-        OE1 = outgoingEdges(G,N1)
-        similars = [N1]
-        for N2 in NLI[i+1:]:
-            same = True
-            OE2 = outgoingEdges(G,N2)
-            if len(OE1) == len(OE2):
-                for E1 in OE1:
-                    found = False
-                    for E2 in OE2:
-                        if E1.get_destination() == E2.get_destination():
-                            if E1.get_label() == E2.get_label():
-                                found = True
-                    if not found:
-                        same = False
-                        break
-            if same:
-                similars.append(N2)
-        if len(similars) > 1:
-            joiners.append(similars)
+    for (i,(N1,T1)) in enumerate(NLI):
+        if T1 == True:
+            similars = [N1]
+            markDone = [i]
+            for (j,(N2,T2)) in enumerate(NLI):
+                if j > i:
+                    if sameOutgoingEdges(G,N1,N2):
+                        similars.append(N2)
+                        markDone.append(j)
+            if len(similars) > 1:
+                joiners.append(similars)
+                for j in markDone:
+                    (N2,T2) = NLI[j]
+                    NLI[j] = (N2,False)
     
     # The set of joiners will be merged
     toremove = []
@@ -1617,13 +1635,22 @@ def joinSimilar(G):
             if N2 not in toremove:
                 toremove.append(N2)
 
-        lb = (" ".join(labels)).strip()
-        lb = "REPLACED"
-        if len(lb) > 0:
-            N1.set_label(lb)
+        dt = ""
+        appendLog("Parsing some labels\n")
+        for lb in labels:
+            appendLog("- %s\n" % lb)
+            lbs = lb.strip()
+            appendLog("- %s\n" % lbs)
+            if lbs.startswith("\"") and lbs.endswith("\""):
+                lbs = lbs[1:-1]
+            dt += lbs
+            dt += "\l"
+        if len(dt) > 0:
+            N1.set_label(dt)
 
     for N2 in toremove:
-        del_edge(G,N2)
+        for OE in outgoingEdges(G,N2):
+            del_edge(G,OE.get_source(),OE.get_destination())
         del_node(G,N2)
 
     return G
@@ -1651,8 +1678,6 @@ def improveGraph(G):
         # CollapseRules throws away a lot of information
         G = collapseRules(G,removeFacts=(sl >= 3))
 
-    G = joinSimilar(G)
-
     # Abbreviate must go last, so that we don't abbreviate things that are later collapsed
     if "abbreviate" in PARAMETERS.keys():
         if PARAMETERS["abbreviate"] == "True":
@@ -1665,6 +1690,8 @@ def improveGraph(G):
     # Add legend if needed
     if len(legend) >= 0:
         G = addLegend(G,legend)
+
+    G = joinSimilar(G)
 
     return G
 
