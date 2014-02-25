@@ -72,6 +72,7 @@ PARAMETERS = {}
 
 # DEBUG mode
 DEBUGMODE = True
+DEBUGPARAMETERS = False
 
 
 class rules(object):
@@ -1634,6 +1635,7 @@ def improveGraph(G):
     """
     global DEBUGMODE
     global PARAMETERS
+    global DEBUGPARAMETERS
 
     legend = ""
 
@@ -1657,7 +1659,7 @@ def improveGraph(G):
             (G,l) = abbreviateGraph(G)
             legend += l
 
-    if DEBUGMODE:
+    if DEBUGPARAMETERS:
         legend += showParameters()
 
     # Add legend if needed
