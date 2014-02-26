@@ -1581,7 +1581,50 @@ def sameOutgoingEdges(G,N1,N2):
     return False
 
 
-def joinSimilar(G):
+def deconstructLabel(lb):
+    """
+    Parse a label into a set of (stripped) lines without line breaks.
+    """
+    res = set()
+    if lb != None:
+        dt = lb.split("\l")
+        for lbs in dt:
+            lbss = lbs.strip()
+            if len(lbss) >= 2:
+                if lbss.startswith("\"") and lbss.endswith("\""):
+                    lbss = lbss[1:-1]
+            if len(lbss) > 0:
+                res.add(lbss)
+    return res
+
+def deconstructLabels(labels):
+    """
+    Parse a list of labels into a set of (stripped) lines without line breaks.
+    """
+    res = set()
+    for lb in labels:
+        res |= deconstructLabel(lb)
+    return res
+
+def constructLabel(labelset):
+    """
+    Join a set of labels into a single label string
+    """
+    res = ""
+    for lb in labelset:
+        res += lb
+        res += " \l"
+    return res
+
+def joinLabels(labels):
+    """
+    Join a list of labels into a single one. Elements may be 'None'.
+    """
+    rset = deconstructLabels(labels)
+    return constructLabel(rset)
+
+
+def joinSimilar(G,subsumetest=True):
     """
     Simplify graph by joining 'similar' leaf nodes and their edges.
 
@@ -1595,6 +1638,14 @@ def joinSimilar(G):
     We want to collapse these to:
 
     (!KU(t1)@vkI !KU(t2)@vkJ) --[somelabel]--> X
+
+    Furthermore, if the subsumetest parameter is True, then we also remove
+    edges that can be subsumed by others based on their outgoing edges and
+    labels.
+
+    TODO: Currently we are not comparing node and edge attributes for
+    similarity, which perhaps we should, to avoid losing information when
+    collapsing different types of node.
     """
     NL = G.get_node_list()
     NLI = []
@@ -1626,28 +1677,43 @@ def joinSimilar(G):
 
         labels = []
         for N2 in l:
-            lb = N2.get_label()
-            if lb != None:
-                if lb not in labels:
-                    labels.append(lb)
+            labels.append(N2.get_label())
 
         for N2 in l[1:]:
             if N2 not in toremove:
                 toremove.append(N2)
 
-        dt = ""
         appendLog("Parsing some labels\n")
-        for lb in labels:
-            appendLog("- %s\n" % lb)
-            lbs = lb.strip()
-            appendLog("- %s\n" % lbs)
-            if lbs.startswith("\"") and lbs.endswith("\""):
-                lbs = lbs[1:-1]
-            dt += lbs
-            dt += "\l"
-        if len(dt) > 0:
-            N1.set_label(dt)
+        label = joinLabels(labels)
+        if len(label) > 0:
+            N1.set_label(label)
 
+    # Test for subsumption?
+    if subsumetest == True:
+
+        oneFound = True
+        while oneFound == True:
+            candidates = []
+            for (x,t) in NLI:
+                if x not in toremove:
+                    candidates.append(x)
+            oneFound = False
+            for N1 in candidates:
+                for N2 in candidates:
+                    if N1 != N2:
+                        if containsOutgoingEdges(G,N1,N2):
+                            # N1 can be subsumed by N2
+                            label = joinLabels([N2.get_label(),N1.get_label()])
+                            N2.set_label(label)
+                            toremove.append(N1)
+                            oneFound = True
+                            break
+                if oneFound == True:
+                    break
+
+
+
+    # Remove the nodes and their edges where needed
     for N2 in toremove:
         for OE in outgoingEdges(G,N2):
             del_edge(G,OE.get_source(),OE.get_destination())
@@ -1666,8 +1732,9 @@ def improveGraph(G):
 
     legend = ""
 
+    ### Start of graph simplification part
+
     sl = getSimplificationLevel()
-    
 
     if sl >= 1:
         # ShowClusters must go early as it needs much information
@@ -1677,6 +1744,8 @@ def improveGraph(G):
     if sl >= 2:
         # CollapseRules throws away a lot of information
         G = collapseRules(G,removeFacts=(sl >= 3))
+
+    ### End of graph simplification part
 
     # Abbreviate must go last, so that we don't abbreviate things that are later collapsed
     if "abbreviate" in PARAMETERS.keys():
@@ -1691,6 +1760,11 @@ def improveGraph(G):
     if len(legend) >= 0:
         G = addLegend(G,legend)
 
+    # TODO: The join similar simplification breaks the language conventions by
+    # joining multiple lines of text. This is currently not in the BNF and
+    # therefore yields an error if abbriation functions try to parse labels. We
+    # should extend the BNF and call this function before doing the
+    # abbreviation.
     G = joinSimilar(G)
 
     return G
@@ -1722,12 +1796,14 @@ def newDot(infile):
     extractParameters(infile)
 
     (fpint,outfile) = mkstemp(suffix=".dot")
-    appendLog("Producing new dot file in %s\n" % outfile)
+    appendLog("Producing new dot file in '%s'.\n" % outfile)
 
     fp = os.fdopen(fpint,'w')
 
+    appendLog("Parsing graph from '%s'.\n" % infile)
     G = graph_from_dot_file(infile)
 
+    appendLog("Improving graph.\n")
     G = improveGraph(G)
 
     fp.write(G.to_string())
@@ -1741,12 +1817,17 @@ def main():
     if "--version" in sys.argv[1:] or "-V" in sys.argv[1:]:
         execDot(sys.argv[1:])
 
+    appendLog("New run in normal case.\n")
     # Normal case
     try:
         # Try to improve the graph and run dot on the result.
+        appendLog("Finding input file.\n")
         infile = findInputFile()
+        appendLog("Finding args.\n")
         nargs = findArgs(infile)
+        appendLog("Producing new dot file from '%s'.\n" % (infile))
         outfile = newDot(infile)
+        appendLog("Running dot on the result '%s'.\n" % (outfile))
         execDot(nargs + [outfile],raiseErrors=True)
     except SystemExit:
         pass
@@ -1764,6 +1845,7 @@ def main():
         # Something went wrong, fall back to default rendering method.
         execDot(sys.argv[1:])
         pass
+
 
 
 def TrickFilter(s):
