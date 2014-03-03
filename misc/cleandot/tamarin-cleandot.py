@@ -1200,6 +1200,18 @@ def findNode(G,nn):
 
     return None
 
+def removeAllPorts(G):
+    """
+    Remove all port elements from edge sources and destinations.
+    """
+    l = G.get_edges()
+    for edge in l:
+        src = noPort(edge.get_source())
+        dst = noPort(edge.get_destination())
+        edge.set_source(src)
+        edge.set_destination(dst)
+    return G
+
 def findSomeConnected(G,NL,prefix=""):
     """
     Given a graph an a list of node names, find additional node names that were not in there yet.
@@ -1805,6 +1817,9 @@ def newDot(infile):
 
     appendLog("Improving graph.\n")
     G = improveGraph(G)
+
+    ## Remove all ports
+    #G = removeAllPorts(G)
 
     fp.write(G.to_string())
 
