@@ -1814,6 +1814,9 @@ def newDot(infile):
 
     appendLog("Parsing graph from '%s'.\n" % infile)
     G = graph_from_dot_file(infile)
+    if G == None:
+        appendLog("Could not prase graph sensibly.\n")
+        return None
 
     appendLog("Improving graph.\n")
     G = improveGraph(G)
