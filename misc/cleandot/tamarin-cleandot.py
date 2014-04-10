@@ -1734,6 +1734,58 @@ def joinSimilar(G,subsumetest=True):
     return G
 
 
+def extractColor(S):
+    """
+    Extract color triplet or None.
+    """
+    if S == None:
+        return None
+
+    prefix = "COLOR"
+    clen = 3
+    x = S.find(prefix)
+    if x < 0:
+        return None
+
+    sx = x + len(prefix)
+    if sx + clen > len(S):
+        return None
+
+    cl = S[sx:sx+clen].upper()
+    for i in range(0,clen):
+        if not (cl[i].isdigit() or (cl[i] >= 'A' and cl[i] <= 'F')):
+            # Not a color code, so skip to next candidate
+            return extractColor(S[sx:])
+    return cl
+
+
+def multiplex(S,n):
+    """
+    Return a string of length n * |S|, where each character is repeated n times in sequence.
+    """
+    SS = ""
+    for c in S:
+        for i in range(0,n):
+            SS += c
+    return SS
+
+
+def colorRules(G):
+    """
+    Color the nodes in a graph if needed, based on the rule names.
+    The rules can include "COLORrgb", where r,g,b are 0-9,A-F.
+    """
+    NL = G.get_node_list()
+    for N in NL:
+        color = extractColor(getRuleName(N))
+        if color != None:
+            nodecolor = "#" + multiplex(color,2)
+            N.set_fillcolor(nodecolor)
+            print "Attempted to set some color!"
+            print nodecolor
+    return G
+
+
 def improveGraph(G):
     """
     Improve a graph
@@ -1756,6 +1808,8 @@ def improveGraph(G):
     if sl >= 2:
         # CollapseRules throws away a lot of information
         G = collapseRules(G,removeFacts=(sl >= 3))
+
+    G = colorRules(G)
 
     ### End of graph simplification part
 
