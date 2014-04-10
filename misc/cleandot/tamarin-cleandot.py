@@ -822,7 +822,7 @@ def getRuleName(N):
 
 def getPrefix(N):
     """
-    Get node prefix up to digit or None from a Node
+    Get node prefix up to final digit sequence or None from a Node
     """
 
     fullname = getRuleName(N)
@@ -832,7 +832,7 @@ def getPrefix(N):
     #print "@@@%s@@@" % fullname
 
     for i in range(0,len(fullname)):
-        if fullname[i] in digits:
+        if fullname[i:] in digits:
             # Prefix must be at least 1 character
             if i >= 1:
                 return fullname[:i]
