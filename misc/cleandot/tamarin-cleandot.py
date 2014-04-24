@@ -820,7 +820,7 @@ def getRuleName(N):
     return None
 
 
-def getPrefix(N):
+def getNodePrefix(N):
     """
     Get node prefix up to final digit sequence or None from a Node
     """
@@ -831,14 +831,20 @@ def getPrefix(N):
 
     #print "@@@%s@@@" % fullname
 
-    for i in range(0,len(fullname)):
-        if fullname[i:] in digits:
-            # Prefix must be at least 1 character
-            if i >= 1:
-                return fullname[:i]
-            else:
-                return None
-    return None
+    i = len(fullname)
+    c = 0
+    while i > 0:
+        if fullname[i-1].isdigit():
+            c += 1
+            i -= 1
+        else:
+            break
+
+    if c > 0:
+        # Prefix must be at least 1 character
+        return fullname[:i]
+    else:
+        return None
 
 
 def incomingEdges(G,N):
@@ -1074,7 +1080,7 @@ def recordSimplifyClauses(N):
     ruleField = getSubfield(label,[1,2]).strip()
     (fl,i) = recordToList(stripQuotes(label))
     fl = strmap(fl,lambda x,y: leavePortAddressExceptString(x,y,ruleField))
-    N.set_label('"%s"' % (listToRecord(fl)))
+    N.set_label(listToRecord(fl))
 
 
 def recordToSimpleHTML(N):
@@ -1106,7 +1112,7 @@ def recordToSimpleHTML(N):
 
     newlabel = "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD>x</TD></TR><TR><TD>y</TD></TR></TABLE>>"
     N.set_label(newlabel)
-    print "Set ", newlabel
+    print "Set [", newlabel, "] for node ",N.get_name()
     N.set_shape("plaintext")
 
 
@@ -1184,7 +1190,7 @@ def collapseRules(G,removeFacts=False):
                 i = ruleField.find(">")
                 if i >= 0:
                     ruleField = ruleField[i+1:]
-            N.set_label('"%s"' % (ruleField))
+            N.set_label(ruleField)
             N.set_shape("box")
 
     return G
@@ -1336,7 +1342,7 @@ def findClusters(G):
     clusters = []
     for n in l:
         if not n.get_name() in done:
-            pf = getPrefix(n)
+            pf = getNodePrefix(n)
             if pf != None:
 
                 if not pf in prefixes:
