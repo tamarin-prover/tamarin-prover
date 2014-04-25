@@ -861,7 +861,7 @@ def incomingEdges(G,N):
     res = []
     n = N.get_name()
     for e in l:
-        if e.get_destination() == n:
+        if noPort(e.get_destination()) == n:
             res.append(e)
     return res
 
@@ -874,7 +874,7 @@ def outgoingEdges(G,N):
     res = []
     n = N.get_name()
     for e in l:
-        if e.get_source() == n:
+        if noPort(e.get_source()) == n:
             res.append(e)
     return res
 
