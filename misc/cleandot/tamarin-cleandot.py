@@ -959,6 +959,17 @@ def del_edge(G, src_or_list, dst=None, index=None):
        
         return False
         
+def clear_node(G,N):
+    """
+    Remove node N and its connected edges from the graph
+    """
+    print "Clearing node ", N.get_name()
+    for OE in incomingEdges(G,N):
+        del_edge(G,OE.get_source(),OE.get_destination())
+    for OE in outgoingEdges(G,N):
+        del_edge(G,OE.get_source(),OE.get_destination())
+
+    del_node(G,N)
 
 
 def removeNode(G,N):
