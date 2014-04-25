@@ -805,6 +805,8 @@ def getRuleName(N):
     Try to reconstruct the rule name or None.
     Tricky business.
     """
+    if N == None:
+        return None
     sh = N.get("shape")
     if sh == None:
         return None
@@ -1022,6 +1024,8 @@ def noPort(nn):
     """
     Strip port part of node name
     """
+    if nn == None:
+        return None
     i = nn.find(":")
     if i >= 0:
         nn = nn[:i]
@@ -1207,7 +1211,7 @@ def collapseRules(G,removeFacts=False):
                 if i >= 0:
                     ruleField = ruleField[i+1:]
             N.set_label(ruleField)
-            N.set_shape("box")
+            N.set("shape",'box')
 
     return G
 
@@ -1494,7 +1498,7 @@ def addLegend(G,l):
     # Add the legend to the graph
     N = Node("Legend")
     N.set_label("\"%s\"" % (l))
-    N.set_shape("box")
+    N.set("shape",'box')
 
     S = Subgraph("LegendCluster")
     S.set("rank","sink")
@@ -1756,6 +1760,7 @@ def joinSimilar(G,subsumetest=True):
         if len(label) > 0:
             print "Setting label for ", N1.get_name()
             N1.set_label(label)
+            N1.set_shape("box")
 
     # Test for subsumption?
     if subsumetest == True:
@@ -1775,6 +1780,7 @@ def joinSimilar(G,subsumetest=True):
                             label = joinLabels([N2.get_label(),N1.get_label()])
                             print "Setting label for ", N2.get_name()
                             N2.set_label(label)
+                            N2.set("shape",'box')
                             if N1 not in toremove:
                                 toremove.append(N1)
                             oneFound = True
