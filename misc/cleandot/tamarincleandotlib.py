@@ -1164,6 +1164,18 @@ def getPortLabel(G,nn):
     return None
 
 
+def removeHideRules(G):
+    """
+    Remove nodes with rule names that contain "_HIDE_"
+    """
+    for N in G.get_nodes():
+        rn = getRuleName(N)
+        if rn != None:
+            if "_HIDE_" in rn:
+                G = removeNode(G,N)
+    return G
+
+
 def collapseRules(G,removeFacts=False):
     """
     Simplify rules
@@ -1892,7 +1904,8 @@ def improveGraph(G):
     sl = getSimplificationLevel()
 
     if sl >= 1:
-        # ShowClusters must go early as it needs much information
+        G = removeHideRules(G)
+        # ShowClusters must go relatively early as it needs much information
         G = showClusters(G)
         G = collapseDerivations(G)
 
