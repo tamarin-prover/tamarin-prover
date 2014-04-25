@@ -1795,6 +1795,27 @@ def joinSimilar(G,subsumetest=True):
     return G
 
 
+def removeDuplicateEdges(G):
+    """
+    Remove duplicate edges
+
+    Note that we ignore different colors/styles for now, and just leave one.
+    Ideally, we order these colors/styles and leave the most important one
+    """
+    seen = {}
+    for E in G.get_edge_list():
+        src = E.get_source()
+        dst = E.get_destination()
+        if (src,dst) in seen:
+            seen[(src,dst)] += 1
+        else:
+            seen[(src,dst)] = 1
+    for (src,dst) in seen:
+        for i in range(1,seen[(src,dst)]):
+            G.del_edge(src,dst,index=i)
+    return G
+
+
 def extractColor(S):
     """
     Extract color triplet or None.
@@ -1903,6 +1924,8 @@ def improveGraph(G):
     # abbreviation.
     G = joinSimilar(G)
 
+    # Remove duplicate artifact edges
+    G = removeDuplicateEdges(G)
     return G
 
 
