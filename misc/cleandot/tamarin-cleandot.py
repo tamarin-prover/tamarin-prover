@@ -17,6 +17,10 @@ global PARAMETERS dict:
 - simplification : [0..3]
 - abbreviate : True/False
 
+E.g.:
+// simplification: X
+// abbreviate: True
+
 To do:
     The parameters now still include the static set of rules names. These
     should be used to determine a nice colour distribution.
@@ -919,6 +923,7 @@ def del_node(G, name, index=None):
         return False
                        
 def del_edge(G, src_or_list, dst=None, index=None):
+        return G.del_edge(src_or_list,dst=dst,index=index)
         """Delete an edge from the graph.
        
         Given an edge's (source, destination) node names all
@@ -1433,7 +1438,6 @@ def collapseDerivations(G):
     Essentially we want to "summarize" all other derivation edges into single ones.
 
     """
-
     while True:
         # Try to find a derivation node that fits the bill
         found = False
