@@ -1653,6 +1653,26 @@ def joinLabels(labels):
     return constructLabel(rset)
 
 
+def hasIncomingEdges(G,N):
+    """
+    Check if a node has incoming edges
+    """
+    return (len(incomingEdges(G,N)) > 0)
+
+
+def areSimilarRootNodes(G,N1,N2):
+    """
+    Check if two nodes (without incoming edges) are similar enough to be possibly joined
+    """
+    if hasIncomingEdges(G,N1) or hasIncomingEdges(G,N2):
+        return False
+    if not sameOutgoingEdges(G,N1,N2):
+        return False
+
+    # Passed all tests, consider similar
+    return True
+
+
 def joinSimilar(G,subsumetest=True):
     """
     Simplify graph by joining 'similar' leaf nodes and their edges.
@@ -1754,6 +1774,8 @@ def joinSimilar(G,subsumetest=True):
 def extractColor(S):
     """
     Extract color triplet or None.
+
+    TODO: What if there is more than one?
     """
     if S == None:
         return None
@@ -1776,6 +1798,13 @@ def extractColor(S):
     return cl
 
 
+def extractNodeColor(N):
+    """
+    Extract color or none from Node
+    """
+    return extractColor(N.get_label())
+
+
 def multiplex(S,n):
     """
     Return a string of length n * |S|, where each character is repeated n times in sequence.
@@ -1794,7 +1823,7 @@ def colorRules(G):
     """
     NL = G.get_node_list()
     for N in NL:
-        color = extractColor(getRuleName(N))
+        color = extractNodeColor(N)
         if color != None:
             nodecolor = "#" + multiplex(color,2)
             N.set_fillcolor(nodecolor)
