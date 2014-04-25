@@ -893,6 +893,8 @@ def areConnected(G,src,dst):
 
 
 def del_node(G, name, index=None):
+        return G.del_node(name,index=index)
+
         """Delete a node from the graph.
        
         Given a node's name all node(s) with that same name
