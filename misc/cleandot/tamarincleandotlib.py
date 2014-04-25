@@ -1009,12 +1009,8 @@ def removeNode(G,N):
                 # Unique style for newly added edges (to compensate for collapsed nodes)
                 G.add_edge(Edge(src,dst,style="dashed",penwidth="2",color="#000000"))
 
-    # Remove old edges
-    for edge in incoming + outgoing:
-        del_edge(G,edge.get_source(),edge.get_destination())
-    
     # Remove node
-    del_node(G,N)
+    clear_node(G,N)
 
     return G
 
