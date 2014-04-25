@@ -1676,6 +1676,7 @@ def areSimilarRootNodes(G,N1,N2):
 def joinSimilar(G,subsumetest=True):
     """
     Simplify graph by joining 'similar' leaf nodes and their edges.
+    Returns a new graph.
 
     A common case is the following:
 
@@ -1692,49 +1693,64 @@ def joinSimilar(G,subsumetest=True):
     edges that can be subsumed by others based on their outgoing edges and
     labels.
 
+    Note that we are not considering nodes with an explicit color for collapsing.
+
     TODO: Currently we are not comparing node and edge attributes for
     similarity, which perhaps we should, to avoid losing information when
     collapsing different types of node.
     """
-    NL = G.get_node_list()
-    NLI = []
-    for N in NL:
-        if incomingEdges(G,N) == []:
-            NLI.append((N,True))
+    AllNodes = G.get_node_list()
+
+
+    RootNodes = []
+    for N in AllNodes:
+        if len(incomingEdges(G,N)) == 0:
+            if extractNodeColor(N) == None:
+                RootNodes.append(N)
 
     # Determine if we can merge some edges
-    joiners = []
-    for (i,(N1,T1)) in enumerate(NLI):
-        if T1 == True:
-            similars = [N1]
-            markDone = [i]
-            for (j,(N2,T2)) in enumerate(NLI):
-                if j > i:
-                    if sameOutgoingEdges(G,N1,N2):
-                        similars.append(N2)
-                        markDone.append(j)
-            if len(similars) > 1:
-                joiners.append(similars)
-                for j in markDone:
-                    (N2,T2) = NLI[j]
-                    NLI[j] = (N2,False)
-    
-    # The set of joiners will be merged
-    toremove = []
-    for l in joiners:
-        N1 = l[0]
+    groups = []    # Will be a list of lists of nodes
+    processed = []  # List of nodes that we already classified somehow
+    for N1 in RootNodes:
+        if N1 not in processed:
+            # Consider this node
+            group = [N1]     # Construct a local list of all similar nodes
+            processed.append(N1)
 
+            # Consider all non-processed nodes as potentially similar
+            for N2 in RootNodes:
+                if N2 not in processed:
+                    if areSimilarRootNodes(G,N1,N2):
+                        group.append(N2)
+                        processed.append(N2)
+
+            # See what we got
+            if len(group) > 1:
+                # There are at least two, so we could compress
+                # Add this list to the "joiners" list.
+                groups.append(group[:])
+    
+
+    # All groups will be merged
+    toremove = []
+    for group in groups:
+        # We will collapse all nodes into the first element
+        N1 = group[0]
+
+        # Collect union of labels
         labels = []
-        for N2 in l:
+        for N2 in group:
             labels.append(N2.get_label())
 
-        for N2 in l[1:]:
-            if N2 not in toremove:
+        # Flag all non-first nodes for removal
+        for N2 in group[1:]:
+            if N2 not in toremove:  # But not twice
                 toremove.append(N2)
 
         appendLog("Parsing some labels\n")
         label = joinLabels(labels)
         if len(label) > 0:
+            print "Setting label for ", N1.get_name()
             N1.set_label(label)
 
     # Test for subsumption?
@@ -1743,18 +1759,20 @@ def joinSimilar(G,subsumetest=True):
         oneFound = True
         while oneFound == True:
             candidates = []
-            for (x,t) in NLI:
+            for x in RootNodes:
                 if x not in toremove:
                     candidates.append(x)
             oneFound = False
             for N1 in candidates:
                 for N2 in candidates:
-                    if N1 != N2:
+                    if N1.get_name() != N2.get_name():
                         if containsOutgoingEdges(G,N1,N2):
                             # N1 can be subsumed by N2
                             label = joinLabels([N2.get_label(),N1.get_label()])
+                            print "Setting label for ", N2.get_name()
                             N2.set_label(label)
-                            toremove.append(N1)
+                            if N1 not in toremove:
+                                toremove.append(N1)
                             oneFound = True
                             break
                 if oneFound == True:
@@ -1763,10 +1781,8 @@ def joinSimilar(G,subsumetest=True):
 
 
     # Remove the nodes and their edges where needed
-    for N2 in toremove:
-        for OE in outgoingEdges(G,N2):
-            del_edge(G,OE.get_source(),OE.get_destination())
-        del_node(G,N2)
+    for N in toremove:
+        clear_node(G,N)
 
     return G
 
