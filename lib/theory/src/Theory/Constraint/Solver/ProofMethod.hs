@@ -361,7 +361,7 @@ smartRanking :: ProofContext
              -> System
              -> [AnnotatedGoal] -> [AnnotatedGoal]
 smartRanking ctxt allowPremiseGLoopBreakers sys =
-    sortOnUsefulness . unmark . sortDecisionTree solveFirst . goalNrRanking
+    sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
 
@@ -382,6 +382,10 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
 
     unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
     unmarkPremiseG annGoal                        = annGoal
+
+    solveLast = 
+        [ isNonLastProtoFact . fst ]
+        -- move the Last proto facts (L_) to the end.
 
     solveFirst =
         [ isChainGoal . fst
@@ -411,6 +415,9 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
 
     isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _) = True
     isAuthOutFact  _                                 = False
+
+    isNonLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
+    isNonLastProtoFact _                                                 = True
 
     isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
     isFirstProtoFact _                                                 = False
