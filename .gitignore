@@ -6,6 +6,8 @@ testbed
 case-studies
 case-studies-sequential
 tamarin-prover-img
+.cabal-sandbox/
+cabal.sandbox.config
 
 *.hi
 *.o
