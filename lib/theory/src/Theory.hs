@@ -129,6 +129,7 @@ import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
+import           Theory.Constraint.Solver.Types (pcHiddenLemmas)
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -217,6 +218,8 @@ closeRuleCache axioms typAsms sig protoRules intrRulesAC =
     ctxt0 = ProofContext
         sig classifiedRules injFactInstances UntypedCaseDist [] AvoidInduction
         (error "closeRuleCache: trace quantifier should not matter here")
+        (error "closeRuleCache: lemma name should not matter here")
+        []
 
     -- inj fact instances
     injFactInstances =
@@ -270,6 +273,7 @@ data LemmaAttribute =
          TypingLemma
        | ReuseLemma
        | InvariantLemma
+       | HideLemma String
        deriving( Eq, Ord, Show )
 
 -- | A 'TraceQuantifier' stating whether we check satisfiability of validity.
@@ -367,8 +371,7 @@ $(mkLabels [''Theory])
 
 -- | Open theories can be extended. Invariants:
 --   1. Lemma names are unique.
-type OpenTheory =
-    Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton
+type OpenTheory = Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton
 
 
 -- | Closed theories can be proven. Invariants:
@@ -547,6 +550,11 @@ getProofContext l thy = ProofContext
     ( L.get (cases . thyCache)              thy)
     inductionHint
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
+    (L.get lName l)
+    ([ h | HideLemma h <- L.get lAttributes l])
+    
+    -- I should be able to put the lemma name here and also hide
+    -- previous lemmas
   where
     kind    = lemmaCaseDistKind l
     cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
@@ -720,6 +728,8 @@ mkSystem ctxt axioms previousItems =
         guard $    lemmaCaseDistKind lem <= kind
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
+                && (L.get lName lem) `notElem` (L.get pcHiddenLemmas ctxt)
+                && "ALL" `notElem` (L.get pcHiddenLemmas ctxt)
         return $ formulaToGuarded_ $ L.get lFormula lem
 
 
@@ -792,6 +802,7 @@ prettyLemmaName l = case L.get lAttributes l of
     prettyLemmaAttribute TypingLemma    = text "typing"
     prettyLemmaAttribute ReuseLemma     = text "reuse"
     prettyLemmaAttribute InvariantLemma = text "use_induction"
+    prettyLemmaAttribute (HideLemma s)  = text ("hide_lemma=" ++ s)
 
 -- | Pretty print an axiom.
 prettyAxiom :: HighlightDocument d => Axiom -> d

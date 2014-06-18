@@ -22,6 +22,10 @@ install-theory:
 install-term:
 	cabal install $(CABAL_OPTS) lib/term lib/theory ./
 
+install-ghc-7.4.1:
+	cabal install -wghc-7.4.1 $(CABAL_OPTS) lib/utils lib/term lib/theory ./
+
+
 # In case some dependencies cannot be resolved and should be forced use this
 # target. NOTE that this may break other libraries installed on your system.
 force-install:

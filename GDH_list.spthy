@@ -1,0 +1,236 @@
+theory GDH_List
+begin
+
+builtins: diffie-hellman, multiset
+
+functions: nil/0, g/0, list_to_mset/1
+
+axiom InEq_not_eq: "not (Ex x #i. Ineq(x,x)@i)"
+
+axiom IsLast: "All x A #i. IsLast(x,A) @ i ==> Ex #j. Last(x,A) @ j"
+
+axiom MembersUnique: "All x A #i #j. Mem(x,A) @ i & Mem(x,A) @ j ==> #i = #j"
+
+/* axiom LoopUnique: "All y D E F #j #i. Loop(y, D, E, F) @ i & Loop(y, D, E, F) @ j ==> #i = #j" */
+
+/*
+// this axiom uses "NIE", if we disable it then NIE can be dropped
+axiom NoInverseInExponents: "All x y #j. NIE(g^(x*y)) @ j ==> not (Ex z. x = inv(z))"
+*/
+
+/*
+// This rule creates 5 open chains 
+rule AuthOut:
+  [ AuthOut(X) ]
+  -->
+  [ AuthOut(X) ,
+    Out(X) ]
+*/
+
+/*************************************************************************/
+/* Setup                                                                 */
+/*************************************************************************/
+
+rule ChooseParticipants1:
+  [ Fr(~gid) ]
+ --[ Mem(~gid,$I), InEq($I, $R)
+   , Last(~gid, $R)
+ ]-> // groups have initiator (first) and responders
+  [ StartGroup(~gid, $I, <$R, nil>) ]
+
+// I [R1]
+
+rule ChooseParticipants2:
+  [ StartGroup(~gid, $I, responders) ]
+ --[ Mem(~gid,$R), StepC() ]->
+  [ StartGroup(~gid, $I, <$R,responders>) ]
+
+// I [R2,R1]
+
+rule StartGroup1:
+  [ StartGroup(~gid, $I, responders) ]
+ --[ Step() , Started(~gid, $I) ]->
+  [ Initiator1(~gid, $I, responders)             // fork initiator
+  , StartResponders(~gid, $I, responders, <$I,nil>) ] // loop for starting responders
+
+// Initiator I
+// responder = [R2,R1]
+
+rule StartGroup2:
+  [ StartResponders(~gid, $I, <$R,notstarted>, started) ]
+ --[ Step(), StepS() , Started(~gid, $R) ]->
+  [ Responder1(~gid, $R, $I, started, notstarted)
+  , StartResponders(~gid, $I, notstarted, <$R,started>) ]
+
+// Responder R2, started=nil, notstarted=[R1]
+// Responder R1, started=[R2], notstarted=[]
+
+//auto proof succeeds
+lemma startTest3:
+  exists-trace
+  "Ex #j1 #j2 #j3 A B C id. Started(id,A) @ j1 & Started(id,B) @ j2 & Started(id,C) @ j3 & not (A = B) & not (A=C) & not (B=C)"
+
+//test this?
+lemma startTest4:
+  exists-trace
+  "Ex #j1 #j2 #j3 #j4 A B C D id. Started(id,A) @ j1 & Started(id,B) @ j2 & Started(id,C) @ j3 & Started(id,D) @ j4
+   & not (A = B) & not (A=C) & not (B=C)
+   & not (A = D) & not (B=D) & not (C=D)"
+
+/*************************************************************************/
+/* Initiator                                                             */
+/*************************************************************************/
+
+rule Initiator:
+  let responders = <$R,other> in
+  [ Initiator1(~gid, $I, responders)
+  , Fr(~ei) ]
+ --[ Step() 
+  , NIE(g^~ei)
+  ]->
+  [ Initiator2(~gid, ~ei, $I, responders)
+  , AuthOut(<~gid, $I, $I, g   >)    // from $I, key for $I
+  , AuthOut(<~gid, $I, $R, g^~ei>)   // from $I, key for first responder $R
+  , Out(g^~ei)
+  , Out(g) 
+  ]
+
+rule Initiator2:
+  let Y = g^y in
+  [ Initiator2(~gid, ~ei, $I, responders)
+  , AuthOut(<~gid, $S, $I, Y>) ]  // $S unspecified, should be last(responders)
+ --[ Key(~gid, $I, list_to_mset(responders) + $I)
+   , IsLast(~gid, $S)
+   , NIE(Y)
+   , Step() ]->
+  [ ]
+
+/*************************************************************************/
+/* Responders                                                          */
+/*************************************************************************/
+
+// $I does not need to be carried through, can just drop it - actually drop it in Responder1 above already
+rule Responder1:
+  let Y = g^y
+      before = <$S, before_missing>
+  in
+  [ Responder1(~gid, $R, $I, before, after)
+  , Fr(~ec) 
+  , AuthOut(<~gid, $S, $S, Y>) ] // key for $I sent by $S // ??? weird comment!
+ --[ Step()
+  , NIE(Y)
+  , NIE(Y^~ec)
+  ]->
+  [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, <$S, nil>, after) 
+  , AuthOut(<~gid, $R, $S, Y^~ec>) 
+  , Out(Y^~ec) ] 
+
+// Responder R2, before=nil,  after=[R1]
+// Responder R1, before=[R2], after=[]
+
+rule Responder2:
+  let Y = g^y
+      before_missing0 = <$KR, before_missing>
+  in
+  [ Responder2(~gid, ~ec, $R, $I, $S, before_missing0, before_rcvd, after)
+  , AuthOut(<~gid, $S, $KR, Y>) ] // key for $KR sent by $S
+ --[ NIE(Y)
+   , NIE(Y^~ec)
+   , Loop(~gid, $R, $S, $KR)
+   , StepR() ]->  // we need this for cutting the search space in the exists-trace proof
+   [ Responder2(~gid, ~ec, $R, $I, $S, before_missing, <$KR, before_rcvd>, after)
+   , Out(Y^~ec)
+   , AuthOut(<~gid, $R, $KR, Y^~ec>) ] // key for $KR sent by $R
+
+// Responder R2, started=nil, notstarted=[R1] => R1
+//    
+// Responder R1, started=[R2], notstarted=[]
+
+rule Responder3:
+  let Y = g^y 
+      after = <$KR, after_missing>
+  in
+  [ Responder2(~gid, ~ec, $R, $I, $S, nil, before_rcvd, after)
+  , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
+--[ InEq(after,nil), Step()
+  , NIE(Y)
+  , NIE(Y^~ec) 
+  ]->
+  [ Responder3(~gid, ~ec, $R, $I, before_rcvd, after)
+  , Out(Y^~ec)
+  , AuthOut(<~gid, $R, $KR, Y^~ec>)   // group key for this round - sent to the next participant 
+  , AuthOut(<~gid, $R, $R, Y>)     ]  // key for $R sent by $R
+
+rule Responder3_last:
+  let Y = g^y in
+  [ Responder2(~gid, ~ec, $R, $I, $S, nil, before_rcvd, nil)
+  , AuthOut(<~gid, $S, $R, Y>) ] // key for $R sent by $S (groupkey from last round)
+ --[ Key(~gid, $R, list_to_mset(before_rcvd) + $R )
+  , NIE(Y)
+  , Step() ]->
+  [ ]
+
+rule Responder4:
+  let Y = g^y in
+  [ Responder3(~gid, ~ec, $R, $I, p1, p2)
+  , AuthOut(<~gid, $S, $R, Y>) ] // $S should be last ... 
+ --[ Key(~gid, $R, list_to_mset(p1) + list_to_mset(p2) + $R ) 
+   , IsLast(~gid, $S)
+   , NIE(Y)
+   , Step() ]->
+  [ ]
+
+
+lemma key_agreement_2:
+  exists-trace
+  "Ex #j1 #j2 A B  id. Key(id, A, list_to_mset(<B,nil>) + A) @ j1
+                     & Key(id, B, list_to_mset(<A,nil>) + B) @ j2
+                     & not (A = B)"
+
+// A initiator
+// B last
+// C middle
+lemma key_agreement_3:
+  exists-trace
+  "Ex #j1 #j2 #j3 A B C id. 
+      Key(id, A, list_to_mset(<C,B,nil>) + A) @ j1
+    & Key(id, B, list_to_mset(<A,C,nil>) + B) @ j2
+    & Key(id, C, list_to_mset(<A,nil>) + list_to_mset(<B,nil>)+ C) @ j3
+    & not (A = B)
+    & not (A = C)
+    & not (B = C)"
+
+
+/*
+lemma test3:
+  exists-trace
+  "Ex #j A B C id. Key(id, C, list_to_mset(<B,nil>) + list_to_mset(<A,nil>) + C) @ j"
+*/
+/*
+       & (All #i1 #i2 #i3 #i4 #i5. (StepR() @ i1 & StepR() @ i2 & StepR() @ i3 &
+                                    StepR() @ i4 & StepR() @ i5)
+                                   ==>  (#i1 = #i2 | #i1 = #i3 | #i1 = #i4 | #i1 = #i5 |
+                                         #i2 = #i3 | #i2 = #i4 | #i2 = #i5 |
+                                         #i3 = #i4 | #i3 = #i5 | #i4 = #i5 ) )
+       & (All #i1 #i2 #i3. StepS() @ i1 & StepS() @ i2 & StepS() @ i3
+                                   ==>  (#i1 = #i2 | #i1 = #i3 | #i2  = #i3))
+       & (All #i1 #i2 #i3. StepC() @ i1 & StepC() @ i2 & StepC() @ i3
+                                   ==>  (#i1 = #i2 | #i1 = #i3 | #i2  = #i3))"
+*/
+/*
+lemma test3:
+  exists-trace
+  "Ex #j A B C id. Key(id, C, list_to_mset(<A,<B,nil>>) + C) @ j
+               & (All y D #j. Mem(y,D) @ j ==> y = id & (D = A | D = B | D = C))
+               & (All y A1 A2 A3 #j. Loop(y, A1, A2, A3) @ j ==> (y =id & (A1 = A | A1 = B | A1 = C)
+                                                                        & (A2 = A | A2 = B | A2 = C)
+                                                                        & (A3 = A | A3 = B | A3 = C)))"
+
+lemma test1:
+  exists-trace
+  "Ex #j I D C1 x. LGroup(x, list_to_mset(<I,<D,<C1, nil>>>)) @ j"
+*/
+
+
+
+end
