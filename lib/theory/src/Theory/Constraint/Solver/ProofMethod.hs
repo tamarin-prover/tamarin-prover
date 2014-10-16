@@ -364,7 +364,7 @@ sapicRanking ctxt sys =
         , isStandardActionGoalButNotInsert  . fst
         , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
-        , isFreshKnowsGoal . fst
+        -- , isFreshKnowsGoal . fst
         , isSplitGoalSmall . fst
         , isMsgOneCaseGoal . fst
         , isDoubleExpGoal . fst
@@ -397,6 +397,7 @@ sapicRanking ctxt sys =
     isStandardActionGoalButNotInsert g = 
        (isStandardActionGoal g) &&  (isNotInsertAction g)
 
+
     isNonLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
     isNonLastProtoFact _                                                 = True
 
@@ -409,9 +410,10 @@ sapicRanking ctxt sys =
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing
 
-    isFreshKnowsGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
-        _                                                           -> False
+--  Problematic when using handles.
+--    isFreshKnowsGoal goal = case msgPremise goal of
+--        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
+--        _                                                           -> False
 
     isMsgOneCaseGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
