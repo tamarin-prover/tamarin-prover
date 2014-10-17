@@ -181,14 +181,12 @@ constructAutoProver as =
 
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
-    ranking 'o' = OracleRanking
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
     ranking r   = error $ render $ fsep $ map text $ words $
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\
-      \ 'o' for oracle ranking,\
       \ 'c' for the creation order and useful goals first,\
       \ and 'C' for the creation order."
 

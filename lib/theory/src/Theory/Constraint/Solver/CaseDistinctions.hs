@@ -38,11 +38,6 @@ import           Control.Monad.Reader
 import           Control.Monad.State                     (gets)
 import           Control.Parallel.Strategies
 
-import           System.IO.Error
-
-import           System.Environment
-import           System.IO.Unsafe
-
 import           Text.PrettyPrint.Highlight
 
 import           Extension.Data.Label
@@ -125,17 +120,15 @@ solveAllSafeGoals :: [CaseDistinction] -> Reduction [String]
 solveAllSafeGoals ths =
     solve []
   where
-    extensiveSplitting = unsafePerformIO $
-      (getEnv "TAMARIN_EXTENSIVE_SPLIT" >> return True) `catchIOError` \_ -> return False
     safeGoal _       (_,   (_, LoopBreaker)) = False
     safeGoal doSplit (goal, _              ) =
       case goal of
         ChainG _ _    -> True
         ActionG _ fa  -> not (isKUFact fa)
-        PremiseG _ fa -> not (isKUFact fa) && doSplit
+        PremiseG _ fa -> not (isKUFact fa)
         DisjG _       -> doSplit
         -- Uncomment to get more extensive case splitting
-        SplitG _      -> extensiveSplitting && doSplit
+        SplitG _   -> doSplit
         -- SplitG _      -> False
 
     usefulGoal (_, (_, Useful)) = True

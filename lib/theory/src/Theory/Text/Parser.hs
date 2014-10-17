@@ -430,7 +430,6 @@ lemmaAttribute = asum
   [ symbol "typing"        *> pure TypingLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
-  , symbol "hide_lemma=" *> (HideLemma <$> identifier)
   ]
 
 -- | Parse a 'TraceQuantifier'.

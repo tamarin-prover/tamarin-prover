@@ -86,7 +86,7 @@ instance Binary SignaturePure where
     get     = Signature <$> get
 
 instance NFData SignaturePure where
-    rnf (Signature y) = rnf y
+  rnf (Signature y) = rnf y
 
 ------------------------------------------------------------------------------
 -- Signatures with an attached Maude process
