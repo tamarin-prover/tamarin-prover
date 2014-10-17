@@ -57,8 +57,6 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
 
-import           Debug.Trace                  (trace)
-
 
 ------------------------------------------------------------------------------
 -- Utilities
@@ -354,7 +352,7 @@ sapicRanking ctxt sys =
         -- isNotInsertAction . fst 
         -- ,
         isNonLastProtoFact . fst ,
-	isNotKnowsHandleGoal . fst
+        isNotKnowsHandleGoal . fst
         ]
         -- move the Last proto facts (L_) to the end.
 
@@ -400,12 +398,10 @@ sapicRanking ctxt sys =
 --    8. lemma `dec_limits', fact "insert": ("Insert",2,Linear)
 --            Fact {factTag = ProtoFact Linear "Insert" 2, factTerms = [pair('obj',Bound 11),pair(Bound 10,pair(Bound 9,pair(Bound 8,pair(Bound 7,pair(Bound 6,pair(Bound 5,pair(Bound 4,pair(Bound 3,pair(Bound 2,pair('trusted',Bound 1))))))))))]}
 --
-    isInsertTemplateAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:tl)) ) = 
+    isInsertTemplateAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
         case t of
-    -- (Lit2 (Con "template" ))
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "template" (show a)
-            (viewTerm2 -> FList _) -> True -- isPrefixOf "template" (show a)
-      --   _ -> False
+            _ -> False
     isInsertTemplateAction _ = False
 
     isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _)) = False
@@ -435,8 +431,8 @@ sapicRanking ctxt sys =
     isHandle lv = isPrefixOf "h" (lvarName lv)
 
     isNotKnowsHandleGoal goal = case msgPremise goal of
-	Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isHandle lv)-> False
-	_                                                           -> True
+        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isHandle lv)-> False
+        _                                                           -> True
 
     isMsgOneCaseGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
