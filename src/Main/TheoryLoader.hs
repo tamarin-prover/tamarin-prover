@@ -188,7 +188,7 @@ constructAutoProver as =
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\
-      \ 'p' for an altered version of smart ranking optimized for translations from the SAPIC tool (http://sapic.gforge.inria.fr) ,\
+      \ 'p' for smart ranking optimized for a specific model of PKCS11, translted using SAPIC (http://sapic.gforge.inria.fr) ,\
       \ 'c' for the creation order and useful goals first,\
       \ and 'C' for the creation order."
 
