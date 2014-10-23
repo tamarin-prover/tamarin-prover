@@ -350,8 +350,7 @@ sapicRanking ctxt sys =
         [ 
         -- isNotInsertAction . fst 
         -- ,
-        isNonLastProtoFact . fst ,
-	isNotKnowsHandleGoal . fst
+        isNonLastProtoFact . fst 
         ]
         -- move the Last proto facts (L_) to the end.
 
@@ -369,8 +368,7 @@ sapicRanking ctxt sys =
         , isSplitGoalSmall . fst
         , isMsgOneCaseGoal . fst
         , isDoubleExpGoal . fst
-        , isNoLargeSplitGoal . fst 
-        , isInsertTemplateAction . fst ]
+        , isNoLargeSplitGoal . fst ]
         -- move the rest (mostly more expensive KU-goals) before expensive
         -- equation splits
 
@@ -392,11 +390,6 @@ sapicRanking ctxt sys =
 
     isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _)) = True
     isUnlockAction  _                                 = False
-
-    isInsertTemplateAction (ActionG _ (Fact (ProtoFact _ "Insert" [t]) _)) = case t of
-        (viewTerm2 -> FPair _ _) -> True
-        _ -> False
-    isInsertTemplateAction _ = False
 
     isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _)) = False
     isNotInsertAction  _                                 = True
@@ -421,12 +414,6 @@ sapicRanking ctxt sys =
 --    isFreshKnowsGoal goal = case msgPremise goal of
 --        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
 --        _                                                           -> False
-    -- we recognize any variable starting with h as a handle an deprioritize 
-    isHandle lv = isPrefixOf "h" (lvarName lv)
-
-    isNotKnowsHandleGoal goal = case msgPremise goal of
-	Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isHandle lv)-> False
-	_                                                           -> True
 
     isMsgOneCaseGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
