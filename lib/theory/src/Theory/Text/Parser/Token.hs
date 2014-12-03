@@ -34,6 +34,8 @@ module Theory.Text.Parser.Token (
   , nodevar
 
   -- * Operators
+--  , opDiff
+  
   , opExp
   , opMult
 
@@ -288,6 +290,12 @@ pubName = singleQuoted identifier
 -- Term Operators
 ------------
 
+{-
+-- | The diff operator @&!$$@.
+opDiff :: Parser ()
+opDiff = symbol_ "&!$$"
+-}
+
 -- | The exponentiation operator @^@.
 opExp :: Parser ()
 opExp = symbol_ "^"
@@ -296,7 +304,7 @@ opExp = symbol_ "^"
 opMult :: Parser ()
 opMult = symbol_ "*"
 
--- | The multiplication operator @*@.
+-- | The addition operator @*@.
 opPlus :: Parser ()
 opPlus = symbol_ "+"
 

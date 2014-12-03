@@ -17,6 +17,7 @@ module Term.Term (
 
     -- ** Smart constructors
     , fAppOne
+    , fAppDiff
     , fAppExp
     , fAppInv
     , fAppPMult
@@ -46,6 +47,7 @@ module Term.Term (
     , NoEqFunSig
 
     -- ** concrete symbols strings
+    , diffSymString
     , expSymString
     , invSymString
     , pmultSymString
@@ -53,6 +55,7 @@ module Term.Term (
     , unionSymString
     
     -- ** Function symbols
+    , diffSym
     , expSym
     , pmultSym
 
@@ -90,8 +93,9 @@ import           Term.Term.Raw
 fAppOne :: Term a
 fAppOne = fAppNoEq oneSym []
 
--- | Smart constructors for pair, exp, pmult, and emap.
-fAppPair, fAppExp,fAppPMult, fAppEMap :: Ord a => (Term a, Term a) -> Term a
+-- | Smart constructors for diff, pair, exp, pmult, and emap.
+fAppDiff, fAppPair, fAppExp,fAppPMult, fAppEMap :: Ord a => (Term a, Term a) -> Term a
+fAppDiff (x,y)  = fAppNoEq diffSym  [x, y]
 fAppPair (x,y)  = fAppNoEq pairSym  [x, y]
 fAppExp  (b,e)  = fAppNoEq expSym   [b, e]
 fAppPMult (s,p) = fAppNoEq pmultSym [s, p]
@@ -164,6 +168,8 @@ prettyTerm ppLit = ppTerm
         Lit l                                     -> ppLit l
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
+        --FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> ppTerm t2 <> text ")"
+        -- not needed as "ppFun" should take care of it which is called by the last "NoEq" based FApp call
         FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts

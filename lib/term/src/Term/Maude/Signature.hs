@@ -148,6 +148,7 @@ hashMaudeSig      = maudeSig $ mempty {stFunSyms=hashFunSig}
 -- | The minimal maude signature.
 minimalMaudeSig :: MaudeSig
 minimalMaudeSig = pairMaudeSig
+-- include diff sig here
 
 ------------------------------------------------------------------------------
 -- Pretty Printing

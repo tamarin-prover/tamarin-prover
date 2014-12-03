@@ -126,6 +126,7 @@ data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | O
                  | FPMult (Term a) (Term a) | FEMap (Term a) (Term a)
                  | FUnion [Term a]
                  | FPair (Term a) (Term a)
+                 | FDiff (Term a) (Term a)
                  | FAppNoEq NoEqSym [Term a]
                  | FAppC CSym [Term a]
                  | FList [Term a]
@@ -148,13 +149,14 @@ viewTerm2 t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == expSym    -> FExp   t1 t2  -- ensure here that FExp is always exp, never a user-defined symbol
     [ t1, t2 ] | o == pmultSym  -> FPMult t1 t2
     [ t1, t2 ] | o == pairSym   -> FPair  t1 t2
+    [ t1, t2 ] | o == diffSym   -> FDiff  t1 t2
     [ t1 ]     | o == invSym    -> FInv   t1
     []         | o == oneSym    -> One
     _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"
     _                           -> FAppNoEq o ts
   where
     -- special symbols
-    ssyms = [ expSym, pairSym, invSym, oneSym, pmultSym ]
+    ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym ]
 
 ----------------------------------------------------------------------
 -- Instances

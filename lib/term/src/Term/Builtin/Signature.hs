@@ -16,12 +16,13 @@ import qualified Data.Set as S
 ----------------------------------------------------------------------
 
 -- | Binary builtin function symbols.
-sdecSym, sencSym, adecSym, aencSym, signSym :: NoEqSym
+sdecSym, sencSym, adecSym, aencSym, signSym, diffSym :: NoEqSym
 sdecSym = ("sdec",(2, Public))
 sencSym = ("senc",(2, Public))
 adecSym = ("adec",(2, Public))
 aencSym = ("aenc",(2, Public))
 signSym = ("sign",(2, Public))
+diffSym = ("diff",(2, Public)) -- this is not actually used here, it should be active at all times anyway
 
 -- | Ternary builtin function symbols.
 verifySym :: NoEqSym

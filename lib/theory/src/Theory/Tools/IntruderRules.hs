@@ -85,6 +85,8 @@ specialIntruderRules =
     , Rule ISendRule [kuFact x_var]  [Fact InFact [x_var]] [kLogFact x_var]
     , Rule IRecvRule [Fact OutFact [x_var]] [Fact KDFact [x_var]] []
     , Rule IEqualityRule [kuFact x_var, kdFact x_var]  [] []
+    -- for testing purposes:
+    -- , Rule IEqualityRule [kuFact x_var, kdFact x_var] [kdfact x_var] [kLogFact x_var]
     ]
   where
     kuRule name prems t = Rule name prems [kuFact t] [kuFact t]
