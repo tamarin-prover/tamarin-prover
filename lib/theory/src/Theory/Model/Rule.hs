@@ -61,7 +61,7 @@ module Theory.Model.Rule (
   , HasRuleName(..)
   , isIntruderRule
   , isDestrRule
-  , isEqualityRule
+  , isIEqualityRule
   , isConstrRule
   , isFreshRule
   , isIRecvRule
@@ -321,7 +321,7 @@ data IntrRuleACInfo =
   | ISendRule
   | PubConstrRule
   | FreshConstrRule
-  | EqualityRule
+  | IEqualityRule
   deriving( Ord, Eq, Show, Data, Typeable )
 
 -- | An intruder rule modulo AC.
@@ -404,10 +404,10 @@ isDestrRule ru = case ruleName ru of
   IntrInfo (DestrRule _) -> True
   _                      -> False
 
--- | True iff the rule is an equality rule.
-isEqualityRule :: HasRuleName r => r -> Bool
-isEqualityRule ru = case ruleName ru of
-  IntrInfo EqualityRule -> True
+-- | True iff the rule is an iequality rule.
+isIEqualityRule :: HasRuleName r => r -> Bool
+isIEqualityRule ru = case ruleName ru of
+  IntrInfo IEqualityRule -> True
   _                     -> False
   
 -- | True iff the rule is a construction rule.
@@ -566,7 +566,7 @@ prefixIfReserved n
 
 -- | List of all reserved rule names.
 reservedRuleNames :: [String]
-reservedRuleNames = ["Fresh", "irecv", "isend", "coerce", "fresh", "pub", "equality"]
+reservedRuleNames = ["Fresh", "irecv", "isend", "coerce", "fresh", "pub", "iequality"]
 
 prettyProtoRuleName :: Document d => ProtoRuleName -> d
 prettyProtoRuleName rn = text $ case rn of
@@ -588,7 +588,7 @@ prettyIntrRuleACInfo rn = text $ case rn of
     CoerceRule      -> "coerce"
     FreshConstrRule -> "fresh"
     PubConstrRule   -> "pub"
-    EqualityRule    -> "equality"
+    IEqualityRule   -> "iequality"
     ConstrRule name -> prefixIfReserved ('c' : BC.unpack name)
     DestrRule name  -> prefixIfReserved ('d' : BC.unpack name)
 

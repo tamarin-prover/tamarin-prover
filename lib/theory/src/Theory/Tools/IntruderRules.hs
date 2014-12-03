@@ -71,6 +71,9 @@ rule isend:
 rule irecv:
    [ Out( x) ] --> [ KD( x ) ]
 
+rule iequality:
+   [ KU( x ) , KD( x ) ] --> []
+
 -}
 -- | @specialIntruderRules@ returns the special intruder rules that are
 --   included independently of the message theory
@@ -81,7 +84,7 @@ specialIntruderRules =
     , kuRule FreshConstrRule [Fact FreshFact [x_fresh_var]] (x_fresh_var)
     , Rule ISendRule [kuFact x_var]  [Fact InFact [x_var]] [kLogFact x_var]
     , Rule IRecvRule [Fact OutFact [x_var]] [Fact KDFact [x_var]] []
-    , Rule EqualityRule [kuFact x_var, kdFact x_var]  [kdFact x_var] []
+    , Rule IEqualityRule [kuFact x_var, kdFact x_var]  [] []
     ]
   where
     kuRule name prems t = Rule name prems [kuFact t] [kuFact t]
