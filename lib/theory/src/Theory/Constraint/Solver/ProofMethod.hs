@@ -352,7 +352,8 @@ sapicRanking ctxt sys =
         -- isNotInsertAction . fst 
         -- ,
         isNonLastProtoFact . fst ,
-        isNotKnowsHandleGoal . fst
+        isNotKnowsLastNameGoal . fst,
+        isNotLastInsertAction . fst
         ]
         -- move the Last proto facts (L_) to the end.
 
@@ -362,7 +363,8 @@ sapicRanking ctxt sys =
         , isFirstProtoFact . fst
         , isStateFact . fst
         , isUnlockAction . fst
-        , isInsertTemplateAction . fst
+        , isKnowsFirstNameGoal . fst
+        , isFirstInsertAction . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoalButNotInsert  . fst
         , isNotAuthOut . fst
@@ -395,14 +397,17 @@ sapicRanking ctxt sys =
     isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _)) = True
     isUnlockAction  _                                 = False
 
---    8. lemma `dec_limits', fact "insert": ("Insert",2,Linear)
---            Fact {factTag = ProtoFact Linear "Insert" 2, factTerms = [pair('obj',Bound 11),pair(Bound 10,pair(Bound 9,pair(Bound 8,pair(Bound 7,pair(Bound 6,pair(Bound 5,pair(Bound 4,pair(Bound 3,pair(Bound 2,pair('trusted',Bound 1))))))))))]}
---
-    isInsertTemplateAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
+    isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
         case t of
-            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "template" (show a)
+            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "F_" (show a)
             _ -> False
-    isInsertTemplateAction _ = False
+    isFirstInsertAction _ = False
+
+    isNotLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
+        case t of
+            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> not( isPrefixOf "L_" (show a))
+            _ -> True
+    isNotLastInsertAction _ = True
 
     isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _)) = False
     isNotInsertAction  _                                 = True
@@ -428,11 +433,18 @@ sapicRanking ctxt sys =
 --        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
 --        _                                                           -> False
     -- we recognize any variable starting with h as a handle an deprioritize 
-    isHandle lv = isPrefixOf "h" (lvarName lv)
+    isLastName lv = isPrefixOf "L_" (lvarName lv)
 
-    isNotKnowsHandleGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isHandle lv)-> False
+    isFirstName lv = isPrefixOf "F_" (lvarName lv)
+
+    isNotKnowsLastNameGoal goal = case msgPremise goal of
+        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> False
         _                                                           -> True
+
+    isKnowsFirstNameGoal goal = case msgPremise goal of
+        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isFirstName lv)-> True
+        _                                                           -> False
+
 
     isMsgOneCaseGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
