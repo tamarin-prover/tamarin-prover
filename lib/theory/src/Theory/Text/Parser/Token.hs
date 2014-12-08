@@ -290,10 +290,11 @@ pubName = singleQuoted identifier
 -- Term Operators
 ------------
 
-{-
--- | The diff operator @&!$$@.
+{- 
+-- Note that this would conflict with the parsing of "identifier", somehow need to mark this as special!
+-- | The diff operator @diff@.
 opDiff :: Parser ()
-opDiff = symbol_ "&!$$"
+opDiff = symbol_ "diff"
 -}
 
 -- | The exponentiation operator @^@.
