@@ -28,6 +28,7 @@ module Term.Term (
 
     -- ** Destructors and classifiers
     , isPair
+    , isDiff
     , isInverse
     , isProduct
     , isUnion
@@ -120,6 +121,11 @@ isPair :: Show a => Term a -> Bool
 isPair (viewTerm2 -> FPair _ _) = True
 isPair _                        = False
 
+-- | 'True' iff the term is a well-formed diff term.
+isDiff :: Show a => Term a -> Bool
+isDiff (viewTerm2 -> FDiff _ _) = True
+isDiff _                        = False
+
 -- | 'True' iff the term is a well-formed inverse.
 isInverse :: Show a => Term a -> Bool
 isInverse (viewTerm2 -> FInv _) = True
@@ -168,8 +174,8 @@ prettyTerm ppLit = ppTerm
         Lit l                                     -> ppLit l
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
-        --FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> ppTerm t2 <> text ")"
-        -- not needed as "ppFun" should take care of it which is called by the last "NoEq" based FApp call
+        -- the pretty printing for diff will likely need some adjustment!
+        FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> ppTerm t2 <> text ")"
         FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
