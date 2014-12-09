@@ -188,6 +188,10 @@ dot = void $ T.dot spthy
 comma :: Parser ()
 comma = void $ T.comma spthy
 
+-- | A semicolon @;@.
+semicolon :: Parser ()
+semicolon = void $ T.semi spthy
+
 -- | A colon @:@.
 colon :: Parser ()
 colon = void $ T.colon spthy
