@@ -120,7 +120,7 @@ spthy =
       , T.nestedComments = True
       , T.identStart     = alphaNum
       , T.identLetter    = alphaNum <|> oneOf "_"
-      , T.reservedNames  = ["in","let","rule"]
+      , T.reservedNames  = ["in","let","rule","diff"]
       , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-"
       , T.opLetter       = oneOf ":!$%&*+./<=>?@\\^|-"
       , T.reservedOpNames= []
@@ -187,6 +187,10 @@ dot = void $ T.dot spthy
 -- | A comma @,@.
 comma :: Parser ()
 comma = void $ T.comma spthy
+
+-- | A semicolon @;@.
+semicolon :: Parser ()
+semicolon = void $ T.semi spthy
 
 -- | A colon @:@.
 colon :: Parser ()
