@@ -116,7 +116,7 @@ pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public))
 -- | Diff.
-diffSym  = (diffSymString,(2,Public))
+diffSym  = (diffSymString,(2,Private))
 -- | Exponentiation.
 expSym   = (expSymString,(2,Public))
 -- | The inverse in the groups of exponents.

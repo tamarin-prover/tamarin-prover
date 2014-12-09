@@ -120,7 +120,7 @@ spthy =
       , T.nestedComments = True
       , T.identStart     = alphaNum
       , T.identLetter    = alphaNum <|> oneOf "_"
-      , T.reservedNames  = ["in","let","rule"]
+      , T.reservedNames  = ["in","let","rule","diff"]
       , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-"
       , T.opLetter       = oneOf ":!$%&*+./<=>?@\\^|-"
       , T.reservedOpNames= []
@@ -288,7 +288,7 @@ pubName = singleQuoted identifier
 
 
 -- Term Operators
-------------
+-----------------
 
 {- 
 -- Note that this would conflict with the parsing of "identifier", somehow need to mark this as special!

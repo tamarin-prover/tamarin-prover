@@ -107,6 +107,17 @@ binaryAlgApp plit = do
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
+diffOp :: Ord l => Parser (Term l) -> Parser (Term l)
+diffOp plit = do
+  ts <- symbol "diff" *> parens (commaSep (multterm plit))
+  when (2 /= length ts) $ fail $
+    "the diff operator requires exactly 2 arguments"
+--  arg1 <- head ts
+--  arg2 <- head (tail ts)
+  let arg1 = head ts  
+  let arg2 = head (tail ts)
+  return $ fAppDiff (arg1, arg2)
+
 {- FAILED ATTEMPT
 -- | Parse the binary operator "diff".
 diffOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -138,7 +149,7 @@ term plit = asum
     <?> "term"
   where
     --diff = opDiff brackets (diffterm plit)
-    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp]
+    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp]
     pairing = angled (tupleterm plit)
     nullaryApp = do
       maudeSig <- getState
