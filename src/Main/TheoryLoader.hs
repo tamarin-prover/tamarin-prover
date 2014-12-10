@@ -83,6 +83,12 @@ theoryLoadFlags =
 
   , flagOpt "" ["defines","D"] (updateArg "defines") "STRING"
       "Define flags for pseudo-preprocessor."
+      
+  , flagNone ["diff"] (addEmptyArg "diff") 
+      "Turn on observational equivalence mode using diff terms."
+  
+--  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
+--      "Turn on observational equivalence (default OFF)."
   ]
 
 -- | The defined pre-processor flags in the argument.
