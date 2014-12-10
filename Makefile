@@ -13,30 +13,30 @@ CABAL_OPTS=
 #
 
 # This is the only target that an end-user will use
-install:
+install: sandbox-init
 	cabal install $(CABAL_OPTS) lib/utils lib/term lib/theory ./
 
-install-theory:
+install-theory: sandbox-init
 	cabal install $(CABAL_OPTS) lib/theory ./
 
-install-term:
+install-term: sandbox-init
 	cabal install $(CABAL_OPTS) lib/term lib/theory ./
 
 # In case some dependencies cannot be resolved and should be forced use this
 # target. NOTE that this may break other libraries installed on your system.
-force-install:
+force-install: sandbox-init
 	cabal install $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
 
-force-install-ghc-7.0.4:
+force-install-ghc-7.0.4: sandbox-init
 	cabal install -wghc-7.0.4 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
 
-force-install-ghc-7.4.1:
+force-install-ghc-7.4.1: sandbox-init
 	cabal install -wghc-7.4.1 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
 
-force-install-theory:
+force-install-theory: sandbox-init
 	cabal install $(CABAL_OPTS) --force-reinstalls lib/theory ./
 
-force-install-term:
+force-install-term: sandbox-init
 	cabal install $(CABAL_OPTS) --force-reinstalls lib/term lib/theory ./
 
 
@@ -51,6 +51,13 @@ force-install-term:
 #
 VERSION=0.8.5.1
 
+sandbox-init:
+	cabal sandbox init --sandbox cabal-sandbox
+	cd lib/utils; cabal sandbox init --sandbox ../../cabal-sandbox
+	cd lib/term; cabal sandbox init --sandbox ../../cabal-sandbox
+	cd lib/theory; cabal sandbox init --sandbox ../../cabal-sandbox
+	cabal update
+        
 source-dists:
 	cd lib/utils; cabal sdist
 	cd lib/term; cabal sdist
@@ -298,4 +305,4 @@ depgraph:
 ctags:
 	ghc -e :ctags src/Main.hs
 
-.PHONY: unit opt all mult coverage haddock case-studies
+.PHONY: unit opt all mult coverage haddock case-studies sandbox-init
