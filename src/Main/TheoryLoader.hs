@@ -97,7 +97,7 @@ defines = findArg "defines"
 
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
-loadOpenThy as = parseOpenTheory (defines as)
+loadOpenThy as = parseOpenTheory (defines as) -- add diff here as extra parameter?
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
