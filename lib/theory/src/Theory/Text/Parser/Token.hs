@@ -142,8 +142,8 @@ parseString :: FilePath
             -> String         -- ^ Input string.
             -> Either ParseError a
 parseString srcDesc parser =
-    runParser (T.whiteSpace spthy *> parser) minimalMaudeSig srcDesc
-
+    runParser (T.whiteSpace spthy *> parser) pairMaudeSig srcDesc
+                                           -- was "minimalMaudeSig" -> could lead to errors with parsing diff terms!
 
 -- Token parsers
 ----------------

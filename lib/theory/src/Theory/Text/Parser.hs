@@ -627,7 +627,9 @@ theory flags0 = do
     symbol_ "theory"
     thyId <- identifier
     symbol_ "begin"
-        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory)
+--        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory)
+--        *> addItems (S.fromList flags0) ( set enableDiff ("diff" `S.member` (S.fromList flags0)) (set thyName thyId defaultOpenTheory) )
+        *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))        
         <* symbol "end"
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory

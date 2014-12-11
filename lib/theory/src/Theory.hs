@@ -463,8 +463,8 @@ addFormalComment c = modify thyItems (++ [TextItem c])
 ------------------------------------------------------------------------------
 
 -- | Default theory
-defaultOpenTheory :: OpenTheory
-defaultOpenTheory = Theory "default" emptySignaturePure [] []
+defaultOpenTheory :: Bool -> OpenTheory
+defaultOpenTheory flag = Theory "default" (emptySignaturePure flag) [] []
 
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness dependens on it.
