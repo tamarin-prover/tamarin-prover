@@ -10,7 +10,7 @@
 -- Equational signatures for Maude.
 module Term.Maude.Signature (
   -- * Maude signatures
-    MaudeSig
+    MaudeSig 
   , enableDH
   , enableBP
   , enableMSet
@@ -152,9 +152,10 @@ hashMaudeSig      = maudeSig $ mempty {stFunSyms=hashFunSig}
 
 -- | The minimal maude signature.
 minimalMaudeSig :: Bool -> MaudeSig
-minimalMaudeSig flag = maudeSig $ mempty {stFunSyms=pairFunSig,stRules=pairRules,enableDiff=flag}
+minimalMaudeSig flag = maudeSig $ mempty {enableDiff=flag,stFunSyms=pairFunSig,stRules=pairRules}
 -- essentially pairMaudeSig, but with the enableDiff flag set according to "flag"
-
+-- -- MaudeSig False False False flag pairFunSig pairRules S.empty S.empty
+                       
 ------------------------------------------------------------------------------
 -- Pretty Printing
 ------------------------------------------------------------------------------

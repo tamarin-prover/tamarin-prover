@@ -39,8 +39,6 @@ import           Theory.Text.Parser.Token
 
 
 
-
-
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
 ------------------------------------------------------------------------------
@@ -113,6 +111,8 @@ diffOp plit = do
   when (2 /= length ts) $ fail $
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState --somehow this flag seems to not get set by adding "diff" to command line??? [or this read fails]
+--  dh <- enableDH <$> getState
+--  when (not dh) $ fail $ "nur zum test"
   when (not diff) $ fail $
     "diff operator found, but flag diff not set"
   let arg1 = head ts
@@ -597,12 +597,18 @@ equations =
 theory :: [String]   -- ^ Defined flags.
        -> Parser OpenTheory
 theory flags0 = do
+    msig <- getState
+-- SOMEHOW AT THIS POINT MAGICALLY INCLUDE THE "DIFF" INTO THE USER STATE ! OR ELSE....    
+-- use 'set' or 'putState' 
     symbol_ "theory"
     thyId <- identifier
     symbol_ "begin"
 --        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory)
---        *> addItems (S.fromList flags0) ( set enableDiff ("diff" `S.member` (S.fromList flags0)) (set thyName thyId defaultOpenTheory) )
         *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
+--        *> addItems (S.fromList flags0) (set (sigpMaudeSig . thySignature) (TEMPORARY.MaudeSig False False False True pairFunSig TEMP2.pairRules S.empty S.empty)  (set thyName thyId (defaultOpenTheory True)))  -- instead of "True" use: ("diff" `S.member` (S.fromList flags0))
+--           set (enableDiff . sigpMaudeSig . thySignature) msig thy
+-- debugging:    fail $ "hallo" ++ show msig
+--set (enableDiff . sigpMaudeSig . thySignature) (True)    
         <* symbol "end"
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
@@ -613,8 +619,11 @@ theory flags0 = do
       , do functions
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           msig <- getState
+           fail $ "hallo" ++ show msig
       , do equations
            msig <- getState
+           fail $ "hallo" ++ show msig
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
