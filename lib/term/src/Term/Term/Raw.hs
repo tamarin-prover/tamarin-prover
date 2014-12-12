@@ -15,10 +15,10 @@ module Term.Term.Raw (
     , viewTerm
     , TermView2 (..)
     , viewTerm2
-      
+
     -- * Diff Type 
     , DiffType
-        
+
     -- ** Standard function
     , traverseTerm
     , fmapTerm
@@ -64,7 +64,7 @@ data Term a = LIT a                 -- ^ atomic terms (constants, variables, ..)
   deriving (Eq, Ord, Typeable, Data )
 
 ----------------------------------------------------------------------
--- Diff Type - whether left/right interpretation of diff is desired, 
+-- Diff Type - whether left/right interpretation of diff is desired,
 --             or no diff should occur
 ----------------------------------------------------------------------
 data DiffType = DiffLeft | DiffRight | DiffNone
@@ -79,7 +79,7 @@ data TermView a = Lit a
   deriving (Show, Eq, Ord)
 
 viewTerm :: Term a -> TermView a
-viewTerm = viewTerm' DiffNone
+viewTerm = viewTerm' DiffLeft -- should be DiffNone, but for test purposes do this!
 
 {-# INLINE viewTerm #-}
 -- | Return the 'TermView' of the given term.
@@ -89,7 +89,7 @@ viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) = case dt of
                                      DiffLeft  -> viewTerm' dt t1
                                      DiffRight -> viewTerm' dt t2
                                      DiffNone  -> error $ "viewTerm: illegal use of diff"
-                                     _         -> error $"vieTerm: illegal diff type"
+                                     _         -> error $"viewTerm: illegal diff type"
 viewTerm' dt (FAPP sym ts) = FApp sym ts
 
 -- | @fApp fsym as@ creates an application of @fsym@ to @as@. The function
@@ -153,7 +153,7 @@ data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | O
 
 -- | Returns the 'TermView2' of the given term.
 viewTerm2 :: Show a => Term a -> TermView2 a
-viewTerm2 = viewTerm2' DiffNone
+viewTerm2 = viewTerm2' DiffLeft -- should be DiffNone, but for test purposes do this!
 
 -- | Returns the 'TermView2' of the given term.
 viewTerm2' :: Show a => DiffType -> Term a -> TermView2 a
@@ -172,10 +172,10 @@ viewTerm2' dt t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == pmultSym  -> FPMult t1 t2
     [ t1, t2 ] | o == pairSym   -> FPair  t1 t2
     [ t1, t2 ] | o == diffSym   -> case dt of
-                                     DiffLeft  -> viewTerm2' dt t1      
+                                     DiffLeft  -> viewTerm2' dt t1
                                      DiffRight -> viewTerm2' dt t2
                                      DiffNone  -> error $ "viewTerm2: illegal use of diff"
-                                     _         -> error $"vieTerm2: illegal diff type"
+                                     _         -> error $"viewTerm2: illegal diff type"
     [ t1 ]     | o == invSym    -> FInv   t1
     []         | o == oneSym    -> One
     _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"

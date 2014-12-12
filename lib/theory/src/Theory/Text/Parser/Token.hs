@@ -35,7 +35,7 @@ module Theory.Text.Parser.Token (
 
   -- * Operators
 --  , opDiff
-  
+
   , opExp
   , opMult
 
@@ -294,7 +294,7 @@ pubName = singleQuoted identifier
 -- Term Operators
 -----------------
 
-{- 
+{-
 -- Note that this would conflict with the parsing of "identifier", somehow need to mark this as special!
 -- | The diff operator @diff@.
 opDiff :: Parser ()

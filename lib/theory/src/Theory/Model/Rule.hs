@@ -409,7 +409,7 @@ isIEqualityRule :: HasRuleName r => r -> Bool
 isIEqualityRule ru = case ruleName ru of
   IntrInfo IEqualityRule -> True
   _                     -> False
-  
+
 -- | True iff the rule is a construction rule.
 isConstrRule :: HasRuleName r => r -> Bool
 isConstrRule ru = case ruleName ru of

@@ -112,9 +112,10 @@ diffOp plit = do
   ts <- symbol "diff" *> parens (commaSep (multterm plit))
   when (2 /= length ts) $ fail $
     "the diff operator requires exactly 2 arguments"
---  arg1 <- head ts
---  arg2 <- head (tail ts)
-  let arg1 = head ts  
+  diff <- enableDiff <$> getState --somehow this flag seems to not get set by adding "diff" to command line???
+  when (not diff) $ fail $
+    "diff operator found, but flag diff not set"
+  let arg1 = head ts
   let arg2 = head (tail ts)
   return $ fAppDiff (arg1, arg2)
 
@@ -629,7 +630,7 @@ theory flags0 = do
     symbol_ "begin"
 --        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory)
 --        *> addItems (S.fromList flags0) ( set enableDiff ("diff" `S.member` (S.fromList flags0)) (set thyName thyId defaultOpenTheory) )
-        *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))        
+        *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
         <* symbol "end"
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
