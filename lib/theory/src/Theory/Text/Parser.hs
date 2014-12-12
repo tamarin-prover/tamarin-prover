@@ -112,35 +112,17 @@ diffOp plit = do
   ts <- symbol "diff" *> parens (commaSep (multterm plit))
   when (2 /= length ts) $ fail $
     "the diff operator requires exactly 2 arguments"
-  diff <- enableDiff <$> getState --somehow this flag seems to not get set by adding "diff" to command line???
+  diff <- enableDiff <$> getState --somehow this flag seems to not get set by adding "diff" to command line??? [or this read fails]
   when (not diff) $ fail $
     "diff operator found, but flag diff not set"
   let arg1 = head ts
   let arg2 = head (tail ts)
   return $ fAppDiff (arg1, arg2)
 
-{- FAILED ATTEMPT
--- | Parse the binary operator "diff".
-diffOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
-diffOpApp plit = do
-    op <- identifier
-    (k,priv) <- lookupArity op
-    ts <- angled $ if k /= 2
-                   then fail $ "operator diff has arity 2 but is used with arity" ++ show k
-                   else commaSep (multterm plit)
-    let k' = length ts
-    when (k /= k') $
-        fail $ "operator `" ++ op ++"' has arity " ++ show k ++
-               ", but here it is used with arity " ++ show k'
-    let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
-    return $ app (BC.pack op, (k,priv)) ts
--}
-
 -- | Parse a term.
 term :: Ord l => Parser (Term l) -> Parser (Term l)
 term plit = asum
     [ pairing       <?> "pairs"
-    --, diff
     , parens (multterm plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
@@ -149,7 +131,6 @@ term plit = asum
     ]
     <?> "term"
   where
-    --diff = opDiff brackets (diffterm plit)
     application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp]
     pairing = angled (tupleterm plit)
     nullaryApp = do
@@ -181,15 +162,6 @@ msetterm plit = do
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
 tupleterm plit = chainr1 (multterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
-
-{-
--- | A pair of terms under diff.
-diffterm :: Ord l => Parser (Term l) -> Parser (Term l)
-diffterm plit = do
-  arg1 <- term plit <$ comma
-  arg2 <- term plit
-  return $ fAppDiff [arg1, arg2]
--}
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))

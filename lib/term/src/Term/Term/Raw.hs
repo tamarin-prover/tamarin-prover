@@ -16,7 +16,7 @@ module Term.Term.Raw (
     , TermView2 (..)
     , viewTerm2
 
-    -- * Diff Type 
+    -- * Diff Type
     , DiffType
 
     -- ** Standard function
@@ -85,11 +85,10 @@ viewTerm = viewTerm' DiffLeft -- should be DiffNone, but for test purposes do th
 -- | Return the 'TermView' of the given term.
 viewTerm' :: DiffType -> Term a -> TermView a
 viewTerm' dt (LIT l) = Lit l
-viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) = case dt of
-                                     DiffLeft  -> viewTerm' dt t1
-                                     DiffRight -> viewTerm' dt t2
-                                     DiffNone  -> error $ "viewTerm: illegal use of diff"
-                                     _         -> error $"viewTerm: illegal diff type"
+--viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) = case dt of
+--                                     DiffLeft  -> viewTerm' dt t1
+--                                     DiffRight -> viewTerm' dt t2
+--                                     DiffNone  -> error $ "viewTerm: illegal use of diff"
 viewTerm' dt (FAPP sym ts) = FApp sym ts
 
 -- | @fApp fsym as@ creates an application of @fsym@ to @as@. The function
@@ -171,11 +170,11 @@ viewTerm2' dt t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == expSym    -> FExp   t1 t2  -- ensure here that FExp is always exp, never a user-defined symbol
     [ t1, t2 ] | o == pmultSym  -> FPMult t1 t2
     [ t1, t2 ] | o == pairSym   -> FPair  t1 t2
-    [ t1, t2 ] | o == diffSym   -> case dt of
-                                     DiffLeft  -> viewTerm2' dt t1
-                                     DiffRight -> viewTerm2' dt t2
-                                     DiffNone  -> error $ "viewTerm2: illegal use of diff"
-                                     _         -> error $"viewTerm2: illegal diff type"
+    [ t1, t2 ] | o == diffSym   -> FDiff t1 t2
+                                   --case dt of
+                                   --  DiffLeft  -> viewTerm2' dt t1
+                                   --  DiffRight -> viewTerm2' dt t2
+                                   --  DiffNone  -> error $ "viewTerm2: illegal use of diff"
     [ t1 ]     | o == invSym    -> FInv   t1
     []         | o == oneSym    -> One
     _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"

@@ -95,9 +95,13 @@ theoryLoadFlags =
 defines :: Arguments -> [String]
 defines = findArg "defines"
 
+-- | Diff flag in the argument
+diff :: Arguments -> [String]
+diff as = if (argExists "diff" as) then ["diff"] else []
+
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
-loadOpenThy as = parseOpenTheory (defines as) -- add diff here as extra parameter?
+loadOpenThy as = parseOpenTheory (diff as ++ defines as)
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
