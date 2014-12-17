@@ -596,10 +596,9 @@ equations =
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
        -> Parser OpenTheory
-theory flags0 = do
+theory flags0 = do 
     msig <- getState
--- SOMEHOW AT THIS POINT MAGICALLY INCLUDE THE "DIFF" INTO THE USER STATE ! OR ELSE....    
--- use 'set' or 'putState' 
+    when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
     symbol_ "begin"
@@ -619,11 +618,8 @@ theory flags0 = do
       , do functions
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
-           msig <- getState
-           fail $ "hallo" ++ show msig
       , do equations
            msig <- getState
-           fail $ "hallo" ++ show msig
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'

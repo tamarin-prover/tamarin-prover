@@ -32,6 +32,7 @@ module Term.Maude.Signature (
   , msetMaudeSig
   , bpMaudeSig
   , minimalMaudeSig
+  , enableDiffMaudeSig
 
   -- * extend maude signatures
   , addFunSym
@@ -155,7 +156,11 @@ minimalMaudeSig :: Bool -> MaudeSig
 minimalMaudeSig flag = maudeSig $ mempty {enableDiff=flag,stFunSyms=pairFunSig,stRules=pairRules}
 -- essentially pairMaudeSig, but with the enableDiff flag set according to "flag"
 -- -- MaudeSig False False False flag pairFunSig pairRules S.empty S.empty
-                       
+
+-- | Signature with enableDiff set to True
+enableDiffMaudeSig :: MaudeSig
+enableDiffMaudeSig = maudeSig $ mempty {enableDiff=True}
+
 ------------------------------------------------------------------------------
 -- Pretty Printing
 ------------------------------------------------------------------------------
