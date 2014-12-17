@@ -110,9 +110,7 @@ diffOp plit = do
   ts <- symbol "diff" *> parens (commaSep (multterm plit))
   when (2 /= length ts) $ fail $
     "the diff operator requires exactly 2 arguments"
-  diff <- enableDiff <$> getState --somehow this flag seems to not get set by adding "diff" to command line??? [or this read fails]
---  dh <- enableDH <$> getState
---  when (not dh) $ fail $ "nur zum test"
+  diff <- enableDiff <$> getState
   when (not diff) $ fail $
     "diff operator found, but flag diff not set"
   let arg1 = head ts

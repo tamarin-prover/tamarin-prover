@@ -85,6 +85,7 @@ viewTerm = viewTerm' DiffLeft -- should be DiffNone, but for test purposes do th
 -- | Return the 'TermView' of the given term.
 viewTerm' :: DiffType -> Term a -> TermView a
 viewTerm' dt (LIT l) = Lit l
+-- THESE LINES BELOW PROBABLY SHOULD BE UNCOMMENTED --- BUT THAT LEADS TO A NUMBER OF PROBLEMS, JUST RUN IT...
 --viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) = case dt of
 --                                     DiffLeft  -> viewTerm' dt t1
 --                                     DiffRight -> viewTerm' dt t2
@@ -170,11 +171,10 @@ viewTerm2' dt t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == expSym    -> FExp   t1 t2  -- ensure here that FExp is always exp, never a user-defined symbol
     [ t1, t2 ] | o == pmultSym  -> FPMult t1 t2
     [ t1, t2 ] | o == pairSym   -> FPair  t1 t2
-    [ t1, t2 ] | o == diffSym   -> FDiff t1 t2
-                                   --case dt of
-                                   --  DiffLeft  -> viewTerm2' dt t1
-                                   --  DiffRight -> viewTerm2' dt t2
-                                   --  DiffNone  -> error $ "viewTerm2: illegal use of diff"
+    [ t1, t2 ] | o == diffSym   -> case dt of
+                                     DiffLeft  -> viewTerm2' dt t1
+                                     DiffRight -> viewTerm2' dt t2
+                                     DiffNone  -> error $ "viewTerm2: illegal use of diff"
     [ t1 ]     | o == invSym    -> FInv   t1
     []         | o == oneSym    -> One
     _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"
