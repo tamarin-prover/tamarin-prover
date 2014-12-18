@@ -13,11 +13,13 @@ module Term.Term.Raw (
       Term
     , TermView (..)
     , viewTerm
+    , viewTerm'
     , TermView2 (..)
     , viewTerm2
+    , viewTerm2'
 
     -- * Diff Type
-    , DiffType
+    , DiffType (..)
 
     -- ** Standard function
     , traverseTerm
@@ -67,7 +69,7 @@ data Term a = LIT a                 -- ^ atomic terms (constants, variables, ..)
 -- Diff Type - whether left/right interpretation of diff is desired,
 --             or no diff should occur
 ----------------------------------------------------------------------
-data DiffType = DiffLeft | DiffRight | DiffNone
+data DiffType = DiffLeft | DiffRight | DiffNone | DiffBoth
 
 ----------------------------------------------------------------------
 -- Views and smart constructors
@@ -86,10 +88,11 @@ viewTerm = viewTerm' DiffLeft -- should be DiffNone, but for test purposes do th
 viewTerm' :: DiffType -> Term a -> TermView a
 viewTerm' dt (LIT l) = Lit l
 -- THESE LINES BELOW PROBABLY SHOULD BE UNCOMMENTED --- BUT THAT LEADS TO A NUMBER OF PROBLEMS, JUST RUN IT...
---viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) = case dt of
---                                     DiffLeft  -> viewTerm' dt t1
---                                     DiffRight -> viewTerm' dt t2
---                                     DiffNone  -> error $ "viewTerm: illegal use of diff"
+viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) = case dt of
+                                     DiffLeft  -> viewTerm' dt t1
+                                     DiffRight -> viewTerm' dt t2
+                                     DiffBoth  -> FApp (NoEq diffSym) [t1,t2]
+                                     DiffNone  -> error $ "viewTerm: illegal use of diff"
 viewTerm' dt (FAPP sym ts) = FApp sym ts
 
 -- | @fApp fsym as@ creates an application of @fsym@ to @as@. The function
@@ -174,6 +177,7 @@ viewTerm2' dt t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == diffSym   -> case dt of
                                      DiffLeft  -> viewTerm2' dt t1
                                      DiffRight -> viewTerm2' dt t2
+                                     DiffBoth  -> FDiff t1 t2
                                      DiffNone  -> error $ "viewTerm2: illegal use of diff"
     [ t1 ]     | o == invSym    -> FInv   t1
     []         | o == oneSym    -> One
