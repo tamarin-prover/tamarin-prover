@@ -81,18 +81,19 @@ data TermView a = Lit a
   deriving (Show, Eq, Ord)
 
 viewTerm :: Term a -> TermView a
-viewTerm = viewTerm' DiffLeft -- should be DiffNone, but for test purposes do this!
+viewTerm = viewTerm' DiffBoth -- should be DiffNone, but for test purposes do this!
 
 {-# INLINE viewTerm #-}
 -- | Return the 'TermView' of the given term.
 viewTerm' :: DiffType -> Term a -> TermView a
 viewTerm' dt (LIT l) = Lit l
 -- THESE LINES BELOW PROBABLY SHOULD BE UNCOMMENTED --- BUT THAT LEADS TO A NUMBER OF PROBLEMS, JUST RUN IT...
-viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) = case dt of
+viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) =   case dt of
                                      DiffLeft  -> viewTerm' dt t1
                                      DiffRight -> viewTerm' dt t2
                                      DiffBoth  -> FApp (NoEq diffSym) [t1,t2]
                                      DiffNone  -> error $ "viewTerm: illegal use of diff"
+-- the above equation is at fault!!! how to fix it???
 viewTerm' dt (FAPP sym ts) = FApp sym ts
 
 -- | @fApp fsym as@ creates an application of @fsym@ to @as@. The function
@@ -156,7 +157,7 @@ data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | O
 
 -- | Returns the 'TermView2' of the given term.
 viewTerm2 :: Show a => Term a -> TermView2 a
-viewTerm2 = viewTerm2' DiffLeft -- should be DiffNone, but for test purposes do this!
+viewTerm2 = viewTerm2' DiffBoth -- should be DiffNone, but for test purposes do this!
 
 -- | Returns the 'TermView2' of the given term.
 viewTerm2' :: Show a => DiffType -> Term a -> TermView2 a
