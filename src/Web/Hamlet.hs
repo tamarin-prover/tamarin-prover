@@ -113,30 +113,31 @@ theoriesTpl thmap = [whamlet|
       groupBy (\x y -> comparing tiName x y == EQ) .
       sortBy (comparing snd) . M.toList
 
-    tiName = get thyName . tiTheory . snd
+    tiName x = getEitherTheoryName $ snd(x)
 
     ntail _ [] = []
     ntail i (_:xs)
       | length xs <= i = xs
       | otherwise      = ntail i xs
-
+      
+      
 -- | Template for single line in table on root page.
-theoryTpl :: (TheoryIdx, TheoryInfo) -> Widget
+theoryTpl :: (TheoryIdx, EitherTheoryInfo) -> Widget
 theoryTpl th = [whamlet|
     $newline never
     <tr>
       <td>
         <a href=@{OverviewR (fst th) TheoryHelp}>
-          \#{get thyName $ tiTheory $ snd th}
-      <td>#{formatTime defaultTimeLocale "%T" $ tiTime $ snd th}
-      $if tiPrimary (snd th)
+          \#{getEitherTheoryName $ snd th}
+      <td>#{formatTime defaultTimeLocale "%T" $ getEitherTheoryTime $ snd th}
+      $if getEitherTheoryPrimary (snd th)
         <td>Original
       $else
         <td><em>Modified
       <td>#{origin th}
   |]
   where
-    origin (_, ti) = case tiOrigin ti of
+    origin (_, ti) = case getEitherTheoryOrigin ti of
       Local path -> path
       Upload name ->  name
       Interactive -> "(interactively created)"

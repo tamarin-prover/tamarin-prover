@@ -41,9 +41,13 @@ where
 
 import           Theory                       (
     ClosedTheory,
+    ClosedDiffTheory,
+    EitherClosedTheory,
     thyName, removeLemma,
     openTheory, sorryProver, runAutoProver,
-    prettyClosedTheory, prettyOpenTheory
+    prettyClosedTheory, prettyOpenTheory, 
+    openDiffTheory, 
+    prettyClosedDiffTheory, prettyOpenDiffTheory
   )
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, apHeuristic)
 import           Text.PrettyPrint.Html
@@ -102,7 +106,7 @@ import           Debug.Trace                  (trace)
 
 -- | Store theory map in file if option enabled.
 storeTheory :: WebUI
-            -> TheoryInfo
+            -> EitherTheoryInfo
             -> TheoryIdx
             -> IO ()
 storeTheory yesod thy idx =
@@ -112,14 +116,15 @@ storeTheory yesod thy idx =
       renameFile (f++".tmp") f
 
 -- | Load a theory given an index.
-getTheory :: TheoryIdx -> Handler (Maybe TheoryInfo)
+getTheory :: TheoryIdx -> Handler (Maybe EitherTheoryInfo)
 getTheory idx = do
     yesod <- getYesod
-    liftIO $ withMVar (theoryVar yesod) $ return . M.lookup idx
+    liftIO $ withMVar (theoryVar yesod) $ return. M.lookup idx
+ 
 
 -- | Store a theory, return index.
 putTheory :: Maybe TheoryInfo     -- ^ Index of parent theory
-          -> Maybe TheoryOrigin   -- ^ Origin of this theory
+          -> Maybe TheoryOrigin         -- ^ Origin of this theory
           -> ClosedTheory         -- ^ The new closed theory
           -> Handler TheoryIdx
 putTheory parent origin thy = do
@@ -131,12 +136,33 @@ putTheory parent origin thy = do
           parentIdx    = tiIndex <$> parent
           parentOrigin = tiOrigin <$> parent
           newOrigin    = parentOrigin <|> origin <|> (Just Interactive)
-          newThy       =
+          newThy       = Trace (
               TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
-                         (maybe (defaultAutoProver yesod) tiAutoProver parent)
+                      (maybe (defaultAutoProver yesod) tiAutoProver parent))
       storeTheory yesod newThy idx
       return (M.insert idx newThy theories, idx)
 
+-- | Store a theory, return index.
+putDiffTheory :: Maybe DiffTheoryInfo     -- ^ Index of parent theory
+              -> Maybe TheoryOrigin         -- ^ Origin of this theory
+              -> ClosedDiffTheory         -- ^ The new closed theory
+              -> Handler TheoryIdx
+putDiffTheory parent origin thy = do
+    yesod <- getYesod
+    liftIO $ modifyMVar (theoryVar yesod) $ \theories -> do
+      time <- getZonedTime
+      let idx | M.null theories = 1
+              | otherwise       = fst (M.findMax theories) + 1
+          parentIdx    = dtiIndex <$> parent
+          parentOrigin = dtiOrigin <$> parent
+          newOrigin    = parentOrigin <|> origin <|> (Just Interactive)
+          newThy       = Diff (
+              DiffTheoryInfo idx thy time parentIdx False (fromJust newOrigin)
+                      (maybe (defaultAutoProver yesod) dtiAutoProver parent))
+      storeTheory yesod newThy idx
+      return (M.insert idx newThy theories, idx)
+
+      
 -- | Delete theory.
 delTheory :: TheoryIdx -> Handler ()
 delTheory idx = do
@@ -161,12 +187,47 @@ adjTheory idx f = do
     yesod <- getYesod
     liftIO $ modifyMVar_ (theoryVar yesod) $ \theories ->
       case M.lookup idx theories of
-        Just thy -> do
-          let newThy =  f thy
-          storeTheory yesod newThy idx
-          return $ M.insert idx newThy theories
+        Just th -> do
+          case th of
+            Trace thy -> do
+              let newThy =  f thy
+              storeTheory yesod (Trace newThy) idx
+              return $ M.insert idx (Trace newThy) theories
+            Diff thy -> error "adjTheory: found DiffTheory"
         Nothing -> error "adjTheory: invalid theory index"
 
+-- | Modify a theory in the map of theories.
+adjEitherTheory :: TheoryIdx
+                -> (EitherTheoryInfo -> EitherTheoryInfo)
+                -> Handler ()
+adjEitherTheory idx f = do
+    yesod <- getYesod
+    liftIO $ modifyMVar_ (theoryVar yesod) $ \theories ->
+      case M.lookup idx theories of
+        Just thy -> do
+            let newThy =  f thy
+            storeTheory yesod newThy idx
+            return $ M.insert idx newThy theories
+        Nothing -> error "adjEitherTheory: invalid theory index"
+
+-- | Modify a theory in the map of theories.
+adjDiffTheory :: TheoryIdx
+              -> (DiffTheoryInfo -> DiffTheoryInfo)
+              -> Handler ()
+adjDiffTheory idx f = do
+    yesod <- getYesod
+    liftIO $ modifyMVar_ (theoryVar yesod) $ \theories ->
+      case M.lookup idx theories of
+        Just th -> do
+          case th of
+            Diff thy -> do
+              let newThy =  f thy
+              storeTheory yesod (Diff newThy) idx
+              return $ M.insert idx (Diff newThy) theories
+            Trace thy -> error "adjTheory: found normal Theory"
+        Nothing -> error "adjTheory: invalid theory index"
+
+        
 -- | Debug tracing.
 dtrace :: WebUI -> String -> a -> a
 dtrace yesod msg | debug yesod = trace msg
@@ -271,9 +332,36 @@ withTheory :: TheoryIdx
 withTheory idx handler = do
   maybeThy <- getTheory idx
   case maybeThy of
-    Just ti -> handler ti
+    Just eitherTi -> case eitherTi of
+                          Trace ti  -> handler ti
+                          Diff ti -> notFound
     Nothing -> notFound
 
+-- | Evaluate a handler with a given theory specified by the index,
+-- return notFound if theory does not exist.
+withDiffTheory :: TheoryIdx
+               -> (DiffTheoryInfo -> Handler a)
+               -> Handler a
+withDiffTheory idx handler = do
+  maybeThy <- getTheory idx
+  case maybeThy of
+    Just eitherTi -> case eitherTi of
+                          Trace  ti -> notFound
+                          Diff ti -> handler ti
+    Nothing -> notFound
+
+-- | Evaluate a handler with a given theory specified by the index,
+-- return notFound if theory does not exist.
+withEitherTheory :: TheoryIdx
+                 -> (EitherTheoryInfo -> Handler a)
+                 -> Handler a
+withEitherTheory idx handler = do
+  maybeThy <- getTheory idx
+  case maybeThy of
+    Just ti  -> handler ti
+    Nothing -> notFound
+
+    
 {-
 -- | Run a form and provide a JSON response.
 -- formHandler :: (HamletValue h, HamletUrl h ~ WebUIRoute, h ~ Widget ())
@@ -345,10 +433,16 @@ postRootR = do
               yesod <- getYesod
               closedThy <- liftIO $ parseThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
               case closedThy of
-                Left err  -> setMessage $ "Theory loading failed:\n" <> toHtml err
+                Left err -> setMessage $ "Theory loading failed:\n" <> toHtml err
                 Right thy -> do
+--                     case th of 
+                         -- FIXME??
+--                          Left thy  -> do
                     void $ putTheory Nothing
                              (Just $ Upload $ T.unpack $ fileName fileinfo) thy
+--                          Right thy -> do
+--                            void $ putDiffTheory Nothing
+--                              (Just $ Upload $ T.unpack $ fileName fileinfo) thy
                     setMessage "Loaded new theory!"
     theories <- getTheories
     defaultLayout $ do
@@ -661,29 +755,54 @@ getDeleteStepR idx path = do
 
 -- | Save a theory to the working directory.
 getSaveTheoryR :: TheoryIdx -> Handler RepJson
-getSaveTheoryR idx = withTheory idx $ \ti -> do
-    let origin = tiOrigin ti
-    case origin of
-      -- Saving interactive/uploaded files not supported yet.
-      Interactive -> notFound
-      Upload _ -> notFound
-      -- Saving of local files implemented.
-      Local file -> do
-        -- Save theory to disk
-        liftIO $ writeFile file (prettyRender ti)
-        -- Find original theorie(s) with same origin
-        -- Set original -> modified
-        thys <- M.filter (same origin) <$> getTheories
-        _ <- Tr.mapM (\t -> adjTheory (tiIndex t) (setPrimary False)) thys
-        -- Find current theory
-        -- Set modified -> original
-        adjTheory (tiIndex ti) (setPrimary True)
-        -- Return message
-        jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
+getSaveTheoryR idx = withEitherTheory idx $ \eti -> do
+    case eti of
+       Trace ti -> do
+          let origin = tiOrigin ti
+          case origin of
+            -- Saving interactive/uploaded files not supported yet.
+            Interactive -> notFound
+            Upload _ -> notFound
+            -- Saving of local files implemented.
+            Local file -> do
+              -- Save theory to disk
+              liftIO $ writeFile file (prettyRender ti)
+              -- Find original theorie(s) with same origin
+              -- Set original -> modified
+              thys <- M.filter (same origin) <$> getTheories
+              _ <- Tr.mapM (\t -> adjEitherTheory (getEitherTheoryIndex t) (setPrimary False)) thys
+              -- Find current theory
+              -- Set modified -> original
+              adjEitherTheory (tiIndex ti) (setPrimary True)
+              -- Return message
+              jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
+       Diff ti -> do
+          let origin = dtiOrigin ti
+          case origin of
+            -- Saving interactive/uploaded files not supported yet.
+            Interactive -> notFound
+            Upload _ -> notFound
+            -- Saving of local files implemented.
+            Local file -> do
+              -- Save theory to disk
+              liftIO $ writeFile file (prettyRenderD ti)
+              -- Find original theorie(s) with same origin
+              -- Set original -> modified
+              thys <- M.filter (same origin) <$> getTheories
+              _ <- Tr.mapM (\t -> adjEitherTheory (getEitherTheoryIndex t) (setPrimary False)) thys
+              -- Find current theory
+              -- Set modified -> original
+              adjEitherTheory (dtiIndex ti) (setPrimary True)
+              -- Return message
+              jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
   where
-    prettyRender = render . prettyOpenTheory . openTheory . tiTheory
-    same origin ti = tiPrimary ti && (tiOrigin ti == origin)
-    setPrimary bool ti = ti { tiPrimary = bool }
+    prettyRender ti  = render $ prettyOpenTheory $ openTheory $ tiTheory ti 
+    prettyRenderD ti = render $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti 
+    same origin (Trace ti) = tiPrimary ti  && (tiOrigin ti  == origin)
+    same origin (Diff ti)    = dtiPrimary ti && (dtiOrigin ti == origin)
+    setPrimary :: Bool -> EitherTheoryInfo -> EitherTheoryInfo 
+    setPrimary bool (Trace ti)  = Trace (ti { tiPrimary  = bool })
+    setPrimary bool (Diff ti)     = Diff    (ti { dtiPrimary = bool })
 
 
 -- | Prompt downloading of theory.

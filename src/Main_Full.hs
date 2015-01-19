@@ -5,7 +5,7 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
--- Main module for the Tamarin prover without a GUI.
+-- Main module for the Tamarin prover with a GUI.
 module Main_Full where
 
 import Main.Console          (defaultMain)

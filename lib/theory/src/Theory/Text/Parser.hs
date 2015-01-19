@@ -10,6 +10,8 @@
 module Theory.Text.Parser (
     parseOpenTheory
   , parseOpenTheoryString
+  , parseOpenDiffTheory
+  , parseOpenDiffTheoryString
   , parseLemma
   , parseIntruderRules
   ) where
@@ -49,6 +51,13 @@ parseOpenTheory :: [String] -- ^ Defined flags
                 -> IO OpenTheory
 parseOpenTheory flags = parseFile (theory flags)
 
+-- | Parse a security protocol theory file.
+parseOpenDiffTheory :: [String] -- ^ Defined flags
+                -> FilePath
+                -> IO OpenDiffTheory
+parseOpenDiffTheory flags = parseFile (diffTheory flags)
+
+
 -- | Parse DH intruder rules.
 parseIntruderRules :: MaudeSig -> FilePath -> IO [IntrRuleAC]
 parseIntruderRules msig = parseFile (setState msig >> many intrRule)
@@ -57,6 +66,11 @@ parseIntruderRules msig = parseFile (setState msig >> many intrRule)
 parseOpenTheoryString :: [String]  -- ^ Defined flags.
                       -> String -> Either ParseError OpenTheory
 parseOpenTheoryString flags = parseString "<unknown source>" (theory flags)
+
+-- | Parse a security protocol theory from a string.
+parseOpenDiffTheoryString :: [String]  -- ^ Defined flags.
+                      -> String -> Either ParseError OpenDiffTheory
+parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory flags)
 
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (Lemma ProofSkeleton)
@@ -660,5 +674,73 @@ theory flags0 = do
         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
 
     liftedAddAxiom thy ax = case addAxiom ax thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
+
+        
+-- | Parse a diff theory.
+diffTheory :: [String]   -- ^ Defined flags.
+       -> Parser OpenDiffTheory
+diffTheory flags0 = do 
+    msig <- getState
+    putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
+    symbol_ "theory"
+    thyId <- identifier
+    symbol_ "begin"
+        *> addItems (S.fromList flags0) (set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` (S.fromList flags0))))
+        <* symbol "end"
+  where
+    addItems :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
+    addItems flags thy = asum
+      [ do builtins
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
+      , do functions
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
+      , do equations
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
+--      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
+--           addItems flags thy'
+      , do thy' <- liftedAddAxiom thy =<< axiom
+           addItems flags thy'
+      , do thy' <- liftedAddLemma thy =<< lemma
+           addItems flags thy'
+      , do ru <- protoRule
+           thy' <- liftedAddProtoRule thy ru
+           addItems flags thy'
+      , do r <- intrRule
+           addItems flags (addIntrRuleACsDiff [r] thy)
+      , do c <- formalComment
+           addItems flags (addFormalCommentDiff c thy)
+      , do ifdef flags thy
+      , do define flags thy
+      , do return thy
+      ]
+
+    define :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
+    define flags thy = do
+       flag <- try (symbol "#define") *> identifier
+       addItems (S.insert flag flags) thy
+
+    ifdef :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
+    ifdef flags thy = do
+       flag <- symbol_ "#ifdef" *> identifier
+       thy' <- addItems flags thy
+       symbol_ "#endif"
+       if flag `S.member` flags
+         then addItems flags thy'
+         else addItems flags thy
+
+    liftedAddProtoRule thy ru = case addProtoRuleDiff ru thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
+
+    liftedAddLemma thy lem = case addLemmaDiff lem thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+
+    liftedAddAxiom thy ax = case addAxiomDiff ax thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate axiom: " ++ get axName ax

@@ -90,14 +90,25 @@ run thisMode as = case findArg "workDir" as of
             , ""
             , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
             ]
-          withWebUI
-            ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
-            cacheDir
-            workDir (argExists "loadstate" as) (argExists "autosave" as)
-            (loadClosedThyWfReport as) (loadClosedThyString as)
-            (argExists "debug" as) dataDir (dotPath as) readImageFormat
-            (constructAutoProver as)
-            (runWarp port)
+          if (argExists "diff" as)
+            then do 
+              withWebUIDiff
+                ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
+                cacheDir
+                workDir (argExists "loadstate" as) (argExists "autosave" as)
+                (loadClosedDiffThyWfReport as) (loadClosedDiffThyString as)
+                (argExists "debug" as) dataDir (dotPath as) readImageFormat
+                (constructAutoDiffProver as)
+                (runWarp port)
+            else do 
+              withWebUI
+                ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
+                cacheDir
+                workDir (argExists "loadstate" as) (argExists "autosave" as)
+                (loadClosedThyWfReport as) (loadClosedThyString as)
+                (argExists "debug" as) dataDir (dotPath as) readImageFormat
+                (constructAutoProver as)
+                (runWarp port)
         else
           helpAndExit thisMode
             (Just $ "directory '" ++ workDir ++ "' does not exist.")

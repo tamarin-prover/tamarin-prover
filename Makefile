@@ -1,4 +1,6 @@
-CABAL_OPTS=
+CABAL_OPTS= 
+# --enable-library-profiling --enable-executable-profiling
+# --force-reinstalls
 
 # NOTE that the dependency solver of cabal-install-0.10.2 has sometimes
 # trouble coping with complicated install plans. In these cases, the

@@ -4,6 +4,7 @@
 {-# LANGUAGE Rank2Types        #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE DeriveGeneric     #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -24,6 +25,13 @@ module Web.Types
   , Route (..)
   , resourcesWebUI
   , TheoryInfo(..)
+  , DiffTheoryInfo(..)
+  , EitherTheoryInfo(..)
+  , getEitherTheoryName
+  , getEitherTheoryTime
+  , getEitherTheoryPrimary
+  , getEitherTheoryOrigin
+  , getEitherTheoryIndex
   , TheoryPath(..)
   , TheoryOrigin(..)
   , JsonResponse(..)
@@ -52,6 +60,9 @@ import           Data.Monoid         (mconcat)
 import           Data.Ord            (comparing)
 import qualified Data.Text           as T
 import           Data.Time.LocalTime
+-- import qualified Data.Binary         as Bin
+-- import           Control.Monad
+-- import           GHC.Generics (Generic)
 
 import           Text.Hamlet
 import           Yesod.Core
@@ -75,7 +86,7 @@ import           Theory
 type TheoryIdx = Int
 
 -- | Type synonym representing a map of theories.
-type TheoryMap = M.Map TheoryIdx TheoryInfo
+type TheoryMap = M.Map TheoryIdx (EitherTheoryInfo)
 
 -- | Type synonym representing a map of threads.
 type ThreadMap = M.Map T.Text ThreadId
@@ -103,9 +114,11 @@ data WebUI = WebUI
   , workDir            :: FilePath
     -- ^ The working directory (for storing/loading theories).
   -- , parseThy    :: MonadIO m => String -> GenericHandler m ClosedTheory
-  , parseThy           :: String -> IO (Either String ClosedTheory)
+  , parseThy           :: String -> IO (Either String (ClosedTheory))
     -- ^ Close an open theory according to command-line arguments.
-  , theoryVar          :: MVar TheoryMap
+  , diffParseThy       :: String -> IO (Either String (ClosedDiffTheory))
+    -- ^ Close an open theory according to command-line arguments.
+  , theoryVar          :: MVar (TheoryMap)
     -- ^ MVar that holds the theory map
   , threadVar          :: MVar ThreadMap
     -- ^ MVar that holds the thread map
@@ -119,8 +132,11 @@ data WebUI = WebUI
     -- ^ The default prover to use for automatic proving.
   , debug              :: Bool
     -- ^ Output debug messages
+  , isDiffTheory       :: Bool
+    -- ^ Output debug messages
   }
 
+  
 -- | Simple data type for generating JSON responses.
 data JsonResponse
   = JsonHtml T.Text Content   -- ^ Title and HTML content
@@ -132,7 +148,7 @@ data JsonResponse
 -- or created by interactive mode (e.g. through editing).
 data TheoryOrigin = Local FilePath | Upload String | Interactive
      deriving (Show, Eq, Ord)
-
+     
 -- | Data type containg both the theory and it's index, making it easier to
 -- pass the two around (since they are always tied to each other). We also
 -- keep some extra bookkeeping information.
@@ -144,7 +160,21 @@ data TheoryInfo = TheoryInfo
   , tiPrimary    :: Bool            -- ^ This is the orginally loaded theory.
   , tiOrigin     :: TheoryOrigin    -- ^ Origin of theory.
   , tiAutoProver :: AutoProver      -- ^ The automatic prover to use.
-  }
+  } -- deriving (Generic)
+
+-- | Data type containg both the theory and it's index, making it easier to
+-- pass the two around (since they are always tied to each other). We also
+-- keep some extra bookkeeping information.
+data DiffTheoryInfo = DiffTheoryInfo
+  { dtiIndex      :: TheoryIdx       -- ^ Index of theory.
+  , dtiTheory     :: ClosedDiffTheory -- ^ The closed theory.
+  , dtiTime       :: ZonedTime       -- ^ Time theory was loaded.
+  , dtiParent     :: Maybe TheoryIdx -- ^ Prev theory in history
+  , dtiPrimary    :: Bool            -- ^ This is the orginally loaded theory.
+  , dtiOrigin     :: TheoryOrigin    -- ^ Origin of theory.
+  , dtiAutoProver :: AutoProver      -- ^ The automatic prover to use.
+  } -- deriving (Generic)
+
 
 -- | We use the ordering in order to display loaded theories to the user.
 -- We first compare by name, then by time loaded, and then by source: Theories
@@ -159,12 +189,121 @@ compareTI (TheoryInfo _ i1 t1 p1 a1 o1 _) (TheoryInfo _ i2 t2 p2 a2 o2 _) =
     , compare p1 p2
     , compare o1 o2
     ]
+    
+-- | We use the ordering in order to display loaded theories to the user.
+-- We first compare by name, then by time loaded, and then by source: Theories
+-- that were loaded from the command-line are displayed earlier then
+-- interactively loaded ones.
+compareDTI :: DiffTheoryInfo -> DiffTheoryInfo -> Ordering
+compareDTI (DiffTheoryInfo _ i1 t1 p1 a1 o1 _) (DiffTheoryInfo _ i2 t2 p2 a2 o2 _) =
+  mconcat
+    [ comparing (get diffThyName) i1 i2
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
 
-instance Eq TheoryInfo where
+data EitherTheoryInfo = Trace TheoryInfo | Diff DiffTheoryInfo -- deriving (Generic)
+
+-- instance Bin.Binary TheoryInfo
+-- instance Bin.Binary DiffTheoryInfo
+-- instance Bin.Binary EitherTheoryInfo
+
+{- instance Bin.Binary EitherTheoryInfo where
+       put (Trace i) = do Bin.put (0 :: Bin.Word8)
+                            Bin.put i
+       put (Diff i)    = do Bin.put (1 :: Bin.Word8)
+       Bin.put i -}
+{-       get = do t <- get :: Bin.Get Bin.Word8
+                case t of
+                           0 -> do i <- Bin.get
+                                   return (Trace i)
+                           1 -> do i <- Bin.get
+                           return (Diff i) -}
+{-       get = do tag <- Bin.getWord8
+                case tag of
+                    0 -> liftM Trace get
+                    1 -> liftM Diff get -}
+
+-- Direct access functionf for Either Theory Type
+getEitherTheoryName :: EitherTheoryInfo -> String
+getEitherTheoryName (Trace i)  = get thyName (tiTheory i)
+getEitherTheoryName (Diff i) = get diffThyName (dtiTheory i)
+
+getEitherTheoryTime :: EitherTheoryInfo -> ZonedTime
+getEitherTheoryTime (Trace i)  = (tiTime i)
+getEitherTheoryTime (Diff i) = (dtiTime i)
+
+getEitherTheoryPrimary :: EitherTheoryInfo -> Bool
+getEitherTheoryPrimary (Trace i)  = (tiPrimary i)
+getEitherTheoryPrimary (Diff i) = (dtiPrimary i)
+
+getEitherTheoryOrigin :: EitherTheoryInfo -> TheoryOrigin
+getEitherTheoryOrigin (Trace i)  = (tiOrigin i)
+getEitherTheoryOrigin (Diff i) = (dtiOrigin i)
+
+getEitherTheoryIndex :: EitherTheoryInfo -> TheoryIdx
+getEitherTheoryIndex (Trace i)  = (tiIndex i)
+getEitherTheoryIndex (Diff i) = (dtiIndex i)
+
+-- | We use the ordering in order to display loaded theories to the user.
+-- We first compare by name, then by time loaded, and then by source: Theories
+-- that were loaded from the command-line are displayed earlier then
+-- interactively loaded ones.
+compareEDTI :: EitherTheoryInfo -> EitherTheoryInfo -> Ordering
+compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _)) (Trace (TheoryInfo _ i2 t2 p2 a2 o2 _)) =
+  mconcat
+    [ comparing (get thyName) i1 i2
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
+compareEDTI (Diff (DiffTheoryInfo _ i1 t1 p1 a1 o1 _)) (Diff (DiffTheoryInfo _ i2 t2 p2 a2 o2 _)) =
+  mconcat
+    [ comparing (get diffThyName) i1 i2
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
+compareEDTI (Diff (DiffTheoryInfo _ i1 t1 p1 a1 o1 _)) (Trace (TheoryInfo _ i2 t2 p2 a2 o2 _)) =
+  mconcat
+    [ compare ((get diffThyName) i1) ((get thyName) i2)
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
+compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _)) (Diff (DiffTheoryInfo _ i2 t2 p2 a2 o2 _)) =
+  mconcat
+    [ compare ((get thyName) i1) ((get diffThyName) i2)
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
+
+
+instance Eq (TheoryInfo) where
   (==) t1 t2 = compareTI t1 t2 == EQ
 
-instance Ord TheoryInfo where
+instance Ord (TheoryInfo) where
   compare = compareTI
+
+instance Eq (DiffTheoryInfo) where
+  (==) t1 t2 = compareDTI t1 t2 == EQ
+
+instance Ord (DiffTheoryInfo) where
+  compare = compareDTI
+
+
+instance Eq (EitherTheoryInfo) where
+  (==) t1 t2 = compareEDTI t1 t2 == EQ
+
+instance Ord (EitherTheoryInfo) where
+  compare = compareEDTI
 
 -- | Simple data type for specifying a path to a specific
 -- item within a theory.
@@ -248,7 +387,7 @@ parseTheoryPath =
     parseCases _       = Nothing
 
 
-type RenderUrl = Route WebUI -> T.Text
+type RenderUrl = Route (WebUI) -> T.Text
 
 ------------------------------------------------------------------------------
 -- Routing
@@ -289,6 +428,7 @@ mkYesodData "WebUI" [parseRoutes|
 /favicon.ico                               FaviconR                GET
 /static                                    StaticR                 Static getStatic
 |]
+
 
 instance PathPiece SolutionExtractor where
   toPathPiece CutNothing = "characterize"

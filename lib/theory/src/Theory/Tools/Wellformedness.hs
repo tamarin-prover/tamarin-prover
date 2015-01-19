@@ -57,6 +57,8 @@ module Theory.Tools.Wellformedness (
     WfErrorReport
   , checkWellformedness
   , noteWellformedness
+  , checkWellformednessDiff
+  , noteWellformednessDiff
 
   , prettyWfErrorReport
   ) where
@@ -495,6 +497,20 @@ multRestrictedReport thy = do
 -- Theory
 ------------------------------------------------------------------------------
 
+-- | Returns a list of errors, if there are any.
+checkWellformednessDiff :: OpenDiffTheory
+                    -> WfErrorReport
+checkWellformednessDiff thy = error "FIXME"
+{-  concatMap ($ thy)
+    [ unboundReport
+    , freshNamesReport
+    , publicNamesReport
+    , ruleSortsReport
+    , factReports
+    , formulaReports
+    , lemmaAttributeReport
+    , multRestrictedReport
+    ] -}
 
 
 -- | Returns a list of errors, if there are any.
@@ -523,3 +539,15 @@ noteWellformedness report thy =
           , prettyWfErrorReport report
           ]
 
+-- | Adds a note to the end of the theory, if it is not well-formed.
+noteWellformednessDiff :: WfErrorReport -> OpenDiffTheory -> OpenDiffTheory
+noteWellformednessDiff report thy = error "FIXME"
+{-    addComment wfErrorReport thy
+  where
+    wfErrorReport
+      | null report = text "All well-formedness checks were successful."
+      | otherwise   = vsep
+          [ text "WARNING: the following wellformedness checks failed!"
+          , prettyWfErrorReport report
+          ]
+          -}
