@@ -43,7 +43,7 @@ import           Theory                       (
     ClosedTheory,
     ClosedDiffTheory,
     EitherClosedTheory,
-    thyName, removeLemma,
+    thyName, diffThyName, removeLemma,
     openTheory, sorryProver, runAutoProver,
     prettyClosedTheory, prettyOpenTheory, 
     openDiffTheory, 
@@ -339,6 +339,21 @@ withTheory idx handler = do
 
 -- | Evaluate a handler with a given theory specified by the index,
 -- return notFound if theory does not exist.
+withBothTheory :: TheoryIdx
+               -> (TheoryInfo -> Handler a)
+               -> (DiffTheoryInfo -> Handler a)
+               -> Handler a
+withBothTheory idx handler diffhandler = do
+  maybeThy <- getTheory idx
+  case maybeThy of
+    Just eitherTi -> case eitherTi of
+                          Trace ti  -> handler ti
+                          Diff ti -> diffhandler ti
+    Nothing -> notFound
+
+    
+-- | Evaluate a handler with a given theory specified by the index,
+-- return notFound if theory does not exist.
 withDiffTheory :: TheoryIdx
                -> (DiffTheoryInfo -> Handler a)
                -> Handler a
@@ -452,25 +467,35 @@ postRootR = do
 
 -- | Show overview over theory (framed layout).
 getOverviewR :: TheoryIdx -> TheoryPath -> Handler Html
-getOverviewR idx path = withTheory idx $ \ti -> do
+getOverviewR idx path = withBothTheory idx ( \ti -> do
   renderF <- getUrlRender
   defaultLayout $ do
     overview <- liftIO $ overviewTpl renderF ti path
     setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
-    overview
+    overview ) ( \ti -> do
+  renderF <- getUrlRender
+--  FIXME Hier liegt der Hase im Pfeffer mit computeViaMaude! 
+  defaultLayout $ do
+    overview <- liftIO $ overviewDiffTpl renderF ti path
+    setTitle (toHtml $ "Theory: " ++ get diffThyName (dtiTheory ti))
+    overview )
 
 -- | Show source (pretty-printed open theory).
 getTheorySourceR :: TheoryIdx -> Handler RepPlain
-getTheorySourceR idx = withTheory idx $ \ti ->
-  return $ RepPlain $ toContent $ prettyRender ti
+getTheorySourceR idx = withBothTheory idx ( \ti ->
+  return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
+  return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
     prettyRender = render . prettyClosedTheory . tiTheory
+    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory    
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryVariantsR :: TheoryIdx -> Handler RepPlain
-getTheoryVariantsR idx = withTheory idx $ \ti ->
-  return $ RepPlain $ toContent $ prettyRender ti
+getTheoryVariantsR idx = withBothTheory idx ( \ti ->
+  return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
+  return $ RepPlain $ toContent $ prettyRenderDiff ti )
   where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionR :: TheoryIdx -> Handler RepPlain

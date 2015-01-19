@@ -21,6 +21,8 @@ Portability :  non-portable
 module Web.Hamlet (
     rootTpl
   , overviewTpl
+--   , rootDiffTpl
+  , overviewDiffTpl
   ) where
 
 import           Data.Label
