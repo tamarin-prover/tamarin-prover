@@ -13,10 +13,12 @@ Portability :  non-portable
 -}
 module Web.Theory
   ( htmlThyPath
+  , htmlDiffThyPath
 --  , htmlThyDbgPath
   , imgThyPath
   , titleThyPath
   , theoryIndex
+  , diffTheoryIndex
   , nextThyPath
   , prevThyPath
   , nextSmartThyPath
@@ -227,6 +229,49 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
 
     reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
 
+-- | Render the theory index.
+diffTheoryIndex :: HtmlDocument d => RenderUrl -> TheoryIdx -> ClosedDiffTheory -> d
+diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
+    [ kwTheoryHeader
+        $ linkToPath renderUrl (TheoryPathMR tidx TheoryHelp) ["help"]
+        $ text $ get diffThyName thy
+    , text ""
+    , messageLink
+    , text ""
+    , ruleLink
+    , text ""
+    , reqCasesLink "Untyped case distinctions" UntypedCaseDist
+    , text ""
+    , reqCasesLink "Typed case distinctions "  TypedCaseDist
+    , text ""
+    , vcat $ intersperse (text "") lemmas
+    , text ""
+    , kwEnd
+    ]
+  where
+    lemmaIndex' lemma = lemmaIndex renderUrl tidx lemma
+
+    lemmas         = map lemmaIndex' (getDiffLemmas thy)
+    rules          = getDiffClassifiedRules thy
+    rulesInfo      = parens $ int $ length $ get crProtocol rules
+    casesInfo kind =
+        parens $ nCases <> comma <-> text chainInfo
+      where
+        cases   = getDiffCaseDistinction kind thy
+        nChains = sum $ map (sum . unsolvedChainConstraints) cases
+        nCases  = int (length cases) <-> text "cases"
+        chainInfo | nChains == 0 = "all chains solved"
+                  | otherwise    = show nChains ++ " chains left"
+
+    bold                = withTag "strong" [] . text
+    overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
+    messageLink         = overview "Message theory" (text "") TheoryMessage
+    ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
+    ruleLinkMsg         = "Multiset rewriting rules" ++
+                          if null(diffTheoryAxioms thy) then "" else " and axioms"
+
+    reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
+
 
 {-
 -- | A snippet that explains a sequent using a rendered graph and the pretty
@@ -312,6 +357,80 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
                 (psInfo $ root prf')
         ]
 
+-- | A snippet that explains a sub-proof by displaying its proof state, the
+-- open-goals, and the new cases.
+subProofDiffSnippet :: HtmlDocument d
+                    => RenderUrl
+                    -> TheoryIdx                 -- ^ The theory index.
+                    -> DiffTheoryInfo                -- ^ The theory info of this index.
+                    -> String                    -- ^ The lemma.
+                    -> ProofPath                 -- ^ The proof path.
+                    -> ProofContext              -- ^ The proof context.
+                    -> IncrementalProof          -- ^ The sub-proof.
+                    -> d
+subProofDiffSnippet renderUrl tidx ti lemma proofPath ctxt prf =
+    case psInfo $ root prf of
+      Nothing -> text $ "no annotated constraint system / " ++ nCases ++ " sub-case(s)"
+      Just se -> vcat $
+        prettyApplicableProofMethods se
+        ++
+        [ text ""
+        , withTag "h3" [] (text "Constraint system")
+        ] ++
+        [ refDotPath renderUrl tidx (TheoryProof lemma proofPath)
+        | nonEmptyGraph se ]
+        ++
+        [ preformatted (Just "sequent") (prettyNonGraphSystem se)
+        , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
+        ] ++
+        subCases
+  where
+    prettyApplicableProofMethods sys = case proofMethods sys of
+        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        pms ->
+          [ withTag "h3" [] (text "Applicable Proof Methods:" <->
+                             comment_ (goalRankingName ranking))
+          , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+          , autoProverLinks 'a' ""         emptyDoc      0
+          , autoProverLinks 'b' "bounded-" boundDesc bound
+          ]
+        where
+          boundDesc = text $ " with proof-depth bound " ++ show bound
+          bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
+
+    autoProverLinks key classPrefix nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoProverR tidx CutDFS bound (TheoryProof lemma proofPath))
+            [classPrefix ++ "autoprove"]
+            (keyword_ $ "autoprove")
+      , parens $
+          text (toUpper key : ".") <->
+          linkToPath renderUrl
+              (AutoProverR tidx CutNothing bound (TheoryProof lemma proofPath))
+              [classPrefix ++ "characterization"]
+              (keyword_ "for all solutions")
+      , nameSuffix
+      ]
+
+    prettyPM (i, (m, (_cases, expl))) =
+      linkToPath renderUrl
+        (TheoryPathMR tidx (TheoryMethod lemma proofPath i))
+        ["proof-method"] (prettyProofMethod m)
+      <-> (if null expl then emptyDoc else lineComment_ expl)
+
+    nCases                  = show $ M.size $ children prf
+    depth                   = length proofPath
+    ranking                 = useHeuristic (apHeuristic $ dtiAutoProver ti) depth
+    proofMethods            = rankProofMethods ranking ctxt
+    subCases                = concatMap refSubCase $ M.toList $ children prf
+    refSubCase (name, prf') =
+        [ withTag "h4" [] (text "Case" <-> text name)
+        , maybe (text "no proof state available")
+                (const $ refDotPath renderUrl tidx $ TheoryProof lemma (proofPath ++ [name]))
+                (psInfo $ root prf')
+        ]
+
 
 -- | A Html document representing the requires case splitting theorem.
 htmlCaseDistinction :: HtmlDocument d
@@ -344,6 +463,11 @@ reqCasesSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> CaseDistKind -> C
 reqCasesSnippet renderUrl tidx kind thy = vcat $
     htmlCaseDistinction renderUrl tidx kind <$> zip [1..] (getCaseDistinction kind thy)
 
+-- | Build the Html document showing the source cases distinctions.
+reqCasesDiffSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> CaseDistKind -> ClosedDiffTheory -> d
+reqCasesDiffSnippet renderUrl tidx kind thy = vcat $
+    htmlCaseDistinction renderUrl tidx kind <$> zip [1..] (getDiffCaseDistinction kind thy)
+
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
 rulesSnippet thy = vcat
@@ -373,6 +497,40 @@ messageSnippet thy = vcat
     ]
   where
     ppRules l = map prettyRuleAC $ get l $ getClassifiedRules thy
+    ppSection header s =
+      withTag "h2" [] (text header) $$ withTag "p"
+        [("class","monospace rules")]
+        (vcat (intersperse (text "") $ s))
+
+-- | Build the Html document showing the rules of the theory.
+rulesDiffSnippet :: HtmlDocument d => ClosedDiffTheory -> d
+rulesDiffSnippet thy = vcat
+    [ ppWithHeader "Fact Symbols with Injective Instances" $
+        fsepList (text . showFactTagArity) injFacts
+    , ppWithHeader "Multiset Rewriting Rules" $
+        vsep $ map prettyRuleAC msrRules
+    , ppWithHeader "Axioms Restricting the Set of Traces" $
+        vsep $ map prettyAxiom $ diffTheoryAxioms thy
+    ]
+  where
+    msrRules   = get crProtocol $ getDiffClassifiedRules thy
+    injFacts   = S.toList $ getDiffInjectiveFactInsts thy
+    ppWithHeader header body =
+        caseEmptyDoc
+            emptyDoc
+            ( withTag "h2" []                            (text header) $$
+              withTag "p"  [("class","monospace rules")] body             )
+            body
+
+-- | Build the Html document showing the message theory.
+messageDiffSnippet :: HtmlDocument d => ClosedDiffTheory -> d
+messageDiffSnippet thy = vcat
+    [ ppSection "Signature"           [prettySignatureWithMaude (get diffThySignature thy)]
+    , ppSection "Construction Rules"  (ppRules crConstruct)
+    , ppSection "Destruction Rules"   (ppRules crDestruct)
+    ]
+  where
+    ppRules l = map prettyRuleAC $ get l $ getDiffClassifiedRules thy
     ppSection header s =
       withTag "h2" [] (text header) $$ withTag "p"
         [("class","monospace rules")]
@@ -415,6 +573,119 @@ htmlThyPath renderUrl info path =
           Theory: #{get thyName $ tiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
           \ from #{show $ tiOrigin info})
+        <div id="help">
+          <h3>Quick introduction
+          <noscript>
+            <div class="warning">
+              Warning: JavaScript must be enabled for the
+              <span class="tamarin">Tamarin</span>
+              prover GUI to function properly.
+          <p>
+            <em>Left pane: Proof scripts display.
+            <ul>
+              <li>
+                When a theory is initially loaded, there will be a line at the
+                \ end of each theorem stating #
+                <tt>"by sorry // not yet proven"
+                .  Click on #
+                <tt>sorry
+                \ to inspect the proof state.
+              <li>
+                Right-click to show further options, such as autoprove.
+          <p>
+            <em>Right pane: Visualization.
+            <ul>
+              <li>
+                Visualization and information display relating to the
+                \ currently selected item.
+
+        <h3>Keyboard shortcuts
+        <p>
+          <table>
+            <tr>
+              <td>
+                <span class="keys">j/k
+              <td>
+                Jump to the next/previous proof path within the currently
+                \ focused lemma.
+            <tr>
+              <td>
+                <span class="keys">J/K
+              <td>
+                Jump to the next/previous open goal within the currently
+                \ focused lemma, or to the next/previous lemma if there are no
+                \ more #
+                <tt>sorry
+                \ steps in the proof of the current lemma.
+            <tr>
+              <td>
+                <span class="keys">1-9
+              <td>
+                Apply the proof method with the given number as shown in the
+                \ applicable proof method section in the main view.
+            <tr>
+              <td>
+                <span class="keys">a/A
+              <td>
+                Apply the autoprove method to the focused proof step.
+                \ <span class="keys">a</span>
+                \ stops after finding a solution, and
+                \ <span class="keys">A</span>
+                \ searches for all solutions.
+            <tr>
+              <td>
+                <span class="keys">b/B
+              <td>
+                Apply a bounded-depth version of the autoprove method to the
+                \ focused proof step.
+                \ <span class="keys">b</span>
+                \ stops after finding a solution, and
+                \ <span class="keys">B</span>
+                \ searches for all solutions.
+            <tr>
+              <td>
+                <span class="keys">?
+              <td>
+                Display this help message.
+      |] renderUrl
+
+-- | Render the item in the given theory given by the supplied path.
+htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.
+                -> DiffTheoryInfo   -- ^ The info of the theory to render
+                -> TheoryPath   -- ^ Path to render
+                -> Html
+htmlDiffThyPath renderUrl info path =
+    go path
+  where
+    thy  = dtiTheory info
+    tidx = dtiIndex  info
+
+    -- Rendering a HtmlDoc to Html
+    pp :: HtmlDoc Doc -> Html
+    pp d = case renderHtmlDoc d of
+      [] -> toHtml "Trying to render document yielded empty string. This is a bug."
+      cs -> preEscapedToMarkup cs
+
+    go (TheoryMethod _ _ _)      = pp $ text "Cannot display theory method."
+
+    go TheoryRules               = pp $ rulesDiffSnippet thy
+    go TheoryMessage             = pp $ messageDiffSnippet thy
+    go (TheoryCaseDist kind _ _) = pp $ reqCasesDiffSnippet renderUrl tidx kind thy
+
+    go (TheoryProof l p)         = pp $
+        fromMaybe (text "No such lemma or proof path.") $ do
+           lemma <- lookupLemmaDiff l thy
+           subProofDiffSnippet renderUrl tidx info l p (getProofContextDiff lemma thy)
+             <$> resolveProofPathDiff thy l p
+
+    go (TheoryLemma _)      = pp $ text "Implement lemma pretty printing!"
+
+    go TheoryHelp           = [hamlet|
+        $newline never
+        <p>
+          Theory: #{get diffThyName $ dtiTheory info}
+          \ (Loaded at #{formatTime defaultTimeLocale "%T" $ dtiTime info}
+          \ from #{show $ dtiOrigin info})
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -616,6 +887,14 @@ resolveProofPath thy lemmaName path = do
   lemma <- lookupLemma lemmaName thy
   get lProof lemma `atPath` path
 
+-- | Resolve a proof path.
+resolveProofPathDiff :: ClosedDiffTheory            -- ^ Theory to resolve in
+                    -> String                  -- ^ Name of lemma
+                    -> ProofPath               -- ^ Path to resolve
+                    -> Maybe IncrementalProof
+resolveProofPathDiff thy lemmaName path = do
+  lemma <- lookupLemmaDiff lemmaName thy
+  get lProof lemma `atPath` path
 
 ------------------------------------------------------------------------------
 -- Moving to next/prev proof path

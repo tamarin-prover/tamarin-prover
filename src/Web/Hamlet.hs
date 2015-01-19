@@ -205,10 +205,57 @@ headerTpl info = [whamlet|
 
     -}
 
+-- | Template for header frame (various information)
+headerDiffTpl :: DiffTheoryInfo -> Widget
+headerDiffTpl info = [whamlet|
+    $newline never
+    <div class="layout-pane-north">
+      <div #header-info>
+        Running
+        \ <a href=@{RootR}><span class="tamarin">Tamarin</span></a>
+        \ #{showVersion version}
+    <div #header-links>
+      <a class=plain-link href=@{RootR}>Index</a>
+      <a class=plain-link href=@{DownloadTheoryR idx filename}>Download</a>
+      <ul #navigation>
+        <li><a href="#">Actions</a>
+          <ul>
+            <li><a target=_blank href=@{TheorySourceR idx}>Show source</a>
+        <li><a href="#">Options</a>
+          <ul>
+            <li><a id=graph-toggle href="#">Compact graphs</a>
+            <li><a id=seqnt-toggle href="#">Compress sequents</a>
+  |]
+  where
+            -- <li><a id=debug-toggle href="#">Debug pane</a>
+            -- <li><a href=@{TheoryVariantsR idx}>Show variants</a>
+            -- <li><a class=edit-link href=@{EditTheoryR idx}>Edit theory</a>
+            -- <li><a class=edit-link href=@{EditPathR idx (TheoryLemma "")}>Add lemma</a>
+            --
+    idx = dtiIndex info
+    filename = get diffThyName (dtiTheory info) ++ ".spthy"
+
+    {- use this snipped to reactivate saving local theories
+    localTheory (Local _) = True
+    localTheory _         = False
+
+      $if localTheory (tiOrigin info)
+        <a class=save-link href=@{SaveTheoryR idx}>Save</a>
+
+    -}
+
 -- | Template for proof state (tree) frame.
 proofStateTpl :: RenderUrl -> TheoryInfo -> IO Widget
 proofStateTpl renderUrl ti = do
     let res = renderHtmlDoc $ theoryIndex renderUrl (tiIndex ti) (tiTheory ti)
+    return [whamlet|
+              $newline never
+              #{preEscapedToMarkup res} |]
+
+-- | Template for proof state (tree) frame.
+proofStateDiffTpl :: RenderUrl -> DiffTheoryInfo -> IO Widget
+proofStateDiffTpl renderUrl ti = do
+    let res = renderHtmlDoc $ diffTheoryIndex renderUrl (dtiIndex ti) (dtiTheory ti)
     return [whamlet|
               $newline never
               #{preEscapedToMarkup res} |]
@@ -241,6 +288,35 @@ overviewTpl renderUrl info path = do
           \^{mainView}
   |]
 
+-- | Framing/UI-layout template (based on JavaScript/JQuery)
+overviewDiffTpl :: RenderUrl
+                -> DiffTheoryInfo -- ^ Theory information
+                -> TheoryPath -- ^ Theory path to load into main
+                -> IO Widget
+overviewDiffTpl renderUrl info path = do
+  proofState <- proofStateDiffTpl renderUrl info
+  mainView <- pathDiffTpl renderUrl info path
+  return [whamlet|
+    $newline never
+    <div .ui-layout-north>
+      ^{headerDiffTpl info}
+    <div .ui-layout-west>
+      <h1 .pane-head>Proof scripts
+      <div #proof-wrapper .scroll-wrapper>
+        <div #proof .monospace>
+          ^{proofState}
+    <div .ui-layout-east>
+      <h1 .pane-head>&nbsp;Debug information
+      <div #debug-wrapper .scroll-wrapper>
+        <div #ui-debug-display>
+    <div .ui-layout-center>
+      <h1 #main-title .pane-head>Visualization display
+      <div #main-wrapper .scroll-wrapper tabindex=0>
+        <div #ui-main-display>
+          \^{mainView}
+  |]
+
+  
 -- | Theory path, displayed when loading main screen for first time.
 pathTpl :: RenderUrl
         -> TheoryInfo   -- ^ The theory
@@ -250,6 +326,16 @@ pathTpl renderUrl info path =
     return $ [whamlet|
                 $newline never
                 #{htmlThyPath renderUrl info path} |]
+
+-- | Theory path, displayed when loading main screen for first time.
+pathDiffTpl :: RenderUrl
+            -> DiffTheoryInfo   -- ^ The theory
+            -> TheoryPath   -- ^ Path to display on load
+            -> IO Widget
+pathDiffTpl renderUrl info path =
+    return $ [whamlet|
+                $newline never
+                #{htmlDiffThyPath renderUrl info path} |]
 
 -- | Template for introduction.
 introTpl :: Widget

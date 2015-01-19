@@ -500,7 +500,7 @@ multRestrictedReport thy = do
 -- | Returns a list of errors, if there are any.
 checkWellformednessDiff :: OpenDiffTheory
                     -> WfErrorReport
-checkWellformednessDiff thy = error "FIXME"
+checkWellformednessDiff thy = [] -- error "FIXME"
 {-  concatMap ($ thy)
     [ unboundReport
     , freshNamesReport
@@ -541,11 +541,11 @@ noteWellformedness report thy =
 
 -- | Adds a note to the end of the theory, if it is not well-formed.
 noteWellformednessDiff :: WfErrorReport -> OpenDiffTheory -> OpenDiffTheory
-noteWellformednessDiff report thy = error "FIXME"
-{-    addComment wfErrorReport thy
+noteWellformednessDiff report thy = 
+    addDiffComment wfErrorReport thy
   where
-    wfErrorReport
-      | null report = text "All well-formedness checks were successful."
+    wfErrorReport = text "All well-formedness checks arre currently ignored." -- error "FIXME"
+{-      | null report = text "All well-formedness checks were successful."
       | otherwise   = vsep
           [ text "WARNING: the following wellformedness checks failed!"
           , prettyWfErrorReport report

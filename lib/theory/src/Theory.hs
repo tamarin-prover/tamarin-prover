@@ -45,13 +45,16 @@ module Theory (
   , theoryRules
   , theoryLemmas
   , theoryAxioms
+  , diffTheoryAxioms
   , addAxiom
   , addLemma
   , addAxiomDiff
   , addLemmaDiff
   , removeLemma
   , lookupLemma
+  , lookupLemmaDiff
   , addComment
+  , addDiffComment
   , addStringComment
   , addFormalComment
   , addFormalCommentDiff
@@ -85,14 +88,19 @@ module Theory (
   , ClosedProtoRule(..)
 
   , getLemmas
+  , getDiffLemmas
   , getIntrVariants
   , getProtoRuleEs
   , getProtoRuleEsDiff
   , getProofContext
+  , getProofContextDiff
   , getClassifiedRules
+  , getDiffClassifiedRules
   , getInjectiveFactInsts
+  , getDiffInjectiveFactInsts
 
   , getCaseDistinction
+  , getDiffCaseDistinction
 
   -- ** Proving
   , ProofSkeleton
@@ -537,6 +545,10 @@ lookupLemmaDiff name = find ((name ==) . L.get lName) . diffTheoryLemmas
 addComment :: Doc -> Theory sig c r p -> Theory sig c r p
 addComment c = modify thyItems (++ [TextItem ("", render c)])
 
+-- | Add a comment to the diff theory.
+addDiffComment :: Doc -> DiffTheory sig c r p -> DiffTheory sig c r p
+addDiffComment c = modify diffThyItems (++ [TextItem ("", render c)])
+
 -- | Add a comment represented as a string to the theory.
 addStringComment :: String -> Theory sig c r p -> Theory sig c r p
 addStringComment = addComment . vcat . map text . lines
@@ -649,6 +661,10 @@ normalizeTheory =
 getLemmas :: ClosedTheory -> [Lemma IncrementalProof]
 getLemmas = theoryLemmas
 
+-- | All lemmas.
+getDiffLemmas :: ClosedDiffTheory -> [Lemma IncrementalProof]
+getDiffLemmas = diffTheoryLemmas
+
 -- | The variants of the intruder rules.
 getIntrVariants :: ClosedTheory -> [IntrRuleAC]
 getIntrVariants = intruderRules . L.get (crcRules . thyCache)
@@ -703,15 +719,27 @@ getProofContextDiff l thy = ProofContext
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
 getInjectiveFactInsts = L.get (crcInjectiveFactInsts . thyCache)
 
+-- | The facts with injective instances in this theory
+getDiffInjectiveFactInsts :: ClosedDiffTheory -> S.Set FactTag
+getDiffInjectiveFactInsts = L.get (crcInjectiveFactInsts . diffThyCache)
+
 -- | The classified set of rules modulo AC in this theory.
 getClassifiedRules :: ClosedTheory -> ClassifiedRules
 getClassifiedRules = L.get (crcRules . thyCache)
 
+-- | The classified set of rules modulo AC in this theory.
+getDiffClassifiedRules :: ClosedDiffTheory -> ClassifiedRules
+getDiffClassifiedRules = L.get (crcRules . diffThyCache)
+
 -- | The precomputed case distinctions.
 getCaseDistinction :: CaseDistKind -> ClosedTheory -> [CaseDistinction]
 getCaseDistinction UntypedCaseDist = L.get (crcUntypedCaseDists . thyCache)
-getCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists . thyCache)
+getCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists .   thyCache)
 
+-- | The precomputed case distinctions.
+getDiffCaseDistinction :: CaseDistKind -> ClosedDiffTheory -> [CaseDistinction]
+getDiffCaseDistinction UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCache)
+getDiffCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCache)
 
 -- construction
 ---------------
