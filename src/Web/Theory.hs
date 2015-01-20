@@ -16,15 +16,23 @@ module Web.Theory
   , htmlDiffThyPath
 --  , htmlThyDbgPath
   , imgThyPath
+  , imgDiffThyPath
   , titleThyPath
+  , titleDiffThyPath
   , theoryIndex
   , diffTheoryIndex
   , nextThyPath
+  , nextDiffThyPath
   , prevThyPath
+  , prevDiffThyPath
   , nextSmartThyPath
+  , nextSmartDiffThyPath
   , prevSmartThyPath
+  , prevSmartDiffThyPath
   , applyMethodAtPath
+  , applyMethodAtPathDiff
   , applyProverAtPath
+  , applyProverAtPathDiff
   )
 where
 
@@ -89,10 +97,34 @@ applyMethodAtPath thy lemmaName proofPath heuristic i = do
        replaceSorryProver (oneStepProver Solved)
       )
 
+applyMethodAtPathDiff :: ClosedDiffTheory -> String -> ProofPath
+                      -> Heuristic             -- ^ How to extract/order the proof methods.
+                      -> Int                   -- What proof method to use.
+                      -> Maybe ClosedDiffTheory
+applyMethodAtPathDiff thy lemmaName proofPath heuristic i = do
+    lemma <- lookupLemmaDiff lemmaName thy
+    subProof <- get lProof lemma `atPath` proofPath
+    let ctxt  = getProofContextDiff lemma thy
+        sys   = psInfo (root subProof)
+        ranking = useHeuristic heuristic (length proofPath)
+    methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
+    method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
+    applyProverAtPathDiff thy lemmaName proofPath
+      (oneStepProver method                        `mappend`
+       replaceSorryProver (oneStepProver Simplify) `mappend`
+       replaceSorryProver (contradictionProver)    `mappend`
+       replaceSorryProver (oneStepProver Solved)
+      )
+
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
                   -> Prover -> Maybe ClosedTheory
 applyProverAtPath thy lemmaName proofPath prover =
     modifyLemmaProof (focus proofPath prover) lemmaName thy
+
+applyProverAtPathDiff :: ClosedDiffTheory -> String -> ProofPath
+                      -> Prover -> Maybe ClosedDiffTheory
+applyProverAtPathDiff thy lemmaName proofPath prover =
+    modifyLemmaProofDiff (focus proofPath prover) lemmaName thy
 
 
 ------------------------------------------------------------------------------
@@ -856,7 +888,86 @@ imgThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
       s <- m
       if s then return True else firstSuccess ms
 
+      
+-- | Render the image corresponding to the given theory path.
+imgDiffThyPath :: ImageFormat
+           -> FilePath               -- ^ 'dot' command
+           -> FilePath               -- ^ Tamarin's cache directory
+           -> (System -> D.Dot ())
+           -> ClosedDiffTheory
+           -> TheoryPath
+           -> IO FilePath
+imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
+  where
+    go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j)
+    go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
+    go _                      = error "Unhandled theory path. This is a bug."
 
+    -- Get dot code for required cases
+    casesDotCode k i j = D.showDot $
+        compact $ snd $ cases !! (i-1) !! (j-1)
+      where
+        cases = map (getDisj . get cdCases) (getDiffCaseDistinction k thy)
+
+    -- Get dot code for proof path in lemma
+    proofPathDotCode lemma proofPath =
+      D.showDot $ fromMaybe (return ()) $ do
+        subProof <- resolveProofPathDiff thy lemma proofPath
+        sequent <- psInfo $ root subProof
+        return $ compact sequent
+
+    -- Render a piece of dot code
+    renderDotCode code = do
+      let dotPath = cacheDir_ </> getDotPath code
+          imgPath = addExtension dotPath (show imgFormat)
+
+          -- A busy wait loop with a maximal number of iterations
+          renderedOrRendering :: Int -> IO Bool
+          renderedOrRendering n = do
+              dotExists <- doesFileExist dotPath
+              imgExists <- doesFileExist imgPath
+              if (n <= 0 || (dotExists && not imgExists))
+                  then do threadDelay 100             -- wait 10 ms
+                          renderedOrRendering (n - 1)
+                  else return imgExists
+
+      -- Ensure that the output directory exists.
+      createDirectoryIfMissing True (takeDirectory dotPath)
+
+      imgGenerated <- firstSuccess
+          [ -- There might be some other thread that rendered or is rendering
+            -- this dot file. We wait at most 50 iterations (0.5 sec timout)
+            -- for this other thread to render the image. Afterwards, we give
+            -- it a try by ourselves.
+            renderedOrRendering 50
+            -- create dot-file and render to image
+          , do writeFile dotPath code
+               dotToImg "dot" dotPath imgPath
+            -- sometimes 'dot' fails => use 'fdp' as a backup tool
+          , dotToImg "fdp" dotPath imgPath
+          ]
+      if imgGenerated
+        then return imgPath
+        else trace ("WARNING: failed to convert:\n  '" ++ dotPath ++ "'")
+                   (return imgPath)
+
+    dotToImg dotMode dotFile imgFile = do
+      (ecode,_out,err) <- readProcessWithExitCode dotCommand
+                              [ "-T"++show imgFormat, "-K"++dotMode, "-o",imgFile, dotFile]
+                              ""
+      case ecode of
+        ExitSuccess   -> return True
+        ExitFailure i -> do
+          putStrLn $ "dotToImg: "++dotCommand++" failed with code "
+                      ++show i++" for file "++dotFile++":\n"++err
+          return False
+
+    firstSuccess []     = return False
+    firstSuccess (m:ms) = do
+      s <- m
+      if s then return True else firstSuccess ms
+
+      
 -- | Get title to display for a given proof path.
 titleThyPath :: ClosedTheory -> TheoryPath -> String
 titleThyPath thy path = go path
@@ -875,6 +986,27 @@ titleThyPath thy path = go path
 
     methodName l p =
       case resolveProofPath thy l p of
+        Nothing -> "None"
+        Just proof -> renderHtmlDoc $ prettyProofMethod $ psMethod $ root proof
+
+-- | Get title to display for a given proof path.
+titleDiffThyPath :: ClosedDiffTheory -> TheoryPath -> String
+titleDiffThyPath thy path = go path
+  where
+    go TheoryHelp                           = "Theory: " ++ get diffThyName thy
+    go TheoryRules                          = "Multiset rewriting rules and axioms"
+    go TheoryMessage                        = "Message theory"
+    go (TheoryCaseDist UntypedCaseDist _ _) = "Untyped case distinctions"
+    go (TheoryCaseDist TypedCaseDist _ _)   = "Typed case distinctions"
+    go (TheoryLemma l)                      = "Lemma: " ++ l
+    go (TheoryProof l [])                   = "Lemma: " ++ l
+    go (TheoryProof l p)
+      | null (last p)       = "Method: " ++ methodName l p
+      | otherwise           = "Case: " ++ last p
+    go (TheoryMethod _ _ _) = "Method Path: This title should not be shown. Please file a bug"
+
+    methodName l p =
+      case resolveProofPathDiff thy l p of
         Nothing -> "None"
         Just proof -> renderHtmlDoc $ prettyProofMethod $ psMethod $ root proof
 
@@ -926,6 +1058,32 @@ nextThyPath thy = go
 
     getNextLemma lemmaName = getNextElement (== lemmaName) (map fst lemmas)
 
+-- | Get 'next' diff theory path.
+nextDiffThyPath :: ClosedDiffTheory -> TheoryPath -> TheoryPath
+nextDiffThyPath thy = go
+  where
+    go TheoryHelp                           = TheoryMessage
+    go TheoryMessage                        = TheoryRules
+    go TheoryRules                          = TheoryCaseDist UntypedCaseDist 0 0
+    go (TheoryCaseDist UntypedCaseDist _ _) = TheoryCaseDist TypedCaseDist 0 0
+    go (TheoryCaseDist TypedCaseDist _ _)   = fromMaybe TheoryHelp firstLemma
+    go (TheoryLemma lemma)                  = TheoryProof lemma []
+    go (TheoryProof l p)
+      | Just nextPath <- getNextPath l p = TheoryProof l nextPath
+      | Just nextLemma <- getNextLemma l = TheoryProof nextLemma []
+      | otherwise                        = TheoryProof l p
+    go path@(TheoryMethod _ _ _)         = path
+
+    lemmas = map (\l -> (get lName l, l)) $ getDiffLemmas thy
+    firstLemma = flip TheoryProof [] . fst <$> listToMaybe lemmas
+
+    getNextPath lemmaName path = do
+      lemma <- lookupLemmaDiff lemmaName thy
+      let paths = map fst $ getProofPaths $ get lProof lemma
+      getNextElement (== path) paths
+
+    getNextLemma lemmaName = getNextElement (== lemmaName) (map fst lemmas)
+
 -- | Get 'prev' theory path.
 prevThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 prevThyPath thy = go
@@ -956,6 +1114,36 @@ prevThyPath thy = go
 
     getPrevLemma lemmaName = getPrevElement (== lemmaName) (map fst lemmas)
 
+-- | Get 'prev' diff theory path.
+prevDiffThyPath :: ClosedDiffTheory -> TheoryPath -> TheoryPath
+prevDiffThyPath thy = go
+  where
+    go TheoryHelp                           = TheoryHelp
+    go TheoryMessage                        = TheoryHelp
+    go TheoryRules                          = TheoryMessage
+    go (TheoryCaseDist UntypedCaseDist _ _) = TheoryRules
+    go (TheoryCaseDist TypedCaseDist _ _)   = TheoryCaseDist UntypedCaseDist 0 0
+    go (TheoryLemma l)
+      | Just prevLemma <- getPrevLemma l = TheoryProof prevLemma (lastPath prevLemma)
+      | otherwise                        = TheoryCaseDist TypedCaseDist 0 0
+    go (TheoryProof l p)
+      | Just prevPath <- getPrevPath l p = TheoryProof l prevPath
+      | Just prevLemma <- getPrevLemma l = TheoryProof prevLemma (lastPath prevLemma)
+      | otherwise                        = TheoryCaseDist TypedCaseDist 0 0
+    go path@(TheoryMethod _ _ _)         = path
+
+    lemmas = map (\l -> (get lName l, l)) $ getDiffLemmas thy
+
+    getPrevPath lemmaName path = do
+      lemma <- lookupLemmaDiff lemmaName thy
+      let paths = map fst $ getProofPaths $ get lProof lemma
+      getPrevElement (== path) paths
+
+    lastPath lemmaName = last $ map fst $ getProofPaths $
+      get lProof $ fromJust $ lookupLemmaDiff lemmaName thy
+
+    getPrevLemma lemmaName = getPrevElement (== lemmaName) (map fst lemmas)
+
 -- | Interesting proof methods that are not skipped by next/prev-smart.
 isInterestingMethod :: ProofMethod -> Bool
 isInterestingMethod (Sorry _) = True
@@ -983,6 +1171,34 @@ nextSmartThyPath thy = go
 
     getNextPath lemmaName path = do
       lemma <- lookupLemma lemmaName thy
+      let paths = getProofPaths $ get lProof lemma
+      case dropWhile ((/= path) . fst) paths of
+        []        -> Nothing
+        nextSteps -> listToMaybe . map fst . filter (isInterestingMethod . snd) $ tail nextSteps
+
+    getNextLemma lemmaName = getNextElement (== lemmaName) (map fst lemmas)
+
+-- Get 'next' smart theory path.
+nextSmartDiffThyPath :: ClosedDiffTheory -> TheoryPath -> TheoryPath
+nextSmartDiffThyPath thy = go
+  where
+    go TheoryHelp                           = TheoryMessage
+    go TheoryMessage                        = TheoryRules
+    go TheoryRules                          = TheoryCaseDist UntypedCaseDist 0 0
+    go (TheoryCaseDist UntypedCaseDist _ _) = TheoryCaseDist TypedCaseDist 0 0
+    go (TheoryCaseDist TypedCaseDist   _ _) = fromMaybe TheoryHelp firstLemma
+    go (TheoryLemma lemma)                  = TheoryProof lemma []
+    go (TheoryProof l p)
+      | Just nextPath <- getNextPath l p = TheoryProof l nextPath
+      | Just nextLemma <- getNextLemma l = TheoryProof nextLemma []
+      | otherwise                        = TheoryProof l p
+    go path@(TheoryMethod _ _ _)         = path
+
+    lemmas = map (\l -> (get lName l, l)) $ getDiffLemmas thy
+    firstLemma = flip TheoryProof [] . fst <$> listToMaybe lemmas
+
+    getNextPath lemmaName path = do
+      lemma <- lookupLemmaDiff lemmaName thy
       let paths = getProofPaths $ get lProof lemma
       case dropWhile ((/= path) . fst) paths of
         []        -> Nothing
@@ -1032,6 +1248,47 @@ prevSmartThyPath thy = go
 
     getPrevLemma lemmaName = getPrevElement (== lemmaName) (map fst lemmas)
 
+-- Get 'prev' smart diff theory path.
+prevSmartDiffThyPath :: ClosedDiffTheory -> TheoryPath -> TheoryPath
+prevSmartDiffThyPath thy = go
+  where
+    go TheoryHelp                           = TheoryHelp
+    go TheoryMessage                        = TheoryHelp
+    go TheoryRules                          = TheoryMessage
+    go (TheoryCaseDist UntypedCaseDist _ _) = TheoryRules
+    go (TheoryCaseDist TypedCaseDist   _ _) = TheoryCaseDist UntypedCaseDist 0 0
+    go (TheoryLemma l)
+      | Just prevLemma <- getPrevLemma l   = TheoryProof prevLemma (lastPath prevLemma)
+      | otherwise                          = TheoryCaseDist TypedCaseDist 0 0
+    go (TheoryProof l p)
+      | Just prevPath <- getPrevPath l p   = TheoryProof l prevPath
+--      | Just firstPath <- getFirstPath l p = TheoryProof l firstPath
+      | Just prevLemma <- getPrevLemma l   = TheoryProof prevLemma (lastPath prevLemma)
+      | otherwise                          = TheoryCaseDist TypedCaseDist 0 0
+    go path@(TheoryMethod _ _ _)           = path
+
+    lemmas = map (\l -> (get lName l, l)) $ getDiffLemmas thy
+
+    {-
+    getFirstPath lemmaName current = do
+      lemma <- lookupLemma lemmaName thy
+      let paths = map fst $ getProofPaths $ get lProof lemma
+      if null paths || (head paths == current)
+        then Nothing
+        else Just $ head paths
+    -}
+
+    getPrevPath lemmaName path = do
+      lemma <- lookupLemmaDiff lemmaName thy
+      let paths = getProofPaths $ get lProof lemma
+      case filter (isInterestingMethod . snd) . takeWhile ((/= path) . fst) $ paths of
+        []        -> Nothing
+        prevSteps -> Just . fst . last $ prevSteps
+
+    lastPath lemmaName = last $ map fst $ getProofPaths $
+      get lProof $ fromJust $ lookupLemmaDiff lemmaName thy
+
+    getPrevLemma lemmaName = getPrevElement (== lemmaName) (map fst lemmas)
 
 -- | Extract proof paths out of a proof.
 getProofPaths :: LTree CaseName (ProofStep a) -> [([String], ProofMethod)]

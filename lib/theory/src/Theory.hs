@@ -51,6 +51,7 @@ module Theory (
   , addAxiomDiff
   , addLemmaDiff
   , removeLemma
+  , removeLemmaDiff
   , lookupLemma
   , lookupLemmaDiff
   , addComment
@@ -110,7 +111,9 @@ module Theory (
   -- ** Lemma references
   , lookupLemmaProof
   , modifyLemmaProof
-
+  , lookupLemmaProofDiff
+  , modifyLemmaProofDiff
+  
   -- * Pretty printing
   , prettyFormalComment
   , prettyLemmaName
@@ -518,6 +521,18 @@ removeLemma :: String -> Theory sig c r p -> Maybe (Theory sig c r p)
 removeLemma lemmaName thy = do
     _ <- lookupLemma lemmaName thy
     return $ modify thyItems (concatMap fItem) thy
+  where
+    fItem   = foldTheoryItem (return . RuleItem)
+                             (return . AxiomItem)
+                             check
+                             (return . TextItem)
+    check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
+
+-- | Remove a lemma by name. Fails, if the lemma does not exist.
+removeLemmaDiff :: String -> DiffTheory sig c r p -> Maybe (DiffTheory sig c r p)
+removeLemmaDiff lemmaName thy = do
+    _ <- lookupLemmaDiff lemmaName thy
+    return $ modify diffThyItems (concatMap fItem) thy
   where
     fItem   = foldTheoryItem (return . RuleItem)
                              (return . AxiomItem)
@@ -1030,6 +1045,11 @@ type LemmaRef = String
 lookupLemmaProof :: LemmaRef -> ClosedTheory -> Maybe IncrementalProof
 lookupLemmaProof name thy = L.get lProof <$> lookupLemma name thy
 
+
+-- | Resolve a path in a diff theory.
+lookupLemmaProofDiff :: LemmaRef -> ClosedDiffTheory -> Maybe IncrementalProof
+lookupLemmaProofDiff name thy = L.get lProof <$> lookupLemmaDiff name thy
+
 -- | Modify the proof at the given lemma ref, if there is one. Fails if the
 -- path is not present or if the prover fails.
 modifyLemmaProof :: Prover -> LemmaRef -> ClosedTheory -> Maybe ClosedTheory
@@ -1042,6 +1062,29 @@ modifyLemmaProof prover name thy =
     change preItems (LemmaItem lem) = do
          let ctxt = getProofContext lem thy
              sys  = mkSystem ctxt (theoryAxioms thy) preItems $ L.get lFormula lem
+         lem' <- modA lProof (runProver prover ctxt 0 sys) lem
+         return $ LemmaItem lem'
+    change _ _ = error "LemmaProof: change: impossible"
+
+    changeItems items = case break findLemma items of
+        (pre, i:post) -> do
+             i' <- change pre i
+             return $ pre ++ i':post
+        (_, []) -> Nothing
+
+
+-- | Modify the proof at the given lemma ref, if there is one. Fails if the
+-- path is not present or if the prover fails.
+modifyLemmaProofDiff :: Prover -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
+modifyLemmaProofDiff prover name thy =
+    modA diffThyItems changeItems thy
+  where
+    findLemma (LemmaItem lem) = name == L.get lName lem
+    findLemma _               = False
+
+    change preItems (LemmaItem lem) = do
+         let ctxt = getProofContextDiff lem thy
+             sys  = mkSystem ctxt (diffTheoryAxioms thy) preItems $ L.get lFormula lem
          lem' <- modA lProof (runProver prover ctxt 0 sys) lem
          return $ LemmaItem lem'
     change _ _ = error "LemmaProof: change: impossible"
