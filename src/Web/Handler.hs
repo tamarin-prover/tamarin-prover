@@ -498,7 +498,6 @@ getOverviewR idx path = withBothTheory idx ( \ti -> do
     setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
     overview ) ( \ti -> do
   renderF <- getUrlRender
---  FIXME Hier liegt der Hase im Pfeffer mit computeViaMaude! 
   defaultLayout $ do
     overview <- liftIO $ overviewDiffTpl renderF ti path
     setTitle (toHtml $ "Theory: " ++ get diffThyName (dtiTheory ti))
