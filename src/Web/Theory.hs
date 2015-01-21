@@ -283,13 +283,13 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
   where
     lemmaIndex' lemma = lemmaIndex renderUrl tidx lemma
 
-    lemmas         = map lemmaIndex' (getDiffLemmas thy)
-    rules          = getDiffClassifiedRules thy
+    lemmas         = [] -- FIXME map lemmaIndex' (getDiffLemmas thy)
+    rules          = ClassifiedRules [] [] [] -- getDiffClassifiedRules thy
     rulesInfo      = parens $ int $ length $ get crProtocol rules
     casesInfo kind =
         parens $ nCases <> comma <-> text chainInfo
       where
-        cases   = getDiffCaseDistinction kind thy
+        cases   = [] -- FIXME getDiffCaseDistinction kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
         chainInfo | nChains == 0 = "all chains solved"
@@ -299,8 +299,8 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
     messageLink         = overview "Message theory" (text "") TheoryMessage
     ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
-    ruleLinkMsg         = "Multiset rewriting rules" ++
-                          if null(diffTheoryAxioms thy) then "" else " and axioms"
+    ruleLinkMsg         = "Multiset rewriting rules" -- FIXME ++
+                          -- FIXME if null(diffTheoryAxioms thy) then "" else " and axioms"
 
     reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
 

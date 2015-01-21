@@ -472,28 +472,16 @@ postRootR = do
                     case closedThy of
                       Left err -> setMessage $ "Theory loading failed:\n" <> toHtml err
                       Right thy -> do
-      --                     case th of 
-                              -- FIXME??
-      --                          Left thy  -> do
                           void $ putDiffTheory Nothing
                                   (Just $ Upload $ T.unpack $ fileName fileinfo) thy
-      --                          Right thy -> do
-      --                            void $ putDiffTheory Nothing
-      --                              (Just $ Upload $ T.unpack $ fileName fileinfo) thy
                           setMessage "Loaded new theory!"
                  else do
                     closedThy <- liftIO $ parseThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
                     case closedThy of
                       Left err -> setMessage $ "Theory loading failed:\n" <> toHtml err
                       Right thy -> do
-      --                     case th of 
-                              -- FIXME??
-      --                          Left thy  -> do
                           void $ putTheory Nothing
                                   (Just $ Upload $ T.unpack $ fileName fileinfo) thy
-      --                          Right thy -> do
-      --                            void $ putDiffTheory Nothing
-      --                              (Just $ Upload $ T.unpack $ fileName fileinfo) thy
                           setMessage "Loaded new theory!"
     theories <- getTheories
     defaultLayout $ do
