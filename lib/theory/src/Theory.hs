@@ -323,6 +323,18 @@ data Lemma p = Lemma
 
 $(mkLabels [''Lemma])
 
+-- | A diff lemma describes a correspondence property that holds in the context of a theory
+-- together with a proof of its correctness.
+data DiffLemma p = DiffLemma
+       { _lDiffName            :: String
+--        , _lTraceQuantifier :: TraceQuantifier
+--        , _lFormula         :: LNFormula
+--        , _lAttributes      :: [LemmaAttribute]
+       , _lDiffProof           :: p
+       }
+       deriving( Eq, Ord, Show )
+
+$(mkLabels [''DiffLemma])
 
 -- Instances
 ------------
@@ -336,6 +348,14 @@ instance Foldable Lemma where
 instance Traversable Lemma where
     traverse f (Lemma n qua fm atts prf) = Lemma n qua fm atts <$> f prf
 
+instance Functor DiffLemma where
+    fmap f (DiffLemma n prf) = DiffLemma n (f prf)
+
+instance Foldable DiffLemma where
+    foldMap f = f . L.get lDiffProof
+
+instance Traversable DiffLemma where
+    traverse f (DiffLemma n prf) = DiffLemma n <$> f prf
 
 -- Lemma queries
 ----------------------------------
@@ -350,7 +370,6 @@ isTypingLemma :: Lemma p -> Bool
 isTypingLemma lem =
      (AllTraces == L.get lTraceQuantifier lem)
   && (TypingLemma `elem` L.get lAttributes lem)
-
 
 -- Lemma construction/modification
 ----------------------------------
@@ -378,12 +397,30 @@ lemmaCaseDistKind lem
 -- | A formal comment is a header together with the body of the comment.
 type FormalComment = (String, String)
 
+-- | In the diff type, we have either the Left Hand Side or the Right Hand Side
+data Side = LHS | RHS deriving( Show, Eq, Ord)
+
 -- | A theory item built over the given rule type.
 data TheoryItem r p =
        RuleItem r
      | LemmaItem (Lemma p)
      | AxiomItem Axiom
      | TextItem FormalComment
+     deriving( Show, Eq, Ord, Functor )
+
+-- | A diff theory item built over the given rule type.
+--   This includes
+--   - Diff Rules, which are then decomposed in either rules for both sides
+--   - the Diff Lemmas, stating observational equivalence
+--   - the either lemmas and axioms, statung properties about either side
+--   - and comments
+data DiffTheoryItem r p =
+       DiffRuleItem r
+     | EitherRuleItem (Side, r)
+     | DiffLemmaItem (DiffLemma p)
+     | EitherLemmaItem (Side, Lemma p)
+     | EitherAxiomItem (Side, Axiom)
+     | DiffTextItem FormalComment
      deriving( Show, Eq, Ord, Functor )
 
 -- | A theory contains a single set of rewriting rules modeling a protocol
@@ -404,7 +441,7 @@ data DiffTheory sig c r p = DiffTheory {
          _diffThyName      :: String
        , _diffThySignature :: sig
        , _diffThyCache     :: c
-       , _diffThyItems     :: [TheoryItem r p]
+       , _diffThyItems     :: [DiffTheoryItem r p]
        }
        deriving( Eq, Ord, Show )
 
@@ -456,7 +493,19 @@ foldTheoryItem fRule fAxiom fLemma fText i = case i of
     TextItem txt  -> fText txt
     AxiomItem ax  -> fAxiom ax
     
--- | Map a theory item.
+-- | Fold a theory item.
+foldDiffTheoryItem
+    :: (r -> a) -> ((Side, r) -> a) -> ((Side, Axiom) -> a) -> ((Side, Lemma p) -> a) -> (DiffLemma p -> a) -> (FormalComment -> a)
+    -> TheoryItem r p -> a
+foldDiffTheoryItem fDiffRule fEitherRule fAxiom fEitherLemma fDiffLemma fText i = case i of
+    DiffRuleItem ru   -> fDiffRule ru
+    EitherRuleItem (side, ru) -> fEitherRule (side, ru)
+    EitherLemmaItem (side, lem) -> fEitherLemma (side, lem)
+    DiffLemmaItem lem -> fDiffLemma lem
+    DiffTextItem txt  -> fText txt
+    EitherAxiomItem (side, ax)  -> fAxiom (side, ax)
+
+    -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p -> TheoryItem r' p'
 mapTheoryItem f g =
     foldTheoryItem (RuleItem . f) AxiomItem (LemmaItem . fmap g) TextItem
@@ -810,16 +859,16 @@ closeDiffTheoryWithMaude sig thy0 = do
     -- and therefore no constraint systems will be unnecessarily cached.
     (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
        ((closeTheoryItem <$> L.get diffThyItems thy0) `using` parList rdeepseq)
-    closeTheoryItem = foldTheoryItem
-       (RuleItem . closeProtoRule hnd)
-       AxiomItem
-       (LemmaItem . fmap skeletonToIncrementalProof)
-       TextItem
+    closeTheoryItem = foldDiffTheoryItem
+       (DiffRuleItem . closeProtoRule hnd)
+       EitherAxiomItem
+       (DiffLemmaItem . fmap skeletonToIncrementalProof)
+       DiffTextItem
 
     -- extract typing axioms and lemmas
-    axioms  = do AxiomItem ax <- items
+    axioms  = do EitherAxiomItem ax <- items
                  return $ formulaToGuarded_ $ L.get axFormula ax
-    typAsms = do LemmaItem lem <- items
+    typAsms = do EitherLemmaItem lem <- items
                  guard (isTypingLemma lem)
                  return $ formulaToGuarded_ $ L.get lFormula lem
 
