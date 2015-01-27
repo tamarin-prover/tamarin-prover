@@ -38,13 +38,13 @@ library
       , bytestring        >= 0.10
       , transformers      == 0.*
       , containers        >= 0.4.2
-      , fclabels          == 1.*
+      , fclabels          == 2.0.*
       , blaze-builder     == 0.*
       , base64-bytestring >= 0.1.0.3
       , SHA               == 1.*
       , parsec            == 3.*
       , deepseq           == 1.*
-      , syb               >= 0.3.3 
+      , syb               >= 0.3.3
       , pretty            == 1.*
       , time              >= 1.2
       , binary            == 0.*

@@ -40,7 +40,7 @@ library
         base              == 4.*
       , bytestring        >= 0.9
       , deepseq           >= 1.3
-      , array             >= 0.3  
+      , array             >= 0.3
       , containers        >= 0.4.2
       , dlist             >= 0.5
       , mtl               >= 2.1
@@ -51,12 +51,12 @@ library
       , parsec            == 3.1.*
       , safe              >= 0.2  && < 0.4
       , transformers      >= 0.3
-      , fclabels          == 1.*
+      , fclabels
       , uniplate          == 1.6.*
       , syb               >= 0.3.3
-      , binary            == 0.5.*
+      , binary
       , derive            == 2.5.*
-      , time              >= 1.2 
+      , time              >= 1.2
       , parallel          >= 3.2
       , HUnit             >= 1.2
 
