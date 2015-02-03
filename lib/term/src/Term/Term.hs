@@ -35,6 +35,8 @@ module Term.Term (
     , isEMap
     , isNullaryPublicFunction
     , isPrivateFunction
+    , getLeftTerm
+    , getRightTerm
 
     -- * AC, C, and NonAC funcion symbols
     , FunSym(..)
@@ -154,6 +156,16 @@ isNullaryPublicFunction _                                            = False
 isPrivateFunction :: Term a -> Bool
 isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private))) _) = True
 isPrivateFunction _                                            = False
+
+----------------------------------------------------------------------
+-- Convert Diff Terms
+----------------------------------------------------------------------
+
+getLeftTerm :: Term a -> Term a
+getLeftTerm t = termViewToTerm $ viewTerm' DiffLeft t
+
+getRightTerm :: Term a -> Term a
+getRightTerm t = termViewToTerm $ viewTerm' DiffLeft t
 
 ----------------------------------------------------------------------
 -- Pretty printing

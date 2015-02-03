@@ -31,6 +31,8 @@ module Theory.Model.Fact (
   , factTagMultiplicity
   , factArity
   , factMultiplicity
+  , getLeftFact
+  , getRightFact
 
   , DirTag(..)
   , kuFact
@@ -298,6 +300,16 @@ matchFact t p =
     matchOnlyIf (factTag t == factTag p &&
                  length (factTerms t) == length (factTerms p))
     <> mconcat (zipWith matchWith (factTerms t) (factTerms p))
+    
+-- | Get "left" variant of a diff fact
+getLeftFact :: LNFact -> LNFact
+getLeftFact (Fact tag ts) =
+   (Fact tag (map getLeftTerm ts))
+
+-- | Get "left" variant of a diff fact
+getRightFact :: LNFact -> LNFact
+getRightFact (Fact tag ts) =
+   (Fact tag (map getRightTerm ts))
 
 ------------------------------------------------------------------------------
 -- Pretty Printing

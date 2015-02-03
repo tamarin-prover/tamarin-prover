@@ -74,6 +74,8 @@ module Theory.Model.Rule (
   , ruleACToIntrRuleAC
   , ruleACIntrToRuleAC
   , ruleACIntrToRuleACInst
+  , getLeftRule
+  , getRightRule
 
   -- ** Construction
   , someRuleACInst
@@ -454,7 +456,16 @@ isTrivialProtoVariantAC (Rule info ps as cs) (Rule _ ps' as' cs') =
     L.get pracVariants info == Disj [emptySubstVFresh]
     && ps == ps' && as == as' && cs == cs'
 
+-- | Converts a protocol rule to its "left" variant
+getLeftRule :: ProtoRuleE ->  ProtoRuleE
+getLeftRule (Rule ri ps cs as) =
+   (Rule ri (map getLeftFact ps) (map getLeftFact cs) (map getLeftFact as))
 
+-- | Converts a protocol rule to its "left" variant
+getRightRule :: ProtoRuleE ->  ProtoRuleE
+getRightRule (Rule ri ps cs as) =
+   (Rule ri (map getRightFact ps) (map getRightFact cs) (map getRightFact as))
+    
 -- Construction
 ---------------
 

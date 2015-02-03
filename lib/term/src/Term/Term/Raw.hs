@@ -17,6 +17,7 @@ module Term.Term.Raw (
     , TermView2 (..)
     , viewTerm2
     , viewTerm2'
+    , termViewToTerm
 
     -- * Diff Type
     , DiffType (..)
@@ -95,6 +96,12 @@ viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) =   case dt of
                                      DiffNone  -> error $ "viewTerm: illegal use of diff"
 -- the above equation is at fault!!! how to fix it???
 viewTerm' dt (FAPP sym ts) = FApp sym ts
+
+-- | Return the term of the given TermView.
+termViewToTerm :: TermView a -> Term a
+termViewToTerm (Lit l) = LIT l
+termViewToTerm (FApp sym ts) = FAPP sym ts
+
 
 -- | @fApp fsym as@ creates an application of @fsym@ to @as@. The function
 -- ensures that the resulting term is in AC-normal-form.

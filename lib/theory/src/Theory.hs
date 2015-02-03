@@ -236,6 +236,7 @@ openProtoRule = L.get cprRuleE
 -- soundness sequent, if required.
 closeProtoRule :: MaudeHandle -> OpenProtoRule -> ClosedProtoRule
 closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
+
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.
 closeRuleCache :: [LNGuarded]        -- ^ Axioms to use.
@@ -495,15 +496,15 @@ foldTheoryItem fRule fAxiom fLemma fText i = case i of
     
 -- | Fold a theory item.
 foldDiffTheoryItem
-    :: (r -> a) -> ((Side, r) -> a) -> ((Side, Axiom) -> a) -> ((Side, Lemma p) -> a) -> (DiffLemma p -> a) -> (FormalComment -> a)
+    :: (r -> a) -> ((Side, r) -> b) -> (DiffLemma p -> a) -> ((Side, Lemma p) -> a) -> ((Side, Axiom) -> a) -> (FormalComment -> a)
     -> TheoryItem r p -> a
-foldDiffTheoryItem fDiffRule fEitherRule fAxiom fEitherLemma fDiffLemma fText i = case i of
+foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fAxiom fText i = case i of
     DiffRuleItem ru   -> fDiffRule ru
     EitherRuleItem (side, ru) -> fEitherRule (side, ru)
-    EitherLemmaItem (side, lem) -> fEitherLemma (side, lem)
     DiffLemmaItem lem -> fDiffLemma lem
-    DiffTextItem txt  -> fText txt
+    EitherLemmaItem (side, lem) -> fEitherLemma (side, lem)
     EitherAxiomItem (side, ax)  -> fAxiom (side, ax)
+    DiffTextItem txt  -> fText txt
 
     -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p -> TheoryItem r' p'
@@ -808,6 +809,13 @@ getDiffCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCac
 -- construction
 ---------------
 
+-- | Close a protocol rule; i.e., compute AC variant and typing assertion
+-- soundness sequent, if required.
+closeEitherProtoRule :: MaudeHandle -> (Side, OpenProtoRule) -> (Side, ClosedProtoRule)
+closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule ruE)
+
+
+
 -- -- | Convert a lemma to the corresponding guarded formula.
 -- lemmaToGuarded :: Lemma p -> Maybe LNGuarded
 -- lemmaToGuarded lem =
@@ -847,8 +855,10 @@ closeDiffTheoryWithMaude sig thy0 = do
       proveDiffTheory (const True) checkProof
     $ DiffTheory (L.get diffThyName thy0) sig cache items
   where
-    cache      = closeRuleCache axioms typAsms sig rules (L.get diffThyCache thy0)
+    cache      = closeRuleCache axioms typAsms sig diffRules (L.get diffThyCache thy0)
     checkProof = checkAndExtendProver (sorryProver Nothing)
+    leftRules  = map getLeftRule  diffRules
+    rightRules = map getRightRule diffRules
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
@@ -858,23 +868,25 @@ closeDiffTheoryWithMaude sig thy0 = do
     -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
     -- and therefore no constraint systems will be unnecessarily cached.
     (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
-       ((closeTheoryItem <$> L.get diffThyItems thy0) `using` parList rdeepseq)
-    closeTheoryItem = foldDiffTheoryItem
-       (DiffRuleItem . closeProtoRule hnd)
+       ((closeDiffTheoryItem <$> L.get diffThyItems thy0) `using` parList rdeepseq)
+    closeDiffTheoryItem = foldDiffTheoryItem
+       DiffRuleItem
+       (EitherRuleItem . closeEitherProtoRule hnd)
+       (\l -> DiffLemmaItem (fmap skeletonToIncrementalProof l))
+       (\(s, l) -> EitherLemmaItem (s, (fmap skeletonToIncrementalProof l)))
        EitherAxiomItem
-       (DiffLemmaItem . fmap skeletonToIncrementalProof)
        DiffTextItem
-
+       
     -- extract typing axioms and lemmas
     axioms  = do EitherAxiomItem ax <- items
                  return $ formulaToGuarded_ $ L.get axFormula ax
-    typAsms = do EitherLemmaItem lem <- items
+    typAsms = do EitherLemmaItem (s, lem) <- items
                  guard (isTypingLemma lem)
                  return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
-    rules = diffTheoryRules (DiffTheory errClose errClose errClose items)
-    errClose = error "closeTheory"
+    diffRules = diffTheoryRules (DiffTheory errClose errClose errClose items)
+    errClose  = error "closeDiffTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
         (liftToItem $ enumPrems . L.get cprRuleAC)
@@ -882,12 +894,12 @@ closeDiffTheoryWithMaude sig thy0 = do
         (liftToItem $ getDisj . L.get (pracVariants . rInfo . cprRuleAC))
         addBreakers
       where
-        liftToItem f (RuleItem ru) = f ru
-        liftToItem _ _             = []
+        liftToItem f (DiffRuleItem ru) = f ru
+        liftToItem _ _                 = []
 
-        addBreakers bs (RuleItem ru) =
-            RuleItem (L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
-        addBreakers _  item = item
+        addBreakers bs (DiffRuleItem ru) =
+            DiffRuleItem (L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
+        addBreakers _  item              = item
 
 
     
