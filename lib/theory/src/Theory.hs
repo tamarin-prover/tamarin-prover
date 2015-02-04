@@ -415,11 +415,11 @@ data TheoryItem r p =
 --   - the Diff Lemmas, stating observational equivalence
 --   - the either lemmas and axioms, statung properties about either side
 --   - and comments
-data DiffTheoryItem r p =
+data DiffTheoryItem r r2 p p2 =
        DiffRuleItem r
-     | EitherRuleItem (Side, r)
+     | EitherRuleItem (Side, r2)
      | DiffLemmaItem (DiffLemma p)
-     | EitherLemmaItem (Side, Lemma p)
+     | EitherLemmaItem (Side, Lemma p2)
      | EitherAxiomItem (Side, Axiom)
      | DiffTextItem FormalComment
      deriving( Show, Eq, Ord, Functor )
@@ -438,11 +438,12 @@ $(mkLabels [''Theory])
 
        
 -- | A diff theory contains a set of rewriting rules with diff modeling two instances
-data DiffTheory sig c r p = DiffTheory {
-         _diffThyName      :: String
-       , _diffThySignature :: sig
-       , _diffThyCache     :: c
-       , _diffThyItems     :: [DiffTheoryItem r p]
+data DiffTheory sig c r r2 p p2 = DiffTheory {
+         _diffThyName       :: String
+       , _diffThySignature  :: sig
+       , _diffThyCacheLeft  :: c
+       , _diffThyCacheRight :: c
+       , _diffThyItems      :: [DiffTheoryItem r r2 p p2]
        }
        deriving( Eq, Ord, Show )
 
@@ -457,7 +458,7 @@ type OpenTheory =
 -- | Open diff theories can be extended. Invariants:
 --   1. Lemma names are unique.
 type OpenDiffTheory =
-    DiffTheory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton
+    DiffTheory SignaturePure [IntrRuleAC] OpenProtoRule OpenProtoRule ProofSkeleton ProofSkeleton
     
 -- | Closed theories can be proven. Invariants:
 --     1. Lemma names are unique
@@ -473,7 +474,7 @@ type ClosedTheory =
 --        closed rule set of the theory.
 --     3. Maude is running under the given handle.
 type ClosedDiffTheory =
-    DiffTheory SignatureWithMaude ClosedRuleCache ClosedProtoRule IncrementalProof
+    DiffTheory SignatureWithMaude ClosedRuleCache OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof
 
 -- | Either Therories can be Either a normal or a diff theory
 
@@ -496,8 +497,8 @@ foldTheoryItem fRule fAxiom fLemma fText i = case i of
     
 -- | Fold a theory item.
 foldDiffTheoryItem
-    :: (r -> a) -> ((Side, r) -> b) -> (DiffLemma p -> a) -> ((Side, Lemma p) -> a) -> ((Side, Axiom) -> a) -> (FormalComment -> a)
-    -> TheoryItem r p -> a
+    :: (r -> a) -> ((Side, r2) -> a) -> (DiffLemma p -> a) -> ((Side, Lemma p2) -> a) -> ((Side, Axiom) -> a) -> (FormalComment -> a)
+    -> DiffTheoryItem r r2 p p2 -> a
 foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fAxiom fText i = case i of
     DiffRuleItem ru   -> fDiffRule ru
     EitherRuleItem (side, ru) -> fEitherRule (side, ru)
@@ -517,10 +518,21 @@ theoryRules =
     foldTheoryItem return (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All rules of a theory.
-diffTheoryRules :: DiffTheory sig c r p -> [r]
+diffTheoryRules :: DiffTheory sig c r r2 p p2 -> [r]
 diffTheoryRules =
-    foldTheoryItem return (const []) (const []) (const []) <=< L.get diffThyItems
+    foldDiffTheoryItem return (const []) (const []) (const []) (const []) (const []) <=< L.get diffThyItems
 
+-- | All rules of a theory.
+leftTheoryRules :: DiffTheory sig c r r2 p p2 -> [r]
+leftTheoryRules =
+    foldDiffTheoryItem (const []) (\(x, y) -> if (x == LHS) then y else []) (const []) (const []) (const []) (const []) <=< L.get diffThyItems
+
+-- | All rules of a theory.
+rightTheoryRules :: DiffTheory sig c r r2 p p2 -> [r]
+rightTheoryRules =
+    foldDiffTheoryItem (const []) (\(x, y) -> if (x == RHS) then y else []) (const []) (const []) (const []) (const []) <=< L.get diffThyItems
+
+    
 -- | All axioms of a theory.
 theoryAxioms :: Theory sig c r p -> [Axiom]
 theoryAxioms =
@@ -532,12 +544,12 @@ theoryLemmas =
     foldTheoryItem (const []) (const []) return (const []) <=< L.get thyItems
 
 -- | All axioms of a theory.
-diffTheoryAxioms :: DiffTheory sig c r p -> [Axiom]
+diffTheoryAxioms :: DiffTheory sig c r r2 p p2 -> [Axiom]
 diffTheoryAxioms =
     foldTheoryItem (const []) return (const []) (const []) <=< L.get diffThyItems
 
 -- | All lemmas of a theory.
-diffTheoryLemmas :: DiffTheory sig c r p -> [Lemma p]
+diffTheoryLemmas :: DiffTheory sig c r r2 p p2 -> [Lemma p]
 diffTheoryLemmas =
     foldTheoryItem (const []) (const []) return (const []) <=< L.get diffThyItems
 
@@ -554,13 +566,13 @@ addLemma l thy = do
     return $ modify thyItems (++ [LemmaItem l]) thy
 
 -- | Add a new axiom. Fails, if axiom with the same name exists.
-addAxiomDiff :: Axiom -> DiffTheory sig c r p -> Maybe (DiffTheory sig c r p)
+addAxiomDiff :: Axiom -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addAxiomDiff l thy = do
     guard (isNothing $ lookupAxiomDiff (L.get axName l) thy)
     return $ modify diffThyItems (++ [AxiomItem l]) thy
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
-addLemmaDiff :: Lemma p -> DiffTheory sig c r p -> Maybe (DiffTheory sig c r p)
+addLemmaDiff :: Lemma p -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addLemmaDiff l thy = do
     guard (isNothing $ lookupLemmaDiff (L.get lName l) thy)
     return $ modify diffThyItems (++ [LemmaItem l]) thy
@@ -579,7 +591,7 @@ removeLemma lemmaName thy = do
     check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
-removeLemmaDiff :: String -> DiffTheory sig c r p -> Maybe (DiffTheory sig c r p)
+removeLemmaDiff :: String -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 removeLemmaDiff lemmaName thy = do
     _ <- lookupLemmaDiff lemmaName thy
     return $ modify diffThyItems (concatMap fItem) thy
@@ -599,11 +611,11 @@ lookupLemma :: String -> Theory sig c r p -> Maybe (Lemma p)
 lookupLemma name = find ((name ==) . L.get lName) . theoryLemmas
 
 -- | Find the axiom with the given name.
-lookupAxiomDiff :: String -> DiffTheory sig c r p -> Maybe Axiom
+lookupAxiomDiff :: String -> DiffTheory sig c r r2 p p2 -> Maybe Axiom
 lookupAxiomDiff name = find ((name ==) . L.get axName) . diffTheoryAxioms
 
 -- | Find the lemma with the given name.
-lookupLemmaDiff :: String -> DiffTheory sig c r p -> Maybe (Lemma p)
+lookupLemmaDiff :: String -> DiffTheory sig c r r2 p p2 -> Maybe (Lemma p)
 lookupLemmaDiff name = find ((name ==) . L.get lName) . diffTheoryLemmas
 
 -- | Add a comment to the theory.
@@ -611,7 +623,7 @@ addComment :: Doc -> Theory sig c r p -> Theory sig c r p
 addComment c = modify thyItems (++ [TextItem ("", render c)])
 
 -- | Add a comment to the diff theory.
-addDiffComment :: Doc -> DiffTheory sig c r p -> DiffTheory sig c r p
+addDiffComment :: Doc -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
 addDiffComment c = modify diffThyItems (++ [TextItem ("", render c)])
 
 -- | Add a comment represented as a string to the theory.
@@ -621,7 +633,7 @@ addStringComment = addComment . vcat . map text . lines
 addFormalComment :: FormalComment -> Theory sig c r p -> Theory sig c r p
 addFormalComment c = modify thyItems (++ [TextItem c])
 
-addFormalCommentDiff :: FormalComment -> DiffTheory sig c r p -> DiffTheory sig c r p
+addFormalCommentDiff :: FormalComment -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
 addFormalCommentDiff c = modify diffThyItems (++ [TextItem c])
 
 
@@ -647,8 +659,8 @@ openTheory  (Theory n sig c items) =
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness dependens on it.
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
-openDiffTheory  (DiffTheory n sig c items) =
-    DiffTheory n (toSignaturePure sig) (openRuleCache c)
+openDiffTheory  (DiffTheory n sig c1 c2 items) =
+    DiffTheory n (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2)
       (map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
 
       
@@ -687,8 +699,12 @@ addIntrRuleACs :: [IntrRuleAC] -> OpenTheory -> OpenTheory
 addIntrRuleACs rs' = modify (thyCache) (\rs -> nub $ rs ++ rs')
 
 -- | Add intruder proof rules.
-addIntrRuleACsDiff :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
-addIntrRuleACsDiff rs' = modify (diffThyCache) (\rs -> nub $ rs ++ rs')
+addIntrRuleACsDiffLeft :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffLeft rs' = modify (diffThyCacheLeft) (\rs -> nub $ rs ++ rs')
+
+-- | Add intruder proof rules.
+addIntrRuleACsDiffRight :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffRight rs' = modify (diffThyCacheRight) (\rs -> nub $ rs ++ rs')
 
 -- | Normalize the theory representation such that they remain semantically
 -- equivalent. Use this function when you want to compare two theories (quite
@@ -762,15 +778,24 @@ getProofContext l thy = ProofContext
       | otherwise                                                        = AvoidInduction
 
 -- | Get the proof context for a lemma of the closed theory.
-getProofContextDiff :: Lemma a -> ClosedDiffTheory -> ProofContext
-getProofContextDiff l thy = ProofContext
-    ( L.get diffThySignature                    thy)
-    ( L.get (crcRules . diffThyCache)           thy)
-    ( L.get (crcInjectiveFactInsts . diffThyCache) thy)
-    kind
-    ( L.get (cases . diffThyCache)              thy)
-    inductionHint
-    (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
+getProofContextDiff :: Side -> Lemma a -> ClosedDiffTheory -> ProofContext
+getProofContextDiff s l thy = case s of
+  LHS -> ProofContext
+            ( L.get diffThySignature                    thy)
+            ( L.get (crcRules . diffThyCacheLeft)           thy)
+            ( L.get (crcInjectiveFactInsts . diffThyCacheLeft) thy)
+            kind
+            ( L.get (cases . diffThyCacheLeft)              thy)
+            inductionHint
+            (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
+  RHS -> ProofContext
+            ( L.get diffThySignature                    thy)
+            ( L.get (crcRules . diffThyCacheRight)           thy)
+            ( L.get (crcInjectiveFactInsts . diffThyCacheRight) thy)
+            kind
+            ( L.get (cases . diffThyCacheRight)              thy)
+            inductionHint
+            (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
   where
     kind    = lemmaCaseDistKind l
     cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
@@ -785,16 +810,20 @@ getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
 getInjectiveFactInsts = L.get (crcInjectiveFactInsts . thyCache)
 
 -- | The facts with injective instances in this theory
-getDiffInjectiveFactInsts :: ClosedDiffTheory -> S.Set FactTag
-getDiffInjectiveFactInsts = L.get (crcInjectiveFactInsts . diffThyCache)
+getDiffInjectiveFactInsts :: Side -> ClosedDiffTheory -> S.Set FactTag
+getDiffInjectiveFactInsts s = case s of
+           LHS -> L.get (crcInjectiveFactInsts . diffThyCacheLeft)
+           RHS -> L.get (crcInjectiveFactInsts . diffThyCacheRight)
 
 -- | The classified set of rules modulo AC in this theory.
 getClassifiedRules :: ClosedTheory -> ClassifiedRules
 getClassifiedRules = L.get (crcRules . thyCache)
 
 -- | The classified set of rules modulo AC in this theory.
-getDiffClassifiedRules :: ClosedDiffTheory -> ClassifiedRules
-getDiffClassifiedRules = L.get (crcRules . diffThyCache)
+getDiffClassifiedRules :: Side -> ClosedDiffTheory -> ClassifiedRules
+getDiffClassifiedRules s = case s of
+           LHS -> L.get (crcRules . diffThyCacheLeft)
+           RHS -> L.get (crcRules . diffThyCacheRight)
 
 -- | The precomputed case distinctions.
 getCaseDistinction :: CaseDistKind -> ClosedTheory -> [CaseDistinction]
@@ -802,9 +831,11 @@ getCaseDistinction UntypedCaseDist = L.get (crcUntypedCaseDists . thyCache)
 getCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists .   thyCache)
 
 -- | The precomputed case distinctions.
-getDiffCaseDistinction :: CaseDistKind -> ClosedDiffTheory -> [CaseDistinction]
-getDiffCaseDistinction UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCache)
-getDiffCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCache)
+getDiffCaseDistinction :: Side -> CaseDistKind -> ClosedDiffTheory -> [CaseDistinction]
+getDiffCaseDistinction LHS UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheLeft)
+getDiffCaseDistinction RHS UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheRight)
+getDiffCaseDistinction LHS TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheLeft)
+getDiffCaseDistinction RHS TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheRight)
 
 -- construction
 ---------------
@@ -853,12 +884,14 @@ closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTh
 closeDiffTheoryWithMaude sig thy0 = do
   -- FIXME!
       proveDiffTheory (const True) checkProof
-    $ DiffTheory (L.get diffThyName thy0) sig cache items
+    $ DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items
   where
-    cache      = closeRuleCache axioms typAsms sig diffRules (L.get diffThyCache thy0)
+    cacheLeft  = closeRuleCache axioms typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
+    cacheRight = closeRuleCache axioms typAsms sig rightClosedRules (L.get diffThyCacheRight thy0)
     checkProof = checkAndExtendProver (sorryProver Nothing)
-    leftRules  = map getLeftRule  diffRules
-    rightRules = map getRightRule diffRules
+    diffRules  = diffTheoryRules thy0
+    leftOpenRules  = map getLeftRule  diffRules
+    rightOpenRules = map getRightRule diffRules
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
@@ -868,24 +901,30 @@ closeDiffTheoryWithMaude sig thy0 = do
     -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
     -- and therefore no constraint systems will be unnecessarily cached.
     (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
-       ((closeDiffTheoryItem <$> L.get diffThyItems thy0) `using` parList rdeepseq)
-    closeDiffTheoryItem = foldDiffTheoryItem
-       DiffRuleItem
-       (EitherRuleItem . closeEitherProtoRule hnd)
-       (\l -> DiffLemmaItem (fmap skeletonToIncrementalProof l))
-       (\(s, l) -> EitherLemmaItem (s, (fmap skeletonToIncrementalProof l)))
-       EitherAxiomItem
-       DiffTextItem
-       
+--       ((closeDiffTheoryItem <$> (L.get diffThyItems thy0)) `using` parList rdeepseq)
+       ((closeDiffTheoryItem <$> ( (L.get diffThyItems thy0) ++ (map (\x -> EitherRuleItem (LHS, x)) leftOpenRules) ++ (map (\x -> EitherRuleItem (RHS, x)) rightOpenRules))) `using` parList rdeepseq)
+          where
+            closeDiffTheoryItem :: DiffTheoryItem OpenProtoRule OpenProtoRule ProofSkeleton ProofSkeleton -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof
+            closeDiffTheoryItem = foldDiffTheoryItem
+              DiffRuleItem
+              (EitherRuleItem . closeEitherProtoRule hnd)
+              (\l -> DiffLemmaItem (fmap skeletonToIncrementalProof l))
+              (\(s, l) -> EitherLemmaItem (s, (fmap skeletonToIncrementalProof l)))
+              EitherAxiomItem
+              DiffTextItem
+            
     -- extract typing axioms and lemmas
-    axioms  = do EitherAxiomItem ax <- items
+    axioms  = do EitherAxiomItem (s, ax) <- items
                  return $ formulaToGuarded_ $ L.get axFormula ax
     typAsms = do EitherLemmaItem (s, lem) <- items
                  guard (isTypingLemma lem)
                  return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
-    diffRules = diffTheoryRules (DiffTheory errClose errClose errClose items)
+    leftClosedRules  :: [ClosedProtoRule]
+    leftClosedRules  = leftTheoryRules  (DiffTheory errClose errClose errClose errClose items)
+    rightClosedRules :: [ClosedProtoRule]
+    rightClosedRules = rightTheoryRules (DiffTheory errClose errClose errClose errClose items)
     errClose  = error "closeDiffTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -894,11 +933,11 @@ closeDiffTheoryWithMaude sig thy0 = do
         (liftToItem $ getDisj . L.get (pracVariants . rInfo . cprRuleAC))
         addBreakers
       where
-        liftToItem f (DiffRuleItem ru) = f ru
-        liftToItem _ _                 = []
+        liftToItem f (EitherRuleItem (s, ru)) = (f ru)
+        liftToItem _ _                   = []
 
-        addBreakers bs (DiffRuleItem ru) =
-            DiffRuleItem (L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
+        addBreakers bs (EitherRuleItem (s, ru)) =
+            EitherRuleItem (s, L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
         addBreakers _  item              = item
 
 
@@ -936,6 +975,7 @@ closeTheoryWithMaude sig thy0 = do
                  return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
+    rules :: [ClosedProtoRule]
     rules = theoryRules (Theory errClose errClose errClose items)
     errClose = error "closeTheory"
 
@@ -1050,24 +1090,26 @@ proveTheory selector prover thy =
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.
 proveDiffTheory :: (Lemma IncrementalProof -> Bool)   -- ^ Lemma selector.
+            -> Side
             -> Prover
             -> ClosedDiffTheory
             -> ClosedDiffTheory
-proveDiffTheory selector prover thy =
+proveDiffTheory selector s prover thy =
   -- FIXME!
     modify diffThyItems ((`MS.evalState` []) . mapM prove) thy
   where
+    prove :: DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof
     prove item = case item of
-      LemmaItem l0 -> do l <- MS.gets (LemmaItem . proveLemma l0)
-                         MS.modify (l :)
-                         return l
-      _            -> do return item
+      EitherLemmaItem (s, l0) -> do l <- MS.gets (\x -> EitherLemmaItem (s, (proveLemma l0 x)))
+                                    MS.modify (l :)
+                                    return l
+      _                       -> do return item
 
     proveLemma lem preItems
       | selector lem = modify lProof add lem
       | otherwise    = lem
       where
-        ctxt    = getProofContextDiff lem thy
+        ctxt    = getProofContextDiff s lem thy
         sys     = mkSystem ctxt (diffTheoryAxioms thy) preItems $ L.get lFormula lem
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
@@ -1136,15 +1178,15 @@ modifyLemmaProof prover name thy =
 
 -- | Modify the proof at the given lemma ref, if there is one. Fails if the
 -- path is not present or if the prover fails.
-modifyLemmaProofDiff :: Prover -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
-modifyLemmaProofDiff prover name thy =
+modifyLemmaProofDiff :: Side -> Prover -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
+modifyLemmaProofDiff s prover name thy =
     modA diffThyItems changeItems thy
   where
     findLemma (LemmaItem lem) = name == L.get lName lem
     findLemma _               = False
 
     change preItems (LemmaItem lem) = do
-         let ctxt = getProofContextDiff lem thy
+         let ctxt = getProofContextDiff s lem thy
              sys  = mkSystem ctxt (diffTheoryAxioms thy) preItems $ L.get lFormula lem
          lem' <- modA lProof (runProver prover ctxt 0 sys) lem
          return $ LemmaItem lem'
@@ -1185,12 +1227,13 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
 -- | Pretty print a theory.
 prettyDiffTheory :: HighlightDocument d
                  => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d)
-                 -> DiffTheory sig c r p -> d
+                 -> DiffTheory sig c r r2 p p2 -> d
 prettyDiffTheory ppSig ppCache ppRule ppPrf thy = vsep $
     [ kwTheoryHeader $ text $ L.get diffThyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get diffThySignature thy
-    , ppCache $ L.get diffThyCache thy
+    , ppCache $ L.get diffThyCacheLeft thy
+    , ppCache $ L.get diffThyCacheRight thy
     ] ++
     parMap rdeepseq ppItem (L.get diffThyItems thy) ++
     [ kwEnd ]
