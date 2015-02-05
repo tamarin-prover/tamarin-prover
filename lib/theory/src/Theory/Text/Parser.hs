@@ -33,12 +33,45 @@ import           Control.Monad
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 
+-- import qualified Extension.Data.Label       as L
+
 import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
 import           Theory.Text.Parser.Token
 
 
+------------------------------------------------------------------------------
+-- ParseAxiom datatype and functions to parse diff axioms
+------------------------------------------------------------------------------
+
+-- | An axiom describes a property that must hold for all traces. Axioms are
+-- always used as lemmas in proofs.
+data ParseAxiom = ParseAxiom
+       { pAxName       :: String
+       , pAxAttributes :: [AxiomAttribute]
+       , pAxFormula    :: LNFormula
+       }
+       deriving( Eq, Ord, Show )
+
+-- | True iff the axiom is a LHS axiom.
+isLeftAxiom :: ParseAxiom -> Bool
+isLeftAxiom ax =
+     (LHSAxiom `elem` pAxAttributes ax)
+
+-- | True iff the axiom is a RHS axiom.
+isRightAxiom :: ParseAxiom -> Bool
+isRightAxiom ax =
+     (RHSAxiom `elem` pAxAttributes ax)
+
+-- | True iff the axiom is a Both axiom.
+isBothAxiom :: ParseAxiom -> Bool
+isBothAxiom ax =
+     (BothAxiom `elem` pAxAttributes ax)
+
+-- | Converts ParseAxioms to Axioms
+toAxiom :: ParseAxiom -> Axiom
+toAxiom ax = Axiom (pAxName ax) (pAxFormula ax)
 
 
 ------------------------------------------------------------------------------
@@ -438,11 +471,24 @@ guardedFormula = try $ do
 -- Parsing Axioms
 ------------------------------------------------------------------------------
 
+-- | Parse a 'AxiomAttribute'.
+axiomAttribute :: Parser AxiomAttribute
+axiomAttribute = asum
+  [ symbol "left"          *> pure LHSAxiom
+  , symbol "right"         *> pure RHSAxiom
+  , symbol "both"          *> pure BothAxiom
+  ]
+
 -- | Parse an axiom.
 axiom :: Parser Axiom
 axiom = Axiom <$> (symbol "axiom" *> identifier <* colon)
               <*> doubleQuoted standardFormula
 
+-- | Parse a diff axiom.
+diffAxiom :: Parser ParseAxiom
+diffAxiom = ParseAxiom <$> (symbol "axiom" *> identifier <* colon)
+              <*> (option [] $ list axiomAttribute)
+              <*> doubleQuoted standardFormula
 
 ------------------------------------------------------------------------------
 -- Parsing Lemmas
@@ -454,6 +500,9 @@ lemmaAttribute = asum
   [ symbol "typing"        *> pure TypingLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
+  , symbol "left"          *> pure LHSLemma
+  , symbol "right"         *> pure RHSLemma
+  , symbol "both"          *> pure BothLemma
   ]
 
 -- | Parse a 'TraceQuantifier'.
@@ -703,7 +752,7 @@ diffTheory flags0 = do
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
-      , do thy' <- liftedAddAxiom thy =<< axiom
+      , do thy' <- liftedAddAxiom thy =<< diffAxiom
            addItems flags thy'
       , do thy' <- liftedAddLemma thy =<< lemma
            addItems flags thy'
@@ -711,7 +760,7 @@ diffTheory flags0 = do
            thy' <- liftedAddProtoRule thy ru
            addItems flags thy'
       , do r <- intrRule
-           addItems flags (addIntrRuleACsDiff [r] thy)
+           addItems flags (addIntrRuleACsDiffBoth [r] thy)
       , do c <- formalComment
            addItems flags (addFormalCommentDiff c thy)
       , do ifdef flags thy
@@ -733,14 +782,34 @@ diffTheory flags0 = do
          then addItems flags thy'
          else addItems flags thy
 
-    liftedAddProtoRule thy ru = case addProtoRuleDiff ru thy of
+    liftedAddProtoRule thy ru = case addProtoDiffRule ru thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
 
-    liftedAddLemma thy lem = case addLemmaDiff lem thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+    liftedAddLemma thy lem = if isLeftLemma lem
+                                then case addLemmaDiff LHS lem thy of
+                                        Just thy' -> return thy'
+                                        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+                                else if isRightLemma lem 
+                                     then case addLemmaDiff RHS lem thy of
+                                             Just thy' -> return thy'
+                                             Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+                                     else case addLemmaDiff RHS lem thy of
+                                             Just thy' -> case addLemmaDiff LHS lem thy of
+                                                             Just thy' -> return thy'
+                                                             Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+                                             Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
 
-    liftedAddAxiom thy ax = case addAxiomDiff ax thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
+    liftedAddAxiom thy ax = if isLeftAxiom ax
+                               then case addAxiomDiff LHS (toAxiom ax) thy of
+                                       Just thy' -> return thy'
+                                       Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
+                               else if isRightAxiom ax
+                                       then case addAxiomDiff RHS (toAxiom ax) thy of
+                                          Just thy' -> return thy'
+                                          Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
+                                       else case addAxiomDiff RHS (toAxiom ax) thy of
+                                          Just thy' -> case addAxiomDiff LHS (toAxiom ax) thy of
+                                             Just thy' -> return thy'
+                                             Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
+                                          Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
