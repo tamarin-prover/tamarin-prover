@@ -571,14 +571,14 @@ rulesDiffSnippetSide s thy = vcat
 
             
 -- | Build the Html document showing the message theory.
-messageDiffSnippet :: HtmlDocument d => ClosedDiffTheory -> d
-messageDiffSnippet thy = vcat
+messageDiffSnippet :: HtmlDocument d => Side -> ClosedDiffTheory -> d
+messageDiffSnippet s thy = vcat
     [ ppSection "Signature"           [prettySignatureWithMaude (get diffThySignature thy)]
     , ppSection "Construction Rules"  (ppRules crConstruct)
     , ppSection "Destruction Rules"   (ppRules crDestruct)
     ]
   where
-    ppRules l = map prettyRuleAC $ get l $ getDiffClassifiedRules thy
+    ppRules l = map prettyRuleAC $ get l $ getDiffClassifiedRules s thy
     ppSection header s =
       withTag "h2" [] (text header) $$ withTag "p"
         [("class","monospace rules")]
@@ -718,7 +718,7 @@ htmlDiffThyPath renderUrl info path =
 
     go DiffTheoryRules                 = pp $ rulesDiffSnippet thy
     go DiffTheoryMessage               = pp $ messageDiffSnippet thy
-    go (DiffTheoryCaseDist s kind _ _) = pp $ reqCasesDiffSnippet renderUrl tidx kind thy
+    go (DiffTheoryCaseDist s kind _ _) = pp $ reqCasesDiffSnippet renderUrl tidx s kind thy
 
     go (DiffTheoryProof s l p)         = pp $
         fromMaybe (text "No such lemma or proof path.") $ do
