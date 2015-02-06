@@ -1095,6 +1095,7 @@ nextDiffThyPath thy = go
     go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS TypedCaseDist 0 0
     go (DiffTheoryCaseDist RHS TypedCaseDist _ _)   = fromMaybe DiffTheoryHelp firstLemma
     go (DiffTheoryLemma s lemma)                    = DiffTheoryProof s lemma []
+    go (DiffTheoryDiffLemma lemma)                  = DiffTheoryHelp -- FIXME
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
@@ -1102,7 +1103,7 @@ nextDiffThyPath thy = go
                      []   -> firstDiffLemma
                      l:ls -> (DiffTheoryLemma RHS (fst l))
       | s == RHS = firstDiffLemma
-      -- | otherwise                          = DiffTheoryProof s l p
+      | otherwise  = DiffTheoryProof s l p
     go path@(DiffTheoryMethod _ _ _)                = path
 
     firstDiffLemma = case getDiffLemmas thy of
@@ -1170,6 +1171,7 @@ prevDiffThyPath thy = go
     go (DiffTheoryLemma s l)
       | Just prevLemma <- getPrevLemma s l = DiffTheoryProof s prevLemma (lastPath s prevLemma)
       | otherwise                          = DiffTheoryCaseDist RHS TypedCaseDist 0 0
+    go (DiffTheoryDiffLemma l)             = DiffTheoryHelp -- FIXME
     go (DiffTheoryProof s l p)
       | Just prevPath <- getPrevPath s l p = DiffTheoryProof s l prevPath
       | Just prevLemma <- getPrevLemma s l = DiffTheoryProof s prevLemma (lastPath s prevLemma)
@@ -1237,6 +1239,7 @@ nextSmartDiffThyPath thy = go
     go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS TypedCaseDist 0 0
     go (DiffTheoryCaseDist RHS TypedCaseDist   _ _) = fromMaybe DiffTheoryHelp firstLemma
     go (DiffTheoryLemma s lemma)                    = DiffTheoryProof s lemma []
+    go (DiffTheoryDiffLemma l)                      = DiffTheoryHelp -- FIXME
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
@@ -1326,6 +1329,7 @@ prevSmartDiffThyPath thy = go
     go (DiffTheoryLemma s l)
       | Just prevLemma <- getPrevLemma s l        = DiffTheoryProof s prevLemma (lastPath s prevLemma)
       | otherwise                                 = DiffTheoryCaseDist RHS TypedCaseDist 0 0
+    go (DiffTheoryDiffLemma l)                    = DiffTheoryHelp -- FIXME
     go (DiffTheoryProof s l p)
       | Just prevPath <- getPrevPath s l p        = DiffTheoryProof s l prevPath
 --      | Just firstPath <- getFirstPath l p = DiffTheoryProof l firstPath
