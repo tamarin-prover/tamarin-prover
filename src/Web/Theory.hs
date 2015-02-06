@@ -97,19 +97,19 @@ applyMethodAtPath thy lemmaName proofPath heuristic i = do
        replaceSorryProver (oneStepProver Solved)
       )
 
-applyMethodAtPathDiff :: ClosedDiffTheory -> String -> ProofPath
+applyMethodAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
                       -> Heuristic             -- ^ How to extract/order the proof methods.
                       -> Int                   -- What proof method to use.
                       -> Maybe ClosedDiffTheory
-applyMethodAtPathDiff thy lemmaName proofPath heuristic i = do
-    lemma <- lookupLemmaDiff lemmaName thy
+applyMethodAtPathDiff thy s lemmaName proofPath heuristic i = do
+    lemma <- lookupLemmaDiff s lemmaName thy
     subProof <- get lProof lemma `atPath` proofPath
-    let ctxt  = getProofContextDiff lemma thy
+    let ctxt  = getProofContextDiff s lemma thy
         sys   = psInfo (root subProof)
         ranking = useHeuristic heuristic (length proofPath)
     methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
-    applyProverAtPathDiff thy lemmaName proofPath
+    applyProverAtPathDiff thy s lemmaName proofPath
       (oneStepProver method                        `mappend`
        replaceSorryProver (oneStepProver Simplify) `mappend`
        replaceSorryProver (contradictionProver)    `mappend`
@@ -121,10 +121,10 @@ applyProverAtPath :: ClosedTheory -> String -> ProofPath
 applyProverAtPath thy lemmaName proofPath prover =
     modifyLemmaProof (focus proofPath prover) lemmaName thy
 
-applyProverAtPathDiff :: ClosedDiffTheory -> String -> ProofPath
+applyProverAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
                       -> Prover -> Maybe ClosedDiffTheory
-applyProverAtPathDiff thy lemmaName proofPath prover =
-    modifyLemmaProofDiff (focus proofPath prover) lemmaName thy
+applyProverAtPathDiff thy s lemmaName proofPath prover =
+    modifyLemmaProofDiff s (focus proofPath prover) lemmaName thy
 
 
 ------------------------------------------------------------------------------
@@ -496,9 +496,9 @@ reqCasesSnippet renderUrl tidx kind thy = vcat $
     htmlCaseDistinction renderUrl tidx kind <$> zip [1..] (getCaseDistinction kind thy)
 
 -- | Build the Html document showing the source cases distinctions.
-reqCasesDiffSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> CaseDistKind -> ClosedDiffTheory -> d
-reqCasesDiffSnippet renderUrl tidx kind thy = vcat $
-    htmlCaseDistinction renderUrl tidx kind <$> zip [1..] (getDiffCaseDistinction kind thy)
+reqCasesDiffSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> ClosedDiffTheory -> d
+reqCasesDiffSnippet renderUrl tidx s kind thy = vcat $
+    htmlCaseDistinction renderUrl tidx kind <$> zip [1..] (getDiffCaseDistinction s kind thy)
 
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
@@ -534,19 +534,14 @@ messageSnippet thy = vcat
         [("class","monospace rules")]
         (vcat (intersperse (text "") $ s))
 
--- | Build the Html document showing the rules of the theory.
+-- | Build the Html document showing the diff rules of the diff theory.
 rulesDiffSnippet :: HtmlDocument d => ClosedDiffTheory -> d
 rulesDiffSnippet thy = vcat
-    [ ppWithHeader "Fact Symbols with Injective Instances" $
-        fsepList (text . showFactTagArity) injFacts
-    , ppWithHeader "Multiset Rewriting Rules" $
-        vsep $ map prettyRuleAC msrRules
-    , ppWithHeader "Axioms Restricting the Set of Traces" $
-        vsep $ map prettyAxiom $ diffTheoryAxioms thy
+    [ ppWithHeader "Multiset Rewriting Rules" $
+        vsep $ map prettyProtoRuleE msrRules
     ]
   where
-    msrRules   = get crProtocol $ getDiffClassifiedRules thy
-    injFacts   = S.toList $ getDiffInjectiveFactInsts thy
+    msrRules   = diffTheoryDiffRules thy
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -554,7 +549,7 @@ rulesDiffSnippet thy = vcat
               withTag "p"  [("class","monospace rules")] body             )
             body
 
--- | Build the Html document showing the rules of the theory.
+-- | Build the Html document showing the either rules of the diff theory.
 rulesDiffSnippetSide :: HtmlDocument d => Side -> ClosedDiffTheory -> d
 rulesDiffSnippetSide s thy = vcat
     [ ppWithHeader "Fact Symbols with Injective Instances" $
