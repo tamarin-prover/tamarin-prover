@@ -716,8 +716,8 @@ htmlDiffThyPath renderUrl info path =
 
     go (DiffTheoryMethod _ _ _)        = pp $ text "Cannot display theory method."
 
-    go DiffTheoryRules                 = pp $ rulesDiffSnippet thy
-    go DiffTheoryMessage               = pp $ messageDiffSnippet thy
+    go (DiffTheoryRules s)               = pp $ rulesDiffSnippet s thy
+    go (DiffTheoryMessage s)             = pp $ messageDiffSnippet s thy
     go (DiffTheoryCaseDist s kind _ _) = pp $ reqCasesDiffSnippet renderUrl tidx s kind thy
 
     go (DiffTheoryProof s l p)         = pp $

@@ -322,12 +322,14 @@ data TheoryPath
 -- item within a theory.
 data DiffTheoryPath
   = DiffTheoryHelp                               -- ^ The help view (help and info about theory)
-  | DiffTheoryLemma Side String                  -- ^ Theory lemma with given name
+  | DiffTheoryLemma Side String                  -- ^ Theory lemma with given name and side
+  | DiffTheoryDiffLemma String                   -- ^ Theory DiffLemma with given name 
   | DiffTheoryCaseDist Side CaseDistKind Int Int -- ^ Required cases (i'th source, j'th case)
   | DiffTheoryProof Side String ProofPath        -- ^ Proof path within proof for given lemma
   | DiffTheoryMethod String ProofPath Int        -- ^ Apply the proof method to proof path
-  | DiffTheoryRules                              -- ^ Theory rules
-  | DiffTheoryMessage                            -- ^ Theory message deduction
+  | DiffTheoryRules Side                         -- ^ Theory rules per side
+  | DiffTheoryDiffRules                          -- ^ Theory rules unprocessed
+  | DiffTheoryMessage Side                       -- ^ Theory message deduction
   deriving (Eq, Show, Read)
 
 -- | Render a theory path to a list of strings. Note that we prefix an
