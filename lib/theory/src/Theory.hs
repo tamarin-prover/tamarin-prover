@@ -49,6 +49,7 @@ module Theory (
   , diffThyCacheRight
   , diffThyItems
   , diffTheorySideLemmas
+  , diffTheoryDiffRules
   , theoryRules
   , theoryLemmas
   , theoryAxioms
