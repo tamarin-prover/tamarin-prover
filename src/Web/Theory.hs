@@ -554,6 +554,27 @@ rulesDiffSnippet thy = vcat
               withTag "p"  [("class","monospace rules")] body             )
             body
 
+-- | Build the Html document showing the rules of the theory.
+rulesDiffSnippetSide :: HtmlDocument d => Side -> ClosedDiffTheory -> d
+rulesDiffSnippetSide s thy = vcat
+    [ ppWithHeader "Fact Symbols with Injective Instances" $
+        fsepList (text . showFactTagArity) (injFacts s)
+    , ppWithHeader "Multiset Rewriting Rules" $
+        vsep $ map prettyRuleAC (msrRules s)
+    , ppWithHeader "Axioms Restricting the Set of Traces" $
+        vsep $ map prettyAxiom $ diffTheorySideAxioms s thy
+    ]
+  where
+    msrRules s = get crProtocol $ getDiffClassifiedRules s thy
+    injFacts s = S.toList $ getDiffInjectiveFactInsts s thy
+    ppWithHeader header body =
+        caseEmptyDoc
+            emptyDoc
+            ( withTag "h2" []                            (text header) $$
+              withTag "p"  [("class","monospace rules")] body             )
+            body
+
+            
 -- | Build the Html document showing the message theory.
 messageDiffSnippet :: HtmlDocument d => ClosedDiffTheory -> d
 messageDiffSnippet thy = vcat
@@ -684,7 +705,7 @@ htmlThyPath renderUrl info path =
 -- | Render the item in the given theory given by the supplied path.
 htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.
                 -> DiffTheoryInfo   -- ^ The info of the theory to render
-                -> TheoryPath   -- ^ Path to render
+                -> DiffTheoryPath   -- ^ Path to render
                 -> Html
 htmlDiffThyPath renderUrl info path =
     go path
@@ -698,21 +719,21 @@ htmlDiffThyPath renderUrl info path =
       [] -> toHtml "Trying to render document yielded empty string. This is a bug."
       cs -> preEscapedToMarkup cs
 
-    go (TheoryMethod _ _ _)      = pp $ text "Cannot display theory method."
+    go (DiffTheoryMethod _ _ _)        = pp $ text "Cannot display theory method."
 
-    go TheoryRules               = pp $ rulesDiffSnippet thy
-    go TheoryMessage             = pp $ messageDiffSnippet thy
-    go (TheoryCaseDist kind _ _) = pp $ reqCasesDiffSnippet renderUrl tidx kind thy
+    go DiffTheoryRules                 = pp $ rulesDiffSnippet thy
+    go DiffTheoryMessage               = pp $ messageDiffSnippet thy
+    go (DiffTheoryCaseDist s kind _ _) = pp $ reqCasesDiffSnippet renderUrl tidx kind thy
 
-    go (TheoryProof l p)         = pp $
+    go (DiffTheoryProof s l p)         = pp $
         fromMaybe (text "No such lemma or proof path.") $ do
-           lemma <- lookupLemmaDiff l thy
-           subProofDiffSnippet renderUrl tidx info l p (getProofContextDiff lemma thy)
-             <$> resolveProofPathDiff thy l p
+           lemma <- lookupLemmaDiff s l thy
+           subProofDiffSnippet renderUrl tidx info l p (getProofContextDiff s lemma thy)
+             <$> resolveProofPathDiff thy s l p
 
-    go (TheoryLemma _)      = pp $ text "Implement lemma pretty printing!"
+    go (DiffTheoryLemma s _)           = pp $ text "Implement lemma pretty printing!"
 
-    go TheoryHelp           = [hamlet|
+    go DiffTheoryHelp                  = [hamlet|
         $newline never
         <p>
           Theory: #{get diffThyName $ dtiTheory info}
