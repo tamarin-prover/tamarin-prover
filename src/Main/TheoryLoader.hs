@@ -383,10 +383,10 @@ addMessageDeductionRuleVariantsDiff thy0
     msig         = get (sigpMaudeSig . diffThySignature) thy0
     rules        = subtermIntruderRules msig ++ specialIntruderRules
                    ++ if enableMSet msig then multisetIntruderRules else []
-    thy          = addIntrRuleACsDiff rules thy0
+    thy          = addIntrRuleACsDiffBoth rules thy0
     addIntruderVariantsDiff files = do
         ruless <- mapM loadRules files
-        return $ addIntrRuleACsDiff (concat ruless) thy
+        return $ addIntrRuleACsDiffBoth (concat ruless) thy
       where
         loadRules file = do
             variantsFile <- getDataFileName file
