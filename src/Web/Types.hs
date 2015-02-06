@@ -348,6 +348,24 @@ renderTheoryPath =
     go (TheoryProof lemma path) = "proof" : lemma : path
     go (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
 
+-- | Render a theory path to a list of strings. Note that we prefix an
+-- underscore to the empty string and strings starting with an underscore.
+-- This avoids empty path segments, which seem to trip up certain versions of
+-- Yesod.
+renderDiffTheoryPath :: DiffTheoryPath -> [String]
+renderDiffTheoryPath =
+    map prefixWithUnderscore . go
+  where
+    go DiffTheoryHelp = ["help"]
+    go (DiffTheoryLemma s name) = ["lemma", show s, name]
+    go (DiffTheoryDiffLemma name) = ["difflemma", name]
+    go (DiffTheoryCaseDist s k i j) = ["cases", show s, show k, show i, show j]
+    go (DiffTheoryProof s lemma path) = "proof" : show s : lemma : path
+    go (DiffTheoryMethod lemma path idx) = "method" : lemma : show idx : path
+    go (DiffTheoryRules s) = ["rules", show s]
+    go (DiffTheoryDiffRules) = ["diffrules"]
+    go (DiffTheoryMessage s) = ["message", show s]
+
 -- | Prefix an underscore to the empty string and strings starting with an
 -- underscore.
 prefixWithUnderscore :: String -> String
@@ -401,6 +419,86 @@ parseTheoryPath =
       return (TheoryCaseDist k m n)
     parseCases _       = Nothing
 
+-- | Parse a list of strings into a theory path.
+parseDiffTheoryPath :: [String] -> Maybe DiffTheoryPath
+parseDiffTheoryPath =
+    parse . map unprefixUnderscore
+  where
+    parse []     = Nothing
+    parse (x:xs) = case x of
+      "help"      -> Just DiffTheoryHelp
+      "diffrules" -> Just DiffTheoryDiffRules
+      "rules"     -> parseRules xs
+      "message"   -> parseMessage xs
+      "lemma"     -> parseLemma xs
+      "difflemma" -> parseDiffLemma xs
+      "cases"     -> parseCases xs
+      "proof"     -> parseProof xs
+      "method"    -> parseMethod xs
+      _           -> Nothing
+
+    
+    -- Don't ask me why, but replicating the function seems to help the compiler...
+    safeRead  = listToMaybe . map fst . reads
+    safeRead1 = listToMaybe . map fst . reads
+    safeRead2 = listToMaybe . map fst . reads
+    safeRead3 = listToMaybe . map fst . reads
+    safeRead4 = listToMaybe . map fst . reads
+    safeRead5 = listToMaybe . map fst . reads
+
+    parseRules :: [String] -> Maybe DiffTheoryPath
+    parseRules (y:_) = do
+      s <- case y of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      return (DiffTheoryRules s)
+    parseRules _         = Nothing
+    
+    parseMessage :: [String] -> Maybe DiffTheoryPath
+    parseMessage (y:_) = do
+      s <- case y of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      return (DiffTheoryMessage s)
+    parseMessage _         = Nothing
+    
+    parseLemma :: [String] -> Maybe DiffTheoryPath
+    parseLemma (y:ys:_) = do
+      s <- case y of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      n <- safeRead ys
+      return (DiffTheoryLemma s n)
+    parseLemma _         = Nothing
+
+    parseDiffLemma :: [String] -> Maybe DiffTheoryPath
+    parseDiffLemma ys = DiffTheoryDiffLemma <$> listToMaybe ys
+
+    parseProof :: [String] -> Maybe DiffTheoryPath
+    parseProof (y:z:zs:_) = do
+      s <- case y of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      n <- safeRead1 z
+      p <- safeRead2 zs
+      return (DiffTheoryProof s n p)
+    parseProof _         = Nothing
+
+    parseMethod (y:z:zs) = safeRead5 z >>= Just . DiffTheoryMethod y zs
+    parseMethod _        = Nothing
+
+    parseCases :: [String] -> Maybe DiffTheoryPath
+    parseCases (x:kind:y:z:_) = do
+      s <- case x of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      k <- case kind of "typed"   -> return TypedCaseDist
+                        "untyped" -> return UntypedCaseDist
+                        _         -> Nothing
+      m <- safeRead3 y
+      n <- safeRead4 z
+      return (DiffTheoryCaseDist s k m n)
+    parseCases _       = Nothing
 
 type RenderUrl = Route (WebUI) -> T.Text
 
@@ -422,21 +520,36 @@ type RenderUrl = Route (WebUI) -> T.Text
 -- and the ones ending in DR are for the debug view.
 mkYesodData "WebUI" [parseRoutes|
 /                                          RootR                   GET POST
-/thy/#Int/overview/MP(TheoryPath)          OverviewR               GET
-/thy/#Int/source                           TheorySourceR           GET
-/thy/#Int/message                          TheoryMessageDeductionR GET
-/thy/#Int/main/MP(TheoryPath)              TheoryPathMR            GET
--- /thy/#Int/debug/MP(TheoryPath)             TheoryPathDR            GET
-/thy/#Int/graph/MP(TheoryPath)             TheoryGraphR            GET
-/thy/#Int/autoprove/#SolutionExtractor/#Int/MP(TheoryPath) AutoProverR             GET
-/thy/#Int/next/#String/MP(TheoryPath)      NextTheoryPathR         GET
-/thy/#Int/prev/#String/MP(TheoryPath)      PrevTheoryPathR         GET
--- /thy/#Int/save                             SaveTheoryR             GET
-/thy/#Int/download/#String                 DownloadTheoryR         GET
--- /thy/#Int/edit/source                      EditTheoryR             GET POST
--- /thy/#Int/edit/path/MP(TheoryPath)         EditPathR               GET POST
-/thy/#Int/del/path/MP(TheoryPath)          DeleteStepR             GET
-/thy/#Int/unload                           UnloadTheoryR           GET
+/thy/trace/#Int/overview/MP(TheoryPath)          OverviewR               GET
+/thy/trace/#Int/source                           TheorySourceR           GET
+/thy/trace/#Int/message                          TheoryMessageDeductionR GET
+/thy/trace/#Int/main/MP(TheoryPath)              TheoryPathMR            GET
+-- /thy/trace/#Int/debug/MP(TheoryPath)             TheoryPathDR            GET
+/thy/trace/#Int/graph/MP(TheoryPath)             TheoryGraphR            GET
+/thy/trace/#Int/autoprove/#SolutionExtractor/#Int/MP(TheoryPath) AutoProverR             GET
+/thy/trace/#Int/next/#String/MP(TheoryPath)      NextTheoryPathR         GET
+/thy/trace/#Int/prev/#String/MP(TheoryPath)      PrevTheoryPathR         GET
+-- /thy/trace/#Int/save                             SaveTheoryR             GET
+/thy/trace/#Int/download/#String                 DownloadTheoryR         GET
+-- /thy/trace/#Int/edit/source                      EditTheoryR             GET POST
+-- /thy/trace/#Int/edit/path/MP(TheoryPath)         EditPathR               GET POST
+/thy/trace/#Int/del/path/MP(TheoryPath)          DeleteStepR             GET
+/thy/trace/#Int/unload                           UnloadTheoryR           GET
+/thy/equiv/#Int/overview/MP(DiffTheoryPath)          OverviewDiffR               GET
+/thy/equiv/#Int/source                           TheorySourceDiffR           GET
+/thy/equiv/#Int/message                          TheoryMessageDeductionDiffR GET
+/thy/equiv/#Int/main/MP(DiffTheoryPath)              TheoryPathDiffMR            GET
+-- /thy/equiv/#Int/debug/MP(DiffTheoryPath)             TheoryPathDiffDR            GET
+/thy/equiv/#Int/graph/MP(DiffTheoryPath)             TheoryGraphDiffR            GET
+/thy/equiv/#Int/autoprove/#SolutionExtractor/#Int/MP(DiffTheoryPath) AutoProverDiffR             GET
+/thy/equiv/#Int/next/#String/MP(DiffTheoryPath)      NextTheoryPathDiffR         GET
+/thy/equiv/#Int/prev/#String/MP(DiffTheoryPath)      PrevTheoryPathDiffR         GET
+-- /thy/equiv/#Int/save                             SaveTheoryR             GET
+/thy/equiv/#Int/download/#String                 DownloadTheoryDiffR         GET
+-- /thy/equiv/#Int/edit/source                      EditTheoryR             GET POST
+-- /thy/equiv/#Int/edit/path/MP(DiffTheoryPath)         EditPathDiffR               GET POST
+/thy/equiv/#Int/del/path/MP(DiffTheoryPath)          DeleteStepDiffR             GET
+/thy/equiv/#Int/unload                           UnloadTheoryDiffR           GET
 /kill                                      KillThreadR             GET
 -- /threads                                   ThreadsR                GET
 /robots.txt                                RobotsR                 GET
@@ -459,6 +572,11 @@ instance PathPiece SolutionExtractor where
 instance PathMultiPiece TheoryPath where
   toPathMultiPiece   = map T.pack . renderTheoryPath
   fromPathMultiPiece = parseTheoryPath . map T.unpack
+
+-- | MultiPiece instance for DiffTheoryPath.
+instance PathMultiPiece DiffTheoryPath where
+  toPathMultiPiece   = map T.pack . renderDiffTheoryPath
+  fromPathMultiPiece = parseDiffTheoryPath . map T.unpack
 
 -- Instance of the Yesod typeclass.
 instance Yesod WebUI where
