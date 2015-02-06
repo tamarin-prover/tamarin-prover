@@ -1006,23 +1006,23 @@ titleThyPath thy path = go path
         Just proof -> renderHtmlDoc $ prettyProofMethod $ psMethod $ root proof
 
 -- | Get title to display for a given proof path.
-titleDiffThyPath :: ClosedDiffTheory -> TheoryPath -> String
+titleDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> String
 titleDiffThyPath thy path = go path
   where
-    go TheoryHelp                           = "Theory: " ++ get diffThyName thy
-    go TheoryRules                          = "Multiset rewriting rules and axioms"
-    go TheoryMessage                        = "Message theory"
-    go (TheoryCaseDist UntypedCaseDist _ _) = "Untyped case distinctions"
-    go (TheoryCaseDist TypedCaseDist _ _)   = "Typed case distinctions"
-    go (TheoryLemma l)                      = "Lemma: " ++ l
-    go (TheoryProof l [])                   = "Lemma: " ++ l
-    go (TheoryProof l p)
-      | null (last p)       = "Method: " ++ methodName l p
+    go DiffTheoryHelp                             = "Theory: " ++ get diffThyName thy
+    go DiffTheoryRules                            = "Multiset rewriting rules and axioms"
+    go DiffTheoryMessage                          = "Message theory"
+    go (DiffTheoryCaseDist s UntypedCaseDist _ _) = "Untyped case distinctions"
+    go (DiffTheoryCaseDist s TypedCaseDist _ _)   = "Typed case distinctions"
+    go (DiffTheoryLemma s l)                      = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
+    go (DiffTheoryProof s l [])                   = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
+    go (DiffTheoryProof s l p)
+      | null (last p)       = "Method: " ++ methodName s l p
       | otherwise           = "Case: " ++ last p
-    go (TheoryMethod _ _ _) = "Method Path: This title should not be shown. Please file a bug"
+    go (DiffTheoryMethod _ _ _) = "Method Path: This title should not be shown. Please file a bug"
 
-    methodName l p =
-      case resolveProofPathDiff thy l p of
+    methodName s l p =
+      case resolveProofPathDiff thy s l p of
         Nothing -> "None"
         Just proof -> renderHtmlDoc $ prettyProofMethod $ psMethod $ root proof
 
@@ -1094,7 +1094,11 @@ nextDiffThyPath thy = go
     go path@(DiffTheoryMethod _ _ _)                = path
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
-    firstLemma = flip DiffTheoryProof [] . fst <$> listToMaybe lemmas
+    firstLemma = case lemmas LHS of
+                  []    -> case lemmas RHS of
+                             []   -> Nothing
+                             l:ls -> Just (DiffTheoryLemma RHS (fst l))
+                  l:ls  -> Just (DiffTheoryLemma LHS (fst l))
 
     getNextPath s lemmaName path = do
       lemma <- lookupLemmaDiff s lemmaName thy
@@ -1209,7 +1213,7 @@ nextSmartDiffThyPath thy = go
     go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS TypedCaseDist 0 0
     go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS TypedCaseDist 0 0
-    go (DiffTheoryCaseDist RHS TypedCaseDist   _ _) = fromMaybe DiffTheoryHelp firstLemma -- no side available at this point, do we want to default to left lemmas? or could there be a case where there is only right lemmas? possibly...
+    go (DiffTheoryCaseDist RHS TypedCaseDist   _ _) = fromMaybe DiffTheoryHelp firstLemma
     go (DiffTheoryLemma s lemma)                    = DiffTheoryProof s lemma []
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
@@ -1218,7 +1222,11 @@ nextSmartDiffThyPath thy = go
     go path@(DiffTheoryMethod _ _ _)                = path
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
-    firstLemma = flip DiffTheoryProof [] . fst <$> listToMaybe (lemmas)
+    firstLemma = case lemmas LHS of
+                  []   -> case lemmas RHS of
+                            []    -> Nothing
+                            l:ls -> Just (DiffTheoryLemma RHS (fst l))
+                  l:ls -> Just (DiffTheoryLemma LHS (fst l))
 
     getNextPath s lemmaName path = do
       lemma <- lookupLemmaDiff s lemmaName thy
