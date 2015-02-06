@@ -1095,8 +1095,16 @@ nextDiffThyPath thy = go
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
-      | otherwise                          = DiffTheoryProof s l p
+      | s == LHS = case lemmas RHS of
+                     []   -> firstDiffLemma
+                     l:ls -> (DiffTheoryLemma RHS (fst l))
+      | s == RHS = firstDiffLemma
+      -- | otherwise                          = DiffTheoryProof s l p
     go path@(DiffTheoryMethod _ _ _)                = path
+
+    firstDiffLemma = case getDiffLemmas thy of
+                      []   -> DiffTheoryHelp
+                      l:ls -> DiffTheoryDiffLemma (get lDiffName l)
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
     firstLemma = case lemmas LHS of
@@ -1229,8 +1237,16 @@ nextSmartDiffThyPath thy = go
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
+      | s == LHS = case lemmas RHS of
+                     []   -> firstDiffLemma
+                     l:ls -> (DiffTheoryLemma RHS (fst l))
+      | s == RHS = firstDiffLemma
       | otherwise                          = DiffTheoryProof s l p
     go path@(DiffTheoryMethod _ _ _)                = path
+
+    firstDiffLemma = case getDiffLemmas thy of
+                      []   -> DiffTheoryHelp
+                      l:ls -> DiffTheoryDiffLemma (get lDiffName l)
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
     firstLemma = case lemmas LHS of

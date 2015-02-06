@@ -24,6 +24,8 @@ module Theory (
   , TraceQuantifier(..)
   , Lemma
   , lName
+  , DiffLemma
+  , lDiffName
   , lTraceQuantifier
   , lFormula
   , lAttributes
