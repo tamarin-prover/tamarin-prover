@@ -795,8 +795,8 @@ diffTheory flags0 = do
                                              Just thy' -> return thy'
                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
                                      else case addLemmaDiff RHS lem thy of
-                                             Just thy' -> case addLemmaDiff LHS lem thy of
-                                                             Just thy' -> return thy'
+                                             Just thy' -> case addLemmaDiff LHS lem thy' of
+                                                             Just thy'' -> return thy''
                                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
 
@@ -809,7 +809,7 @@ diffTheory flags0 = do
                                           Just thy' -> return thy'
                                           Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
                                        else case addAxiomDiff RHS (toAxiom ax) thy of
-                                          Just thy' -> case addAxiomDiff LHS (toAxiom ax) thy of
-                                             Just thy' -> return thy'
+                                          Just thy' -> case addAxiomDiff LHS (toAxiom ax) thy' of
+                                             Just thy'' -> return thy''
                                              Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
                                           Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
