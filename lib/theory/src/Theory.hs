@@ -597,9 +597,10 @@ diffTheorySideAxioms s =
     foldDiffTheoryItem (const []) (const []) (const []) (const []) (\(x, y) -> if (x == s) then [y] else []) (const []) <=< L.get diffThyItems
 
 -- | All lemmas of a theory.
-diffTheoryLemmas :: DiffTheory sig c r r2 p p2 -> [(Side, Lemma p2)]
-diffTheoryLemmas =
-    foldDiffTheoryItem (const []) (const []) (const []) return (const []) (const []) <=< L.get diffThyItems
+-- REMOVE
+-- diffTheoryLemmas :: DiffTheory sig c r r2 p p2 -> [(Side, Lemma p2)]
+-- diffTheoryLemmas =
+--    foldDiffTheoryItem (const []) (const []) (const []) return (const []) (const []) <=< L.get diffThyItems
 
 -- | All lemmas of a theory.
 diffTheorySideLemmas :: Side -> DiffTheory sig c r r2 p p2 -> [Lemma p2]
@@ -730,9 +731,10 @@ lookupOpenProtoRule name =
     find ((name ==) . L.get rInfo) . theoryRules
 
 -- | Find the open protocol rule with the given name.
-lookupOpenDiffProtoRule :: Side -> ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
-lookupOpenDiffProtoRule s name =
-    find ((name ==) . L.get rInfo) . (diffTheorySideRules s)
+-- REMOVE
+-- lookupOpenDiffProtoRule :: Side -> ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
+-- lookupOpenDiffProtoRule s name =
+--     find ((name ==) . L.get rInfo) . (diffTheorySideRules s)
 
 -- | Find the open protocol rule with the given name.
 lookupOpenDiffProtoDiffRule :: ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
@@ -816,8 +818,9 @@ getDiffLemmas :: ClosedDiffTheory -> [DiffLemma IncrementalProof]
 getDiffLemmas = diffTheoryDiffLemmas
 
 -- | All side lemmas.
-getEitherLemmas :: ClosedDiffTheory -> [(Side, Lemma IncrementalProof)]
-getEitherLemmas = diffTheoryLemmas
+-- REMOVE
+-- getEitherLemmas :: ClosedDiffTheory -> [(Side, Lemma IncrementalProof)]
+-- getEitherLemmas = diffTheoryLemmas
 
 -- | The variants of the intruder rules.
 getIntrVariants :: ClosedTheory -> [IntrRuleAC]
@@ -986,9 +989,9 @@ closeDiffTheoryWithMaude sig thy0 = do
               DiffTextItem
             
     -- extract typing axioms and lemmas
-    axioms  = do EitherAxiomItem (s, ax) <- items
+    axioms  = do EitherAxiomItem (_, ax) <- items
                  return $ formulaToGuarded_ $ L.get axFormula ax
-    typAsms = do EitherLemmaItem (s, lem) <- items
+    typAsms = do EitherLemmaItem (_, lem) <- items
                  guard (isTypingLemma lem)
                  return $ formulaToGuarded_ $ L.get lFormula lem
 
@@ -1005,7 +1008,7 @@ closeDiffTheoryWithMaude sig thy0 = do
         (liftToItem $ getDisj . L.get (pracVariants . rInfo . cprRuleAC))
         addBreakers
       where
-        liftToItem f (EitherRuleItem (s, ru)) = (f ru)
+        liftToItem f (EitherRuleItem (_, ru)) = (f ru)
         liftToItem _ _                   = []
 
         addBreakers bs (EitherRuleItem (s, ru)) =
@@ -1175,7 +1178,7 @@ proveDiffTheory :: (Lemma IncrementalProof -> Bool)   -- ^ Lemma selector.
             -> Prover
             -> ClosedDiffTheory
             -> ClosedDiffTheory
-proveDiffTheory selector s prover thy =
+proveDiffTheory selector _ prover thy =
   -- FIXME!
     modify diffThyItems ((`MS.evalState` []) . mapM prove) thy
   where
@@ -1225,16 +1228,16 @@ mkSystemDiff s ctxt axioms previousItems =
     -- they do not change the considered set of traces. This is the key
     -- difference between lemmas and axioms.
     addLemmas
-  . formulaToSystem (map (formulaToGuarded_ . L.get axFormula) (axioms' s))
+  . formulaToSystem (map (formulaToGuarded_ . L.get axFormula) axioms')
                     (L.get pcCaseDistKind ctxt)
                     (L.get pcTraceQuantifier ctxt)
   where
-    axioms' s = foldr (\(s', a) l -> if s == s' then l ++ [a] else l) [] axioms
+    axioms' = foldr (\(s', a) l -> if s == s' then l ++ [a] else l) [] axioms
     addLemmas sys =
         insertLemmas (gatherReusableLemmas $ L.get sCaseDistKind sys) sys
 
     gatherReusableLemmas kind = do
-        EitherLemmaItem (s, lem) <- previousItems
+        EitherLemmaItem (_, lem) <- previousItems
         guard $    lemmaCaseDistKind lem <= kind
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
@@ -1283,10 +1286,10 @@ modifyLemmaProof prover name thy =
 -- | Modify the proof at the given lemma ref, if there is one. Fails if the
 -- path is not present or if the prover fails.
 modifyLemmaProofDiff :: Side -> Prover -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
-modifyLemmaProofDiff s prover name thy =
+modifyLemmaProofDiff _ prover name thy =
     modA diffThyItems changeItems thy
   where
-    findLemma (EitherLemmaItem (s, lem)) = name == L.get lName lem
+    findLemma (EitherLemmaItem (_, lem)) = name == L.get lName lem
     findLemma _                          = False
 
     change preItems (EitherLemmaItem (s, lem)) = do
@@ -1356,6 +1359,10 @@ prettyLemmaName l = case L.get lAttributes l of
     prettyLemmaAttribute TypingLemma    = text "typing"
     prettyLemmaAttribute ReuseLemma     = text "reuse"
     prettyLemmaAttribute InvariantLemma = text "use_induction"
+    prettyLemmaAttribute LHSLemma       = text "left"
+    prettyLemmaAttribute RHSLemma       = text "right"
+    prettyLemmaAttribute BothLemma      = text "both"
+
 
 -- | Pretty print the diff lemma name
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
@@ -1373,7 +1380,7 @@ prettyAxiom ax =
 
 -- | Pretty print an either axiom.
 prettyEitherAxiom :: HighlightDocument d => (Side, Axiom) -> d
-prettyEitherAxiom (s, ax) =
+prettyEitherAxiom (_, ax) =
     kwAxiom <-> text (L.get axName ax) <> colon $-$
     (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get axFormula ax) $-$
     (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
@@ -1408,7 +1415,7 @@ prettyLemma ppPrf lem =
 
 -- | Pretty print an Either lemma.
 prettyEitherLemma :: HighlightDocument d => (p -> d) -> (Side, Lemma p) -> d
-prettyEitherLemma ppPrf (s, lem) =
+prettyEitherLemma ppPrf (_, lem) =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
@@ -1461,7 +1468,7 @@ prettyDiffRule = prettyProtoRuleE
 
 -- | Pretty print an open rule together with its assertion soundness proof.
 prettyEitherRule :: HighlightDocument d => (Side, OpenProtoRule) -> d
-prettyEitherRule (s, p) = prettyProtoRuleE p
+prettyEitherRule (_, p) = prettyProtoRuleE p
 
 prettyIncrementalProof :: HighlightDocument d => IncrementalProof -> d
 prettyIncrementalProof = prettyProofWith ppStep (const id)
@@ -1486,7 +1493,7 @@ prettyClosedProtoRule cru =
 
 -- | Pretty print an closed rule.
 prettyClosedEitherRule :: HighlightDocument d => (Side, ClosedProtoRule) -> d
-prettyClosedEitherRule (s, cru) =
+prettyClosedEitherRule (_, cru) =
     (prettyProtoRuleE ruE) $--$
     (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
   where
