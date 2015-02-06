@@ -53,6 +53,7 @@ module Theory (
   , theoryLemmas
   , theoryAxioms
   , diffTheoryAxioms
+  , diffTheorySideAxioms
   , addAxiom
   , addLemma
   , addAxiomDiff
@@ -67,6 +68,7 @@ module Theory (
   , addFormalComment
   , addFormalCommentDiff
   , cprRuleE
+  , filterSide
 
   -- ** Open theories
   , OpenTheory
@@ -518,6 +520,12 @@ type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
     
 -- Shared theory modification functions
 ---------------------------------------
+
+
+filterSide :: Side -> [(Side, a)] -> [a]
+filterSide s l = case l of
+                    x:xs -> if (fst x) == s then (snd x):(filterSide s xs) else (filterSide s xs)
+                    []   -> []
 
 -- | Fold a theory item.
 foldTheoryItem
