@@ -293,7 +293,7 @@ overviewTpl renderUrl info path = do
 -- | Framing/UI-layout template (based on JavaScript/JQuery)
 overviewDiffTpl :: RenderUrl
                 -> DiffTheoryInfo -- ^ Theory information
-                -> TheoryPath -- ^ Theory path to load into main
+                -> DiffTheoryPath -- ^ Theory path to load into main
                 -> IO Widget
 overviewDiffTpl renderUrl info path = do
   proofState <- proofStateDiffTpl renderUrl info
@@ -332,7 +332,7 @@ pathTpl renderUrl info path =
 -- | Theory path, displayed when loading main screen for first time.
 pathDiffTpl :: RenderUrl
             -> DiffTheoryInfo   -- ^ The theory
-            -> TheoryPath   -- ^ Path to display on load
+            -> DiffTheoryPath   -- ^ Path to display on load
             -> IO Widget
 pathDiffTpl renderUrl info path =
     return $ [whamlet|
