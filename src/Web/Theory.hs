@@ -895,24 +895,24 @@ imgDiffThyPath :: ImageFormat
            -> FilePath               -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())
            -> ClosedDiffTheory
-           -> TheoryPath
+           -> DiffTheoryPath
            -> IO FilePath
 imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
   where
-    go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j)
-    go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
-    go _                      = error "Unhandled theory path. This is a bug."
+    go (DiffTheoryCaseDist s k i j) = renderDotCode (casesDotCode s k i j)
+    go (DiffTheoryProof s l p)      = renderDotCode (proofPathDotCode s l p)
+    go _                            = error "Unhandled theory path. This is a bug."
 
     -- Get dot code for required cases
-    casesDotCode k i j = D.showDot $
+    casesDotCode s k i j = D.showDot $
         compact $ snd $ cases !! (i-1) !! (j-1)
       where
-        cases = map (getDisj . get cdCases) (getDiffCaseDistinction k thy)
+        cases = map (getDisj . get cdCases) (getDiffCaseDistinction s k thy)
 
     -- Get dot code for proof path in lemma
-    proofPathDotCode lemma proofPath =
+    proofPathDotCode s lemma proofPath =
       D.showDot $ fromMaybe (return ()) $ do
-        subProof <- resolveProofPathDiff thy lemma proofPath
+        subProof <- resolveProofPathDiff thy s lemma proofPath
         sequent <- psInfo $ root subProof
         return $ compact sequent
 
@@ -1020,12 +1020,13 @@ resolveProofPath thy lemmaName path = do
   get lProof lemma `atPath` path
 
 -- | Resolve a proof path.
-resolveProofPathDiff :: ClosedDiffTheory            -- ^ Theory to resolve in
+resolveProofPathDiff :: ClosedDiffTheory       -- ^ Theory to resolve in
+                    -> Side                    -- ^ Side of lemma
                     -> String                  -- ^ Name of lemma
                     -> ProofPath               -- ^ Path to resolve
                     -> Maybe IncrementalProof
-resolveProofPathDiff thy lemmaName path = do
-  lemma <- lookupLemmaDiff lemmaName thy
+resolveProofPathDiff thy s lemmaName path = do
+  lemma <- lookupLemmaDiff s lemmaName thy
   get lProof lemma `atPath` path
 
 ------------------------------------------------------------------------------
@@ -1249,25 +1250,25 @@ prevSmartThyPath thy = go
     getPrevLemma lemmaName = getPrevElement (== lemmaName) (map fst lemmas)
 
 -- Get 'prev' smart diff theory path.
-prevSmartDiffThyPath :: ClosedDiffTheory -> TheoryPath -> TheoryPath
+prevSmartDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 prevSmartDiffThyPath thy = go
   where
-    go TheoryHelp                           = TheoryHelp
-    go TheoryMessage                        = TheoryHelp
-    go TheoryRules                          = TheoryMessage
-    go (TheoryCaseDist UntypedCaseDist _ _) = TheoryRules
-    go (TheoryCaseDist TypedCaseDist   _ _) = TheoryCaseDist UntypedCaseDist 0 0
-    go (TheoryLemma l)
-      | Just prevLemma <- getPrevLemma l   = TheoryProof prevLemma (lastPath prevLemma)
-      | otherwise                          = TheoryCaseDist TypedCaseDist 0 0
-    go (TheoryProof l p)
-      | Just prevPath <- getPrevPath l p   = TheoryProof l prevPath
---      | Just firstPath <- getFirstPath l p = TheoryProof l firstPath
-      | Just prevLemma <- getPrevLemma l   = TheoryProof prevLemma (lastPath prevLemma)
-      | otherwise                          = TheoryCaseDist TypedCaseDist 0 0
-    go path@(TheoryMethod _ _ _)           = path
+    go DiffTheoryHelp                             = DiffTheoryHelp
+    go DiffTheoryMessage                          = DiffTheoryHelp
+    go DiffTheoryRules                            = DiffTheoryMessage
+    go (DiffTheoryCaseDist _ UntypedCaseDist _ _) = DiffTheoryRules
+    go (DiffTheoryCaseDist s TypedCaseDist   _ _) = DiffTheoryCaseDist s UntypedCaseDist 0 0
+    go (DiffTheoryLemma s l)
+      | Just prevLemma <- getPrevLemma s l        = DiffTheoryProof s prevLemma (lastPath s prevLemma)
+      | otherwise                                 = DiffTheoryCaseDist s TypedCaseDist 0 0
+    go (DiffTheoryProof s l p)
+      | Just prevPath <- getPrevPath s l p        = DiffTheoryProof s l prevPath
+--      | Just firstPath <- getFirstPath l p = DiffTheoryProof l firstPath
+      | Just prevLemma <- getPrevLemma s l        = DiffTheoryProof s prevLemma (lastPath s prevLemma)
+      | otherwise                                 = DiffTheoryCaseDist s TypedCaseDist 0 0
+    go path@(DiffTheoryMethod _ _ _)              = path
 
-    lemmas = map (\l -> (get lName l, l)) $ getDiffLemmas thy
+    lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
 
     {-
     getFirstPath lemmaName current = do
@@ -1278,17 +1279,17 @@ prevSmartDiffThyPath thy = go
         else Just $ head paths
     -}
 
-    getPrevPath lemmaName path = do
-      lemma <- lookupLemmaDiff lemmaName thy
+    getPrevPath s lemmaName path = do
+      lemma <- lookupLemmaDiff s lemmaName thy
       let paths = getProofPaths $ get lProof lemma
       case filter (isInterestingMethod . snd) . takeWhile ((/= path) . fst) $ paths of
         []        -> Nothing
         prevSteps -> Just . fst . last $ prevSteps
 
-    lastPath lemmaName = last $ map fst $ getProofPaths $
-      get lProof $ fromJust $ lookupLemmaDiff lemmaName thy
+    lastPath s lemmaName = last $ map fst $ getProofPaths $
+      get lProof $ fromJust $ lookupLemmaDiff s lemmaName thy
 
-    getPrevLemma lemmaName = getPrevElement (== lemmaName) (map fst lemmas)
+    getPrevLemma s lemmaName = getPrevElement (== lemmaName) (map fst (lemmas s))
 
 -- | Extract proof paths out of a proof.
 getProofPaths :: LTree CaseName (ProofStep a) -> [([String], ProofMethod)]

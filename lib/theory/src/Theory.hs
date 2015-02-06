@@ -48,6 +48,7 @@ module Theory (
   , diffThyCacheLeft
   , diffThyCacheRight
   , diffThyItems
+  , diffTheorySideLemmas
   , theoryRules
   , theoryLemmas
   , theoryAxioms
@@ -432,7 +433,7 @@ lemmaCaseDistKind lem
 type FormalComment = (String, String)
 
 -- | In the diff type, we have either the Left Hand Side or the Right Hand Side
-data Side = LHS | RHS deriving( Show, Eq, Ord)
+data Side = LHS | RHS deriving(Show, Eq, Ord, Read)
 
 -- | A theory item built over the given rule type.
 data TheoryItem r p =

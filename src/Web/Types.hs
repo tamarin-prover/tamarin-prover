@@ -33,6 +33,7 @@ module Web.Types
   , getEitherTheoryOrigin
   , getEitherTheoryIndex
   , TheoryPath(..)
+  , DiffTheoryPath(..)
   , TheoryOrigin(..)
   , JsonResponse(..)
   , TheoryIdx
@@ -315,6 +316,18 @@ data TheoryPath
   | TheoryMethod String ProofPath Int   -- ^ Apply the proof method to proof path
   | TheoryRules                         -- ^ Theory rules
   | TheoryMessage                       -- ^ Theory message deduction
+  deriving (Eq, Show, Read)
+
+-- | Simple data type for specifying a path to a specific
+-- item within a theory.
+data DiffTheoryPath
+  = DiffTheoryHelp                               -- ^ The help view (help and info about theory)
+  | DiffTheoryLemma Side String                  -- ^ Theory lemma with given name
+  | DiffTheoryCaseDist Side CaseDistKind Int Int -- ^ Required cases (i'th source, j'th case)
+  | DiffTheoryProof Side String ProofPath        -- ^ Proof path within proof for given lemma
+  | DiffTheoryMethod String ProofPath Int        -- ^ Apply the proof method to proof path
+  | DiffTheoryRules                              -- ^ Theory rules
+  | DiffTheoryMessage                            -- ^ Theory message deduction
   deriving (Eq, Show, Read)
 
 -- | Render a theory path to a list of strings. Note that we prefix an
