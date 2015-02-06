@@ -1010,8 +1010,9 @@ titleDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> String
 titleDiffThyPath thy path = go path
   where
     go DiffTheoryHelp                             = "Theory: " ++ get diffThyName thy
-    go DiffTheoryRules                            = "Multiset rewriting rules and axioms"
-    go DiffTheoryMessage                          = "Message theory"
+    go (DiffTheoryRules s)                        = "Multiset rewriting rules axioms [" ++ show s ++ "]"
+    go DiffTheoryDiffRules                        = "Multiset rewriting rules and axioms - unprocessed"
+    go (DiffTheoryMessage s)                      = "Message theory [" ++ show s ++ "]"
     go (DiffTheoryCaseDist s UntypedCaseDist _ _) = "Untyped case distinctions"
     go (DiffTheoryCaseDist s TypedCaseDist _ _)   = "Typed case distinctions"
     go (DiffTheoryLemma s l)                      = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
@@ -1079,9 +1080,12 @@ nextThyPath thy = go
 nextDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 nextDiffThyPath thy = go
   where
-    go DiffTheoryHelp                               = DiffTheoryMessage
-    go DiffTheoryMessage                            = DiffTheoryRules
-    go DiffTheoryRules                              = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
+    go DiffTheoryHelp                               = DiffTheoryMessage LHS
+    go (DiffTheoryMessage LHS)                      = DiffTheoryMessage RHS
+    go (DiffTheoryMessage RHS)                      = DiffTheoryDiffRules
+    go DiffTheoryDiffRules                          = DiffTheoryRules LHS
+    go (DiffTheoryRules LHS)                        = DiffTheoryRules RHS
+    go (DiffTheoryRules RHS)                        = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS TypedCaseDist 0 0
     go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS TypedCaseDist 0 0
@@ -1142,9 +1146,12 @@ prevDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 prevDiffThyPath thy = go
   where
     go DiffTheoryHelp                               = DiffTheoryHelp
-    go DiffTheoryMessage                            = DiffTheoryHelp
-    go DiffTheoryRules                              = DiffTheoryMessage
-    go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryRules
+    go (DiffTheoryMessage LHS)                      = DiffTheoryHelp
+    go (DiffTheoryMessage RHS)                      = DiffTheoryMessage LHS
+    go DiffTheoryDiffRules                          = DiffTheoryMessage RHS
+    go (DiffTheoryRules LHS)                        = DiffTheoryDiffRules
+    go (DiffTheoryRules RHS)                        = DiffTheoryRules LHS
+    go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryRules RHS
     go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist RHS TypedCaseDist _ _)   = DiffTheoryCaseDist LHS TypedCaseDist   0 0
@@ -1207,9 +1214,12 @@ nextSmartThyPath thy = go
 nextSmartDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 nextSmartDiffThyPath thy = go
   where
-    go DiffTheoryHelp                               = DiffTheoryMessage
-    go DiffTheoryMessage                            = DiffTheoryRules
-    go DiffTheoryRules                              = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
+    go DiffTheoryHelp                               = DiffTheoryMessage LHS
+    go (DiffTheoryMessage LHS)                      = DiffTheoryMessage RHS
+    go (DiffTheoryMessage RHS)                      = DiffTheoryDiffRules
+    go DiffTheoryDiffRules                          = DiffTheoryRules LHS
+    go (DiffTheoryRules LHS)                        = DiffTheoryRules RHS
+    go (DiffTheoryRules RHS)                        = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS TypedCaseDist 0 0
     go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS TypedCaseDist 0 0
@@ -1284,9 +1294,12 @@ prevSmartDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 prevSmartDiffThyPath thy = go
   where
     go DiffTheoryHelp                               = DiffTheoryHelp
-    go DiffTheoryMessage                            = DiffTheoryHelp
-    go DiffTheoryRules                              = DiffTheoryMessage
-    go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryRules
+    go (DiffTheoryMessage LHS)                      = DiffTheoryHelp
+    go (DiffTheoryMessage RHS)                      = DiffTheoryMessage LHS
+    go DiffTheoryDiffRules                          = DiffTheoryMessage RHS
+    go (DiffTheoryRules LHS)                        = DiffTheoryDiffRules
+    go (DiffTheoryRules RHS)                        = DiffTheoryRules LHS
+    go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryRules RHS
     go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist LHS TypedCaseDist   _ _) = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist RHS TypedCaseDist   _ _) = DiffTheoryCaseDist LHS TypedCaseDist   0 0
