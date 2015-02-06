@@ -716,6 +716,8 @@ htmlDiffThyPath renderUrl info path =
 
     go (DiffTheoryMethod _ _ _)        = pp $ text "Cannot display theory method."
 
+    go (DiffTheoryDiffLemma _)        = pp $ text "Cannot display diff lemma - under construction."
+
     go (DiffTheoryDiffRules)           = pp $ rulesDiffSnippet thy
     go (DiffTheoryRules s)             = pp $ rulesDiffSnippetSide s thy
     go (DiffTheoryMessage s)           = pp $ messageDiffSnippet s thy
@@ -1017,6 +1019,7 @@ titleDiffThyPath thy path = go path
     go (DiffTheoryCaseDist s UntypedCaseDist _ _) = "Untyped case distinctions"
     go (DiffTheoryCaseDist s TypedCaseDist _ _)   = "Typed case distinctions"
     go (DiffTheoryLemma s l)                      = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
+    go (DiffTheoryDiffLemma l)                    = "DiffLemma: " ++ l
     go (DiffTheoryProof s l [])                   = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
     go (DiffTheoryProof s l p)
       | null (last p)       = "Method: " ++ methodName s l p
