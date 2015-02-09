@@ -128,9 +128,14 @@ theoryTpl :: (TheoryIdx, EitherTheoryInfo) -> Widget
 theoryTpl th = [whamlet|
     $newline never
     <tr>
-      <td>
-        <a href=@{OverviewR (fst th) TheoryHelp}>
-          \#{getEitherTheoryName $ snd th}
+      $if isTheoryInfo (snd th)
+        <td>
+          <a href=@{OverviewR (fst th) TheoryHelp}>
+            \#{getEitherTheoryName $ snd th}
+      $else
+        <td>
+          <a href=@{OverviewDiffR (fst th) DiffTheoryHelp}>
+            \#{getEitherTheoryName $ snd th}
       <td>#{formatTime defaultTimeLocale "%T" $ getEitherTheoryTime $ snd th}
       $if getEitherTheoryPrimary (snd th)
         <td>Original
@@ -218,11 +223,11 @@ headerDiffTpl info = [whamlet|
         \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
-      <a class=plain-link href=@{DownloadTheoryR idx filename}>Download</a>
+      <a class=plain-link href=@{DownloadTheoryDiffR idx filename}>Download</a>
       <ul #navigation>
         <li><a href="#">Actions</a>
           <ul>
-            <li><a target=_blank href=@{TheorySourceR idx}>Show source</a>
+            <li><a target=_blank href=@{TheorySourceDiffR idx}>Show source</a>
         <li><a href="#">Options</a>
           <ul>
             <li><a id=graph-toggle href="#">Compact graphs</a>

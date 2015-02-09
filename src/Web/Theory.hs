@@ -136,6 +136,11 @@ refDotPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> TheoryPath -> d
 refDotPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath)]
   where imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
 
+-- | Reference a dot graph for the given diff path.
+refDotDiffPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> DiffTheoryPath -> d
+refDotDiffPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath)]
+  where imgPath = T.unpack $ renderUrl (TheoryGraphDiffR tidx path)
+
 getDotPath :: String -> FilePath
 getDotPath code = imageDir </> addExtension (stringSHA256 code) "dot"
 
@@ -218,6 +223,36 @@ lemmaIndex renderUrl tidx l =
     annPrf = annotateLemmaProof l
     mkRoute proofPath = TheoryPathMR tidx (TheoryProof (get lName l) proofPath)
 
+-- | Render the indexing links for a single lemma
+lemmaIndexDiff :: HtmlDocument d
+           => RenderUrl                   -- ^ The url rendering function
+           -> TheoryIdx                   -- ^ The theory index
+           -> Side
+           -> Lemma IncrementalProof      -- ^ The lemma
+           -> d
+lemmaIndexDiff renderUrl tidx s l =
+    ( markStatus (psInfo $ root annPrf) $
+        (kwLemma <-> prettyLemmaName l <> colon)
+        -- FIXME: Reactivate theory editing.
+        -- <->
+        -- (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->
+        -- linkToPath renderUrl lemmaRoute ["delete-link"] deletePng)
+        $-$
+        nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
+                     , doubleQuotes $ prettyLNFormula $ get lFormula l
+                     ] )
+    ) $-$
+    proofIndex renderUrl mkRoute annPrf
+  where
+    -- editPng = png "/static/img/edit.png"
+    -- deletePng = png "/static/img/delete.png"
+    -- png path = closedTag "img" [("class","icon"),("src",path)]
+    -- lemmaRoute = TheoryPathMR tidx (TheoryLemma $ get lName l)
+
+    annPrf = annotateLemmaProof l
+    mkRoute proofPath = TheoryPathDiffMR tidx (DiffTheoryProof s (get lName l) proofPath)
+
+    
 -- | Render the theory index.
 theoryIndex :: HtmlDocument d => RenderUrl -> TheoryIdx -> ClosedTheory -> d
 theoryIndex renderUrl tidx thy = foldr1 ($-$)
@@ -265,44 +300,63 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
 diffTheoryIndex :: HtmlDocument d => RenderUrl -> TheoryIdx -> ClosedDiffTheory -> d
 diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     [ kwTheoryHeader
-        $ linkToPath renderUrl (TheoryPathMR tidx TheoryHelp) ["help"]
+        $ linkToPath renderUrl (TheoryPathDiffMR tidx DiffTheoryHelp) ["help"]
         $ text $ get diffThyName thy
     , text ""
-    , messageLink
+    , messageLink LHS
     , text ""
-    , ruleLink
+    , messageLink RHS
     , text ""
-    , reqCasesLink "Untyped case distinctions" UntypedCaseDist
+    , ruleLink LHS
     , text ""
-    , reqCasesLink "Typed case distinctions "  TypedCaseDist
+    , ruleLink RHS
     , text ""
-    , vcat $ intersperse (text "") lemmas
+    , reqCasesLink LHS "Untyped case distinctions LHS " UntypedCaseDist
+    , text ""
+    , reqCasesLink RHS "Untyped case distinctions RHS " UntypedCaseDist
+    , text ""
+    , reqCasesLink LHS "Typed case distinctions LHS "   TypedCaseDist
+    , text ""
+    , reqCasesLink RHS "Typed case distinctions RHS "   TypedCaseDist
+    , text ""
+    , bold "Lemmas LHS"
+    , text ""
+    , vcat $ intersperse (text "") (lemmas LHS)
+    , text ""
+    , bold "Lemmas RHS"
+    , text ""
+    , vcat $ intersperse (text "") (lemmas RHS)
+    , text ""
+    , bold "Diff-Lemmas"
+    , text ""
+    , vcat $ intersperse (text "") (diffLemmas)
     , text ""
     , kwEnd
     ]
   where
-    -- lemmaIndex' lemma = lemmaIndex renderUrl tidx lemma -- see FIXME 2 lines below
+    lemmaIndex' s lemma = lemmaIndexDiff renderUrl tidx s lemma
 
-    lemmas         = [] -- FIXME map lemmaIndex' (getDiffLemmas thy)
-    rules          = ClassifiedRules [] [] [] -- getDiffClassifiedRules thy
-    rulesInfo      = parens $ int $ length $ get crProtocol rules
-    casesInfo _ =
+    lemmas s       = map (lemmaIndex' s) (diffTheorySideLemmas s thy)
+    diffLemmas     = [] -- FIXME map lemmaIndex' (getDiffLemmas s thy)
+    rules s        = getDiffClassifiedRules s thy
+    rulesInfo s    = parens $ int $ length $ get crProtocol (rules s)
+    casesInfo s kind =
         parens $ nCases <> comma <-> text chainInfo
       where
-        cases   = [] -- FIXME getDiffCaseDistinction kind thy
+        cases   = getDiffCaseDistinction s kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
         chainInfo | nChains == 0 = "all chains solved"
                   | otherwise    = show nChains ++ " chains left"
 
-    bold                = withTag "strong" [] . text
-    overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
-    messageLink         = overview "Message theory" (text "") TheoryMessage
-    ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
-    ruleLinkMsg         = "Multiset rewriting rules" -- FIXME ++
-                          -- FIXME if null(diffTheoryAxioms thy) then "" else " and axioms"
+    bold                 = withTag "strong" [] . text
+    overview n info p    = linkToPath renderUrl (TheoryPathDiffMR tidx p) [] (bold n <-> info)
+    messageLink s        = overview ("Message theory " ++ show s) (text "") (DiffTheoryMessage s)
+    ruleLink s           = overview (ruleLinkMsg s) (rulesInfo s) (DiffTheoryRules s)
+    ruleLinkMsg s        = "Multiset rewriting rules " ++ show s ++
+                           if null(diffTheorySideAxioms s thy) then "" else " and axioms"
 
-    reqCasesLink name k = overview name (casesInfo k) (TheoryCaseDist k 0 0)
+    reqCasesLink s name k = overview name (casesInfo s k) (DiffTheoryCaseDist s k 0 0)
 
 
 {-
@@ -394,7 +448,7 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
 subProofDiffSnippet :: HtmlDocument d
                     => RenderUrl
                     -> TheoryIdx                 -- ^ The theory index.
-                    -> DiffTheoryInfo                -- ^ The theory info of this index.
+                    -> DiffTheoryInfo            -- ^ The diff theory info of this index.
                     -> String                    -- ^ The lemma.
                     -> ProofPath                 -- ^ The proof path.
                     -> ProofContext              -- ^ The proof context.
@@ -490,6 +544,33 @@ htmlCaseDistinction renderUrl tidx kind (j, th) =
       where
         name = intercalate "_" names
 
+-- | A Html document representing the requires case splitting theorem.
+htmlCaseDistinctionDiff :: HtmlDocument d
+                    => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> (Int, CaseDistinction) -> d
+htmlCaseDistinctionDiff renderUrl tidx s kind (j, th) =
+    if null cases
+      then withTag "h2" [] ppHeader $-$ withTag "h3" [] (text "No cases.")
+      else vcat $ withTag "h2" [] ppHeader : cases
+  where
+    cases    = concatMap ppCase $ zip [1..] $ getDisj $ get cdCases th
+    wrapP    = withTag "p" [("class","monospace cases")]
+    nCases   = int $ length $ getDisj $ get cdCases th
+    ppPrem   = nest 2 $ doubleQuotes $ prettyGoal $ get cdGoal th
+    ppHeader = hsep
+      [ text "Sources of" <-> ppPrem
+      , parens $ nCases <-> text "cases"
+      ]
+    ppCase (i, (names, se)) =
+      [ withTag "h3" [] $ fsep [ text "Source", int i, text "of", nCases
+                               , text " / named ", doubleQuotes (text name) ]
+      , refDotDiffPath renderUrl tidx (DiffTheoryCaseDist s kind j i)
+      , withTag "p" [] $ ppPrem
+      , wrapP $ prettyNonGraphSystem se
+      ]
+      where
+        name = intercalate "_" names
+
+        
 -- | Build the Html document showing the source cases distinctions.
 reqCasesSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> CaseDistKind -> ClosedTheory -> d
 reqCasesSnippet renderUrl tidx kind thy = vcat $
@@ -498,7 +579,7 @@ reqCasesSnippet renderUrl tidx kind thy = vcat $
 -- | Build the Html document showing the source cases distinctions.
 reqCasesDiffSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> ClosedDiffTheory -> d
 reqCasesDiffSnippet renderUrl tidx s kind thy = vcat $
-    htmlCaseDistinction renderUrl tidx kind <$> zip [1..] (getDiffCaseDistinction s kind thy)
+    htmlCaseDistinctionDiff renderUrl tidx s kind <$> zip [1..] (getDiffCaseDistinction s kind thy)
 
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d

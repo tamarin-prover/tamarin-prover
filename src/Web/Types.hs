@@ -27,6 +27,8 @@ module Web.Types
   , TheoryInfo(..)
   , DiffTheoryInfo(..)
   , EitherTheoryInfo(..)
+  , isTheoryInfo
+  , isDiffTheoryInfo
   , getEitherTheoryName
   , getEitherTheoryTime
   , getEitherTheoryPrimary
@@ -231,6 +233,14 @@ data EitherTheoryInfo = Trace TheoryInfo | Diff DiffTheoryInfo -- deriving (Gene
 getEitherTheoryName :: EitherTheoryInfo -> String
 getEitherTheoryName (Trace i)  = get thyName (tiTheory i)
 getEitherTheoryName (Diff i) = get diffThyName (dtiTheory i)
+
+isTheoryInfo :: EitherTheoryInfo -> Bool
+isTheoryInfo (Trace _) = True
+isTheoryInfo (Diff  _) = False
+
+isDiffTheoryInfo :: EitherTheoryInfo -> Bool
+isDiffTheoryInfo (Trace _) = False
+isDiffTheoryInfo (Diff  _) = True
 
 getEitherTheoryTime :: EitherTheoryInfo -> ZonedTime
 getEitherTheoryTime (Trace i)  = (tiTime i)
