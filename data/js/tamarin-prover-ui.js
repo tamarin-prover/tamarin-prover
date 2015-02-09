@@ -15,7 +15,7 @@ var theory = {
      * @return The absolute path.
      */
     absolutePath: function(section, path) {
-        return "/thy/" + this.idx + "/" + section + "/" + path;
+        return "/thy/" + this.type + "/" + this.idx + "/" + section + "/" + path;
     },
 
     /**
@@ -168,7 +168,7 @@ var ui = {
 
         // set active link
         path = window.location.pathname.split("/");
-        path[3] = "main";
+        path[4] = "main";
         this.setActiveLink(path.join("/"));
         proofScript.focusActive();
 
@@ -427,7 +427,7 @@ var events = {
             if(section) {
               // replace section in path
               elementPath = $(this).attr("href").split("/");
-              elementPath[3] = section;
+              elementPath[4] = section;
               path = elementPath.join("/");
             }
 
@@ -742,7 +742,8 @@ $(document).ready(function() {
     if(main_display.length != 1) return;
 
     // Get theory index
-    theory.idx = location.pathname.split('/')[2];
+    theory.idx = location.pathname.split('/')[3];
+    theory.type = location.pathname.split('/')[2];
 
     // Set up the layout
     layout = $('body').layout({
