@@ -419,10 +419,10 @@ modifyTheory ti f fpath errResponse = do
                      (JsonAlert $ "Last request failed with exception: " `T.append` (T.pack (show e)))
 
 -- | Modify a theory, redirect if successful.
-modifyDiffTheory :: DiffTheoryInfo                                -- ^ Theory to modify
+modifyDiffTheory :: DiffTheoryInfo                                    -- ^ Theory to modify
                  -> (ClosedDiffTheory -> IO (Maybe ClosedDiffTheory)) -- ^ Function to apply
-                 -> (ClosedDiffTheory -> TheoryPath)              -- ^ Compute the new path
-                 -> JsonResponse                              -- ^ Response on failure
+                 -> (ClosedDiffTheory -> DiffTheoryPath)              -- ^ Compute the new path
+                 -> JsonResponse                                      -- ^ Response on failure
                  -> Handler Value
 modifyDiffTheory ti f fpath errResponse = do
     res <- evalInThread (liftIO $ f (dtiTheory ti))
@@ -431,7 +431,7 @@ modifyDiffTheory ti f fpath errResponse = do
       Right Nothing    -> return (responseToJson errResponse)
       Right (Just thy) -> do
         newThyIdx <- putDiffTheory (Just ti) Nothing thy
-        newUrl <- getUrlRender <*> pure (OverviewR newThyIdx (fpath thy))
+        newUrl <- getUrlRender <*> pure (OverviewDiffR newThyIdx (fpath thy))
         return . responseToJson $ JsonRedirect newUrl
   where
    excResponse e = responseToJson
@@ -491,21 +491,34 @@ postRootR = do
 
 -- | Show overview over theory (framed layout).
 getOverviewR :: TheoryIdx -> TheoryPath -> Handler Html
-getOverviewR idx path = withBothTheory idx ( \ti -> do
+getOverviewR idx path = withTheory idx ( \ti -> do
   renderF <- getUrlRender
   defaultLayout $ do
     overview <- liftIO $ overviewTpl renderF ti path
     setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
-    overview ) ( \ti -> do
+    overview ) 
+                        
+-- | Show overview over diff theory (framed layout).
+getOverviewDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
+getOverviewDiffR idx path = withDiffTheory idx ( \ti -> do
   renderF <- getUrlRender
   defaultLayout $ do
     overview <- liftIO $ overviewDiffTpl renderF ti path
-    setTitle (toHtml $ "Theory: " ++ get diffThyName (dtiTheory ti))
+    setTitle (toHtml $ "DiffTheory: " ++ get diffThyName (dtiTheory ti))
     overview )
 
 -- | Show source (pretty-printed open theory).
 getTheorySourceR :: TheoryIdx -> Handler RepPlain
 getTheorySourceR idx = withBothTheory idx ( \ti ->
+  return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
+  return $ RepPlain $ toContent $ prettyRenderDiff ti)
+  where
+    prettyRender = render . prettyClosedTheory . tiTheory
+    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory    
+
+-- | Show source (pretty-printed open diff theory).
+getTheorySourceDiffR :: TheoryIdx -> Handler RepPlain
+getTheorySourceDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
@@ -520,9 +533,25 @@ getTheoryVariantsR idx = withBothTheory idx ( \ti ->
   where prettyRender = render . prettyClosedTheory . tiTheory
         prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
+-- | Show variants (pretty-printed closed diff theory).
+getTheoryVariantsDiffR :: TheoryIdx -> Handler RepPlain
+getTheoryVariantsDiffR idx = withBothTheory idx ( \ti ->
+  return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
+  return $ RepPlain $ toContent $ prettyRenderDiff ti )
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionR :: TheoryIdx -> Handler RepPlain
 getTheoryMessageDeductionR idx = withBothTheory idx ( \ti ->
+  return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
+  return $ RepPlain $ toContent $ prettyRenderDiff ti )
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+
+-- | Show variants (pretty-printed closed theory).
+getTheoryMessageDeductionDiffR :: TheoryIdx -> Handler RepPlain
+getTheoryMessageDeductionDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
   where prettyRender = render . prettyClosedTheory . tiTheory
@@ -535,7 +564,7 @@ getTheoryPathMR :: TheoryIdx
                 -> Handler RepJson
 getTheoryPathMR idx path = do
     renderUrl <- getUrlRender
-    jsonValue <- withBothTheory idx (go renderUrl path) (goDiff renderUrl path)
+    jsonValue <- withTheory idx (go renderUrl path) 
     return $ RepJson $ toContent jsonValue
   where
     --
@@ -556,12 +585,21 @@ getTheoryPathMR idx path = do
       let html = htmlThyPath renderUrl ti path
       return $ responseToJson (JsonHtml title $ toContent html)
     
+-- | Show a given path within a diff theory (main view).
+getTheoryPathDiffMR :: TheoryIdx
+                    -> DiffTheoryPath
+                    -> Handler RepJson
+getTheoryPathDiffMR idx path = do
+    renderUrl <- getUrlRender
+    jsonValue <- withDiffTheory idx (goDiff renderUrl path)
+    return $ RepJson $ toContent jsonValue
+  where    
     --
     -- Handle method paths by trying to solve the given goal/method
     --
-    goDiff _ (TheoryMethod lemma proofPath i) ti = modifyDiffTheory ti
+    goDiff _ (DiffTheoryMethod lemma proofPath i) ti = modifyDiffTheory ti
         (\thy -> return $ applyMethodAtPathDiff thy lemma proofPath heuristic i)
-        (\thy -> nextSmartDiffThyPath thy (TheoryProof lemma proofPath))
+        (\thy -> nextSmartDiffThyPath thy (DiffTheoryProof lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
       where
         heuristic = apHeuristic (dtiAutoProver ti)
@@ -579,7 +617,7 @@ getTheoryPathMR idx path = do
 getProverR :: (T.Text, AutoProver -> Prover)
            -> TheoryIdx -> TheoryPath -> Handler RepJson
 getProverR (name, mkProver) idx path = do
-    jsonValue <- withBothTheory idx (go path) (goDiff path)
+    jsonValue <- withTheory idx (go path)
     return $ RepJson $ toContent jsonValue
   where
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
@@ -592,10 +630,17 @@ getProverR (name, mkProver) idx path = do
 
     go _ _ = return $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
-
-    goDiff (TheoryProof lemma proofPath) ti = modifyDiffTheory ti
+      
+-- | Run the some prover on a given proof path.
+getProverDiffR :: (T.Text, AutoProver -> Prover)
+               -> TheoryIdx -> DiffTheoryPath -> Handler RepJson
+getProverDiffR (name, mkProver) idx path = do
+    jsonValue <- withDiffTheory idx (goDiff path)
+    return $ RepJson $ toContent jsonValue
+  where
+    goDiff (DiffTheoryProof s lemma proofPath) ti = modifyDiffTheory ti
         (\thy ->
-            return $ applyProverAtPathDiff thy lemma proofPath autoProver)
+            return $ applyProverAtPathDiff thy s lemma proofPath autoProver)
         (\thy -> nextSmartDiffThyPath thy path)
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
@@ -611,6 +656,29 @@ getAutoProverR :: TheoryIdx
                -> TheoryPath -> Handler RepJson
 getAutoProverR idx extractor bound =
     getProverR (fullName, runAutoProver . adapt) idx
+  where
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+
+    withCommas = intersperse ", "
+    fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
+    qualifiers = extractorQualfier ++ boundQualifier
+
+    (actualBound, boundQualifier)
+        | bound > 0 = (Just bound, ["bound " <> T.pack (show bound)])
+        | otherwise = (Nothing,    []                               )
+
+    (proverName, extractorQualfier) = case extractor of
+        CutNothing -> ("characterization", ["dfs"])
+        CutDFS     -> ("the autoprover",   []     )
+        CutBFS     -> ("the autoprover",   ["bfs"])
+
+-- | Run an autoprover on a given proof path.
+getAutoProverDiffR :: TheoryIdx
+                   -> SolutionExtractor
+                   -> Int                             -- autoprover bound to use
+                   -> DiffTheoryPath -> Handler RepJson
+getAutoProverDiffR idx extractor bound =
+    getProverDiffR (fullName, runAutoProver . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
@@ -656,7 +724,7 @@ getTheoryPathDR idx path = withTheory idx $ \ti -> ajaxLayout $ do
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphR :: TheoryIdx -> TheoryPath -> Handler ()
-getTheoryGraphR idx path = withBothTheory idx ( \ti -> do
+getTheoryGraphR idx path = withTheory idx ( \ti -> do
       yesod <- getYesod
       compact <- isNothing <$> lookupGetParam "uncompact"
       compress <- isNothing <$> lookupGetParam "uncompress"
@@ -668,11 +736,20 @@ getTheoryGraphR idx path = withBothTheory idx ( \ti -> do
           (graphStyle compact compress)
           (tiTheory ti) path
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
-      ( \ti -> do
+  where
+    graphStyle d c = dotStyle d . compression c
+    dotStyle True = dotSystemCompact CompactBoringNodes
+    dotStyle False = dotSystemCompact FullBoringNodes
+    compression True = compressSystem
+    compression False = id
+
+-- | Get rendered graph for theory and given path.
+getTheoryGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
+getTheoryGraphDiffR idx path = withDiffTheory idx ( \ti -> do
       yesod <- getYesod
       compact <- isNothing <$> lookupGetParam "uncompact"
       compress <- isNothing <$> lookupGetParam "uncompress"
-      img <- liftIO $ traceExceptions "getTheoryGraphR" $
+      img <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
           (imageFormat yesod)
           (dotCmd yesod)
@@ -714,10 +791,25 @@ getNextTheoryPathR :: TheoryIdx         -- ^ Theory index
                    -> String            -- ^ Jumping mode (smart?)
                    -> TheoryPath        -- ^ Current path
                    -> Handler RepPlain
-getNextTheoryPathR idx md path = withBothTheory idx (\ti -> do
+getNextTheoryPathR idx md path = withTheory idx (\ti -> do
     url <- getUrlRender <*> pure (TheoryPathMR idx $ next md (tiTheory ti) path)
-    return . RepPlain $ toContent url) (\ti -> do
-    url <- getUrlRender <*> pure (TheoryPathMR idx $ nextDiff md (dtiTheory ti) path)
+    return . RepPlain $ toContent url)  
+  where
+    next "normal" = nextThyPath
+    next "smart"  = nextSmartThyPath
+    next _        = const id
+    nextDiff "normal" = nextDiffThyPath
+    nextDiff "smart"  = nextSmartDiffThyPath
+    nextDiff _        = const id
+
+-- | Get the 'next' theory path for a given path.
+-- This function is used for implementing keyboard shortcuts.
+getNextTheoryPathDiffR :: TheoryIdx         -- ^ Theory index
+                       -> String            -- ^ Jumping mode (smart?)
+                       -> DiffTheoryPath    -- ^ Current path
+                       -> Handler RepPlain
+getNextTheoryPathDiffR idx md path = withDiffTheory idx  (\ti -> do
+    url <- getUrlRender <*> pure (TheoryPathDiffMR idx $ nextDiff md (dtiTheory ti) path)
     return . RepPlain $ toContent url) 
   where
     next "normal" = nextThyPath
@@ -730,10 +822,22 @@ getNextTheoryPathR idx md path = withBothTheory idx (\ti -> do
 -- | Get the 'prev' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
 getPrevTheoryPathR :: TheoryIdx -> String -> TheoryPath -> Handler RepPlain
-getPrevTheoryPathR idx md path = withBothTheory idx (\ti -> do
+getPrevTheoryPathR idx md path = withTheory idx (\ti -> do
     url <- getUrlRender <*> pure (TheoryPathMR idx $ prev md (tiTheory ti) path)
-    return $ RepPlain $ toContent url) (\ti -> do
-    url <- getUrlRender <*> pure (TheoryPathMR idx $ prevDiff md (dtiTheory ti) path)
+    return $ RepPlain $ toContent url) 
+  where
+    prev "normal" = prevThyPath
+    prev "smart" = prevSmartThyPath
+    prev _ = const id
+    prevDiff "normal" = prevDiffThyPath
+    prevDiff "smart" = prevSmartDiffThyPath
+    prevDiff _ = const id
+
+-- | Get the 'prev' theory path for a given path.
+-- This function is used for implementing keyboard shortcuts.
+getPrevTheoryPathDiffR :: TheoryIdx -> String -> DiffTheoryPath -> Handler RepPlain
+getPrevTheoryPathDiffR idx md path = withDiffTheory idx  (\ti -> do
+    url <- getUrlRender <*> pure (TheoryPathDiffMR idx $ prevDiff md (dtiTheory ti) path)
     return $ RepPlain $ toContent url)
   where
     prev "normal" = prevThyPath
@@ -838,7 +942,7 @@ postEditPathR _ _ =
 -- | Delete a given proof step.
 getDeleteStepR :: TheoryIdx -> TheoryPath -> Handler RepJson
 getDeleteStepR idx path = do
-    jsonValue <- withBothTheory idx (go path) (goDiff path)
+    jsonValue <- withTheory idx (go path) 
     return $ RepJson $ toContent jsonValue
   where
     go (TheoryLemma lemma) ti = modifyTheory ti
@@ -855,14 +959,20 @@ getDeleteStepR idx path = do
     go _ _ = return . responseToJson $ JsonAlert
       "Can't delete the given theory path!"
 
-    goDiff (TheoryLemma lemma) ti = modifyDiffTheory ti
-      (return . removeLemmaDiff lemma)
+-- | Delete a given proof step.
+getDeleteStepDiffR :: TheoryIdx -> DiffTheoryPath -> Handler RepJson
+getDeleteStepDiffR idx path = do
+    jsonValue <- withDiffTheory idx (goDiff path)
+    return $ RepJson $ toContent jsonValue
+  where
+    goDiff (DiffTheoryLemma s lemma) ti = modifyDiffTheory ti
+      (return . removeLemmaDiff s lemma)
       (const path)
       (JsonAlert "Sorry, but removing the selected lemma failed!")
 
-    goDiff (TheoryProof lemma proofPath) ti = modifyDiffTheory ti
+    goDiff (DiffTheoryProof s lemma proofPath) ti = modifyDiffTheory ti
       (\thy -> return $
-          applyProverAtPathDiff thy lemma proofPath (sorryProver (Just "removed")))
+          applyProverAtPathDiff thy s lemma proofPath (sorryProver (Just "removed")))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")
 

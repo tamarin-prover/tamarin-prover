@@ -535,20 +535,20 @@ mkYesodData "WebUI" [parseRoutes|
 -- /thy/trace/#Int/edit/path/MP(TheoryPath)         EditPathR               GET POST
 /thy/trace/#Int/del/path/MP(TheoryPath)          DeleteStepR             GET
 /thy/trace/#Int/unload                           UnloadTheoryR           GET
-/thy/equiv/#Int/overview/MP(DiffTheoryPath)          OverviewDiffR               GET
+/thy/equiv/#Int/overview/MP(DiffTheoryPath)      OverviewDiffR               GET
 /thy/equiv/#Int/source                           TheorySourceDiffR           GET
 /thy/equiv/#Int/message                          TheoryMessageDeductionDiffR GET
-/thy/equiv/#Int/main/MP(DiffTheoryPath)              TheoryPathDiffMR            GET
+/thy/equiv/#Int/main/MP(DiffTheoryPath)          TheoryPathDiffMR            GET
 -- /thy/equiv/#Int/debug/MP(DiffTheoryPath)             TheoryPathDiffDR            GET
-/thy/equiv/#Int/graph/MP(DiffTheoryPath)             TheoryGraphDiffR            GET
+/thy/equiv/#Int/graph/MP(DiffTheoryPath)         TheoryGraphDiffR            GET
 /thy/equiv/#Int/autoprove/#SolutionExtractor/#Int/MP(DiffTheoryPath) AutoProverDiffR             GET
-/thy/equiv/#Int/next/#String/MP(DiffTheoryPath)      NextTheoryPathDiffR         GET
-/thy/equiv/#Int/prev/#String/MP(DiffTheoryPath)      PrevTheoryPathDiffR         GET
+/thy/equiv/#Int/next/#String/MP(DiffTheoryPath)  NextTheoryPathDiffR         GET
+/thy/equiv/#Int/prev/#String/MP(DiffTheoryPath)  PrevTheoryPathDiffR         GET
 -- /thy/equiv/#Int/save                             SaveTheoryR             GET
 /thy/equiv/#Int/download/#String                 DownloadTheoryDiffR         GET
 -- /thy/equiv/#Int/edit/source                      EditTheoryR             GET POST
 -- /thy/equiv/#Int/edit/path/MP(DiffTheoryPath)         EditPathDiffR               GET POST
-/thy/equiv/#Int/del/path/MP(DiffTheoryPath)          DeleteStepDiffR             GET
+/thy/equiv/#Int/del/path/MP(DiffTheoryPath)      DeleteStepDiffR             GET
 /thy/equiv/#Int/unload                           UnloadTheoryDiffR           GET
 /kill                                      KillThreadR             GET
 -- /threads                                   ThreadsR                GET
