@@ -15,26 +15,38 @@ Portability :  non-portable
 
 module Web.Handler
   ( getOverviewR
+  , getOverviewDiffR
   , getRootR
   , postRootR
   , getTheorySourceR
+  , getTheorySourceDiffR
   , getTheoryMessageDeductionR
+  , getTheoryMessageDeductionDiffR
   , getTheoryVariantsR
+  , getTheoryVariantsDiffR
   , getTheoryPathMR
+  , getTheoryPathDiffMR
   -- , getTheoryPathDR
   , getTheoryGraphR
+  , getTheoryGraphDiffR
   , getAutoProverR
+  , getAutoProverDiffR
   , getDeleteStepR
+  , getDeleteStepDiffR
   , getKillThreadR
   , getNextTheoryPathR
+  , getNextTheoryPathDiffR
   , getPrevTheoryPathR
+  , getPrevTheoryPathDiffR
   , getSaveTheoryR
   , getDownloadTheoryR
+  , getDownloadTheoryDiffR
   -- , getEditTheoryR
   -- , postEditTheoryR
   -- , getEditPathR
   -- , postEditPathR
   , getUnloadTheoryR
+  , getUnloadTheoryDiffR
   -- , getThreadsR
   )
 where
@@ -1025,11 +1037,19 @@ getDownloadTheoryR idx _ = do
     RepPlain source <- getTheorySourceR idx
     return (typeOctet, source)
 
+-- | Prompt downloading of theory.
+getDownloadTheoryDiffR :: TheoryIdx -> String -> Handler (ContentType, Content)
+getDownloadTheoryDiffR = getDownloadTheoryR
+
 -- | Unload a theory from the interactive server.
 getUnloadTheoryR :: TheoryIdx -> Handler RepPlain
 getUnloadTheoryR idx = do
     delTheory idx
     redirect RootR
+
+-- | Unload a theory from the interactive server.
+getUnloadTheoryDiffR :: TheoryIdx -> Handler RepPlain
+getUnloadTheoryDiffR = getUnloadTheoryR
 
 {-
 -- | Show a list of all currently running threads.
