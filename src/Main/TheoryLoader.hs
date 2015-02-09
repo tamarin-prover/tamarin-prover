@@ -226,7 +226,7 @@ closeDiffThy as thy0 = do
   let thy2 = wfCheck thy1
   -- close and prove
   cthy <- closeDiffTheory (maudePath as) thy2
-  return $ proveDiffTheory lemmaSelector prover $ partialEvaluation cthy
+  return $ proveDiffTheory lemmaSelector LHS prover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
