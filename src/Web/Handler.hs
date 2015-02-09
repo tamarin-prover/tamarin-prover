@@ -194,7 +194,7 @@ adjTheory idx f = do
               let newThy =  f thy
               storeTheory yesod (Trace newThy) idx
               return $ M.insert idx (Trace newThy) theories
-            Diff thy -> error "adjTheory: found DiffTheory"
+            Diff _ -> error "adjTheory: found DiffTheory"
         Nothing -> error "adjTheory: invalid theory index"
 
 -- | Modify a theory in the map of theories.
@@ -225,7 +225,7 @@ adjDiffTheory idx f = do
               let newThy =  f thy
               storeTheory yesod (Diff newThy) idx
               return $ M.insert idx (Diff newThy) theories
-            Trace thy -> error "adjTheory: found normal Theory"
+            Trace _ -> error "adjTheory: found normal Theory"
         Nothing -> error "adjTheory: invalid theory index"
 
         
@@ -334,8 +334,8 @@ withTheory idx handler = do
   maybeThy <- getTheory idx
   case maybeThy of
     Just eitherTi -> case eitherTi of
-                          Trace ti  -> handler ti
-                          Diff ti -> notFound
+                          Trace ti -> handler ti
+                          Diff _   -> notFound
     Nothing -> notFound
 
 -- | Evaluate a handler with a given theory specified by the index,
@@ -362,8 +362,8 @@ withDiffTheory idx handler = do
   maybeThy <- getTheory idx
   case maybeThy of
     Just eitherTi -> case eitherTi of
-                          Trace  ti -> notFound
-                          Diff ti -> handler ti
+                          Trace _  -> notFound
+                          Diff  ti -> handler ti
     Nothing -> notFound
 
 -- | Evaluate a handler with a given theory specified by the index,
@@ -798,10 +798,7 @@ getNextTheoryPathR idx md path = withTheory idx (\ti -> do
     next "normal" = nextThyPath
     next "smart"  = nextSmartThyPath
     next _        = const id
-    nextDiff "normal" = nextDiffThyPath
-    nextDiff "smart"  = nextSmartDiffThyPath
-    nextDiff _        = const id
-
+    
 -- | Get the 'next' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
 getNextTheoryPathDiffR :: TheoryIdx         -- ^ Theory index
@@ -812,9 +809,6 @@ getNextTheoryPathDiffR idx md path = withDiffTheory idx  (\ti -> do
     url <- getUrlRender <*> pure (TheoryPathDiffMR idx $ nextDiff md (dtiTheory ti) path)
     return . RepPlain $ toContent url) 
   where
-    next "normal" = nextThyPath
-    next "smart"  = nextSmartThyPath
-    next _        = const id
     nextDiff "normal" = nextDiffThyPath
     nextDiff "smart"  = nextSmartDiffThyPath
     nextDiff _        = const id
@@ -829,9 +823,6 @@ getPrevTheoryPathR idx md path = withTheory idx (\ti -> do
     prev "normal" = prevThyPath
     prev "smart" = prevSmartThyPath
     prev _ = const id
-    prevDiff "normal" = prevDiffThyPath
-    prevDiff "smart" = prevSmartDiffThyPath
-    prevDiff _ = const id
 
 -- | Get the 'prev' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
@@ -840,9 +831,6 @@ getPrevTheoryPathDiffR idx md path = withDiffTheory idx  (\ti -> do
     url <- getUrlRender <*> pure (TheoryPathDiffMR idx $ prevDiff md (dtiTheory ti) path)
     return $ RepPlain $ toContent url)
   where
-    prev "normal" = prevThyPath
-    prev "smart" = prevSmartThyPath
-    prev _ = const id
     prevDiff "normal" = prevDiffThyPath
     prevDiff "smart" = prevSmartDiffThyPath
     prevDiff _ = const id
