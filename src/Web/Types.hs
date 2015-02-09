@@ -437,15 +437,8 @@ parseDiffTheoryPath =
       "method"    -> parseMethod xs
       _           -> Nothing
 
-    
-    -- Don't ask me why, but replicating the function seems to help the compiler...
+    safeRead :: Read a => String -> Maybe a
     safeRead  = listToMaybe . map fst . reads
-    safeRead1 = listToMaybe . map fst . reads
-    safeRead2 = listToMaybe . map fst . reads
-    safeRead3 = listToMaybe . map fst . reads
-    safeRead4 = listToMaybe . map fst . reads
-    safeRead5 = listToMaybe . map fst . reads
-    safeRead6 = listToMaybe . map fst . reads
 
     parseRules :: [String] -> Maybe DiffTheoryPath
     parseRules (y:_) = do
@@ -480,8 +473,8 @@ parseDiffTheoryPath =
       s <- case y of "LHS" -> return LHS
                      "RHS" -> return RHS
                      _     -> Nothing
-      n <- safeRead1 z
-      p <- safeRead2 zs
+      n <- safeRead z
+      p <- safeRead zs
       return (DiffTheoryProof s n p)
     parseProof _         = Nothing
 
@@ -490,8 +483,8 @@ parseDiffTheoryPath =
       s <- case x of "LHS" -> return LHS    
                      "RHS" -> return RHS
                      _     -> Nothing
-      l <- safeRead3 y
-      i <- safeRead4 z
+      l <- safeRead y
+      i <- safeRead z
       return (DiffTheoryMethod s l zs i)
     parseMethod _        = Nothing
 --    parseMethod (y:z:zs) = safeRead5 z >>= Just . DiffTheoryMethod y zs
@@ -505,8 +498,8 @@ parseDiffTheoryPath =
       k <- case kind of "typed"   -> return TypedCaseDist
                         "untyped" -> return UntypedCaseDist
                         _         -> Nothing
-      m <- safeRead5 y
-      n <- safeRead6 z
+      m <- safeRead y
+      n <- safeRead z
       return (DiffTheoryCaseDist s k m n)
     parseCases _       = Nothing
 
