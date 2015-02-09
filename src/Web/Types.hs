@@ -490,8 +490,8 @@ parseDiffTheoryPath =
       s <- case x of "LHS" -> return LHS    
                      "RHS" -> return RHS
                      _     -> Nothing
-      l <- safeRead5 y
-      i <- safeRead6 z
+      l <- safeRead3 y
+      i <- safeRead4 z
       return (DiffTheoryMethod s l zs i)
     parseMethod _        = Nothing
 --    parseMethod (y:z:zs) = safeRead5 z >>= Just . DiffTheoryMethod y zs
@@ -505,8 +505,8 @@ parseDiffTheoryPath =
       k <- case kind of "typed"   -> return TypedCaseDist
                         "untyped" -> return UntypedCaseDist
                         _         -> Nothing
-      m <- safeRead3 y
-      n <- safeRead4 z
+      m <- safeRead5 y
+      n <- safeRead6 z
       return (DiffTheoryCaseDist s k m n)
     parseCases _       = Nothing
 
