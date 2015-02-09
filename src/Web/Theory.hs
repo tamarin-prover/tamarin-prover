@@ -714,7 +714,7 @@ htmlDiffThyPath renderUrl info path =
       [] -> toHtml "Trying to render document yielded empty string. This is a bug."
       cs -> preEscapedToMarkup cs
 
-    go (DiffTheoryMethod _ _ _)        = pp $ text "Cannot display theory method."
+    go (DiffTheoryMethod _ _ _ _)        = pp $ text "Cannot display theory method."
 
     go (DiffTheoryDiffLemma _)        = pp $ text "Cannot display diff lemma - under construction."
 
@@ -1024,7 +1024,7 @@ titleDiffThyPath thy path = go path
     go (DiffTheoryProof s l p)
       | null (last p)       = "Method: " ++ methodName s l p
       | otherwise           = "Case: " ++ last p
-    go (DiffTheoryMethod _ _ _) = "Method Path: This title should not be shown. Please file a bug"
+    go (DiffTheoryMethod _ _ _ _) = "Method Path: This title should not be shown. Please file a bug"
 
     methodName s l p =
       case resolveProofPathDiff thy s l p of
@@ -1104,7 +1104,7 @@ nextDiffThyPath thy = go
                      l':_ -> (DiffTheoryLemma RHS (fst l'))
       | s == RHS = firstDiffLemma
       | otherwise  = DiffTheoryProof s l p
-    go path@(DiffTheoryMethod _ _ _)                = path
+    go path@(DiffTheoryMethod _ _ _ _)                = path
 
     firstDiffLemma = case getDiffLemmas thy of
                       []  -> DiffTheoryHelp
@@ -1176,7 +1176,7 @@ prevDiffThyPath thy = go
       | Just prevPath <- getPrevPath s l p = DiffTheoryProof s l prevPath
       | Just prevLemma <- getPrevLemma s l = DiffTheoryProof s prevLemma (lastPath s prevLemma)
       | otherwise                          = DiffTheoryCaseDist RHS TypedCaseDist 0 0
-    go path@(DiffTheoryMethod _ _ _)         = path
+    go path@(DiffTheoryMethod _ _ _ _)         = path
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
 
@@ -1248,7 +1248,7 @@ nextSmartDiffThyPath thy = go
                      l':_ -> (DiffTheoryLemma RHS (fst l'))
       | s == RHS = firstDiffLemma
       | otherwise                          = DiffTheoryProof s l p
-    go path@(DiffTheoryMethod _ _ _)                = path
+    go path@(DiffTheoryMethod _ _ _ _)                = path
 
     firstDiffLemma = case getDiffLemmas thy of
                       []  -> DiffTheoryHelp
@@ -1335,7 +1335,7 @@ prevSmartDiffThyPath thy = go
 --      | Just firstPath <- getFirstPath l p = DiffTheoryProof l firstPath
       | Just prevLemma <- getPrevLemma s l        = DiffTheoryProof s prevLemma (lastPath s prevLemma)
       | otherwise                                 = DiffTheoryCaseDist RHS TypedCaseDist 0 0
-    go path@(DiffTheoryMethod _ _ _)              = path
+    go path@(DiffTheoryMethod _ _ _ _)              = path
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
 

@@ -597,9 +597,9 @@ getTheoryPathDiffMR idx path = do
     --
     -- Handle method paths by trying to solve the given goal/method
     --
-    goDiff _ (DiffTheoryMethod lemma proofPath i) ti = modifyDiffTheory ti
-        (\thy -> return $ applyMethodAtPathDiff thy lemma proofPath heuristic i)
-        (\thy -> nextSmartDiffThyPath thy (DiffTheoryProof lemma proofPath))
+    goDiff _ (DiffTheoryMethod s lemma proofPath i) ti = modifyDiffTheory ti
+        (\thy -> return $ applyMethodAtPathDiff thy s lemma proofPath heuristic i)
+        (\thy -> nextSmartDiffThyPath thy (DiffTheoryProof s lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
       where
         heuristic = apHeuristic (dtiAutoProver ti)

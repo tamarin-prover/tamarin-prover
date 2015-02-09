@@ -326,7 +326,7 @@ data DiffTheoryPath
   | DiffTheoryDiffLemma String                   -- ^ Theory DiffLemma with given name 
   | DiffTheoryCaseDist Side CaseDistKind Int Int -- ^ Required cases (i'th source, j'th case)
   | DiffTheoryProof Side String ProofPath        -- ^ Proof path within proof for given lemma
-  | DiffTheoryMethod String ProofPath Int        -- ^ Apply the proof method to proof path
+  | DiffTheoryMethod Side String ProofPath Int   -- ^ Apply the proof method to proof path
   | DiffTheoryRules Side                         -- ^ Theory rules per side
   | DiffTheoryDiffRules                          -- ^ Theory rules unprocessed
   | DiffTheoryMessage Side                       -- ^ Theory message deduction
@@ -361,7 +361,7 @@ renderDiffTheoryPath =
     go (DiffTheoryDiffLemma name) = ["difflemma", name]
     go (DiffTheoryCaseDist s k i j) = ["cases", show s, show k, show i, show j]
     go (DiffTheoryProof s lemma path) = "proof" : show s : lemma : path
-    go (DiffTheoryMethod lemma path idx) = "method" : lemma : show idx : path
+    go (DiffTheoryMethod s lemma path idx) = "method" : show s : lemma : show idx : path
     go (DiffTheoryRules s) = ["rules", show s]
     go (DiffTheoryDiffRules) = ["diffrules"]
     go (DiffTheoryMessage s) = ["message", show s]
@@ -445,6 +445,7 @@ parseDiffTheoryPath =
     safeRead3 = listToMaybe . map fst . reads
     safeRead4 = listToMaybe . map fst . reads
     safeRead5 = listToMaybe . map fst . reads
+    safeRead6 = listToMaybe . map fst . reads
 
     parseRules :: [String] -> Maybe DiffTheoryPath
     parseRules (y:_) = do
@@ -484,8 +485,17 @@ parseDiffTheoryPath =
       return (DiffTheoryProof s n p)
     parseProof _         = Nothing
 
-    parseMethod (y:z:zs) = safeRead5 z >>= Just . DiffTheoryMethod y zs
+    parseMethod :: [String] -> Maybe DiffTheoryPath
+    parseMethod (x:y:z:zs) = do
+      s <- case x of "LHS" -> return LHS    
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      l <- safeRead5 y
+      i <- safeRead6 z
+      return (DiffTheoryMethod s l zs i)
     parseMethod _        = Nothing
+--    parseMethod (y:z:zs) = safeRead5 z >>= Just . DiffTheoryMethod y zs
+--    parseMethod _        = Nothing
 
     parseCases :: [String] -> Maybe DiffTheoryPath
     parseCases (x:kind:y:z:_) = do
