@@ -551,7 +551,7 @@ mkYesodData "WebUI" [parseRoutes|
 /thy/equiv/#Int/main/MP(DiffTheoryPath)          TheoryPathDiffMR            GET
 -- /thy/equiv/#Int/debug/MP(DiffTheoryPath)             TheoryPathDiffDR            GET
 /thy/equiv/#Int/graph/MP(DiffTheoryPath)         TheoryGraphDiffR            GET
-/thy/equiv/#Int/autoprove/#SolutionExtractor/#Int/MP(DiffTheoryPath) AutoProverDiffR             GET
+/thy/equiv/#Int/autoprove/#SolutionExtractor/#Int/#Side/MP(DiffTheoryPath) AutoProverDiffR             GET
 /thy/equiv/#Int/next/#String/MP(DiffTheoryPath)  NextTheoryPathDiffR         GET
 /thy/equiv/#Int/prev/#String/MP(DiffTheoryPath)  PrevTheoryPathDiffR         GET
 -- /thy/equiv/#Int/save                             SaveTheoryR             GET
@@ -578,6 +578,15 @@ instance PathPiece SolutionExtractor where
   fromPathPiece "bfs"          = Just CutBFS
   fromPathPiece _              = Nothing
 
+instance PathPiece Side where
+  toPathPiece LHS = "LHS"
+  toPathPiece RHS = "RHS"
+
+  fromPathPiece "LHS" = Just LHS
+  fromPathPiece "RHS" = Just RHS
+  fromPathPiece _     = Nothing
+
+  
 -- | MultiPiece instance for TheoryPath.
 instance PathMultiPiece TheoryPath where
   toPathMultiPiece   = map T.pack . renderTheoryPath

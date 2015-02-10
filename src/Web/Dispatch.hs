@@ -99,6 +99,7 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
       f =<< toWaiApp WebUI
         { workDir            = thDir
         , cacheDir           = cacheDir_
+        , diffParseThy       = error "not in diff mode!"
         , parseThy           = liftIO . thParser
         , getStatic          = st
         , theoryVar          = thyVar
@@ -166,7 +167,8 @@ withWebUIDiff readyMsg cacheDir_ thDir loadState autosave thLoader thParser debu
       f =<< toWaiApp WebUI
         { workDir            = thDir
         , cacheDir           = cacheDir_
-        , diffParseThy           = liftIO . thParser
+        , parseThy           = error "in diff mode!"
+        , diffParseThy       = liftIO . thParser
         , getStatic          = st
         , theoryVar          = thyVar
         , threadVar          = thrVar

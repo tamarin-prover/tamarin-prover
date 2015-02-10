@@ -1298,22 +1298,26 @@ modifyLemmaProof prover name thy =
 -- | Modify the proof at the given lemma ref, if there is one. Fails if the
 -- path is not present or if the prover fails.
 modifyLemmaProofDiff :: Side -> Prover -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
-modifyLemmaProofDiff _ prover name thy =
-    modA diffThyItems changeItems thy
+modifyLemmaProofDiff s prover name thy =
+    modA diffThyItems (changeItems s) thy
   where
-    findLemma (EitherLemmaItem (_, lem)) = name == L.get lName lem
-    findLemma _                          = False
+    findLemma s'' (EitherLemmaItem (s''', lem)) = (name == L.get lName lem) && (s''' == s'')
+    findLemma _ _                            = False
 
-    change preItems (EitherLemmaItem (s, lem)) = do
-         let ctxt = getProofContextDiff s lem thy
-             sys  = mkSystemDiff s ctxt (diffTheoryAxioms thy) preItems $ L.get lFormula lem
-         lem' <- modA lProof (runProver prover ctxt 0 sys) lem
-         return $ EitherLemmaItem (s, lem')
-    change _ _ = error "LemmaProof: change: impossible"
+    change s'' preItems (EitherLemmaItem (s''', lem)) = if s''==s'''
+        then
+          do
+            let ctxt = getProofContextDiff s'' lem thy
+                sys  = mkSystemDiff s'' ctxt (diffTheoryAxioms thy) preItems $ L.get lFormula lem
+            lem' <- modA lProof (runProver prover ctxt 0 sys) lem
+            return $ EitherLemmaItem (s''', lem')
+        else
+          error "LemmaProof: change: impossible"
+    change _ _ _ = error "LemmaProof: change: impossible"
 
-    changeItems items = case break findLemma items of
+    changeItems s' items = case break (findLemma s') items of
         (pre, i:post) -> do
-             i' <- change pre i
+             i' <- change s' pre i
              return $ pre ++ i':post
         (_, []) -> Nothing
 

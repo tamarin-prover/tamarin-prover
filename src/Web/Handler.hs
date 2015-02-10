@@ -55,6 +55,7 @@ import           Theory                       (
     ClosedTheory,
     ClosedDiffTheory,
     EitherClosedTheory,
+    Side,
     thyName, diffThyName, removeLemma,
     removeLemmaDiff, 
     openTheory, sorryProver, runAutoProver,
@@ -602,7 +603,7 @@ getTheoryPathDiffMR :: TheoryIdx
                     -> DiffTheoryPath
                     -> Handler RepJson
 getTheoryPathDiffMR idx path = do
---     error "failed in handler"
+--     error ("failed in handler" ++ show path)
     renderUrl <- getUrlRender
     jsonValue <- withDiffTheory idx (goDiff renderUrl path)
     return $ RepJson $ toContent jsonValue
@@ -646,20 +647,25 @@ getProverR (name, mkProver) idx path = do
       
 -- | Run the some prover on a given proof path.
 getProverDiffR :: (T.Text, AutoProver -> Prover)
-               -> TheoryIdx -> DiffTheoryPath -> Handler RepJson
-getProverDiffR (name, mkProver) idx path = do
-    jsonValue <- withDiffTheory idx (goDiff path)
+               -> TheoryIdx -> Side -> DiffTheoryPath -> Handler RepJson
+getProverDiffR (name, mkProver) idx s path = do
+    jsonValue <- withDiffTheory idx (goDiff s path)
     return $ RepJson $ toContent jsonValue
   where
-    goDiff (DiffTheoryProof s lemma proofPath) ti = modifyDiffTheory ti
-        (\thy ->
-            return $ applyProverAtPathDiff thy s lemma proofPath autoProver)
-        (\thy -> nextSmartDiffThyPath thy path)
-        (JsonAlert $ "Sorry, but " <> name <> " failed!")
+    goDiff s'' (DiffTheoryProof s' lemma proofPath) ti = 
+        if s''==s'
+           then modifyDiffTheory ti
+              (\thy ->
+                  return $ applyProverAtPathDiff thy s' lemma proofPath autoProver)
+              (\thy -> nextSmartDiffThyPath thy path)
+              (JsonAlert $ "Sorry, but " <> name <> " failed!")
+           else
+              return $ responseToJson $ JsonAlert $
+                "Can't run " <> name <> " on the given theory path!"
       where
         autoProver = mkProver (dtiAutoProver ti)
 
-    goDiff _ _ = return $ responseToJson $ JsonAlert $
+    goDiff _ _ _ = return $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
 
 -- | Run an autoprover on a given proof path.
@@ -689,9 +695,9 @@ getAutoProverR idx extractor bound =
 getAutoProverDiffR :: TheoryIdx
                    -> SolutionExtractor
                    -> Int                             -- autoprover bound to use
-                   -> DiffTheoryPath -> Handler RepJson
-getAutoProverDiffR idx extractor bound =
-    getProverDiffR (fullName, runAutoProver . adapt) idx
+                   -> Side -> DiffTheoryPath -> Handler RepJson
+getAutoProverDiffR idx extractor bound s =
+    getProverDiffR (fullName, runAutoProver . adapt) idx s
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
