@@ -165,7 +165,7 @@ getLeftTerm :: Term a -> Term a
 getLeftTerm t = termViewToTerm $ viewTerm' DiffLeft t
 
 getRightTerm :: Term a -> Term a
-getRightTerm t = termViewToTerm $ viewTerm' DiffLeft t
+getRightTerm t = termViewToTerm $ viewTerm' DiffRight t
 
 ----------------------------------------------------------------------
 -- Pretty printing

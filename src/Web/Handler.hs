@@ -54,7 +54,7 @@ where
 import           Theory                       (
     ClosedTheory,
     ClosedDiffTheory,
-    EitherClosedTheory,
+--     EitherClosedTheory,
     Side,
     thyName, diffThyName, removeLemma,
     removeLemmaDiff, 
