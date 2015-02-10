@@ -427,7 +427,7 @@ var events = {
             if(section) {
               // replace section in path
               elementPath = $(this).attr("href").split("/");
-              elementPath[4] = section;
+              elementPath[3] = section;
               path = elementPath.join("/");
             }
 
