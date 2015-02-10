@@ -99,6 +99,7 @@ cabal-dev:
 cabal-clean:
 	cd lib/utils; cabal clean
 	cd lib/term; cabal clean
+	cd lib/theory; cabal clean
 	cabal clean
 
 
