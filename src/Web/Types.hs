@@ -339,7 +339,7 @@ data DiffTheoryPath
   | DiffTheoryMethod Side String ProofPath Int   -- ^ Apply the proof method to proof path
   | DiffTheoryRules Side                         -- ^ Theory rules per side
   | DiffTheoryDiffRules                          -- ^ Theory rules unprocessed
-  | DiffTheoryMessage Side                       -- ^ Theory message deduction
+  | DiffTheoryMessage Side                       -- ^ Theory message deduction per side
   deriving (Eq, Show, Read)
 
 -- | Render a theory path to a list of strings. Note that we prefix an
