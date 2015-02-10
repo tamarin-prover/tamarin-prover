@@ -602,6 +602,7 @@ getTheoryPathDiffMR :: TheoryIdx
                     -> DiffTheoryPath
                     -> Handler RepJson
 getTheoryPathDiffMR idx path = do
+--     error "failed in handler"
     renderUrl <- getUrlRender
     jsonValue <- withDiffTheory idx (goDiff renderUrl path)
     return $ RepJson $ toContent jsonValue

@@ -467,35 +467,32 @@ parseDiffTheoryPath =
     parseMessage _         = Nothing
     
     parseLemma :: [String] -> Maybe DiffTheoryPath
-    parseLemma (y:ys:_) = do
+    parseLemma (y:ys) = do
       s <- case y of "LHS" -> return LHS
                      "RHS" -> return RHS
                      _     -> Nothing
-      n <- safeRead ys
-      return (DiffTheoryLemma s n)
+      return (DiffTheoryLemma s (head ys))
     parseLemma _         = Nothing
 
     parseDiffLemma :: [String] -> Maybe DiffTheoryPath
     parseDiffLemma ys = DiffTheoryDiffLemma <$> listToMaybe ys
 
     parseProof :: [String] -> Maybe DiffTheoryPath
-    parseProof (y:z:zs:_) = do
+    parseProof (y:z:zs) = do
       s <- case y of "LHS" -> return LHS
                      "RHS" -> return RHS
                      _     -> Nothing
-      n <- safeRead z
-      p <- safeRead zs
-      return (DiffTheoryProof s n p)
+      return (DiffTheoryProof s z zs)
     parseProof _         = Nothing
 
     parseMethod :: [String] -> Maybe DiffTheoryPath
+--     parseMethod s = error ("failed with string " ++ (foldl (++) [] s))
     parseMethod (x:y:z:zs) = do
       s <- case x of "LHS" -> return LHS    
                      "RHS" -> return RHS
                      _     -> Nothing
-      l <- safeRead y
       i <- safeRead z
-      return (DiffTheoryMethod s l zs i)
+      return (DiffTheoryMethod s y zs i)
     parseMethod _        = Nothing
 --    parseMethod (y:z:zs) = safeRead5 z >>= Just . DiffTheoryMethod y zs
 --    parseMethod _        = Nothing

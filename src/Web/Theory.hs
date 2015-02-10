@@ -449,12 +449,13 @@ subProofDiffSnippet :: HtmlDocument d
                     => RenderUrl
                     -> TheoryIdx                 -- ^ The theory index.
                     -> DiffTheoryInfo            -- ^ The diff theory info of this index.
+                    -> Side                      -- ^ The side of the lemma.
                     -> String                    -- ^ The lemma.
                     -> ProofPath                 -- ^ The proof path.
                     -> ProofContext              -- ^ The proof context.
                     -> IncrementalProof          -- ^ The sub-proof.
                     -> d
-subProofDiffSnippet renderUrl tidx ti lemma proofPath ctxt prf =
+subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
     case psInfo $ root prf of
       Nothing -> text $ "no annotated constraint system / " ++ nCases ++ " sub-case(s)"
       Just se -> vcat $
@@ -463,7 +464,7 @@ subProofDiffSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         [ text ""
         , withTag "h3" [] (text "Constraint system")
         ] ++
-        [ refDotPath renderUrl tidx (TheoryProof lemma proofPath)
+        [ refDotDiffPath renderUrl tidx (DiffTheoryProof s lemma proofPath)
         | nonEmptyGraph se ]
         ++
         [ preformatted (Just "sequent") (prettyNonGraphSystem se)
@@ -487,13 +488,13 @@ subProofDiffSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
-            (AutoProverR tidx CutDFS bound (TheoryProof lemma proofPath))
+            (AutoProverDiffR tidx CutDFS bound (DiffTheoryProof s lemma proofPath))
             [classPrefix ++ "autoprove"]
             (keyword_ $ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
-              (AutoProverR tidx CutNothing bound (TheoryProof lemma proofPath))
+              (AutoProverDiffR tidx CutNothing bound (DiffTheoryProof s lemma proofPath))
               [classPrefix ++ "characterization"]
               (keyword_ "for all solutions")
       , nameSuffix
@@ -501,7 +502,7 @@ subProofDiffSnippet renderUrl tidx ti lemma proofPath ctxt prf =
 
     prettyPM (i, (m, (_cases, expl))) =
       linkToPath renderUrl
-        (TheoryPathMR tidx (TheoryMethod lemma proofPath i))
+        (TheoryPathDiffMR tidx (DiffTheoryMethod s lemma proofPath i))
         ["proof-method"] (prettyProofMethod m)
       <-> (if null expl then emptyDoc else lineComment_ expl)
 
@@ -807,7 +808,7 @@ htmlDiffThyPath renderUrl info path =
     go (DiffTheoryProof s l p)         = pp $
         fromMaybe (text "No such lemma or proof path.") $ do
            lemma <- lookupLemmaDiff s l thy
-           subProofDiffSnippet renderUrl tidx info l p (getProofContextDiff s lemma thy)
+           subProofDiffSnippet renderUrl tidx info s l p (getProofContextDiff s lemma thy)
              <$> resolveProofPathDiff thy s l p
 
     go (DiffTheoryLemma _ _)           = pp $ text "Implement lemma pretty printing!"
