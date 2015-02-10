@@ -1169,10 +1169,10 @@ nextThyPath thy = go
 nextDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 nextDiffThyPath thy = go
   where
-    go DiffTheoryHelp                               = DiffTheoryMessage LHS
+    go DiffTheoryHelp                               = DiffTheoryDiffRules
+    go DiffTheoryDiffRules                          = DiffTheoryMessage LHS
     go (DiffTheoryMessage LHS)                      = DiffTheoryMessage RHS
-    go (DiffTheoryMessage RHS)                      = DiffTheoryDiffRules
-    go DiffTheoryDiffRules                          = DiffTheoryRules LHS
+    go (DiffTheoryMessage RHS)                      = (DiffTheoryRules LHS)
     go (DiffTheoryRules LHS)                        = DiffTheoryRules RHS
     go (DiffTheoryRules RHS)                        = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
@@ -1186,7 +1186,7 @@ nextDiffThyPath thy = go
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
       | s == LHS = case lemmas RHS of
                      []  -> firstDiffLemma
-                     l':_ -> (DiffTheoryLemma RHS (fst l'))
+                     l':_ -> (DiffTheoryProof RHS (fst l') [])
       | s == RHS = firstDiffLemma
       | otherwise  = DiffTheoryProof s l p
     go path@(DiffTheoryMethod _ _ _ _)                = path
@@ -1199,8 +1199,8 @@ nextDiffThyPath thy = go
     firstLemma = case lemmas LHS of
                   []  -> case lemmas RHS of
                              []   -> Nothing
-                             l:_ -> Just (DiffTheoryLemma RHS (fst l))
-                  l:_ -> Just (DiffTheoryLemma LHS (fst l))
+                             l:_ -> Just (DiffTheoryProof RHS (fst l) [])
+                  l:_ -> Just (DiffTheoryProof LHS (fst l) [])
 
     getNextPath s lemmaName path = do
       lemma <- lookupLemmaDiff s lemmaName thy
@@ -1244,10 +1244,10 @@ prevDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 prevDiffThyPath thy = go
   where
     go DiffTheoryHelp                               = DiffTheoryHelp
+    go DiffTheoryDiffRules                          = DiffTheoryHelp
     go (DiffTheoryMessage LHS)                      = DiffTheoryHelp
     go (DiffTheoryMessage RHS)                      = DiffTheoryMessage LHS
-    go DiffTheoryDiffRules                          = DiffTheoryMessage RHS
-    go (DiffTheoryRules LHS)                        = DiffTheoryDiffRules
+    go (DiffTheoryRules LHS)                        = DiffTheoryMessage RHS
     go (DiffTheoryRules RHS)                        = DiffTheoryRules LHS
     go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryRules RHS
     go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
@@ -1260,6 +1260,7 @@ prevDiffThyPath thy = go
     go (DiffTheoryProof s l p)
       | Just prevPath <- getPrevPath s l p = DiffTheoryProof s l prevPath
       | Just prevLemma <- getPrevLemma s l = DiffTheoryProof s prevLemma (lastPath s prevLemma)
+      | s == RHS                           = lastLemmaLHS
       | otherwise                          = DiffTheoryCaseDist RHS TypedCaseDist 0 0
     go path@(DiffTheoryMethod _ _ _ _)         = path
 
@@ -1274,6 +1275,11 @@ prevDiffThyPath thy = go
       get lProof $ fromJust $ lookupLemmaDiff s lemmaName thy
 
     getPrevLemma s lemmaName = getPrevElement (== lemmaName) (map fst (lemmas s))
+
+    lastLemmaLHS = case lemmas LHS of
+                  [] -> DiffTheoryCaseDist RHS TypedCaseDist 0 0 
+                  l  -> DiffTheoryProof LHS (fst (last l)) (lastPath LHS (fst (last l)))
+
 
 -- | Interesting proof methods that are not skipped by next/prev-smart.
 isInterestingMethod :: ProofMethod -> Bool
@@ -1313,10 +1319,10 @@ nextSmartThyPath thy = go
 nextSmartDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 nextSmartDiffThyPath thy = go
   where
-    go DiffTheoryHelp                               = DiffTheoryMessage LHS
+    go DiffTheoryHelp                               = DiffTheoryDiffRules
+    go DiffTheoryDiffRules                          = DiffTheoryMessage LHS
     go (DiffTheoryMessage LHS)                      = DiffTheoryMessage RHS
-    go (DiffTheoryMessage RHS)                      = DiffTheoryDiffRules
-    go DiffTheoryDiffRules                          = DiffTheoryRules LHS
+    go (DiffTheoryMessage RHS)                      = DiffTheoryRules LHS
     go (DiffTheoryRules LHS)                        = DiffTheoryRules RHS
     go (DiffTheoryRules RHS)                        = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
     go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
@@ -1331,7 +1337,7 @@ nextSmartDiffThyPath thy = go
 --       | otherwise                          = error "blubb"
       | s == LHS = case lemmas RHS of
                      []   -> firstDiffLemma
-                     l':_ -> (DiffTheoryLemma RHS (fst l'))
+                     l':_ -> (DiffTheoryProof RHS (fst l') [])
       | s == RHS = firstDiffLemma
       | otherwise                          = DiffTheoryProof s l p
     go path@(DiffTheoryMethod _ _ _ _)                = path
@@ -1344,8 +1350,8 @@ nextSmartDiffThyPath thy = go
     firstLemma = case lemmas LHS of
                   []  -> case lemmas RHS of
                             []  -> Nothing
-                            l:_ -> Just (DiffTheoryLemma RHS (fst l))
-                  l:_ -> Just (DiffTheoryLemma LHS (fst l))
+                            l:_ -> Just (DiffTheoryProof RHS (fst l) [])
+                  l:_ -> Just (DiffTheoryProof LHS (fst l) [])
 
     getNextPath s lemmaName path = do
       lemma <- lookupLemmaDiff s lemmaName thy
@@ -1404,10 +1410,10 @@ prevSmartDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 prevSmartDiffThyPath thy = go
   where
     go DiffTheoryHelp                               = DiffTheoryHelp
-    go (DiffTheoryMessage LHS)                      = DiffTheoryHelp
+    go DiffTheoryDiffRules                          = DiffTheoryHelp
+    go (DiffTheoryMessage LHS)                      = DiffTheoryDiffRules
     go (DiffTheoryMessage RHS)                      = DiffTheoryMessage LHS
-    go DiffTheoryDiffRules                          = DiffTheoryMessage RHS
-    go (DiffTheoryRules LHS)                        = DiffTheoryDiffRules
+    go (DiffTheoryRules LHS)                        = DiffTheoryMessage RHS
     go (DiffTheoryRules RHS)                        = DiffTheoryRules LHS
     go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryRules RHS
     go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
@@ -1421,6 +1427,7 @@ prevSmartDiffThyPath thy = go
       | Just prevPath <- getPrevPath s l p        = DiffTheoryProof s l prevPath
 --      | Just firstPath <- getFirstPath l p = DiffTheoryProof l firstPath
       | Just prevLemma <- getPrevLemma s l        = DiffTheoryProof s prevLemma (lastPath s prevLemma)
+      | s == RHS                                  = lastLemmaLHS
       | otherwise                                 = DiffTheoryCaseDist RHS TypedCaseDist 0 0
     go path@(DiffTheoryMethod _ _ _ _)              = path
 
@@ -1446,6 +1453,11 @@ prevSmartDiffThyPath thy = go
       get lProof $ fromJust $ lookupLemmaDiff s lemmaName thy
 
     getPrevLemma s lemmaName = getPrevElement (== lemmaName) (map fst (lemmas s))
+
+    lastLemmaLHS = case lemmas LHS of
+      [] -> DiffTheoryCaseDist RHS TypedCaseDist 0 0 
+      l  -> DiffTheoryProof LHS (fst (last l)) (lastPath LHS (fst (last l)))
+
 
 -- | Extract proof paths out of a proof.
 getProofPaths :: LTree CaseName (ProofStep a) -> [([String], ProofMethod)]
