@@ -24,8 +24,7 @@ var theory = {
      * @return The theory path.
      */
     extractTheoryPath : function(urlPath) {
-	alert "hello";
-        return urlPath.split("/").splice(4).join("/");
+        return urlPath.split("/").splice(5).join("/");
     }
 }
 
