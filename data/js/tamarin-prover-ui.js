@@ -24,7 +24,7 @@ var theory = {
      * @return The theory path.
      */
     extractTheoryPath : function(urlPath) {
-        return urlPath.split("/").splice(4).join("/");
+        return urlPath.split("/").splice(5).join("/");
     }
 }
 
@@ -427,7 +427,7 @@ var events = {
             if(section) {
               // replace section in path
               elementPath = $(this).attr("href").split("/");
-              elementPath[4] = section;
+              elementPath[3] = section; // change the 3 to a 4 to drop the information about which internal theory number is worked on
               path = elementPath.join("/");
             }
 
