@@ -303,6 +303,8 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
         $ linkToPath renderUrl (TheoryPathDiffMR tidx DiffTheoryHelp) ["help"]
         $ text $ get diffThyName thy
     , text ""
+    , diffRules
+    , text ""
     , messageLink LHS
     , text ""
     , messageLink RHS
@@ -351,6 +353,7 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
 
     bold                 = withTag "strong" [] . text
     overview n info p    = linkToPath renderUrl (TheoryPathDiffMR tidx p) [] (bold n <-> info)
+    diffRules            = overview ("Diff Rules") (text "") (DiffTheoryDiffRules)
     messageLink s        = overview ("Message theory " ++ show s) (text "") (DiffTheoryMessage s)
     ruleLink s           = overview (ruleLinkMsg s) (rulesInfo s) (DiffTheoryRules s)
     ruleLinkMsg s        = "Multiset rewriting rules " ++ show s ++
