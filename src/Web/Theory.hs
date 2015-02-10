@@ -488,13 +488,13 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
-            (AutoProverDiffR tidx CutDFS bound (DiffTheoryProof s lemma proofPath))
+            (AutoProverDiffR tidx CutDFS bound s (DiffTheoryProof s lemma proofPath))
             [classPrefix ++ "autoprove"]
             (keyword_ $ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
-              (AutoProverDiffR tidx CutNothing bound (DiffTheoryProof s lemma proofPath))
+              (AutoProverDiffR tidx CutNothing bound s (DiffTheoryProof s lemma proofPath))
               [classPrefix ++ "characterization"]
               (keyword_ "for all solutions")
       , nameSuffix
@@ -514,7 +514,7 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
         , maybe (text "no proof state available")
-                (const $ refDotPath renderUrl tidx $ TheoryProof lemma (proofPath ++ [name]))
+                (const $ refDotDiffPath renderUrl tidx $ DiffTheoryProof s lemma (proofPath ++ [name]))
                 (psInfo $ root prf')
         ]
 
@@ -1325,6 +1325,7 @@ nextSmartDiffThyPath thy = go
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
+--       | otherwise                          = error "blubb"
       | s == LHS = case lemmas RHS of
                      []   -> firstDiffLemma
                      l':_ -> (DiffTheoryLemma RHS (fst l'))
@@ -1346,6 +1347,7 @@ nextSmartDiffThyPath thy = go
     getNextPath s lemmaName path = do
       lemma <- lookupLemmaDiff s lemmaName thy
       let paths = getProofPaths $ get lProof lemma
+--       error (show (get lProof lemma))
       case dropWhile ((/= path) . fst) paths of
         []        -> Nothing
         nextSteps -> listToMaybe . map fst . filter (isInterestingMethod . snd) $ tail nextSteps
