@@ -64,10 +64,10 @@ isRightAxiom :: ParseAxiom -> Bool
 isRightAxiom ax =
      (RHSAxiom `elem` pAxAttributes ax)
 
--- | True iff the axiom is a Both axiom.
-isBothAxiom :: ParseAxiom -> Bool
-isBothAxiom ax =
-     (BothAxiom `elem` pAxAttributes ax)
+-- -- | True iff the axiom is a Both axiom.
+-- isBothAxiom :: ParseAxiom -> Bool
+-- isBothAxiom ax =
+--      (BothAxiom `elem` pAxAttributes ax)
 
 -- | Converts ParseAxioms to Axioms
 toAxiom :: ParseAxiom -> Axiom

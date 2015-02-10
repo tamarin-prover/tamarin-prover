@@ -10,7 +10,7 @@
 -- Term Algebra and related notions.
 module Term.Term.Raw (
     -- * Terms
-      Term
+      Term(..)
     , TermView (..)
     , viewTerm
     , viewTerm'
@@ -87,15 +87,14 @@ viewTerm = viewTerm' DiffBoth -- should be DiffNone, but for test purposes do th
 {-# INLINE viewTerm #-}
 -- | Return the 'TermView' of the given term.
 viewTerm' :: DiffType -> Term a -> TermView a
-viewTerm' dt (LIT l) = Lit l
--- THESE LINES BELOW PROBABLY SHOULD BE UNCOMMENTED --- BUT THAT LEADS TO A NUMBER OF PROBLEMS, JUST RUN IT...
-viewTerm' dt (FAPP (NoEq diffSym) [t1,t2]) =   case dt of
-                                     DiffLeft  -> viewTerm' dt t1
-                                     DiffRight -> viewTerm' dt t2
-                                     DiffBoth  -> FApp (NoEq diffSym) [t1,t2]
-                                     DiffNone  -> error $ "viewTerm: illegal use of diff"
--- the above equation is at fault!!! how to fix it???
-viewTerm' dt (FAPP sym ts) = FApp sym ts
+viewTerm' _  (LIT l) = Lit l
+viewTerm' dt (FAPP (NoEq o) [t1,t2]) =   case dt of
+                                     DiffLeft  | o == diffSym -> viewTerm' dt t1
+                                     DiffRight | o == diffSym -> viewTerm' dt t2
+                                     DiffBoth  | o == diffSym -> FApp (NoEq o) [t1,t2]
+                                     DiffNone  | o == diffSym -> error $ "viewTerm: illegal use of diff"
+                                     _                        -> FApp (NoEq o) [t1,t2]
+viewTerm' _  (FAPP sym ts) = FApp sym ts
 
 -- | Return the term of the given TermView.
 termViewToTerm :: TermView a -> Term a
@@ -168,16 +167,16 @@ viewTerm2 = viewTerm2' DiffBoth -- should be DiffNone, but for test purposes do 
 
 -- | Returns the 'TermView2' of the given term.
 viewTerm2' :: Show a => DiffType -> Term a -> TermView2 a
-viewTerm2' dt (LIT l) = Lit2 l
-viewTerm2' dt (FAPP List ts) = FList ts
-viewTerm2' dt t@(FAPP (AC o) ts)
+viewTerm2' _  (LIT l) = Lit2 l
+viewTerm2' _  (FAPP List ts) = FList ts
+viewTerm2' _  t@(FAPP (AC o) ts)
   | length ts < 2 = error $ "viewTerm2: malformed term `"++show t++"'"
   | otherwise     = (acSymToConstr o) ts
   where
     acSymToConstr Mult  = FMult
     acSymToConstr Union = FUnion
-viewTerm2' dt (FAPP (C EMap) [ t1 ,t2 ]) = FEMap t1 t2
-viewTerm2' dt t@(FAPP (C _)  _)          = error $ "viewTerm2: malformed term `"++show t++"'"
+viewTerm2' _  (FAPP (C EMap) [ t1 ,t2 ]) = FEMap t1 t2
+viewTerm2' _  t@(FAPP (C _)  _)          = error $ "viewTerm2: malformed term `"++show t++"'"
 viewTerm2' dt t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == expSym    -> FExp   t1 t2  -- ensure here that FExp is always exp, never a user-defined symbol
     [ t1, t2 ] | o == pmultSym  -> FPMult t1 t2
