@@ -23,7 +23,7 @@ import           System.Timing                   (timed)
 import qualified Text.PrettyPrint.Class          as Pretty
 
 import           Theory
-import           Theory.Tools.Wellformedness     (checkWellformedness)
+import           Theory.Tools.Wellformedness     (checkWellformedness, checkWellformednessDiff)
 
 import           Main.Console
 import           Main.Environment
@@ -116,6 +116,10 @@ run thisMode as
       --     generateHtml inFile =<< loadClosedThy as inFile
       | argExists "parseOnly" as =
           out (const Pretty.emptyDoc) prettyOpenTheory   (loadOpenThy   as inFile)
+      | (argExists "parseOnly" as) && (argExists "diff" as) =
+          out (const Pretty.emptyDoc) prettyOpenDiffTheory   (loadOpenDiffThy   as inFile)
+      | argExists "diff" as =
+          out ppWfAndSummaryDiff prettyClosedDiffTheory (loadClosedDiffThy as inFile)
       | otherwise        =
           out ppWfAndSummary prettyClosedTheory (loadClosedThy as inFile)
       where
@@ -129,6 +133,15 @@ run thisMode as
                                         ++ " wellformedness check failed!"
                           , "         The analysis results might be wrong!" ]
             Pretty.$--$ prettyClosedSummary thy
+
+        ppWfAndSummaryDiff thy =
+            case checkWellformednessDiff (openDiffTheory thy) of
+                []   -> Pretty.emptyDoc
+                errs -> Pretty.vcat $ map Pretty.text $
+                          [ "WARNING: " ++ show (length errs)
+                                        ++ " wellformedness check failed!"
+                          , "         The analysis results might be wrong!" ]
+            Pretty.$--$ prettyClosedDiffSummary thy
 
         out :: (a -> Pretty.Doc) -> (a -> Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load

@@ -139,6 +139,7 @@ module Theory (
   , prettyOpenDiffTheory
 
   , prettyClosedSummary
+  , prettyClosedDiffSummary
 
   , prettyIntruderVariants
   , prettyTraceQuantifier
@@ -1382,7 +1383,7 @@ prettyLemmaName l = case L.get lAttributes l of
 
 -- | Pretty print the diff lemma name
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
-prettyDiffLemmaName l = text (L.get lDiffName l)
+prettyDiffLemmaName l = text ("Diff: " ++ (L.get lDiffName l))
 
     
 -- | Pretty print an axiom.
@@ -1396,8 +1397,8 @@ prettyAxiom ax =
 
 -- | Pretty print an either axiom.
 prettyEitherAxiom :: HighlightDocument d => (Side, Axiom) -> d
-prettyEitherAxiom (_, ax) =
-    kwAxiom <-> text (L.get axName ax) <> colon $-$
+prettyEitherAxiom (s, ax) =
+    text ((show s) ++ ": ") <-> kwAxiom <-> text (L.get axName ax) <> colon $-$
     (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get axFormula ax) $-$
     (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
@@ -1431,8 +1432,8 @@ prettyLemma ppPrf lem =
 
 -- | Pretty print an Either lemma.
 prettyEitherLemma :: HighlightDocument d => (p -> d) -> (Side, Lemma p) -> d
-prettyEitherLemma ppPrf (_, lem) =
-    kwLemma <-> prettyLemmaName lem <> colon $-$
+prettyEitherLemma ppPrf (s, lem) =
+    text ((show s) ++ ": ") <-> kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
           , doubleQuotes $ prettyLNFormula $ L.get lFormula lem
@@ -1509,7 +1510,8 @@ prettyClosedProtoRule cru =
 
 -- | Pretty print an closed rule.
 prettyClosedEitherRule :: HighlightDocument d => (Side, ClosedProtoRule) -> d
-prettyClosedEitherRule (_, cru) =
+prettyClosedEitherRule (s, cru) = 
+    text ((show s) ++ ": ") <>
     (prettyProtoRuleE ruE) $--$
     (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
   where
@@ -1597,6 +1599,36 @@ prettyClosedSummary thy =
 
     proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
 
+prettyClosedDiffSummary :: Document d => ClosedDiffTheory -> d
+prettyClosedDiffSummary thy =
+    vcat lemmaSummaries
+  where
+    lemmaSummaries = do
+        -- FIXME: TODO for DiffLemmaItem
+        EitherLemmaItem (s, lem)  <- L.get diffThyItems thy
+        -- Note that here we are relying on the invariant that all proof steps
+        -- with a 'Just' annotation follow from the application of
+        -- 'execProofMethod' to their parent and are valid in the sense that
+        -- the application of 'execProofMethod' to their method and constraint
+        -- system is guaranteed to succeed.
+        --
+        -- This is guaranteed initially by 'closeTheory' and is (must be)
+        -- maintained by the provers being applied to the theory using
+        -- 'modifyLemmaProof' or 'proveTheory'. Note that we could check the
+        -- proof right before computing its status. This is however quite
+        -- expensive, as it requires recomputing all intermediate constraint
+        -- systems.
+        --
+        -- TODO: The whole consruction seems a bit hacky. Think of a more
+        -- principled constrution with better correctness guarantees.
+        let (status, Sum siz) = foldProof proofStepSummary $ L.get lProof lem
+            quantifier = (toSystemTraceQuantifier $ L.get lTraceQuantifier lem)
+            analysisType = parens $ prettyTraceQuantifier $ L.get lTraceQuantifier lem
+        return $ text (show s) <-> text ": " <-> text (L.get lName lem) <-> analysisType <> colon <->
+                 text (showProofStatus quantifier status) <->
+                 parens (integer siz <-> text "steps")
+
+    proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
 
 -- | Pretty print a 'TraceQuantifier'.
 prettyTraceQuantifier :: Document d => TraceQuantifier -> d
