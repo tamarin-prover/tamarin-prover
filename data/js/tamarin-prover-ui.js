@@ -427,7 +427,7 @@ var events = {
             if(section) {
               // replace section in path
               elementPath = $(this).attr("href").split("/");
-              elementPath[3] = section; // change the 3 to a 4 to drop the information about which internal theory number is worked on
+              elementPath[4] = section;
               path = elementPath.join("/");
             }
 
