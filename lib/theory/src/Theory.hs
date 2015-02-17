@@ -971,8 +971,8 @@ closeDiffTheory maudePath thy0 = do
 closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTheory
 closeDiffTheoryWithMaude sig thy0 = do
   -- FIXME!
-      proveDiffTheory (const True) LHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
--- probably wrong!     proveDiffTheory (const True) RHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
+--       lth <- proveDiffTheory (const True) LHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
+      proveDiffTheory (const True) RHS checkProof $ proveDiffTheory (const True) LHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
   where
     cacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
     cacheRight = closeRuleCache axiomsRight typAsms sig rightClosedRules (L.get diffThyCacheRight thy0)
@@ -989,7 +989,6 @@ closeDiffTheoryWithMaude sig thy0 = do
     -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
     -- and therefore no constraint systems will be unnecessarily cached.
     (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
---       ((closeDiffTheoryItem <$> (L.get diffThyItems thy0)) `using` parList rdeepseq)
        ((closeDiffTheoryItem <$> ( (L.get diffThyItems thy0) ++ (map (\x -> EitherRuleItem (LHS, x)) leftOpenRules) ++ (map (\x -> EitherRuleItem (RHS, x)) rightOpenRules))) `using` parList rdeepseq)
           where
             closeDiffTheoryItem :: DiffTheoryItem OpenProtoRule OpenProtoRule ProofSkeleton ProofSkeleton -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof
