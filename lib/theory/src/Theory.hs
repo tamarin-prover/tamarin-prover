@@ -61,9 +61,11 @@ module Theory (
   , addLemma
   , addAxiomDiff
   , addLemmaDiff
+  , addDiffLemma
   , removeLemma
   , removeLemmaDiff
   , lookupLemma
+  , lookupDiffLemma
   , lookupLemmaDiff
   , addComment
   , addDiffComment
@@ -649,6 +651,11 @@ addLemmaDiff s l thy = do
     guard (isNothing $ lookupLemmaDiff s (L.get lName l) thy)
     return $ modify diffThyItems (++ [EitherLemmaItem (s, l)]) thy
 
+-- | Add a new lemma. Fails, if a lemma with the same name exists.
+addDiffLemma :: DiffLemma p -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffLemma l thy = do
+    guard (isNothing $ lookupDiffLemma (L.get lDiffName l) thy)
+    return $ modify diffThyItems (++ [DiffLemmaItem l]) thy
     
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
 removeLemma :: String -> Theory sig c r p -> Maybe (Theory sig c r p)
@@ -691,6 +698,10 @@ lookupAxiomDiff s name = find ((name ==) . L.get axName) . (diffTheorySideAxioms
 -- | Find the lemma with the given name.
 lookupLemmaDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe (Lemma p2)
 lookupLemmaDiff s name = find ((name ==) . L.get lName) . (diffTheorySideLemmas s)
+
+-- | Find the lemma with the given name.
+lookupDiffLemma :: String -> DiffTheory sig c r r2 p p2 -> Maybe (DiffLemma p)
+lookupDiffLemma name = find ((name ==) . L.get lDiffName) . diffTheoryDiffLemmas
 
 -- | Add a comment to the theory.
 addComment :: Doc -> Theory sig c r p -> Theory sig c r p
@@ -966,12 +977,11 @@ closeDiffTheory maudePath thy0 = do
     sig <- toSignatureWithMaude maudePath $ L.get diffThySignature thy0
     return $ closeDiffTheoryWithMaude sig thy0
 
--- | Close a theory given a maude signature. This signature must be valid for
+-- | Close a diff theory given a maude signature. This signature must be valid for
 -- the given theory.
 closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTheory
 closeDiffTheoryWithMaude sig thy0 = do
   -- FIXME!
---       lth <- proveDiffTheory (const True) LHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
       proveDiffTheory (const True) RHS checkProof $ proveDiffTheory (const True) LHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
   where
     cacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
