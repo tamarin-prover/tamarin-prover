@@ -974,8 +974,8 @@ closeDiffTheoryWithMaude sig thy0 = do
       proveDiffTheory (const True) LHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
 -- probably wrong!     proveDiffTheory (const True) RHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
   where
-    cacheLeft  = closeRuleCache axioms typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
-    cacheRight = closeRuleCache axioms typAsms sig rightClosedRules (L.get diffThyCacheRight thy0)
+    cacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
+    cacheRight = closeRuleCache axiomsRight typAsms sig rightClosedRules (L.get diffThyCacheRight thy0)
     checkProof = checkAndExtendProver (sorryProver Nothing)
     diffRules  = diffTheoryDiffRules thy0
     leftOpenRules  = map getLeftRule  diffRules
@@ -1002,8 +1002,10 @@ closeDiffTheoryWithMaude sig thy0 = do
               DiffTextItem
             
     -- extract typing axioms and lemmas
-    axioms  = do EitherAxiomItem (_, ax) <- items
-                 return $ formulaToGuarded_ $ L.get axFormula ax
+    axiomsLeft  = do EitherAxiomItem (LHS, ax) <- items
+                     return $ formulaToGuarded_ $ L.get axFormula ax
+    axiomsRight  = do EitherAxiomItem (RHS, ax) <- items
+                      return $ formulaToGuarded_ $ L.get axFormula ax
     typAsms = do EitherLemmaItem (_, lem) <- items
                  guard (isTypingLemma lem)
                  return $ formulaToGuarded_ $ L.get lFormula lem
