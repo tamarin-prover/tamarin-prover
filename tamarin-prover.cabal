@@ -237,7 +237,7 @@ executable tamarin-prover
         , yesod-static      >= 1.2
         , conduit           == 1.0.*
         -- , yesod-form        == 0.4.*   -- required once we reactivate editing
-        , text              == 0.11.*
+        , text              >= 0.11  && < 1.3
         , wai               >= 1.3
         , hamlet            >= 1.1
         , shakespeare       == 2.0.*
