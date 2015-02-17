@@ -486,9 +486,9 @@ axiom = Axiom <$> (symbol "axiom" *> identifier <* colon)
 
 -- | Parse a diff axiom.
 diffAxiom :: Parser ParseAxiom
-diffAxiom = ParseAxiom <$> (symbol "axiom" *> identifier <* colon)
+diffAxiom = ParseAxiom <$> (symbol "axiom" *> identifier)
               <*> (option [] $ list axiomAttribute)
-              <*> doubleQuoted standardFormula
+              <*> (colon *> doubleQuoted standardFormula)
 
 ------------------------------------------------------------------------------
 -- Parsing Lemmas
