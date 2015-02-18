@@ -26,6 +26,7 @@ module Theory (
   , lName
   , DiffLemma
   , lDiffName
+  , lDiffProof
   , lTraceQuantifier
   , lFormula
   , lAttributes
@@ -74,6 +75,7 @@ module Theory (
   , addFormalCommentDiff
   , cprRuleE
   , filterSide
+  , addDefaultDiffLemma
 
   -- ** Open theories
   , OpenTheory
@@ -135,6 +137,7 @@ module Theory (
   , prettyLemmaName
   , prettyAxiom
   , prettyLemma
+  , prettyDiffLemmaName
   , prettyClosedTheory
   , prettyClosedDiffTheory
   , prettyOpenTheory
@@ -198,6 +201,18 @@ skeletonToIncrementalProof = fmap (fmap (const Nothing))
 incrementalToSkeletonProof :: IncrementalProof -> ProofSkeleton
 incrementalToSkeletonProof = fmap (fmap (const ()))
 
+-- | Proof skeletons are used to represent proofs in open theories.
+type DiffProofSkeleton    = DiffProof ()
+
+-- | Convert a proof skeleton to an incremental proof without any sequent
+-- annotations.
+skeletonToIncrementalDiffProof :: DiffProofSkeleton -> IncrementalDiffProof
+skeletonToIncrementalDiffProof = fmap (fmap (const Nothing))
+
+-- | Convert an incremental proof to a proof skeleton by dropping all
+-- annotations.
+incrementalToSkeletonDiffProof :: IncrementalDiffProof -> DiffProofSkeleton
+incrementalToSkeletonDiffProof = fmap (fmap (const ()))
 
 ------------------------------------------------------------------------------
 -- Commented sets of rewriting rules
@@ -426,6 +441,15 @@ skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
               -> ProofSkeleton -> Lemma ProofSkeleton
 skeletonLemma name atts qua fm = Lemma name qua fm atts
 
+-- | Create a new unproven diff lemma.
+unprovenDiffLemma :: String
+              -> DiffLemma DiffProofSkeleton
+unprovenDiffLemma name = DiffLemma name (diffUnproven ())
+
+skeletonDiffLemma :: String -> DiffProofSkeleton -> DiffLemma DiffProofSkeleton
+skeletonDiffLemma name = DiffLemma name
+
+
 -- | The case-distinction kind allowed for a lemma
 lemmaCaseDistKind :: Lemma p -> CaseDistKind
 lemmaCaseDistKind lem
@@ -500,7 +524,7 @@ type OpenTheory =
 -- | Open diff theories can be extended. Invariants:
 --   1. Lemma names are unique.
 type OpenDiffTheory =
-    DiffTheory SignaturePure [IntrRuleAC] OpenProtoRule OpenProtoRule ProofSkeleton ProofSkeleton
+    DiffTheory SignaturePure [IntrRuleAC] OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton
     
 -- | Closed theories can be proven. Invariants:
 --     1. Lemma names are unique
@@ -516,7 +540,7 @@ type ClosedTheory =
 --        closed rule set of the theory.
 --     3. Maude is running under the given handle.
 type ClosedDiffTheory =
-    DiffTheory SignatureWithMaude ClosedRuleCache OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof
+    DiffTheory SignatureWithMaude ClosedRuleCache OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
 
 -- | Either Therories can be Either a normal or a diff theory
 
@@ -734,6 +758,13 @@ defaultOpenTheory flag = Theory "default" (emptySignaturePure flag) [] []
 defaultOpenDiffTheory :: Bool -> OpenDiffTheory
 defaultOpenDiffTheory flag = DiffTheory "default" (emptySignaturePure flag) [] [] []
 
+-- Add the default Diff lemma to an Open Diff Theory
+addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
+addDefaultDiffLemma thy = modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_Equivalence")]) thy
+--     liftedAddDiffLemma thy lem = case addDiffLemma lem thy of
+--       Just thy' -> return thy'
+--       Nothing   -> error $ "duplicate lemma: " ++ L.get lDiffName lem
+
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness dependens on it.
 openTheory :: ClosedTheory -> OpenTheory
@@ -746,7 +777,7 @@ openTheory  (Theory n sig c items) =
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
 openDiffTheory  (DiffTheory n sig c1 c2 items) =
     DiffTheory n (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2)
-      (map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s p) -> (DiffLemma s (incrementalToSkeletonProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
+      (map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s p) -> (DiffLemma s (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
 
       
 -- | Find the open protocol rule with the given name.
@@ -838,7 +869,7 @@ getLemmas :: ClosedTheory -> [Lemma IncrementalProof]
 getLemmas = theoryLemmas
 
 -- | All diff lemmas.
-getDiffLemmas :: ClosedDiffTheory -> [DiffLemma IncrementalProof]
+getDiffLemmas :: ClosedDiffTheory -> [DiffLemma IncrementalDiffProof]
 getDiffLemmas = diffTheoryDiffLemmas
 
 -- | All side lemmas.
@@ -962,7 +993,7 @@ closeTheory :: FilePath         -- ^ Path to the Maude executable.
 closeTheory maudePath thy0 = do
     sig <- toSignatureWithMaude maudePath $ L.get thySignature thy0
     return $ closeTheoryWithMaude sig thy0
-
+    
 -- | Close a theory by closing its associated rule set and checking the proof
 -- skeletons and caching AC variants as well as precomputed case distinctions.
 --
@@ -976,12 +1007,11 @@ closeDiffTheory maudePath thy0 = do
     -- FIXME!
     sig <- toSignatureWithMaude maudePath $ L.get diffThySignature thy0
     return $ closeDiffTheoryWithMaude sig thy0
-
+    
 -- | Close a diff theory given a maude signature. This signature must be valid for
 -- the given theory.
 closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTheory
 closeDiffTheoryWithMaude sig thy0 = do
-  -- FIXME!
       proveDiffTheory (const True) RHS checkProof $ proveDiffTheory (const True) LHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
   where
     cacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
@@ -1001,11 +1031,11 @@ closeDiffTheoryWithMaude sig thy0 = do
     (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
        ((closeDiffTheoryItem <$> ( (L.get diffThyItems thy0) ++ (map (\x -> EitherRuleItem (LHS, x)) leftOpenRules) ++ (map (\x -> EitherRuleItem (RHS, x)) rightOpenRules))) `using` parList rdeepseq)
           where
-            closeDiffTheoryItem :: DiffTheoryItem OpenProtoRule OpenProtoRule ProofSkeleton ProofSkeleton -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof
+            closeDiffTheoryItem :: DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
             closeDiffTheoryItem = foldDiffTheoryItem
               DiffRuleItem
               (EitherRuleItem . closeEitherProtoRule hnd)
-              (\l -> DiffLemmaItem (fmap skeletonToIncrementalProof l))
+              (\l -> DiffLemmaItem (fmap skeletonToIncrementalDiffProof l))
               (\(s, l) -> EitherLemmaItem (s, (fmap skeletonToIncrementalProof l)))
               EitherAxiomItem
               DiffTextItem
@@ -1361,10 +1391,9 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
 
 -- | Pretty print a diff theory.
 prettyDiffTheory :: HighlightDocument d
-                 => (sig -> d) -> (c -> d) -> ((Side, r2) -> d) -> (p -> d)
-                 -> DiffTheory sig c OpenProtoRule r2 p p -> d
-                 -- FIXME: propbably p2
-prettyDiffTheory ppSig ppCache ppRule ppPrf thy = vsep $
+                 => (sig -> d) -> (c -> d) -> ((Side, r2) -> d) -> (p -> d) -> (p2 -> d)
+                 -> DiffTheory sig c OpenProtoRule r2 p p2 -> d
+prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
     [ kwTheoryHeader $ text $ L.get diffThyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get diffThySignature thy
@@ -1375,7 +1404,7 @@ prettyDiffTheory ppSig ppCache ppRule ppPrf thy = vsep $
     [ kwEnd ]
   where
     ppItem = foldDiffTheoryItem
-        prettyDiffRule ppRule (prettyDiffLemma ppPrf) (prettyEitherLemma ppPrf) prettyEitherAxiom (uncurry prettyFormalComment)
+        prettyDiffRule ppRule (prettyDiffLemma ppDiffPrf) (prettyEitherLemma ppPrf) prettyEitherAxiom (uncurry prettyFormalComment)
 
 -- | Pretty print the lemma name together with its attributes.
 prettyLemmaName :: HighlightDocument d => Lemma p -> d
@@ -1507,6 +1536,15 @@ prettyIncrementalProof = prettyProofWith ppStep (const id)
                                    else emptyDoc
       ]
 
+prettyIncrementalDiffProof :: HighlightDocument d => IncrementalDiffProof -> d
+prettyIncrementalDiffProof = prettyDiffProofWith ppStep (const id)
+  where
+    ppStep step = sep
+      [ prettyDiffProofMethod (dpsMethod step)
+      , if isNothing (dpsInfo step) then multiComment_ ["unannotated"]
+                                    else emptyDoc
+      ]
+
 -- | Pretty print an closed rule.
 prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d
 prettyClosedProtoRule cru =
@@ -1543,7 +1581,7 @@ prettyOpenTheory =
 prettyOpenDiffTheory :: HighlightDocument d => OpenDiffTheory -> d
 prettyOpenDiffTheory =
     prettyDiffTheory prettySignaturePure
-                 (const emptyDoc) prettyEitherRule prettyProof
+                 (const emptyDoc) prettyEitherRule prettyDiffProof prettyProof
                  -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
 
 -- | Pretty print a closed theory.
@@ -1570,6 +1608,7 @@ prettyClosedDiffTheory thy =
                  ppInjectiveFactInsts
                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
                  prettyClosedEitherRule
+                 prettyIncrementalDiffProof
                  prettyIncrementalProof
                  thy
   where

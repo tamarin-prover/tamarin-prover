@@ -14,6 +14,7 @@ module Theory.Constraint.Solver.ProofMethod (
   -- * Proof methods
     CaseName
   , ProofMethod(..)
+  , DiffProofMethod(..)
   , execProofMethod
 
   -- ** Heuristics
@@ -27,6 +28,7 @@ module Theory.Constraint.Solver.ProofMethod (
 
   -- ** Pretty Printing
   , prettyProofMethod
+  , prettyDiffProofMethod
 
 ) where
 
@@ -102,6 +104,17 @@ data ProofMethod =
                                          -- the system.
   deriving( Eq, Ord, Show )
 
+-- | Sound transformations of diff sequents.
+-- FIXME
+data DiffProofMethod =
+    DiffSorry (Maybe String)                 -- ^ Proof was not completed
+  | DiffUnfold                               -- ^ Consider all rules
+  | DiffSolved                               -- ^ No attack was fond
+  | DiffTrivial                              -- ^ The rule is trivially sound
+  | DiffAttack                               -- ^ A potential attack was found
+  deriving( Eq, Ord, Show )
+
+  
 instance HasFrees ProofMethod where
     foldFrees f (SolveGoal g)     = foldFrees f g
     foldFrees f (Contradiction c) = foldFrees f c
@@ -113,6 +126,16 @@ instance HasFrees ProofMethod where
     mapFrees f (Contradiction c) = Contradiction <$> mapFrees f c
     mapFrees _ method            = pure method
 
+instance HasFrees DiffProofMethod where
+--     foldFrees f (SolveGoal g)     = foldFrees f g
+--     foldFrees f (Contradiction c) = foldFrees f c
+    foldFrees _ _                 = mempty
+
+    foldFreesOcc  _ _ = const mempty
+
+--     mapFrees f (SolveGoal g)     = SolveGoal <$> mapFrees f g
+--     mapFrees f (Contradiction c) = Contradiction <$> mapFrees f c
+    mapFrees _ method            = pure method
 
 -- Proof method execution
 -------------------------
@@ -426,15 +449,25 @@ prettyProofMethod method = case method of
             , maybe emptyDoc (lineComment . prettyContradiction) reason
             ]
 
-
+-- | Pretty-print a diff proof method.
+prettyDiffProofMethod :: HighlightDocument d => DiffProofMethod -> d
+prettyDiffProofMethod method = case method of
+    DiffSolved               -> keyword_ "SOLVED"
+    DiffAttack               -> keyword_ "ATTACK" <-> lineComment_ "trace found"
+    DiffSorry reason         ->
+        fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
+    DiffTrivial              -> keyword_ "TRIVIAL"
+    DiffUnfold               -> keyword_ "UNFOLD"
 
 -- Derived instances
 --------------------
 
 $( derive makeBinary ''ProofMethod)
+$( derive makeBinary ''DiffProofMethod)
 $( derive makeBinary ''GoalRanking)
 $( derive makeBinary ''Heuristic)
 
 $( derive makeNFData ''ProofMethod)
+$( derive makeNFData ''DiffProofMethod)
 $( derive makeNFData ''GoalRanking)
 $( derive makeNFData ''Heuristic)

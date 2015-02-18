@@ -194,7 +194,38 @@ proofIndex renderUrl mkRoute =
         removeStep = linkToPath renderUrl (mkRoute . snd . psInfo $ step)
           ["remove-step"] emptyDoc
 
+-- | Render a proof index relative to a theory path constructor.
+diffProofIndex :: HtmlDocument d
+           => RenderUrl
+           -> (ProofPath -> Route WebUI)          -- ^ Relative addressing function
+           -> DiffProof (Maybe System, Maybe Bool) -- ^ The annotated incremental proof
+           -> d
+diffProofIndex renderUrl mkRoute =
+    prettyDiffProofWith ppStep ppCase . insertPathsDiff
+  where
+    ppCase step = markStatus (fst $ dpsInfo step)
 
+    ppStep step =
+           case fst $ dpsInfo step of
+               (Nothing, _)    -> superfluousStep
+               (_, Nothing)    -> stepLink ["sorry-step"]
+               (_, Just True)  -> stepLink ["hl_good"]
+               (_, Just False) -> stepLink ["hl_bad"]
+        <> case dpsMethod step of
+               DiffSorry _ -> emptyDoc
+               _           -> removeStep
+      where
+        ppMethod = prettyDiffProofMethod $ dpsMethod step
+        stepLink cls = linkToPath renderUrl
+            (mkRoute . snd . dpsInfo $ step)
+            ("proof-step" : cls) ppMethod
+
+        superfluousStep = withTag "span" [("class","hl_superfluous")] ppMethod
+
+        removeStep = linkToPath renderUrl (mkRoute . snd . dpsInfo $ step)
+          ["remove-step"] emptyDoc
+
+          
 -- | Render the indexing links for a single lemma
 lemmaIndex :: HtmlDocument d
            => RenderUrl                   -- ^ The url rendering function
@@ -251,6 +282,34 @@ lemmaIndexDiff renderUrl tidx s l =
 
     annPrf = annotateLemmaProof l
     mkRoute proofPath = TheoryPathDiffMR tidx (DiffTheoryProof s (get lName l) proofPath)
+
+-- | Render the indexing links for a single diff lemma
+diffLemmaIndex :: HtmlDocument d
+           => RenderUrl                   -- ^ The url rendering function
+           -> TheoryIdx                   -- ^ The theory index
+           -> DiffLemma IncrementalDiffProof      -- ^ The lemma
+           -> d
+diffLemmaIndex renderUrl tidx l =
+    ( markStatus (dpsInfo $ root annPrf) $
+        (kwLemma <-> prettyDiffLemmaName l <> colon)
+        -- FIXME: Reactivate theory editing.
+        -- <->
+        -- (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->
+        -- linkToPath renderUrl lemmaRoute ["delete-link"] deletePng)
+--         $-$
+--         nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
+--                      , doubleQuotes $ prettyLNFormula $ get lFormula l
+--                      ] )
+    ) $-$
+    diffProofIndex renderUrl mkRoute annPrf
+  where
+    -- editPng = png "/static/img/edit.png"
+    -- deletePng = png "/static/img/delete.png"
+    -- png path = closedTag "img" [("class","icon"),("src",path)]
+    -- lemmaRoute = TheoryPathMR tidx (TheoryLemma $ get lName l)
+
+    annPrf = annotateDiffLemmaProof l
+    mkRoute proofPath = TheoryPathDiffMR tidx (DiffTheoryDiffProof (get lDiffName l) proofPath)
 
     
 -- | Render the theory index.
@@ -313,19 +372,19 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     , text ""
     , ruleLink RHS
     , text ""
-    , reqCasesLink LHS "Untyped case distinctions LHS " UntypedCaseDist
+    , reqCasesLink LHS "LHS: Untyped case distinctions " UntypedCaseDist
     , text ""
-    , reqCasesLink RHS "Untyped case distinctions RHS " UntypedCaseDist
+    , reqCasesLink RHS "RHS: Untyped case distinctions " UntypedCaseDist
     , text ""
-    , reqCasesLink LHS "Typed case distinctions LHS "   TypedCaseDist
+    , reqCasesLink LHS "LHS: Typed case distinctions "   TypedCaseDist
     , text ""
-    , reqCasesLink RHS "Typed case distinctions RHS "   TypedCaseDist
+    , reqCasesLink RHS "RHS: Typed case distinctions "   TypedCaseDist
     , text ""
-    , bold "Lemmas LHS"
+    , bold "LHS: Lemmas"
     , text ""
     , vcat $ intersperse (text "") (lemmas LHS)
     , text ""
-    , bold "Lemmas RHS"
+    , bold "RHS: Lemmas"
     , text ""
     , vcat $ intersperse (text "") (lemmas RHS)
     , text ""
@@ -337,9 +396,10 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     ]
   where
     lemmaIndex' s lemma = lemmaIndexDiff renderUrl tidx s lemma
+    diffLemmaIndex' lemma = diffLemmaIndex renderUrl tidx lemma
 
     lemmas s       = map (lemmaIndex' s) (diffTheorySideLemmas s thy)
-    diffLemmas     = [] -- FIXME map lemmaIndex' (getDiffLemmas s thy)
+    diffLemmas     = map diffLemmaIndex' (getDiffLemmas thy)
     rules s        = getDiffClassifiedRules s thy
     rulesInfo s    = parens $ int $ length $ get crProtocol (rules s)
     casesInfo s kind =
@@ -1516,3 +1576,24 @@ annotateLemmaProof lem =
       (ExistsTrace, TraceFound)        -> Just True
       (ExistsTrace, CompleteProof)     -> Just False
 
+-- | Annotate a proof for pretty printing.
+-- The boolean flag indicates that the given proof step's children
+-- are (a) all annotated and (b) contain no sorry steps.
+annotateDiffLemmaProof :: DiffLemma IncrementalDiffProof
+                   -> DiffProof (Maybe System, Maybe Bool)
+annotateDiffLemmaProof lem =
+    mapDiffProofInfo (second interpret) prf
+  where
+    prf = annotateDiffProof annotate $ get lDiffProof lem
+    annotate step cs =
+        ( dpsInfo step
+        , mconcat $ diffProofStepStatus step : incomplete ++ map snd cs
+        )
+      where
+        incomplete = if isNothing (dpsInfo step) then [IncompleteProof] else []
+
+    interpret status = case status of
+      IncompleteProof   -> Nothing
+      UndeterminedProof -> Nothing
+      TraceFound        -> Just False
+      CompleteProof     -> Just True

@@ -111,7 +111,7 @@ diff as = if (argExists "diff" as) then ["diff"] else []
 
 -- | Load an open theory from a file.
 loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
-loadOpenDiffThy as = parseOpenDiffTheory (diff as ++ defines as)
+loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as) fp
 
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
@@ -165,7 +165,7 @@ loadClosedDiffThyWfReport as inFile = do
           putStrLn $ replicate 78 '-'
           putStrLn ""
     -- return closed theory
-    closeDiffThy as thy
+    closeDiffThy as (addDefaultDiffLemma thy)
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
 loadClosedThyString as input =
@@ -177,7 +177,7 @@ loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTh
 loadClosedDiffThyString as input =
     case parseOpenDiffTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
-        Right thy -> fmap Right $ closeDiffThy as thy
+        Right thy -> fmap Right $ closeDiffThy as (addDefaultDiffLemma thy)
              
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
@@ -226,7 +226,7 @@ closeDiffThy as thy0 = do
   let thy2 = wfCheck thy1
   -- close and prove
   cthy <- closeDiffTheory (maudePath as) thy2
-  return $ proveDiffTheory lemmaSelector LHS prover $ partialEvaluation cthy
+  return $ proveDiffTheory lemmaSelector RHS prover $ partialEvaluation $ proveDiffTheory lemmaSelector LHS prover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------

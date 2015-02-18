@@ -16,26 +16,35 @@ module Theory.Proof (
 
   -- * Types
   , ProofStep(..)
+  , DiffProofStep(..)
   , Proof
+  , DiffProof
 
   -- ** Paths inside proofs
   , ProofPath
   , atPath
   , insertPaths
+  , insertPathsDiff
 
   -- ** Folding/modifying proofs
   , mapProofInfo
+  , mapDiffProofInfo
   , foldProof
   , annotateProof
+  , annotateDiffProof
   , ProofStatus(..)
   , proofStepStatus
+  , diffProofStepStatus
 
   -- ** Unfinished proofs
   , sorry
   , unproven
+  , diffSorry
+  , diffUnproven
 
   -- ** Incremental proof construction
   , IncrementalProof
+  , IncrementalDiffProof
   , Prover
   , runProver
   , mapProverProof
@@ -56,7 +65,9 @@ module Theory.Proof (
 
   -- ** Pretty Printing
   , prettyProof
+  , prettyDiffProof
   , prettyProofWith
+  , prettyDiffProofWith
 
   , showProofStatus
 
@@ -168,6 +179,29 @@ instance HasFrees a => HasFrees (ProofStep a) where
     foldFreesOcc  _ _ = const mempty
     mapFrees f (ProofStep m i)  = ProofStep <$> mapFrees f m <*> mapFrees f i
 
+-- | A diff proof steps is a proof method together with additional context-dependent
+-- information.
+data DiffProofStep a = DiffProofStep
+     { dpsMethod :: DiffProofMethod
+     , dpsInfo   :: a
+     }
+     deriving( Eq, Ord, Show )
+
+instance Functor DiffProofStep where
+    fmap f (DiffProofStep m i) = DiffProofStep m (f i)
+
+instance Foldable DiffProofStep where
+    foldMap f = f . dpsInfo
+
+instance Traversable DiffProofStep where
+    traverse f (DiffProofStep m i) = DiffProofStep m <$> f i
+
+instance HasFrees a => HasFrees (DiffProofStep a) where
+    foldFrees f (DiffProofStep m i) = foldFrees f m `mappend` foldFrees f i
+    foldFreesOcc  _ _ = const mempty
+    mapFrees f (DiffProofStep m i)  = DiffProofStep <$> mapFrees f m <*> mapFrees f i
+
+    
 ------------------------------------------------------------------------------
 -- Proof Trees
 ------------------------------------------------------------------------------
@@ -178,6 +212,9 @@ type ProofPath = [CaseName]
 -- | A proof is a tree of proof steps whose edges are labelled with case names.
 type Proof a = LTree CaseName (ProofStep a)
 
+-- | A diff proof is a tree of proof steps whose edges are labelled with case names.
+type DiffProof a = LTree CaseName (DiffProofStep a)
+
 -- Unfinished proofs
 --------------------
 
@@ -185,10 +222,17 @@ type Proof a = LTree CaseName (ProofStep a)
 sorry :: Maybe String -> a -> Proof a
 sorry reason ann = LNode (ProofStep (Sorry reason) ann) M.empty
 
+-- | A proof using the 'sorry' proof method.
+diffSorry :: Maybe String -> a -> DiffProof a
+diffSorry reason ann = LNode (DiffProofStep (DiffSorry reason) ann) M.empty
+
 -- | A proof denoting an unproven part of the proof.
 unproven :: a -> Proof a
 unproven = sorry Nothing
 
+-- | A proof denoting an unproven part of the proof.
+diffUnproven :: a -> DiffProof a
+diffUnproven = diffSorry Nothing
 
 -- Paths in proofs
 ------------------
@@ -219,6 +263,14 @@ insertPaths =
         LNode (fmap (,reverse path) ps)
               (M.mapWithKey (\n prf -> insertPath (n:path) prf) cs)
 
+-- | @insertPaths prf@ inserts the path to every diff proof node.
+insertPathsDiff :: DiffProof a -> DiffProof (a, ProofPath)
+insertPathsDiff =
+    insertPath []
+  where
+    insertPath path (LNode ps cs) =
+        LNode (fmap (,reverse path) ps)
+              (M.mapWithKey (\n prf -> insertPath (n:path) prf) cs)
 
 -- Utilities for dealing with proofs
 ------------------------------------
@@ -227,6 +279,10 @@ insertPaths =
 -- | Apply a function to the information of every proof step.
 mapProofInfo :: (a -> b) -> Proof a -> Proof b
 mapProofInfo = fmap . fmap
+
+-- | Apply a function to the information of every proof step.
+mapDiffProofInfo :: (a -> b) -> DiffProof a -> DiffProof b
+mapDiffProofInfo = fmap . fmap
 
 -- | @boundProofDepth bound prf@ bounds the depth of the proof @prf@ using
 -- 'Sorry' steps to replace the cut sub-proofs.
@@ -255,6 +311,17 @@ annotateProof f =
       where
         cs' = M.map go cs
         info' = f step (map (psInfo . root . snd) (M.toList cs'))
+
+-- | Annotate a proof in a bottom-up fashion.
+annotateDiffProof :: (DiffProofStep a -> [b] -> b) -> DiffProof a -> DiffProof b
+annotateDiffProof f =
+    go
+  where
+    go (LNode step@(DiffProofStep method _) cs) =
+        LNode (DiffProofStep method info') cs'
+      where
+        cs' = M.map go cs
+        info' = f step (map (dpsInfo . root . snd) (M.toList cs'))
 
 -- Proof cutting
 ----------------
@@ -286,6 +353,13 @@ proofStepStatus (ProofStep Solved    (Just _)) = TraceFound
 proofStepStatus (ProofStep (Sorry _) (Just _)) = IncompleteProof
 proofStepStatus (ProofStep _         (Just _)) = CompleteProof
 
+-- | The status of a 'ProofStep'.
+diffProofStepStatus :: DiffProofStep (Maybe a) -> ProofStatus
+-- FIXME: right semantics here?
+diffProofStepStatus (DiffProofStep _             Nothing ) = UndeterminedProof
+diffProofStepStatus (DiffProofStep DiffAttack    (Just _)) = TraceFound
+diffProofStepStatus (DiffProofStep (DiffSorry _) (Just _)) = IncompleteProof
+diffProofStepStatus (DiffProofStep _             (Just _)) = CompleteProof
 
 {- TODO: Test and probably improve
 
@@ -366,6 +440,12 @@ annotateWithSystems ctxt =
 -- | Incremental proofs are used to represent intermediate results of proof
 -- checking/construction.
 type IncrementalProof = Proof (Maybe System)
+
+-- | Incremental diff proofs are used to represent intermediate results of proof
+-- checking/construction.
+-- FIXME: not clear if/how we need the system
+type IncrementalDiffProof = DiffProof (Maybe System)
+
 
 -- | Provers whose sequencing is handled via the 'Monoid' instance.
 --
@@ -624,6 +704,32 @@ prettyProofWith prettyStep prettyCase =
       (prettyCase (root prf) $ kwCase <-> text name) $-$
       ppPrf prf
 
+prettyDiffProof :: HighlightDocument d => DiffProof a -> d
+prettyDiffProof = prettyDiffProofWith (prettyDiffProofMethod . dpsMethod) (const id)
+
+prettyDiffProofWith :: HighlightDocument d
+                => (DiffProofStep a -> d)      -- ^ Make proof step pretty
+                -> (DiffProofStep a -> d -> d) -- ^ Make whole case pretty
+                -> DiffProof a                 -- ^ The proof to prettify
+                -> d
+prettyDiffProofWith prettyStep prettyCase =
+    ppPrf
+  where
+    ppPrf (LNode ps cs) = ppCases ps (M.toList cs)
+
+    ppCases ps@(DiffProofStep DiffSolved _) [] = prettyStep ps
+    ppCases ps []                              = prettyCase ps (kwBy <> text " ")
+                                                  <> prettyStep ps
+    ppCases ps [("", prf)]                     = prettyStep ps $-$ ppPrf prf
+    ppCases ps cases                           =
+        prettyStep ps $-$
+        (vcat $ intersperse (prettyCase ps kwNext) $ map ppCase cases) $-$
+        prettyCase ps kwQED
+
+    ppCase (name, prf) = nest 2 $
+      (prettyCase (root prf) $ kwCase <-> text name) $-$
+      ppPrf prf
+
 -- | Convert a proof status to a redable string.
 showProofStatus :: SystemTraceQuantifier -> ProofStatus -> String
 showProofStatus ExistsNoTrace   TraceFound        = "falsified - found trace"
@@ -638,11 +744,13 @@ showProofStatus _               UndeterminedProof = "analysis undetermined"
 --------------------
 
 $( derive makeBinary ''ProofStep)
+$( derive makeBinary ''DiffProofStep)
 $( derive makeBinary ''ProofStatus)
 $( derive makeBinary ''SolutionExtractor)
 $( derive makeBinary ''AutoProver)
 
 $( derive makeNFData ''ProofStep)
+$( derive makeNFData ''DiffProofStep)
 $( derive makeNFData ''ProofStatus)
 $( derive makeNFData ''SolutionExtractor)
 $( derive makeNFData ''AutoProver)
