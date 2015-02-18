@@ -32,6 +32,7 @@ module Web.Theory
   , applyMethodAtPath
   , applyMethodAtPathDiff
   , applyProverAtPath
+  , applyDiffProverAtPath
   , applyProverAtPathDiff
   )
 where
@@ -126,6 +127,10 @@ applyProverAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
 applyProverAtPathDiff thy s lemmaName proofPath prover =
     modifyLemmaProofDiff s (focus proofPath prover) lemmaName thy
 
+applyDiffProverAtPath :: ClosedDiffTheory -> String -> ProofPath
+                      -> Prover -> Maybe ClosedDiffTheory
+applyDiffProverAtPath thy lemmaName proofPath prover =
+    modifyDiffLemmaProof (focus proofPath prover) lemmaName thy
 
 ------------------------------------------------------------------------------
 -- Pretty printing
@@ -581,6 +586,79 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
                 (psInfo $ root prf')
         ]
 
+-- | A snippet that explains a sub-proof by displaying its proof state, the
+-- open-goals, and the new cases.
+subDiffProofSnippet :: HtmlDocument d
+                    => RenderUrl
+                    -> TheoryIdx                 -- ^ The theory index.
+                    -> DiffTheoryInfo            -- ^ The diff theory info of this index.
+                    -> String                    -- ^ The diff lemma.
+                    -> ProofPath                 -- ^ The proof path.
+--                     -> ProofContext              -- ^ The proof context. Necessary?
+                    -> IncrementalDiffProof      -- ^ The sub-proof.
+                    -> d
+subDiffProofSnippet renderUrl tidx ti lemma proofPath {-ctxt-} prf =
+    case dpsInfo $ root prf of
+      Nothing -> text $ "no annotated constraint system / " ++ nCases ++ " sub-case(s)"
+      Just se -> vcat $
+        prettyApplicableDiffProofMethods se
+        ++
+        [ text ""
+        , withTag "h3" [] (text "Constraint system")
+        ] ++
+        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath)
+        | nonEmptyGraph se ]
+        ++
+        [ preformatted (Just "sequent") (prettyNonGraphSystem se)
+        , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
+        ] ++
+        subCases
+  where
+    prettyApplicableDiffProofMethods sys = case diffProofMethods sys of
+        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        pms ->
+          [ withTag "h3" [] (text "Applicable Proof Methods:" <->
+                             comment_ (goalRankingName ranking))
+          , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+          , autoProverLinks 'a' ""         emptyDoc      0
+          , autoProverLinks 'b' "bounded-" boundDesc bound
+          ]
+        where
+          boundDesc = text $ " with proof-depth bound " ++ show bound
+          bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
+
+    autoProverLinks key classPrefix nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoDiffProverR tidx CutDFS bound (DiffTheoryDiffProof lemma proofPath))
+            [classPrefix ++ "autoprove"]
+            (keyword_ $ "autoprove")
+      , parens $
+          text (toUpper key : ".") <->
+          linkToPath renderUrl
+              (AutoDiffProverR tidx CutNothing bound (DiffTheoryDiffProof lemma proofPath))
+              [classPrefix ++ "characterization"]
+              (keyword_ "for all solutions")
+      , nameSuffix
+      ]
+
+    prettyPM (i, (m, (_cases, expl))) =
+      linkToPath renderUrl
+        (TheoryPathDiffMR tidx (DiffTheoryDiffMethod lemma proofPath i))
+        ["proof-method"] (prettyDiffProofMethod m)
+      <-> (if null expl then emptyDoc else lineComment_ expl)
+
+    nCases                  = show $ M.size $ children prf
+    depth                   = length proofPath
+    ranking                 = useHeuristic (apHeuristic $ dtiAutoProver ti) depth
+    diffProofMethods        = const [] -- FIXME rankProofMethods ranking ctxt
+    subCases                = concatMap refSubCase $ M.toList $ children prf
+    refSubCase (name, prf') =
+        [ withTag "h4" [] (text "Case" <-> text name)
+        , maybe (text "no proof state available")
+                (const $ refDotDiffPath renderUrl tidx $ DiffTheoryDiffProof lemma (proofPath ++ [name]))
+                (dpsInfo $ root prf')
+        ]
 
 -- | A Html document representing the requires case splitting theorem.
 htmlCaseDistinction :: HtmlDocument d
@@ -860,8 +938,9 @@ htmlDiffThyPath renderUrl info path =
       cs -> preEscapedToMarkup cs
 
     go (DiffTheoryMethod _ _ _ _)        = pp $ text "Cannot display theory method."
+    go (DiffTheoryDiffMethod _ _ _)        = pp $ text "Cannot display theory diff method."
 
-    go (DiffTheoryDiffLemma _)        = pp $ text "Cannot display diff lemma - under construction."
+    go (DiffTheoryDiffLemma _)         = pp $ text "Implement diff lemma pretty printing!"
 
     go (DiffTheoryDiffRules)           = pp $ rulesDiffSnippet thy
     go (DiffTheoryRules s)             = pp $ rulesDiffSnippetSide s thy
@@ -873,6 +952,12 @@ htmlDiffThyPath renderUrl info path =
            lemma <- lookupLemmaDiff s l thy
            subProofDiffSnippet renderUrl tidx info s l p (getProofContextDiff s lemma thy)
              <$> resolveProofPathDiff thy s l p
+
+    go (DiffTheoryDiffProof l p)         = pp $
+        fromMaybe (text "No such lemma or proof path.") $ do
+--            lemma <- lookupDiffLemma l thy
+           subDiffProofSnippet renderUrl tidx info l p {-(getProofContextDiff s lemma thy)-}
+             <$> resolveProofPathDiffLemma thy l p
 
     go (DiffTheoryLemma _ _)           = pp $ text "Implement lemma pretty printing!"
 
@@ -1169,13 +1254,24 @@ titleDiffThyPath thy path = go path
     go (DiffTheoryProof s l p)
       | null (last p)       = "Method: " ++ methodName s l p
       | otherwise           = "Case: " ++ last p
-    go (DiffTheoryMethod _ _ _ _) = "Method Path: This title should not be shown. Please file a bug"
+    go (DiffTheoryDiffProof l [])                   = "Diff-Lemma: " ++ l
+    go (DiffTheoryDiffProof l p)
+      | null (last p)       = "Method: " ++ diffMethodName l p
+      | otherwise           = "Case: " ++ last p
+    go (DiffTheoryMethod _ _ _ _)     = "Method Path: This title should not be shown. Please file a bug"
+    go (DiffTheoryDiffMethod _ _ _) = "DiffMethod Path: This title should not be shown. Please file a bug"
 
     methodName s l p =
       case resolveProofPathDiff thy s l p of
         Nothing -> "None"
         Just proof -> renderHtmlDoc $ prettyProofMethod $ psMethod $ root proof
 
+    diffMethodName l p =
+      case resolveProofPathDiffLemma thy l p of
+        Nothing -> "None"
+        Just proof -> renderHtmlDoc $ prettyDiffProofMethod $ dpsMethod $ root proof
+
+        
 -- | Resolve a proof path.
 resolveProofPath :: ClosedTheory            -- ^ Theory to resolve in
                  -> String                  -- ^ Name of lemma
@@ -1185,7 +1281,7 @@ resolveProofPath thy lemmaName path = do
   lemma <- lookupLemma lemmaName thy
   get lProof lemma `atPath` path
 
--- | Resolve a proof path.
+-- | Resolve a diff proof path.
 resolveProofPathDiff :: ClosedDiffTheory       -- ^ Theory to resolve in
                     -> Side                    -- ^ Side of lemma
                     -> String                  -- ^ Name of lemma
@@ -1195,6 +1291,16 @@ resolveProofPathDiff thy s lemmaName path = do
   lemma <- lookupLemmaDiff s lemmaName thy
   get lProof lemma `atPath` path
 
+-- | Resolve a proof path for a diff lemma.
+resolveProofPathDiffLemma :: ClosedDiffTheory       -- ^ Theory to resolve in
+                    -> String                  -- ^ Name of lemma
+                    -> ProofPath               -- ^ Path to resolve
+                    -> Maybe IncrementalDiffProof
+resolveProofPathDiffLemma thy lemmaName path = do
+  lemma <- lookupDiffLemma lemmaName thy
+  get lDiffProof lemma `atPathDiff` path
+
+  
 ------------------------------------------------------------------------------
 -- Moving to next/prev proof path
 ------------------------------------------------------------------------------
@@ -1249,13 +1355,19 @@ nextDiffThyPath thy = go
                      l':_ -> (DiffTheoryProof RHS (fst l') [])
       | s == RHS = firstDiffLemma
       | otherwise  = DiffTheoryProof s l p
+    go (DiffTheoryDiffProof l p)
+      | Just nextPath <- getNextDiffPath l p = DiffTheoryDiffProof l nextPath
+      | Just nextDiffLemma <- getNextDiffLemma l = DiffTheoryDiffProof nextDiffLemma []
+      | otherwise  = DiffTheoryDiffProof l p
     go path@(DiffTheoryMethod _ _ _ _)                = path
+    go path@(DiffTheoryDiffMethod _ _ _)              = path
 
     firstDiffLemma = case getDiffLemmas thy of
                       []  -> DiffTheoryHelp
                       l:_ -> DiffTheoryDiffLemma (get lDiffName l)
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
+    diffLemmas = map (\l -> (get lDiffName l, l)) $ diffTheoryDiffLemmas thy
     firstLemma = case lemmas LHS of
                   []  -> case lemmas RHS of
                              []   -> Nothing
@@ -1267,7 +1379,14 @@ nextDiffThyPath thy = go
       let paths = map fst $ getProofPaths $ get lProof lemma
       getNextElement (== path) paths
 
+    getNextDiffPath lemmaName path = do
+      lemma <- lookupDiffLemma lemmaName thy
+      let paths = map fst $ getDiffProofPaths $ get lDiffProof lemma
+      getNextElement (== path) paths
+
     getNextLemma s lemmaName = getNextElement (== lemmaName) (map fst (lemmas s))
+
+    getNextDiffLemma lemmaName = getNextElement (== lemmaName) (map fst (diffLemmas))
 
 -- | Get 'prev' theory path.
 prevThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
@@ -1305,7 +1424,7 @@ prevDiffThyPath thy = go
   where
     go DiffTheoryHelp                               = DiffTheoryHelp
     go DiffTheoryDiffRules                          = DiffTheoryHelp
-    go (DiffTheoryMessage LHS)                      = DiffTheoryHelp
+    go (DiffTheoryMessage LHS)                      = DiffTheoryDiffRules
     go (DiffTheoryMessage RHS)                      = DiffTheoryMessage LHS
     go (DiffTheoryRules LHS)                        = DiffTheoryMessage RHS
     go (DiffTheoryRules RHS)                        = DiffTheoryRules LHS
@@ -1322,30 +1441,56 @@ prevDiffThyPath thy = go
       | Just prevLemma <- getPrevLemma s l = DiffTheoryProof s prevLemma (lastPath s prevLemma)
       | s == RHS                           = lastLemmaLHS
       | otherwise                          = DiffTheoryCaseDist RHS TypedCaseDist 0 0
+    go (DiffTheoryDiffProof l p)
+      | Just prevPath <- getPrevDiffPath l p   = DiffTheoryDiffProof l prevPath
+      | Just prevDiffLemma <- getPrevDiffLemma l = DiffTheoryDiffProof prevDiffLemma (lastPathDiff prevDiffLemma)
+      | otherwise                          = lastLemmaRHS
     go path@(DiffTheoryMethod _ _ _ _)         = path
+    go path@(DiffTheoryDiffMethod _ _ _)       = path
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
+    
+    diffLemmas = map (\l -> (get lDiffName l, l)) $ diffTheoryDiffLemmas thy
 
     getPrevPath s lemmaName path = do
       lemma <- lookupLemmaDiff s lemmaName thy
       let paths = map fst $ getProofPaths $ get lProof lemma
       getPrevElement (== path) paths
 
+    getPrevDiffPath lemmaName path = do
+      lemma <- lookupDiffLemma lemmaName thy
+      let paths = map fst $ getDiffProofPaths $ get lDiffProof lemma
+      getPrevElement (== path) paths
+
     lastPath s lemmaName = last $ map fst $ getProofPaths $
       get lProof $ fromJust $ lookupLemmaDiff s lemmaName thy
 
+    lastPathDiff lemmaName = last $ map fst $ getDiffProofPaths $
+      get lDiffProof $ fromJust $ lookupDiffLemma lemmaName thy
+
     getPrevLemma s lemmaName = getPrevElement (== lemmaName) (map fst (lemmas s))
+
+    getPrevDiffLemma lemmaName = getPrevElement (== lemmaName) (map fst (diffLemmas))
 
     lastLemmaLHS = case lemmas LHS of
                   [] -> DiffTheoryCaseDist RHS TypedCaseDist 0 0 
                   l  -> DiffTheoryProof LHS (fst (last l)) (lastPath LHS (fst (last l)))
 
+    lastLemmaRHS = case lemmas RHS of
+                  [] -> lastLemmaLHS 
+                  l  -> DiffTheoryProof RHS (fst (last l)) (lastPath RHS (fst (last l)))
 
 -- | Interesting proof methods that are not skipped by next/prev-smart.
 isInterestingMethod :: ProofMethod -> Bool
 isInterestingMethod (Sorry _) = True
 isInterestingMethod Solved    = True
 isInterestingMethod _         = False
+
+-- | Interesting diff proof methods that are not skipped by next/prev-smart.
+isInterestingDiffMethod :: DiffProofMethod -> Bool
+isInterestingDiffMethod (DiffSorry _) = True
+isInterestingDiffMethod DiffSolved    = True
+isInterestingDiffMethod _             = False
 
 -- Get 'next' smart theory path.
 nextSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
@@ -1390,23 +1535,28 @@ nextSmartDiffThyPath thy = go
     go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS TypedCaseDist 0 0
     go (DiffTheoryCaseDist RHS TypedCaseDist   _ _) = fromMaybe DiffTheoryHelp firstLemma
     go (DiffTheoryLemma s lemma)                    = DiffTheoryProof s lemma []
-    go (DiffTheoryDiffLemma _)                      = DiffTheoryHelp -- FIXME
+    go (DiffTheoryDiffLemma lemma)                  = DiffTheoryDiffProof lemma []
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
---       | otherwise                          = error "blubb"
       | s == LHS = case lemmas RHS of
                      []   -> firstDiffLemma
                      l':_ -> (DiffTheoryProof RHS (fst l') [])
       | s == RHS = firstDiffLemma
       | otherwise                          = DiffTheoryProof s l p
-    go path@(DiffTheoryMethod _ _ _ _)                = path
+    go (DiffTheoryDiffProof l p)
+      | Just nextPath <- getNextDiffPath l p = DiffTheoryDiffProof l nextPath
+      | Just nextLemma <- getNextDiffLemma l = DiffTheoryDiffProof nextLemma []
+      | otherwise                          = DiffTheoryDiffProof l p
+    go path@(DiffTheoryMethod _ _ _ _)              = path
+    go path@(DiffTheoryDiffMethod _ _ _)            = path
 
     firstDiffLemma = case getDiffLemmas thy of
                       []  -> DiffTheoryHelp
                       l:_ -> DiffTheoryDiffLemma (get lDiffName l)
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
+    diffLemmas = map (\l -> (get lDiffName l, l)) $ diffTheoryDiffLemmas thy
     firstLemma = case lemmas LHS of
                   []  -> case lemmas RHS of
                             []  -> Nothing
@@ -1416,12 +1566,20 @@ nextSmartDiffThyPath thy = go
     getNextPath s lemmaName path = do
       lemma <- lookupLemmaDiff s lemmaName thy
       let paths = getProofPaths $ get lProof lemma
---       error (show (get lProof lemma))
       case dropWhile ((/= path) . fst) paths of
         []        -> Nothing
         nextSteps -> listToMaybe . map fst . filter (isInterestingMethod . snd) $ tail nextSteps
 
+    getNextDiffPath lemmaName path = do
+      lemma <- lookupDiffLemma lemmaName thy
+      let paths = getDiffProofPaths $ get lDiffProof lemma
+      case dropWhile ((/= path) . fst) paths of
+        []        -> Nothing
+        nextSteps -> listToMaybe . map fst . filter (isInterestingDiffMethod . snd) $ tail nextSteps
+
     getNextLemma s lemmaName = getNextElement (== lemmaName) (map fst (lemmas s))
+
+    getNextDiffLemma lemmaName = getNextElement (== lemmaName) (map fst (diffLemmas))
 
 -- Get 'prev' smart theory path.
 prevSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
@@ -1482,16 +1640,24 @@ prevSmartDiffThyPath thy = go
     go (DiffTheoryLemma s l)
       | Just prevLemma <- getPrevLemma s l        = DiffTheoryProof s prevLemma (lastPath s prevLemma)
       | otherwise                                 = DiffTheoryCaseDist RHS TypedCaseDist 0 0
-    go (DiffTheoryDiffLemma _)                    = DiffTheoryHelp -- FIXME
+    go (DiffTheoryDiffLemma l)
+      | Just prevLemma <- getPrevDiffLemma l      = DiffTheoryDiffProof prevLemma (lastPathDiff prevLemma)
+      | otherwise                                 = lastLemmaRHS
     go (DiffTheoryProof s l p)
       | Just prevPath <- getPrevPath s l p        = DiffTheoryProof s l prevPath
---      | Just firstPath <- getFirstPath l p = DiffTheoryProof l firstPath
       | Just prevLemma <- getPrevLemma s l        = DiffTheoryProof s prevLemma (lastPath s prevLemma)
       | s == RHS                                  = lastLemmaLHS
       | otherwise                                 = DiffTheoryCaseDist RHS TypedCaseDist 0 0
-    go path@(DiffTheoryMethod _ _ _ _)              = path
+    go (DiffTheoryDiffProof l p)
+      | Just prevPath <- getPrevPathDiff l p      = DiffTheoryDiffProof l prevPath
+      | Just prevDiffLemma <- getPrevDiffLemma l  = DiffTheoryDiffProof prevDiffLemma (lastPathDiff prevDiffLemma)
+      | otherwise                                 = lastLemmaRHS
+    go path@(DiffTheoryMethod _ _ _ _)            = path
+    go path@(DiffTheoryDiffMethod _ _ _)          = path
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
+    
+    diffLemmas = map (\l -> (get lDiffName l, l)) $ diffTheoryDiffLemmas thy
 
     {-
     getFirstPath lemmaName current = do
@@ -1509,15 +1675,30 @@ prevSmartDiffThyPath thy = go
         []        -> Nothing
         prevSteps -> Just . fst . last $ prevSteps
 
+    getPrevPathDiff lemmaName path = do
+      lemma <- lookupDiffLemma lemmaName thy
+      let paths = getDiffProofPaths $ get lDiffProof lemma
+      case filter (isInterestingDiffMethod . snd) . takeWhile ((/= path) . fst) $ paths of
+        []        -> Nothing
+        prevSteps -> Just . fst . last $ prevSteps
+
     lastPath s lemmaName = last $ map fst $ getProofPaths $
       get lProof $ fromJust $ lookupLemmaDiff s lemmaName thy
 
+    lastPathDiff lemmaName = last $ map fst $ getDiffProofPaths $
+      get lDiffProof $ fromJust $ lookupDiffLemma lemmaName thy
+
     getPrevLemma s lemmaName = getPrevElement (== lemmaName) (map fst (lemmas s))
+
+    getPrevDiffLemma lemmaName = getPrevElement (== lemmaName) (map fst (diffLemmas))
 
     lastLemmaLHS = case lemmas LHS of
       [] -> DiffTheoryCaseDist RHS TypedCaseDist 0 0 
       l  -> DiffTheoryProof LHS (fst (last l)) (lastPath LHS (fst (last l)))
 
+    lastLemmaRHS = case lemmas RHS of
+      [] -> lastLemmaLHS 
+      l  -> DiffTheoryProof RHS (fst (last l)) (lastPath RHS (fst (last l)))
 
 -- | Extract proof paths out of a proof.
 getProofPaths :: LTree CaseName (ProofStep a) -> [([String], ProofMethod)]
@@ -1526,6 +1707,12 @@ getProofPaths proof = ([], psMethod . root $ proof) : go proof
     go = concatMap paths . M.toList . children
     paths (lbl, prf) = ([lbl], psMethod . root $ prf) : map (first (lbl:)) (go prf)
 
+-- | Extract proof paths out of a proof.
+getDiffProofPaths :: LTree CaseName (DiffProofStep a) -> [([String], DiffProofMethod)]
+getDiffProofPaths proof = ([], dpsMethod . root $ proof) : go proof
+  where
+    go = concatMap paths . M.toList . children
+    paths (lbl, prf) = ([lbl], dpsMethod . root $ prf) : map (first (lbl:)) (go prf)
 
 -- | Get element _after_ the matching element in the list.
 getNextElement :: (a -> Bool) -> [a] -> Maybe a

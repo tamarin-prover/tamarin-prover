@@ -21,6 +21,7 @@ module Theory.Constraint.Solver.ProofMethod (
   , GoalRanking(..)
   , goalRankingName
   , rankProofMethods
+--   , rankDiffProofMethods -- FIXME
 
   , Heuristic
   , roundRobinHeuristic

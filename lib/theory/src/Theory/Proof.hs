@@ -23,6 +23,7 @@ module Theory.Proof (
   -- ** Paths inside proofs
   , ProofPath
   , atPath
+  , atPathDiff
   , insertPaths
   , insertPathsDiff
 
@@ -240,6 +241,10 @@ diffUnproven = diffSorry Nothing
 -- | @prf `atPath` path@ returns the subproof at the @path@ in @prf@.
 atPath :: Proof a -> ProofPath -> Maybe (Proof a)
 atPath = foldM (flip M.lookup . children)
+
+-- | @prf `atPath` path@ returns the subproof at the @path@ in @prf@.
+atPathDiff :: DiffProof a -> ProofPath -> Maybe (DiffProof a)
+atPathDiff = foldM (flip M.lookup . children)
 
 -- | @modifyAtPath f path prf@ applies @f@ to the subproof at @path@,
 -- if there is one.

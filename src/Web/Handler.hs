@@ -30,6 +30,7 @@ module Web.Handler
   , getTheoryGraphR
   , getTheoryGraphDiffR
   , getAutoProverR
+  , getAutoDiffProverR
   , getAutoProverDiffR
   , getDeleteStepR
   , getDeleteStepDiffR
@@ -668,6 +669,26 @@ getProverDiffR (name, mkProver) idx s path = do
     goDiff _ _ _ = return $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
 
+-- | Run the some prover on a given proof path.
+getDiffProverR :: (T.Text, AutoProver -> Prover)
+               -> TheoryIdx -> DiffTheoryPath -> Handler RepJson
+getDiffProverR (name, mkProver) idx path = do
+    jsonValue <- withDiffTheory idx (goDiff path)
+    return $ RepJson $ toContent jsonValue
+  where
+    goDiff (DiffTheoryDiffProof lemma proofPath) ti = 
+        modifyDiffTheory ti
+              (\thy ->
+                  return $ applyDiffProverAtPath thy lemma proofPath autoProver)
+              (\thy -> nextSmartDiffThyPath thy path)
+              (JsonAlert $ "Sorry, but " <> name <> " failed!")
+      where
+        autoProver = mkProver (dtiAutoProver ti)
+
+    goDiff _ _ = return $ responseToJson $ JsonAlert $
+      "Can't run " <> name <> " on the given theory path!"
+
+      
 -- | Run an autoprover on a given proof path.
 getAutoProverR :: TheoryIdx
                -> SolutionExtractor
@@ -698,6 +719,29 @@ getAutoProverDiffR :: TheoryIdx
                    -> Side -> DiffTheoryPath -> Handler RepJson
 getAutoProverDiffR idx extractor bound s =
     getProverDiffR (fullName, runAutoProver . adapt) idx s
+  where
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+
+    withCommas = intersperse ", "
+    fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
+    qualifiers = extractorQualfier ++ boundQualifier
+
+    (actualBound, boundQualifier)
+        | bound > 0 = (Just bound, ["bound " <> T.pack (show bound)])
+        | otherwise = (Nothing,    []                               )
+
+    (proverName, extractorQualfier) = case extractor of
+        CutNothing -> ("characterization", ["dfs"])
+        CutDFS     -> ("the autoprover",   []     )
+        CutBFS     -> ("the autoprover",   ["bfs"])
+
+-- | Run an autoprover on a given proof path.
+getAutoDiffProverR :: TheoryIdx
+                   -> SolutionExtractor
+                   -> Int                             -- autoprover bound to use
+                   -> DiffTheoryPath -> Handler RepJson
+getAutoDiffProverR idx extractor bound =
+    getDiffProverR (fullName, runAutoProver . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 

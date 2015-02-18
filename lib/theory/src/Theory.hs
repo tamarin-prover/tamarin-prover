@@ -53,6 +53,7 @@ module Theory (
   , diffThyItems
   , diffTheorySideLemmas
   , diffTheoryDiffRules
+  , diffTheoryDiffLemmas
   , theoryRules
   , theoryLemmas
   , theoryAxioms
@@ -131,6 +132,8 @@ module Theory (
   , modifyLemmaProof
   , lookupLemmaProofDiff
   , modifyLemmaProofDiff
+  , lookupDiffLemmaProof
+  , modifyDiffLemmaProof
   
   -- * Pretty printing
   , prettyFormalComment
@@ -760,7 +763,7 @@ defaultOpenDiffTheory flag = DiffTheory "default" (emptySignaturePure flag) [] [
 
 -- Add the default Diff lemma to an Open Diff Theory
 addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
-addDefaultDiffLemma thy = modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_Equivalence")]) thy
+addDefaultDiffLemma thy = modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_equivalence")]) thy
 --     liftedAddDiffLemma thy lem = case addDiffLemma lem thy of
 --       Just thy' -> return thy'
 --       Nothing   -> error $ "duplicate lemma: " ++ L.get lDiffName lem
@@ -1314,6 +1317,12 @@ lookupLemmaProof name thy = L.get lProof <$> lookupLemma name thy
 lookupLemmaProofDiff :: Side -> LemmaRef -> ClosedDiffTheory -> Maybe IncrementalProof
 lookupLemmaProofDiff s name thy = L.get lProof <$> lookupLemmaDiff s name thy
 
+
+-- | Resolve a path in a diff theory.
+lookupDiffLemmaProof :: LemmaRef -> ClosedDiffTheory -> Maybe IncrementalDiffProof
+lookupDiffLemmaProof name thy = L.get lDiffProof <$> lookupDiffLemma name thy
+
+
 -- | Modify the proof at the given lemma ref, if there is one. Fails if the
 -- path is not present or if the prover fails.
 modifyLemmaProof :: Prover -> LemmaRef -> ClosedTheory -> Maybe ClosedTheory
@@ -1360,6 +1369,28 @@ modifyLemmaProofDiff s prover name thy =
     changeItems s' items = case break (findLemma s') items of
         (pre, i:post) -> do
              i' <- change s' pre i
+             return $ pre ++ i':post
+        (_, []) -> Nothing
+
+        
+-- | Modify the proof at the given diff lemma ref, if there is one. Fails if the
+-- path is not present or if the prover fails.
+modifyDiffLemmaProof :: Prover -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
+modifyDiffLemmaProof prover name thy =
+    modA diffThyItems changeItems thy
+  where
+    findLemma (DiffLemmaItem lem) = (name == L.get lDiffName lem)
+    findLemma  _                  = False
+
+    change preItems (DiffLemmaItem lem) =
+          do
+--             lem' <- modA lDiffProof (runProver prover ctxt 0 sys) lem -- FIXME
+            return $ DiffLemmaItem lem
+    change _ _ = error "DiffLemmaProof: change: impossible"
+
+    changeItems items = case break findLemma items of
+        (pre, i:post) -> do
+             i' <- change pre i
              return $ pre ++ i':post
         (_, []) -> Nothing
 
