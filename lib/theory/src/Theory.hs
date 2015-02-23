@@ -114,6 +114,7 @@ module Theory (
   , getProtoRuleEsDiff
   , getProofContext
   , getProofContextDiff
+  , getDiffProofContext
   , getClassifiedRules
   , getDiffClassifiedRules
   , getInjectiveFactInsts
@@ -937,6 +938,9 @@ getProofContextDiff s l thy = case s of
       | any (`elem` [TypingLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
       | otherwise                                                        = AvoidInduction
 
+-- | Get the proof context for a diff lemma of the closed theory.
+getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
+getDiffProofContext l thy = DiffProofContext (diffTheoryDiffRules thy)
       
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
@@ -978,8 +982,6 @@ getDiffCaseDistinction RHS TypedCaseDist   = L.get (crcTypedCaseDists .   diffTh
 closeEitherProtoRule :: MaudeHandle -> (Side, OpenProtoRule) -> (Side, ClosedProtoRule)
 closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd ruE)
 
-
-
 -- -- | Convert a lemma to the corresponding guarded formula.
 -- lemmaToGuarded :: Lemma p -> Maybe LNGuarded
 -- lemmaToGuarded lem =
@@ -1007,7 +1009,6 @@ closeDiffTheory :: FilePath         -- ^ Path to the Maude executable.
             -> OpenDiffTheory
             -> IO ClosedDiffTheory
 closeDiffTheory maudePath thy0 = do
-    -- FIXME!
     sig <- toSignatureWithMaude maudePath $ L.get diffThySignature thy0
     return $ closeDiffTheoryWithMaude sig thy0
     
@@ -1015,11 +1016,12 @@ closeDiffTheory maudePath thy0 = do
 -- the given theory.
 closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTheory
 closeDiffTheoryWithMaude sig thy0 = do
-      proveDiffTheory (const True) RHS checkProof $ proveDiffTheory (const True) LHS checkProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
+    proveDiffTheory (const True) (const True) checkProof checkDiffProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
   where
     cacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
     cacheRight = closeRuleCache axiomsRight typAsms sig rightClosedRules (L.get diffThyCacheRight thy0)
     checkProof = checkAndExtendProver (sorryProver Nothing)
+    checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
     diffRules  = diffTheoryDiffRules thy0
     leftOpenRules  = map getLeftRule  diffRules
     rightOpenRules = map getRightRule diffRules
@@ -1230,12 +1232,13 @@ proveTheory selector prover thy =
 
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.
-proveDiffTheory :: (Lemma IncrementalProof -> Bool)   -- ^ Lemma selector.
-            -> Side
+proveDiffTheory :: (Lemma IncrementalProof -> Bool)       -- ^ Lemma selector.
+            -> (DiffLemma IncrementalDiffProof -> Bool)   -- ^ DiffLemma selector.
             -> Prover
+            -> DiffProver
             -> ClosedDiffTheory
             -> ClosedDiffTheory
-proveDiffTheory selector _ prover thy =
+proveDiffTheory selector diffselector prover diffprover thy =
   -- FIXME!
     modify diffThyItems ((`MS.evalState` []) . mapM prove) thy
   where
@@ -1244,6 +1247,9 @@ proveDiffTheory selector _ prover thy =
       EitherLemmaItem (s, l0) -> do l <- MS.gets (\x -> EitherLemmaItem (s, (proveLemma s l0 x)))
                                     MS.modify (l :)
                                     return l
+      DiffLemmaItem l0        -> do l' <- MS.gets (\x -> DiffLemmaItem (proveDiffLemma l0 x))
+                                    MS.modify (l' :)
+                                    return l'
       _                       -> do return item
 
     proveLemma s lem preItems
@@ -1254,6 +1260,13 @@ proveDiffTheory selector _ prover thy =
         sys     = mkSystemDiff s ctxt (diffTheoryAxioms thy) preItems $ L.get lFormula lem
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
+    proveDiffLemma lem preItems
+      | diffselector lem = modify lDiffProof add lem
+      | otherwise        = lem
+      where
+        ctxt    = getDiffProofContext lem thy
+        sys     = emptyDiffSystem
+        add prf = fromMaybe prf $ runDiffProver diffprover ctxt 0 sys prf
         
 -- | Construct a constraint system for verifying the given formula.
 mkSystem :: ProofContext -> [Axiom] -> [TheoryItem r p]
@@ -1299,7 +1312,6 @@ mkSystemDiff s ctxt axioms previousItems =
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
         return $ formulaToGuarded_ $ L.get lFormula lem
-
 
 ------------------------------------------------------------------------------
 -- References to lemmas

@@ -226,7 +226,7 @@ closeDiffThy as thy0 = do
   let thy2 = wfCheck thy1
   -- close and prove
   cthy <- closeDiffTheory (maudePath as) thy2
-  return $ proveDiffTheory lemmaSelector RHS prover $ partialEvaluation $ proveDiffTheory lemmaSelector LHS prover $ partialEvaluation cthy
+  return $ proveDiffTheory lemmaSelector diffLemmaSelector prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
@@ -248,11 +248,16 @@ closeDiffThy as thy0 = do
         where
           lemmaNames = findArg "prove" as
 
+      diffLemmaSelector :: DiffLemma p -> Bool
+      diffLemmaSelector lem =
+          any (`isPrefixOf` get lDiffName lem) lemmaNames
+        where
+          lemmaNames = findArg "prove" as
+
       -- diff prover: replace all annotated sorrys with the configured autoprover.
-      -- FIXME
-      diffprover :: Prover
+      diffprover :: DiffProver
       diffprover | argExists "prove" as =
-                         replaceSorryProver $ runAutoProver $ constructAutoProver as
+                         replaceDiffSorryProver $ runAutoDiffProver $ constructAutoDiffProver as
                  | otherwise            = mempty
 
       -- replace all annotated sorrys with the configured autoprover.

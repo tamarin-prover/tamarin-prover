@@ -16,12 +16,13 @@ module Theory.Constraint.Solver.ProofMethod (
   , ProofMethod(..)
   , DiffProofMethod(..)
   , execProofMethod
+  , execDiffProofMethod
 
   -- ** Heuristics
   , GoalRanking(..)
   , goalRankingName
   , rankProofMethods
---   , rankDiffProofMethods -- FIXME
+  , rankDiffProofMethods
 
   , Heuristic
   , roundRobinHeuristic
@@ -95,7 +96,7 @@ type CaseName = String
 -- | Sound transformations of sequents.
 data ProofMethod =
     Sorry (Maybe String)                 -- ^ Proof was not completed
-  | Solved                               -- ^ An attack was fond
+  | Solved                               -- ^ An attack was found
   | Simplify                             -- ^ A simplification step.
   | SolveGoal Goal                       -- ^ A goal that was solved.
   | Contradiction (Maybe Contradiction)  -- ^ A contradiction could be
@@ -109,9 +110,10 @@ data ProofMethod =
 -- FIXME
 data DiffProofMethod =
     DiffSorry (Maybe String)                 -- ^ Proof was not completed
-  | DiffUnfold                               -- ^ Consider all rules
-  | DiffSolved                               -- ^ No attack was fond
+  | DiffRuleEquivalence                      -- ^ Consider all rules
   | DiffTrivial                              -- ^ The rule is trivially sound
+  | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
+  | DiffSolved                               -- ^ No attack was found
   | DiffAttack                               -- ^ A potential attack was found
   deriving( Eq, Ord, Show )
 
@@ -230,6 +232,96 @@ execProofMethod ctxt method sys =
 
         insCase name gf = M.insert name (set sFormulas (S.singleton gf) sys)
 
+-- @execDiffMethod rules method se@ checks first if the @method@ is applicable to
+-- the sequent @se@. Then, it applies the @method@ to the sequent under the
+-- assumption that the @rules@ describe all rewriting rules in scope.
+--
+-- NOTE that the returned systems have their free substitution fully applied
+-- and all variable indices reset.
+execDiffProofMethod :: DiffProofContext
+                -> DiffProofMethod -> DiffSystem -> Maybe (M.Map CaseName DiffSystem)
+execDiffProofMethod ctxt method sys = return M.empty
+  -- FIXME!!
+--       case method of
+--         DiffSorry _                  -> return M.empty
+--         DiffSolved
+--           | null (openGoals sys) -> return M.empty
+--           | otherwise            -> Nothing
+--         SolveGoal goal
+--           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
+--           | otherwise                        -> Nothing
+--         Simplify                 -> singleCase simplifySystem
+--         Induction                -> M.map cleanupSystem <$> execInduction
+--         Contradiction _
+--           | null (contradictions ctxt sys) -> Nothing
+--           | otherwise                      -> Just M.empty
+--   where
+--     -- at this point it is safe to remove the free substitution, as all
+--     -- systems have it fully applied (by the virtue of a call to
+--     -- simplifySystem). We also reset the variable indices here.
+--     cleanupSystem =
+--          (`Precise.evalFresh` Precise.nothingUsed)
+--        . renamePrecise
+--        . set sSubst emptySubst
+-- 
+-- 
+--     -- expect only one or no subcase in the given case distinction
+--     singleCase m =
+--         case    removeRedundantCases ctxt [] id . map cleanupSystem
+--               . map fst . getDisj $ execReduction m ctxt sys (avoid sys) of
+--           []                  -> return $ M.empty
+--           [sys'] | check sys' -> return $ M.singleton "" sys'
+--                  | otherwise  -> mzero
+--           syss                ->
+--                return $ M.fromList (zip (map show [(1::Int)..]) syss)
+--       where check sys' = cleanupSystem sys /= sys'
+-- 
+--     -- solve the given goal
+--     -- PRE: Goal must be valid in this system.
+--     execSolveGoal goal =
+--         return . makeCaseNames . removeRedundantCases ctxt [] snd
+--                . map (second cleanupSystem) . map fst . getDisj
+--                $ runReduction solver ctxt sys (avoid sys)
+--       where
+--         ths    = L.get pcCaseDists ctxt
+--         solver = do name <- maybe (solveGoal goal)
+--                                   (fmap $ concat . intersperse "_")
+--                                   (solveWithCaseDistinction ctxt ths goal)
+--                     simplifySystem
+--                     return name
+-- 
+--         makeCaseNames =
+--             M.fromListWith (error "case names not unique")
+--           . uniqueListBy (comparing fst) id distinguish
+--           where
+--             distinguish n =
+--                 [ (\(x,y) -> (x ++ "_case_" ++ pad (show i), y))
+--                 | i <- [(1::Int)..] ]
+--               where
+--                 l      = length (show n)
+--                 pad cs = replicate (l - length cs) '0' ++ cs
+-- 
+--     -- Apply induction: possible if the system contains only
+--     -- a single, last-free, closed formula.
+--     execInduction
+--       | sys == sys0 =
+--           case S.toList $ L.get sFormulas sys of
+--             [gf] -> case ginduct gf of
+--                       Right (bc, sc) -> Just $ insCase "empty_trace"     bc
+--                                              $ insCase "non_empty_trace" sc
+--                                              $ M.empty
+--                       _              -> Nothing
+--             _    -> Nothing
+-- 
+--       | otherwise = Nothing
+--       where
+--         sys0 = set sFormulas (L.get sFormulas sys)
+--              $ set sLemmas (L.get sLemmas sys)
+--              $ emptySystem (L.get sCaseDistKind sys)
+-- 
+--         insCase name gf = M.insert name (set sFormulas (S.singleton gf) sys)
+
+        
 ------------------------------------------------------------------------------
 -- Heuristics
 ------------------------------------------------------------------------------
@@ -290,6 +382,35 @@ rankProofMethods ranking ctxt sys = do
                                CurrentlyDeducible    -> " (currently deducible)"
       )
 
+-- | Use a 'GoalRanking' to generate the ranked, list of possible
+-- 'ProofMethod's and their corresponding results in this 'ProofContext' and
+-- for this 'System'. If the resulting list is empty, then the constraint
+-- system is solved.
+rankDiffProofMethods :: GoalRanking -> DiffProofContext -> DiffSystem
+                 -> [(DiffProofMethod, (M.Map CaseName DiffSystem, String))]
+rankDiffProofMethods ranking ctxt sys = [] -- FIXME!!! do
+--     (m, expl) <-
+--             (contradiction <$> contradictions ctxt sys)
+--         <|> (case L.get pcUseInduction ctxt of
+--                AvoidInduction -> [(Simplify, ""), (Induction, "")]
+--                UseInduction   -> [(Induction, ""), (Simplify, "")]
+--             )
+--         <|> (solveGoalMethod <$> (rankGoals ctxt ranking sys $ openGoals sys))
+--     case execProofMethod ctxt m sys of
+--       Just cases -> return (m, (cases, expl))
+--       Nothing    -> []
+--   where
+--     contradiction c                    = (Contradiction (Just c), "")
+--     solveGoalMethod (goal, (nr, usefulness)) =
+--       ( SolveGoal goal
+--       , "nr. " ++ show nr ++ case usefulness of
+--                                Useful                -> ""
+--                                LoopBreaker           -> " (loop breaker)"
+--                                ProbablyConstructible -> " (probably constructible)"
+--                                CurrentlyDeducible    -> " (currently deducible)"
+--       )
+
+      
 newtype Heuristic = Heuristic [GoalRanking]
     deriving( Eq, Ord, Show )
 
@@ -458,8 +579,10 @@ prettyDiffProofMethod method = case method of
     DiffSorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
     DiffTrivial              -> keyword_ "TRIVIAL"
-    DiffUnfold               -> keyword_ "UNFOLD"
-
+    DiffRuleEquivalence      -> keyword_ "RULE_EQUIVALENCE"
+    DiffBackwardSearch       -> keyword_ "BACKWARD_SEARCH"  
+    
+    
 -- Derived instances
 --------------------
 

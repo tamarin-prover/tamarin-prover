@@ -21,6 +21,7 @@ module Theory.Constraint.Solver (
   -- used, and whether we are looking for the existence of a trace or proving
   -- the absence of any trace satisfying the constraint system.
   , ProofContext(..)
+  , DiffProofContext(..)
   , pcSignature
   , pcRules
   , pcCaseDists

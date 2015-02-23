@@ -18,9 +18,11 @@ module Theory.Constraint.System (
 
   -- * Constraint systems
   , System
+  , DiffSystem
 
   -- ** Construction
   , emptySystem
+  , emptyDiffSystem
 
   , SystemTraceQuantifier(..)
   , formulaToSystem
@@ -92,6 +94,7 @@ module Theory.Constraint.System (
   -- * Pretty-printing
   , prettySystem
   , prettyNonGraphSystem
+  , prettyNonGraphSystemDiff
 
   ) where
 
@@ -191,8 +194,15 @@ data System = System
     -- constraint system.
     deriving( Eq, Ord )
 
-$(mkLabels [''System, ''GoalStatus])
+-- | A system used in diff proofs. 
+-- FIXME: Necessary?
+data DiffSystem = DiffSystem
+    { _dsSystems        :: S.Set System          -- The constraint systems used
+    , _dsRules          :: S.Set ProtoRuleE      -- the rule(s) under consideration
+    }
+    deriving( Eq, Ord )
 
+$(mkLabels [''System, ''DiffSystem, ''GoalStatus])
 
 -- Further accessors
 --------------------
@@ -218,6 +228,11 @@ emptySystem = System
     M.empty S.empty S.empty Nothing emptyEqStore
     S.empty S.empty S.empty
     M.empty 0
+
+-- | The empty constraint system, which is logically equivalent to true.
+emptyDiffSystem :: DiffSystem
+emptyDiffSystem = DiffSystem
+    S.empty S.empty
 
 -- | Returns the constraint system that has to be proven to show that given
 -- formula holds in the context of the given theory.
@@ -426,6 +441,17 @@ prettyNonGraphSystem se = vsep $ map combine
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
 
+-- | Pretty print the non-graph part of the sequent; i.e. equation store and
+-- clauses.
+prettyNonGraphSystemDiff :: HighlightDocument d => DiffSystem -> d
+prettyNonGraphSystemDiff se = vsep $ map combine
+  [ ("rules",           vsep $ map prettyProtoRuleE $ S.toList $ L.get dsRules se)
+  , ("systems",         vsep $ map prettyNonGraphSystem $ S.toList $ L.get dsSystems se)
+  ]
+  where
+    combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
+
+    
 -- | Pretty print solved or unsolved goals.
 prettyGoals :: HighlightDocument d => Bool -> System -> d
 prettyGoals solved sys = vsep $ do
@@ -499,9 +525,11 @@ instance HasFrees System where
 $( derive makeBinary ''CaseDistKind)
 $( derive makeBinary ''GoalStatus)
 $( derive makeBinary ''System)
+$( derive makeBinary ''DiffSystem)
 $( derive makeBinary ''SystemTraceQuantifier)
 
 $( derive makeNFData ''CaseDistKind)
 $( derive makeNFData ''GoalStatus)
 $( derive makeNFData ''System)
+$( derive makeNFData ''DiffSystem)
 $( derive makeNFData ''SystemTraceQuantifier)

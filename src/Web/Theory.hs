@@ -68,7 +68,7 @@ import           System.Process
 
 import           Logic.Connectives
 import           Theory
-import           Theory.Constraint.System.Dot (nonEmptyGraph)
+import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
 
 import           Web.Settings
@@ -203,12 +203,12 @@ proofIndex renderUrl mkRoute =
 diffProofIndex :: HtmlDocument d
            => RenderUrl
            -> (ProofPath -> Route WebUI)          -- ^ Relative addressing function
-           -> DiffProof (Maybe System, Maybe Bool) -- ^ The annotated incremental proof
+           -> DiffProof (Maybe DiffSystem, Maybe Bool) -- ^ The annotated incremental proof
            -> d
 diffProofIndex renderUrl mkRoute =
     prettyDiffProofWith ppStep ppCase . insertPathsDiff
   where
-    ppCase step = markStatus (fst $ dpsInfo step)
+    ppCase step = markStatusDiff (fst $ dpsInfo step)
 
     ppStep step =
            case fst $ dpsInfo step of
@@ -267,6 +267,7 @@ lemmaIndexDiff :: HtmlDocument d
            -> Lemma IncrementalProof      -- ^ The lemma
            -> d
 lemmaIndexDiff renderUrl tidx s l =
+--     error (show annPrf)
     ( markStatus (psInfo $ root annPrf) $
         (kwLemma <-> prettyLemmaName l <> colon)
         -- FIXME: Reactivate theory editing.
@@ -295,7 +296,8 @@ diffLemmaIndex :: HtmlDocument d
            -> DiffLemma IncrementalDiffProof      -- ^ The lemma
            -> d
 diffLemmaIndex renderUrl tidx l =
-    ( markStatus (dpsInfo $ root annPrf) $
+--     error (show annPrf)
+    ( markStatusDiff (dpsInfo $ root annPrf) $
         (kwLemma <-> prettyDiffLemmaName l <> colon)
         -- FIXME: Reactivate theory editing.
         -- <->
@@ -419,9 +421,9 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     bold                 = withTag "strong" [] . text
     overview n info p    = linkToPath renderUrl (TheoryPathDiffMR tidx p) [] (bold n <-> info)
     diffRules            = overview ("Diff Rules") (text "") (DiffTheoryDiffRules)
-    messageLink s        = overview ("Message theory " ++ show s) (text "") (DiffTheoryMessage s)
+    messageLink s        = overview (show s ++ ": Message theory") (text "") (DiffTheoryMessage s)
     ruleLink s           = overview (ruleLinkMsg s) (rulesInfo s) (DiffTheoryRules s)
-    ruleLinkMsg s        = "Multiset rewriting rules " ++ show s ++
+    ruleLinkMsg s        = show s ++ ": Multiset rewriting rules " ++
                            if null(diffTheorySideAxioms s thy) then "" else " and axioms"
 
     reqCasesLink s name k = overview name (casesInfo s k) (DiffTheoryCaseDist s k 0 0)
@@ -607,9 +609,9 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath {-ctxt-} prf =
         , withTag "h3" [] (text "Constraint system")
         ] ++
         [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath)
-        | nonEmptyGraph se ]
+        | nonEmptyGraphDiff se ]
         ++
-        [ preformatted (Just "sequent") (prettyNonGraphSystem se)
+        [ preformatted (Just "sequent") (prettyNonGraphSystemDiff se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
         ] ++
         subCases
@@ -1739,12 +1741,22 @@ markStatus (Just _,  Just True ) = withTag "span" [("class","hl_good")]
 markStatus (Just _,  Just False) = withTag "span" [("class","hl_bad")]
 markStatus (Just _,  Nothing   ) = id
 
+-- | Translate a diff proof status returned by 'annotateLemmaProof' to a
+-- corresponding CSS class.
+markStatusDiff :: HtmlDocument d => (Maybe DiffSystem, Maybe Bool) -> d -> d
+markStatusDiff (Nothing, _         ) = withTag "span" [("class","hl_superfluous")]
+markStatusDiff (Just _,  Just True ) = withTag "span" [("class","hl_good")]
+markStatusDiff (Just _,  Just False) = withTag "span" [("class","hl_bad")]
+markStatusDiff (Just _,  Nothing   ) = id
+
+
 -- | Annotate a proof for pretty printing.
 -- The boolean flag indicates that the given proof step's children
 -- are (a) all annotated and (b) contain no sorry steps.
 annotateLemmaProof :: Lemma IncrementalProof
                    -> Proof (Maybe System, Maybe Bool)
 annotateLemmaProof lem =
+--     error (show (get lProof lem) ++ " - " ++ show prf)
     mapProofInfo (second interpret) prf
   where
     prf = annotateProof annotate $ get lProof lem
@@ -1767,7 +1779,7 @@ annotateLemmaProof lem =
 -- The boolean flag indicates that the given proof step's children
 -- are (a) all annotated and (b) contain no sorry steps.
 annotateDiffLemmaProof :: DiffLemma IncrementalDiffProof
-                   -> DiffProof (Maybe System, Maybe Bool)
+                   -> DiffProof (Maybe DiffSystem, Maybe Bool)
 annotateDiffLemmaProof lem =
     mapDiffProofInfo (second interpret) prf
   where

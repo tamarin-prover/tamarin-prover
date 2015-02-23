@@ -17,6 +17,7 @@ module Theory.Constraint.Solver.Types (
 
   -- * Proof context
     ProofContext(..)
+  , DiffProofContext(..)
   , InductionHint(..)
 
   , pcSignature
@@ -122,7 +123,18 @@ data ProofContext = ProofContext
        }
        deriving( Eq, Ord, Show )
 
-$(mkLabels [''ProofContext, ''CaseDistinction])
+-- | A diff proof context contains the two proof contexts for either side
+-- and all rules.
+data DiffProofContext = DiffProofContext
+       {
+--          _dpcPCLeft            :: ProofContext
+--        , _dpcPCRight           :: ProofContext
+         _dpcRules             :: [ProtoRuleE]
+       }
+       deriving( Eq, Ord, Show )
+
+       
+$(mkLabels [''ProofContext, ''DiffProofContext, ''CaseDistinction])
 
 
 -- | The 'MaudeHandle' of a proof-context.

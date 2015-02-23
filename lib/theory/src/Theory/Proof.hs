@@ -47,22 +47,29 @@ module Theory.Proof (
   , IncrementalProof
   , IncrementalDiffProof
   , Prover
+  , DiffProver
   , runProver
+  , runDiffProver
   , mapProverProof
+  , mapDiffProverDiffProof
 
   , orelse
   , tryProver
   , sorryProver
+  , sorryDiffProver
   , oneStepProver
   , focus
   , checkAndExtendProver
+  , checkAndExtendDiffProver
   , replaceSorryProver
+  , replaceDiffSorryProver
   , contradictionProver
 
   -- ** Explicit representation of a fully automatic prover
   , SolutionExtractor(..)
   , AutoProver(..)
   , runAutoProver
+  , runAutoDiffProver
 
   -- ** Pretty Printing
   , prettyProof
@@ -299,6 +306,17 @@ boundProofDepth bound =
       | 0 < n     = LNode ps                     $ M.map (go (pred n)) cs
       | otherwise = sorry (Just $ "bound " ++ show bound ++ " hit") info
 
+-- | @boundProofDepth bound prf@ bounds the depth of the proof @prf@ using
+-- 'Sorry' steps to replace the cut sub-proofs.
+boundDiffProofDepth :: Int -> DiffProof a -> DiffProof a
+boundDiffProofDepth bound =
+    go bound
+  where
+    go n (LNode ps@(DiffProofStep _ info) cs)
+      | 0 < n     = LNode ps                     $ M.map (go (pred n)) cs
+      | otherwise = diffSorry (Just $ "bound " ++ show bound ++ " hit") info
+
+      
 -- | Fold a proof.
 foldProof :: Monoid m => (ProofStep a -> m) -> Proof a -> m
 foldProof f =
@@ -339,6 +357,7 @@ data ProofStatus =
        | IncompleteProof    -- ^ There is a annotated sorry,
                             --   but no annotatd solved step.
        | TraceFound         -- ^ There is an annotated solved step
+    deriving (Show)
 
 instance Monoid ProofStatus where
     mempty = CompleteProof
@@ -358,9 +377,8 @@ proofStepStatus (ProofStep Solved    (Just _)) = TraceFound
 proofStepStatus (ProofStep (Sorry _) (Just _)) = IncompleteProof
 proofStepStatus (ProofStep _         (Just _)) = CompleteProof
 
--- | The status of a 'ProofStep'.
+-- | The status of a 'DiffProofStep'.
 diffProofStepStatus :: DiffProofStep (Maybe a) -> ProofStatus
--- FIXME: right semantics here?
 diffProofStepStatus (DiffProofStep _             Nothing ) = UndeterminedProof
 diffProofStepStatus (DiffProofStep DiffAttack    (Just _)) = TraceFound
 diffProofStepStatus (DiffProofStep (DiffSorry _) (Just _)) = IncompleteProof
@@ -416,6 +434,34 @@ checkProof ctxt prover d sys prf@(LNode (ProofStep method info) cs) =
       where
         unhandledCase = mapProofInfo ((,) Nothing) . prover d
 
+-- | @checkDiffProof rules se prf@ replays the proof @prf@ against the start
+-- sequent @se@. A failure to apply a proof method is denoted by a resulting
+-- proof step without an annotated sequent. An unhandled case is denoted using
+-- the 'Sorry' proof method.
+checkDiffProof :: DiffProofContext
+           -> (Int -> DiffSystem -> DiffProof (Maybe DiffSystem)) -- prover for new cases in depth
+           -> Int         -- ^ Original depth
+           -> DiffSystem
+           -> DiffProof a
+           -> DiffProof (Maybe a, Maybe DiffSystem)
+checkDiffProof ctxt prover d sys prf@(LNode (DiffProofStep method info) cs) =
+    case (method, execDiffProofMethod ctxt method sys) of
+        (DiffSorry reason, _         ) -> sorryNode reason cs
+        (_               , Just cases) -> node method $ checkChildren cases
+        (_               , Nothing   ) ->
+            sorryNode (Just "invalid proof step encountered")
+                      (M.singleton "" prf)
+  where
+    node m                 = LNode (DiffProofStep m (Just info, Just emptyDiffSystem))
+    sorryNode reason cases = node (DiffSorry reason) (M.map noSystemPrf cases)
+    noSystemPrf            = mapDiffProofInfo (\i -> (Just i, Nothing))
+
+    checkChildren cases = mergeMapsWith
+        unhandledCase noSystemPrf (checkDiffProof ctxt prover (d + 1)) cases cs
+      where
+        unhandledCase = mapDiffProofInfo ((,) Nothing) . prover d
+
+        
 -- | Annotate a proof with the constraint systems of all intermediate steps
 -- under the assumption that all proof steps are valid. If some proof steps
 -- might be invalid, then you must use 'checkProof', which handles them
@@ -437,6 +483,26 @@ annotateWithSystems ctxt =
         csAnn       = extract "proof method execution failed" $
                       execProofMethod ctxt method sysOrig
 
+-- | Annotate a proof with the constraint systems of all intermediate steps
+-- under the assumption that all proof steps are valid. If some proof steps
+-- might be invalid, then you must use 'checkProof', which handles them
+-- gracefully.
+annotateWithDiffSystems :: DiffProofContext -> DiffSystem -> DiffProof () -> DiffProof DiffSystem
+annotateWithDiffSystems ctxt =
+    go
+  where
+    -- Here we are careful to construct the result such that an inspection of
+    -- the proof does not force the recomputed constraint systems.
+    go sysOrig (LNode (DiffProofStep method _) csOrig) =
+      LNode (DiffProofStep method sysOrig) $ M.fromList $ do
+          (name, prf) <- M.toList csOrig
+          let sysAnn = extract ("case '" ++ name ++ "' non-existent") $
+                       M.lookup name csAnn
+          return (name, go sysAnn prf)
+      where
+        extract msg = fromMaybe (error $ "annotateWithSystems: " ++ msg)
+        csAnn       = extract "diff proof method execution failed" $
+                      execDiffProofMethod ctxt method sysOrig
 
 ------------------------------------------------------------------------------
 -- Provers: the interface to the outside world.
@@ -449,7 +515,7 @@ type IncrementalProof = Proof (Maybe System)
 -- | Incremental diff proofs are used to represent intermediate results of proof
 -- checking/construction.
 -- FIXME: not clear if/how we need the system
-type IncrementalDiffProof = DiffProof (Maybe System)
+type IncrementalDiffProof = DiffProof (Maybe DiffSystem)
 
 
 -- | Provers whose sequencing is handled via the 'Monoid' instance.
@@ -471,13 +537,40 @@ instance Monoid Prover where
     p1 `mappend` p2 = Prover $ \ctxt d se ->
         runProver p1 ctxt d se >=> runProver p2 ctxt d se
 
+-- | Provers whose sequencing is handled via the 'Monoid' instance.
+--
+-- > p1 `mappend` p2
+--
+-- Is a prover that first runs p1 and then p2 on the resulting proof.
+newtype DiffProver =  DiffProver
+          { runDiffProver
+              :: DiffProofContext              -- proof rules to use
+              -> Int                           -- proof depth
+              -> DiffSystem                    -- original sequent to start with
+              -> IncrementalDiffProof          -- original proof
+              -> Maybe IncrementalDiffProof    -- resulting proof
+          }
+
+instance Monoid DiffProver where
+    mempty          = DiffProver $ \_  _ _ -> Just
+    p1 `mappend` p2 = DiffProver $ \ctxt d se ->
+        runDiffProver p1 ctxt d se >=> runDiffProver p2 ctxt d se
+
 -- | Map the proof generated by the prover.
 mapProverProof :: (IncrementalProof -> IncrementalProof) -> Prover -> Prover
 mapProverProof f p = Prover $ \ ctxt d se prf -> f <$> runProver p ctxt d se prf
 
+-- | Map the proof generated by the prover.
+mapDiffProverDiffProof :: (IncrementalDiffProof -> IncrementalDiffProof) -> DiffProver -> DiffProver
+mapDiffProverDiffProof f p = DiffProver $ \ctxt d se prf -> f <$> runDiffProver p ctxt d se prf
+
 -- | Prover that always fails.
 failProver :: Prover
 failProver = Prover (\ _ _ _ _ -> Nothing)
+
+-- | Prover that always fails.
+failDiffProver :: DiffProver
+failDiffProver = DiffProver (\_ _ _ _ -> Nothing)
 
 -- | Resorts to the second prover, if the first one is not successful.
 orelse :: Prover -> Prover -> Prover
@@ -497,6 +590,10 @@ oneStepProver method = Prover $ \ctxt _ se _ -> do
 -- | Replace the current proof with a sorry step and the given reason.
 sorryProver :: Maybe String -> Prover
 sorryProver reason = Prover $ \_ _ se _ -> return $ sorry reason (Just se)
+
+-- | Replace the current proof with a sorry step and the given reason.
+sorryDiffProver :: Maybe String -> DiffProver
+sorryDiffProver reason = DiffProver $ \_ _ se _ -> return $ diffSorry reason (Just se)
 
 -- | Apply a prover only to a sub-proof, fails if the subproof doesn't exist.
 focus :: ProofPath -> Prover -> Prover
@@ -518,6 +615,15 @@ checkAndExtendProver prover0 = Prover $ \ctxt d se prf ->
     prover ctxt d se =
         fromMaybe unhandledCase $ runProver prover0 ctxt d se unhandledCase
 
+-- | Check the proof and handle new cases using the given prover.
+checkAndExtendDiffProver :: DiffProver -> DiffProver
+checkAndExtendDiffProver prover0 = DiffProver $ \ctxt d se prf ->
+    return $ mapDiffProofInfo snd $ checkDiffProof ctxt (prover ctxt) d se prf
+  where
+    unhandledCase = diffSorry (Just "unhandled case") Nothing
+    prover ctxt d se =
+        fromMaybe unhandledCase $ runDiffProver prover0 ctxt d se unhandledCase
+
 -- | Replace all annotated sorry steps using the given prover.
 replaceSorryProver :: Prover -> Prover
 replaceSorryProver prover0 = Prover prover
@@ -529,6 +635,16 @@ replaceSorryProver prover0 = Prover prover
         replace (LNode ps cases) =
             LNode ps $ M.map replace cases
 
+-- | Replace all annotated sorry steps using the given prover.
+replaceDiffSorryProver :: DiffProver -> DiffProver
+replaceDiffSorryProver prover0 = DiffProver prover
+  where
+    prover ctxt d _ = return . replace
+      where
+        replace prf@(LNode (DiffProofStep (DiffSorry _) (Just se)) _) =
+            fromMaybe prf $ runDiffProver prover0 ctxt d se prf
+        replace (LNode ps cases) =
+            LNode ps $ M.map replace cases
 
 -- | Use the first prover that works.
 firstProver :: [Prover] -> Prover
@@ -576,6 +692,28 @@ runAutoProver (AutoProver heuristic bound cut) =
     boundProver :: Int -> Prover -> Prover
     boundProver b p = Prover $ \ctxt d se prf ->
         boundProofDepth b <$> runProver p ctxt d se prf
+
+runAutoDiffProver :: AutoProver -> DiffProver
+runAutoDiffProver (AutoProver heuristic bound cut) =
+    mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
+  where
+    cutSolved = case cut of
+      CutDFS     -> cutOnSolvedDFSDiff
+      CutBFS     -> cutOnSolvedBFSDiff
+      CutNothing -> id
+
+    -- | The standard automatic prover that ignores the existing proof and
+    -- tries to find one by itself.
+    autoProver :: DiffProver
+    autoProver = DiffProver $ \ctxt depth sys _ ->
+        return $ fmap (fmap Just)
+               $ annotateWithDiffSystems ctxt sys
+               $ proveDiffSystemDFS heuristic ctxt depth sys
+
+    -- | Bound the depth of proofs generated by the given prover.
+    boundProver :: Int -> DiffProver -> DiffProver
+    boundProver b p = DiffProver $ \ctxt d se prf ->
+        boundDiffProofDepth b <$> runDiffProver p ctxt d se prf
 
 
 -- | The result of one pass of iterative deepening.
@@ -628,6 +766,44 @@ cutOnSolvedDFS prf0 =
         Nothing     ->
           error "Theory.Constraint.cutOnSolvedDFS: impossible, extractSolved failed, invalid path"
 
+-- | @cutOnSolvedDFS prf@ removes all other cases if an attack is found. The
+-- attack search is performed using a parallel DFS traversal with iterative
+-- deepening.
+--
+-- FIXME: Note that this function may use a lot of space, as it holds onto the
+-- whole proof tree.
+cutOnSolvedDFSDiff :: DiffProof (Maybe a) -> DiffProof (Maybe a)
+cutOnSolvedDFSDiff prf0 =
+    go (4 :: Integer) $ insertPathsDiff prf0
+  where
+    go dMax prf = case findSolved 0 prf of
+        NoSolution      -> prf0
+        MaybeNoSolution -> go (2 * dMax) prf
+        Solution path   -> extractSolved path prf0
+      where
+        findSolved d node
+          | d >= dMax = MaybeNoSolution
+          | otherwise = case node of
+              -- do not search in nodes that are not annotated
+              LNode (DiffProofStep _          (Nothing, _   )) _  -> NoSolution
+              LNode (DiffProofStep DiffSolved (Just _ , path)) _  -> Solution path
+              LNode (DiffProofStep _          (Just _ , _   )) cs ->
+                  foldMap (findSolved (succ d))
+                      (cs `using` parTraversable nfProofMethod)
+
+        nfProofMethod node = do
+            void $ rseq (dpsMethod $ root node)
+            void $ rseq (dpsInfo   $ root node)
+            void $ rseq (children node)
+            return node
+
+    extractSolved []         p               = p
+    extractSolved (label:ps) (LNode pstep m) = case M.lookup label m of
+        Just subprf ->
+          LNode pstep (M.fromList [(label, extractSolved ps subprf)])
+        Nothing     ->
+          error "Theory.Constraint.cutOnSolvedDFSDiff: impossible, extractSolved failed, invalid path"
+          
 -- | Search for attacks in a BFS manner.
 cutOnSolvedBFS :: Proof (Maybe a) -> Proof (Maybe a)
 cutOnSolvedBFS =
@@ -657,6 +833,34 @@ cutOnSolvedBFS =
       | isNothing (psInfo step) = return prf
       | otherwise               = LNode step <$> traverse (checkLevel (l-1)) cs
 
+-- | Search for attacks in a BFS manner.
+cutOnSolvedBFSDiff :: DiffProof (Maybe a) -> DiffProof (Maybe a)
+cutOnSolvedBFSDiff =
+    go (1::Int)
+  where
+    go l prf =
+      -- FIXME: See if that poor man's logging could be done better.
+      trace ("searching for attacks at depth: " ++ show l) $
+        case S.runState (checkLevel l prf) CompleteProof of
+          (_, UndeterminedProof) -> error "cutOnSolvedBFS: impossible"
+          (_, CompleteProof)     -> prf
+          (_, IncompleteProof)   -> go (l+1) prf
+          (prf', TraceFound)     ->
+              trace ("attack found at depth: " ++ show l) prf'
+
+    checkLevel 0 (LNode  step@(DiffProofStep DiffSolved (Just _)) _) =
+        S.put TraceFound >> return (LNode step M.empty)
+    checkLevel 0 prf@(LNode (DiffProofStep _ x) cs)
+      | M.null cs = return prf
+      | otherwise = do
+          st <- S.get
+          msg <- case st of
+              TraceFound -> return $ "ignored (attack exists)"
+              _           -> S.put IncompleteProof >> return "bound reached"
+          return $ LNode (DiffProofStep (DiffSorry (Just msg)) x) M.empty
+    checkLevel l prf@(LNode step cs)
+      | isNothing (dpsInfo step) = return prf
+      | otherwise                = LNode step <$> traverse (checkLevel (l-1)) cs
 
 -- | @proveSystemDFS rules se@ explores all solutions of the initial
 -- constraint system using a depth-first-search strategy to resolve the
@@ -677,6 +881,24 @@ proveSystemDFS heuristic ctxt d0 sys0 =
         node method cases =
           LNode (ProofStep method ()) (M.map (prove (succ depth)) cases)
 
+-- | @proveSystemDFS rules se@ explores all solutions of the initial
+-- constraint system using a depth-first-search strategy to resolve the
+-- non-determinism wrt. what goal to solve next.  This proof can be of
+-- infinite depth, if the proof strategy loops.
+--
+-- Use 'annotateWithSystems' to annotate the proof tree with the constraint
+-- systems.
+proveDiffSystemDFS :: Heuristic -> DiffProofContext -> Int -> DiffSystem -> DiffProof ()
+proveDiffSystemDFS heuristic ctxt d0 sys0 =
+    prove d0 sys0
+  where
+    prove !depth sys =
+        case rankDiffProofMethods (useHeuristic heuristic depth) ctxt sys of
+          []                         -> node DiffSolved M.empty
+          (method, (cases, _expl)):_ -> node method cases
+      where
+        node method cases =
+          LNode (DiffProofStep method ()) (M.map (prove (succ depth)) cases)
 
 ------------------------------------------------------------------------------
 -- Pretty printing
