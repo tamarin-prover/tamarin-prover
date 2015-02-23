@@ -38,10 +38,10 @@ module Theory (
   , isBothLemma
 
   -- * Theories
-  , Side(..)
   , Theory(..)
   , DiffTheory(..)
   , TheoryItem(..)
+  , DiffTheoryItem(..)
   , thyName
   , thySignature
   , thyCache
@@ -51,6 +51,7 @@ module Theory (
   , diffThyCacheLeft
   , diffThyCacheRight
   , diffThyItems
+  , diffTheoryLemmas
   , diffTheorySideLemmas
   , diffTheoryDiffRules
   , diffTheoryDiffLemmas
@@ -156,6 +157,7 @@ module Theory (
   -- * Convenience exports
   , module Theory.Model
   , module Theory.Proof
+  , module Theory.Constraint.Solver.Types
 
   ) where
 
@@ -187,6 +189,7 @@ import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
+import           Theory.Constraint.Solver.Types
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -468,9 +471,6 @@ lemmaCaseDistKind lem
 -- | A formal comment is a header together with the body of the comment.
 type FormalComment = (String, String)
 
--- | In the diff type, we have either the Left Hand Side or the Right Hand Side
-data Side = LHS | RHS deriving(Show, Eq, Ord, Read)
-
 -- | A theory item built over the given rule type.
 data TheoryItem r p =
        RuleItem r
@@ -640,10 +640,9 @@ diffTheorySideAxioms s =
     foldDiffTheoryItem (const []) (const []) (const []) (const []) (\(x, y) -> if (x == s) then [y] else []) (const []) <=< L.get diffThyItems
 
 -- | All lemmas of a theory.
--- REMOVE
--- diffTheoryLemmas :: DiffTheory sig c r r2 p p2 -> [(Side, Lemma p2)]
--- diffTheoryLemmas =
---    foldDiffTheoryItem (const []) (const []) (const []) return (const []) (const []) <=< L.get diffThyItems
+diffTheoryLemmas :: DiffTheory sig c r r2 p p2 -> [(Side, Lemma p2)]
+diffTheoryLemmas =
+   foldDiffTheoryItem (const []) (const []) (const []) return (const []) (const []) <=< L.get diffThyItems
 
 -- | All lemmas of a theory.
 diffTheorySideLemmas :: Side -> DiffTheory sig c r r2 p p2 -> [Lemma p2]
@@ -1745,7 +1744,6 @@ $( derive makeBinary ''LemmaAttribute)
 $( derive makeBinary ''TraceQuantifier)
 $( derive makeBinary ''Axiom)
 $( derive makeBinary ''Lemma)
-$( derive makeBinary ''Side)
 $( derive makeBinary ''DiffLemma)
 $( derive makeBinary ''ClosedProtoRule)
 $( derive makeBinary ''ClosedRuleCache)
@@ -1758,7 +1756,6 @@ $( derive makeNFData ''LemmaAttribute)
 $( derive makeNFData ''TraceQuantifier)
 $( derive makeNFData ''Axiom)
 $( derive makeNFData ''Lemma)
-$( derive makeNFData ''Side)
 $( derive makeNFData ''DiffLemma)
 $( derive makeNFData ''ClosedProtoRule)
 $( derive makeNFData ''ClosedRuleCache)

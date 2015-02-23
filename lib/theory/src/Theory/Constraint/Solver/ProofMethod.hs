@@ -111,8 +111,8 @@ data ProofMethod =
 data DiffProofMethod =
     DiffSorry (Maybe String)                 -- ^ Proof was not completed
   | DiffRuleEquivalence                      -- ^ Consider all rules
-  | DiffTrivial                              -- ^ The rule is trivially sound
-  | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
+  | DiffTrivial ProtoRuleE                   -- ^ The rule is trivially sound
+  | DiffBackwardSearch Side ProtoRuleE       -- ^ Do the backward search starting from a rule
   | DiffSolved                               -- ^ No attack was found
   | DiffAttack                               -- ^ A potential attack was found
   deriving( Eq, Ord, Show )
@@ -240,22 +240,21 @@ execProofMethod ctxt method sys =
 -- and all variable indices reset.
 execDiffProofMethod :: DiffProofContext
                 -> DiffProofMethod -> DiffSystem -> Maybe (M.Map CaseName DiffSystem)
-execDiffProofMethod ctxt method sys = return M.empty
-  -- FIXME!!
---       case method of
---         DiffSorry _                  -> return M.empty
---         DiffSolved
---           | null (openGoals sys) -> return M.empty
---           | otherwise            -> Nothing
---         SolveGoal goal
+execDiffProofMethod ctxt method sys = -- return M.empty
+      case method of
+        DiffSorry _                    -> return M.empty
+        DiffSolved                     -> Nothing -- FIXME: check if allowed?
+        DiffBackwardSearch side rule  -- FIXME
 --           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
---           | otherwise                        -> Nothing
---         Simplify                 -> singleCase simplifySystem
---         Induction                -> M.map cleanupSystem <$> execInduction
---         Contradiction _
---           | null (contradictions ctxt sys) -> Nothing
---           | otherwise                      -> Just M.empty
---   where
+          | otherwise                        -> Nothing
+        DiffTrivial      rule          -> Nothing -- FIXME
+        DiffAttack                     -> Nothing -- FIXME
+        DiffRuleEquivalence            -> case L.get dsProofType sys of
+            Nothing      -> Just ruleEquivalence
+            _            -> Nothing
+          
+  where
+    ruleEquivalence = M.singleton "Rule-Equivalence" $ L.set dsRules (S.fromList (L.get dpcRules ctxt)) $ L.set dsProofType (Just RuleEquivalence) sys
 --     -- at this point it is safe to remove the free substitution, as all
 --     -- systems have it fully applied (by the virtue of a call to
 --     -- simplifySystem). We also reset the variable indices here.
@@ -391,8 +390,9 @@ rankDiffProofMethods :: GoalRanking -> DiffProofContext -> DiffSystem
 rankDiffProofMethods ranking ctxt sys = do
     (m, expl) <-
             [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
-        <|> [(DiffTrivial, "Trivial rule equivalence")]
-        <|> [(DiffBackwardSearch, "Do backward search from rule")]
+        <|> (map (\x -> (DiffTrivial x, "Trivial rule equivalence")) (L.get dpcRules ctxt))
+        <|> (map (\x -> (DiffBackwardSearch LHS x, "Do backward search from rule")) (L.get dpcRules ctxt))
+        <|> (map (\x -> (DiffBackwardSearch RHS x, "Do backward search from rule")) (L.get dpcRules ctxt))
         <|> [(DiffSolved, "Backward search completed")]
         <|> [(DiffAttack, "Found attack")]
 --             (contradiction <$> contradictions ctxt sys)
@@ -583,9 +583,9 @@ prettyDiffProofMethod method = case method of
     DiffAttack               -> keyword_ "ATTACK" <-> lineComment_ "trace found"
     DiffSorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
-    DiffTrivial              -> keyword_ "TRIVIAL"
-    DiffRuleEquivalence      -> keyword_ "RULE_EQUIVALENCE"
-    DiffBackwardSearch       -> keyword_ "BACKWARD_SEARCH"  
+    DiffTrivial _            -> keyword_ "trivial"
+    DiffRuleEquivalence      -> keyword_ "rule-equivalence"
+    DiffBackwardSearch _ _   -> keyword_ "backward-search"  
     
     
 -- Derived instances

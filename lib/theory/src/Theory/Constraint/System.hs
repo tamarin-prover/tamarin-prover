@@ -18,6 +18,7 @@ module Theory.Constraint.System (
 
   -- * Constraint systems
   , System
+  , DiffProofType(..)
   , DiffSystem
 
   -- ** Construction
@@ -26,6 +27,10 @@ module Theory.Constraint.System (
 
   , SystemTraceQuantifier(..)
   , formulaToSystem
+  
+  -- ** Diff proof system
+  , dsProofType
+  , dsRules
 
   -- ** Node constraints
   , sNodes
@@ -194,10 +199,13 @@ data System = System
     -- constraint system.
     deriving( Eq, Ord )
 
+data DiffProofType = RuleEquivalence | None
+    deriving( Eq, Ord )
+    
 -- | A system used in diff proofs. 
--- FIXME: Necessary?
 data DiffSystem = DiffSystem
-    { _dsSystems        :: S.Set System          -- The constraint systems used
+    { _dsProofType      :: Maybe DiffProofType   -- The diff proof technique used
+    , _dsSystems        :: S.Set System          -- The constraint systems used
     , _dsRules          :: S.Set ProtoRuleE      -- the rule(s) under consideration
     }
     deriving( Eq, Ord )
@@ -232,7 +240,7 @@ emptySystem = System
 -- | The empty diff constraint system.
 emptyDiffSystem :: DiffSystem
 emptyDiffSystem = DiffSystem
-    S.empty S.empty
+    Nothing S.empty S.empty
 
 -- | Returns the constraint system that has to be proven to show that given
 -- formula holds in the context of the given theory.
@@ -524,12 +532,14 @@ instance HasFrees System where
 
 $( derive makeBinary ''CaseDistKind)
 $( derive makeBinary ''GoalStatus)
+$( derive makeBinary ''DiffProofType)
 $( derive makeBinary ''System)
 $( derive makeBinary ''DiffSystem)
 $( derive makeBinary ''SystemTraceQuantifier)
 
 $( derive makeNFData ''CaseDistKind)
 $( derive makeNFData ''GoalStatus)
+$( derive makeNFData ''DiffProofType)
 $( derive makeNFData ''System)
 $( derive makeNFData ''DiffSystem)
 $( derive makeNFData ''SystemTraceQuantifier)

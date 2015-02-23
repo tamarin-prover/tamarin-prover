@@ -28,6 +28,7 @@ module Theory.Constraint.Solver.Types (
   , pcUseInduction
   , pcTraceQuantifier
   , pcMaudeHandle
+  , dpcRules
 
   -- ** Classified rules
   , ClassifiedRules(..)
@@ -44,6 +45,8 @@ module Theory.Constraint.Solver.Types (
   , cdGoal
   , cdCases
 
+  , Side(..)
+  
   , prettyCaseDistinction
 
   ) where
@@ -97,6 +100,10 @@ nonSilentRules = filter (not . null . L.get rActs) . joinAllRules
 ------------------------------------------------------------------------------
 -- Proof Context
 ------------------------------------------------------------------------------
+
+-- | In the diff type, we have either the Left Hand Side or the Right Hand Side
+data Side = LHS | RHS deriving(Show, Eq, Ord, Read)
+
 
 -- | A big-step case distinction.
 data CaseDistinction = CaseDistinction
@@ -169,10 +176,12 @@ prettyCaseDistinction th = vcat $
 -- NFData
 ---------
 
+$( derive makeBinary ''Side)
 $( derive makeBinary ''CaseDistinction)
 $( derive makeBinary ''ClassifiedRules)
 $( derive makeBinary ''InductionHint)
 
+$( derive makeNFData ''Side)
 $( derive makeNFData ''CaseDistinction)
 $( derive makeNFData ''ClassifiedRules)
 $( derive makeNFData ''InductionHint)
