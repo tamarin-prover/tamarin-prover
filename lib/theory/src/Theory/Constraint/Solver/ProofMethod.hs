@@ -388,17 +388,22 @@ rankProofMethods ranking ctxt sys = do
 -- system is solved.
 rankDiffProofMethods :: GoalRanking -> DiffProofContext -> DiffSystem
                  -> [(DiffProofMethod, (M.Map CaseName DiffSystem, String))]
-rankDiffProofMethods ranking ctxt sys = [] -- FIXME!!! do
---     (m, expl) <-
+rankDiffProofMethods ranking ctxt sys = do
+    (m, expl) <-
+            [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
+        <|> [(DiffTrivial, "Trivial rule equivalence")]
+        <|> [(DiffBackwardSearch, "Do backward search from rule")]
+        <|> [(DiffSolved, "Backward search completed")]
+        <|> [(DiffAttack, "Found attack")]
 --             (contradiction <$> contradictions ctxt sys)
 --         <|> (case L.get pcUseInduction ctxt of
 --                AvoidInduction -> [(Simplify, ""), (Induction, "")]
 --                UseInduction   -> [(Induction, ""), (Simplify, "")]
 --             )
 --         <|> (solveGoalMethod <$> (rankGoals ctxt ranking sys $ openGoals sys))
---     case execProofMethod ctxt m sys of
---       Just cases -> return (m, (cases, expl))
---       Nothing    -> []
+    case execDiffProofMethod ctxt m sys of
+      Just cases -> return (m, (cases, expl))
+      Nothing    -> []
 --   where
 --     contradiction c                    = (Contradiction (Just c), "")
 --     solveGoalMethod (goal, (nr, usefulness)) =

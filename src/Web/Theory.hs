@@ -596,10 +596,10 @@ subDiffProofSnippet :: HtmlDocument d
                     -> DiffTheoryInfo            -- ^ The diff theory info of this index.
                     -> String                    -- ^ The diff lemma.
                     -> ProofPath                 -- ^ The proof path.
---                     -> ProofContext              -- ^ The proof context. Necessary?
+                    -> DiffProofContext          -- ^ The proof context.
                     -> IncrementalDiffProof      -- ^ The sub-proof.
                     -> d
-subDiffProofSnippet renderUrl tidx ti lemma proofPath {-ctxt-} prf =
+subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     case dpsInfo $ root prf of
       Nothing -> text $ "no annotated constraint system / " ++ nCases ++ " sub-case(s)"
       Just se -> vcat $
@@ -653,7 +653,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath {-ctxt-} prf =
     nCases                  = show $ M.size $ children prf
     depth                   = length proofPath
     ranking                 = useHeuristic (apHeuristic $ dtiAutoProver ti) depth
-    diffProofMethods        = const [] -- FIXME rankProofMethods ranking ctxt
+    diffProofMethods        = rankDiffProofMethods ranking ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -957,8 +957,8 @@ htmlDiffThyPath renderUrl info path =
 
     go (DiffTheoryDiffProof l p)         = pp $
         fromMaybe (text "No such lemma or proof path.") $ do
---            lemma <- lookupDiffLemma l thy
-           subDiffProofSnippet renderUrl tidx info l p {-(getProofContextDiff s lemma thy)-}
+           lemma <- lookupDiffLemma l thy
+           subDiffProofSnippet renderUrl tidx info l p (getDiffProofContext lemma thy)
              <$> resolveProofPathDiffLemma thy l p
 
     go (DiffTheoryLemma _ _)           = pp $ text "Implement lemma pretty printing!"
