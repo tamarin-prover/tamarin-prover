@@ -1368,7 +1368,7 @@ nextDiffThyPath thy = go
     go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS TypedCaseDist 0 0
     go (DiffTheoryCaseDist RHS TypedCaseDist _ _)   = fromMaybe DiffTheoryHelp firstLemma
     go (DiffTheoryLemma s lemma)                    = DiffTheoryProof s lemma []
-    go (DiffTheoryDiffLemma _)                      = DiffTheoryHelp -- FIXME
+    go (DiffTheoryDiffLemma lemma)                  = DiffTheoryDiffProof lemma []
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
@@ -1386,7 +1386,7 @@ nextDiffThyPath thy = go
 
     firstDiffLemma = case getDiffLemmas thy of
                       []  -> DiffTheoryHelp
-                      l:_ -> DiffTheoryDiffLemma (get lDiffName l)
+                      l:_ -> DiffTheoryDiffProof (get lDiffName l) []
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
     diffLemmas = map (\l -> (get lDiffName l, l)) $ diffTheoryDiffLemmas thy
@@ -1457,7 +1457,9 @@ prevDiffThyPath thy = go
     go (DiffTheoryLemma s l)
       | Just prevLemma <- getPrevLemma s l = DiffTheoryProof s prevLemma (lastPath s prevLemma)
       | otherwise                          = DiffTheoryCaseDist RHS TypedCaseDist 0 0
-    go (DiffTheoryDiffLemma _)             = DiffTheoryHelp -- FIXME
+    go (DiffTheoryDiffLemma l)
+      | Just prevLemma <- getPrevDiffLemma l      = DiffTheoryDiffProof prevLemma (lastPathDiff prevLemma)
+      | otherwise                                 = lastLemmaRHS
     go (DiffTheoryProof s l p)
       | Just prevPath <- getPrevPath s l p = DiffTheoryProof s l prevPath
       | Just prevLemma <- getPrevLemma s l = DiffTheoryProof s prevLemma (lastPath s prevLemma)
@@ -1575,7 +1577,7 @@ nextSmartDiffThyPath thy = go
 
     firstDiffLemma = case getDiffLemmas thy of
                       []  -> DiffTheoryHelp
-                      l:_ -> DiffTheoryDiffLemma (get lDiffName l)
+                      l:_ -> DiffTheoryDiffProof (get lDiffName l) []
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
     diffLemmas = map (\l -> (get lDiffName l, l)) $ diffTheoryDiffLemmas thy
