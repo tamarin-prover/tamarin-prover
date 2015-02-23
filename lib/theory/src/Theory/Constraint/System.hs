@@ -229,7 +229,7 @@ emptySystem = System
     S.empty S.empty S.empty
     M.empty 0
 
--- | The empty constraint system, which is logically equivalent to true.
+-- | The empty diff constraint system.
 emptyDiffSystem :: DiffSystem
 emptyDiffSystem = DiffSystem
     S.empty S.empty

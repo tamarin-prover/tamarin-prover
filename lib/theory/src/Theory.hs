@@ -1313,6 +1313,11 @@ mkSystemDiff s ctxt axioms previousItems =
                 && AllTraces == L.get lTraceQuantifier lem
         return $ formulaToGuarded_ $ L.get lFormula lem
 
+-- | Construct a diff constraint system.
+mkDiffSystem :: DiffProofContext -> [(Side, Axiom)] -> [DiffTheoryItem r r2 p p2]
+        -> DiffSystem
+mkDiffSystem ctxt axioms items = emptyDiffSystem -- FIXME!!!
+
 ------------------------------------------------------------------------------
 -- References to lemmas
 ------------------------------------------------------------------------------
@@ -1387,7 +1392,7 @@ modifyLemmaProofDiff s prover name thy =
         
 -- | Modify the proof at the given diff lemma ref, if there is one. Fails if the
 -- path is not present or if the prover fails.
-modifyDiffLemmaProof :: Prover -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
+modifyDiffLemmaProof :: DiffProver -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
 modifyDiffLemmaProof prover name thy =
     modA diffThyItems changeItems thy
   where
@@ -1396,7 +1401,9 @@ modifyDiffLemmaProof prover name thy =
 
     change preItems (DiffLemmaItem lem) =
           do
---             lem' <- modA lDiffProof (runProver prover ctxt 0 sys) lem -- FIXME
+            let ctxt = getDiffProofContext lem thy
+                sys  = mkDiffSystem ctxt (diffTheoryAxioms thy) preItems
+            lem' <- modA lDiffProof (runDiffProver prover ctxt 0 sys) lem
             return $ DiffLemmaItem lem
     change _ _ = error "DiffLemmaProof: change: impossible"
 

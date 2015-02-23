@@ -58,7 +58,9 @@ module Theory.Proof (
   , sorryProver
   , sorryDiffProver
   , oneStepProver
+  , oneStepDiffProver
   , focus
+  , focusDiff
   , checkAndExtendProver
   , checkAndExtendDiffProver
   , replaceSorryProver
@@ -258,6 +260,19 @@ atPathDiff = foldM (flip M.lookup . children)
 modifyAtPath :: (Proof a -> Maybe (Proof a)) -> ProofPath
              -> Proof a -> Maybe (Proof a)
 modifyAtPath f =
+    go
+  where
+    go []     prf = f prf
+    go (l:ls) prf = do
+        let cs = children prf
+        prf' <- go ls =<< M.lookup l cs
+        return (prf { children = M.insert l prf' cs })
+
+-- | @modifyAtPath f path prf@ applies @f@ to the subproof at @path@,
+-- if there is one.
+modifyAtPathDiff :: (DiffProof a -> Maybe (DiffProof a)) -> ProofPath
+                 -> DiffProof a -> Maybe (DiffProof a)
+modifyAtPathDiff f =
     go
   where
     go []     prf = f prf
@@ -587,6 +602,12 @@ oneStepProver method = Prover $ \ctxt _ se _ -> do
     cases <- execProofMethod ctxt method se
     return $ LNode (ProofStep method (Just se)) (M.map (unproven . Just) cases)
 
+-- | Try to execute one proof step using the given proof method.
+oneStepDiffProver :: DiffProofMethod -> DiffProver
+oneStepDiffProver method = DiffProver $ \ctxt _ se _ -> do
+    cases <- execDiffProofMethod ctxt method se
+    return $ LNode (DiffProofStep method (Just se)) (M.map (diffUnproven . Just) cases)
+
 -- | Replace the current proof with a sorry step and the given reason.
 sorryProver :: Maybe String -> Prover
 sorryProver reason = Prover $ \_ _ se _ -> return $ sorry reason (Just se)
@@ -605,6 +626,17 @@ focus path prover =
     prover' ctxt d prf = do
         se <- psInfo (root prf)
         runProver prover ctxt d se prf
+
+-- | Apply a diff prover only to a sub-proof, fails if the subproof doesn't exist.
+focusDiff :: ProofPath -> DiffProver -> DiffProver
+focusDiff []   prover = prover
+focusDiff path prover =
+    DiffProver $ \ctxt d _ prf ->
+        modifyAtPathDiff (prover' ctxt (d + length path)) path prf
+  where
+    prover' ctxt d prf = do
+        se <- dpsInfo (root prf)
+        runDiffProver prover ctxt d se prf
 
 -- | Check the proof and handle new cases using the given prover.
 checkAndExtendProver :: Prover -> Prover

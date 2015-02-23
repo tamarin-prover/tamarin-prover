@@ -31,6 +31,7 @@ module Web.Theory
   , prevSmartDiffThyPath
   , applyMethodAtPath
   , applyMethodAtPathDiff
+  , applyDiffMethodAtPath
   , applyProverAtPath
   , applyDiffProverAtPath
   , applyProverAtPathDiff
@@ -117,6 +118,25 @@ applyMethodAtPathDiff thy s lemmaName proofPath heuristic i = do
        replaceSorryProver (oneStepProver Solved)
       )
 
+applyDiffMethodAtPath :: ClosedDiffTheory -> String -> ProofPath
+                      -> Heuristic             -- ^ How to extract/order the proof methods.
+                      -> Int                   -- What proof method to use.
+                      -> Maybe ClosedDiffTheory
+applyDiffMethodAtPath thy lemmaName proofPath heuristic i = do
+    lemma <- lookupDiffLemma lemmaName thy
+    subProof <- get lDiffProof lemma `atPathDiff` proofPath
+    let ctxt  = getDiffProofContext lemma thy
+        sys   = dpsInfo (root subProof)
+        ranking = useHeuristic heuristic (length proofPath)
+    methods <- (map fst . rankDiffProofMethods ranking ctxt) <$> sys
+    method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
+    applyDiffProverAtPath thy lemmaName proofPath
+      (oneStepDiffProver method                        `mappend`
+--        replaceDiffSorryProver (oneStepDiffProver DiffSimplify) `mappend`
+--        replaceDiffSorryProver (contradictionDiffProver)    `mappend`
+       replaceDiffSorryProver (oneStepDiffProver DiffSolved)
+      )
+
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
                   -> Prover -> Maybe ClosedTheory
 applyProverAtPath thy lemmaName proofPath prover =
@@ -128,9 +148,9 @@ applyProverAtPathDiff thy s lemmaName proofPath prover =
     modifyLemmaProofDiff s (focus proofPath prover) lemmaName thy
 
 applyDiffProverAtPath :: ClosedDiffTheory -> String -> ProofPath
-                      -> Prover -> Maybe ClosedDiffTheory
+                      -> DiffProver -> Maybe ClosedDiffTheory
 applyDiffProverAtPath thy lemmaName proofPath prover =
-    modifyDiffLemmaProof (focus proofPath prover) lemmaName thy
+    modifyDiffLemmaProof (focusDiff proofPath prover) lemmaName thy
 
 ------------------------------------------------------------------------------
 -- Pretty printing
@@ -940,7 +960,7 @@ htmlDiffThyPath renderUrl info path =
       cs -> preEscapedToMarkup cs
 
     go (DiffTheoryMethod _ _ _ _)        = pp $ text "Cannot display theory method."
-    go (DiffTheoryDiffMethod _ _ _)        = pp $ text "Cannot display theory diff method."
+    go (DiffTheoryDiffMethod _ _ _)      = pp $ text "Cannot display theory diff method."
 
     go (DiffTheoryDiffLemma _)         = pp $ text "Implement diff lemma pretty printing!"
 

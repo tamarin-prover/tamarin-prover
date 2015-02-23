@@ -60,11 +60,13 @@ import           Theory                       (
     thyName, diffThyName, removeLemma,
     removeLemmaDiff, 
     openTheory, sorryProver, runAutoProver,
+--     sorryDiffProver, 
+    runAutoDiffProver, 
     prettyClosedTheory, prettyOpenTheory, 
     openDiffTheory, 
     prettyClosedDiffTheory, prettyOpenDiffTheory
   )
-import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, apHeuristic)
+import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver, apHeuristic)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
 import           Web.Hamlet
@@ -618,6 +620,12 @@ getTheoryPathDiffMR idx path = do
         (JsonAlert "Sorry, but the prover failed on the selected method!")
       where
         heuristic = apHeuristic (dtiAutoProver ti)
+    goDiff _ (DiffTheoryDiffMethod lemma proofPath i) ti = modifyDiffTheory ti
+        (\thy -> return $ applyDiffMethodAtPath thy lemma proofPath heuristic i)
+        (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof lemma proofPath))
+        (JsonAlert "Sorry, but the prover failed on the selected method!")
+      where
+        heuristic = apHeuristic (dtiAutoProver ti)
 
     --
     -- Handle generic paths by trying to render them
@@ -670,7 +678,7 @@ getProverDiffR (name, mkProver) idx s path = do
       "Can't run " <> name <> " on the given theory path!"
 
 -- | Run the some prover on a given proof path.
-getDiffProverR :: (T.Text, AutoProver -> Prover)
+getDiffProverR :: (T.Text, AutoProver -> DiffProver)
                -> TheoryIdx -> DiffTheoryPath -> Handler RepJson
 getDiffProverR (name, mkProver) idx path = do
     jsonValue <- withDiffTheory idx (goDiff path)
@@ -741,7 +749,7 @@ getAutoDiffProverR :: TheoryIdx
                    -> Int                             -- autoprover bound to use
                    -> DiffTheoryPath -> Handler RepJson
 getAutoDiffProverR idx extractor bound =
-    getDiffProverR (fullName, runAutoProver . adapt) idx
+    getDiffProverR (fullName, runAutoDiffProver . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
