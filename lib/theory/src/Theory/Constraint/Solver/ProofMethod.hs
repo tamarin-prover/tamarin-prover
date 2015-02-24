@@ -397,9 +397,8 @@ rankDiffProofMethods :: GoalRanking -> DiffProofContext -> DiffSystem
 rankDiffProofMethods ranking ctxt sys = do
     (m, expl) <-
             [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
-        <|> (map (\x -> (DiffTrivial x, "Trivial rule equivalence")) (L.get dpcRules ctxt))
-        <|> (map (\x -> (DiffBackwardSearch LHS x, "Do backward search from rule")) (L.get dpcRules ctxt))
-        <|> (map (\x -> (DiffBackwardSearch RHS x, "Do backward search from rule")) (L.get dpcRules ctxt))
+        <|> [(DiffTrivial, "Trivial rule equivalence")]
+        <|> [(DiffBackwardSearch, "Do backward search from rule")]
         <|> [(DiffSolved, "Backward search completed")]
         <|> [(DiffAttack, "Found attack")]
 --             (contradiction <$> contradictions ctxt sys)
@@ -590,9 +589,9 @@ prettyDiffProofMethod method = case method of
     DiffAttack               -> keyword_ "ATTACK" <-> lineComment_ "trace found"
     DiffSorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
-    DiffTrivial _            -> keyword_ "trivial"
+    DiffTrivial              -> keyword_ "trivial"
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
-    DiffBackwardSearch _ _   -> keyword_ "backward-search"  
+    DiffBackwardSearch       -> keyword_ "backward-search"  
     
     
 -- Derived instances
