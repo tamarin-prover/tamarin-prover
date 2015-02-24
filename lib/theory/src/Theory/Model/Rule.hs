@@ -67,6 +67,7 @@ module Theory.Model.Rule (
   , isIRecvRule
   , isISendRule
   , isCoerceRule
+  , getRuleName
   , nfRule
   , isTrivialProtoVariantAC
 
@@ -456,6 +457,12 @@ isTrivialProtoVariantAC (Rule info ps as cs) (Rule _ ps' as' cs') =
     L.get pracVariants info == Disj [emptySubstVFresh]
     && ps == ps' && as == as' && cs == cs'
 
+-- | Returns a protocol rule's name
+getRuleName :: ProtoRuleE -> String
+getRuleName (Rule rname _ _ _) = case rname of
+         FreshRule   -> "FreshRule"
+         StandRule s -> s
+    
 -- | Converts a protocol rule to its "left" variant
 getLeftRule :: ProtoRuleE ->  ProtoRuleE
 getLeftRule (Rule ri ps cs as) =

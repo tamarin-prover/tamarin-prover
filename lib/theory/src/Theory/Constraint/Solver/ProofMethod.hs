@@ -111,8 +111,8 @@ data ProofMethod =
 data DiffProofMethod =
     DiffSorry (Maybe String)                 -- ^ Proof was not completed
   | DiffRuleEquivalence                      -- ^ Consider all rules
-  | DiffTrivial ProtoRuleE                   -- ^ The rule is trivially sound
-  | DiffBackwardSearch Side ProtoRuleE       -- ^ Do the backward search starting from a rule
+  | DiffTrivial                              -- ^ The rule is trivially sound
+  | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
   | DiffSolved                               -- ^ No attack was found
   | DiffAttack                               -- ^ A potential attack was found
   deriving( Eq, Ord, Show )
@@ -244,17 +244,24 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
       case method of
         DiffSorry _                    -> return M.empty
         DiffSolved                     -> Nothing -- FIXME: check if allowed?
-        DiffBackwardSearch side rule  -- FIXME
+        DiffBackwardSearch  -- FIXME
           | (L.get dsProofType sys) == Just RuleEquivalence -> return M.empty
           | otherwise                                       -> Nothing
-        DiffTrivial      rule          -> Nothing -- FIXME
+        DiffTrivial                    -> Nothing -- FIXME
         DiffAttack                     -> Nothing -- FIXME
         DiffRuleEquivalence            -> case L.get dsProofType sys of
             Nothing      -> Just ruleEquivalence
             _            -> Nothing
           
   where
-    ruleEquivalence = M.singleton "Rule-Equivalence" $ L.set dsRules (S.fromList (L.get dpcRules ctxt)) $ L.set dsProofType (Just RuleEquivalence) sys
+    rules = (L.get dpcRules ctxt)
+    
+    ruleEquivalenceSystem = L.set dsRules (S.fromList rules) $ L.set dsProofType (Just RuleEquivalence) sys
+    
+    ruleEquivalenceCase :: M.Map CaseName DiffSystem -> ProtoRuleE -> M.Map CaseName DiffSystem
+    ruleEquivalenceCase m rule = M.insert ("Rule-Equivalence: " ++ (getRuleName rule)) ruleEquivalenceSystem m
+    
+    ruleEquivalence = foldl ruleEquivalenceCase M.empty rules
 --     -- at this point it is safe to remove the free substitution, as all
 --     -- systems have it fully applied (by the virtue of a call to
 --     -- simplifySystem). We also reset the variable indices here.
