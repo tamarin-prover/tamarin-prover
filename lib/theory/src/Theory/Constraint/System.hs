@@ -200,7 +200,7 @@ data System = System
     deriving( Eq, Ord )
 
 data DiffProofType = RuleEquivalence | None
-    deriving( Eq, Ord )
+    deriving( Eq, Ord, Show )
     
 -- | A system used in diff proofs. 
 data DiffSystem = DiffSystem
@@ -474,6 +474,7 @@ prettyGoals solved sys = vsep $ do
 -----------------------
 
 deriving instance Show System
+deriving instance Show DiffSystem
 
 instance Apply CaseDistKind where
     apply = const id

@@ -150,6 +150,7 @@ applyProverAtPathDiff thy s lemmaName proofPath prover =
 applyDiffProverAtPath :: ClosedDiffTheory -> String -> ProofPath
                       -> DiffProver -> Maybe ClosedDiffTheory
 applyDiffProverAtPath thy lemmaName proofPath prover =
+--     error (show thy ++ "<br> " ++ show lemmaName ++ "<br> " ++ show proofPath ++ "<br> "{- ++ show prover-})
     modifyDiffLemmaProof (focusDiff proofPath prover) lemmaName thy
 
 ------------------------------------------------------------------------------
@@ -318,7 +319,7 @@ diffLemmaIndex :: HtmlDocument d
 diffLemmaIndex renderUrl tidx l =
 --     error (show annPrf)
     ( markStatusDiff (dpsInfo $ root annPrf) $
-        (kwLemma <-> prettyDiffLemmaName l <> colon)
+        (kwLemma <-> prettyDiffLemmaName l {-<> text (show annPrf)-} <> colon)
         -- FIXME: Reactivate theory editing.
         -- <->
         -- (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->

@@ -240,13 +240,13 @@ execProofMethod ctxt method sys =
 -- and all variable indices reset.
 execDiffProofMethod :: DiffProofContext
                 -> DiffProofMethod -> DiffSystem -> Maybe (M.Map CaseName DiffSystem)
-execDiffProofMethod ctxt method sys = -- return M.empty
+execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ show sys -- return M.empty
       case method of
         DiffSorry _                    -> return M.empty
         DiffSolved                     -> Nothing -- FIXME: check if allowed?
         DiffBackwardSearch side rule  -- FIXME
---           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
-          | otherwise                        -> Nothing
+          | (L.get dsProofType sys) == Just RuleEquivalence -> return M.empty
+          | otherwise                                       -> Nothing
         DiffTrivial      rule          -> Nothing -- FIXME
         DiffAttack                     -> Nothing -- FIXME
         DiffRuleEquivalence            -> case L.get dsProofType sys of

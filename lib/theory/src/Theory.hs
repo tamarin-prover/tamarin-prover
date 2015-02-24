@@ -1306,8 +1306,8 @@ mkSystemDiff s ctxt axioms previousItems =
         insertLemmas (gatherReusableLemmas $ L.get sCaseDistKind sys) sys
 
     gatherReusableLemmas kind = do
-        EitherLemmaItem (_, lem) <- previousItems
-        guard $    lemmaCaseDistKind lem <= kind
+        EitherLemmaItem (s'', lem) <- previousItems
+        guard $    lemmaCaseDistKind lem <= kind && s==s''
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
         return $ formulaToGuarded_ $ L.get lFormula lem
@@ -1392,18 +1392,19 @@ modifyLemmaProofDiff s prover name thy =
 -- | Modify the proof at the given diff lemma ref, if there is one. Fails if the
 -- path is not present or if the prover fails.
 modifyDiffLemmaProof :: DiffProver -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
-modifyDiffLemmaProof prover name thy =
-    modA diffThyItems changeItems thy
+modifyDiffLemmaProof prover name thy = -- error $ show $ -- name ++ show thy
+     modA diffThyItems changeItems thy
   where
     findLemma (DiffLemmaItem lem) = (name == L.get lDiffName lem)
     findLemma  _                  = False
 
     change preItems (DiffLemmaItem lem) =
           do
+            -- I don't get why we need this here, but anyway the empty system does not seem to be a problem.
             let ctxt = getDiffProofContext lem thy
                 sys  = mkDiffSystem ctxt (diffTheoryAxioms thy) preItems
             lem' <- modA lDiffProof (runDiffProver prover ctxt 0 sys) lem
-            return $ DiffLemmaItem lem
+            return $ DiffLemmaItem lem'
     change _ _ = error "DiffLemmaProof: change: impossible"
 
     changeItems items = case break findLemma items of

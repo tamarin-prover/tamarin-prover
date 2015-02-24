@@ -606,6 +606,7 @@ oneStepProver method = Prover $ \ctxt _ se _ -> do
 oneStepDiffProver :: DiffProofMethod -> DiffProver
 oneStepDiffProver method = DiffProver $ \ctxt _ se _ -> do
     cases <- execDiffProofMethod ctxt method se
+--     error $ show $ LNode (DiffProofStep method (Just se)) (M.map (diffUnproven . Just) cases) -- (show cases ++ " " ++ show se)
     return $ LNode (DiffProofStep method (Just se)) (M.map (diffUnproven . Just) cases)
 
 -- | Replace the current proof with a sorry step and the given reason.
