@@ -58,10 +58,9 @@ import           Theory                       (
 --     EitherClosedTheory,
     Side,
     thyName, diffThyName, removeLemma,
-    removeLemmaDiff, 
+    removeLemmaDiff, removeDiffLemma,
     openTheory, sorryProver, runAutoProver,
---     sorryDiffProver, 
-    runAutoDiffProver, 
+    sorryDiffProver, runAutoDiffProver, 
     prettyClosedTheory, prettyOpenTheory, 
     openDiffTheory, 
     prettyClosedDiffTheory, prettyOpenDiffTheory
@@ -1032,6 +1031,17 @@ getDeleteStepDiffR idx path = do
     goDiff (DiffTheoryProof s lemma proofPath) ti = modifyDiffTheory ti
       (\thy -> return $
           applyProverAtPathDiff thy s lemma proofPath (sorryProver (Just "removed")))
+      (const path)
+      (JsonAlert "Sorry, but removing the selected proof step failed!")
+
+    goDiff (DiffTheoryDiffLemma lemma) ti = modifyDiffTheory ti
+      (return . removeDiffLemma lemma)
+      (const path)
+      (JsonAlert "Sorry, but removing the selected lemma failed!")
+
+    goDiff (DiffTheoryDiffProof lemma proofPath) ti = modifyDiffTheory ti
+      (\thy -> return $
+          applyDiffProverAtPath thy lemma proofPath (sorryDiffProver (Just "removed")))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")
 

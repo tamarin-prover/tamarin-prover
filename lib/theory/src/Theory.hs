@@ -67,6 +67,7 @@ module Theory (
   , addDiffLemma
   , removeLemma
   , removeLemmaDiff
+  , removeDiffLemma
   , lookupLemma
   , lookupDiffLemma
   , lookupLemmaDiff
@@ -709,6 +710,20 @@ removeLemmaDiff s lemmaName thy = do
                                  (return . EitherAxiomItem)
                                  (return . DiffTextItem)
     check (s', l) = do guard (L.get lName l /= lemmaName || s'/=s); return (EitherLemmaItem (s, l))
+
+-- | Remove a lemma by name. Fails, if the lemma does not exist.
+removeDiffLemma :: String -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+removeDiffLemma lemmaName thy = do
+    _ <- lookupDiffLemma lemmaName thy
+    return $ modify diffThyItems (concatMap fItem) thy
+  where
+    fItem   = foldDiffTheoryItem (return . DiffRuleItem)
+                                 (return . EitherRuleItem)
+                                 check
+                                 (return . EitherLemmaItem)
+                                 (return . EitherAxiomItem)
+                                 (return . DiffTextItem)
+    check l = do guard (L.get lDiffName l /= lemmaName); return (DiffLemmaItem l)
 
 -- | Find the axiom with the given name.
 lookupAxiom :: String -> Theory sig c r p -> Maybe Axiom
