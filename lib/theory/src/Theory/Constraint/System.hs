@@ -30,7 +30,10 @@ module Theory.Constraint.System (
   
   -- ** Diff proof system
   , dsProofType
-  , dsRules
+  , dsProtoRules
+  , dsConstrRules
+  , dsDestrRules
+  , dsCurrentRule
 
   -- ** Node constraints
   , sNodes
@@ -204,9 +207,12 @@ data DiffProofType = RuleEquivalence | None
     
 -- | A system used in diff proofs. 
 data DiffSystem = DiffSystem
-    { _dsProofType      :: Maybe DiffProofType   -- The diff proof technique used
-    , _dsSystems        :: S.Set System          -- The constraint systems used
-    , _dsRules          :: S.Set ProtoRuleE      -- the rule(s) under consideration
+    { _dsProofType      :: Maybe DiffProofType              -- The diff proof technique used
+    , _dsSystems        :: S.Set System                     -- The constraint systems used
+    , _dsProtoRules     :: S.Set ProtoRuleE                 -- the rules of the protocol
+    , _dsConstrRules    :: S.Set RuleAC                     -- the construction rules of the theory
+    , _dsDestrRules     :: S.Set RuleAC                     -- the descruction rules of the theory
+    , _dsCurrentRule    :: Maybe (Either RuleAC ProtoRuleE) -- the rule under consideration
     }
     deriving( Eq, Ord )
 
@@ -240,7 +246,7 @@ emptySystem = System
 -- | The empty diff constraint system.
 emptyDiffSystem :: DiffSystem
 emptyDiffSystem = DiffSystem
-    Nothing S.empty S.empty
+    Nothing S.empty S.empty S.empty S.empty Nothing
 
 -- | Returns the constraint system that has to be proven to show that given
 -- formula holds in the context of the given theory.
@@ -453,11 +459,27 @@ prettyNonGraphSystem se = vsep $ map combine
 -- clauses.
 prettyNonGraphSystemDiff :: HighlightDocument d => DiffSystem -> d
 prettyNonGraphSystemDiff se = vsep $ map combine
-  [ ("rules",           vsep $ map prettyProtoRuleE $ S.toList $ L.get dsRules se)
-  , ("systems",         vsep $ map prettyNonGraphSystem $ S.toList $ L.get dsSystems se)
+  [ ("proof type",          prettyProofType $ L.get dsProofType se)
+  , ("current rule",        prettyEitherRule $ L.get dsCurrentRule se)
+  , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
+  , ("construction rules",  vsep $ map prettyRuleAC $ S.toList $ L.get dsConstrRules se)
+  , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
+  , ("systems",             vsep $ map prettyNonGraphSystem $ S.toList $ L.get dsSystems se)
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
+
+-- | Pretty print the proof type.
+prettyProofType :: HighlightDocument d => Maybe DiffProofType -> d
+prettyProofType Nothing  = text "none"
+prettyProofType (Just p) = text $ show p
+
+
+-- | Pretty print the either rules.
+prettyEitherRule :: HighlightDocument d => Maybe (Either RuleAC ProtoRuleE) -> d
+prettyEitherRule Nothing             = text "none"
+prettyEitherRule (Just (Left rule))  = prettyRuleAC rule
+prettyEitherRule (Just (Right rule)) = prettyProtoRuleE rule
 
     
 -- | Pretty print solved or unsolved goals.

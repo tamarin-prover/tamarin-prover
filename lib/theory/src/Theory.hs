@@ -954,7 +954,7 @@ getProofContextDiff s l thy = case s of
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
-getDiffProofContext l thy = DiffProofContext (diffTheoryDiffRules thy)
+getDiffProofContext l thy = DiffProofContext (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) -- FIXME!!
       
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
@@ -1179,7 +1179,6 @@ applyPartialEvaluation evalStyle thy0 =
 -- | Apply partial evaluation.
 applyPartialEvaluationDiff :: EvaluationStyle -> ClosedDiffTheory -> ClosedDiffTheory
 applyPartialEvaluationDiff evalStyle thy0 =
-  -- FIXME!
     closeDiffTheoryWithMaude sig $
     L.modify diffThyItems replaceProtoRules (openDiffTheory thy0)
   where
@@ -1564,9 +1563,9 @@ prettyEitherLemma ppPrf (s, lem) =
 -- | Pretty print a diff lemma.
 prettyDiffLemma :: HighlightDocument d => (p -> d) -> DiffLemma p -> d
 prettyDiffLemma ppPrf lem =
-    kwLemma <-> prettyDiffLemmaName lem
-    -- FIXME!!!
-
+    kwLemma <-> prettyDiffLemmaName lem <> colon 
+    $-$
+    ppPrf (L.get lDiffProof lem)
 
 -- | Pretty-print a non-empty bunch of intruder rules.
 prettyIntruderVariants :: HighlightDocument d => [IntrRuleAC] -> d

@@ -28,7 +28,9 @@ module Theory.Constraint.Solver.Types (
   , pcUseInduction
   , pcTraceQuantifier
   , pcMaudeHandle
-  , dpcRules
+  , dpcProtoRules
+  , dpcDestrRules
+  , dpcConstrRules
 
   -- ** Classified rules
   , ClassifiedRules(..)
@@ -136,7 +138,9 @@ data DiffProofContext = DiffProofContext
        {
 --          _dpcPCLeft            :: ProofContext
 --        , _dpcPCRight           :: ProofContext
-         _dpcRules             :: [ProtoRuleE]
+         _dpcProtoRules           :: [ProtoRuleE]
+       , _dpcConstrRules          :: [RuleAC]
+       , _dpcDestrRules           :: [RuleAC]
        }
        deriving( Eq, Ord, Show )
 

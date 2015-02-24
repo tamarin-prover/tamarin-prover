@@ -67,7 +67,10 @@ module Theory.Model.Rule (
   , isIRecvRule
   , isISendRule
   , isCoerceRule
-  , getRuleName
+  , isTrivialProtoDiffRule
+  , isTrivialACDiffRule
+  , getProtoRuleName
+  , getACRuleName
   , nfRule
   , isTrivialProtoVariantAC
 
@@ -108,6 +111,7 @@ import           Data.DeriveTH
 import           Data.Foldable        (foldMap)
 import           Data.Generics
 import           Data.List
+import qualified Data.Set              as S
 import           Data.Monoid
 import           Safe
 
@@ -457,12 +461,35 @@ isTrivialProtoVariantAC (Rule info ps as cs) (Rule _ ps' as' cs') =
     L.get pracVariants info == Disj [emptySubstVFresh]
     && ps == ps' && as == as' && cs == cs'
 
+-- | True if the ac rule is trivially observational equivalent.
+isTrivialACDiffRule :: RuleAC -> Bool
+isTrivialACDiffRule = isTrivialDiffRule
+
+-- | True if the protocol is trivially observational equivalent.
+isTrivialProtoDiffRule :: ProtoRuleE -> Bool
+isTrivialProtoDiffRule = isTrivialDiffRule
+    
+-- | True if the rule is trivially observational equivalent.
+isTrivialDiffRule :: Rule a -> Bool
+isTrivialDiffRule (Rule info pms as cs) = case pms of
+   []   -> True
+   p:[] -> True
+   p:ps -> S.null $ foldl S.intersection (S.fromList (getFactVariables p)) (map (S.fromList . getFactVariables) ps)
+
 -- | Returns a protocol rule's name
-getRuleName :: ProtoRuleE -> String
-getRuleName (Rule rname _ _ _) = case rname of
+getProtoRuleName :: ProtoRuleE -> String
+getProtoRuleName (Rule rname _ _ _) = case rname of
          FreshRule   -> "FreshRule"
          StandRule s -> s
-    
+
+-- | Returns a protocol rule's name
+getACRuleName :: RuleAC -> String
+getACRuleName (Rule rname _ _ _) = case rname of
+         ProtoInfo p -> case L.get pracName p of
+                            FreshRule   -> "FreshRule"
+                            StandRule s -> s
+         IntrInfo  i -> show i
+         
 -- | Converts a protocol rule to its "left" variant
 getLeftRule :: ProtoRuleE ->  ProtoRuleE
 getLeftRule (Rule ri ps cs as) =

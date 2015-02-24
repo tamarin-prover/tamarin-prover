@@ -245,87 +245,40 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
         DiffSorry _                    -> return M.empty
         DiffSolved                     -> Nothing -- FIXME: check if allowed?
         DiffBackwardSearch  -- FIXME
-          | (L.get dsProofType sys) == Just RuleEquivalence -> return M.empty
+          | (L.get dsProofType sys) == (Just RuleEquivalence) && (L.get dsCurrentRule sys) /= Nothing -> return M.empty
           | otherwise                                       -> Nothing
-        DiffTrivial                    -> Nothing -- FIXME
+        DiffTrivial 
+          | isTrivial sys              -> return M.empty
+          | otherwise                  -> Nothing
         DiffAttack                     -> Nothing -- FIXME
-        DiffRuleEquivalence            -> case L.get dsProofType sys of
-            Nothing      -> Just ruleEquivalence
-            _            -> Nothing
+        DiffRuleEquivalence
+          | (L.get dsProofType sys) == Nothing              -> Just ruleEquivalence
+          | otherwise                                       -> Nothing
           
   where
-    rules = (L.get dpcRules ctxt)
+    protoRules  = (L.get dpcProtoRules  ctxt)
+    destrRules  = (L.get dpcDestrRules  ctxt)
+    constrRules = (L.get dpcConstrRules ctxt)
     
-    ruleEquivalenceSystem = L.set dsRules (S.fromList rules) $ L.set dsProofType (Just RuleEquivalence) sys
+    ruleEquivalenceSystem rule = L.set dsCurrentRule (Just rule) 
+      $ L.set dsConstrRules (S.fromList constrRules) 
+      $ L.set dsDestrRules (S.fromList destrRules) 
+      $ L.set dsProtoRules (S.fromList protoRules) 
+      $ L.set dsProofType (Just RuleEquivalence) sys
     
-    ruleEquivalenceCase :: M.Map CaseName DiffSystem -> ProtoRuleE -> M.Map CaseName DiffSystem
-    ruleEquivalenceCase m rule = M.insert ("Rule-Equivalence: " ++ (getRuleName rule)) ruleEquivalenceSystem m
+    ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
+    ruleEquivalenceCase m rule = M.insert ("Rule " ++ (getACRuleName rule)) (ruleEquivalenceSystem (Left rule)) m
     
-    ruleEquivalence = foldl ruleEquivalenceCase M.empty rules
---     -- at this point it is safe to remove the free substitution, as all
---     -- systems have it fully applied (by the virtue of a call to
---     -- simplifySystem). We also reset the variable indices here.
---     cleanupSystem =
---          (`Precise.evalFresh` Precise.nothingUsed)
---        . renamePrecise
---        . set sSubst emptySubst
--- 
--- 
---     -- expect only one or no subcase in the given case distinction
---     singleCase m =
---         case    removeRedundantCases ctxt [] id . map cleanupSystem
---               . map fst . getDisj $ execReduction m ctxt sys (avoid sys) of
---           []                  -> return $ M.empty
---           [sys'] | check sys' -> return $ M.singleton "" sys'
---                  | otherwise  -> mzero
---           syss                ->
---                return $ M.fromList (zip (map show [(1::Int)..]) syss)
---       where check sys' = cleanupSystem sys /= sys'
--- 
---     -- solve the given goal
---     -- PRE: Goal must be valid in this system.
---     execSolveGoal goal =
---         return . makeCaseNames . removeRedundantCases ctxt [] snd
---                . map (second cleanupSystem) . map fst . getDisj
---                $ runReduction solver ctxt sys (avoid sys)
---       where
---         ths    = L.get pcCaseDists ctxt
---         solver = do name <- maybe (solveGoal goal)
---                                   (fmap $ concat . intersperse "_")
---                                   (solveWithCaseDistinction ctxt ths goal)
---                     simplifySystem
---                     return name
--- 
---         makeCaseNames =
---             M.fromListWith (error "case names not unique")
---           . uniqueListBy (comparing fst) id distinguish
---           where
---             distinguish n =
---                 [ (\(x,y) -> (x ++ "_case_" ++ pad (show i), y))
---                 | i <- [(1::Int)..] ]
---               where
---                 l      = length (show n)
---                 pad cs = replicate (l - length cs) '0' ++ cs
--- 
---     -- Apply induction: possible if the system contains only
---     -- a single, last-free, closed formula.
---     execInduction
---       | sys == sys0 =
---           case S.toList $ L.get sFormulas sys of
---             [gf] -> case ginduct gf of
---                       Right (bc, sc) -> Just $ insCase "empty_trace"     bc
---                                              $ insCase "non_empty_trace" sc
---                                              $ M.empty
---                       _              -> Nothing
---             _    -> Nothing
--- 
---       | otherwise = Nothing
---       where
---         sys0 = set sFormulas (L.get sFormulas sys)
---              $ set sLemmas (L.get sLemmas sys)
---              $ emptySystem (L.get sCaseDistKind sys)
--- 
---         insCase name gf = M.insert name (set sFormulas (S.singleton gf) sys)
+    protoRuleEquivalenceCase :: M.Map CaseName DiffSystem -> ProtoRuleE -> M.Map CaseName DiffSystem
+    protoRuleEquivalenceCase m rule = M.insert ("Rule " ++ (getProtoRuleName rule)) (ruleEquivalenceSystem (Right rule)) m
+    
+    -- Not checking construction rules is sound!
+    ruleEquivalence = foldl protoRuleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) protoRules
+    
+    isTrivial sys' = case L.get dsCurrentRule sys' of
+      Nothing   -> False
+      Just (Left rule)  -> isTrivialACDiffRule    rule
+      Just (Right rule) -> isTrivialProtoDiffRule rule
 
         
 ------------------------------------------------------------------------------

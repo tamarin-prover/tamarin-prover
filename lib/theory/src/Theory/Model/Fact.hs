@@ -33,6 +33,7 @@ module Theory.Model.Fact (
   , factMultiplicity
   , getLeftFact
   , getRightFact
+  , getFactVariables
 
   , DirTag(..)
   , kuFact
@@ -311,6 +312,12 @@ getRightFact :: LNFact -> LNFact
 getRightFact (Fact tag ts) =
    (Fact tag (map getRightTerm ts))
 
+-- | Get all variables inside a fact
+getFactVariables :: LNFact -> [LVar]
+getFactVariables (Fact tag ts) =
+   {-concat $-} map fst $ varOccurences ts
+
+   
 ------------------------------------------------------------------------------
 -- Pretty Printing
 ------------------------------------------------------------------------------
