@@ -409,6 +409,7 @@ instance HasRuleName RuleACInst where
 isDestrRule :: HasRuleName r => r -> Bool
 isDestrRule ru = case ruleName ru of
   IntrInfo (DestrRule _) -> True
+  IntrInfo IEqualityRule -> True
   _                      -> False
 
 -- | True iff the rule is an iequality rule.
@@ -471,7 +472,7 @@ isTrivialProtoDiffRule = isTrivialDiffRule
     
 -- | True if the rule is trivially observational equivalent.
 isTrivialDiffRule :: Rule a -> Bool
-isTrivialDiffRule (Rule info pms as cs) = case pms of
+isTrivialDiffRule (Rule _ pms _ _) = case pms of
       []   -> True
       x:xs -> (foldl combine (isTrivialFact x) (map isTrivialFact xs)) /= Nothing
     where
