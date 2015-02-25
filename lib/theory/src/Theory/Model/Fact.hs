@@ -34,6 +34,7 @@ module Theory.Model.Fact (
   , getLeftFact
   , getRightFact
   , getFactVariables
+  , isTrivialFact
 
   , DirTag(..)
   , kuFact
@@ -80,6 +81,7 @@ import           Data.Generics
 import           Data.Maybe             (isJust)
 import           Data.Monoid
 import           Data.Traversable       (Traversable(..))
+import qualified Data.Set               as S
 
 import           Term.Unification
 
@@ -314,9 +316,21 @@ getRightFact (Fact tag ts) =
 
 -- | Get all variables inside a fact
 getFactVariables :: LNFact -> [LVar]
-getFactVariables (Fact tag ts) =
-   {-concat $-} map fst $ varOccurences ts
+getFactVariables (Fact _ ts) =
+   map fst $ varOccurences ts
 
+-- | If all the facts terms are simple and different variables, returns the list of all these variables. Otherwise returns Nothing.
+isTrivialFact :: LNFact -> Maybe [LVar]
+isTrivialFact (Fact _ ts) = case ts of
+      []   -> Just []
+      x:xs -> Prelude.foldl combine (getVar x) (map getVar xs)
+    where
+      combine :: Maybe [LVar] -> Maybe [LVar] -> Maybe [LVar]
+      combine Nothing    _        = Nothing
+      combine (Just _ )  Nothing  = Nothing
+      combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
+      
+      noDuplicates l1 l2 = ((length l1) + (length l2)) == S.size (S.union (S.fromList l1) (S.fromList l2))
    
 ------------------------------------------------------------------------------
 -- Pretty Printing

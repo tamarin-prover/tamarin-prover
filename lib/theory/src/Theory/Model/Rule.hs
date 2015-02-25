@@ -472,9 +472,14 @@ isTrivialProtoDiffRule = isTrivialDiffRule
 -- | True if the rule is trivially observational equivalent.
 isTrivialDiffRule :: Rule a -> Bool
 isTrivialDiffRule (Rule info pms as cs) = case pms of
-   []   -> True
-   p:[] -> True
-   p:ps -> S.null $ foldl S.intersection (S.fromList (getFactVariables p)) (map (S.fromList . getFactVariables) ps)
+      []   -> True
+      x:xs -> (foldl combine (isTrivialFact x) (map isTrivialFact xs)) /= Nothing
+    where
+      combine Nothing    _        = Nothing
+      combine (Just _)   Nothing  = Nothing
+      combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
+      
+      noDuplicates l1 l2 = ((length l1) + (length l2)) == S.size (S.union (S.fromList l1) (S.fromList l2))
 
 -- | Returns a protocol rule's name
 getProtoRuleName :: ProtoRuleE -> String
