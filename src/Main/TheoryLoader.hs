@@ -219,7 +219,6 @@ closeThy as thy0 = do
 -- | Close a diff theory according to arguments.
 closeDiffThy :: Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
 closeDiffThy as thy0 = do
---   error "TODO"
   thy1 <- addMessageDeductionRuleVariantsDiff thy0
   -- FIXME: wf-check is at the wrong position here. Needs to be more
   -- fine-grained.

@@ -471,7 +471,7 @@ factReportsDiff thy = concat
         if info `S.member` ruleActions
           then []
           else return $ (,) "lemma actions" $
-                 text ("lemma " ++ quote name ++ " references action ") $-$
+                 text (show s ++ " lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
 
@@ -600,11 +600,11 @@ formulaReportsDiff thy = do
          ]
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy
-                     let header = "lemma " ++ quote (get lName l)
+                     let header = show s ++ " lemma " ++ quote (get lName l)
                          fm     = get lFormula l
                      return (header, fm)
               <|> do EitherAxiomItem (s, ax) <- get diffThyItems thy
-                     let header = "axiom " ++ quote (get axName ax)
+                     let header = show s ++ " axiom " ++ quote (get axName ax)
                          fm     = get axFormula ax
                      return (header, fm)
 

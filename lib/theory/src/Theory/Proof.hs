@@ -31,6 +31,7 @@ module Theory.Proof (
   , mapProofInfo
   , mapDiffProofInfo
   , foldProof
+  , foldDiffProof
   , annotateProof
   , annotateDiffProof
   , ProofStatus(..)
@@ -80,6 +81,7 @@ module Theory.Proof (
   , prettyDiffProofWith
 
   , showProofStatus
+  , showDiffProofStatus
 
   -- ** Parallel Strategy for exploring a proof
   , parLTreeDFS
@@ -335,6 +337,13 @@ boundDiffProofDepth bound =
 -- | Fold a proof.
 foldProof :: Monoid m => (ProofStep a -> m) -> Proof a -> m
 foldProof f =
+    go
+  where
+    go (LNode step cs) = f step `mappend` foldMap go (M.elems cs)
+
+-- | Fold a proof.
+foldDiffProof :: Monoid m => (DiffProofStep a -> m) -> DiffProof a -> m
+foldDiffProof f =
     go
   where
     go (LNode step cs) = f step `mappend` foldMap go (M.elems cs)
@@ -999,6 +1008,12 @@ showProofStatus ExistsSomeTrace TraceFound        = "verified"
 showProofStatus _               IncompleteProof   = "analysis incomplete"
 showProofStatus _               UndeterminedProof = "analysis undetermined"
 
+-- | Convert a proof status to a redable string.
+showDiffProofStatus :: ProofStatus -> String
+showDiffProofStatus TraceFound        = "falsified - found trace"
+showDiffProofStatus CompleteProof     = "verified"
+showDiffProofStatus IncompleteProof   = "analysis incomplete"
+showDiffProofStatus UndeterminedProof = "analysis undetermined"
 
 -- Derived instances
 --------------------

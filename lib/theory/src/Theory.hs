@@ -954,7 +954,7 @@ getProofContextDiff s l thy = case s of
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
-getDiffProofContext l thy = DiffProofContext (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) -- FIXME!!
+getDiffProofContext _ thy = DiffProofContext (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) -- FIXME!!
       
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
@@ -1715,10 +1715,9 @@ prettyClosedSummary thy =
 
 prettyClosedDiffSummary :: Document d => ClosedDiffTheory -> d
 prettyClosedDiffSummary thy =
-    vcat lemmaSummaries
+    vcat lemmaSummaries <-> vcat diffLemmaSummaries
   where
     lemmaSummaries = do
-        -- FIXME: TODO for DiffLemmaItem
         EitherLemmaItem (s, lem)  <- L.get diffThyItems thy
         -- Note that here we are relying on the invariant that all proof steps
         -- with a 'Just' annotation follow from the application of
@@ -1742,7 +1741,30 @@ prettyClosedDiffSummary thy =
                  text (showProofStatus quantifier status) <->
                  parens (integer siz <-> text "steps")
 
+    diffLemmaSummaries = do
+        DiffLemmaItem (lem)  <- L.get diffThyItems thy
+        -- Note that here we are relying on the invariant that all proof steps
+        -- with a 'Just' annotation follow from the application of
+        -- 'execProofMethod' to their parent and are valid in the sense that
+        -- the application of 'execProofMethod' to their method and constraint
+        -- system is guaranteed to succeed.
+        --
+        -- This is guaranteed initially by 'closeTheory' and is (must be)
+        -- maintained by the provers being applied to the theory using
+        -- 'modifyLemmaProof' or 'proveTheory'. Note that we could check the
+        -- proof right before computing its status. This is however quite
+        -- expensive, as it requires recomputing all intermediate constraint
+        -- systems.
+        --
+        -- TODO: The whole consruction seems a bit hacky. Think of a more
+        -- principled constrution with better correctness guarantees.
+        let (status, Sum siz) = foldDiffProof diffProofStepSummary $ L.get lDiffProof lem
+        return $ text "DiffLemma: " <-> text (L.get lDiffName lem) <-> colon <->
+                 text (showDiffProofStatus status) <->
+                 parens (integer siz <-> text "steps")
+
     proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
+    diffProofStepSummary = diffProofStepStatus &&& const (Sum (1::Integer))
 
 -- | Pretty print a 'TraceQuantifier'.
 prettyTraceQuantifier :: Document d => TraceQuantifier -> d
