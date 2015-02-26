@@ -71,6 +71,7 @@ module Theory.Model.Rule (
   , isTrivialACDiffRule
   , getProtoRuleName
   , getACRuleName
+  , getEitherRuleName
   , nfRule
   , isTrivialProtoVariantAC
 
@@ -495,7 +496,12 @@ getACRuleName (Rule rname _ _ _) = case rname of
                             FreshRule   -> "FreshRule"
                             StandRule s -> s
          IntrInfo  i -> show i
-         
+
+-- | Returns a protocol rule's name
+getEitherRuleName :: Either RuleAC ProtoRuleE -> String
+getEitherRuleName (Left  r) = getACRuleName    r
+getEitherRuleName (Right r) = getProtoRuleName r
+       
 -- | Converts a protocol rule to its "left" variant
 getLeftRule :: ProtoRuleE ->  ProtoRuleE
 getLeftRule (Rule ri ps cs as) =

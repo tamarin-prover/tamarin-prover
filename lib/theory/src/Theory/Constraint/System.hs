@@ -16,7 +16,14 @@ module Theory.Constraint.System (
   -- * Constraints
     module Theory.Constraint.System.Constraints
 
-  -- * Proof context
+  -- * Proof contexts
+  -- | The proof context captures all relevant information about the context
+  -- in which we are using the constraint solver. These are things like the
+  -- signature of the message theory, the multiset rewriting rules of the
+  -- protocol, the available precomputed case distinctions, whether induction
+  -- should be applied or not, whether typed or untyped case distinctions are
+  -- used, and whether we are looking for the existence of a trace or proving
+  -- the absence of any trace satisfying the constraint system.
   , ProofContext(..)
   , DiffProofContext(..)
   , InductionHint(..)
@@ -29,6 +36,8 @@ module Theory.Constraint.System (
   , pcUseInduction
   , pcTraceQuantifier
   , pcMaudeHandle
+  , dpcPCLeft
+  , dpcPCRight
   , dpcProtoRules
   , dpcDestrRules
   , dpcConstrRules
@@ -43,7 +52,10 @@ module Theory.Constraint.System (
   , joinAllRules
   , nonSilentRules
 
-  -- * Precomputed case distinctions.
+  -- ** Precomputed case distinctions
+  -- | For better speed, we precompute case distinctions. This is especially
+  -- important for getting rid of all chain constraints before actually
+  -- starting to verify security properties.
   , CaseDistinction(..)
 
   , cdGoal
@@ -318,9 +330,9 @@ data ProofContext = ProofContext
 -- and all rules.
 data DiffProofContext = DiffProofContext
        {
---          _dpcPCLeft            :: ProofContext
---        , _dpcPCRight           :: ProofContext
-         _dpcProtoRules           :: [ProtoRuleE]
+         _dpcPCLeft               :: ProofContext
+       , _dpcPCRight              :: ProofContext
+       , _dpcProtoRules           :: [ProtoRuleE]
        , _dpcConstrRules          :: [RuleAC]
        , _dpcDestrRules           :: [RuleAC]
        , _dpcAxioms               :: [(Side, [LNGuarded])]
@@ -389,7 +401,7 @@ formulaToSystem :: [LNGuarded]           -- ^ Axioms to add
                 -> SystemTraceQuantifier -- ^ Trace quantifier
                 -> LNFormula
                 -> System
-formulaToSystem axioms kind traceQuantifier fm =
+formulaToSystem axioms kind traceQuantifier fm = -- error $ show fm
       insertLemmas safetyAxioms
     $ L.set sFormulas (S.singleton gf2)
     $ (emptySystem kind)
@@ -579,7 +591,7 @@ prettySystem se = vcat $
 prettyNonGraphSystem :: HighlightDocument d => System -> d
 prettyNonGraphSystem se = vsep $ map combine
   [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
-  , ("formulas",        vsep $ map prettyGuarded $ S.toList $ L.get sFormulas se)
+  , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
   , ("equations",       prettyEqStore $ L.get sEqStore se)
   , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
   , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
@@ -599,7 +611,7 @@ prettyNonGraphSystemDiff se = vsep $ map combine
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
   , ("construction rules",  vsep $ map prettyRuleAC $ S.toList $ L.get dsConstrRules se)
   , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
---   , ("systems",             vsep $ map prettyNonGraphSystem $ S.toList $ L.get dsSystems se)
+  , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]

@@ -954,14 +954,31 @@ getProofContextDiff s l thy = case s of
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
-getDiffProofContext _ thy = DiffProofContext (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) ((LHS, axiomsLeft):[(RHS, axiomsRight)]) -- FIXME!!
+getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) ((LHS, axiomsLeft):[(RHS, axiomsRight)]) -- FIXME!!
   where
     items = L.get diffThyItems thy
     axiomsLeft  = do EitherAxiomItem (LHS, ax) <- items
                      return $ formulaToGuarded_ $ L.get axFormula ax
     axiomsRight  = do EitherAxiomItem (RHS, ax) <- items
                       return $ formulaToGuarded_ $ L.get axFormula ax
-      
+    proofContext s = case s of
+        LHS -> ProofContext
+            ( L.get diffThySignature                    thy)
+            ( L.get (crcRules . diffThyCacheLeft)           thy)
+            ( L.get (crcInjectiveFactInsts . diffThyCacheLeft) thy)
+            TypedCaseDist
+            ( L.get (crcTypedCaseDists . diffThyCacheLeft)              thy)
+            AvoidInduction   -- FIXME?
+            ExistsNoTrace    -- FIXME?
+        RHS -> ProofContext
+            ( L.get diffThySignature                    thy)
+            ( L.get (crcRules . diffThyCacheRight)           thy)
+            ( L.get (crcInjectiveFactInsts . diffThyCacheRight) thy)
+            TypedCaseDist
+            ( L.get (crcTypedCaseDists . diffThyCacheRight)              thy)
+            AvoidInduction   -- FIXME?
+            ExistsNoTrace    -- FIXME?
+
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
 getInjectiveFactInsts = L.get (crcInjectiveFactInsts . thyCache)

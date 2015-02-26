@@ -246,11 +246,15 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
         DiffSorry _                    -> return M.empty
         DiffSolved                     -> Nothing -- FIXME: check if allowed?
         DiffBackwardSearch  -- FIXME
-          | (L.get dsProofType sys) == (Just RuleEquivalence) && (L.get dsCurrentRule sys) /= Nothing && (L.get dsSide sys) == Nothing -> Just startBackwardSearch
+          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys) of
+                                                                      (Just rule, Nothing) -> Just $ startBackwardSearch rule
+                                                                      (_ , _)              -> Nothing
           | otherwise                                       -> Nothing
         DiffBackwardSearchStep meth  -- FIXME
-          | (L.get dsProofType sys) == (Just RuleEquivalence) && (L.get dsCurrentRule sys) /= Nothing && (L.get dsSide sys) /= Nothing -> return M.empty -- FIXME
-          | otherwise                                       -> Nothing
+          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
+                                                                      (Just _, Just s, Just sys') -> applyStep meth s sys'
+                                                                      (_ , _ , _)                -> Nothing
+          | otherwise                                         -> Nothing
         DiffTrivial 
           | isTrivial sys              -> return M.empty
           | otherwise                  -> Nothing
@@ -269,6 +273,11 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
       $ L.set dsDestrRules (S.fromList destrRules) 
       $ L.set dsProtoRules (S.fromList protoRules) 
       $ L.set dsProofType (Just RuleEquivalence) sys
+      
+    formula :: Either RuleAC ProtoRuleE -> LNFormula
+    formula rule = TF True -- Qua Ex ("i", LSortNode) (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear ("Testlabel" ++ getEitherRuleName rule) 0, factTerms = []})))
+    -- Qua Ex ("i",LSortNode) (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear "Testlabel" 0, factTerms = []})))
+    -- GGuarded Ex [("i",LSortNode)] [Action Bound 0 (Fact {factTag = ProtoFact Linear "Testlabel" 0, factTerms = []})] (GConj (Conj {getConj = []}))
     
     ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
     ruleEquivalenceCase m rule = M.insert ("Rule " ++ (getACRuleName rule)) (ruleEquivalenceSystem (Left rule)) m
@@ -283,12 +292,20 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
       Nothing   -> False
       Just (Left rule)  -> isTrivialACDiffRule    rule
       Just (Right rule) -> isTrivialProtoDiffRule rule
-      
-    backwardSearchSystem s sys' = L.set dsSide (Just s)
-      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) UntypedCaseDist ExistsNoTrace (TF True) {- FIXME -})) sys'
+    
+    eitherProofContext s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
+    
+    backwardSearchSystem s sys' rule = L.set dsSide (Just s)
+      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsNoTrace (formula rule))) sys'
+--       $ L.set dsProofContext (Just (eitherProofContext s)) sys'
 
-    startBackwardSearch = M.insert ("LHS") (backwardSearchSystem LHS sys) $ M.insert ("RHS") (backwardSearchSystem RHS sys) $ M.empty
-        
+    startBackwardSearch rule = M.insert ("LHS") (backwardSearchSystem LHS sys rule) $ M.insert ("RHS") (backwardSearchSystem RHS sys rule) $ M.empty
+    
+    applyStep :: ProofMethod -> Side -> System -> Maybe (M.Map CaseName DiffSystem)
+    applyStep m s sys' = case (execProofMethod (eitherProofContext s) m sys') of
+                           Nothing    -> Nothing
+                           Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
+    
 ------------------------------------------------------------------------------
 -- Heuristics
 ------------------------------------------------------------------------------
@@ -360,8 +377,8 @@ rankDiffProofMethods ranking ctxt sys = do
             [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
         <|> [(DiffTrivial, "Trivial rule equivalence")]
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
-        <|> (case (L.get dsProofContext sys, L.get dsSystem sys) of
-                  (Just ctxt', Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking ctxt' sys')
+        <|> (case (L.get dsSide sys, L.get dsSystem sys) of
+                  (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking (eitherProofContext s) sys')
                   (_         , _        ) -> [])
         <|> [(DiffSolved, "Backward search completed")]
         <|> [(DiffAttack, "Found attack")]
@@ -384,7 +401,8 @@ rankDiffProofMethods ranking ctxt sys = do
 --                                ProbablyConstructible -> " (probably constructible)"
 --                                CurrentlyDeducible    -> " (currently deducible)"
 --       )
-
+  where
+    eitherProofContext s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
       
 newtype Heuristic = Heuristic [GoalRanking]
     deriving( Eq, Ord, Show )
@@ -556,7 +574,7 @@ prettyDiffProofMethod method = case method of
     DiffTrivial              -> keyword_ "trivial"
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
     DiffBackwardSearch       -> keyword_ "backward-search"  
-    DiffBackwardSearchStep s -> keyword_ "backward-search-step" <-> prettyProofMethod s 
+    DiffBackwardSearchStep s -> {-keyword_ "backward-search-step" <->-} prettyProofMethod s 
     
     
 -- Derived instances
