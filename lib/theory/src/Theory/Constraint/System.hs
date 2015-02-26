@@ -16,6 +16,41 @@ module Theory.Constraint.System (
   -- * Constraints
     module Theory.Constraint.System.Constraints
 
+  -- * Proof context
+  , ProofContext(..)
+  , DiffProofContext(..)
+  , InductionHint(..)
+
+  , pcSignature
+  , pcRules
+  , pcInjectiveFactInsts
+  , pcCaseDists
+  , pcCaseDistKind
+  , pcUseInduction
+  , pcTraceQuantifier
+  , pcMaudeHandle
+  , dpcProtoRules
+  , dpcDestrRules
+  , dpcConstrRules
+  , dpcAxioms
+
+  -- ** Classified rules
+  , ClassifiedRules(..)
+  , emptyClassifiedRules
+  , crConstruct
+  , crDestruct
+  , crProtocol
+  , joinAllRules
+  , nonSilentRules
+
+  -- * Precomputed case distinctions.
+  , CaseDistinction(..)
+
+  , cdGoal
+  , cdCases
+  
+  , Side(..)
+    
   -- * Constraint systems
   , System
   , DiffProofType(..)
@@ -34,6 +69,9 @@ module Theory.Constraint.System (
   , dsConstrRules
   , dsDestrRules
   , dsCurrentRule
+  , dsSide
+  , dsSystem
+  , dsProofContext
 
   -- ** Node constraints
   , sNodes
@@ -103,6 +141,7 @@ module Theory.Constraint.System (
   , prettySystem
   , prettyNonGraphSystem
   , prettyNonGraphSystemDiff
+  , prettyCaseDistinction
 
   ) where
 
@@ -131,10 +170,38 @@ import           Theory.Text.Pretty
 import           Theory.Tools.EquationStore
 
 
+----------------------------------------------------------------------
+-- ClassifiedRules
+----------------------------------------------------------------------
+
+data ClassifiedRules = ClassifiedRules
+     { _crProtocol      :: [RuleAC] -- all protocol rules
+     , _crDestruct      :: [RuleAC] -- destruction rules
+     , _crConstruct     :: [RuleAC] -- construction rules
+     }
+     deriving( Eq, Ord, Show )
+
+$(mkLabels [''ClassifiedRules])
+
+-- | The empty proof rule set.
+emptyClassifiedRules :: ClassifiedRules
+emptyClassifiedRules = ClassifiedRules [] [] []
+
+-- | @joinAllRules rules@ computes the union of all rules classified in
+-- @rules@.
+joinAllRules :: ClassifiedRules -> [RuleAC]
+joinAllRules (ClassifiedRules a b c) = a ++ b ++ c
+
+-- | Extract all non-silent rules.
+nonSilentRules :: ClassifiedRules -> [RuleAC]
+nonSilentRules = filter (not . null . L.get rActs) . joinAllRules
 
 ------------------------------------------------------------------------------
 -- Types
 ------------------------------------------------------------------------------
+
+-- | In the diff type, we have either the Left Hand Side or the Right Hand Side
+data Side = LHS | RHS deriving(Show, Eq, Ord, Read)
 
 -- | Whether we are checking for the existence of a trace satisfiying a the
 -- current constraint system or whether we're checking that no traces
@@ -202,21 +269,9 @@ data System = System
     -- constraint system.
     deriving( Eq, Ord )
 
-data DiffProofType = RuleEquivalence | None
-    deriving( Eq, Ord, Show )
-    
--- | A system used in diff proofs. 
-data DiffSystem = DiffSystem
-    { _dsProofType      :: Maybe DiffProofType              -- The diff proof technique used
-    , _dsSystems        :: S.Set System                     -- The constraint systems used
-    , _dsProtoRules     :: S.Set ProtoRuleE                 -- the rules of the protocol
-    , _dsConstrRules    :: S.Set RuleAC                     -- the construction rules of the theory
-    , _dsDestrRules     :: S.Set RuleAC                     -- the descruction rules of the theory
-    , _dsCurrentRule    :: Maybe (Either RuleAC ProtoRuleE) -- the rule under consideration
-    }
-    deriving( Eq, Ord )
+$(mkLabels [''System, ''GoalStatus])
 
-$(mkLabels [''System, ''DiffSystem, ''GoalStatus])
+deriving instance Show System
 
 -- Further accessors
 --------------------
@@ -230,7 +285,86 @@ sSubst = eqsSubst . sEqStore
 sConjDisjEqs :: System :-> Conj (SplitId, S.Set (LNSubstVFresh))
 sConjDisjEqs = eqsConj . sEqStore
 
+------------------------------------------------------------------------------
+-- Proof Context
+------------------------------------------------------------------------------
 
+-- | A big-step case distinction.
+data CaseDistinction = CaseDistinction
+     { _cdGoal     :: Goal   -- start goal of case distinction
+       -- disjunction of named sequents with premise being solved; each name
+       -- being the path of proof steps required to arrive at these cases
+     , _cdCases    :: Disj ([String], System)
+     }
+     deriving( Eq, Ord, Show )
+
+data InductionHint = UseInduction | AvoidInduction
+       deriving( Eq, Ord, Show )
+
+-- | A proof context contains the globally fresh facts, classified rewrite
+-- rules and the corresponding precomputed premise case distinction theorems.
+data ProofContext = ProofContext
+       { _pcSignature          :: SignatureWithMaude
+       , _pcRules              :: ClassifiedRules
+       , _pcInjectiveFactInsts :: S.Set FactTag
+       , _pcCaseDistKind       :: CaseDistKind
+       , _pcCaseDists          :: [CaseDistinction]
+       , _pcUseInduction       :: InductionHint
+       , _pcTraceQuantifier    :: SystemTraceQuantifier
+       }
+       deriving( Eq, Ord, Show )
+
+-- | A diff proof context contains the two proof contexts for either side
+-- and all rules.
+data DiffProofContext = DiffProofContext
+       {
+--          _dpcPCLeft            :: ProofContext
+--        , _dpcPCRight           :: ProofContext
+         _dpcProtoRules           :: [ProtoRuleE]
+       , _dpcConstrRules          :: [RuleAC]
+       , _dpcDestrRules           :: [RuleAC]
+       , _dpcAxioms               :: [(Side, [LNGuarded])]
+       }
+       deriving( Eq, Ord, Show )
+
+       
+$(mkLabels [''ProofContext, ''DiffProofContext, ''CaseDistinction])
+
+
+-- | The 'MaudeHandle' of a proof-context.
+pcMaudeHandle :: ProofContext :-> MaudeHandle
+pcMaudeHandle = sigmMaudeHandle . pcSignature
+
+-- Instances
+------------
+
+instance HasFrees CaseDistinction where
+    foldFrees f th =
+        foldFrees f (L.get cdGoal th)   `mappend`
+        foldFrees f (L.get cdCases th)
+
+    foldFreesOcc  _ _ = const mempty
+
+    mapFrees f th = CaseDistinction <$> mapFrees f (L.get cdGoal th)
+                                    <*> mapFrees f (L.get cdCases th)
+
+data DiffProofType = RuleEquivalence | None
+    deriving( Eq, Ord, Show )
+    
+-- | A system used in diff proofs. 
+data DiffSystem = DiffSystem
+    { _dsProofType      :: Maybe DiffProofType              -- The diff proof technique used
+    , _dsSide           :: Maybe Side                       -- The side for backward search, when doing rule equivalence
+    , _dsProofContext   :: Maybe ProofContext               -- The proof context used
+    , _dsSystem         :: Maybe System                     -- The constraint system used
+    , _dsProtoRules     :: S.Set ProtoRuleE                 -- the rules of the protocol
+    , _dsConstrRules    :: S.Set RuleAC                     -- the construction rules of the theory
+    , _dsDestrRules     :: S.Set RuleAC                     -- the descruction rules of the theory
+    , _dsCurrentRule    :: Maybe (Either RuleAC ProtoRuleE) -- the rule under consideration
+    }
+    deriving( Eq, Ord )
+
+$(mkLabels [''DiffSystem])
 
 ------------------------------------------------------------------------------
 -- Constraint system construction
@@ -246,7 +380,7 @@ emptySystem = System
 -- | The empty diff constraint system.
 emptyDiffSystem :: DiffSystem
 emptyDiffSystem = DiffSystem
-    Nothing S.empty S.empty S.empty S.empty Nothing
+    Nothing Nothing Nothing Nothing S.empty S.empty S.empty Nothing
 
 -- | Returns the constraint system that has to be proven to show that given
 -- formula holds in the context of the given theory.
@@ -459,12 +593,13 @@ prettyNonGraphSystem se = vsep $ map combine
 -- clauses.
 prettyNonGraphSystemDiff :: HighlightDocument d => DiffSystem -> d
 prettyNonGraphSystemDiff se = vsep $ map combine
+-- FIXME!!!
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
   , ("current rule",        prettyEitherRule $ L.get dsCurrentRule se)
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
   , ("construction rules",  vsep $ map prettyRuleAC $ S.toList $ L.get dsConstrRules se)
   , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
-  , ("systems",             vsep $ map prettyNonGraphSystem $ S.toList $ L.get dsSystems se)
+--   , ("systems",             vsep $ map prettyNonGraphSystem $ S.toList $ L.get dsSystems se)
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
@@ -491,11 +626,19 @@ prettyGoals solved sys = vsep $ do
         loopBreaker | L.get gsLoopBreaker status = " (loop breaker)"
                     | otherwise                  = ""
     return $ prettyGoal goal <-> lineComment_ ("nr: " ++ show nr ++ loopBreaker)
+    
+-- | Pretty print a case distinction
+prettyCaseDistinction :: HighlightDocument d => CaseDistinction -> d
+prettyCaseDistinction th = vcat $
+   [ prettyGoal $ L.get cdGoal th ]
+   ++ map combine (zip [(1::Int)..] $ map snd . getDisj $ (L.get cdCases th))
+  where
+    combine (i, sys) = fsep [keyword_ ("Case " ++ show i) <> colon, nest 2 (prettySystem sys)]
+
 
 -- Additional instances
 -----------------------
 
-deriving instance Show System
 deriving instance Show DiffSystem
 
 instance Apply CaseDistKind where
@@ -552,7 +695,15 @@ instance HasFrees System where
                <*> mapFrees fun j
                <*> mapFrees fun k
 
+-- NFData
+---------
 
+$( derive makeBinary ''CaseDistinction)
+$( derive makeBinary ''ClassifiedRules)
+$( derive makeBinary ''InductionHint)
+$( derive makeBinary ''ProofContext)
+
+$( derive makeBinary ''Side)
 $( derive makeBinary ''CaseDistKind)
 $( derive makeBinary ''GoalStatus)
 $( derive makeBinary ''DiffProofType)
@@ -560,6 +711,12 @@ $( derive makeBinary ''System)
 $( derive makeBinary ''DiffSystem)
 $( derive makeBinary ''SystemTraceQuantifier)
 
+$( derive makeNFData ''CaseDistinction)
+$( derive makeNFData ''ClassifiedRules)
+$( derive makeNFData ''InductionHint)
+$( derive makeNFData ''ProofContext)
+
+$( derive makeNFData ''Side)
 $( derive makeNFData ''CaseDistKind)
 $( derive makeNFData ''GoalStatus)
 $( derive makeNFData ''DiffProofType)

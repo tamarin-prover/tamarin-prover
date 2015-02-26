@@ -39,7 +39,7 @@ import           Extension.Data.Label
 
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
-import           Theory.Constraint.Solver.Types
+-- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule)
 import           Theory.Model

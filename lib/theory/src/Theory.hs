@@ -158,7 +158,7 @@ module Theory (
   -- * Convenience exports
   , module Theory.Model
   , module Theory.Proof
-  , module Theory.Constraint.Solver.Types
+--   , module Theory.Constraint.Solver.Types
 
   ) where
 
@@ -190,7 +190,7 @@ import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
-import           Theory.Constraint.Solver.Types
+-- import           Theory.Constraint.Solver.Types
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -954,7 +954,13 @@ getProofContextDiff s l thy = case s of
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
-getDiffProofContext _ thy = DiffProofContext (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) -- FIXME!!
+getDiffProofContext _ thy = DiffProofContext (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) ((LHS, axiomsLeft):[(RHS, axiomsRight)]) -- FIXME!!
+  where
+    items = L.get diffThyItems thy
+    axiomsLeft  = do EitherAxiomItem (LHS, ax) <- items
+                     return $ formulaToGuarded_ $ L.get axFormula ax
+    axiomsRight  = do EitherAxiomItem (RHS, ax) <- items
+                      return $ formulaToGuarded_ $ L.get axFormula ax
       
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
@@ -1715,7 +1721,7 @@ prettyClosedSummary thy =
 
 prettyClosedDiffSummary :: Document d => ClosedDiffTheory -> d
 prettyClosedDiffSummary thy =
-    vcat lemmaSummaries <-> vcat diffLemmaSummaries
+    (vcat lemmaSummaries) $$ (vcat diffLemmaSummaries)
   where
     lemmaSummaries = do
         EitherLemmaItem (s, lem)  <- L.get diffThyItems thy

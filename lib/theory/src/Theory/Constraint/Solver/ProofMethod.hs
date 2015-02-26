@@ -56,7 +56,7 @@ import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
-import           Theory.Constraint.Solver.Types
+-- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
@@ -113,6 +113,7 @@ data DiffProofMethod =
   | DiffRuleEquivalence                      -- ^ Consider all rules
   | DiffTrivial                              -- ^ The rule is trivially sound
   | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
+  | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
   | DiffSolved                               -- ^ No attack was found
   | DiffAttack                               -- ^ A potential attack was found
   deriving( Eq, Ord, Show )
@@ -245,7 +246,10 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
         DiffSorry _                    -> return M.empty
         DiffSolved                     -> Nothing -- FIXME: check if allowed?
         DiffBackwardSearch  -- FIXME
-          | (L.get dsProofType sys) == (Just RuleEquivalence) && (L.get dsCurrentRule sys) /= Nothing -> return M.empty
+          | (L.get dsProofType sys) == (Just RuleEquivalence) && (L.get dsCurrentRule sys) /= Nothing && (L.get dsSide sys) == Nothing -> Just startBackwardSearch
+          | otherwise                                       -> Nothing
+        DiffBackwardSearchStep meth  -- FIXME
+          | (L.get dsProofType sys) == (Just RuleEquivalence) && (L.get dsCurrentRule sys) /= Nothing && (L.get dsSide sys) /= Nothing -> return M.empty -- FIXME
           | otherwise                                       -> Nothing
         DiffTrivial 
           | isTrivial sys              -> return M.empty
@@ -279,7 +283,11 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
       Nothing   -> False
       Just (Left rule)  -> isTrivialACDiffRule    rule
       Just (Right rule) -> isTrivialProtoDiffRule rule
+      
+    backwardSearchSystem s sys' = L.set dsSide (Just s)
+      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) UntypedCaseDist ExistsNoTrace (TF True) {- FIXME -})) sys'
 
+    startBackwardSearch = M.insert ("LHS") (backwardSearchSystem LHS sys) $ M.insert ("RHS") (backwardSearchSystem RHS sys) $ M.empty
         
 ------------------------------------------------------------------------------
 -- Heuristics
@@ -352,6 +360,9 @@ rankDiffProofMethods ranking ctxt sys = do
             [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
         <|> [(DiffTrivial, "Trivial rule equivalence")]
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
+        <|> (case (L.get dsProofContext sys, L.get dsSystem sys) of
+                  (Just ctxt', Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking ctxt' sys')
+                  (_         , _        ) -> [])
         <|> [(DiffSolved, "Backward search completed")]
         <|> [(DiffAttack, "Found attack")]
 --             (contradiction <$> contradictions ctxt sys)
@@ -545,6 +556,7 @@ prettyDiffProofMethod method = case method of
     DiffTrivial              -> keyword_ "trivial"
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
     DiffBackwardSearch       -> keyword_ "backward-search"  
+    DiffBackwardSearchStep s -> keyword_ "backward-search-step" <-> prettyProofMethod s 
     
     
 -- Derived instances

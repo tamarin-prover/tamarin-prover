@@ -119,7 +119,7 @@ loadOpenThy as = parseOpenTheory (diff as ++ defines as)
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
-loadClosedDiffThy as inFile = loadOpenDiffThy as inFile >>= closeDiffThy as
+loadClosedDiffThy as inFile = (loadOpenDiffThy as inFile) >>= (closeDiffThy as) . addDefaultDiffLemma
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory

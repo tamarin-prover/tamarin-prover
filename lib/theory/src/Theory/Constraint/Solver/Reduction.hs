@@ -96,7 +96,7 @@ import           Extension.Prelude
 import           Logic.Connectives
 
 import           Theory.Constraint.Solver.Contradictions
-import           Theory.Constraint.Solver.Types
+-- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 

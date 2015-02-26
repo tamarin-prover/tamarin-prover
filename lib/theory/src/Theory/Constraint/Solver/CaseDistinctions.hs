@@ -47,7 +47,7 @@ import           Theory.Constraint.Solver.Contradictions (contradictorySystem)
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
-import           Theory.Constraint.Solver.Types
+-- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 
