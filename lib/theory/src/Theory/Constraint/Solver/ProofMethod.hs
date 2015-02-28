@@ -253,12 +253,12 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
         DiffBackwardSearchStep meth  -- FIXME
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
-                                                                      (_ , _ , _)                -> Nothing
+                                                                      (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
         DiffTrivial 
-          | isTrivial sys              -> return M.empty
-          | otherwise                  -> Nothing
-        DiffAttack                     -> Nothing -- FIXME
+          | isTrivial sys && L.get dsSystem sys == Nothing -> return M.empty
+          | otherwise                                      -> Nothing
+        DiffAttack                                         -> Nothing -- FIXME
         DiffRuleEquivalence
           | (L.get dsProofType sys) == Nothing              -> Just ruleEquivalence
           | otherwise                                       -> Nothing
@@ -275,7 +275,19 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
       $ L.set dsProofType (Just RuleEquivalence) sys
       
     formula :: Either RuleAC ProtoRuleE -> LNFormula
-    formula rule = TF True -- Qua Ex ("i", LSortNode) (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear ("Testlabel" ++ getEitherRuleName rule) 0, factTerms = []})))
+    -- Formula (String, LSort) Name LVar
+    -- Formula s c v = Ato (Atom (VTerm c (BVar v))) | c = Name, v = LVar
+    -- Atom t = Action t (Fact t) | t = (VTerm c (BVar v)) = (VTerm Name (BVar LVar)
+    -- data Fact t = Fact { factTag :: FactTag, factTerms :: [t]} | t = (VTerm c (BVar v))
+    -- data FactTag = ProtoFact Multiplicity String Int -- ^ A protocol fact together with its arity and multiplicity.
+    -- data Name = Name {nTag :: NameTag, nId :: NameId}
+    -- newtype NameId = NameId { getNameId :: String }
+    -- data NameTag = FreshName | PubName
+    -- type VTerm c v = Term (Lit c v) | c = Name, v = (BVar LVar)
+    -- data Term a = LIT a | a = (Lit Name (BVar LVar)
+    -- data Lit c v = Con c | Var v | v = (BVar LVar)
+    -- data BVar v = Bound Integer  
+    formula rule = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact {factTag = ProtoFact Linear ("Diff" ++ getEitherRuleNameDiff rule) 0, factTerms = []})))
     -- Qua Ex ("i",LSortNode) (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear "Testlabel" 0, factTerms = []})))
     -- GGuarded Ex [("i",LSortNode)] [Action Bound 0 (Fact {factTag = ProtoFact Linear "Testlabel" 0, factTerms = []})] (GConj (Conj {getConj = []}))
     

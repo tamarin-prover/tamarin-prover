@@ -119,7 +119,7 @@ loadOpenThy as = parseOpenTheory (diff as ++ defines as)
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
-loadClosedDiffThy as inFile = (loadOpenDiffThy as inFile) >>= (closeDiffThy as) . addDefaultDiffLemma
+loadClosedDiffThy as inFile = (loadOpenDiffThy as inFile) >>= (closeDiffThy as) . addDefaultDiffLemma . addProtoRuleLabels
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
@@ -165,7 +165,7 @@ loadClosedDiffThyWfReport as inFile = do
           putStrLn $ replicate 78 '-'
           putStrLn ""
     -- return closed theory
-    closeDiffThy as (addDefaultDiffLemma thy)
+    closeDiffThy as (addDefaultDiffLemma (addProtoRuleLabels thy))
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
 loadClosedThyString as input =
@@ -177,7 +177,7 @@ loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTh
 loadClosedDiffThyString as input =
     case parseOpenDiffTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
-        Right thy -> fmap Right $ closeDiffThy as (addDefaultDiffLemma thy)
+        Right thy -> fmap Right $ closeDiffThy as (addDefaultDiffLemma (addProtoRuleLabels thy))
              
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
@@ -382,7 +382,7 @@ addMessageDeductionRuleVariantsDiff thy0
   | enableBP msig = addIntruderVariantsDiff [ dhIntruderVariantsFile
                                             , bpIntruderVariantsFile ]
   | enableDH msig = addIntruderVariantsDiff [ dhIntruderVariantsFile ]
-  | otherwise     = return thy
+  | otherwise     = return $ addIntrRuleLabels thy
   where
     msig         = get (sigpMaudeSig . diffThySignature) thy0
     rules        = subtermIntruderRules msig ++ specialIntruderRules
@@ -390,7 +390,7 @@ addMessageDeductionRuleVariantsDiff thy0
     thy          = addIntrRuleACsDiffBoth rules thy0
     addIntruderVariantsDiff files = do
         ruless <- mapM loadRules files
-        return $ addIntrRuleACsDiffBoth (concat ruless) thy
+        return $ addIntrRuleLabels (addIntrRuleACsDiffBoth (concat ruless) thy)
       where
         loadRules file = do
             variantsFile <- getDataFileName file

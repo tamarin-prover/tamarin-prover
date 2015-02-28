@@ -72,6 +72,10 @@ module Theory.Model.Rule (
   , getProtoRuleName
   , getACRuleName
   , getEitherRuleName
+  , getProtoRuleNameDiff
+  , getACRuleNameDiff
+  , getEitherRuleNameDiff
+  , getIntrACRuleName
   , nfRule
   , isTrivialProtoVariantAC
 
@@ -84,6 +88,7 @@ module Theory.Model.Rule (
 
   -- ** Construction
   , someRuleACInst
+  , addDiffLabel
 
   -- ** Unification
   , unifyRuleACInstEqs
@@ -490,6 +495,12 @@ getProtoRuleName (Rule rname _ _ _) = case rname of
          StandRule s -> s
 
 -- | Returns a protocol rule's name
+getProtoRuleNameDiff :: ProtoRuleE -> String
+getProtoRuleNameDiff (Rule rname _ _ _) = case rname of
+         FreshRule   -> "ProtoConstr"
+         StandRule s -> "Proto" ++ s
+
+-- | Returns a AC rule's name
 getACRuleName :: RuleAC -> String
 getACRuleName (Rule rname _ _ _) = case rname of
          ProtoInfo p -> case L.get pracName p of
@@ -497,10 +508,44 @@ getACRuleName (Rule rname _ _ _) = case rname of
                             StandRule s -> s
          IntrInfo  i -> show i
 
+-- | Returns a AC rule's name
+getACRuleNameDiff :: RuleAC -> String
+getACRuleNameDiff (Rule rname _ _ _) = case rname of
+         ProtoInfo p -> case L.get pracName p of
+                            FreshRule   -> "ProtoFreshConstr"
+                            StandRule s -> "Proto" ++ s
+         IntrInfo  i -> "Intr" ++ case i of
+                 ConstrRule x    -> "Constr" ++ show x 
+                 DestrRule x     -> "Destr" ++ show x
+                 CoerceRule      -> "Coerce"
+                 IRecvRule       -> "Recv"
+                 ISendRule       -> "Send"
+                 PubConstrRule   -> "PubConstr"
+                 FreshConstrRule -> "FreshConstr"
+                 IEqualityRule   -> "Equality"
+
+         
+-- | Returns an intruder rule's name
+getIntrACRuleName :: IntrRuleAC -> String
+getIntrACRuleName (Rule rname _ _ _) = case rname of
+         ConstrRule x    -> "Constr" ++ show x 
+         DestrRule x     -> "Destr" ++ show x
+         CoerceRule      -> "Coerce"
+         IRecvRule       -> "Recv"
+         ISendRule       -> "Send"
+         PubConstrRule   -> "PubConstr"
+         FreshConstrRule -> "FreshConstr"
+         IEqualityRule   -> "Equality"
+         
 -- | Returns a protocol rule's name
 getEitherRuleName :: Either RuleAC ProtoRuleE -> String
 getEitherRuleName (Left  r) = getACRuleName    r
 getEitherRuleName (Right r) = getProtoRuleName r
+
+-- | Returns a protocol rule's name
+getEitherRuleNameDiff :: Either RuleAC ProtoRuleE -> String
+getEitherRuleNameDiff (Left  r) = getACRuleNameDiff    r
+getEitherRuleNameDiff (Right r) = getProtoRuleNameDiff r
        
 -- | Converts a protocol rule to its "left" variant
 getLeftRule :: ProtoRuleE ->  ProtoRuleE
@@ -511,6 +556,10 @@ getLeftRule (Rule ri ps cs as) =
 getRightRule :: ProtoRuleE ->  ProtoRuleE
 getRightRule (Rule ri ps cs as) =
    (Rule ri (map getRightFact ps) (map getRightFact cs) (map getRightFact as))
+   
+-- | Add the diff label to a rule
+addDiffLabel :: Rule a -> String -> Rule a
+addDiffLabel (Rule info prems concs acts) name = Rule info prems concs (acts ++ [Fact {factTag = ProtoFact Linear name 0, factTerms = []}])
     
 -- Construction
 ---------------

@@ -79,6 +79,8 @@ module Theory (
   , cprRuleE
   , filterSide
   , addDefaultDiffLemma
+  , addProtoRuleLabels
+  , addIntrRuleLabels
 
   -- ** Open theories
   , OpenTheory
@@ -552,7 +554,11 @@ type ClosedDiffTheory =
 -- type EitherTheory = Either Theory  DiffTheory
 type EitherOpenTheory = Either OpenTheory OpenDiffTheory
 type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
-    
+
+type OpenDiffTheoryItem =
+    DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton
+
+
 -- Shared theory modification functions
 ---------------------------------------
 
@@ -779,10 +785,23 @@ defaultOpenDiffTheory flag = DiffTheory "default" (emptySignaturePure flag) [] [
 -- Add the default Diff lemma to an Open Diff Theory
 addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
 addDefaultDiffLemma thy = modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_equivalence")]) thy
---     liftedAddDiffLemma thy lem = case addDiffLemma lem thy of
---       Just thy' -> return thy'
---       Nothing   -> error $ "duplicate lemma: " ++ L.get lDiffName lem
 
+-- Add the rule labels to an Open Diff Theory
+addProtoRuleLabels:: OpenDiffTheory -> OpenDiffTheory
+addProtoRuleLabels thy = -- modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_equivalence")]) thy
+    modify diffThyItems (map addRuleLabel) thy
+  where
+    addRuleLabel :: OpenDiffTheoryItem -> OpenDiffTheoryItem
+    addRuleLabel (DiffRuleItem rule) = DiffRuleItem $ addDiffLabel rule ("DiffProto" ++ (getProtoRuleName rule))
+    addRuleLabel x                   = x
+    
+-- Add the rule labels to an Open Diff Theory
+addIntrRuleLabels:: OpenDiffTheory -> OpenDiffTheory
+addIntrRuleLabels thy = -- modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_equivalence")]) thy
+    modify diffThyCacheLeft (map addRuleLabel) $ modify diffThyCacheRight (map addRuleLabel) thy
+  where
+    addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getIntrACRuleName rule))
+    
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness dependens on it.
 openTheory :: ClosedTheory -> OpenTheory
