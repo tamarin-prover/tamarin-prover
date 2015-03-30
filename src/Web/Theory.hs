@@ -1173,6 +1173,7 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
   where
     go (DiffTheoryCaseDist s k i j) = renderDotCode (casesDotCode s k i j)
     go (DiffTheoryProof s l p)      = renderDotCode (proofPathDotCode s l p)
+    go (DiffTheoryDiffProof l p)    = renderDotCode (proofPathDotCodeDiff l p)
     go _                            = error "Unhandled theory path. This is a bug."
 
     -- Get dot code for required cases
@@ -1186,6 +1187,14 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
       D.showDot $ fromMaybe (return ()) $ do
         subProof <- resolveProofPathDiff thy s lemma proofPath
         sequent <- psInfo $ root subProof
+        return $ compact sequent
+
+    -- Get dot code for proof path in lemma
+    proofPathDotCodeDiff lemma proofPath =
+      D.showDot $ fromMaybe (return ()) $ do
+        subProof <- resolveProofPathDiffLemma thy lemma proofPath
+        diffSequent <- dpsInfo $ root subProof
+        sequent <- get dsSystem diffSequent
         return $ compact sequent
 
     -- Render a piece of dot code

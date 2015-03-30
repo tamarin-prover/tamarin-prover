@@ -308,7 +308,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     eitherProofContext s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
     
     backwardSearchSystem s sys' rule = L.set dsSide (Just s)
-      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsNoTrace (formula rule))) sys'
+      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsSomeTrace (formula rule))) sys'
 --       $ L.set dsProofContext (Just (eitherProofContext s)) sys'
 
     startBackwardSearch rule = M.insert ("LHS") (backwardSearchSystem LHS sys rule) $ M.insert ("RHS") (backwardSearchSystem RHS sys rule) $ M.empty

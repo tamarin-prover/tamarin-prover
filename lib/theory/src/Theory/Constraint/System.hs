@@ -589,17 +589,17 @@ prettySystem se = vcat $
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
 prettyNonGraphSystem :: HighlightDocument d => System -> d
-prettyNonGraphSystem se = text $ show se -- vsep $ map combine
---   [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
---   , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
---   , ("equations",       prettyEqStore $ L.get sEqStore se)
---   , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
---   , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
---   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
---   , ("solved goals",    prettyGoals True se)
---   ]
---   where
---     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
+prettyNonGraphSystem se = vsep $ map combine -- text $ show se
+  [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
+  , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
+  , ("equations",       prettyEqStore $ L.get sEqStore se)
+  , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
+  , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
+  , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
+  , ("solved goals",    prettyGoals True se)
+  ]
+  where
+    combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
 
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
