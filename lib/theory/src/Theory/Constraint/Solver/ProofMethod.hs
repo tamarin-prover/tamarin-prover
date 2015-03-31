@@ -243,25 +243,29 @@ execDiffProofMethod :: DiffProofContext
                 -> DiffProofMethod -> DiffSystem -> Maybe (M.Map CaseName DiffSystem)
 execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ show sys -- return M.empty
       case method of
-        DiffSorry _                    -> return M.empty
-        DiffSolved                     -> Nothing -- FIXME: check if allowed?
-        DiffBackwardSearch  -- FIXME
+        DiffSorry _                                           -> return M.empty
+        DiffSolved
+          | isSolved && checkOtherSide                        -> return M.empty
+          | otherwise                                         -> Nothing
+        DiffBackwardSearch
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys) of
                                                                       (Just rule, Nothing) -> Just $ startBackwardSearch rule
                                                                       (_ , _)              -> Nothing
-          | otherwise                                       -> Nothing
+          | otherwise                                         -> Nothing
         DiffBackwardSearchStep meth  -- FIXME
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
         DiffTrivial 
-          | isTrivial sys && L.get dsSystem sys == Nothing -> return M.empty
-          | otherwise                                      -> Nothing
-        DiffAttack                                         -> Nothing -- FIXME
+          | isTrivial sys && L.get dsSystem sys == Nothing    -> return M.empty
+          | otherwise                                         -> Nothing
+        DiffAttack
+          | isSolved && not(checkOtherSide)                   -> return M.empty
+          | otherwise                                         -> Nothing
         DiffRuleEquivalence
-          | (L.get dsProofType sys) == Nothing              -> Just ruleEquivalence
-          | otherwise                                       -> Nothing
+          | (L.get dsProofType sys) == Nothing                -> Just ruleEquivalence
+          | otherwise                                         -> Nothing
           
   where
     protoRules  = (L.get dpcProtoRules  ctxt)
@@ -317,6 +321,12 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     applyStep m s sys' = case (execProofMethod (eitherProofContext s) m sys') of
                            Nothing    -> Nothing
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
+                           
+    isSolved = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
+                       (Just RuleEquivalence, Just _, Just s, Just sys') -> (rankProofMethods GoalNrRanking (eitherProofContext s) sys') == []
+                       (_                   , _     , _     , _        ) -> False           
+                       
+    checkOtherSide = False
     
 ------------------------------------------------------------------------------
 -- Heuristics
@@ -394,25 +404,10 @@ rankDiffProofMethods ranking ctxt sys = do
                   (_         , _        ) -> [])
         <|> [(DiffSolved, "Backward search completed")]
         <|> [(DiffAttack, "Found attack")]
---             (contradiction <$> contradictions ctxt sys)
---         <|> (case L.get pcUseInduction ctxt of
---                AvoidInduction -> [(Simplify, ""), (Induction, "")]
---                UseInduction   -> [(Induction, ""), (Simplify, "")]
---             )
---         <|> (solveGoalMethod <$> (rankGoals ctxt ranking sys $ openGoals sys))
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
---   where
---     contradiction c                    = (Contradiction (Just c), "")
---     solveGoalMethod (goal, (nr, usefulness)) =
---       ( SolveGoal goal
---       , "nr. " ++ show nr ++ case usefulness of
---                                Useful                -> ""
---                                LoopBreaker           -> " (loop breaker)"
---                                ProbablyConstructible -> " (probably constructible)"
---                                CurrentlyDeducible    -> " (currently deducible)"
---       )
+
   where
     eitherProofContext s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
       

@@ -608,10 +608,10 @@ prettyNonGraphSystemDiff se = vsep $ map combine
 -- FIXME!!!
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
   , ("current rule",        prettyEitherRule $ L.get dsCurrentRule se)
+  , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
   , ("construction rules",  vsep $ map prettyRuleAC $ S.toList $ L.get dsConstrRules se)
   , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
-  , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
