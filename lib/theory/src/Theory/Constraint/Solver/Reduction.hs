@@ -23,6 +23,8 @@ module Theory.Constraint.Solver.Reduction (
   , applyChangeList
   , whileChanging
 
+  , checkMirrors
+  
   -- ** Accessing the 'ProofContext'
   , getProofContext
   , getMaudeHandle
@@ -170,6 +172,62 @@ whileChanging reduction =
                           Unchanged -> return indicator
                           Changed   -> go     indicator'
 
+-- checking mirrors
+------------------------------
+                          
+checkMirrors :: System -> [RuleAC] -> Bool -- NodeId -> Reduction RuleACInst
+checkMirrors sys rules = False
+ -- M.foldl sys matchRules
+  where
+--     matchRules i rules = do
+--             (ru, mrconstrs) <- importRule =<< disjunctionOfList rules
+--             solveRuleConstraints mrconstrs
+--             modM sNodes (M.update i ru)
+--             exploitPrems i ru
+--             return ru
+--       
+    -- | Import a rule with all its variables renamed to fresh variables.
+    importRule ru = someRuleACInst ru `evalBindT` noBindings
+
+    mkISendRuleAC m = return $ Rule (IntrInfo (ISendRule))
+                                    [kuFact m] [inFact m] [kLogFact m]
+
+
+    mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule []))
+                           [] [freshFact m] []
+
+    exploitPrems i ru = mapM_ (exploitPrem i ru) (enumPrems ru)
+
+    exploitPrem i ru (v, fa) = case fa of
+        -- CR-rule *DG2_2* specialized for *In* facts.
+        Fact InFact [m] -> do
+            j <- freshLVar "vf" LSortNode
+            ruKnows <- mkISendRuleAC m
+            modM sNodes (M.insert j ruKnows)
+            modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i, v))
+            exploitPrems j ruKnows
+
+        -- CR-rule *DG2_2* specialized for *Fr* facts.
+        Fact FreshFact [m] -> do
+            j <- freshLVar "vf" LSortNode
+            modM sNodes (M.insert j (mkFreshRuleAC m))
+            unless (isFreshVar m) $ do
+                -- 'm' must be of sort fresh ==> enforce via unification
+                n <- varTerm <$> freshLVar "n" LSortFresh
+                void (solveTermEqs SplitNow [Equal m n])
+            modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i,v))
+
+          -- CR-rule *DG2_{2,u}*: solve a KU-premise by inserting the
+          -- corresponding KU-actions before this node.
+        _ | isKUFact fa -> do
+              j <- freshLVar "vk" LSortNode
+              insertLess j i
+              void (insertAction j fa)
+
+          -- Store premise goal for later processing using CR-rule *DG2_2*
+          | otherwise -> insertGoal (PremiseG (i,v) fa) (v `elem` breakers)
+      where
+        breakers = ruleInfo (get praciLoopBreakers) (const []) $ get rInfo ru
 
 -- Accessing the proof context
 ------------------------------

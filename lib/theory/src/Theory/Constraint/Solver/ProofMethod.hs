@@ -252,7 +252,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                                                                       (Just rule, Nothing) -> Just $ startBackwardSearch rule
                                                                       (_ , _)              -> Nothing
           | otherwise                                         -> Nothing
-        DiffBackwardSearchStep meth  -- FIXME
+        DiffBackwardSearchStep meth
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
                                                                       (_ , _ , _)                 -> Nothing
@@ -261,7 +261,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | isTrivial sys && L.get dsSystem sys == Nothing    -> return M.empty
           | otherwise                                         -> Nothing
         DiffAttack
-          | isSolved && not(checkOtherSide)                   -> return M.empty
+          | isSolved && (not checkOtherSide)                   -> return M.empty
           | otherwise                                         -> Nothing
         DiffRuleEquivalence
           | (L.get dsProofType sys) == Nothing                -> Just ruleEquivalence
@@ -313,7 +313,6 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     backwardSearchSystem s sys' rule = L.set dsSide (Just s)
       $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsSomeTrace (formula rule))) sys'
---       $ L.set dsProofContext (Just (eitherProofContext s)) sys'
 
     startBackwardSearch rule = M.insert ("LHS") (backwardSearchSystem LHS sys rule) $ M.insert ("RHS") (backwardSearchSystem RHS sys rule) $ M.empty
     
@@ -323,10 +322,14 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
                            
     isSolved = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                       (Just RuleEquivalence, Just _, Just s, Just sys') -> (rankProofMethods GoalNrRanking (eitherProofContext s) sys') == []
+                       (Just RuleEquivalence, Just _, Just s, Just sys') -> (rankProofMethods GoalNrRanking (eitherProofContext s) sys') == [] -- checks if the system is solved
                        (_                   , _     , _     , _        ) -> False           
-                       
-    checkOtherSide = False
+    
+    checkOtherSide = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
+                       (Just RuleEquivalence, Just _, Just s, Just sys') -> False -- checkMirrors sys'
+                       (_                   , _     , _     , _        ) -> False
+    
+    
     
 ------------------------------------------------------------------------------
 -- Heuristics
