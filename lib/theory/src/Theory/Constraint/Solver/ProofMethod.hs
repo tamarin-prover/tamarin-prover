@@ -253,7 +253,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                                                                       (_ , _)              -> Nothing
           | otherwise                                         -> Nothing
         DiffBackwardSearchStep meth
-          | (L.get dsProofType sys) == (Just RuleEquivalence) -- FIXME: check if ForbiddenKD is really a problem!
+          | (L.get dsProofType sys) == (Just RuleEquivalence)
             && (meth /= (Contradiction (Just ForbiddenKD)))   -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
                                                                       (_ , _ , _)                 -> Nothing
@@ -262,7 +262,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | isTrivial sys && L.get dsSystem sys == Nothing    -> return M.empty
           | otherwise                                         -> Nothing
         DiffAttack
-          | isSolved && (not checkOtherSide)                   -> return M.empty
+          | isSolved && (not checkOtherSide)                  -> return M.empty
           | otherwise                                         -> Nothing
         DiffRuleEquivalence
           | (L.get dsProofType sys) == Nothing                -> Just ruleEquivalence
@@ -322,7 +322,6 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                            Nothing    -> Nothing
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
                            
-    -- FIXME: check ForbiddenKD
     isSolved = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                        (Just RuleEquivalence, Just _, Just s, Just sys') -> filter isNotForbiddenKD (rankProofMethods GoalNrRanking (eitherProofContext s) sys') == [] -- checks if the system is solved
                        (_                   , _     , _     , _        ) -> False           
@@ -331,7 +330,9 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     isNotForbiddenKD (_                               , _) = True
     
     checkOtherSide = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                       (Just RuleEquivalence, Just _, Just s, Just sys') -> False -- checkMirrors sys'
+                       (Just RuleEquivalence, Just _, Just s, Just sys') -> case getMirrorDG ctxt s sys' of
+                                                                                 Just sys'' -> isCorrectDG sys'' {-error (show sys'')-}
+                                                                                 Nothing    -> False
                        (_                   , _     , _     , _        ) -> False
     
     

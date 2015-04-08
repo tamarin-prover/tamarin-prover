@@ -557,7 +557,7 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
         ] ++
         [ refDotDiffPath renderUrl tidx (DiffTheoryProof s lemma proofPath)
         | nonEmptyGraph se ]
-        ++
+        ++ 
         [ preformatted (Just "sequent") (prettyNonGraphSystem se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
         ] ++
@@ -631,6 +631,9 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         ] ++
         [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath)
         | nonEmptyGraphDiff se ]
+--         ++ -- FIXME getMirrorDG ctxt s sys'
+--         [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath)
+--         | nonEmptyGraphDiff se ]
         ++
         [ preformatted (Just "sequent") (prettyNonGraphSystemDiff se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")

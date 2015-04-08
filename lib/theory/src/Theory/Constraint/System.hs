@@ -109,6 +109,9 @@ module Theory.Constraint.System (
   , sEdges
   , unsolvedChains
 
+  , isCorrectDG
+  , getMirrorDG
+  
   -- ** Temporal ordering
   , sLessAtoms
 
@@ -369,6 +372,7 @@ data DiffSystem = DiffSystem
     , _dsSide           :: Maybe Side                       -- The side for backward search, when doing rule equivalence
     , _dsProofContext   :: Maybe ProofContext               -- The proof context used
     , _dsSystem         :: Maybe System                     -- The constraint system used
+--    , _dsMirrorSystem   :: Maybe System                     -- The mirrored constraint system
     , _dsProtoRules     :: S.Set ProtoRuleE                 -- the rules of the protocol
     , _dsConstrRules    :: S.Set RuleAC                     -- the construction rules of the theory
     , _dsDestrRules     :: S.Set RuleAC                     -- the descruction rules of the theory
@@ -481,6 +485,86 @@ nodeConcFact (v, i) = L.get (rConc i) . nodeRule v
 nodeConcNode :: NodeConc -> NodeId
 nodeConcNode = fst
 
+-- | Returns true if the graph is correct, i.e. complete and conclusions and premises match
+-- | Note that this does not check if all goals are solved!
+isCorrectDG :: System -> Bool
+isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) True (L.get sNodes sys)
+  where
+    checkRuleInstance :: System -> NodeId -> RuleACInst -> Bool
+    checkRuleInstance sys' idx rule = foldr (\x y -> y && (checkPrems sys' idx x)) True (enumPrems rule)
+      
+    checkPrems :: System -> NodeId -> (PremIdx, LNFact) -> Bool
+    checkPrems sys' idx (premidx, fact) = case S.toList (S.filter (\(Edge _ y) -> y == (idx, premidx)) (L.get sEdges sys')) of
+                                               [(Edge x _)] -> fact == nodeConcFact x sys'
+                                               _            -> False
+
+-- | Returns the mirrored DG, if it exists.
+getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
+getMirrorDG ctxt side sys = Just $ L.set sNodes (M.mapWithKey (transformRuleInstance sys) (L.get sNodes sys)) sys
+  where
+    transformRuleInstance :: System -> NodeId -> RuleACInst -> RuleACInst
+    transformRuleInstance sys' idx rule = if enumPrems rule == []
+                                             then rule -- FIXME: check for new diff-variables!
+                                             else fst $ getInstance $ getOtherRule rule -- FIXME: unify
+    
+    getRules :: [RuleAC]
+    getRules = joinAllRules $ L.get pcRules $ if side == LHS then L.get dpcPCRight ctxt else L.get dpcPCLeft ctxt
+    
+    pRuleWithName :: ProtoRuleName -> [RuleAC]
+    pRuleWithName name = filter (\(Rule x _ _ _) -> case x of
+                                            ProtoInfo p -> (L.get pracName p) == name
+                                            IntrInfo  _ -> False) getRules
+
+    iRuleWithName :: IntrRuleACInfo -> [RuleAC]
+    iRuleWithName name = filter (\(Rule x _ _ _) -> case x of
+                                            IntrInfo  i -> i == name
+                                            ProtoInfo _ -> False) getRules
+    
+    getOtherRule :: RuleACInst -> RuleAC
+    getOtherRule (Rule rule _ _ _) = case rule of
+                             ProtoInfo p -> head $ pRuleWithName (L.get praciName p)
+                             IntrInfo  i -> head $ iRuleWithName i
+
+    getInstance :: RuleAC -> (RuleACInst, Maybe RuleACConstrs)
+    getInstance (Rule (ProtoInfo i) ps cs as) =
+      ( Rule (ProtoInfo i') ps cs as
+      , Just (L.get pracVariants i)
+      )
+      where
+        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+    getInstance (Rule (IntrInfo i) ps cs as) =
+      ( Rule (IntrInfo i) ps cs as, Nothing )
+                             
+                                               
+--     Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo)
+--     data Rule i = Rule {
+--          _rInfo  :: i
+--        , _rPrems :: [LNFact]
+--        , _rConcs :: [LNFact]
+--        , _rActs  :: [LNFact]
+--        }
+--     RuleInfo p i =
+--          ProtoInfo p
+--        | IntrInfo i
+-- 
+-- data ProtoRuleACInstInfo = ProtoRuleACInstInfo
+--        { _praciName         :: ProtoRuleName
+--        , _praciLoopBreakers :: [PremIdx]
+--        }
+-- data ProtoRuleACInfo = ProtoRuleACInfo
+--        { _pracName         :: ProtoRuleName
+--        , _pracVariants     :: Disj (LNSubstVFresh)
+--        , _pracLoopBreakers :: [PremIdx]
+--        }
+-- data IntrRuleACInfo =
+--     ConstrRule BC.ByteString
+--   | DestrRule BC.ByteString
+--   | CoerceRule
+--   | IRecvRule
+--   | ISendRule
+--   | PubConstrRule
+--   | FreshConstrRule
+--   | IEqualityRule
 
 -- Actions
 ----------
