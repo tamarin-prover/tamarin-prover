@@ -88,6 +88,7 @@ module Theory.Model.Rule (
 
   -- ** Construction
   , someRuleACInst
+  , someRuleACInstAvoiding
   , addDiffLabel
 
   -- ** Unification
@@ -583,6 +584,23 @@ someRuleACInst =
     extractInsts (Rule (IntrInfo i) ps cs as) =
       ( Rule (IntrInfo i) ps cs as, Nothing )
 
+-- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
+-- protocol rule, then the given typing and variants also need to be handled.
+someRuleACInstAvoiding :: HasFrees t 
+               => RuleAC
+               -> t
+               -> (RuleACInst, Maybe RuleACConstrs)
+someRuleACInstAvoiding r s =
+    fmap (\x -> renameAvoiding x s) (extractInsts r)
+  where
+    extractInsts (Rule (ProtoInfo i) ps cs as) =
+      ( Rule (ProtoInfo i') ps cs as
+      , Just (L.get pracVariants i)
+      )
+      where
+        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+    extractInsts (Rule (IntrInfo i) ps cs as) =
+      ( Rule (IntrInfo i) ps cs as, Nothing )
 
 -- Unification
 --------------

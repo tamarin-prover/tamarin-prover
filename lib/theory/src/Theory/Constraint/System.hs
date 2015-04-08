@@ -174,6 +174,8 @@ import qualified Data.Set                             as S
 import           Control.Basics
 import           Control.Category
 import           Control.DeepSeq
+import           Control.Monad.Fresh
+import           Control.Monad.Reader
 
 import           Data.Label                           ((:->), mkLabels)
 import qualified Extension.Data.Label                 as L
@@ -500,12 +502,37 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
 
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
-getMirrorDG ctxt side sys = Just $ L.set sNodes (M.mapWithKey (transformRuleInstance sys) (L.get sNodes sys)) sys
+getMirrorDG ctxt side sys = unifyInstances sys (M.mapWithKey (transformRuleInstance sys) (L.get sNodes sys))
   where
-    transformRuleInstance :: System -> NodeId -> RuleACInst -> RuleACInst
+    transformRuleInstance :: System -> NodeId -> RuleACInst -> (RuleACInst, Maybe RuleACConstrs)
     transformRuleInstance sys' idx rule = if enumPrems rule == []
-                                             then rule -- FIXME: check for new diff-variables!
-                                             else fst $ getInstance $ getOtherRule rule -- FIXME: unify
+                                             then (rule, Nothing)
+                                             else someRuleACInstAvoiding (getOtherRule rule) sys
+
+    unifyInstances :: System -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> Maybe System
+    unifyInstances sys newrules = if (null $ unifiers $ getEqualities newrules sys) then Nothing else Just sys -- FIXME: return correct system, check for new diff-variables, and deal with variants
+    
+    unifiers :: [Equal LNFact] -> [SubstVFresh Name LVar]
+    unifiers equalities = runReader (unifyLNFactEqs equalities) getMaudeHandle
+    
+    getMaudeHandle :: MaudeHandle
+    getMaudeHandle = if side == RHS then L.get (pcMaudeHandle . dpcPCRight) ctxt else L.get (pcMaudeHandle . dpcPCLeft) ctxt
+    
+    getEqualities :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> System -> [Equal LNFact]
+    getEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFact y nodes) (nodeConcFact x nodes)) $ S.toList (L.get sEdges sys')
+    
+    nodePremFact :: NodePrem -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> LNFact
+    nodePremFact (v, i) nodes = L.get (rPrem i) $ nodeRule v nodes
+
+    nodeConcFact :: NodeConc -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> LNFact
+    nodeConcFact (v, i) nodes = L.get (rConc i) $ nodeRule v nodes
+    
+    nodeRule :: NodeId -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> RuleACInst
+    nodeRule v nodes =
+        fst $ fromMaybe errMsg $ M.lookup v $ nodes
+      where
+        errMsg = error $
+            "nodeRule: node '" ++ show v ++ "' does not exist in sequent\n"
     
     getRules :: [RuleAC]
     getRules = joinAllRules $ L.get pcRules $ if side == LHS then L.get dpcPCRight ctxt else L.get dpcPCLeft ctxt

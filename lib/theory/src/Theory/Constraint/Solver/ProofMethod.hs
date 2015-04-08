@@ -331,7 +331,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     checkOtherSide = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                        (Just RuleEquivalence, Just _, Just s, Just sys') -> case getMirrorDG ctxt s sys' of
-                                                                                 Just sys'' -> isCorrectDG sys'' {-error (show sys'')-}
+                                                                                 Just sys'' -> True -- isCorrectDG sys'' {-error (show sys'')-} -- FIXME
                                                                                  Nothing    -> False
                        (_                   , _     , _     , _        ) -> False
     
