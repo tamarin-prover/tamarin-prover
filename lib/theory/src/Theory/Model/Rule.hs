@@ -591,7 +591,7 @@ someRuleACInstAvoiding :: HasFrees t
                -> t
                -> (RuleACInst, Maybe RuleACConstrs)
 someRuleACInstAvoiding r s =
-    fmap (\x -> renameAvoiding x s) (extractInsts r)
+    renameAvoiding (extractInsts r) s
   where
     extractInsts (Rule (ProtoInfo i) ps cs as) =
       ( Rule (ProtoInfo i') ps cs as

@@ -502,15 +502,15 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
 
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
-getMirrorDG ctxt side sys = unifyInstances sys (M.mapWithKey (transformRuleInstance sys) (L.get sNodes sys))
+getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance sys) M.empty (L.get sNodes sys))
   where
-    transformRuleInstance :: System -> NodeId -> RuleACInst -> (RuleACInst, Maybe RuleACConstrs)
-    transformRuleInstance sys' idx rule = if enumPrems rule == []
-                                             then (rule, Nothing)
-                                             else someRuleACInstAvoiding (getOtherRule rule) sys
+    transformRuleInstance :: System -> NodeId -> RuleACInst -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs)
+    transformRuleInstance sys' idx rule nodes = if isFreshRule rule -- FIXME?
+                                             then M.insert idx (rule, Nothing) nodes
+                                             else M.insert idx (someRuleACInstAvoiding (getOtherRule rule) nodes) nodes
 
     unifyInstances :: System -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> Maybe System
-    unifyInstances sys newrules = if (null $ unifiers $ getEqualities newrules sys) then Nothing else Just sys -- FIXME: return correct system, check for new diff-variables, and deal with variants
+    unifyInstances sys newrules = {-error $ (show $ unifiers $ getGraphEqualities newrules sys) ++ " | " ++ show (avoid newrules) ++ " - " ++ show (avoid sys) ++ " | " ++ (show newrules) ++ " | " ++ (show sys)-} if (null $ unifiers $ (getGraphEqualities newrules sys) ++ (getKUEqualities newrules sys)) then Nothing else Just sys -- FIXME: return correct system, check for new diff-variables, and deal with variants
     
     unifiers :: [Equal LNFact] -> [SubstVFresh Name LVar]
     unifiers equalities = runReader (unifyLNFactEqs equalities) getMaudeHandle
@@ -518,9 +518,12 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.mapWithKey (transformRuleInsta
     getMaudeHandle :: MaudeHandle
     getMaudeHandle = if side == RHS then L.get (pcMaudeHandle . dpcPCRight) ctxt else L.get (pcMaudeHandle . dpcPCLeft) ctxt
     
-    getEqualities :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> System -> [Equal LNFact]
-    getEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFact y nodes) (nodeConcFact x nodes)) $ S.toList (L.get sEdges sys')
+    getGraphEqualities :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> System -> [Equal LNFact]
+    getGraphEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFact y nodes) (nodeConcFact x nodes)) $ S.toList (L.get sEdges sys')
     
+    getKUEqualities :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> System -> [Equal LNFact]
+    getKUEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFact y nodes) (nodeConcFact x nodes)) $ S.toList (L.get sEdges sys')
+
     nodePremFact :: NodePrem -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> LNFact
     nodePremFact (v, i) nodes = L.get (rPrem i) $ nodeRule v nodes
 
@@ -535,7 +538,7 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.mapWithKey (transformRuleInsta
             "nodeRule: node '" ++ show v ++ "' does not exist in sequent\n"
     
     getRules :: [RuleAC]
-    getRules = joinAllRules $ L.get pcRules $ if side == LHS then L.get dpcPCRight ctxt else L.get dpcPCLeft ctxt
+    getRules = {-(Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule [])) [] [freshFact [(LIT (Var (Bound 0)))]] []):-}(joinAllRules $ L.get pcRules $ if side == LHS then L.get dpcPCRight ctxt else L.get dpcPCLeft ctxt)
     
     pRuleWithName :: ProtoRuleName -> [RuleAC]
     pRuleWithName name = filter (\(Rule x _ _ _) -> case x of
@@ -549,8 +552,12 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.mapWithKey (transformRuleInsta
     
     getOtherRule :: RuleACInst -> RuleAC
     getOtherRule (Rule rule _ _ _) = case rule of
-                             ProtoInfo p -> head $ pRuleWithName (L.get praciName p)
-                             IntrInfo  i -> head $ iRuleWithName i
+                             ProtoInfo p -> case pRuleWithName (L.get praciName p) of
+                                                 x:_ -> x
+                                                 _   -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show getRules
+                             IntrInfo  i -> case iRuleWithName i of
+                                                 x:_ -> x
+                                                 _   -> error $ "No other rule found for intruder rule " ++ show i ++ show getRules
 
     getInstance :: RuleAC -> (RuleACInst, Maybe RuleACConstrs)
     getInstance (Rule (ProtoInfo i) ps cs as) =
