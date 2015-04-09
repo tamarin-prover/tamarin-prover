@@ -498,7 +498,7 @@ getProtoRuleName (Rule rname _ _ _) = case rname of
 -- | Returns a protocol rule's name
 getProtoRuleNameDiff :: ProtoRuleE -> String
 getProtoRuleNameDiff (Rule rname _ _ _) = case rname of
-         FreshRule   -> "ProtoConstr"
+         FreshRule   -> "ProtoFreshRule"
          StandRule s -> "Proto" ++ s
 
 -- | Returns a AC rule's name
@@ -513,7 +513,7 @@ getACRuleName (Rule rname _ _ _) = case rname of
 getACRuleNameDiff :: RuleAC -> String
 getACRuleNameDiff (Rule rname _ _ _) = case rname of
          ProtoInfo p -> case L.get pracName p of
-                            FreshRule   -> "ProtoFreshConstr"
+                            FreshRule   -> "ProtoFreshRule"
                             StandRule s -> "Proto" ++ s
          IntrInfo  i -> "Intr" ++ case i of
                  ConstrRule x    -> "Constr" ++ show x 
