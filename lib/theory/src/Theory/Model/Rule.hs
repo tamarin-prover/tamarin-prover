@@ -63,6 +63,7 @@ module Theory.Model.Rule (
   , isDestrRule
   , isIEqualityRule
   , isConstrRule
+  , isPubConstrRule
   , isFreshRule
   , isIRecvRule
   , isISendRule
@@ -78,6 +79,7 @@ module Theory.Model.Rule (
   , getIntrACRuleName
   , nfRule
   , isTrivialProtoVariantAC
+  , getNewVariables
 
   -- ** Conversion
   , ruleACToIntrRuleAC
@@ -434,6 +436,12 @@ isConstrRule ru = case ruleName ru of
   IntrInfo CoerceRule      -> True
   _                        -> False
 
+-- | True iff the rule is a construction rule.
+isPubConstrRule :: HasRuleName r => r -> Bool
+isPubConstrRule ru = case ruleName ru of
+  IntrInfo PubConstrRule   -> True
+  _                        -> False
+  
 -- | True iff the rule is the special fresh rule.
 isFreshRule :: HasRuleName r => r -> Bool
 isFreshRule = (ProtoInfo FreshRule ==) . ruleName
@@ -558,10 +566,17 @@ getRightRule :: ProtoRuleE ->  ProtoRuleE
 getRightRule (Rule ri ps cs as) =
    (Rule ri (map getRightFact ps) (map getRightFact cs) (map getRightFact as))
    
--- | Add the diff label to a rule
-addDiffLabel :: Rule a -> String -> Rule a
-addDiffLabel (Rule info prems concs acts) name = Rule info prems concs (acts ++ [Fact {factTag = ProtoFact Linear name 0, factTerms = []}])
+-- | Returns a list of all new variables introduced in this rule instance and the facts they occur in
+getNewVariables :: RuleACInst -> [(LNFact, LVar)]
+getNewVariables ru = getFacts $ S.toList newvars
+  where 
+    newvars = S.difference concvars premvars
+    premvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumPrems ru
+    concvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumConcs ru
     
+    getFacts []     = []
+    getFacts (x:xs) = (map (\(_, f) -> (f, x)) $ filter (\(_, f) -> varOccurences f /= []) $ enumConcs ru) ++ (getFacts xs)
+
 -- Construction
 ---------------
 
@@ -601,6 +616,10 @@ someRuleACInstAvoiding r s =
         i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
     extractInsts (Rule (IntrInfo i) ps cs as) =
       ( Rule (IntrInfo i) ps cs as, Nothing )
+
+-- | Add the diff label to a rule
+addDiffLabel :: Rule a -> String -> Rule a
+addDiffLabel (Rule info prems concs acts) name = Rule info prems concs (acts ++ [Fact {factTag = ProtoFact Linear name 0, factTerms = []}])
 
 -- Unification
 --------------

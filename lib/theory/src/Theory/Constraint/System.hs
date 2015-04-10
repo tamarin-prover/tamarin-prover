@@ -176,7 +176,7 @@ import qualified Data.Set                             as S
 import           Control.Basics
 import           Control.Category
 import           Control.DeepSeq
-import           Control.Monad.Fresh
+-- import           Control.Monad.Fresh
 import           Control.Monad.Reader
 
 import           Data.Label                           ((:->), mkLabels)
@@ -411,10 +411,10 @@ formulaToSystem :: [LNGuarded]           -- ^ Axioms to add
                 -> Bool                  -- ^ In diff proofs, all action goals have to be resolved
                 -> LNFormula
                 -> System
-formulaToSystem axioms kind traceQuantifier isDiff fm = -- error $ show fm
+formulaToSystem axioms kind traceQuantifier isdiff fm = -- error $ show fm
       insertLemmas safetyAxioms
     $ L.set sFormulas (S.singleton gf2)
-    $ L.set sDiffSystem (isDiff)
+    $ L.set sDiffSystem (isdiff)
     $ (emptySystem kind)
   where
     (safetyAxioms, otherAxioms) = partition isSafetyFormula axioms
@@ -507,45 +507,69 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
 
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
-getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance sys) M.empty (L.get sNodes sys))
+getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance) M.empty (L.get sNodes sys))
   where
-    transformRuleInstance :: System -> NodeId -> RuleACInst -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs)
-    transformRuleInstance sys' idx rule nodes = if isFreshRule rule -- FIXME?
+    transformRuleInstance :: NodeId -> RuleACInst -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs)
+    transformRuleInstance idx rule nodes = if (isFreshRule rule) || (isPubConstrRule rule) -- We keep instantiations of fresh and public variables. Currently new public variables in protocol rule instances are instantiated correctly in someRuleACInstAvoiding, but if this is changed we need to fix this part. 
                                              then M.insert idx (rule, Nothing) nodes
                                              else M.insert idx (someRuleACInstAvoiding (getOtherRule rule) nodes) nodes
 
     unifyInstances :: System -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> Maybe System
-    unifyInstances sys newrules = error $ (show $ unifiers $ getGraphEqualities newrules sys) ++ " | " ++ show (avoid newrules) ++ " - " ++ show (avoid sys) ++ " | " ++ (show newrules) ++ " | " ++ (show sys) -- if (null $ unifiers $ (getGraphEqualities newrules sys) ++ (getKUEqualities newrules sys)) then Nothing else Just sys -- FIXME: return correct system, check for new diff-variables, and deal with variants
+    unifyInstances sys' newrules = {-error $ (show $ unifiers $ equalities sys' newrules) ++ " | " ++ (show $ equalities sys' newrules) ++ " | " ++ show (avoid newrules) ++ " - " ++ show (avoid sys') ++ " | " ++ (show newrules) ++ " | " ++ (show sys')-} if (null $ unifiers $ equalities sys' newrules) then Nothing else Just sys' -- FIXME: return correct system, deal with variants
     
     unifiers :: [Equal LNFact] -> [SubstVFresh Name LVar]
-    unifiers equalities = runReader (unifyLNFactEqs equalities) getMaudeHandle
+    unifiers equalfacts = runReader (unifyLNFactEqs equalfacts) getMaudeHandle
+    
+    equalities :: System -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> [Equal LNFact]
+    equalities sys' newrules' = (getGraphEqualities newrules' sys') ++ (getKUEqualities newrules' sys') ++ (getNewVarEqualities newrules')
     
     getMaudeHandle :: MaudeHandle
     getMaudeHandle = if side == RHS then L.get (pcMaudeHandle . dpcPCRight) ctxt else L.get (pcMaudeHandle . dpcPCLeft) ctxt
     
     getGraphEqualities :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> System -> [Equal LNFact]
-    getGraphEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFact y nodes) (nodeConcFact x nodes)) $ S.toList (L.get sEdges sys')
+    getGraphEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFactMap y nodes) (nodeConcFactMap x nodes)) $ S.toList (L.get sEdges sys')
     
     getKUEqualities :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> System -> [Equal LNFact]
-    getKUEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFact y nodes) (nodeConcFact x nodes)) $ S.toList (L.get sEdges sys')
+    getKUEqualities nodes sys' = map (\(x, y) -> Equal (nodePremFactMap x nodes) (nodeConcFactMap y nodes)) $ getEdges (getOpenNodePrems nodes sys') sys'
+    
+    getEdges :: [NodePrem] -> System -> [(NodePrem, NodeConc)]
+    getEdges prems sys' = map findMatchingConclusion prems
+      where 
+        findMatchingConclusion :: NodePrem -> (NodePrem, NodeConc)
+        findMatchingConclusion (nid, pid) = head $ concat $ map (\(x, _) -> map (\(cid, _) -> ((nid, pid), (x, cid))) $ filter (\(_, cf) -> cf == nodePremFact (nid, pid) sys) $ enumConcs $ nodeRule x sys) $ filter (\(_, y) -> nid == y) (S.toList (L.get sLessAtoms sys'))
     
     getOpenNodePrems :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> System -> [NodePrem]
     getOpenNodePrems nodes sys' = getOpenIncoming (M.toList nodes)
       where
         getOpenIncoming :: [(NodeId, (RuleACInst, Maybe RuleACConstrs))] -> [NodePrem]
         getOpenIncoming []               = []
-        getOpenIncoming ((k, (r, _)):xs) = (filter (hasNoIncomingEdge sys') $ map (\(x, y) -> (k, x)) (enumPrems r)) ++ (getOpenIncoming xs)
+        getOpenIncoming ((k, (r, _)):xs) = (filter (hasNoIncomingEdge sys') $ map (\(x, _) -> (k, x)) (enumPrems r)) ++ (getOpenIncoming xs)
         
-        hasNoIncomingEdge sys' np = S.null (S.filter (\(Edge _ y) -> y == np) (L.get sEdges sys'))
+        hasNoIncomingEdge sys'' np = S.null (S.filter (\(Edge _ y) -> y == np) (L.get sEdges sys''))
 
-    nodePremFact :: NodePrem -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> LNFact
-    nodePremFact (v, i) nodes = L.get (rPrem i) $ nodeRule v nodes
-
-    nodeConcFact :: NodeConc -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> LNFact
-    nodeConcFact (v, i) nodes = L.get (rConc i) $ nodeRule v nodes
+    getNewVarEqualities :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> [Equal LNFact]
+    getNewVarEqualities nodes = concat $ map genEqualities $ M.toList nodes
+      where
+        genEqualities (_, (r, _)) = map (\(x, y) -> Equal x (replaceNewVarWithConstant x y)) $ getNewVariables r
+        
+        replaceNewVarWithConstant :: LNFact -> LVar -> LNFact
+        replaceNewVarWithConstant fact v = apply subst fact
+          where
+            subst = Subst (M.fromList [(v, constTerm (Name (pubOrFresh v) (NameId ("constVar" ++ toConstName v))))])
+            
+            toConstName (LVar name vsort idx) = (show vsort) ++ name ++ (show idx)
+            
+            pubOrFresh (LVar _ LSortFresh _) = FreshName
+            pubOrFresh (LVar _ _          _) = PubName
     
-    nodeRule :: NodeId -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> RuleACInst
-    nodeRule v nodes =
+    nodePremFactMap :: NodePrem -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> LNFact
+    nodePremFactMap (v, i) nodes = L.get (rPrem i) $ nodeRuleMap v nodes
+
+    nodeConcFactMap :: NodeConc -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> LNFact
+    nodeConcFactMap (v, i) nodes = L.get (rConc i) $ nodeRuleMap v nodes
+    
+    nodeRuleMap :: NodeId -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> RuleACInst
+    nodeRuleMap v nodes =
         fst $ fromMaybe errMsg $ M.lookup v $ nodes
       where
         errMsg = error $
@@ -573,46 +597,6 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
                                                  x:_ -> x
                                                  _   -> error $ "No other rule found for intruder rule " ++ show i ++ show getRules
 
-    getInstance :: RuleAC -> (RuleACInst, Maybe RuleACConstrs)
-    getInstance (Rule (ProtoInfo i) ps cs as) =
-      ( Rule (ProtoInfo i') ps cs as
-      , Just (L.get pracVariants i)
-      )
-      where
-        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
-    getInstance (Rule (IntrInfo i) ps cs as) =
-      ( Rule (IntrInfo i) ps cs as, Nothing )
-                             
-                                               
---     Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo)
---     data Rule i = Rule {
---          _rInfo  :: i
---        , _rPrems :: [LNFact]
---        , _rConcs :: [LNFact]
---        , _rActs  :: [LNFact]
---        }
---     RuleInfo p i =
---          ProtoInfo p
---        | IntrInfo i
--- 
--- data ProtoRuleACInstInfo = ProtoRuleACInstInfo
---        { _praciName         :: ProtoRuleName
---        , _praciLoopBreakers :: [PremIdx]
---        }
--- data ProtoRuleACInfo = ProtoRuleACInfo
---        { _pracName         :: ProtoRuleName
---        , _pracVariants     :: Disj (LNSubstVFresh)
---        , _pracLoopBreakers :: [PremIdx]
---        }
--- data IntrRuleACInfo =
---     ConstrRule BC.ByteString
---   | DestrRule BC.ByteString
---   | CoerceRule
---   | IRecvRule
---   | ISendRule
---   | PubConstrRule
---   | FreshConstrRule
---   | IEqualityRule
 
 -- Actions
 ----------
