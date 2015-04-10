@@ -313,7 +313,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     eitherProofContext s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
     
     backwardSearchSystem s sys' rule = L.set dsSide (Just s)
-      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsSomeTrace (formula rule))) sys'
+      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsSomeTrace True (formula rule))) sys'
 
     startBackwardSearch rule = M.insert ("LHS") (backwardSearchSystem LHS sys rule) $ M.insert ("RHS") (backwardSearchSystem RHS sys rule) $ M.empty
     
@@ -331,7 +331,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     checkOtherSide = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                        (Just RuleEquivalence, Just _, Just s, Just sys') -> case getMirrorDG ctxt s sys' of
-                                                                                 Just sys'' -> True -- isCorrectDG sys'' {-error (show sys'')-} -- FIXME
+                                                                                 Just sys'' -> True {-error (show sys'')-} -- FIXME
                                                                                  Nothing    -> False
                        (_                   , _     , _     , _        ) -> False
     

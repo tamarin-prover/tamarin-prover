@@ -1333,7 +1333,7 @@ mkSystem ctxt axioms previousItems =
     addLemmas
   . formulaToSystem (map (formulaToGuarded_ . L.get axFormula) axioms)
                     (L.get pcCaseDistKind ctxt)
-                    (L.get pcTraceQuantifier ctxt)
+                    (L.get pcTraceQuantifier ctxt) False
   where
     addLemmas sys =
         insertLemmas (gatherReusableLemmas $ L.get sCaseDistKind sys) sys
@@ -1355,7 +1355,7 @@ mkSystemDiff s ctxt axioms previousItems =
     addLemmas
   . formulaToSystem (map (formulaToGuarded_ . L.get axFormula) axioms')
                     (L.get pcCaseDistKind ctxt)
-                    (L.get pcTraceQuantifier ctxt)
+                    (L.get pcTraceQuantifier ctxt) False
   where
     axioms' = foldr (\(s', a) l -> if s == s' then l ++ [a] else l) [] axioms
     addLemmas sys =

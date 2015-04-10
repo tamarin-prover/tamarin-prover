@@ -151,6 +151,8 @@ module Theory.Constraint.System (
 
   , sGoals
   , sNextGoalNr
+  
+  , sDiffSystem
 
   -- * Pretty-printing
   , prettySystem
@@ -280,6 +282,7 @@ data System = System
     , _sGoals          :: M.Map Goal GoalStatus
     , _sNextGoalNr     :: Integer
     , _sCaseDistKind   :: CaseDistKind
+    , _sDiffSystem     :: Bool
     }
     -- NOTE: Don't forget to update 'substSystem' in
     -- "Constraint.Solver.Reduction" when adding further fields to the
@@ -390,10 +393,10 @@ $(mkLabels [''DiffSystem])
 
 -- | The empty constraint system, which is logically equivalent to true.
 emptySystem :: CaseDistKind -> System
-emptySystem = System
+emptySystem d = System
     M.empty S.empty S.empty Nothing emptyEqStore
     S.empty S.empty S.empty
-    M.empty 0
+    M.empty 0 d False
 
 -- | The empty diff constraint system.
 emptyDiffSystem :: DiffSystem
@@ -405,11 +408,13 @@ emptyDiffSystem = DiffSystem
 formulaToSystem :: [LNGuarded]           -- ^ Axioms to add
                 -> CaseDistKind          -- ^ Case distinction kind
                 -> SystemTraceQuantifier -- ^ Trace quantifier
+                -> Bool                  -- ^ In diff proofs, all action goals have to be resolved
                 -> LNFormula
                 -> System
-formulaToSystem axioms kind traceQuantifier fm = -- error $ show fm
+formulaToSystem axioms kind traceQuantifier isDiff fm = -- error $ show fm
       insertLemmas safetyAxioms
     $ L.set sFormulas (S.singleton gf2)
+    $ L.set sDiffSystem (isDiff)
     $ (emptySystem kind)
   where
     (safetyAxioms, otherAxioms) = partition isSafetyFormula axioms
@@ -510,7 +515,7 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
                                              else M.insert idx (someRuleACInstAvoiding (getOtherRule rule) nodes) nodes
 
     unifyInstances :: System -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> Maybe System
-    unifyInstances sys newrules = {-error $ (show $ unifiers $ getGraphEqualities newrules sys) ++ " | " ++ show (avoid newrules) ++ " - " ++ show (avoid sys) ++ " | " ++ (show newrules) ++ " | " ++ (show sys)-} if (null $ unifiers $ (getGraphEqualities newrules sys) ++ (getKUEqualities newrules sys)) then Nothing else Just sys -- FIXME: return correct system, check for new diff-variables, and deal with variants
+    unifyInstances sys newrules = error $ (show $ unifiers $ getGraphEqualities newrules sys) ++ " | " ++ show (avoid newrules) ++ " - " ++ show (avoid sys) ++ " | " ++ (show newrules) ++ " | " ++ (show sys) -- if (null $ unifiers $ (getGraphEqualities newrules sys) ++ (getKUEqualities newrules sys)) then Nothing else Just sys -- FIXME: return correct system, check for new diff-variables, and deal with variants
     
     unifiers :: [Equal LNFact] -> [SubstVFresh Name LVar]
     unifiers equalities = runReader (unifyLNFactEqs equalities) getMaudeHandle
@@ -523,6 +528,15 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
     
     getKUEqualities :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> System -> [Equal LNFact]
     getKUEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFact y nodes) (nodeConcFact x nodes)) $ S.toList (L.get sEdges sys')
+    
+    getOpenNodePrems :: M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> System -> [NodePrem]
+    getOpenNodePrems nodes sys' = getOpenIncoming (M.toList nodes)
+      where
+        getOpenIncoming :: [(NodeId, (RuleACInst, Maybe RuleACConstrs))] -> [NodePrem]
+        getOpenIncoming []               = []
+        getOpenIncoming ((k, (r, _)):xs) = (filter (hasNoIncomingEdge sys') $ map (\(x, y) -> (k, x)) (enumPrems r)) ++ (getOpenIncoming xs)
+        
+        hasNoIncomingEdge sys' np = S.null (S.filter (\(Edge _ y) -> y == np) (L.get sEdges sys'))
 
     nodePremFact :: NodePrem -> M.Map NodeId (RuleACInst, Maybe RuleACConstrs) -> LNFact
     nodePremFact (v, i) nodes = L.get (rPrem i) $ nodeRule v nodes
@@ -785,7 +799,7 @@ instance HasFrees GoalStatus where
     mapFrees  = const pure
 
 instance HasFrees System where
-    foldFrees fun (System a b c d e f g h i j k) =
+    foldFrees fun (System a b c d e f g h i j k l) =
         foldFrees fun a `mappend`
         foldFrees fun b `mappend`
         foldFrees fun c `mappend`
@@ -796,9 +810,10 @@ instance HasFrees System where
         foldFrees fun h `mappend`
         foldFrees fun i `mappend`
         foldFrees fun j `mappend`
-        foldFrees fun k
+        foldFrees fun k `mappend`
+        foldFrees fun l
 
-    foldFreesOcc fun ctx (System a _b _c _d _e _f _g _h _i _j _k) =
+    foldFreesOcc fun ctx (System a _b _c _d _e _f _g _h _i _j _k _l) =
         foldFreesOcc fun ("a":ctx') a {- `mappend`
         foldFreesCtx fun ("b":ctx') b `mappend`
         foldFreesCtx fun ("c":ctx') c `mappend`
@@ -812,7 +827,7 @@ instance HasFrees System where
         foldFreesCtx fun ("k":ctx') k -}
       where ctx' = "system":ctx
 
-    mapFrees fun (System a b c d e f g h i j k) =
+    mapFrees fun (System a b c d e f g h i j k l) =
         System <$> mapFrees fun a
                <*> mapFrees fun b
                <*> mapFrees fun c
@@ -824,6 +839,7 @@ instance HasFrees System where
                <*> mapFrees fun i
                <*> mapFrees fun j
                <*> mapFrees fun k
+               <*> mapFrees fun l
 
 -- NFData
 ---------

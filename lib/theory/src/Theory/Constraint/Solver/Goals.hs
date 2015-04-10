@@ -74,7 +74,7 @@ openGoals sys = do
     let solved = get gsSolved status
     -- check whether the goal is still open
     guard $ case goal of
-        ActionG _ (kFactView -> Just (UpK, m)) ->
+        ActionG _ (kFactView -> Just (UpK, m)) -> if get sDiffSystem sys then not solved else -- In a diff proof, all action goals need to be solved.
           not $    solved
                 || isMsgVar m || sortOfLNTerm m == LSortPub
                 -- handled by 'insertAction'
