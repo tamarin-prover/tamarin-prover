@@ -178,11 +178,6 @@ extra-source-files:
 -- build flags
 --------------
 
-flag gui
-    default: True
-    manual: True
-    description: Build the web-application GUI.
-
 flag threaded
     default: True
     manual: True
@@ -224,34 +219,6 @@ executable tamarin-prover
     hs-source-dirs:    src
     main-is:           Main.hs
 
-    if !flag(gui)
-      cpp-options: -DNO_GUI
-
-    if flag(gui)
-      -- To help the top-down solver we put the more difficult to solve yesod
-      -- dependencies up front.
-      build-depends:
-
-          bytestring
-        , blaze-html
-        , http-types
-        , blaze-builder
-        , yesod-core
-        , yesod-json
-        , yesod-static
-        , conduit
-        , text
-        , wai
-        , hamlet
-        , shakespeare
-        , warp
-        , aeson
-        , old-locale
-        , monad-control
-        , lifted-base
-        , threads
-        , resourcet
-
     build-depends:
         base
       , bytestring
@@ -275,6 +242,25 @@ executable tamarin-prover
       , time
       , parallel
       , HUnit
+      , bytestring
+      , blaze-html
+      , http-types
+      , blaze-builder
+      , yesod-core
+      , yesod-json
+      , yesod-static
+      , conduit
+      , text
+      , wai
+      , hamlet
+      , shakespeare
+      , warp
+      , aeson
+      , old-locale
+      , monad-control
+      , lifted-base
+      , threads
+      , resourcet
 
       , tamarin-prover-utils  == 1.0.0
       , tamarin-prover-term   == 1.0.0
@@ -284,8 +270,6 @@ executable tamarin-prover
       Paths_tamarin_prover
 
       Main
-      Main_Full
-      Main_NoGui
       Main.Console
       Main.Environment
       Main.TheoryLoader
