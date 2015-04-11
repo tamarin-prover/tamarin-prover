@@ -83,7 +83,12 @@ import           Extension.Data.Monoid
 
 -- | Index of disjunction in equation store
 newtype SplitId = SplitId { unSplitId :: Integer }
-  deriving( Eq, Ord, Show, Enum, Binary, NFData, HasFrees )
+  deriving( Eq, Ord, Show, Enum, Binary, NFData )
+
+instance HasFrees SplitId where
+    foldFrees    _   = const mempty
+    foldFreesOcc _ _ = const mempty
+    mapFrees     _   = pure
 
 -- FIXME: Make comment parse.
 --

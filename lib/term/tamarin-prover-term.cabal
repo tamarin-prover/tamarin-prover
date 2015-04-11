@@ -60,7 +60,6 @@ library
 
       , tamarin-prover-utils
 
-
     hs-source-dirs: src
 
     exposed-modules:

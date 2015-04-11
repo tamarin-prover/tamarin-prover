@@ -250,6 +250,7 @@ executable tamarin-prover
         , monad-control
         , lifted-base
         , threads
+        , resourcet
 
     build-depends:
         base
@@ -278,7 +279,6 @@ executable tamarin-prover
       , tamarin-prover-utils  == 1.0.0
       , tamarin-prover-term   == 1.0.0
       , tamarin-prover-theory == 1.0.0
-
 
     other-modules:
       Paths_tamarin_prover
