@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TupleSections         #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 -- FIXME: See how we can get rid of the Template Haskell induced warning, such
 -- that we have the warning again for our code.

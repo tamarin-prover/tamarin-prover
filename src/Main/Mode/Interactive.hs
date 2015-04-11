@@ -21,7 +21,7 @@ import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.Directory                (doesDirectoryExist, doesFileExist, getTemporaryDirectory)
 import           System.FilePath
 
-import           Network.Wai.Handler.Warp        (defaultSettings, settingsHost, settingsPort)
+import           Network.Wai.Handler.Warp        (defaultSettings, setHost, setPort)
 import qualified Network.Wai.Handler.Warp        as Warp
 import           Web.Dispatch
 import qualified Web.Settings
@@ -129,11 +129,10 @@ run thisMode as = case findArg "workDir" as of
                 | otherwise                        = interface
 
     runWarp port wapp =
-        handle (\e -> err (e::IOException))
-            (Warp.runSettings
-               (defaultSettings { settingsHost = fromString interface
-                                , settingsPort = port})
-               wapp)
+        handle (\e -> err (e::IOException)) $
+            Warp.runSettings
+               (setHost (fromString interface) $ setPort port defaultSettings)
+               wapp
 
     err e = error $ "Starting the webserver on "++interface++" failed: \n"
                     ++ show e

@@ -57,12 +57,14 @@ import           Web.Types
 import           Yesod.Core
 import           Yesod.Json()
 
+import           Control.Monad.Trans.Resource (runResourceT)
+
 import           Data.Label
 import           Data.Maybe
 import           Data.String                  (fromString)
 import           Data.List                    (intersperse)
 import           Data.Monoid                  (mconcat)
-import           Data.Conduit                 as C ( ($$), runResourceT)
+import           Data.Conduit                 as C ( ($$) )
 import           Data.Conduit.List            (consume)
 
 import qualified Blaze.ByteString.Builder     as B
@@ -70,6 +72,7 @@ import qualified Data.ByteString.Char8        as BS
 import qualified Data.Map                     as M
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as T (encodeUtf8, decodeUtf8)
+import qualified Data.Text.Lazy.Encoding      as TLE
 import qualified Data.Traversable             as Tr
 import           Network.HTTP.Types           ( urlDecode )
 
@@ -241,7 +244,7 @@ responseToJson = go
       [ "html"  .= contentToJson content
       , "title" .= title ]
 
-    contentToJson (ContentBuilder b _) = toJSON $ B.toLazyByteString b
+    contentToJson (ContentBuilder b _) = toJSON $ TLE.decodeUtf8 $ B.toLazyByteString b
     contentToJson _ = error "Unsupported content format in json response!"
 
 -- | Fully evaluate a value in a thread that can be canceled.

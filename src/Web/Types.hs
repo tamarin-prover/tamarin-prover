@@ -4,6 +4,7 @@
 {-# LANGUAGE Rank2Types        #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -333,7 +334,7 @@ defaultLayout' :: Widget -> Handler Html
 defaultLayout' w = do
   page <- widgetToPageContent w
   message <- getMessage
-  giveUrlRenderer [hamlet|
+  withUrlRenderer [hamlet|
     $newline never
     !!!
     <html>
