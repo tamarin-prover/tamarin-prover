@@ -1,3 +1,9 @@
+* 1.0.0
+  - Improve build-stability by switching to Stackage-based precise
+    version-constraints.
+  - Add support for building tamarin-prover on GHC 7.8.X and 7.6.X
+  - Drop support for building tamarin-prover on GHC 7.4.X and lower.
+
 * 0.8.6.0
   - Incorporate a patch contributed by Ognjen Maric that improves reasoning
     about injective facts in inductive proofs.

@@ -56,8 +56,9 @@ sandbox-init:
 	cd lib/utils; cabal sandbox init --sandbox ../../cabal-sandbox
 	cd lib/term; cabal sandbox init --sandbox ../../cabal-sandbox
 	cd lib/theory; cabal sandbox init --sandbox ../../cabal-sandbox
+	cabal sandbox add-source lib/*
 	cabal update
-        
+
 source-dists:
 	cd lib/utils; cabal sdist
 	cd lib/term; cabal sdist

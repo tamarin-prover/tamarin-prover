@@ -7,8 +7,25 @@ users and future developers of the Tamarin prover. For installation
 and usage instructions of the Tamarin prover see:
 http://www.infsec.ethz.ch/research/software/tamarin.
 
+TODO: Usage and build instructions
+
+
 Developing
 ----------
+
+TODO: development instructions
+TODO: pinning instructions (switch template-haskell and base to 'installed')
+
+          array ==0.4.0.1,
+          deepseq ==1.3.0.1,
+          ghc-prim ==0.3.0.0,
+          old-locale ==1.0.0.5,
+          old-time ==1.1.0.1,
+          time ==1.4.0.1,
+          template-haskell,
+          base
+
+
 
 We use Linux and Mac OS X during the development of Tamarin. Windows can be
 used for development, but the directory layout simplification introduced via
