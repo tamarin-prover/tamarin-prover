@@ -37,28 +37,28 @@ library
     ghc-prof-options:  -auto-all
 
     build-depends:
-        base
-      , bytestring
-      , deepseq
+        HUnit
       , array
-      , containers
-      , dlist
-      , mtl
-      , cmdargs
-      , filepath
-      , directory
-      , process
-      , parsec
-      , safe
-      , transformers
-      , fclabels
-      , uniplate
-      , syb
+      , base
       , binary
+      , bytestring
+      , cmdargs
+      , containers
+      , deepseq
       , derive
-      , time
+      , directory
+      , dlist
+      , fclabels
+      , filepath
+      , mtl
       , parallel
-      , HUnit
+      , parsec
+      , process
+      , safe
+      , syb
+      , time
+      , transformers
+      , uniplate
 
       , tamarin-prover-utils
       , tamarin-prover-term

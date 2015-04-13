@@ -33,22 +33,22 @@ library
     ghc-prof-options:  -auto-all
 
     build-depends:
-        base
-      , mtl
-      , bytestring
-      , transformers
-      , containers
-      , fclabels
-      , blaze-builder
+        SHA
+      , base
       , base64-bytestring
-      , SHA
-      , parsec
-      , deepseq
-      , syb
-      , pretty
-      , time
       , binary
+      , blaze-builder
+      , bytestring
+      , containers
+      , deepseq
       , dlist
+      , fclabels
+      , mtl
+      , parsec
+      , pretty
+      , syb
+      , time
+      , transformers
 
     hs-source-dirs: src
 

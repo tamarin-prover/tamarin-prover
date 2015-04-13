@@ -40,23 +40,22 @@ library
     ghc-prof-options:  -auto-all
 
     build-depends:
-        base
-      , mtl
-      , bytestring
+        HUnit
       , attoparsec
+      , base
+      , binary
+      , bytestring
       , containers
+      , deepseq
+      , derive
+      , directory
       , dlist
+      , mtl
+      , parsec
+      , process
       , safe
       , split
-      , parsec
       , syb
-      , directory
-      , process
-      , deepseq
-      , binary
-      , derive
-
-      , HUnit
 
       , tamarin-prover-utils
 

@@ -230,47 +230,47 @@ executable tamarin-prover
     main-is:           Main.hs
 
     build-depends:
-        base
-      , bytestring
-      , deepseq
+        HUnit
+      , aeson
       , array
-      , containers
-      , dlist
-      , mtl
-      , cmdargs
-      , filepath
-      , directory
-      , process
-      , parsec
-      , safe
-      , transformers
-      , fclabels
-      , uniplate
-      , syb
+      , base
       , binary
-      , derive
-      , time
-      , parallel
-      , HUnit
-      , bytestring
-      , blaze-html
-      , http-types
       , blaze-builder
+      , blaze-html
+      , bytestring
+      , bytestring
+      , cmdargs
+      , conduit
+      , containers
+      , deepseq
+      , derive
+      , directory
+      , dlist
+      , fclabels
+      , filepath
+      , hamlet
+      , http-types
+      , lifted-base
+      , monad-control
+      , mtl
+      , old-locale
+      , parallel
+      , parsec
+      , process
+      , resourcet
+      , safe
+      , shakespeare
+      , syb
+      , text
+      , threads
+      , time
+      , transformers
+      , uniplate
+      , wai
+      , warp
       , yesod-core
       , yesod-json
       , yesod-static
-      , conduit
-      , text
-      , wai
-      , hamlet
-      , shakespeare
-      , warp
-      , aeson
-      , old-locale
-      , monad-control
-      , lifted-base
-      , threads
-      , resourcet
 
       , tamarin-prover-utils  == 1.0.0
       , tamarin-prover-term   == 1.0.0
