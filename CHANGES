@@ -1,8 +1,19 @@
-* 1.0.0
+* 0.9.0
   - Improve build-stability by switching to Stackage-based precise
-    version-constraints.
-  - Add support for building tamarin-prover on GHC 7.8.X and 7.6.X
-  - Drop support for building tamarin-prover on GHC 7.4.X and lower.
+    version-constraints: tamarin-prover should now build under GHC
+    7.8.4, GHC 7.6.2, and GHC 7.4.2. See
+
+      https://travis-ci.org/tamarin-prover/tamarin-prover
+
+    for it's build status.
+
+  - Make executable relocatable => this means we can now offer pre-built
+    binaries. This is the preferred way for distributin tamarin-prover. We no
+    longer support publishing to Hackage and downloading from Hackage.
+
+  - We no longer include examples, manuals, and licence files. They should be
+    downloaded from the github repository:
+    https://github.com/tamarin-prover/tamarin-prover
 
 * 0.8.6.0
   - Incorporate a patch contributed by Ognjen Maric that improves reasoning

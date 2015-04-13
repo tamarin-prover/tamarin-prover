@@ -68,7 +68,8 @@ getFaviconR = redirect (StaticR faviconRoute)
 getRobotsR :: Handler RepPlain
 getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: B.ByteString)
 
--- | NOTE (SM):
+-- | NOTE (SM): See the note on 'staticFiles' below on how to enable dynamic
+-- reloading.
 staticFiles :: Yesod.Static.Static
 staticFiles = $(Yesod.Static.embed "data")
 
@@ -94,7 +95,8 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
     thy    <- getTheos
     thrVar <- newMVar M.empty
     thyVar <- newMVar thy
-    -- st     <- static stPath
+    -- NOTE (SM): uncomment this line to load the assets dynamically.
+    -- staticFiles     <- Yesod.Static.static "data"
     when autosave $ createDirectoryIfMissing False autosaveDir
     -- Don't create parent dirs, as temp-dir should be created by OS.
     createDirectoryIfMissing False cacheDir_
