@@ -30,8 +30,6 @@ import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
 
-import           Paths_tamarin_prover            (getDataDir)
-
 
 -- | Batch processing mode.
 interactiveMode :: TamarinMode
@@ -82,7 +80,6 @@ run thisMode as = case findArg "workDir" as of
           _ <- ensureMaude as
           putStrLn ""
           port <- readPort
-          dataDir <- getDataDir
           let webUrl = serverUrl port
           putStrLn $ intercalate "\n"
             [ "The server is starting up on port " ++ show port ++ "."
@@ -95,7 +92,7 @@ run thisMode as = case findArg "workDir" as of
             cacheDir
             workDir (argExists "loadstate" as) (argExists "autosave" as)
             (loadClosedThyWfReport as) (loadClosedThyString as)
-            (argExists "debug" as) dataDir (dotPath as) readImageFormat
+            (argExists "debug" as) (dotPath as) readImageFormat
             (constructAutoProver as)
             (runWarp port)
         else

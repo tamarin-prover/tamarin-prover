@@ -16,6 +16,7 @@ module Theory.Text.Parser (
 
 import           Prelude                    hiding (id, (.))
 
+import qualified Data.ByteString            as B
 import qualified Data.ByteString.Char8      as BC
 import           Data.Char                  (isUpper, toUpper)
 import           Data.Foldable              (asum)
@@ -23,6 +24,8 @@ import           Data.Label
 import qualified Data.Map                   as M
 import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
+import qualified Data.Text                  as T
+import qualified Data.Text.Encoding         as TE
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -38,9 +41,6 @@ import           Theory.Text.Parser.Token
 
 
 
-
-
-
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
 ------------------------------------------------------------------------------
@@ -52,8 +52,11 @@ parseOpenTheory :: [String] -- ^ Defined flags
 parseOpenTheory flags = parseFile (theory flags)
 
 -- | Parse DH intruder rules.
-parseIntruderRules :: MaudeSig -> FilePath -> IO [IntrRuleAC]
-parseIntruderRules msig = parseFile (setState msig >> many intrRule)
+parseIntruderRules
+    :: MaudeSig -> String -> B.ByteString -> Either ParseError [IntrRuleAC]
+parseIntruderRules msig ctxtDesc =
+    parseString ctxtDesc (setState msig >> many intrRule)
+  . T.unpack . TE.decodeUtf8
 
 -- | Parse a security protocol theory from a string.
 parseOpenTheoryString :: [String]  -- ^ Defined flags.

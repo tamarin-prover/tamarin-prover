@@ -57,6 +57,7 @@ library
       , safe
       , syb
       , time
+      , text
       , transformers
       , uniplate
 
