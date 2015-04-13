@@ -1,4 +1,3 @@
-cabal-version:      >= 1.18
 build-type:         Simple
 name:               tamarin-prover
 version:            1.0.0
