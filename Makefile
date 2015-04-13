@@ -15,8 +15,7 @@ install: build-setup
 	cabal --version  # Should be at least 1.18
 	$(CABAL_INSTALL) --force-reinstalls .
 
-# build-setup: cabal-sandbox/created $(ALEX) $(HAPPY)
-build-setup: cabal-sandbox/created
+build-setup: cabal-sandbox/created $(ALEX) $(HAPPY)
 	cabal sandbox add-source lib/*
 
 # Create a sandbox shared between the tamarin-prover its custom libraries.
