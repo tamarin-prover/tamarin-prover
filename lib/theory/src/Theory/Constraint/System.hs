@@ -493,7 +493,7 @@ nodeConcNode :: NodeConc -> NodeId
 nodeConcNode = fst
 
 -- | Returns true if the graph is correct, i.e. complete and conclusions and premises match
--- | Note that this does not check if all goals are solved!
+-- | Note that this does not check if all goals are solved, nor if any axioms are violated!
 isCorrectDG :: System -> Bool
 isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) True (L.get sNodes sys)
   where

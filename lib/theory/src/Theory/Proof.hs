@@ -737,7 +737,7 @@ runAutoProver (AutoProver heuristic bound cut) =
 
 runAutoDiffProver :: AutoProver -> DiffProver
 runAutoDiffProver (AutoProver heuristic bound cut) =
-    mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
+    mapDiffProverDiffProof id {-cutSolved-} $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
       CutDFS     -> cutOnSolvedDFSDiff
