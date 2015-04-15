@@ -1,0 +1,33 @@
+theory N5N6DiffTest
+begin
+
+/*
+ * Protocol:	 Test whether conditions N5+N6 are treated correctly
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: 
+ * Date: 	 April 2014
+ *
+ * Status: 	 ?
+ */
+
+builtins: hashing
+
+
+// Registering a public key
+rule Test:
+  [ Fr(~f) ]
+  -->
+  [ Out(diff(h($A),~f)) ]
+
+// This lemma uses an automatically generated Fact "DiffIntrEquality"
+// which the parser does not know about, and thus complains, which can be
+// safely ignored.
+lemma Diff_test:
+  all-traces
+  "
+  not( Ex #i. DiffIntrEquality() @ i)
+  "
+
+//This MUST find an attack, otherwise conditions N5+N6 are still used and cases are probably missed!
+  
+end
