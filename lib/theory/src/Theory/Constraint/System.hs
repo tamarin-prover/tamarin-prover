@@ -668,9 +668,9 @@ getFactAndVars nodes sys premid = map (\x -> (fact, x)) $ fromMaybe (error $ "ge
                 
 -- | Assumption: the goal is trivial. Returns true if it is independent wrt the rest of the system.                                                 
 checkIndependence :: System -> (Either NodePrem LVar, LNFact) -> Bool
-checkIndependence sys (eith, fact) = case eith of
-                                          (Left premidx) -> checkIndependenceRec premidx
-                                          (Right lvar)   -> and $ map checkIndependenceRec (identifyPremises lvar fact)
+checkIndependence sys (eith, fact) = checkNodes $ case eith of
+                                          (Left premidx) -> checkIndependenceRec (L.get sNodes sys) premidx
+                                          (Right lvar)   -> foldl checkIndependenceRec (L.get sNodes sys) (identifyPremises lvar fact)
   where
     edges = S.toList $ saturateEdgesWithLessRelation sys
     variables = fromMaybe (error $ "checkIndependence: This fact " ++ show fact ++ " should be trivial! System: " ++ show sys) (isTrivialFact fact)
@@ -678,13 +678,14 @@ checkIndependence sys (eith, fact) = case eith of
     identifyPremises :: LVar -> LNFact -> [NodePrem]
     identifyPremises var' fact' = getAllMatchingPrems sys fact' (getAllLessSucs sys var')
     
-    checkIndependenceRec :: NodePrem -> Bool
-    checkIndependenceRec cnid = (checkCurrentRule) && (checkAllOutgoingEdges cnid)
+    checkIndependenceRec :: M.Map NodeId RuleACInst -> NodePrem -> M.Map NodeId RuleACInst
+    checkIndependenceRec nodes (nid, _) = foldl checkIndependenceRec (M.delete nid nodes) $ map (\(Edge _ tgt) -> tgt) $ filter (\(Edge (srcn, _) _) -> srcn == nid) edges
+    
+    checkNodes :: M.Map NodeId RuleACInst -> Bool
+    checkNodes nodes = all (\(_, r) -> null $ filter (\f -> not $ null $ intersect variables (getFactVariables f)) (facts r)) $ M.toList nodes
       where
-        checkAllOutgoingEdges :: NodePrem -> Bool
-        checkAllOutgoingEdges (nid, _) = foldl (&&) True $ map (checkIndependenceRec) $ map (\(Edge _ tgt) -> tgt) $ filter (\(Edge (srcn, _) _) -> srcn == nid) edges
-        
-        checkCurrentRule = all (\(pid, fact') -> (pid == snd cnid) || (null $ intersect variables (getFactVariables fact'))) $ enumPrems $ nodeRule (nodePremNode cnid) sys
+        facts ru = (map snd (enumPrems ru)) ++ (map snd (enumConcs ru))
+
 
 -- | All premises that still need to be solved.
 unsolvedPremises :: System -> [(NodePrem, LNFact)]
@@ -703,13 +704,24 @@ unsolvedTrivialGoals sys = foldl f [] $ M.toList (L.get sGoals sys)
     f l (SplitG _, _)                 = l 
     f l (DisjG _, _)                  = l 
 
+-- | All trivial goals that still need to be solved.
+noCommonVarsInGoals :: [(Either NodePrem LVar, LNFact)] -> Bool
+noCommonVarsInGoals goals = noCommonVars $ map (getFactVariables . snd) goals
+  where
+    noCommonVars :: [[LVar]] -> Bool
+    noCommonVars []     = True
+    noCommonVars (x:xs) = (all (\y -> null $ intersect x y) xs) && (noCommonVars xs)
+
+    
 -- | Returns true if all formulas in the system are solved.
 allFormulasAreSolved :: System -> Bool
 allFormulasAreSolved sys = S.null $ L.get sFormulas sys
 
 -- | Assumption: all open goals in the system are "trivial" fact goals. Returns true if these goals are independent from each other and the rest of the system.
 allOpenFactGoalsAreIndependent :: System -> Bool
-allOpenFactGoalsAreIndependent sys = foldl (&&) True $ map (checkIndependence sys) $ unsolvedTrivialGoals sys
+allOpenFactGoalsAreIndependent sys = (noCommonVarsInGoals unsolvedGoals) && (all (checkIndependence sys) unsolvedGoals)
+  where
+    unsolvedGoals = unsolvedTrivialGoals sys
 
 -- | FIXME: This function is only for debbuging purposes...
 allOpenGoalsAreSimpleFacts :: System -> Bool
