@@ -20,6 +20,7 @@ module Theory.Constraint.Solver.Goals (
   , AnnotatedGoal
   , openGoals
   , solveGoal
+  , allOpenGoalsAreSimpleFacts
   ) where
 
 import           Prelude                                 hiding (id, (.))
@@ -161,6 +162,18 @@ openGoals sys = do
                                 return t
 
 
+-- | Returns true if all open goals in the system are "trivial" fact goals.
+allOpenGoalsAreSimpleFacts :: System -> Bool
+allOpenGoalsAreSimpleFacts sys = foldl f True (openGoals sys)
+  where
+    f :: Bool -> AnnotatedGoal -> Bool
+    f ret ((ActionG _ fact),  _) = ret && (isTrivialFact fact /= Nothing) && (isKUFact fact)
+    f ret ((ChainG _ _),      _) = False
+    f ret ((PremiseG _ fact), _) = ret && (isTrivialFact fact /= Nothing)
+    f ret ((SplitG _),        _) = False
+    f ret ((DisjG _),         _) = False
+
+                                
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
 ------------------------------------------------------------------------------

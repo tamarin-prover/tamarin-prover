@@ -259,7 +259,9 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
         DiffTrivial 
-          | isTrivial sys && L.get dsSystem sys == Nothing    -> return M.empty
+          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
+                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && checkOtherSide) then return M.empty else Nothing -- If the system is trivial, we still need to check the other side of the current system.
+                                                                      (_ , _ , _)                 -> Nothing                                                       
           | otherwise                                         -> Nothing
         DiffAttack
           | isSolved && (not checkOtherSide)                  -> return M.empty
@@ -279,43 +281,33 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
       $ L.set dsProtoRules (S.fromList protoRules) 
       $ L.set dsProofType (Just RuleEquivalence) sys
       
-    formula :: Either RuleAC ProtoRuleE -> LNFormula
-    -- Formula (String, LSort) Name LVar
-    -- Formula s c v = Ato (Atom (VTerm c (BVar v))) | c = Name, v = LVar
-    -- Atom t = Action t (Fact t) | t = (VTerm c (BVar v)) = (VTerm Name (BVar LVar)
-    -- data Fact t = Fact { factTag :: FactTag, factTerms :: [t]} | t = (VTerm c (BVar v))
-    -- data FactTag = ProtoFact Multiplicity String Int -- ^ A protocol fact together with its arity and multiplicity.
-    -- data Name = Name {nTag :: NameTag, nId :: NameId}
-    -- newtype NameId = NameId { getNameId :: String }
-    -- data NameTag = FreshName | PubName
-    -- type VTerm c v = Term (Lit c v) | c = Name, v = (BVar LVar)
-    -- data Term a = LIT a | a = (Lit Name (BVar LVar)
-    -- data Lit c v = Con c | Var v | v = (BVar LVar)
-    -- data BVar v = Bound Integer  
-    formula rule = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact {factTag = ProtoFact Linear ("Diff" ++ getEitherRuleNameDiff rule) 0, factTerms = []})))
-    -- Qua Ex ("i",LSortNode) (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear "Testlabel" 0, factTerms = []})))
-    -- GGuarded Ex [("i",LSortNode)] [Action Bound 0 (Fact {factTag = ProtoFact Linear "Testlabel" 0, factTerms = []})] (GConj (Conj {getConj = []}))
+    formula :: String -> LNFormula
+    formula rulename = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact {factTag = ProtoFact Linear ("Diff" ++ rulename) 0, factTerms = []})))
     
     ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
-    ruleEquivalenceCase m rule = M.insert ("Rule " ++ (getACRuleName rule)) (ruleEquivalenceSystem (Left rule)) m
+    ruleEquivalenceCase m rule = M.insert ("Rule " ++ (getACRuleName rule)) (ruleEquivalenceSystem (getACRuleNameDiff rule)) m
     
     protoRuleEquivalenceCase :: M.Map CaseName DiffSystem -> ProtoRuleE -> M.Map CaseName DiffSystem
-    protoRuleEquivalenceCase m rule = M.insert ("Rule " ++ (getProtoRuleName rule)) (ruleEquivalenceSystem (Right rule)) m
+    protoRuleEquivalenceCase m rule = M.insert ("Rule " ++ (getProtoRuleName rule)) (ruleEquivalenceSystem (getProtoRuleNameDiff rule)) m
     
-    -- Not checking construction rules is sound!
+    -- Not checking construction rules is sound, as they are 'trivial' !
     ruleEquivalence = foldl protoRuleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) protoRules
     
-    isTrivial sys' = case L.get dsCurrentRule sys' of
-      Nothing   -> False
-      Just (Left rule)  -> isTrivialACDiffRule    rule
-      Just (Right rule) -> isTrivialProtoDiffRule rule
+    isTrivial :: System -> Bool
+    isTrivial sys' = (allFormulasAreSolved sys') && (allOpenGoalsAreSimpleFacts sys') && (allOpenFactGoalsAreIndependent sys')
+    
+    -- This was the old version, we now check (more general) whether the current state of the constraint system could be trivial
+--     case L.get dsCurrentRule sys' of
+--       Nothing   -> False
+--       Just (Left rule)  -> isTrivialACDiffRule    rule
+--       Just (Right rule) -> isTrivialProtoDiffRule rule
     
     eitherProofContext s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
     
-    backwardSearchSystem s sys' rule = L.set dsSide (Just s)
-      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsSomeTrace True (formula rule))) sys'
+    backwardSearchSystem s sys' rulename = L.set dsSide (Just s)
+      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsSomeTrace True (formula rulename))) sys'
 
-    startBackwardSearch rule = M.insert ("LHS") (backwardSearchSystem LHS sys rule) $ M.insert ("RHS") (backwardSearchSystem RHS sys rule) $ M.empty
+    startBackwardSearch rulename = M.insert ("LHS") (backwardSearchSystem LHS sys rulename) $ M.insert ("RHS") (backwardSearchSystem RHS sys rulename) $ M.empty
     
     applyStep :: ProofMethod -> Side -> System -> Maybe (M.Map CaseName DiffSystem)
     applyStep m s sys' = case (execProofMethod (eitherProofContext s) m sys') of
@@ -331,7 +323,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     checkOtherSide = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                        (Just RuleEquivalence, Just _, Just s, Just sys') -> case getMirrorDG ctxt s sys' of
-                                                                                 Just sys'' -> True {-error (show sys'')-} -- FIXME
+                                                                                 Just sys'' -> True {-error (show sys'')-} -- FIXME: Show other system?
                                                                                  Nothing    -> False
                        (_                   , _     , _     , _        ) -> False
     

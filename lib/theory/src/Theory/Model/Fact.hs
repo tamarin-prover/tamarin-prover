@@ -319,7 +319,7 @@ getFactVariables :: LNFact -> [LVar]
 getFactVariables (Fact _ ts) =
    map fst $ varOccurences ts
 
--- | If all the facts terms are simple and different variables, returns the list of all these variables. Otherwise returns Nothing.
+-- | If all the fact terms are simple and different variables, returns the list of all these variables. Otherwise returns Nothing.
 isTrivialFact :: LNFact -> Maybe [LVar]
 isTrivialFact (Fact _ ts) = case ts of
       []   -> Just []
