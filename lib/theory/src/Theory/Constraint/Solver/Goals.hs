@@ -91,8 +91,8 @@ openGoals sys = do
         ChainG c _     ->
           case kFactView (nodeConcFact c sys) of
               Just (DnK, viewTerm2 -> FUnion args) ->
-                  not solved && allMsgVarsKnownEarlier c args
-              Just (DnK,  m) | isMsgVar m          -> False
+                  not solved && if get sDiffSystem sys then True else allMsgVarsKnownEarlier c args -- In a diff proof, all chain goals need to be solved. 
+              Just (DnK,  m) | isMsgVar m          -> if get sDiffSystem sys then not solved else False -- In a diff proof, all chain goals need to be solved.
                              | otherwise           -> not solved
               fa -> error $ "openChainGoals: impossible fact: " ++ show fa
 
@@ -164,14 +164,14 @@ openGoals sys = do
 
 -- | Returns true if all open goals in the system are "trivial" fact goals.
 allOpenGoalsAreSimpleFacts :: System -> Bool
-allOpenGoalsAreSimpleFacts sys = foldl f True (openGoals sys)
+allOpenGoalsAreSimpleFacts sys = all f (openGoals sys)
   where
-    f :: Bool -> AnnotatedGoal -> Bool
-    f ret ((ActionG _ fact),  _) = ret && (isTrivialFact fact /= Nothing) && (isKUFact fact)
-    f _   ((ChainG _ _),      _) = False
-    f ret ((PremiseG _ fact), _) = ret && (isTrivialFact fact /= Nothing)
-    f _   ((SplitG _),        _) = False
-    f _   ((DisjG _),         _) = False
+    f :: AnnotatedGoal -> Bool
+    f ((ActionG _ fact),  _) = (isTrivialFact fact /= Nothing) && (isKUFact fact)
+    f ((ChainG _ _),      _) = False
+    f ((PremiseG _ fact), _) = (isTrivialFact fact /= Nothing)
+    f ((SplitG _),        _) = False
+    f ((DisjG _),         _) = False
 
                                 
 ------------------------------------------------------------------------------

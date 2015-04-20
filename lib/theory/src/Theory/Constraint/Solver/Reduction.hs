@@ -286,7 +286,6 @@ insertAction i fa = do
                     if isdiff
                        then do                          
                           modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "pair")) ([(Fact KUFact [m1]),(Fact KUFact [m2])]) ([fa]) ([fa])))
--- FIXME                          exploitPrems i ru
                           insertGoal goal False
                           markGoalAsSolved "pair" goal
                           requiresKU m1 *> requiresKU m2 *> return Changed
@@ -300,7 +299,6 @@ insertAction i fa = do
                     if isdiff
                        then do                          
                           modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "inv")) ([(Fact KUFact [m])]) ([fa]) ([fa])))
--- FIXME                          exploitPrems i ru
                           insertGoal goal False
                           markGoalAsSolved "inv" goal
                           requiresKU m *> return Changed
@@ -314,7 +312,6 @@ insertAction i fa = do
                     if isdiff
                        then do                          
                           modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "mult")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
--- FIXME                          exploitPrems i ru
                           insertGoal goal False
                           markGoalAsSolved "mult" goal
                           mapM_ requiresKU ms *> return Changed
@@ -328,14 +325,13 @@ insertAction i fa = do
                     if isdiff
                        then do                          
                           modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
--- FIXME                          exploitPrems i ru
                           insertGoal goal False
                           markGoalAsSolved "mult" goal
                           mapM_ requiresKU ms *> return Changed
                           
                        else do
-                    insertGoal goal False
-                    mapM_ requiresKU ms *> return Changed
+                          insertGoal goal False
+                          mapM_ requiresKU ms *> return Changed
 
                 _ -> do
                     insertGoal goal False

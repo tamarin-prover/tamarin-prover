@@ -110,12 +110,12 @@ data ProofMethod =
 -- FIXME
 data DiffProofMethod =
     DiffSorry (Maybe String)                 -- ^ Proof was not completed
+  | DiffSolved                               -- ^ No attack was found
+  | DiffAttack                               -- ^ A potential attack was found
   | DiffRuleEquivalence                      -- ^ Consider all rules
 --   | DiffTrivial                              -- ^ The rule is trivially sound - REMOVED and merged with solved!
   | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
   | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
-  | DiffSolved                               -- ^ No attack was found
-  | DiffAttack                               -- ^ A potential attack was found
   deriving( Eq, Ord, Show )
 
   
@@ -402,12 +402,12 @@ rankDiffProofMethods ranking ctxt sys = do
             [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
 -- MERGED with solved.
 --         <|> [(DiffTrivial, "Trivial rule equivalence")]
+        <|> [(DiffSolved, "Backward search completed")]
+        <|> [(DiffAttack, "Found attack")]
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
                   (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking (eitherProofContext s) sys')
                   (_         , _        ) -> [])
-        <|> [(DiffSolved, "Backward search completed")]
-        <|> [(DiffAttack, "Found attack")]
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
