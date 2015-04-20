@@ -526,8 +526,8 @@ getACRuleNameDiff (Rule rname _ _ _) = case rname of
                             FreshRule   -> "ProtoFreshRule"
                             StandRule s -> "Proto" ++ s
          IntrInfo  i -> "Intr" ++ case i of
-                 ConstrRule x    -> "Constr" ++ show x 
-                 DestrRule x     -> "Destr" ++ show x
+                 ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
+                 DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
                  CoerceRule      -> "Coerce"
                  IRecvRule       -> "Recv"
                  ISendRule       -> "Send"
@@ -540,8 +540,8 @@ getACRuleNameDiff (Rule rname _ _ _) = case rname of
 -- | Returns an intruder rule's name
 getIntrACRuleName :: IntrRuleAC -> String
 getIntrACRuleName (Rule rname _ _ _) = case rname of
-         ConstrRule x    -> "Constr" ++ show x 
-         DestrRule x     -> "Destr" ++ show x
+         ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
+         DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
          CoerceRule      -> "Coerce"
          IRecvRule       -> "Recv"
          ISendRule       -> "Send"

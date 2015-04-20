@@ -119,6 +119,7 @@ module Theory.Constraint.System (
   , allFormulasAreSolved
   , dgIsNotEmpty
   , allOpenFactGoalsAreIndependent
+  , allOpenGoalsAreSimpleFacts
   
   -- ** Temporal ordering
   , sLessAtoms
@@ -732,15 +733,16 @@ allOpenFactGoalsAreIndependent sys = (noCommonVarsInGoals unsolvedGoals) && (all
   where
     unsolvedGoals = unsolvedTrivialGoals sys
 
--- | FIXME: This function is only for debbuging purposes...
+-- | Returns true if all open goals in the system are "trivial" fact goals.
 allOpenGoalsAreSimpleFacts :: System -> Bool
-allOpenGoalsAreSimpleFacts sys = M.foldlWithKey f True (L.get sGoals sys)
+allOpenGoalsAreSimpleFacts sys = M.foldlWithKey goalIsSimpleFact True (L.get sGoals sys)
   where
-    f ret (ActionG _ fact)  (GoalStatus solved _ _) = ret && (solved || ((isTrivialFact fact /= Nothing) && (isKUFact fact)))
-    f ret (ChainG _ _)      (GoalStatus solved _ _) = ret && solved
-    f ret (PremiseG _ fact) (GoalStatus solved _ _) = ret && (solved || (isTrivialFact fact /= Nothing))
-    f ret (SplitG _)        (GoalStatus solved _ _) = ret && solved
-    f ret (DisjG _)         (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact :: Bool -> Goal -> GoalStatus -> Bool
+    goalIsSimpleFact ret (ActionG _ fact)  (GoalStatus solved _ _) = ret && (solved || ((isTrivialFact fact /= Nothing) && (isKUFact fact)))
+    goalIsSimpleFact ret (ChainG _ _)      (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (PremiseG _ fact) (GoalStatus solved _ _) = ret && (solved || (isTrivialFact fact /= Nothing))
+    goalIsSimpleFact ret (SplitG _)        (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (DisjG _)         (GoalStatus solved _ _) = ret && solved
         
 -- Actions
 ----------

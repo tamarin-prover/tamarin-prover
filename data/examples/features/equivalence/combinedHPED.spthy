@@ -42,6 +42,12 @@ lemma Diff_test:
   not( Ex #i. DiffProtoOut_Dec() @ i)
   "
   
+lemma Diff_test2:
+  all-traces
+  "
+  not( Ex #i. DiffIntrDestrdfst() @ i)
+  "
+  
 lemma Ltk_secret:
   all-traces
   "
