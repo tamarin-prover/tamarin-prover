@@ -77,6 +77,7 @@ import           Prelude                                 hiding (id, (.))
 import qualified Data.Foldable                           as F
 import qualified Data.Map                                as M
 import qualified Data.Set                                as S
+import qualified Data.ByteString.Char8                   as BC
 import           Data.List                               (mapAccumL)
 import           Safe
 
@@ -276,23 +277,69 @@ insertEdges edges = do
 insertAction :: NodeId -> LNFact -> Reduction ChangeIndicator
 insertAction i fa = do
     present <- (goal `M.member`) <$> getM sGoals
+    isdiff <- getM sDiffSystem
     if present
       then do return Unchanged
-      else do insertGoal goal False
-              case kFactView fa of
-                Just (UpK, viewTerm2 -> FPair m1 m2) ->
-                    requiresKU m1 *> requiresKU m2 *> return Changed
+      else do case kFactView fa of
+                Just (UpK, viewTerm2 -> FPair m1 m2) -> do
+                -- In the diff case, add pair rule instead of goal
+                    if isdiff
+                       then do                          
+                          modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "pair")) ([(Fact KUFact [m1]),(Fact KUFact [m2])]) ([fa]) ([fa])))
+-- FIXME                          exploitPrems i ru
+                          insertGoal goal False
+                          markGoalAsSolved "pair" goal
+                          requiresKU m1 *> requiresKU m2 *> return Changed
+                          
+                       else do
+                          insertGoal goal False
+                          requiresKU m1 *> requiresKU m2 *> return Changed
 
-                Just (UpK, viewTerm2 -> FInv m) ->
-                    requiresKU m *> return Changed
+                Just (UpK, viewTerm2 -> FInv m) -> do
+                -- In the diff case, add inv rule instead of goal
+                    if isdiff
+                       then do                          
+                          modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "inv")) ([(Fact KUFact [m])]) ([fa]) ([fa])))
+-- FIXME                          exploitPrems i ru
+                          insertGoal goal False
+                          markGoalAsSolved "inv" goal
+                          requiresKU m *> return Changed
+                          
+                       else do
+                          insertGoal goal False
+                          requiresKU m *> return Changed
 
-                Just (UpK, viewTerm2 -> FMult ms) ->
+                Just (UpK, viewTerm2 -> FMult ms) -> do
+                -- In the diff case, add mult rule instead of goal
+                    if isdiff
+                       then do                          
+                          modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "mult")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
+-- FIXME                          exploitPrems i ru
+                          insertGoal goal False
+                          markGoalAsSolved "mult" goal
+                          mapM_ requiresKU ms *> return Changed
+                          
+                       else do
+                          insertGoal goal False
+                          mapM_ requiresKU ms *> return Changed
+
+                Just (UpK, viewTerm2 -> FUnion ms) -> do
+                -- In the diff case, add union (?) rule instead of goal
+                    if isdiff
+                       then do                          
+                          modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
+-- FIXME                          exploitPrems i ru
+                          insertGoal goal False
+                          markGoalAsSolved "mult" goal
+                          mapM_ requiresKU ms *> return Changed
+                          
+                       else do
+                    insertGoal goal False
                     mapM_ requiresKU ms *> return Changed
 
-                Just (UpK, viewTerm2 -> FUnion ms) ->
-                    mapM_ requiresKU ms *> return Changed
-
-                _ -> return Unchanged
+                _ -> do
+                    insertGoal goal False
+                    return Unchanged
   where
     goal = ActionG i fa
     -- Here we rely on the fact that the action is new. Otherwise, we might

@@ -111,7 +111,7 @@ data ProofMethod =
 data DiffProofMethod =
     DiffSorry (Maybe String)                 -- ^ Proof was not completed
   | DiffRuleEquivalence                      -- ^ Consider all rules
-  | DiffTrivial                              -- ^ The rule is trivially sound
+--   | DiffTrivial                              -- ^ The rule is trivially sound - REMOVED and merged with solved!
   | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
   | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
   | DiffSolved                               -- ^ No attack was found
@@ -244,9 +244,10 @@ execDiffProofMethod :: DiffProofContext
 execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ show sys -- return M.empty
       case method of
         DiffSorry _                                           -> return M.empty
-        DiffSolved
-          | isSolved && checkOtherSide                        -> return M.empty
-          | otherwise                                         -> Nothing
+-- REMOVED, as we merged solved and trivial.
+--         DiffSolved
+--           | isSolved && checkOtherSide                        -> return M.empty
+--           | otherwise                                         -> Nothing
         DiffBackwardSearch
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys) of
                                                                       (Just rule, Nothing) -> Just $ startBackwardSearch rule
@@ -258,9 +259,9 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
-        DiffTrivial 
+        DiffSolved
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && checkOtherSide) then return M.empty else Nothing -- If the system is trivial, we still need to check the other side of the current system.
+                                                                      (Just _, Just _, Just sys') -> if ((isTrivial sys') && checkOtherSide) then return M.empty else Nothing
                                                                       (_ , _ , _)                 -> Nothing                                                       
           | otherwise                                         -> Nothing
         DiffAttack
@@ -294,7 +295,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     ruleEquivalence = foldl protoRuleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) protoRules
     
     isTrivial :: System -> Bool
-    isTrivial sys' = (allFormulasAreSolved sys') && (allOpenGoalsAreSimpleFacts sys') && (allOpenFactGoalsAreIndependent sys')
+    isTrivial sys' = (dgIsNotEmpty sys') && (allOpenGoalsAreSimpleFacts sys') && (allOpenFactGoalsAreIndependent sys')
     
     -- This was the old version, we now check (more general) whether the current state of the constraint system could be trivial
 --     case L.get dsCurrentRule sys' of
@@ -399,7 +400,8 @@ rankDiffProofMethods :: GoalRanking -> DiffProofContext -> DiffSystem
 rankDiffProofMethods ranking ctxt sys = do
     (m, expl) <-
             [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
-        <|> [(DiffTrivial, "Trivial rule equivalence")]
+-- MERGED with solved.
+--         <|> [(DiffTrivial, "Trivial rule equivalence")]
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
                   (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking (eitherProofContext s) sys')
@@ -580,7 +582,8 @@ prettyDiffProofMethod method = case method of
     DiffAttack               -> keyword_ "ATTACK" <-> lineComment_ "trace found"
     DiffSorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
-    DiffTrivial              -> keyword_ "trivial"
+-- MERGED with solved.
+--    DiffTrivial              -> keyword_ "trivial"
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
     DiffBackwardSearch       -> keyword_ "backward-search"  
     DiffBackwardSearchStep s -> {-keyword_ "backward-search-step" <->-} prettyProofMethod s 

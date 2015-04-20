@@ -92,6 +92,8 @@ module Theory.Model.Rule (
   , someRuleACInst
   , someRuleACInstAvoiding
   , addDiffLabel
+  , multRuleInstance
+  , unionRuleInstance
 
   -- ** Unification
   , unifyRuleACInstEqs
@@ -337,7 +339,7 @@ data IntrRuleACInfo =
   | ISendRule
   | PubConstrRule
   | FreshConstrRule
-  | IEqualityRule
+  | IEqualityRule -- Necessary for diff
   deriving( Ord, Eq, Show, Data, Typeable )
 
 -- | An intruder rule modulo AC.
@@ -529,6 +531,7 @@ getACRuleNameDiff (Rule rname _ _ _) = case rname of
                  CoerceRule      -> "Coerce"
                  IRecvRule       -> "Recv"
                  ISendRule       -> "Send"
+--                  MultConstrRule  -> "MultConstr"
                  PubConstrRule   -> "PubConstr"
                  FreshConstrRule -> "FreshConstr"
                  IEqualityRule   -> "Equality"
@@ -542,6 +545,7 @@ getIntrACRuleName (Rule rname _ _ _) = case rname of
          CoerceRule      -> "Coerce"
          IRecvRule       -> "Recv"
          ISendRule       -> "Send"
+--          MultConstrRule  -> "MultConstr"
          PubConstrRule   -> "PubConstr"
          FreshConstrRule -> "FreshConstr"
          IEqualityRule   -> "Equality"
@@ -579,6 +583,48 @@ getNewVariables ru = getFacts $ S.toList newvars
 
 -- Construction
 ---------------
+
+multRuleInstance :: Int -> RuleAC
+multRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "mult")) (map xifact [1..n]) [prod] [prod])
+  where
+    prod = Fact KUFact [(FAPP (AC Mult) (map xi [1..n]))]
+    
+    xi :: Int -> LNTerm
+    xi k = (LIT $ Var $ LVar "x" LSortMsg (toInteger k))
+    
+    xifact :: Int -> LNFact
+    xifact k = Fact KUFact [(xi k)]
+
+unionRuleInstance :: Int -> RuleAC
+unionRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "union")) (map xifact [1..n]) [prod] [prod])
+  where
+    prod = Fact KUFact [(FAPP (AC Union) (map xi [1..n]))]
+    
+    xi :: Int -> LNTerm
+    xi k = (LIT $ Var $ LVar "x" LSortMsg (toInteger k))
+    
+    xifact :: Int -> LNFact
+    xifact k = Fact KUFact [(xi k)]
+
+--     data LVar = LVar
+--      { lvarName :: String
+--      , lvarSort :: !LSort     -- FIXME: Rename to 'sortOfLVar' for consistency
+--                               -- with the other 'sortOf' functions.
+--      , lvarIdx  :: !Integer
+--      }
+--      deriving( Typeable, Data )
+-- data LSort = LSortPub   -- ^ Arbitrary public names.
+--            | LSortFresh -- ^ Arbitrary fresh names.
+--            | LSortMsg   -- ^ Arbitrary messages.
+--            | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
+-- type VTerm c v = Term (Lit c v)
+-- data Term a = LIT a                 -- ^ atomic terms (constants, variables, ..)
+--             | FAPP FunSym [Term a]  -- ^ function applications
+--   deriving (Eq, Ord, Typeable, Data )
+--   -- | Names.
+-- data Name = Name {nTag :: NameTag, nId :: NameId}
+--     deriving( Eq, Ord, Typeable, Data )
+-- type LNTerm = VTerm Name LVar
 
 type RuleACConstrs = Disj LNSubstVFresh
 
@@ -730,6 +776,7 @@ prettyIntrRuleACInfo rn = text $ case rn of
     ISendRule       -> "isend"
     CoerceRule      -> "coerce"
     FreshConstrRule -> "fresh"
+--     MultConstrRule  -> "mult"
     PubConstrRule   -> "pub"
     IEqualityRule   -> "iequality"
     ConstrRule name -> prefixIfReserved ('c' : BC.unpack name)

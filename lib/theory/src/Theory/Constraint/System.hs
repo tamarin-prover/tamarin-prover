@@ -117,6 +117,7 @@ module Theory.Constraint.System (
   , unsolvedPremises
   , unsolvedTrivialGoals
   , allFormulasAreSolved
+  , dgIsNotEmpty
   , allOpenFactGoalsAreIndependent
   
   -- ** Temporal ordering
@@ -172,6 +173,7 @@ module Theory.Constraint.System (
 import           Prelude                              hiding (id, (.))
 
 import           Data.Binary
+import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
 import           Data.DeriveTH
 import           Data.List                            (foldl', partition, intersect)
@@ -604,13 +606,16 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
                                             ProtoInfo _ -> False) getRules
     
     getOtherRules :: RuleACInst -> [RuleAC]
-    getOtherRules (Rule rule _ _ _) = case rule of
+    getOtherRules (Rule rule prem _ _) = case rule of
                              ProtoInfo p -> case pRuleWithName (L.get praciName p) of
                                                  [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show getRules
                                                  x  -> x
-                             IntrInfo  i -> case iRuleWithName i of
-                                                 [] -> error $ "No other rule found for intruder rule " ++ show i ++ show getRules
-                                                 x  -> x
+                             IntrInfo  i -> case i of
+                                                 (ConstrRule x) | x == BC.pack "mult"  -> [(multRuleInstance (length prem))]
+                                                 (ConstrRule x) | x == BC.pack "union" -> [(unionRuleInstance (length prem))]
+                                                 _                                     -> case iRuleWithName i of
+                                                                                            [] -> error $ "No other rule found for intruder rule " ++ show i ++ show getRules
+                                                                                            x  -> x
 
 -- | Returns the set of edges of a system saturated with all edges deducible from the nodes and the less relation                                                 
 saturateEdgesWithLessRelation :: System -> S.Set Edge 
@@ -716,6 +721,10 @@ noCommonVarsInGoals goals = noCommonVars $ map (getFactVariables . snd) goals
 -- | Returns true if all formulas in the system are solved.
 allFormulasAreSolved :: System -> Bool
 allFormulasAreSolved sys = S.null $ L.get sFormulas sys
+
+-- | Returns true if all the depedency graph is not empty.
+dgIsNotEmpty :: System -> Bool
+dgIsNotEmpty sys = not $ M.null $ L.get sNodes sys
 
 -- | Assumption: all open goals in the system are "trivial" fact goals. Returns true if these goals are independent from each other and the rest of the system.
 allOpenFactGoalsAreIndependent :: System -> Bool
@@ -849,7 +858,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("solved goals",    prettyGoals True se)
   , ("open goals",      text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
-  , ("DEBUG",           text $ "allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (allFormulasAreSolved se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
+  , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
