@@ -563,7 +563,7 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
                                               
     unifyInstances :: System -> [M.Map NodeId RuleACInst] -> Maybe System
     unifyInstances sys' newrules = 
-      trace ((show $ head $ map (unifiers . equalities sys') newrules) ++ " |\n " ++ (show $ head $ map (equalities sys') newrules) ++ " |\n " {-++ show (map avoid newrules) ++ " - " ++ show (avoid sys') ++ " |\n "-} ++ (show $ head newrules) ++ " |\n " ++ (show sys')) $
+--       trace ((show $ head $ map (unifiers . equalities sys') newrules) ++ " |\n " ++ (show $ head $ map (equalities sys') newrules) ++ " |\n " {-++ show (map avoid newrules) ++ " - " ++ show (avoid sys') ++ " |\n "-} ++ (show $ head newrules) ++ " |\n " ++ (show sys')) $
       foldl (\ret x -> if (ret /= Nothing) || (null $ unifiers $ equalities sys' x) then ret else Just $ L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys') Nothing newrules
       -- We can stop if a corresponding system is found for one variant. Otherwise we continue until we find a system which we can unify, or return Nothing if no such system exists.
         where
