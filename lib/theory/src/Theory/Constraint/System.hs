@@ -171,6 +171,8 @@ module Theory.Constraint.System (
 
   ) where
 
+import           Debug.Trace
+
 import           Prelude                              hiding (id, (.))
 
 import           Data.Binary
@@ -540,8 +542,11 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
 
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
-getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance) [M.empty] (L.get sNodes sys))
+getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) [M.empty] freshAndPubConstrRules) otherRules)
   where
+    freshAndPubConstrRules = (M.filter (\rule -> (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
+    otherRules = (M.filter (\rule -> not $ (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
+    
     -- We keep instantiations of fresh and public variables. Currently new public variables in protocol rule instances 
     -- are instantiated correctly in someRuleACInstAvoiding, but if this is changed we need to fix this part.
     transformRuleInstance :: NodeId -> RuleACInst -> [M.Map NodeId RuleACInst] -> [M.Map NodeId RuleACInst]
@@ -554,19 +559,23 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
     
         getVariants :: (HasFrees t) => t -> (RuleACInst, Maybe RuleACConstrs) -> [RuleACInst]
         getVariants _ (r, Nothing)       = [r]
-        getVariants a (r, Just (Disj v)) = map (\x -> apply (freshToFreeAvoiding x (a, r)) r) v -- CHECKME!
+        getVariants a (r, Just (Disj v)) = map (\x -> apply (freshToFreeAvoiding x (a, r)) r) v
                                               
     unifyInstances :: System -> [M.Map NodeId RuleACInst] -> Maybe System
-    unifyInstances sys' newrules = {-error $ (show $ map (unifiers . equalities sys') newrules) ++ " | " ++ (show $ map (equalities sys') newrules) ++ " | " ++ show (map avoid newrules) ++ " - " ++ show (avoid sys') ++ " | " ++ (show newrules) ++ " | " ++ (show sys')-} foldl (\ret x -> if (ret /= Nothing) || (null $ unifiers $ equalities sys' x) then ret else Just $ L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys') Nothing newrules -- We can stop if a corresponding system is found for one variant. Otherwise we continue until we find a system which we can unify, or return Nothing if no such system exists.
-      where
-        freeUnifiers :: M.Map NodeId RuleACInst -> [LNSubst]
-        freeUnifiers newnodes = map (\y -> freshToFreeAvoiding y newnodes) (unifiers $ equalities sys' newnodes)
+    unifyInstances sys' newrules = 
+      trace ((show $ head $ map (unifiers . equalities sys') newrules) ++ " |\n " ++ (show $ head $ map (equalities sys') newrules) ++ " |\n " {-++ show (map avoid newrules) ++ " - " ++ show (avoid sys') ++ " |\n "-} ++ (show $ head newrules) ++ " |\n " ++ (show sys')) $
+      foldl (\ret x -> if (ret /= Nothing) || (null $ unifiers $ equalities sys' x) then ret else Just $ L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys') Nothing newrules
+      -- We can stop if a corresponding system is found for one variant. Otherwise we continue until we find a system which we can unify, or return Nothing if no such system exists.
+        where
+          freeUnifiers :: M.Map NodeId RuleACInst -> [LNSubst]
+          freeUnifiers newnodes = map (\y -> freshToFreeAvoiding y newnodes) (unifiers $ equalities sys' newnodes)
         
-    unifiers :: [Equal LNFact] -> [SubstVFresh Name LVar]
-    unifiers equalfacts = runReader (unifyLNFactEqs equalfacts) (getMaudeHandle ctxt side)
+    unifiers :: Maybe [Equal LNFact] -> [SubstVFresh Name LVar]
+    unifiers (Nothing)         = []
+    unifiers (Just equalfacts) = runReader (unifyLNFactEqs equalfacts) (getMaudeHandle ctxt side)
     
-    equalities :: System -> M.Map NodeId RuleACInst -> [Equal LNFact]
-    equalities sys' newrules' = (getGraphEqualities newrules' sys') ++ (getKUEqualities newrules' sys') ++ (getNewVarEqualities newrules' sys')
+    equalities :: System -> M.Map NodeId RuleACInst -> Maybe [Equal LNFact]
+    equalities sys' newrules' = (++) <$> (Just ((getGraphEqualities newrules' sys') ++ (getKUEqualities newrules' sys'))) <*> (getNewVarEqualities newrules' sys')
         
     getGraphEqualities :: M.Map NodeId RuleACInst -> System -> [Equal LNFact]
     getGraphEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFactMap y nodes) (nodeConcFactMap x nodes)) $ S.toList (L.get sEdges sys')
@@ -574,19 +583,19 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
     getKUEqualities :: M.Map NodeId RuleACInst -> System -> [Equal LNFact]
     getKUEqualities nodes sys' = map (\(Edge y x) -> Equal (nodePremFactMap x nodes) (nodeConcFactMap y nodes)) $ S.toList $ getEdgesFromLessRelation sys'
 
-    getNewVarEqualities :: M.Map NodeId RuleACInst -> System -> [Equal LNFact]
-    getNewVarEqualities nodes sys' = (genTrivialEqualities nodes sys') ++ (concat $ map (\(_, r) -> genEqualities $ getNewVariables r) $ M.toList nodes)
+    getNewVarEqualities :: M.Map NodeId RuleACInst -> System -> Maybe ([Equal LNFact])
+    getNewVarEqualities nodes sys' = (++) <$> (genTrivialEqualities nodes sys') <*> (Just (concat $ map (\(_, r) -> genEqualities $ map (\(x, y) -> (x, y, y)) $ getNewVariables r) $ M.toList nodes))
       where
-        genEqualities :: [(LNFact, LVar)] -> [Equal LNFact]
-        genEqualities = map (\(x, y) -> Equal x (replaceNewVarWithConstant x y))
+        genEqualities :: [(LNFact, LVar, LVar)] -> [Equal LNFact]
+        genEqualities = map (\(x, y, z) -> Equal x (replaceNewVarWithConstant x y z))
         
-        genTrivialEqualities :: M.Map NodeId RuleACInst -> System -> [Equal LNFact]
-        genTrivialEqualities nodes' sys'' = genEqualities $ getTrivialFacts nodes' sys''
+        genTrivialEqualities :: M.Map NodeId RuleACInst -> System -> Maybe ([Equal LNFact])
+        genTrivialEqualities nodes' sys'' = genEqualities <$> getTrivialFacts nodes' sys''
                 
-        replaceNewVarWithConstant :: LNFact -> LVar -> LNFact
-        replaceNewVarWithConstant fact v = apply subst fact
+        replaceNewVarWithConstant :: LNFact -> LVar -> LVar -> LNFact
+        replaceNewVarWithConstant fact v cvar = apply subst fact
           where
-            subst = Subst (M.fromList [(v, constTerm (Name (pubOrFresh v) (NameId ("constVar" ++ toConstName v))))])
+            subst = Subst (M.fromList [(v, constTerm (Name (pubOrFresh v) (NameId ("constVar" ++ toConstName cvar))))])
             
             toConstName (LVar name vsort idx) = (show vsort) ++ name ++ (show idx)
             
@@ -658,17 +667,41 @@ getOpenNodePrems sys = getOpenIncoming (M.toList $ L.get sNodes sys)
     
     hasNoIncomingEdge sys' np = S.null (S.filter (\(Edge _ y) -> y == np) (L.get sEdges sys'))
        
--- | Returns all open trivial facts of nodes in the current system
-getTrivialFacts :: M.Map NodeId RuleACInst -> System -> [(LNFact, LVar)]
-getTrivialFacts nodes sys = concat $ map (getAllWithoutMatchingConcs nodes sys) $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds sys nid)) $ getOpenNodePrems sys
+-- | Returns a list of all open trivial facts of nodes in the current system, and the variable they need to be unified with
+getTrivialFacts :: M.Map NodeId RuleACInst -> System -> Maybe ([(LNFact, LVar, LVar)])
+getTrivialFacts nodes sys = case (unsolvedTrivialGoals sys) of
+                                 []     -> Just []
+                                 (x:xs) -> foldl foldTreatGoal (treatGoal nodes x) xs
+  where
+    foldTreatGoal :: Maybe [(LNFact, LVar, LVar)] -> (Either NodePrem LVar, LNFact) -> Maybe [(LNFact, LVar, LVar)]
+    foldTreatGoal eqdata goal = (++) <$> (treatGoal eqdata goal) <*> eqdata
+    
+    treatGoal :: HasFrees t => t -> (Either NodePrem LVar, LNFact) -> Maybe [(LNFact, LVar, LVar)]
+    treatGoal _ (Left pidx, _ ) = (map (\(x, y) -> (x, y, y))) <$> getFactAndVars nodes pidx
+    treatGoal a (Right var, fa) = premiseFacts (nodes, a) var fa
+    
+    premisesForKUAction :: LVar -> LNFact -> [NodePrem]
+    premisesForKUAction var fa = getAllMatchingPrems sys fa $ getAllLessSucs sys var
+    
+    premiseFacts :: HasFrees t => t -> LVar -> LNFact -> Maybe ([(LNFact, LVar, LVar)])
+    premiseFacts av var fa = case (premisesForKUAction var fa) of
+                               []     -> Just []
+                               (x:xs) -> foldl (g av) (getAllEqDataAvoiding av x) xs
+      where
+        g :: HasFrees t => t ->  Maybe ([(LNFact, LVar, LVar)]) -> NodePrem -> Maybe ([(LNFact, LVar, LVar)])
+        g _ (Nothing) _    = Nothing
+        g a (Just xs) pidx = (xs++) <$> getAllEqDataAvoiding a pidx
+        
+        getAllEqDataAvoiding :: HasFrees t => t -> NodePrem -> Maybe ([(LNFact, LVar, LVar)])
+        getAllEqDataAvoiding a p = zipWith (\(x, y) z -> (x, y, z)) <$> getFactAndVars nodes p <*> renameAvoiding (isTrivialFact fa) a 
 
 -- | Given a system and a node premise together with a list of "less" predecessors, returns a list of facts and variables if the premise has no matching conclusion in any of the predecessors.
-getAllWithoutMatchingConcs :: M.Map NodeId RuleACInst -> System -> (NodePrem, [NodeId]) -> [(LNFact, LVar)]
-getAllWithoutMatchingConcs nodes sys (premid, gids) = if null (getAllMatchingConcs sys premid gids) then (getFactAndVars nodes sys premid) else []
+getAllWithoutMatchingConcs :: M.Map NodeId RuleACInst -> System -> (NodePrem, [NodeId]) -> Maybe ([(LNFact, LVar)])
+getAllWithoutMatchingConcs nodes sys (premid, gids) = if null (getAllMatchingConcs sys premid gids) then (getFactAndVars nodes premid) else (Just [])
 
--- | Assumption: the fact at premid is trivial. Returns the fact and its (trivial) variables.
-getFactAndVars :: M.Map NodeId RuleACInst -> System -> NodePrem -> [(LNFact, LVar)]
-getFactAndVars nodes sys premid = map (\x -> (fact, x)) $ fromMaybe (error $ "getFactAndVars: This " ++ show premid ++ " fact " ++ show (nodePremFact premid sys) ++ " should be trivial! System: " ++ show sys) (isTrivialFact fact)
+-- | If the fact at premid in nodes is trivial, returns the fact and its (trivial) variables. Otherwise returns nothing
+getFactAndVars :: M.Map NodeId RuleACInst -> NodePrem -> Maybe ([(LNFact, LVar)])
+getFactAndVars nodes premid = (map (\x -> (fact, x))) <$> (isTrivialFact fact)
   where
     fact = (nodePremFactMap premid nodes)
                 
@@ -859,7 +892,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
   , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("solved goals",    prettyGoals True se)
-  , ("open goals",      text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
+  , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
@@ -867,16 +900,18 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
 
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
-prettyNonGraphSystemDiff :: HighlightDocument d => DiffSystem -> d
-prettyNonGraphSystemDiff se = vsep $ map combine
+prettyNonGraphSystemDiff :: HighlightDocument d => DiffProofContext -> DiffSystem -> d
+prettyNonGraphSystemDiff ctxt se = vsep $ map combine
 -- FIXME!!!
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
   , ("current rule",        {-prettyEitherRule-} maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
+  , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
+                                 (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
+                                 _                                                                                                                   -> text "none")
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
   , ("construction rules",  vsep $ map prettyRuleAC $ S.toList $ L.get dsConstrRules se)
   , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
---  , ("DEBUG",           text $ (if (allFormulasAreSolved se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then (getMirrorDG se ) else " not trivial ") ++ (show $ unsolvedTrivialGoals se))
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]

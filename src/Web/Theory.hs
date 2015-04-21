@@ -635,7 +635,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
 --         [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath)
 --         | nonEmptyGraphDiff se ]
         ++
-        [ preformatted (Just "sequent") (prettyNonGraphSystemDiff se)
+        [ preformatted (Just "sequent") (prettyNonGraphSystemDiff ctxt se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
         ] ++
         subCases

@@ -330,7 +330,7 @@ isTrivialFact (Fact _ ts) = case ts of
       combine (Just _ )  Nothing  = Nothing
       combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
       
-      noDuplicates l1 l2 = ((length l1) + (length l2)) == S.size (S.union (S.fromList l1) (S.fromList l2))
+      noDuplicates l1 l2 = S.null (S.intersection (S.fromList l1) (S.fromList l2))
    
 ------------------------------------------------------------------------------
 -- Pretty Printing

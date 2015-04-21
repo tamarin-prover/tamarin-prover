@@ -1315,7 +1315,7 @@ proveDiffTheory selector diffselector prover diffprover thy =
         sys     = mkSystemDiff s ctxt (diffTheoryAxioms thy) preItems $ L.get lFormula lem
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
-    proveDiffLemma lem preItems
+    proveDiffLemma lem _
       | diffselector lem = modify lDiffProof add lem
       | otherwise        = lem
       where

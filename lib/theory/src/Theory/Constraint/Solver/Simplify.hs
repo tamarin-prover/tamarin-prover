@@ -56,12 +56,17 @@ import           Theory.Text.Pretty
 -- system does not change anymore.
 simplifySystem :: Reduction ()
 simplifySystem = do
+    isdiff <- getM sDiffSystem
     -- Start simplification, indicating that some change happened
     go (0 :: Int) [Changed]
     -- Add all ordering constraint implied by CR-rule *N6*.
-    exploitUniqueMsgOrder
-    -- Remove equation split goals that do not exist anymore
-    removeSolvedSplitGoals
+    if isdiff
+       then do
+        removeSolvedSplitGoals
+       else do
+        exploitUniqueMsgOrder
+        -- Remove equation split goals that do not exist anymore
+        removeSolvedSplitGoals    
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -74,35 +79,69 @@ simplifySystem = do
           -- changes as 'substSystem' is idempotent.
           void substSystem
           -- Perform one simplification pass.
-          (c1,c2,c3) <- enforceNodeUniqueness
-          c4 <- enforceEdgeUniqueness
-          c5 <- solveUniqueActions
-          c6 <- reduceFormulas
-          c7 <- evalFormulaAtoms
-          c8 <- insertImpliedFormulas
+          isdiff <- getM sDiffSystem
+          -- In the diff case, we cannot enfore N4-N6.
+          if isdiff
+            then do
+              (c1,c3) <- enforceFreshNodeUniqueness
+              c4 <- enforceEdgeUniqueness
+              c5 <- solveUniqueActions
+              c6 <- reduceFormulas
+              c7 <- evalFormulaAtoms
+              c8 <- insertImpliedFormulas
 
-          -- Report on looping behaviour if necessary
-          let changes = filter ((Changed ==) . snd) $
-                [ ("unique fresh instances (DG4)",        c1)
-                , ("unique K↓-facts (N5↓)",               c2)
-                , ("unique K↑-facts (N5↑)",               c3)
-                , ("unique (linear) edges (DG2 and DG3)", c4)
-                , ("solve unambiguous actions (S_@)",     c5)
-                , ("decompose trace formula",             c6)
-                , ("propagate atom valuation to formula", c7)
-                , ("saturate under ∀-clauses (S_∀)",      c8)
-                ]
-              traceIfLooping
-                | n <= 10   = id
-                | otherwise = trace $ render $ vsep
-                    [ text "Simplifier iteration" <-> int n <> colon
-                    , fsep $ text "The reduction-rules for" :
-                             (punctuate comma $ map (text . fst) changes) ++
-                             [text "were applied to the following constraint system."]
-                    , nest 2 (prettySystem se0)
+              -- Report on looping behaviour if necessary
+              let changes = filter ((Changed ==) . snd) $
+                    [ ("unique fresh instances (DG4)",        c1)
+--                     , ("unique K↓-facts (N5↓)",               c2)
+                     , ("unique K↑-facts (N5↑)",               c3)
+                    , ("unique (linear) edges (DG2 and DG3)", c4)
+                    , ("solve unambiguous actions (S_@)",     c5)
+                    , ("decompose trace formula",             c6)
+                    , ("propagate atom valuation to formula", c7)
+                    , ("saturate under ∀-clauses (S_∀)",      c8)
                     ]
+                  traceIfLooping
+                    | n <= 10   = id
+                    | otherwise = trace $ render $ vsep
+                        [ text "Simplifier iteration" <-> int n <> colon
+                        , fsep $ text "The reduction-rules for" :
+                                (punctuate comma $ map (text . fst) changes) ++
+                                [text "were applied to the following constraint system."]
+                        , nest 2 (prettySystem se0)
+                        ]
 
-          traceIfLooping $ go (n + 1) (map snd changes)
+              traceIfLooping $ go (n + 1) (map snd changes)
+            else do
+              (c1,c2,c3) <- enforceNodeUniqueness
+              c4 <- enforceEdgeUniqueness
+              c5 <- solveUniqueActions
+              c6 <- reduceFormulas
+              c7 <- evalFormulaAtoms
+              c8 <- insertImpliedFormulas
+
+              -- Report on looping behaviour if necessary
+              let changes = filter ((Changed ==) . snd) $
+                    [ ("unique fresh instances (DG4)",        c1)
+                    , ("unique K↓-facts (N5↓)",               c2)
+                    , ("unique K↑-facts (N5↑)",               c3)
+                    , ("unique (linear) edges (DG2 and DG3)", c4)
+                    , ("solve unambiguous actions (S_@)",     c5)
+                    , ("decompose trace formula",             c6)
+                    , ("propagate atom valuation to formula", c7)
+                    , ("saturate under ∀-clauses (S_∀)",      c8)
+                    ]
+                  traceIfLooping
+                    | n <= 10   = id
+                    | otherwise = trace $ render $ vsep
+                        [ text "Simplifier iteration" <-> int n <> colon
+                        , fsep $ text "The reduction-rules for" :
+                                (punctuate comma $ map (text . fst) changes) ++
+                                [text "were applied to the following constraint system."]
+                        , nest 2 (prettySystem se0)
+                        ]
+
+              traceIfLooping $ go (n + 1) (map snd changes)
 
 
 -- | CR-rule *N6*: add ordering constraints between all KU-actions and
@@ -152,6 +191,40 @@ enforceNodeUniqueness =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
 
+-- | CR-rule *DG4*: enforcing uniqueness of *Fresh* rule
+-- instances.
+--
+-- Returns 'Changed' if a change was done.
+enforceFreshNodeUniqueness :: Reduction (ChangeIndicator, ChangeIndicator)
+enforceFreshNodeUniqueness =
+    (,)
+      <$> (merge (const $ return Unchanged) freshRuleInsts)
+      <*> (merge (solveFactEqs SplitNow)    kuActions)
+  where
+    -- *DG4*
+    freshRuleInsts se = do
+        (i, ru) <- M.toList $ get sNodes se
+        guard (isFreshRule ru)
+        return (ru, ((), i))  -- no need to merge equal rules
+
+    -- *N5_u*
+    kuActions se = (\(i, fa, m) -> (m, (fa, i))) <$> allKUActions se
+
+    merge :: Ord b
+          => ([Equal a] -> Reduction ChangeIndicator)
+             -- ^ Equation solver for 'Equal a'
+          -> (System -> [(b,(a,NodeId))])
+             -- ^ Candidate selector
+          -> Reduction ChangeIndicator                  --
+    merge solver candidates = do
+        changes <- gets (map mergers . groupSortOn fst . candidates)
+        mconcat <$> sequence changes
+      where
+        mergers []                          = unreachable "enforceUniqueness"
+        mergers ((_,(xKeep, iKeep)):remove) =
+            mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
+                    <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
+                    
 
 -- | CR-rules *DG2_1* and *DG3*: merge multiple incoming edges to all facts
 -- and multiple outgoing edges from linear facts.
