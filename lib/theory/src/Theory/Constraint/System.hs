@@ -684,16 +684,10 @@ getTrivialFacts nodes sys = case (unsolvedTrivialGoals sys) of
     premisesForKUAction var fa = getAllMatchingPrems sys fa $ getAllLessSucs sys var
     
     premiseFacts :: HasFrees t => t -> LVar -> LNFact -> Maybe ([(LNFact, LVar, LVar)])
-    premiseFacts av var fa = case (premisesForKUAction var fa) of
-                               []     -> Just []
-                               (x:xs) -> foldl (g av) (getAllEqDataAvoiding av x) xs
-      where
-        g :: HasFrees t => t ->  Maybe ([(LNFact, LVar, LVar)]) -> NodePrem -> Maybe ([(LNFact, LVar, LVar)])
-        g _ (Nothing) _    = Nothing
-        g a (Just xs) pidx = (xs++) <$> getAllEqDataAvoiding a pidx
-        
-        getAllEqDataAvoiding :: HasFrees t => t -> NodePrem -> Maybe ([(LNFact, LVar, LVar)])
-        getAllEqDataAvoiding a p = zipWith (\(x, y) z -> (x, y, z)) <$> getFactAndVars nodes p <*> renameAvoiding (isTrivialFact fa) a 
+    premiseFacts av var fa = fmap concat $ sequence $ map (getAllEqData (renameAvoiding fa av)) (premisesForKUAction var fa)
+
+    getAllEqData :: LNFact -> NodePrem -> Maybe ([(LNFact, LVar, LVar)])
+    getAllEqData fact p = zipWith (\(x, y) z -> (x, y, z)) <$> getFactAndVars nodes p <*> (isTrivialFact fact)
 
 -- | Given a system and a node premise together with a list of "less" predecessors, returns a list of facts and variables if the premise has no matching conclusion in any of the predecessors.
 getAllWithoutMatchingConcs :: M.Map NodeId RuleACInst -> System -> (NodePrem, [NodeId]) -> Maybe ([(LNFact, LVar)])
