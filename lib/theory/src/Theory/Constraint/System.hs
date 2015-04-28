@@ -527,6 +527,48 @@ nodeRuleMap v nodes =
 getMaudeHandle :: DiffProofContext -> Side -> MaudeHandle
 getMaudeHandle ctxt side = if side == RHS then L.get (pcMaudeHandle . dpcPCRight) ctxt else L.get (pcMaudeHandle . dpcPCLeft) ctxt
 
+-- | 'getAllRulesOnOtherSide' @ctxt@ @side@ returns all rules in diff proof context @ctxt@ on the opposite side of side @side@.
+getAllRulesOnOtherSide :: DiffProofContext -> Side -> [RuleAC]
+getAllRulesOnOtherSide ctxt side = getAllRulesOnSide ctxt $ if side == LHS then RHS else LHS
+
+-- | 'getAllRulesOnSide' @ctxt@ @side@ returns all rules in diff proof context @ctxt@ on the side @side@.
+getAllRulesOnSide :: DiffProofContext -> Side -> [RuleAC]
+getAllRulesOnSide ctxt side = joinAllRules $ L.get pcRules $ if side == RHS then L.get dpcPCRight ctxt else L.get dpcPCLeft ctxt
+
+-- | 'protocolRuleWithName' @rules@ @name@ returns all rules with protocol rule name @name@ in rules @rules@.
+protocolRuleWithName :: [RuleAC] -> ProtoRuleName -> [RuleAC]
+protocolRuleWithName rules name = filter (\(Rule x _ _ _) -> case x of
+                                             ProtoInfo p -> (L.get pracName p) == name
+                                             IntrInfo  _ -> False) rules
+
+-- | 'intruderRuleWithName' @rules@ @name@ returns all rules with intruder rule name @name@ in rules @rules@.
+intruderRuleWithName :: [RuleAC] -> IntrRuleACInfo -> [RuleAC]
+intruderRuleWithName rules name = filter (\(Rule x _ _ _) -> case x of
+                                             IntrInfo  i -> i == name
+                                             ProtoInfo _ -> False) rules
+    
+-- | 'getOppositeRules' @ctxt@ @side@ @rule@ returns all rules with the same name as @rule@ in diff proof context @ctxt@ on the opposite side of side @side@.
+getOppositeRules :: DiffProofContext -> Side -> RuleACInst -> [RuleAC]
+getOppositeRules ctxt side (Rule rule prem _ _) = case rule of
+               ProtoInfo p -> case protocolRuleWithName (getAllRulesOnOtherSide ctxt side) (L.get praciName p) of
+                                   [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnOtherSide ctxt side)
+                                   x  -> x
+               IntrInfo  i -> case i of
+                                   (ConstrRule x) | x == BC.pack "mult"  -> [(multRuleInstance (length prem))]
+                                   (ConstrRule x) | x == BC.pack "union" -> [(unionRuleInstance (length prem))]
+                                   _                                     -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
+                                                                                 [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
+                                                                                 x  -> x
+                                                                                 
+-- | 'getOriginalRule' @ctxt@ @side@ @rule@ returns the original rule of protocol rule @rule@ in diff proof context @ctxt@ on side @side@.
+getOriginalRule :: DiffProofContext -> Side -> RuleACInst -> RuleAC
+getOriginalRule ctxt side (Rule rule _ _ _) = case rule of
+               ProtoInfo p -> case protocolRuleWithName (getAllRulesOnSide ctxt side) (L.get praciName p) of
+                                   [x]  -> x
+                                   _    -> error $ "getOriginalRule: No or more than one other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnSide ctxt side)
+               IntrInfo  i -> error $ "getOriginalRule: This should be a protocol rule: " ++ show rule
+
+
 -- | Returns true if the graph is correct, i.e. complete and conclusions and premises match
 -- | Note that this does not check if all goals are solved, nor if any axioms are violated!
 isCorrectDG :: System -> Bool
@@ -539,7 +581,7 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
     checkPrems sys' idx (premidx, fact) = case S.toList (S.filter (\(Edge _ y) -> y == (idx, premidx)) (L.get sEdges sys')) of
                                                [(Edge x _)] -> fact == nodeConcFact x sys'
                                                _            -> False
-
+                                               
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
 getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) [M.empty] freshAndPubConstrRules) otherRules)
@@ -555,15 +597,19 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
                                              else (\x y -> M.insert idx y x) <$> nodes <*> getOtherRulesAndVariants rule 
       where
         getOtherRulesAndVariants :: RuleACInst -> [RuleACInst]
-        getOtherRulesAndVariants r = concat $ map (\x -> getVariants nodes $ someRuleACInstAvoiding x nodes) (getOtherRules r)
-    
+        getOtherRulesAndVariants r = concat $ map (\x -> getVariants nodes $ temp x) (getOppositeRules ctxt side r)
+          where
+            temp x = if isProtocolRule r 
+                        then someRuleACInstAvoidingFixing x nodes (getSubstitutionsFixingNewVars r (getOriginalRule ctxt side r))
+                        else someRuleACInstAvoiding x nodes
+            
         getVariants :: (HasFrees t) => t -> (RuleACInst, Maybe RuleACConstrs) -> [RuleACInst]
         getVariants _ (r, Nothing)       = [r]
         getVariants a (r, Just (Disj v)) = map (\x -> apply (freshToFreeAvoiding x (a, r)) r) v
                                               
     unifyInstances :: System -> [M.Map NodeId RuleACInst] -> Maybe System
     unifyInstances sys' newrules = 
---       trace ((show $ head $ map (unifiers . equalities sys') newrules) ++ " |\n " ++ (show $ head $ map (equalities sys') newrules) ++ " |\n " {-++ show (map avoid newrules) ++ " - " ++ show (avoid sys') ++ " |\n "-} ++ (show $ head newrules) ++ " |\n " ++ (show sys')) $
+      trace ("unifyInstances:" ++  (show $ head $ map (unifiers . equalities sys') newrules) ++ " |\n " ++ (show $ head $ map (equalities sys') newrules) ++ " |\n " {-++ show (map avoid newrules) ++ " - " ++ show (avoid sys') ++ " |\n "-} ++ (show $ head newrules) ++ " |\n " ++ (show sys')) $
       foldl (\ret x -> if (ret /= Nothing) || (null $ unifiers $ equalities sys' x) then ret else Just $ L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys') Nothing newrules
       -- We can stop if a corresponding system is found for one variant. Otherwise we continue until we find a system which we can unify, or return Nothing if no such system exists.
         where
@@ -601,31 +647,7 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
             
             pubOrFresh (LVar _ LSortFresh _) = FreshName
             pubOrFresh (LVar _ _          _) = PubName
-        
-    getRules :: [RuleAC]
-    getRules = joinAllRules $ L.get pcRules $ if side == LHS then L.get dpcPCRight ctxt else L.get dpcPCLeft ctxt
-    
-    pRuleWithName :: ProtoRuleName -> [RuleAC]
-    pRuleWithName name = filter (\(Rule x _ _ _) -> case x of
-                                            ProtoInfo p -> (L.get pracName p) == name
-                                            IntrInfo  _ -> False) getRules
-
-    iRuleWithName :: IntrRuleACInfo -> [RuleAC]
-    iRuleWithName name = filter (\(Rule x _ _ _) -> case x of
-                                            IntrInfo  i -> i == name
-                                            ProtoInfo _ -> False) getRules
-    
-    getOtherRules :: RuleACInst -> [RuleAC]
-    getOtherRules (Rule rule prem _ _) = case rule of
-                             ProtoInfo p -> case pRuleWithName (L.get praciName p) of
-                                                 [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show getRules
-                                                 x  -> x
-                             IntrInfo  i -> case i of
-                                                 (ConstrRule x) | x == BC.pack "mult"  -> [(multRuleInstance (length prem))]
-                                                 (ConstrRule x) | x == BC.pack "union" -> [(unionRuleInstance (length prem))]
-                                                 _                                     -> case iRuleWithName i of
-                                                                                            [] -> error $ "No other rule found for intruder rule " ++ show i ++ show getRules
-                                                                                            x  -> x
+            
 
 -- | Returns the set of edges of a system saturated with all edges deducible from the nodes and the less relation                                                 
 saturateEdgesWithLessRelation :: System -> S.Set Edge 

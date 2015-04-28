@@ -68,6 +68,7 @@ module Theory.Model.Rule (
   , isIRecvRule
   , isISendRule
   , isCoerceRule
+  , isProtocolRule
   , isTrivialProtoDiffRule
   , isTrivialACDiffRule
   , getProtoRuleName
@@ -80,6 +81,7 @@ module Theory.Model.Rule (
   , nfRule
   , isTrivialProtoVariantAC
   , getNewVariables
+  , getSubstitutionsFixingNewVars
 
   -- ** Conversion
   , ruleACToIntrRuleAC
@@ -91,6 +93,7 @@ module Theory.Model.Rule (
   -- ** Construction
   , someRuleACInst
   , someRuleACInstAvoiding
+  , someRuleACInstAvoidingFixing
   , addDiffLabel
   , multRuleInstance
   , unionRuleInstance
@@ -473,6 +476,11 @@ isIntruderRule :: HasRuleName r => r -> Bool
 isIntruderRule ru =
     case ruleName ru of IntrInfo _ -> True; ProtoInfo _ -> False
 
+-- | True iff the rule is an intruder rule
+isProtocolRule :: HasRuleName r => r -> Bool
+isProtocolRule ru =
+    case ruleName ru of IntrInfo _ -> False; ProtoInfo _ -> True
+    
 -- | True if the protocol rule has only the trivial variant.
 isTrivialProtoVariantAC :: ProtoRuleAC -> ProtoRuleE -> Bool
 isTrivialProtoVariantAC (Rule info ps as cs) (Rule _ ps' as' cs') =
@@ -531,7 +539,6 @@ getACRuleNameDiff (Rule rname _ _ _) = case rname of
                  CoerceRule      -> "Coerce"
                  IRecvRule       -> "Recv"
                  ISendRule       -> "Send"
---                  MultConstrRule  -> "MultConstr"
                  PubConstrRule   -> "PubConstr"
                  FreshConstrRule -> "FreshConstr"
                  IEqualityRule   -> "Equality"
@@ -545,7 +552,6 @@ getIntrACRuleName (Rule rname _ _ _) = case rname of
          CoerceRule      -> "Coerce"
          IRecvRule       -> "Recv"
          ISendRule       -> "Send"
---          MultConstrRule  -> "MultConstr"
          PubConstrRule   -> "PubConstr"
          FreshConstrRule -> "FreshConstr"
          IEqualityRule   -> "Equality"
@@ -580,10 +586,15 @@ getNewVariables ru = getFacts $ S.toList newvars
     
     getFacts []     = []
     getFacts (x:xs) = (map (\(_, f) -> (f, x)) $ filter (\(_, f) -> varOccurences f /= []) $ enumConcs ru) ++ (getFacts xs)
+    
+-- | Given a rule instance, returns a substiution determining how all new variables have been instantiated.
+getSubstitutionsFixingNewVars :: RuleACInst -> RuleAC ->LNSubst
+getSubstitutionsFixingNewVars rule orig = emptySubst -- FIXME
 
 -- Construction
 ---------------
 
+-- | Returns a multiplication rule instance of the given size.
 multRuleInstance :: Int -> RuleAC
 multRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "mult")) (map xifact [1..n]) [prod] [prod])
   where
@@ -595,6 +606,7 @@ multRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "mult")) (map xifact 
     xifact :: Int -> LNFact
     xifact k = Fact KUFact [(xi k)]
 
+-- | Returns a union rule instance of the given size.
 unionRuleInstance :: Int -> RuleAC
 unionRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "union")) (map xifact [1..n]) [prod] [prod])
   where
@@ -663,6 +675,26 @@ someRuleACInstAvoiding r s =
     extractInsts (Rule (IntrInfo i) ps cs as) =
       ( Rule (IntrInfo i) ps cs as, Nothing )
 
+-- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
+-- protocol rule, then the given typing and variants also need to be handled.
+someRuleACInstAvoidingFixing :: HasFrees t 
+               => RuleAC
+               -> t
+               -> LNSubst
+               -> (RuleACInst, Maybe RuleACConstrs)
+someRuleACInstAvoidingFixing r s subst =
+    renameAvoiding (extractInsts r) s
+  where
+    extractInsts (Rule (ProtoInfo i) ps cs as) =
+      ( apply subst (Rule (ProtoInfo i') ps cs as)
+      , Just (L.get pracVariants i)
+      )
+      where
+        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+    extractInsts (Rule (IntrInfo i) ps cs as) =
+      ( apply subst (Rule (IntrInfo i) ps cs as), Nothing )
+
+      
 -- | Add the diff label to a rule
 addDiffLabel :: Rule a -> String -> Rule a
 addDiffLabel (Rule info prems concs acts) name = Rule info prems concs (acts ++ [Fact {factTag = ProtoFact Linear name 0, factTerms = []}])
