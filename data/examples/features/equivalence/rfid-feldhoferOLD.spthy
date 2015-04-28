@@ -1,0 +1,88 @@
+theory RFID_FeldhoferOLD
+begin
+
+/* 
+Example by Feldhofer, described in: 
+Untraceability of RFID Protocols
+Ton van Deursen, Sjouke Mauw, Sasa Radomirovic
+
+Figure 1.
+Untraceability holds
+*/
+
+builtins: symmetric-encryption
+functions: h/1
+
+rule Setup_Shared_Key:
+  [ Fr(~k) ]
+--[ Setup(~k, $R, $T) ]->
+  [ !Reader(~k, $R, $T), !Tag(~k, $R, $T) ]
+
+rule Compromised_Reader:
+  [ !Reader(~k, $R, $T) ]
+--[ Compromised(~k, $R) ]->
+  [ Out(~k) ]
+
+rule Reader_Start:
+  [ !Reader(~k, R, T), Fr(~nr) ]
+--[ ]->
+  [ Reader_1(~k, R, T, ~nr), Out(~nr) ]
+
+//RECEIVED HASH OF FRESH IS CHEATING!!! --- fixed using typing lemma!
+
+rule Reader_Finish:
+  let r_in = senc(<h(~nr), hnt> , ~k) // h(~nt): we assume by typing the reader can see if the nt is actually a nonce
+      r_out = senc(<hnt, h(~nr)>, ~k)
+  in
+  [ Reader_1(~k, R, T, ~nr), In(r_in) ]
+--[ IN_R_1(hnt, r_in) ]->
+  [ Reader_Done(~k, R, T, ~nr, hnt), Out(r_out) ]
+
+rule Tag_Start:
+  let t_msg = senc(<h(~nr),h(~nt)>, ~k)
+  in
+  [ !Tag(~k, R, T) 
+  , In(~nr) // we assume by typing we can see if the nr is actually a nonce type!
+  , Fr(~nt) ] 
+--[ OUT_T_1(h(~nt), t_msg) ]->
+  [ Tag_1(~k, R, T, ~nr, ~nt), Out(t_msg) ]
+
+rule Tag_Finish:
+  [ Tag_1(~k, R, T, ~nr, ~nt), In(senc(<h(~nt),h(~nr)>, ~k)) ]
+--[ Secret(~nt, ~k) ]->
+  [ Tag_Done(~k, R, T, ~nr, ~nt) ]
+
+
+rule Challenge:
+  [ Tag_Done(~k, R, T, ~nr, ~nt), Fr(~f) ]
+--[ Challenge(~k,~nt) ]->
+  [ Out(diff(h(~nt), h(~f))) ]
+
+//The typing lemma is needed to remove open chains.
+lemma types [typing]:
+  " (All n m1 #i.
+       IN_R_1( n, m1) @ i
+       ==>
+       ( (Ex #j. KU(n) @ j & j < i)
+       | (Ex #j. OUT_T_1(n, m1 ) @ j)
+       )
+    )"
+
+axiom challenge_uncompromised:
+  "not (Ex k n r #i #j. Challenge(k,n)@i & Compromised(k,r)@j)"
+
+axiom only_one_compromised_reader:
+  "All k1 r1 k2 r2 #i1 #i2. Compromised(k1,r1)@i1 & Compromised(k2,r2)@i2 ==> #i1 = #i2"
+
+
+lemma executable:
+  exists-trace
+  "Ex n k1 #i. Secret(n,k1)@i & not (Ex k2 r #j. Compromised(k2, r)@j)"
+
+lemma secret_value_with_NO_CORRUPTED:
+  "All s k #i #i2. Secret(s,k)@i & K(s)@i2  ==> Ex kcorr r #j. Compromised(kcorr,r)@j"
+
+lemma secret_value:
+  "All s k #i #i2. Secret(s,k)@i & K(s)@i2  ==> Ex r #j. Compromised(k,r)@j"
+
+end
