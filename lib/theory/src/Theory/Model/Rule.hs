@@ -126,7 +126,9 @@ import           Data.Foldable        (foldMap)
 import           Data.Generics
 import           Data.List
 import qualified Data.Set              as S
+import qualified Data.Map              as M
 import           Data.Monoid
+import           Data.Maybe            (fromMaybe)
 import           Safe
 
 import           Control.Basics
@@ -578,18 +580,52 @@ getRightRule (Rule ri ps cs as) =
    
 -- | Returns a list of all new variables introduced in this rule instance and the facts they occur in
 getNewVariables :: RuleACInst -> [(LNFact, LVar)]
-getNewVariables ru = getFacts $ S.toList newvars
+getNewVariables ru = map (\(x, _, z) -> (x, z)) $ getNewVariablesWithIndex ru
+
+-- | Returns whether a given variable is among the new variables introduced in this rule instance
+isNewVar :: Rule i -> LVar -> Bool
+isNewVar ru var = S.member var newvars
+  where 
+    newvars = S.difference concvars premvars
+    premvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumPrems ru
+    concvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumConcs ru
+
+-- | Returns a list of all new variables introduced in this rule instance and the facts and indices they occur in
+getNewVariablesWithIndex :: RuleACInst -> [(LNFact, ConcIdx, LVar)]
+getNewVariablesWithIndex ru = getFacts $ S.toList newvars
   where 
     newvars = S.difference concvars premvars
     premvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumPrems ru
     concvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumConcs ru
     
     getFacts []     = []
-    getFacts (x:xs) = (map (\(_, f) -> (f, x)) $ filter (\(_, f) -> varOccurences f /= []) $ enumConcs ru) ++ (getFacts xs)
+    getFacts (x:xs) = (map (\(idx, f) -> (f, idx, x)) $ filter (\(_, f) -> varOccurences f /= []) $ enumConcs ru) ++ (getFacts xs)
+
     
 -- | Given a rule instance, returns a substiution determining how all new variables have been instantiated.
-getSubstitutionsFixingNewVars :: RuleACInst -> RuleAC ->LNSubst
-getSubstitutionsFixingNewVars rule orig = emptySubst -- FIXME
+getSubstitutionsFixingNewVars :: RuleACInst -> RuleAC -> LNSubst
+getSubstitutionsFixingNewVars rule orig = Subst $ M.fromList $ concat $ map getSubst newvars
+  where
+    newvars = getNewVariablesWithIndex rule
+    
+    getSubst :: (LNFact, ConcIdx, LVar) -> [(LVar, LNTerm)]
+    getSubst (fa, cidx, var) = map (\x -> (x, LIT (Var var))) (getMatchingOrigVar (fa, cidx, var))
+    
+    getMatchingOrigVar :: (LNFact, ConcIdx, LVar) -> [LVar]
+    getMatchingOrigVar ((Fact fi ts), cidx, var') = rec var' ts matchingTs 
+      where
+        matchingTs = case matchingConc of
+                          Fact fi' ts' -> if fi == fi' then ts' else (error $ "getMatchingOrigVar: Matching conclusion with different fact: " ++ show (Fact fi ts) ++ " " ++ show cidx ++ " " ++ show var')
+        matchingConc = fromMaybe (error $ "getMatchingOrigVar: No matching conclusion: " ++ show (Fact fi ts) ++ " " ++ show cidx ++ " " ++ show var') (lookupConc cidx orig)
+        
+        rec :: LVar -> [LNTerm] -> [LNTerm] -> [LVar]
+        rec _   []     []             = []
+        rec var (x:xs) (origt:origts) = case (viewTerm x, viewTerm origt) of
+                                             (Lit (Var a), Lit (Var b))    | a == var && isNewVar orig b -> b:(rec var xs origts)
+                                             (FApp f ts', FApp f' origts') | f == f'                     -> (rec var ts' origts')++(rec var xs origts)
+                                             (_         , _              )                               -> (rec var xs origts)
+        rec _   _      _              = error "getMatchingOrigVar: Different number of terms!"
+        
 
 -- Construction
 ---------------
@@ -617,26 +653,6 @@ unionRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "union")) (map xifac
     
     xifact :: Int -> LNFact
     xifact k = Fact KUFact [(xi k)]
-
---     data LVar = LVar
---      { lvarName :: String
---      , lvarSort :: !LSort     -- FIXME: Rename to 'sortOfLVar' for consistency
---                               -- with the other 'sortOf' functions.
---      , lvarIdx  :: !Integer
---      }
---      deriving( Typeable, Data )
--- data LSort = LSortPub   -- ^ Arbitrary public names.
---            | LSortFresh -- ^ Arbitrary fresh names.
---            | LSortMsg   -- ^ Arbitrary messages.
---            | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
--- type VTerm c v = Term (Lit c v)
--- data Term a = LIT a                 -- ^ atomic terms (constants, variables, ..)
---             | FAPP FunSym [Term a]  -- ^ function applications
---   deriving (Eq, Ord, Typeable, Data )
---   -- | Names.
--- data Name = Name {nTag :: NameTag, nId :: NameId}
---     deriving( Eq, Ord, Typeable, Data )
--- type LNTerm = VTerm Name LVar
 
 type RuleACConstrs = Disj LNSubstVFresh
 
@@ -683,7 +699,7 @@ someRuleACInstAvoidingFixing :: HasFrees t
                -> LNSubst
                -> (RuleACInst, Maybe RuleACConstrs)
 someRuleACInstAvoidingFixing r s subst =
-    renameAvoiding (extractInsts r) s
+    renameAvoidingIgnoring (extractInsts r) s (varsRange subst)
   where
     extractInsts (Rule (ProtoInfo i) ps cs as) =
       ( apply subst (Rule (ProtoInfo i') ps cs as)
@@ -808,7 +824,6 @@ prettyIntrRuleACInfo rn = text $ case rn of
     ISendRule       -> "isend"
     CoerceRule      -> "coerce"
     FreshConstrRule -> "fresh"
---     MultConstrRule  -> "mult"
     PubConstrRule   -> "pub"
     IEqualityRule   -> "iequality"
     ConstrRule name -> prefixIfReserved ('c' : BC.unpack name)

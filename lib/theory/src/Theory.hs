@@ -164,6 +164,8 @@ module Theory (
 
   ) where
 
+import           Debug.Trace
+
 import           Prelude                             hiding (id, (.))
 
 import           Data.Binary
@@ -287,7 +289,7 @@ closeRuleCache :: [LNGuarded]        -- ^ Axioms to use.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache axioms typAsms sig protoRules intrRulesAC =
+closeRuleCache axioms typAsms sig protoRules intrRulesAC = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules untypedCaseDists typedCaseDists injFactInstances
   where
@@ -1074,6 +1076,9 @@ closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTh
 closeDiffTheoryWithMaude sig thy0 = do
     proveDiffTheory (const True) (const True) checkProof checkDiffProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
   where
+    ruleitems :: [DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton]
+    ruleitems = ((map (\x -> EitherRuleItem (LHS, x)) leftOpenRules) ++ (map (\x -> EitherRuleItem (RHS, x)) rightOpenRules))
+    
     cacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
     cacheRight = closeRuleCache axiomsRight typAsms sig rightClosedRules (L.get diffThyCacheRight thy0)
     checkProof = checkAndExtendProver (sorryProver Nothing)

@@ -73,11 +73,13 @@ module Term.LTerm (
   , frees
   , someInst
   , rename
+  , renameIgnoring
   , eqModuloFreshnessNoAC
   , avoid
   , evalFreshAvoiding
   , evalFreshTAvoiding
   , renameAvoiding
+  , renameAvoidingIgnoring
   , avoidPrecise
   , renamePrecise
   , renameDropNamehint
@@ -507,6 +509,19 @@ rename x = case boundsVarIdx x of
   where
     incVar shift (LVar n so i) = pure $ LVar n so (i+shift)
 
+-- | @renameIgnoring t vars@ replaces all variables in @t@ with fresh variables, excpet for the variables in @vars@.
+--   Note that the result is not guaranteed to be equal for terms that are
+--   equal modulo changing the indices of variables.
+renameIgnoring :: (MonadFresh m, HasFrees a) => [LVar] -> a -> m a
+renameIgnoring vars x = case boundsVarIdx x of
+    Nothing                     -> return x
+    Just (minVarIdx, maxVarIdx) -> do
+      freshStart <- freshIdents (succ (maxVarIdx - minVarIdx))
+      return . runIdentity . mapFrees (Monotone $ incVar (freshStart - minVarIdx)) $ x
+  where
+    incVar shift (LVar n so i) = pure $ if elem (LVar n so i) vars then (LVar n so i) else (LVar n so (i+shift))
+
+    
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
 -- renaming of indices of free variables. Note that the normal form is not
 -- unique with respect to AC symbols.
@@ -543,6 +558,12 @@ evalFreshTAvoiding m = evalFreshT m . avoid
 --   fresh variables avoiding variables in @t@.
 renameAvoiding :: (HasFrees s, HasFrees t) => s -> t -> s
 s `renameAvoiding` t = rename s `evalFreshAvoiding` t
+
+-- | @s `renameAvoiding` t@ replaces all free variables in @s@ by
+--   fresh variables avoiding variables in @t@.
+renameAvoidingIgnoring :: (HasFrees s, HasFrees t) => s -> t -> [LVar] -> s
+renameAvoidingIgnoring s t vars = renameIgnoring vars s `evalFreshAvoiding` t
+
 
 -- | @avoidPrecise t@ computes a 'Precise.FreshState' that avoids generating
 -- variables occurring in @t@.
