@@ -71,6 +71,7 @@ module Theory.Model.Rule (
   , isProtocolRule
   , isTrivialProtoDiffRule
   , isTrivialACDiffRule
+  , containsNewVars
   , getProtoRuleName
   , getACRuleName
   , getEitherRuleName
@@ -581,6 +582,15 @@ getRightRule (Rule ri ps cs as) =
 -- | Returns a list of all new variables introduced in this rule instance and the facts they occur in
 getNewVariables :: RuleACInst -> [(LNFact, LVar)]
 getNewVariables ru = map (\(x, _, z) -> (x, z)) $ getNewVariablesWithIndex ru
+
+-- | Returns whether a given rule has new variables
+containsNewVars :: Rule i -> Bool
+containsNewVars ru = not $ S.null newvars
+  where 
+    newvars = S.difference concvars premvars
+    premvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumPrems ru
+    concvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumConcs ru
+
 
 -- | Returns whether a given variable is among the new variables introduced in this rule instance
 isNewVar :: Rule i -> LVar -> Bool

@@ -566,7 +566,7 @@ getOriginalRule ctxt side (Rule rule _ _ _) = case rule of
                ProtoInfo p -> case protocolRuleWithName (getAllRulesOnSide ctxt side) (L.get praciName p) of
                                    [x]  -> x
                                    _    -> error $ "getOriginalRule: No or more than one other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnSide ctxt side)
-               IntrInfo  i -> error $ "getOriginalRule: This should be a protocol rule: " ++ show rule
+               IntrInfo  _ -> error $ "getOriginalRule: This should be a protocol rule: " ++ show rule
 
 
 -- | Returns true if the graph is correct, i.e. complete and conclusions and premises match
@@ -584,10 +584,10 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
                                                
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
-getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) [M.empty] freshAndPubConstrRules) otherRules)
+getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) [M.empty] freshAndPubConstrRules) newProtoRules) otherRules)
   where
-    freshAndPubConstrRules = (M.filter (\rule -> (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
-    otherRules = (M.filter (\rule -> not $ (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
+    (freshAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
+    (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)
     
     -- We keep instantiations of fresh and public variables. Currently new public variables in protocol rule instances 
     -- are instantiated correctly in someRuleACInstAvoiding, but if this is changed we need to fix this part.
