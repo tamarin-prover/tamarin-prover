@@ -82,10 +82,50 @@ axiom singleChallenge:
   "All I R k I2 R2 k2 #j #j2. Challenge(I, R, k)@j & Challenge(I2, R2, k2)@ j2 ==> #j = #j2"
 
 // Note that these axioms are only for observational equivalence, comment them out for trace properties!
-axiom NoChallengeAndRevealInitiator:
-  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(I)@k)"
+//axiom NoChallengeAndRevealInitiatorBefore:
+//  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(I)@k & k < i)"
 
-axiom NoChallengeAndRevealResponder:
-  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(R)@k)"
+//axiom NoChallengeAndRevealResponder:
+//  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(R)@k & k < i)"
+
+axiom CombinedStuff:
+  "All I R sessKey #i. 
+     Challenge(I,R,sessKey) @ i 
+     ==>
+     not ( (Ex #r. LtkReveal(I) @ r & r < i)
+         | (Ex #r. LtkReveal(R) @ r & r < i)
+         )
+  "
+
+
+/****
+Current state of the diff-proof:
+
+Challenge Initiator  CHECK
+Challenge Responder  CHECK
+Exp	  	     loops
+Fst		     long ? runtime, did not finish
+Inv		     CHECK
+Snd		     long ?
+Get_pk		     CHECK
+Init1		     CHECK
+Init2		     long ?
+Register_pk	     CHECK
+Resp		     ?
+Reveal_ltk	     CHECK
+
+
+IEqualityRule
+  LHS
+   Init1 
+     at one 'cexp' pick the x^x1 instead of x
+   Resp
+     cpair (fairly deep) there is an 'x' and 3 public vars $I, $R, '1' -> need to solve the public ones first (can use auto in coerce, manual in pub)
+     cpair -> init1_case_1: same
+
+   LOOPING behavior (and ever-larger trees) are possible, based on repeated Responder instances with unrelated public keys 
+   this is likely due to our axiom only prohibiting LTK-reveals for the challenge not for whenever keys are already available
+
+****/
 
 end
