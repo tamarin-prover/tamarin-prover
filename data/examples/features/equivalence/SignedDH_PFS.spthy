@@ -12,6 +12,7 @@ section{* The Signed Diffie-Hellman Protocol *}
  */
 
 builtins: diffie-hellman, signing
+functions: h/1
 
 // Public key infrastructure
 rule Register_pk:
@@ -37,26 +38,58 @@ rule Init_1:
   , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', $I, $R,'g' ^ ~ekI }ltkI> ) ]
 
 rule Init_2:
+    let Y = 'g' ^ z // think of this as a group element check
+    in
     [ Init_1( $I, $R, ~ekI )
     , !Pk($R, pk(ltkR))
     , In( <$R, $I, Y, sign{'2', $R, $I, Y }ltkR> ) 
     ]
-  --[ SessionKey($I,$R, Y ^ ~ekI) ]->
+  --[ SessionKey($I,$R, Y ^ ~ekI)
+    , ExpR(z) 
+    ]->
     [ InitiatorKey($I,$R, Y ^ ~ekI) ]
 
 rule Resp:
+    let X = 'g' ^ z // think of this as a group element check
+    in
     [ !Pk($I, pk(ltkI))
     , !Ltk($R, ltkR)
     , Fr(~ekR)
     , In( <$I, $R, X, sign{'1', $I, $R, X }ltkI> ) 
     ]
-  --[ SessionKey($I,$R, X ^ ~ekR) ]->
+  --[ SessionKey($I,$R, X ^ ~ekR)
+    , ExpR(z) ]->
     [
       ResponderKey($I,$R, X ^ ~ekR)
     , Out( <$R, $I, 'g' ^ ~ekR, sign{'2', $R, $I, 'g' ^ ~ekR }ltkR> ) 
     ]
 
 
+rule ChallengeInitiator:
+    [ InitiatorKey($I,$R, k) , Fr(~z)]
+  --[ Challenge($I,$R,diff(k, ~z)) ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+rule ChallengeResponder:
+    [ ResponderKey($I,$R, k) , Fr(~z)]
+  --[ Challenge($I,$R,diff(k, ~z)) ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+
+/*
+// do not represent any element as "inv(x)", rather use the y=inv(x)
+// for this lemma to hold, we need to exclude reveal of the LTK that is used to authenticate the incoming message
+lemma No_Inv_exp[use_induction,reuse,typing]:
+  all-traces
+  "not ((Ex #i x. ExpR( inv(x) ) @ i) | (Ex #i x y. ExpR( x * inv(y) ) @ i))"
+*/
+
+/*
+//// OLD STUFF BASED ON JUST SIGNING SOMETHING TO AVOID CHAINS - FOUND ANOTHER WAY AROUND THAT NOW...
 rule ChallengeInitiator:
     [ InitiatorKey($I,$R, k) , Fr(~z) , In(~c)]
   --[ Challenge($I,$R,diff(k, ~z)) ]->
@@ -66,6 +99,7 @@ rule ChallengeResponder:
     [ ResponderKey($I,$R, k) , Fr(~z) , In(~c)]
   --[ Challenge($I,$R,diff(k, ~z)) ]->
     [ Out(diff(sign{'challenge', ~c}k, sign{'challenge', ~c}~z)) ]
+*/
 
 
 lemma Perfect_Forward_Secrecy:
@@ -98,18 +132,18 @@ axiom CombinedStuff:
   "
 
 
-/****
-Current state of the diff-proof:
+/**** OLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLD
+Current state of the diff-proof based on OLD STUFF:
 
 Challenge Initiator  CHECK
 Challenge Responder  CHECK
-Exp	  	     loops
-Fst		     long ? runtime, did not finish
+Exp	  	     manual proof possible
+Fst		     manual proof like that for Exp
 Inv		     CHECK
-Snd		     long ?
+Snd		     long ? probably like exp
 Get_pk		     CHECK
 Init1		     CHECK
-Init2		     long ?
+Init2		     long ? 
 Register_pk	     CHECK
 Resp		     ?
 Reveal_ltk	     CHECK
