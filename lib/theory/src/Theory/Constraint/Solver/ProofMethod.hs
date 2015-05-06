@@ -341,6 +341,7 @@ data GoalRanking =
     GoalNrRanking
   | UsefulGoalNrRanking
   | SmartRanking Bool
+  | SmartDiffRanking
   deriving( Eq, Ord, Show )
 
 -- | The name/explanation of a 'GoalRanking'.
@@ -350,6 +351,7 @@ goalRankingName ranking =
         GoalNrRanking                -> "their order of creation"
         UsefulGoalNrRanking          -> "their usefulness and order of creation"
         SmartRanking useLoopBreakers -> smart useLoopBreakers
+        SmartDiffRanking             -> "the 'smart' heuristic (for diff proofs)"
    where
      smart b = "the 'smart' heuristic (loop breakers " ++
                (if b then "allowed" else "delayed") ++ ")."
@@ -362,6 +364,7 @@ rankGoals ctxt ranking = case ranking of
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
     SmartRanking useLoopsBreakers -> smartRanking ctxt useLoopsBreakers
+    SmartDiffRanking -> smartDiffRanking ctxt
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
@@ -554,6 +557,22 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
       where (sat, nonsat) = partition p xs
 
+
+-- | A ranking function tuned for the automatic verification of
+-- classical security protocols that exhibit a well-founded protocol premise
+-- fact flow.
+smartDiffRanking :: ProofContext
+                    -> System
+                    -> [AnnotatedGoal] -> [AnnotatedGoal]
+smartDiffRanking ctxt sys =
+    filterTrivial . smartRanking ctxt False sys
+  where
+    filterTrivial agl = fst parts ++ snd parts 
+      where
+        parts = partition nonTrivialKUGoal agl
+    
+    nonTrivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialFact fa == Nothing)
+    nonTrivialKUGoal _                   = False
 
 
 ------------------------------------------------------------------------------

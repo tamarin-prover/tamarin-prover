@@ -50,7 +50,7 @@ module Term.LTerm (
   , isMsgVar
   , isFreshVar
   , isSimpleTerm
-  , getVar
+  , getMsgVar
   , niFactors
   , containsPrivate
   , neverContainsFreshPriv
@@ -284,9 +284,9 @@ isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
 isFreshVar _                         = False
 
 -- | If the term is a variable, return it, nothing otherwise.
-getVar :: LNTerm -> Maybe [LVar]
-getVar (viewTerm -> Lit (Var v)) = Just [v]
-getVar _                         = Nothing
+getMsgVar :: LNTerm -> Maybe [LVar]
+getMsgVar (viewTerm -> Lit (Var v)) | (lvarSort v == LSortMsg) = Just [v]
+getMsgVar _                                                    = Nothing
 
 
 -- Utility functions for constraint solving

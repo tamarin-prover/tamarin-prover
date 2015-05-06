@@ -319,11 +319,11 @@ getFactVariables :: LNFact -> [LVar]
 getFactVariables (Fact _ ts) =
    map fst $ varOccurences ts
 
--- | If all the fact terms are simple and different variables, returns the list of all these variables. Otherwise returns Nothing.
+-- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing.
 isTrivialFact :: LNFact -> Maybe [LVar]
 isTrivialFact (Fact _ ts) = case ts of
       []   -> Just []
-      x:xs -> Prelude.foldl combine (getVar x) (map getVar xs)
+      x:xs -> Prelude.foldl combine (getMsgVar x) (map getMsgVar xs)
     where
       combine :: Maybe [LVar] -> Maybe [LVar] -> Maybe [LVar]
       combine Nothing    _        = Nothing
