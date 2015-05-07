@@ -561,18 +561,26 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
 -- | A ranking function tuned for the automatic verification of
 -- classical security protocols that exhibit a well-founded protocol premise
 -- fact flow.
+-- Adjusted for diff systems by delaying splitEqs and ensuring trivial goals are solved last.
 smartDiffRanking :: ProofContext
                     -> System
                     -> [AnnotatedGoal] -> [AnnotatedGoal]
 smartDiffRanking ctxt sys =
-    filterTrivial . smartRanking ctxt False sys
+    delayTrivial . delaySplits . smartRanking ctxt False sys
   where
-    filterTrivial agl = fst parts ++ snd parts 
+    delaySplits agl = fst parts ++ snd parts
       where
-        parts = partition nonTrivialKUGoal agl
+        parts = partition (not . isSplitGoal) agl
+        isSplitGoal ((SplitG sid), _) = True
+        isSplitGoal _                 = False
+
+
+    delayTrivial agl = fst parts ++ snd parts
+      where
+        parts = partition (not . trivialKUGoal) agl
     
-    nonTrivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialMsgFact fa == Nothing)
-    nonTrivialKUGoal _                   = False
+    trivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialMsgFact fa /= Nothing)
+    trivialKUGoal _                   = False
 
     -- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing.
     isTrivialMsgFact :: LNFact -> Maybe [LVar]
