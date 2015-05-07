@@ -571,8 +571,21 @@ smartDiffRanking ctxt sys =
       where
         parts = partition nonTrivialKUGoal agl
     
-    nonTrivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialFact fa == Nothing)
+    nonTrivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialMsgFact fa == Nothing)
     nonTrivialKUGoal _                   = False
+
+    -- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing.
+    isTrivialMsgFact :: LNFact -> Maybe [LVar]
+    isTrivialMsgFact (Fact _ ts) = case ts of
+      []   -> Just []
+      x:xs -> Prelude.foldl combine (getMsgVar x) (map getMsgVar xs)
+      where
+        combine :: Maybe [LVar] -> Maybe [LVar] -> Maybe [LVar]
+        combine Nothing    _        = Nothing
+        combine (Just _ )  Nothing  = Nothing
+        combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
+      
+        noDuplicates l1 l2 = S.null (S.intersection (S.fromList l1) (S.fromList l2))
 
 
 ------------------------------------------------------------------------------
