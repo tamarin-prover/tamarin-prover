@@ -1,0 +1,24 @@
+theory AxiomDiffTest
+begin
+
+/*
+ * Protocol:	 Test whether condition axioms are treated correctly
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: 
+ * Date: 	 April 2014
+ *
+ * Status: 	 ?
+ */
+
+
+functions: h/1
+
+rule Test: 
+  [ Fr(~f) ]
+  --[ Never() ]->
+  [ Out(~f) ]
+
+axiom blockLeft [left]:
+  "All #i. Never() @i ==> F"
+
+end

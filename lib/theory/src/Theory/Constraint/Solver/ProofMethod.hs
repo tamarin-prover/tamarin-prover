@@ -582,7 +582,7 @@ smartDiffRanking ctxt sys =
     trivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialMsgFact fa /= Nothing)
     trivialKUGoal _                   = False
 
-    -- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing.
+    -- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing. Currently identical to "isTrivialFact" from Model/Fact, but could eventually be relaxed there, but not here. 
     isTrivialMsgFact :: LNFact -> Maybe [LVar]
     isTrivialMsgFact (Fact _ ts) = case ts of
       []   -> Just []

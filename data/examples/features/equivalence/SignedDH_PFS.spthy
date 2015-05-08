@@ -17,7 +17,7 @@ functions: h/1
 // Public key infrastructure
 rule Register_pk:
   [ Fr(~ltk) ] 
-  --> 
+--[ Register($A) ]-> 
   [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
 
 rule Get_pk:
@@ -66,15 +66,15 @@ rule Resp:
 
 
 rule ChallengeInitiator:
-    [ InitiatorKey($I,$R, k) , Fr(~z)]
-  --[ Challenge($I,$R,diff(k, ~z)) ]->
+    [ InitiatorKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R,diff(k, ~z)) ]->
     [ Out(diff(k,'g'^~z)) ]
 //    [ Out(diff(k,~z)) ]
 // the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
 
 rule ChallengeResponder:
-    [ ResponderKey($I,$R, k) , Fr(~z)]
-  --[ Challenge($I,$R,diff(k, ~z)) ]->
+    [ ResponderKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R,diff(k, ~z)) ]->
     [ Out(diff(k,'g'^~z)) ]
 //    [ Out(diff(k,~z)) ]
 // the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
@@ -131,6 +131,9 @@ axiom CombinedStuff:
          )
   "
 
+// seems not helpful, ignore
+//axiom OneLongTermKeyPerAgent:
+//  "All A #i #j. Register(A) @ i & Register(A) @ j ==> #i = #j"
 
 /**** OLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLD
 Current state of the diff-proof based on OLD STUFF:
