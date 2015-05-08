@@ -1,13 +1,21 @@
 theory RFID_Feldhofer
 begin
 
+
+/*
+ * Protocol:	RFID protocol by Feldhofer, using symmetric encryption
+ * Modeler: 	Jannik Dreier, Ralf Sasse
+ * Date: 	April 2015
+ *
+ * Status: 	working
+ */
+
 /* 
 Example by Feldhofer, described in: 
 Untraceability of RFID Protocols
 Ton van Deursen, Sjouke Mauw, Sasa Radomirovic
 Figure 1.
 Untraceability holds
-
 
 Our model needs to be "clever", as otherwise our strict one-to-one
 rule+recipe(!) mapping yields spurious attacks (see OLD/SPURIOUS).
