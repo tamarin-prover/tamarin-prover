@@ -35,7 +35,9 @@ module Theory (
   , skeletonLemma
   , isLeftLemma
   , isRightLemma
-  , isBothLemma
+--   , isBothLemma
+  , addLeftLemma
+  , addRightLemma
 
   -- * Theories
   , Theory(..)
@@ -358,7 +360,7 @@ data LemmaAttribute =
        | InvariantLemma
        | LHSLemma
        | RHSLemma
-       | BothLemma
+--        | BothLemma
        deriving( Eq, Ord, Show )
 
 -- | A 'TraceQuantifier' stating whether we check satisfiability of validity.
@@ -436,10 +438,10 @@ isRightLemma :: Lemma p -> Bool
 isRightLemma lem =
      (RHSLemma `elem` L.get lAttributes lem)
 
--- | True iff the lemma is a Both lemma.
-isBothLemma :: Lemma p -> Bool
-isBothLemma lem =
-     (BothLemma `elem` L.get lAttributes lem)
+-- -- | True iff the lemma is a Both lemma.
+-- isBothLemma :: Lemma p -> Bool
+-- isBothLemma lem =
+--      (BothLemma `elem` L.get lAttributes lem)
 
 -- Lemma construction/modification
 ----------------------------------
@@ -468,6 +470,15 @@ lemmaCaseDistKind lem
   | TypingLemma `elem` L.get lAttributes lem = UntypedCaseDist
   | otherwise                                = TypedCaseDist
 
+-- | Adds the LHS lemma attribute.
+addLeftLemma :: Lemma p -> Lemma p
+addLeftLemma lem =
+     L.set lAttributes (LHSLemma:(L.get lAttributes lem)) lem
+
+-- | Adds the RHS lemma attribute.
+addRightLemma :: Lemma p -> Lemma p
+addRightLemma lem =
+     L.set lAttributes (RHSLemma:(L.get lAttributes lem)) lem
 
 ------------------------------------------------------------------------------
 -- Theories
@@ -1479,6 +1490,11 @@ modifyDiffLemmaProof prover name thy = -- error $ show $ -- name ++ show thy
 -- Pretty printing
 ------------------------------------------------------------------------------
 
+-- | Pretty print a side for parameters
+prettySide :: HighlightDocument d => Side -> d
+prettySide LHS = text "[left]"
+prettySide RHS = text "[right]"
+
 -- | Pretty print a formal comment
 prettyFormalComment :: HighlightDocument d => String -> String -> d
 prettyFormalComment "" body = multiComment_ [body]
@@ -1529,13 +1545,12 @@ prettyLemmaName l = case L.get lAttributes l of
     prettyLemmaAttribute InvariantLemma = text "use_induction"
     prettyLemmaAttribute LHSLemma       = text "left"
     prettyLemmaAttribute RHSLemma       = text "right"
-    prettyLemmaAttribute BothLemma      = text "both"
+--     prettyLemmaAttribute BothLemma      = text "both"
 
 
 -- | Pretty print the diff lemma name
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
-prettyDiffLemmaName l = text ("Diff: " ++ (L.get lDiffName l))
-
+prettyDiffLemmaName l = text ((L.get lDiffName l))
     
 -- | Pretty print an axiom.
 prettyAxiom :: HighlightDocument d => Axiom -> d
@@ -1549,7 +1564,7 @@ prettyAxiom ax =
 -- | Pretty print an either axiom.
 prettyEitherAxiom :: HighlightDocument d => (Side, Axiom) -> d
 prettyEitherAxiom (s, ax) =
-    text ((show s) ++ ": ") <-> kwAxiom <-> text (L.get axName ax) <> colon $-$
+    kwAxiom <-> text (L.get axName ax) <-> prettySide s <> colon $-$
     (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get axFormula ax) $-$
     (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
@@ -1584,7 +1599,7 @@ prettyLemma ppPrf lem =
 -- | Pretty print an Either lemma.
 prettyEitherLemma :: HighlightDocument d => (p -> d) -> (Side, Lemma p) -> d
 prettyEitherLemma ppPrf (s, lem) =
-    text ((show s) ++ ": ") <-> kwLemma <-> prettyLemmaName lem <> colon $-$
+    kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
           , doubleQuotes $ prettyLNFormula $ L.get lFormula lem
@@ -1610,7 +1625,7 @@ prettyEitherLemma ppPrf (s, lem) =
 -- | Pretty print a diff lemma.
 prettyDiffLemma :: HighlightDocument d => (p -> d) -> DiffLemma p -> d
 prettyDiffLemma ppPrf lem =
-    kwLemma <-> prettyDiffLemmaName lem <> colon 
+    kwDiffLemma <-> prettyDiffLemmaName lem <> colon 
     $-$
     ppPrf (L.get lDiffProof lem)
 
@@ -1718,7 +1733,7 @@ prettyClosedDiffTheory thy =
     prettyDiffTheory prettySignatureWithMaude
                  ppInjectiveFactInsts
                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
-                 prettyClosedEitherRule
+                 (\_ -> emptyDoc) --prettyClosedEitherRule
                  prettyIncrementalDiffProof
                  prettyIncrementalProof
                  thy

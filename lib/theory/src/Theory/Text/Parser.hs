@@ -502,7 +502,7 @@ lemmaAttribute = asum
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
-  , symbol "both"          *> pure BothLemma
+--   , symbol "both"          *> pure BothLemma
   ]
 
 -- | Parse a 'TraceQuantifier'.
@@ -794,8 +794,8 @@ diffTheory flags0 = do
                                      then case addLemmaDiff RHS lem thy of
                                              Just thy' -> return thy'
                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
-                                     else case addLemmaDiff RHS lem thy of
-                                             Just thy' -> case addLemmaDiff LHS lem thy' of
+                                     else case addLemmaDiff RHS (addRightLemma lem) thy of
+                                             Just thy' -> case addLemmaDiff LHS (addLeftLemma lem) thy' of
                                                              Just thy'' -> return thy''
                                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
