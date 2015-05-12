@@ -98,6 +98,7 @@ module Term.LTerm (
   , prettyNodeId
   , prettyNTerm
   , prettyLNTerm
+  , showLitName
 
   -- * Convenience exports
   , module Term.VTerm
@@ -748,6 +749,16 @@ prettyNTerm = prettyTerm (text . show)
 prettyLNTerm :: Document d => LNTerm -> d
 prettyLNTerm = prettyNTerm
 
+
+-- | Pretty print a literal for case generation.
+showLitName :: Lit Name LVar -> String
+showLitName (Con (Name FreshName n)) = "Const_fresh_" ++ show n
+showLitName (Con (Name PubName   n)) = "Const_pub_"   ++ show n
+showLitName (Var (LVar v s i))       = "Var_" ++ sortSuffix s ++ "_" ++ body
+      where
+        body | null v           = show i
+             | i == 0           = v
+             | otherwise        = v ++ "." ++ show i
 
 -- derived instances
 --------------------

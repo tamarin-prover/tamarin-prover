@@ -258,8 +258,9 @@ solveChain rules (c, p) = do
         let mPrem = case kFactView faConc of
                       Just (DnK, m') -> m'
                       _              -> error $ "solveChain: impossible"
-            caseName (viewTerm -> FApp o _) = showFunSymName o
-            caseName t                      = show t
+            caseName (viewTerm -> FApp o _)    = showFunSymName o
+            caseName (viewTerm -> Lit l)       = showLitName l
+            caseName t                         = show t
         return $ caseName mPrem
      `disjunction`
      -- extend it with one step

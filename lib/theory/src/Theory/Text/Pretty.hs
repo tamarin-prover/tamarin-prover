@@ -17,9 +17,11 @@ module Theory.Text.Pretty (
   -- * Comments
   , lineComment
   , multiComment
+  , closedComment
 
   , lineComment_
   , multiComment_
+  , closedComment_
 
   -- * Keywords
   , kwTheoryHeader
@@ -91,6 +93,12 @@ multiComment d = comment $ fsep [text "/*", d, text "*/"]
 
 multiComment_ :: HighlightDocument d => [String] -> d
 multiComment_ ls = comment $ fsep [text "/*", vcat $ map text ls, text "*/"]
+
+closedComment :: HighlightDocument d => d -> d
+closedComment d = comment $ fsep [text "/*", d, text "*/"]
+
+closedComment_ :: HighlightDocument d => String -> d
+closedComment_ ls = comment $ fsep [text "/*", text ls, text "*/"]
 
 ------------------------------------------------------------------------------
 -- Keywords

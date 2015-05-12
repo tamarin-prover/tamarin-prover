@@ -286,10 +286,10 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     formula rulename = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact {factTag = ProtoFact Linear ("Diff" ++ rulename) 0, factTerms = []})))
     
     ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
-    ruleEquivalenceCase m rule = M.insert ("Rule " ++ (getACRuleName rule)) (ruleEquivalenceSystem (getACRuleNameDiff rule)) m
+    ruleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
     
     protoRuleEquivalenceCase :: M.Map CaseName DiffSystem -> ProtoRuleE -> M.Map CaseName DiffSystem
-    protoRuleEquivalenceCase m rule = M.insert ("Rule " ++ (getProtoRuleName rule)) (ruleEquivalenceSystem (getProtoRuleNameDiff rule)) m
+    protoRuleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
     
     -- Not checking construction rules is sound, as they are 'trivial' !
     ruleEquivalence = foldl protoRuleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) protoRules
@@ -570,9 +570,9 @@ smartDiffRanking ctxt sys =
   where
     delaySplits agl = fst parts ++ snd parts
       where
-        parts = partition (not . isSplitGoal) agl
-        isSplitGoal ((SplitG sid), _) = True
-        isSplitGoal _                 = False
+        parts = partition (not . isSplitGoal') agl
+        isSplitGoal' ((SplitG sid), _) = True
+        isSplitGoal' _                 = False
 
 
     delayTrivial agl = fst parts ++ snd parts
@@ -606,13 +606,13 @@ prettyProofMethod method = case method of
     Solved               -> keyword_ "SOLVED" <-> lineComment_ "trace found"
     Induction            -> keyword_ "induction"
     Sorry reason         ->
-        fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
+        fsep [keyword_ "sorry", maybe emptyDoc closedComment_ reason]
     SolveGoal goal       ->
         keyword_ "solve(" <-> prettyGoal goal <-> keyword_ ")"
     Simplify             -> keyword_ "simplify"
     Contradiction reason ->
         sep [ keyword_ "contradiction"
-            , maybe emptyDoc (lineComment . prettyContradiction) reason
+            , maybe emptyDoc (closedComment . prettyContradiction) reason
             ]
 
 -- | Pretty-print a diff proof method.
@@ -626,7 +626,7 @@ prettyDiffProofMethod method = case method of
 --    DiffTrivial              -> keyword_ "trivial"
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
     DiffBackwardSearch       -> keyword_ "backward-search"  
-    DiffBackwardSearchStep s -> {-keyword_ "backward-search-step" <->-} prettyProofMethod s 
+    DiffBackwardSearchStep s -> keyword_ "step(" <-> prettyProofMethod s <-> keyword_ ")"
     
     
 -- Derived instances

@@ -72,13 +72,8 @@ module Theory.Model.Rule (
   , isTrivialProtoDiffRule
   , isTrivialACDiffRule
   , containsNewVars
-  , getProtoRuleName
-  , getACRuleName
-  , getEitherRuleName
-  , getProtoRuleNameDiff
-  , getACRuleNameDiff
-  , getEitherRuleNameDiff
-  , getIntrACRuleName
+  , getRuleName
+  , getRuleNameDiff
   , nfRule
   , isTrivialProtoVariantAC
   , getNewVariables
@@ -510,64 +505,37 @@ isTrivialDiffRule (Rule _ pms _ _) = case pms of
       
       noDuplicates l1 l2 = ((length l1) + (length l2)) == S.size (S.union (S.fromList l1) (S.fromList l2))
 
--- | Returns a protocol rule's name
-getProtoRuleName :: ProtoRuleE -> String
-getProtoRuleName (Rule rname _ _ _) = case rname of
-         FreshRule   -> "FreshRule"
-         StandRule s -> s
+-- | Returns a rule's name
+getRuleName :: HasRuleName (Rule i) => Rule i -> String
+getRuleName ru = case ruleName ru of
+                      IntrInfo i  -> case i of
+                                      ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
+                                      DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
+                                      CoerceRule      -> "Coerce"
+                                      IRecvRule       -> "Recv"
+                                      ISendRule       -> "Send"
+                                      PubConstrRule   -> "PubConstr"
+                                      FreshConstrRule -> "FreshConstr"
+                                      IEqualityRule   -> "Equality"
+                      ProtoInfo p -> case p of
+                                      FreshRule   -> "FreshRule"
+                                      StandRule s -> s
 
 -- | Returns a protocol rule's name
-getProtoRuleNameDiff :: ProtoRuleE -> String
-getProtoRuleNameDiff (Rule rname _ _ _) = case rname of
-         FreshRule   -> "ProtoFreshRule"
-         StandRule s -> "Proto" ++ s
-
--- | Returns a AC rule's name
-getACRuleName :: RuleAC -> String
-getACRuleName (Rule rname _ _ _) = case rname of
-         ProtoInfo p -> case L.get pracName p of
-                            FreshRule   -> "FreshRule"
-                            StandRule s -> s
-         IntrInfo  i -> show i
-
--- | Returns a AC rule's name
-getACRuleNameDiff :: RuleAC -> String
-getACRuleNameDiff (Rule rname _ _ _) = case rname of
-         ProtoInfo p -> case L.get pracName p of
-                            FreshRule   -> "ProtoFreshRule"
-                            StandRule s -> "Proto" ++ s
-         IntrInfo  i -> "Intr" ++ case i of
-                 ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
-                 DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
-                 CoerceRule      -> "Coerce"
-                 IRecvRule       -> "Recv"
-                 ISendRule       -> "Send"
-                 PubConstrRule   -> "PubConstr"
-                 FreshConstrRule -> "FreshConstr"
-                 IEqualityRule   -> "Equality"
-
-         
--- | Returns an intruder rule's name
-getIntrACRuleName :: IntrRuleAC -> String
-getIntrACRuleName (Rule rname _ _ _) = case rname of
-         ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
-         DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
-         CoerceRule      -> "Coerce"
-         IRecvRule       -> "Recv"
-         ISendRule       -> "Send"
-         PubConstrRule   -> "PubConstr"
-         FreshConstrRule -> "FreshConstr"
-         IEqualityRule   -> "Equality"
-         
--- | Returns a protocol rule's name
-getEitherRuleName :: Either RuleAC ProtoRuleE -> String
-getEitherRuleName (Left  r) = getACRuleName    r
-getEitherRuleName (Right r) = getProtoRuleName r
-
--- | Returns a protocol rule's name
-getEitherRuleNameDiff :: Either RuleAC ProtoRuleE -> String
-getEitherRuleNameDiff (Left  r) = getACRuleNameDiff    r
-getEitherRuleNameDiff (Right r) = getProtoRuleNameDiff r
+getRuleNameDiff :: HasRuleName (Rule i) => Rule i -> String
+getRuleNameDiff ru = case ruleName ru of
+                      IntrInfo i  -> "Intr" ++ case i of
+                                      ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
+                                      DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
+                                      CoerceRule      -> "Coerce"
+                                      IRecvRule       -> "Recv"
+                                      ISendRule       -> "Send"
+                                      PubConstrRule   -> "PubConstr"
+                                      FreshConstrRule -> "FreshConstr"
+                                      IEqualityRule   -> "Equality"
+                      ProtoInfo p -> "Proto" ++ case p of
+                                      FreshRule   -> "FreshRule"
+                                      StandRule s -> s
        
 -- | Converts a protocol rule to its "left" variant
 getLeftRule :: ProtoRuleE ->  ProtoRuleE
@@ -846,15 +814,18 @@ prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
 prettyNamedRule prefix ppInfo ru =
     prefix <-> prettyRuleName ru <> colon $-$
     nest 2 (sep [ nest 1 $ ppFactsList rPrems
-                , if null (L.get rActs ru)
+                , if null acts
                     then operator_ "-->"
-                    else fsep [operator_ "--[", ppFacts rActs, operator_ "]->"]
+                    else fsep [operator_ "--[", ppFacts' acts, operator_ "]->"]
                 , nest 1 $ ppFactsList rConcs]) $-$
     nest 2 (ppInfo $ L.get rInfo ru)
   where
+    acts             = filter isNotDiffAnnotation (L.get rActs ru)
     ppList pp        = fsep . punctuate comma . map pp
+    ppFacts' list    = ppList prettyLNFact list
     ppFacts proj     = ppList prettyLNFact $ L.get proj ru
     ppFactsList proj = fsep [operator_ "[", ppFacts proj, operator_ "]"]
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factTerms = []})
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
 prettyProtoRuleACInfo i =

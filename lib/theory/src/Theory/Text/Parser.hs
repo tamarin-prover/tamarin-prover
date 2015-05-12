@@ -520,7 +520,12 @@ lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
                       <*> doubleQuoted standardFormula
                       <*> (proofSkeleton <|> pure (unproven ()))
 
+-- | Parse a diff lemma.
+diffLemma :: Parser (DiffLemma DiffProofSkeleton)
+diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
+                              <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
+                      
 ------------------------------------------------------------------------------
 -- Parsing Proofs
 ------------------------------------------------------------------------------
@@ -593,6 +598,38 @@ proofSkeleton =
         return (LNode (ProofStep method ()) (M.fromList cases))
 
     oneCase = (,) <$> (symbol "case" *> identifier) <*> proofSkeleton
+
+-- | Parse a proof method.
+diffProofMethod :: Parser DiffProofMethod
+diffProofMethod = asum
+  [ symbol "sorry"            *> pure (DiffSorry Nothing)
+  , symbol "rule-equivalence" *> pure DiffRuleEquivalence
+  , symbol "backward-search"  *> pure DiffBackwardSearch
+  , symbol "step"             *> (DiffBackwardSearchStep <$> parens proofMethod)
+  ]
+    
+-- | Parse a diff proof skeleton.
+diffProofSkeleton :: Parser DiffProofSkeleton
+diffProofSkeleton =
+    solvedProof <|> attackProof <|> finalProof <|> interProof
+  where
+    solvedProof =
+        symbol "SOLVED" *> pure (LNode (DiffProofStep DiffSolved ()) M.empty)
+
+    attackProof =
+        symbol "ATTACK" *> pure (LNode (DiffProofStep DiffAttack ()) M.empty)
+        
+    finalProof = do
+        method <- symbol "by" *> diffProofMethod
+        return (LNode (DiffProofStep method ()) M.empty)
+
+    interProof = do
+        method <- diffProofMethod
+        cases  <- (sepBy oneCase (symbol "next") <* symbol "qed") <|>
+                  ((return . (,) "") <$> diffProofSkeleton          )
+        return (LNode (DiffProofStep method ()) (M.fromList cases))
+
+    oneCase = (,) <$> (symbol "case" *> identifier) <*> diffProofSkeleton
 
 ------------------------------------------------------------------------------
 -- Parsing Signatures
@@ -756,6 +793,8 @@ diffTheory flags0 = do
            addItems flags thy'
       , do thy' <- liftedAddLemma thy =<< lemma
            addItems flags thy'
+      , do thy' <- liftedAddDiffLemma thy =<< diffLemma
+           addItems flags thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
            addItems flags thy'
@@ -786,6 +825,10 @@ diffTheory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
 
+    liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (prettyDiffLemmaName ru)
+        
     liftedAddLemma thy lem = if isLeftLemma lem
                                 then case addLemmaDiff LHS lem thy of
                                         Just thy' -> return thy'

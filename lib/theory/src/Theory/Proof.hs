@@ -476,7 +476,7 @@ checkDiffProof ctxt prover d sys prf@(LNode (DiffProofStep method info) cs) =
             sorryNode (Just "invalid proof step encountered")
                       (M.singleton "" prf)
   where
-    node m                 = LNode (DiffProofStep m (Just info, Just emptyDiffSystem))
+    node m                 = LNode (DiffProofStep m (Just info, Just sys))
     sorryNode reason cases = node (DiffSorry reason) (M.map noSystemPrf cases)
     noSystemPrf            = mapDiffProofInfo (\i -> (Just i, Nothing))
 

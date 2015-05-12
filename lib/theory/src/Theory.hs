@@ -33,6 +33,7 @@ module Theory (
   , lProof
   , unprovenLemma
   , skeletonLemma
+  , skeletonDiffLemma
   , isLeftLemma
   , isRightLemma
 --   , isBothLemma
@@ -131,6 +132,7 @@ module Theory (
 
   -- ** Proving
   , ProofSkeleton
+  , DiffProofSkeleton
   , proveTheory
   , proveDiffTheory
 
@@ -797,7 +799,7 @@ defaultOpenDiffTheory flag = DiffTheory "default" (emptySignaturePure flag) [] [
 
 -- Add the default Diff lemma to an Open Diff Theory
 addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
-addDefaultDiffLemma thy = modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_equivalence")]) thy
+addDefaultDiffLemma thy = fromMaybe thy $ addDiffLemma (unprovenDiffLemma "Observational_equivalence") thy
 
 -- Add the rule labels to an Open Diff Theory
 addProtoRuleLabels:: OpenDiffTheory -> OpenDiffTheory
@@ -805,7 +807,7 @@ addProtoRuleLabels thy = -- modify diffThyItems (++ [DiffLemmaItem (unprovenDiff
     modify diffThyItems (map addRuleLabel) thy
   where
     addRuleLabel :: OpenDiffTheoryItem -> OpenDiffTheoryItem
-    addRuleLabel (DiffRuleItem rule) = DiffRuleItem $ addDiffLabel rule ("DiffProto" ++ (getProtoRuleName rule))
+    addRuleLabel (DiffRuleItem rule) = DiffRuleItem $ addDiffLabel rule ("DiffProto" ++ (getRuleName rule))
     addRuleLabel x                   = x
     
 -- Add the rule labels to an Open Diff Theory
@@ -813,7 +815,7 @@ addIntrRuleLabels:: OpenDiffTheory -> OpenDiffTheory
 addIntrRuleLabels thy = -- modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_equivalence")]) thy
     modify diffThyCacheLeft (map addRuleLabel) $ modify diffThyCacheRight (map addRuleLabel) thy
   where
-    addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getIntrACRuleName rule))
+    addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getRuleName rule))
     
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness dependens on it.
