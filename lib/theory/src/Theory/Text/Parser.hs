@@ -617,8 +617,8 @@ diffProofSkeleton =
     solvedProof =
         symbol "SOLVED" *> pure (LNode (DiffProofStep DiffSolved ()) M.empty)
 
-    attackProof =
-        symbol "ATTACK" *> pure (LNode (DiffProofStep DiffAttack ()) M.empty)
+--     attackProof =
+--         symbol "ATTACK" *> pure (LNode (DiffProofStep DiffAttack ()) M.empty)
         
     finalProof = do
         method <- symbol "by" *> diffProofMethod
