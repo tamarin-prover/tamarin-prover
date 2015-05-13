@@ -606,12 +606,13 @@ diffProofMethod = asum
   , symbol "rule-equivalence" *> pure DiffRuleEquivalence
   , symbol "backward-search"  *> pure DiffBackwardSearch
   , symbol "step"             *> (DiffBackwardSearchStep <$> parens proofMethod)
+  , symbol "ATTACK"           *> pure DiffAttack
   ]
     
 -- | Parse a diff proof skeleton.
 diffProofSkeleton :: Parser DiffProofSkeleton
 diffProofSkeleton =
-    solvedProof <|> attackProof <|> finalProof <|> interProof
+    solvedProof {-<|> attackProof-} <|> finalProof <|> interProof
   where
     solvedProof =
         symbol "SOLVED" *> pure (LNode (DiffProofStep DiffSolved ()) M.empty)
