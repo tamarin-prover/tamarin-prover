@@ -584,7 +584,7 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
                                                
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
-getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) [M.empty] freshAndPubConstrRules) newProtoRules) otherRules)
+getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) [freshAndPubConstrRules] newProtoRules) otherRules)
   where
     (freshAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
     (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)
@@ -592,9 +592,7 @@ getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleIns
     -- We keep instantiations of fresh and public variables. Currently new public variables in protocol rule instances 
     -- are instantiated correctly in someRuleACInstAvoiding, but if this is changed we need to fix this part.
     transformRuleInstance :: NodeId -> RuleACInst -> [M.Map NodeId RuleACInst] -> [M.Map NodeId RuleACInst]
-    transformRuleInstance idx rule nodes = if (isFreshRule rule) || (isPubConstrRule rule) 
-                                             then map (\x -> M.insert idx rule x) nodes
-                                             else (\x y -> M.insert idx y x) <$> nodes <*> getOtherRulesAndVariants rule 
+    transformRuleInstance idx rule nodes = (\x y -> M.insert idx y x) <$> nodes <*> getOtherRulesAndVariants rule 
       where
         getOtherRulesAndVariants :: RuleACInst -> [RuleACInst]
         getOtherRulesAndVariants r = concat $ map (\x -> getVariants nodes $ temp x) (getOppositeRules ctxt side r)

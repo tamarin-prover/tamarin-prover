@@ -90,6 +90,7 @@ module Theory.Model.Rule (
   , someRuleACInst
   , someRuleACInstAvoiding
   , someRuleACInstAvoidingFixing
+  , someRuleACInstFixing
   , addDiffLabel
   , multRuleInstance
   , unionRuleInstance
@@ -669,6 +670,25 @@ someRuleACInstAvoiding r s =
     extractInsts (Rule (IntrInfo i) ps cs as) =
       ( Rule (IntrInfo i) ps cs as, Nothing )
 
+-- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
+-- protocol rule, then the given typing and variants also need to be handled.
+someRuleACInstFixing :: MonadFresh m
+               => RuleAC
+               -> LNSubst
+               -> m (RuleACInst, Maybe RuleACConstrs)
+someRuleACInstFixing r subst =
+    renameIgnoring (varsRange subst) (extractInsts r)
+  where
+    extractInsts (Rule (ProtoInfo i) ps cs as) =
+      ( apply subst (Rule (ProtoInfo i') ps cs as)
+      , Just (L.get pracVariants i)
+      )
+      where
+        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+    extractInsts (Rule (IntrInfo i) ps cs as) =
+      ( apply subst (Rule (IntrInfo i) ps cs as), Nothing )
+
+      
 -- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
 -- protocol rule, then the given typing and variants also need to be handled.
 someRuleACInstAvoidingFixing :: HasFrees t 
