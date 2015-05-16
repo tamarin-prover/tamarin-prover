@@ -75,8 +75,8 @@ rule ChallengeResponder:
 // the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
 
 
-axiom singleChallenge:
-  "All I R k I2 R2 k2 #j #j2. Challenge(I, R, k)@j & Challenge(I2, R2, k2)@ j2 ==> #j = #j2"
+//axiom singleChallenge:
+//  "All I R k I2 R2 k2 #j #j2. Challenge(I, R, k)@j & Challenge(I2, R2, k2)@ j2 ==> #j = #j2"
 
 
 end
