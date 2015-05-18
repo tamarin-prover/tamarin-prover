@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -45,14 +46,13 @@ import           Data.Char                           (toLower)
 import           Data.Label
 import           Data.List                           (isPrefixOf)
 import           Data.Monoid
+import           Data.FileEmbed                      (embedFile)
 
 import           Control.Basics
 import           Control.Category
 import           Control.DeepSeq                     (rnf)
-import           Extension.Prelude                   (ifM)
 
 import           System.Console.CmdArgs.Explicit
-import           System.Directory                    (doesFileExist)
 
 import           Theory
 import           Theory.Text.Parser                  (parseIntruderRules, parseOpenTheory, parseOpenTheoryString, parseOpenDiffTheory, parseOpenDiffTheoryString)
@@ -64,7 +64,6 @@ import           Theory.Tools.Wellformedness
 
 import           Main.Console
 import           Main.Environment
-import           Paths_tamarin_prover                (getDataFileName)
 
 
 ------------------------------------------------------------------------------
@@ -349,52 +348,51 @@ dhIntruderVariantsFile = "intruder_variants_dh.spthy"
 bpIntruderVariantsFile :: FilePath
 bpIntruderVariantsFile = "intruder_variants_bp.spthy"
 
--- | Add the variants of the message deduction rule. Uses the cached version
--- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
--- deduction rules for Diffie-Hellman exponentiation.
+-- | Construct the DH intruder variants for the given maude signature.
+mkDhIntruderVariants :: MaudeSig -> [IntrRuleAC]
+mkDhIntruderVariants msig =
+    either (error . show) id  -- report errors lazily through 'error'
+  $ parseIntruderRules msig dhIntruderVariantsFile
+                $(embedFile "data/intruder_variants_dh.spthy")
+
+-- | Construct the BP intruder variants for the given maude signature.
+mkBpIntruderVariants :: MaudeSig -> [IntrRuleAC]
+mkBpIntruderVariants msig =
+    either (error . show) id  -- report errors lazily through 'error'
+  $ parseIntruderRules msig bpIntruderVariantsFile
+                $(embedFile "data/intruder_variants_bp.spthy")
+
+-- | Add the variants of the message deduction rule. Uses built-in cached
+-- files for the variants of the message deduction rules for Diffie-Hellman
+-- exponentiation and Bilinear-Pairing.
 addMessageDeductionRuleVariants :: OpenTheory -> IO OpenTheory
+                                -- TODO (SM): drop use of IO here.
 addMessageDeductionRuleVariants thy0
-  | enableBP msig = addIntruderVariants [ dhIntruderVariantsFile
-                                        , bpIntruderVariantsFile ]
-  | enableDH msig = addIntruderVariants [ dhIntruderVariantsFile ]
+  | enableBP msig = addIntruderVariants [ mkDhIntruderVariants
+                                        , mkBpIntruderVariants ]
+  | enableDH msig = addIntruderVariants [ mkDhIntruderVariants ]
   | otherwise     = return thy
   where
     msig         = get (sigpMaudeSig . thySignature) thy0
     rules        = subtermIntruderRules msig ++ specialIntruderRules
                    ++ if enableMSet msig then multisetIntruderRules else []
     thy          = addIntrRuleACs rules thy0
-    addIntruderVariants files = do
-        ruless <- mapM loadRules files
-        return $ addIntrRuleACs (concat ruless) thy
-      where
-        loadRules file = do
-            variantsFile <- getDataFileName file
-            ifM (doesFileExist variantsFile)
-                (parseIntruderRules msig variantsFile)
-                (error $ "could not find intruder message deduction theory '"
-                           ++ variantsFile ++ "'")
+    addIntruderVariants mkRuless = do
+        return $ addIntrRuleACs (concatMap ($ msig) mkRuless) thy
 
 -- | Add the variants of the message deduction rule. Uses the cached version
 -- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
 -- deduction rules for Diffie-Hellman exponentiation.
 addMessageDeductionRuleVariantsDiff :: OpenDiffTheory -> IO OpenDiffTheory
 addMessageDeductionRuleVariantsDiff thy0
-  | enableBP msig = addIntruderVariantsDiff [ dhIntruderVariantsFile
-                                            , bpIntruderVariantsFile ]
-  | enableDH msig = addIntruderVariantsDiff [ dhIntruderVariantsFile ]
+  | enableBP msig = addIntruderVariantsDiff [ mkDhIntruderVariants
+                                            , mkBpIntruderVariants ]
+  | enableDH msig = addIntruderVariantsDiff [ mkDhIntruderVariants ]
   | otherwise     = return $ addIntrRuleLabels thy
   where
     msig         = get (sigpMaudeSig . diffThySignature) thy0
     rules        = subtermIntruderRules msig ++ specialIntruderRules
                    ++ if enableMSet msig then multisetIntruderRules else []
     thy          = addIntrRuleACsDiffBoth rules thy0
-    addIntruderVariantsDiff files = do
-        ruless <- mapM loadRules files
-        return $ addIntrRuleLabels (addIntrRuleACsDiffBoth (concat ruless) thy)
-      where
-        loadRules file = do
-            variantsFile <- getDataFileName file
-            ifM (doesFileExist variantsFile)
-                (parseIntruderRules msig variantsFile)
-                (error $ "could not find intruder message deduction theory '"
-                           ++ variantsFile ++ "'")
+    addIntruderVariantsDiff mkRuless = do
+        return $ addIntrRuleLabels (addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)

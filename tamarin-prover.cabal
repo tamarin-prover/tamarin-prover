@@ -1,7 +1,7 @@
-cabal-version:      >= 1.8
+cabal-version:      >= 1.10
 build-type:         Simple
 name:               tamarin-prover
-version:            0.8.6.1
+version:            0.9.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -42,12 +42,7 @@ homepage:           http://www.infsec.ethz.ch/research/software/tamarin
 -- extra files
 --------------
 
-data-dir:           data
-data-files:
-  LICENSE
-  AUTHORS
-  CHANGES
-
+extra-source-files:
   -- cached intruder variants for DH and BP
   intruder_variants_dh.spthy
   intruder_variants_bp.spthy
@@ -61,137 +56,32 @@ data-files:
   css/smoothness/*.css
   css/smoothness/images/*.png
 
-  -- vim syntax highlighting
-  etc/spthy.vim
-  etc/filetype.vim
 
-  -- documentation
-  doc/MANUAL
+-------------------------
+-- repository information
+-------------------------
 
-  -- examples files
-  examples/Tutorial.spthy
-
-  -- classic security protocols
-  examples/classic/TLS_Handshake.spthy
-  examples/classic/NSLPK3.spthy
-  examples/classic/NSPK3.spthy
-
-  -- features
-  examples/features/multiset/counter.spthy
-  examples/features/private_function_symbols/NAXOS_eCK_PFS_private.spthy
-  examples/features/private_function_symbols/NAXOS_eCK_private.spthy
-
-  -- newer AKE examples
-  examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
-  examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
-  examples/ake/dh/NAXOS_eCK.spthy
-  examples/ake/dh/NAXOS_eCK_PFS.spthy
-  examples/ake/dh/UM_one_pass_attack.spthy
-  examples/ake/dh/UM_one_pass_fix.spthy
-  examples/ake/dh/UM_three_pass.spthy
-  examples/ake/dh/UM_three_pass_combined.spthy
-  examples/ake/dh/UM_three_pass_combined_fixed.spthy
-  examples/ake/bilinear/Chen_Kudla.spthy
-  examples/ake/bilinear/Chen_Kudla_eCK.spthy
-  examples/ake/bilinear/Joux.spthy
-  examples/ake/bilinear/Joux_EphkRev.spthy
-  examples/ake/bilinear/README
-  examples/ake/bilinear/RYY.spthy
-  examples/ake/bilinear/RYY_PFS.spthy
-  examples/ake/bilinear/Scott.spthy
-  examples/ake/bilinear/Scott_EphkRev.spthy
-  examples/ake/bilinear/TAK1.spthy
-  examples/ake/bilinear/TAK1_eCK_like.spthy
-
-  -- running examples from papers/documentation
-  examples/cav13/DH_example.spthy
-  examples/thesis-benedikt/running-examples/DH_Message_Deduction.spthy
-  examples/thesis-benedikt/running-examples/UM_one_pass_eCK_like.spthy
-  examples/thesis-benedikt/running-examples/UM_one_pass_private.spthy
-
-  -- loops
-  examples/loops/Minimal_Crypto_API.spthy
-  examples/loops/Minimal_KeyRenegotiation.spthy
-  examples/loops/Minimal_Create_Use_Destroy.spthy
-  examples/loops/Minimal_Typing_Example.spthy
-  examples/loops/Minimal_Loop_Example.spthy
-  examples/loops/Minimal_HashChain.spthy
-  examples/loops/Typing_and_Destructors.spthy
-  examples/loops/JCS12_Typing_Example.spthy
-  examples/loops/TESLA_Scheme1.spthy
-  examples/loops/TESLA_Scheme2_lossless.spthy
-  examples/loops/TESLA_Scheme2.spthy
-
-  -- related work
-  examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
-  examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
-  examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
-  examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
-  examples/related_work/TPM_DKRS_CSF11/TPM_Exclusive_Secrets.spthy
-  examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
-  examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
-
-  -- CSF'12 case studies
-  examples/csf12/Artificial.spthy
-
-  examples/csf12/DH2_original.spthy
-  examples/csf12/KAS1.spthy
-  examples/csf12/KAS2_eCK.spthy
-  examples/csf12/KAS2_original.spthy
-
-  examples/csf12/KEA_plus_KI_KCI.spthy
-  examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
-  examples/csf12/KEA_plus_eCK.spthy
-
-  examples/csf12/NAXOS_eCK_PFS.spthy
-  examples/csf12/NAXOS_eCK.spthy
-
-  examples/csf12/UM_eCK.spthy
-  examples/csf12/UM_eCK_noKCI.spthy
-  examples/csf12/UM_PFS.spthy
-  examples/csf12/UM_wPFS.spthy
-  examples/csf12/UM_PFS.spthy
-
-  examples/csf12/SignedDH_PFS.spthy
-  examples/csf12/SignedDH_eCK.spthy
-
-  examples/csf12/STS_MAC.spthy
-  examples/csf12/STS_MAC_fix1.spthy
-  examples/csf12/STS_MAC_fix2.spthy
-
-  examples/csf12/JKL_TS1_2004_KI.spthy
-  examples/csf12/JKL_TS1_2008_KI.spthy
-  examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
-  examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
-  examples/csf12/JKL_TS3_2004_KI_wPFS.spthy_nonterm
-  examples/csf12/JKL_TS3_2008_KI_wPFS.spthy_nonterm
-
-  examples/csf12/KEA_plus_AdvKey-fix.spthy
-  examples/csf12/KEA_plus_AdvKey.spthy
-
-extra-source-files:
-  .ghci
-  interactive-only-src/Paths_tamarin_prover.hs
-
+source-repository head
+  type:     git
+  location: https://github.com/tamarin-prover/tamarin-prover.git
 
 --------------
 -- build flags
 --------------
 
-flag no-gui
-    default: False
-    description: Do not build the web-application GUI.
-
 flag threaded
     default: True
+    manual: True
     description: Build with support for multithreaded execution
 
 flag test-coverage
     default: True
+    manual: True
     description: Build with test coverage support
 
 flag build-tests
-  default:     False
+  default: False
+  manual: True
   description: Build unit test driver
 
 
@@ -200,6 +90,8 @@ flag build-tests
 ----------------------
 
 executable tamarin-prover
+    default-language: Haskell2010
+
     if flag(threaded)
         ghc-options:   -threaded -eventlog 
     
@@ -221,69 +113,58 @@ executable tamarin-prover
     hs-source-dirs:    src
     main-is:           Main.hs
 
-    if flag(no-gui)
-      cpp-options: -DNO_GUI
-
-    if !flag(no-gui)
-      -- To help the top-down solver we put the more difficult to solve yesod
-      -- dependencies up front.
-      build-depends:
-
-          bytestring        >= 0.9
-        , blaze-html        >= 0.5
-        , http-types        >= 0.7
-        , blaze-builder     >= 0.3
-        , yesod-core        >= 1.2.6.6
-        , yesod-json        >= 1.2
-        , yesod-static      >= 1.2
-        , conduit           == 1.0.*
-        -- , yesod-form        == 0.4.*   -- required once we reactivate editing
-        , text              == 0.11.*
-        , wai               >= 1.3
-        , hamlet            >= 1.1
-        , shakespeare       == 2.0.*
-        , warp              >= 1.3
-        , aeson             == 0.6.*
-        , old-locale        == 1.*
-        , monad-control     == 0.*
-        , lifted-base       >= 0.2.0.5
-        , threads           >= 0.4
-
     build-depends:
-        base              == 4.*
-      , bytestring        >= 0.9
-      , deepseq           >= 1.3
-      , array             >= 0.3   
-      , containers        >= 0.4.2 
-      , dlist             >= 0.5
-      , mtl               >= 2.1
-      , cmdargs           == 0.10.*
-      , filepath          >= 1.1
-      , directory         >= 1.0
-      , process           == 1.1.*
-      , parsec            == 3.1.*
-      , safe              >= 0.2
-      , transformers      >= 0.3
-      , fclabels          == 1.1.*
-      , uniplate          == 1.6.*
-      , syb               >= 0.3.3
-      , binary            == 0.5.*
-      , derive            == 2.5.*
-      , time              >= 1.2
-      , parallel          == 3.2.*
-      , HUnit             == 1.2.*
+        HUnit
+      , aeson
+      , array
+      , base
+      , binary
+      , blaze-builder
+      , blaze-html
+      , bytestring
+      , bytestring
+      , cmdargs
+      , conduit
+      , containers
+      , deepseq
+      , derive
+      , directory
+      , dlist
+      , fclabels
+      , file-embed
+      , filepath
+      , hamlet
+      , http-types
+      , lifted-base
+      , monad-control
+      , mtl
+      , old-locale
+      , parallel
+      , parsec
+      , process
+      , resourcet
+      , safe
+      , shakespeare
+      , syb
+      , text
+      , threads
+      , time
+      , transformers
+      , uniplate
+      , wai
+      , warp
+      , yesod-core
+      , yesod-json
+      , yesod-static
 
-      , tamarin-prover-utils  >= 0.8.5.1  && < 0.9
-      , tamarin-prover-term   >= 0.8.5.1  && < 0.9
-      , tamarin-prover-theory >= 0.8.6.0  && < 0.9
-
+      , tamarin-prover-utils  == 0.9.0
+      , tamarin-prover-term   == 0.9.0
+      , tamarin-prover-theory == 0.9.0
 
     other-modules:
       Paths_tamarin_prover
 
       Main
-      Main_Full
-      Main_NoGui
       Main.Console
       Main.Environment
       Main.TheoryLoader
@@ -302,9 +183,3 @@ executable tamarin-prover
       Web.Types
 
       Test.ParserTests
-
-
-source-repository head
-  type:     git
-  location: https://github.com/tamarin-prover/tamarin-prover.git
-

@@ -1,57 +1,57 @@
-CABAL_OPTS= 
-# --enable-library-profiling --enable-executable-profiling
-# --force-reinstalls
+# Please make sure that you have a recent 'cabal-install' installed. At least
+# version 1.18. Otherwise upgrade using 'cabal install cabal-install'.
 
-# NOTE that the dependency solver of cabal-install-0.10.2 has sometimes
-# trouble coping with complicated install plans. In these cases, the
-# development version version of 'cabal-install' available from
-#
-#   darcs get http://darcs.haskell.org/cabal-install/
-#
-# allows you to use a better solver which is activated using the following
-# flag.
-#
-# CABAL_OPTS=--solver=modular
-#
+ALEX=cabal-sandbox/bin/alex
+HAPPY=cabal-sandbox/bin/happy
 
-# This is the only target that an end-user will use
-install:
-	cabal install $(CABAL_OPTS) lib/utils lib/term lib/theory ./
+# We use the happy and alex versions as they are constrained by our
+# 'cabal.config file.
+CABAL_INSTALL=cabal install --with-happy=$(PWD)/$(HAPPY) --with-alex=$(PWD)/$(ALEX)
 
-install-theory:
-	cabal install $(CABAL_OPTS) lib/theory ./
+TAMARIN=cabal-sandbox/bin/tamarin-prover
 
-install-term:
-	cabal install $(CABAL_OPTS) lib/term lib/theory ./
+# We always force a reinstall, as we are using a sandbox.
+install: build-setup
+	cabal --version  # Should be at least 1.18
+	$(CABAL_INSTALL) --force-reinstalls .
 
-# In case some dependencies cannot be resolved and should be forced use this
-# target. NOTE that this may break other libraries installed on your system.
-force-install:
-	cabal install $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
+build-setup: cabal-sandbox/created $(ALEX) $(HAPPY)
+	cabal sandbox add-source lib/*
 
-force-install-ghc-7.0.4:
-	cabal install -wghc-7.0.4 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
+# Create a sandbox shared between the tamarin-prover its custom libraries.
+cabal-sandbox/created:
+	cabal sandbox init --sandbox cabal-sandbox
+	cd lib/utils; cabal sandbox init --sandbox ../../cabal-sandbox
+	cd lib/term; cabal sandbox init --sandbox ../../cabal-sandbox
+	cd lib/theory; cabal sandbox init --sandbox ../../cabal-sandbox
+	cabal update
+	touch cabal-sandbox/created
 
-force-install-ghc-7.4.1:
-	cabal install -wghc-7.4.1 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
+$(ALEX): cabal-sandbox/created $(HAPPY)
+	# We delete the source here as these libraries are not needed for
+	# building alex
+	cabal sandbox delete-source lib/*
+	ghc --version
+	cabal --version
+	cabal install --with-happy=$(PWD)/$(HAPPY) alex
 
-force-install-theory:
-	cabal install $(CABAL_OPTS) --force-reinstalls lib/theory ./
+$(HAPPY): cabal-sandbox/created
+	# We delete the source here as these libraries are not needed for
+	# building happy
+	cabal sandbox delete-source lib/*
+	ghc --version
+	cabal --version
+	cabal install happy
 
-force-install-term:
-	cabal install $(CABAL_OPTS) --force-reinstalls lib/term lib/theory ./
 
-
-#
-#
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
-#
-#
-#
-VERSION=0.8.5.1
+
+
+VERSION=0.9.0
+
 
 source-dists:
 	cd lib/utils; cabal sdist
@@ -111,7 +111,7 @@ cabal-clean:
 ## CSF'12
 #########
 
-# These case studies are located in data/examples/ or examples/
+# These case studies are located in examples/
 DH2=DH2_original.spthy
 
 KAS=KAS1.spthy KAS2_eCK.spthy KAS2_original.spthy
@@ -142,7 +142,7 @@ csf12-case-studies:	$(CSF12_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/csf12/*.spthy
 
 # individual case studies
-case-studies/%_analyzed.spthy:	data/examples/%.spthy
+case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/csf12
 	mkdir -p case-studies/classic
 	mkdir -p case-studies/loops
@@ -156,7 +156,7 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 	mkdir -p case-studies/related_work/YubiSecure_KS_STM12
 	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
 	# Use -N3, as the fourth core is used by the OS and the console
-	tamarin-prover $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	echo "\n/* Output" >>$(TMPRES)
@@ -301,4 +301,4 @@ depgraph:
 ctags:
 	ghc -e :ctags src/Main.hs
 
-.PHONY: unit opt all mult coverage haddock case-studies
+.PHONY: unit opt all mult coverage haddock case-studies sandbox-init

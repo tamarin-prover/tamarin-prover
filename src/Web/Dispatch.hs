@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TupleSections         #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 -- FIXME: See how we can get rid of the Template Haskell induced warning, such
 -- that we have the warning again for our code.
@@ -34,7 +35,7 @@ import           Web.Types
 
 import           Network.Wai
 import           Yesod.Core
-import           Yesod.Static
+import qualified Yesod.Static
 
 import qualified Control.Exception      as E
 import qualified Data.Binary            as Bin
@@ -57,8 +58,8 @@ import           System.FilePath
 mkYesodDispatch "WebUI"     resourcesWebUI
 
 -- | Static route for favicon file.
-faviconRoute :: StaticRoute
-faviconRoute = StaticRoute ["img", "favicon.ico"] []
+faviconRoute :: Yesod.Static.StaticRoute
+faviconRoute = Yesod.Static.StaticRoute ["img", "favicon.ico"] []
 
 -- | Favicon handler function (favicon.ico).
 getFaviconR :: Handler ()
@@ -67,6 +68,11 @@ getFaviconR = redirect (StaticR faviconRoute)
 -- | Robots file handler function (robots.txt).
 getRobotsR :: Handler RepPlain
 getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: B.ByteString)
+
+-- | NOTE (SM): See the note on 'staticFiles' below on how to enable dynamic
+-- reloading.
+staticFiles :: Yesod.Static.Static
+staticFiles = $(Yesod.Static.embed "data")
 
 -- | Initialization function for the web application.
 withWebUI :: String                          -- ^ Message to output once the sever is ready.
@@ -79,19 +85,19 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -- ^ Theory loader (from string).
           -- -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
-          -> FilePath                        -- ^ Path to static content directory
           -> FilePath                        -- ^ Path to dot binary
           -> ImageFormat                     -- ^ The preferred image format
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
 withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
-          stPath dotCmd' imgFormat' defaultAutoProver' f
+          dotCmd' imgFormat' defaultAutoProver' f
   = do
     thy    <- getTheos
     thrVar <- newMVar M.empty
     thyVar <- newMVar thy
-    st     <- static stPath
+    -- NOTE (SM): uncomment this line to load the assets dynamically.
+    -- staticFiles     <- Yesod.Static.static "data"
     when autosave $ createDirectoryIfMissing False autosaveDir
     -- Don't create parent dirs, as temp-dir should be created by OS.
     createDirectoryIfMissing False cacheDir_
@@ -101,7 +107,7 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
         , cacheDir           = cacheDir_
         , diffParseThy       = error "not in diff mode!"
         , parseThy           = liftIO . thParser
-        , getStatic          = st
+        , getStatic          = staticFiles
         , theoryVar          = thyVar
         , threadVar          = thrVar
         , autosaveProofstate = autosave
@@ -147,19 +153,19 @@ withWebUIDiff :: String                      -- ^ Message to output once the sev
           -- ^ Theory loader (from string).
           -- -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
-          -> FilePath                        -- ^ Path to static content directory
           -> FilePath                        -- ^ Path to dot binary
           -> ImageFormat                     -- ^ The preferred image format
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
 withWebUIDiff readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
-          stPath dotCmd' imgFormat' defaultAutoProver' f
+          dotCmd' imgFormat' defaultAutoProver' f
   = do
     thy    <- getTheos
     thrVar <- newMVar M.empty
     thyVar <- newMVar thy
-    st     <- static stPath
+    -- NOTE (SM): uncomment this line to load the assets dynamically.
+    -- staticFiles     <- Yesod.Static.static "data"
     when autosave $ createDirectoryIfMissing False autosaveDir
     -- Don't create parent dirs, as temp-dir should be created by OS.
     createDirectoryIfMissing False cacheDir_
@@ -169,7 +175,7 @@ withWebUIDiff readyMsg cacheDir_ thDir loadState autosave thLoader thParser debu
         , cacheDir           = cacheDir_
         , parseThy           = error "in diff mode!"
         , diffParseThy       = liftIO . thParser
-        , getStatic          = st
+        , getStatic          = staticFiles
         , theoryVar          = thyVar
         , threadVar          = thrVar
         , autosaveProofstate = autosave

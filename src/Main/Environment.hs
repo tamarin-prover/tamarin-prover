@@ -21,9 +21,8 @@ import           System.Exit
 import           System.IO
 import           System.Process
 
-import           Paths_tamarin_prover
-
 import           Main.Console
+
 
 ------------------------------------------------------------------------------
 -- Retrieving the paths to required tools.
@@ -67,11 +66,6 @@ getCpuModel =
   errMsg = "could not extract CPU model"
   handler :: IOException -> IO String
   handler _ = return errMsg
-
--- | Get the path to the Html template file.
-getHtmlTemplate :: IO FilePath
-getHtmlTemplate = getDataFileName "HTML_TEMPLATE"
-
 
 -- | Build the command line corresponding to a program arguments tuple.
 commandLine :: String -> [String] -> String

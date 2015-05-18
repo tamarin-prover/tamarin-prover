@@ -1,11 +1,15 @@
 The Tamarin prover repository
 =============================
+![master branch build-status](https://travis-ci.org/tamarin-prover/tamarin-prover.svg?branch=develop)
 
 This README describes the organization of the repository of the Tamarin prover
 for security protocol verification. Its intended audience are interested
 users and future developers of the Tamarin prover. For installation
 and usage instructions of the Tamarin prover see:
 http://www.infsec.ethz.ch/research/software/tamarin.
+
+TODO: @cas, installation, usage, and examples (see #147)
+
 
 Developing
 ----------
@@ -19,22 +23,33 @@ http://nvie.com/posts/a-successful-git-branching-model/.
 We moreover use the Haskell coding style from
 https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md.
 
-The simplest way to start developing is to call `make force-install` in the
-root directory of this repository. This installs the repository versions of
-the `tamarin-prover` package and its supporting libraries
-`tamarin-prover-utils`, `tamarin-prover-term`, and `tamarin-prover-theory`
-in the global package database. Once this succeeded, compatible versions of
-all libraries required by the `tamarin-prover` are also installed in the
-global package database. Thus, you can load the `Main` module of the Tamarin
-prover by typing `ghci Main` in the root directory of this repository. Note
-that, if GHCi prints
+We manage the Haskell dependencies using 'cabal sandbox'es with all transitive
+dependencies pinned in the 'cabal.config' file. To bootstrap development, you
+should run a successful sandboxed installation by calling 'make install' in
+the repositories root directory. This will build the tamarin-prover executable
+at
 
-~~~~
-*** WARNING: /home/repositories/git/github/meiersi/tamarin-prover/.ghci is writable by someone else, IGNORING!
-~~~~
+  cabal-sandbox/bin/tamarin-prover
 
-, then you have to `chmod g-w` the directory `.` and the GHCi configuration
-file `.ghci`.
+This file is relocatable and you can copy it anywhere you'd like. Also to
+other systems with the same 'libc' and 'libgmp' libraries.
+
+To enter the GHCi repl, type
+
+  cabal repl
+
+in the root directory of this repository. If you are working on one of the
+tamarin-prover-XXX libraries, you can use GHCi to load them by typing 'cabal
+repl' in their respective root directory.
+
+The static web assets are embedded into the built binary in the file
+'src/Web/Dispatch.hs'. See the note on 'staticFile' on how to enable dynamic
+reloading in case you are working on the web assets.
+
+The variants of the intruder rules for Diffi-Hellman exponentiation and
+Bilinear-Pairing are embedded statically in 'src/Main/TheoryLoader.hs'. If you
+change them, then this file needs to be recompiled for the changes to come
+into effect.
 
 Note that we welcome all contributions, e.g., further protocol models. Just
 send us a pull request.
