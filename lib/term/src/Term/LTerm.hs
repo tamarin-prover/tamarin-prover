@@ -553,7 +553,7 @@ avoid = maybe 0 (succ . snd) . boundsVarIdx
 -- | @m `evalFreshAvoiding` t@ evaluates the monadic action @m@ with a
 -- fresh-variable supply that avoids generating variables occurring in @t@.
 evalFreshAvoiding :: HasFrees t => Fresh a -> t -> a
-evalFreshAvoiding m = evalFresh m . avoid
+evalFreshAvoiding m a = evalFresh m (avoid a)
 
 -- | @m `evalFreshTAvoiding` t@ evaluates the monadic action @m@ in the
 -- underlying monad with a fresh-variable supply that avoids generating
@@ -564,7 +564,7 @@ evalFreshTAvoiding m = evalFreshT m . avoid
 -- | @s `renameAvoiding` t@ replaces all free variables in @s@ by
 --   fresh variables avoiding variables in @t@.
 renameAvoiding :: (HasFrees s, HasFrees t) => s -> t -> s
-s `renameAvoiding` t = rename s `evalFreshAvoiding` t
+renameAvoiding s t = evalFreshAvoiding (rename s) t
 
 -- | @s `renameAvoiding` t@ replaces all free variables in @s@ by
 --   fresh variables avoiding variables in @t@.

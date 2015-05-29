@@ -188,7 +188,7 @@ import qualified Data.Set                             as S
 import           Control.Basics
 import           Control.Category
 import           Control.DeepSeq
--- import           Control.Monad.Fresh
+import           Control.Monad.Fresh
 import           Control.Monad.Reader
 
 import           Data.Label                           ((:->), mkLabels)
@@ -571,6 +571,7 @@ getOriginalRule ctxt side (Rule rule _ _ _) = case rule of
 
 -- | Returns true if the graph is correct, i.e. complete and conclusions and premises match
 -- | Note that this does not check if all goals are solved, nor if any axioms are violated!
+-- FIXME: consider implicit deduction
 isCorrectDG :: System -> Bool
 isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) True (L.get sNodes sys)
   where
@@ -584,26 +585,44 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
                                                
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
-getMirrorDG ctxt side sys = unifyInstances sys (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) [freshAndPubConstrRules] newProtoRules) otherRules)
+getMirrorDG ctxt side sys = unifyInstances sys $ evalFreshAvoiding newNodes freshAndPubConstrRules
   where
     (freshAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
     (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)
+    newNodes = (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) (return [freshAndPubConstrRules]) newProtoRules) otherRules)
     
     -- We keep instantiations of fresh and public variables. Currently new public variables in protocol rule instances 
     -- are instantiated correctly in someRuleACInstAvoiding, but if this is changed we need to fix this part.
-    transformRuleInstance :: NodeId -> RuleACInst -> [M.Map NodeId RuleACInst] -> [M.Map NodeId RuleACInst]
-    transformRuleInstance idx rule nodes = (\x y -> M.insert idx y x) <$> nodes <*> getOtherRulesAndVariants rule 
+    transformRuleInstance :: MonadFresh m => NodeId -> RuleACInst -> m ([M.Map NodeId RuleACInst]) -> m ([M.Map NodeId RuleACInst])
+    transformRuleInstance idx rule nodes = genNodeMapsForAllRuleVariants <$> nodes <*> (getOtherRulesAndVariants rule)
       where
-        getOtherRulesAndVariants :: RuleACInst -> [RuleACInst]
-        getOtherRulesAndVariants r = concat $ map (\x -> getVariants nodes $ temp x) (getOppositeRules ctxt side r)
-          where
-            temp x = if isProtocolRule r 
-                        then someRuleACInstAvoidingFixing x nodes (getSubstitutionsFixingNewVars r (getOriginalRule ctxt side r))
-                        else someRuleACInstAvoiding x nodes
+        genNodeMapsForAllRuleVariants :: [M.Map NodeId RuleACInst] -> [RuleACInst] -> [M.Map NodeId RuleACInst]
+        genNodeMapsForAllRuleVariants nodes' rules = (\x y -> M.insert idx y x) <$> nodes' <*> rules
+        
+        getOtherRulesAndVariants :: MonadFresh m => RuleACInst -> m ([RuleACInst])
+        getOtherRulesAndVariants r = mapGetVariants (getOppositeRules ctxt side r)
+          where       
+            mapGetVariants :: MonadFresh m => [RuleAC] -> m ([RuleACInst])
+            mapGetVariants []     = return []
+            mapGetVariants (x:xs) = do
+              instances <- if isProtocolRule r 
+                              then someRuleACInstFixing x (getSubstitutionsFixingNewVars r (getOriginalRule ctxt side r))
+                              else someRuleACInst x
+              variants <- getVariants instances
+              rest <- mapGetVariants xs
+              return (variants++rest)
             
-        getVariants :: (HasFrees t) => t -> (RuleACInst, Maybe RuleACConstrs) -> [RuleACInst]
-        getVariants _ (r, Nothing)       = [r]
-        getVariants a (r, Just (Disj v)) = map (\x -> apply (freshToFreeAvoiding x (a, r)) r) v
+        getVariants :: MonadFresh m => (RuleACInst, Maybe RuleACConstrs) -> m ([RuleACInst])
+        getVariants (r, Nothing)       = return [r]
+        getVariants (r, Just (Disj v)) = appSubst v
+          where
+            appSubst :: MonadFresh m => [LNSubstVFresh] -> m ([RuleACInst])
+            appSubst []     = return []
+            appSubst (x:xs) = do
+              subst <- freshToFree x
+              inst <- return (apply subst r)
+              rest <- appSubst xs
+              return (inst:rest)
                                               
     unifyInstances :: System -> [M.Map NodeId RuleACInst] -> Maybe System
     unifyInstances sys' newrules = 
@@ -708,10 +727,6 @@ getTrivialFacts nodes sys = case (unsolvedTrivialGoals sys) of
 
     getAllEqData :: LNFact -> NodePrem -> Maybe ([(LNFact, LVar, LVar)])
     getAllEqData fact p = zipWith (\(x, y) z -> (x, y, z)) <$> getFactAndVars nodes p <*> (isTrivialFact fact)
-
--- | Given a system and a node premise together with a list of "less" predecessors, returns a list of facts and variables if the premise has no matching conclusion in any of the predecessors.
-getAllWithoutMatchingConcs :: M.Map NodeId RuleACInst -> System -> (NodePrem, [NodeId]) -> Maybe ([(LNFact, LVar)])
-getAllWithoutMatchingConcs nodes sys (premid, gids) = if null (getAllMatchingConcs sys premid gids) then (getFactAndVars nodes premid) else (Just [])
 
 -- | If the fact at premid in nodes is trivial, returns the fact and its (trivial) variables. Otherwise returns nothing
 getFactAndVars :: M.Map NodeId RuleACInst -> NodePrem -> Maybe ([(LNFact, LVar)])
@@ -906,8 +921,8 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
   , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("solved goals",    prettyGoals True se)
-  , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
-  , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
+--   , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
+--   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
@@ -918,7 +933,7 @@ prettyNonGraphSystemDiff :: HighlightDocument d => DiffProofContext -> DiffSyste
 prettyNonGraphSystemDiff ctxt se = vsep $ map combine
 -- FIXME!!!
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
-  , ("current rule",        {-prettyEitherRule-} maybe (text "none") text $ L.get dsCurrentRule se)
+  , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
   , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
                                  (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
@@ -935,14 +950,6 @@ prettyProofType :: HighlightDocument d => Maybe DiffProofType -> d
 prettyProofType Nothing  = text "none"
 prettyProofType (Just p) = text $ show p
 
-
--- | Pretty print the either rules.
-prettyEitherRule :: HighlightDocument d => Maybe (Either RuleAC ProtoRuleE) -> d
-prettyEitherRule Nothing             = text "none"
-prettyEitherRule (Just (Left rule))  = prettyRuleAC rule
-prettyEitherRule (Just (Right rule)) = prettyProtoRuleE rule
-
-    
 -- | Pretty print solved or unsolved goals.
 prettyGoals :: HighlightDocument d => Bool -> System -> d
 prettyGoals solved sys = vsep $ do
