@@ -67,6 +67,7 @@ module Theory.Proof (
   , replaceSorryProver
   , replaceDiffSorryProver
   , contradictionProver
+  , contradictionDiffProver
 
   -- ** Explicit representation of a fully automatic prover
   , SolutionExtractor(..)
@@ -95,6 +96,7 @@ import           Data.Binary
 import           Data.DeriveTH
 import           Data.Foldable                    (Foldable, foldMap)
 import           Data.List
+import qualified Data.Label                       as L
 import qualified Data.Map                         as M
 import           Data.Maybe
 import           Data.Monoid
@@ -601,6 +603,11 @@ orelse :: Prover -> Prover -> Prover
 orelse p1 p2 = Prover $ \ctxt d se prf ->
     runProver p1 ctxt d se prf `mplus` runProver p2 ctxt d se prf
 
+-- | Resorts to the second prover, if the first one is not successful.
+orelseDiff :: DiffProver -> DiffProver -> DiffProver
+orelseDiff p1 p2 = DiffProver $ \ctxt d se prf ->
+    runDiffProver p1 ctxt d se prf `mplus` runDiffProver p2 ctxt d se prf
+
 -- | Try to apply a prover. If it fails, just return the original proof.
 tryProver :: Prover -> Prover
 tryProver =  (`orelse` mempty)
@@ -700,6 +707,20 @@ contradictionProver = Prover $ \ctxt d sys prf ->
             (Contradiction . Just <$> contradictions ctxt sys))
         ctxt d sys prf
 
+-- | Use the first diff prover that works.
+firstDiffProver :: [DiffProver] -> DiffProver
+firstDiffProver = foldr orelseDiff failDiffProver
+
+-- | Diff Prover that does one contradiction step if possible.
+contradictionDiffProver :: DiffProver
+contradictionDiffProver = DiffProver $ \ctxt d sys prf ->
+  case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
+    (Just _, Just s, Just sys') -> runDiffProver
+              (firstDiffProver $ map oneStepDiffProver $
+                  (DiffBackwardSearchStep . Contradiction . Just <$> contradictions (eitherProofContext ctxt s) sys'))
+          ctxt d sys prf
+    (_     , _     , _        ) -> Nothing
+
 ------------------------------------------------------------------------------
 -- Automatic Prover's
 ------------------------------------------------------------------------------
@@ -736,13 +757,13 @@ runAutoProver (AutoProver heuristic bound cut) =
         boundProofDepth b <$> runProver p ctxt d se prf
 
 runAutoDiffProver :: AutoProver -> DiffProver
-runAutoDiffProver (AutoProver heuristic bound cut) =
+runAutoDiffProver (AutoProver heuristic bound _ {-cut-}) =
     mapDiffProverDiffProof id {-cutSolved-} $ maybe id boundProver bound autoProver
   where
-    cutSolved = case cut of
-      CutDFS     -> cutOnSolvedDFSDiff
-      CutBFS     -> cutOnSolvedBFSDiff
-      CutNothing -> id
+--     cutSolved = case cut of
+--       CutDFS     -> cutOnSolvedDFSDiff
+--       CutBFS     -> cutOnSolvedBFSDiff
+--       CutNothing -> id
 
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.

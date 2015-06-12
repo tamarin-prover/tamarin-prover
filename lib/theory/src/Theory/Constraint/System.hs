@@ -42,6 +42,7 @@ module Theory.Constraint.System (
   , dpcDestrRules
   , dpcConstrRules
   , dpcAxioms
+  , eitherProofContext
 
   -- ** Classified rules
   , ClassifiedRules(..)
@@ -62,6 +63,7 @@ module Theory.Constraint.System (
   , cdCases
   
   , Side(..)
+  , opposite
     
   -- * Constraint systems
   , System
@@ -111,6 +113,7 @@ module Theory.Constraint.System (
 
   , isCorrectDG
   , getMirrorDG
+  , doAxiomsHold
   
   , checkIndependence
   
@@ -162,6 +165,10 @@ module Theory.Constraint.System (
   , sNextGoalNr
   
   , sDiffSystem
+  
+  -- * Formula simplification
+  
+  , impliedFormulas
 
   -- * Pretty-printing
   , prettySystem
@@ -184,6 +191,7 @@ import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe)
 import           Data.Monoid                          (Monoid(..))
 import qualified Data.Set                             as S
+import           Data.Either                          (partitionEithers)
 
 import           Control.Basics
 import           Control.Category
@@ -232,6 +240,10 @@ nonSilentRules = filter (not . null . L.get rActs) . joinAllRules
 
 -- | In the diff type, we have either the Left Hand Side or the Right Hand Side
 data Side = LHS | RHS deriving(Show, Eq, Ord, Read)
+
+opposite :: Side -> Side
+opposite LHS = RHS
+opposite RHS = LHS
 
 -- | Whether we are checking for the existence of a trace satisfiying a the
 -- current constraint system or whether we're checking that no traces
@@ -365,6 +377,10 @@ $(mkLabels [''ProofContext, ''DiffProofContext, ''CaseDistinction])
 -- | The 'MaudeHandle' of a proof-context.
 pcMaudeHandle :: ProofContext :-> MaudeHandle
 pcMaudeHandle = sigmMaudeHandle . pcSignature
+
+-- | Returns the LHS or RHS proof-context of a diff proof context.
+eitherProofContext :: DiffProofContext -> Side -> ProofContext
+eitherProofContext ctxt s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
 
 -- Instances
 ------------
@@ -583,6 +599,131 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
                                                [(Edge x _)] -> fact == nodeConcFact x sys'
                                                _            -> False
                                                
+-- | A partial valuation for atoms. The return value of this function is
+-- interpreted as follows.
+--
+-- @partialAtomValuation ctxt sys ato == Just True@ if for every valuation
+-- @theta@ satisfying the graph constraints and all atoms in the constraint
+-- system @sys@, the atom @ato@ is also satisfied by @theta@.
+--
+-- The interpretation for @Just False@ is analogous. @Nothing@ is used to
+-- represent *unknown*.
+--
+safePartialAtomValuation :: ProofContext -> System -> LNAtom -> Maybe Bool
+safePartialAtomValuation ctxt sys =
+    eval
+  where
+    runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
+    before     = alwaysBefore sys
+    lessRel    = rawLessRel sys
+    nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
+
+    -- | 'True' iff there in every solution to the system the two node-ids are
+    -- instantiated to a different index *in* the trace.
+    nonUnifiableNodes :: NodeId -> NodeId -> Bool
+    nonUnifiableNodes i j = maybe False (not . runMaude) $
+        (unifiableRuleACInsts) <$> M.lookup i (L.get sNodes sys)
+                               <*> M.lookup j (L.get sNodes sys)
+
+    -- | Try to evaluate the truth value of this atom in all models of the
+    -- constraint system 'sys'.
+    eval ato = case ato of
+          Action (ltermNodeId' -> i) fa
+            | otherwise ->
+                case M.lookup i (L.get sNodes sys) of
+                  Just ru
+                    | any (fa ==) (L.get rActs ru)                                -> Just True
+                    | all (not . runMaude . unifiableLNFacts fa) (L.get rActs ru) -> Just False
+                  _                                                               -> Nothing
+
+          Less (ltermNodeId' -> i) (ltermNodeId' -> j)
+            | i == j || j `before` i             -> Just False
+            | i `before` j                       -> Just True
+            | isLast sys i && isInTrace sys j    -> Just False
+            | isLast sys j && isInTrace sys i &&
+              nonUnifiableNodes i j              -> Just True
+            | otherwise                          -> Nothing
+
+          EqE x y
+            | x == y                                -> Just True
+            | not (runMaude (unifiableLNTerms x y)) -> Just False
+            | otherwise                             ->
+                case (,) <$> ltermNodeId x <*> ltermNodeId y of
+                  Just (i, j)
+                    | i `before` j || j `before` i  -> Just False
+                    | nonUnifiableNodes i j         -> Just False
+                  _                                 -> Nothing
+
+          Last (ltermNodeId' -> i)
+            | isLast sys i                       -> Just True
+            | any (isInTrace sys) (nodesAfter i) -> Just False
+            | otherwise ->
+                case L.get sLastAtom sys of
+                  Just j | nonUnifiableNodes i j -> Just False
+                  _                              -> Nothing
+                  
+-- | @impliedFormulas se imp@ returns the list of guarded formulas that are
+-- implied by @se@.
+impliedFormulas :: MaudeHandle -> System -> LNGuarded -> [LNGuarded]
+impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++ show res)-} res
+  where
+    res = case openGuarded gf `evalFresh` avoid gf of
+      Just (All, _vs, antecedent, succedent) -> do
+        let (actionsEqs, otherAtoms) = first sortGAtoms . partitionEithers $
+                                        map prepare antecedent
+            succedent'               = gall [] otherAtoms succedent
+        subst <- candidateSubsts emptySubst actionsEqs
+        return $ unskolemizeLNGuarded $ applySkGuarded subst succedent'
+      _ -> []
+    gf = skolemizeGuarded gf0
+
+    prepare (Action i fa) = Left  (GAction (i,fa))
+    prepare (EqE s t)     = Left  (GEqE (s,t))
+    prepare ato           = Right (fmap (fmapTerm (fmap Free)) ato)
+
+    sysActions = do (i, fa) <- allActions sys
+                    return (skolemizeTerm (varTerm i), skolemizeFact fa)
+
+    candidateSubsts subst []               = return subst
+    candidateSubsts subst ((GAction a):as) = do
+        sysAct <- sysActions
+        subst' <- (`runReader` hnd) $ matchAction sysAct (applySkAction subst a)
+        candidateSubsts (compose subst' subst) as
+    candidateSubsts subst ((GEqE eq):as)   = do
+        let (s,t) = applySkTerm subst <$> eq
+            (term,pat) | frees s == [] = (s,t)
+                       | frees t == [] = (t,s)
+                       | otherwise     = error $ "impliedFormulas: impossible, "
+                                           ++ "equality not guarded as checked"
+                                           ++"by 'Guarded.formulaToGuarded'."
+        subst' <- (`runReader` hnd) $ matchTerm term pat
+        candidateSubsts (compose subst' subst) as
+                  
+
+-- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
+-- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
+doAxiomsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
+doAxiomsHold ctxt sys formulas isSolved = 
+  if (all (== gtrue) (simplify formulas isSolved)) 
+    then Just $ trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) True 
+    else if (any (== gfalse) (simplify formulas isSolved)) 
+          then Just $ trace ("doAxiomsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) False
+          else trace ("doAxiomsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) Nothing
+  where
+    simplify :: [LNGuarded] -> Bool -> [LNGuarded]
+    simplify forms solved = if (step forms solved) == forms 
+                        then (step forms solved)
+                        else simplify (step forms solved) solved
+    
+    step :: [LNGuarded] -> Bool -> [LNGuarded]
+    step forms solved = map simpGuard $ concat $ map (impliedOrInitial solved) forms
+    
+    valuation = (safePartialAtomValuation ctxt sys)
+    simpGuard = simplifyGuardedOrReturn valuation
+    impliedOrInitial solved x = if isAllGuarded x && (solved || not (null (impliedForms x))) then (impliedForms x) else [x]
+    impliedForms = impliedFormulas (L.get pcMaudeHandle ctxt) sys
+          
+                  
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
 getMirrorDG ctxt side sys = unifyInstances sys $ evalFreshAvoiding newNodes freshAndPubConstrRules
@@ -938,12 +1079,36 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
   , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
                                  (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
                                  _                                                                                                                   -> text "none")
+  , ("DEBUG",               maybe (text "none") (\x -> vsep $ map prettyGuarded x) help)
+  , ("DEBUG2",              maybe (text "none") (\x -> vsep $ map prettyGuarded x) help2)
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
   , ("construction rules",  vsep $ map prettyRuleAC $ S.toList $ L.get dsConstrRules se)
   , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
+    help :: Maybe [LNGuarded]
+    help = do 
+      side <- L.get dsSide se
+--       system <- L.get dsSystem se
+      axioms <- Just $ L.get dpcAxioms ctxt
+      sideaxioms <- Just $ filter (\x -> fst x == side) axioms
+--       formulas <- Just $ concat $ map snd sideaxioms
+--       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
+--       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
+      return $ concat $ map snd sideaxioms
+
+    help2 :: Maybe [LNGuarded]
+    help2 = do 
+      side2 <- L.get dsSide se
+      side <- Just $ if side2 == LHS then RHS else LHS
+--       system <- L.get dsSystem se
+      axioms <- Just $ L.get dpcAxioms ctxt
+      sideaxioms <- Just $ filter (\x -> fst x == side) axioms
+--       formulas <- Just $ concat $ map snd sideaxioms
+--       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
+--       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
+      return $ concat $ map snd sideaxioms
 
 -- | Pretty print the proof type.
 prettyProofType :: HighlightDocument d => Maybe DiffProofType -> d

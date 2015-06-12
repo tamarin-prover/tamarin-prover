@@ -162,16 +162,16 @@ openGoals sys = do
                                 return t
 
 
--- | Returns true if all open goals in the system are "trivial" fact goals. -- FIXME: Remove
-allOpenGoalsAreSimpleFacts :: System -> Bool
-allOpenGoalsAreSimpleFacts sys = all goalIsSimpleFact (openGoals sys)
-  where
-    goalIsSimpleFact :: AnnotatedGoal -> Bool
-    goalIsSimpleFact ((ActionG _ fact),  _) = (isTrivialFact fact /= Nothing) && (isKUFact fact)
-    goalIsSimpleFact ((ChainG _ _),      _) = False
-    goalIsSimpleFact ((PremiseG _ fact), _) = (isTrivialFact fact /= Nothing)
-    goalIsSimpleFact ((SplitG _),        _) = False
-    goalIsSimpleFact ((DisjG _),         _) = False
+-- -- | Returns true if all open goals in the system are "trivial" fact goals. -- FIXME: Remove
+-- allOpenGoalsAreSimpleFacts :: System -> Bool
+-- allOpenGoalsAreSimpleFacts sys = all goalIsSimpleFact (openGoals sys)
+--   where
+--     goalIsSimpleFact :: AnnotatedGoal -> Bool
+--     goalIsSimpleFact ((ActionG _ fact),  _) = (isTrivialFact fact /= Nothing) && (isKUFact fact)
+--     goalIsSimpleFact ((ChainG _ _),      _) = False
+--     goalIsSimpleFact ((PremiseG _ fact), _) = (isTrivialFact fact /= Nothing)
+--     goalIsSimpleFact ((SplitG _),        _) = False
+--     goalIsSimpleFact ((DisjG _),         _) = False
 
                                 
 ------------------------------------------------------------------------------

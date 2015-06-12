@@ -988,7 +988,7 @@ getProofContextDiff s l thy = case s of
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
-getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) ((LHS, axiomsLeft):[(RHS, axiomsRight)]) -- FIXME!!
+getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) ((LHS, axiomsLeft):[(RHS, axiomsRight)])
   where
     items = L.get diffThyItems thy
     axiomsLeft  = do EitherAxiomItem (LHS, ax) <- items
@@ -1002,16 +1002,16 @@ getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get (crcInjectiveFactInsts . diffThyCacheLeft) thy)
             TypedCaseDist
             ( L.get (crcTypedCaseDists . diffThyCacheLeft)              thy)
-            AvoidInduction   -- FIXME?
-            ExistsNoTrace    -- FIXME?
+            AvoidInduction
+            ExistsNoTrace
         RHS -> ProofContext
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyCacheRight)           thy)
             ( L.get (crcInjectiveFactInsts . diffThyCacheRight) thy)
             TypedCaseDist
             ( L.get (crcTypedCaseDists . diffThyCacheRight)              thy)
-            AvoidInduction   -- FIXME?
-            ExistsNoTrace    -- FIXME?
+            AvoidInduction
+            ExistsNoTrace
 
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
@@ -1089,9 +1089,6 @@ closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTh
 closeDiffTheoryWithMaude sig thy0 = do
     proveDiffTheory (const True) (const True) checkProof checkDiffProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
   where
-    ruleitems :: [DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton]
-    ruleitems = ((map (\x -> EitherRuleItem (LHS, x)) leftOpenRules) ++ (map (\x -> EitherRuleItem (RHS, x)) rightOpenRules))
-    
     cacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
     cacheRight = closeRuleCache axiomsRight typAsms sig rightClosedRules (L.get diffThyCacheRight thy0)
     checkProof = checkAndExtendProver (sorryProver Nothing)
@@ -1389,7 +1386,7 @@ mkSystemDiff s ctxt axioms previousItems =
 -- | Construct a diff constraint system.
 mkDiffSystem :: DiffProofContext -> [(Side, Axiom)] -> [DiffTheoryItem r r2 p p2]
         -> DiffSystem
-mkDiffSystem ctxt axioms items = emptyDiffSystem -- FIXME!!!
+mkDiffSystem _ _ _ = emptyDiffSystem
 
 ------------------------------------------------------------------------------
 -- References to lemmas
@@ -1600,7 +1597,7 @@ prettyLemma ppPrf lem =
 
 -- | Pretty print an Either lemma.
 prettyEitherLemma :: HighlightDocument d => (p -> d) -> (Side, Lemma p) -> d
-prettyEitherLemma ppPrf (s, lem) =
+prettyEitherLemma ppPrf (_, lem) =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
@@ -1685,18 +1682,18 @@ prettyClosedProtoRule cru =
       | isTrivialProtoVariantAC ruAC ruE = multiComment_ ["has exactly the trivial AC variant"]
       | otherwise                        = multiComment $ prettyProtoRuleAC ruAC
 
--- | Pretty print an closed rule.
-prettyClosedEitherRule :: HighlightDocument d => (Side, ClosedProtoRule) -> d
-prettyClosedEitherRule (s, cru) = 
-    text ((show s) ++ ": ") <>
-    (prettyProtoRuleE ruE) $--$
-    (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
-  where
-    ruAC = L.get cprRuleAC cru
-    ruE  = L.get cprRuleE cru
-    ppRuleAC
-      | isTrivialProtoVariantAC ruAC ruE = multiComment_ ["has exactly the trivial AC variant"]
-      | otherwise                        = multiComment $ prettyProtoRuleAC ruAC
+-- -- | Pretty print an closed rule.
+-- prettyClosedEitherRule :: HighlightDocument d => (Side, ClosedProtoRule) -> d
+-- prettyClosedEitherRule (s, cru) = 
+--     text ((show s) ++ ": ") <>
+--     (prettyProtoRuleE ruE) $--$
+--     (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
+--   where
+--     ruAC = L.get cprRuleAC cru
+--     ruE  = L.get cprRuleE cru
+--     ppRuleAC
+--       | isTrivialProtoVariantAC ruAC ruE = multiComment_ ["has exactly the trivial AC variant"]
+--       | otherwise                        = multiComment $ prettyProtoRuleAC ruAC
 
 -- | Pretty print an open theory.
 prettyOpenTheory :: HighlightDocument d => OpenTheory -> d

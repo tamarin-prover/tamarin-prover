@@ -33,6 +33,8 @@ module Theory.Constraint.Solver.ProofMethod (
   , prettyDiffProofMethod
 
 ) where
+  
+import           Debug.Trace
 
 import           Data.Binary
 import           Data.DeriveTH
@@ -244,10 +246,6 @@ execDiffProofMethod :: DiffProofContext
 execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ show sys -- return M.empty
       case method of
         DiffSorry _                                           -> return M.empty
--- REMOVED, as we merged solved and trivial.
---         DiffSolved
---           | isSolved && checkOtherSide                        -> return M.empty
---           | otherwise                                         -> Nothing
         DiffBackwardSearch
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys) of
                                                                       (Just rule, Nothing) -> Just $ startBackwardSearch rule
@@ -261,21 +259,32 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | otherwise                                         -> Nothing
         DiffSolved
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just _, Just sys') -> if ((isTrivial sys') && checkOtherSide) then return M.empty else Nothing
+                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && (checkOtherSide s sys' == Just True)) ||
+                                                                                                        ((isSolved s sys') && (checkOtherSide s sys' == Nothing))
+                                                                                                        then return M.empty 
+                                                                                                        else Nothing
                                                                       (_ , _ , _)                 -> Nothing                                                       
           | otherwise                                         -> Nothing
         DiffAttack
-          | isSolved && (not checkOtherSide)                  -> return M.empty
+          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
+                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (checkOtherSide s sys' == Just False) 
+                                                                                                        then return M.empty 
+                                                                                                        else Nothing
+                                                                      (_ , _ , _)                 -> Nothing                                                       
           | otherwise                                         -> Nothing
         DiffRuleEquivalence
           | (L.get dsProofType sys) == Nothing                -> Just ruleEquivalence
           | otherwise                                         -> Nothing
           
   where
-    protoRules  = (L.get dpcProtoRules  ctxt)
-    destrRules  = (L.get dpcDestrRules  ctxt)
-    constrRules = (L.get dpcConstrRules ctxt)
+    protoRules       = (L.get dpcProtoRules  ctxt)
+    protoRulesAC :: Side -> [RuleAC]
+    protoRulesAC LHS = filter (\x -> trace (getRuleNameDiff x) (getRuleNameDiff x) /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCLeft  ctxt)
+    protoRulesAC RHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCRight ctxt)
+    destrRules       = (L.get dpcDestrRules  ctxt)
+    constrRules      = (L.get dpcConstrRules ctxt)
     
+    ruleEquivalenceSystem :: String -> DiffSystem
     ruleEquivalenceSystem rule = L.set dsCurrentRule (Just rule) 
       $ L.set dsConstrRules (S.fromList constrRules) 
       $ L.set dsDestrRules (S.fromList destrRules) 
@@ -292,7 +301,10 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     protoRuleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
     
     -- Not checking construction rules is sound, as they are 'trivial' !
-    ruleEquivalence = foldl protoRuleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) protoRules
+    -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in axioms.
+    -- LHS or RHS is not important in this case als we only need the names of the rules.
+    ruleEquivalence :: M.Map CaseName DiffSystem
+    ruleEquivalence = foldl ruleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) (protoRulesAC LHS)
     
     isTrivial :: System -> Bool
     isTrivial sys' = (dgIsNotEmpty sys') && (allOpenGoalsAreSimpleFacts sys') && (allOpenFactGoalsAreIndependent sys')
@@ -303,30 +315,35 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 --       Just (Left rule)  -> isTrivialACDiffRule    rule
 --       Just (Right rule) -> isTrivialProtoDiffRule rule
     
-    eitherProofContext s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
-    
+    backwardSearchSystem :: Side -> DiffSystem -> String -> DiffSystem
     backwardSearchSystem s sys' rulename = L.set dsSide (Just s)
       $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsSomeTrace True (formula rulename))) sys'
 
+    startBackwardSearch :: String -> M.Map CaseName DiffSystem
     startBackwardSearch rulename = M.insert ("LHS") (backwardSearchSystem LHS sys rulename) $ M.insert ("RHS") (backwardSearchSystem RHS sys rulename) $ M.empty
     
     applyStep :: ProofMethod -> Side -> System -> Maybe (M.Map CaseName DiffSystem)
-    applyStep m s sys' = case (execProofMethod (eitherProofContext s) m sys') of
+    applyStep m s sys' = case (execProofMethod (eitherProofContext ctxt s) m sys') of
                            Nothing    -> Nothing
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
                            
-    isSolved = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                       (Just RuleEquivalence, Just _, Just s, Just sys') -> filter isNotForbiddenKD (rankProofMethods GoalNrRanking (eitherProofContext s) sys') == [] -- checks if the system is solved
-                       (_                   , _     , _     , _        ) -> False           
+    isSolved :: Side -> System -> Bool
+    isSolved s sys' = filter isNotForbiddenKD (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved       
     
+    isNotForbiddenKD :: (ProofMethod, (M.Map CaseName System, String)) -> Bool
     isNotForbiddenKD (Contradiction (Just ForbiddenKD), _) = False
     isNotForbiddenKD (_                               , _) = True
     
-    checkOtherSide = case (L.get dsProofType sys, L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                       (Just RuleEquivalence, Just _, Just s, Just sys') -> case getMirrorDG ctxt s sys' of
-                                                                                 Just sys'' -> True {-error (show sys'')-} -- FIXME: Show other system?
-                                                                                 Nothing    -> False
-                       (_                   , _     , _     , _        ) -> False
+    checkOtherSide :: Side -> System -> Maybe Bool
+    checkOtherSide s sys'= case getMirrorDG ctxt s sys' of
+                             Just sys'' -> trace ("RE: axioms: " ++ (show (axioms s)) ++ " " ++ (show (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s)) (isSolved s sys')))) (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s)) (isSolved s sys'))
+                             Nothing    -> Just False
+            where
+              oppositeCtxt s' = eitherProofContext ctxt (opposite s')
+              axioms s' = axioms' s' $ L.get dpcAxioms ctxt
+              
+              axioms' _ []              = []
+              axioms' s' ((s'', form):xs) = if s' == s'' then form ++ (axioms' s' xs) else (axioms' s' xs)
     
     
     
@@ -409,15 +426,12 @@ rankDiffProofMethods ranking ctxt sys = do
         <|> [(DiffAttack, "Found attack")]
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
-                  (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking (eitherProofContext s) sys')
+                  (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking (eitherProofContext ctxt s) sys')
                   (_         , _        ) -> [])
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
-
-  where
-    eitherProofContext s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
-      
+     
 newtype Heuristic = Heuristic [GoalRanking]
     deriving( Eq, Ord, Show )
 
@@ -571,8 +585,8 @@ smartDiffRanking ctxt sys =
     delaySplits agl = fst parts ++ snd parts
       where
         parts = partition (not . isSplitGoal') agl
-        isSplitGoal' ((SplitG sid), _) = True
-        isSplitGoal' _                 = False
+        isSplitGoal' ((SplitG _), _) = True
+        isSplitGoal' _               = False
 
 
     delayTrivial agl = fst parts ++ snd parts

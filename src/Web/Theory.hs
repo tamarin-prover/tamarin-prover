@@ -132,8 +132,8 @@ applyDiffMethodAtPath thy lemmaName proofPath heuristic i = do
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyDiffProverAtPath thy lemmaName proofPath
       (oneStepDiffProver method                        `mappend`
---        replaceDiffSorryProver (oneStepDiffProver DiffSimplify) `mappend`
---        replaceDiffSorryProver (contradictionDiffProver)    `mappend`
+       replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify)) `mappend`
+       replaceDiffSorryProver (contradictionDiffProver)    `mappend`
        replaceDiffSorryProver (oneStepDiffProver DiffSolved)
       )
 

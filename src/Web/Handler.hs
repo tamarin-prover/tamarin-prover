@@ -198,22 +198,22 @@ getTheories = do
     liftIO $ withMVar (theoryVar yesod) return
 
 
--- | Modify a theory in the map of theories.
-adjTheory :: TheoryIdx
-          -> (TheoryInfo -> TheoryInfo)
-          -> Handler ()
-adjTheory idx f = do
-    yesod <- getYesod
-    liftIO $ modifyMVar_ (theoryVar yesod) $ \theories ->
-      case M.lookup idx theories of
-        Just th -> do
-          case th of
-            Trace thy -> do
-              let newThy =  f thy
-              storeTheory yesod (Trace newThy) idx
-              return $ M.insert idx (Trace newThy) theories
-            Diff _ -> error "adjTheory: found DiffTheory"
-        Nothing -> error "adjTheory: invalid theory index"
+-- -- | Modify a theory in the map of theories.
+-- adjTheory :: TheoryIdx
+--           -> (TheoryInfo -> TheoryInfo)
+--           -> Handler ()
+-- adjTheory idx f = do
+--     yesod <- getYesod
+--     liftIO $ modifyMVar_ (theoryVar yesod) $ \theories ->
+--       case M.lookup idx theories of
+--         Just th -> do
+--           case th of
+--             Trace thy -> do
+--               let newThy =  f thy
+--               storeTheory yesod (Trace newThy) idx
+--               return $ M.insert idx (Trace newThy) theories
+--             Diff _ -> error "adjTheory: found DiffTheory"
+--         Nothing -> error "adjTheory: invalid theory index"
 
 -- | Modify a theory in the map of theories.
 adjEitherTheory :: TheoryIdx
@@ -229,22 +229,22 @@ adjEitherTheory idx f = do
             return $ M.insert idx newThy theories
         Nothing -> error "adjEitherTheory: invalid theory index"
 
--- | Modify a theory in the map of theories.
-adjDiffTheory :: TheoryIdx
-              -> (DiffTheoryInfo -> DiffTheoryInfo)
-              -> Handler ()
-adjDiffTheory idx f = do
-    yesod <- getYesod
-    liftIO $ modifyMVar_ (theoryVar yesod) $ \theories ->
-      case M.lookup idx theories of
-        Just th -> do
-          case th of
-            Diff thy -> do
-              let newThy =  f thy
-              storeTheory yesod (Diff newThy) idx
-              return $ M.insert idx (Diff newThy) theories
-            Trace _ -> error "adjTheory: found normal Theory"
-        Nothing -> error "adjTheory: invalid theory index"
+-- -- | Modify a theory in the map of theories.
+-- adjDiffTheory :: TheoryIdx
+--               -> (DiffTheoryInfo -> DiffTheoryInfo)
+--               -> Handler ()
+-- adjDiffTheory idx f = do
+--     yesod <- getYesod
+--     liftIO $ modifyMVar_ (theoryVar yesod) $ \theories ->
+--       case M.lookup idx theories of
+--         Just th -> do
+--           case th of
+--             Diff thy -> do
+--               let newThy =  f thy
+--               storeTheory yesod (Diff newThy) idx
+--               return $ M.insert idx (Diff newThy) theories
+--             Trace _ -> error "adjTheory: found normal Theory"
+--         Nothing -> error "adjTheory: invalid theory index"
 
         
 -- | Debug tracing.
