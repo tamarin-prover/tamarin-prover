@@ -114,6 +114,7 @@ module Theory.Constraint.System (
   , isCorrectDG
   , getMirrorDG
   , doAxiomsHold
+  , filterAxioms
   
   , checkIndependence
   
@@ -700,6 +701,37 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
         candidateSubsts (compose subst' subst) as
                   
 
+-- | Removes all axioms that are not relevant for the system, i.e. that only contain atoms not present in the system.
+filterAxioms :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
+filterAxioms ctxt sys formulas = filter unifiableNodes formulas
+  where
+    runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
+
+    -- | 'True' iff there in every solution to the system the two node-ids are
+    -- instantiated to a different index *in* the trace.
+    unifiableNodes :: LNGuarded -> Bool
+    unifiableNodes fm = case fm of
+         (GAto ato)  -> unifiableAtoms [bvarToLVar ato]
+         (GDisj fms) -> any unifiableNodes $ getDisj fms
+         (GConj fms) -> any unifiableNodes $ getConj fms
+         (GGuarded _ _ atos gf) -> (unifiableNodes gf) || (unifiableAtoms $ map bvarToLVar atos)
+   
+    unifiableAtoms :: [Atom (VTerm Name (LVar))] -> Bool
+    unifiableAtoms []                   = False
+    unifiableAtoms ((Action _ fact):fs) = unifiableFact fact || unifiableAtoms fs
+    unifiableAtoms (_:fs)               = unifiableAtoms fs
+         
+    -- FIXME: Do unification check instead of existence check
+    unifiableFact :: LNFact -> Bool
+    unifiableFact fact = mapper fact
+    
+    mapper fact = any (runMaude . unifiableLNFacts fact) $ concat $ map (L.get rActs . snd) $ M.toList (L.get sNodes sys)
+    
+--       maybe False (not . runMaude) $
+--         (unifiableRuleACInsts) <$> M.lookup i (L.get sNodes sys)
+--                                <*> M.lookup j (L.get sNodes sys)
+-- 
+                  
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
 doAxiomsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
