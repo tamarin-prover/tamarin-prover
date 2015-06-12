@@ -1,0 +1,33 @@
+theory AxiomDiffTest2
+begin
+
+/*
+ * Protocol:	 Test whether condition axioms are treated correctly
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: 
+ * Date: 	 June 2015
+ *
+ * Status: 	 ?
+ */
+
+
+functions: h/1
+
+rule Test: 
+  [ Fr(~f) ]
+  --[ Never1(~f) ]->
+  [ Fact(~f) ]
+
+rule Test2: 
+  [ Fact(f) ]
+  --[ Never2(f) ]->
+  [ Fact2(f) ]
+
+
+axiom blockLeft [left]:
+  "All #i #j f. (Never1(f) @i & Never2(f) @j) ==> F"
+  
+axiom blockLeft2 [left]:
+  "All #i f. Never2(f) @ i ==> (All #j. Never1(f) @j ==> F)"
+
+end
