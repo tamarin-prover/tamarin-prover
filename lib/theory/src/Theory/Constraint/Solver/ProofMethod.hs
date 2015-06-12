@@ -278,11 +278,12 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           
   where
     protoRules       = (L.get dpcProtoRules  ctxt)
-    protoRulesAC :: Side -> [RuleAC]
-    protoRulesAC LHS = filter (\x -> trace (getRuleNameDiff x) (getRuleNameDiff x) /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCLeft  ctxt)
-    protoRulesAC RHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCRight ctxt)
     destrRules       = (L.get dpcDestrRules  ctxt)
     constrRules      = (L.get dpcConstrRules ctxt)
+
+    protoRulesAC :: Side -> [RuleAC]
+    protoRulesAC LHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCLeft  ctxt)
+    protoRulesAC RHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCRight ctxt)
     
     ruleEquivalenceSystem :: String -> DiffSystem
     ruleEquivalenceSystem rule = L.set dsCurrentRule (Just rule) 
