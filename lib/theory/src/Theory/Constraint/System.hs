@@ -703,7 +703,7 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
 
 -- | Removes all axioms that are not relevant for the system, i.e. that only contain atoms not present in the system.
 filterAxioms :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
-filterAxioms ctxt sys formulas = filter unifiableNodes formulas
+filterAxioms ctxt sys formulas = filter (not . unifiableNodes) formulas
   where
     runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
 
@@ -711,11 +711,13 @@ filterAxioms ctxt sys formulas = filter unifiableNodes formulas
     -- instantiated to a different index *in* the trace.
     unifiableNodes :: LNGuarded -> Bool
     unifiableNodes fm = case fm of
-         (GAto ato)  -> unifiableAtoms [bvarToLVar ato]
+      -- calling 'bvarToLVar' on atoms that contain bound variables crashes the system; I have for now removed those calls completely which is likely not good enough to prevent non-termination; non-terminates indeed for axiom-test.spthy on Rule_Send
+         (GAto ato)  -> False -- unifiableAtoms [bvarToLVar ato]
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
-         (GGuarded _ _ atos gf) -> (unifiableNodes gf) || (unifiableAtoms $ map bvarToLVar atos)
-   
+         (GGuarded _ _ atos gf) -> (unifiableNodes gf) -- || (unifiableAtoms $ trace ("atom on which bvarToLVar will be applied: " ++ concat (map show atos)) $ map bvarToLVar atos)
+-- bvarToLVar can only be applied if there are NO bound variables left - which is not the case here
+
     unifiableAtoms :: [Atom (VTerm Name (LVar))] -> Bool
     unifiableAtoms []                   = False
     unifiableAtoms ((Action _ fact):fs) = unifiableFact fact || unifiableAtoms fs

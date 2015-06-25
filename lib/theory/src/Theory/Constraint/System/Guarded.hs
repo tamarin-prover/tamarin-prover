@@ -54,6 +54,7 @@ module Theory.Constraint.System.Guarded (
 
   -- ** Conversions to non-bound representations
   , bvarToLVar
+--  , unbindAtom
   , openGuarded
 
   -- ** Substitutions
@@ -310,6 +311,12 @@ bvarToLVar =
   where
     boundError v = error $ "bvarToLVar: left-over bound variable '"
                            ++ show v ++ "'"
+
+-- | Assuming that there are no more bound variables left in an atom of a
+-- formula, convert it to an atom with free variables only.
+--bvarToMaybeLVar :: Ord c => Atom (VTerm c (BVar LVar)) -> Maybe (Atom (VTerm c LVar))
+--bvarToMaybeLVar =
+--    fmap (fmapTerm (fmap (foldBVar ??? id)))
 
 -- | Provided an 'Atom' does not contain a bound variable, it is converted to
 -- the type of atoms without bound varaibles.
