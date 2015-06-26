@@ -703,7 +703,7 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
 
 -- | Removes all axioms that are not relevant for the system, i.e. that only contain atoms not present in the system.
 filterAxioms :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
-filterAxioms ctxt sys formulas = filter (not . unifiableNodes) formulas
+filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
   where
     runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
 
@@ -711,12 +711,15 @@ filterAxioms ctxt sys formulas = filter (not . unifiableNodes) formulas
     -- instantiated to a different index *in* the trace.
     unifiableNodes :: LNGuarded -> Bool
     unifiableNodes fm = case fm of
-      -- calling 'bvarToLVar' on atoms that contain bound variables crashes the system; I have for now removed those calls completely which is likely not good enough to prevent non-termination; non-terminates indeed for axiom-test.spthy on Rule_Send
-         (GAto ato)  -> False -- unifiableAtoms [bvarToLVar ato]
+      -- FIXME RS: 'bvarToLVar' is NOT the right function to call here.
+      -- calling 'bvarToLVar' on atoms that contain bound variables crashes the system; removing those calls completely prevents crash but is not good enough to prevent non-termination; non-terminates indeed for axiom-test.spthy on Rule_Send
+      -- having it in (instead of "False") leads to 'crashes' as before
+      -- maybe first apply 'substBoundAtom' to replace all bound variables by logical variables -- can we reconstruct the correct ones from the axiom(name)?
+      -- alternatively do the "unifiableAtoms" check on terms with bound variables?
+         (GAto ato)  -> unifiableAtoms $ trace ("atom on which bvarToLVar will be applied: " ++ show ato) $ [bvarToLVar ato]
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
-         (GGuarded _ _ atos gf) -> (unifiableNodes gf) -- || (unifiableAtoms $ trace ("atom on which bvarToLVar will be applied: " ++ concat (map show atos)) $ map bvarToLVar atos)
--- bvarToLVar can only be applied if there are NO bound variables left - which is not the case here
+         (GGuarded _ _ atos gf) -> (unifiableNodes gf) || (unifiableAtoms $ trace ("atom on which bvarToLVar will be applied: " ++ concat (map show atos)) $ map bvarToLVar atos)
 
     unifiableAtoms :: [Atom (VTerm Name (LVar))] -> Bool
     unifiableAtoms []                   = False

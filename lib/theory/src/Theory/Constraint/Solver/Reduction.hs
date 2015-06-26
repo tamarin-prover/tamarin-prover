@@ -326,7 +326,7 @@ insertAction i fa = do
                        then do                          
                           modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
                           insertGoal goal False
-                          markGoalAsSolved "mult" goal
+                          markGoalAsSolved "union" goal
                           mapM_ requiresKU ms *> return Changed
                           
                        else do
