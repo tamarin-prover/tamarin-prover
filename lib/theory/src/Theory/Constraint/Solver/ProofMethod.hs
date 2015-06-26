@@ -33,7 +33,7 @@ module Theory.Constraint.Solver.ProofMethod (
   , prettyDiffProofMethod
 
 ) where
-  
+
 import           Debug.Trace
 
 import           Data.Binary
@@ -267,10 +267,10 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | otherwise                                         -> Nothing
         DiffAttack
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (checkOtherSide s sys' == Just False) 
-                                                                                                        then return M.empty 
+                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (checkOtherSide s sys' == Just False)
+                                                                                                        then return M.empty
                                                                                                         else Nothing
-                                                                      (_ , _ , _)                 -> Nothing                                                       
+                                                                      (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
         DiffRuleEquivalence
           | (L.get dsProofType sys) == Nothing                -> Just ruleEquivalence
@@ -329,7 +329,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
                            
     isSolved :: Side -> System -> Bool
-    isSolved s sys' = filter isNotForbiddenKD (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved       
+    isSolved s sys' = filter isNotForbiddenKD (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
     
     isNotForbiddenKD :: (ProofMethod, (M.Map CaseName System, String)) -> Bool
     isNotForbiddenKD (Contradiction (Just ForbiddenKD), _) = False
@@ -342,7 +342,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
             where
               oppositeCtxt s' = eitherProofContext ctxt (opposite s')
               axioms s' sys'' = filterAxioms (oppositeCtxt s') sys'' $ axioms' s' $ L.get dpcAxioms ctxt
-              
+
               axioms' _ []              = []
               axioms' s' ((s'', form):xs) = if s' == s'' then form ++ (axioms' s' xs) else (axioms' s' xs)
     
@@ -432,7 +432,7 @@ rankDiffProofMethods ranking ctxt sys = do
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
-     
+
 newtype Heuristic = Heuristic [GoalRanking]
     deriving( Eq, Ord, Show )
 

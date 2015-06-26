@@ -166,9 +166,8 @@ module Theory.Constraint.System (
   , sNextGoalNr
   
   , sDiffSystem
-  
+
   -- * Formula simplification
-  
   , impliedFormulas
 
   -- * Pretty-printing
@@ -662,7 +661,7 @@ safePartialAtomValuation ctxt sys =
                 case L.get sLastAtom sys of
                   Just j | nonUnifiableNodes i j -> Just False
                   _                              -> Nothing
-                  
+
 -- | @impliedFormulas se imp@ returns the list of guarded formulas that are
 -- implied by @se@.
 impliedFormulas :: MaudeHandle -> System -> LNGuarded -> [LNGuarded]
@@ -699,7 +698,7 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
                                            ++"by 'Guarded.formulaToGuarded'."
         subst' <- (`runReader` hnd) $ matchTerm term pat
         candidateSubsts (compose subst' subst) as
-                  
+
 
 -- | Removes all axioms that are not relevant for the system, i.e. that only contain atoms not present in the system.
 filterAxioms :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
@@ -725,13 +724,13 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
     unifiableAtoms []                   = False
     unifiableAtoms ((Action _ fact):fs) = unifiableFact fact || unifiableAtoms fs
     unifiableAtoms (_:fs)               = unifiableAtoms fs
-         
+
     -- FIXME: Do unification check instead of existence check
     unifiableFact :: LNFact -> Bool
     unifiableFact fact = mapper fact
-    
+
     mapper fact = any (runMaude . unifiableLNFacts fact) $ concat $ map (L.get rActs . snd) $ M.toList (L.get sNodes sys)
-    
+
 --       maybe False (not . runMaude) $
 --         (unifiableRuleACInsts) <$> M.lookup i (L.get sNodes sys)
 --                                <*> M.lookup j (L.get sNodes sys)
@@ -740,27 +739,27 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
 doAxiomsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
-doAxiomsHold ctxt sys formulas isSolved = 
-  if (all (== gtrue) (simplify formulas isSolved)) 
-    then Just $ trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) True 
-    else if (any (== gfalse) (simplify formulas isSolved)) 
+doAxiomsHold ctxt sys formulas isSolved =
+  if (all (== gtrue) (simplify formulas isSolved))
+    then Just $ trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) True
+    else if (any (== gfalse) (simplify formulas isSolved))
           then Just $ trace ("doAxiomsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) False
           else trace ("doAxiomsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) Nothing
   where
     simplify :: [LNGuarded] -> Bool -> [LNGuarded]
-    simplify forms solved = if (step forms solved) == forms 
+    simplify forms solved = if (step forms solved) == forms
                         then (step forms solved)
                         else simplify (step forms solved) solved
-    
+
     step :: [LNGuarded] -> Bool -> [LNGuarded]
     step forms solved = map simpGuard $ concat $ map (impliedOrInitial solved) forms
-    
+
     valuation = (safePartialAtomValuation ctxt sys)
     simpGuard = simplifyGuardedOrReturn valuation
     impliedOrInitial solved x = if isAllGuarded x && (solved || not (null (impliedForms x))) then (impliedForms x) else [x]
     impliedForms = impliedFormulas (L.get pcMaudeHandle ctxt) sys
-          
-                  
+
+
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
 getMirrorDG ctxt side sys = unifyInstances sys $ evalFreshAvoiding newNodes freshAndPubConstrRules

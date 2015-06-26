@@ -62,9 +62,9 @@ module Theory.Constraint.System.Guarded (
   , substBoundAtom
   , substFree
   , substFreeAtom
-  
+
   -- ** Skolemization
-  
+
   , unskolemizeLNGuarded
   , applySkGuarded
   , skolemizeGuarded
@@ -629,7 +629,7 @@ simplifyGuarded :: (LNAtom -> Maybe Bool)
 simplifyGuarded valuation fm0
     | fm1 /= fm0 = trace (render ppMsg) (Just fm1)
     | otherwise  = Nothing
-  where 
+  where
     fm1 = simplifyGuardedOrReturn valuation fm0
     ppFm  = nest 2 . doubleQuotes . prettyGuarded
     ppMsg = nest 2 $ text "simplified formula:" $-$
@@ -656,7 +656,7 @@ simplifyGuardedOrReturn valuation fm0 = {-trace (render ppMsg)-} fm1
     simp (GConj fms)           = gconj $ map simp $ getConj fms
     simp (GGuarded All [] atos gf)
       | any ((Just False ==) . snd) annAtos = gtrue
-      | otherwise                           = 
+      | otherwise                           =
           -- keep all atoms that we cannot evaluate yet.
           -- NOTE: Here we are missing the opportunity to change the valuation
           -- for evaluating the body 'gf'. We could add all atoms that we have
