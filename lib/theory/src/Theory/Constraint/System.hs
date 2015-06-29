@@ -710,32 +710,24 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
     -- instantiated to a different index *in* the trace.
     unifiableNodes :: LNGuarded -> Bool
     unifiableNodes fm = case fm of
-      -- FIXME RS: 'bvarToLVar' is NOT the right function to call here.
-      -- calling 'bvarToLVar' on atoms that contain bound variables crashes the system; removing those calls completely prevents crash but is not good enough to prevent non-termination; non-terminates indeed for axiom-test.spthy on Rule_Send
-      -- having it in (instead of "False") leads to 'crashes' as before
-      -- maybe first apply 'substBoundAtom' to replace all bound variables by logical variables -- can we reconstruct the correct ones from the axiom(name)?
-      -- alternatively do the "unifiableAtoms" check on terms with bound variables?
-         (GAto ato)  -> unifiableAtoms $ trace ("atom on which bvarToLVar will be applied: " ++ show ato) $ [bvarToLVar ato]
+         (GAto ato)  -> unifiableAtoms $ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato) $ [bvarToLVar ato]
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
-         (GGuarded _ _ atos gf) -> (unifiableNodes gf) || (unifiableAtoms $ trace ("atom on which bvarToLVar will be applied: " ++ concat (map show atos)) $ map bvarToLVar atos)
+         gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
+                                          Nothing               -> error "Bug in filterAxioms, please report."
+                                          Just (_, _, atos, gf) -> (unifiableNodes gf) || (unifiableAtoms atos)
 
     unifiableAtoms :: [Atom (VTerm Name (LVar))] -> Bool
     unifiableAtoms []                   = False
     unifiableAtoms ((Action _ fact):fs) = unifiableFact fact || unifiableAtoms fs
     unifiableAtoms (_:fs)               = unifiableAtoms fs
 
-    -- FIXME: Do unification check instead of existence check
     unifiableFact :: LNFact -> Bool
     unifiableFact fact = mapper fact
 
     mapper fact = any (runMaude . unifiableLNFacts fact) $ concat $ map (L.get rActs . snd) $ M.toList (L.get sNodes sys)
 
---       maybe False (not . runMaude) $
---         (unifiableRuleACInsts) <$> M.lookup i (L.get sNodes sys)
---                                <*> M.lookup j (L.get sNodes sys)
--- 
-                  
+
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
 doAxiomsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
