@@ -62,14 +62,18 @@ rule Resp:
 
 rule ChallengeInitiator:
     [ InitiatorKey(I,R, k) , Fr(~z)]
-  --[ Challenge(I,R,diff(k, ~z)) ]->
+  --[ Challenge(I,R,diff(k, ~z)) 
+    , SafeChallenge()
+    ]->
     [ Out(diff(k,'g'^~z)) ]
 //    [ Out(diff(k,~z)) ]
 // the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
 
 rule ChallengeResponder:
     [ ResponderKey(I,R, k) , Fr(~z)]
-  --[ Challenge(I,R,diff(k, ~z)) ]->
+  --[ Challenge(I,R,diff(k, ~z)) 
+    , SafeChallenge()
+    ]->
     [ Out(diff(k,'g'^~z)) ]
 //    [ Out(diff(k,~z)) ]
 // the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
@@ -78,5 +82,7 @@ rule ChallengeResponder:
 //axiom singleChallenge:
 //  "All I R k I2 R2 k2 #j #j2. Challenge(I, R, k)@j & Challenge(I2, R2, k2)@ j2 ==> #j = #j2"
 
+axiom safeSingleChallenge:
+  " All #i1 #2. SafeChallenge() @i1 & SafeChallenge() @i2 ==> #i1 = #i2"
 
 end
