@@ -83,6 +83,6 @@ rule ChallengeResponder:
 //  "All I R k I2 R2 k2 #j #j2. Challenge(I, R, k)@j & Challenge(I2, R2, k2)@ j2 ==> #j = #j2"
 
 axiom safeSingleChallenge:
-  " All #i1 #2. SafeChallenge() @i1 & SafeChallenge() @i2 ==> #i1 = #i2"
+  " All #i1 #i2. SafeChallenge() @i1 & SafeChallenge() @i2 ==> #i1 = #i2"
 
 end
