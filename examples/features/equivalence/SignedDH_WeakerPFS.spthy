@@ -103,6 +103,15 @@ axiom ChallengeBeforeReveal:
      not ( (Ex #r. SafeLtkReveal() @ r & r < i))
   "
 
+/* // alternative formulation that does not help
+axiom ChallengeBeforeReveal:
+  "All #i #r. 
+     SafeChallenge() @ i & SafeLtkReveal() @ r
+     ==>
+     i < r
+  "
+*/
+
 /*
 axiom CombinedStuff:
   "All I R sessKey #i. 
