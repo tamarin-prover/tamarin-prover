@@ -67,14 +67,14 @@ rule Resp:
 
 rule ChallengeInitiator:
     [ InitiatorKey(I,R, k) , Fr(~z)]
-  --[ Challenge(I,R,diff(k, ~z)) ]->
+  --[ Challenge(I,R) ]->
     [ Out(diff(k,'g'^~z)) ]
 //    [ Out(diff(k,~z)) ]
 // the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
 
 rule ChallengeResponder:
     [ ResponderKey(I,R, k) , Fr(~z)]
-  --[ Challenge(I,R,diff(k, ~z)) ]->
+  --[ Challenge(I,R) ]->
     [ Out(diff(k,'g'^~z)) ]
 //    [ Out(diff(k,~z)) ]
 // the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
@@ -92,12 +92,12 @@ lemma No_Inv_exp[use_induction,reuse,typing]:
 //// OLD STUFF BASED ON JUST SIGNING SOMETHING TO AVOID CHAINS - FOUND ANOTHER WAY AROUND THAT NOW...
 rule ChallengeInitiator:
     [ InitiatorKey($I,$R, k) , Fr(~z) , In(~c)]
-  --[ Challenge($I,$R,diff(k, ~z)) ]->
+  --[ Challenge($I,$R) ]->
     [ Out(diff(sign{'challenge', ~c}k,sign{'challenge', ~c}~z)) ]
 
 rule ChallengeResponder:
     [ ResponderKey($I,$R, k) , Fr(~z) , In(~c)]
-  --[ Challenge($I,$R,diff(k, ~z)) ]->
+  --[ Challenge($I,$R) ]->
     [ Out(diff(sign{'challenge', ~c}k, sign{'challenge', ~c}~z)) ]
 */
 
@@ -113,18 +113,18 @@ lemma Perfect_Forward_Secrecy:
   "
 
 axiom singleChallenge:
-  "All I R k I2 R2 k2 #j #j2. Challenge(I, R, k)@j & Challenge(I2, R2, k2)@ j2 ==> #j = #j2"
+  "All I R I2 R2 #j #j2. Challenge(I, R)@j & Challenge(I2, R2)@ j2 ==> #j = #j2"
 
 // Note that these axioms are only for observational equivalence, comment them out for trace properties!
 //axiom NoChallengeAndRevealInitiatorBefore:
-//  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(I)@k & k < i)"
+//  "not (Ex I R #i #k. Challenge(I, R)@i & LtkReveal(I)@k & k < i)"
 
 //axiom NoChallengeAndRevealResponder:
-//  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(R)@k & k < i)"
+//  "not (Ex I R #i #k. Challenge(I, R)@i & LtkReveal(R)@k & k < i)"
 
 axiom CombinedStuff:
-  "All I R sessKey #i. 
-     Challenge(I,R,sessKey) @ i 
+  "All I R #i. 
+     Challenge(I,R) @ i 
      ==>
      not ( (Ex #r. LtkReveal(I) @ r & r < i)
          | (Ex #r. LtkReveal(R) @ r & r < i)

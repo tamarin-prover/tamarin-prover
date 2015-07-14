@@ -731,7 +731,8 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
 doAxiomsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
-doAxiomsHold ctxt sys formulas isSolved =
+doAxiomsHold ctxt sys formulas isSolved = Just True -- FIXME Jannik: This is a temporary simulation of diff-safe axioms!
+{-
   if (all (== gtrue) (simplify formulas isSolved))
     then Just $ trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) True
     else if (any (== gfalse) (simplify formulas isSolved))
@@ -749,7 +750,7 @@ doAxiomsHold ctxt sys formulas isSolved =
     valuation = (safePartialAtomValuation ctxt sys)
     simpGuard = simplifyGuardedOrReturn valuation
     impliedOrInitial solved x = if isAllGuarded x && (solved || not (null (impliedForms x))) then (impliedForms x) else [x]
-    impliedForms = impliedFormulas (L.get pcMaudeHandle ctxt) sys
+    impliedForms = impliedFormulas (L.get pcMaudeHandle ctxt) sys-}
 
 
 -- | Returns the mirrored DG, if it exists.
