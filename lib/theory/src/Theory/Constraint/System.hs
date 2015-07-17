@@ -36,6 +36,7 @@ module Theory.Constraint.System (
   , pcUseInduction
   , pcTraceQuantifier
   , pcMaudeHandle
+  , pcDiffContext
   , dpcPCLeft
   , dpcPCRight
   , dpcProtoRules
@@ -354,6 +355,7 @@ data ProofContext = ProofContext
        , _pcCaseDists          :: [CaseDistinction]
        , _pcUseInduction       :: InductionHint
        , _pcTraceQuantifier    :: SystemTraceQuantifier
+       , _pcDiffContext        :: Bool
        }
        deriving( Eq, Ord, Show )
 
@@ -419,11 +421,11 @@ $(mkLabels [''DiffSystem])
 ------------------------------------------------------------------------------
 
 -- | The empty constraint system, which is logically equivalent to true.
-emptySystem :: CaseDistKind -> System
-emptySystem d = System
+emptySystem :: CaseDistKind -> Bool -> System
+emptySystem d isdiff = System
     M.empty S.empty S.empty Nothing emptyEqStore
     S.empty S.empty S.empty
-    M.empty 0 d False
+    M.empty 0 d isdiff
 
 -- | The empty diff constraint system.
 emptyDiffSystem :: DiffSystem
@@ -441,8 +443,7 @@ formulaToSystem :: [LNGuarded]           -- ^ Axioms to add
 formulaToSystem axioms kind traceQuantifier isdiff fm = 
       insertLemmas safetyAxioms
     $ L.set sFormulas (S.singleton gf2)
-    $ L.set sDiffSystem (isdiff)
-    $ (emptySystem kind)
+    $ (emptySystem kind isdiff)
   where
     (safetyAxioms, otherAxioms) = partition isSafetyFormula axioms
     gf0 = formulaToGuarded_ fm
@@ -1091,7 +1092,8 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
   , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("solved goals",    prettyGoals True se)
---   , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
+  , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
+  , ("DEBUG: Nodes",    text $ show $ M.toList $ L.get sNodes se) -- prettyGoals False se)
 --   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where

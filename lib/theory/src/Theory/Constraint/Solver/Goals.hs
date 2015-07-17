@@ -78,10 +78,10 @@ openGoals sys = do
         ActionG _ (kFactView -> Just (UpK, m)) ->
           if get sDiffSystem sys 
              -- In a diff proof, all action goals need to be solved.
-             then not (solved 
+             then not (solved)
                       -- handled by 'insertAction'
-                      || isPair m || isInverse m 
-                      || isProduct m || isUnion m) 
+--                       || isPair m || isInverse m 
+--                       || isProduct m || isUnion m) 
              else
                not $    solved
                     || isMsgVar m || sortOfLNTerm m == LSortPub

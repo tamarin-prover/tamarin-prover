@@ -331,17 +331,17 @@ data TheoryPath
 -- | Simple data type for specifying a path to a specific
 -- item within a theory.
 data DiffTheoryPath
-  = DiffTheoryHelp                               -- ^ The help view (help and info about theory)
-  | DiffTheoryLemma Side String                  -- ^ Theory lemma with given name and side
-  | DiffTheoryDiffLemma String                   -- ^ Theory DiffLemma with given name 
-  | DiffTheoryCaseDist Side CaseDistKind Int Int -- ^ Required cases (i'th source, j'th case)
-  | DiffTheoryProof Side String ProofPath        -- ^ Proof path within proof for given lemma
-  | DiffTheoryDiffProof String ProofPath         -- ^ Proof path within proof for given lemma
-  | DiffTheoryMethod Side String ProofPath Int   -- ^ Apply the proof method to proof path
-  | DiffTheoryDiffMethod String ProofPath Int    -- ^ Apply the proof method to proof path
-  | DiffTheoryRules Side                         -- ^ Theory rules per side
-  | DiffTheoryDiffRules                          -- ^ Theory rules unprocessed
-  | DiffTheoryMessage Side                       -- ^ Theory message deduction per side
+  = DiffTheoryHelp                                    -- ^ The help view (help and info about theory)
+  | DiffTheoryLemma Side String                       -- ^ Theory lemma with given name and side
+  | DiffTheoryDiffLemma String                        -- ^ Theory DiffLemma with given name 
+  | DiffTheoryCaseDist Side CaseDistKind Bool Int Int -- ^ Required cases (i'th source, j'th case)
+  | DiffTheoryProof Side String ProofPath             -- ^ Proof path within proof for given lemma
+  | DiffTheoryDiffProof String ProofPath              -- ^ Proof path within proof for given lemma
+  | DiffTheoryMethod Side String ProofPath Int        -- ^ Apply the proof method to proof path
+  | DiffTheoryDiffMethod String ProofPath Int         -- ^ Apply the proof method to proof path
+  | DiffTheoryRules Side Bool                         -- ^ Theory rules per side
+  | DiffTheoryDiffRules                               -- ^ Theory rules unprocessed
+  | DiffTheoryMessage Side Bool                       -- ^ Theory message deduction per side
   deriving (Eq, Show, Read)
 
 -- | Render a theory path to a list of strings. Note that we prefix an
@@ -371,14 +371,14 @@ renderDiffTheoryPath =
     go DiffTheoryHelp = ["help"]
     go (DiffTheoryLemma s name) = ["lemma", show s, name]
     go (DiffTheoryDiffLemma name) = ["difflemma", name]
-    go (DiffTheoryCaseDist s k i j) = ["cases", show s, show k, show i, show j]
+    go (DiffTheoryCaseDist s k i j d) = ["cases", show s, show k, show i, show j, show d]
     go (DiffTheoryProof s lemma path) = "proof" : show s : lemma : path
     go (DiffTheoryDiffProof lemma path) = "diffProof" : lemma : path
     go (DiffTheoryMethod s lemma path idx) = "method" : show s : lemma : show idx : path
     go (DiffTheoryDiffMethod lemma path idx) = "diffMethod" : lemma : show idx : path
-    go (DiffTheoryRules s) = ["rules", show s]
+    go (DiffTheoryRules s d) = ["rules", show s, show d]
     go (DiffTheoryDiffRules) = ["diffrules"]
-    go (DiffTheoryMessage s) = ["message", show s]
+    go (DiffTheoryMessage s d) = ["message", show s, show d]
 
 -- | Prefix an underscore to the empty string and strings starting with an
 -- underscore.
@@ -457,19 +457,25 @@ parseDiffTheoryPath =
     safeRead  = listToMaybe . map fst . reads
 
     parseRules :: [String] -> Maybe DiffTheoryPath
-    parseRules (y:_) = do
+    parseRules (y:z:_) = do
       s <- case y of "LHS" -> return LHS
                      "RHS" -> return RHS
                      _     -> Nothing
-      return (DiffTheoryRules s)
+      d <- case z of "True"  -> return True
+                     "False" -> return False
+                     _       -> Nothing
+      return (DiffTheoryRules s d)
     parseRules _         = Nothing
     
     parseMessage :: [String] -> Maybe DiffTheoryPath
-    parseMessage (y:_) = do
+    parseMessage (y:z:_) = do
       s <- case y of "LHS" -> return LHS
                      "RHS" -> return RHS
                      _     -> Nothing
-      return (DiffTheoryMessage s)
+      d <- case z of "True"  -> return True
+                     "False" -> return False
+                     _       -> Nothing
+      return (DiffTheoryMessage s d)
     parseMessage _         = Nothing
     
     parseLemma :: [String] -> Maybe DiffTheoryPath
@@ -512,16 +518,19 @@ parseDiffTheoryPath =
     parseDiffMethod _        = Nothing
 
     parseCases :: [String] -> Maybe DiffTheoryPath
-    parseCases (x:kind:y:z:_) = do
+    parseCases (x:kind:pd:y:z:_) = do
       s <- case x of "LHS" -> return LHS
                      "RHS" -> return RHS
                      _     -> Nothing
       k <- case kind of "typed"   -> return TypedCaseDist
                         "untyped" -> return UntypedCaseDist
                         _         -> Nothing
+      d <- case pd of "True"  -> return True
+                      "False" -> return False
+                      _       -> Nothing
       m <- safeRead y
       n <- safeRead z
-      return (DiffTheoryCaseDist s k m n)
+      return (DiffTheoryCaseDist s k d m n)
     parseCases _       = Nothing
 
 type RenderUrl = Route (WebUI) -> T.Text

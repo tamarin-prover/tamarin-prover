@@ -77,7 +77,7 @@ initialCaseDistinction ctxt axioms goal =
     CaseDistinction goal cases
   where
     polish ((name, se), _) = ([name], se)
-    se0   = insertLemmas axioms $ emptySystem UntypedCaseDist
+    se0   = insertLemmas axioms $ emptySystem UntypedCaseDist $ get pcDiffContext ctxt
     cases = fmap polish $
         runReduction instantiate ctxt se0 (avoid (goal, se0))
     instantiate = do

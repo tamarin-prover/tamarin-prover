@@ -231,7 +231,7 @@ execProofMethod ctxt method sys =
       where
         sys0 = set sFormulas (L.get sFormulas sys)
              $ set sLemmas (L.get sLemmas sys)
-             $ emptySystem (L.get sCaseDistKind sys)
+             $ emptySystem (L.get sCaseDistKind sys) (L.get sDiffSystem sys)
 
         insCase name gf = M.insert name (set sFormulas (S.singleton gf) sys)
 

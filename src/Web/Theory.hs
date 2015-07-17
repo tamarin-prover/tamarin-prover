@@ -392,21 +392,37 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     , text ""
     , diffRules
     , text ""
-    , messageLink LHS
+    , messageLink LHS False
     , text ""
-    , messageLink RHS
+    , messageLink RHS False
     , text ""
-    , ruleLink LHS
+    , messageLink LHS True
     , text ""
-    , ruleLink RHS
+    , messageLink RHS True
     , text ""
-    , reqCasesLink LHS "LHS: Untyped case distinctions " UntypedCaseDist
+    , ruleLink LHS False
     , text ""
-    , reqCasesLink RHS "RHS: Untyped case distinctions " UntypedCaseDist
+    , ruleLink RHS False
     , text ""
-    , reqCasesLink LHS "LHS: Typed case distinctions "   TypedCaseDist
+    , ruleLink LHS True
     , text ""
-    , reqCasesLink RHS "RHS: Typed case distinctions "   TypedCaseDist
+    , ruleLink RHS True
+    , text ""
+    , reqCasesLink LHS "LHS: Untyped case distinctions "      UntypedCaseDist False
+    , text ""
+    , reqCasesLink RHS "RHS: Untyped case distinctions "      UntypedCaseDist False
+    , text ""
+    , reqCasesLink LHS "LHS: Untyped case distinctions [Diff] " UntypedCaseDist True
+    , text ""
+    , reqCasesLink RHS "RHS: Untyped case distinctions [Diff] " UntypedCaseDist True
+    , text ""
+    , reqCasesLink LHS "LHS: Typed case distinctions "        TypedCaseDist   False
+    , text ""
+    , reqCasesLink RHS "RHS: Typed case distinctions "        TypedCaseDist   False
+    , text ""
+    , reqCasesLink LHS "LHS: Typed case distinctions [Diff] "   TypedCaseDist   True
+    , text ""
+    , reqCasesLink RHS "RHS: Typed case distinctions [Diff] "   TypedCaseDist   True
     , text ""
     , bold "LHS: Lemmas"
     , text ""
@@ -426,14 +442,14 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     lemmaIndex' s lemma = lemmaIndexDiff renderUrl tidx s lemma
     diffLemmaIndex' lemma = diffLemmaIndex renderUrl tidx lemma
 
-    lemmas s       = map (lemmaIndex' s) (diffTheorySideLemmas s thy)
-    diffLemmas     = map diffLemmaIndex' (getDiffLemmas thy)
-    rules s        = getDiffClassifiedRules s thy
-    rulesInfo s    = parens $ int $ length $ get crProtocol (rules s)
-    casesInfo s kind =
+    lemmas s           = map (lemmaIndex' s) (diffTheorySideLemmas s thy)
+    diffLemmas         = map diffLemmaIndex' (getDiffLemmas thy)
+    rules s isdiff     = getDiffClassifiedRules s isdiff thy
+    rulesInfo s isdiff = parens $ int $ length $ get crProtocol (rules s isdiff)
+    casesInfo s kind isdiff =
         parens $ nCases <> comma <-> text chainInfo
       where
-        cases   = getDiffCaseDistinction s kind thy
+        cases   = getDiffCaseDistinction s isdiff kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
         chainInfo | nChains == 0 = "all chains solved"
@@ -442,12 +458,12 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     bold                 = withTag "strong" [] . text
     overview n info p    = linkToPath renderUrl (TheoryPathDiffMR tidx p) [] (bold n <-> info)
     diffRules            = overview ("Diff Rules") (text "") (DiffTheoryDiffRules)
-    messageLink s        = overview (show s ++ ": Message theory") (text "") (DiffTheoryMessage s)
-    ruleLink s           = overview (ruleLinkMsg s) (rulesInfo s) (DiffTheoryRules s)
-    ruleLinkMsg s        = show s ++ ": Multiset rewriting rules " ++
-                           if null(diffTheorySideAxioms s thy) then "" else " and axioms"
+    messageLink s isdiff = overview (show s ++ ": Message theory" ++ if isdiff then " [Diff]" else "") (text "") (DiffTheoryMessage s isdiff)
+    ruleLink s isdiff    = overview (ruleLinkMsg s isdiff) (rulesInfo s isdiff) (DiffTheoryRules s isdiff)
+    ruleLinkMsg s isdiff = show s ++ ": Multiset rewriting rules " ++
+                           if null(diffTheorySideAxioms s thy) then "" else " and axioms" ++ if isdiff then " [Diff]" else ""
 
-    reqCasesLink s name k = overview name (casesInfo s k) (DiffTheoryCaseDist s k 0 0)
+    reqCasesLink s name k isdiff = overview name (casesInfo s k isdiff) (DiffTheoryCaseDist s k isdiff 0 0)
 
 
 {-
@@ -714,8 +730,8 @@ htmlCaseDistinction renderUrl tidx kind (j, th) =
 
 -- | A Html document representing the requires case splitting theorem.
 htmlCaseDistinctionDiff :: HtmlDocument d
-                    => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> (Int, CaseDistinction) -> d
-htmlCaseDistinctionDiff renderUrl tidx s kind (j, th) =
+                    => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> Bool -> (Int, CaseDistinction) -> d
+htmlCaseDistinctionDiff renderUrl tidx s kind d (j, th) =
     if null cases
       then withTag "h2" [] ppHeader $-$ withTag "h3" [] (text "No cases.")
       else vcat $ withTag "h2" [] ppHeader : cases
@@ -731,7 +747,7 @@ htmlCaseDistinctionDiff renderUrl tidx s kind (j, th) =
     ppCase (i, (names, se)) =
       [ withTag "h3" [] $ fsep [ text "Source", int i, text "of", nCases
                                , text " / named ", doubleQuotes (text name) ]
-      , refDotDiffPath renderUrl tidx (DiffTheoryCaseDist s kind j i)
+      , refDotDiffPath renderUrl tidx (DiffTheoryCaseDist s kind d j i)
       , withTag "p" [] $ ppPrem
       , wrapP $ prettyNonGraphSystem se
       ]
@@ -745,9 +761,9 @@ reqCasesSnippet renderUrl tidx kind thy = vcat $
     htmlCaseDistinction renderUrl tidx kind <$> zip [1..] (getCaseDistinction kind thy)
 
 -- | Build the Html document showing the source cases distinctions.
-reqCasesDiffSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> ClosedDiffTheory -> d
-reqCasesDiffSnippet renderUrl tidx s kind thy = vcat $
-    htmlCaseDistinctionDiff renderUrl tidx s kind <$> zip [1..] (getDiffCaseDistinction s kind thy)
+reqCasesDiffSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> Bool -> ClosedDiffTheory -> d
+reqCasesDiffSnippet renderUrl tidx s kind isdiff thy = vcat $
+    htmlCaseDistinctionDiff renderUrl tidx s kind isdiff <$> zip [1..] (getDiffCaseDistinction s isdiff kind thy)
 
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
@@ -799,8 +815,8 @@ rulesDiffSnippet thy = vcat
             body
 
 -- | Build the Html document showing the either rules of the diff theory.
-rulesDiffSnippetSide :: HtmlDocument d => Side -> ClosedDiffTheory -> d
-rulesDiffSnippetSide s thy = vcat
+rulesDiffSnippetSide :: HtmlDocument d => Side -> Bool -> ClosedDiffTheory -> d
+rulesDiffSnippetSide s isdiff thy = vcat
     [ ppWithHeader "Fact Symbols with Injective Instances" $
         fsepList (text . showFactTagArity) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
@@ -809,8 +825,8 @@ rulesDiffSnippetSide s thy = vcat
         vsep $ map prettyAxiom $ diffTheorySideAxioms s thy
     ]
   where
-    msrRules = get crProtocol $ getDiffClassifiedRules s thy
-    injFacts = S.toList $ getDiffInjectiveFactInsts s thy
+    msrRules = get crProtocol $ getDiffClassifiedRules s isdiff thy
+    injFacts = S.toList $ getDiffInjectiveFactInsts s isdiff thy
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -820,14 +836,14 @@ rulesDiffSnippetSide s thy = vcat
 
             
 -- | Build the Html document showing the message theory.
-messageDiffSnippet :: HtmlDocument d => Side -> ClosedDiffTheory -> d
-messageDiffSnippet s thy = vcat
+messageDiffSnippet :: HtmlDocument d => Side -> Bool -> ClosedDiffTheory -> d
+messageDiffSnippet s isdiff thy = vcat
     [ ppSection "Signature"           [prettySignatureWithMaude (get diffThySignature thy)]
     , ppSection "Construction Rules"  (ppRules crConstruct)
     , ppSection "Destruction Rules"   (ppRules crDestruct)
     ]
   where
-    ppRules l = map prettyRuleAC $ get l $ getDiffClassifiedRules s thy
+    ppRules l = map prettyRuleAC $ get l $ getDiffClassifiedRules s isdiff thy
     ppSection header t =
       withTag "h2" [] (text header) $$ withTag "p"
         [("class","monospace rules")]
@@ -966,12 +982,12 @@ htmlDiffThyPath renderUrl info path =
     go (DiffTheoryMethod _ _ _ _)        = pp $ text "Cannot display theory method."
     go (DiffTheoryDiffMethod _ _ _)      = pp $ text "Cannot display theory diff method."
 
-    go (DiffTheoryDiffLemma _)         = pp $ text "Implement diff lemma pretty printing!"
+    go (DiffTheoryDiffLemma _)           = pp $ text "Implement diff lemma pretty printing!"
 
-    go (DiffTheoryDiffRules)           = pp $ rulesDiffSnippet thy
-    go (DiffTheoryRules s)             = pp $ rulesDiffSnippetSide s thy
-    go (DiffTheoryMessage s)           = pp $ messageDiffSnippet s thy
-    go (DiffTheoryCaseDist s kind _ _) = pp $ reqCasesDiffSnippet renderUrl tidx s kind thy
+    go (DiffTheoryDiffRules)             = pp $ rulesDiffSnippet thy
+    go (DiffTheoryRules s d)             = pp $ rulesDiffSnippetSide s d thy
+    go (DiffTheoryMessage s d)           = pp $ messageDiffSnippet s d thy
+    go (DiffTheoryCaseDist s kind d _ _) = pp $ reqCasesDiffSnippet renderUrl tidx s kind d thy
 
     go (DiffTheoryProof s l p)         = pp $
         fromMaybe (text "No such lemma or proof path.") $ do
@@ -1174,16 +1190,16 @@ imgDiffThyPath :: ImageFormat
            -> IO FilePath
 imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
   where
-    go (DiffTheoryCaseDist s k i j) = renderDotCode (casesDotCode s k i j)
-    go (DiffTheoryProof s l p)      = renderDotCode (proofPathDotCode s l p)
-    go (DiffTheoryDiffProof l p)    = renderDotCode (proofPathDotCodeDiff l p)
-    go _                            = error "Unhandled theory path. This is a bug."
+    go (DiffTheoryCaseDist s k d i j) = renderDotCode (casesDotCode s k i j d)
+    go (DiffTheoryProof s l p)        = renderDotCode (proofPathDotCode s l p)
+    go (DiffTheoryDiffProof l p)      = renderDotCode (proofPathDotCodeDiff l p)
+    go _                              = error "Unhandled theory path. This is a bug."
 
     -- Get dot code for required cases
-    casesDotCode s k i j = D.showDot $
+    casesDotCode s k i j isdiff = D.showDot $
         compact $ snd $ cases !! (i-1) !! (j-1)
       where
-        cases = map (getDisj . get cdCases) (getDiffCaseDistinction s k thy)
+        cases = map (getDisj . get cdCases) (getDiffCaseDistinction s isdiff k thy)
 
     -- Get dot code for proof path in lemma
     proofPathDotCode s lemma proofPath =
@@ -1277,15 +1293,15 @@ titleThyPath thy path = go path
 titleDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> String
 titleDiffThyPath thy path = go path
   where
-    go DiffTheoryHelp                             = "Theory: " ++ get diffThyName thy
-    go (DiffTheoryRules s)                        = "Multiset rewriting rules axioms [" ++ show s ++ "]"
-    go DiffTheoryDiffRules                        = "Multiset rewriting rules and axioms - unprocessed"
-    go (DiffTheoryMessage s)                      = "Message theory [" ++ show s ++ "]"
-    go (DiffTheoryCaseDist _ UntypedCaseDist _ _) = "Untyped case distinctions"
-    go (DiffTheoryCaseDist _ TypedCaseDist _ _)   = "Typed case distinctions"
-    go (DiffTheoryLemma s l)                      = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
-    go (DiffTheoryDiffLemma l)                    = "DiffLemma: " ++ l
-    go (DiffTheoryProof s l [])                   = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
+    go DiffTheoryHelp                               = "Theory: " ++ get diffThyName thy
+    go (DiffTheoryRules s d)                        = "Multiset rewriting rules axioms [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
+    go DiffTheoryDiffRules                          = "Multiset rewriting rules and axioms - unprocessed"
+    go (DiffTheoryMessage s d)                      = "Message theory [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
+    go (DiffTheoryCaseDist s UntypedCaseDist d _ _) = "Untyped case distinctions [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
+    go (DiffTheoryCaseDist s TypedCaseDist d _ _)   = "Typed case distinctions [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
+    go (DiffTheoryLemma s l)                        = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
+    go (DiffTheoryDiffLemma l)                      = "DiffLemma: " ++ l
+    go (DiffTheoryProof s l [])                     = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
     go (DiffTheoryProof s l p)
       | null (last p)       = "Method: " ++ methodName s l p
       | otherwise           = "Case: " ++ last p
@@ -1370,18 +1386,26 @@ nextThyPath thy = go
 nextDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 nextDiffThyPath thy = go
   where
-    go DiffTheoryHelp                               = DiffTheoryDiffRules
-    go DiffTheoryDiffRules                          = DiffTheoryMessage LHS
-    go (DiffTheoryMessage LHS)                      = DiffTheoryMessage RHS
-    go (DiffTheoryMessage RHS)                      = (DiffTheoryRules LHS)
-    go (DiffTheoryRules LHS)                        = DiffTheoryRules RHS
-    go (DiffTheoryRules RHS)                        = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
-    go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
-    go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS TypedCaseDist 0 0
-    go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS TypedCaseDist 0 0
-    go (DiffTheoryCaseDist RHS TypedCaseDist _ _)   = fromMaybe DiffTheoryHelp firstLemma
-    go (DiffTheoryLemma s lemma)                    = DiffTheoryProof s lemma []
-    go (DiffTheoryDiffLemma lemma)                  = DiffTheoryDiffProof lemma []
+    go DiffTheoryHelp                                     = DiffTheoryDiffRules
+    go DiffTheoryDiffRules                                = DiffTheoryMessage LHS False
+    go (DiffTheoryMessage LHS False)                      = DiffTheoryMessage RHS False
+    go (DiffTheoryMessage RHS False)                      = DiffTheoryMessage LHS True
+    go (DiffTheoryMessage LHS True)                       = DiffTheoryMessage RHS True
+    go (DiffTheoryMessage RHS True)                       = (DiffTheoryRules LHS False)
+    go (DiffTheoryRules LHS False)                        = DiffTheoryRules RHS False
+    go (DiffTheoryRules RHS False)                        = DiffTheoryRules LHS True
+    go (DiffTheoryRules LHS True)                         = DiffTheoryRules RHS True
+    go (DiffTheoryRules RHS True)                         = DiffTheoryCaseDist LHS UntypedCaseDist False 0 0
+    go (DiffTheoryCaseDist LHS UntypedCaseDist False _ _) = DiffTheoryCaseDist RHS UntypedCaseDist False 0 0
+    go (DiffTheoryCaseDist RHS UntypedCaseDist False _ _) = DiffTheoryCaseDist LHS UntypedCaseDist True  0 0
+    go (DiffTheoryCaseDist LHS UntypedCaseDist True  _ _) = DiffTheoryCaseDist RHS UntypedCaseDist True  0 0
+    go (DiffTheoryCaseDist RHS UntypedCaseDist True  _ _) = DiffTheoryCaseDist LHS TypedCaseDist False 0 0
+    go (DiffTheoryCaseDist LHS TypedCaseDist False _ _)   = DiffTheoryCaseDist RHS TypedCaseDist False 0 0
+    go (DiffTheoryCaseDist RHS TypedCaseDist False _ _)   = DiffTheoryCaseDist LHS TypedCaseDist True  0 0
+    go (DiffTheoryCaseDist LHS TypedCaseDist True  _ _)   = DiffTheoryCaseDist RHS TypedCaseDist True 0 0
+    go (DiffTheoryCaseDist RHS TypedCaseDist True  _ _)   = fromMaybe DiffTheoryHelp firstLemma
+    go (DiffTheoryLemma s lemma)                          = DiffTheoryProof s lemma []
+    go (DiffTheoryDiffLemma lemma)                        = DiffTheoryDiffProof lemma []
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
@@ -1457,19 +1481,27 @@ prevThyPath thy = go
 prevDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 prevDiffThyPath thy = go
   where
-    go DiffTheoryHelp                               = DiffTheoryHelp
-    go DiffTheoryDiffRules                          = DiffTheoryHelp
-    go (DiffTheoryMessage LHS)                      = DiffTheoryDiffRules
-    go (DiffTheoryMessage RHS)                      = DiffTheoryMessage LHS
-    go (DiffTheoryRules LHS)                        = DiffTheoryMessage RHS
-    go (DiffTheoryRules RHS)                        = DiffTheoryRules LHS
-    go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryRules RHS
-    go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
-    go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
-    go (DiffTheoryCaseDist RHS TypedCaseDist _ _)   = DiffTheoryCaseDist LHS TypedCaseDist   0 0
+    go DiffTheoryHelp                                     = DiffTheoryHelp
+    go DiffTheoryDiffRules                                = DiffTheoryHelp
+    go (DiffTheoryMessage LHS False)                      = DiffTheoryDiffRules
+    go (DiffTheoryMessage RHS False)                      = DiffTheoryMessage LHS False
+    go (DiffTheoryMessage LHS True)                       = DiffTheoryMessage RHS False
+    go (DiffTheoryMessage RHS True)                       = DiffTheoryMessage LHS True
+    go (DiffTheoryRules LHS False)                        = DiffTheoryMessage RHS True
+    go (DiffTheoryRules RHS False)                        = DiffTheoryRules LHS False
+    go (DiffTheoryRules LHS True)                         = DiffTheoryRules RHS False
+    go (DiffTheoryRules RHS True)                         = DiffTheoryRules LHS True
+    go (DiffTheoryCaseDist LHS UntypedCaseDist False _ _) = DiffTheoryRules RHS True
+    go (DiffTheoryCaseDist RHS UntypedCaseDist False _ _) = DiffTheoryCaseDist LHS UntypedCaseDist False 0 0
+    go (DiffTheoryCaseDist LHS UntypedCaseDist True  _ _) = DiffTheoryCaseDist RHS UntypedCaseDist False 0 0
+    go (DiffTheoryCaseDist RHS UntypedCaseDist True  _ _) = DiffTheoryCaseDist LHS UntypedCaseDist True  0 0
+    go (DiffTheoryCaseDist LHS TypedCaseDist False _ _)   = DiffTheoryCaseDist RHS UntypedCaseDist True  0 0
+    go (DiffTheoryCaseDist RHS TypedCaseDist False _ _)   = DiffTheoryCaseDist LHS TypedCaseDist   False 0 0
+    go (DiffTheoryCaseDist LHS TypedCaseDist True  _ _)   = DiffTheoryCaseDist RHS TypedCaseDist   False 0 0
+    go (DiffTheoryCaseDist RHS TypedCaseDist True  _ _)   = DiffTheoryCaseDist LHS TypedCaseDist   True 0 0
     go (DiffTheoryLemma s l)
       | Just prevLemma <- getPrevLemma s l = DiffTheoryProof s prevLemma (lastPath s prevLemma)
-      | otherwise                          = DiffTheoryCaseDist RHS TypedCaseDist 0 0
+      | otherwise                          = DiffTheoryCaseDist RHS TypedCaseDist True 0 0
     go (DiffTheoryDiffLemma l)
       | Just prevLemma <- getPrevDiffLemma l      = DiffTheoryDiffProof prevLemma (lastPathDiff prevLemma)
       | otherwise                                 = lastLemmaRHS
@@ -1477,7 +1509,7 @@ prevDiffThyPath thy = go
       | Just prevPath <- getPrevPath s l p = DiffTheoryProof s l prevPath
       | Just prevLemma <- getPrevLemma s l = DiffTheoryProof s prevLemma (lastPath s prevLemma)
       | s == RHS                           = lastLemmaLHS
-      | otherwise                          = DiffTheoryCaseDist RHS TypedCaseDist 0 0
+      | otherwise                          = DiffTheoryCaseDist RHS TypedCaseDist True 0 0
     go (DiffTheoryDiffProof l p)
       | Just prevPath <- getPrevDiffPath l p   = DiffTheoryDiffProof l prevPath
       | Just prevDiffLemma <- getPrevDiffLemma l = DiffTheoryDiffProof prevDiffLemma (lastPathDiff prevDiffLemma)
@@ -1510,7 +1542,7 @@ prevDiffThyPath thy = go
     getPrevDiffLemma lemmaName = getPrevElement (== lemmaName) (map fst (diffLemmas))
 
     lastLemmaLHS = case lemmas LHS of
-                  [] -> DiffTheoryCaseDist RHS TypedCaseDist 0 0 
+                  [] -> DiffTheoryCaseDist RHS TypedCaseDist True 0 0 
                   l  -> DiffTheoryProof LHS (fst (last l)) (lastPath LHS (fst (last l)))
 
     lastLemmaRHS = case lemmas RHS of
@@ -1561,18 +1593,26 @@ nextSmartThyPath thy = go
 nextSmartDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 nextSmartDiffThyPath thy = go
   where
-    go DiffTheoryHelp                               = DiffTheoryDiffRules
-    go DiffTheoryDiffRules                          = DiffTheoryMessage LHS
-    go (DiffTheoryMessage LHS)                      = DiffTheoryMessage RHS
-    go (DiffTheoryMessage RHS)                      = DiffTheoryRules LHS
-    go (DiffTheoryRules LHS)                        = DiffTheoryRules RHS
-    go (DiffTheoryRules RHS)                        = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
-    go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
-    go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS TypedCaseDist 0 0
-    go (DiffTheoryCaseDist LHS TypedCaseDist _ _)   = DiffTheoryCaseDist RHS TypedCaseDist 0 0
-    go (DiffTheoryCaseDist RHS TypedCaseDist   _ _) = fromMaybe DiffTheoryHelp firstLemma
-    go (DiffTheoryLemma s lemma)                    = DiffTheoryProof s lemma []
-    go (DiffTheoryDiffLemma lemma)                  = DiffTheoryDiffProof lemma []
+    go DiffTheoryHelp                                     = DiffTheoryDiffRules
+    go DiffTheoryDiffRules                                = DiffTheoryMessage LHS False
+    go (DiffTheoryMessage LHS False)                      = DiffTheoryMessage RHS False
+    go (DiffTheoryMessage RHS False)                      = DiffTheoryMessage LHS True
+    go (DiffTheoryMessage LHS True)                       = DiffTheoryMessage RHS True
+    go (DiffTheoryMessage RHS True)                       = (DiffTheoryRules LHS False)
+    go (DiffTheoryRules LHS False)                        = DiffTheoryRules RHS False
+    go (DiffTheoryRules RHS False)                        = DiffTheoryRules LHS True
+    go (DiffTheoryRules LHS True)                         = DiffTheoryRules RHS True
+    go (DiffTheoryRules RHS True)                         = DiffTheoryCaseDist LHS UntypedCaseDist False 0 0
+    go (DiffTheoryCaseDist LHS UntypedCaseDist False _ _) = DiffTheoryCaseDist RHS UntypedCaseDist False 0 0
+    go (DiffTheoryCaseDist RHS UntypedCaseDist False _ _) = DiffTheoryCaseDist LHS UntypedCaseDist True  0 0
+    go (DiffTheoryCaseDist LHS UntypedCaseDist True  _ _) = DiffTheoryCaseDist RHS UntypedCaseDist True  0 0
+    go (DiffTheoryCaseDist RHS UntypedCaseDist True  _ _) = DiffTheoryCaseDist LHS TypedCaseDist False 0 0
+    go (DiffTheoryCaseDist LHS TypedCaseDist False _ _)   = DiffTheoryCaseDist RHS TypedCaseDist False 0 0
+    go (DiffTheoryCaseDist RHS TypedCaseDist False _ _)   = DiffTheoryCaseDist LHS TypedCaseDist True  0 0
+    go (DiffTheoryCaseDist LHS TypedCaseDist True  _ _)   = DiffTheoryCaseDist RHS TypedCaseDist True 0 0
+    go (DiffTheoryCaseDist RHS TypedCaseDist True  _ _)   = fromMaybe DiffTheoryHelp firstLemma
+    go (DiffTheoryLemma s lemma)                          = DiffTheoryProof s lemma []
+    go (DiffTheoryDiffLemma lemma)                        = DiffTheoryDiffProof lemma []
     go (DiffTheoryProof s l p)
       | Just nextPath <- getNextPath s l p = DiffTheoryProof s l nextPath
       | Just nextLemma <- getNextLemma s l = DiffTheoryProof s nextLemma []
@@ -1664,33 +1704,41 @@ prevSmartThyPath thy = go
 prevSmartDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> DiffTheoryPath
 prevSmartDiffThyPath thy = go
   where
-    go DiffTheoryHelp                               = DiffTheoryHelp
-    go DiffTheoryDiffRules                          = DiffTheoryHelp
-    go (DiffTheoryMessage LHS)                      = DiffTheoryDiffRules
-    go (DiffTheoryMessage RHS)                      = DiffTheoryMessage LHS
-    go (DiffTheoryRules LHS)                        = DiffTheoryMessage RHS
-    go (DiffTheoryRules RHS)                        = DiffTheoryRules LHS
-    go (DiffTheoryCaseDist LHS UntypedCaseDist _ _) = DiffTheoryRules RHS
-    go (DiffTheoryCaseDist RHS UntypedCaseDist _ _) = DiffTheoryCaseDist LHS UntypedCaseDist 0 0
-    go (DiffTheoryCaseDist LHS TypedCaseDist   _ _) = DiffTheoryCaseDist RHS UntypedCaseDist 0 0
-    go (DiffTheoryCaseDist RHS TypedCaseDist   _ _) = DiffTheoryCaseDist LHS TypedCaseDist   0 0
+    go DiffTheoryHelp                                     = DiffTheoryHelp
+    go DiffTheoryDiffRules                                = DiffTheoryHelp
+    go (DiffTheoryMessage LHS False)                      = DiffTheoryDiffRules
+    go (DiffTheoryMessage RHS False)                      = DiffTheoryMessage LHS False
+    go (DiffTheoryMessage LHS True)                       = DiffTheoryMessage RHS False
+    go (DiffTheoryMessage RHS True)                       = DiffTheoryMessage LHS True
+    go (DiffTheoryRules LHS False)                        = DiffTheoryMessage RHS True
+    go (DiffTheoryRules RHS False)                        = DiffTheoryRules LHS False
+    go (DiffTheoryRules LHS True)                         = DiffTheoryRules RHS False
+    go (DiffTheoryRules RHS True)                         = DiffTheoryRules LHS True
+    go (DiffTheoryCaseDist LHS UntypedCaseDist False _ _) = DiffTheoryRules RHS True
+    go (DiffTheoryCaseDist RHS UntypedCaseDist False _ _) = DiffTheoryCaseDist LHS UntypedCaseDist False 0 0
+    go (DiffTheoryCaseDist LHS UntypedCaseDist True  _ _) = DiffTheoryCaseDist RHS UntypedCaseDist False 0 0
+    go (DiffTheoryCaseDist RHS UntypedCaseDist True  _ _) = DiffTheoryCaseDist LHS UntypedCaseDist True  0 0
+    go (DiffTheoryCaseDist LHS TypedCaseDist False _ _)   = DiffTheoryCaseDist RHS UntypedCaseDist True  0 0
+    go (DiffTheoryCaseDist RHS TypedCaseDist False _ _)   = DiffTheoryCaseDist LHS TypedCaseDist   False 0 0
+    go (DiffTheoryCaseDist LHS TypedCaseDist True  _ _)   = DiffTheoryCaseDist RHS TypedCaseDist   False 0 0
+    go (DiffTheoryCaseDist RHS TypedCaseDist True  _ _)   = DiffTheoryCaseDist LHS TypedCaseDist   True 0 0
     go (DiffTheoryLemma s l)
-      | Just prevLemma <- getPrevLemma s l        = DiffTheoryProof s prevLemma (lastPath s prevLemma)
-      | otherwise                                 = DiffTheoryCaseDist RHS TypedCaseDist 0 0
+      | Just prevLemma <- getPrevLemma s l                = DiffTheoryProof s prevLemma (lastPath s prevLemma)
+      | otherwise                                         = DiffTheoryCaseDist RHS TypedCaseDist True 0 0
     go (DiffTheoryDiffLemma l)
-      | Just prevLemma <- getPrevDiffLemma l      = DiffTheoryDiffProof prevLemma (lastPathDiff prevLemma)
-      | otherwise                                 = lastLemmaRHS
+      | Just prevLemma <- getPrevDiffLemma l              = DiffTheoryDiffProof prevLemma (lastPathDiff prevLemma)
+      | otherwise                                         = lastLemmaRHS
     go (DiffTheoryProof s l p)
-      | Just prevPath <- getPrevPath s l p        = DiffTheoryProof s l prevPath
-      | Just prevLemma <- getPrevLemma s l        = DiffTheoryProof s prevLemma (lastPath s prevLemma)
-      | s == RHS                                  = lastLemmaLHS
-      | otherwise                                 = DiffTheoryCaseDist RHS TypedCaseDist 0 0
+      | Just prevPath <- getPrevPath s l p                = DiffTheoryProof s l prevPath
+      | Just prevLemma <- getPrevLemma s l                = DiffTheoryProof s prevLemma (lastPath s prevLemma)
+      | s == RHS                                          = lastLemmaLHS
+      | otherwise                                         = DiffTheoryCaseDist RHS TypedCaseDist True 0 0
     go (DiffTheoryDiffProof l p)
-      | Just prevPath <- getPrevPathDiff l p      = DiffTheoryDiffProof l prevPath
-      | Just prevDiffLemma <- getPrevDiffLemma l  = DiffTheoryDiffProof prevDiffLemma (lastPathDiff prevDiffLemma)
-      | otherwise                                 = lastLemmaRHS
-    go path@(DiffTheoryMethod _ _ _ _)            = path
-    go path@(DiffTheoryDiffMethod _ _ _)          = path
+      | Just prevPath <- getPrevPathDiff l p              = DiffTheoryDiffProof l prevPath
+      | Just prevDiffLemma <- getPrevDiffLemma l          = DiffTheoryDiffProof prevDiffLemma (lastPathDiff prevDiffLemma)
+      | otherwise                                         = lastLemmaRHS
+    go path@(DiffTheoryMethod _ _ _ _)                    = path
+    go path@(DiffTheoryDiffMethod _ _ _)                  = path
 
     lemmas s = map (\l -> (get lName l, l)) $ diffTheorySideLemmas s thy
     
@@ -1730,7 +1778,7 @@ prevSmartDiffThyPath thy = go
     getPrevDiffLemma lemmaName = getPrevElement (== lemmaName) (map fst (diffLemmas))
 
     lastLemmaLHS = case lemmas LHS of
-      [] -> DiffTheoryCaseDist RHS TypedCaseDist 0 0 
+      [] -> DiffTheoryCaseDist RHS TypedCaseDist True 0 0 
       l  -> DiffTheoryProof LHS (fst (last l)) (lastPath LHS (fst (last l)))
 
     lastLemmaRHS = case lemmas RHS of

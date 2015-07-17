@@ -53,6 +53,8 @@ module Theory (
   , diffThySignature
   , diffThyCacheLeft
   , diffThyCacheRight
+  , diffThyDiffCacheLeft
+  , diffThyDiffCacheRight
   , diffThyItems
   , diffTheoryLemmas
   , diffTheorySideLemmas
@@ -292,14 +294,15 @@ closeRuleCache :: [LNGuarded]        -- ^ Axioms to use.
                -> SignatureWithMaude -- ^ Signature of theory.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
+               -> Bool               -- ^ Diff or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache axioms typAsms sig protoRules intrRulesAC = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache axioms typAsms sig protoRules intrRulesAC isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules untypedCaseDists typedCaseDists injFactInstances
   where
     ctxt0 = ProofContext
         sig classifiedRules injFactInstances UntypedCaseDist [] AvoidInduction
-        (error "closeRuleCache: trace quantifier should not matter here")
+        (error "closeRuleCache: trace quantifier should not matter here") isdiff
 
     -- inj fact instances
     injFactInstances =
@@ -527,11 +530,13 @@ $(mkLabels [''Theory])
        
 -- | A diff theory contains a set of rewriting rules with diff modeling two instances
 data DiffTheory sig c r r2 p p2 = DiffTheory {
-         _diffThyName       :: String
-       , _diffThySignature  :: sig
-       , _diffThyCacheLeft  :: c
-       , _diffThyCacheRight :: c
-       , _diffThyItems      :: [DiffTheoryItem r r2 p p2]
+         _diffThyName           :: String
+       , _diffThySignature      :: sig
+       , _diffThyCacheLeft      :: c
+       , _diffThyCacheRight     :: c
+       , _diffThyDiffCacheLeft  :: c
+       , _diffThyDiffCacheRight :: c
+       , _diffThyItems          :: [DiffTheoryItem r r2 p p2]
        }
        deriving( Eq, Ord, Show )
 
@@ -795,7 +800,7 @@ defaultOpenTheory flag = Theory "default" (emptySignaturePure flag) [] []
 
 -- | Default diff theory
 defaultOpenDiffTheory :: Bool -> OpenDiffTheory
-defaultOpenDiffTheory flag = DiffTheory "default" (emptySignaturePure flag) [] [] []
+defaultOpenDiffTheory flag = DiffTheory "default" (emptySignaturePure flag) [] [] [] [] []
 
 -- Add the default Diff lemma to an Open Diff Theory
 addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
@@ -813,7 +818,7 @@ addProtoRuleLabels thy = -- modify diffThyItems (++ [DiffLemmaItem (unprovenDiff
 -- Add the rule labels to an Open Diff Theory
 addIntrRuleLabels:: OpenDiffTheory -> OpenDiffTheory
 addIntrRuleLabels thy = -- modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_equivalence")]) thy
-    modify diffThyCacheLeft (map addRuleLabel) $ modify diffThyCacheRight (map addRuleLabel) thy
+    modify diffThyCacheLeft (map addRuleLabel) $ modify diffThyDiffCacheLeft (map addRuleLabel) $ modify diffThyDiffCacheRight (map addRuleLabel) $ modify diffThyCacheRight (map addRuleLabel) thy
   where
     addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getRuleName rule))
     
@@ -827,8 +832,8 @@ openTheory  (Theory n sig c items) =
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness dependens on it.
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
-openDiffTheory  (DiffTheory n sig c1 c2 items) =
-    DiffTheory n (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2)
+openDiffTheory  (DiffTheory n sig c1 c2 c3 c4 items) =
+    DiffTheory n (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
       (map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s p) -> (DiffLemma s (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
 
       
@@ -878,11 +883,11 @@ addIntrRuleACsDiffBoth rs' thy = addIntrRuleACsDiffRight rs' (addIntrRuleACsDiff
 
 -- | Add intruder proof rules.
 addIntrRuleACsDiffLeft :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
-addIntrRuleACsDiffLeft rs' = modify (diffThyCacheLeft) (\rs -> nub $ rs ++ rs')
+addIntrRuleACsDiffLeft rs' thy = modify (diffThyDiffCacheLeft) (\rs -> nub $ rs ++ rs') $ modify (diffThyCacheLeft) (\rs -> nub $ rs ++ rs') thy
 
 -- | Add intruder proof rules.
 addIntrRuleACsDiffRight :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
-addIntrRuleACsDiffRight rs' = modify (diffThyCacheRight) (\rs -> nub $ rs ++ rs')
+addIntrRuleACsDiffRight rs' thy = modify (diffThyDiffCacheRight) (\rs -> nub $ rs ++ rs') $ modify (diffThyCacheRight) (\rs -> nub $ rs ++ rs') thy
 
 -- | Normalize the theory representation such that they remain semantically
 -- equivalent. Use this function when you want to compare two theories (quite
@@ -951,6 +956,7 @@ getProofContext l thy = ProofContext
     ( L.get (cases . thyCache)              thy)
     inductionHint
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
+    False
   where
     kind    = lemmaCaseDistKind l
     cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
@@ -970,6 +976,7 @@ getProofContextDiff s l thy = case s of
             ( L.get (cases . diffThyCacheLeft)              thy)
             inductionHint
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
+            False
   RHS -> ProofContext
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyCacheRight)           thy)
@@ -978,6 +985,7 @@ getProofContextDiff s l thy = case s of
             ( L.get (cases . diffThyCacheRight)              thy)
             inductionHint
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
+            False
   where
     kind    = lemmaCaseDistKind l
     cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
@@ -988,7 +996,7 @@ getProofContextDiff s l thy = case s of
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
-getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyCacheLeft) thy) ((LHS, axiomsLeft):[(RHS, axiomsRight)])
+getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyDiffCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyDiffCacheLeft) thy) ((LHS, axiomsLeft):[(RHS, axiomsRight)])
   where
     items = L.get diffThyItems thy
     axiomsLeft  = do EitherAxiomItem (LHS, ax) <- items
@@ -998,40 +1006,46 @@ getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RH
     proofContext s = case s of
         LHS -> ProofContext
             ( L.get diffThySignature                    thy)
-            ( L.get (crcRules . diffThyCacheLeft)           thy)
-            ( L.get (crcInjectiveFactInsts . diffThyCacheLeft) thy)
+            ( L.get (crcRules . diffThyDiffCacheLeft)           thy)
+            ( L.get (crcInjectiveFactInsts . diffThyDiffCacheLeft) thy)
             TypedCaseDist
-            ( L.get (crcTypedCaseDists . diffThyCacheLeft)              thy)
+            ( L.get (crcTypedCaseDists . diffThyDiffCacheLeft)              thy)
             AvoidInduction
             ExistsNoTrace
+            True
         RHS -> ProofContext
             ( L.get diffThySignature                    thy)
-            ( L.get (crcRules . diffThyCacheRight)           thy)
-            ( L.get (crcInjectiveFactInsts . diffThyCacheRight) thy)
+            ( L.get (crcRules . diffThyDiffCacheRight)           thy)
+            ( L.get (crcInjectiveFactInsts . diffThyDiffCacheRight) thy)
             TypedCaseDist
-            ( L.get (crcTypedCaseDists . diffThyCacheRight)              thy)
+            ( L.get (crcTypedCaseDists . diffThyDiffCacheRight)              thy)
             AvoidInduction
             ExistsNoTrace
+            True
 
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
 getInjectiveFactInsts = L.get (crcInjectiveFactInsts . thyCache)
 
 -- | The facts with injective instances in this theory
-getDiffInjectiveFactInsts :: Side -> ClosedDiffTheory -> S.Set FactTag
-getDiffInjectiveFactInsts s = case s of
-           LHS -> L.get (crcInjectiveFactInsts . diffThyCacheLeft)
-           RHS -> L.get (crcInjectiveFactInsts . diffThyCacheRight)
+getDiffInjectiveFactInsts :: Side -> Bool -> ClosedDiffTheory -> S.Set FactTag
+getDiffInjectiveFactInsts s isdiff = case (s, isdiff) of
+           (LHS, False) -> L.get (crcInjectiveFactInsts . diffThyCacheLeft)
+           (RHS, False) -> L.get (crcInjectiveFactInsts . diffThyCacheRight)
+           (LHS, True)  -> L.get (crcInjectiveFactInsts . diffThyDiffCacheLeft)
+           (RHS, True)  -> L.get (crcInjectiveFactInsts . diffThyDiffCacheRight)
 
 -- | The classified set of rules modulo AC in this theory.
 getClassifiedRules :: ClosedTheory -> ClassifiedRules
 getClassifiedRules = L.get (crcRules . thyCache)
 
 -- | The classified set of rules modulo AC in this theory.
-getDiffClassifiedRules :: Side -> ClosedDiffTheory -> ClassifiedRules
-getDiffClassifiedRules s = case s of
-           LHS -> L.get (crcRules . diffThyCacheLeft)
-           RHS -> L.get (crcRules . diffThyCacheRight)
+getDiffClassifiedRules :: Side -> Bool -> ClosedDiffTheory -> ClassifiedRules
+getDiffClassifiedRules s isdiff = case (s, isdiff) of
+           (LHS, False) -> L.get (crcRules . diffThyCacheLeft)
+           (RHS, False) -> L.get (crcRules . diffThyCacheRight)
+           (LHS, True)  -> L.get (crcRules . diffThyDiffCacheLeft)
+           (RHS, True)  -> L.get (crcRules . diffThyDiffCacheRight)
 
 -- | The precomputed case distinctions.
 getCaseDistinction :: CaseDistKind -> ClosedTheory -> [CaseDistinction]
@@ -1039,11 +1053,15 @@ getCaseDistinction UntypedCaseDist = L.get (crcUntypedCaseDists . thyCache)
 getCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists .   thyCache)
 
 -- | The precomputed case distinctions.
-getDiffCaseDistinction :: Side -> CaseDistKind -> ClosedDiffTheory -> [CaseDistinction]
-getDiffCaseDistinction LHS UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheLeft)
-getDiffCaseDistinction RHS UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheRight)
-getDiffCaseDistinction LHS TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheLeft)
-getDiffCaseDistinction RHS TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheRight)
+getDiffCaseDistinction :: Side -> Bool -> CaseDistKind -> ClosedDiffTheory -> [CaseDistinction]
+getDiffCaseDistinction LHS False UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheLeft)
+getDiffCaseDistinction RHS False UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheRight)
+getDiffCaseDistinction LHS False TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheLeft)
+getDiffCaseDistinction RHS False TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheRight)
+getDiffCaseDistinction LHS True  UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyDiffCacheLeft)
+getDiffCaseDistinction RHS True  UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyDiffCacheRight)
+getDiffCaseDistinction LHS True  TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyDiffCacheLeft)
+getDiffCaseDistinction RHS True  TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyDiffCacheRight)
 
 -- construction
 ---------------
@@ -1087,10 +1105,12 @@ closeDiffTheory maudePath thy0 = do
 -- the given theory.
 closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTheory
 closeDiffTheoryWithMaude sig thy0 = do
-    proveDiffTheory (const True) (const True) checkProof checkDiffProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight items)
+    proveDiffTheory (const True) (const True) checkProof checkDiffProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight diffCacheLeft diffCacheRight items)
   where
-    cacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0)
-    cacheRight = closeRuleCache axiomsRight typAsms sig rightClosedRules (L.get diffThyCacheRight thy0)
+    diffCacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyDiffCacheLeft  thy0) True
+    diffCacheRight = closeRuleCache axiomsRight typAsms sig rightClosedRules (L.get diffThyDiffCacheRight thy0) True
+    cacheLeft  = closeRuleCache axiomsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0) False
+    cacheRight = closeRuleCache axiomsRight typAsms sig rightClosedRules (L.get diffThyCacheRight thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
     diffRules  = diffTheoryDiffRules thy0
@@ -1127,9 +1147,9 @@ closeDiffTheoryWithMaude sig thy0 = do
 
     -- extract protocol rules
     leftClosedRules  :: [ClosedProtoRule]
-    leftClosedRules  = leftTheoryRules  (DiffTheory errClose errClose errClose errClose items)
+    leftClosedRules  = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose items)
     rightClosedRules :: [ClosedProtoRule]
-    rightClosedRules = rightTheoryRules (DiffTheory errClose errClose errClose errClose items)
+    rightClosedRules = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose items)
     errClose  = error "closeDiffTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -1154,7 +1174,7 @@ closeTheoryWithMaude sig thy0 = do
       proveTheory (const True) checkProof
     $ Theory (L.get thyName thy0) sig cache items
   where
-    cache      = closeRuleCache axioms typAsms sig rules (L.get thyCache thy0)
+    cache      = closeRuleCache axioms typAsms sig rules (L.get thyCache thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
@@ -1525,6 +1545,8 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
     , ppSig $ L.get diffThySignature thy
     , ppCache $ L.get diffThyCacheLeft thy
     , ppCache $ L.get diffThyCacheRight thy
+    , ppCache $ L.get diffThyDiffCacheLeft thy
+    , ppCache $ L.get diffThyDiffCacheRight thy
     ] ++
     parMap rdeepseq ppItem (L.get diffThyItems thy) ++
     [ kwEnd ]
