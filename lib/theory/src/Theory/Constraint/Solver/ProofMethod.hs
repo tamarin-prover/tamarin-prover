@@ -325,7 +325,7 @@ smartRanking :: ProofContext
              -> System
              -> [AnnotatedGoal] -> [AnnotatedGoal]
 smartRanking ctxt allowPremiseGLoopBreakers sys =
-    sortOnUsefulness . unmark . sortDecisionTree solveFirst . goalNrRanking
+    sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
 
@@ -347,9 +347,14 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
     unmarkPremiseG annGoal                        = annGoal
 
+    solveLast = 
+       [ isNonLastProtoFact . fst ]
+       -- move the Last proto facts (L_) to the end.
+
     solveFirst =
         [ isChainGoal . fst
         , isDisjGoal . fst
+        , isFirstProtoFact . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoal . fst
         , isPrivateKnowsGoal . fst
@@ -372,6 +377,14 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
 
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing
+
+    -- Detect 'F_' (first) fact prefix for heuristics
+    isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
+    isFirstProtoFact _                                                 = False
+
+    -- Detect 'L_' (last) fact prefix for heuristics
+    isNonLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
+    isNonLastProtoFact _                                                 = True
 
     isFreshKnowsGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
