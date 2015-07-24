@@ -298,8 +298,8 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
     ruleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
     
-    protoRuleEquivalenceCase :: M.Map CaseName DiffSystem -> ProtoRuleE -> M.Map CaseName DiffSystem
-    protoRuleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
+--     protoRuleEquivalenceCase :: M.Map CaseName DiffSystem -> ProtoRuleE -> M.Map CaseName DiffSystem
+--     protoRuleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
     
     -- Not checking construction rules is sound, as they are 'trivial' !
     -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in axioms.
@@ -309,12 +309,6 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     isTrivial :: System -> Bool
     isTrivial sys' = (dgIsNotEmpty sys') && (allOpenGoalsAreSimpleFacts sys') && (allOpenFactGoalsAreIndependent sys')
-    
-    -- This was the old version, we now check (more general) whether the current state of the constraint system could be trivial
---     case L.get dsCurrentRule sys' of
---       Nothing   -> False
---       Just (Left rule)  -> isTrivialACDiffRule    rule
---       Just (Right rule) -> isTrivialProtoDiffRule rule
     
     backwardSearchSystem :: Side -> DiffSystem -> String -> DiffSystem
     backwardSearchSystem s sys' rulename = L.set dsSide (Just s)
@@ -329,11 +323,12 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
                            
     isSolved :: Side -> System -> Bool
-    isSolved s sys' = filter isNotForbiddenKD (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
+    isSolved s sys' = {-filter isNotForbiddenKD-} (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
     
-    isNotForbiddenKD :: (ProofMethod, (M.Map CaseName System, String)) -> Bool
-    isNotForbiddenKD (Contradiction (Just ForbiddenKD), _) = False
-    isNotForbiddenKD (_                               , _) = True
+    -- Not necessary any more, now diff-systems do not generate ForbiddeKD-contradictions any more.
+--     isNotForbiddenKD :: (ProofMethod, (M.Map CaseName System, String)) -> Bool
+--     isNotForbiddenKD (Contradiction (Just ForbiddenKD), _) = False
+--     isNotForbiddenKD (_                               , _) = True
     
     checkOtherSide :: Side -> System -> Maybe Bool
     checkOtherSide s sys'= case getMirrorDG ctxt s sys' of

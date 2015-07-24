@@ -93,6 +93,7 @@ module Theory.Constraint.System (
   , allKDConcs
 
   , nodeRule
+  , nodeRuleSafe
   , nodeConcNode
   , nodePremNode
   , nodePremFact
@@ -166,6 +167,7 @@ module Theory.Constraint.System (
   , sGoals
   , sNextGoalNr
   
+  , isDiffSystem
   , sDiffSystem
 
   -- * Formula simplification
@@ -976,6 +978,10 @@ allOpenGoalsAreSimpleFacts sys = M.foldlWithKey goalIsSimpleFact True (L.get sGo
     goalIsSimpleFact ret (PremiseG _ fact) (GoalStatus solved _ _) = ret && (solved || (isTrivialFact fact /= Nothing))
     goalIsSimpleFact ret (SplitG _)        (GoalStatus solved _ _) = ret && solved
     goalIsSimpleFact ret (DisjG _)         (GoalStatus solved _ _) = ret && solved
+
+-- | Returns true if the current system is a diff system
+isDiffSystem :: System -> Bool
+isDiffSystem = L.get sDiffSystem
         
 -- Actions
 ----------
