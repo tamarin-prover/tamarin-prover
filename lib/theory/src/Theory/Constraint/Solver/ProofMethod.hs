@@ -34,7 +34,7 @@ module Theory.Constraint.Solver.ProofMethod (
 
 ) where
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 import           Data.Binary
 import           Data.DeriveTH
@@ -332,7 +332,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     checkOtherSide :: Side -> System -> Maybe Bool
     checkOtherSide s sys'= case getMirrorDG ctxt s sys' of
-                             Just sys'' -> trace ("RE: axioms: " ++ (show (axioms s sys'')) ++ " " ++ (show (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys')))) (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys'))
+                             Just sys'' -> {-trace ("RE: axioms: " ++ (show (axioms s sys'')) ++ " " ++ (show (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys'))))-} (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys'))
                              Nothing    -> Just False
             where
               oppositeCtxt s' = eitherProofContext ctxt (opposite s')

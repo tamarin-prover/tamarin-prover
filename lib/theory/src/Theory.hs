@@ -170,7 +170,7 @@ module Theory (
 
   ) where
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 import           Prelude                             hiding (id, (.))
 

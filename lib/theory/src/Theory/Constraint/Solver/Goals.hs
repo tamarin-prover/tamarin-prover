@@ -23,6 +23,8 @@ module Theory.Constraint.Solver.Goals (
 --   , allOpenGoalsAreSimpleFacts
   ) where
 
+-- import           Debug.Trace
+
 import           Prelude                                 hiding (id, (.))
 
 import qualified Data.DAG.Simple                         as D (cyclic)
@@ -268,7 +270,8 @@ solveChain rules (c, p) = do
             caseName (viewTerm -> FApp o _)    = showFunSymName o
             caseName (viewTerm -> Lit l)       = showLitName l
             caseName t                         = show t
-        return $ caseName mPrem
+        contradictoryIf (illegalCoerce pRule mPrem)
+        return (caseName mPrem)
      `disjunction`
      -- extend it with one step
      case kFactView faConc of
@@ -302,7 +305,7 @@ solveChain rules (c, p) = do
         insertEdges [(c, faConc, faPrem, (i, v))]
         markGoalAsSolved "directly" (PremiseG (i, v) faPrem)
         insertChain (i, ConcIdx 0) p
-        return $ showRuleCaseName ru
+        return (showRuleCaseName ru)
 
     -- contradicts normal form condition:
     -- no edge from dexp to dexp KD premise, no edge from dpmult
@@ -311,6 +314,14 @@ solveChain rules (c, p) = do
     forbiddenEdge cRule pRule = isDExpRule   cRule && isDExpRule  pRule  ||
                                 isDPMultRule cRule && isDPMultRule pRule ||
                                 isDPMultRule cRule && isDEMapRule  pRule
+
+    -- Contradicts normal form condition N2:
+    -- No coerce of a pair of inverse.
+    illegalCoerce pRule mPrem = isCoerceRule pRule && isPair    mPrem ||
+                                isCoerceRule pRule && isInverse mPrem ||
+    -- Also: Coercing of products is unnecessary, since the protocol is *-restricted.
+                                isCoerceRule pRule && isProduct mPrem 
+
 
 -- | Solve an equation split. There is no corresponding CR-rule in the rule
 -- system on paper because there we eagerly split over all variants of a rule.

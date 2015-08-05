@@ -181,7 +181,7 @@ module Theory.Constraint.System (
 
   ) where
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 import           Prelude                              hiding (id, (.))
 
@@ -713,7 +713,7 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
     -- instantiated to a different index *in* the trace.
     unifiableNodes :: LNGuarded -> Bool
     unifiableNodes fm = case fm of
-         (GAto ato)  -> unifiableAtoms $ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato) $ [bvarToLVar ato]
+         (GAto ato)  -> unifiableAtoms {-$ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato)-} $ [bvarToLVar ato]
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
          gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
@@ -736,10 +736,10 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
 doAxiomsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
 doAxiomsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: This is a temporary simulation of diff-safe axioms!
   if (all (== gtrue) (simplify formulas isSolved))
-    then Just $ trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) True
+    then Just {-$ trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} True
     else if (any (== gfalse) (simplify formulas isSolved))
-          then Just $ trace ("doAxiomsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) False
-          else trace ("doAxiomsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved))) Nothing
+          then Just {-$ trace ("doAxiomsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} False
+          else {-trace ("doAxiomsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} Nothing
   where
     simplify :: [LNGuarded] -> Bool -> [LNGuarded]
     simplify forms solved = if (step forms solved) == forms

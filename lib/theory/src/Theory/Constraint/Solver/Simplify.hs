@@ -94,7 +94,7 @@ simplifySystem = do
               let changes = filter ((Changed ==) . snd) $
                     [ ("unique fresh instances (DG4)",        c1)
 --                     , ("unique K↓-facts (N5↓)",               c2)
-                     , ("unique K↑-facts (N5↑)",               c3)
+                    , ("unique K↑-facts (N5↑)",               c3)
                     , ("unique (linear) edges (DG2 and DG3)", c4)
                     , ("solve unambiguous actions (S_@)",     c5)
                     , ("decompose trace formula",             c6)
@@ -220,7 +220,7 @@ enforceFreshNodeUniqueness =
         changes <- gets (map mergers . groupSortOn fst . candidates)
         mconcat <$> sequence changes
       where
-        mergers []                          = unreachable "enforceUniqueness"
+        mergers []                          = unreachable "enforceFreshUniqueness"
         mergers ((_,(xKeep, iKeep)):remove) =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
