@@ -112,7 +112,7 @@ data ProofMethod =
 -- FIXME
 data DiffProofMethod =
     DiffSorry (Maybe String)                 -- ^ Proof was not completed
-  | DiffSolved                               -- ^ No attack was found
+  | DiffMirrored                             -- ^ No attack was found
   | DiffAttack                               -- ^ A potential attack was found
   | DiffRuleEquivalence                      -- ^ Consider all rules
 --   | DiffTrivial                              -- ^ The rule is trivially sound - REMOVED and merged with solved!
@@ -257,7 +257,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
-        DiffSolved
+        DiffMirrored
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> if ((isTrivial sys') && (checkOtherSide s sys' == Just True)) ||
                                                                                                         ((isSolved s sys') && (checkOtherSide s sys' == Nothing))
@@ -416,9 +416,7 @@ rankDiffProofMethods :: GoalRanking -> DiffProofContext -> DiffSystem
 rankDiffProofMethods ranking ctxt sys = do
     (m, expl) <-
             [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
--- MERGED with solved.
---         <|> [(DiffTrivial, "Trivial rule equivalence")]
-        <|> [(DiffSolved, "Backward search completed")]
+        <|> [(DiffMirrored, "Backward search completed")]
         <|> [(DiffAttack, "Found attack")]
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
@@ -628,7 +626,7 @@ prettyProofMethod method = case method of
 -- | Pretty-print a diff proof method.
 prettyDiffProofMethod :: HighlightDocument d => DiffProofMethod -> d
 prettyDiffProofMethod method = case method of
-    DiffSolved               -> keyword_ "SOLVED"
+    DiffMirrored             -> keyword_ "MIRRORED"
     DiffAttack               -> keyword_ "ATTACK" <-> lineComment_ "trace found"
     DiffSorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]

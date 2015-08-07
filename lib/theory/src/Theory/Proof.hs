@@ -848,9 +848,9 @@ cutOnSolvedDFSDiff prf0 =
           | d >= dMax = MaybeNoSolution
           | otherwise = case node of
               -- do not search in nodes that are not annotated
-              LNode (DiffProofStep _          (Nothing, _   )) _  -> NoSolution
-              LNode (DiffProofStep DiffSolved (Just _ , path)) _  -> Solution path
-              LNode (DiffProofStep _          (Just _ , _   )) cs ->
+              LNode (DiffProofStep _            (Nothing, _   )) _  -> NoSolution
+              LNode (DiffProofStep DiffMirrored (Just _ , path)) _  -> Solution path
+              LNode (DiffProofStep _            (Just _ , _   )) cs ->
                   foldMap (findSolved (succ d))
                       (cs `using` parTraversable nfProofMethod)
 
@@ -911,7 +911,7 @@ cutOnSolvedBFSDiff =
           (prf', TraceFound)     ->
               trace ("attack found at depth: " ++ show l) prf'
 
-    checkLevel 0 (LNode  step@(DiffProofStep DiffSolved (Just _)) _) =
+    checkLevel 0 (LNode  step@(DiffProofStep DiffMirrored (Just _)) _) =
         S.put TraceFound >> return (LNode step M.empty)
     checkLevel 0 prf@(LNode (DiffProofStep _ x) cs)
       | M.null cs = return prf
@@ -957,7 +957,7 @@ proveDiffSystemDFS heuristic ctxt d0 sys0 =
   where
     prove !depth sys =
         case rankDiffProofMethods (useHeuristic heuristic depth) ctxt sys of
-          []                         -> node DiffSolved M.empty
+          []                         -> node DiffMirrored M.empty
           (method, (cases, _expl)):_ -> node method cases
       where
         node method cases =
@@ -1007,7 +1007,7 @@ prettyDiffProofWith prettyStep prettyCase =
   where
     ppPrf (LNode ps cs) = ppCases ps (M.toList cs)
 
-    ppCases ps@(DiffProofStep DiffSolved _) [] = prettyStep ps
+    ppCases ps@(DiffProofStep DiffMirrored _) [] = prettyStep ps
     ppCases ps []                              = prettyCase ps (kwBy <> text " ")
                                                   <> prettyStep ps
     ppCases ps [("", prf)]                     = prettyStep ps $-$ ppPrf prf

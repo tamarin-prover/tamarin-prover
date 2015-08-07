@@ -134,7 +134,7 @@ applyDiffMethodAtPath thy lemmaName proofPath heuristic i = do
       (oneStepDiffProver method                        `mappend`
        replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify)) `mappend`
        replaceDiffSorryProver (contradictionDiffProver)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffSolved)
+       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)
       )
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
@@ -1558,7 +1558,7 @@ isInterestingMethod _         = False
 -- | Interesting diff proof methods that are not skipped by next/prev-smart.
 isInterestingDiffMethod :: DiffProofMethod -> Bool
 isInterestingDiffMethod (DiffSorry _) = True
-isInterestingDiffMethod DiffSolved    = True
+isInterestingDiffMethod DiffAttack    = True
 isInterestingDiffMethod _             = False
 
 -- Get 'next' smart theory path.

@@ -620,7 +620,7 @@ diffProofSkeleton =
     solvedProof {-<|> attackProof-} <|> finalProof <|> interProof
   where
     solvedProof =
-        symbol "SOLVED" *> pure (LNode (DiffProofStep DiffSolved ()) M.empty)
+        symbol "MIRRORED" *> pure (LNode (DiffProofStep DiffMirrored ()) M.empty)
 
 --     attackProof =
 --         symbol "ATTACK" *> pure (LNode (DiffProofStep DiffAttack ()) M.empty)
