@@ -43,7 +43,7 @@
 --     11. no protocol fact uses a reserved name =>
 --        [TODO] change parser to ensure this and pretty printer to show this.
 --
---     12. (diff only) No rule uses a fact staring with 'DiffProto' or 'DiffIntr'
+--     12. (diff only) No rule uses a fact starting with 'DiffProto' or 'DiffIntr'
 --
 --   [security properties]
 --

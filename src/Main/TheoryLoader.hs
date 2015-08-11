@@ -40,7 +40,7 @@ module Main.TheoryLoader (
 
   ) where
 
-import           Debug.Trace
+-- import           Debug.Trace
   
 import           Prelude                             hiding (id, (.))
 
@@ -209,7 +209,7 @@ closeThy as thy0 = do
       wfCheck :: OpenTheory -> OpenTheory
       wfCheck thy =
         noteWellformedness
-          (checkWellformedness $ trace ("Thy Non-Diff: " ++ show thy) thy) thy
+          (checkWellformedness thy) thy
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
@@ -245,7 +245,7 @@ closeDiffThy as thy0 = do
       wfCheckDiff :: OpenDiffTheory -> OpenDiffTheory
       wfCheckDiff thy =
         noteWellformednessDiff
-          (checkWellformednessDiff $ trace ("Thy: " ++ show thy) thy) thy
+          (checkWellformednessDiff thy) thy
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =

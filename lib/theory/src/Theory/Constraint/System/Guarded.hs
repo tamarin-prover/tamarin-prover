@@ -651,7 +651,7 @@ simplifyGuardedOrReturn valuation fm0 = {-trace (render ppMsg)-} fm1
 
     fm1 = simp fm0
 
-    simp fm@(GAto ato)         = maybe fm gtf (trace (show (valuation =<< unbindAtom ato)) (valuation =<< unbindAtom ato))
+    simp fm@(GAto ato)         = maybe fm gtf {-(trace (show (valuation =<< unbindAtom ato))-} (valuation =<< unbindAtom ato){-)-}
     simp (GDisj fms)           = gdisj $ map simp $ getDisj fms
     simp (GConj fms)           = gconj $ map simp $ getConj fms
     simp (GGuarded All [] atos gf)
@@ -664,7 +664,7 @@ simplifyGuardedOrReturn valuation fm0 = {-trace (render ppMsg)-} fm1
           gall [] (fst <$> filter ((Nothing ==) . snd) annAtos) (simp gf)
       where
         -- cache the possibly expensive evaluation of the valuation
-        annAtos = (\x -> (x, (trace (show (valuation =<< unbindAtom x)) (valuation =<< unbindAtom x)))) <$> atos
+        annAtos = (\x -> (x, {-(trace (show (valuation =<< unbindAtom x))-} (valuation =<< unbindAtom x){-)-})) <$> atos
 
     -- Note that existentials without quantifiers are already eliminated by
     -- 'gex'. Moreover, we delay simplification inside guarded all
