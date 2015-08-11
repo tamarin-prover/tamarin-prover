@@ -757,13 +757,13 @@ runAutoProver (AutoProver heuristic bound cut) =
         boundProofDepth b <$> runProver p ctxt d se prf
 
 runAutoDiffProver :: AutoProver -> DiffProver
-runAutoDiffProver (AutoProver heuristic bound _ {-cut-}) =
-    mapDiffProverDiffProof id {-cutSolved-} $ maybe id boundProver bound autoProver
+runAutoDiffProver (AutoProver heuristic bound cut) =
+    mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
   where
---     cutSolved = case cut of
---       CutDFS     -> cutOnSolvedDFSDiff
---       CutBFS     -> cutOnSolvedBFSDiff
---       CutNothing -> id
+    cutSolved = case cut of
+      CutDFS     -> cutOnSolvedDFSDiff
+      CutBFS     -> cutOnSolvedBFSDiff
+      CutNothing -> id
 
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
@@ -848,9 +848,9 @@ cutOnSolvedDFSDiff prf0 =
           | d >= dMax = MaybeNoSolution
           | otherwise = case node of
               -- do not search in nodes that are not annotated
-              LNode (DiffProofStep _            (Nothing, _   )) _  -> NoSolution
-              LNode (DiffProofStep DiffMirrored (Just _ , path)) _  -> Solution path
-              LNode (DiffProofStep _            (Just _ , _   )) cs ->
+              LNode (DiffProofStep _          (Nothing, _   )) _  -> NoSolution
+              LNode (DiffProofStep DiffAttack (Just _ , path)) _  -> Solution path
+              LNode (DiffProofStep _          (Just _ , _   )) cs ->
                   foldMap (findSolved (succ d))
                       (cs `using` parTraversable nfProofMethod)
 
@@ -911,7 +911,7 @@ cutOnSolvedBFSDiff =
           (prf', TraceFound)     ->
               trace ("attack found at depth: " ++ show l) prf'
 
-    checkLevel 0 (LNode  step@(DiffProofStep DiffMirrored (Just _)) _) =
+    checkLevel 0 (LNode  step@(DiffProofStep DiffAttack (Just _)) _) =
         S.put TraceFound >> return (LNode step M.empty)
     checkLevel 0 prf@(LNode (DiffProofStep _ x) cs)
       | M.null cs = return prf
