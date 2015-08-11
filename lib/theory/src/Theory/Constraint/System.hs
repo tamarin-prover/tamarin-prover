@@ -1097,8 +1097,8 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
   , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("solved goals",    prettyGoals True se)
-  , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
-  , ("DEBUG: Nodes",    text $ show $ M.toList $ L.get sNodes se) -- prettyGoals False se)
+--   , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
+--   , ("DEBUG: Nodes",    text $ show $ M.toList $ L.get sNodes se) -- prettyGoals False se)
 --   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
@@ -1115,36 +1115,36 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
   , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
                                  (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
                                  _                                                                                                                   -> text "none")
-  , ("DEBUG",               maybe (text "none") (\x -> vsep $ map prettyGuarded x) help)
-  , ("DEBUG2",              maybe (text "none") (\x -> vsep $ map prettyGuarded x) help2)
+--   , ("DEBUG",               maybe (text "none") (\x -> vsep $ map prettyGuarded x) help)
+--   , ("DEBUG2",              maybe (text "none") (\x -> vsep $ map prettyGuarded x) help2)
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
   , ("construction rules",  vsep $ map prettyRuleAC $ S.toList $ L.get dsConstrRules se)
   , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
-    help :: Maybe [LNGuarded]
-    help = do 
-      side <- L.get dsSide se
---       system <- L.get dsSystem se
-      axioms <- Just $ L.get dpcAxioms ctxt
-      sideaxioms <- Just $ filter (\x -> fst x == side) axioms
---       formulas <- Just $ concat $ map snd sideaxioms
---       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
---       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
-      return $ concat $ map snd sideaxioms
-
-    help2 :: Maybe [LNGuarded]
-    help2 = do 
-      side2 <- L.get dsSide se
-      side <- Just $ if side2 == LHS then RHS else LHS
---       system <- L.get dsSystem se
-      axioms <- Just $ L.get dpcAxioms ctxt
-      sideaxioms <- Just $ filter (\x -> fst x == side) axioms
---       formulas <- Just $ concat $ map snd sideaxioms
---       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
---       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
-      return $ concat $ map snd sideaxioms
+--     help :: Maybe [LNGuarded]
+--     help = do 
+--       side <- L.get dsSide se
+-- --       system <- L.get dsSystem se
+--       axioms <- Just $ L.get dpcAxioms ctxt
+--       sideaxioms <- Just $ filter (\x -> fst x == side) axioms
+-- --       formulas <- Just $ concat $ map snd sideaxioms
+-- --       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
+-- --       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
+--       return $ concat $ map snd sideaxioms
+-- 
+--     help2 :: Maybe [LNGuarded]
+--     help2 = do 
+--       side2 <- L.get dsSide se
+--       side <- Just $ if side2 == LHS then RHS else LHS
+-- --       system <- L.get dsSystem se
+--       axioms <- Just $ L.get dpcAxioms ctxt
+--       sideaxioms <- Just $ filter (\x -> fst x == side) axioms
+-- --       formulas <- Just $ concat $ map snd sideaxioms
+-- --       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
+-- --       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
+--       return $ concat $ map snd sideaxioms
 
 -- | Pretty print the proof type.
 prettyProofType :: HighlightDocument d => Maybe DiffProofType -> d
