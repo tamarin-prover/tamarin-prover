@@ -85,6 +85,7 @@ module Theory (
   , filterSide
   , addDefaultDiffLemma
   , addProtoRuleLabels
+  , removeProtoRuleLabels
   , addIntrRuleLabels
 
   -- ** Open theories
@@ -821,6 +822,16 @@ addIntrRuleLabels thy =
     modify diffThyCacheLeft (map addRuleLabel) $ modify diffThyDiffCacheLeft (map addRuleLabel) $ modify diffThyDiffCacheRight (map addRuleLabel) $ modify diffThyCacheRight (map addRuleLabel) thy
   where
     addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getRuleName rule))
+
+-- Add the rule labels to an Open Diff Theory
+removeProtoRuleLabels:: OpenDiffTheory -> OpenDiffTheory
+removeProtoRuleLabels thy =
+    modify diffThyItems (map removeRuleLabel) thy
+  where
+    removeRuleLabel :: OpenDiffTheoryItem -> OpenDiffTheoryItem
+    removeRuleLabel (DiffRuleItem rule) = DiffRuleItem $ removeDiffLabel rule ("DiffProto" ++ (getRuleName rule))
+    removeRuleLabel x                   = x
+
     
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness dependens on it.

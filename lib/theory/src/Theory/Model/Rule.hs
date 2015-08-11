@@ -92,6 +92,7 @@ module Theory.Model.Rule (
   , someRuleACInstAvoidingFixing
   , someRuleACInstFixing
   , addDiffLabel
+  , removeDiffLabel
   , multRuleInstance
   , unionRuleInstance
 
@@ -712,6 +713,12 @@ someRuleACInstAvoidingFixing r s subst =
 -- | Add the diff label to a rule
 addDiffLabel :: Rule a -> String -> Rule a
 addDiffLabel (Rule info prems concs acts) name = Rule info prems concs (acts ++ [Fact {factTag = ProtoFact Linear name 0, factTerms = []}])
+
+-- | Remove the diff label from a rule
+removeDiffLabel :: Rule a -> String -> Rule a
+removeDiffLabel (Rule info prems concs acts) name = Rule info prems concs (filter isNotDiffAnnotation acts)
+  where
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear name 0, factTerms = []})
 
 -- Unification
 --------------

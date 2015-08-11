@@ -135,7 +135,8 @@ run thisMode as
             Pretty.$--$ prettyClosedSummary thy
 
         ppWfAndSummaryDiff thy =
-            case checkWellformednessDiff (openDiffTheory thy) of
+            -- We need to remove the proto rule labels here to prevent false wellformedness errors
+            case checkWellformednessDiff (removeProtoRuleLabels (openDiffTheory thy)) of
                 []   -> Pretty.emptyDoc
                 errs -> Pretty.vcat $ map Pretty.text $
                           [ "WARNING: " ++ show (length errs)
