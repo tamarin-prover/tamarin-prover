@@ -43,6 +43,8 @@
 --     11. no protocol fact uses a reserved name =>
 --        [TODO] change parser to ensure this and pretty printer to show this.
 --
+--     12. (diff only) No rule uses a fact staring with 'DiffProto' or 'DiffIntr'
+--
 --   [security properties]
 --
 --     1. all facts occur with the same arity in the action of some
@@ -63,6 +65,8 @@ module Theory.Tools.Wellformedness (
   , prettyWfErrorReport
   ) where
 
+-- import           Debug.Trace
+  
 import           Prelude                     hiding (id, (.))
 
 import           Control.Basics
@@ -174,6 +178,26 @@ ruleSortsReportDiff thy = do
     ru <- diffThyProtoRules thy
     sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++
                      " clashing sorts, casings, or multiplicities:") ru
+
+-- -- | Report on rule name clashes.
+-- -- Unnecessary, is already checked during parsing!
+-- ruleNameReportDiff :: OpenDiffTheory -> WfErrorReport
+-- ruleNameReportDiff thy = 
+--   nameClashCheck ("clashing rule names:") (diffThyProtoRules thy)
+-- 
+--                      
+-- --- | Check that the protocol rules are well-formed.
+-- nameClashCheck :: String -> [(ProtoRuleE)] -> WfErrorReport
+-- nameClashCheck info t = case clashes ruleName t of
+--     [] -> []
+--     cs -> return $
+--             ( "names"
+--             , text info $-$ (nest 2 $ numbered' $ map (text . getRuleNameDiff) cs)
+--             )
+--     where
+--       ruleName r = map toLower $ getRuleNameDiff r
+--       grp f xs = groupOn f $ sortOn f xs
+--       clashes f xs = map head $ filter (\x -> length x >= 2) (grp f xs) 
 
 -- | Report on fresh names.
 freshNamesReport :: OpenTheory -> WfErrorReport
@@ -371,7 +395,7 @@ factReports thy = concat
 -- | Report on facts usage.
 factReportsDiff :: OpenDiffTheory -> WfErrorReport
 factReportsDiff thy = concat
-    [ reservedReport, freshFactArguments, specialFactsUsage
+    [ reservedReport, reservedPrefixReport, freshFactArguments, specialFactsUsage
     , factUsage, inexistentActions
     ]
   where
@@ -383,11 +407,16 @@ factReportsDiff thy = concat
     -- agrees with the arity of the function as given by the signature is
     -- enforced by the parser and implicitly checked in 'factArity'.
 
-    theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
-          do ruleFacts <$> get diffThyCacheLeft thy
+    theoryRuleFacts = {- do ruleFacts <$> get diffThyCacheLeft thy
+      <|> do ruleFacts <$> get diffThyDiffCacheLeft thy
       <|> do ruleFacts <$> get diffThyCacheRight thy
-      <|> do DiffRuleItem ru <- get diffThyItems thy
-             return $ ruleFacts ru
+      <|> do ruleFacts <$> get diffThyDiffCacheRight thy
+      <|>-} do
+              DiffRuleItem ru <- get diffThyItems thy
+              return $ ruleFacts ru
+  
+    theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
+          theoryRuleFacts
       <|> do EitherLemmaItem (s, l) <- get diffThyItems thy
              return $ (,) ("lemma " ++ show s ++ " " ++ quote (get lName l)) $ do
                  fa <- formulaFacts (get lFormula l)
@@ -400,7 +429,7 @@ factReportsDiff thy = concat
     factInfo :: Fact t -> (FactTag, Int, Multiplicity)
     factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 
-    --- Check for usage of protocol facts with reserved names
+    -- Check for usage of protocol facts with reserved names
     reservedReport = do
         (origin, fas) <- theoryFacts
         case mapMaybe reservedFactName fas of
@@ -414,6 +443,21 @@ factReportsDiff thy = concat
       | map toLower name `elem` ["fr","ku","kd","out","in"] =
           return $ ppFa $-$ text ("show:" ++ show info)
     reservedFactName _ = Nothing
+
+    -- Check for usage of protocol facts in rules with reserved prefixes in names
+    reservedPrefixReport = do
+        (origin, fas) <- theoryRuleFacts
+        case mapMaybe reservedPrefixFactName fas of
+          []   -> []
+          errs -> return $ (,) "reseved names" $ foldr1 ($--$) $
+              wrappedText ("The " ++ origin ++
+                           " contains facts with reserved prefixes ('DiffIntr', 'DiffProto') inside names:")
+            : map (nest 2) errs
+
+    reservedPrefixFactName (ppFa, info@(ProtoFact _ name _, _,_))
+      | (take 8 (map toLower name) == "diffintr") || (take 9 (map toLower name) == "diffproto") =
+          return $ ppFa $-$ text (show info)
+    reservedPrefixFactName _ = Nothing
 
     freshFactArguments = do
        ru                      <- diffThyProtoRules thy
@@ -435,8 +479,8 @@ factReportsDiff thy = concat
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
-       msum [ check "uses disallowed facts on left-hand-side:"  lhs
-            , check "uses disallowed facts on right-hand-side:" rhs ]
+       msum [ check "uses disallowed facts on left-hand-side of rule:"  lhs
+            , check "uses disallowed facts on right-hand-side of rule:" rhs ]
 
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.
@@ -455,16 +499,20 @@ factReportsDiff thy = concat
 
 
     -- Check that every fact referenced in a formula is present as an action
-    -- of a protocol rule. We have to add the linear "K/1" fact, as the
-    -- WF-check cannot rely on a loaded intruder theory.
+    -- of a protocol rule. In the diff case, we load the intruder theory before.
     ruleActions = S.fromList $ map factInfo $
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
         : (do DiffRuleItem ru <- get diffThyItems thy; get rActs ru)
+        ++ (do DiffRuleItem ru <- get diffThyItems thy; [Fact {factTag = ProtoFact Linear ("DiffProto" ++ (getRuleName ru)) 0, factTerms = []}])
+        ++ (do ru <- get diffThyCacheRight thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factTerms = []}]) 
+        ++ (do ru <- get diffThyDiffCacheRight thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factTerms = []}]) 
+        ++ (do ru <- get diffThyCacheLeft thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factTerms = []}]) 
+        ++ (do ru <- get diffThyDiffCacheLeft thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factTerms = []}]) 
 
     inexistentActions = do
-        EitherLemmaItem (s, l) <- get diffThyItems thy
+        EitherLemmaItem (s, l) <- {-trace ("Caches: " ++ show ((get diffThyCacheRight thy) ++ (get diffThyDiffCacheRight thy) ++ (get diffThyCacheLeft thy) ++ (get diffThyDiffCacheLeft thy))) $-} get diffThyItems thy
         fa <- sortednub $ formulaFacts (get lFormula l)
         let info = factInfo fa
             name = get lName l
@@ -794,13 +842,14 @@ multRestrictedReportDiff thy = do
 -- | Returns a list of errors, if there are any.
 checkWellformednessDiff :: OpenDiffTheory
                     -> WfErrorReport
-checkWellformednessDiff thy = 
+checkWellformednessDiff thy = -- trace ("checkWellformednessDiff: " ++ show thy) $
   concatMap ($ thy)
     [ unboundReportDiff
     , freshNamesReportDiff
     , publicNamesReportDiff
     , ruleSortsReportDiff
     , factReportsDiff
+--     , ruleNameReportDiff
     , formulaReportsDiff
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff

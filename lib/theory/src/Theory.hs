@@ -808,7 +808,7 @@ addDefaultDiffLemma thy = fromMaybe thy $ addDiffLemma (unprovenDiffLemma "Obser
 
 -- Add the rule labels to an Open Diff Theory
 addProtoRuleLabels:: OpenDiffTheory -> OpenDiffTheory
-addProtoRuleLabels thy = -- modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_equivalence")]) thy
+addProtoRuleLabels thy =
     modify diffThyItems (map addRuleLabel) thy
   where
     addRuleLabel :: OpenDiffTheoryItem -> OpenDiffTheoryItem
@@ -817,7 +817,7 @@ addProtoRuleLabels thy = -- modify diffThyItems (++ [DiffLemmaItem (unprovenDiff
     
 -- Add the rule labels to an Open Diff Theory
 addIntrRuleLabels:: OpenDiffTheory -> OpenDiffTheory
-addIntrRuleLabels thy = -- modify diffThyItems (++ [DiffLemmaItem (unprovenDiffLemma "Observational_equivalence")]) thy
+addIntrRuleLabels thy =
     modify diffThyCacheLeft (map addRuleLabel) $ modify diffThyDiffCacheLeft (map addRuleLabel) $ modify diffThyDiffCacheRight (map addRuleLabel) $ modify diffThyCacheRight (map addRuleLabel) thy
   where
     addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getRuleName rule))

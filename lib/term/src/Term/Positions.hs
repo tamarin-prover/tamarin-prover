@@ -28,7 +28,7 @@ atPos :: Ord a => Term a -> Position -> Term a
 atPos = atPos' DiffBoth
 
 atPos' :: Ord a => DiffType -> Term a -> Position -> Term a
-atPos' dt t                                         []     = t
+atPos' _  t                                         []     = t
 atPos' dt (viewTerm' dt -> FApp (AC _) (a:_))       (0:ps) =
     a `atPos` ps
 atPos' dt (viewTerm' dt -> FApp (AC _) [_])         _      =

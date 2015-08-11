@@ -22,6 +22,12 @@ rule Register_pk:
 /*  Out(diff(h(<$A,$B>),<~ltk,$B>)) */
 /*The above line is the same as the one in the actual rule as the diff(..diff(..)) only picks the left/right part of the inner diff, depending on whether it was in left or right part of the outer diff - but this is good for checking syntax */
 
+rule Register_pk1:
+  [ Fr(~ltk) ]
+  --[ DiffProtoRegister_pk() ]->
+  [ Out(~ltk) ]
+/* Testing rule name and fact name clash identification */
+  
 /*
 lemma testLeftEq [left]:
   "Ex #i. DiffIntrEquality() @i"

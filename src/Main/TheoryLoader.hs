@@ -40,6 +40,8 @@ module Main.TheoryLoader (
 
   ) where
 
+import           Debug.Trace
+  
 import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
@@ -118,7 +120,10 @@ loadOpenThy as = parseOpenTheory (diff as ++ defines as)
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
-loadClosedDiffThy as inFile = (loadOpenDiffThy as inFile) >>= ((closeDiffThy as) . addDefaultDiffLemma . addProtoRuleLabels)
+loadClosedDiffThy as inFile = do
+  thy0 <- loadOpenDiffThy as inFile
+  thy1 <- addMessageDeductionRuleVariantsDiff thy0
+  closeDiffThy as thy1
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
@@ -148,9 +153,10 @@ loadClosedThyWfReport as inFile = do
 -- | Load a closed diff theory and report on well-formedness errors.
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
 loadClosedDiffThyWfReport as inFile = do
-    thy <- loadOpenDiffThy as inFile
+    thy0 <- loadOpenDiffThy as inFile
+    thy1 <- addMessageDeductionRuleVariantsDiff thy0
     -- report
-    case checkWellformednessDiff thy of
+    case checkWellformednessDiff thy1 of
       []     -> return ()
       report -> do
           putStrLn ""
@@ -164,7 +170,7 @@ loadClosedDiffThyWfReport as inFile = do
           putStrLn $ replicate 78 '-'
           putStrLn ""
     -- return closed theory
-    closeDiffThy as (addDefaultDiffLemma (addProtoRuleLabels thy))
+    closeDiffThy as thy1
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
 loadClosedThyString as input =
@@ -176,7 +182,9 @@ loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTh
 loadClosedDiffThyString as input =
     case parseOpenDiffTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
-        Right thy -> fmap Right $ closeDiffThy as (addDefaultDiffLemma (addProtoRuleLabels thy))
+        Right thy -> fmap Right $ do
+          thy1 <- addMessageDeductionRuleVariantsDiff thy
+          closeDiffThy as thy1
              
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
@@ -201,7 +209,7 @@ closeThy as thy0 = do
       wfCheck :: OpenTheory -> OpenTheory
       wfCheck thy =
         noteWellformedness
-          (checkWellformedness thy) thy
+          (checkWellformedness $ trace ("Thy Non-Diff: " ++ show thy) thy) thy
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
@@ -218,12 +226,11 @@ closeThy as thy0 = do
 -- | Close a diff theory according to arguments.
 closeDiffThy :: Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
 closeDiffThy as thy0 = do
-  thy1 <- addMessageDeductionRuleVariantsDiff thy0
   -- FIXME: wf-check is at the wrong position here. Needs to be more
   -- fine-grained.
-  let thy2 = wfCheck thy1
+  let thy2 = wfCheckDiff thy0
   -- close and prove
-  cthy <- closeDiffTheory (maudePath as) thy2
+  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma (addProtoRuleLabels thy2))
   return $ proveDiffTheory lemmaSelector diffLemmaSelector prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
@@ -235,10 +242,10 @@ closeDiffThy as thy0 = do
 
       -- wellformedness check
       -----------------------
-      wfCheck :: OpenDiffTheory -> OpenDiffTheory
-      wfCheck thy =
+      wfCheckDiff :: OpenDiffTheory -> OpenDiffTheory
+      wfCheckDiff thy =
         noteWellformednessDiff
-          (checkWellformednessDiff thy) thy
+          (checkWellformednessDiff $ trace ("Thy: " ++ show thy) thy) thy
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
