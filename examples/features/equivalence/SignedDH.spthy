@@ -8,7 +8,7 @@ section{* The Signed Diffie-Hellman Protocol *}
  * Modeler: 	Simon Meier, Benedikt Schmidt; extension by Jannik Dreier, Ralf Sasse
  * Date: 	January 2012; extended April 2015
  *
- * Status: 	working; ???
+ * Status: 	working - using the SignedDH_partiallysolved.spthy file
  */
 
 builtins: diffie-hellman, signing

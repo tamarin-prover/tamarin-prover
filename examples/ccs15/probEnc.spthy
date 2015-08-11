@@ -2,9 +2,10 @@ theory probEnc
 begin
 
 /*
- * Protocol:	Probabilistic encryption
- * Modeler: 	Anonymous
- * Date: 	April 2015
+ * Protocol:     Probabilistic encryption
+ * Modeler:      Jannik Dreier and Ralf Sasse
+ * Described in: Automated Symbolic Proofs of Observational Equivalence [CCS'15]
+ * Date:         April 2015
  *
  * Status: 	working
 // Observational equivalence is proven automatically in less than 0.4 seconds.

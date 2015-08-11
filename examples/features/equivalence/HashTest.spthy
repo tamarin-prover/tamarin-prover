@@ -4,14 +4,14 @@ theory HashTest begin
  * Protocol:	 Test of Hash function operators
  * Modeler: 	 Jannik Dreier and Ralf Sasse
  * Described in: 
- * Date: 	 April 2014
+ * Date: 	 April 2015
  *
- * Status: 	 ?
+ * Status: 	 working
  */
 
 functions: h/1
 
-// this should NOT lead to attacks, as the adversary cannot distinguish a nonce and a hash of a nonce which it does not know
+// this must NOT lead to attacks, as the adversary cannot distinguish a nonce and a hash of a nonce which it does not know
 rule Out_Hash:
   [ Fr(~ltk) ]
   -->

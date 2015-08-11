@@ -1,13 +1,13 @@
-theory AxiomDiffTest
+theory AxiomDiffTest1
 begin
 
 /*
  * Protocol:	 Test whether condition axioms are treated correctly
  * Modeler: 	 Jannik Dreier and Ralf Sasse
  * Described in: 
- * Date: 	 April 2014
+ * Date: 	 April 2015
  *
- * Status: 	 ?
+ * Status: 	 working
  */
 
 
@@ -20,5 +20,8 @@ rule Test:
 
 axiom blockLeft [left]:
   "All #i. Never() @i ==> F"
+
+// this MUST result in an attack, which is due to the rule being executable on the right, but not on the left.
+// the attack will show up under the existance of this rule, and under the equality
 
 end

@@ -5,9 +5,9 @@ begin
  * Protocol:	 Test of simple input and output (memorized)
  * Modeler: 	 Jannik Dreier and Ralf Sasse
  * Described in: 
- * Date: 	 April 2014
+ * Date: 	 April 2015
  *
- * Status: 	 ?
+ * Status: 	 working
  */
 
 functions: h/1, aenc/2, adec/2, pk/1
@@ -55,4 +55,8 @@ lemma Diff_test_2:
   not( Ex #i. DiffProtoRegister_pk() @ i)
   "
   
+// Under Rule_Equality in the RHS an attack can be found here, which
+// is based on the fact that the RHS can execute with any input, while on
+// the LHS that input needs to match the stored value.
+
 end

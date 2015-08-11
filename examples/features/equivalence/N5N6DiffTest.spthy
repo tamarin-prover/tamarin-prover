@@ -5,9 +5,9 @@ begin
  * Protocol:	 Test whether conditions N5+N6 are treated correctly
  * Modeler: 	 Jannik Dreier and Ralf Sasse
  * Described in: 
- * Date: 	 April 2014
+ * Date: 	 April 2015
  *
- * Status: 	 ?
+ * Status: 	 working
  */
 
 builtins: hashing
@@ -19,15 +19,13 @@ rule Test:
   -->
   [ Out(diff(h($A),~f)) ]
 
-// This lemma uses an automatically generated Fact "DiffIntrEquality"
-// which the parser does not know about, and thus complains, which can be
-// safely ignored.
+
 lemma Diff_test:
   all-traces
   "
   not( Ex #i. DiffIntrEquality() @ i)
   "
 
-//This MUST find an attack, otherwise conditions N5+N6 are still used and cases are probably missed!
+//This MUST find an attack, otherwise conditions N5+N6 are still used and cases are probably missed! (auto prover works)
   
 end

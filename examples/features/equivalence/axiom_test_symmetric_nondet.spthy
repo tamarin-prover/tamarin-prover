@@ -6,7 +6,7 @@ theory axiom_test_symmetric_nondet begin
  * Described in: 
  * Date: 	 April 2014
  *
- * Status: 	 ?
+ * Status: 	 working
  */
 
 

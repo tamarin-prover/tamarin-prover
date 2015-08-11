@@ -4,9 +4,9 @@ theory CombinedHashPubEncDecTest begin
  * Protocol:	 Combination of Hash, Public, Encryption and Decryption operators
  * Modeler: 	 Jannik Dreier and Ralf Sasse
  * Described in: 
- * Date: 	 April 2014
+ * Date: 	 April 2015
  *
- * Status: 	 ?
+ * Status: 	 working
  */
 
 functions: h/1, aenc/2, adec/2, pk/1
@@ -63,5 +63,7 @@ lemma types [typing]:
        | (Ex #j. OUT_I_1( m1 ) @ j)
        )
     )"
+
+// This must find a number of attacks, all based on comparing public values, $A on the left, $B on the right.
   
 end

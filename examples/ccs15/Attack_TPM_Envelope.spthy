@@ -1,4 +1,4 @@
-theory TPM_Envelope begin
+theory Attack_TPM_Envelope begin
 
 // The attack on observational equivalence is exposed in under 1
 // seconds when loading this file into the GUI. Also note, the file

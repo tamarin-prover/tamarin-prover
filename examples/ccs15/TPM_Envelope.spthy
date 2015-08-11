@@ -32,9 +32,9 @@ Protocol specification for trace properties only:
 /* Extension to observational equivalence:
  *
  * Protocol:	 TPM_Envelope
- * Modeler: 	 Anonymous
- * Described in: see above
- * Date: 	 April 2014
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: Automated Symbolic Proofs of Observational Equivalence [CCS'15]
+ * Date: 	 April 2015
  *
  * Status: 	 working
 // Observational equivalence attack is found as given in the file Attack_TPM_Envelope.spthy.

@@ -5,12 +5,12 @@ begin
  * Protocol:	 Test of Public variables
  * Modeler: 	 Jannik Dreier and Ralf Sasse
  * Described in: 
- * Date: 	 April 2014
+ * Date: 	 April 2015
  *
- * Status: 	 ?
+ * Status: 	 working
  */
 
-// this should lead to attacks, as the adversary can check whether the left or right public value is sent
+// this must lead to attacks, as the adversary can check whether the left or right public value is sent
 rule Out_pub:
   [ ]
   -->

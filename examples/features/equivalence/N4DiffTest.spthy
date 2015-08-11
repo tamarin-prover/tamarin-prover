@@ -5,9 +5,9 @@ begin
  * Protocol:	 Test whether condition N4 is treated correctly
  * Modeler: 	 Jannik Dreier and Ralf Sasse
  * Described in: 
- * Date: 	 April 2014
+ * Date: 	 April 2015
  *
- * Status: 	 ?
+ * Status: 	 working
  */
 
 
@@ -25,9 +25,6 @@ axiom Product:
   All x #i. Prod(x) @ i ==> (Ex a b. x = (a*b))
   "
 
-// This lemma uses an automatically generated Fact "DiffIntrEquality"
-// which the parser does not know about, and thus complains, which can be
-// safely ignored.
 lemma Diff_test:
   all-traces
   "
@@ -35,5 +32,6 @@ lemma Diff_test:
   "
 
 //This MUST find an attack, otherwise condition N4 is still used and cases are probably missed!
+// Attack found in Rule_Equality, picking public (pub) instantiations for the variables.
   
 end
