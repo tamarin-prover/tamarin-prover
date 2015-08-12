@@ -680,20 +680,21 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
       _ -> []
     gf = skolemizeGuarded gf0
 
-    prepare (Action i fa) = Left  (GAction (i,fa))
-    prepare (EqE s t)     = Left  (GEqE (s,t))
+    prepare (Action i fa) = Left  (GAction i fa)
+    prepare (EqE s t)     = Left  (GEqE s t)
     prepare ato           = Right (fmap (fmapTerm (fmap Free)) ato)
 
     sysActions = do (i, fa) <- allActions sys
                     return (skolemizeTerm (varTerm i), skolemizeFact fa)
 
     candidateSubsts subst []               = return subst
-    candidateSubsts subst ((GAction a):as) = do
+    candidateSubsts subst ((GAction a fa):as) = do
         sysAct <- sysActions
-        subst' <- (`runReader` hnd) $ matchAction sysAct (applySkAction subst a)
+        subst' <- (`runReader` hnd) $ matchAction sysAct (applySkAction subst (a, fa))
         candidateSubsts (compose subst' subst) as
-    candidateSubsts subst ((GEqE eq):as)   = do
-        let (s,t) = applySkTerm subst <$> eq
+    candidateSubsts subst ((GEqE s' t'):as)   = do
+        let s = applySkTerm subst s'
+            t = applySkTerm subst t'
             (term,pat) | frees s == [] = (s,t)
                        | frees t == [] = (t,s)
                        | otherwise     = error $ "impliedFormulas: impossible, "
