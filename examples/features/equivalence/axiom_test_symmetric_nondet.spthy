@@ -1,0 +1,46 @@
+theory axiom_test_symmetric_nondet begin
+
+/*
+ * Protocol:	 Symmetric Encryption and Decryption operators
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: 
+ * Date: 	 April 2014
+ *
+ * Status: 	 working
+ */
+
+
+functions: enc/3, dec/2
+equations: dec(enc(m, k, n), k) = m
+//Consider using nondeterministic encryption to test.
+
+/*
+// This symmetric encryption rule works fine on its own.  
+rule Out_enc:
+  [ Fr(~k) ]
+  -->
+  [ Out(diff(enc(~k,~k,~k),~k)) ]
+*/
+
+
+rule Out_enc_twice:
+  [ Fr(~k), Fr(~n1), Fr(~n2) ]
+  --[ RuleApplied() ]->
+  [ Out(diff(enc(~k,~k,~n1),~k)) 
+  , Out(enc(~k,~k,~n2)) ]
+
+
+axiom crazy [right]:
+  "
+  not( Ex #i. RuleApplied() @ i)
+  "
+
+
+/*
+The Equality Rule should find these two systems NOT equivalent, due to
+the fact that on the left-hand side the rule is applicable, while on
+the right the rule cannot be used at all. Without the axiom it does
+find a DIFFERENT attack based on decryption.
+*/
+
+end
