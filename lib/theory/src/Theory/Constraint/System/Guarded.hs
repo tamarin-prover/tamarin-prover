@@ -146,18 +146,18 @@ guardFactTags =
 
 
 -- | Atoms that are allowed as guards.
-data GAtom t = GEqE (t,t) | GAction (t,Fact t)
+data GAtom t = GEqE t t | GAction t (Fact t)
     deriving (Eq, Show, Ord)
 
 isGAction :: GAtom t -> Bool
-isGAction (GAction _) = True
-isGAction _           = False
+isGAction (GAction _ _) = True
+isGAction _             = False
 
 -- | Convert 'Atom's to 'GAtom's, if possible.
 atomToGAtom :: Show t => Atom t -> GAtom t
 atomToGAtom = conv
-  where conv (EqE s t)     = GEqE (s,t)
-        conv (Action i f)  = GAction (i,f)
+  where conv (EqE s t)     = GEqE s t
+        conv (Action i f)  = GAction i f
         conv a             = error $ "atomsToGAtom: "++ show a
                                  ++ "is not a guarded atom."
 
@@ -478,10 +478,10 @@ formulaToGuarded fmOrig =
         remainingUnguarded ug0 atoms =
             go ug0 (sortGAtoms . map atomToGAtom $ atoms)
           where go ug []                       = ug
-                go ug ((GAction a) :gatoms) = go (ug \\ frees a) gatoms
+                go ug ((GAction a fa) :gatoms) = go (ug \\ frees (a, fa)) gatoms
                 -- FIXME: We do not consider the terms, e.g., for ug=[x,y],
                 -- s=pair(x,a), and t=pair(b,y), we could define ug'=[].
-                go ug ((GEqE (s,t)):gatoms) = go ug' gatoms
+                go ug ((GEqE s t):gatoms) = go ug' gatoms
                   where ug' | covered s ug = ug \\ frees t 
                             | covered t ug = ug \\ frees s
                             | otherwise    = ug
