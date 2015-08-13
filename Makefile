@@ -10,6 +10,12 @@ CABAL_INSTALL=cabal install --with-happy=$(PWD)/$(HAPPY) --with-alex=$(PWD)/$(AL
 
 TAMARIN=cabal-sandbox/bin/tamarin-prover
 
+# Default installation via stack
+default: 
+	stack setup
+	stack build
+	stack install
+
 # We always force a reinstall, as we are using a sandbox.
 install: build-setup
 	cabal --version  # Should be at least 1.18

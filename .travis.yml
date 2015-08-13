@@ -36,5 +36,5 @@ before_install:
   - $CABAL update
 
 install:
-  - make install
+  - make default
 
