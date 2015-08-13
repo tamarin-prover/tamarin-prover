@@ -4,6 +4,8 @@
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TupleSections        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+-- FIXME: for functions prove
+{-# LANGUAGE FlexibleContexts     #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -821,6 +823,7 @@ addIntrRuleLabels:: OpenDiffTheory -> OpenDiffTheory
 addIntrRuleLabels thy =
     modify diffThyCacheLeft (map addRuleLabel) $ modify diffThyDiffCacheLeft (map addRuleLabel) $ modify diffThyDiffCacheRight (map addRuleLabel) $ modify diffThyCacheRight (map addRuleLabel) thy
   where
+    addRuleLabel :: IntrRuleAC -> IntrRuleAC
     addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getRuleName rule))
 
 -- Add the rule labels to an Open Diff Theory

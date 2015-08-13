@@ -9,7 +9,7 @@
 module Extension.Prelude where
 
 import Data.Maybe
-import Data.List
+import Data.List hiding (sortOn)
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.Ord (comparing)

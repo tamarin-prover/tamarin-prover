@@ -21,7 +21,7 @@ import Term.Narrowing.Variants.Check (leqSubstVariant,variantsFrom)
 import Extension.Prelude
 
 import Data.Ord
-import Data.List
+import Data.List hiding (sortOn)
 import Data.Maybe
 import Control.Arrow
 import Control.Applicative

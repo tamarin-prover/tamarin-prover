@@ -1,4 +1,5 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns     #-}
+{-# LANGUAGE FlexibleContexts #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -74,7 +75,7 @@ import           Control.Category
 import           Data.Char
 import           Data.Generics.Uniplate.Data (universeBi)
 import           Data.Label
-import           Data.List
+import           Data.List                   hiding (sortOn)
 import           Data.Maybe
 import           Data.Monoid                 (mappend, mempty)
 import qualified Data.Set                    as S

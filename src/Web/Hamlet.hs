@@ -39,7 +39,11 @@ import           Data.Ord
 import           Data.Time.Format
 import           Data.Version          (showVersion)
 
-import           System.Locale
+-- #if MIN_VERSION_time(1,5,0)
+-- import           Data.Time.Format
+-- #else
+-- import           System.Locale
+-- #endif
 
 import           Paths_tamarin_prover  (version)
 

@@ -21,7 +21,7 @@ import           Data.Char                (isSpace)
 import           Data.Color
 import qualified Data.DAG.Simple          as D
 import qualified Data.Foldable            as F
-import           Data.List
+import           Data.List                hiding (sortOn)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Monoid              (Any(..))
@@ -335,6 +335,9 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     mkSimpleNode lbl attrs =
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
 
+    mkNode  :: RuleACInst -> [(String, String)] -> Bool 
+      -> ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
+         [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
     mkNode ru attrs hasOutgoingEdge
       -- single node, share node-id for all premises and conclusions
       | boringStyle == CompactBoringNodes &&
@@ -493,6 +496,7 @@ tryHideNodeId v se = fromMaybe se $ do
         lNews = [ (i, j) | (i, _) <- lIns, (_, j) <- lOuts ]
 
     -- hide a rule, if it is not "too complicated"
+    hideRule :: RuleACInst -> Maybe System
     hideRule ru = do
         guard $  eligibleRule
               && ( length eIns  == length (get rPrems ru) )

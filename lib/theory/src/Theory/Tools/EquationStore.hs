@@ -70,7 +70,7 @@ import qualified Control.Monad.State   as MS
 import           Data.Binary
 import           Data.DeriveTH
 import qualified Data.Foldable         as F
-import           Data.List
+import           Data.List             hiding (sortOn)
 import           Data.Maybe
 import qualified Data.Set              as S
 import           Extension.Data.Label  hiding (for, get)
@@ -531,13 +531,14 @@ simpMinimize isContr = do
 --   Then the @disjs@ is inserted at the current position, if @mfreeSubst@ is
 --   @Just freesubst@, then it is applied to the equation store. @True@ is
 --   returned if any modifications took place.
-foreachDisj :: MonadFresh m
+foreachDisj :: forall m. MonadFresh m
             => MaudeHandle
             -> ([LNSubstVFresh] -> m (Maybe (Maybe LNSubst, [S.Set LNSubstVFresh])))
             -> StateT EqStore m Bool
 foreachDisj hnd f =
     go [] =<< gets (getConj . L.get eqsConj)
   where
+    go :: [(SplitId, S.Set LNSubstVFresh)] -> [(SplitId, S.Set LNSubstVFresh)] -> StateT EqStore m Bool
     go _     []               = return False
     go lefts ((idx,d):rights) = do
         b <- lift $ f (S.toList d)

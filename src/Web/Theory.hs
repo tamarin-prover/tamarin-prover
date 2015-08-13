@@ -54,7 +54,11 @@ import           Control.Concurrent           (threadDelay)
 
 import           System.Directory
 import           System.FilePath
-import           System.Locale                (defaultTimeLocale)
+-- #if MIN_VERSION_time(1,5,0)
+import           Data.Time.Format             (defaultTimeLocale)
+-- #else
+-- import           System.Locale                (defaultTimeLocale)
+-- #endif
 
 import           Extension.Data.Label
 

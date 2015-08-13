@@ -215,6 +215,7 @@ closeThy as thy0 = do
       lemmaSelector lem =
           any (`isPrefixOf` get lName lem) lemmaNames
         where
+          lemmaNames :: [String]
           lemmaNames = findArg "prove" as
 
       -- replace all annotated sorrys with the configured autoprover.
@@ -251,12 +252,14 @@ closeDiffThy as thy0 = do
       lemmaSelector lem =
           any (`isPrefixOf` get lName lem) lemmaNames
         where
+          lemmaNames :: [String]
           lemmaNames = findArg "prove" as
 
       diffLemmaSelector :: DiffLemma p -> Bool
       diffLemmaSelector lem =
           any (`isPrefixOf` get lDiffName lem) lemmaNames
         where
+          lemmaNames :: [String]
           lemmaNames = findArg "prove" as
 
       -- diff prover: replace all annotated sorrys with the configured autoprover.

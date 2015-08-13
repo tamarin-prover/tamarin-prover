@@ -26,7 +26,7 @@ import Utils.Misc
 
 import Control.Basics
 import Control.Monad.Reader
-import Data.List
+import Data.List hiding (sortOn)
 
 import Debug.Trace.Ignore
 

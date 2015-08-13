@@ -41,7 +41,7 @@ import           Data.DeriveTH
 import           Data.Function                             (on)
 import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
-import           Data.List
+import           Data.List                                 hiding (sortOn)
 import qualified Data.Map                                  as M
 import           Data.Maybe                                (catMaybes)
 import           Data.Monoid

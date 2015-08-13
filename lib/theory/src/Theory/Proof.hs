@@ -1,6 +1,8 @@
-{-# LANGUAGE BangPatterns    #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TupleSections   #-}
+{-# LANGUAGE BangPatterns     #-}
+{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE TupleSections    #-}
+-- FIXME: better types in checkLevel
+{-# LANGUAGE FlexibleContexts #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)

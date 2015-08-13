@@ -155,8 +155,9 @@ punctuate p (d:ds) = go d ds
 -- The 'Document' instance for 'Text.PrettyPrint.Doc'
 ------------------------------------------------------------------------------
 
-instance NFData P.Doc where
-  rnf = rnf . P.render
+-- Unnecessary in GHC 7.10
+-- instance NFData P.Doc where
+--   rnf = rnf . P.render
 
 instance Document P.Doc where
   char = P.char
