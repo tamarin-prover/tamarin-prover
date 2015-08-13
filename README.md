@@ -23,11 +23,20 @@ http://nvie.com/posts/a-successful-git-branching-model/.
 We moreover use the Haskell coding style from
 https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md.
 
-We manage the Haskell dependencies using 'cabal sandbox'es with all transitive
-dependencies pinned in the 'cabal.config' file. To bootstrap development, you
-should run a successful sandboxed installation by calling 'make install' in
-the repositories root directory. This will build the tamarin-prover executable
-at
+We manage the Haskell dependencies automatically, using
+'stack'. Install 'stack' from
+https://github.com/commercialhaskell/stack/wiki/Downloads and run
+'make default' which will install an appropriate GHC for your system,
+including all dependencies, and the tamarin-prover executable will be at
+
+  ~/.local/bin/tamarin-prover
+
+We also (currently) support management of Haskell dependencies using
+'cabal sandbox'es with all transitive dependencies pinned in the
+'cabal.config' file. To bootstrap development, you should run a
+successful sandboxed installation by calling 'make install' in the
+repositories root directory. This will build the tamarin-prover
+executable at
 
   cabal-sandbox/bin/tamarin-prover
 
@@ -46,7 +55,7 @@ The static web assets are embedded into the built binary in the file
 'src/Web/Dispatch.hs'. See the note on 'staticFile' on how to enable dynamic
 reloading in case you are working on the web assets.
 
-The variants of the intruder rules for Diffi-Hellman exponentiation and
+The variants of the intruder rules for Diffie-Hellman exponentiation and
 Bilinear-Pairing are embedded statically in 'src/Main/TheoryLoader.hs'. If you
 change them, then this file needs to be recompiled for the changes to come
 into effect.
@@ -89,9 +98,9 @@ Example Protocol Models
 
 All example protocol models are found in the directory
 
-    ./data/examples/
+    ./examples/
 
-, which is also symlinked as `./examples`. All models that we consider stable
+All models that we consider stable
 are part of every installation of the Tamarin prover. See
 `tamarin-prover.cabal` for the list of installed protocols. We use the
 following sub-directories to organize the models.
@@ -108,6 +117,7 @@ experiments/   all other experiments
 ake/           more AKE examples including ID-based and tripartite group KE
                protocols based on bilinear pairing
 features/      (small) models that demonstrate a given feature
+ccs15/	       the observational equivalence case studies from our CCS'15 paper
 ~~~~
 
 Feel free to add more sub-directories and describe them here.

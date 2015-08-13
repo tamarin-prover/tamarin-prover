@@ -6,6 +6,4 @@ packages:
 - lib/utils/
 extra-deps: 
 - yesod-json-1.2.0
-# - hamlet-1.2.0
-# - cabal-install-1.22.0.0
 resolver: lts-3.0
