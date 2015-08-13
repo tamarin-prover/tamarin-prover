@@ -44,4 +44,4 @@ install:
 
 #overwrite the Travis CI default test script executed at the end of a build
 script:
-  - make default
+  - echo 1
