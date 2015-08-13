@@ -392,3 +392,4 @@ insertImpliedFormulas = do
              implied `S.notMember` get sSolvedFormulas sys )
           then return (insertFormula implied)
           else []
+
