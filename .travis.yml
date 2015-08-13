@@ -42,3 +42,6 @@ before_install:
 install:
   - make default
 
+#overwrite the Travis CI default test script executed at the end of a build
+script:
+  - make default
