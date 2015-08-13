@@ -13,7 +13,7 @@ TAMARIN=cabal-sandbox/bin/tamarin-prover
 # Default installation via stack
 default: 
 	stack setup
-        stack build
+	stack build
 	stack install
 
 # We always force a reinstall, as we are using a sandbox.
