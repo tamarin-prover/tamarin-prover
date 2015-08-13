@@ -6,7 +6,7 @@ This README describes the organization of the repository of the Tamarin prover
 for security protocol verification. Its intended audience are interested
 users and future developers of the Tamarin prover. For installation
 and usage instructions of the Tamarin prover see:
-http://www.infsec.ethz.ch/research/software/tamarin.
+http://tamarin-prover.github.io/
 
 TODO: @cas, installation, usage, and examples (see #147)
 
