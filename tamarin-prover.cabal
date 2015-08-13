@@ -44,17 +44,17 @@ homepage:           http://www.infsec.ethz.ch/research/software/tamarin
 
 extra-source-files:
   -- cached intruder variants for DH and BP
-  intruder_variants_dh.spthy
-  intruder_variants_bp.spthy
+  data/intruder_variants_dh.spthy
+  data/intruder_variants_bp.spthy
 
   -- files for the web-frontend
-  img/*.ico
-  img/*.gif
-  img/*.png
-  js/*.js
-  css/*.css
-  css/smoothness/*.css
-  css/smoothness/images/*.png
+  data/img/*.ico
+  data/img/*.gif
+  data/img/*.png
+  data/js/*.js
+  data/css/*.css
+  data/css/smoothness/*.css
+  data/css/smoothness/images/*.png
 
 
 -------------------------

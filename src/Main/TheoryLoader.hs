@@ -349,11 +349,11 @@ constructAutoDiffProver as =
 
 -- | The name of the intruder variants file.
 dhIntruderVariantsFile :: FilePath
-dhIntruderVariantsFile = "intruder_variants_dh.spthy"
+dhIntruderVariantsFile = "data/intruder_variants_dh.spthy"
 
 -- | The name of the intruder variants file.
 bpIntruderVariantsFile :: FilePath
-bpIntruderVariantsFile = "intruder_variants_bp.spthy"
+bpIntruderVariantsFile = "data/intruder_variants_bp.spthy"
 
 -- | Construct the DH intruder variants for the given maude signature.
 mkDhIntruderVariants :: MaudeSig -> [IntrRuleAC]
