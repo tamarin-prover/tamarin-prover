@@ -50,8 +50,6 @@ module Term.LTerm (
   , isMsgVar
   , isFreshVar
   , isSimpleTerm
-  , getVar
-  , getMsgVar
   , niFactors
   , containsPrivate
   , neverContainsFreshPriv
@@ -74,13 +72,11 @@ module Term.LTerm (
   , frees
   , someInst
   , rename
-  , renameIgnoring
   , eqModuloFreshnessNoAC
   , avoid
   , evalFreshAvoiding
   , evalFreshTAvoiding
   , renameAvoiding
-  , renameAvoidingIgnoring
   , avoidPrecise
   , renamePrecise
   , renameDropNamehint
@@ -98,7 +94,6 @@ module Term.LTerm (
   , prettyNodeId
   , prettyNTerm
   , prettyLNTerm
-  , showLitName
 
   -- * Convenience exports
   , module Term.VTerm
@@ -284,16 +279,6 @@ isMsgVar _                         = False
 isFreshVar :: LNTerm -> Bool
 isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
 isFreshVar _                         = False
-
--- | If the term is a variable, return it, nothing otherwise.
-getVar :: LNTerm -> Maybe [LVar]
-getVar (viewTerm -> Lit (Var v)) = Just [v]
-getVar _                         = Nothing
-
--- | If the term is a message variable, return it, nothing otherwise.
-getMsgVar :: LNTerm -> Maybe [LVar]
-getMsgVar (viewTerm -> Lit (Var v)) | (lvarSort v == LSortMsg) = Just [v]
-getMsgVar _                                                    = Nothing
 
 
 -- Utility functions for constraint solving
@@ -516,19 +501,6 @@ rename x = case boundsVarIdx x of
   where
     incVar shift (LVar n so i) = pure $ LVar n so (i+shift)
 
--- | @renameIgnoring t vars@ replaces all variables in @t@ with fresh variables, excpet for the variables in @vars@.
---   Note that the result is not guaranteed to be equal for terms that are
---   equal modulo changing the indices of variables.
-renameIgnoring :: (MonadFresh m, HasFrees a) => [LVar] -> a -> m a
-renameIgnoring vars x = case boundsVarIdx x of
-    Nothing                     -> return x
-    Just (minVarIdx, maxVarIdx) -> do
-      freshStart <- freshIdents (succ (maxVarIdx - minVarIdx))
-      return . runIdentity . mapFrees (Monotone $ incVar (freshStart - minVarIdx)) $ x
-  where
-    incVar shift (LVar n so i) = pure $ if elem (LVar n so i) vars then (LVar n so i) else (LVar n so (i+shift))
-
-    
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
 -- renaming of indices of free variables. Note that the normal form is not
 -- unique with respect to AC symbols.
@@ -553,7 +525,7 @@ avoid = maybe 0 (succ . snd) . boundsVarIdx
 -- | @m `evalFreshAvoiding` t@ evaluates the monadic action @m@ with a
 -- fresh-variable supply that avoids generating variables occurring in @t@.
 evalFreshAvoiding :: HasFrees t => Fresh a -> t -> a
-evalFreshAvoiding m a = evalFresh m (avoid a)
+evalFreshAvoiding m = evalFresh m . avoid
 
 -- | @m `evalFreshTAvoiding` t@ evaluates the monadic action @m@ in the
 -- underlying monad with a fresh-variable supply that avoids generating
@@ -564,13 +536,7 @@ evalFreshTAvoiding m = evalFreshT m . avoid
 -- | @s `renameAvoiding` t@ replaces all free variables in @s@ by
 --   fresh variables avoiding variables in @t@.
 renameAvoiding :: (HasFrees s, HasFrees t) => s -> t -> s
-renameAvoiding s t = evalFreshAvoiding (rename s) t
-
--- | @s `renameAvoiding` t@ replaces all free variables in @s@ by
---   fresh variables avoiding variables in @t@.
-renameAvoidingIgnoring :: (HasFrees s, HasFrees t) => s -> t -> [LVar] -> s
-renameAvoidingIgnoring s t vars = renameIgnoring vars s `evalFreshAvoiding` t
-
+s `renameAvoiding` t = rename s `evalFreshAvoiding` t
 
 -- | @avoidPrecise t@ computes a 'Precise.FreshState' that avoids generating
 -- variables occurring in @t@.
@@ -749,16 +715,6 @@ prettyNTerm = prettyTerm (text . show)
 prettyLNTerm :: Document d => LNTerm -> d
 prettyLNTerm = prettyNTerm
 
-
--- | Pretty print a literal for case generation.
-showLitName :: Lit Name LVar -> String
-showLitName (Con (Name FreshName n)) = "Const_fresh_" ++ show n
-showLitName (Con (Name PubName   n)) = "Const_pub_"   ++ show n
-showLitName (Var (LVar v s i))       = "Var_" ++ sortSuffix s ++ "_" ++ body
-      where
-        body | null v           = show i
-             | i == 0           = v
-             | otherwise        = v ++ "." ++ show i
 
 -- derived instances
 --------------------

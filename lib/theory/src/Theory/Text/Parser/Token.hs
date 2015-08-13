@@ -34,8 +34,6 @@ module Theory.Text.Parser.Token (
   , nodevar
 
   -- * Operators
---  , opDiff
-
   , opExp
   , opMult
 
@@ -120,7 +118,7 @@ spthy =
       , T.nestedComments = True
       , T.identStart     = alphaNum
       , T.identLetter    = alphaNum <|> oneOf "_"
-      , T.reservedNames  = ["in","let","rule","diff"]
+      , T.reservedNames  = ["in","let","rule"]
       , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-"
       , T.opLetter       = oneOf ":!$%&*+./<=>?@\\^|-"
       , T.reservedOpNames= []
@@ -142,8 +140,8 @@ parseString :: FilePath
             -> String         -- ^ Input string.
             -> Either ParseError a
 parseString srcDesc parser =
-    runParser (T.whiteSpace spthy *> parser) pairMaudeSig srcDesc
-                                           -- was "minimalMaudeSig" -> could lead to errors with parsing diff terms!
+    runParser (T.whiteSpace spthy *> parser) minimalMaudeSig srcDesc
+
 
 -- Token parsers
 ----------------
@@ -187,10 +185,6 @@ dot = void $ T.dot spthy
 -- | A comma @,@.
 comma :: Parser ()
 comma = void $ T.comma spthy
-
--- -- | A semicolon @;@.
--- semicolon :: Parser ()
--- semicolon = void $ T.semi spthy
 
 -- | A colon @:@.
 colon :: Parser ()
@@ -292,14 +286,7 @@ pubName = singleQuoted identifier
 
 
 -- Term Operators
------------------
-
-{-
--- Note that this would conflict with the parsing of "identifier", somehow need to mark this as special!
--- | The diff operator @diff@.
-opDiff :: Parser ()
-opDiff = symbol_ "diff"
--}
+------------
 
 -- | The exponentiation operator @^@.
 opExp :: Parser ()
@@ -309,7 +296,7 @@ opExp = symbol_ "^"
 opMult :: Parser ()
 opMult = symbol_ "*"
 
--- | The addition operator @*@.
+-- | The multiplication operator @*@.
 opPlus :: Parser ()
 opPlus = symbol_ "+"
 

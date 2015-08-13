@@ -47,7 +47,7 @@ import           Theory.Constraint.Solver.Contradictions (contradictorySystem)
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
--- import           Theory.Constraint.Solver.Types
+import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 
@@ -77,7 +77,7 @@ initialCaseDistinction ctxt axioms goal =
     CaseDistinction goal cases
   where
     polish ((name, se), _) = ([name], se)
-    se0   = insertLemmas axioms $ emptySystem UntypedCaseDist $ get pcDiffContext ctxt
+    se0   = insertLemmas axioms $ emptySystem UntypedCaseDist
     cases = fmap polish $
         runReduction instantiate ctxt se0 (avoid (goal, se0))
     instantiate = do

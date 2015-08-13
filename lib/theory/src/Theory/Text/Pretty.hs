@@ -17,11 +17,9 @@ module Theory.Text.Pretty (
   -- * Comments
   , lineComment
   , multiComment
-  , closedComment
 
   , lineComment_
   , multiComment_
-  , closedComment_
 
   -- * Keywords
   , kwTheoryHeader
@@ -32,7 +30,6 @@ module Theory.Text.Pretty (
   , kwNext
   , kwQED
   , kwLemma
-  , kwDiffLemma
   , kwAxiom
 
   -- ** Composed forms
@@ -94,12 +91,6 @@ multiComment d = comment $ fsep [text "/*", d, text "*/"]
 multiComment_ :: HighlightDocument d => [String] -> d
 multiComment_ ls = comment $ fsep [text "/*", vcat $ map text ls, text "*/"]
 
-closedComment :: HighlightDocument d => d -> d
-closedComment d = comment $ fsep [text "/*", d, text "*/"]
-
-closedComment_ :: HighlightDocument d => String -> d
-closedComment_ ls = comment $ fsep [text "/*", text ls, text "*/"]
-
 ------------------------------------------------------------------------------
 -- Keywords
 ------------------------------------------------------------------------------
@@ -107,15 +98,14 @@ closedComment_ ls = comment $ fsep [text "/*", text ls, text "*/"]
 kwTheoryHeader :: HighlightDocument d => d -> d
 kwTheoryHeader name = keyword_ "theory" <-> name <-> keyword_ "begin"
 
-kwEnd, kwBy, kwCase, kwNext, kwQED, kwAxiom, kwLemma, kwDiffLemma :: HighlightDocument d => d
-kwEnd       = keyword_ "end"
-kwBy        = keyword_ "by"
-kwCase      = keyword_ "case"
-kwNext      = keyword_ "next"
-kwQED       = keyword_ "qed"
-kwAxiom     = keyword_ "axiom"
-kwLemma     = keyword_ "lemma"
-kwDiffLemma = keyword_ "diffLemma"
+kwEnd, kwBy, kwCase, kwNext, kwQED, kwAxiom, kwLemma :: HighlightDocument d => d
+kwEnd   = keyword_ "end"
+kwBy    = keyword_ "by"
+kwCase  = keyword_ "case"
+kwNext  = keyword_ "next"
+kwQED   = keyword_ "qed"
+kwAxiom = keyword_ "axiom"
+kwLemma = keyword_ "lemma"
 
 kwModulo :: HighlightDocument d
          => String  -- ^ What

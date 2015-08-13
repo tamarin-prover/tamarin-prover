@@ -10,11 +10,10 @@
 -- Equational signatures for Maude.
 module Term.Maude.Signature (
   -- * Maude signatures
-    MaudeSig 
+    MaudeSig
   , enableDH
   , enableBP
   , enableMSet
-  , enableDiff
   , stFunSyms
   , stRules
   , funSyms
@@ -32,7 +31,6 @@ module Term.Maude.Signature (
   , msetMaudeSig
   , bpMaudeSig
   , minimalMaudeSig
-  , enableDiffMaudeSig
 
   -- * extend maude signatures
   , addFunSym
@@ -71,7 +69,6 @@ data MaudeSig = MaudeSig
     { enableDH           :: Bool
     , enableBP           :: Bool
     , enableMSet         :: Bool
-    , enableDiff         :: Bool
     , stFunSyms          :: S.Set NoEqSym -- ^ function signature for subterm theory
     , stRules            :: S.Set StRule  -- ^ rewriting rules for subterm theory
 
@@ -84,7 +81,7 @@ data MaudeSig = MaudeSig
 
 -- | Smart constructor for maude signatures. Computes funSyms and irreducibleFunSyms.
 maudeSig :: MaudeSig -> MaudeSig
-maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,enableDiff=_,stFunSyms,stRules}) =
+maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,stFunSyms,stRules}) =
     msig {enableDH=enableDH||enableBP, funSyms=allfuns, irreducibleFunSyms=irreduciblefuns}
   where
     allfuns = (S.map NoEq stFunSyms)
@@ -98,15 +95,14 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,enableDiff=_,stFunSyms,stR
 
 -- | A monoid instance to combine maude signatures.
 instance Monoid MaudeSig where
-    (MaudeSig dh1 bp1 mset1 diff1 stFunSyms1 stRules1 _ _) `mappend`
-      (MaudeSig dh2 bp2 mset2 diff2 stFunSyms2 stRules2 _ _) =
+    (MaudeSig dh1 bp1 mset1 stFunSyms1 stRules1 _ _) `mappend`
+      (MaudeSig dh2 bp2 mset2 stFunSyms2 stRules2 _ _) =
           maudeSig (mempty {enableDH=dh1||dh2
                            ,enableBP=bp1||bp2
                            ,enableMSet=mset1||mset2
-                           ,enableDiff=diff1||diff2
                            ,stFunSyms=S.union stFunSyms1 stFunSyms2
                            ,stRules=S.union stRules1 stRules2})
-    mempty = MaudeSig False False False False S.empty S.empty S.empty S.empty
+    mempty = MaudeSig False False False S.empty S.empty S.empty S.empty
 
 -- | Non-AC function symbols.
 noEqFunSyms :: MaudeSig -> NoEqFunSig
@@ -142,8 +138,6 @@ bpMaudeSig   = maudeSig $ mempty {enableBP=True}
 msetMaudeSig = maudeSig $ mempty {enableMSet=True}
 
 -- | Maude signatures for the default subterm symbols.
---pairMaudeSig :: Bool -> MaudeSig
---pairMaudeSig flag = maudeSig $ mempty {stFunSyms=pairFunSig,stRules=pairRules,enableDiff=flag}
 pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, hashMaudeSig :: MaudeSig
 pairMaudeSig      = maudeSig $ mempty {stFunSyms=pairFunSig,stRules=pairRules}
 symEncMaudeSig    = maudeSig $ mempty {stFunSyms=symEncFunSig,stRules=symEncRules}
@@ -152,14 +146,8 @@ signatureMaudeSig = maudeSig $ mempty {stFunSyms=signatureFunSig,stRules=signatu
 hashMaudeSig      = maudeSig $ mempty {stFunSyms=hashFunSig}
 
 -- | The minimal maude signature.
-minimalMaudeSig :: Bool -> MaudeSig
-minimalMaudeSig flag = maudeSig $ mempty {enableDiff=flag,stFunSyms=pairFunSig,stRules=pairRules}
--- essentially pairMaudeSig, but with the enableDiff flag set according to "flag"
--- -- MaudeSig False False False flag pairFunSig pairRules S.empty S.empty
-
--- | Signature with enableDiff set to True
-enableDiffMaudeSig :: MaudeSig
-enableDiffMaudeSig = maudeSig $ mempty {enableDiff=True}
+minimalMaudeSig :: MaudeSig
+minimalMaudeSig = pairMaudeSig
 
 ------------------------------------------------------------------------------
 -- Pretty Printing

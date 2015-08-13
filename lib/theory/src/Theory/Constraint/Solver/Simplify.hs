@@ -25,8 +25,8 @@ import           Debug.Trace
 import           Prelude                            hiding (id, (.))
 
 import qualified Data.DAG.Simple                    as D
--- import           Data.Data
--- import           Data.Either                        (partitionEithers)
+import           Data.Data
+import           Data.Either                        (partitionEithers)
 import qualified Data.Foldable                      as F
 import           Data.List
 import qualified Data.Map                           as M
@@ -36,7 +36,7 @@ import qualified Data.Set                           as S
 import           Control.Basics
 import           Control.Category
 import           Control.Monad.Disj
--- import           Control.Monad.Fresh
+import           Control.Monad.Fresh
 import           Control.Monad.Reader
 import           Control.Monad.State                (gets)
 
@@ -46,7 +46,7 @@ import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
--- import           Theory.Constraint.Solver.Types
+import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
@@ -56,17 +56,12 @@ import           Theory.Text.Pretty
 -- system does not change anymore.
 simplifySystem :: Reduction ()
 simplifySystem = do
-    isdiff <- getM sDiffSystem
     -- Start simplification, indicating that some change happened
     go (0 :: Int) [Changed]
     -- Add all ordering constraint implied by CR-rule *N6*.
-    if isdiff
-       then do
-        removeSolvedSplitGoals
-       else do
-        exploitUniqueMsgOrder
-        -- Remove equation split goals that do not exist anymore
-        removeSolvedSplitGoals    
+    exploitUniqueMsgOrder
+    -- Remove equation split goals that do not exist anymore
+    removeSolvedSplitGoals
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -79,69 +74,35 @@ simplifySystem = do
           -- changes as 'substSystem' is idempotent.
           void substSystem
           -- Perform one simplification pass.
-          isdiff <- getM sDiffSystem
-          -- In the diff case, we cannot enfore N4-N6.
-          if isdiff
-            then do
-              (c1,c3) <- enforceFreshNodeUniqueness
-              c4 <- enforceEdgeUniqueness
-              c5 <- solveUniqueActions
-              c6 <- reduceFormulas
-              c7 <- evalFormulaAtoms
-              c8 <- insertImpliedFormulas
+          (c1,c2,c3) <- enforceNodeUniqueness
+          c4 <- enforceEdgeUniqueness
+          c5 <- solveUniqueActions
+          c6 <- reduceFormulas
+          c7 <- evalFormulaAtoms
+          c8 <- insertImpliedFormulas
 
-              -- Report on looping behaviour if necessary
-              let changes = filter ((Changed ==) . snd) $
-                    [ ("unique fresh instances (DG4)",        c1)
---                     , ("unique K↓-facts (N5↓)",               c2)
-                    , ("unique K↑-facts (N5↑)",               c3)
-                    , ("unique (linear) edges (DG2 and DG3)", c4)
-                    , ("solve unambiguous actions (S_@)",     c5)
-                    , ("decompose trace formula",             c6)
-                    , ("propagate atom valuation to formula", c7)
-                    , ("saturate under ∀-clauses (S_∀)",      c8)
+          -- Report on looping behaviour if necessary
+          let changes = filter ((Changed ==) . snd) $
+                [ ("unique fresh instances (DG4)",        c1)
+                , ("unique K↓-facts (N5↓)",               c2)
+                , ("unique K↑-facts (N5↑)",               c3)
+                , ("unique (linear) edges (DG2 and DG3)", c4)
+                , ("solve unambiguous actions (S_@)",     c5)
+                , ("decompose trace formula",             c6)
+                , ("propagate atom valuation to formula", c7)
+                , ("saturate under ∀-clauses (S_∀)",      c8)
+                ]
+              traceIfLooping
+                | n <= 10   = id
+                | otherwise = trace $ render $ vsep
+                    [ text "Simplifier iteration" <-> int n <> colon
+                    , fsep $ text "The reduction-rules for" :
+                             (punctuate comma $ map (text . fst) changes) ++
+                             [text "were applied to the following constraint system."]
+                    , nest 2 (prettySystem se0)
                     ]
-                  traceIfLooping
-                    | n <= 10   = id
-                    | otherwise = trace $ render $ vsep
-                        [ text "Simplifier iteration" <-> int n <> colon
-                        , fsep $ text "The reduction-rules for" :
-                                (punctuate comma $ map (text . fst) changes) ++
-                                [text "were applied to the following constraint system."]
-                        , nest 2 (prettySystem se0)
-                        ]
 
-              traceIfLooping $ go (n + 1) (map snd changes)
-            else do
-              (c1,c2,c3) <- enforceNodeUniqueness
-              c4 <- enforceEdgeUniqueness
-              c5 <- solveUniqueActions
-              c6 <- reduceFormulas
-              c7 <- evalFormulaAtoms
-              c8 <- insertImpliedFormulas
-
-              -- Report on looping behaviour if necessary
-              let changes = filter ((Changed ==) . snd) $
-                    [ ("unique fresh instances (DG4)",        c1)
-                    , ("unique K↓-facts (N5↓)",               c2)
-                    , ("unique K↑-facts (N5↑)",               c3)
-                    , ("unique (linear) edges (DG2 and DG3)", c4)
-                    , ("solve unambiguous actions (S_@)",     c5)
-                    , ("decompose trace formula",             c6)
-                    , ("propagate atom valuation to formula", c7)
-                    , ("saturate under ∀-clauses (S_∀)",      c8)
-                    ]
-                  traceIfLooping
-                    | n <= 10   = id
-                    | otherwise = trace $ render $ vsep
-                        [ text "Simplifier iteration" <-> int n <> colon
-                        , fsep $ text "The reduction-rules for" :
-                                (punctuate comma $ map (text . fst) changes) ++
-                                [text "were applied to the following constraint system."]
-                        , nest 2 (prettySystem se0)
-                        ]
-
-              traceIfLooping $ go (n + 1) (map snd changes)
+          traceIfLooping $ go (n + 1) (map snd changes)
 
 
 -- | CR-rule *N6*: add ordering constraints between all KU-actions and
@@ -191,40 +152,6 @@ enforceNodeUniqueness =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
 
--- | CR-rule *DG4*: enforcing uniqueness of *Fresh* rule
--- instances.
---
--- Returns 'Changed' if a change was done.
-enforceFreshNodeUniqueness :: Reduction (ChangeIndicator, ChangeIndicator)
-enforceFreshNodeUniqueness =
-    (,)
-      <$> (merge (const $ return Unchanged) freshRuleInsts)
-      <*> (merge (solveFactEqs SplitNow)    kuActions)
-  where
-    -- *DG4*
-    freshRuleInsts se = do
-        (i, ru) <- M.toList $ get sNodes se
-        guard (isFreshRule ru)
-        return (ru, ((), i))  -- no need to merge equal rules
-
-    -- *N5_u*
-    kuActions se = (\(i, fa, m) -> (m, (fa, i))) <$> allKUActions se
-
-    merge :: Ord b
-          => ([Equal a] -> Reduction ChangeIndicator)
-             -- ^ Equation solver for 'Equal a'
-          -> (System -> [(b,(a,NodeId))])
-             -- ^ Candidate selector
-          -> Reduction ChangeIndicator                  --
-    merge solver candidates = do
-        changes <- gets (map mergers . groupSortOn fst . candidates)
-        mconcat <$> sequence changes
-      where
-        mergers []                          = unreachable "enforceFreshUniqueness"
-        mergers ((_,(xKeep, iKeep)):remove) =
-            mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
-                    <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
-                    
 
 -- | CR-rules *DG2_1* and *DG3*: merge multiple incoming edges to all facts
 -- and multiple outgoing edges from linear facts.
@@ -392,3 +319,160 @@ insertImpliedFormulas = do
              implied `S.notMember` get sSolvedFormulas sys )
           then return (insertFormula implied)
           else []
+
+-- | @impliedFormulas se imp@ returns the list of guarded formulas that are
+-- implied by @se@.
+impliedFormulas :: MaudeHandle -> System -> LNGuarded -> [LNGuarded]
+impliedFormulas hnd sys gf0 =
+    case openGuarded gf `evalFresh` avoid gf of
+      Just (All, _vs, antecedent, succedent) -> do
+        let (actionsEqs, otherAtoms) = first sortGAtoms . partitionEithers $
+                                        map prepare antecedent
+            succedent'               = gall [] otherAtoms succedent
+        subst <- candidateSubsts emptySubst actionsEqs
+        return $ unskolemizeLNGuarded $ applySkGuarded subst succedent'
+      _ -> []
+  where
+    gf = skolemizeGuarded gf0
+
+    prepare (Action i fa) = Left  (GAction i fa)
+    prepare (EqE s t)     = Left  (GEqE s t)
+    prepare ato           = Right (fmap (fmapTerm (fmap Free)) ato)
+
+    sysActions = do (i, fa) <- allActions sys
+                    return (skolemizeTerm (varTerm i), skolemizeFact fa)
+
+    candidateSubsts subst []               = return subst
+    candidateSubsts subst ((GAction a fa):as) = do
+        sysAct <- sysActions
+        subst' <- (`runReader` hnd) $ matchAction sysAct (applySkAction subst (a, fa))
+        candidateSubsts (compose subst' subst) as
+    candidateSubsts subst ((GEqE s' t'):as)   = do
+        let s = applySkTerm subst s'
+            t = applySkTerm subst t' 
+            (term,pat) | frees s == [] = (s,t)
+                       | frees t == [] = (t,s)
+                       | otherwise     = error $ "impliedFormulas: impossible, "
+                                           ++ "equality not guarded as checked"
+                                           ++"by 'Guarded.formulaToGuarded'."
+        subst' <- (`runReader` hnd) $ matchTerm term pat
+        candidateSubsts (compose subst' subst) as
+
+
+------------------------------------------------------------------------------
+-- Terms, facts, and formulas with skolem constants
+------------------------------------------------------------------------------
+
+-- | A constant type that supports names and skolem constants. We use the
+-- skolem constants to represent fixed free variables from the constraint
+-- system during matching the atoms of a guarded clause to the atoms of the
+-- constraint system.
+data SkConst = SkName  Name
+             | SkConst LVar
+             deriving( Eq, Ord, Show, Data, Typeable )
+
+type SkTerm    = VTerm SkConst LVar
+type SkFact    = Fact SkTerm
+type SkSubst   = Subst SkConst LVar
+type SkGuarded = LGuarded SkConst
+
+-- | A term with skolem constants and bound variables
+type BSkTerm   = VTerm SkConst BLVar
+
+-- | An term with skolem constants and bound variables
+type BSkAtom   = Atom BSkTerm
+
+instance IsConst SkConst
+
+
+-- Skolemization of terms without bound variables.
+--------------------------------------------------
+
+skolemizeTerm :: LNTerm -> SkTerm
+skolemizeTerm = fmapTerm conv
+ where
+  conv :: Lit Name LVar -> Lit SkConst LVar
+  conv (Var v) = Con (SkConst v)
+  conv (Con n) = Con (SkName n)
+
+skolemizeFact :: LNFact -> Fact SkTerm
+skolemizeFact = fmap skolemizeTerm
+
+skolemizeAtom :: BLAtom -> BSkAtom
+skolemizeAtom = fmap skolemizeBTerm
+
+skolemizeGuarded :: LNGuarded -> SkGuarded
+skolemizeGuarded = mapGuardedAtoms (const skolemizeAtom)
+
+applySkTerm :: SkSubst -> SkTerm -> SkTerm
+applySkTerm subst t = applyVTerm subst t
+
+applySkFact :: SkSubst -> SkFact -> SkFact
+applySkFact subst = fmap (applySkTerm subst)
+
+applySkAction :: SkSubst -> (SkTerm,SkFact) -> (SkTerm,SkFact)
+applySkAction subst (t,f) = (applySkTerm subst t, applySkFact subst f)
+
+
+-- Skolemization of terms with bound variables.
+-----------------------------------------------
+
+skolemizeBTerm :: VTerm Name BLVar -> BSkTerm
+skolemizeBTerm = fmapTerm conv
+ where
+  conv :: Lit Name BLVar -> Lit SkConst BLVar
+  conv (Var (Free x))  = Con (SkConst x)
+  conv (Var (Bound b)) = Var (Bound b)
+  conv (Con n)         = Con (SkName n)
+
+unskolemizeBTerm :: BSkTerm -> VTerm Name BLVar
+unskolemizeBTerm t = fmapTerm conv t
+ where
+  conv :: Lit SkConst BLVar -> Lit Name BLVar
+  conv (Con (SkConst x)) = Var (Free x)
+  conv (Var (Bound b))   = Var (Bound b)
+  conv (Var (Free v))    = error $ "unskolemizeBTerm: free variable " ++
+                                   show v++" found in "++show t
+  conv (Con (SkName n))  = Con n
+
+unskolemizeBLAtom :: BSkAtom -> BLAtom
+unskolemizeBLAtom = fmap unskolemizeBTerm
+
+unskolemizeLNGuarded :: SkGuarded -> LNGuarded
+unskolemizeLNGuarded = mapGuardedAtoms (const unskolemizeBLAtom)
+
+applyBSkTerm :: SkSubst -> VTerm SkConst BLVar -> VTerm SkConst BLVar
+applyBSkTerm subst =
+    go
+  where
+    go t = case viewTerm t of
+      Lit l     -> applyBLLit l
+      FApp o as -> fApp o (map go as)
+
+    applyBLLit :: Lit SkConst BLVar -> VTerm SkConst BLVar
+    applyBLLit l@(Var (Free v)) =
+        maybe (lit l) (fmapTerm (fmap Free)) (imageOf subst v)
+    applyBLLit l                = lit l
+
+applyBSkAtom :: SkSubst -> Atom (VTerm SkConst BLVar) -> Atom (VTerm SkConst BLVar)
+applyBSkAtom subst = fmap (applyBSkTerm subst)
+
+applySkGuarded :: SkSubst -> LGuarded SkConst -> LGuarded SkConst
+applySkGuarded subst = mapGuardedAtoms (const $ applyBSkAtom subst)
+
+-- Matching
+-----------
+
+matchAction :: (SkTerm, SkFact) ->  (SkTerm, SkFact) -> WithMaude [SkSubst]
+matchAction (i1, fa1) (i2, fa2) =
+    solveMatchLTerm sortOfSkol (i1 `matchWith` i2 <> fa1 `matchFact` fa2)
+  where
+    sortOfSkol (SkName  n) = sortOfName n
+    sortOfSkol (SkConst v) = lvarSort v
+
+matchTerm :: SkTerm ->  SkTerm -> WithMaude [SkSubst]
+matchTerm s t =
+    solveMatchLTerm sortOfSkol (s `matchWith` t)
+  where
+    sortOfSkol (SkName  n) = sortOfName n
+    sortOfSkol (SkConst v) = lvarSort v

@@ -12,23 +12,30 @@ module Theory.Constraint.Solver (
   -- * Constraint systems
     module Theory.Constraint.System
 
---   , ProofContext(..)
---   , DiffProofContext(..)
---   , pcSignature
---   , pcRules
---   , pcCaseDists
---   , pcUseInduction
---   , pcCaseDistKind
---   , pcTraceQuantifier
---   , pcInjectiveFactInsts
--- 
---   , InductionHint(..)
--- 
---   , ClassifiedRules(..)
---   , joinAllRules
---   , crProtocol
---   , crConstruct
---   , crDestruct
+  -- * Proof contexts
+  -- | The proof context captures all relevant information about the context
+  -- in which we are using the constraint solver. These are things like the
+  -- signature of the message theory, the multiset rewriting rules of the
+  -- protocol, the available precomputed case distinctions, whether induction
+  -- should be applied or not, whether typed or untyped case distinctions are
+  -- used, and whether we are looking for the existence of a trace or proving
+  -- the absence of any trace satisfying the constraint system.
+  , ProofContext(..)
+  , pcSignature
+  , pcRules
+  , pcCaseDists
+  , pcUseInduction
+  , pcCaseDistKind
+  , pcTraceQuantifier
+  , pcInjectiveFactInsts
+
+  , InductionHint(..)
+
+  , ClassifiedRules(..)
+  , joinAllRules
+  , crProtocol
+  , crConstruct
+  , crDestruct
 
   -- * Constraint reduction rules
 
@@ -39,9 +46,13 @@ module Theory.Constraint.Solver (
   , Contradiction
   , contradictions
 
---   , CaseDistinction
---   , cdGoal
---   , cdCases
+  -- ** Precomputed case distinctions
+  -- | For better speed, we precompute case distinctions. This is especially
+  -- important for getting rid of all chain constraints before actually
+  -- starting to verify security properties.
+  , CaseDistinction
+  , cdGoal
+  , cdCases
 
   , precomputeCaseDistinctions
   , refineWithTypingAsms
@@ -62,7 +73,7 @@ import           Logic.Connectives
 import           Theory.Constraint.Solver.CaseDistinctions
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.ProofMethod
--- import           Theory.Constraint.Solver.Types
+import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 
 

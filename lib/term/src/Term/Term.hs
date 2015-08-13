@@ -17,7 +17,6 @@ module Term.Term (
 
     -- ** Smart constructors
     , fAppOne
-    , fAppDiff
     , fAppExp
     , fAppInv
     , fAppPMult
@@ -28,15 +27,12 @@ module Term.Term (
 
     -- ** Destructors and classifiers
     , isPair
-    , isDiff
     , isInverse
     , isProduct
     , isUnion
     , isEMap
     , isNullaryPublicFunction
     , isPrivateFunction
-    , getLeftTerm
-    , getRightTerm
 
     -- * AC, C, and NonAC funcion symbols
     , FunSym(..)
@@ -50,7 +46,6 @@ module Term.Term (
     , NoEqFunSig
 
     -- ** concrete symbols strings
-    , diffSymString
     , expSymString
     , invSymString
     , pmultSymString
@@ -58,7 +53,6 @@ module Term.Term (
     , unionSymString
     
     -- ** Function symbols
-    , diffSym
     , expSym
     , pmultSym
 
@@ -96,9 +90,8 @@ import           Term.Term.Raw
 fAppOne :: Term a
 fAppOne = fAppNoEq oneSym []
 
--- | Smart constructors for diff, pair, exp, pmult, and emap.
-fAppDiff, fAppPair, fAppExp,fAppPMult, fAppEMap :: Ord a => (Term a, Term a) -> Term a
-fAppDiff (x,y)  = fAppNoEq diffSym  [x, y]
+-- | Smart constructors for pair, exp, pmult, and emap.
+fAppPair, fAppExp,fAppPMult, fAppEMap :: Ord a => (Term a, Term a) -> Term a
 fAppPair (x,y)  = fAppNoEq pairSym  [x, y]
 fAppExp  (b,e)  = fAppNoEq expSym   [b, e]
 fAppPMult (s,p) = fAppNoEq pmultSym [s, p]
@@ -122,11 +115,6 @@ lits = foldMap return
 isPair :: Show a => Term a -> Bool
 isPair (viewTerm2 -> FPair _ _) = True
 isPair _                        = False
-
--- | 'True' iff the term is a well-formed diff term.
-isDiff :: Show a => Term a -> Bool
-isDiff (viewTerm2 -> FDiff _ _) = True
-isDiff _                        = False
 
 -- | 'True' iff the term is a well-formed inverse.
 isInverse :: Show a => Term a -> Bool
@@ -158,26 +146,6 @@ isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private))) _) = True
 isPrivateFunction _                                            = False
 
 ----------------------------------------------------------------------
--- Convert Diff Terms
-----------------------------------------------------------------------
-
-getSide :: DiffType -> Term a -> Term a
-getSide _  (LIT l) = LIT l
-getSide dt (FAPP (NoEq o) [t1,t2]) = case dt of
-    DiffLeft  | o == diffSym -> getSide dt t1
-    DiffRight | o == diffSym -> getSide dt t2
-    DiffBoth  | o == diffSym -> FAPP (NoEq o) [(getSide dt t1),(getSide dt t2)]
-    DiffNone  | o == diffSym -> error $ "getSide: illegal use of diff"
-    _                        -> FAPP (NoEq o) [(getSide dt t1),(getSide dt t2)]
-getSide dt (FAPP sym ts) = FAPP sym (map (getSide dt) ts)
-
-getLeftTerm :: Term a -> Term a
-getLeftTerm t = getSide DiffLeft t
-
-getRightTerm :: Term a -> Term a
-getRightTerm t = getSide DiffRight t
-
-----------------------------------------------------------------------
 -- Pretty printing
 ----------------------------------------------------------------------
 
@@ -196,7 +164,6 @@ prettyTerm ppLit = ppTerm
         Lit l                                     -> ppLit l
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
-        FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts

@@ -14,15 +14,12 @@ module Theory.Constraint.Solver.ProofMethod (
   -- * Proof methods
     CaseName
   , ProofMethod(..)
-  , DiffProofMethod(..)
   , execProofMethod
-  , execDiffProofMethod
 
   -- ** Heuristics
   , GoalRanking(..)
   , goalRankingName
   , rankProofMethods
-  , rankDiffProofMethods
 
   , Heuristic
   , roundRobinHeuristic
@@ -30,11 +27,8 @@ module Theory.Constraint.Solver.ProofMethod (
 
   -- ** Pretty Printing
   , prettyProofMethod
-  , prettyDiffProofMethod
 
 ) where
-
--- import           Debug.Trace
 
 import           Data.Binary
 import           Data.DeriveTH
@@ -58,7 +52,7 @@ import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
--- import           Theory.Constraint.Solver.Types
+import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
@@ -98,7 +92,7 @@ type CaseName = String
 -- | Sound transformations of sequents.
 data ProofMethod =
     Sorry (Maybe String)                 -- ^ Proof was not completed
-  | Solved                               -- ^ An attack was found
+  | Solved                               -- ^ An attack was fond
   | Simplify                             -- ^ A simplification step.
   | SolveGoal Goal                       -- ^ A goal that was solved.
   | Contradiction (Maybe Contradiction)  -- ^ A contradiction could be
@@ -108,19 +102,6 @@ data ProofMethod =
                                          -- the system.
   deriving( Eq, Ord, Show )
 
--- | Sound transformations of diff sequents.
--- FIXME
-data DiffProofMethod =
-    DiffSorry (Maybe String)                 -- ^ Proof was not completed
-  | DiffMirrored                             -- ^ No attack was found
-  | DiffAttack                               -- ^ A potential attack was found
-  | DiffRuleEquivalence                      -- ^ Consider all rules
---   | DiffTrivial                              -- ^ The rule is trivially sound - REMOVED and merged with solved!
-  | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
-  | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
-  deriving( Eq, Ord, Show )
-
-  
 instance HasFrees ProofMethod where
     foldFrees f (SolveGoal g)     = foldFrees f g
     foldFrees f (Contradiction c) = foldFrees f c
@@ -132,16 +113,6 @@ instance HasFrees ProofMethod where
     mapFrees f (Contradiction c) = Contradiction <$> mapFrees f c
     mapFrees _ method            = pure method
 
-instance HasFrees DiffProofMethod where
---     foldFrees f (SolveGoal g)     = foldFrees f g
---     foldFrees f (Contradiction c) = foldFrees f c
-    foldFrees _ _                 = mempty
-
-    foldFreesOcc  _ _ = const mempty
-
---     mapFrees f (SolveGoal g)     = SolveGoal <$> mapFrees f g
---     mapFrees f (Contradiction c) = Contradiction <$> mapFrees f c
-    mapFrees _ method            = pure method
 
 -- Proof method execution
 -------------------------
@@ -231,119 +202,10 @@ execProofMethod ctxt method sys =
       where
         sys0 = set sFormulas (L.get sFormulas sys)
              $ set sLemmas (L.get sLemmas sys)
-             $ emptySystem (L.get sCaseDistKind sys) (L.get sDiffSystem sys)
+             $ emptySystem (L.get sCaseDistKind sys)
 
         insCase name gf = M.insert name (set sFormulas (S.singleton gf) sys)
 
--- @execDiffMethod rules method se@ checks first if the @method@ is applicable to
--- the sequent @se@. Then, it applies the @method@ to the sequent under the
--- assumption that the @rules@ describe all rewriting rules in scope.
---
--- NOTE that the returned systems have their free substitution fully applied
--- and all variable indices reset.
-execDiffProofMethod :: DiffProofContext
-                -> DiffProofMethod -> DiffSystem -> Maybe (M.Map CaseName DiffSystem)
-execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ show sys -- return M.empty
-      case method of
-        DiffSorry _                                           -> return M.empty
-        DiffBackwardSearch
-          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys) of
-                                                                      (Just rule, Nothing) -> Just $ startBackwardSearch rule
-                                                                      (_ , _)              -> Nothing
-          | otherwise                                         -> Nothing
-        DiffBackwardSearchStep meth
-          | (L.get dsProofType sys) == (Just RuleEquivalence)
-            && (meth /= (Contradiction (Just ForbiddenKD)))   -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> applyStep meth s sys'
-                                                                      (_ , _ , _)                 -> Nothing
-          | otherwise                                         -> Nothing
-        DiffMirrored
-          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && (checkOtherSide s sys' == Just True)) ||
-                                                                                                        ((isSolved s sys') && (checkOtherSide s sys' == Nothing))
-                                                                                                        then return M.empty 
-                                                                                                        else Nothing
-                                                                      (_ , _ , _)                 -> Nothing                                                       
-          | otherwise                                         -> Nothing
-        DiffAttack
-          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (checkOtherSide s sys' == Just False)
-                                                                                                        then return M.empty
-                                                                                                        else Nothing
-                                                                      (_ , _ , _)                 -> Nothing
-          | otherwise                                         -> Nothing
-        DiffRuleEquivalence
-          | (L.get dsProofType sys) == Nothing                -> Just ruleEquivalence
-          | otherwise                                         -> Nothing
-          
-  where
-    protoRules       = (L.get dpcProtoRules  ctxt)
-    destrRules       = (L.get dpcDestrRules  ctxt)
-    constrRules      = (L.get dpcConstrRules ctxt)
-
-    protoRulesAC :: Side -> [RuleAC]
-    protoRulesAC LHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCLeft  ctxt)
-    protoRulesAC RHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCRight ctxt)
-    
-    ruleEquivalenceSystem :: String -> DiffSystem
-    ruleEquivalenceSystem rule = L.set dsCurrentRule (Just rule) 
-      $ L.set dsConstrRules (S.fromList constrRules) 
-      $ L.set dsDestrRules (S.fromList destrRules) 
-      $ L.set dsProtoRules (S.fromList protoRules) 
-      $ L.set dsProofType (Just RuleEquivalence) sys
-      
-    formula :: String -> LNFormula
-    formula rulename = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact {factTag = ProtoFact Linear ("Diff" ++ rulename) 0, factTerms = []})))
-    
-    ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
-    ruleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
-    
---     protoRuleEquivalenceCase :: M.Map CaseName DiffSystem -> ProtoRuleE -> M.Map CaseName DiffSystem
---     protoRuleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
-    
-    -- Not checking construction rules is sound, as they are 'trivial' !
-    -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in axioms.
-    -- LHS or RHS is not important in this case als we only need the names of the rules.
-    ruleEquivalence :: M.Map CaseName DiffSystem
-    ruleEquivalence = foldl ruleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) (protoRulesAC LHS)
-    
-    isTrivial :: System -> Bool
-    isTrivial sys' = (dgIsNotEmpty sys') && (allOpenGoalsAreSimpleFacts sys') && (allOpenFactGoalsAreIndependent sys')
-    
-    backwardSearchSystem :: Side -> DiffSystem -> String -> DiffSystem
-    backwardSearchSystem s sys' rulename = L.set dsSide (Just s)
-      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsSomeTrace True (formula rulename))) sys'
-
-    startBackwardSearch :: String -> M.Map CaseName DiffSystem
-    startBackwardSearch rulename = M.insert ("LHS") (backwardSearchSystem LHS sys rulename) $ M.insert ("RHS") (backwardSearchSystem RHS sys rulename) $ M.empty
-    
-    applyStep :: ProofMethod -> Side -> System -> Maybe (M.Map CaseName DiffSystem)
-    applyStep m s sys' = case (execProofMethod (eitherProofContext ctxt s) m sys') of
-                           Nothing    -> Nothing
-                           Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
-                           
-    isSolved :: Side -> System -> Bool
-    isSolved s sys' = {-filter isNotForbiddenKD-} (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
-    
-    -- Not necessary any more, now diff-systems do not generate ForbiddeKD-contradictions any more.
---     isNotForbiddenKD :: (ProofMethod, (M.Map CaseName System, String)) -> Bool
---     isNotForbiddenKD (Contradiction (Just ForbiddenKD), _) = False
---     isNotForbiddenKD (_                               , _) = True
-    
-    checkOtherSide :: Side -> System -> Maybe Bool
-    checkOtherSide s sys'= case getMirrorDG ctxt s sys' of
-                             Just sys'' -> {-trace ("RE: axioms: " ++ (show (axioms s sys'')) ++ " " ++ (show (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys'))))-} (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys'))
-                             Nothing    -> Just False
-            where
-              oppositeCtxt s' = eitherProofContext ctxt (opposite s')
-              axioms s' sys'' = filterAxioms (oppositeCtxt s') sys'' $ axioms' s' $ L.get dpcAxioms ctxt
-
-              axioms' _ []              = []
-              axioms' s' ((s'', form):xs) = if s' == s'' then form ++ (axioms' s' xs) else (axioms' s' xs)
-    
-    
-    
-    
 ------------------------------------------------------------------------------
 -- Heuristics
 ------------------------------------------------------------------------------
@@ -354,7 +216,6 @@ data GoalRanking =
     GoalNrRanking
   | UsefulGoalNrRanking
   | SmartRanking Bool
-  | SmartDiffRanking
   deriving( Eq, Ord, Show )
 
 -- | The name/explanation of a 'GoalRanking'.
@@ -364,7 +225,6 @@ goalRankingName ranking =
         GoalNrRanking                -> "their order of creation"
         UsefulGoalNrRanking          -> "their usefulness and order of creation"
         SmartRanking useLoopBreakers -> smart useLoopBreakers
-        SmartDiffRanking             -> "the 'smart' heuristic (for diff proofs)"
    where
      smart b = "the 'smart' heuristic (loop breakers " ++
                (if b then "allowed" else "delayed") ++ ")."
@@ -377,7 +237,6 @@ rankGoals ctxt ranking = case ranking of
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
     SmartRanking useLoopsBreakers -> smartRanking ctxt useLoopsBreakers
-    SmartDiffRanking -> smartDiffRanking ctxt
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
@@ -406,25 +265,6 @@ rankProofMethods ranking ctxt sys = do
                                ProbablyConstructible -> " (probably constructible)"
                                CurrentlyDeducible    -> " (currently deducible)"
       )
-
--- | Use a 'GoalRanking' to generate the ranked, list of possible
--- 'ProofMethod's and their corresponding results in this 'ProofContext' and
--- for this 'System'. If the resulting list is empty, then the constraint
--- system is solved.
-rankDiffProofMethods :: GoalRanking -> DiffProofContext -> DiffSystem
-                 -> [(DiffProofMethod, (M.Map CaseName DiffSystem, String))]
-rankDiffProofMethods ranking ctxt sys = do
-    (m, expl) <-
-            [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
-        <|> [(DiffMirrored, "Backward search completed")]
-        <|> [(DiffAttack, "Found attack")]
-        <|> [(DiffBackwardSearch, "Do backward search from rule")]
-        <|> (case (L.get dsSide sys, L.get dsSystem sys) of
-                  (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking (eitherProofContext ctxt s) sys')
-                  (_         , _        ) -> [])
-    case execDiffProofMethod ctxt m sys of
-      Just cases -> return (m, (cases, expl))
-      Nothing    -> []
 
 newtype Heuristic = Heuristic [GoalRanking]
     deriving( Eq, Ord, Show )
@@ -566,43 +406,6 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
       where (sat, nonsat) = partition p xs
 
 
--- | A ranking function tuned for the automatic verification of
--- classical security protocols that exhibit a well-founded protocol premise
--- fact flow.
--- Adjusted for diff systems by delaying splitEqs and ensuring trivial goals are solved last.
-smartDiffRanking :: ProofContext
-                    -> System
-                    -> [AnnotatedGoal] -> [AnnotatedGoal]
-smartDiffRanking ctxt sys =
-    delayTrivial . delaySplits . smartRanking ctxt False sys
-  where
-    delaySplits agl = fst parts ++ snd parts
-      where
-        parts = partition (not . isSplitGoal') agl
-        isSplitGoal' ((SplitG _), _) = True
-        isSplitGoal' _               = False
-
-
-    delayTrivial agl = fst parts ++ snd parts
-      where
-        parts = partition (not . trivialKUGoal) agl
-    
-    trivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialMsgFact fa /= Nothing)
-    trivialKUGoal _                   = False
-
-    -- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing. Currently identical to "isTrivialFact" from Model/Fact, but could eventually be relaxed there, but not here. 
-    isTrivialMsgFact :: LNFact -> Maybe [LVar]
-    isTrivialMsgFact (Fact _ ts) = case ts of
-      []   -> Just []
-      x:xs -> Prelude.foldl combine (getMsgVar x) (map getMsgVar xs)
-      where
-        combine :: Maybe [LVar] -> Maybe [LVar] -> Maybe [LVar]
-        combine Nothing    _        = Nothing
-        combine (Just _ )  Nothing  = Nothing
-        combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
-      
-        noDuplicates l1 l2 = S.null (S.intersection (S.fromList l1) (S.fromList l2))
-
 
 ------------------------------------------------------------------------------
 -- Pretty printing
@@ -614,38 +417,24 @@ prettyProofMethod method = case method of
     Solved               -> keyword_ "SOLVED" <-> lineComment_ "trace found"
     Induction            -> keyword_ "induction"
     Sorry reason         ->
-        fsep [keyword_ "sorry", maybe emptyDoc closedComment_ reason]
+        fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
     SolveGoal goal       ->
         keyword_ "solve(" <-> prettyGoal goal <-> keyword_ ")"
     Simplify             -> keyword_ "simplify"
     Contradiction reason ->
         sep [ keyword_ "contradiction"
-            , maybe emptyDoc (closedComment . prettyContradiction) reason
+            , maybe emptyDoc (lineComment . prettyContradiction) reason
             ]
 
--- | Pretty-print a diff proof method.
-prettyDiffProofMethod :: HighlightDocument d => DiffProofMethod -> d
-prettyDiffProofMethod method = case method of
-    DiffMirrored             -> keyword_ "MIRRORED"
-    DiffAttack               -> keyword_ "ATTACK" <-> lineComment_ "trace found"
-    DiffSorry reason         ->
-        fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
--- MERGED with solved.
---    DiffTrivial              -> keyword_ "trivial"
-    DiffRuleEquivalence      -> keyword_ "rule-equivalence"
-    DiffBackwardSearch       -> keyword_ "backward-search"  
-    DiffBackwardSearchStep s -> keyword_ "step(" <-> prettyProofMethod s <-> keyword_ ")"
-    
-    
+
+
 -- Derived instances
 --------------------
 
 $( derive makeBinary ''ProofMethod)
-$( derive makeBinary ''DiffProofMethod)
 $( derive makeBinary ''GoalRanking)
 $( derive makeBinary ''Heuristic)
 
 $( derive makeNFData ''ProofMethod)
-$( derive makeNFData ''DiffProofMethod)
 $( derive makeNFData ''GoalRanking)
 $( derive makeNFData ''Heuristic)

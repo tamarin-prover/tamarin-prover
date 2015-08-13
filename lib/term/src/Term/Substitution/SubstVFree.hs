@@ -274,9 +274,6 @@ instance (Apply a, Apply b) => Apply (Either a b) where
 instance Apply a => Apply [a] where
     apply subst = fmap (apply subst)
 
-instance Apply a => Apply (Map k a) where
-    apply subst = fmap (apply subst)
-
 instance Apply a => Apply (Conj a) where
     apply subst = fmap (apply subst)
 

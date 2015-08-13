@@ -31,10 +31,6 @@ module Theory.Model.Fact (
   , factTagMultiplicity
   , factArity
   , factMultiplicity
-  , getLeftFact
-  , getRightFact
-  , getFactVariables
-  , isTrivialFact
 
   , DirTag(..)
   , kuFact
@@ -81,7 +77,6 @@ import           Data.Generics
 import           Data.Maybe             (isJust)
 import           Data.Monoid
 import           Data.Traversable       (Traversable(..))
-import qualified Data.Set               as S
 
 import           Term.Unification
 
@@ -303,35 +298,7 @@ matchFact t p =
     matchOnlyIf (factTag t == factTag p &&
                  length (factTerms t) == length (factTerms p))
     <> mconcat (zipWith matchWith (factTerms t) (factTerms p))
-    
--- | Get "left" variant of a diff fact
-getLeftFact :: LNFact -> LNFact
-getLeftFact (Fact tag ts) =
-   (Fact tag (map getLeftTerm ts))
 
--- | Get "left" variant of a diff fact
-getRightFact :: LNFact -> LNFact
-getRightFact (Fact tag ts) =
-   (Fact tag (map getRightTerm ts))
-
--- | Get all variables inside a fact
-getFactVariables :: LNFact -> [LVar]
-getFactVariables (Fact _ ts) =
-   map fst $ varOccurences ts
-
--- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing. [This could be relaxed to work for all variables (including fresh and public) if Facts were typed, so that an argument would always have to be fresh or public or general.]
-isTrivialFact :: LNFact -> Maybe [LVar]
-isTrivialFact (Fact _ ts) = case ts of
-      []   -> Just []
-      x:xs -> Prelude.foldl combine (getMsgVar x) (map getMsgVar xs)
-    where
-      combine :: Maybe [LVar] -> Maybe [LVar] -> Maybe [LVar]
-      combine Nothing    _        = Nothing
-      combine (Just _ )  Nothing  = Nothing
-      combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
-      
-      noDuplicates l1 l2 = S.null (S.intersection (S.fromList l1) (S.fromList l2))
-   
 ------------------------------------------------------------------------------
 -- Pretty Printing
 ------------------------------------------------------------------------------
