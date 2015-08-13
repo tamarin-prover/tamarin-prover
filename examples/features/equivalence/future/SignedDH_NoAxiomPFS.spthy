@@ -1,0 +1,141 @@
+theory SignedDH_NoAxiomPFS
+begin
+
+section{* The Signed Diffie-Hellman Protocol *}
+
+/*
+ * Protocol:	Signed Diffie-Hellman, extended for ObsEq
+ * Modeler: 	Simon Meier, Benedikt Schmidt; extension by Jannik Dreier, Ralf Sasse
+ * Date: 	January 2012; extended April 2015
+ *
+ * Status: 	working; ???
+ */
+
+builtins: diffie-hellman, signing
+functions: h/1
+
+rule NoEarlyReveals:
+  [ ]
+--[ CreateTokenOnce() ]->
+  [ NoRevealToken() ]
+
+rule AllowReveals:
+  [ NoRevealToken() ]
+--[ ]->
+  [ RevealsAllowedToken() ]
+
+axiom SingleToken:
+  " All #i1 #i2. CreateTokenOnce() @i1 & CreateTokenOnce() @i2 ==> #i1 = #i2"
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltk) ] 
+--[ Register($A) ]-> 
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+
+rule Get_pk:
+  [ !Pk(A, pk) ] 
+  --> 
+  [ Out(pk) ]
+
+rule Reveal_ltk:
+    [ !Ltk(A, ltk) , RevealsAllowedToken() ]
+  --[ LtkReveal(A) ]->
+    [ Out(ltk) , RevealsAllowedToken() ]
+
+// Protocol
+rule Init_1:
+  [ Fr(~ekI), !Ltk($I, ltkI) , NoRevealToken() ]
+  -->
+  [ Init_1( $I, $R, ~ekI ) , NoRevealToken()
+  , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', $I, $R,'g' ^ ~ekI }ltkI> ) ]
+
+rule Init_2:
+    let Y = 'g' ^ z // think of this as a group element check
+    in
+    [ Init_1( $I, $R, ~ekI ) , NoRevealToken()
+    , !Pk($R, pk(ltkR))
+    , In( <$R, $I, Y, sign{'2', $R, $I, Y }ltkR> ) 
+    ]
+  --[ SessionKey($I,$R, Y ^ ~ekI)
+    , ExpR(z) 
+    ]->
+    [ InitiatorKey($I,$R, Y ^ ~ekI) , NoRevealToken() ]
+
+rule Resp:
+    let X = 'g' ^ z // think of this as a group element check
+    in
+    [ !Pk($I, pk(ltkI)) , NoRevealToken()
+    , !Ltk($R, ltkR)
+    , Fr(~ekR)
+    , In( <$I, $R, X, sign{'1', $I, $R, X }ltkI> ) 
+    ]
+  --[ SessionKey($I,$R, X ^ ~ekR)
+    , ExpR(z) ]->
+    [
+      ResponderKey($I,$R, X ^ ~ekR) , NoRevealToken()
+    , Out( <$R, $I, 'g' ^ ~ekR, sign{'2', $R, $I, 'g' ^ ~ekR }ltkR> ) 
+    ]
+
+
+rule ChallengeInitiator:
+    [ InitiatorKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R,diff(k, ~z))
+    , SafeChallenge() ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+rule ChallengeResponder:
+    [ ResponderKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R,diff(k, ~z))
+    , SafeChallenge() ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+
+/*
+lemma Perfect_Forward_Secrecy:
+  "All I R sessKey #i #k. 
+     SessionKey(I,R,sessKey) @ i &
+     K(sessKey) @ k
+     ==>
+     ( (Ex #r. LtkReveal(I) @ r & r < i)
+     | (Ex #r. LtkReveal(R) @ r & r < i)
+     )
+  "
+*/
+
+//axiom singleChallenge:
+//  "All I R k I2 R2 k2 #j #j2. Challenge(I, R, k)@j & Challenge(I2, R2, k2)@ j2 ==> #j = #j2"
+
+axiom safeSingleChallenge:
+  " All #i1 #i2. SafeChallenge() @i1 & SafeChallenge() @i2 ==> #i1 = #i2"
+
+// Note that these axioms are only for observational equivalence, comment them out for trace properties!
+//axiom NoChallengeAndRevealInitiatorBefore:
+//  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(I)@k & k < i)"
+
+//axiom NoChallengeAndRevealResponder:
+//  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(R)@k & k < i)"
+
+/*
+axiom CombinedStuff:
+  "All I R sessKey #i. 
+     Challenge(I,R,sessKey) @ i 
+     ==>
+     not ( (Ex #r. LtkReveal(I) @ r & r < i)
+         | (Ex #r. LtkReveal(R) @ r & r < i)
+         )
+  "
+*/
+
+lemma Executable:
+  exists-trace 
+    "Ex #i1 #i2 I R sessKey.  
+         SessionKey(I,R,sessKey) @ i1 &
+         SessionKey(I,R,sessKey) @ i2 &
+         not (#i1 = #i2)"
+
+end

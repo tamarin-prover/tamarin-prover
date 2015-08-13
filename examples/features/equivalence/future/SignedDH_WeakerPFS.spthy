@@ -1,0 +1,126 @@
+theory SignedDH_WeakerPFS
+begin
+
+section{* The Signed Diffie-Hellman Protocol *}
+
+/*
+ * Protocol:	Signed Diffie-Hellman, extended for ObsEq
+ * Modeler: 	Simon Meier, Benedikt Schmidt; extension by Jannik Dreier, Ralf Sasse
+ * Date: 	January 2012; extended April 2015
+ *
+ * Status: 	working; ???
+ */
+
+builtins: diffie-hellman, signing
+functions: h/1
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltk) ] 
+--[ Register($A) ]-> 
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+
+rule Get_pk:
+  [ !Pk(A, pk) ] 
+  --> 
+  [ Out(pk) ]
+
+rule Reveal_ltk:
+    [ !Ltk(A, ltk) ]
+  --[ LtkReveal(A) 
+    , SafeLtkReveal() ]->
+    [ Out(ltk) ]
+
+// Protocol
+rule Init_1:
+  [ Fr(~ekI), !Ltk($I, ltkI) ]
+  -->
+  [ Init_1( $I, $R, ~ekI )
+  , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', $I, $R,'g' ^ ~ekI }ltkI> ) ]
+
+rule Init_2:
+    let Y = 'g' ^ z // think of this as a group element check
+    in
+    [ Init_1( $I, $R, ~ekI )
+    , !Pk($R, pk(ltkR))
+    , In( <$R, $I, Y, sign{'2', $R, $I, Y }ltkR> ) 
+    ]
+  --[ SessionKey($I,$R, Y ^ ~ekI)
+    , ExpR(z) 
+    ]->
+    [ InitiatorKey($I,$R, Y ^ ~ekI) ]
+
+rule Resp:
+    let X = 'g' ^ z // think of this as a group element check
+    in
+    [ !Pk($I, pk(ltkI))
+    , !Ltk($R, ltkR)
+    , Fr(~ekR)
+    , In( <$I, $R, X, sign{'1', $I, $R, X }ltkI> ) 
+    ]
+  --[ SessionKey($I,$R, X ^ ~ekR)
+    , ExpR(z) ]->
+    [
+      ResponderKey($I,$R, X ^ ~ekR)
+    , Out( <$R, $I, 'g' ^ ~ekR, sign{'2', $R, $I, 'g' ^ ~ekR }ltkR> ) 
+    ]
+
+
+rule ChallengeInitiator:
+    [ InitiatorKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R,diff(k, ~z))  
+    , SafeChallenge() ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+rule ChallengeResponder:
+    [ ResponderKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R,diff(k, ~z))  
+    , SafeChallenge() ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+
+lemma Perfect_Forward_Secrecy:
+  "All I R sessKey #i #k. 
+     SessionKey(I,R,sessKey) @ i &
+     K(sessKey) @ k
+     ==>
+     ( (Ex #r. LtkReveal(I) @ r & r < i)
+     | (Ex #r. LtkReveal(R) @ r & r < i)
+     )
+  "
+
+axiom safeSingleChallenge:
+  " All #i1 #i2. SafeChallenge() @i1 & SafeChallenge() @i2 ==> #i1 = #i2"
+
+axiom ChallengeBeforeReveal:
+  "All #i. 
+     SafeChallenge() @ i 
+     ==>
+     not ( (Ex #r. SafeLtkReveal() @ r & r < i))
+  "
+
+/* // alternative formulation that does not help
+axiom ChallengeBeforeReveal:
+  "All #i #r. 
+     SafeChallenge() @ i & SafeLtkReveal() @ r
+     ==>
+     i < r
+  "
+*/
+
+/*
+axiom CombinedStuff:
+  "All I R sessKey #i. 
+     Challenge(I,R,sessKey) @ i 
+     ==>
+     not ( (Ex #r. LtkReveal(I) @ r & r < i)
+         | (Ex #r. LtkReveal(R) @ r & r < i)
+         )
+  "
+*/
+
+end
