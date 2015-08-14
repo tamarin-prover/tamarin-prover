@@ -25,31 +25,16 @@ https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md.
 
 We manage the Haskell dependencies automatically, using
 'stack'. Install 'stack' from
-https://github.com/commercialhaskell/stack/wiki/Downloads and run
-'make default' which will install an appropriate GHC for your system,
-including all dependencies, and the tamarin-prover executable will be at
+https://github.com/commercialhaskell/stack/wiki/Downloads
+
+After cloning this repository run 'make default', which will install an
+appropriate GHC for your system, including all dependencies, and the
+tamarin-prover executable will be at
 
   ~/.local/bin/tamarin-prover
 
-We also (currently) support management of Haskell dependencies using
-'cabal sandbox'es with all transitive dependencies pinned in the
-'cabal.config' file. To bootstrap development, you should run a
-successful sandboxed installation by calling 'make install' in the
-repositories root directory. This will build the tamarin-prover
-executable at
-
-  cabal-sandbox/bin/tamarin-prover
-
 This file is relocatable and you can copy it anywhere you'd like. Also to
 other systems with the same 'libc' and 'libgmp' libraries.
-
-To enter the GHCi repl, type
-
-  cabal repl
-
-in the root directory of this repository. If you are working on one of the
-tamarin-prover-XXX libraries, you can use GHCi to load them by typing 'cabal
-repl' in their respective root directory.
 
 The static web assets are embedded into the built binary in the file
 'src/Web/Dispatch.hs'. See the note on 'staticFile' on how to enable dynamic
