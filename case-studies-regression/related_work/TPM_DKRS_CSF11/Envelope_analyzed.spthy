@@ -102,7 +102,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -114,28 +114,28 @@ next
       case CreateLockedKey
       solve( !KU( aenc(m, pk(~sk)) ) @ #vk )
         case Alice2
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case PCR_Unbind
         solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                (∃ #j. (Secret( t ) @ #j) ∧ ¬(last(#j))) )
           case case_1
-          by contradiction // cyclic
+          by contradiction /* cyclic */
         next
           case case_2
-          by contradiction // impossible chain
+          by contradiction /* impossible chain */
         qed
       next
         case caenc
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     qed
   next
     case case_2
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   next
     case case_3
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -147,7 +147,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -157,22 +157,22 @@ next
       case CreateLockedKey
       solve( PCR( x ) ▶₀ #i )
         case Alice1
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case CreateLockedKey
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case PCR_Extend
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case PCR_Init
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case PCR_Quote
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case PCR_Unbind
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     next
       case PCR_Quote
@@ -180,22 +180,22 @@ next
         case PCR_Init
         solve( PCR( x ) ▶₀ #i )
           case Alice1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case CreateLockedKey
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case PCR_Extend
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case PCR_Init
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case PCR_Quote
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case PCR_Unbind
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     next
@@ -214,16 +214,16 @@ next
                 case Alice1
                 solve( PCR( h(<h(<'pcr0', ~n>), 'obtain'>) ) ▶₀ #i )
                   case CreateLockedKey
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case PCR_Extend
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case PCR_Quote
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case PCR_Unbind
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               next
                 case PCR_Extend
@@ -237,19 +237,19 @@ next
             case caenc
             solve( PCR( h(<h(<x, ~n>), lock>) ) ▶₀ #i )
               case Alice1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case CreateLockedKey
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case PCR_Extend
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case PCR_Quote
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case PCR_Unbind
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           qed
         next
@@ -275,19 +275,19 @@ next
             case caenc
             solve( PCR( h(<h(<x, y>), lock>) ) ▶₀ #i )
               case Alice1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case CreateLockedKey
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case PCR_Extend
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case PCR_Quote
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case PCR_Unbind
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           qed
         next
@@ -304,19 +304,19 @@ next
             case caenc
             solve( PCR( h(<'pcr0', lock>) ) ▶₀ #i )
               case Alice1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case CreateLockedKey
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case PCR_Extend
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case PCR_Quote
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case PCR_Unbind
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           qed
         qed
@@ -324,7 +324,7 @@ next
     qed
   next
     case case_2
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -6039,7 +6039,7 @@ solve( Alice1( n ) ▶₀ #i )
                         qed
                       next
                         case caenc
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       qed
                     qed
                   next
@@ -6071,7 +6071,7 @@ solve( Alice1( n ) ▶₀ #i )
                         by solve( !KU( ~n ) @ #vk.5 )
                       next
                         case caenc
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       qed
                     qed
                   next
@@ -6100,7 +6100,7 @@ solve( Alice1( n ) ▶₀ #i )
                       case PCR_Extend
                       solve( !KU( aenc(~s, pk(~sk.1)) ) @ #vk.3 )
                         case caenc
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       qed
                     qed
                   next
@@ -6132,13 +6132,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
+analyzing: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
+analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 35.284322s
+  processing time: 61.421116s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
@@ -6148,10 +6148,10 @@ analyzed: data/examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
+analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 35.284322s
+  processing time: 61.421116s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)

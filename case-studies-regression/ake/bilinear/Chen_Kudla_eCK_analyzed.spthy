@@ -510,13 +510,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/ake/bilinear/Chen_Kudla_eCK.spthy
+analyzing: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/ake/bilinear/Chen_Kudla_eCK.spthy
+analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 60.627098s
+  processing time: 61.066884s
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ------------------------------------------------------------------------------
@@ -524,10 +524,10 @@ analyzed: data/examples/ake/bilinear/Chen_Kudla_eCK.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/ake/bilinear/Chen_Kudla_eCK.spthy
+analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 60.627098s
+  processing time: 61.066884s
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ==============================================================================

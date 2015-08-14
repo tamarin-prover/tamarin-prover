@@ -54,6 +54,8 @@ KEA=KEA_plus_KI_KCI.spthy KEA_plus_KI_KCI_wPFS.spthy
 NAXOS=NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy
 
 SDH=SignedDH_PFS.spthy #SignedDH_eCK.spthy
+# The "SignedDH_eCK.spthy" case study has not been working for a long time, 
+# probably some change in the heuristics somewhere made it run indefinitely.
 
 STS=STS_MAC.spthy STS_MAC_fix1.spthy STS_MAC_fix2.spthy
 

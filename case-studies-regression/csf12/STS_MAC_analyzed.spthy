@@ -311,13 +311,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/STS_MAC.spthy
+analyzing: examples/csf12/STS_MAC.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/STS_MAC.spthy
+analyzed: examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.582101s
+  processing time: 4.963773s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (12 steps)
 
@@ -326,10 +326,10 @@ analyzed: data/examples/csf12/STS_MAC.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/STS_MAC.spthy
+analyzed: examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.582101s
+  processing time: 4.963773s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (12 steps)
 

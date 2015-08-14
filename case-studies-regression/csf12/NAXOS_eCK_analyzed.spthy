@@ -343,7 +343,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                                   $I, $R>)
                          ) @ #vk )
                     case Sessk_reveal
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case ch2
                     solve( !KU( 'g'^(~lkI*h1(<~eskR, ~lkR>)) ) @ #vk.4 )
@@ -360,7 +360,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                                 case ch1
                                 solve( !KU( ~eskR ) @ #vk.16 )
                                   case Ephk_reveal
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             next
@@ -369,7 +369,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                                 case ch1
                                 solve( !KU( ~eskI ) @ #vk.16 )
                                   case Ephk_reveal
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             next
@@ -378,7 +378,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                                 case ch1
                                 solve( !KU( ~eskI ) @ #vk.19 )
                                   case Ephk_reveal
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             qed
@@ -391,7 +391,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                               case ch1
                               solve( !KU( ~eskI ) @ #vk.18 )
                                 case Ephk_reveal
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -401,7 +401,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                             case ch1
                             solve( !KU( ~eskI ) @ #vk.15 )
                               case Ephk_reveal
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           qed
                         qed
@@ -416,7 +416,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                             case Ephk_reveal
                             solve( !KU( ~lkR ) @ #vk.18 )
                               case Ltk_reveal
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           qed
                         qed
@@ -429,7 +429,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                           case Ephk_reveal
                           solve( !KU( ~lkR ) @ #vk.15 )
                             case Ltk_reveal
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           qed
                         qed
                       qed
@@ -462,7 +462,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                                 $I, $R>)
                        ) @ #vk )
                   case Sessk_reveal
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case ch2
                   solve( !KU( 'g'^(~x*h1(<~eskR, ~lkR>)) ) @ #vk.4 )
@@ -479,7 +479,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                               case ch1
                               solve( !KU( ~eskR ) @ #vk.16 )
                                 case Ephk_reveal
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           next
@@ -488,7 +488,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                               case ch1
                               solve( !KU( ~eskI ) @ #vk.16 )
                                 case Ephk_reveal
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           next
@@ -497,7 +497,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                               case ch1
                               solve( !KU( ~eskI ) @ #vk.19 )
                                 case Ephk_reveal
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -510,7 +510,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                             case ch1
                             solve( !KU( ~eskI ) @ #vk.18 )
                               case Ephk_reveal
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           qed
                         qed
@@ -520,7 +520,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                           case ch1
                           solve( !KU( ~eskI ) @ #vk.15 )
                             case Ephk_reveal
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           qed
                         qed
                       qed
@@ -535,7 +535,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                           case Ephk_reveal
                           solve( !KU( ~lkR ) @ #vk.18 )
                             case Ltk_reveal
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           qed
                         qed
                       qed
@@ -548,7 +548,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                         case Ephk_reveal
                         solve( !KU( ~lkR ) @ #vk.15 )
                           case Ltk_reveal
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         qed
                       qed
                     qed
@@ -584,31 +584,31 @@ next
         case generate_ltk
         solve( !KU( h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>) ) @ #vk )
           case Sessk_reveal_case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case Sessk_reveal_case_2
           solve( splitEqs(1) )
             case split_case_1
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case split_case_2
             solve( !KU( 'g'^(~x*h1(<~eskI, ~lkI>)*inv(~lkI)) ) @ #vk.2 )
               case Init_1
               solve( !KU( ~x ) @ #vk.4 )
                 case Ltk_reveal
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case cexp
               solve( !KU( ~x ) @ #vk.5 )
                 case Ltk_reveal
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case generate_ltk
               solve( !KU( ~lkI ) @ #vk.6 )
                 case Ltk_reveal
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             qed
           qed
@@ -618,13 +618,13 @@ next
             case Init_1
             solve( !KU( ~x ) @ #vk.11 )
               case Ltk_reveal
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           next
             case cexp
             solve( !KU( ~x ) @ #vk.13 )
               case Ltk_reveal
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           next
             case generate_ltk
@@ -634,7 +634,7 @@ next
                 case Ephk_reveal
                 solve( !KU( ~lkI ) @ #vk.14 )
                   case Ltk_reveal
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               qed
             qed
@@ -652,45 +652,45 @@ next
           case Sessk_reveal_case_1
           solve( splitEqs(1) )
             case split_case_1
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case split_case_2
             solve( !KU( 'g'^(~x*h1(<~eskR, ~lkI>)*inv(~lkI)) ) @ #vk.2 )
               case Resp_1
               solve( !KU( ~x ) @ #vk.4 )
                 case Ltk_reveal
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case cexp
               solve( !KU( ~x ) @ #vk.5 )
                 case Ltk_reveal
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case generate_ltk
               solve( !KU( ~lkI ) @ #vk.6 )
                 case Ltk_reveal
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             qed
           qed
         next
           case Sessk_reveal_case_2
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case ch2
           solve( !KU( 'g'^(~x*h1(<~eskR, ~lkR>)) ) @ #vk.3 )
             case Resp_1
             solve( !KU( ~x ) @ #vk.11 )
               case Ltk_reveal
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           next
             case cexp
             solve( !KU( ~x ) @ #vk.13 )
               case Ltk_reveal
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           next
             case generate_ltk
@@ -700,7 +700,7 @@ next
                 case Ephk_reveal
                 solve( !KU( ~lkR ) @ #vk.14 )
                   case Ltk_reveal
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               qed
             qed
@@ -720,13 +720,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/NAXOS_eCK.spthy
+analyzing: examples/csf12/NAXOS_eCK.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/NAXOS_eCK.spthy
+analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.062988s
+  processing time: 4.473299s
   eCK_key_secrecy (all-traces): verified (132 steps)
 
 ------------------------------------------------------------------------------
@@ -734,10 +734,10 @@ analyzed: data/examples/csf12/NAXOS_eCK.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/NAXOS_eCK.spthy
+analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.062988s
+  processing time: 4.473299s
   eCK_key_secrecy (all-traces): verified (132 steps)
 
 ==============================================================================

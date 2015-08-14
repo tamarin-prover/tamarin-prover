@@ -326,13 +326,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/ake/dh/UM_one_pass_attack.spthy
+analyzing: examples/ake/dh/UM_one_pass_attack.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/ake/dh/UM_one_pass_attack.spthy
+analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.727094s
+  processing time: 5.295212s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 
@@ -341,10 +341,10 @@ analyzed: data/examples/ake/dh/UM_one_pass_attack.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/ake/dh/UM_one_pass_attack.spthy
+analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.727094s
+  processing time: 5.295212s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 

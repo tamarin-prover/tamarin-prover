@@ -276,13 +276,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
+analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
+analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.097503s
+  processing time: 1.276297s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -291,10 +291,10 @@ analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
+analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.097503s
+  processing time: 1.276297s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

@@ -244,13 +244,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
+analyzing: examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
+analyzed: examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.518553s
+  processing time: 0.578124s
   JKL2008_2_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_2_responder_key (all-traces): falsified - found trace (7 steps)
 
@@ -259,10 +259,10 @@ analyzed: data/examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
+analyzed: examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.518553s
+  processing time: 0.578124s
   JKL2008_2_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_2_responder_key (all-traces): falsified - found trace (7 steps)
 

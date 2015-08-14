@@ -157,7 +157,7 @@ solve( SessionKey( I, R, sessKey ) @ #i )
         case csign
         solve( !KU( ~ltk ) @ #vk.11 )
           case Reveal_ltk
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -184,7 +184,7 @@ next
         case csign
         solve( !KU( ~ltk ) @ #vk.11 )
           case Reveal_ltk
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -200,13 +200,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/SignedDH_PFS.spthy
+analyzing: examples/csf12/SignedDH_PFS.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/SignedDH_PFS.spthy
+analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.532613s
+  processing time: 0.569603s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ------------------------------------------------------------------------------
@@ -214,10 +214,10 @@ analyzed: data/examples/csf12/SignedDH_PFS.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/SignedDH_PFS.spthy
+analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.532613s
+  processing time: 0.569603s
   Perfect_Forward_Secrecy (all-traces): verified (20 steps)
 
 ==============================================================================

@@ -119,13 +119,13 @@ solve( HonestKey( sk ) @ #i )
   case Client_RenewKey
   solve( !KU( ~skNew ) @ #vk )
     case Client_LeakKey
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 next
   case SetupHonestKey
   solve( !KU( ~sk ) @ #vk )
     case Client_LeakKey
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -138,13 +138,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
+analyzing: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
+analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.100299s
+  processing time: 0.172639s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -152,10 +152,10 @@ analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
+analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.100299s
+  processing time: 0.172639s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ==============================================================================

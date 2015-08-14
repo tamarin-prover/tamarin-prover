@@ -85,7 +85,7 @@ solve( Step1( tid, A, B, ~x ) ▶₀ #i )
     case cmac
     solve( !KU( shk ) @ #vk.5 )
       case RevealKey
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     qed
   qed
 qed
@@ -124,13 +124,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/cav13/DH_example.spthy
+analyzing: examples/cav13/DH_example.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/cav13/DH_example.spthy
+analyzed: examples/cav13/DH_example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.223694s
+  processing time: 0.247315s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 
@@ -139,10 +139,10 @@ analyzed: data/examples/cav13/DH_example.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/cav13/DH_example.spthy
+analyzed: examples/cav13/DH_example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.223694s
+  processing time: 0.247315s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 

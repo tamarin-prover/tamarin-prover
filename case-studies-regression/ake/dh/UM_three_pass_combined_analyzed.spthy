@@ -832,13 +832,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/ake/dh/UM_three_pass_combined.spthy
+analyzing: examples/ake/dh/UM_three_pass_combined.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/ake/dh/UM_three_pass_combined.spthy
+analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 29.740054s
+  processing time: 38.619717s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
 
@@ -847,10 +847,10 @@ analyzed: data/examples/ake/dh/UM_three_pass_combined.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/ake/dh/UM_three_pass_combined.spthy
+analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 29.740054s
+  processing time: 38.619717s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
 

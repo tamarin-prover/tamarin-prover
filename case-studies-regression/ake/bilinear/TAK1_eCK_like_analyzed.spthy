@@ -520,13 +520,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/ake/bilinear/TAK1_eCK_like.spthy
+analyzing: examples/ake/bilinear/TAK1_eCK_like.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/ake/bilinear/TAK1_eCK_like.spthy
+analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 85.951491s
+  processing time: 113.572988s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 
@@ -535,10 +535,10 @@ analyzed: data/examples/ake/bilinear/TAK1_eCK_like.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/ake/bilinear/TAK1_eCK_like.spthy
+analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 85.951491s
+  processing time: 113.572988s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 

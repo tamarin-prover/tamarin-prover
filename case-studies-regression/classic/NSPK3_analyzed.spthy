@@ -90,7 +90,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -115,17 +115,17 @@ next
           case Register_pk
           solve( !KU( aenc(<'1', ni, $A>, pk(~ltkA)) ) @ #vk )
             case I_1
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case I_2
             solve( (∃ #j. (!KU( nr.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                    (∃ #j.
                      (OUT_R_1( aenc(<'2', ~ni.1, nr.1>, pk(~ltkA.3)) ) @ #j) ∧ ¬(last(#j))) )
               case case_1
-              by contradiction // cyclic
+              by contradiction /* cyclic */
             next
               case case_2
-              by contradiction // impossible chain
+              by contradiction /* impossible chain */
             qed
           next
             case R_1
@@ -133,23 +133,23 @@ next
                    (∃ #j.
                      (OUT_I_1( aenc(<'1', ni.1, $A.1>, pk(~ltkA.3)) ) @ #j) ∧ ¬(last(#j))) )
               case case_1
-              by contradiction // cyclic
+              by contradiction /* cyclic */
             next
               case case_2
-              by contradiction // impossible chain
+              by contradiction /* impossible chain */
             qed
           next
             case caenc
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           qed
         qed
       qed
     next
       case case_2
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case case_3
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     qed
   next
     case case_2
@@ -169,38 +169,38 @@ next
                      (∃ #j.
                        (OUT_R_1( aenc(<'2', ~ni.1, nr.1>, pk(~ltkA.4)) ) @ #j) ∧ ¬(last(#j))) )
                 case case_1
-                by contradiction // cyclic
+                by contradiction /* cyclic */
               next
                 case case_2
-                by contradiction // impossible chain
+                by contradiction /* impossible chain */
               qed
             next
               case R_1_case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case R_1_case_2
               solve( (∃ #j. (!KU( ni.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
                      (∃ #j.
                        (OUT_I_1( aenc(<'1', ni.1, $A>, pk(~ltkA.4)) ) @ #j) ∧ ¬(last(#j))) )
                 case case_1
-                by contradiction // cyclic
+                by contradiction /* cyclic */
               next
                 case case_2
-                by contradiction // impossible chain
+                by contradiction /* impossible chain */
               qed
             next
               case caenc
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           qed
         qed
       qed
     next
       case case_2
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case case_3
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     qed
   qed
 qed
@@ -361,13 +361,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/classic/NSPK3.spthy
+analyzing: examples/classic/NSPK3.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/classic/NSPK3.spthy
+analyzed: examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.599761s
+  processing time: 2.82802s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)
@@ -378,10 +378,10 @@ analyzed: data/examples/classic/NSPK3.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/classic/NSPK3.spthy
+analyzed: examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.599761s
+  processing time: 2.82802s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)

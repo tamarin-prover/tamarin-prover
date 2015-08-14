@@ -383,13 +383,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
+analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
+analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.760052s
+  processing time: 1.351639s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)
@@ -400,10 +400,10 @@ analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_S
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
+analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.760052s
+  processing time: 1.351639s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

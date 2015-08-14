@@ -355,7 +355,7 @@ solve( (∃ matching #i3 role2.
           (∀ #i5. (LtkRev( A ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
           (∀ #i5. (MskRev( ) @ #i5) ⇒ ¬(#i5 < #i1))) )
     case case_1
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   next
     case case_2
     solve( Accept( test, k ) @ #i1 )
@@ -368,7 +368,7 @@ solve( (∃ matching #i3 role2.
             case Init_2
             solve( Sid( matching, <$B, $A, Y, 'g'^~ex, role2> ) @ #i3 )
               case Init_2
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Resp_1
               solve( !LTK( $B, skB ) ▶₁ #i3 )
@@ -377,10 +377,10 @@ solve( (∃ matching #i3 role2.
                                  'g'^~ey>)
                        ) @ #vk )
                   case Reveal_session_key_case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case Reveal_session_key_case_2
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case ckdf
                   solve( !KU( 'g'^(~ex*~ey) ) @ #vk.5 )
@@ -415,10 +415,10 @@ solve( (∃ matching #i3 role2.
                                  'g'^~ey>)
                        ) @ #vk )
                   case Reveal_session_key_case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case Reveal_session_key_case_2
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case ckdf
                   solve( !KU( 'g'^(~ex*~ey) ) @ #vk.5 )
@@ -436,7 +436,7 @@ solve( (∃ matching #i3 role2.
             qed
           next
             case Resp_1
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           qed
         qed
       qed
@@ -454,23 +454,23 @@ next
           case Init_2
           solve( !KU( kdf(<z, em(hp($A), hp($B))^~n, $A, $B, 'g'^~ex, Y>) ) @ #vk )
             case Reveal_session_key_case_1
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case Reveal_session_key_case_2
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case ckdf
             solve( !KU( em(hp($A), hp($B))^~n ) @ #vk.6 )
               case Reveal_ltk_case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Reveal_ltk_case_2
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case cexp
               solve( !KU( ~n ) @ #vk.13 )
                 case Reveal_master_key
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             qed
           qed
@@ -485,23 +485,23 @@ next
         case Resp_1
         solve( !KU( kdf(<z, em(hp($A), hp($B))^~n, $A, $B, X, 'g'^~ey>) ) @ #vk )
           case Reveal_session_key_case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case Reveal_session_key_case_2
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case ckdf
           solve( !KU( em(hp($A), hp($B))^~n ) @ #vk.6 )
             case Reveal_ltk_case_1
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case Reveal_ltk_case_2
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case cexp
             solve( !KU( ~n ) @ #vk.13 )
               case Reveal_master_key
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           qed
         qed
@@ -519,13 +519,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/ake/bilinear/RYY.spthy
+analyzing: examples/ake/bilinear/RYY.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/ake/bilinear/RYY.spthy
+analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.110379s
+  processing time: 10.126624s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 
@@ -534,10 +534,10 @@ analyzed: data/examples/ake/bilinear/RYY.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/ake/bilinear/RYY.spthy
+analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.110379s
+  processing time: 10.126624s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 

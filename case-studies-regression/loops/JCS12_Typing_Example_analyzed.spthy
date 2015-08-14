@@ -102,7 +102,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -116,14 +116,14 @@ next
         case Register_pk
         solve( !KU( aenc(<z, $A, v>, pk(~ltkS)) ) @ #vk )
           case Client_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case Serv_1_case_1
           solve( (∃ #j. (!KU( <$A, v> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                  (∃ #j.
                    (Out_Client_1( aenc(<z, $S, $A, v>, pk(~ltkS.1)) ) @ #j) ∧ ¬(last(#j))) )
             case case_1
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           qed
         next
           case Serv_1_case_2
@@ -133,23 +133,23 @@ next
                   ∧
                    ¬(last(#j))) )
             case case_1
-            by contradiction // cyclic
+            by contradiction /* cyclic */
           next
             case case_2
-            by contradiction // impossible chain
+            by contradiction /* impossible chain */
           qed
         next
           case caenc
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
   next
     case case_2
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   next
     case case_3
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -176,13 +176,13 @@ solve( Client_1( C, S, k ) ▶₀ #i )
       case Client_1
       solve( !KU( ~ltk.1 ) @ #vk.1 )
         case Reveal_ltk
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     next
       case Serv_1
       solve( !KU( ~ltk.2 ) @ #vk.2 )
         case Reveal_ltk
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     qed
   qed
@@ -206,10 +206,10 @@ simplify
 solve( (∃ #r. (LtkReveal( S ) @ #r) ∧ #r < #vk.1)  ∥
        (∃ #r. (LtkReveal( C ) @ #r) ∧ #r < #vk.1) )
   case case_1
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case case_2
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 qed
 
 lemma Client_auth:
@@ -239,16 +239,16 @@ solve( Client_1( C, S, k ) ▶₀ #i )
       case Serv_1
       solve( !KU( aenc(<'1', $C, ~k>, pk(~ltkS)) ) @ #vk.1 )
         case Client_1
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case caenc
         solve( (∃ #r. (LtkReveal( $S ) @ #r) ∧ #r < #vk.7)  ∥
                (∃ #r. (LtkReveal( $C ) @ #r) ∧ #r < #vk.7) )
           case case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case case_2
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     next
@@ -256,10 +256,10 @@ solve( Client_1( C, S, k ) ▶₀ #i )
       solve( (∃ #r. (LtkReveal( $S ) @ #r) ∧ #r < #vk.4)  ∥
              (∃ #r. (LtkReveal( $C ) @ #r) ∧ #r < #vk.4) )
         case case_1
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case case_2
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     qed
   qed
@@ -274,13 +274,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/loops/JCS12_Typing_Example.spthy
+analyzing: examples/loops/JCS12_Typing_Example.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/loops/JCS12_Typing_Example.spthy
+analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.256599s
+  processing time: 0.526228s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
@@ -291,10 +291,10 @@ analyzed: data/examples/loops/JCS12_Typing_Example.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/loops/JCS12_Typing_Example.spthy
+analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.256599s
+  processing time: 0.526228s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)

@@ -1032,13 +1032,13 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: data/examples/ake/bilinear/Joux_EphkRev.spthy
+analyzing: examples/ake/bilinear/Joux_EphkRev.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/ake/bilinear/Joux_EphkRev.spthy
+analyzed: examples/ake/bilinear/Joux_EphkRev.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 111.064033s
+  processing time: 152.170233s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): falsified - found trace (14 steps)
 
@@ -1047,10 +1047,10 @@ analyzed: data/examples/ake/bilinear/Joux_EphkRev.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/ake/bilinear/Joux_EphkRev.spthy
+analyzed: examples/ake/bilinear/Joux_EphkRev.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 111.064033s
+  processing time: 152.170233s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): falsified - found trace (14 steps)
 
