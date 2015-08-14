@@ -24,7 +24,7 @@ before_install:
     sudo apt-get update && sudo apt-get install stack -y
 
 install:
-  - make default
+  - make travis
 
 #overwrite the Travis CI default test script executed at the end of a build, find something more useful here!
 script:

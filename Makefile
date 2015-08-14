@@ -10,6 +10,10 @@ default:
 	stack setup
 	stack install
 
+travis:
+	stack setup
+	stack build
+	stack intall
 
 clean:
 	stack clean
