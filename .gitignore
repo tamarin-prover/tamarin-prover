@@ -9,6 +9,7 @@ tamarin-prover-img
 .cabal-sandbox/
 cabal-sandbox/
 cabal.sandbox.config
+.stack-work/
 
 *.hi
 *.o

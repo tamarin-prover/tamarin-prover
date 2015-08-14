@@ -1,112 +1,40 @@
-# Please make sure that you have a recent 'cabal-install' installed. At least
-# version 1.18. Otherwise upgrade using 'cabal install cabal-install'.
+# Please make sure that you have 'stack' installed. 
+# https://github.com/commercialhaskell/stack/wiki/Downloads
 
-ALEX=cabal-sandbox/bin/alex
-HAPPY=cabal-sandbox/bin/happy
-
-# We use the happy and alex versions as they are constrained by our
-# 'cabal.config file.
-CABAL_INSTALL=cabal install --with-happy=$(PWD)/$(HAPPY) --with-alex=$(PWD)/$(ALEX)
-
-TAMARIN=cabal-sandbox/bin/tamarin-prover
+# This would need to be changed depending on OS, stack lts, and GHC used
+# TAMARIN=.stack-work/install/x86_64-linux/lts-3.0/7.10.2/bin/tamarin-prover
+TAMARIN=~/.local/bin/tamarin-prover
 
 # Default installation via stack
 default: 
 	stack setup
-	stack build
 	stack install
 
-# We always force a reinstall, as we are using a sandbox.
-install: build-setup
-	cabal --version  # Should be at least 1.18
-	$(CABAL_INSTALL) --force-reinstalls .
 
-build-setup: cabal-sandbox/created $(ALEX) $(HAPPY)
-	cabal sandbox add-source lib/*
-
-# Create a sandbox shared between the tamarin-prover its custom libraries.
-cabal-sandbox/created:
-	cabal sandbox init --sandbox cabal-sandbox
-	cd lib/utils; cabal sandbox init --sandbox ../../cabal-sandbox
-	cd lib/term; cabal sandbox init --sandbox ../../cabal-sandbox
-	cd lib/theory; cabal sandbox init --sandbox ../../cabal-sandbox
-	cabal update
-	touch cabal-sandbox/created
-
-$(ALEX): cabal-sandbox/created $(HAPPY)
-	# We delete the source here as these libraries are not needed for
-	# building alex
-	cabal sandbox delete-source lib/*
-	ghc --version
-	cabal --version
-	cabal install --with-happy=$(PWD)/$(HAPPY) alex
-
-$(HAPPY): cabal-sandbox/created
-	# We delete the source here as these libraries are not needed for
-	# building happy
-	cabal sandbox delete-source lib/*
-	ghc --version
-	cabal --version
-	cabal install happy
-
+clean:
+	stack clean
 
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-
 VERSION=0.9.0
 
+#source-dists:
+#	cd lib/utils; cabal sdist
+#	cd lib/term; cabal sdist
+#	cd lib/theory; cabal sdist
+#	cabal sdist
 
-source-dists:
-	cd lib/utils; cabal sdist
-	cd lib/term; cabal sdist
-	cd lib/theory; cabal sdist
-	cabal sdist
+#source-dists-tests: source-dists
+#	mkdir -p /tmp/dist-test-$(VERSION)/
+#	cp lib/utils/dist/tamarin-prover-utils-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+#	cp lib/term/dist/tamarin-prover-term-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+#	cp lib/theory/dist/tamarin-prover-theory-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+#	cp dist/tamarin-prover-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+#	cd /tmp/dist-test-$(VERSION)/; cabal install *.tar.gz --force-reinstalls
 
-source-dists-tests: source-dists
-	mkdir -p /tmp/dist-test-$(VERSION)/
-	cp lib/utils/dist/tamarin-prover-utils-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-	cp lib/term/dist/tamarin-prover-term-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-	cp lib/theory/dist/tamarin-prover-theory-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-	cp dist/tamarin-prover-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-	cd /tmp/dist-test-$(VERSION)/; cabal install *.tar.gz --force-reinstalls
-
-# For profiling, we use the cabal-dev tool and do not build the GUI. This
-# simplifies installing all required libraries with profiling support enabled.
-# The locally installed executable can then be called as follows
-#
-#   ./cabal-dev/bin/tamarin-prover +RTS -p -RTS
-#
-# to generate the profiling report
-#
-#   tamarin-prover.prof
-#
-# in the working directory.
-profiling-install:
-	cabal-dev install --flags="-threaded no-gui" --force-reinstalls --enable-library-profiling --enable-executable-profiling ./lib/term ./lib/utils ./lib/theory  ./
-
-# requires the cabal-dev tool. Install it using the 'cabal-dev'
-dev-install:
-	cabal-dev configure && cabal-dev build
-
-dev-run:
-	./dist/build/tamarin-prover/tamarin-prover interactive examples/TPM
-
-# TODO: Implement 'dev-clean' target
-
-cabal-dev:
-	cabal-dev add-source lib/utils
-	cabal-dev add-source lib/term
-	# force install with 'native' flag of blaze-textual
-	cabal-dev install blaze-textual -fnative --reinstall
-
-cabal-clean:
-	cd lib/utils; cabal clean
-	cd lib/term; cabal clean
-	cd lib/theory; cabal clean
-	cabal clean
 
 
 ###############################################################################
