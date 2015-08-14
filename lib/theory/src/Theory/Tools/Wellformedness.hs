@@ -75,7 +75,7 @@ import           Control.Category
 import           Data.Char
 import           Data.Generics.Uniplate.Data (universeBi)
 import           Data.Label
-import           Data.List                   hiding (sortOn)
+import qualified Data.List                   as D
 import           Data.Maybe
 import           Data.Monoid                 (mappend, mempty)
 import qualified Data.Set                    as S
@@ -99,12 +99,12 @@ type WfErrorReport = [WfError]
 
 prettyWfErrorReport :: WfErrorReport -> Doc
 prettyWfErrorReport =
-    vcat . intersperse (text "") . map ppTopic . groupOn fst
+    vcat . D.intersperse (text "") . map ppTopic . groupOn fst
   where
     ppTopic []                 = error "prettyWfErrorReport: groupOn returned empty list"
     ppTopic errs@((topic,_):_) =
       text topic <> colon $-$
-      (nest 2 . vcat . intersperse (text "") $ map snd errs)
+      (nest 2 . vcat . D.intersperse (text "") $ map snd errs)
 
 
 ------------------------------------------------------------------------------
@@ -749,7 +749,7 @@ multRestrictedReport thy = do
                     fApp o <$> mapM replaceAbstracted args
                 Lit l       -> return $ lit l
 
-    restrictedFailures ru = (mults, unbound ruAbstr \\ unbound ru)
+    restrictedFailures ru = (mults, unbound ruAbstr D.\\ unbound ru)
       where
         ruAbstr = abstractRule ru
 
@@ -759,7 +759,7 @@ multRestrictedReport thy = do
         multTerms   (viewTerm -> FApp _         as) = concatMap multTerms as
         multTerms _                                 = []
 
-    unbound ru = [v | v <- frees (get rConcs ru) \\ frees (get rPrems ru)
+    unbound ru = [v | v <- frees (get rConcs ru) D.\\ frees (get rPrems ru)
                  , lvarSort v /= LSortPub ]
 
 
@@ -814,7 +814,7 @@ multRestrictedReportDiff thy = do
                     fApp o <$> mapM replaceAbstracted args
                 Lit l       -> return $ lit l
 
-    restrictedFailures ru = (mults, unbound ruAbstr \\ unbound ru)
+    restrictedFailures ru = (mults, unbound ruAbstr D.\\ unbound ru)
       where
         ruAbstr = abstractRule ru
 
@@ -824,7 +824,7 @@ multRestrictedReportDiff thy = do
         multTerms   (viewTerm -> FApp _         as) = concatMap multTerms as
         multTerms _                                 = []
 
-    unbound ru = [v | v <- frees (get rConcs ru) \\ frees (get rPrems ru)
+    unbound ru = [v | v <- frees (get rConcs ru) D.\\ frees (get rPrems ru)
                  , lvarSort v /= LSortPub ]
 
 

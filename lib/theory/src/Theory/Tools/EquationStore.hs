@@ -70,7 +70,7 @@ import qualified Control.Monad.State   as MS
 import           Data.Binary
 import           Data.DeriveTH
 import qualified Data.Foldable         as F
-import           Data.List             hiding (sortOn)
+import qualified Data.List             as D
 import           Data.Maybe
 import qualified Data.Set              as S
 import           Extension.Data.Label  hiding (for, get)
@@ -171,7 +171,7 @@ falseDisj = S.empty
 -- | Returns the list of all @SplitId@s valid for the given equation store
 -- sorted by the size of the disjunctions.
 splits :: EqStore -> [SplitId]
-splits eqs = map fst $ nub $ sortOn snd
+splits eqs = map fst $ D.nub $ sortOn snd
     [ (idx, S.size conj) | (idx, conj) <- getConj $ L.get eqsConj eqs ]
 
 -- | Returns 'True' if the 'SplitId' is valid.
@@ -181,7 +181,7 @@ splitExists eqs = isJust . splitSize eqs
 -- | Returns the number of cases for a given 'SplitId'.
 splitSize :: EqStore -> SplitId -> Maybe Int
 splitSize eqs sid =
-    (S.size . snd) <$> (find ((sid ==) . fst) $ getConj $ L.get eqsConj $ eqs)
+    (S.size . snd) <$> (D.find ((sid ==) . fst) $ getConj $ L.get eqsConj $ eqs)
 
 -- | Add a disjunction to the equation store at the beginning
 addDisj :: EqStore -> (S.Set LNSubstVFresh) -> (EqStore, SplitId)
@@ -242,7 +242,7 @@ addEqs hnd eqs0 eqStore =
 --   normal form again by using unification.
 applyEqStore :: MaudeHandle -> LNSubst -> EqStore -> EqStore
 applyEqStore hnd asubst eqStore
-    | dom asubst `intersect` varsRange asubst /= [] || trace (show ("applyEqStore", asubst, eqStore)) False
+    | dom asubst `D.intersect` varsRange asubst /= [] || trace (show ("applyEqStore", asubst, eqStore)) False
     = error $ "applyEqStore: dom and vrange not disjoint for `"++show asubst++"'"
     | otherwise
     = modify eqsConj (fmap (second (S.fromList . concatMap applyBound  . S.toList))) $
@@ -287,7 +287,7 @@ So we have
 -- | Add the given rule variants.
 addRuleVariants :: Disj LNSubstVFresh -> EqStore -> (EqStore, SplitId)
 addRuleVariants (Disj substs) eqStore
-    | dom freeSubst `intersect` concatMap domVFresh substs /= []
+    | dom freeSubst `D.intersect` concatMap domVFresh substs /= []
     = error $ "addRuleVariants: Nonempty intersection between domain of variants and free substitution. "
               ++"This case has not been implemented, add rule variants earlier."
     | otherwise = addDisj eqStore (S.fromList substs)
@@ -446,7 +446,7 @@ simpAbstractName (subst:others) = case commonNames of
     []           -> return Nothing
     (v, c):_     ->
         return $ Just (Just $ substFromList [(v, c)]
-                      , [S.fromList (map (\s -> restrictVFresh (delete v (domVFresh s)) s) (subst:others))])
+                      , [S.fromList (map (\s -> restrictVFresh (D.delete v (domVFresh s)) s) (subst:others))])
   where
     commonNames = do
         (v, c@(viewTerm -> Lit (Con _))) <- substToListVFresh subst
@@ -507,7 +507,7 @@ simpIdentify (subst:others) = case equalImgPairs of
         return (v,v')
     agrees_on v v' s =
         imageOfVFresh s v == imageOfVFresh s v' && isJust (imageOfVFresh s v)
-    removeMappings vs s = restrictVFresh (domVFresh s \\ vs) s
+    removeMappings vs s = restrictVFresh (domVFresh s D.\\ vs) s
 
 
 -- | Simplify by removing substitutions that occur twice in a disjunct.
@@ -573,7 +573,7 @@ prettyEqStore eqs@(EqStore substFree (Conj disjs) _nextSplitId) = vcat $
 
     ppSubst subst = sep
       [ hsep (opExists : map prettyLVar (varsRangeVFresh subst)) <> opDot
-      , nest 2 $ fsep $ intersperse opLAnd $ map ppEq $ substToListVFresh subst
+      , nest 2 $ fsep $ D.intersperse opLAnd $ map ppEq $ substToListVFresh subst
       ]
 
 
