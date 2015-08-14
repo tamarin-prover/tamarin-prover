@@ -100,6 +100,61 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mv $(TMPRES) $@
 	\rm -f $(TMPOUT)
 
+## Observational Equivalence
+############################
+
+# individual diff-based case studies
+case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/ccs15
+	mkdir -p case-studies/features/equivalence
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	echo "\n/* Output" >>$(TMPRES)
+	cat $(TMPOUT) >>$(TMPRES)
+	echo "*/" >>$(TMPRES)
+	mv $(TMPRES) $@
+	\rm -f $(TMPOUT)
+
+# individual diff-based precomputed (no --prove) case studies
+case-studies/%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/ccs15
+	mkdir -p case-studies/features/equivalence
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	echo "\n/* Output" >>$(TMPRES)
+	cat $(TMPOUT) >>$(TMPRES)
+	echo "*/" >>$(TMPRES)
+	mv $(TMPRES) $@
+	\rm -f $(TMPOUT)
+
+CCS15_CASE_STUDIES=DDH.spthy  probEnc.spthy  rfid-feldhofer.spthy
+CCS15_CS_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/ccs15/,$(CCS15_CASE_STUDIES)))
+
+CCS15_PRECOMPUTED_CASE_STUDIES=Attack_TPM_Envelope.spthy
+CCS15_PCS_TARGETS=$(subst .spthy,_analyzed-diff-noprove.spthy,$(addprefix case-studies/ccs15/,$(CCS15_PRECOMPUTED_CASE_STUDIES)))
+
+CCS15_TARGETS= $(CCS15_CS_TARGETS) $(CCS15_PCS_TARGETS)
+
+# CCS15 case studies
+ccs15-case-studies:	$(CCS15_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy
+
+TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy N5N6DiffTest.spthy
+TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/equivalence/,$(TESTOBSEQ_CASE_STUDIES)))
+
+OBSEQ_TARGETS= $(CCS15_TARGETS) $(TESTOBSEQ_TARGETS)
+
+#Observational equivalence test case studies:
+obseq-test-case-studies:	$(TESTOBSEQ_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/features/equivalence/*.spthy
+
+#Observational equivalence case studies with CCS15
+obseq-case-studies:	$(OBSEQ_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy case-studies/features/equivalence/*.spthy
 
 ## Inductive Strengthening
 ##########################
