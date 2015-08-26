@@ -55,3 +55,9 @@ Build the tamarin-prover
   make default
 
 The tamarin-prover executable will be installed in ~/.local/bin/tamarin-prover
+
+Starting 'tamarin-prover' without arguments will output help,
+including the paths to the installed example protocol models and the
+case studies from our papers. We recommend opening the Tutorial.spthy
+example file in a text editor and start exploring from there. Happy
+proving :-)

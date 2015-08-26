@@ -1,3 +1,13 @@
+* 1.0.0
+  - Change build system to use stack, see https://stackage.org,
+    builds with lts-2.22 (GHC 7.8)
+
+  - Adds observational equivalence feature. Available via --diff flag.
+
+  - Some minor fixes:
+     + issue #144
+     + saving and loading theories with proofs
+
 * 0.9.0
   - Improve build-stability by switching to Stackage-based precise
     version-constraints: tamarin-prover should now build under GHC

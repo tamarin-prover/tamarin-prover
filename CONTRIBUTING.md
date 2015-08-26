@@ -35,3 +35,17 @@ into effect.
 
 Note that we welcome all contributions, e.g., further protocol models. Just
 send us a pull request.
+
+
+Branches
+--------
+
+There is only the 'develop' branch to which we are happy to accept your pull requests.
+
+In general, we do ask developers to use their own, external, branches
+and send pull requests to include. There are some historical branches
+that we will keep around, but that are definitely stale and will
+bitrot:
+
+feature-user-defined-sorts
+feature-ac-rewrite-rules
