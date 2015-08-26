@@ -367,7 +367,10 @@ introTpl = [whamlet|
         \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a><br>
         Contributors:
         \ <a href="http://www.cs.ox.ac.uk/people/cas.cremers/">Cas Cremers</a>,
-        \ <a href="http://cssx.ch">Cedric Staub</a>
+        \ <a href="http://cssx.ch">Cedric Staub</a><br>
+        Observational Equivalence Authors:
+        \ <a href="http://www.jannikdreier.net">Jannik Dreier</a>,
+        \ <a href="http://people.inf.ethz.ch/rsasse/">Ralf Sasse</a>
       <p>
         <span class="tamarin">Tamarin</span> was developed at the
         \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
