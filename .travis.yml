@@ -3,17 +3,14 @@ language: haskell
 
 # selected by stack for us - ignore
 env:
-#  - GHCVER=7.4.2
-#  - GHCVER=7.6.3
 #  - GHCVER=7.8.4
 #  - GHCVER=head
-  # - >
-  #   GHCVER=7.4.2
-  #   MODE="-fsafe"
+
   
 cache:
   directories:
   - $HOME/.stack
+  - .stack-work
   
 matrix:
   allow_failures:
@@ -22,10 +19,14 @@ matrix:
 
 before_install:
   # Install 'stack': signature key, package source, and actual install
-  - |
-    wget -q -O- https://s3.amazonaws.com/download.fpcomplete.com/ubuntu/fpco.key | sudo apt-key add -
-    echo 'deb http://download.fpcomplete.com/ubuntu/trusty stable main'|sudo tee /etc/apt/sources.list.d/fpco.list
-    sudo apt-get update && sudo apt-get install stack -y
+#  - |
+#    wget -q -O- https://s3.amazonaws.com/download.fpcomplete.com/ubuntu/fpco.key | sudo apt-key add -
+#    echo 'deb http://download.fpcomplete.com/ubuntu/trusty stable main'|sudo tee /etc/apt/sources.list.d/fpco.list
+#    sudo apt-get update && sudo apt-get install stack -y
+  - mkdir -p ~/.local/bin
+  - export PATH=~/.local/bin:$PATH
+  - travis_retry curl -L https://github.com/commercialhaskell/stack/releases/download/v0.1.2.0/stack-0.1.2.0-x86_64-linux.gz | gunzip > ~/.local/bin/stack
+  - chmod a+x ~/.local/bin/stack
 
 install:
   - make default

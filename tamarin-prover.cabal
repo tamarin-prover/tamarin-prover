@@ -1,4 +1,4 @@
-cabal-version:      >= 1.10
+cabal-version:      >= 1.22
 build-type:         Simple
 name:               tamarin-prover
 version:            0.9.0
@@ -6,9 +6,13 @@ license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
 author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
-                    Simon Meier <simon.meier@inf.ethz.ch>
-maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
-copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2013
+                    Simon Meier <simon.meier@inf.ethz.ch>,
+                    Jannik Dreier <research@jannikdreier.net>,
+                    Ralf Sasse <ralf.sasse@gmail.com>
+maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
+                    Jannik Dreier <research@jannikdreier.net>,
+                    Ralf Sasse <ralf.sasse@gmail.com>
+copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2015
 synopsis:           The Tamarin prover for security protocol analysis.
 description:
 
@@ -23,19 +27,24 @@ description:
     .
     The paper describing the theory underlying the Tamarin prover was
     accepted at CSF 2012. Its extended version is available from
-    <http://www.infsec.ethz.ch/research/software/tamarin>.
+    <http://tamarin-prover.github.io>.
     .
     The Tamarin prover supports both a batch analysis mode and the
     interactive construction of security proofs using a GUI. Example protocols
     and the user guide are installed together with the prover. Just call the
     @tamarin-prover@ executable without any arguments to get more information.
     .
-    The Tamarin prover uses maude (<http://maude.cs.uiuc.edu/>) as a
+    The Tamarin prover uses maude (<http://maude.cs.illinois.edu/>) as a
     unification backend and GraphViz (<http://www.graphviz.org/>) to visualize
     constraint systems. Detailed instructions for installing the Tamarin
-    prover are given at <http://www.infsec.ethz.ch/research/software/tamarin>.
+    prover are given at <http://tamarin-prover.github.io>.
+    .
+    The paper describing the theory underlying the extension for observational
+    equivalence is published at CCS 2015. Its extended version is available from 
+    <http://tamarin-prover.github.io>. For observational equivalence proofs just 
+    add the "--diff" flag when calling the @tamarin-prover@.
 
-homepage:           http://www.infsec.ethz.ch/research/software/tamarin
+homepage:           http://tamarin-prover.github.io
 
 
 --------------
