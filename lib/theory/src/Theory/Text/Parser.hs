@@ -490,7 +490,7 @@ goal = asum
     disjSplitGoal = (DisjG . Disj) <$> sepBy1 guardedFormula (symbol "∥")
 
     eqSplitGoal = try $ do
-        symbol_ "split"
+        symbol_ "splitEqs"
         parens $ (SplitG . SplitId . fromIntegral) <$> natural
 
 
