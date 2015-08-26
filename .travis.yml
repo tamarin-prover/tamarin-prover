@@ -10,7 +10,11 @@ env:
   # - >
   #   GHCVER=7.4.2
   #   MODE="-fsafe"
-
+  
+cache:
+  directories:
+  - $HOME/.stack
+  
 matrix:
   allow_failures:
 #    - env: GHCVER=7.8.4
