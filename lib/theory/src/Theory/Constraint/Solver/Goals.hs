@@ -38,8 +38,8 @@ import           Control.Category
 import           Control.Monad.Disj
 import           Control.Monad.State                     (gets)
 import           Control.Monad.Trans.State.Lazy          hiding (get,gets)
-import           Control.Monad.Trans.FastFresh           hiding (get,gets)
-import           Control.Monad.Trans.Reader              hiding (get,gets)
+import           Control.Monad.Trans.FastFresh           -- GHC7.10 needs: hiding (get,gets)
+import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hiding (get,gets)
 
 import           Extension.Data.Label
 
