@@ -71,7 +71,7 @@ versionStr = unlines
     [ programName
     , " "
     , showVersion version
-    , ", (C) Benedikt Schmidt, Simon Meier, ETH Zurich 2010-2015"
+    , ", (C) Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich 2010-2015"
     ]
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"
