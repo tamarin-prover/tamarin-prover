@@ -1,8 +1,6 @@
 # Please make sure that you have 'stack' installed. 
 # https://github.com/commercialhaskell/stack/wiki/Downloads
 
-# This would need to be changed depending on OS, stack lts, and GHC used
-# TAMARIN=.stack-work/install/x86_64-linux/lts-3.0/7.10.2/bin/tamarin-prover
 TAMARIN=~/.local/bin/tamarin-prover
 
 # Default installation via stack
@@ -243,52 +241,3 @@ case-studies: 	$(CS_TARGETS)
 ###############################################################################
 
 # outdated targets
-
-all: unit mult psearch
-
-web:
-	ghc --make Main -c -isrc -Wall -iinteractive-only-src
-	runghc -isrc -Wall -iinteractive-only-src Main interactive examples --autosave --loadstate --debug
-
-webc: comp
-	./tamarin-prover interactive --autosave --loadstate --debug --datadir=data/ examples/
-
-comp:
-	ghc --make Main -isrc -iinteractive-only-src/ -o tamarin-prover
-
-opt:
-	ghc -fforce-recomp -isrc -main-is Narrow.main --make -O2 -Wall -o narrow src/Narrow.hs
-
-assert:
-	ghc -fforce-recomp -isrc -main-is Narrow.main --make -Wall -o narrow src/Narrow.hs
-
-mult: assert
-	time ./narrow variants "x1*x2"
-
-
-scyther:
-	cabal install --flags="-build-library -build-tests build-scyther"
-
-unit:
-	cabal install --flags="-build-library build-tests -build-scyther"
-	-rm scyther-ac-unit-tests.tix
-	scyther-ac-unit-tests
-
-coverage:
-	ghc -fhpc -fforce-recomp -main-is Term.UnitTests.main --make -Wall -o unit -ilib/term/src Term.UnitTests
-	-rm unit.tix
-	./unit
-	hpc markup unit --destdir coverage
-	open coverage/hpc_index.html
-	hpc report unit
-
-haddock:
-	cabal haddock --executables
-
-depgraph:
-	find . -name \*hs | grep -v Old | xargs graphmod -q | tred | dot -odepGraph.svg -Tsvg
-
-ctags:
-	ghc -e :ctags src/Main.hs
-
-.PHONY: unit opt all mult coverage haddock case-studies sandbox-init
