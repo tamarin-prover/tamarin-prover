@@ -275,7 +275,7 @@ formula terms:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -285,7 +285,7 @@ analyzing: examples/loops/Typing_and_Destructors.spthy
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.583991s
+  processing time: 0.290373s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -301,7 +301,7 @@ summary of summaries:
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.583991s
+  processing time: 0.290373s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   

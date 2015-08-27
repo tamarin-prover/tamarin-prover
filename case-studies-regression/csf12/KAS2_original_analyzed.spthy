@@ -1033,7 +1033,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -1043,7 +1043,7 @@ analyzing: examples/csf12/KAS2_original.spthy
 analyzed: examples/csf12/KAS2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.608492s
+  processing time: 6.48721s
   KAS_key_secrecy (all-traces): verified (254 steps)
 
 ------------------------------------------------------------------------------
@@ -1054,7 +1054,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.608492s
+  processing time: 6.48721s
   KAS_key_secrecy (all-traces): verified (254 steps)
 
 ==============================================================================

@@ -435,7 +435,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -445,7 +445,7 @@ analyzing: examples/csf12/STS_MAC_fix2.spthy
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.093375s
+  processing time: 2.020991s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (34 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (34 steps)
 
@@ -457,7 +457,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.093375s
+  processing time: 2.020991s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (34 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (34 steps)
 

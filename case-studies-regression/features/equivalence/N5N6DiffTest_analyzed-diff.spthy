@@ -65,7 +65,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -75,7 +75,7 @@ analyzing: examples/features/equivalence/N5N6DiffTest.spthy
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.102604s
+  processing time: 0.077023s
   RHS :  Diff_test (all-traces): falsified - found trace (5 steps)
   LHS :  Diff_test (all-traces): verified (3 steps)
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
@@ -88,7 +88,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.102604s
+  processing time: 0.077023s
   RHS :  Diff_test (all-traces): falsified - found trace (5 steps)
   LHS :  Diff_test (all-traces): verified (3 steps)
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)

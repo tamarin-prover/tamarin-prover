@@ -506,7 +506,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -516,7 +516,7 @@ analyzing: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 61.066884s
+  processing time: 59.224204s
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ------------------------------------------------------------------------------
@@ -527,7 +527,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 61.066884s
+  processing time: 59.224204s
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ==============================================================================

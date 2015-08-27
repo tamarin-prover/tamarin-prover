@@ -385,7 +385,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -395,7 +395,7 @@ analyzing: examples/ake/bilinear/RYY_PFS.spthy
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.930055s
+  processing time: 11.359761s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
 
@@ -407,7 +407,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.930055s
+  processing time: 11.359761s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
 

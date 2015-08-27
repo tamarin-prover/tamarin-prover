@@ -837,7 +837,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -847,7 +847,7 @@ analyzing: examples/loops/TESLA_Scheme1.spthy
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.2104s
+  processing time: 4.457052s
   authentic (all-traces): verified (188 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
@@ -859,7 +859,7 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.2104s
+  processing time: 4.457052s
   authentic (all-traces): verified (188 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 

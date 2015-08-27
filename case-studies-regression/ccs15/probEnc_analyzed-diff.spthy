@@ -218,7 +218,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -228,7 +228,7 @@ analyzing: examples/ccs15/probEnc.spthy
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.233987s
+  processing time: 0.210119s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ------------------------------------------------------------------------------
@@ -239,7 +239,7 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.233987s
+  processing time: 0.210119s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================

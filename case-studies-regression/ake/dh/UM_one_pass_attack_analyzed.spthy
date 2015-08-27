@@ -322,7 +322,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -332,7 +332,7 @@ analyzing: examples/ake/dh/UM_one_pass_attack.spthy
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.295212s
+  processing time: 4.925136s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 
@@ -344,7 +344,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.295212s
+  processing time: 4.925136s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 

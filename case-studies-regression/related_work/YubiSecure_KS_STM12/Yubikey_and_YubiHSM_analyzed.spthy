@@ -7917,7 +7917,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -7927,7 +7927,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 72.159818s
+  processing time: 40.083353s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   k2_is_secret_use_induction (all-traces): verified (132 steps)
@@ -7942,7 +7942,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 72.159818s
+  processing time: 40.083353s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   k2_is_secret_use_induction (all-traces): verified (132 steps)

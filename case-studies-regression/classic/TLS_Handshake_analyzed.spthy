@@ -626,7 +626,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -636,7 +636,7 @@ analyzing: examples/classic/TLS_Handshake.spthy
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.58433s
+  processing time: 2.818863s
   session_key_secrecy (all-traces): verified (55 steps)
   injective_agree (all-traces): verified (49 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
@@ -649,7 +649,7 @@ summary of summaries:
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.58433s
+  processing time: 2.818863s
   session_key_secrecy (all-traces): verified (55 steps)
   injective_agree (all-traces): verified (49 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)

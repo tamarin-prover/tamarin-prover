@@ -6128,7 +6128,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
@@ -6138,7 +6138,7 @@ analyzing: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 61.421116s
+  processing time: 36.487547s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
@@ -6151,7 +6151,7 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 61.421116s
+  processing time: 36.487547s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
