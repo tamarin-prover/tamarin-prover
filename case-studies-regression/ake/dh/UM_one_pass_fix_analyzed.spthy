@@ -272,19 +272,19 @@ solve( (¬(role = 'I'))  ∥
       case case_1
       solve( Complete( <A, B, X>, role, k ) @ #i )
         case I_Complete
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case R_Complete
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     next
       case case_2
       solve( Complete( <A, B, X>, role, k ) @ #i )
         case I_Complete
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case R_Complete
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     qed
   next
@@ -294,7 +294,7 @@ solve( (¬(role = 'I'))  ∥
       case case_1
       solve( Complete( <A, B, X>, role, k ) @ #i )
         case I_Complete
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case R_Complete
         solve( !Ltk( $B, ~eb ) ▶₁ #i )
@@ -311,23 +311,23 @@ solve( (¬(role = 'I'))  ∥
                     case Register_key_honest
                     solve( !KU( h(<'g'^(~eb*~ex), 'g'^(~ea*~eb), $A, $B>) ) @ #vk )
                       case Corrupt_SessionKey_case_1
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Corrupt_SessionKey_case_2
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Reveal_SessionKey_case_1
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Reveal_SessionKey_case_2
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case ch
                       solve( !KU( 'g'^(~eb*~ex) ) @ #vk.3 )
                         case I_Complete
                         solve( !KU( ~eb ) @ #vk.9 )
                           case Corrupt_Ltk
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         qed
                       next
                         case Register_key_honest
@@ -336,7 +336,7 @@ solve( (¬(role = 'I'))  ∥
                         case cexp
                         solve( !KU( ~eb ) @ #vk.11 )
                           case Corrupt_Ltk
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         qed
                       qed
                     qed
@@ -351,7 +351,7 @@ solve( (¬(role = 'I'))  ∥
       case case_2
       solve( Complete( <A, B, X>, role, k ) @ #i )
         case I_Complete
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case R_Complete
         solve( !Ltk( $B, ~eb ) ▶₁ #i )
@@ -360,57 +360,57 @@ solve( (¬(role = 'I'))  ∥
             case Register_key_honest
             solve( !KU( h(<z, 'g'^(~eb*~x), $A, $B>) ) @ #vk )
               case Corrupt_SessionKey_case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Corrupt_SessionKey_case_2
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Corrupt_SessionKey_case_3
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Reveal_SessionKey_case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Reveal_SessionKey_case_2
               solve( splitEqs(0) )
                 case split_case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_3
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_4
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_5
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_6
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case Reveal_SessionKey_case_3
               solve( splitEqs(0) )
                 case split_case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_3
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_4
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_5
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_6
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case ch
@@ -418,19 +418,19 @@ solve( (¬(role = 'I'))  ∥
                 case Register_key_honest_case_1
                 solve( !KU( ~eb ) @ #vk.9 )
                   case Corrupt_Ltk
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               next
                 case Register_key_honest_case_2
                 solve( !KU( ~x ) @ #vk.9 )
                   case Corrupt_Ltk
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               next
                 case cexp
                 solve( !KU( ~eb ) @ #vk.11 )
                   case Corrupt_Ltk
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               qed
             qed
@@ -460,17 +460,17 @@ next
                   case I_Activate
                   solve( !KU( h(<'g'^(~ea*~ex), 'g'^(~ea*~ea), $A, $A>) ) @ #vk )
                     case Corrupt_SessionKey
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case Reveal_SessionKey
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case ch
                     solve( !KU( 'g'^(~ea*~ex) ) @ #vk.2 )
                       case I_Complete
                       solve( !KU( ~ea ) @ #vk.7 )
                         case Corrupt_Ltk
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       qed
                     next
                       case Register_key_honest
@@ -479,7 +479,7 @@ next
                       case cexp
                       solve( !KU( ~ea ) @ #vk.9 )
                         case Corrupt_Ltk
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       qed
                     qed
                   qed
@@ -490,7 +490,7 @@ next
         qed
       next
         case R_Complete
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     next
       case case_2
@@ -504,23 +504,23 @@ next
               case Register_key_honest
               solve( !KU( h(<'g'^(~eb*~ex), 'g'^(~ea*~eb), $A, $B>) ) @ #vk )
                 case Corrupt_SessionKey_case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case Corrupt_SessionKey_case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case Reveal_SessionKey_case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case Reveal_SessionKey_case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case ch
                 solve( !KU( 'g'^(~eb*~ex) ) @ #vk.2 )
                   case I_Complete
                   solve( !KU( ~eb ) @ #vk.8 )
                     case Corrupt_Ltk
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   qed
                 next
                   case Register_key_honest
@@ -529,7 +529,7 @@ next
                   case cexp
                   solve( !KU( ~eb ) @ #vk.10 )
                     case Corrupt_Ltk
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   qed
                 qed
               qed
@@ -538,7 +538,7 @@ next
         qed
       next
         case R_Complete
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     qed
   next
@@ -560,17 +560,17 @@ next
                   case I_Activate
                   solve( !KU( h(<'g'^(~ea*~ex), 'g'^(~ea*~ea), $A, $A>) ) @ #vk )
                     case Corrupt_SessionKey
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case Reveal_SessionKey
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case ch
                     solve( !KU( 'g'^(~ea*~ex) ) @ #vk.2 )
                       case I_Complete
                       solve( !KU( ~ea ) @ #vk.7 )
                         case Corrupt_Ltk
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       qed
                     next
                       case Register_key_honest
@@ -579,7 +579,7 @@ next
                       case cexp
                       solve( !KU( ~ea ) @ #vk.9 )
                         case Corrupt_Ltk
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       qed
                     qed
                   qed
@@ -604,23 +604,23 @@ next
                     case Register_key_honest
                     solve( !KU( h(<'g'^(~eb*~ex), 'g'^(~ea*~eb), $A, $B>) ) @ #vk )
                       case Corrupt_SessionKey_case_1
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Corrupt_SessionKey_case_2
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Reveal_SessionKey_case_1
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Reveal_SessionKey_case_2
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case ch
                       solve( !KU( 'g'^(~eb*~ex) ) @ #vk.3 )
                         case I_Complete
                         solve( !KU( ~eb ) @ #vk.9 )
                           case Corrupt_Ltk
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         qed
                       next
                         case Register_key_honest
@@ -629,7 +629,7 @@ next
                         case cexp
                         solve( !KU( ~eb ) @ #vk.11 )
                           case Corrupt_Ltk
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         qed
                       qed
                     qed
@@ -652,23 +652,23 @@ next
               case Register_key_honest
               solve( !KU( h(<'g'^(~eb*~ex), 'g'^(~ea*~eb), $A, $B>) ) @ #vk )
                 case Corrupt_SessionKey_case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case Corrupt_SessionKey_case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case Reveal_SessionKey_case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case Reveal_SessionKey_case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case ch
                 solve( !KU( 'g'^(~eb*~ex) ) @ #vk.2 )
                   case I_Complete
                   solve( !KU( ~eb ) @ #vk.8 )
                     case Corrupt_Ltk
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   qed
                 next
                   case Register_key_honest
@@ -677,7 +677,7 @@ next
                   case cexp
                   solve( !KU( ~eb ) @ #vk.10 )
                     case Corrupt_Ltk
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   qed
                 qed
               qed
@@ -692,57 +692,57 @@ next
             case Register_key_honest
             solve( !KU( h(<z, 'g'^(~eb*~x), $A, $B>) ) @ #vk )
               case Corrupt_SessionKey_case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Corrupt_SessionKey_case_2
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Corrupt_SessionKey_case_3
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Reveal_SessionKey_case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Reveal_SessionKey_case_2
               solve( splitEqs(0) )
                 case split_case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_3
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_4
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_5
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_6
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case Reveal_SessionKey_case_3
               solve( splitEqs(0) )
                 case split_case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_3
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_4
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_5
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case split_case_6
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case ch
@@ -750,19 +750,19 @@ next
                 case Register_key_honest_case_1
                 solve( !KU( ~eb ) @ #vk.9 )
                   case Corrupt_Ltk
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               next
                 case Register_key_honest_case_2
                 solve( !KU( ~x ) @ #vk.9 )
                   case Corrupt_Ltk
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               next
                 case cexp
                 solve( !KU( ~eb ) @ #vk.11 )
                   case Corrupt_Ltk
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               qed
             qed
@@ -778,17 +778,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/ake/dh/UM_one_pass_fix.spthy
+analyzing: examples/ake/dh/UM_one_pass_fix.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/ake/dh/UM_one_pass_fix.spthy
+analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.398387s
+  processing time: 2.896876s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 
@@ -797,10 +797,10 @@ analyzed: data/examples/ake/dh/UM_one_pass_fix.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/ake/dh/UM_one_pass_fix.spthy
+analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.398387s
+  processing time: 2.896876s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 

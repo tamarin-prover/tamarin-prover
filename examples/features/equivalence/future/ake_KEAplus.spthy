@@ -1,0 +1,90 @@
+theory ake_KEAplus
+begin
+
+builtins: diffie-hellman
+
+section{* KEA+ *}
+
+/*
+ * Protocol:	KEA+
+ * Modeler: 	Jannik Dreier, Ralf Sasse
+ * Date: 	April 2015
+ * Source:	Lauter, Mityagin, 2006
+ * Property: 	Key indistinguishable from randomness
+ *
+ * Status: 	??
+ */
+
+functions: h/1, g/0
+
+/* Protocol rules */
+
+/* Generate long-term keypair */
+rule generate_ltk:
+   let pkA = g^~lkA 
+   in
+   [ Fr(~lkA) ] 
+   --[ RegKey($A) ]->
+   [ !Ltk( $A, ~lkA ), !Pk( $A, pkA ), Out( pkA ) ]
+
+
+
+/* Initiator */
+rule Init_1:
+  let // exI = h1(<~eskI, ~lkI >)
+      hkI = g^~eskI
+  in
+   [   Fr( ~eskI ), !Ltk( $I, ~lkI ) , !Pk($R, pkR) ]
+   -->
+   [   Init_1( ~eskI, $I, $R, ~lkI, pkR, hkI )
+     , !Ephk(~eskI, ~eskI)
+     , Out( hkI ) ]
+
+rule Init_2:
+  let pkR = g^~lkR
+      kI  = h(< Y^~lkI, pkR^~eskI, g^~lkI, pkR >) 
+  in
+   [   Init_1( ~eskI, $I, $R, ~lkI, pkR, hkI),  In( Y ) ]
+   --[ //Accept( ~eskI, $I, $R, kI)
+//     , Sid( ~eskI, < 'Init', $I, $R, hkI, Y >)
+//     , Match( ~eskI, < 'Resp', $R, $I, hkI, Y >)
+       KeyInit(kI)
+     ]->
+   [   !Sessk( ~eskI, kI) ]
+
+/* Responder */
+rule Resp_1:
+  let pkI = g^~lkI
+      hkR = g^~eskR
+      kR  = h(< pkI^~eskR, X^~lkR, pkI, g^~lkR >) 
+  in
+   [   Fr( ~eskR ), !Ltk($R, ~lkR), !Pk($I, pkI), In( X ) ]
+   --[ //Accept( ~eskR, $R, $I, kR )
+//     , Sid( ~eskR, <'Resp', $R, $I, X, hkR >)
+//     , Match( ~eskR, <'Init', $I, $R, X, hkR > )
+       KeyResp(kR)
+     ]->
+   [   Out( hkR ),
+       !Ephk(~eskR, ~eskR),
+       !Sessk( ~eskR, kR) ]
+
+axiom one_key_per_name:
+  "All A #i #j. RegKey(A) @i & RegKey(A) @j ==> #i = #j"
+
+lemma executable:
+  exists-trace
+  " Ex #i #j k. KeyInit(k)@ i & KeyResp(k)@ j
+  "
+
+/* Key Reveals for the eCK model */
+//rule Sessk_reveal: 
+//   [ !Sessk(~tid, k) ] --[ SesskRev(~tid) ]-> [ Out(k) ]
+
+//rule Ltk_reveal:
+//   [ !Ltk($A, lkA) ] --[ LtkRev($A) ]-> [ Out(lkA) ]
+
+//rule Ephk_reveal:
+//   [ !Ephk(~s, ~ek) ] --[ EphkRev(~s) ]-> [ Out(~ek) ]
+
+
+end

@@ -163,29 +163,29 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
     case generate_ltk
     solve( !KU( h(<z, 'g'^(~ekI*~x), $I, $R>) ) @ #vk.1 )
       case Sessk_reveal_case_1
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Sessk_reveal_case_2
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case ch
       solve( !KU( 'g'^(~ekI*~x) ) @ #vk.5 )
         case Init_1
         solve( !KU( ~x ) @ #vk.9 )
           case Ltk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       next
         case cexp
         solve( !KU( ~ekI ) @ #vk.11 )
           case Ephk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       next
         case generate_ltk
         solve( !KU( ~ekI ) @ #vk.9 )
           case Ephk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -242,29 +242,29 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
     case generate_ltk
     solve( !KU( h(<'g'^(~ekR*~x), z, $I, $R>) ) @ #vk.1 )
       case Sessk_reveal_case_1
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Sessk_reveal_case_2
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case ch
       solve( !KU( 'g'^(~ekR*~x) ) @ #vk.3 )
         case Resp_1
         solve( !KU( ~x ) @ #vk.9 )
           case Ltk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       next
         case cexp
         solve( !KU( ~ekR ) @ #vk.11 )
           case Ephk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       next
         case generate_ltk
         solve( !KU( ~ekR ) @ #vk.9 )
           case Ephk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -276,17 +276,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/KEA_plus_KI_KCI.spthy
+analyzing: examples/csf12/KEA_plus_KI_KCI.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
+analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.565853s
+  processing time: 0.614136s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 
@@ -295,10 +295,10 @@ analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/KEA_plus_KI_KCI.spthy
+analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.565853s
+  processing time: 0.614136s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 
