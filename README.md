@@ -6,13 +6,13 @@ This README describes the organization of the repository of the Tamarin prover
 for security protocol verification. Its intended audience are interested
 users and future developers of the Tamarin prover. For installation
 and usage instructions of the Tamarin prover see:
-INSTALL.md
+[install instructions](INSTALL.md)
 
 
 Developing and contributing
 ---------------------------
 
-See CONTRIBUTING.md
+See [contributing instructions](CONTRIBUTING.md)
 
 
 Version Numbering Policy
