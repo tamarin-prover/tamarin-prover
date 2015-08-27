@@ -17,6 +17,11 @@ matrix:
 #    - env: GHCVER=7.8.4
 #    - env: GHCVER=head
 
+addons:
+  apt:
+    packages:
+    - libgmp-dev
+
 before_install:
 # stack
 - mkdir -p ~/.local/bin
@@ -37,8 +42,7 @@ before_install:
 #  - chmod a+x ~/.local/bin/stack
 
 install:
-  - stack setup
-  - stack build -j 1 mwc-random SHA
+  - stack build mwc-random SHA -j 1
   - stack install
 
 #overwrite the Travis CI default test script executed at the end of a build, find something more useful here!
