@@ -1,0 +1,69 @@
+theory CombinedHashPubEncDecTest begin
+
+/*
+ * Protocol:	 Combination of Hash, Public, Encryption and Decryption operators
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: 
+ * Date: 	 April 2015
+ *
+ * Status: 	 working
+ */
+
+functions: h/1, aenc/2, adec/2, pk/1
+equations: adec(aenc(m, pk(k)), k) = m
+
+
+rule Out_Hash:
+  [ Fr(~ltk) ]
+  -->
+  [ Out(diff(h(~ltk),~ltk)) ]
+
+rule Out_pub:
+  [ ]
+  -->
+  [ Out(diff($A,$B)) ]
+
+rule Out_Enc:
+  [ Fr(~ltk) ]
+  --[ OUT_I_1(aenc(diff($A,$B),pk(~ltk))), LTK(~ltk) ]->
+  [ !Key(~ltk), Out(aenc(diff($A,$B),pk(~ltk))) ]
+
+rule Out_Dec:
+  [ !Key(ltk), In(aenc(m,pk(ltk))) ]
+  --[ IN_R_1_ni(m, aenc(m,pk(ltk))) ]->
+  [ Out(m) ]
+  
+// This lemma uses an automatically generated Fact "DiffProtoOut_Dec"
+// which the parser does not know about, and thus complains, which can be
+// safely ignored.
+lemma Diff_test:
+  all-traces
+  "
+  not( Ex #i. DiffProtoOut_Dec() @ i)
+  "
+  
+lemma Diff_test2:
+  all-traces
+  "
+  not( Ex #i. DiffIntrDestrdfst() @ i)
+  "
+  
+lemma Ltk_secret:
+  all-traces
+  "
+  All #j #i ltk. ((K(ltk) @ j & LTK(ltk) @ i) ==> F)
+  "
+
+//The typing lemma is needed to remove open chains.
+lemma types [typing]:
+  " (All ni m1 #i.
+       IN_R_1_ni( ni, m1) @ i
+       ==>
+       ( (Ex #j. KU(ni) @ j & j < i)
+       | (Ex #j. OUT_I_1( m1 ) @ j)
+       )
+    )"
+
+// This must find a number of attacks, all based on comparing public values, $A on the left, $B on the right.
+  
+end

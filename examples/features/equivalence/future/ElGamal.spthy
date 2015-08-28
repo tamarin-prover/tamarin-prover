@@ -1,0 +1,28 @@
+theory ElGamal
+begin
+
+/*
+ * Protocol:	 ElGamal
+ * Modeler: 	 Jannik Dreier
+ * Described in: 
+ * Date: 	 April 2015
+ *
+ * Status: 	 Not Working - not * restricted!
+ */
+
+
+builtins: diffie-hellman
+functions: g/0
+
+rule Init:
+  [ Fr(x:fresh) ]
+  --[ ]->
+  [ !Key(x:fresh), Out(g^(x:fresh)) ]
+
+rule Challenge:
+  [ In(<m1, m2>), Fr(r:fresh), !Key(x:fresh) ]
+  --[ ]->
+  [ Out(<diff(m1,m2) * g^(x:fresh)^(r:fresh), g^(x:fresh)>) ]
+  
+  
+end

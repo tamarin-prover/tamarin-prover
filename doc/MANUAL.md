@@ -9,9 +9,8 @@ Authors: Simon Meier <iridcode@gmail.com>,
 Installation
 ============
 
-See http://www.infsec.ethz.ch/research/software/tamarin for detailed
-installation instructions for Linux and Mac. The Tamarin prover also runs on
-Windows. Drop us a mail, if you would like access to a precompiled binary.
+See the [installation instructions](../INSTALL.md).
+
 Subscribe to https://groups.google.com/group/tamarin-prover for receiving news
 on updates and new releases of the Tamarin prover.
 
@@ -144,6 +143,10 @@ Most of the theory underlying the Tamarin prover is described in the submitted
 draft of Meier's PhD thesis available from
 
   http://www.infsec.ethz.ch/research/software/tamarin
+
+or directly at
+
+  http://dx.doi.org/10.3929/ethz-a-009790675
 
 Some of the missing pieces will be described in Schmidt's PhD thesis. His
 thesis explains the notion of an equation store and design of the normal form

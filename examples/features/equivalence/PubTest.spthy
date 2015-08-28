@@ -1,0 +1,19 @@
+theory PubTest
+begin
+
+/*
+ * Protocol:	 Test of Public variables
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: 
+ * Date: 	 April 2015
+ *
+ * Status: 	 working
+ */
+
+// this must lead to attacks, as the adversary can check whether the left or right public value is sent
+rule Out_pub:
+  [ ]
+  -->
+  [ Out(diff($A,$B)) ]
+  
+end

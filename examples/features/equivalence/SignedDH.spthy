@@ -1,0 +1,88 @@
+theory SignedDH
+begin
+
+section{* The Signed Diffie-Hellman Protocol *}
+
+/*
+ * Protocol:	Signed Diffie-Hellman, extended for ObsEq
+ * Modeler: 	Simon Meier, Benedikt Schmidt; extension by Jannik Dreier, Ralf Sasse
+ * Date: 	January 2012; extended April 2015
+ *
+ * Status: 	working - using the SignedDH_partiallysolved.spthy file
+ */
+
+builtins: diffie-hellman, signing
+functions: h/1
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltk) ] 
+--[ Register($A) ]-> 
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+
+rule Get_pk:
+  [ !Pk(A, pk) ] 
+  --> 
+  [ Out(pk) ]
+
+// Protocol
+rule Init_1:
+  [ Fr(~ekI), !Ltk($I, ltkI) ]
+  -->
+  [ Init_1( $I, $R, ~ekI )
+  , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', $I, $R,'g' ^ ~ekI }ltkI> ) ]
+
+rule Init_2:
+    let Y = 'g' ^ z // think of this as a group element check
+    in
+    [ Init_1( $I, $R, ~ekI )
+    , !Pk($R, pk(ltkR))
+    , In( <$R, $I, Y, sign{'2', $R, $I, Y }ltkR> ) 
+    ]
+  --[ SessionKey($I,$R, Y ^ ~ekI)
+    , ExpR(z) 
+    ]->
+    [ InitiatorKey($I,$R, Y ^ ~ekI) ]
+
+rule Resp:
+    let X = 'g' ^ z // think of this as a group element check
+    in
+    [ !Pk($I, pk(ltkI))
+    , !Ltk($R, ltkR)
+    , Fr(~ekR)
+    , In( <$I, $R, X, sign{'1', $I, $R, X }ltkI> ) 
+    ]
+  --[ SessionKey($I,$R, X ^ ~ekR)
+    , ExpR(z) ]->
+    [
+      ResponderKey($I,$R, X ^ ~ekR)
+    , Out( <$R, $I, 'g' ^ ~ekR, sign{'2', $R, $I, 'g' ^ ~ekR }ltkR> ) 
+    ]
+
+
+rule ChallengeInitiator:
+    [ InitiatorKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R,diff(k, ~z)) 
+    , SafeChallenge()
+    ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+rule ChallengeResponder:
+    [ ResponderKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R,diff(k, ~z)) 
+    , SafeChallenge()
+    ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+
+//axiom singleChallenge:
+//  "All I R k I2 R2 k2 #j #j2. Challenge(I, R, k)@j & Challenge(I2, R2, k2)@ j2 ==> #j = #j2"
+
+axiom safeSingleChallenge:
+  " All #i1 #i2. SafeChallenge() @i1 & SafeChallenge() @i2 ==> #i1 = #i2"
+
+end

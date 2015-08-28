@@ -38,7 +38,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -49,63 +49,63 @@ next
       case Create
       solve( Counter( ~s, y ) ▶₀ #j )
         case Create
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case Inc
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     next
       case Inc
       solve( (last(#i))  ∥ (∃ z. ((x+z) = ('1'+x)))  ∥ (∃ z. (('1'+x+z) = x)) )
         case case_1
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case case_2
         solve( (last(#i))  ∥ (∃ z. (('1'+x+z) = x))  ∥ (∃ z. ((x+z) = ('1'+x))) )
           case case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case case_3
           solve( Counter( ~s, y ) ▶₀ #j )
             case Create
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case Inc
             solve( (last(#i))  ∥ (∃ z. ((z+x.1) = ('1'+x)))  ∥
                    (∃ z. (('1'+x+z) = x.1))  ∥ (('1'+x) = x.1) )
               case case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case case_2_case_1
               solve( (∃ z. (('1'+z) = x))  ∥ (∃ z. ((x+z) = '1'))  ∥ (x = '1') )
                 case case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case case_3
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case case_2_case_2
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case case_2_case_3
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case case_2_case_4
               solve( (∃ z.1. (('1'+x+z.1) = (x+z)))  ∥
                      (∃ z.1. ((x+z+z.1) = ('1'+x)))  ∥ ((x+z) = ('1'+x)) )
                 case case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case case_3
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case case_3
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case case_4
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           qed
         qed
@@ -117,23 +117,23 @@ next
       case Create
       solve( Counter( ~s, y ) ▶₀ #j )
         case Create
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case Inc
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     next
       case Inc
       solve( (last(#j))  ∥ (∃ z. ((x+z) = y))  ∥ (∃ z. ((y+z) = x))  ∥
              (y = x) )
         case case_1
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case case_2
         solve( (last(#j))  ∥ (∃ z.1. ((x+z+z.1) = x))  ∥
                (∃ z.1. ((x+z.1) = (x+z))) )
           case case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case case_3
           solve( Counter( ~s, (x+z) ) ▶₀ #j )
@@ -141,60 +141,60 @@ next
             solve( (last(#j))  ∥ (∃ z.1. ((z+z.1) = ('1'+z)))  ∥
                    (∃ z.1. (('1'+z+z.1) = z)) )
               case case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case case_2
               solve( (∃ z.1. ((z+z.1) = '1'))  ∥ (∃ z.1. (('1'+z.1) = z))  ∥
                      ('1' = z) )
                 case case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case case_3
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             qed
           next
             case Inc_case_2
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case Inc_case_3
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case Inc_case_4
             solve( (last(#j))  ∥ (∃ z.1. ((x+z+z.1) = ('1'+x+z)))  ∥
                    (∃ z.1. (('1'+x+z+z.1) = (x+z))) )
               case case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case case_2
               solve( (∃ z.1. ((x+z+z.1) = ('1'+x)))  ∥
                      (∃ z.1. (('1'+x+z.1) = (x+z)))  ∥ (('1'+x) = (x+z)) )
                 case case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case case_3
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             qed
           qed
         qed
       next
         case case_3
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case case_4
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     qed
   next
     case case_3
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   next
     case case_4
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   next
     case case_5
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -208,7 +208,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -217,14 +217,14 @@ next
     case case_1
     solve( Counter( ~s, x ) ▶₀ #i )
       case Create
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Inc
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     qed
   next
     case case_2
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -242,13 +242,13 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
   solve( (∃ z. ((x+z) = y))  ∥ (∃ z. ((y+z) = x))  ∥ (y = x) )
     case case_1
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   next
     case case_2
     solve( (last(#j))  ∥ (∃ z.1. ((y+z+z.1) = y)) )
@@ -270,7 +270,7 @@ next
                   case case_2
                   solve( Counter( ~s, '1' ) ▶₀ #j )
                     case Create
-                    by contradiction // non-injective facts (#j.1,#i,#j)
+                    by contradiction /* non-injective facts (#j.1,#i,#j) */
                   qed
                 qed
               qed
@@ -281,7 +281,7 @@ next
               case case_2
               solve( Counter( ~s, '1' ) ▶₀ #j )
                 case Create
-                by contradiction // non-injective facts (#j.1,#i,#j)
+                by contradiction /* non-injective facts (#j.1,#i,#j) */
               qed
             qed
           qed
@@ -289,7 +289,7 @@ next
           case Inc_case_2
           solve( Counter( ~s, y ) ▶₀ #j )
             case Create
-            by contradiction // non-injective facts (#j.1,#i,#j)
+            by contradiction /* non-injective facts (#j.1,#i,#j) */
           next
             case Inc
             solve( (#i < #vr.1)  ∥ (∃ z. ((x+z) = ('1'+'1'+x))) )
@@ -298,7 +298,7 @@ next
                 case case_2
                 solve( (#vr.1 < #i)  ∥ (∃ z. (('1'+'1'+x+z) = x)) )
                   case case_1
-                  by contradiction // non-injective facts (#vr.1,#i,#j)
+                  by contradiction /* non-injective facts (#vr.1,#i,#j) */
                 qed
               qed
             qed
@@ -315,7 +315,7 @@ next
                   case case_1
                   solve( Counter( ~s, y ) ▶₀ #j )
                     case Create
-                    by contradiction // non-injective facts (#j.1,#i,#j)
+                    by contradiction /* non-injective facts (#j.1,#i,#j) */
                   next
                     case Inc
                     solve( (#i < #vr.1)  ∥ (∃ z. ((z+x.1) = ('1'+'1'+x+x.1))) )
@@ -324,7 +324,7 @@ next
                         case case_2
                         solve( (#vr.1 < #i)  ∥ (∃ z. (('1'+'1'+x+z+x.1) = x)) )
                           case case_1
-                          by contradiction // non-injective facts (#vr.1,#i,#j)
+                          by contradiction /* non-injective facts (#vr.1,#i,#j) */
                         qed
                       qed
                     qed
@@ -355,7 +355,7 @@ next
                         case case_2
                         solve( (#vr.1 < #i)  ∥ (∃ z.1. (('1'+'1'+x+z+z.1) = x)) )
                           case case_1
-                          by contradiction // non-injective facts (#vr.1,#i,#j)
+                          by contradiction /* non-injective facts (#vr.1,#i,#j) */
                         qed
                       qed
                     qed
@@ -376,7 +376,7 @@ next
                     case case_2
                     solve( (#vr.1 < #i)  ∥ (∃ z. (('1'+'1'+x+z) = x)) )
                       case case_1
-                      by contradiction // non-injective facts (#vr.1,#i,#j)
+                      by contradiction /* non-injective facts (#vr.1,#i,#j) */
                     qed
                   qed
                 qed
@@ -394,7 +394,7 @@ next
         case Create
         solve( Counter( ~s, '1' ) ▶₀ #j )
           case Create
-          by contradiction // cyclic
+          by contradiction /* cyclic */
         qed
       next
         case Inc
@@ -408,7 +408,7 @@ next
                 case case_2
                 solve( (#vr.1 = #vr)  ∥ (#vr < #vr.1)  ∥ (∃ z. ((x+z) = x)) )
                   case case_1
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 qed
               qed
             qed
@@ -433,7 +433,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -462,7 +462,7 @@ next
                       by solve( Counter( ~s, h(y) ) ▶₀ #vr )
                     next
                       case case_2
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     qed
                   qed
                 qed
@@ -492,10 +492,10 @@ next
                     qed
                   next
                     case case_2_case_1
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case case_2_case_2
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   qed
                 qed
               qed
@@ -509,7 +509,7 @@ next
     qed
   next
     case case_2
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -518,17 +518,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/features//multiset/counter.spthy
+analyzing: examples/features//multiset/counter.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/features//multiset/counter.spthy
+analyzed: examples/features//multiset/counter.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.504523s
+  processing time: 1.961099s
   counters_linear_order (all-traces): verified (52 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)
@@ -539,10 +539,10 @@ analyzed: data/examples/features//multiset/counter.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/features//multiset/counter.spthy
+analyzed: examples/features//multiset/counter.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.504523s
+  processing time: 1.961099s
   counters_linear_order (all-traces): verified (52 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)

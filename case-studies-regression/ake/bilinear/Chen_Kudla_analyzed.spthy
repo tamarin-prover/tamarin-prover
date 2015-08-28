@@ -531,17 +531,17 @@ solve( (∃ matching #i3 #i4 sid.
                                            pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                  ) @ #vk )
                             case Reveal_session_key_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_session_key_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case ckdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case KGC_Setup
@@ -551,41 +551,41 @@ solve( (∃ matching #i3 #i4 sid.
                                   case KGC_Setup
                                   solve( !KU( ~ey ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~x ) @ #vk.17 )
                                     case Reveal_master_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Reveal_ltk_case_1
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case Reveal_ltk_case_2
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case cexp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               qed
                             next
                               case Reveal_ltk_case_1
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case Reveal_ltk_case_2
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case cexp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 solve( !KU( ~x ) @ #vk.17 )
                                   case Reveal_master_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             qed
@@ -618,35 +618,35 @@ solve( (∃ matching #i3 #i4 sid.
                                          pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                ) @ #vk )
                           case Reveal_session_key_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_session_key_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case ckdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
                               case Reveal_master_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case KGC_Setup
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case Reveal_ltk_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_ltk_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case cexp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           qed
                         qed
@@ -707,35 +707,35 @@ solve( (∃ matching #i3 #i4 sid.
                                            pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                  ) @ #vk )
                             case Reveal_session_key_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_session_key_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case ckdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case KGC_Setup
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_1
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case Reveal_ltk_case_2
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case cexp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -767,29 +767,29 @@ solve( (∃ matching #i3 #i4 sid.
                                          pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                ) @ #vk )
                           case Reveal_session_key_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_session_key_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case ckdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
                               case Reveal_master_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case KGC_Setup
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case Reveal_ltk_case_1
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case Reveal_ltk_case_2
@@ -797,32 +797,32 @@ solve( (∃ matching #i3 #i4 sid.
                               case KGC_Setup
                               solve( !KU( ~ey ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Resp_1
                               solve( !KU( ~x ) @ #vk.15 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_1
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case Reveal_ltk_case_2
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case cexp
                               solve( !KU( ~ey ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           next
                             case cexp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           qed
                         qed
@@ -888,35 +888,35 @@ solve( (∃ matching #i3 #i4 sid.
                                            pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                  ) @ #vk )
                             case Reveal_session_key_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_session_key_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case ckdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case KGC_Setup
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_1
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case Reveal_ltk_case_2
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case cexp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -948,17 +948,17 @@ solve( (∃ matching #i3 #i4 sid.
                                          pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                ) @ #vk )
                           case Reveal_session_key_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_session_key_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case ckdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
                               case Reveal_master_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case KGC_Setup
@@ -968,41 +968,41 @@ solve( (∃ matching #i3 #i4 sid.
                                 case KGC_Setup
                                 solve( !KU( ~ey ) @ #vk.17 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
                                 solve( !KU( ~x ) @ #vk.17 )
                                   case Reveal_master_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Reveal_ltk_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_ltk_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case cexp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             qed
                           next
                             case Reveal_ltk_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_ltk_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case cexp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
                               solve( !KU( ~x ) @ #vk.17 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -1064,35 +1064,35 @@ solve( (∃ matching #i3 #i4 sid.
                                            pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                  ) @ #vk )
                             case Reveal_session_key_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_session_key_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case ckdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case KGC_Setup
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_1
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case Reveal_ltk_case_2
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case cexp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -1124,17 +1124,17 @@ solve( (∃ matching #i3 #i4 sid.
                                          pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                ) @ #vk )
                           case Reveal_session_key_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_session_key_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case ckdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
                               case Reveal_master_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case KGC_Setup
@@ -1144,25 +1144,25 @@ solve( (∃ matching #i3 #i4 sid.
                                 case KGC_Setup
                                 solve( !KU( ~ey ) @ #vk.17 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
                                 solve( !KU( ~x ) @ #vk.17 )
                                   case Reveal_master_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Reveal_ltk_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_ltk_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case cexp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             qed
@@ -1174,25 +1174,25 @@ solve( (∃ matching #i3 #i4 sid.
                                 case KGC_Setup
                                 solve( !KU( ~ey ) @ #vk.17 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
                                 solve( !KU( ~x ) @ #vk.17 )
                                   case Reveal_master_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Reveal_ltk_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_ltk_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case cexp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             qed
@@ -1202,25 +1202,25 @@ solve( (∃ matching #i3 #i4 sid.
                               case KGC_Setup
                               solve( !KU( ~ey ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Resp_1
                               solve( !KU( ~x ) @ #vk.15 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_1
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case Reveal_ltk_case_2
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case cexp
                               solve( !KU( ~ey ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           next
@@ -1229,7 +1229,7 @@ solve( (∃ matching #i3 #i4 sid.
                               case Reveal_ephemeral_key
                               solve( !KU( ~x ) @ #vk.17 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -1300,17 +1300,17 @@ solve( (∃ matching #i3 #i4 sid.
                                            pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                  ) @ #vk )
                             case Reveal_session_key_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_session_key_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case ckdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case KGC_Setup
@@ -1320,25 +1320,25 @@ solve( (∃ matching #i3 #i4 sid.
                                   case KGC_Setup
                                   solve( !KU( ~ey ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~x ) @ #vk.17 )
                                     case Reveal_master_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Reveal_ltk_case_1
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case Reveal_ltk_case_2
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case cexp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               qed
@@ -1350,25 +1350,25 @@ solve( (∃ matching #i3 #i4 sid.
                                   case KGC_Setup
                                   solve( !KU( ~ey ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~x ) @ #vk.17 )
                                     case Reveal_master_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Reveal_ltk_case_1
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case Reveal_ltk_case_2
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case cexp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               qed
@@ -1378,25 +1378,25 @@ solve( (∃ matching #i3 #i4 sid.
                                 case KGC_Setup
                                 solve( !KU( ~ey ) @ #vk.15 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
                                 solve( !KU( ~x ) @ #vk.15 )
                                   case Reveal_master_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Reveal_ltk_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_ltk_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case cexp
                                 solve( !KU( ~ey ) @ #vk.16 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             next
@@ -1405,7 +1405,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Reveal_ephemeral_key
                                 solve( !KU( ~x ) @ #vk.17 )
                                   case Reveal_master_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             qed
@@ -1438,35 +1438,35 @@ solve( (∃ matching #i3 #i4 sid.
                                          pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                ) @ #vk )
                           case Reveal_session_key_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_session_key_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case ckdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
                               case Reveal_master_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case KGC_Setup
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case Reveal_ltk_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_ltk_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case cexp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           qed
                         qed
@@ -1527,10 +1527,10 @@ solve( (∃ matching #i3 #i4 sid.
                                            pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                  ) @ #vk )
                             case Reveal_session_key_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_session_key_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case ckdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
@@ -1541,7 +1541,7 @@ solve( (∃ matching #i3 #i4 sid.
                                   case KGC_Setup
                                   solve( !KU( ~ey ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
@@ -1549,26 +1549,26 @@ solve( (∃ matching #i3 #i4 sid.
                                     case Init_1
                                     solve( !KU( ~ey ) @ #vk.17 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case Resp_1
                                     solve( !KU( ~ex ) @ #vk.17 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case cpmult
                                     solve( !KU( ~ex ) @ #vk.19 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   qed
                                 next
                                   case Reveal_ltk_case_1
                                   solve( !KU( ~ey ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Reveal_ltk_case_2
@@ -1576,26 +1576,26 @@ solve( (∃ matching #i3 #i4 sid.
                                     case Init_1
                                     solve( !KU( ~ey ) @ #vk.16 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case Resp_1
                                     solve( !KU( ~ex ) @ #vk.16 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case cpmult
                                     solve( !KU( ~ex ) @ #vk.18 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   qed
                                 next
                                   case cexp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               qed
@@ -1603,13 +1603,13 @@ solve( (∃ matching #i3 #i4 sid.
                               case KGC_Setup
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_1
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_2
@@ -1617,7 +1617,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case KGC_Setup
                                 solve( !KU( ~ey ) @ #vk.15 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
@@ -1627,19 +1627,19 @@ solve( (∃ matching #i3 #i4 sid.
                                     case Init_1
                                     solve( !KU( ~ey ) @ #vk.16 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case Resp_1
                                     solve( !KU( ~ex ) @ #vk.16 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case cpmult
                                     solve( !KU( ~ex ) @ #vk.18 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   qed
                                 qed
@@ -1647,7 +1647,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Reveal_ltk_case_1
                                 solve( !KU( ~ey ) @ #vk.15 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Reveal_ltk_case_2
@@ -1655,33 +1655,33 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Init_1
                                   solve( !KU( ~ey ) @ #vk.14 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~ex ) @ #vk.14 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case cpmult
                                   solve( !KU( ~ex ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               next
                                 case cexp
                                 solve( !KU( ~ey ) @ #vk.16 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             next
                               case cexp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -1713,10 +1713,10 @@ solve( (∃ matching #i3 #i4 sid.
                                          pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                ) @ #vk )
                           case Reveal_session_key_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_session_key_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case ckdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
@@ -1727,7 +1727,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case KGC_Setup
                                 solve( !KU( ~ey ) @ #vk.17 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
@@ -1735,26 +1735,26 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Init_1
                                   solve( !KU( ~ey ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~ex ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case cpmult
                                   solve( !KU( ~ex ) @ #vk.19 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               next
                                 case Reveal_ltk_case_1
                                 solve( !KU( ~ey ) @ #vk.17 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Reveal_ltk_case_2
@@ -1762,26 +1762,26 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Init_1
                                   solve( !KU( ~ey ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~ex ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case cpmult
                                   solve( !KU( ~ex ) @ #vk.18 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               next
                                 case cexp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             qed
@@ -1789,13 +1789,13 @@ solve( (∃ matching #i3 #i4 sid.
                             case KGC_Setup
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case Reveal_ltk_case_1
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case Reveal_ltk_case_2
@@ -1803,7 +1803,7 @@ solve( (∃ matching #i3 #i4 sid.
                               case KGC_Setup
                               solve( !KU( ~ey ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Resp_1
@@ -1813,19 +1813,19 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Init_1
                                   solve( !KU( ~ey ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~ex ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case cpmult
                                   solve( !KU( ~ex ) @ #vk.18 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               qed
@@ -1833,7 +1833,7 @@ solve( (∃ matching #i3 #i4 sid.
                               case Reveal_ltk_case_1
                               solve( !KU( ~ey ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_2
@@ -1841,33 +1841,33 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Init_1
                                 solve( !KU( ~ey ) @ #vk.14 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
                                 solve( !KU( ~ex ) @ #vk.14 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case cpmult
                                 solve( !KU( ~ex ) @ #vk.16 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             next
                               case cexp
                               solve( !KU( ~ey ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           next
                             case cexp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           qed
                         qed
@@ -1933,29 +1933,29 @@ solve( (∃ matching #i3 #i4 sid.
                                            pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                  ) @ #vk )
                             case Reveal_session_key_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_session_key_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case ckdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
                                 case Reveal_master_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case KGC_Setup
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_1
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_2
@@ -1963,32 +1963,32 @@ solve( (∃ matching #i3 #i4 sid.
                                 case KGC_Setup
                                 solve( !KU( ~ey ) @ #vk.15 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
                                 solve( !KU( ~x ) @ #vk.15 )
                                   case Reveal_master_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Reveal_ltk_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_ltk_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case cexp
                                 solve( !KU( ~ey ) @ #vk.16 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             next
                               case cexp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -2020,35 +2020,35 @@ solve( (∃ matching #i3 #i4 sid.
                                          pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                ) @ #vk )
                           case Reveal_session_key_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_session_key_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case ckdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
                               case Reveal_master_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case KGC_Setup
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case Reveal_ltk_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_ltk_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case cexp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           qed
                         qed
@@ -2109,10 +2109,10 @@ solve( (∃ matching #i3 #i4 sid.
                                            pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                  ) @ #vk )
                             case Reveal_session_key_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_session_key_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case ckdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
@@ -2123,7 +2123,7 @@ solve( (∃ matching #i3 #i4 sid.
                                   case KGC_Setup
                                   solve( !KU( ~ey ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
@@ -2131,26 +2131,26 @@ solve( (∃ matching #i3 #i4 sid.
                                     case Init_1
                                     solve( !KU( ~ey ) @ #vk.17 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case Resp_1
                                     solve( !KU( ~ex ) @ #vk.17 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case cpmult
                                     solve( !KU( ~ex ) @ #vk.19 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   qed
                                 next
                                   case Reveal_ltk_case_1
                                   solve( !KU( ~ey ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Reveal_ltk_case_2
@@ -2158,26 +2158,26 @@ solve( (∃ matching #i3 #i4 sid.
                                     case Init_1
                                     solve( !KU( ~ey ) @ #vk.16 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case Resp_1
                                     solve( !KU( ~ex ) @ #vk.16 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case cpmult
                                     solve( !KU( ~ex ) @ #vk.18 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   qed
                                 next
                                   case cexp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               qed
@@ -2185,13 +2185,13 @@ solve( (∃ matching #i3 #i4 sid.
                               case KGC_Setup
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_1
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_2
@@ -2199,7 +2199,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case KGC_Setup
                                 solve( !KU( ~ey ) @ #vk.15 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
@@ -2209,19 +2209,19 @@ solve( (∃ matching #i3 #i4 sid.
                                     case Init_1
                                     solve( !KU( ~ey ) @ #vk.16 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case Resp_1
                                     solve( !KU( ~ex ) @ #vk.16 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case cpmult
                                     solve( !KU( ~ex ) @ #vk.18 )
                                       case Reveal_ephemeral_key
-                                      by contradiction // from formulas
+                                      by contradiction /* from formulas */
                                     qed
                                   qed
                                 qed
@@ -2229,7 +2229,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Reveal_ltk_case_1
                                 solve( !KU( ~ey ) @ #vk.15 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Reveal_ltk_case_2
@@ -2237,33 +2237,33 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Init_1
                                   solve( !KU( ~ey ) @ #vk.14 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~ex ) @ #vk.14 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case cpmult
                                   solve( !KU( ~ex ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               next
                                 case cexp
                                 solve( !KU( ~ey ) @ #vk.16 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             next
                               case cexp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -2295,10 +2295,10 @@ solve( (∃ matching #i3 #i4 sid.
                                          pmult((~ex*~ey), 'P'), $A, $B, pmult(~ex, 'P'), pmult(~ey, 'P')>)
                                ) @ #vk )
                           case Reveal_session_key_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_session_key_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case ckdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
@@ -2309,7 +2309,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case KGC_Setup
                                 solve( !KU( ~ey ) @ #vk.17 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
@@ -2317,26 +2317,26 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Init_1
                                   solve( !KU( ~ey ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~ex ) @ #vk.17 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case cpmult
                                   solve( !KU( ~ex ) @ #vk.19 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               next
                                 case Reveal_ltk_case_1
                                 solve( !KU( ~ey ) @ #vk.17 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Reveal_ltk_case_2
@@ -2344,26 +2344,26 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Init_1
                                   solve( !KU( ~ey ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~ex ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case cpmult
                                   solve( !KU( ~ex ) @ #vk.18 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               next
                                 case cexp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             qed
@@ -2371,13 +2371,13 @@ solve( (∃ matching #i3 #i4 sid.
                             case KGC_Setup
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case Reveal_ltk_case_1
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           next
                             case Reveal_ltk_case_2
@@ -2385,7 +2385,7 @@ solve( (∃ matching #i3 #i4 sid.
                               case KGC_Setup
                               solve( !KU( ~ey ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Resp_1
@@ -2395,19 +2395,19 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Init_1
                                   solve( !KU( ~ey ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case Resp_1
                                   solve( !KU( ~ex ) @ #vk.16 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 next
                                   case cpmult
                                   solve( !KU( ~ex ) @ #vk.18 )
                                     case Reveal_ephemeral_key
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
                               qed
@@ -2415,7 +2415,7 @@ solve( (∃ matching #i3 #i4 sid.
                               case Reveal_ltk_case_1
                               solve( !KU( ~ey ) @ #vk.15 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             next
                               case Reveal_ltk_case_2
@@ -2423,33 +2423,33 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Init_1
                                 solve( !KU( ~ey ) @ #vk.14 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case Resp_1
                                 solve( !KU( ~ex ) @ #vk.14 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case cpmult
                                 solve( !KU( ~ex ) @ #vk.16 )
                                   case Reveal_ephemeral_key
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               qed
                             next
                               case cexp
                               solve( !KU( ~ey ) @ #vk.16 )
                                 case Reveal_ephemeral_key
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               qed
                             qed
                           next
                             case cexp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             qed
                           qed
                         qed
@@ -2490,35 +2490,35 @@ next
                            pmult(~ex, 'P'), Y>)
                  ) @ #vk )
             case Reveal_session_key_case_1
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case Reveal_session_key_case_2
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case ckdf
             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.4 )
               case Init_1
               solve( !KU( ~x ) @ #vk.15 )
                 case Reveal_master_key
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case KGC_Setup
               solve( !KU( ~ex ) @ #vk.15 )
                 case Reveal_ephemeral_key
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             next
               case Reveal_ltk_case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case Reveal_ltk_case_2
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case cexp
               solve( !KU( ~ex ) @ #vk.16 )
                 case Reveal_ephemeral_key
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             qed
           qed
@@ -2535,35 +2535,35 @@ next
                          pmult(~ey, 'P')>)
                ) @ #vk )
           case Reveal_session_key_case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case Reveal_session_key_case_2
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case ckdf
           solve( !KU( em('P', hp($A))^(~ey*~x) ) @ #vk.6 )
             case KGC_Setup
             solve( !KU( ~ey ) @ #vk.15 )
               case Reveal_ephemeral_key
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           next
             case Resp_1
             solve( !KU( ~x ) @ #vk.15 )
               case Reveal_master_key
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           next
             case Reveal_ltk_case_1
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case Reveal_ltk_case_2
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case cexp
             solve( !KU( ~ey ) @ #vk.16 )
               case Reveal_ephemeral_key
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             qed
           qed
         qed
@@ -2577,17 +2577,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/ake/bilinear/Chen_Kudla.spthy
+analyzing: examples/ake/bilinear/Chen_Kudla.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/ake/bilinear/Chen_Kudla.spthy
+analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 67.855664s
+  processing time: 75.708905s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 
@@ -2596,10 +2596,10 @@ analyzed: data/examples/ake/bilinear/Chen_Kudla.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/ake/bilinear/Chen_Kudla.spthy
+analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 67.855664s
+  processing time: 75.708905s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 
