@@ -17,17 +17,17 @@ The input files for the Tamarin prover have the extension .spthy, which is
 short for 'security protocol theory'. A security protocol theory specifies
 
   1. the signature and equational theory to use for the message algebra,
-  2. the set of set of multiset rewriting rules modeling the protocol and
+  2. the set of multiset rewriting rules modeling the protocol and
      the adversary capabilities, and
   3. the guarded trace properties whose satisfiability or validity we wish to
      check for this set of multiset rewriting rules.
 
 We explain each of these parts where they occur in the following security
-protocol theory. Before we start, a few notes on the syntax.
+protocol theory. Before we start, let us add a few notes on the syntax.
 As you probably noticed, comments are C-style. All identifiers are
 case-sensitive. The parser is layout-insensitive, i.e., your are free to use
 whitespace as it suits you. We provide a complete specification of the input
-syntax in the reference MANUAL.
+syntax in the REFERENCE MANUAL (available at doc/MANUAL.md).
 
 
 Modeling a security protocol
@@ -40,12 +40,12 @@ theory Tutorial
 begin
 
 /*
-Obviously, you can replace 'Tutorial' with any name you like to give your
-theory. After 'begin', you can declare function symbols, equations that they
-must satisfy, multiset rewriting rules, and lemmas specifying security
-properties. Moreover, you can also insert formal comments, to structure your
-theory. We give examples of each of these elements while modeling the
-a simple protocol.
+Obviously, you can replace 'Tutorial' with any name you like to give
+your theory. After 'begin', you can declare function symbols,
+equations that they must satisfy, multiset rewriting rules, and lemmas
+specifying security properties. Moreover, you can also insert formal
+comments, to structure your theory. We give examples of each of these
+elements while modeling a simple protocol.
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
 with the public key of a server 'S' and sends it to 'S'. The server confirms
@@ -86,9 +86,10 @@ rewriting rules, when oriented from left to right. This means that the
 right-hand-side must be a subterm of the left-hand-side or a nullary
 function symbol.
 
-Certain equational theories are used very often when modeling cryptographic
-messages. We therefore provide builtins definitions for them. The above theory
-could also be enabled using the declaration
+Certain equational theories are used very often when modeling
+cryptographic messages. We therefore provide builtins definitions for
+them, using the keyword 'builtins'. The above theory could also be
+enabled using the declaration
 
   builtins: hashing, asymmetric-encryption
 
@@ -139,7 +140,7 @@ rule Register_pk:
 /* The above rule models registering a public key. It makes use of the
    following syntax.
 
-   Facts always start with an upper-case letter and do not have to declared.
+   Facts always start with an upper-case letter and do not have to be declared.
    If their name is prefixed with an exclamation mark '!', then they are
    persistent. Otherwise, they are linear. Note that you must use every fact
    name consistently; i.e., you must always use it with the same arity, casing,
@@ -153,7 +154,7 @@ rule Register_pk:
 
      ~x  denotes  x:fresh
      $x  denotes  x:pub
-     #i  denotes  i:temp
+     #i  denotes  i:temporal
      i   denotes  i:msg
 
      'c' denotes a public name 'c \in PN'; i.e., a fixed, global constant
@@ -201,7 +202,7 @@ Recall that we want to model the following protocol.
   C -> S: aenc{k}pk(S)
   C <- S: h(k)
 
-We model it use the following three rules.
+We model it using the following three rules.
 */
 
 // Start a new thread executing the client role, choosing the server
@@ -270,7 +271,7 @@ The syntax for specifying security properties uses
            is optional
 
   i < j    for temporal ordering, the sort prefix for the temporal variables 'i'
-           adn 'j' is optional
+           and 'j' is optional
 
   #i = #j  for an equality between temporal variables 'i' and 'j'
   x = y    for an equality between message variables 'x' and 'y'
@@ -307,7 +308,7 @@ lemma Client_session_key_secrecy:
   " /* It cannot be that a  */
     not(
       Ex S k #i #j.
-        /* client setup a session key 'k' with a server'S' */
+        /* client has set up a session key 'k' with a server'S' */
         SessKeyC(S, k) @ #i
         /* and the adversary knows 'k' */
       & K(k) @ #j
