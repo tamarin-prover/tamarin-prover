@@ -41,7 +41,7 @@ import           Data.DeriveTH
 import           Data.Function                             (on)
 import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
-import           Data.List                                 (intersperse,partition,groupBy,sortBy)
+import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf)
 import qualified Data.Map                                  as M
 import           Data.Maybe                                (catMaybes)
 import           Data.Monoid
