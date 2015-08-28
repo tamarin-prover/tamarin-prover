@@ -71,8 +71,8 @@ sigpMaudeSig:: SignaturePure L.:-> MaudeSig
 sigpMaudeSig = sigMaudeInfo
 
 -- | The empty pure signature.
-emptySignaturePure :: SignaturePure
-emptySignaturePure = Signature minimalMaudeSig
+emptySignaturePure :: Bool -> SignaturePure
+emptySignaturePure flag = Signature (minimalMaudeSig flag)
 
 -- Instances
 ------------

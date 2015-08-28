@@ -1,3 +1,5 @@
+-- FIXME: Better solution for dfsLoopBreakers
+{-# LANGUAGE FlexibleContexts #-}
 -- |
 -- Copyright   : (c) 2010,2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)

@@ -36,7 +36,9 @@ module Term.Unification (
   , enableDH
   , enableBP
   , enableMSet
+  , enableDiff
   , minimalMaudeSig
+  , enableDiffMaudeSig
   , dhMaudeSig
   , bpMaudeSig
   , msetMaudeSig

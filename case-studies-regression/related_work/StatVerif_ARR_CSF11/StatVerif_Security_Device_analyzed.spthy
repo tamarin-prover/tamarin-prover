@@ -62,7 +62,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -77,20 +77,20 @@ next
         case ConfigureDevice
         solve( !KU( aenc(<m, y>, pk(~sk)) ) @ #vk )
           case Alice
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case UseLeftDevice
           solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
-            by contradiction // cyclic
+            by contradiction /* cyclic */
           next
             case case_2
-            by contradiction // impossible chain
+            by contradiction /* impossible chain */
           next
             case case_3
-            by contradiction // impossible chain
+            by contradiction /* impossible chain */
           qed
         next
           case UseRightDevice
@@ -98,17 +98,17 @@ next
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
-            by contradiction // cyclic
+            by contradiction /* cyclic */
           next
             case case_2
-            by contradiction // impossible chain
+            by contradiction /* impossible chain */
           next
             case case_3
-            by contradiction // impossible chain
+            by contradiction /* impossible chain */
           qed
         next
           case caenc
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     next
@@ -117,20 +117,20 @@ next
         case ConfigureDevice
         solve( !KU( aenc(<x, m>, pk(~sk)) ) @ #vk )
           case Alice
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case UseLeftDevice
           solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
-            by contradiction // cyclic
+            by contradiction /* cyclic */
           next
             case case_2
-            by contradiction // impossible chain
+            by contradiction /* impossible chain */
           next
             case case_3
-            by contradiction // impossible chain
+            by contradiction /* impossible chain */
           qed
         next
           case UseRightDevice
@@ -138,29 +138,29 @@ next
                  (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
                  (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
             case case_1
-            by contradiction // cyclic
+            by contradiction /* cyclic */
           next
             case case_2
-            by contradiction // impossible chain
+            by contradiction /* impossible chain */
           next
             case case_3
-            by contradiction // impossible chain
+            by contradiction /* impossible chain */
           qed
         next
           case caenc
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
   next
     case case_2
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   next
     case case_3
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   next
     case case_4
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -226,11 +226,11 @@ solve( !DevicePublicKey( key ) ▶₂ #i )
         case Alice
         solve( !KU( aenc(<~y, y.1>, pk(~sk.1)) ) @ #vk.4 )
           case caenc
-          by contradiction // cyclic
+          by contradiction /* cyclic */
         qed
       next
         case caenc
-        by contradiction // cyclic
+        by contradiction /* cyclic */
       qed
     next
       case UseRightDevice
@@ -238,11 +238,11 @@ solve( !DevicePublicKey( key ) ▶₂ #i )
         case Alice
         solve( !KU( aenc(<x.1, ~y>, pk(~sk.1)) ) @ #vk.4 )
           case caenc
-          by contradiction // cyclic
+          by contradiction /* cyclic */
         qed
       next
         case caenc
-        by contradiction // cyclic
+        by contradiction /* cyclic */
       qed
     qed
   next
@@ -254,13 +254,13 @@ solve( !DevicePublicKey( key ) ▶₂ #i )
       case UseLeftDevice
       solve( !KU( aenc(<x.1, ~x>, pk(~sk.1)) ) @ #vk.2 )
         case caenc
-        by contradiction // cyclic
+        by contradiction /* cyclic */
       qed
     next
       case UseRightDevice
       solve( !KU( aenc(<x.1, ~x>, pk(~sk.1)) ) @ #vk.2 )
         case caenc
-        by contradiction // cyclic
+        by contradiction /* cyclic */
       qed
     qed
   qed
@@ -271,17 +271,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
+analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
+analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.413362s
+  processing time: 0.449495s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -292,10 +292,10 @@ analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Devi
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
+analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.413362s
+  processing time: 0.449495s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)

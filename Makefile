@@ -1,103 +1,37 @@
-CABAL_OPTS=
+# Please make sure that you have 'stack' installed. 
+# https://github.com/commercialhaskell/stack/wiki/Downloads
 
-# NOTE that the dependency solver of cabal-install-0.10.2 has sometimes
-# trouble coping with complicated install plans. In these cases, the
-# development version version of 'cabal-install' available from
-#
-#   darcs get http://darcs.haskell.org/cabal-install/
-#
-# allows you to use a better solver which is activated using the following
-# flag.
-#
-# CABAL_OPTS=--solver=modular
-#
+TAMARIN=~/.local/bin/tamarin-prover
 
-# This is the only target that an end-user will use
-install:
-	cabal install $(CABAL_OPTS) lib/utils lib/term lib/theory ./
+# Default installation via stack
+default: 
+	stack setup
+	stack install
 
-install-theory:
-	cabal install $(CABAL_OPTS) lib/theory ./
+clean:
+	stack clean
 
-install-term:
-	cabal install $(CABAL_OPTS) lib/term lib/theory ./
-
-# In case some dependencies cannot be resolved and should be forced use this
-# target. NOTE that this may break other libraries installed on your system.
-force-install:
-	cabal install $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
-
-force-install-ghc-7.0.4:
-	cabal install -wghc-7.0.4 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
-
-force-install-ghc-7.4.1:
-	cabal install -wghc-7.4.1 $(CABAL_OPTS) --force-reinstalls lib/utils lib/term lib/theory ./
-
-force-install-theory:
-	cabal install $(CABAL_OPTS) --force-reinstalls lib/theory ./
-
-force-install-term:
-	cabal install $(CABAL_OPTS) --force-reinstalls lib/term lib/theory ./
-
-
-#
-#
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
-#
-#
-#
-VERSION=0.8.5.1
 
-source-dists:
-	cd lib/utils; cabal sdist
-	cd lib/term; cabal sdist
-	cd lib/theory; cabal sdist
-	cabal sdist
+VERSION=0.9.0
 
-source-dists-tests: source-dists
-	mkdir -p /tmp/dist-test-$(VERSION)/
-	cp lib/utils/dist/tamarin-prover-utils-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-	cp lib/term/dist/tamarin-prover-term-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-	cp lib/theory/dist/tamarin-prover-theory-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-	cp dist/tamarin-prover-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-	cd /tmp/dist-test-$(VERSION)/; cabal install *.tar.gz --force-reinstalls
+#source-dists:
+#	cd lib/utils; cabal sdist
+#	cd lib/term; cabal sdist
+#	cd lib/theory; cabal sdist
+#	cabal sdist
 
-# For profiling, we use the cabal-dev tool and do not build the GUI. This
-# simplifies installing all required libraries with profiling support enabled.
-# The locally installed executable can then be called as follows
-#
-#   ./cabal-dev/bin/tamarin-prover +RTS -p -RTS
-#
-# to generate the profiling report
-#
-#   tamarin-prover.prof
-#
-# in the working directory.
-profiling-install:
-	cabal-dev install --flags="-threaded no-gui" --force-reinstalls --enable-library-profiling --enable-executable-profiling ./lib/term ./lib/utils ./lib/theory  ./
+#source-dists-tests: source-dists
+#	mkdir -p /tmp/dist-test-$(VERSION)/
+#	cp lib/utils/dist/tamarin-prover-utils-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+#	cp lib/term/dist/tamarin-prover-term-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+#	cp lib/theory/dist/tamarin-prover-theory-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+#	cp dist/tamarin-prover-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
+#	cd /tmp/dist-test-$(VERSION)/; cabal install *.tar.gz --force-reinstalls
 
-# requires the cabal-dev tool. Install it using the 'cabal-dev'
-dev-install:
-	cabal-dev configure && cabal-dev build
-
-dev-run:
-	./dist/build/tamarin-prover/tamarin-prover interactive examples/TPM
-
-# TODO: Implement 'dev-clean' target
-
-cabal-dev:
-	cabal-dev add-source lib/utils
-	cabal-dev add-source lib/term
-	# force install with 'native' flag of blaze-textual
-	cabal-dev install blaze-textual -fnative --reinstall
-
-cabal-clean:
-	cd lib/utils; cabal clean
-	cd lib/term; cabal clean
-	cabal clean
 
 
 ###############################################################################
@@ -108,7 +42,7 @@ cabal-clean:
 ## CSF'12
 #########
 
-# These case studies are located in data/examples/ or examples/
+# These case studies are located in examples/
 DH2=DH2_original.spthy
 
 KAS=KAS1.spthy KAS2_eCK.spthy KAS2_original.spthy
@@ -117,7 +51,9 @@ KEA=KEA_plus_KI_KCI.spthy KEA_plus_KI_KCI_wPFS.spthy
 
 NAXOS=NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy
 
-SDH=SignedDH_PFS.spthy SignedDH_eCK.spthy
+SDH=SignedDH_PFS.spthy #SignedDH_eCK.spthy
+# The "SignedDH_eCK.spthy" case study has not been working for a long time, 
+# probably some change in the heuristics somewhere made it run indefinitely.
 
 STS=STS_MAC.spthy STS_MAC_fix1.spthy STS_MAC_fix2.spthy
 
@@ -139,7 +75,7 @@ csf12-case-studies:	$(CSF12_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/csf12/*.spthy
 
 # individual case studies
-case-studies/%_analyzed.spthy:	data/examples/%.spthy
+case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/csf12
 	mkdir -p case-studies/classic
 	mkdir -p case-studies/loops
@@ -153,7 +89,7 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 	mkdir -p case-studies/related_work/YubiSecure_KS_STM12
 	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
 	# Use -N3, as the fourth core is used by the OS and the console
-	tamarin-prover $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	echo "\n/* Output" >>$(TMPRES)
@@ -162,6 +98,61 @@ case-studies/%_analyzed.spthy:	data/examples/%.spthy
 	mv $(TMPRES) $@
 	\rm -f $(TMPOUT)
 
+## Observational Equivalence
+############################
+
+# individual diff-based case studies
+case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/ccs15
+	mkdir -p case-studies/features/equivalence
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	echo "\n/* Output" >>$(TMPRES)
+	cat $(TMPOUT) >>$(TMPRES)
+	echo "*/" >>$(TMPRES)
+	mv $(TMPRES) $@
+	\rm -f $(TMPOUT)
+
+# individual diff-based precomputed (no --prove) case studies
+case-studies/%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/ccs15
+	mkdir -p case-studies/features/equivalence
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	echo "\n/* Output" >>$(TMPRES)
+	cat $(TMPOUT) >>$(TMPRES)
+	echo "*/" >>$(TMPRES)
+	mv $(TMPRES) $@
+	\rm -f $(TMPOUT)
+
+CCS15_CASE_STUDIES=DDH.spthy  probEnc.spthy  rfid-feldhofer.spthy
+CCS15_CS_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/ccs15/,$(CCS15_CASE_STUDIES)))
+
+CCS15_PRECOMPUTED_CASE_STUDIES=Attack_TPM_Envelope.spthy
+CCS15_PCS_TARGETS=$(subst .spthy,_analyzed-diff-noprove.spthy,$(addprefix case-studies/ccs15/,$(CCS15_PRECOMPUTED_CASE_STUDIES)))
+
+CCS15_TARGETS= $(CCS15_CS_TARGETS) $(CCS15_PCS_TARGETS)
+
+# CCS15 case studies
+ccs15-case-studies:	$(CCS15_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy
+
+TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy N5N6DiffTest.spthy
+TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/equivalence/,$(TESTOBSEQ_CASE_STUDIES)))
+
+OBSEQ_TARGETS= $(CCS15_TARGETS) $(TESTOBSEQ_TARGETS)
+
+#Observational equivalence test case studies:
+obseq-test-case-studies:	$(TESTOBSEQ_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/features/equivalence/*.spthy
+
+#Observational equivalence case studies with CCS15
+obseq-case-studies:	$(OBSEQ_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy case-studies/features/equivalence/*.spthy
 
 ## Inductive Strengthening
 ##########################
@@ -239,7 +230,7 @@ features-case-studies:	$(FEATURES_CS_TARGETS)
 ###################
 
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS)
 
 case-studies: 	$(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/
@@ -250,52 +241,3 @@ case-studies: 	$(CS_TARGETS)
 ###############################################################################
 
 # outdated targets
-
-all: unit mult psearch
-
-web:
-	ghc --make Main -c -isrc -Wall -iinteractive-only-src
-	runghc -isrc -Wall -iinteractive-only-src Main interactive examples --autosave --loadstate --debug
-
-webc: comp
-	./tamarin-prover interactive --autosave --loadstate --debug --datadir=data/ examples/
-
-comp:
-	ghc --make Main -isrc -iinteractive-only-src/ -o tamarin-prover
-
-opt:
-	ghc -fforce-recomp -isrc -main-is Narrow.main --make -O2 -Wall -o narrow src/Narrow.hs
-
-assert:
-	ghc -fforce-recomp -isrc -main-is Narrow.main --make -Wall -o narrow src/Narrow.hs
-
-mult: assert
-	time ./narrow variants "x1*x2"
-
-
-scyther:
-	cabal install --flags="-build-library -build-tests build-scyther"
-
-unit:
-	cabal install --flags="-build-library build-tests -build-scyther"
-	-rm scyther-ac-unit-tests.tix
-	scyther-ac-unit-tests
-
-coverage:
-	ghc -fhpc -fforce-recomp -main-is Term.UnitTests.main --make -Wall -o unit -ilib/term/src Term.UnitTests
-	-rm unit.tix
-	./unit
-	hpc markup unit --destdir coverage
-	open coverage/hpc_index.html
-	hpc report unit
-
-haddock:
-	cabal haddock --executables
-
-depgraph:
-	find . -name \*hs | grep -v Old | xargs graphmod -q | tred | dot -odepGraph.svg -Tsvg
-
-ctags:
-	ghc -e :ctags src/Main.hs
-
-.PHONY: unit opt all mult coverage haddock case-studies

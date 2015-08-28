@@ -1,0 +1,120 @@
+theory ake_simpNXPR
+begin
+
+builtins: diffie-hellman
+
+// h1 and h2 as hash functions
+// g as the base for exponentiation
+functions: h1/1, h2/5, g/0
+
+section{* ? *}
+/*
+ * Protocol:	NXPR
+ * Modeler: 	Ralf Sasse, Jannik Dreier [based on Naxos by Benedikt Schmidt and Michele Feltz]
+ * Date: 	April 2015
+ * Source:	"On the Limits of Authenticated Key Exchange Security with an Application to Bad Randomness" (Feltz, Cremers)
+ * Status: 	? loops for obs-eq because of "State" backwards search with an infinite list of old randomness ?
+ */
+
+rule init:
+   [ Fr(~sa), Fr(~sb) ]
+ --[ OnlyOnce() 
+   , Init($A,$B) // do we need to enforce these as different? YES for now.
+   ]->
+   [ State(     $A, $B, ~sa, g^~sb, 'nil')
+   , State_resp($B, $A, ~sb, g^~sa, 'nil')
+   , Out(< g^~sa, g^~sb >)
+   ]
+
+//this does not give the adversary the list of previous randomness
+//it also does not allow the agent to continue as state as dropped
+//Make sure both are on purpose?
+rule corrupt_A:
+   [ State($A, $B, ~sa, pb, l) ]
+ --[ Corrupt($A, ~sa) ]->
+   [ Out(< $A, ~sa >) ]
+
+rule A_random:
+   [ Fr(~r), State($A, $B, ~sa, pb, l) ] 
+ --[ Random($A) ]->
+   [ State($A, $B, ~sa, pb, < ~r, l >)
+   , Session($A, $B, ~r, l)
+   , Out(g^h1(< ~r,l,~sa >))
+   ]
+
+// Consider: use fresh ~r input (arguably ok due to "type-check" on length of input)
+rule A_chosen:
+   [ In(r), State($A, $B, ~sa, pb, l) ]
+ --[ ChosenRandomness($A) ]->
+   [ State($A, $B, ~sa, pb, < r, l >)
+   , Session($A, $B, r, l)
+   , Out(g^h1(< r,l,~sa >))
+   ] 
+
+rule A_reveal:
+   let key = h2(y^~sa, pb^h1(< r,l,~sa >), y^h1(< r,l,~sa >), $A, $B)
+   in
+   [ In(y) 
+   , State($A, $B, ~sa, pb, l2)
+   , Session($A, $B, r, l)
+   ]
+ --[ KeyReveal(), KeyInit(key) ]->
+   [ State($A, $B, ~sa, pb, l2)
+   , Out(key)
+   ]
+
+rule A_challenge:
+   let key =  h2(y^~sa, pb^h1(< r,l,~sa >), y^h1(< r,l,~sa >), $A, $B)
+   in
+   [ Fr(~r2)
+   , In(y) 
+   , State($A, $B, ~sa, pb, l2)
+   , Session($A, $B, r, l)
+   ]
+ --[ Challenge() ]->
+   [ State($A, $B, ~sa, pb, l2)
+   , Out(diff(~r2, key))
+   ]
+
+rule B_random:
+   let key = h2(pa^h1(< ~r,l,~sb >), x^~sb, x^h1(< ~r,l,~sb >), $A, $B)
+   in
+   [ Fr(~r)
+   , In(x)
+   , State_resp($B, $A, ~sb, pa, l)
+   ] 
+ --[ Random($B), KeyResp(key) ]->
+   [ State_resp($B, $A, ~sb, pa, < ~r, l >)
+   , Key('resp', key)
+   , Out(g^h1(< ~r,l,~sb >))
+   ]
+
+// CONSIDER: fresh ~r instead of r like above
+rule B_chosen:
+   let key = h2(pa^h1(< r,l,~sb >), x^~sb, x^h1(< r,l,~sb >), $A, $B)
+   in
+   [ In(r)
+   , In(x)
+   , State_resp($B, $A, ~sb, pa, l)
+   ] 
+ --[ Chosen($B) ]->
+   [ State_resp($B, $A, ~sb, pa, < r, l >)
+   , Key('resp', key)
+   , Out(g^h1(< r,l,~sb >))
+   ]
+
+axiom no_self_communication_initialization:
+  "not (Ex A #i. Init(A,A)@i)"
+
+axiom only_one_initialization:
+  "All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j"
+
+lemma executable:
+  exists-trace
+  " Ex #i #j k. KeyInit(k)@ i & KeyResp(k)@ j
+  "
+/* AAAAAAA
+*/
+
+end
+

@@ -1,0 +1,23 @@
+theory DDH begin
+
+/*
+ * Protocol:	 Decisional Diffie-Hellman
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: Automated Symbolic Proofs of Observational Equivalence [CCS'15]
+ * Date: 	 April 2015
+ *
+ * Status: 	 working
+// Observational equivalence is proven automatically in about 25 seconds.
+ */
+
+
+builtins: diffie-hellman
+functions: g/0
+
+// This should be observationally equivalent as the adversary cannot distinguish between the left/right result
+rule DDH:
+  [ Fr(x:fresh), Fr(y:fresh), Fr(z:fresh) ]
+  --[ ]->
+  [ Out(<g^(x:fresh), g^(y:fresh), diff(g^(z:fresh),g^(x:fresh)^(y:fresh))>) ]
+
+end

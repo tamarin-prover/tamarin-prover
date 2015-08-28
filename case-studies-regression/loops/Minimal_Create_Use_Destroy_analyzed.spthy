@@ -44,7 +44,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -53,14 +53,14 @@ next
     case case_1
     solve( Object( x ) ▶₀ #j )
       case Create
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Use
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     qed
   next
     case case_2
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -82,7 +82,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -97,14 +97,14 @@ next
       case case_1
       solve( Object( x ) ▶₀ #j )
         case Create
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case Use
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     next
       case case_2
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     qed
   next
     case case_2
@@ -112,16 +112,16 @@ next
       case Create
       solve( Object( ~n ) ▶₀ #i )
         case Use
-        by contradiction // non-injective facts (#vr,#j,#i)
+        by contradiction /* non-injective facts (#vr,#j,#i) */
       qed
     next
       case Use
       solve( Object( ~n ) ▶₀ #i )
         case Create
-        by contradiction // non-injective facts (#i.1,#j,#i)
+        by contradiction /* non-injective facts (#i.1,#j,#i) */
       next
         case Use
-        by contradiction // non-injective facts (#vr.1,#j,#i)
+        by contradiction /* non-injective facts (#vr.1,#j,#i) */
       qed
     qed
   next
@@ -133,35 +133,35 @@ next
       case case_1
       solve( Object( ~n ) ▶₀ #j )
         case Create
-        by contradiction // non-injective facts (#i.1,#i,#j)
+        by contradiction /* non-injective facts (#i.1,#i,#j) */
       next
         case Use
-        by contradiction // non-injective facts (#vr,#i,#j)
+        by contradiction /* non-injective facts (#vr,#i,#j) */
       qed
     next
       case case_2
       solve( (#i < #j)  ∥ (#j < #i) )
         case case_1
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       next
         case case_2
         solve( Object( ~n ) ▶₀ #j )
           case Create
           solve( Object( ~n ) ▶₀ #i )
             case Create
-            by contradiction // cyclic
+            by contradiction /* cyclic */
           next
             case Use
-            by contradiction // non-injective facts (#vr,#j,#i)
+            by contradiction /* non-injective facts (#vr,#j,#i) */
           qed
         next
           case Use
           solve( Object( ~n ) ▶₀ #i )
             case Create
-            by contradiction // non-injective facts (#i.1,#j,#i)
+            by contradiction /* non-injective facts (#i.1,#j,#i) */
           next
             case Use
-            by contradiction // non-injective facts (#vr.1,#j,#i)
+            by contradiction /* non-injective facts (#vr.1,#j,#i) */
           qed
         qed
       qed
@@ -174,17 +174,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/loops/Minimal_Create_Use_Destroy.spthy
+analyzing: examples/loops/Minimal_Create_Use_Destroy.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
+analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.145022s
+  processing time: 0.153961s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 
@@ -193,10 +193,10 @@ analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/loops/Minimal_Create_Use_Destroy.spthy
+analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.145022s
+  processing time: 0.153961s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 

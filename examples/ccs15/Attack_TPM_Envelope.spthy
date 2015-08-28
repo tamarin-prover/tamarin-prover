@@ -1,0 +1,397 @@
+theory Attack_TPM_Envelope begin
+
+// The attack on observational equivalence is exposed in under 1
+// seconds when loading this file into the GUI. Also note, the file
+// Attack_TPM_Envelope_visualization.png contains the dependency graph
+// Tamarin presents to the user for which there is no mirroring
+// dependency graph.
+
+
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sign/2, snd/1,
+           true/0, verify/3
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+rule (modulo E) PCR_Init:
+   [ Fr( ~aik ) ]
+  --[ PCR_Init( ), PCR_Write( 'pcr0' ) ]->
+   [ PCR( 'pcr0' ), PCR_Write( 'pcr0' ), !AIK( ~aik ), Out( pk(~aik) )
+   ]
+
+rule (modulo E) PCR_Extend:
+   [ PCR_Write( x ), PCR( x ), In( y ) ]
+  --[ PCR_Write( h(<x, y>) ) ]->
+   [ PCR( h(<x, y>) ), PCR_Write( h(<x, y>) ) ]
+
+rule (modulo E) PCR_CertKey:
+   [ !AIK( aik ), !KeyTable( lock, sk ) ]
+  -->
+   [ Out( sign(<'certkey', lock, pk(sk)>, aik) ) ]
+
+rule (modulo E) PCR_Quote:
+   [ PCR( x ), !AIK( aik ) ]
+  --[ PCR_Read( x ) ]->
+   [ Out( sign(<'certpcr', x>, aik) ), PCR( x ) ]
+
+rule (modulo E) PCR_Unbind:
+   [ PCR( x ), !KeyTable( x, sk ), In( aenc(m, pk(sk)) ) ]
+  --[ PCR_Unbind( x, sk, m ), PCR_Read( x ) ]->
+   [ PCR( x ), Out( m ) ]
+
+rule (modulo E) Alice1:
+   [ Fr( ~n ), PCR( x ), PCR_Write( x ) ]
+  --[ PCR_Write( h(<x, ~n>) ) ]->
+   [ PCR( h(<x, ~n>) ), PCR_Write( h(<x, ~n>) ), Alice1( ~n ) ]
+
+rule (modulo E) Alice2:
+   [
+   Alice1( n ), Fr( ~s ), !AIK( aik ),
+   In( sign(<'certkey', h(<h(<'pcr0', n>), 'obtain'>), pk>, aik) )
+   ]
+  --[ Secret( ~s ) ]->
+   [ Out( aenc(~s, pk) ), Alice2( n, ~s ), Alice2reveal( ~s ) ]
+
+rule (modulo E) Challenge:
+   [ Alice2reveal( ~s ), Fr( ~f ) ]
+  --[ Challenge( ~s ) ]->
+   [ Out( diff(~s, ~f) ) ]
+
+axiom challenge_restriction [right]:
+  "∀ s #i.
+    (Challenge( s ) @ #i) ⇒
+    (∃ #j #k. (Secret( s ) @ #j) ∧ (Denied( s ) @ #k))"
+
+axiom challenge_restriction [left]:
+  "∀ s #i.
+    (Challenge( s ) @ #i) ⇒
+    (∃ #j #k. (Secret( s ) @ #j) ∧ (Denied( s ) @ #k))"
+
+rule (modulo E) Alice3:
+   [
+   Alice2( n, s ), !AIK( aik ),
+   In( sign(<'certpcr', h(<h(<'pcr0', n>), 'deny'>)>, aik) )
+   ]
+  --[ Denied( s ) ]->
+   [ ]
+
+rule (modulo E) CreateLockedKey:
+   [ PCR( x ), Fr( ~sk ), In( lock ) ]
+  --[ PCR_Read( x ) ]->
+   [ PCR( x ), !KeyTable( h(<x, lock>), ~sk ), Out( pk(~sk) ) ]
+
+axiom PCR_Init_unique [right]:
+  "∀ #i #j. ((PCR_Init( ) @ #i) ∧ (PCR_Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+axiom PCR_Init_unique [left]:
+  "∀ #i #j. ((PCR_Init( ) @ #i) ∧ (PCR_Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma types [right, typing]:
+  all-traces
+  "∀ m d1 d2 #i.
+    (PCR_Unbind( d1, d2, m ) @ #i) ⇒
+    ((∃ #j. (!KU( m ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. Secret( m ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ m d1 d2 #i.
+  (PCR_Unbind( d1, d2, m ) @ #i)
+ ∧
+  (∀ #j. (!KU( m ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (Secret( m ) @ #j) ⇒ ⊥)"
+*/
+by sorry
+
+lemma types [left, typing]:
+  all-traces
+  "∀ m d1 d2 #i.
+    (PCR_Unbind( d1, d2, m ) @ #i) ⇒
+    ((∃ #j. (!KU( m ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. Secret( m ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ m d1 d2 #i.
+  (PCR_Unbind( d1, d2, m ) @ #i)
+ ∧
+  (∀ #j. (!KU( m ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (Secret( m ) @ #j) ⇒ ⊥)"
+*/
+by sorry
+
+lemma PCR_Write_charn [right, reuse, use_induction]:
+  all-traces
+  "∀ x #i. (PCR_Read( x ) @ #i) ⇒ (∃ #j. PCR_Write( x ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (PCR_Read( x ) @ #i) ∧ ∀ #j. (PCR_Write( x ) @ #j) ⇒ ⊥"
+*/
+by sorry
+
+lemma PCR_Write_charn [left, reuse, use_induction]:
+  all-traces
+  "∀ x #i. (PCR_Read( x ) @ #i) ⇒ (∃ #j. PCR_Write( x ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (PCR_Read( x ) @ #i) ∧ ∀ #j. (PCR_Write( x ) @ #j) ⇒ ⊥"
+*/
+by sorry
+
+lemma executable [right]:
+  exists-trace "∃ s #i #j. (Secret( s ) @ #i) ∧ (Denied( s ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ s #i #j. (Secret( s ) @ #i) ∧ (Denied( s ) @ #j)"
+*/
+by sorry
+
+lemma executable [left]:
+  exists-trace "∃ s #i #j. (Secret( s ) @ #i) ∧ (Denied( s ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ s #i #j. (Secret( s ) @ #i) ∧ (Denied( s ) @ #j)"
+*/
+by sorry
+
+lemma Secret_and_Denied_exclusive [right]:
+  all-traces
+  "¬(∃ s #i #j #k.
+      ((Secret( s ) @ #i) ∧ (Denied( s ) @ #j)) ∧ (K( s ) @ #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ s #i #j #k.
+  (Secret( s ) @ #i) ∧ (Denied( s ) @ #j) ∧ (K( s ) @ #k)"
+*/
+by sorry
+
+lemma Secret_and_Denied_exclusive [left]:
+  all-traces
+  "¬(∃ s #i #j #k.
+      ((Secret( s ) @ #i) ∧ (Denied( s ) @ #j)) ∧ (K( s ) @ #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ s #i #j #k.
+  (Secret( s ) @ #i) ∧ (Denied( s ) @ #j) ∧ (K( s ) @ #k)"
+*/
+by sorry
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Alice1
+  by sorry
+next
+  case Rule_Alice2
+  by sorry
+next
+  case Rule_Alice3
+  by sorry
+next
+  case Rule_Challenge
+  by sorry
+next
+  case Rule_CreateLockedKey
+  by sorry
+next
+  case Rule_Destrdadec
+  by sorry
+next
+  case Rule_Destrdfst
+  by sorry
+next
+  case Rule_Destrdsnd
+  by sorry
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Alice2
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case aenc
+        step( solve( Alice1( n ) ▶₀ #vr ) )
+          case Alice1
+          step( solve( !AIK( aik ) ▶₂ #vr ) )
+            case PCR_Init
+            step( solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n>), 'obtain'>), 
+                                    pk>,
+                                   ~aik)
+                         ) @ #vk.1 ) )
+              case PCR_CertKey
+              step( solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.4 ) )
+                case Alice1
+                step( solve( PCR( 'pcr0' ) ▶₁ #vr.1 ) )
+                  case CreateLockedKey
+                  by sorry
+                next
+                  case PCR_Init
+                  step( solve( PCR_Write( 'pcr0' ) ▶₂ #vr.1 ) )
+                    case PCR_Init
+                    step( solve( !KU( aenc(~s, pk(~sk)) ) @ #vk.1 ) )
+                      case Alice2
+                      by sorry // removed
+                    next
+                      case caenc
+                      step( solve( !KU( ~s ) @ #vk.3 ) )
+                        case Alice2
+                        by sorry
+                      next
+                        case Challenge
+                        step( solve( Alice2( n.1, ~s ) ▶₀ #k ) )
+                          case Alice2
+                          step( solve( !AIK( aik ) ▶₁ #k ) )
+                            case PCR_Init
+                            step( solve( !KU( pk(~sk) ) @ #vk.4 ) )
+                              case CreateLockedKey
+                              step( solve( !KU( 'obtain' ) @ #vk.4 ) )
+                                case coerce
+                                by sorry
+                              next
+                                case pub
+                                step( solve( !KU( sign(<'certpcr', h(<h(<'pcr0', ~n>), 'deny'>)>,
+                                                       ~aik)
+                                             ) @ #vk.5 ) )
+                                  case PCR_Quote
+                                  step( solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.6 ) )
+                                    case CreateLockedKey
+                                    by sorry
+                                  next
+                                    case PCR_Extend
+                                    step( solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #vr.7 ) )
+                                      case CreateLockedKey
+                                      step( solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #vr.7 ) )
+                                        case Alice1
+                                        step( solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.8 ) )
+                                          case Alice1
+                                          step( solve( !KU( 'deny' ) @ #vk.6 ) )
+                                            case coerce
+                                            by sorry
+                                          next
+                                            case pub
+                                            by ATTACK // trace found
+                                          qed
+                                        next
+                                          case CreateLockedKey
+                                          by sorry
+                                        next
+                                          case PCR_Extend
+                                          by sorry
+                                        next
+                                          case PCR_Quote
+                                          by sorry
+                                        next
+                                          case PCR_Unbind
+                                          by sorry
+                                        qed
+                                      next
+                                        case PCR_Extend
+                                        by sorry
+                                      qed
+                                    next
+                                      case PCR_Extend
+                                      by sorry
+                                    next
+                                      case PCR_Quote
+                                      by sorry
+                                    next
+                                      case PCR_Unbind
+                                      by sorry
+                                    qed
+                                  next
+                                    case PCR_Quote
+                                    by sorry
+                                  next
+                                    case PCR_Unbind
+                                    by sorry
+                                  qed
+                                next
+                                  case csign
+                                  by sorry
+                                qed
+                              qed
+                            next
+                              case cpk
+                              by sorry
+                            qed
+                          qed
+                        qed
+                      next
+                        case PCR_Unbind
+                        by sorry
+                      qed
+                    qed
+                  qed
+                next
+                  case PCR_Quote
+                  by sorry
+                qed
+              next
+                case CreateLockedKey
+                by sorry
+              next
+                case PCR_Extend
+                by sorry
+              next
+                case PCR_Quote
+                by sorry
+              next
+                case PCR_Unbind
+                by sorry
+              qed
+            next
+              case csign
+              by sorry
+            qed
+          qed
+        qed
+      next
+        case dadec
+        by sorry
+      qed
+    next
+      case Challenge
+      by sorry
+    next
+      case CreateLockedKey
+      by sorry
+    next
+      case PCR_CertKey
+      by sorry
+    next
+      case PCR_Init
+      by sorry
+    next
+      case PCR_Quote
+      by sorry
+    next
+      case PCR_Unbind
+      by sorry
+    qed
+  next
+    case RHS
+    by sorry
+  qed
+next
+  case Rule_PCR_CertKey
+  by sorry
+next
+  case Rule_PCR_Extend
+  by sorry
+next
+  case Rule_PCR_Init
+  by sorry
+next
+  case Rule_PCR_Quote
+  by sorry
+next
+  case Rule_PCR_Unbind
+  by sorry
+qed
+
+/* All well-formedness checks were successful. */
+
+end
