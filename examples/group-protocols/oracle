@@ -4,46 +4,107 @@ import re
 import os
 import sys
 
-last_re = re.compile(u'[0-9]+:.*(last|\u2225).*')
-xfour_re = re.compile('.*x\.4.*')
-authout_re = re.compile('.*AuthOut.*')
-split_re = re.compile('.*splitEqs.*')
-
 lines = sys.stdin.readlines()
 
-# uncomment for all lemmas except 'Exp_nonce_or_product2'
-# exit(0)
+l1 = []
+l2 = []
+l3 = []
+l4 = []
+l5 = []
+l6 = []
+l7 = []
 
-disjs = []
-splits = []
-authouts = []
+lemma = sys.argv[1]
 
-# first last disjunctions,
+use_ih = True
+
 for line in lines:
-  if last_re.match(line) and not (xfour_re.match(line)): # this is the wrong disjunction with x.4
-    disjs.append(line.split(':')[0])
+  num = line.split(':')[0]
 
-# then splitEqs,
-for line in lines:
-  if split_re.match(line):
-    splits.append(line.split(':')[0])
+  if lemma == "Exp_nonce_or_product2":
+    if re.match('.*Group.*', line):
+      l1.append(num)
+    if re.match('.*last.*', line) and use_ih:
+      l2.append(num)
+      # if there are too many induction hypotheses, we ignore them
+      if len(l2) > 2:
+        l2 = []
+        use_ih = False
+    if re.match('.*ExpRoundKey.*', line) or re.match('.*ExpKeyFor.*', line):
+      l3.append(num)
+    if re.match('.*splitEqs.*', line):
+      l4.append(num)
+    if re.match('.*AO.*', line):
+      l5.append(num)
 
-# afterwards AuthOut
-for line in lines:
-  if authout_re.match(line):
-    authouts.append(line.split(':')[0])
+  elif lemma == "key_secret_last":
+    if (   re.match('.*Group.*', line)
+        or re.match(".*'RoundKey', 'g'>.*", line)
+        or re.match(".*KU\(\s~.*", line)):
+      l1.append(num)
+    if (  re.match(".*Pstate.*", line)
+        or re.match('.*splitEqs.*', line)):
+      l2.append(num)
+    if re.match('.*\^\(~.*\*.*\).*', line): # product in exponent
+      l3.append(num)
+    if re.match('.*AO.*', line):
+      l4.append(num)
 
-# we don't perform disjunction splits if there are too many of them
-# otherwise, the chances that we get stuck/choose the wrong ones
-# are too big.
-if len(disjs) < 3:
-  for i in disjs:
-    print i
+  elif lemma == "key_secret":
+    if (   re.match('.*Group.*', line)
+        or re.match(".*'RoundKey', 'g'>.*", line)):
+      l1.append(num)
+    if (  re.match(".*Pstate.*", line)
+        or re.match('.*splitEqs.*', line)):
+      l2.append(num)
+    if re.match(".*KU\(\s~.*", line):
+      l3.append(num)
+    if re.match(".*AO.*'1'\+.*k.*",line):
+      l4.append(num)
+    if re.match('.*\^\(~.*\*.*\).*', line): # product in exponent
+      l5.append(num)
+    if re.match(".*WaitAccept.*", line):
+      l6.append(num)
+    if re.match('.*AO.*', line):
+      l7.append(num)
 
-for i in splits:
+  elif lemma == "Exp_subterm":
+    if (   re.match('.*Group.*', line)
+        or re.match(".*'RoundKey', 'g'>.*", line)
+        or re.match(".*ExpKeyFor\(.*", line)        
+        or re.match(".*ExpRoundKey\(.*", line)                  
+        or re.match(".*last.*", line)):
+      l1.append(num)
+    if (  re.match(".*Pstate.*", line)
+        or re.match('.*splitEqs.*', line)):
+      l2.append(num)
+    if re.match(".*KU\(\s~.*", line):
+      l3.append(num)
+    if re.match(".*AO.*'1'\+.*k.*",line):
+      l4.append(num)
+    if re.match('.*\^\(~.*\*.*\).*', line): # product in exponent
+      l5.append(num)
+    if re.match(".*WaitAccept.*", line):
+      l6.append(num)
+    if re.match('.*AO.*', line):
+      l7.append(num)
+
+  elif lemma == "Relate_KeyFor_RoundKey":
+    if re.match('.*Group.*', line) or re.match('.*last.*', line):
+      l1.append(num)
+    if re.match('.*ExpRoundKey.*', line) or re.match('.*ExpKeyFor.*', line):
+      l2.append(num)
+    if re.match('.*Pstate.*', line):
+      l3.append(num)      
+    if re.match('.*splitEqs.*', line):
+      l4.append(num)
+    if re.match('.*AO.*', line):
+      l5.append(num)
+
+  else:
+    exit(0)
+
+ranked = l1 + l2 + l3 + l4 + l5 + l6 + l7
+
+for i in ranked:
   print i
-
-for i in authouts:
-  print i
-
-# the remaining goals will be added back by Tamarin

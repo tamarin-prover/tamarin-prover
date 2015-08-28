@@ -1,0 +1,125 @@
+theory TAK1
+begin
+
+section{* The TAK1 Protocol. *}
+
+/*
+ * Protocol:	TAK1
+ *
+ * Status: 	working
+ */
+
+builtins: bilinear-pairing, multiset
+functions: kdf/1, tag/1, h/1
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr( ~ea ) ]
+  -->
+  [ !Ltk( $A, ~ea ), !Pk( $A, pmult(~ea,'P') ), Out( pmult(~ea,'P') ) ]
+
+// Key reveals
+
+rule Reveal_ltk:
+    [ !Ltk( $A, ~ea ) ]
+  --[ LtkRev( $A ) ]->
+    [ Out( ~ea ) ]
+
+rule Reveal_ephk:
+    [ !EphKey( ~ek ) ]
+  --[ EphkRev( ~ek ) ]->
+    [ Out( ~ek ) ]
+
+rule Reveal_sessk:
+    [ !SessKey( ~sid, kdf(sessKey ) ) ]
+  --[ SesskRev( ~sid ) ]->
+    [ Out( kdf(sessKey) ) ]
+
+
+// Protocol
+
+rule Proto1:
+  let XA = pmult(~ex,'P')
+  in
+  [ Fr( ~ex ) ]
+  --[ Origin( ~ex, XA ), Participants($A + $B + $C) ]->
+  [ PState1( ~ex, $A, $B, $C )
+  , Out( XA )
+  , !EphKey( ~ex )
+  ]
+
+
+// We split this rule into two steps 'Proto2'
+// and 'Proto3' to speed up the variant computation.
+rule Proto2:
+    [ PState1( ~ex, $A, $B, $C )
+    , In( XB )    
+    , In(  XC )
+    ]
+    -->
+    // we first compute em(XB, XC)
+    [ PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), em(XB, XC) ) ]
+
+
+rule Proto3:
+  let pkB  = pmult(~eb,'P')
+      pkC  = pmult(~ec,'P')
+      XA   = pmult(~ex,'P')
+      sessKey = kdf(emXBXC ^ ~ex, em(pkB,pkC) ^ ~ea,
+                    $A + $B + $C,
+                    tag(XA) + tag(XB) + tag(XC))
+  in
+  [ PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), emXBXC )
+  , !Ltk( $A, ~ea)
+  , !Pk( $B, pkB )
+  , !Pk( $C, pkC )
+  ]
+  --[ Accept( ~ex, $A, $B, $C, XA, tag(XB), tag(XC), sessKey )
+    , Match( ~ex, <tag(XA) + tag(XB) + tag(XC), $A + $B + $C> )
+    , Sid( ~ex, <tag(XA) + tag(XB) + tag(XC), $A + $B + $C> ) ]->
+      // A session matches if the same multiset of messages has
+      //  been received and the same multiset of agents has participated
+  [ !SessKey( ~ex, sessKey ) ]
+
+
+#ifdef executable
+
+lemma session_key_establish:
+  exists-trace
+  "Ex A B C XA XB XC sa sb sc #ia #ib #ic k.
+      ( Accept(sa, A, B, C, XA, tag(XB), tag(XC), k) @ ia &
+        Accept(sb, B, A, C, XB, tag(XA), tag(XC), k) @ ib &
+        Accept(sc, C, A, B, XC, tag(XA), tag(XB), k) @ ic &
+        not (A = B) &
+        not (B = C) &
+        not (A = C) &
+        not (Ex #j. LtkRev(A) @ j ) &
+        not (Ex #j. LtkRev(B) @ j ) &
+        not (Ex #j. LtkRev(C) @ j ))"
+#endif
+
+lemma Session_Key_Secrecy:
+  "(All stest A B C XA XB XC sessKey sessString #i #j. 
+           Accept(stest, A, B, C, XA, tag(XB), tag(XC), sessKey) @ i &
+           K(sessKey) @ j &
+           Match(stest, sessString) @ i
+         ==>
+           (             
+             // no session key reveal for matching session (includes stest)
+             ( Ex #m #n smatch. Sid(smatch, sessString) @ m & SesskRev(smatch) @ n )
+
+             // no origin session for either XB or XC
+           | (   (  not (Ex #k spartner. Origin(spartner, XC) @ k ) 
+                  | not (Ex #k spartner. Origin(spartner, XB) @ k ))
+             // no longterm key reveal for any of the participants allowed
+              &  (  (Ex #m. LtkRev(A) @ m )
+                  | (Ex #m. LtkRev(B) @ m )
+                  | (Ex #m. LtkRev(C) @ m )))
+
+           | // there are origin sessions for both XB and XC
+             (Ex #k #l spartner1 spartner2.
+                  Origin(spartner1, XB) @ k & Origin(spartner2, XC) @ l
+               & ((  ((Ex #v1. LtkRev(A) @ v1)      | (Ex #v1. LtkRev(B) @ v1)          | (Ex #v1. LtkRev(C) @ v1))
+                   & ((Ex #v2. EphkRev(stest) @ v2) | (Ex #v2. EphkRev(spartner1) @ v2) | (Ex #v2. EphkRev(spartner2) @ v2)))))))"
+
+end

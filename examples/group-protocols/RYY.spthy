@@ -1,0 +1,212 @@
+theory RYY
+begin
+
+builtins: bilinear-pairing
+
+functions: kdf/1, hp/1
+
+section{* RYY : UM-like identity based key exchange protocol *}
+
+/*
+ * Protocol:	RYY
+ * Source:	Boyd overview identity based key exchange protocols
+ *
+ * Status: 	Working
+ */
+
+
+// Key generation center
+
+rule KGC_Setup:
+  [ Fr(msk) ]
+  -->
+  [ !MSK( msk ) ]
+
+rule KGC_request:
+  [ !MSK( s ) ]
+  -->
+  [ !LTK( $ID, pmult(s, hp($ID)) ) ]
+
+
+// Reveals
+
+rule Reveal_ltk:
+  [ !LTK( $ID, skID ) ]
+  --[ LtkRev($ID) ]->
+  [ Out(skID) ]
+
+rule Reveal_master_key:
+  [ !MSK( msk ) ]
+  --[ MskRev() ]->
+  [ Out( msk ) ]
+
+rule Reveal_session_key:
+  [ !Sessk( ~ey, sek ) ]
+  --[ SesskRev( ~ey ) ]->
+  [ Out( sek ) ]
+
+
+// Protocol
+
+rule Init_1:
+  [ Fr( ~ex ) ]
+  -->
+  [ Init( ~ex, $A, $B )
+  , Out( 'g'^~ex )
+  ]
+
+rule Init_2:
+  let X = 'g'^~ex
+      sessKey = kdf( Y^~ex, em(hp($B), skA), $A, $B, X, Y )
+  in
+  [ Init( ~ex, $A, $B )
+  , !LTK( $A, skA )
+  , In( Y )
+  ]
+  --[ Accept( ~ex, sessKey )
+    , Sid(    ~ex, <$A,$B,X,Y,'Init'> )
+    ]->
+  [ !Sessk( ~ex, sessKey )]
+
+
+rule Resp_1:
+  let Y = 'g'^~ey
+      sessKey = kdf(X^~ey, em(skB, hp($A)), $A, $B, X, Y)
+  in
+  [ Fr( ~ey )
+  , !LTK( $B, skB )
+  , In( X )
+  ]
+  --[ Accept( ~ey, sessKey )
+    , Sid(    ~ey, <$B,$A,Y,X,'Resp'> )
+    ]->
+  [ Out( Y )
+  , !Sessk( ~ey, sessKey )
+  ]
+
+#ifdef executable 
+
+lemma key_agreement_reachable:
+  exists-trace
+  "Ex #i #j A B X Y t1 t2 k role1 role2.
+        Accept(t1, k) @ i
+      & Sid(t1, <A,B,X,Y,role1>) @ i
+      & Accept(t2, k) @ j
+      & Sid(t2, <B,A,Y,X,role2>) @ j
+      & not (role1 = role2)"
+
+#endif
+
+#ifdef secure
+
+lemma key_secrecy_WPFS:
+  /* 
+   * We do not consider ephemeral key reveals for RYY
+   * 
+   * If there exists a test session whose key k is known to the
+   * Adversary with some session id, then...
+   */
+  "(All #i1 #i2 test A B X Y role1 k.
+    Accept(test, k) @ i1 & K( k ) @ i2 & Sid(test, <A,B,X,Y,role1>) @ i1
+    ==> ( 
+    // ... the test session must be "not clean".
+    // test is not clean if one of the following has happened:
+    //
+    // 1. The adversary has revealed the test's session key.
+      (Ex #i3. SesskRev( test ) @ i3 )
+
+    // 2. There is a matching session and
+    | (Ex matching #i3 role2.
+           ( Sid ( matching, <B,A,Y,X,role2>  ) @ i3 & not (role1 = role2))
+	   & ( 
+             // (a) the adversary has revealed the session key of the matching sesssion, or
+	       (Ex #i5. SesskRev( matching ) @ i5 )
+
+             // (b) the adversary revealed the longterm key of test's peer before test finished, or
+             | (Ex #i5. LtkRev( B ) @ i5 & i5 < i1)
+
+             // (c) the adversary revealed the longterm key of test's actor before test finished, or
+             | (Ex #i5. LtkRev( A ) @ i5 & i5 < i1 )
+
+             // (d) the adversary revealed the master key before test finished.
+             | (Ex #i5. MskRev() @ i5 & i5 < i1 )
+	   )
+      )
+
+    // 3. There is no matching session and
+    | (  (not (Ex matching #i3 role2.
+           ( Sid ( matching, <B,A,Y,X,role2>  ) @ i3 & not (role1 = role2))))
+
+        & (  
+          // (a) the adversary revealed the longterm key of test's peer, or
+            (Ex #i5. LtkRev( B ) @ i5)
+
+          // (b) the adversary revealed the longterm key of test's actor, or
+          | (Ex #i3. LtkRev(A) @ i3)
+          
+          // (c) the adversary revealed the master key.
+          | (Ex #i3. MskRev() @ i3)
+          )
+      )
+    )
+  )"
+#endif
+
+#ifdef attack
+
+lemma key_secrecy_PFS:
+  /* 
+   * We do not consider ephemeral key reveals for RYY
+   * 
+   * If there exists a test session whose key k is known to the
+   * Adversary with some session id, then...
+   */
+  "(All #i1 #i2 test A B X Y role1 k.
+    Accept(test, k) @ i1 & K( k ) @ i2 & Sid(test, <A,B,X,Y,role1>) @ i1
+    ==> ( 
+    // ... the test session must be "not clean".
+    // test is not clean if one of the following has happened:
+    //
+    // 1. The adversary has revealed the test's session key.
+      (Ex #i3. SesskRev( test ) @ i3 )
+
+    // 2. There is a matching session and
+    | (Ex matching #i3 role2.
+           ( Sid ( matching, <B,A,Y,X,role2>  ) @ i3 & not (role1 = role2))
+     & ( 
+             // (a) the adversary has revealed the session key of the matching sesssion, or
+         (Ex #i5. SesskRev( matching ) @ i5 )
+
+             // (b) the adversary revealed the longterm key of test's peer before test finished, or
+             | (Ex #i5. LtkRev( B ) @ i5 & i5 < i1)
+
+             // (c) the adversary revealed the longterm key of test's actor before test finished, or
+             | (Ex #i5. LtkRev( A ) @ i5 & i5 < i1 )
+
+             // (d) the adversary revealed the master key before test finished.
+             | (Ex #i5. MskRev() @ i5 & i5 < i1 )
+     )
+      )
+
+    // 3. There is no matching session and
+    | (  (not (Ex matching #i3 role2.
+           ( Sid ( matching, <B,A,Y,X,role2>  ) @ i3 & not (role1 = role2))))
+
+        & (  
+          // (a) the adversary revealed the longterm key of test's peer, or
+            (Ex #i3. LtkRev( B ) @ i3 & i3 < i1)
+
+          // (b) the adversary revealed the longterm key of test's actor, or
+          | (Ex #i3. LtkRev(A) @ i3 & i3 < i1)
+          
+          // (c) the adversary revealed the master key.
+          | (Ex #i3. MskRev() @ i3 & i3 < i1)
+          )
+      )
+    )
+  )"
+
+#endif
+
+
+end

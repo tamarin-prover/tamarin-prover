@@ -1,14 +1,9 @@
-theory joux_mpka_explicit_auth_privatefunc //based on: joux_mpka
+theory group_joux
 begin
-
-section{* *}
 
 /*
  * Protocol: Joux-based unauthenticated multi-party key agreement using ternary trees
  * Source:      Extending Joux's Protocol to Multi Party Key Agreement (Barua, Dutta, Sarkar)
- *              
- * Modeler: 	Ralf Sasse and Benedikt Schmidt
- * Date: 	March 2013
  *
  * Model:       authentic channels used
  * Status: 	working
@@ -16,16 +11,21 @@ section{* *}
 
 builtins: bilinear-pairing, multiset
 
-// LOADING THIS RAN OVER 85% OF 4GB MEMORY AND THUS STALLED - COULD NOT LOAD CURRENTLY.
 
-/* We use authentic channels, by private function symbols used for signing the messages.*/
-/* We use the private function symbol sk to model the longterm secret
-   key of an agent. For example, sk('A') is 'A's longterm secret key.
-   We also allow recipients to check who the sender was in the form of
-   matching for "m, sign(sk(A),m)" for expected sender A. */
-functions: sk/1 [private]
-functions: sign/2
+// the intruder is allowed to see all messages
+rule AuthChan:
+  [ !AuthChan(A, x) ]
+  -->
+  [ Out(x) ]
 
+/* ************************************************************* */
+/* We first show how the tree is generated for any number of     */
+/* participants. To see the actual protocol execution go below   */
+/* to the "Protocol starts here" marker.                         */
+/* ************************************************************* */
+
+/* ***************************************************************************************** */
+// TREE GENERATION FIRST:
 
 /* Determine group participants */
 rule GenerateParticipants_1: //Init:
@@ -202,21 +202,261 @@ rule GenerateGroup_0: //:
                 subGMS) // participant stores list of other participants, including self
   ]
 
+// TREE GENERATION ABOVE
+/* ***************************************************************************************** */
 
-/// ***************************************************************** ///
-/// ***************************************************************** ///
-/// ***************************************************************** ///
-/// *** TESTING THE ABOVE GENERATION BY THE FOLLOWING EXISTENTIAL *** ///
-/// *** LEMMAS, FOR BEST PERFORMANCE, DISABLE PROTOCOL BELOW      *** ///
-/// ***************************************************************** ///
-/// ***************************************************************** ///
-/// ***************************************************************** ///
 
-/*
+// Protocol starts here
+
+// Let us now define the protocol, there are 3 possible cases:
+// (i)   grouping of 3 participants, just use the regular joux's protocol 
+//         (<pass,A+B+C>)
+// (ii)  grouping of 2 participants, use joux where the first participant A
+//       creates 2 of the nonces
+//       (<pass,A,B>)
+// (iii) grouping of 1 participant, no protocol usage, just pass along 
+//       information of current key 
+//       (<pass,A>)
+
+    // Format of participant:
+    //*** Participant(num,                          // participant index
+    //***             A,                            // participant name
+    //***             resps+ <num, A> + generated,  // list of all participants
+    //***             ~gid,                         // group identifier
+    //***             pN,                           // number of passes needed
+    //***             1,                            // current pass number, initialized to 1 
+    //***             subGMS) // participant stores list of other participants, including self
+
+
+/* ************************************************************* */
+/* Rule to initialize each participant                           */
+/* ************************************************************* */
+
+rule PickNonce_0:
+  [ Fr(~ekA),
+    Participant(num, A, particList, ~gid, totalPassN, 1, GMS)
+  ]
+  --[ Secret(~ekA, // secret info 
+             A,    // set of participants this secret is shared with
+             ~gid, // group identifier
+             A)    // principal name
+  ]->
+  [ PReady(A,           // name 
+           ~ekA,        // nonce, will later on be the joint secret key at some pass level 
+           A,           // set of participants the current secret is shared with
+           ~gid,        // group identifier
+           totalPassN,  // number of total passes needed - maybe drop this, probably not needed
+           1,           // current pass number
+           GMS)         // group membership info
+  ]
+
+/* ************************************************************* */
+/* Additional transformation functions                           */
+/* ************************************************************* */
+
+// h: G_2 -> G_1, i.e., it transforms elements from G_2 back to 
+// elements of G_1 so we can perform another round of Joux
+functions: h/1
+
+// This one-way function is used to encode the recipient of a message - if we send all the pieces encapsulated by 'destination' in the clear, the amount of unnecessary case distinction and fruitless attempts of changing that by the adversary is too much. As it is an authentic channel anyway, the adversary cannot manipulate the destination.
+functions: destination/1
+
+/* ************************************************************* */
+/* Rules for participants of 3-member exchange: send and receive */
+/* ************************************************************* */
+
+rule SendGroup_3:
+  let hkA = pmult(h(secret) ,'P')
+  in
+  [ PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A+B+C>) 
+  ]
+  --[ ]->
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A+B+C>,
+           <B,A+C>,   // expecting message from here
+           <C,A+B>),  // and here
+    !Compute(A, <hkA, destination(currPassN, ~gid, B + C)> )
+  ]
+
+rule ComputeToAuthChan:
+  [ !Compute(A, <pmult(h(secret) , 'P'), destination(currPassN, ~gid, X)>) ]
+  --[ Secret(secret, 'nil', ~gid, A) ]-> // it *SHOULD* not matter for which group (2nd argument) this is secret, just that it IS secret
+  [ !AuthChan( A, <pmult(h(secret) , 'P'), destination(currPassN, ~gid, X)>) ]
+
+rule ReceiveGroup:
+  let newsecret = em(XB,XC)^ h(secret)
+      newSharedPartners = sharedPartners + B + C
+  in
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS,
+           <B,A+X1>,
+           <C,A+X2>),
+    !AuthChan(B, < XB, destination(currPassN, ~gid, A + X1)> ),
+    !AuthChan(C, < XC, destination(currPassN, ~gid, A + X2)> )
+  ]
+  --[ Secret(newsecret, newSharedPartners, ~gid, A)
+    ]->
+  [ PReady(A,
+           newsecret,
+           newSharedPartners,
+           ~gid, totalPassN, currPassN + 1, GMS)
+  ]
+
+/* ************************************************************* */
+/* Rules for participants of 2-member exchange, first the one    */
+/* doing the double work by creating etra dummy, then other one  */
+/*                                                               */
+/* Note that receiving is the same as in the 3-member case and   */
+/* thus covered by the rule given above                          */
+/* ************************************************************* */
+
+rule SendGroup_2_double:
+  let hkA = pmult(h(secret) ,'P')
+      dummy = pmult(h(~extra), 'P') // gratuitous hashing to keep the message format consistent
+  in
+  [ Fr(~extra),
+    PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A,B>) 
+  ]
+  --[ ]->
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A,B>,
+           <B,A+1>,
+           <A,B+A>),
+    !Compute(A, <hkA,   destination(currPassN, ~gid, B+1)> ),
+    !Compute(A, <dummy, destination(currPassN, ~gid, B+A)> )
+  ]
+
+rule SendGroup_2_single:
+  let hkA = pmult(h(secret) ,'P')
+  in
+  [ PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,B,A>) 
+  ]
+  --[ ]->
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,B,A>,
+           <B,A+B>,
+           <B,A+1>),
+    !Compute(A, <hkA,   destination(currPassN, ~gid, B+1)> )
+  
+]
+
+/* ************************************************************* */
+/* Rule for the degenerate case where a participant is the sole  */
+/* member at some level, so essentially the level just needs to  */
+/* be jumped over.                                               */
+/* ************************************************************* */
+ 
+// add a G1->G1 hash for StepOver1
+functions: hashGOne/1
+
+rule StepOver1:
+  let newsecret = hashGOne(secret)
+  in
+  [ PReady(A,                  // name 
+           secret,             // joint secret key 
+           sharedPartners,     // set of principals the secret is shared with
+           ~gid,               // group identifier
+           totalPassN,         // number of total passes needed - maybe drop this, probably not needed
+           currPassN,          // current pass number
+           GMS+<currPassN,A> ) // group membership info: A alone at this level
+  ]
+  --[Secret(newsecret, sharedPartners, ~gid, A)]->
+  [ PReady(A,       
+           newsecret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN+1,     // increase current pass number
+           GMS+<currPassN,A>) 
+  ]
+
+/* ************************************************************* */
+/* Secrecy lemma                                                 */
+/* ************************************************************* */
+
+lemma key_secrecy[use_induction]:
+  all-traces
+  "not (Ex #i1 I group gid key #i2.
+          Secret( key, group, gid, I ) @ i1 
+        & KU( key ) @ i2)"
+
+
+
+/* ************************************************************* */
+/* Executability lemma                                           */
+/* ************************************************************* */
+
+// run tamarin with -Dexecutable to include this lemma
+#ifdef executable
+
+lemma key_reachable_3:
+  exists-trace
+  "Ex A B C gid key #ia #ib #ic.
+         Secret(key, A+B+C, gid, A) @ ia
+       & Secret(key, A+B+C, gid, B) @ ib
+       & Secret(key, A+B+C, gid, C) @ ic
+       & not (A = B)
+       & not (A = C)
+       & not (B = C)
+"
+
+#endif
+
+
+/* **************************************************************** */
+/* Testing the tree generation before the comment                   */
+/* "TREE GENERATION ABOVE".                                         */
+/* **************************************************************** */
+
+// run tamarin with -Dgenerationtest to include these lemmas
+#ifdef generationtest
+
+/* **************************************************************** */
+/* In this part there are comments ahead of lemmas explaining how   */
+/* to manually prove the lemma.                                     */
+/* **************************************************************** */
 
 // pick D first, then fully solve before touching E; always pick the bottom rule application choice, and here is the cases to choose:
 // 4; 1
-// now on solving E, simply go throug, choice points are 1;1 
+// now on solving E, simply go through, choice points are 1;1 
 lemma create_2_participants:
   exists-trace
   "Ex D E #id #ie k.
@@ -297,215 +537,6 @@ lemma create_5_participants:
         not (D = E) 
        )"
 
-*/
-
-/// ***************************************************************** ///
-/// ***************************************************************** ///
-/// ***************************************************************** ///
-/// *** TESTING THE ABOVE GENERATION BY THE ABOVE EXISTENTIAL     *** ///
-/// *** LEMMAS, FOR BEST PERFORMANCE, DISABLE PROTOCOL BELOW      *** ///
-/// ***************************************************************** ///
-/// ***************************************************************** ///
-/// ***************************************************************** ///
-
-// Let us now define the protocol, there are 3 possible cases:
-// (i)   grouping of 3 participants, just use the regular joux's protocol 
-//         (<pass,A+B+C>)
-// (ii)  grouping of 2 participants, use joux where the first participant A
-//       creates 2 of the nonces
-//       (<pass,A,B>)
-// (iii) grouping of 1 participant, no protocol usage, just pass along 
-//       information of current key 
-//       (<pass,A>)
-
-    //*** Participant(num,                          // participant index
-    //***             A,                            // participant name
-    //***             resps+ <num, A> + generated,  // list of all participants
-    //***             ~gid,                         // group identifier
-    //***             pN,                           // number of passes needed
-    //***             1,                            // current pass number, initialized to 1 
-    //***             subGMS) // participant stores list of other participants, including self
-
-
-rule PickNonce_0:
-  [ Fr(~ekA),
-    Participant(num, A, particList, ~gid, totalPassN, 1, GMS)
-  ]
-  --[ Secret(~ekA, // secret info 
-             A,    // set of participants this secret is shared with
-             ~gid, // group identifier
-             A)    // principal name
-  ]->
-  [ PReady(A,           // name 
-           ~ekA,        // nonce, will later on be the joint secret key at some pass level 
-           A,           // set of participants the current secret is shared with
-           ~gid,        // group identifier
-           totalPassN,  // number of total passes needed - maybe drop this, probably not needed
-           1,           // current pass number
-           GMS)         // group membership info
-  ]
-
-
-// hash function - hides the content 
-// h: G_2 -> G_1, i.e., it transforms elements from G_2 back to 
-// elements of G_1 so we can perform another round of Joux
-functions: h/1
-
-// This one-way function is used to encode the recipient of a message - if we send all the pieces encapsulated by 'destination' in the clear, the amount of unnecessary case distinction and fruitless attempts of changing that by the adversary is too much - recall that we only have a passive adversary, so there is nothing it can do with this information anyway. 
-functions: destination/1
-
-rule SendGroup_3:
-  let hkA = pmult(h(secret) ,'P')
-  in
-  [ PReady(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,A+B+C>) 
-  ]
-  --[ ]->
-  [ PWaitResponse(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,A+B+C>,
-           <B,A+C>,   // expecting message from here
-           <C,A+B>),  // and here
-    !Compute(A, <hkA, destination(currPassN, ~gid, B + C)> )
-  ]
-
-rule ComputeToOut:
-  let mOut =  < A, pmult(h(secret) , 'P'), destination(currPassN, ~gid, X)>
-  in
-  [ !Compute(A, <pmult(h(secret) , 'P'), destination(currPassN, ~gid, X)>) ]
-  --[ Secret(secret, 'nil', ~gid, A) ]-> // it *SHOULD* not matter for which group (2nd argument) this is secret, just that it IS secret
-  [ Out(<sign(sk(A), mOut), mOut>) ]
-
-rule ReceiveGroup:
-  let newsecret = em(XB,XC)^ h(secret)
-      newSharedPartners = sharedPartners + B + C
-      mInB = < B, XB, destination(currPassN, ~gid, A + X1)> 
-      mInC = < C, XC, destination(currPassN, ~gid, A + X2)> 
-  in
-  [ PWaitResponse(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS,
-           <B,A+X1>,
-           <C,A+X2>),
-    In(< sign(sk(B), mInB), mInB >),
-    In(< sign(sk(C), mInC), mInC >)
-  ]
-  --[ Secret(newsecret, newSharedPartners, ~gid, A)
-    ]->
-  [ PReady(A,
-           newsecret,
-           newSharedPartners,
-           ~gid, totalPassN, currPassN + 1, GMS)
-  ]
-
-
-rule SendGroup_2_double:
-  let hkA = pmult(h(secret) ,'P')
-      dummy = pmult(h(~extra), 'P') // gratuitous hashing - needed for the message format in AuthOutToIn!
-  in
-  [ Fr(~extra),
-    PReady(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,A,B>) 
-  ]
-  --[ ]->
-  [ PWaitResponse(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,A,B>,
-           <B,A+1>,
-           <A,B+A>),
-    !Compute(A, <hkA,   destination(currPassN, ~gid, B+1)> ),
-    !Compute(A, <dummy, destination(currPassN, ~gid, B+A)> )
-  ]
-
-rule SendGroup_2_single:
-  let hkA = pmult(h(secret) ,'P')
-  in
-  [ PReady(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,B,A>) 
-  ]
-  --[ ]->
-  [ PWaitResponse(A,       
-           secret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN,   
-           GMS+<currPassN,B,A>,
-           <B,A+B>,
-           <B,A+1>),
-    !Compute(A, <hkA,   destination(currPassN, ~gid, B+1)> )
-  
-]
-
-// add a G1->G1 hash for StepOver1, to force the tool to actually evaluate and 
-// realize that the induction hypothesis can be applied, and thus the
-// secret stays secret - otherwise looping behavior was possible
-functions: hashGOne/1
-
-rule StepOver1:
-  let newsecret = hashGOne(secret)
-  in
-  [ PReady(A,                  // name 
-           secret,             // joint secret key 
-           sharedPartners,     // set of principals the secret is shared with
-           ~gid,               // group identifier
-           totalPassN,         // number of total passes needed - maybe drop this, probably not needed
-           currPassN,          // current pass number
-           GMS+<currPassN,A> ) // group membership info: A alone at this level
-  ]
-  --[Secret(newsecret, sharedPartners, ~gid, A)]->
-  [ PReady(A,       
-           newsecret,  
-           sharedPartners,
-           ~gid,   
-           totalPassN,
-           currPassN+1,     // increase current pass number
-           GMS+<currPassN,A>) 
-  ]
-
-
-lemma key_reachable_3:
-  exists-trace
-  "Ex A B C gid key #ia #ib #ic.
-         Secret(key, A+B+C, gid, A) @ ia
-       & Secret(key, A+B+C, gid, B) @ ib
-       & Secret(key, A+B+C, gid, C) @ ic
-       & not (A = B)
-       & not (A = C)
-       & not (B = C)
-"
-
-lemma key_secrecy[use_induction]:
-  all-traces
-  "not (Ex #i1 I group gid key #i2.
-          Secret( key, group, gid, I ) @ i1 
-        & KU( key ) @ i2)"
+#endif
 
 end

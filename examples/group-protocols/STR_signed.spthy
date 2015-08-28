@@ -1,18 +1,5 @@
-theory STR_explicit_auth_pki // based on: _privatefunc // based on: ml_authentic_channel_2args_intruder_can_corrupt_rulenamechange
+theory STR_signed // based on: ml_authentic_channel_2args_intruder_can_corrupt_rulenamechange
 begin
-
-section{* *}
-
-/*
- * Protocol: STR with explicit authentication, using a PKI
- * Source:      Communication-Efficient Group Key Agreement
- *              
- * Modeler: 	
- * Date: 	
- *
- * Model:       
- * Status: 	
- */
 
 builtins: diffie-hellman, multiset
 
@@ -20,25 +7,12 @@ functions: blindedRandomOf/1, blindedKeyFor/1
 functions: te/1, te_inv/1  // convert group element to exponent
 equations: te_inv(te(x)) = x // te is not hiding
 
-
-functions: verify/3, sign/2, pk/1, true/0
-equations: verify(sign(sk, m), m, pk(sk)) = true
-
-// Public key infrastructure
-rule Register_pk:
-  [ Fr(~ltk) ] 
-  --> 
-  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
-
-rule Get_pk:
-  [ !Pk(A, pk) ] 
-  --> 
-  [ Out(pk) ]
-
-rule Reveal_ltk:
-    [ !Ltk(A, ltk) ]
-  --[ LtkReveal(A) ]->
-    [ Out(ltk) ]
+/* We use the private function symbol sk to model the longterm secret
+   key of an agent. For example, sk('A') is 'A's longterm secret key.
+   We also allow recipients to check who the sender was in the form of
+   matching for "m, sign(sk(A),m)" for expected sender A. */
+functions: sk/1 [private]
+functions: sign/2
 
 
 /* Determine group participants */
@@ -97,20 +71,18 @@ rule Responder_0: //:
   let mOut = < blindedRandomOf(j,~gid), 'g'^~r >
   in 
   [ Responder($R1, $I, j, below, above, ~gid)
-  , Fr(~r) 
-  , !Ltk($R1, ltkR1)]
+  , Fr(~r) ]
   -->
-  [ Out(< sign(ltkR1, mOut), mOut > )
+  [ Out(< sign(sk($R1), mOut), mOut > )
   , ResponderBRSent($R1, $I, j, below + <j,$R1>, above, ~gid, ~r) ]
 
 rule Responder_1: //BKRecv:
   let mIn = < blindedKeyFor(j,~gid), bk >
   in
   [ ResponderBRSent($R1, $I, j, below, above, ~gid, ~r)
-  , !Pk($I, pkI)
-  , In(< SIG, mIn > )
+  , In(< sign(sk($I), mIn), mIn > )
   ]
-  --[ Eq(verify(SIG, mIn, pkI), true) ]->
+  -->
   [ ResponderLoop( $R1
                  , $I
                  , j      // index of $R1 in list
@@ -125,11 +97,9 @@ rule Responder_2: //Loop:
     let mIn  = < blindedRandomOf(k, ~gid), br >
     in
     [ ResponderLoop( $R1, $I, j, k, below, <k, $R2> + above, ~gid, key )
-    , !Pk($R2, pkR2)
-    , In(< SIG, mIn >  ) 
+    , In(< sign(sk($R2), mIn), mIn >  ) 
     ]
-    --[ IKey( $R1, below + <'zero',$I>, ~gid, key ) 
-      , Eq(verify(SIG, mIn, pkR2), true)]->
+    --[ IKey( $R1, below + <'zero',$I>, ~gid, key ) ]->
     [ ResponderLoop($R1, $I, j, k + 1, <k, $R2> + below, above, ~gid, br ^ te(key)) ]
 
 rule Responder_3: //Done:
@@ -145,18 +115,16 @@ rule Initiator_0: //:
       mOut = < blindedKeyFor(1, ~gid), 'g'^~r> 
   in
   [ Initiator($I, resps + <1,$R1>, ~gid)
-  , Fr(~r) 
-  , !Ltk($I, ltkI)
-  , !Pk($R1, pkR1)
-  , In(< SIG, mIn > ) ]
-  --[ Eq(verify(SIG, mIn, pkR1), true) ]->
+  , Fr(~r)
+  , In(< sign(sk($R1), mIn), mIn > ) ]
+  -->
   [ InitiatorLoop( $I
                  , 1 + 1            // index of first not-done
                  , <1,$R1> + 'nil'  // done
                  , resps            // not-done
                  , ~gid
                  , key)
-  , Out(< sign(ltkI, mOut), mOut > ) ]
+  , Out(< sign(sk($I), mOut), mOut > ) ]
 
 rule Initiator_1: //Loop:
   let newkey = br^te(key) // here, key is a group element and has to be converted to
@@ -164,13 +132,9 @@ rule Initiator_1: //Loop:
       mOut = < blindedKeyFor(j, ~gid), 'g'^te(key)>
   in
   [ InitiatorLoop($I, j, handled, <j,$R1> + notHandled, ~gid, key)
-  , !Ltk($I, ltkI)
-  , !Pk($R1, pkR1)
-  , In(< SIG, mIn >  ) ]
-  --[ IKey($I, handled + <'zero',$I>, ~gid, key )
-    , Eq(verify(SIG, mIn, pkR1), true) 
-    , CheckReachable3Participants($I) ]->
-  [ Out(< sign(ltkI, mOut), mOut > )
+  , In(< sign(sk($R1), mIn), mIn >  ) ]
+  --[ IKey($I, handled + <'zero',$I>, ~gid, key ) ]->
+  [ Out(< sign(sk($I), mOut), mOut > )
   , InitiatorLoop($I, j + 1, <j,$R1> + handled, notHandled, ~gid, newkey) ]
 
 rule Initiator_2: //Done:
@@ -179,6 +143,25 @@ rule Initiator_2: //Done:
     , IKey($I, handled + <'zero',$I>, ~gid, key )
   ]-> []
 
+rule IntruderCorrupts:
+  [] 
+  --[Corrupt($A)]-> 
+  [Out(sk($A))]
+
+#ifdef secure
+lemma key_secrecy_with_corruption[use_induction]:
+  all-traces
+  "(All #i1 I group gid key #i2.
+          IKey( I,  group, gid, key ) @ i1 
+        & KU( key ) @ i2
+   ==> Ex A indexA others #i3. 
+             (Corrupt(A) @ i3
+            & i3 < i1
+            & others + <indexA, A> = group))"
+
+#endif
+
+#ifdef executable
 
 lemma key_reachable_2:
   exists-trace
@@ -186,19 +169,9 @@ lemma key_reachable_2:
          Key(I,  <'zero', I> + <1, R1> + 'nil', gid, key ) @ i1
        & Key(R1, <'zero', I> + <1, R1> + 'nil', gid, key ) @ i2
        & not (I = R1)
-       & not (Ex A #i5. LtkReveal(A) @ i5) 
-       & (All #i x y. Eq(x,y)@i ==> x = y)
+       & not (Ex A #i5. Corrupt(A) @ i5) 
 "
 
-// This sanity check takes 6 minutes already! 
-lemma checkReachable3ParticipantsFromInitiator:
-  exists-trace
-  "Ex #i0 I.
-         CheckReachable3Participants(I) @ i0
-       & not (Ex A #i5. LtkReveal(A) @ i5) 
-       & (All #i x y. Eq(x,y)@i ==> x = y)
-"
-// 33 minute runtime!
 lemma key_reachable_3:
   exists-trace
   "Ex #i1 I R1 R2 gid key #i2 #i3.
@@ -208,8 +181,7 @@ lemma key_reachable_3:
        & not (I = R1)
        & not (R1 = R2)
        & not (I = R2)
-       & not (Ex A #i5. LtkReveal(A) @ i5) 
-       & (All #i x y. Eq(x,y)@i ==> x = y)
+       & not (Ex A #i5. Corrupt(A) @ i5) 
 "
 
 lemma key_reachable_4:
@@ -225,8 +197,7 @@ lemma key_reachable_4:
        & not (I = R3)
        & not (R1 = R3)
        & not (R2 = R3)
-       & not (Ex A #i5. LtkReveal(A) @ i5) 
-       & (All #i x y. Eq(x,y)@i ==> x = y)
+       & not (Ex A #i5. Corrupt(A) @ i5) 
 " 
 
 lemma key_reachable_5:
@@ -247,19 +218,9 @@ lemma key_reachable_5:
        & not (R1 = R4)
        & not (R2 = R4)
        & not (R3 = R4)
-       & not (Ex A #i6. LtkReveal(A) @ i6) 
-       & (All #i x y. Eq(x,y)@i ==> x = y)
+       & not (Ex A #i6. Corrupt(A) @ i6) 
 " 
 
-//finishes in 11 minutes
-lemma key_secrecy_with_corruption[use_induction]:
-  all-traces
-  "(All #i1 I group gid key #i2.
-          IKey( I,  group, gid, key ) @ i1 
-        & KU( key ) @ i2
-       & (All #i x y. Eq(x,y)@i ==> x = y) 
-   ==> Ex A #i3. (LtkReveal(A) @ i3
-               & i3 < i1))"
-
+#endif
 
 end
