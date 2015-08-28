@@ -40,7 +40,7 @@ http://tamarin-prover.github.io
 Manual
 ------
 
-The manual is `data/doc/MANUAL`. It is part of every installation of the
+The manual is [`/doc/MANUAL.md`](/doc/MANUAL.md). It is part of every installation of the
 Tamarin prover.
 
 
