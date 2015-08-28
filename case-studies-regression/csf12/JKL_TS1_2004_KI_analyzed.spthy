@@ -165,17 +165,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/JKL_TS1_2004_KI.spthy
+analyzing: examples/csf12/JKL_TS1_2004_KI.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
+analyzed: examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.269725s
+  processing time: 0.313468s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 
@@ -184,10 +184,10 @@ analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/JKL_TS1_2004_KI.spthy
+analyzed: examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.269725s
+  processing time: 0.313468s
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
 

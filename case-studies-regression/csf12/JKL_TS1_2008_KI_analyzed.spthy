@@ -103,35 +103,35 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, ~ekI ) ▶₀ #i1 )
     case generate_ltk
     solve( !KU( h(<$I, $R, ~ekI, hkR, 'g'^(~lkI*~lkR)>) ) @ #vk.1 )
       case Sessk_reveal_case_1
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Sessk_reveal_case_2
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Sessk_reveal_case_3
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Sessk_reveal_case_4
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case ch
       solve( !KU( 'g'^(~lkI*~lkR) ) @ #vk.9 )
         case cexp
         solve( !KU( ~lkI ) @ #vk.12 )
           case Ltk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       next
         case generate_ltk_case_1
         solve( !KU( ~lkI ) @ #vk.10 )
           case Ltk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       next
         case generate_ltk_case_2
         solve( !KU( ~lkR ) @ #vk.10 )
           case Ltk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -170,35 +170,35 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
     case generate_ltk
     solve( !KU( h(<$I, $R, hkI, ~ekR, 'g'^(~lkI*~lkR)>) ) @ #vk.1 )
       case Sessk_reveal_case_1
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Sessk_reveal_case_2
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Sessk_reveal_case_3
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case Sessk_reveal_case_4
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case ch
       solve( !KU( 'g'^(~lkI*~lkR) ) @ #vk.9 )
         case cexp
         solve( !KU( ~lkI ) @ #vk.12 )
           case Ltk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       next
         case generate_ltk_case_1
         solve( !KU( ~lkI ) @ #vk.10 )
           case Ltk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       next
         case generate_ltk_case_2
         solve( !KU( ~lkR ) @ #vk.10 )
           case Ltk_reveal
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -210,17 +210,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/JKL_TS1_2008_KI.spthy
+analyzing: examples/csf12/JKL_TS1_2008_KI.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/JKL_TS1_2008_KI.spthy
+analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.384309s
+  processing time: 0.320362s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 
@@ -229,10 +229,10 @@ analyzed: data/examples/csf12/JKL_TS1_2008_KI.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/JKL_TS1_2008_KI.spthy
+analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.384309s
+  processing time: 0.320362s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 

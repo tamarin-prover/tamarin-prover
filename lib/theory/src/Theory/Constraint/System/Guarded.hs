@@ -4,6 +4,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -35,6 +36,7 @@ module Theory.Constraint.System.Guarded (
 
   -- ** Transformation
   , simplifyGuarded
+  , simplifyGuardedOrReturn
 
   , mapGuardedAtoms
 
@@ -52,6 +54,7 @@ module Theory.Constraint.System.Guarded (
 
   -- ** Conversions to non-bound representations
   , bvarToLVar
+--  , unbindAtom
   , openGuarded
 
   -- ** Substitutions
@@ -59,6 +62,18 @@ module Theory.Constraint.System.Guarded (
   , substBoundAtom
   , substFree
   , substFreeAtom
+
+  -- ** Skolemization
+
+  , unskolemizeLNGuarded
+  , applySkGuarded
+  , skolemizeGuarded
+  , skolemizeTerm
+  , skolemizeFact
+  , matchAction
+  , matchTerm
+  , applySkAction
+  , applySkTerm
 
   -- ** Pretty-printing
   , prettyGuarded
@@ -74,6 +89,7 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise (Fresh, evalFresh, 
 
 import           Debug.Trace
 
+import           Data.Data
 import           Data.Binary
 import           Data.DeriveTH
 import           Data.Either                      (partitionEithers)
@@ -146,18 +162,18 @@ guardFactTags =
 
 
 -- | Atoms that are allowed as guards.
-data GAtom t = GEqE (t,t) | GAction (t,Fact t)
+data GAtom t = GEqE t t | GAction t (Fact t)
     deriving (Eq, Show, Ord)
 
 isGAction :: GAtom t -> Bool
-isGAction (GAction _) = True
-isGAction _           = False
+isGAction (GAction _ _) = True
+isGAction _             = False
 
 -- | Convert 'Atom's to 'GAtom's, if possible.
 atomToGAtom :: Show t => Atom t -> GAtom t
 atomToGAtom = conv
-  where conv (EqE s t)     = GEqE (s,t)
-        conv (Action i f)  = GAction (i,f)
+  where conv (EqE s t)     = GEqE s t
+        conv (Action i f)  = GAction i f
         conv a             = error $ "atomsToGAtom: "++ show a
                                  ++ "is not a guarded atom."
 
@@ -295,6 +311,12 @@ bvarToLVar =
   where
     boundError v = error $ "bvarToLVar: left-over bound variable '"
                            ++ show v ++ "'"
+
+-- | Assuming that there are no more bound variables left in an atom of a
+-- formula, convert it to an atom with free variables only.
+--bvarToMaybeLVar :: Ord c => Atom (VTerm c (BVar LVar)) -> Maybe (Atom (VTerm c LVar))
+--bvarToMaybeLVar =
+--    fmap (fmapTerm (fmap (foldBVar ??? id)))
 
 -- | Provided an 'Atom' does not contain a bound variable, it is converted to
 -- the type of atoms without bound varaibles.
@@ -478,10 +500,10 @@ formulaToGuarded fmOrig =
         remainingUnguarded ug0 atoms =
             go ug0 (sortGAtoms . map atomToGAtom $ atoms)
           where go ug []                       = ug
-                go ug ((GAction a) :gatoms) = go (ug \\ frees a) gatoms
+                go ug ((GAction a fa) :gatoms) = go (ug \\ frees (a, fa)) gatoms
                 -- FIXME: We do not consider the terms, e.g., for ug=[x,y],
                 -- s=pair(x,a), and t=pair(b,y), we could define ug'=[].
-                go ug ((GEqE (s,t)):gatoms) = go ug' gatoms
+                go ug ((GEqE s t):gatoms)  = go ug' gatoms
                   where ug' | covered s ug = ug \\ frees t 
                             | covered t ug = ug \\ frees s
                             | otherwise    = ug
@@ -608,13 +630,28 @@ simplifyGuarded valuation fm0
     | fm1 /= fm0 = trace (render ppMsg) (Just fm1)
     | otherwise  = Nothing
   where
+    fm1 = simplifyGuardedOrReturn valuation fm0
     ppFm  = nest 2 . doubleQuotes . prettyGuarded
     ppMsg = nest 2 $ text "simplified formula:" $-$
                      nest 2 (vcat [ ppFm fm0, text "to", ppFm fm1])
 
+-- | Simplify a 'Guarded' formula by replacing atoms with their truth value,
+-- if it can be determined. If nothing is simplified, returns the initial formula.
+simplifyGuardedOrReturn :: (LNAtom -> Maybe Bool)
+                        -- ^ Partial assignment for truth value of atoms.
+                        -> LNGuarded
+                        -- ^ Original formula
+                        -> LNGuarded
+                        -- ^ Simplified formula.
+simplifyGuardedOrReturn valuation fm0 = {-trace (render ppMsg)-} fm1
+  where
+--     ppFm  = nest 2 . doubleQuotes . prettyGuarded
+--     ppMsg = nest 2 $ text "simplified formula:" $-$
+--                      nest 2 (vcat [ ppFm fm0, text "to", ppFm fm1])
+
     fm1 = simp fm0
 
-    simp fm@(GAto ato)         = maybe fm gtf (valuation =<< unbindAtom ato)
+    simp fm@(GAto ato)         = maybe fm gtf {-(trace (show (valuation =<< unbindAtom ato))-} (valuation =<< unbindAtom ato){-)-}
     simp (GDisj fms)           = gdisj $ map simp $ getDisj fms
     simp (GConj fms)           = gconj $ map simp $ getConj fms
     simp (GGuarded All [] atos gf)
@@ -627,7 +664,7 @@ simplifyGuarded valuation fm0
           gall [] (fst <$> filter ((Nothing ==) . snd) annAtos) (simp gf)
       where
         -- cache the possibly expensive evaluation of the valuation
-        annAtos = (\x -> (x, valuation =<< unbindAtom x)) <$> atos
+        annAtos = (\x -> (x, {-(trace (show (valuation =<< unbindAtom x))-} (valuation =<< unbindAtom x){-)-})) <$> atos
 
     -- Note that existentials without quantifiers are already eliminated by
     -- 'gex'. Moreover, we delay simplification inside guarded all
@@ -635,6 +672,124 @@ simplifyGuarded valuation fm0
     -- simplified once the quantifiers are gone.
     simp fm@(GGuarded _ _ _ _) = fm
 
+
+------------------------------------------------------------------------------
+-- Terms, facts, and formulas with skolem constants
+------------------------------------------------------------------------------
+
+-- | A constant type that supports names and skolem constants. We use the
+-- skolem constants to represent fixed free variables from the constraint
+-- system during matching the atoms of a guarded clause to the atoms of the
+-- constraint system.
+data SkConst = SkName  Name
+             | SkConst LVar
+             deriving( Eq, Ord, Show, Data, Typeable )
+
+type SkTerm    = VTerm SkConst LVar
+type SkFact    = Fact SkTerm
+type SkSubst   = Subst SkConst LVar
+type SkGuarded = LGuarded SkConst
+
+-- | A term with skolem constants and bound variables
+type BSkTerm   = VTerm SkConst BLVar
+
+-- | An term with skolem constants and bound variables
+type BSkAtom   = Atom BSkTerm
+
+instance IsConst SkConst
+
+
+-- Skolemization of terms without bound variables.
+--------------------------------------------------
+
+skolemizeTerm :: LNTerm -> SkTerm
+skolemizeTerm = fmapTerm conv
+ where
+  conv :: Lit Name LVar -> Lit SkConst LVar
+  conv (Var v) = Con (SkConst v)
+  conv (Con n) = Con (SkName n)
+
+skolemizeFact :: LNFact -> Fact SkTerm
+skolemizeFact = fmap skolemizeTerm
+
+skolemizeAtom :: BLAtom -> BSkAtom
+skolemizeAtom = fmap skolemizeBTerm
+
+skolemizeGuarded :: LNGuarded -> SkGuarded
+skolemizeGuarded = mapGuardedAtoms (const skolemizeAtom)
+
+applySkTerm :: SkSubst -> SkTerm -> SkTerm
+applySkTerm subst t = applyVTerm subst t
+
+applySkFact :: SkSubst -> SkFact -> SkFact
+applySkFact subst = fmap (applySkTerm subst)
+
+applySkAction :: SkSubst -> (SkTerm,SkFact) -> (SkTerm,SkFact)
+applySkAction subst (t,f) = (applySkTerm subst t, applySkFact subst f)
+
+
+-- Skolemization of terms with bound variables.
+-----------------------------------------------
+
+skolemizeBTerm :: VTerm Name BLVar -> BSkTerm
+skolemizeBTerm = fmapTerm conv
+ where
+  conv :: Lit Name BLVar -> Lit SkConst BLVar
+  conv (Var (Free x))  = Con (SkConst x)
+  conv (Var (Bound b)) = Var (Bound b)
+  conv (Con n)         = Con (SkName n)
+
+unskolemizeBTerm :: BSkTerm -> VTerm Name BLVar
+unskolemizeBTerm t = fmapTerm conv t
+ where
+  conv :: Lit SkConst BLVar -> Lit Name BLVar
+  conv (Con (SkConst x)) = Var (Free x)
+  conv (Var (Bound b))   = Var (Bound b)
+  conv (Var (Free v))    = error $ "unskolemizeBTerm: free variable " ++
+                                   show v++" found in "++show t
+  conv (Con (SkName n))  = Con n
+
+unskolemizeBLAtom :: BSkAtom -> BLAtom
+unskolemizeBLAtom = fmap unskolemizeBTerm
+
+unskolemizeLNGuarded :: SkGuarded -> LNGuarded
+unskolemizeLNGuarded = mapGuardedAtoms (const unskolemizeBLAtom)
+
+applyBSkTerm :: SkSubst -> VTerm SkConst BLVar -> VTerm SkConst BLVar
+applyBSkTerm subst =
+    go
+  where
+    go t = case viewTerm t of
+      Lit l     -> applyBLLit l
+      FApp o as -> fApp o (map go as)
+
+    applyBLLit :: Lit SkConst BLVar -> VTerm SkConst BLVar
+    applyBLLit l@(Var (Free v)) =
+        maybe (lit l) (fmapTerm (fmap Free)) (imageOf subst v)
+    applyBLLit l                = lit l
+
+applyBSkAtom :: SkSubst -> Atom (VTerm SkConst BLVar) -> Atom (VTerm SkConst BLVar)
+applyBSkAtom subst = fmap (applyBSkTerm subst)
+
+applySkGuarded :: SkSubst -> LGuarded SkConst -> LGuarded SkConst
+applySkGuarded subst = mapGuardedAtoms (const $ applyBSkAtom subst)
+
+-- Matching
+-----------
+
+matchAction :: (SkTerm, SkFact) ->  (SkTerm, SkFact) -> WithMaude [SkSubst]
+matchAction (i1, fa1) (i2, fa2) =
+    solveMatchLTerm sortOfSkol (i1 `matchWith` i2 <> fa1 `matchFact` fa2)
+  where
+    sortOfSkol (SkName  n) = sortOfName n
+    sortOfSkol (SkConst v) = lvarSort v
+
+matchTerm :: SkTerm ->  SkTerm -> WithMaude [SkSubst]
+matchTerm s t =
+    solveMatchLTerm sortOfSkol (s `matchWith` t)
+  where
+    sortOfSkol (SkName  n) = sortOfName n
+    sortOfSkol (SkConst v) = lvarSort v
 
 ------------------------------------------------------------------------------
 -- Pretty Printing

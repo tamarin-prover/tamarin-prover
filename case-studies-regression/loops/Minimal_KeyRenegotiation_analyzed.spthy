@@ -57,7 +57,7 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 next
   case non_empty_trace
   simplify
@@ -71,7 +71,7 @@ next
           case Send
           solve( Receiver( k0 ) ▶₀ #i )
             case Receive
-            by contradiction // from formulas
+            by contradiction /* from formulas */
           next
             case Setup
             by solve( !KU( ~k ) @ #vk.1 )
@@ -79,7 +79,7 @@ next
         qed
       next
         case csenc
-        by contradiction // node #i after last node #j
+        by contradiction /* node #i after last node #j */
       qed
     next
       case Send
@@ -87,7 +87,7 @@ next
         case Send
         solve( Sender( k0 ) ▶₀ #i )
           case Send
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case Setup
           by solve( !KU( ~k ) @ #vk )
@@ -105,7 +105,7 @@ next
         case csenc
         solve( Receiver( k0 ) ▶₀ #i )
           case Receive
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case Setup
           by solve( !KU( ~k ) @ #vk.1 )
@@ -115,7 +115,7 @@ next
       case Send
       solve( !KU( ~k ) @ #j )
         case Send
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     qed
   qed
@@ -126,17 +126,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/loops/Minimal_KeyRenegotiation.spthy
+analyzing: examples/loops/Minimal_KeyRenegotiation.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
+analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.113412s
+  processing time: 0.111309s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 
@@ -145,10 +145,10 @@ analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/loops/Minimal_KeyRenegotiation.spthy
+analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.113412s
+  processing time: 0.111309s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 

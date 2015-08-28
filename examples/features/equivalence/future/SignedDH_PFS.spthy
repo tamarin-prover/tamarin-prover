@@ -1,0 +1,168 @@
+theory SignedDH_PFS
+begin
+
+section{* The Signed Diffie-Hellman Protocol *}
+
+/*
+ * Protocol:	Signed Diffie-Hellman, extended for ObsEq
+ * Modeler: 	Simon Meier, Benedikt Schmidt; extension by Jannik Dreier, Ralf Sasse
+ * Date: 	January 2012; extended April 2015
+ *
+ * Status: 	working; ???
+ */
+
+builtins: diffie-hellman, signing
+functions: h/1
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltk) ] 
+--[ Register($A) ]-> 
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+
+rule Get_pk:
+  [ !Pk(A, pk) ] 
+  --> 
+  [ Out(pk) ]
+
+rule Reveal_ltk:
+    [ !Ltk(A, ltk) ]
+  --[ LtkReveal(A) ]->
+    [ Out(ltk) ]
+
+// Protocol
+rule Init_1:
+  [ Fr(~ekI), !Ltk($I, ltkI) ]
+  -->
+  [ Init_1( $I, $R, ~ekI )
+  , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', $I, $R,'g' ^ ~ekI }ltkI> ) ]
+
+rule Init_2:
+    let Y = 'g' ^ z // think of this as a group element check
+    in
+    [ Init_1( $I, $R, ~ekI )
+    , !Pk($R, pk(ltkR))
+    , In( <$R, $I, Y, sign{'2', $R, $I, Y }ltkR> ) 
+    ]
+  --[ SessionKey($I,$R, Y ^ ~ekI)
+    , ExpR(z) 
+    ]->
+    [ InitiatorKey($I,$R, Y ^ ~ekI) ]
+
+rule Resp:
+    let X = 'g' ^ z // think of this as a group element check
+    in
+    [ !Pk($I, pk(ltkI))
+    , !Ltk($R, ltkR)
+    , Fr(~ekR)
+    , In( <$I, $R, X, sign{'1', $I, $R, X }ltkI> ) 
+    ]
+  --[ SessionKey($I,$R, X ^ ~ekR)
+    , ExpR(z) ]->
+    [
+      ResponderKey($I,$R, X ^ ~ekR)
+    , Out( <$R, $I, 'g' ^ ~ekR, sign{'2', $R, $I, 'g' ^ ~ekR }ltkR> ) 
+    ]
+
+
+rule ChallengeInitiator:
+    [ InitiatorKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R) ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+rule ChallengeResponder:
+    [ ResponderKey(I,R, k) , Fr(~z)]
+  --[ Challenge(I,R) ]->
+    [ Out(diff(k,'g'^~z)) ]
+//    [ Out(diff(k,~z)) ]
+// the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
+
+
+/*
+// do not represent any element as "inv(x)", rather use the y=inv(x)
+// for this lemma to hold, we need to exclude reveal of the LTK that is used to authenticate the incoming message
+lemma No_Inv_exp[use_induction,reuse,typing]:
+  all-traces
+  "not ((Ex #i x. ExpR( inv(x) ) @ i) | (Ex #i x y. ExpR( x * inv(y) ) @ i))"
+*/
+
+/*
+//// OLD STUFF BASED ON JUST SIGNING SOMETHING TO AVOID CHAINS - FOUND ANOTHER WAY AROUND THAT NOW...
+rule ChallengeInitiator:
+    [ InitiatorKey($I,$R, k) , Fr(~z) , In(~c)]
+  --[ Challenge($I,$R) ]->
+    [ Out(diff(sign{'challenge', ~c}k,sign{'challenge', ~c}~z)) ]
+
+rule ChallengeResponder:
+    [ ResponderKey($I,$R, k) , Fr(~z) , In(~c)]
+  --[ Challenge($I,$R) ]->
+    [ Out(diff(sign{'challenge', ~c}k, sign{'challenge', ~c}~z)) ]
+*/
+
+
+lemma Perfect_Forward_Secrecy:
+  "All I R sessKey #i #k. 
+     SessionKey(I,R,sessKey) @ i &
+     K(sessKey) @ k
+     ==>
+     ( (Ex #r. LtkReveal(I) @ r & r < i)
+     | (Ex #r. LtkReveal(R) @ r & r < i)
+     )
+  "
+
+axiom singleChallenge:
+  "All I R I2 R2 #j #j2. Challenge(I, R)@j & Challenge(I2, R2)@ j2 ==> #j = #j2"
+
+// Note that these axioms are only for observational equivalence, comment them out for trace properties!
+//axiom NoChallengeAndRevealInitiatorBefore:
+//  "not (Ex I R #i #k. Challenge(I, R)@i & LtkReveal(I)@k & k < i)"
+
+//axiom NoChallengeAndRevealResponder:
+//  "not (Ex I R #i #k. Challenge(I, R)@i & LtkReveal(R)@k & k < i)"
+
+axiom CombinedStuff:
+  "All I R #i. 
+     Challenge(I,R) @ i 
+     ==>
+     not ( (Ex #r. LtkReveal(I) @ r & r < i)
+         | (Ex #r. LtkReveal(R) @ r & r < i)
+         )
+  "
+
+// seems not helpful, ignore
+//axiom OneLongTermKeyPerAgent:
+//  "All A #i #j. Register(A) @ i & Register(A) @ j ==> #i = #j"
+
+/**** OLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLD
+Current state of the diff-proof based on OLD STUFF:
+
+Challenge Initiator  CHECK
+Challenge Responder  CHECK
+Exp	  	     manual proof possible
+Fst		     manual proof like that for Exp
+Inv		     CHECK
+Snd		     long ? probably like exp
+Get_pk		     CHECK
+Init1		     CHECK
+Init2		     long ? 
+Register_pk	     CHECK
+Resp		     ?
+Reveal_ltk	     CHECK
+
+
+IEqualityRule
+  LHS
+   Init1 
+     at one 'cexp' pick the x^x1 instead of x
+   Resp
+     cpair (fairly deep) there is an 'x' and 3 public vars $I, $R, '1' -> need to solve the public ones first (can use auto in coerce, manual in pub)
+     cpair -> init1_case_1: same
+
+   LOOPING behavior (and ever-larger trees) are possible, based on repeated Responder instances with unrelated public keys 
+   this is likely due to our axiom only prohibiting LTK-reveals for the challenge not for whenever keys are already available
+
+****/
+
+end

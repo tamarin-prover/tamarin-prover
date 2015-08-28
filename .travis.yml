@@ -1,0 +1,40 @@
+# Adapted from https://github.com/commercialhaskell/all-cabal-hashes-tool/blob/master/.travis.yml
+sudo: false
+language: haskell
+
+# selected by stack for us - ignore
+env:
+#  - GHCVER=7.8.4
+#  - GHCVER=head
+
+  
+cache:
+  directories:
+  - $HOME/.stack
+  
+matrix:
+  allow_failures:
+#    - env: GHCVER=7.8.4
+#    - env: GHCVER=head
+
+addons:
+  apt:
+    packages:
+    - libgmp-dev
+
+before_install:
+#Install 'stack'
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://github.com/commercialhaskell/stack/releases/download/v0.1.3.1/stack-0.1.3.1-x86_64-linux.gz | gunzip > ~/.local/bin/stack
+- chmod a+x ~/.local/bin/stack
+- stack --no-terminal setup
+
+install:
+  # pre-build 'mwc-random' and 'SHA' as otherwise Travis CI sometimes runs out of memory
+  - stack build mwc-random SHA -j 1
+  - stack install
+
+#overwrite the Travis CI default test script executed at the end of a build, find something more useful here!
+script:
+  - echo 1

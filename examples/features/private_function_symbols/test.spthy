@@ -1,0 +1,24 @@
+theory privateFunctionTest
+begin
+
+/*
+ * Protocol:     Test whether private functions are treated correctly
+ * Modeler:      Jannik Dreier and Ralf Sasse
+ * Described in: 
+ * Date:         July 2015
+ *
+ * Status:       ?
+ */
+
+
+functions: f/0 [private]
+
+rule Test: 
+  [ ]
+  --[ ]->
+  [ Out(f) ]
+
+lemma secretF:
+  "All #i. K(f) @ i ==> F"
+  
+end

@@ -71,8 +71,8 @@ sigpMaudeSig:: SignaturePure L.:-> MaudeSig
 sigpMaudeSig = sigMaudeInfo
 
 -- | The empty pure signature.
-emptySignaturePure :: SignaturePure
-emptySignaturePure = Signature minimalMaudeSig
+emptySignaturePure :: Bool -> SignaturePure
+emptySignaturePure flag = Signature (minimalMaudeSig flag)
 
 -- Instances
 ------------
@@ -86,7 +86,7 @@ instance Binary SignaturePure where
     get     = Signature <$> get
 
 instance NFData SignaturePure where
-    rnf (Signature y) = rnf y
+  rnf (Signature y) = rnf y
 
 ------------------------------------------------------------------------------
 -- Signatures with an attached Maude process

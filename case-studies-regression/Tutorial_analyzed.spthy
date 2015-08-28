@@ -91,7 +91,7 @@ solve( Client_1( S, k ) ▶₀ #i )
     case Client_1
     solve( !KU( ~ltk ) @ #vk.2 )
       case Reveal_ltk
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     qed
   qed
 qed
@@ -117,14 +117,14 @@ solve( Client_1( S, k ) ▶₀ #i )
     case Serv_1
     solve( !KU( aenc(<'1', ~k>, pk(~ltkS)) ) @ #vk.1 )
       case Client_1
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case caenc
       solve( !KU( ~k ) @ #vk.5 )
         case Client_1
         solve( !KU( ~ltk ) @ #vk.6 )
           case Reveal_ltk
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -134,7 +134,7 @@ solve( Client_1( S, k ) ▶₀ #i )
       case Client_1
       solve( !KU( ~ltk ) @ #vk.2 )
         case Reveal_ltk
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     qed
   qed
@@ -170,13 +170,13 @@ solve( Client_1( S, k ) ▶₀ #i )
         case case_1
         solve( Client_1( $S, ~k ) ▶₀ #j )
           case Client_1
-          by contradiction // cyclic
+          by contradiction /* cyclic */
         qed
       next
         case case_2
         solve( Client_1( $S, ~k ) ▶₀ #j )
           case Client_1
-          by contradiction // cyclic
+          by contradiction /* cyclic */
         qed
       qed
     next
@@ -185,7 +185,7 @@ solve( Client_1( S, k ) ▶₀ #i )
         case Client_1
         solve( !KU( ~ltk ) @ #vk.6 )
           case Reveal_ltk
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -195,7 +195,7 @@ solve( Client_1( S, k ) ▶₀ #i )
       case Client_1
       solve( !KU( ~ltk ) @ #vk.2 )
         case Reveal_ltk
-        by contradiction // from formulas
+        by contradiction /* from formulas */
       qed
     qed
   qed
@@ -225,17 +225,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/Tutorial.spthy
+analyzing: examples/Tutorial.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/Tutorial.spthy
+analyzed: examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.286112s
+  processing time: 0.218391s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)
@@ -246,10 +246,10 @@ analyzed: data/examples/Tutorial.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/Tutorial.spthy
+analyzed: examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.286112s
+  processing time: 0.218391s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)

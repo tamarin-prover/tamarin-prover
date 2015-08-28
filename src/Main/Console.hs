@@ -51,11 +51,10 @@ import           Control.Monad
 import           System.Console.CmdArgs.Explicit
 import           System.Console.CmdArgs.Text
 import           System.Exit
-import           System.FilePath
 
 import qualified Text.PrettyPrint.Class          as PP
 
-import           Paths_tamarin_prover
+import           Paths_tamarin_prover (version)
 
 ------------------------------------------------------------------------------
 -- Static constants for the tamarin-prover
@@ -66,19 +65,18 @@ programName :: String
 programName = "tamarin-prover"
 
 -- | Version string
-versionStr :: FilePath -- ^ Path to LICENCE file.
-           -> String
-versionStr licensePath = unlines
+versionStr :: String
+versionStr = unlines
   [ concat
     [ programName
     , " "
     , showVersion version
-    , ", (C) Benedikt Schmidt, Simon Meier, ETH Zurich 2010-2013"
+    , ", (C) Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich 2010-2015"
     ]
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"
   , "are welcome to redistribute it according to its LICENSE, see"
-  , "'" ++ licensePath ++ "'."
+  , "'https://github.com/tamarin-prover/tamarin-prover/blob/master/LICENSE'."
   ]
 
 -- | Line width to use.
@@ -175,8 +173,7 @@ tamarinMode name help adaptMode run0 = TamarinMode
   where
     run thisMode as
       | argExists "help"    as = helpAndExit thisMode Nothing
-      | argExists "version" as = do licensePath <- getDataFileName "LICENSE"
-                                    putStrLn $ versionStr licensePath
+      | argExists "version" as = putStrLn versionStr
       | otherwise              = run0 thisMode as
 
 -- | Disply help message of a tamarin mode and exit.
@@ -186,26 +183,15 @@ helpAndExit tmode mayMsg = do
              $ helpText header HelpFormatOne (tmCmdArgsMode tmode)
     -- output example info
     when (tmIsMainMode tmode) $ do
-      examplePath <- getDataFileName "examples"
-      manualPath  <- getDataFileName ("doc" </> "MANUAL")
-      let tutorialPath = examplePath </> "Tutorial.spthy"
-          csf12Path = examplePath </> "csf12" </> "*.spthy"
-          csf12Cmd  = programName ++ " --prove -Ocase-studies +RTS -N -RTS " ++ csf12Path
-          csf12Cmd' = programName ++ " interactive +RTS -N -RTS " ++ csf12Path
-          separator = replicate shortLineWidth '-'
-          e info paths = info ++ concatMap ("\n  " ++) paths ++ "\n"
       putStrLn $ unlines
         [ separator
-        , e "For example protocol models see:" [examplePath]
-        , e "A tutorial and the user manual are found at" [tutorialPath, manualPath]
-        , e "To run all case-studies from our CSF'12 paper, use" [csf12Cmd]
-        , e "To construct their security proofs interactively, use" [csf12Cmd']
-        , "Note that the +RTS -N -RTS flags instruct the Haskell runtime system to"
-        , "use as many cores as your system has. This speeds-up some of the computations."
+        , "See 'https://github.com/tamarin-prover/tamarin-prover/blob/master/README.md'"
+        , "for usage instructions and pointers to examples."
         , separator
         ]
     end
   where
+    separator = replicate shortLineWidth '-'
     (header, end) = case mayMsg of
         Nothing  -> ([], return ())
         Just msg -> (["error: " ++ msg], exitFailure)

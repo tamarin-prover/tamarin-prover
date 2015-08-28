@@ -22,6 +22,7 @@ module Term.Term.FunctionSymbols (
     , NoEqFunSig
 
     -- ** concrete symbols strings
+    , diffSymString
     , expSymString
     , invSymString
     , pmultSymString
@@ -29,6 +30,7 @@ module Term.Term.FunctionSymbols (
     , unionSymString
 
     -- ** concrete symbols
+    , diffSym
     , expSym
     , pmultSym
     , oneSym
@@ -42,6 +44,7 @@ module Term.Term.FunctionSymbols (
     , bpFunSig
     , msetFunSig
     , pairFunSig
+    , diffFunSig
     , dhReducibleFunSig
     , bpReducibleFunSig
     , implicitFunSig
@@ -97,7 +100,8 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-expSymString, invSymString :: ByteString
+diffSymString, expSymString, invSymString :: ByteString
+diffSymString = "diff"
 expSymString = "exp"
 invSymString = "inv"
 
@@ -108,9 +112,11 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public))
+-- | Diff.
+diffSym  = (diffSymString,(2,Private))
 -- | Exponentiation.
 expSym   = (expSymString,(2,Public))
 -- | The inverse in the groups of exponents.
@@ -143,6 +149,10 @@ msetFunSig = S.fromList [AC Union]
 -- | The signature for pairing.
 pairFunSig :: NoEqFunSig
 pairFunSig = S.fromList [ pairSym, fstSym, sndSym ]
+
+-- | The signature for diff terms.
+diffFunSig :: NoEqFunSig
+diffFunSig = S.fromList [ diffSym ]
 
 -- | Reducible function symbols for DH.
 dhReducibleFunSig :: FunSig

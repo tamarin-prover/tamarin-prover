@@ -18,7 +18,7 @@ module Term.Narrowing.Variants.Check (
 import Term.Substitution
 import Term.Unification
 import Term.Rewriting.Norm
-import Term.Subsumption (factorSubstVia,canonizeSubst)
+import Term.Subsumption      (factorSubstVia,canonizeSubst)
 import Term.Narrowing.Narrow
 
 import Extension.Prelude
@@ -26,7 +26,7 @@ import Utils.Misc
 
 import Control.Basics
 import Control.Monad.Reader
-import Data.List
+import Data.List             (delete)
 
 import Debug.Trace.Ignore
 
