@@ -35,6 +35,8 @@ module Theory.Constraint.System (
   , pcCaseDistKind
   , pcUseInduction
   , pcTraceQuantifier
+  , pcLemmaName
+  , pcHiddenLemmas
   , pcMaudeHandle
   , pcDiffContext
   , dpcPCLeft
@@ -357,6 +359,8 @@ data ProofContext = ProofContext
        , _pcCaseDists          :: [CaseDistinction]
        , _pcUseInduction       :: InductionHint
        , _pcTraceQuantifier    :: SystemTraceQuantifier
+       , _pcLemmaName          :: String
+       , _pcHiddenLemmas       :: [String]
        , _pcDiffContext        :: Bool
        }
        deriving( Eq, Ord, Show )

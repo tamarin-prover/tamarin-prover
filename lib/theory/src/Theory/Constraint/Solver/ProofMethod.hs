@@ -34,8 +34,6 @@ module Theory.Constraint.Solver.ProofMethod (
 
 ) where
 
--- import           Debug.Trace
-
 import           Data.Binary
 import           Data.DeriveTH
 import           Data.Function                             (on)
@@ -52,6 +50,11 @@ import           Extension.Prelude                         (sortOn)
 import           Control.Basics
 import           Control.DeepSeq
 import qualified Control.Monad.Trans.PreciseFresh          as Precise
+
+import           Debug.Trace
+import           Safe
+import           System.IO.Unsafe
+import           System.Process
 
 import           Theory.Constraint.Solver.CaseDistinctions
 import           Theory.Constraint.Solver.Contradictions
@@ -352,6 +355,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 -- order of solving in a constraint system.
 data GoalRanking =
     GoalNrRanking
+  | OracleRanking
   | UsefulGoalNrRanking
   | SmartRanking Bool
   | SmartDiffRanking
@@ -362,6 +366,7 @@ goalRankingName :: GoalRanking -> String
 goalRankingName ranking =
     "Goals sorted according to " ++ case ranking of
         GoalNrRanking                -> "their order of creation"
+        OracleRanking                -> "an oracle for ranking"
         UsefulGoalNrRanking          -> "their usefulness and order of creation"
         SmartRanking useLoopBreakers -> smart useLoopBreakers
         SmartDiffRanking             -> "the 'smart' heuristic (for diff proofs)"
@@ -374,6 +379,7 @@ goalRankingName ranking =
 rankGoals :: ProofContext -> GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 rankGoals ctxt ranking = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
+    OracleRanking -> oracleRanking ctxt
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
     SmartRanking useLoopsBreakers -> smartRanking ctxt useLoopsBreakers
@@ -477,6 +483,34 @@ roundRobinHeuristic rankings =
 goalNrRanking :: [AnnotatedGoal] -> [AnnotatedGoal]
 goalNrRanking = sortOn (fst . snd)
 
+oracleRanking :: ProofContext
+              -> System
+              -> [AnnotatedGoal] -> [AnnotatedGoal]
+oracleRanking ctxt _sys ags0
+--  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
+  | otherwise =
+    unsafePerformIO $ do
+      let ags = goalNrRanking ags0
+      let inp = unlines
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                       (zip [(0::Int)..] ags))
+      outp <- readProcess "./oracle" [ L.get pcLemmaName ctxt ] inp
+      let indices = catMaybes . map readMay . lines $ outp
+          ranked = catMaybes . map (atMay ags) $ indices
+          remaining = filter (`notElem` ranked) ags
+          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+                   ++ inp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
+                   ++ outp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
+      guard $ trace logMsg True
+      -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
+      -- guard $ trace sd True
+
+      return (ranked ++ remaining)
+  where
+    pgoal (g,(_nr,_usefulness)) = prettyGoal g
+
 -- | A ranking function tuned for the automatic verification of
 -- classical security protocols that exhibit a well-founded protocol premise
 -- fact flow.
@@ -512,6 +546,7 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
         , isDisjGoal . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoal . fst
+        , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
         , isFreshKnowsGoal . fst
         , isSplitGoalSmall . fst
@@ -527,8 +562,15 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
-    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) = not $ isKFact fa
+    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) =
+      not (isKFact fa) && not (isAuthOutFact fa)
     isNonLoopBreakerProtoFactGoal _                            = False
+
+    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _) = True
+    isAuthOutFact  _                                 = False
+
+    isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
+    isNotAuthOut _               = False
 
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing

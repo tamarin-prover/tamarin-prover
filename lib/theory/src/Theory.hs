@@ -28,6 +28,7 @@ module Theory (
   , lName
   , DiffLemma
   , lDiffName
+  , lDiffAttributes
   , lDiffProof
   , lTraceQuantifier
   , lFormula
@@ -305,7 +306,8 @@ closeRuleCache axioms typAsms sig protoRules intrRulesAC isdiff = -- trace ("clo
   where
     ctxt0 = ProofContext
         sig classifiedRules injFactInstances UntypedCaseDist [] AvoidInduction
-        (error "closeRuleCache: trace quantifier should not matter here") isdiff
+        (error "closeRuleCache: trace quantifier should not matter here")
+        (error "closeRuleCache: lemma name should not matter here") [] isdiff
 
     -- inj fact instances
     injFactInstances =
@@ -366,6 +368,7 @@ data LemmaAttribute =
          TypingLemma
        | ReuseLemma
        | InvariantLemma
+       | HideLemma String
        | LHSLemma
        | RHSLemma
 --        | BothLemma
@@ -394,7 +397,7 @@ data DiffLemma p = DiffLemma
        { _lDiffName            :: String
 --        , _lTraceQuantifier :: TraceQuantifier
 --        , _lFormula         :: LNFormula
---        , _lAttributes      :: [LemmaAttribute]
+       , _lDiffAttributes      :: [LemmaAttribute]
        , _lDiffProof           :: p
        }
        deriving( Eq, Ord, Show )
@@ -414,13 +417,13 @@ instance Traversable Lemma where
     traverse f (Lemma n qua fm atts prf) = Lemma n qua fm atts <$> f prf
 
 instance Functor DiffLemma where
-    fmap f (DiffLemma n prf) = DiffLemma n (f prf)
+    fmap f (DiffLemma n atts prf) = DiffLemma n atts (f prf)
 
 instance Foldable DiffLemma where
     foldMap f = f . L.get lDiffProof
 
 instance Traversable DiffLemma where
-    traverse f (DiffLemma n prf) = DiffLemma n <$> f prf
+    traverse f (DiffLemma n atts prf) = DiffLemma n atts <$> f prf
 
 -- Lemma queries
 ----------------------------------
@@ -464,12 +467,12 @@ skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
 skeletonLemma name atts qua fm = Lemma name qua fm atts
 
 -- | Create a new unproven diff lemma.
-unprovenDiffLemma :: String
+unprovenDiffLemma :: String -> [LemmaAttribute] 
               -> DiffLemma DiffProofSkeleton
-unprovenDiffLemma name = DiffLemma name (diffUnproven ())
+unprovenDiffLemma name atts = DiffLemma name atts (diffUnproven ())
 
-skeletonDiffLemma :: String -> DiffProofSkeleton -> DiffLemma DiffProofSkeleton
-skeletonDiffLemma name = DiffLemma name
+skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemma DiffProofSkeleton
+skeletonDiffLemma name atts = DiffLemma name atts
 
 
 -- | The case-distinction kind allowed for a lemma
@@ -807,7 +810,7 @@ defaultOpenDiffTheory flag = DiffTheory "default" (emptySignaturePure flag) [] [
 
 -- Add the default Diff lemma to an Open Diff Theory
 addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
-addDefaultDiffLemma thy = fromMaybe thy $ addDiffLemma (unprovenDiffLemma "Observational_equivalence") thy
+addDefaultDiffLemma thy = fromMaybe thy $ addDiffLemma (unprovenDiffLemma "Observational_equivalence" []) thy
 
 -- Add the rule labels to an Open Diff Theory
 addProtoRuleLabels:: OpenDiffTheory -> OpenDiffTheory
@@ -848,7 +851,7 @@ openTheory  (Theory n sig c items) =
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
 openDiffTheory  (DiffTheory n sig c1 c2 c3 c4 items) =
     DiffTheory n (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
-      (map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s p) -> (DiffLemma s (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
+      (map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
 
       
 -- | Find the open protocol rule with the given name.
@@ -970,6 +973,8 @@ getProofContext l thy = ProofContext
     ( L.get (cases . thyCache)              thy)
     inductionHint
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
+    (L.get lName l)
+    ([ h | HideLemma h <- L.get lAttributes l])
     False
   where
     kind    = lemmaCaseDistKind l
@@ -990,6 +995,8 @@ getProofContextDiff s l thy = case s of
             ( L.get (cases . diffThyCacheLeft)              thy)
             inductionHint
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
+            (L.get lName l)
+            ([ h | HideLemma h <- L.get lAttributes l])
             False
   RHS -> ProofContext
             ( L.get diffThySignature                    thy)
@@ -999,6 +1006,8 @@ getProofContextDiff s l thy = case s of
             ( L.get (cases . diffThyCacheRight)              thy)
             inductionHint
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
+            (L.get lName l)
+            ([ h | HideLemma h <- L.get lAttributes l])
             False
   where
     kind    = lemmaCaseDistKind l
@@ -1010,7 +1019,7 @@ getProofContextDiff s l thy = case s of
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
-getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyDiffCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyDiffCacheLeft) thy) ((LHS, axiomsLeft):[(RHS, axiomsRight)])
+getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyDiffCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyDiffCacheLeft) thy) ((LHS, axiomsLeft):[(RHS, axiomsRight)])
   where
     items = L.get diffThyItems thy
     axiomsLeft  = do EitherAxiomItem (LHS, ax) <- items
@@ -1026,6 +1035,8 @@ getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get (crcTypedCaseDists . diffThyDiffCacheLeft)              thy)
             AvoidInduction
             ExistsNoTrace
+            ( L.get lDiffName l )
+            ([ h | HideLemma h <- L.get lDiffAttributes l])
             True
         RHS -> ProofContext
             ( L.get diffThySignature                    thy)
@@ -1035,6 +1046,8 @@ getDiffProofContext _ thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get (crcTypedCaseDists . diffThyDiffCacheRight)              thy)
             AvoidInduction
             ExistsNoTrace
+            ( L.get lDiffName l )
+            ([ h | HideLemma h <- L.get lDiffAttributes l])
             True
 
 -- | The facts with injective instances in this theory
@@ -1392,6 +1405,8 @@ mkSystem ctxt axioms previousItems =
         guard $    lemmaCaseDistKind lem <= kind
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
+                && (L.get lName lem) `notElem` (L.get pcHiddenLemmas ctxt)
+                && "ALL" `notElem` (L.get pcHiddenLemmas ctxt)
         return $ formulaToGuarded_ $ L.get lFormula lem
 
 -- | Construct a constraint system for verifying the given formula.
@@ -1578,6 +1593,7 @@ prettyLemmaName l = case L.get lAttributes l of
     prettyLemmaAttribute TypingLemma    = text "typing"
     prettyLemmaAttribute ReuseLemma     = text "reuse"
     prettyLemmaAttribute InvariantLemma = text "use_induction"
+    prettyLemmaAttribute (HideLemma s)  = text ("hide_lemma=" ++ s)
     prettyLemmaAttribute LHSLemma       = text "left"
     prettyLemmaAttribute RHSLemma       = text "right"
 --     prettyLemmaAttribute BothLemma      = text "both"

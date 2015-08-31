@@ -1,7 +1,7 @@
 #! /bin/bash
 set -e
 
-export TAMARIN=../tamarin-prover/.cabal-sandbox/bin/tamarin-prover
+export TAMARIN=~/.local/bin/tamarin-prover
 
 function run {
   echo "Analyzing $2. Check './log/$2.log' for tamarin output."
