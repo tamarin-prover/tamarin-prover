@@ -3,6 +3,8 @@ set -e
 
 export TAMARIN=~/.local/bin/tamarin-prover
 
+mkdir -p log/
+
 function run {
   echo "Analyzing $2. Check './log/$2.log' for tamarin output."
   $TAMARIN +RTS -N -RTS --prove $1 -olog/$2.out >log/$2.log 2>/dev/null
