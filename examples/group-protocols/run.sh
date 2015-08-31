@@ -10,7 +10,7 @@ function run {
 }
 
 run  "-Dsecure               STR.spthy"        "STR1"
-run  "-Dsecure               STR_signed.spthy" "STR2"
+# run  "-Dsecure               STR_signed.spthy" "STR2"
 run  "                       group_joux.spthy" "group_joux"
 export TAMARIN_EXTENSIVE_SPLIT=1
 run  "-Dsecure --heuristic=o GDH.spthy"        "GDH"
