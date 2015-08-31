@@ -123,6 +123,7 @@ module Theory (
   , getLemmas
   , getDiffLemmas
   , getIntrVariants
+  , getIntrVariantsDiff
   , getProtoRuleEs
   , getProtoRuleEsDiff
   , getProofContext
@@ -954,6 +955,13 @@ getDiffLemmas = diffTheoryDiffLemmas
 -- | The variants of the intruder rules.
 getIntrVariants :: ClosedTheory -> [IntrRuleAC]
 getIntrVariants = intruderRules . L.get (crcRules . thyCache)
+
+-- | The variants of the intruder rules.
+getIntrVariantsDiff :: Side -> ClosedDiffTheory -> [IntrRuleAC]
+getIntrVariantsDiff s
+  | s == LHS  = intruderRules . L.get (crcRules . diffThyCacheLeft)
+  | s == RHS  = intruderRules . L.get (crcRules . diffThyCacheRight)
+  | otherwise = error $ "The Side MUST always be LHS or RHS."
 
 -- | All protocol rules modulo E.
 getProtoRuleEs :: ClosedTheory -> [ProtoRuleE]

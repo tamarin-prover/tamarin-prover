@@ -801,12 +801,16 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
       yesod <- getYesod
       compact <- isNothing <$> lookupGetParam "uncompact"
       compress <- isNothing <$> lookupGetParam "uncompress"
+      abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
+      simplificationLevel <- fromMaybe "1" <$> lookupGetParam "simplification"
       img <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
           (imageFormat yesod)
           (dotCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress)
+          (show simplificationLevel)
+          (abbreviate)
           (tiTheory ti) path
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
@@ -822,12 +826,16 @@ getTheoryGraphDiffR idx path = withDiffTheory idx ( \ti -> do
       yesod <- getYesod
       compact <- isNothing <$> lookupGetParam "uncompact"
       compress <- isNothing <$> lookupGetParam "uncompress"
+      abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
+      simplificationLevel <- fromMaybe "1" <$> lookupGetParam "simplification"
       img <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
           (imageFormat yesod)
           (dotCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress)
+          (show simplificationLevel)
+          (abbreviate)
           (dtiTheory ti) path
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
