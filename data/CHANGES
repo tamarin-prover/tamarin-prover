@@ -1,3 +1,12 @@
+
+* 0.8.6.2
+  - Change the package description because we now always recommend to build
+    tamarin-prover from source and not by downloading a package to hackage.
+    See the README on the development branch for installation instructions.
+
+* 0.8.6.1
+  - Tweak dependencies.
+
 * 0.8.6.0
   - Incorporate a patch contributed by Ognjen Maric that improves reasoning
     about injective facts in inductive proofs.
