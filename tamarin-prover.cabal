@@ -1,7 +1,7 @@
 cabal-version:      >= 1.8
 build-type:         Simple
 name:               tamarin-prover
-version:            0.8.6.2
+version:            0.8.6.3
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -12,9 +12,10 @@ copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2013
 synopsis:           The Tamarin prover for security protocol analysis.
 description:
 
-    **Note:** the tamarin-prover should be installed from source as described
-    in its README at <https://github.com/tamarin-prover/tamarin-prover>.
-
+    Note that the @tamarin-prover@ should be installed from source as
+    described in its README at
+    <https://github.com/tamarin-prover/tamarin-prover>.
+    .
     The Tamarin prover is a tool for the analysis of security protocols. It
     implements a constraint solving algorithm that supports both falsification
     and verification of security protocols with respect to an unbounded number

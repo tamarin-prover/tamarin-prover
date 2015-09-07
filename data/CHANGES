@@ -1,3 +1,6 @@
+* 0.8.6.3
+  - Fix some formatting issues in the tamarin-prover.cabal description,
+    which were introduced in 0.8.6.2.
 
 * 0.8.6.2
   - Change the package description because we now always recommend to build
