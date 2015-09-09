@@ -14,6 +14,7 @@ import Main.Mode.Intruder    (intruderMode)
 import Main.Mode.Variants    (variantsMode)
 import Main.Mode.Interactive (interactiveMode)
 import Main.Mode.Test        (testMode)
+import Main.Mode.Variants    (variantsMode)
 
 main :: IO ()
 main = defaultMain batchMode [interactiveMode, intruderMode, testMode, variantsMode]
