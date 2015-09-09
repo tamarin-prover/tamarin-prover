@@ -1,5 +1,7 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE BangPatterns     #-}
+{-# LANGUAGE ViewPatterns     #-}
+-- FIXME: Better solution for absTerm
+{-# LANGUAGE FlexibleContexts #-}
 -- |
 -- Copyright   : (c) 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)

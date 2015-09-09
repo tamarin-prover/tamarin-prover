@@ -20,7 +20,10 @@ module Theory.Constraint.Solver.Goals (
   , AnnotatedGoal
   , openGoals
   , solveGoal
+--   , allOpenGoalsAreSimpleFacts
   ) where
+
+-- import           Debug.Trace
 
 import           Prelude                                 hiding (id, (.))
 
@@ -34,12 +37,15 @@ import           Control.Basics
 import           Control.Category
 import           Control.Monad.Disj
 import           Control.Monad.State                     (gets)
+import           Control.Monad.Trans.State.Lazy          hiding (get,gets)
+import           Control.Monad.Trans.FastFresh           -- GHC7.10 needs: hiding (get,gets)
+import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hiding (get,gets)
 
 import           Extension.Data.Label
 
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
-import           Theory.Constraint.Solver.Types
+-- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule)
 import           Theory.Model
@@ -75,11 +81,18 @@ openGoals sys = do
     -- check whether the goal is still open
     guard $ case goal of
         ActionG _ (kFactView -> Just (UpK, m)) ->
-          not $    solved
-                || isMsgVar m || sortOfLNTerm m == LSortPub
-                -- handled by 'insertAction'
-                || isPair m || isInverse m || isProduct m
-                || isUnion m || isNullaryPublicFunction m
+          if get sDiffSystem sys 
+             -- In a diff proof, all action goals need to be solved.
+             then not (solved)
+                      -- handled by 'insertAction'
+--                       || isPair m || isInverse m 
+--                       || isProduct m || isUnion m) 
+             else
+               not $    solved
+                    || isMsgVar m || sortOfLNTerm m == LSortPub
+                    -- handled by 'insertAction'
+                    || isPair m || isInverse m || isProduct m
+                    || isUnion m || isNullaryPublicFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
         -- Technically the 'False' disj would be a solvable goal. However, we
@@ -161,6 +174,18 @@ openGoals sys = do
                                 return t
 
 
+-- -- | Returns true if all open goals in the system are "trivial" fact goals. -- FIXME: Remove
+-- allOpenGoalsAreSimpleFacts :: System -> Bool
+-- allOpenGoalsAreSimpleFacts sys = all goalIsSimpleFact (openGoals sys)
+--   where
+--     goalIsSimpleFact :: AnnotatedGoal -> Bool
+--     goalIsSimpleFact ((ActionG _ fact),  _) = (isTrivialFact fact /= Nothing) && (isKUFact fact)
+--     goalIsSimpleFact ((ChainG _ _),      _) = False
+--     goalIsSimpleFact ((PremiseG _ fact), _) = (isTrivialFact fact /= Nothing)
+--     goalIsSimpleFact ((SplitG _),        _) = False
+--     goalIsSimpleFact ((DisjG _),         _) = False
+
+                                
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
 ------------------------------------------------------------------------------
@@ -245,9 +270,11 @@ solveChain rules (c, p) = do
         let mPrem = case kFactView faConc of
                       Just (DnK, m') -> m'
                       _              -> error $ "solveChain: impossible"
-            caseName (viewTerm -> FApp o _) = showFunSymName o
-            caseName t                      = show t
-        return $ caseName mPrem
+            caseName (viewTerm -> FApp o _)    = showFunSymName o
+            caseName (viewTerm -> Lit l)       = showLitName l
+            caseName t                         = show t
+        contradictoryIf (illegalCoerce pRule mPrem)
+        return (caseName mPrem)
      `disjunction`
      -- extend it with one step
      case kFactView faConc of
@@ -277,11 +304,15 @@ solveChain rules (c, p) = do
                 extendAndMark i ru v faPrem faConc
      )
   where
+    extendAndMark :: NodeId -> RuleACInst -> PremIdx -> LNFact -> LNFact 
+      -> Control.Monad.Trans.State.Lazy.StateT System 
+      (Control.Monad.Trans.FastFresh.FreshT 
+      (DisjT (Control.Monad.Trans.Reader.Reader ProofContext))) String
     extendAndMark i ru v faPrem faConc = do
         insertEdges [(c, faConc, faPrem, (i, v))]
         markGoalAsSolved "directly" (PremiseG (i, v) faPrem)
         insertChain (i, ConcIdx 0) p
-        return $ showRuleCaseName ru
+        return (showRuleCaseName ru)
 
     -- contradicts normal form condition:
     -- no edge from dexp to dexp KD premise, no edge from dpmult
@@ -290,6 +321,14 @@ solveChain rules (c, p) = do
     forbiddenEdge cRule pRule = isDExpRule   cRule && isDExpRule  pRule  ||
                                 isDPMultRule cRule && isDPMultRule pRule ||
                                 isDPMultRule cRule && isDEMapRule  pRule
+
+    -- Contradicts normal form condition N2:
+    -- No coerce of a pair of inverse.
+    illegalCoerce pRule mPrem = isCoerceRule pRule && isPair    mPrem ||
+                                isCoerceRule pRule && isInverse mPrem ||
+    -- Also: Coercing of products is unnecessary, since the protocol is *-restricted.
+                                isCoerceRule pRule && isProduct mPrem 
+
 
 -- | Solve an equation split. There is no corresponding CR-rule in the rule
 -- system on paper because there we eagerly split over all variants of a rule.

@@ -1,9 +1,9 @@
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE Rank2Types        #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -24,7 +24,17 @@ module Web.Types
   , Route (..)
   , resourcesWebUI
   , TheoryInfo(..)
+  , DiffTheoryInfo(..)
+  , EitherTheoryInfo(..)
+  , isTheoryInfo
+  , isDiffTheoryInfo
+  , getEitherTheoryName
+  , getEitherTheoryTime
+  , getEitherTheoryPrimary
+  , getEitherTheoryOrigin
+  , getEitherTheoryIndex
   , TheoryPath(..)
+  , DiffTheoryPath(..)
   , TheoryOrigin(..)
   , JsonResponse(..)
   , TheoryIdx
@@ -52,6 +62,9 @@ import           Data.Monoid         (mconcat)
 import           Data.Ord            (comparing)
 import qualified Data.Text           as T
 import           Data.Time.LocalTime
+-- import qualified Data.Binary         as Bin
+-- import           Control.Monad
+-- import           GHC.Generics (Generic)
 
 import           Text.Hamlet
 import           Yesod.Core
@@ -75,7 +88,7 @@ import           Theory
 type TheoryIdx = Int
 
 -- | Type synonym representing a map of theories.
-type TheoryMap = M.Map TheoryIdx TheoryInfo
+type TheoryMap = M.Map TheoryIdx (EitherTheoryInfo)
 
 -- | Type synonym representing a map of threads.
 type ThreadMap = M.Map T.Text ThreadId
@@ -103,9 +116,11 @@ data WebUI = WebUI
   , workDir            :: FilePath
     -- ^ The working directory (for storing/loading theories).
   -- , parseThy    :: MonadIO m => String -> GenericHandler m ClosedTheory
-  , parseThy           :: String -> IO (Either String ClosedTheory)
+  , parseThy           :: String -> IO (Either String (ClosedTheory))
     -- ^ Close an open theory according to command-line arguments.
-  , theoryVar          :: MVar TheoryMap
+  , diffParseThy       :: String -> IO (Either String (ClosedDiffTheory))
+    -- ^ Close an open theory according to command-line arguments.
+  , theoryVar          :: MVar (TheoryMap)
     -- ^ MVar that holds the theory map
   , threadVar          :: MVar ThreadMap
     -- ^ MVar that holds the thread map
@@ -119,8 +134,11 @@ data WebUI = WebUI
     -- ^ The default prover to use for automatic proving.
   , debug              :: Bool
     -- ^ Output debug messages
+  , isDiffTheory       :: Bool
+    -- ^ Output debug messages
   }
 
+  
 -- | Simple data type for generating JSON responses.
 data JsonResponse
   = JsonHtml T.Text Content   -- ^ Title and HTML content
@@ -132,7 +150,7 @@ data JsonResponse
 -- or created by interactive mode (e.g. through editing).
 data TheoryOrigin = Local FilePath | Upload String | Interactive
      deriving (Show, Eq, Ord)
-
+     
 -- | Data type containg both the theory and it's index, making it easier to
 -- pass the two around (since they are always tied to each other). We also
 -- keep some extra bookkeeping information.
@@ -144,7 +162,21 @@ data TheoryInfo = TheoryInfo
   , tiPrimary    :: Bool            -- ^ This is the orginally loaded theory.
   , tiOrigin     :: TheoryOrigin    -- ^ Origin of theory.
   , tiAutoProver :: AutoProver      -- ^ The automatic prover to use.
-  }
+  } -- deriving (Generic)
+
+-- | Data type containg both the theory and it's index, making it easier to
+-- pass the two around (since they are always tied to each other). We also
+-- keep some extra bookkeeping information.
+data DiffTheoryInfo = DiffTheoryInfo
+  { dtiIndex      :: TheoryIdx       -- ^ Index of theory.
+  , dtiTheory     :: ClosedDiffTheory -- ^ The closed theory.
+  , dtiTime       :: ZonedTime       -- ^ Time theory was loaded.
+  , dtiParent     :: Maybe TheoryIdx -- ^ Prev theory in history
+  , dtiPrimary    :: Bool            -- ^ This is the orginally loaded theory.
+  , dtiOrigin     :: TheoryOrigin    -- ^ Origin of theory.
+  , dtiAutoProver :: AutoProver      -- ^ The automatic prover to use.
+  } -- deriving (Generic)
+
 
 -- | We use the ordering in order to display loaded theories to the user.
 -- We first compare by name, then by time loaded, and then by source: Theories
@@ -159,12 +191,129 @@ compareTI (TheoryInfo _ i1 t1 p1 a1 o1 _) (TheoryInfo _ i2 t2 p2 a2 o2 _) =
     , compare p1 p2
     , compare o1 o2
     ]
+    
+-- | We use the ordering in order to display loaded theories to the user.
+-- We first compare by name, then by time loaded, and then by source: Theories
+-- that were loaded from the command-line are displayed earlier then
+-- interactively loaded ones.
+compareDTI :: DiffTheoryInfo -> DiffTheoryInfo -> Ordering
+compareDTI (DiffTheoryInfo _ i1 t1 p1 a1 o1 _) (DiffTheoryInfo _ i2 t2 p2 a2 o2 _) =
+  mconcat
+    [ comparing (get diffThyName) i1 i2
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
 
-instance Eq TheoryInfo where
+data EitherTheoryInfo = Trace TheoryInfo | Diff DiffTheoryInfo -- deriving (Generic)
+
+-- instance Bin.Binary TheoryInfo
+-- instance Bin.Binary DiffTheoryInfo
+-- instance Bin.Binary EitherTheoryInfo
+
+{- instance Bin.Binary EitherTheoryInfo where
+       put (Trace i) = do Bin.put (0 :: Bin.Word8)
+                            Bin.put i
+       put (Diff i)    = do Bin.put (1 :: Bin.Word8)
+       Bin.put i -}
+{-       get = do t <- get :: Bin.Get Bin.Word8
+                case t of
+                           0 -> do i <- Bin.get
+                                   return (Trace i)
+                           1 -> do i <- Bin.get
+                           return (Diff i) -}
+{-       get = do tag <- Bin.getWord8
+                case tag of
+                    0 -> liftM Trace get
+                    1 -> liftM Diff get -}
+
+-- Direct access functionf for Either Theory Type
+getEitherTheoryName :: EitherTheoryInfo -> String
+getEitherTheoryName (Trace i)  = get thyName (tiTheory i)
+getEitherTheoryName (Diff i) = get diffThyName (dtiTheory i)
+
+isTheoryInfo :: EitherTheoryInfo -> Bool
+isTheoryInfo (Trace _) = True
+isTheoryInfo (Diff  _) = False
+
+isDiffTheoryInfo :: EitherTheoryInfo -> Bool
+isDiffTheoryInfo (Trace _) = False
+isDiffTheoryInfo (Diff  _) = True
+
+getEitherTheoryTime :: EitherTheoryInfo -> ZonedTime
+getEitherTheoryTime (Trace i)  = (tiTime i)
+getEitherTheoryTime (Diff i) = (dtiTime i)
+
+getEitherTheoryPrimary :: EitherTheoryInfo -> Bool
+getEitherTheoryPrimary (Trace i)  = (tiPrimary i)
+getEitherTheoryPrimary (Diff i) = (dtiPrimary i)
+
+getEitherTheoryOrigin :: EitherTheoryInfo -> TheoryOrigin
+getEitherTheoryOrigin (Trace i)  = (tiOrigin i)
+getEitherTheoryOrigin (Diff i) = (dtiOrigin i)
+
+getEitherTheoryIndex :: EitherTheoryInfo -> TheoryIdx
+getEitherTheoryIndex (Trace i)  = (tiIndex i)
+getEitherTheoryIndex (Diff i) = (dtiIndex i)
+
+-- | We use the ordering in order to display loaded theories to the user.
+-- We first compare by name, then by time loaded, and then by source: Theories
+-- that were loaded from the command-line are displayed earlier then
+-- interactively loaded ones.
+compareEDTI :: EitherTheoryInfo -> EitherTheoryInfo -> Ordering
+compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _)) (Trace (TheoryInfo _ i2 t2 p2 a2 o2 _)) =
+  mconcat
+    [ comparing (get thyName) i1 i2
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
+compareEDTI (Diff (DiffTheoryInfo _ i1 t1 p1 a1 o1 _)) (Diff (DiffTheoryInfo _ i2 t2 p2 a2 o2 _)) =
+  mconcat
+    [ comparing (get diffThyName) i1 i2
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
+compareEDTI (Diff (DiffTheoryInfo _ i1 t1 p1 a1 o1 _)) (Trace (TheoryInfo _ i2 t2 p2 a2 o2 _)) =
+  mconcat
+    [ compare ((get diffThyName) i1) ((get thyName) i2)
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
+compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _)) (Diff (DiffTheoryInfo _ i2 t2 p2 a2 o2 _)) =
+  mconcat
+    [ compare ((get thyName) i1) ((get diffThyName) i2)
+    , comparing zonedTimeToUTC t1 t2
+    , compare a1 a2
+    , compare p1 p2
+    , compare o1 o2
+    ]
+
+
+instance Eq (TheoryInfo) where
   (==) t1 t2 = compareTI t1 t2 == EQ
 
-instance Ord TheoryInfo where
+instance Ord (TheoryInfo) where
   compare = compareTI
+
+instance Eq (DiffTheoryInfo) where
+  (==) t1 t2 = compareDTI t1 t2 == EQ
+
+instance Ord (DiffTheoryInfo) where
+  compare = compareDTI
+
+
+instance Eq (EitherTheoryInfo) where
+  (==) t1 t2 = compareEDTI t1 t2 == EQ
+
+instance Ord (EitherTheoryInfo) where
+  compare = compareEDTI
 
 -- | Simple data type for specifying a path to a specific
 -- item within a theory.
@@ -176,6 +325,22 @@ data TheoryPath
   | TheoryMethod String ProofPath Int   -- ^ Apply the proof method to proof path
   | TheoryRules                         -- ^ Theory rules
   | TheoryMessage                       -- ^ Theory message deduction
+  deriving (Eq, Show, Read)
+
+-- | Simple data type for specifying a path to a specific
+-- item within a theory.
+data DiffTheoryPath
+  = DiffTheoryHelp                                    -- ^ The help view (help and info about theory)
+  | DiffTheoryLemma Side String                       -- ^ Theory lemma with given name and side
+  | DiffTheoryDiffLemma String                        -- ^ Theory DiffLemma with given name 
+  | DiffTheoryCaseDist Side CaseDistKind Bool Int Int -- ^ Required cases (i'th source, j'th case)
+  | DiffTheoryProof Side String ProofPath             -- ^ Proof path within proof for given lemma
+  | DiffTheoryDiffProof String ProofPath              -- ^ Proof path within proof for given lemma
+  | DiffTheoryMethod Side String ProofPath Int        -- ^ Apply the proof method to proof path
+  | DiffTheoryDiffMethod String ProofPath Int         -- ^ Apply the proof method to proof path
+  | DiffTheoryRules Side Bool                         -- ^ Theory rules per side
+  | DiffTheoryDiffRules                               -- ^ Theory rules unprocessed
+  | DiffTheoryMessage Side Bool                       -- ^ Theory message deduction per side
   deriving (Eq, Show, Read)
 
 -- | Render a theory path to a list of strings. Note that we prefix an
@@ -193,6 +358,26 @@ renderTheoryPath =
     go (TheoryCaseDist k i j) = ["cases", show k, show i, show j]
     go (TheoryProof lemma path) = "proof" : lemma : path
     go (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
+
+-- | Render a theory path to a list of strings. Note that we prefix an
+-- underscore to the empty string and strings starting with an underscore.
+-- This avoids empty path segments, which seem to trip up certain versions of
+-- Yesod.
+renderDiffTheoryPath :: DiffTheoryPath -> [String]
+renderDiffTheoryPath =
+    map prefixWithUnderscore . go
+  where
+    go DiffTheoryHelp = ["help"]
+    go (DiffTheoryLemma s name) = ["lemma", show s, name]
+    go (DiffTheoryDiffLemma name) = ["difflemma", name]
+    go (DiffTheoryCaseDist s k i j d) = ["cases", show s, show k, show i, show j, show d]
+    go (DiffTheoryProof s lemma path) = "proof" : show s : lemma : path
+    go (DiffTheoryDiffProof lemma path) = "diffProof" : lemma : path
+    go (DiffTheoryMethod s lemma path idx) = "method" : show s : lemma : show idx : path
+    go (DiffTheoryDiffMethod lemma path idx) = "diffMethod" : lemma : show idx : path
+    go (DiffTheoryRules s d) = ["rules", show s, show d]
+    go (DiffTheoryDiffRules) = ["diffrules"]
+    go (DiffTheoryMessage s d) = ["message", show s, show d]
 
 -- | Prefix an underscore to the empty string and strings starting with an
 -- underscore.
@@ -247,20 +432,111 @@ parseTheoryPath =
       return (TheoryCaseDist k m n)
     parseCases _       = Nothing
 
+-- | Parse a list of strings into a theory path.
+parseDiffTheoryPath :: [String] -> Maybe DiffTheoryPath
+parseDiffTheoryPath =
+    parse . map unprefixUnderscore
+  where
+    parse []     = Nothing
+    parse (x:xs) = case x of
+      "help"      -> Just DiffTheoryHelp
+      "diffrules" -> Just DiffTheoryDiffRules
+      "rules"     -> parseRules xs
+      "message"   -> parseMessage xs
+      "lemma"     -> parseLemma xs
+      "difflemma" -> parseDiffLemma xs
+      "cases"     -> parseCases xs
+      "proof"     -> parseProof xs
+      "diffProof" -> parseDiffProof xs
+      "method"    -> parseMethod xs
+      "diffMethod"-> parseDiffMethod xs
+      _           -> Nothing
 
-type RenderUrl = Route WebUI -> T.Text
+    safeRead :: Read a => String -> Maybe a
+    safeRead  = listToMaybe . map fst . reads
+
+    parseRules :: [String] -> Maybe DiffTheoryPath
+    parseRules (y:z:_) = do
+      s <- case y of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      d <- case z of "True"  -> return True
+                     "False" -> return False
+                     _       -> Nothing
+      return (DiffTheoryRules s d)
+    parseRules _         = Nothing
+    
+    parseMessage :: [String] -> Maybe DiffTheoryPath
+    parseMessage (y:z:_) = do
+      s <- case y of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      d <- case z of "True"  -> return True
+                     "False" -> return False
+                     _       -> Nothing
+      return (DiffTheoryMessage s d)
+    parseMessage _         = Nothing
+    
+    parseLemma :: [String] -> Maybe DiffTheoryPath
+    parseLemma (y:ys) = do
+      s <- case y of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      return (DiffTheoryLemma s (head ys))
+    parseLemma _         = Nothing
+
+    parseDiffLemma :: [String] -> Maybe DiffTheoryPath
+    parseDiffLemma ys = DiffTheoryDiffLemma <$> listToMaybe ys
+
+    parseProof :: [String] -> Maybe DiffTheoryPath
+    parseProof (y:z:zs) = do
+      s <- case y of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      return (DiffTheoryProof s z zs)
+    parseProof _         = Nothing
+
+    parseDiffProof :: [String] -> Maybe DiffTheoryPath
+    parseDiffProof (z:zs) = do
+      return (DiffTheoryDiffProof z zs)
+    parseDiffProof _         = Nothing
+
+    parseMethod :: [String] -> Maybe DiffTheoryPath
+    parseMethod (x:y:z:zs) = do
+      s <- case x of "LHS" -> return LHS    
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      i <- safeRead z
+      return (DiffTheoryMethod s y zs i)
+    parseMethod _        = Nothing
+
+    parseDiffMethod :: [String] -> Maybe DiffTheoryPath
+    parseDiffMethod (y:z:zs) = do
+      i <- safeRead z
+      return (DiffTheoryDiffMethod y zs i)
+    parseDiffMethod _        = Nothing
+
+    parseCases :: [String] -> Maybe DiffTheoryPath
+    parseCases (x:kind:pd:y:z:_) = do
+      s <- case x of "LHS" -> return LHS
+                     "RHS" -> return RHS
+                     _     -> Nothing
+      k <- case kind of "typed"   -> return TypedCaseDist
+                        "untyped" -> return UntypedCaseDist
+                        _         -> Nothing
+      d <- case pd of "True"  -> return True
+                      "False" -> return False
+                      _       -> Nothing
+      m <- safeRead y
+      n <- safeRead z
+      return (DiffTheoryCaseDist s k d m n)
+    parseCases _       = Nothing
+
+type RenderUrl = Route (WebUI) -> T.Text
 
 ------------------------------------------------------------------------------
 -- Routing
 ------------------------------------------------------------------------------
-
--- This is a hack we need to work around a bug (?) in the
--- C pre-processor. In order to define multi-pieces we need
--- the asterisk symbol, but the C pre-processor always chokes
--- on them thinking that they are somehow comments. This can
--- be removed once the CPP language ext is disabled, but it's
--- currently needed for GHC < 7 support.
-#define MP(x) *x
 
 -- | Static routing for our application.
 -- Note that handlers ending in R are general handlers,
@@ -268,27 +544,44 @@ type RenderUrl = Route WebUI -> T.Text
 -- and the ones ending in DR are for the debug view.
 mkYesodData "WebUI" [parseRoutes|
 /                                          RootR                   GET POST
-/thy/#Int/overview/MP(TheoryPath)          OverviewR               GET
-/thy/#Int/source                           TheorySourceR           GET
-/thy/#Int/message                          TheoryMessageDeductionR GET
-/thy/#Int/main/MP(TheoryPath)              TheoryPathMR            GET
--- /thy/#Int/debug/MP(TheoryPath)             TheoryPathDR            GET
-/thy/#Int/graph/MP(TheoryPath)             TheoryGraphR            GET
-/thy/#Int/autoprove/#SolutionExtractor/#Int/MP(TheoryPath) AutoProverR             GET
-/thy/#Int/next/#String/MP(TheoryPath)      NextTheoryPathR         GET
-/thy/#Int/prev/#String/MP(TheoryPath)      PrevTheoryPathR         GET
--- /thy/#Int/save                             SaveTheoryR             GET
-/thy/#Int/download/#String                 DownloadTheoryR         GET
--- /thy/#Int/edit/source                      EditTheoryR             GET POST
--- /thy/#Int/edit/path/MP(TheoryPath)         EditPathR               GET POST
-/thy/#Int/del/path/MP(TheoryPath)          DeleteStepR             GET
-/thy/#Int/unload                           UnloadTheoryR           GET
+/thy/trace/#Int/overview/*TheoryPath          OverviewR               GET
+/thy/trace/#Int/source                           TheorySourceR           GET
+/thy/trace/#Int/message                          TheoryMessageDeductionR GET
+/thy/trace/#Int/main/*TheoryPath              TheoryPathMR            GET
+-- /thy/trace/#Int/debug/*TheoryPath             TheoryPathDR            GET
+/thy/trace/#Int/graph/*TheoryPath             TheoryGraphR            GET
+/thy/trace/#Int/autoprove/#SolutionExtractor/#Int/*TheoryPath AutoProverR             GET
+/thy/trace/#Int/next/#String/*TheoryPath      NextTheoryPathR         GET
+/thy/trace/#Int/prev/#String/*TheoryPath      PrevTheoryPathR         GET
+-- /thy/trace/#Int/save                             SaveTheoryR             GET
+/thy/trace/#Int/download/#String                 DownloadTheoryR         GET
+-- /thy/trace/#Int/edit/source                      EditTheoryR             GET POST
+-- /thy/trace/#Int/edit/path/*TheoryPath         EditPathR               GET POST
+/thy/trace/#Int/del/path/*TheoryPath          DeleteStepR             GET
+/thy/trace/#Int/unload                           UnloadTheoryR           GET
+/thy/equiv/#Int/overview/*DiffTheoryPath      OverviewDiffR               GET
+/thy/equiv/#Int/source                           TheorySourceDiffR           GET
+/thy/equiv/#Int/message                          TheoryMessageDeductionDiffR GET
+/thy/equiv/#Int/main/*DiffTheoryPath          TheoryPathDiffMR            GET
+-- /thy/equiv/#Int/debug/*DiffTheoryPath             TheoryPathDiffDR            GET
+/thy/equiv/#Int/graph/*DiffTheoryPath         TheoryGraphDiffR            GET
+/thy/equiv/#Int/autoprove/#SolutionExtractor/#Int/#Side/*DiffTheoryPath AutoProverDiffR             GET
+/thy/equiv/#Int/autoproveDiff/#SolutionExtractor/#Int/*DiffTheoryPath AutoDiffProverR             GET
+/thy/equiv/#Int/next/#String/*DiffTheoryPath  NextTheoryPathDiffR         GET
+/thy/equiv/#Int/prev/#String/*DiffTheoryPath  PrevTheoryPathDiffR         GET
+-- /thy/equiv/#Int/save                             SaveTheoryR             GET
+/thy/equiv/#Int/download/#String                 DownloadTheoryDiffR         GET
+-- /thy/equiv/#Int/edit/source                      EditTheoryR             GET POST
+-- /thy/equiv/#Int/edit/path/*DiffTheoryPath         EditPathDiffR               GET POST
+/thy/equiv/#Int/del/path/*DiffTheoryPath      DeleteStepDiffR             GET
+/thy/equiv/#Int/unload                           UnloadTheoryDiffR           GET
 /kill                                      KillThreadR             GET
 -- /threads                                   ThreadsR                GET
 /robots.txt                                RobotsR                 GET
 /favicon.ico                               FaviconR                GET
 /static                                    StaticR                 Static getStatic
 |]
+
 
 instance PathPiece SolutionExtractor where
   toPathPiece CutNothing = "characterize"
@@ -300,10 +593,24 @@ instance PathPiece SolutionExtractor where
   fromPathPiece "bfs"          = Just CutBFS
   fromPathPiece _              = Nothing
 
+instance PathPiece Side where
+  toPathPiece LHS = "LHS"
+  toPathPiece RHS = "RHS"
+
+  fromPathPiece "LHS" = Just LHS
+  fromPathPiece "RHS" = Just RHS
+  fromPathPiece _     = Nothing
+
+  
 -- | MultiPiece instance for TheoryPath.
 instance PathMultiPiece TheoryPath where
   toPathMultiPiece   = map T.pack . renderTheoryPath
   fromPathMultiPiece = parseTheoryPath . map T.unpack
+
+-- | MultiPiece instance for DiffTheoryPath.
+instance PathMultiPiece DiffTheoryPath where
+  toPathMultiPiece   = map T.pack . renderDiffTheoryPath
+  fromPathMultiPiece = parseDiffTheoryPath . map T.unpack
 
 -- Instance of the Yesod typeclass.
 instance Yesod WebUI where
@@ -328,12 +635,12 @@ instance Yesod WebUI where
 -- belong in the "types" module in order to avoid mutually recursive modules.
 -- defaultLayout' :: (Yesod master, Route master ~ WebUIRoute)
 --                => Widget master ()      -- ^ Widget to embed in layout
---                -> Handler master RepHtml
-defaultLayout' :: Widget -> Handler RepHtml
+--                -> Handler master Html
+defaultLayout' :: Widget -> Handler Html
 defaultLayout' w = do
   page <- widgetToPageContent w
   message <- getMessage
-  hamletToRepHtml [hamlet|
+  withUrlRenderer [hamlet|
     $newline never
     !!!
     <html>

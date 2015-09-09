@@ -10,6 +10,8 @@
 module Theory.Text.Parser (
     parseOpenTheory
   , parseOpenTheoryString
+  , parseOpenDiffTheory
+  , parseOpenDiffTheoryString
   , parseLemma
   , parseIntruderRules
   , multterm
@@ -20,6 +22,7 @@ module Theory.Text.Parser (
 
 import           Prelude                    hiding (id, (.))
 
+import qualified Data.ByteString            as B
 import qualified Data.ByteString.Char8      as BC
 import           Data.Char                  (isUpper, toUpper)
 import           Data.Foldable              (asum)
@@ -27,6 +30,8 @@ import           Data.Label
 import qualified Data.Map                   as M
 import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
+import qualified Data.Text                  as T
+import qualified Data.Text.Encoding         as TE
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -35,15 +40,45 @@ import           Control.Monad
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 
+-- import qualified Extension.Data.Label       as L
+
 import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
 import           Theory.Text.Parser.Token
 
 
+------------------------------------------------------------------------------
+-- ParseAxiom datatype and functions to parse diff axioms
+------------------------------------------------------------------------------
 
+-- | An axiom describes a property that must hold for all traces. Axioms are
+-- always used as lemmas in proofs.
+data ParseAxiom = ParseAxiom
+       { pAxName       :: String
+       , pAxAttributes :: [AxiomAttribute]
+       , pAxFormula    :: LNFormula
+       }
+       deriving( Eq, Ord, Show )
 
+-- | True iff the axiom is a LHS axiom.
+isLeftAxiom :: ParseAxiom -> Bool
+isLeftAxiom ax =
+     (LHSAxiom `elem` pAxAttributes ax)
 
+-- | True iff the axiom is a RHS axiom.
+isRightAxiom :: ParseAxiom -> Bool
+isRightAxiom ax =
+     (RHSAxiom `elem` pAxAttributes ax)
+
+-- -- | True iff the axiom is a Both axiom.
+-- isBothAxiom :: ParseAxiom -> Bool
+-- isBothAxiom ax =
+--      (BothAxiom `elem` pAxAttributes ax)
+
+-- | Converts ParseAxioms to Axioms
+toAxiom :: ParseAxiom -> Axiom
+toAxiom ax = Axiom (pAxName ax) (pAxFormula ax)
 
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
@@ -55,14 +90,29 @@ parseOpenTheory :: [String] -- ^ Defined flags
                 -> IO OpenTheory
 parseOpenTheory flags = parseFile (theory flags)
 
+-- | Parse a security protocol theory file.
+parseOpenDiffTheory :: [String] -- ^ Defined flags
+                -> FilePath
+                -> IO OpenDiffTheory
+parseOpenDiffTheory flags = parseFile (diffTheory flags)
+
+
 -- | Parse DH intruder rules.
-parseIntruderRules :: MaudeSig -> FilePath -> IO [IntrRuleAC]
-parseIntruderRules msig = parseFile (setState msig >> many intrRule)
+parseIntruderRules
+    :: MaudeSig -> String -> B.ByteString -> Either ParseError [IntrRuleAC]
+parseIntruderRules msig ctxtDesc =
+    parseString ctxtDesc (setState msig >> many intrRule)
+  . T.unpack . TE.decodeUtf8
 
 -- | Parse a security protocol theory from a string.
 parseOpenTheoryString :: [String]  -- ^ Defined flags.
                       -> String -> Either ParseError OpenTheory
 parseOpenTheoryString flags = parseString "<unknown source>" (theory flags)
+
+-- | Parse a security protocol theory from a string.
+parseOpenDiffTheoryString :: [String]  -- ^ Defined flags.
+                      -> String -> Either ParseError OpenDiffTheory
+parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory flags)
 
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (Lemma ProofSkeleton)
@@ -111,6 +161,18 @@ binaryAlgApp plit = do
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
+diffOp :: Ord l => Parser (Term l) -> Parser (Term l)
+diffOp plit = do
+  ts <- symbol "diff" *> parens (commaSep (multterm plit))
+  when (2 /= length ts) $ fail $
+    "the diff operator requires exactly 2 arguments"
+  diff <- enableDiff <$> getState
+  when (not diff) $ fail $
+    "diff operator found, but flag diff not set"
+  let arg1 = head ts
+  let arg2 = head (tail ts)
+  return $ fAppDiff (arg1, arg2)
+
 -- | Parse a term.
 term :: Ord l => Parser (Term l) -> Parser (Term l)
 term plit = asum
@@ -123,7 +185,7 @@ term plit = asum
     ]
     <?> "term"
   where
-    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp]
+    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp]
     pairing = angled (tupleterm plit)
     nullaryApp = do
       maudeSig <- getState
@@ -418,11 +480,24 @@ guardedFormula = try $ do
 -- Parsing Axioms
 ------------------------------------------------------------------------------
 
+-- | Parse a 'AxiomAttribute'.
+axiomAttribute :: Parser AxiomAttribute
+axiomAttribute = asum
+  [ symbol "left"          *> pure LHSAxiom
+  , symbol "right"         *> pure RHSAxiom
+  , symbol "both"          *> pure BothAxiom
+  ]
+
 -- | Parse an axiom.
 axiom :: Parser Axiom
 axiom = Axiom <$> (symbol "axiom" *> identifier <* colon)
               <*> doubleQuoted standardFormula
 
+-- | Parse a diff axiom.
+diffAxiom :: Parser ParseAxiom
+diffAxiom = ParseAxiom <$> (symbol "axiom" *> identifier)
+              <*> (option [] $ list axiomAttribute)
+              <*> (colon *> doubleQuoted standardFormula)
 
 ------------------------------------------------------------------------------
 -- Parsing Lemmas
@@ -434,6 +509,9 @@ lemmaAttribute = asum
   [ symbol "typing"        *> pure TypingLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
+  , symbol "left"          *> pure LHSLemma
+  , symbol "right"         *> pure RHSLemma
+--   , symbol "both"          *> pure BothLemma
   ]
 
 -- | Parse a 'TraceQuantifier'.
@@ -451,7 +529,12 @@ lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
                       <*> doubleQuoted standardFormula
                       <*> (proofSkeleton <|> pure (unproven ()))
 
+-- | Parse a diff lemma.
+diffLemma :: Parser (DiffLemma DiffProofSkeleton)
+diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
+                              <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
+                      
 ------------------------------------------------------------------------------
 -- Parsing Proofs
 ------------------------------------------------------------------------------
@@ -491,7 +574,7 @@ goal = asum
     disjSplitGoal = (DisjG . Disj) <$> sepBy1 guardedFormula (symbol "∥")
 
     eqSplitGoal = try $ do
-        symbol_ "split"
+        symbol_ "splitEqs"
         parens $ (SplitG . SplitId . fromIntegral) <$> natural
 
 
@@ -524,6 +607,39 @@ proofSkeleton =
         return (LNode (ProofStep method ()) (M.fromList cases))
 
     oneCase = (,) <$> (symbol "case" *> identifier) <*> proofSkeleton
+
+-- | Parse a proof method.
+diffProofMethod :: Parser DiffProofMethod
+diffProofMethod = asum
+  [ symbol "sorry"            *> pure (DiffSorry Nothing)
+  , symbol "rule-equivalence" *> pure DiffRuleEquivalence
+  , symbol "backward-search"  *> pure DiffBackwardSearch
+  , symbol "step"             *> (DiffBackwardSearchStep <$> parens proofMethod)
+  , symbol "ATTACK"           *> pure DiffAttack
+  ]
+    
+-- | Parse a diff proof skeleton.
+diffProofSkeleton :: Parser DiffProofSkeleton
+diffProofSkeleton =
+    solvedProof {-<|> attackProof-} <|> finalProof <|> interProof
+  where
+    solvedProof =
+        symbol "MIRRORED" *> pure (LNode (DiffProofStep DiffMirrored ()) M.empty)
+
+--     attackProof =
+--         symbol "ATTACK" *> pure (LNode (DiffProofStep DiffAttack ()) M.empty)
+        
+    finalProof = do
+        method <- symbol "by" *> diffProofMethod
+        return (LNode (DiffProofStep method ()) M.empty)
+
+    interProof = do
+        method <- diffProofMethod
+        cases  <- (sepBy oneCase (symbol "next") <* symbol "qed") <|>
+                  ((return . (,) "") <$> diffProofSkeleton          )
+        return (LNode (DiffProofStep method ()) (M.fromList cases))
+
+    oneCase = (,) <$> (symbol "case" *> identifier) <*> diffProofSkeleton
 
 ------------------------------------------------------------------------------
 -- Parsing Signatures
@@ -588,11 +704,18 @@ equations =
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
        -> Parser OpenTheory
-theory flags0 = do
+theory flags0 = do 
+    msig <- getState
+    when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
     symbol_ "begin"
-        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory)
+--        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory)
+        *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
+--        *> addItems (S.fromList flags0) (set (sigpMaudeSig . thySignature) (TEMPORARY.MaudeSig False False False True pairFunSig TEMP2.pairRules S.empty S.empty)  (set thyName thyId (defaultOpenTheory True)))  -- instead of "True" use: ("diff" `S.member` (S.fromList flags0))
+--           set (enableDiff . sigpMaudeSig . thySignature) msig thy
+-- debugging:    fail $ "hallo" ++ show msig
+--set (enableDiff . sigpMaudeSig . thySignature) (True)    
         <* symbol "end"
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
@@ -649,3 +772,97 @@ theory flags0 = do
     liftedAddAxiom thy ax = case addAxiom ax thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
+
+        
+-- | Parse a diff theory.
+diffTheory :: [String]   -- ^ Defined flags.
+       -> Parser OpenDiffTheory
+diffTheory flags0 = do 
+    msig <- getState
+    putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
+    symbol_ "theory"
+    thyId <- identifier
+    symbol_ "begin"
+        *> addItems (S.fromList flags0) (set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` (S.fromList flags0))))
+        <* symbol "end"
+  where
+    addItems :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
+    addItems flags thy = asum
+      [ do builtins
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
+      , do functions
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
+      , do equations
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
+--      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
+--           addItems flags thy'
+      , do thy' <- liftedAddAxiom thy =<< diffAxiom
+           addItems flags thy'
+      , do thy' <- liftedAddLemma thy =<< lemma
+           addItems flags thy'
+      , do thy' <- liftedAddDiffLemma thy =<< diffLemma
+           addItems flags thy'
+      , do ru <- protoRule
+           thy' <- liftedAddProtoRule thy ru
+           addItems flags thy'
+      , do r <- intrRule
+           addItems flags (addIntrRuleACsDiffBoth [r] thy)
+      , do c <- formalComment
+           addItems flags (addFormalCommentDiff c thy)
+      , do ifdef flags thy
+      , do define flags thy
+      , do return thy
+      ]
+
+    define :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
+    define flags thy = do
+       flag <- try (symbol "#define") *> identifier
+       addItems (S.insert flag flags) thy
+
+    ifdef :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
+    ifdef flags thy = do
+       flag <- symbol_ "#ifdef" *> identifier
+       thy' <- addItems flags thy
+       symbol_ "#endif"
+       if flag `S.member` flags
+         then addItems flags thy'
+         else addItems flags thy
+
+    liftedAddProtoRule thy ru = case addProtoDiffRule ru thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
+
+    liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (prettyDiffLemmaName ru)
+        
+    liftedAddLemma thy lem = if isLeftLemma lem
+                                then case addLemmaDiff LHS lem thy of
+                                        Just thy' -> return thy'
+                                        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+                                else if isRightLemma lem 
+                                     then case addLemmaDiff RHS lem thy of
+                                             Just thy' -> return thy'
+                                             Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+                                     else case addLemmaDiff RHS (addRightLemma lem) thy of
+                                             Just thy' -> case addLemmaDiff LHS (addLeftLemma lem) thy' of
+                                                             Just thy'' -> return thy''
+                                                             Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+                                             Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+
+    liftedAddAxiom thy ax = if isLeftAxiom ax
+                               then case addAxiomDiff LHS (toAxiom ax) thy of
+                                       Just thy' -> return thy'
+                                       Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
+                               else if isRightAxiom ax
+                                       then case addAxiomDiff RHS (toAxiom ax) thy of
+                                          Just thy' -> return thy'
+                                          Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
+                                       else case addAxiomDiff RHS (toAxiom ax) thy of
+                                          Just thy' -> case addAxiomDiff LHS (toAxiom ax) thy' of
+                                             Just thy'' -> return thy''
+                                             Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
+                                          Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)

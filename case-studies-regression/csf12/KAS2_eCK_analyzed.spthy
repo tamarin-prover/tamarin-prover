@@ -231,17 +231,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/KAS2_eCK.spthy
+analyzing: examples/csf12/KAS2_eCK.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/KAS2_eCK.spthy
+analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.880877s
+  processing time: 3.255143s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ------------------------------------------------------------------------------
@@ -249,10 +249,10 @@ analyzed: data/examples/csf12/KAS2_eCK.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/KAS2_eCK.spthy
+analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.880877s
+  processing time: 3.255143s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

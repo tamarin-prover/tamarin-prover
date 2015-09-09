@@ -1,8 +1,12 @@
 Authors:
-  Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>
+  Benedikt Schmidt <beschmi@gmail.com>
   Simon Meier      <iridcode@gmail.com>
 
+Obervational Equivalence authors:
+  Jannik Dreier <research@jannikdreier.net>
+  Ralf Sasse    <ralf.sasse@gmail.com>
+
 Contributors:
-  protocol models, GUI:   Cas Cremers <cas.cremers@inf.ethz.ch>
+  protocol models, GUI:   Cas Cremers <cas.cremers@cs.ox.ac.uk>
   original web interface: Cedric Staub <cs@cssx.ch
   YubiKey models:         Robert Kuennemann <kunneman@lsv.ens-cachan.fr>

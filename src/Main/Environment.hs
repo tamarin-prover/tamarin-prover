@@ -21,9 +21,8 @@ import           System.Exit
 import           System.IO
 import           System.Process
 
-import           Paths_tamarin_prover
-
 import           Main.Console
+
 
 ------------------------------------------------------------------------------
 -- Retrieving the paths to required tools.
@@ -67,11 +66,6 @@ getCpuModel =
   errMsg = "could not extract CPU model"
   handler :: IOException -> IO String
   handler _ = return errMsg
-
--- | Get the path to the Html template file.
-getHtmlTemplate :: IO FilePath
-getHtmlTemplate = getDataFileName "HTML_TEMPLATE"
-
 
 -- | Build the command line corresponding to a program arguments tuple.
 commandLine :: String -> [String] -> String
@@ -147,8 +141,9 @@ ensureMaude as = do
     maude = maudePath as
     checkVersion out _
       | filter (not . isSpace) out == "2.6" = Right "2.6. OK."
+      | filter (not . isSpace) out == "2.7" = Right "2.7. OK."
       | otherwise                           = Left  $ errMsg $
-          " 'maude --version' returned wrong verison '" ++ out ++ "'"
+          " 'maude --version' returned wrong version '" ++ out ++ "'"
 
     checkInstall _ []  = Right "OK."
     checkInstall _ err = Left  $ errMsg err
@@ -159,7 +154,7 @@ ensureMaude as = do
           , ""
           , reason
           , " " ++ programName ++ " will likely not work."
-          , " Please download 'Core Maude 2.6' from:"
+          , " Please download 'Core Maude 2.7' (or 2.6) from:"
           , "    http://maude.cs.uiuc.edu/download/"
           , " Note that 'prelude.maude' must be in the same directory as the 'maude' executable."
           ]

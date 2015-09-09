@@ -218,7 +218,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
         case Sessionkey_Reveal_case_1
         solve( splitEqs(1) )
           case split_case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case split_case_2
           solve( !KU( 'g'^(~ekI*~ekR*inv(~tid)) ) @ #vk.18 )
@@ -251,7 +251,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
         case Sessionkey_Reveal_case_3
         solve( splitEqs(2) )
           case split_case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case split_case_2
           solve( !KU( 'g'^(~ekI*~ekR*inv(~tid)) ) @ #vk.22 )
@@ -269,7 +269,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
         case Sessionkey_Reveal_case_4
         solve( splitEqs(2) )
           case split_case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case split_case_2
           solve( !KU( 'g'^(~ekI*~ekR*inv(~tid)) ) @ #vk.22 )
@@ -302,7 +302,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
     qed
   next
     case Register_pk_clone_case_2
-    by contradiction // from formulas
+    by contradiction /* from formulas */
   qed
 qed
 
@@ -342,7 +342,7 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
         case Sessionkey_Reveal_case_1
         solve( splitEqs(2) )
           case split_case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case split_case_2
           solve( !KU( 'g'^(~ekI*~ekR*inv(~tid)) ) @ #vk.23 )
@@ -375,7 +375,7 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
         case Sessionkey_Reveal_case_3
         solve( splitEqs(3) )
           case split_case_1
-          by contradiction // from formulas
+          by contradiction /* from formulas */
         next
           case split_case_2
           solve( !KU( 'g'^(~ekI*~ekR*inv(~tid)) ) @ #vk.27 )
@@ -419,7 +419,7 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
       qed
     next
       case Init_2_case_2
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case csign
       by solve( !KU( ~ltkI ) @ #vk.15 )
@@ -427,7 +427,7 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
   qed
 next
   case Register_pk_clone_case_2
-  by contradiction // from formulas
+  by contradiction /* from formulas */
 qed
 
 /* All well-formedness checks were successful. */
@@ -435,17 +435,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/csf12/STS_MAC_fix2.spthy
+analyzing: examples/csf12/STS_MAC_fix2.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/csf12/STS_MAC_fix2.spthy
+analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.77607s
+  processing time: 2.020991s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (34 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (34 steps)
 
@@ -454,10 +454,10 @@ analyzed: data/examples/csf12/STS_MAC_fix2.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/csf12/STS_MAC_fix2.spthy
+analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.77607s
+  processing time: 2.020991s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (34 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (34 steps)
 

@@ -1,0 +1,41 @@
+# Vagrantfile which downloads and compiles the TAMARIN prover from source.
+# 
+# Usage:
+#   1. Install a recent version of Vagrant e.g. 1.7.2. (The apt-get packages are extremely old.)
+#   2. Download this file somewhere, still called Vagrantfile.
+#   3. Run `vagrant up` and wait for a while.
+#   4. Open localhost:3001 on your local machine.
+# 
+# If you want to get your hands dirty, you can `vagrant ssh` to connect to the running VM
+# as the vagrant user. TAMARIN lives in ~/tamarin-prover and the binary is symlinked into
+# PATH. Note that you must specify --interface=*4 to ensure that the port forwarding acts
+# correctly; otherwise you will not be able to access TAMARIN from your external machine.
+# 
+# There is a crontab entry, so you can `vagrant halt` and `vagrant up` to stop and start.
+
+$script = <<SCRIPT
+echo "Provisioning..."
+sudo apt-get install -y maude graphviz zlib1g-dev ghc cabal-install git
+git clone --depth 1 --single-branch --branch develop https://github.com/tamarin-prover/tamarin-prover/
+cd tamarin-prover
+make
+sudo ln -s /home/vagrant/tamarin-prover/cabal-sandbox/bin/tamarin-prover /usr/local/bin/
+echo "@reboot /home/vagrant/tamarin-prover/cabal-sandbox/bin/tamarin-prover interactive --interface=*4 /home/vagrant/tamarin-prover/examples/ > /home/vagrant/tamarin.log &" | crontab -
+nohup tamarin-prover interactive --interface=*4 /home/vagrant/tamarin-prover/examples/ > tamarin.log &
+SCRIPT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "chef/ubuntu-14.10"
+
+  # Forward Tamarin's default port so you can use your local browser
+  config.vm.network "forwarded_port", guest: 3001, host: 3001
+
+  # Bump the memory. You may wish to change this.
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 1024
+    vb.cpus = 2
+  end
+
+  # A shell script that installs Tamarin and its dependencies
+  config.vm.provision "shell", inline: $script, privileged: false
+end

@@ -699,10 +699,10 @@ solve( (∃ #l matchingComm.
              ⇒
               (∀ #l. (Corrupt( A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( B ) @ #l) ⇒ ⊥))) )
       case case_1
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case case_2
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case case_3
       solve( Complete( <'UM3', A, B, (matchingComm+rest)>, role, k ) @ #i )
@@ -894,16 +894,16 @@ solve( (∃ #l matchingComm.
                                               'g'^~ey>))
                                ) @ #vk )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -1112,16 +1112,16 @@ solve( (∃ #l matchingComm.
                                               'g'^~ey>))
                                ) @ #vk )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -1153,28 +1153,28 @@ solve( (∃ #l matchingComm.
                                           'g'^~ey>))
                            ) @ #vk )
                       case Corrupt_SessionKey_case_1
-                      by contradiction // cyclic
+                      by contradiction /* cyclic */
                     next
                       case Corrupt_SessionKey_case_2
-                      by contradiction // cyclic
+                      by contradiction /* cyclic */
                     next
                       case Corrupt_SessionKey_case_3
-                      by contradiction // cyclic
+                      by contradiction /* cyclic */
                     next
                       case Corrupt_SessionKey_case_4
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Reveal_SessionKey_case_1
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Reveal_SessionKey_case_2
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Reveal_SessionKey_case_3
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case Reveal_SessionKey_case_4
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case csecond
                       solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey>)
@@ -1304,7 +1304,7 @@ solve( (∃ #l matchingComm.
                           >
                      ) @ #l )
                 case R_Activate
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               qed
             qed
           qed
@@ -1368,7 +1368,7 @@ solve( (∃ #l matchingComm.
              ⇒
               (∀ #l. (Corrupt( A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( B ) @ #l) ⇒ ⊥))) )
       case case_1
-      by contradiction // from formulas
+      by contradiction /* from formulas */
     next
       case case_2
       solve( Complete( <'UM3', A, B, comm>, role, k ) @ #i )
@@ -1497,7 +1497,7 @@ solve( (∃ #l matchingComm.
                                ⇒
                                 (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                         case case_1
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       next
                         case case_2
                         solve( SidUpdated( <'UM3', $A, $A, 
@@ -1521,16 +1521,16 @@ solve( (∃ #l matchingComm.
                                                       'g'^~ey>))
                                        ) @ #vk.2 )
                                   case Corrupt_SessionKey_case_1
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 next
                                   case Corrupt_SessionKey_case_2
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 next
                                   case Reveal_SessionKey_case_1
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case Reveal_SessionKey_case_2
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case csecond
                                   solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -1558,16 +1558,16 @@ solve( (∃ #l matchingComm.
                                               'g'^~ey>))
                                ) @ #vk.2 )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -1624,7 +1624,7 @@ solve( (∃ #l matchingComm.
                                                >
                                        ) ▶₀ #l )
                                   case I_Complete
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 qed
                               next
                                 case R_Expire
@@ -1720,7 +1720,7 @@ solve( (∃ #l matchingComm.
                                             (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧
                                             (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                                     case case_1
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   next
                                     case case_2
                                     solve( SidUpdated( <'UM3', $A, $A, 
@@ -1820,7 +1820,7 @@ solve( (∃ #l matchingComm.
                                                >
                                        ) ▶₀ #l )
                                   case I_Complete
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 qed
                               next
                                 case R_Expire
@@ -1916,7 +1916,7 @@ solve( (∃ #l matchingComm.
                                             (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧
                                             (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                                     case case_1
-                                    by contradiction // from formulas
+                                    by contradiction /* from formulas */
                                   next
                                     case case_2
                                     solve( SidUpdated( <'UM3', $A, $A, 
@@ -2076,7 +2076,7 @@ solve( (∃ #l matchingComm.
                                ⇒
                                 (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                         case case_1
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       next
                         case case_2
                         solve( SidUpdated( <'UM3', $A, $A, 
@@ -2100,16 +2100,16 @@ solve( (∃ #l matchingComm.
                                                       'g'^~ey>))
                                        ) @ #vk.2 )
                                   case Corrupt_SessionKey_case_1
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 next
                                   case Corrupt_SessionKey_case_2
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 next
                                   case Reveal_SessionKey_case_1
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case Reveal_SessionKey_case_2
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 next
                                   case csecond
                                   solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -2137,16 +2137,16 @@ solve( (∃ #l matchingComm.
                                               'g'^~ey>))
                                ) @ #vk.2 )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -2278,7 +2278,7 @@ solve( (∃ #l matchingComm.
                            ⇒
                             (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥))) )
                     case case_1
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case case_2
                     solve( !Ltk( $B, ~ea ) ▶₂ #l )
@@ -2327,16 +2327,16 @@ solve( (∃ #l matchingComm.
                                                     'g'^~ey>))
                                      ) @ #vk )
                                 case Corrupt_SessionKey_case_1
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Corrupt_SessionKey_case_2
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Reveal_SessionKey_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_SessionKey_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case csecond
                                 solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -2399,16 +2399,16 @@ solve( (∃ #l matchingComm.
                                                     'g'^~ey>))
                                      ) @ #vk )
                                 case Corrupt_SessionKey_case_1
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Corrupt_SessionKey_case_2
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Reveal_SessionKey_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_SessionKey_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case csecond
                                 solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -2466,16 +2466,16 @@ solve( (∃ #l matchingComm.
                                                 'g'^~ey>))
                                  ) @ #vk )
                             case Corrupt_SessionKey_case_1
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Corrupt_SessionKey_case_2
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Reveal_SessionKey_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_SessionKey_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case csecond
                             solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -2508,16 +2508,16 @@ solve( (∃ #l matchingComm.
                                                 'g'^~ey>))
                                  ) @ #vk )
                             case Corrupt_SessionKey_case_1
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Corrupt_SessionKey_case_2
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Reveal_SessionKey_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_SessionKey_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case csecond
                             solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -2617,7 +2617,7 @@ solve( (∃ #l matchingComm.
                            ⇒
                             (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥))) )
                     case case_1
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case case_2
                     solve( !Ltk( $B, ~x ) ▶₂ #l )
@@ -2668,16 +2668,16 @@ solve( (∃ #l matchingComm.
                                                     'g'^~ey>))
                                      ) @ #vk )
                                 case Corrupt_SessionKey_case_1
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Corrupt_SessionKey_case_2
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Reveal_SessionKey_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_SessionKey_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case csecond
                                 solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -2704,16 +2704,16 @@ solve( (∃ #l matchingComm.
                                                     'g'^~ey>))
                                      ) @ #vk )
                                 case Corrupt_SessionKey_case_1
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Corrupt_SessionKey_case_2
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Reveal_SessionKey_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_SessionKey_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case csecond
                                 solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -2741,28 +2741,28 @@ solve( (∃ #l matchingComm.
                                                   'g'^~ey>))
                                    ) @ #vk )
                               case Corrupt_SessionKey_case_1
-                              by contradiction // cyclic
+                              by contradiction /* cyclic */
                             next
                               case Corrupt_SessionKey_case_2
-                              by contradiction // cyclic
+                              by contradiction /* cyclic */
                             next
                               case Corrupt_SessionKey_case_3
-                              by contradiction // cyclic
+                              by contradiction /* cyclic */
                             next
                               case Corrupt_SessionKey_case_4
-                              by contradiction // cyclic
+                              by contradiction /* cyclic */
                             next
                               case Reveal_SessionKey_case_1
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case Reveal_SessionKey_case_2
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case Reveal_SessionKey_case_3
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case Reveal_SessionKey_case_4
-                              by contradiction // from formulas
+                              by contradiction /* from formulas */
                             next
                               case csecond
                               solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey>)
@@ -2794,28 +2794,28 @@ solve( (∃ #l matchingComm.
                                               'g'^~ey>))
                                ) @ #vk )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_3
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_4
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_3
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_4
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey>)
@@ -2965,7 +2965,7 @@ solve( (∃ #l matchingComm.
                                ⇒
                                 (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                         case case_1
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       next
                         case case_2
                         solve( !Pk( $A, 'g'^~eb ) ▶₃ #l )
@@ -2987,16 +2987,16 @@ solve( (∃ #l matchingComm.
                                                     'g'^~ey>))
                                      ) @ #vk )
                                 case Corrupt_SessionKey_case_1
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Corrupt_SessionKey_case_2
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Reveal_SessionKey_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_SessionKey_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case csecond
                                 solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -3025,16 +3025,16 @@ solve( (∃ #l matchingComm.
                                                 'g'^~ey>))
                                  ) @ #vk )
                             case Corrupt_SessionKey_case_1
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Corrupt_SessionKey_case_2
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Reveal_SessionKey_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_SessionKey_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case csecond
                             solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -3132,7 +3132,7 @@ solve( (∃ #l matchingComm.
                                ⇒
                                 (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                         case case_1
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       next
                         case case_2
                         solve( !Pk( $A, 'g'^~eb ) ▶₃ #l )
@@ -3224,7 +3224,7 @@ solve( (∃ #l matchingComm.
                                ⇒
                                 (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                         case case_1
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       next
                         case case_2
                         solve( !Pk( $A, 'g'^~eb ) ▶₃ #l )
@@ -3246,16 +3246,16 @@ solve( (∃ #l matchingComm.
                                                     'g'^~ey>))
                                      ) @ #vk )
                                 case Corrupt_SessionKey_case_1
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Corrupt_SessionKey_case_2
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Reveal_SessionKey_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_SessionKey_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case csecond
                                 solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -3284,16 +3284,16 @@ solve( (∃ #l matchingComm.
                                                 'g'^~ey>))
                                  ) @ #vk )
                             case Corrupt_SessionKey_case_1
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Corrupt_SessionKey_case_2
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Reveal_SessionKey_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_SessionKey_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case csecond
                             solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -3353,28 +3353,28 @@ solve( (∃ #l matchingComm.
                                               'g'^~ey>))
                                ) @ #vk )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_3
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_4
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_3
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_4
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey>)
@@ -3413,28 +3413,28 @@ solve( (∃ #l matchingComm.
                                               'g'^~ey>))
                                ) @ #vk )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_3
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_4
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_3
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_4
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey>)
@@ -3533,7 +3533,7 @@ solve( (∃ #l matchingComm.
                                     <'R', $A, $A, 'g'^~ey, X>)
                            ) @ #vk.1 )
                       case I_Complete
-                      by contradiction // from formulas
+                      by contradiction /* from formulas */
                     next
                       case cMAC
                       solve( !KU( first(h(<z, 'g'^(~eb*~eb), $A, $A, X, 'g'^~ey>)) ) @ #vk.4 )
@@ -3572,7 +3572,7 @@ solve( (∃ #l matchingComm.
                                                >
                                        ) ▶₀ #l )
                                   case I_Complete
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case R_Expire
@@ -3590,7 +3590,7 @@ solve( (∃ #l matchingComm.
                                                >
                                        ) ▶₀ #l )
                                   case R_Complete
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 qed
                               qed
                             qed
@@ -3626,7 +3626,7 @@ solve( (∃ #l matchingComm.
                                                >
                                        ) ▶₀ #l )
                                   case I_Complete
-                                  by contradiction // from formulas
+                                  by contradiction /* from formulas */
                                 qed
                               next
                                 case R_Expire
@@ -3644,7 +3644,7 @@ solve( (∃ #l matchingComm.
                                                >
                                        ) ▶₀ #l )
                                   case R_Complete
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 qed
                               qed
                             qed
@@ -3780,13 +3780,13 @@ solve( (∃ #l matchingComm.
                         case case_1
                         solve( R_Act( ~ey, $A, $A, X ) ▶₀ #v )
                           case R_Activate
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         qed
                       next
                         case case_2
                         solve( R_Act( ~ey, $A, $A, X ) ▶₀ #v )
                           case R_Activate
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         qed
                       next
                         case case_3
@@ -3827,16 +3827,16 @@ solve( (∃ #l matchingComm.
                                                     'g'^~ey>))
                                      ) @ #vk.1 )
                                 case Corrupt_SessionKey_case_1
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Corrupt_SessionKey_case_2
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Reveal_SessionKey_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_SessionKey_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case csecond
                                 solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -3863,16 +3863,16 @@ solve( (∃ #l matchingComm.
                                                     'g'^~ey>))
                                      ) @ #vk.1 )
                                 case Corrupt_SessionKey_case_1
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Corrupt_SessionKey_case_2
-                                by contradiction // cyclic
+                                by contradiction /* cyclic */
                               next
                                 case Reveal_SessionKey_case_1
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case Reveal_SessionKey_case_2
-                                by contradiction // from formulas
+                                by contradiction /* from formulas */
                               next
                                 case csecond
                                 solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -3998,7 +3998,7 @@ solve( (∃ #l matchingComm.
                                                      >
                                              ) ▶₀ #l )
                                         case R_Complete
-                                        by contradiction // cyclic
+                                        by contradiction /* cyclic */
                                       qed
                                     qed
                                   qed
@@ -4103,7 +4103,7 @@ solve( (∃ #l matchingComm.
                                                      >
                                              ) ▶₀ #l )
                                         case R_Complete
-                                        by contradiction // cyclic
+                                        by contradiction /* cyclic */
                                       qed
                                     qed
                                   qed
@@ -4152,16 +4152,16 @@ solve( (∃ #l matchingComm.
                                               'g'^~ey>))
                                ) @ #vk.1 )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -4188,16 +4188,16 @@ solve( (∃ #l matchingComm.
                                               'g'^~ey>))
                                ) @ #vk.1 )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -4406,7 +4406,7 @@ solve( (∃ #l matchingComm.
                                                >
                                        ) ▶₀ #l )
                                   case R_Complete
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 qed
                               qed
                             qed
@@ -4594,7 +4594,7 @@ solve( (∃ #l matchingComm.
                                                >
                                        ) ▶₀ #l )
                                   case R_Complete
-                                  by contradiction // cyclic
+                                  by contradiction /* cyclic */
                                 qed
                               qed
                             qed
@@ -4696,7 +4696,7 @@ next
                      ⇒
                       (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
               case case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case case_2
               solve( (∀ rest.
@@ -4855,16 +4855,16 @@ next
                                                 'g'^~ey>))
                                  ) @ #vk.2 )
                             case Corrupt_SessionKey_case_1
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Corrupt_SessionKey_case_2
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Reveal_SessionKey_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_SessionKey_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case csecond
                             solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -5141,16 +5141,16 @@ next
                                                 'g'^~ey>))
                                  ) @ #vk.2 )
                             case Corrupt_SessionKey_case_1
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Corrupt_SessionKey_case_2
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Reveal_SessionKey_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_SessionKey_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case csecond
                             solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -5294,16 +5294,16 @@ next
                                         'g'^~ey>))
                          ) @ #vk.2 )
                     case Corrupt_SessionKey_case_1
-                    by contradiction // cyclic
+                    by contradiction /* cyclic */
                   next
                     case Corrupt_SessionKey_case_2
-                    by contradiction // cyclic
+                    by contradiction /* cyclic */
                   next
                     case Reveal_SessionKey_case_1
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case Reveal_SessionKey_case_2
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case csecond
                     solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -5496,16 +5496,16 @@ next
                                         'g'^~ey>))
                          ) @ #vk.2 )
                     case Corrupt_SessionKey_case_1
-                    by contradiction // cyclic
+                    by contradiction /* cyclic */
                   next
                     case Corrupt_SessionKey_case_2
-                    by contradiction // cyclic
+                    by contradiction /* cyclic */
                   next
                     case Reveal_SessionKey_case_1
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case Reveal_SessionKey_case_2
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case csecond
                     solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -5599,7 +5599,7 @@ next
                      ⇒
                       (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥))) )
               case case_1
-              by contradiction // from formulas
+              by contradiction /* from formulas */
             next
               case case_2
               solve( SidUpdated( <'UM3', $B, $A, 
@@ -5811,16 +5811,16 @@ next
                                                 'g'^~ey>))
                                  ) @ #vk.2 )
                             case Corrupt_SessionKey_case_1
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Corrupt_SessionKey_case_2
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Reveal_SessionKey_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_SessionKey_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case csecond
                             solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -5853,16 +5853,16 @@ next
                                                 'g'^~ey>))
                                  ) @ #vk.2 )
                             case Corrupt_SessionKey_case_1
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Corrupt_SessionKey_case_2
-                            by contradiction // cyclic
+                            by contradiction /* cyclic */
                           next
                             case Reveal_SessionKey_case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case Reveal_SessionKey_case_2
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case csecond
                             solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~ea), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -5995,28 +5995,28 @@ next
                                               'g'^~ey>))
                                ) @ #vk.2 )
                           case Corrupt_SessionKey_case_1
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_2
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_3
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Corrupt_SessionKey_case_4
-                          by contradiction // cyclic
+                          by contradiction /* cyclic */
                         next
                           case Reveal_SessionKey_case_1
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_2
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_3
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case Reveal_SessionKey_case_4
-                          by contradiction // from formulas
+                          by contradiction /* from formulas */
                         next
                           case csecond
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey>)
@@ -6045,13 +6045,13 @@ next
                                     'g'^~ey>))
                      ) @ #vk.2 )
                 case Corrupt_SessionKey_case_1
-                by contradiction // cyclic
+                by contradiction /* cyclic */
               next
                 case Corrupt_SessionKey_case_2
-                by contradiction // cyclic
+                by contradiction /* cyclic */
               next
                 case Corrupt_SessionKey_case_3
-                by contradiction // cyclic
+                by contradiction /* cyclic */
               next
                 case Corrupt_SessionKey_case_4
                 solve( (∃ #v.
@@ -6189,7 +6189,7 @@ next
                       qed
                     next
                       case I_Complete_case_2
-                      by contradiction // cyclic
+                      by contradiction /* cyclic */
                     qed
                   next
                     case R_Expire
@@ -6207,22 +6207,22 @@ next
                                    >
                            ) ▶₀ #l )
                       case R_Complete
-                      by contradiction // cyclic
+                      by contradiction /* cyclic */
                     qed
                   qed
                 next
                   case case_2
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 qed
               next
                 case Reveal_SessionKey_case_1
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case Reveal_SessionKey_case_2
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case Reveal_SessionKey_case_3
-                by contradiction // from formulas
+                by contradiction /* from formulas */
               next
                 case Reveal_SessionKey_case_4
                 solve( (∃ #v.
@@ -6314,7 +6314,7 @@ next
                             ) @ #v )
                 next
                   case case_2
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 qed
               next
                 case csecond
@@ -6372,10 +6372,10 @@ next
                                      >
                              ) ▶₀ #l )
                         case I_Complete_case_1
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case I_Complete_case_2
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       qed
                     next
                       case R_Expire
@@ -6491,7 +6491,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -6849,7 +6849,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -7088,7 +7088,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -7312,10 +7312,10 @@ next
                                      >
                              ) ▶₀ #l )
                         case I_Complete_case_1
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case I_Complete_case_2
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       qed
                     next
                       case R_Expire
@@ -7431,7 +7431,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -7789,7 +7789,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -8028,7 +8028,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -8252,10 +8252,10 @@ next
                                      >
                              ) ▶₀ #l )
                         case I_Complete_case_1
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case I_Complete_case_2
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       qed
                     next
                       case R_Expire
@@ -8371,7 +8371,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -8729,7 +8729,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -8968,7 +8968,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -9346,7 +9346,7 @@ next
                          ⇒
                           (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                   case case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case case_2
                   by solve( SidUpdated( <'UM3', $A, $A, 
@@ -9456,7 +9456,7 @@ next
                          ⇒
                           (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                   case case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case case_2
                   solve( SidUpdated( <'UM3', $A, $A, 
@@ -9476,16 +9476,16 @@ next
                                             'g'^~ey>))
                              ) @ #vk.1 )
                         case Corrupt_SessionKey_case_1
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case Corrupt_SessionKey_case_2
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case Reveal_SessionKey_case_1
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       next
                         case Reveal_SessionKey_case_2
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       next
                         case csecond
                         solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -9511,16 +9511,16 @@ next
                                         'g'^~ey>))
                          ) @ #vk.1 )
                     case Corrupt_SessionKey_case_1
-                    by contradiction // cyclic
+                    by contradiction /* cyclic */
                   next
                     case Corrupt_SessionKey_case_2
-                    by contradiction // cyclic
+                    by contradiction /* cyclic */
                   next
                     case Reveal_SessionKey_case_1
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case Reveal_SessionKey_case_2
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case csecond
                     solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -9684,7 +9684,7 @@ next
                          ⇒
                           (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                   case case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case case_2
                   by solve( SidUpdated( <'UM3', $A, $A, 'g'^~ex> ) @ #v )
@@ -9766,7 +9766,7 @@ next
                          ⇒
                           (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                   case case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case case_2
                   by solve( SidUpdated( <'UM3', $A, $A, 'g'^~ex> ) @ #v )
@@ -9919,7 +9919,7 @@ next
                          ⇒
                           (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                   case case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case case_2
                   by solve( SidUpdated( <'UM3', $A, $A, 
@@ -10029,7 +10029,7 @@ next
                          ⇒
                           (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                   case case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case case_2
                   solve( SidUpdated( <'UM3', $A, $A, 
@@ -10049,16 +10049,16 @@ next
                                             'g'^~ey>))
                              ) @ #vk.1 )
                         case Corrupt_SessionKey_case_1
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case Corrupt_SessionKey_case_2
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case Reveal_SessionKey_case_1
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       next
                         case Reveal_SessionKey_case_2
-                        by contradiction // from formulas
+                        by contradiction /* from formulas */
                       next
                         case csecond
                         solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -10084,16 +10084,16 @@ next
                                         'g'^~ey>))
                          ) @ #vk.1 )
                     case Corrupt_SessionKey_case_1
-                    by contradiction // cyclic
+                    by contradiction /* cyclic */
                   next
                     case Corrupt_SessionKey_case_2
-                    by contradiction // cyclic
+                    by contradiction /* cyclic */
                   next
                     case Reveal_SessionKey_case_1
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case Reveal_SessionKey_case_2
-                    by contradiction // from formulas
+                    by contradiction /* from formulas */
                   next
                     case csecond
                     solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~eb), $A, $A, 'g'^~ex, 'g'^~ey>)
@@ -10232,28 +10232,28 @@ next
                                       'g'^~ey>))
                        ) @ #vk.1 )
                   case Corrupt_SessionKey_case_1
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 next
                   case Corrupt_SessionKey_case_2
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 next
                   case Corrupt_SessionKey_case_3
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 next
                   case Corrupt_SessionKey_case_4
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 next
                   case Reveal_SessionKey_case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case Reveal_SessionKey_case_2
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case Reveal_SessionKey_case_3
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case Reveal_SessionKey_case_4
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case csecond
                   solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey>)
@@ -10442,28 +10442,28 @@ next
                                       'g'^~ey>))
                        ) @ #vk.1 )
                   case Corrupt_SessionKey_case_1
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 next
                   case Corrupt_SessionKey_case_2
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 next
                   case Corrupt_SessionKey_case_3
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 next
                   case Corrupt_SessionKey_case_4
-                  by contradiction // cyclic
+                  by contradiction /* cyclic */
                 next
                   case Reveal_SessionKey_case_1
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case Reveal_SessionKey_case_2
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case Reveal_SessionKey_case_3
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case Reveal_SessionKey_case_4
-                  by contradiction // from formulas
+                  by contradiction /* from formulas */
                 next
                   case csecond
                   solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey>)
@@ -10619,7 +10619,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -10977,7 +10977,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -11216,7 +11216,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -11422,10 +11422,10 @@ next
                                      >
                              ) ▶₀ #l )
                         case R_Complete_case_1
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case R_Complete_case_2
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       qed
                     qed
                   qed
@@ -11559,7 +11559,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -11917,7 +11917,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -12156,7 +12156,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -12362,10 +12362,10 @@ next
                                      >
                              ) ▶₀ #l )
                         case R_Complete_case_1
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case R_Complete_case_2
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       qed
                     qed
                   qed
@@ -12499,7 +12499,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -12857,7 +12857,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -13096,7 +13096,7 @@ next
                                    ⇒
                                     (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                             case case_1
-                            by contradiction // from formulas
+                            by contradiction /* from formulas */
                           next
                             case case_2
                             solve( (∃ #v.
@@ -13302,10 +13302,10 @@ next
                                      >
                              ) ▶₀ #l )
                         case R_Complete_case_1
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       next
                         case R_Complete_case_2
-                        by contradiction // cyclic
+                        by contradiction /* cyclic */
                       qed
                     qed
                   qed
@@ -13324,17 +13324,17 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.6. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 
 
-analyzing: data/examples/ake/dh/UM_three_pass.spthy
+analyzing: examples/ake/dh/UM_three_pass.spthy
 
 ------------------------------------------------------------------------------
-analyzed: data/examples/ake/dh/UM_three_pass.spthy
+analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 129.591122s
+  processing time: 162.88655s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 
@@ -13343,10 +13343,10 @@ analyzed: data/examples/ake/dh/UM_three_pass.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: data/examples/ake/dh/UM_three_pass.spthy
+analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 129.591122s
+  processing time: 162.88655s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 

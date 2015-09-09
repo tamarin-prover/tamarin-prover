@@ -1,0 +1,28 @@
+theory probEnc 
+begin
+
+/*
+ * Protocol:     Probabilistic encryption
+ * Modeler:      Jannik Dreier and Ralf Sasse
+ * Described in: Automated Symbolic Proofs of Observational Equivalence [CCS'15]
+ * Date:         April 2015
+ *
+ * Status: 	working
+// Observational equivalence is proven automatically in less than 0.4 seconds.
+ */
+
+functions: penc/3, pdec/2, pk/1
+
+equations: pdec(penc(m,pk(k),r), k) = m
+
+rule gen:
+  [ Fr(~k) ]
+--[ ]->
+  [ !Key(~k), Out(pk(~k)) ]
+
+rule enc:
+  [ !Key(k), Fr(~r1), Fr(~r2), In(x) ]
+--[ ]->
+  [ Out(diff(~r1, penc(x, pk(k), ~r2))) ]
+
+end

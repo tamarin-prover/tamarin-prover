@@ -1,0 +1,62 @@
+theory InputOutputTest
+begin
+
+/*
+ * Protocol:	 Test of simple input and output (memorized)
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: 
+ * Date: 	 April 2015
+ *
+ * Status: 	 working
+ */
+
+functions: h/1, aenc/2, adec/2, pk/1
+equations: adec(aenc(m, pk(k)), k) = m
+
+rule Initialize:
+  [ Fr(~x) ]
+  --[ TestInitLabel(~x) ]->
+  [ Test(~x), Out(~x) ]
+
+rule Initialize2:
+  [ Fr(~x) ]
+  --[ TestInitLabel2(~x) ]->
+  [ Test(~x), Out(~x) ]
+
+
+// this should lead to attacks, as the adversary can check whether the memorized value needs to be received or arbitrary values are permissible
+// Registering a public key
+rule Register_pk:
+  [ Fr(~ltk), In(x), Test(diff(x,y)) ]
+  --[Testlabel()]->
+  [ Out(~ltk) ]
+
+lemma Client_session_key_secrecy:
+  " /* It cannot be that a  */
+  not( 
+      Ex k #j.
+        K(k) @ #j
+   )
+  "
+
+lemma Diff_test:
+  exists-trace
+  " /* It cannot be that a  */
+    Ex #i.
+      Testlabel() @i
+  "
+
+// This lemma uses an automatically generated Fact "DiffProtoRegister_pk"
+// which the parser does not know about, and thus complains, which can be
+// safely ignored.
+lemma Diff_test_2:
+  all-traces
+  "
+  not( Ex #i. DiffProtoRegister_pk() @ i)
+  "
+  
+// Under Rule_Equality in the RHS an attack can be found here, which
+// is based on the fact that the RHS can execute with any input, while on
+// the LHS that input needs to match the stored value.
+
+end

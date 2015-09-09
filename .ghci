@@ -1,6 +1,0 @@
-:set -iinteractive-only-src
--- :set -ilib/term/src
--- :set -ilib/utils/src
-:set -ilib/theory/src
-:set -isrc
-:set -Wall -fwarn-tabs
