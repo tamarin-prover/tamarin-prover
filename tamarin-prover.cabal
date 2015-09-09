@@ -182,6 +182,7 @@ executable tamarin-prover
       Main.Mode.Interactive
       Main.Mode.Intruder
       Main.Mode.Test
+      Main.Mode.Variants
 
       Web.Dispatch
       Web.Hamlet
