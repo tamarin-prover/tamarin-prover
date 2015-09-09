@@ -40,15 +40,15 @@ builtins: symmetric-encryption, multiset
 /* keystream models the way the keystream used for encryption is computed.
  * Mac describes the MAC used inside the AEADs, which are computed using
  * CBC mode, described in RFC 3610.
- * keystream_kh and keyhandle_n model the adversaries capacity to extract the
+ * keystreamKH and keystreamN model the adversaries capacity to extract the
  * used keyhandle and nonce that determined the keystream. (Similar for
  * demac.)
 */
-functions: keystream/2,  keystream_kh/1, keystream_n/1,
+functions: keystream/2,  keystreamKH/1, keystreamN/1,
             xorc/2, dexor1/2, dexor2/2,
             mac/2, demac/2
-equations: keystream_kh(keystream(kh,n))=kh,
-            keystream_n(keystream(n,n))=n,
+equations: keystreamKH(keystream(kh,n))=kh,
+            keystreamN(keystream(n,n))=n,
 /* an incomplete way of modelling the algebraic properties of the XOR
  * operator */
             dexor1(xorc(a,b),a)=b,
