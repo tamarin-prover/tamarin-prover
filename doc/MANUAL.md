@@ -135,6 +135,13 @@ Note that your ranking may depend on *all* the information present in a
 constraint system. Scroll down in the constraint system visualization page in
 the GUI to see what information that is.
 
+Marking facts to be solved preferentially or delayed
+----------------------------------------------------
+
+By starting a fact name with "F_" the tool will solve instances of
+that fact earlier than normal, while putting "L_" as the prefix will
+delay solving the fact. This can have a performance impact.
+
 
 Additional Theory
 =================

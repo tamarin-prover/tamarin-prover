@@ -25,8 +25,9 @@ After cloning the tamarin-prover repository run 'make default', which
 will install an appropriate GHC for your system, including all
 dependencies, and the tamarin-prover executable will be copied to
 
+```
   ~/.local/bin/tamarin-prover
-
+```
 
 Limitations on Windows
 ----------------------
@@ -39,25 +40,32 @@ functional there.
 Detailed instructions for Linux - from source
 ---------------------------------------------
 
-Use your package manager to install maude and graphviz:
+1. Use your package manager to install maude and graphviz:
 
-  sudo apt-get install maude graphviz
+   ```
+     sudo apt-get install maude graphviz
+   ```
 
-Install stack - follow instructions at 
-https://github.com/commercialhaskell/stack/wiki/Downloads
+2. Install the Haskell tool `stack` by following the instructions at 
+   https://github.com/commercialhaskell/stack/wiki/Downloads.
 
-Clone the repository
+3. Clone the `tamarin-prover` repository
 
-  git clone https://github.com/tamarin-prover/tamarin-prover.git
+   ```
+     git clone https://github.com/tamarin-prover/tamarin-prover.git
+   ```
 
-Build the tamarin-prover
+4. Build the tamarin-prover
 
-  make default
+   ```
+     make default
+   ```
+   
+   The `tamarin-prover` executable will be installed in `~/.local/bin/tamarin-prover`.
 
-The tamarin-prover executable will be installed in ~/.local/bin/tamarin-prover
+   Starting 'tamarin-prover' without arguments will output its help message,
+   including the paths to the installed example protocol models and the
+   case studies from our papers. We recommend opening the `Tutorial.spthy`
+   example file in a text editor and start exploring from there. 
 
-Starting 'tamarin-prover' without arguments will output help,
-including the paths to the installed example protocol models and the
-case studies from our papers. We recommend opening the Tutorial.spthy
-example file in a text editor and start exploring from there. Happy
-proving :-)
+   Happy proving :-)
