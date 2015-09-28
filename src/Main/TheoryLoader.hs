@@ -85,7 +85,7 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|c|C)+"
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|p|P|c|C)+"
       "Sequence of goal rankings to use (default 's')"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
@@ -293,12 +293,16 @@ constructAutoProver as =
 
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
+    ranking 'p' = SapicRanking
+    ranking 'P' = SapicPKCS11Ranking
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
     ranking r   = error $ render $ fsep $ map text $ words $
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\
+      \ 'p' for the smart ranking optimized for translations coming from SAPIC (http://sapic.gforge.inria.fr),\
+      \ 'P' for the smart ranking optimized for a specific model of PKCS11, translated using SAPIC (http://sapic.gforge.inria.fr),\
       \ 'c' for the creation order and useful goals first,\
       \ and 'C' for the creation order."
 
