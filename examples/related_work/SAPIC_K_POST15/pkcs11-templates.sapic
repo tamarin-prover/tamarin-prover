@@ -1,0 +1,332 @@
+theory PKCS11TemplatePolicy
+
+/*
+ * Protocol:    PKCS#11
+ * Modeler:     Robert Kunnemann 
+ * Date:    	Oct 2014
+ *
+ * Status:      working 
+ */
+ /*
+ * PKCS#11 Configuration with three templates:
+ *      - one for trusted keys that can backup other trusted keys
+ *      - one for trusted keys that can backup other non-trusted keys
+ *      - one non-trusted keys, that cannot backup anything
+ */
+
+begin
+
+builtins: symmetric-encryption
+
+functions: key/1, attwrap/1, attunwrap/1, attenc/1, attdec/1, attsens/1,
+attextr/1, atttrus/1, attwwt/1, attwt/1, attut/1, key/1, tem/1
+
+equations:
+ 
+ /* extract attributes */
+attwrap (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = wrap,
+attunwrap (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = unwrap,
+attenc (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = enc,
+attdec (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = dec,
+attsens (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = sens,
+attextr (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = extr,
+atttrus (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = trus,
+attwwt (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = wwt,
+attwt (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = wt,
+attut (<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>) = ut,
+key (<k,templ>) = k,
+tem (<k,templ>) = templ
+
+predicates:
+can_encrypt(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> enc='on',
+can_decrypt(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> dec='on',
+can_wrap(
+wrap1, unwrap1, enc1, dec1, sens1, extr1, trus1, wwt1, wt1, ut1,
+wrap2, unwrap2, enc2, dec2, sens2, extr2, trus2, wwt2, wt2, ut2
+) <=> ( wrap1='on' & extr2='on') &
+( (wwt2='off') 
+| ( wwt2='on' & trus1='on'))
+,
+can_unwrap(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> unwrap='on',
+can_get_keyvalue(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> sens='off',
+permits(
+t_wrap, t_unwrap, t_enc, t_dec, t_sens, t_extr, t_trus, t_wwt, t_wt, t_ut,
+wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=>
+// permissiveness can be alted by changing this predicate.
+(t_wrap = wrap) &
+(t_unwrap = unwrap) &
+(t_enc = enc) &
+(t_dec = dec) &
+(t_sens = sens) &
+(t_extr = extr) &
+(t_trus = trus) &
+(t_wwt = wwt) &
+(t_wt = wt) &
+(t_ut = ut) 
+
+let create = ( in(<'create',atts,ptr>); 
+    lock 'device';
+    new h; new k; 
+    // wrap, unwrap, enc,   dec,   sens,  extr, trus,   wwt, wt, ut
+    lookup <'template',ptr> as templ in
+        if permits(
+        attwrap(templ), attunwrap(templ), attenc(templ), attdec(templ),
+attsens(templ), attextr(templ), atttrus(templ), attwwt(templ),
+attwt(templ), attut(templ),
+        attwrap(atts), attunwrap(atts), attenc(atts), attdec(atts),
+attsens(atts), attextr(atts), atttrus(atts), attwwt(atts),
+attwt(atts), attut(atts)
+        ) then
+            event NewKey(h,k,attsens(atts)); 
+            insert <'obj',h>, <k,atts>;
+            event WrapKey(h,k,attwrap(atts));
+            event DecKey(h,k,attdec(atts));
+            event EncKey(h,k,attenc(atts));
+            event UnwrapKey(h,k,attunwrap(atts));
+            out(h) ;
+            unlock 'device'
+     )
+
+
+let decrypt= ( 
+    in(<h,senc(m,k)>); 
+    lock 'device';
+    lookup <'obj',h> as v in 
+        if can_decrypt(
+        attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
+attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)),
+attwt(tem(v)), attut(tem(v))) then 
+                if key(v)=k then
+                    event DecUsing(k,m); out(m); unlock 'device'
+        )
+
+let encrypt = ( in(<h,m>);
+    lock 'device';
+    lookup <'obj',h> as v in 
+        if can_encrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
+attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)),
+attwt(tem(v)), attut(tem(v))) then 
+            event EncUsing(key(v),m); out(senc(m,key(v))); unlock 'device' 
+        )
+
+let wrap =
+  ( in(<h1,h2>); 
+    lock 'device'; 
+    lookup <'obj',h1> as v1 in 
+        lookup <'obj',h2> as v2 in 
+            if can_wrap(
+attwrap(tem(v1)), attunwrap(tem(v1)), attenc(tem(v1)), attdec(tem(v1)),
+attsens(tem(v1)), attextr(tem(v1)), atttrus(tem(v1)), attwwt(tem(v1)),
+attwt(tem(v1)), attut(tem(v1)), attwrap(tem(v2)), attunwrap(tem(v2)),
+attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)),
+atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2))) then 
+                lookup <'template', attwt(tem(v1))> as wt in
+                    if permits(
+                            attwrap(wt), attunwrap(wt), attenc(wt), attdec(wt),
+                            attsens(wt), attextr(wt), atttrus(wt), attwwt(wt),
+                            attwt(wt), attut(wt),
+                            attwrap(tem(v2)), attunwrap(tem(v2)), attenc(tem(v2)),
+                            attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)),
+                            atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)),
+                            attut(tem(v2))
+                ) then
+                    event Wrap(key(v1),key(v2));
+                    out(senc(key(v2),key(v1)));
+                    unlock 'device'
+            )
+
+let unwrap =
+    ( in(<h,senc(m,k),atts>); 
+      lock 'device';
+      lookup <'obj',h> as v in 
+        if can_unwrap(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
+attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)),
+attwt(tem(v)), attut(tem(v))) then
+            if key(v)=k then
+                lookup <'template', attut(tem(v))> as ut in
+                    if permits(
+                            attwrap(ut), attunwrap(ut), attenc(ut), attdec(ut),
+                            attsens(ut), attextr(ut), atttrus(ut), attwwt(ut),
+                            attwt(ut), attut(ut),
+                            attwrap(atts), attunwrap(atts), attenc(atts),
+                            attdec(atts), attsens(atts), attextr(atts),
+                            atttrus(atts), attwwt(atts), attwt(atts),
+                            attut(atts)
+                    
+                    ) then
+                        new h2;
+                        insert <'obj',h2>, <m, atts >;
+                        event Unwrapped(h2,m, atts);
+                        event WrapKey(h2,m,attwrap(atts));
+                        event DecKey(h2,m,attdec(atts));
+                        event EncKey(h2,m,attenc(atts));
+                        event UnwrapKey(h2,m,attunwrap(atts));
+                        out(h2) ;
+                        unlock 'device'
+    )
+
+let get_keyvalue= ( in(h); 
+    lock 'device';
+    lookup <'obj',h> as v in 
+        if can_get_keyvalue(
+        attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
+attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)),
+attwt(tem(v)), attut(tem(v))) then 
+            event GetKeyValue(key(v)); out(key(v)); unlock 'device'
+        )
+
+insert <'template','trusted'>,
+//       wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut
+       < 'on', 'on', 'off','off','on','on', 'on', 'on','usage','usage'>;
+insert <'template','usage'>,
+//      wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut
+       <'off', 'off','on','on','on',  'on','off', 'on','undef','undef'>;
+insert <'template','untrusted'>,
+//      wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut
+       <'off', 'off','on','on','off', 'on','off', 'off','undef','undef'>;
+!( 
+   create 
+  || decrypt
+  || encrypt
+  || wrap
+  || unwrap
+  || get_keyvalue
+)
+
+/* Sanity tests */
+
+/* //verified in 3 steps (w/ bounds) */
+/* lemma can_create_key: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t h k. NewKey(h,k)@t" */
+
+/* //verified in 18 steps (w/ bounds) */
+/* lemma can__wrap: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t k1 k2 .Wrap(k1,k2)@t" */
+
+/* //verified in 13 steps (w/ bounds) */
+/* lemma can_enc: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t k m . EncUsing(k,m)@t" */
+
+
+/* //verified in 21 steps (w/ bounds) */
+/* lemma can_dec: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t k m . DecUsing(k,m)@t" */
+
+/* // can be found manually */
+/* lemma can_unwrap: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t h k .Unwrapped(h,k)@t" */
+
+lemma dec_limits[typing]: 
+	"( 
+          All k m #t1. DecUsing(k,m)@t1 ==> 
+          ( Ex h2  k2 #t2 #t3 . NewKey(h2, k2, 'on')@t2 & KU(k2)@t3 & t2<t1 & t3<t1)
+        | ( Ex h2  #t2 #t3 #t4 . NewKey(h2, k, 'off')@t2 & KU(k)@t3 & KU(m)@t4 & t2<t1 & t3<t1 & t4<t1) //new
+	| ( Ex #t2 . EncUsing(k,m)@t2 & t2<t1 )
+        | ( Ex h2  k2 #t2 #t3 a. Unwrapped(h2, k2, a)@t2 & KU(k2)@t3 & t2<t1 & t3<t1)
+        | ( Ex #t2 #t3 h1 h2 k2 .  WrapKey(h2, k2,'on') @ t2 & DecKey(h1,k2,'on') @ t3 
+                                  & t2<t1 & t3<t1 
+          )
+        )
+        &
+        //get_keyvalue
+        (All k #t2 . GetKeyValue(k)@t2 ==> Ex h #t1 . NewKey(h,k,'off')@t1 )
+        & /* object that cannot be created because there is not template that
+             allows their creation */
+        (not (Ex h k wrap unwrap enc dec sens extr trus wwt wt #t.
+        Insert( <'obj', h>,
+                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'trusted'>
+           ) @ t ))
+        &
+        (not (Ex h k wrap unwrap enc dec sens extr trus wwt wt #t.
+        Insert( <'obj', h>,
+                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'untrusted'>
+           ) @ t ))
+        &
+        (not (Ex h k wrap unwrap enc dec sens extr trus wwt ut #t.
+        Insert( <'obj', h>,
+                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'trusted', ut>
+           ) @ t ))
+        &
+        (not (Ex h k wrap unwrap enc dec sens extr trus wwt ut #t.
+        Insert( <'obj', h>,
+                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'untrusted', ut>
+           ) @ t ))
+        "
+
+lemma trusted_as_ut_impossible[reuse]: 
+    "not (Ex h k wrap unwrap enc dec sens extr trus wwt wt #t.
+        Insert( <'obj', h>,
+                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'trusted'>
+           ) @ t )"
+
+lemma untrusted_as_ut_impossible[reuse]: 
+    "not (Ex h k wrap unwrap enc dec sens extr trus wwt wt #t.
+        Insert( <'obj', h>,
+                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'untrusted'>
+           ) @ t )"
+
+lemma untrusted_as_wt_impossible[reuse]: 
+    "not (Ex h k wrap unwrap enc dec sens extr trus wwt ut #t.
+        Insert( <'obj', h>,
+                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'untrusted', ut>
+           ) @ t )"
+
+lemma trusted_as_wt_impossible[reuse]: 
+    "not (Ex h k wrap unwrap enc dec sens extr trus wwt ut #t.
+        Insert( <'obj', h>,
+                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'trusted', ut>
+           ) @ t )"
+
+lemma bad_keys [reuse, use_induction]:
+       "
+          All h2 k #t2 a . Unwrapped (h2,k,a)@t2 ==>
+                (Ex h1 #t1 . NewKey (h1,k, 'on')@t1 & t1<t2 )
+            | ( Ex h k2 #t1 #t0. NewKey(h, k2, 'on')@t0 & KU(k2)@t1 & t1<t2 & t0<t2)
+            | ( Ex #t0 #t1 h1 h2 k.  WrapKey(h2, k,'on')@ t0 & DecKey(h1,k,'on') @ t1 
+                & t0<t2 & t1<t2 )
+            | ( Ex #t0 #t1 h1 h2 k.  UnwrapKey(h2, k,'on')@ t0 & EncKey(h1,k,'on') @ t1 
+                & t0<t2 & t1<t2 )
+        "
+
+lemma no_key_is_wrap_and_dec__or_unwrap_and_dec_ind[use_induction,reuse]: 
+        "
+        (All #t2 #t3 h1 h2 k .  (DecKey(h1,k,'on') @ t2 & WrapKey(h2, k,'on') @ t3)
+        ==>
+          ( Ex h k2 #t1 #t0 . NewKey(h, k2, 'on')@t0 & KU(k2)@t1 
+              & 
+             (  ( t1<t3 & t0<t3)
+              | ( t1<t2 & t0<t2) )
+          )
+            | ( Ex #t0 #t1 h1 h2 k.  UnwrapKey(h2, k,'on')@ t0 & EncKey(h1,k,'on') @ t1 
+                    &( 
+                       ( t0<t2 & t1<t2)
+                      |( t0<t3 & t1<t3)
+                    ))
+       )
+        "
+
+lemma no_key_is_enc_and_unwrap[use_induction,reuse]: 
+        "
+        (All #t2 #t3 h1 h2 k .  (EncKey(h1,k,'on') @ t2 & UnwrapKey(h2, k,'on') @ t3)
+        ==>
+          ( Ex h k2 #t1 #t0 . NewKey(h, k2, 'on')@t0 & KU(k2)@t1 
+              & 
+             (  ( t1<t3 & t0<t3)
+              | ( t1<t2 & t0<t2) )
+          )
+       )
+        "
+
+lemma cannot_obtain_key_ind[reuse,use_induction]:
+	"not (Ex #i #j  h k . NewKey(h,k,'on')@i & KU(k) @j)"
+
+lemma cannot_obtain_key:
+	"not (Ex #i #j  h k . NewKey(h,k,'on')@i & K(k) @j)"
+
+end
+
