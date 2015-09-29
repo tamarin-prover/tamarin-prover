@@ -1758,7 +1758,7 @@ prettyClosedTheory thy =
     ppInjectiveFactInsts crc =
         case S.toList $ L.get crcInjectiveFactInsts crc of
             []   -> emptyDoc
-            tags -> lineComment $ sep
+            tags -> multiComment $ sep
                       [ text "looping facts with injective instances:"
                       , nest 2 $ fsepList (text . showFactTagArity) tags ]
 
@@ -1776,7 +1776,7 @@ prettyClosedDiffTheory thy =
     ppInjectiveFactInsts crc =
         case S.toList $ L.get crcInjectiveFactInsts crc of
             []   -> emptyDoc
-            tags -> lineComment $ sep
+            tags -> multiComment $ sep
                       [ text "looping facts with injective instances:"
                       , nest 2 $ fsepList (text . showFactTagArity) tags ]
 
