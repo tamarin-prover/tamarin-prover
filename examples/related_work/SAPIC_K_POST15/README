@@ -2,7 +2,8 @@ This example was generated the SAPIC tool available at
 http://sapic.gforge.inria.fr/
 
 You may give the file pkcs11-templates.spthy to tamarin, or generate it from
-pkcs11-templates.sapic as described below.
+pkcs11-templates.sapic as described below. Note that the proof will take about 
+half an hour and require 12GB of RAM to be available.
 
 Installation for Sapic:
 =======================
