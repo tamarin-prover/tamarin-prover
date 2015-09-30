@@ -5,7 +5,7 @@ theory Minimal_Create_Use_Destroy begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-// looping facts with injective instances: Object/1
+/* looping facts with injective instances: Object/1 */
 
 text{*
   Author: Simon Meier <simon.meier@inf.ethz.ch>
@@ -184,7 +184,7 @@ analyzing: examples/loops/Minimal_Create_Use_Destroy.spthy
 analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.153961s
+  processing time: 0.182976s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 
@@ -196,7 +196,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.153961s
+  processing time: 0.182976s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 

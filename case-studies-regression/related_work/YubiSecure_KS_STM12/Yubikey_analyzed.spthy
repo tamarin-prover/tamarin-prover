@@ -8,7 +8,7 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-// looping facts with injective instances: Server/3, Y_counter/2
+/* looping facts with injective instances: Server/3, Y_counter/2 */
 
 section{* The Yubikey-Protocol *}
 
@@ -4674,7 +4674,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 20.34175s
+  processing time: 20.231133s
   Login_reachable (exists-trace): verified (12 steps)
   one_count_foreach_login (all-traces): verified (210 steps)
   slightly_weaker_invariant (all-traces): verified (1241 steps)
@@ -4690,7 +4690,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 20.34175s
+  processing time: 20.231133s
   Login_reachable (exists-trace): verified (12 steps)
   one_count_foreach_login (all-traces): verified (210 steps)
   slightly_weaker_invariant (all-traces): verified (1241 steps)

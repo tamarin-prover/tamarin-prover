@@ -8,7 +8,7 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-// looping facts with injective instances: Sender/1
+/* looping facts with injective instances: Sender/1 */
 
 rule (modulo E) Setup:
    [ Fr( ~k ) ] --> [ Sender( ~k ), Receiver( ~k ) ]
@@ -136,7 +136,7 @@ analyzing: examples/loops/Minimal_KeyRenegotiation.spthy
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.111309s
+  processing time: 0.131244s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 
@@ -148,7 +148,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.111309s
+  processing time: 0.131244s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 
