@@ -19,7 +19,7 @@ https://github.com/tamarin-prover/bin-dists
 You can also compile tamarin-prover from source.  We manage the
 Haskell dependencies automatically, using 'stack'. First install
 'stack' according to
-https://github.com/commercialhaskell/stack/wiki/Downloads
+https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 After cloning the tamarin-prover repository run 'make default', which
 will install an appropriate GHC for your system, including all
