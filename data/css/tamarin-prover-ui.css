@@ -218,15 +218,21 @@ form.root-form div.required label {
  ************/
 
 a.active-option {
-    background-image: url(/static/img/option-on.png) !important;
+    background-image: url(/static/img/option-light.png) !important;
     background-repeat: no-repeat !important;
-    background-position: 12.8em center !important;
+    background-position: 14.1em center !important;
 }
 
 a.inactive-option {
+    background-image: url(/static/img/option-dark.png) !important;
+    background-repeat: no-repeat !important;
+    background-position: 14.1em center !important;
+}
+
+a.disabled-option {
     background-image: url(/static/img/option-off.png) !important;
     background-repeat: no-repeat !important;
-    background-position: 12.8em center !important;
+    background-position: 14.1em center !important;
 }
 
 a.remove-step {

@@ -872,25 +872,31 @@ checkWellformedness thy = concatMap ($ thy)
     ]
 
 -- | Adds a note to the end of the theory, if it is not well-formed.
-noteWellformedness :: WfErrorReport -> OpenTheory -> OpenTheory
-noteWellformedness report thy =
+noteWellformedness :: WfErrorReport -> OpenTheory -> Bool -> OpenTheory
+noteWellformedness report thy quitOnWarning =
     addComment wfErrorReport thy
   where
     wfErrorReport
       | null report = text "All well-formedness checks were successful."
-      | otherwise   = vsep
+      | otherwise   = if quitOnWarning
+                      then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
+                                 ++ (render (prettyWfErrorReport report)))
+                      else vsep
           [ text "WARNING: the following wellformedness checks failed!"
           , prettyWfErrorReport report
           ]
 
 -- | Adds a note to the end of the theory, if it is not well-formed.
-noteWellformednessDiff :: WfErrorReport -> OpenDiffTheory -> OpenDiffTheory
-noteWellformednessDiff report thy = 
+noteWellformednessDiff :: WfErrorReport -> OpenDiffTheory -> Bool -> OpenDiffTheory
+noteWellformednessDiff report thy quitOnWarning = 
     addDiffComment wfErrorReport thy
   where
     wfErrorReport
       | null report = text "All well-formedness checks were successful."
-      | otherwise   = vsep
+      | otherwise   = if quitOnWarning
+                      then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
+                                 ++ (render (prettyWfErrorReport report)))
+                      else vsep
           [ text "WARNING: the following wellformedness checks failed!"
           , prettyWfErrorReport report
           ]

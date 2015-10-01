@@ -43,6 +43,14 @@ Manual
 The manual is [`/doc/MANUAL.md`](/doc/MANUAL.md). It is part of every installation of the
 Tamarin prover.
 
+Experimental improved graph output
+----------------------------------
+
+You can use our experimental improved graph output which may be
+helpful for very large graphs that can be created for complicated
+protocols. To enable this feature read the instructions about
+[improved graphs](/misc/cleandot/README.md).
+
 
 Example Protocol Models
 -----------------------

@@ -85,7 +85,7 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|p|P|c|C)+"
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|p|P|c|C)+"
       "Sequence of goal rankings to use (default 's')"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
@@ -97,6 +97,9 @@ theoryLoadFlags =
 
   , flagNone ["diff"] (addEmptyArg "diff")
       "Turn on observational equivalence mode using diff terms."
+
+  , flagNone ["quit-on-warning"] (addEmptyArg "quit-on-warning")
+      "Strict mode that quits on any warning that is emitted."
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."
@@ -110,13 +113,17 @@ defines = findArg "defines"
 diff :: Arguments -> [String]
 diff as = if (argExists "diff" as) then ["diff"] else []
 
+-- | quit-on-warning flag in the argument
+quitOnWarning :: Arguments -> [String]
+quitOnWarning as = if (argExists "quit-on-warning" as) then ["quit-on-warning"] else []
+
 -- | Load an open theory from a file.
 loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
-loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as) fp
+loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning as) fp
 
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
-loadOpenThy as = parseOpenTheory (diff as ++ defines as)
+loadOpenThy as = parseOpenTheory (diff as ++ defines as ++ quitOnWarning as)
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -146,7 +153,7 @@ loadClosedThyWfReport as inFile = do
           putStrLn ""
           putStrLn $ renderDoc $ prettyWfErrorReport report
           putStrLn $ replicate 78 '-'
-          putStrLn ""
+          if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
     -- return closed theory
     closeThy as thy
 
@@ -168,7 +175,7 @@ loadClosedDiffThyWfReport as inFile = do
           putStrLn ""
           putStrLn $ renderDoc $ prettyWfErrorReport report
           putStrLn $ replicate 78 '-'
-          putStrLn ""
+          if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
     -- return closed theory
     closeDiffThy as thy1
 
@@ -209,7 +216,7 @@ closeThy as thy0 = do
       wfCheck :: OpenTheory -> OpenTheory
       wfCheck thy =
         noteWellformedness
-          (checkWellformedness thy) thy
+          (checkWellformedness thy) thy (elem "quit-on-warning" (quitOnWarning as))
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
@@ -246,7 +253,7 @@ closeDiffThy as thy0 = do
       wfCheckDiff :: OpenDiffTheory -> OpenDiffTheory
       wfCheckDiff thy =
         noteWellformednessDiff
-          (checkWellformednessDiff thy) thy
+          (checkWellformednessDiff thy) thy (elem "quit-on-warning" (quitOnWarning as))
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
@@ -293,6 +300,7 @@ constructAutoProver as =
 
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
+    ranking 'o' = OracleRanking
     ranking 'p' = SapicRanking
     ranking 'P' = SapicPKCS11Ranking
     ranking 'c' = UsefulGoalNrRanking
@@ -301,6 +309,7 @@ constructAutoProver as =
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\
+      \ 'o' for oracle ranking,\
       \ 'p' for the smart ranking optimized for translations coming from SAPIC (http://sapic.gforge.inria.fr),\
       \ 'P' for the smart ranking optimized for a specific model of PKCS11, translated using SAPIC (http://sapic.gforge.inria.fr),\
       \ 'c' for the creation order and useful goals first,\

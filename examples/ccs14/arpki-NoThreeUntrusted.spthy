@@ -1,0 +1,642 @@
+theory AKIvfinalproofNoThreeUntrusted begin
+/*
+ * Facts that start with 'F_' are given priority by the heuristic.
+ * Effectively, the below definitions prioritize some prefix-unrolling
+ * of the rules, similar to the way in which Scyther handles
+ * prefix-closed role instances.
+ *
+ * Facts that start with 'L_' conversely are being de-prioritized to
+ * the point of being used only when there is nothing else left to
+ * be considered but such facts.
+ */
+text{*
+  ARPKI model
+  There are now at least two different CAs involved in the registration 
+  process, regardless of the contents of CA_List. This is meant to ensure 
+  that at least three parties (CA1,CA2,ILS) sign off of the registration.
+  Authors: Cas Cremers <cas.cremers@cs.ox.ac.uk>
+           Ralf Sasse <ralf.sasse@inf.ethz.ch>
+  Date: May 2013 - June 2014
+  Status: Working
+*}
+builtins: hashing, signing, multiset
+functions: time/1
+// Usage: time(~n) is an abstract representation of the time of the
+// first occurrence of ~n.
+// Example use:   
+//   rule x: [ Fr(~n) ] --[ Clock(time(~n)) ]-> [ Out( time(~n) ]
+// The Clock facts store that time(~n) was the time at the instantiation
+// of the rule. We can later use this in the formulae to, e.g., check
+// for ordering constraints.
+functions: sig/2, pk/1
+// Usage: sig( m , k ), where k is the second parameter of an Ltk fact.
+// pk wraps the secret key to represent the public key.
+// Assumption: signatures include plaintext that is already known (i.e.
+// extraction is redundant)
+/*
+ * In the below specification, we will use the signing module different
+ * than intended. On the receiver end, we will also bind the private key
+ * in the rule and subsequently use pattern matching of sign{ m }k.
+ * Hence, we will not use the verify equational theory.
+ * This is less intuitive from an operational point of view but hugely
+ * simplifies the specification.
+ */
+
+
+// NOTE THAT THIS IS THE TAMARIN SPECIFICATION AFTER EXPANDING THE MACROS
+/*
+ * We put the macros here early and in one place, so a reader has an
+ * easier time unfolding them if he keeps this part of the file visible
+ * while editing other parts.
+ *
+ * Currently, naming is not very consistent wrt capitalization etc. This
+ * should be fixed; however, it is a problem shared with aki-spec.txt so
+ * maybe we should find common ground with its author.
+ */
+// vars in CertA: NEW: $A, pkA, ~ltkA
+// vars in SIGNREQ: NEW: TA ; OLD: $A, pkA, ~ltkA
+// vars in SIGCert: NEW: ~ltkCA ; OLD: $A, pkA, ~ltkA
+// vars in SIGCert1: NEW: ~ltkCAx1 ; OLD: $A, pkA, ~ltkA
+// vars in SIGCert2: NEW: ~ltkCAx2 ; OLD: $A, pkA, ~ltkA
+// vars in AKICertA: OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2 //[[TWOCA]] for AKICertA
+// vars in RegReq: NEW: TA ; OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2
+// vars in HA: OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2
+// Inner signature by ILS that will be ultimately added to the Cert of A
+// vars in ACCDATA: NEW: TILSk, ~ltkK ; OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2
+// ILS response message that combines the ACCDATA and the RegReq and the
+// reponses (see spec)
+// vars in MSG1: OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2, TILSk, ~ltkK // plus whatever is in RESPONSESkA
+// CA2 signs off Accepted, layer 1 - note that CA2 IS automatically the second CA that has signed the initial cert ; we would like to have a new ~ltkCA2 here, but can't match that new ~ltkCA2 to old ~ltkCAx2 due to issue with macro mechanism
+// vars in MOK1: OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2, TILSk, ~ltkK
+// CA2 signs off Accepted, layer 2 - note that CA2 IS automatically the second CA that has signed the initial cert ; we would like to have a new ~ltkCA2 here, but can't match that new ~ltkCA2 to old ~ltkCAx2 due to issue with macro mechanism 
+// vars in MSG2: OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2, TILSk,  ~ltkK // plus whatever is in RESPONSESkA
+// CA1 signs off signed off Accepted requests - note that CA1 IS automatically the first CA that has signed the initial cert ; we would like to have a new ~ltkCA1 here, but can't match that new ~ltkCA1 to old ~ltkCAx1 due to issue with macro mechanism
+// vars in MOK2: OLD:  $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2, TILSk, ~ltkK
+// Full non-verified thing (for CALIST of order 1, with only CA2)
+// vars in IntegVR: NEW: TA ; OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2
+// vars in InLog: NEW: TILSk, ~ltkk, OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2 [RS: plus what's in Hk]
+// vars in MSG4: OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2, TILSk, ~ltkK [RS: plus what's in Hk]
+// vars in RVOK1: OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2, TILSk, ~ltkK [RS: plus what's in Hk]
+// vars in RVOK2: OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2, TILSk, ~ltkK [RS: plus what's in Hk]
+// vars in RVOK2: OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2, TILSk, ~ltkK [RS: plus what's in Hk]
+// SSLConnSend only works if LHS of rule has "FullCert" as a variable matching and grabbing what's there, that way only one such rule is needed
+// vars in SSLConnSend: NEW: TA ; OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2 //[[TWOCA]] for AKICertA
+// vars in SSLConnRcvAcc: NEW: TA ; OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2, TILSk, ~ltkK //[[TWOCA]] for AKICertA
+// vars in SSLConnRcvInLog: NEW: TA ; OLD: $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2,  TILSk, ~ltkK [RS: plus what's in Hk] //[[TWOCA]] for AKICertA
+// vars in ILSIV: NEW: Tup ; OLD:  $A, pkA, ~ltkA, ~ltkCAx1, ~ltkCAx2 //[[TWOCA]] for AKICertA
+// THESE ARE NOT CURRENTLY IN USE
+// // Domain forwards MSG1 signed and timestamped
+// #define CONFREQ sig( (< 'ConfirmationRequest', MSG1, TA2 >), ~ltkA )
+// // Validator signs off ACCDATA
+// #define APPMSG sig( (< 'Approved', ACCDATA >) , ~ltkV)
+// // AKI cert using 'Approved' messages
+// #define AKIAppCert sig( (< AKICertA, APPMSG, TA >), ~ltkA )
+/*
+ * For the initial modeling, we want to limit the state space. We
+ * enforce this by having only limited instances of some rules. This is
+ * enforced by axioms and the OnlyOne(x) actions. The meaning of
+ * these is that for each unique x, there should only be one 'OnlyOne'
+ * action. For x we typically take the rule name (string form).
+ */
+//=========================================================================
+// General setup
+//=========================================================================
+// Fresh values that are not secret
+rule PubFr:
+    [ Fr(~x) ]
+  -->
+    [ Out(~x), PubFr(~x) ]
+// PKI (think X509)
+rule Generate_Keypair_trusted_COLOR00F_x:
+    [ Fr(~ltk) ]
+  --[ GEN_LTK($A,~ltk, 'trusted') ]->
+    [ !Ltk($A, ~ltk), F_CERT($A, pk(~ltk)), Out(pk(~ltk))
+    , TrustedKey($A, ~ltk) ] // only this particular key for $A is trusted, otherwise both an untrusted and a trusted key could be generated, and both would be trusted (and untrusted) at the same time
+// PKI (think X509)
+rule Generate_Keypair_untrusted_COLORF00_x:
+    [ PubFr(~ltk) ] 
+  --[ GEN_LTK($A,~ltk, 'untrusted') ]->
+    [ !Ltk($A, ~ltk), F_CERT($A, pk(~ltk)), Out(pk(~ltk)), UntrustedKey($A) ]
+// Initialize ILS
+rule A_Initialize_ILS:
+    let
+      TILSk = time(~t)
+    in
+    [ !Ltk($K, ~ltkK) , PubFr(~t) ]
+  --[ IsType('ILS',$K) , Clock(TILSk) ,
+      OnlyOne('InitializeILS') ]-> //[[ONEILS]]
+    [ L_ILStoAdd(~ltkK, $K, 'nil') , L_ILSlog(~ltkK, $K, 'nil') ,
+      L_ILSIntegrity(~ltkK, $K, (< h('nil'), TILSk >) ) ]
+//=========================================================================
+// Common macros
+//=========================================================================
+//=========================================================================
+// Certificate creation
+// A new certificate is created with the associated policy parameters
+//=========================================================================
+/*
+ * A: Domain name
+ * Note this does not create a normal X509 certificate but an extended
+ * one.
+ *
+ * For now, we are omitting:
+ *   KEY_EXP
+ *   ILS_TIMEOUT
+ *   COP_UNLINKED
+ *
+ *
+ * Further restriction and deviation from the spec wrt number of CAs:
+ *
+ * We hardcode in a number of places that there are exactly two CAs, CA1 
+ * and CA2, which are used as described in the spec for ILS registration.
+ * We additionally require them to have signed the cert of $A initially
+ * in the CA signature acquisition, and that they are the whole CAlist.
+ * A potential (easy) extension would be to allow additional CAs into that
+ * CAlist, a (more difficult) extension would be to not have them sign 
+ * initially. Whenever that restriction is made, we annotate it with 
+ * [[TWOCA]] in a comment on that line, or just above a rule. 
+ *
+ *
+ * Additional hardcoding of $CA1 and $CA2 as public names happened to 
+ * reduce number of open chains!
+ *
+ * Similarly we restrict to one single ILS by using [[ONEILS]].
+ */
+rule A_Create_Aki_Cert:
+  let ILSlist = $ILSk // [[ONEILS]]
+//      CALIST  = $X1 + $X2 // [[TWOCA]]
+      TA = time(~t)
+      pkA = pk(~ltkA) // certificate creation uses paired private/public key
+   in
+    [ !Ltk($A, ~ltkA), F_CERT($A,pkA), PubFr(~t) ]
+  --[ IsType('Agent',$A), IsType('ILS', $ILSk),
+      IsType('CA',$CA1), IsType('CA',$CA2), // [[TWOCA]]
+      OnlyOne('A_Create_Aki_Cert'),
+      AskedForAKICert($A,~ltkA) ,
+      Clock(TA) ]->
+    [ DomainCombineAKICertA($A, sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), $CA1, $CA2) ,
+      Out(<$A, $CA1, sig( (< 'SignRequest', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), TA >) , ~ltkA)>) , Out(<$A, $CA2, sig( (< 'SignRequest', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), TA >) , ~ltkA)>) //[[TWOCA]] // exact same time stamp for both requests - seems reasonable
+    , Out( sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) ) // CC: Unfolding inner signature for deduction closure on signatures
+    ]
+//=========================================================================
+// CA Signature Acquisition
+//
+// Checks for revoked certs of CA's, and performs implicit identity
+// check.
+//
+//=========================================================================
+// This rule will work with $CA2 as well, even if the naming looks weird for that.
+rule CA_Sig_Acq_CA:
+//  let 
+//    CALIST = thisCA + otherCAs
+//  in
+    [ In( < $A, $CA1, sig( (< 'SignRequest', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), TA >) , ~ltkA)> ),
+      !Ltk($CA1, ~ltkCA) ] // note that this binds the current CA to the macro-used ltk 
+  --[ IsType('Agent',$A), IsType('CA', $CA1), Clock(TA),
+      IdentityProof( $A, sig( (< 'SignRequest', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), TA >) , ~ltkA) ) 
+    ]->
+    [ Out( <$CA1, $A, sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCA)> ) // note that this rule will be executed twice, and the output macro here will match the two input macros in the next rule!
+    , Out( sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) ) // CC: Unfolding inner signature for deduction closure on signatures
+    ]
+//[[TWOCA]]
+rule A_Receive_SignedCerts:
+  let
+    contactCA = $CA1
+  in
+  [ DomainCombineAKICertA($A, sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), $CA1, $CA2) ,
+    In(<$CA1, $A, sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1)>) , In(<$CA2, $A, sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2)>) ] //[[TWOCA]]
+--[ NotEq(~ltkCAx1, ~ltkCAx2) // require that two different CA signatures have been used
+  , ReceivedCASignedAKICert($A,~ltkA)
+  ]->
+  [ F_DomainHasAKICertA($A,contactCA,< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >)
+    , Out( sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) ) // CC: Unfolding inner signature for deduction closure on signatures
+  ]
+//=========================================================================
+// ILS registration
+//=========================================================================
+// A -> CA1:
+//    RegReq={"RegistrationRequest", AKICertA, CA1, ILSk, CA2, TA }A
+// CA1:
+//    R_INCOMPLETE[H(AKICertA)]=RegReq #remember the latest request (according to timestamp)
+//    if [CA1,CA2] in AKICertA.CA_LIST:
+//       CA1 -> ILSk:
+//          RegReq
+// (CA1 is the 'chosen' CA that we communicate with, distributes to all
+//  ILS's involved)
+//
+//
+rule ILS_Reg_A1:
+  let
+//    CA1 = $contactCA // macro use - ensuring public name for CA - ensures that CA1 is in CALIST by matching
+//    CA2 = $CA2       // macro use - ensuring public name for CA - ensures that CA2 is in CALIST by matching
+    TA = time(~t)
+    ILSlist = $ILSk // [[ONEILS]] //singleton ILS list
+  in
+  [ F_DomainHasAKICertA($A,$CA1,< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >) , PubFr(~t) ,
+    !Ltk($A, ~ltkA), // to make sure this is $A with the right private key
+    !Ltk($CA1, ~ltkCAx1), !Ltk($CA2, ~ltkCAx2) //[[TWOCA]] - making this check is legitimate as it does not actually use the private keys of the two CAs but rather checks that their signatures are ok by using their public keys ; this is used to get the naming of CAs consistent and pushed through
+  ]
+--[ Clock(TA)
+  , OnlyOne(< 'ILS_Reg_A1' , ~ltkA >) // This rule can be used once per long term key ~ltkA only.
+  ]->
+  [ Out(< $A, $CA1, sig( (< 'RegistrationRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA ) >) , F_DomainHasAKICertA($A,$CA1,< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >) ]
+rule ILS_Reg_CA1_Forward:
+  [ In(< $A, $CA1, sig( (< 'RegistrationRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA ) >) ] // note that by pattern matching the CA1 is the one in the AKICertA and the ILSk is ILS of RegReq
+--[ ExecutionTestComplete2()
+  , ExecutionTestComplete2ARG(sig( (< 'RegistrationRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA ))
+  ]->
+  [ Out(< $CA1, $ILSk, sig( (< 'RegistrationRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA ) >)
+  , ContactCAStateILSReg($A, $CA1, sig( (< 'RegistrationRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA )) ] // this CA1 needs to keep state, keeping it local now
+/* **************************
+ * We need to keep state at the CA1, so in general all CAs need a way to
+ * keep state. Question now: Make it 'big permanent state for all CAs, or
+ * just create a state here that is consumed as soon as this loop is
+ * completed... let's go first for the local state that will be consumed
+ * shortly!  
+************************** */
+//ILSk on receiving RegReq:
+//ILSk:
+//   if AKICertA not in (LOGk+TOADDk) and ILSk in AKICertA.ILS_LIST and ReqUniq(RegReq) and AKICertA.KEY_EXP > time() and CorrectParams(AKICertA) and [CA1,CA2] in AKICertA.CA_LIST:
+//      HA=H(AKICertA)
+//      TOADDk.add(AKICertA)
+//      REQUESTSk[LAST_UPk + ILS_UPk].add(RegReq)
+//      ILSk -> CA2:
+//         MSG1 = {{"Accepted", HA , TILSk }ILSk , AKICertA, CA1, RESPONSESk[A], CA2 }ILSk
+//   else:
+//      ILSk -> CA1 -> A: 
+//         {"Failed", RegReq, "Invalid ILS/CA or Cert was submitted or comm. error", TILSk }ILSk
+//      A:
+//         exit()
+rule ILS_Reg_ILS:
+  let
+    //CA1 and CA2 are bound in RegReq
+    //ILSk = $K // singleton ILS list
+    TILSk = time(~t)
+    RESPONSESkA = 'TEMPCONST' // Not sure how to deal with this for now
+  in
+    [ In(< $CA1, $ILSk, sig( (< 'RegistrationRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA ) >) , !Ltk($ILSk, ~ltkK) , PubFr(~t)
+    , !Ltk($CA1, ~ltkCAx1) , !Ltk($CA2, ~ltkCAx2) //  making this check is legitimate as it does not actually use the private keys of the two CAs but rather checks that their signatures are ok by using their public keys ; this is used to get the naming of CAs consistent and pushed through  // This check is legitimate to do, as we assume that all interested parties have access to all CAs and all ILSs public keys to validate the signatures.
+    , L_ILStoAdd(~ltkK, $ILSk, AddList) , L_ILSlog(~ltkK, $ILSk, Log) ]
+  --[ Clock(TILSk)
+    , ExecutionTestComplete()
+    , ExecutionTestCompleteARG(sig( (< 'RegistrationRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA ))
+    , OnlyOne(< 'RegisterDomain', $A >) // RS: there should be some kind of check that AKICertA is NOT in AddList or Log already - but this would need be checked time stamp independent or something, as we otherwise run into issues about multiple certificates for one domain // this is that check!
+    ]->
+    [ Out(< $ILSk, $CA2, sig( (< sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK), < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, RESPONSESkA, $CA2 >) , ~ltkK) >) ,
+      L_ILStoAdd(~ltkK, $ILSk, AddList + < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >) , L_ILSlog(~ltkK, $ILSk, Log) ]
+// CA2 on receiving msg1:
+//    CA2:
+//       if TILSk < LAST_UPk or AKICertA.KEY_EXP < time():
+//          CA2 -> CA1 -> A:
+//             {"Expired", MSG1, TCA2}CA2
+//          exit()
+// # cond.2
+//       if AKICertA in LLOGk or ILSk in REV_CA2 or HA != H(AKICertA) or |RESPONSESk[A]|<= 0.5*ILSes_NUMBER or not CorrectParams(AKICertA) or [CA1,CA2] not in AKICertA.CA_LIST:
+//          Revoke([ILSk], MSG1)
+//       elif not CertIsUniq(AKICertA):
+//          #audit needed
+//       else:
+//          LREQUESTSk[LAST_UPk + ILS_UPk].add(RegReq)  // TODO: this could/should be logged for later checking
+//          CA2 -> CA1:
+//             MOK1 = {{"OK1",{"Accepted", HA , TILSk }ILSk}CA2, RESPONSESkA }CA2
+rule ILS_Reg_CA2:
+    [ In(< K, $CA2, sig( (< sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK), < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, RESPONSESkA, $CA2 >) , ~ltkK) >) , !Ltk($CA2, ~ltkCAx2) //[[TWOCA]] - this forces CA2 to be one of initial two CAs
+    , !Ltk($ILSk, ~ltkK) // This check is legitimate to do, just like the one below, as we assume that all interested parties have access to all CAs and all ILSs public keys to validate the signatures.
+    , !Ltk($CA1, ~ltkCAx1) //  making this check is legitimate as it does not actually use the private keys of the two CAs but rather checks that their signatures are ok by using their public keys ; this is used to get the naming of CAs consistent and pushed through
+    ]
+  --[ OnlyOne(< 'RegisterDomainSecondCA', $A >) // CA needs to take responsibility to ensure this domain's registration makes it into the logs, and to not allow this if it already is in the logs
+    ]->
+    [ Out(< $CA2, $CA1, sig( (< sig( (< 'OK1', sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK) >), ~ltkCAx2 ), RESPONSESkA >), ~ltkCAx2 ) >) ]
+// CA1 on receiving MOK1: 
+//          CA1:
+//             RegReq=R_INCOMPLETE[HA]     // recall old state simply
+//             if RegReq not found:
+//                exit()
+//             AKICertA=RegReq.Cert_field
+//             R_INCOMPLETE.remove(HA)     // end of recalling state
+//             if TILSk < LAST_UPk or AKICertA.KEY_EXP < time():
+//                CA1 -> A:
+//                   {"Expired", msg2, TCA1}CA1
+//             #check if msg1 is a part of msg2.
+// # cond.3
+//             if AKICertA in LLOGk or ILSk in REV_CA1 or HA != H(AKICertA) or |RESPONSESk[A]|<= 0.5*ILSes_NUMBER or not CorrectParams(AKICertA) or [CA1,CA2] not in AKICertA.CA_LIST:
+//                #check for CA2 revocation ?
+//                Revoke( [ILSk] , msg2)
+//             elif not CertIsUniq(AKICertA):
+//                #audit needed
+//             else:
+//                LREQUESTSk[LAST_UPk + ILS_UPk].add(RegReq)
+//                CA1 -> A:
+//                   {"OK2", {"OK1", {"Accepted", HA , TILSk }ILSk }CA2 }CA1
+rule ILS_Reg_CA1:
+    [ In(< $CA2, $CA1, sig( (< sig( (< 'OK1', sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK) >), ~ltkCAx2 ), RESPONSESkA >), ~ltkCAx2 ) >) , !Ltk($CA1, ~ltkCAx1) //[[TWOCA]] - this forces CA1 to be one of initial two CAs 
+    , !Ltk($ILSk, ~ltkK) // This check is legitimate to do, just like the one below, as we assume that all interested parties have access to all CAs and all ILSs public keys to validate the signatures.
+    , !Ltk($CA2, ~ltkCAx2) //  making this check is legitimate as it does not actually use the private keys of the two CAs but rather checks that their signatures are ok by using their public keys ; this is used to get the naming of CAs consistent and pushed through
+    , ContactCAStateILSReg($A, $CA1, sig( (< 'RegistrationRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA )) ]
+  --[ OnlyOne(< 'RegisterDomainFirstCA', $A >) // CA needs to take responsibility to ensure this domain's registration makes it into the logs, and to not allow this if it already is in the logs
+    , AcceptedAKICert($A, ~ltkA) ]-> //RS: The output of this rule is the proof that is used later, so this event needs to be here. Whether the actual recipient takes it and uses it in ILS_Reg_A2 or the intruder gets hold of it are separate issues.
+    [ Out(< $CA1, $A, sig( (< 'OK2', sig( (< 'OK1', sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK) >), ~ltkCAx2 ) >), ~ltkCAx1 ) >) ]
+// A on receiving MOK2 = {"OK2", {"OK1", {"Accepted", HA , TILSk }ILSk }CA2 }CA1: 
+//    Supplements AKICertA with MOK2 = {"OK2", {"OK1", {"Accepted", HA , TILSk }ILSk }CA2 }CA1
+rule ILS_Reg_A2:
+    [ F_DomainHasAKICertA($A,$CA1,< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >)
+    , !Ltk($ILSk, ~ltkK) // This check is legitimate to do, just like the one below, as we assume that all interested parties have access to all CAs and all ILSs public keys to validate the signatures.
+    , !Ltk($CA1, ~ltkCAx1), !Ltk($CA2, ~ltkCAx2) //[[TWOCA]] - making this check is legitimate as it does not actually use the private keys of the two CAs but rather checks that their signatures are ok by using their public keys ; this is used to get the naming of CAs consistent and pushed through
+    , In(< $CA1, $A, sig( (< 'OK2', sig( (< 'OK1', sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK) >), ~ltkCAx2 ) >), ~ltkCAx1 ) >) ]
+  --[ HasAKICertNoLog($A, ~ltkA, (< < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, sig( (< 'OK2', sig( (< 'OK1', sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK) >), ~ltkCAx2 ) >), ~ltkCAx1 ) >))
+    , NotEq(~ltkCAx1, ~ltkCAx2) , NotEq(~ltkCAx1, ~ltkK) , NotEq(~ltkCAx2, ~ltkK) // make sure all CA/ILS are distinct
+    , ReceivedAKICert($A, ~ltkA) ]-> // $A received the certificate for its key
+    [ Out( (< < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, sig( (< 'OK2', sig( (< 'OK1', sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK) >), ~ltkCAx2 ) >), ~ltkCAx1 ) >) ) , StoredAKICertA($A, < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, (< < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, sig( (< 'OK2', sig( (< 'OK1', sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK) >), ~ltkCAx2 ) >), ~ltkCAx1 ) >)) ]
+//=========================================================================
+// Registration Verification
+//=========================================================================
+// A -> CA1:
+//    IntegVR = {"IntegrityValueRequest", AKICertA, CA1, ILSk, CA2, TA}A
+rule Reg_Ver_A1:
+  let
+    TA = time(~t)
+    //CALIST = $X1 + $X2 //[[TWOCA]]
+    //CA1 = $X1
+    //CA2 = $X2
+    ILSlist = $ILSk // [[ONEILS]] singleton ILS list for now
+  in
+  [ !Ltk($A, ~ltkA), StoredAKICertA($A, < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, AnyKindOfCert) , PubFr(~t) ,
+    !Ltk($CA1, ~ltkCAx1) , !Ltk($CA2, ~ltkCAx2) ] //[[TWOCA]]
+--[ Clock(TA) ,
+    OnlyOne('RegistrationVerification') ]->
+  [ Out(<$A, $CA1, sig( (< 'IntegrityValueRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA )>) , StoredAKICertA($A, < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, AnyKindOfCert) ]
+// CA1: // on receiving IntegVR
+//    if [CA1,CA2] in AKICertA.CA_LIST:
+//       I_INCOMPLETE[H(AKICertA)]=IntegVR // store this request, for later reference, like in ILS registration
+//       CA1 -> ILSk:
+//          IntegVR
+//    else:
+//       CA1 -> A:
+//          {"Failed", RegReq, "Invalid CA", TCA1 }CA1
+rule Reg_Ver_CA1_Forward:
+  [ In(< $A, $CA1, sig( (< 'IntegrityValueRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA ) >) ] // we implicitly assume that the condition CA1,CA2 in AKICertA.CA_LIST holds! (actually it is forced to hold by virtue of the macros, and that CA1 and CA2 are hardcoded in there, in particular in the CA_LIST...
+--[ ]->
+  [ Out(< $CA1, $ILSk, sig( (< 'IntegrityValueRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA ) >)
+  , ContactCAStateRegVer($A, $CA1, sig( (< 'IntegrityValueRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA )) ] // We again only keep this state temporarily, until this message loop is completed.
+// ILSk on receiving IntegVR:
+// ILSk:
+//    if AKICertA not in LOGk:
+//       ILSk -> CA1 -> A:
+//          {"NotInLog", AKICertA, Hk, TA}ILSk
+//    else:
+//       HA=H(AKICertA)
+//       ILSk -> CA2:
+//          MSG4 = { {"InLog", Hk, HA, TILSk}ILSk, AKICertA, CA1, CA2}ILSk
+//consider duplicating this rule for the case that the cert is not in log, for now ignore that case!
+rule Reg_Ver_ILS:
+  let
+//   $K = $ILSk // singleton ILS list 
+    LL = < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) > + rest
+    TILSk = time(~t)
+    Hk = (< h(LL), Tup >) // RS: this need to be in the data structure for retrieval, generated during log update!
+  in
+  [ In(< $CA1, $ILSk, sig( (< 'IntegrityValueRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA ) >) , !Ltk($ILSk, ~ltkK) , PubFr(~t) ,
+    L_ILSlog(~ltkK, $ILSk, < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) > + rest) ,
+    L_ILSIntegrity(~ltkK, $ILSk, (< h(LL), Tup >)) ] // RS: this implicitly checks that the list from ILSlog is the one in the integrity hash, otherwise this rule simply won't match 
+--[ Clock(TILSk) ]->
+  [ Out(<$ILSk, $CA2, sig( (< sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) , < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $CA2 >) , ~ltkK ) >) ,
+    L_ILSlog(~ltkK, $ILSk, < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) > + rest) ,
+    L_ILSIntegrity(~ltkK, $ILSk, (< h(LL), Tup >)) ]
+// CA2 on receiving MSG4:
+//       CA2:
+//          if TILSk < LAST_UPk or AKICertA.KEY_EXP < time():
+//             CA2 -> CA1 -> A:
+//                {"Expired", MSG4, TCA2}CA2
+//             exit()
+// # cond.4
+//          if AKICertA not in LLOGk or HA!=H(AKICertA) or ILSK in REV_CA2 or Hk!=H(LLOGk) or [CA1,CA2] not AKICertA.CA_LIST:
+//             Revoke([ILSk], MSG4)
+//          else:
+//             CA2 -> CA1:
+//                RVOK1 = {"RVOK1", {"InLog", Hk, HA, TILSk}ILSk }CA2
+// no checks are done at this point just yet, need to duplicate rule potentially //RS: add checks later
+rule Reg_Ver_CA2:
+    [ In(<$ILSk, $CA2, sig( (< sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) , < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $CA2 >) , ~ltkK ) >) , !Ltk($CA2, ~ltkCAx2) ] //[[TWOCA]] - this forces CA2 to be one of initial two CAs
+  --[ ]->
+    [ Out(< $CA2, $CA1, sig( (< 'RVOK1', sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) >) , ~ltkCAx2 ) >) ]
+// CA1 on receiving RVOK1: 
+//             CA1:
+//                IntegVR=I_INCOMPLETE(HA) // recall old state simply
+//                if IntegVR not found:
+//                   exit()
+//                AKICertA=IntegVR.Cert_field
+//                I_INCOMPLETE.remove(HA) // end of recalling state
+//                if TILSk < LAST_UPk or AKICertA.KEY_EXP < time():
+//                   CA1 -> A:
+//                      {"Expired", RVOK1, TCA1}CA1
+//                      exit()
+// # cond.5
+//                if AKICertA not in LLOGk or HA!=H(AKICertA) or ILSK in REV_CA1 or Hk!=H(LLOGk):
+//                   Revoke( [ILSk, CA2] , RVOK1)
+//                else:
+//                   CA1 -> A:
+//                      RVOK2 = {"OK2", {"OK1", {"InLog", Hk, HA, TILSk}ILSk }CA2 }CA1
+// no checks are done at this point just yet, need to duplicate rule potentially //RS: add checks later
+rule Reg_Ver_CA1:
+    [ In(< $CA2, $CA1, sig( (< 'RVOK1', sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) >) , ~ltkCAx2 ) >) , !Ltk($CA1, ~ltkCAx1) //[[TWOCA]] - this forces CA1 to be one of initial two CAs 
+    , ContactCAStateRegVer($A, $CA1, sig( (< 'IntegrityValueRequest', < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, $CA1, $ILSk, $CA2, TA >) , ~ltkA )) ]
+  --[ ]->
+    [ Out(< $CA1, $A, sig( (< 'RVOK2', sig( (< 'RVOK1', sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) >) , ~ltkCAx2 ) >) , ~ltkCAx1 ) >) ]
+// A on receiving RVOK2:
+//                   A:
+//                      Supplements AKICertA with {"OK2", {"OK1", {"InLog", Hk, HA, TILSk}ILSk }CA2 }CA1
+rule Reg_Ver_A2:
+    [ In(< $CA1, $A, sig( (< 'RVOK2', sig( (< 'RVOK1', sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) >) , ~ltkCAx2 ) >) , ~ltkCAx1 ) >) ,
+      StoredAKICertA($A, < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, AnyKindOfCert) ]
+  --[ HasAKICertInLog($A, ~ltkA, (< < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, sig( (< 'RVOK2', sig( (< 'RVOK1', sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) >) , ~ltkCAx2 ) >) , ~ltkCAx1 ) >))
+    , OnlyOne('Reg_Ver_A2') // RS: Is this ok? We really only do this one single time for now - meaning repeats are not possible - this is even stronger than the one below... - in particular this restricts any kind of UPDATE from happening later on, so need to relax this eventually; that is, we can not get a different RVOK2 instance with a newer time stamp once we get there
+    , LoggedAKICert($A, ~ltkA)
+    , NotEq(AnyKindOfCert, (< < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, sig( (< 'RVOK2', sig( (< 'RVOK1', sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) >) , ~ltkCAx2 ) >) , ~ltkCAx1 ) >)) ]-> // CC: I guess we don't re-do this? The inequality kills a potential loop in verification; double-check if this corresponds to the design. // RS: This seems good. Even if this rule would be redone and there is a different RVOK2, then the generated (by the macros) AKICertAVerified would be different from the old one and would update. If it is not different, then there is no need to update anyway.
+    [ Out( (< < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, sig( (< 'RVOK2', sig( (< 'RVOK1', sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) >) , ~ltkCAx2 ) >) , ~ltkCAx1 ) >) ) , StoredAKICertA($A, < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) > , (< < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, sig( (< 'RVOK2', sig( (< 'RVOK1', sig( (< 'InLog', Hk, h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK ) >) , ~ltkCAx2 ) >) , ~ltkCAx1 ) >) ) ]
+// ========================================================================
+// ILS Log Update (atomic)
+// ========================================================================
+// ILSk:
+//    while True:
+//       for Cert in TOADDk:
+//          LOGk.add(Cert)
+//       for Cert in TOREMOVEk:
+//          LOGk.remove(Cert)
+//       for Cert in LOGk:
+//          if Cert.KEY_EXP < time():
+//             LOGk.remove(Cert)
+//       TOREMOVEk=[]
+//       TOADDk=[]
+//       Hk=H(Hk, LOGk)
+//       LAST_UPk=LAST_UPk+ILS_UPk
+//       sleep(ILS_UPk)
+// note that this rule does not iterate over all elements in the Add list, but just copies over the whole list in one step
+rule Update_ILS:
+  let
+    Tnewup = time(~t)
+  in
+  [ L_ILStoAdd(~ltkK, $K, Add) ,
+    L_ILSlog(~ltkK, $K, LL) ,
+    L_ILSIntegrity(~ltkK, $K, (< h(LL), Tup >)) ,
+    PubFr(~t) ]
+--[ Update(~ltkK, Tnewup) , NotEq(Add, 'nil'), Clock(Tnewup) ]->
+  [ L_ILStoAdd(~ltkK, $K, 'nil') ,
+    L_ILSlog(~ltkK, $K, LL + Add) ,
+    L_ILSIntegrity(~ltkK, $K, (<h(LL+Add) , Tnewup >) ) ] // theoretically this should include the old Hk!
+// ========================================================================
+// (B)rowser-based validation. Standard communication between Domain and Browser.
+// ========================================================================
+/* Before first ILS UP after registration A adds following message to the certificate:
+ * Confirmations = {"OK2", {"OK1", {"Accepted", HA , TILSk }ILSk }CA2 }CA1
+ * After AKICertA is added to LOG, A adds:
+ * Confirmations = {"OK2", {"OK1", {"InLog", Hk, HA, TILSk}ILSk }CA2 }CA1
+*/
+// B -> A:
+//    ClientHello ...
+rule Connection_B1:
+    [ ]
+  --[ OnlyOne('Connection_B1') ]->
+    [ Out(< $B, $A, 'ClientHello' >),
+      F_SSL_Conn_waiting_B($B, $A) ]
+// A -> B:
+//    {AKICertA ,Confirmations ,TA }A
+// This models the case in which the confirmations consist of either the
+// 'Approved' messages or the 'InLog' messages, already included in "FullCert".
+rule Connection_A1:
+  let
+    TA = time(~t)
+  in
+    [ In(< $B, $A, 'ClientHello' >),
+      !Ltk($A,~ltkA),
+      StoredAKICertA($A, < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) > , FullCert ),
+      PubFr(~t) ]
+  --[ OnlyOne('Connection_A1') ,
+      IsType('Agent',$A), IsType('Browser',$B), Clock(TA) ]->
+    [ Out(< $A, $B, sig( (< FullCert, TA >), ~ltkA ) >) ]
+// B:
+//    if TILSk + AKICertA.ILS_TIMEOUT < time() or AKICertA.KEY_EXP < TIME():
+//       B -> A:
+//          "Expired"
+//       exit()
+//    if AKICertA in REV_B or ILSk in REV_B or CA2 in REV_B or CA1 in REV_B or (any key is not in BrwsKeys):
+//       exit()
+//    if HA!=H(AKICertA) or ILSk not in AKICertA.ILS_LIST or not CorrectParams(AKICertA) or [CA1,CA2] not in AKICertA.CA_LIST:
+//       exit()
+//    AKICertA is accepted
+// 2 rules needed for this, depending on whether "accept" or "inlog" is received
+rule Connection_B2a:
+    [ PubFr(~cid),
+      F_SSL_Conn_waiting_B($B, $A),
+      TrustedKey($CA1, ~ltkCAx1), TrustedKey($CA2, ~ltkCAx2), TrustedKey($ILSk, ~ltkK),
+      !Ltk($CA1, ~ltkCAx1), !Ltk($CA2, ~ltkCAx2), !Ltk($ILSk, ~ltkK),
+      In(< $A, $B, sig( (< < < sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >, sig( (< 'OK2', sig( (< 'OK1', sig( (< 'Accepted', h(< sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA), sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx1) , sig( (< 'CACert', sig( (< 'Cert', $A, pkA, ILSlist, $CA1 + $CA2 >) , ~ltkA) >) , ~ltkCAx2) >), TILSk >) , ~ltkK) >), ~ltkCAx2 ) >), ~ltkCAx1 ) > , TA >) , ~ltkA ) >) ]
+  --[
+  ConnectionAccepted(~cid,$B,$A,'Accept',~ltkA)
+  ]->
+    [
+      TrustedKey($CA1, ~ltkCAx1), TrustedKey($CA2, ~ltkCAx2), TrustedKey($ILSk, ~ltkK) // keep trust info! not persistent so we can change it, if we need to
+    ]
+//rule Connection_B2b:
+//    [ PubFr(~cid),
+//      F_SSL_Conn_waiting_B($B, $A),
+//      TrustedKey($CA1, ~ltkCAx1), TrustedKey($CA2, ~ltkCAx2), TrustedKey($ILSk, ~ltkK),
+//      !Ltk($CA1, ~ltkCAx1), !Ltk($CA2, ~ltkCAx2), !Ltk($ILSk, ~ltkK), 
+//      In(< $A, $B, SSLConnRcvInLog >) ]
+//  --[
+//  ConnectionAccepted(~cid,$B,$A,'InLog',~ltkA)
+//  // RS: specify more precisely WHY the connection was accepted ; also make the required checks!
+//  ]->
+//    [
+//      TrustedKey($CA1, ~ltkCAx1), TrustedKey($CA2, ~ltkCAx2), TrustedKey($ILSk, ~ltkK) 
+//    ]
+//=========================================================================
+// TODO:
+// UNDER TESTING: ILSk Log Update
+// UNDER TESTING: Registration Verification
+// Update/verification/recovery
+// Dissemination and Validation 
+//=========================================================================
+//=========================================================================
+// Axioms for correct modeling
+//=========================================================================
+// Inequalities should be maintained as an axiom
+axiom InEq:
+  "(not Ex x #i. NotEq(x,x)@i)"
+//=========================================================================
+// Axioms that restrict the state space
+//=========================================================================
+/********************
+// Each CA x will only consider a cert request y one single time 
+// this gets rid of the unnecessary duplication of this rule
+axiom SingleCASigAcqCA1PerCert:
+  //"(All x y #i #j. CA_Sig_Acq_CA1_exec(x,y) @i & CA_Sig_Acq_CA1_exec(x,y)@j ==> (#i = #j))"
+  // For now: perform only one cert request per agent.
+  "(All x y z #i #j. CA_Sig_Acq_CA1_exec(x,y) @i & CA_Sig_Acq_CA1_exec(x,z)@j ==> (#i = #j))"
+********************/
+axiom OnlyOne:
+  "(All x #i #j. (OnlyOne(x)@i & OnlyOne(x)@j) ==> (#i = #j))"
+axiom TypesDistinct:
+  "(All t1 t2 x #i #j. (IsType(t1,x)@i & IsType(t2,x)@j) ==> (t1 = t2))"
+//RS: only one key allowed per name for now - this is mostly for exists traces so it doesn't get silly
+axiom SingleKeyPerName:
+  "(All a ltk1 ltk2 tr1 tr2 #i #j. (GEN_LTK(a,ltk1,tr1)@i & GEN_LTK(a,ltk2, tr2)@j ==> (#i = #j)))"
+/*
+// Disallow any compromised party
+axiom NoneCompromised:
+  "(not (Ex x #i a.
+      ( GEN_LTK(a,x, 'untrusted')@#i )
+     ))"
+
+// Experimentally only allow a single compromised party
+axiom MaxOneCompromised:
+  "(All x y #i #j a b.
+     ( ( GEN_LTK(a,x, 'untrusted')@#i &
+         GEN_LTK(b,y, 'untrusted')@#j )
+       ==>
+         ( ( #i = #j ) ) 
+     ))"
+*/
+// We don't want more than two compromised parties
+axiom MaxTwoCompromised:
+  "(All x y z #i #j #k a b c.
+     ( ( GEN_LTK(a,x, 'untrusted')@#i &
+         GEN_LTK(b,y, 'untrusted')@#j &
+         GEN_LTK(c,z, 'untrusted')@#k )
+       ==>
+         ( ( #i = #j ) | ( #i = #k ) | (#j = #k) )
+     ))"
+// Property:
+// - connection accepted with key, but there was a [first/earlier/...]
+// registration of the domain by an honest user
+// - does not deal with updates yet!
+//
+lemma main:
+  " (
+      All cid a b reason oldkey key #i1 #i2 #i3 #i4 .
+        ( GEN_LTK(a,oldkey,'trusted')@i1 // 'Honest' agent a.
+        & AskedForAKICert(a,oldkey) @i2 // domain has asked for an AKI cert with this exact key, no update or anything.
+        & ReceivedAKICert(a,oldkey) @i3 // domain has confirmation that its AKI cert with this exact key has been processed.
+        & ConnectionAccepted(cid,b,a,reason,key)@i4 // browser accepted connection, based on private key 'key' in possession of domain a.
+        & i3 < i4
+        )
+        ==>
+        ( (not (Ex #j. KU(key) @j)) // intruder cannot know that private key
+        )
+    ) "
+end
+/*
+==============================================================================
+summary of summaries:
+
+analyzed: aki-vfinal-proofNoThreeUntrusted.spthy
+
+  main (all-traces): verified (26423 steps)
+
+==============================================================================
+
+real    77m30.543s
+user    1055m35.013s
+sys     569m31.567s
+rsasse2@haunted:~/models$ date
+Sun May 11 11:39:31 BST 2014
+*/

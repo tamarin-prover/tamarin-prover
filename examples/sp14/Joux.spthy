@@ -1,0 +1,74 @@
+theory Joux
+begin
+
+section{* The Joux Protocol using Signatures*}
+
+/*
+ * Protocol:	The Joux Protocol.
+ * Source:      "A One Round Protocol for Tripartite Diffie-Hellman"
+ *              A. Joux
+ *
+ * Model:       PFS
+ * Status: 	working
+ */
+
+builtins: bilinear-pairing, signing, multiset
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltk) ] 
+  --[ ]-> 
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk(~ltk)) ]
+
+// Reveals
+rule Reveal_ltk:
+    [ !Ltk(A, ltk) ]
+  --[ LtkReveal(A) ]->
+    [ Out(ltk) ]
+
+
+// Protocol
+rule Proto1:
+  let hkA = pmult(~ekA ,'P')
+  in
+  [ Fr(~ekA), !Ltk($A, ltkA) ]
+  --[ ]->
+  [ PState( $A, $B + $C, ~ekA )
+  , Out( <hkA, sign{$A, $B + $C, hkA }ltkA> )
+  ]
+
+rule Proto2:
+    [ PState( $A, $B + $C, ~ekA)
+    , !Pk($B, pk(ltkB))
+    , !Pk($C, pk(ltkC))
+    , In( < XB, sign{$B, $A + $C, XB}ltkB > )
+    , In( < XC, sign{$C, $A + $B, XC}ltkC > )
+    ]
+  --[ SessionKey($A, $B + $C, em(XB,XC) ^ ~ekA) ]->
+    []
+
+#ifdef executable
+lemma session_key_establish:
+  exists-trace
+  "Ex A B C #ia #ib #ic k.
+      ( SessionKey(A,B + C, k) @ ia &
+        SessionKey(B,C + A, k) @ ib &
+        SessionKey(C,B + A, k) @ ic &
+        not (A = B) &
+        not (B = C) &
+        not (A = C) &
+        not ( Ex #j. LtkReveal(A) @ j ) &
+        not ( Ex #j. LtkReveal(B) @ j ) &
+        not ( Ex #j. LtkReveal(C) @ j ))"
+#endif
+
+lemma Session_Key_Secrecy_PFS:
+  "(All A B C sessKey #i #k. 
+           SessionKey(A,B + C,sessKey) @ i &
+           K(sessKey) @ k
+         ==>
+             (Ex #l. LtkReveal(A) @ l & l < i )
+           | (Ex #l. LtkReveal(B) @ l & l < i )
+           | (Ex #l. LtkReveal(C) @ l & l < i ))"
+
+end

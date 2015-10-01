@@ -1,6 +1,8 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE QuasiQuotes   #-}
 {-# LANGUAGE TupleSections #-}
+-- FIXME: for functions prefixedShowDot
+{-# LANGUAGE FlexibleContexts           #-}
 {- |
 Module      :  Web.Theory
 Description :  Pretty-printing security protocol theories into HTML code.
@@ -1111,17 +1113,31 @@ imgThyPath :: ImageFormat
            -> FilePath               -- ^ 'dot' command
            -> FilePath               -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())
+           -> String                 -- ^ Simplification level of graph (string representation of integer >= 0)
+           -> Bool                   -- ^ True iff we want abbreviations
            -> ClosedTheory
            -> TheoryPath
            -> IO FilePath
-imgThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
+imgThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate thy path = go path
   where
     go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j)
     go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
     go _                      = error "Unhandled theory path. This is a bug."
 
+    -- Prefix dot code with comment mentioning all protocol rule names
+    prefixedShowDot dot = unlines
+        [ "// simplification: "          ++ simplificationLevel
+        , "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
+        , "// message deduction rules: " ++ ruleList (getIntrVariants thy)
+        , "// abbreviate: "              ++ show abbreviate
+        , D.showDot dot
+        ]
+      where
+        ruleList :: HasRuleName (Rule i) => [Rule i] -> String
+        ruleList = concat . intersperse ", " . nub . map showRuleCaseName
+
     -- Get dot code for required cases
-    casesDotCode k i j = D.showDot $
+    casesDotCode k i j = prefixedShowDot $
         compact $ snd $ cases !! (i-1) !! (j-1)
       where
         cases = map (getDisj . get cdCases) (getCaseDistinction k thy)
@@ -1190,18 +1206,34 @@ imgDiffThyPath :: ImageFormat
            -> FilePath               -- ^ 'dot' command
            -> FilePath               -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())
+           -> String                 -- ^ Simplification level of graph (string representation of integer >= 0)
+           -> Bool                   -- ^ True iff we want abbreviations
            -> ClosedDiffTheory
            -> DiffTheoryPath
            -> IO FilePath
-imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path = go path
+imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate thy path = go path
   where
     go (DiffTheoryCaseDist s k d i j) = renderDotCode (casesDotCode s k i j d)
     go (DiffTheoryProof s l p)        = renderDotCode (proofPathDotCode s l p)
     go (DiffTheoryDiffProof l p)      = renderDotCode (proofPathDotCodeDiff l p)
     go _                              = error "Unhandled theory path. This is a bug."
 
+    -- Prefix dot code with comment mentioning all protocol rule names
+    prefixedShowDot dot = unlines
+        [ "// simplification: "          ++ simplificationLevel
+        , "// protocol rules: "          ++ ruleList (getProtoRuleEsDiff LHS thy) -- FIXME RS: the rule names are the same on LHS and RHS, so we just pick LHS; should pass the current Side through to make this clean
+        , "// message deduction rules: " ++ ruleList (getIntrVariantsDiff LHS thy) -- FIXME RS: the intruder rule names are the same on LHS and RHS; should pass the current Side through to make this clean
+--        , "// message deduction rules: " ++ ruleList ((intruderRules . get (_crcRules . diffThyCacheLeft)) thy) -- FIXME RS: again, we arbitrarily pick the LHS version of the cache, should be the same on both sides
+--intruderRules . L.get (crcRules . diffThyCacheLeft) 
+        , "// abbreviate: "              ++ show abbreviate
+        , D.showDot dot
+        ]
+      where
+        ruleList :: HasRuleName (Rule i) => [Rule i] -> String
+        ruleList = concat . intersperse ", " . nub . map showRuleCaseName
+
     -- Get dot code for required cases
-    casesDotCode s k i j isdiff = D.showDot $
+    casesDotCode s k i j isdiff = prefixedShowDot $
         compact $ snd $ cases !! (i-1) !! (j-1)
       where
         cases = map (getDisj . get cdCases) (getDiffCaseDistinction s isdiff k thy)

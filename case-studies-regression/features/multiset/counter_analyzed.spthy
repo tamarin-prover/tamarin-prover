@@ -447,56 +447,53 @@ next
         solve( (∃ z.1. ((z.1+h(y)) = (z+h(y))))  ∥
                (∃ z.1. ((z+z.1+h(y)) = h(y))) )
           case case_1
-          solve( !KU( h(y) ) @ #vk.2 )
-            case ch
-            solve( Counter( ~s, (z+h(y)) ) ▶₀ #i )
-              case Inc_case_1
-              solve( (¬(#vr < #vr.1))  ∥ (∃ z. ((z+h(y)) = h(y))) )
+          solve( Counter( ~s, (z+h(y)) ) ▶₀ #i )
+            case Inc_case_1
+            solve( (¬(#vr < #vr.1))  ∥ (∃ z. ((z+h(y)) = h(y))) )
+              case case_1
+              solve( (¬(#vr.1 < #vr))  ∥ (∃ z. ((z+h(y)) = h(y))) )
                 case case_1
-                solve( (¬(#vr.1 < #vr))  ∥ (∃ z. ((z+h(y)) = h(y))) )
+                solve( (#vr.1 < #j)  ∥ (∃ z. ((y+z) = h(y))) )
                   case case_1
-                  solve( (#vr.1 < #j)  ∥ (∃ z. ((y+z) = h(y))) )
+                  solve( (#vr = #vr.1)  ∥ (#vr.1 < #vr) )
                     case case_1
-                    solve( (#vr = #vr.1)  ∥ (#vr.1 < #vr) )
-                      case case_1
-                      by solve( Counter( ~s, h(y) ) ▶₀ #vr )
-                    next
-                      case case_2
-                      by contradiction /* from formulas */
-                    qed
+                    by solve( Counter( ~s, h(y) ) ▶₀ #vr )
+                  next
+                    case case_2
+                    by contradiction /* from formulas */
                   qed
                 qed
               qed
-            next
-              case Inc_case_2
-              solve( (¬(#vr < #vr.1))  ∥ (∃ z. ((z+h(y)) = (x+h(y)))) )
-                case case_2
-                solve( (¬(#vr.1 < #vr))  ∥ (∃ z. ((x+z+h(y)) = h(y))) )
+            qed
+          next
+            case Inc_case_2
+            solve( (¬(#vr < #vr.1))  ∥ (∃ z. ((z+h(y)) = (x+h(y)))) )
+              case case_2
+              solve( (¬(#vr.1 < #vr))  ∥ (∃ z. ((x+z+h(y)) = h(y))) )
+                case case_1
+                solve( (#vr.1 < #j)  ∥ (∃ z. ((y+z) = (x+h(y)))) )
                   case case_1
-                  solve( (#vr.1 < #j)  ∥ (∃ z. ((y+z) = (x+h(y)))) )
-                    case case_1
-                    solve( (∃ z. (('1'+x+z+h(y)) = (x+h(y))))  ∥
-                           (∃ z. ((x+z+h(y)) = ('1'+x+h(y)))) )
+                  solve( (∃ z. (('1'+x+z+h(y)) = (x+h(y))))  ∥
+                         (∃ z. ((x+z+h(y)) = ('1'+x+h(y)))) )
+                    case case_2
+                    solve( (∃ z. ((x+z+h(y)) = h(y)))  ∥ (∃ z. ((z+h(y)) = (x+h(y)))) )
                       case case_2
-                      solve( (∃ z. ((x+z+h(y)) = h(y)))  ∥ (∃ z. ((z+h(y)) = (x+h(y)))) )
-                        case case_2
-                        solve( (∃ z. ((x+z+h(y)) = ('1'+x+h(y))))  ∥
-                               (∃ z. (('1'+x+z+h(y)) = (x+h(y)))) )
+                      solve( (∃ z. ((x+z+h(y)) = ('1'+x+h(y))))  ∥
+                             (∃ z. (('1'+x+z+h(y)) = (x+h(y)))) )
+                        case case_1
+                        solve( (∃ z. ((z+h(y)) = (x+h(y))))  ∥ (∃ z. ((x+z+h(y)) = h(y))) )
                           case case_1
-                          solve( (∃ z. ((z+h(y)) = (x+h(y))))  ∥ (∃ z. ((x+z+h(y)) = h(y))) )
-                            case case_1
-                            by solve( Counter( ~s, h(y) ) ▶₀ #vr )
-                          qed
+                          by solve( Counter( ~s, h(y) ) ▶₀ #vr )
                         qed
                       qed
                     qed
-                  next
-                    case case_2_case_1
-                    by contradiction /* from formulas */
-                  next
-                    case case_2_case_2
-                    by contradiction /* from formulas */
                   qed
+                next
+                  case case_2_case_1
+                  by contradiction /* from formulas */
+                next
+                  case case_2_case_2
+                  by contradiction /* from formulas */
                 qed
               qed
             qed
@@ -528,11 +525,11 @@ analyzing: examples/features//multiset/counter.spthy
 analyzed: examples/features//multiset/counter.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.70302s
+  processing time: 1.688787s
   counters_linear_order (all-traces): verified (52 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)
-  lesser_senc_secret (all-traces): verified (27 steps)
+  lesser_senc_secret (all-traces): verified (26 steps)
 
 ------------------------------------------------------------------------------
 
@@ -542,11 +539,11 @@ summary of summaries:
 analyzed: examples/features//multiset/counter.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.70302s
+  processing time: 1.688787s
   counters_linear_order (all-traces): verified (52 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)
-  lesser_senc_secret (all-traces): verified (27 steps)
+  lesser_senc_secret (all-traces): verified (26 steps)
 
 ==============================================================================
 */
