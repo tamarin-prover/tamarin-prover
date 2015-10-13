@@ -47,7 +47,7 @@ Detailed instructions for Linux - from source
    ```
 
 2. Install the Haskell tool `stack` by following the instructions at 
-   https://github.com/commercialhaskell/stack/wiki/Downloads.
+   https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 3. Clone the `tamarin-prover` repository
 

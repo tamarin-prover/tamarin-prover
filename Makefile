@@ -1,5 +1,5 @@
 # Please make sure that you have 'stack' installed. 
-# https://github.com/commercialhaskell/stack/wiki/Downloads
+# https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 TAMARIN=~/.local/bin/tamarin-prover
 

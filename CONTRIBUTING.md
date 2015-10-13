@@ -13,7 +13,7 @@ https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md.
 
 We manage the Haskell dependencies automatically, using
 'stack'. Install 'stack' according to
-https://github.com/commercialhaskell/stack/wiki/Downloads
+https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 After cloning this repository run 'make default', which will install an
 appropriate GHC for your system, including all dependencies, and the
