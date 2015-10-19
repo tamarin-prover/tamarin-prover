@@ -1,0 +1,44 @@
+This example was generated the SAPIC tool available at
+http://sapic.gforge.inria.fr/
+
+You may give the file pkcs11-templates.spthy to tamarin, or generate it from
+pkcs11-templates.sapic as described below. Note that the proof will take about 
+half an hour and require 12GB of RAM to be available.
+
+Installation for Sapic:
+=======================
+
+Installation requires a OCaml programming environment (tested with
+OCaml version 4.00.1). 
+
+To compile the tool simply type 'make' in the current directory.
+
+Usage: ./sapic [filename]
+
+Example:
+
+	./sapic Examples/Basic/running-example.sapic > running-example.spthy
+
+will translate the running example described in running-example.apip
+in MSR rules (in the tmarin prover input language), redirecting the
+output in the file "running-example.spthy" which can be analyzed using
+the tamarin-prover.
+
+
+Warnings & Heuristics
+====================================
+
+The Sapic heuristic adapted for this very example must be requested, using the
+command line parameter --heuristics=P.
+
+Also note that the tamarin prover may output warnings
+
+-----
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+-----
+
+If the input file is produced by the translator and the well-formedness checks
+concern only the lookup rules, they can be safely ignored (as was proven in the
+long version of the S&P paper describing the theory of this translation).
+

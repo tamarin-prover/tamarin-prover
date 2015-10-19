@@ -1,0 +1,37 @@
+theory N4DiffTest
+begin
+
+/*
+ * Protocol:	 Test whether condition N4 is treated correctly
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: 
+ * Date: 	 April 2015
+ *
+ * Status: 	 working
+ */
+
+
+builtins: diffie-hellman
+
+
+// Registering a public key
+rule Test:
+  [ Fr(~f), In(x) ]
+  --[ Prod(x) ]->
+  [ Out(diff(x,~f)) ]
+
+axiom Product:
+  "
+  All x #i. Prod(x) @ i ==> (Ex a b. x = (a*b))
+  "
+
+lemma Diff_test:
+  all-traces
+  "
+  not( Ex #i. DiffIntrEquality() @ i)
+  "
+
+//This MUST find an attack, otherwise condition N4 is still used and cases are probably missed!
+// Attack found in Rule_Equality, picking public (pub) instantiations for the variables.
+  
+end

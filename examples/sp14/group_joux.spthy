@@ -1,0 +1,542 @@
+theory group_joux
+begin
+
+/*
+ * Protocol: Joux-based unauthenticated multi-party key agreement using ternary trees
+ * Source:      Extending Joux's Protocol to Multi Party Key Agreement (Barua, Dutta, Sarkar)
+ *
+ * Model:       authentic channels used
+ * Status: 	working
+ */
+
+builtins: bilinear-pairing, multiset
+
+
+// the intruder is allowed to see all messages
+rule AuthChan:
+  [ !AuthChan(A, x) ]
+  -->
+  [ Out(x) ]
+
+/* ************************************************************* */
+/* We first show how the tree is generated for any number of     */
+/* participants. To see the actual protocol execution go below   */
+/* to the "Protocol starts here" marker.                         */
+/* ************************************************************* */
+
+/* ***************************************************************************************** */
+// TREE GENERATION FIRST:
+
+/* Determine group participants */
+rule GenerateParticipants_1: //Init:
+  [ Fr(~gid) ] -->
+  [ GenPartic( 1                         // number of participants
+              , <'nil'+1,$P1> + 'nil'    // the list of participants (*)
+              , ~gid)                    // the group id, not secret
+  , Out(~gid)
+  ]
+
+// (*) we encode lists [x1,..,xk] as multisets <i,x_1> + <i+1,x_2> + .. + <i+k,x_k> + 'nil'
+// we also use pairs ([x_1, .., x_j], [x_{j+1},..,x_k])  to traverse a list
+
+// Extend the group size, by 1, for each repetition of this rule
+rule StartGroup_2: 
+  let nextnum = num + 1
+  in
+  [ GenPartic( num,     resps                , ~gid) ]
+  -->
+  [ GenPartic( nextnum, resps + <'nil'+nextnum, $P>, ~gid) ]
+
+
+rule ClusterParticipantsStart_1:
+  [ GenPartic( num, resps, ~gid) ]
+  -->
+  [ ClusterParticipants( num,   // total number of participants 
+                         resps, // whole participants list
+                         ~gid, 
+                         resps, // participant list, to be cut apart
+                         1,     // nextElemCut // index of next element to look for in list that is cut apart
+                         'nil', // subNum // subtract number (needs to be increased by 2 for each subgroup picked, and then reset to 0 for each new pass); note that the lowest available element in the cutList will be nextElemCut+subNum
+                         1,     // current pass number - there will be log_3(n) passes (+1)
+                         'nil', // multiset of subgroups (i.e., pairs of <pass#, A+B+C> of size 1-3), to be given to all participants
+                         'nil'  // NEXT pass level representative elements of each subgroup, to be copied into the 'cut apart list' once the pass is over,
+                         
+                       )
+  ]
+
+// when there are at least 3 elements in cutList, this is the standard rule
+rule ClusterParticipants_3:
+  let nec1 = nextElemCut+subNum
+      nec2 = nextElemCut+subNum + 1
+      nec3 = nextElemCut+subNum + 1 + 1
+  in
+  [ ClusterParticipants(num,
+                        resps+<indA,A>+<indA+indB,B>+<indA+indB+indC,C>,       // make explicit that A,B,C exist in the set of participants at some index such that the index of A < B < C
+                        ~gid, 
+                        cutList+<nec1, A>+<nec2, B>+<nec3, C>, 
+                        nextElemCut, subNum, passNumber, 
+                        subGMS, 
+                        nextCL) ]
+  -->
+  [ ClusterParticipants(num, 
+                       resps+<indA,A>+<indA+indB,B>+<indA+indB+indC,C>, 
+                       ~gid, 
+                       cutList, 
+                       nextElemCut+1, subNum+1+1, passNumber, 
+                       subGMS + <passNumber, A+B+C>, 
+                       nextCL+<'nil'+nextElemCut, A>) ] // A will represent this group of 3 at the next level ; it should use the joint key it has for A,B,C to afterwards send the next level key to B and C in practice ; we will ignore this
+
+//once there is 0,1, or 2 elements left, these will be treated and the pass number will be increased
+
+//2 elements in cutList; we do not care if there is further work, that will simply be dealt with in the next pass level 
+rule ClusterParticipants_2:
+  let nec1 = nextElemCut+subNum
+      nec2 = nextElemCut+subNum + 1
+  in
+  [ ClusterParticipants(num, 
+                        resps+<indA,A>+<indA+indB,B>,    // make explicit that A,B exist in the set of participants at some index with A < B
+                        ~gid, 
+                        'nil'+<nec1, A>+<nec2, B>,  // explicit match on nil and 2 elements
+                        nextElemCut, subNum, passNumber, 
+                        subGMS, 
+                        nextCL) 
+  ]
+  -->
+  [ ClusterParticipants(num, 
+                       resps+<indA,A>+<indA+indB,B>, 
+                       ~gid, 
+                       nextCL+<'nil'+nextElemCut,A>, 
+                       1, 'nil', passNumber + 1,      //reset cut and sub numbers, increase pass counter
+                       subGMS + <passNumber, A,B>, // note how for two elements their ORDER suddenly does matter, because one has to provide the "dummy element", so this is a triple of pass number and 2 names, instead of the usual pair of pass number and multiset of 3 names 
+                       'nil' ) ]
+
+
+//1 element in cutList and there is NO more work after - that is, this is the LAST level, so we stop
+rule ClusterParticipants_final_1:
+  let nec1 = nextElemCut+subNum
+  in
+  [ ClusterParticipants(num, 
+                        resps+<indA,A>,     // make explicit that A exist in the set of participants at some index 
+                        ~gid, 
+                        'nil'+<nec1, A>,  // explicit match on nil and 1 element
+                        nextElemCut, subNum, passNumber + 1, 
+                        subGMS, 
+                        'nil') // explicit match on nil, so NO further level is needed
+  ]
+  -->
+  [ ClusteringDone(num, 
+                   resps+<indA,A>, 
+                   ~gid, 
+                   passNumber, // pass number is one lower now as there was nothing to do at that last level!
+                   subGMS ) 
+  ]
+
+//1 element here and there is more work to be done after 
+rule ClusterParticipants_1:
+  let nec1 = nextElemCut+subNum
+  in
+  [ ClusterParticipants(num, 
+                        resps+<indA,A>,     // make explicit that A exist in the set of participants at some index
+                        ~gid, 
+                        'nil'+<nec1, A>,  // explicit match on nil and 1 element
+                        nextElemCut, subNum, passNumber, 
+                        subGMS, 
+                        nextCL+<anyNum,anyName>) // there is at least one other element for the next level, so next level has to happen 
+                                        // note that there can not be any 2-participant combination here, as that is always the last thing happening on a level; so, there is either the 2-case or the 1-case, but if there were 2 and then 1 participants that would make the 3 case!
+  ]
+  -->
+  [ ClusterParticipants(num, 
+                        resps+<indA,A>, 
+                        ~gid, 
+                        nextCL+<anyNum,anyName>+<'nil'+nextElemCut,A>,  // take the next level representatives, and add the current one
+                        1, 'nil', passNumber + 1,    // reset of cut and sub, increase pass number
+                        subGMS + <passNumber, A>,    // A has nothing to do at this level, but needs to realize that the pass number goes up - this helps with not redoing work or looping in the actual protocol exchange
+                        'nil' ) ]
+
+
+//0 elements in cutList and there is more work after (the case of 0 elements and no further work never happens)
+rule ClusterParticipants_0:
+  [ ClusterParticipants(num, resps, ~gid, 
+                        'nil',  // explicit match on nil
+                        nextElemCut, subNum, passNumber, 
+                        subGMS, 
+                        nextCL+<anyNum,anyName>) // there is at least one other element for the next level, so next level has to be checked
+                                // note how that must be a 3-participant case, as the 2 and 1-participant cases end the level and do not lead to this 0-participant case!
+  ]
+  -->
+  [ ClusterParticipants(num, resps, ~gid, 
+                       nextCL+<anyNum,anyName>,  //move next level list to current level list
+                       1, 'nil', passNumber + 1, //reset cut and sub, increase pass number
+                       subGMS, 
+                       'nil' ) ]
+
+
+// now that clustering is done, create the participants proper
+rule startGeneration:
+  [ ClusteringDone(num, resps, ~gid, 
+                       passNumber,
+                       subGMS ) 
+  ]
+  -->
+  [ GenerateGroup( 1+'nil',    // number of next participant to be generated
+                   num,        // total number of participants to be generated
+                   resps,      // list of participants that still need to be generated
+                   ~gid,
+                   'nil',      // list of participants that have already been generated
+                   passNumber, // number of passes that will be necessary 
+                   subGMS      // groupings for all participants
+                   ) ]
+
+/* Generate all Participants - everyone knows the subgrouping, i.e., the tree structure to be built, it is encoded in subGMS */
+
+rule GenerateGroup_0: //:
+  [ GenerateGroup(   num, total, resps + <num, A>, ~gid, generated, pN, subGMS) ]
+  --[GP(num, A, ~gid, resps+ <num, A> + generated)]->
+  [ GenerateGroup( num+1, total, resps, ~gid, generated + <num, A>, pN, subGMS),
+    Participant(num,                          // participant index
+                A,                            // participant name
+                resps+ <num, A> + generated,  // list of all participants
+                ~gid,                         // group identifier
+                pN,                           // number of passes needed
+                1,                            // current pass number, initialized to 1 
+                subGMS) // participant stores list of other participants, including self
+  ]
+
+// TREE GENERATION ABOVE
+/* ***************************************************************************************** */
+
+
+// Protocol starts here
+
+// Let us now define the protocol, there are 3 possible cases:
+// (i)   grouping of 3 participants, just use the regular joux's protocol 
+//         (<pass,A+B+C>)
+// (ii)  grouping of 2 participants, use joux where the first participant A
+//       creates 2 of the nonces
+//       (<pass,A,B>)
+// (iii) grouping of 1 participant, no protocol usage, just pass along 
+//       information of current key 
+//       (<pass,A>)
+
+    // Format of participant:
+    //*** Participant(num,                          // participant index
+    //***             A,                            // participant name
+    //***             resps+ <num, A> + generated,  // list of all participants
+    //***             ~gid,                         // group identifier
+    //***             pN,                           // number of passes needed
+    //***             1,                            // current pass number, initialized to 1 
+    //***             subGMS) // participant stores list of other participants, including self
+
+
+/* ************************************************************* */
+/* Rule to initialize each participant                           */
+/* ************************************************************* */
+
+rule PickNonce_0:
+  [ Fr(~ekA),
+    Participant(num, A, particList, ~gid, totalPassN, 1, GMS)
+  ]
+  --[ Secret(~ekA, // secret info 
+             A,    // set of participants this secret is shared with
+             ~gid, // group identifier
+             A)    // principal name
+  ]->
+  [ PReady(A,           // name 
+           ~ekA,        // nonce, will later on be the joint secret key at some pass level 
+           A,           // set of participants the current secret is shared with
+           ~gid,        // group identifier
+           totalPassN,  // number of total passes needed - maybe drop this, probably not needed
+           1,           // current pass number
+           GMS)         // group membership info
+  ]
+
+/* ************************************************************* */
+/* Additional transformation functions                           */
+/* ************************************************************* */
+
+// h: G_2 -> G_1, i.e., it transforms elements from G_2 back to 
+// elements of G_1 so we can perform another round of Joux
+functions: h/1
+
+// This one-way function is used to encode the recipient of a message - if we send all the pieces encapsulated by 'destination' in the clear, the amount of unnecessary case distinction and fruitless attempts of changing that by the adversary is too much. As it is an authentic channel anyway, the adversary cannot manipulate the destination.
+functions: destination/1
+
+/* ************************************************************* */
+/* Rules for participants of 3-member exchange: send and receive */
+/* ************************************************************* */
+
+rule SendGroup_3:
+  let hkA = pmult(h(secret) ,'P')
+  in
+  [ PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A+B+C>) 
+  ]
+  --[ ]->
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A+B+C>,
+           <B,A+C>,   // expecting message from here
+           <C,A+B>),  // and here
+    !Compute(A, <hkA, destination(currPassN, ~gid, B + C)> )
+  ]
+
+rule ComputeToAuthChan:
+  [ !Compute(A, <pmult(h(secret) , 'P'), destination(currPassN, ~gid, X)>) ]
+  --[ Secret(secret, 'nil', ~gid, A) ]-> // it *SHOULD* not matter for which group (2nd argument) this is secret, just that it IS secret
+  [ !AuthChan( A, <pmult(h(secret) , 'P'), destination(currPassN, ~gid, X)>) ]
+
+rule ReceiveGroup:
+  let newsecret = em(XB,XC)^ h(secret)
+      newSharedPartners = sharedPartners + B + C
+  in
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS,
+           <B,A+X1>,
+           <C,A+X2>),
+    !AuthChan(B, < XB, destination(currPassN, ~gid, A + X1)> ),
+    !AuthChan(C, < XC, destination(currPassN, ~gid, A + X2)> )
+  ]
+  --[ Secret(newsecret, newSharedPartners, ~gid, A)
+    ]->
+  [ PReady(A,
+           newsecret,
+           newSharedPartners,
+           ~gid, totalPassN, currPassN + 1, GMS)
+  ]
+
+/* ************************************************************* */
+/* Rules for participants of 2-member exchange, first the one    */
+/* doing the double work by creating etra dummy, then other one  */
+/*                                                               */
+/* Note that receiving is the same as in the 3-member case and   */
+/* thus covered by the rule given above                          */
+/* ************************************************************* */
+
+rule SendGroup_2_double:
+  let hkA = pmult(h(secret) ,'P')
+      dummy = pmult(h(~extra), 'P') // gratuitous hashing to keep the message format consistent
+  in
+  [ Fr(~extra),
+    PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A,B>) 
+  ]
+  --[ ]->
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,A,B>,
+           <B,A+1>,
+           <A,B+A>),
+    !Compute(A, <hkA,   destination(currPassN, ~gid, B+1)> ),
+    !Compute(A, <dummy, destination(currPassN, ~gid, B+A)> )
+  ]
+
+rule SendGroup_2_single:
+  let hkA = pmult(h(secret) ,'P')
+  in
+  [ PReady(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,B,A>) 
+  ]
+  --[ ]->
+  [ PWaitResponse(A,       
+           secret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN,   
+           GMS+<currPassN,B,A>,
+           <B,A+B>,
+           <B,A+1>),
+    !Compute(A, <hkA,   destination(currPassN, ~gid, B+1)> )
+  
+]
+
+/* ************************************************************* */
+/* Rule for the degenerate case where a participant is the sole  */
+/* member at some level, so essentially the level just needs to  */
+/* be jumped over.                                               */
+/* ************************************************************* */
+ 
+// add a G1->G1 hash for StepOver1
+functions: hashGOne/1
+
+rule StepOver1:
+  let newsecret = hashGOne(secret)
+  in
+  [ PReady(A,                  // name 
+           secret,             // joint secret key 
+           sharedPartners,     // set of principals the secret is shared with
+           ~gid,               // group identifier
+           totalPassN,         // number of total passes needed - maybe drop this, probably not needed
+           currPassN,          // current pass number
+           GMS+<currPassN,A> ) // group membership info: A alone at this level
+  ]
+  --[Secret(newsecret, sharedPartners, ~gid, A)]->
+  [ PReady(A,       
+           newsecret,  
+           sharedPartners,
+           ~gid,   
+           totalPassN,
+           currPassN+1,     // increase current pass number
+           GMS+<currPassN,A>) 
+  ]
+
+/* ************************************************************* */
+/* Secrecy lemma                                                 */
+/* ************************************************************* */
+
+lemma key_secrecy[use_induction]:
+  all-traces
+  "not (Ex #i1 I group gid key #i2.
+          Secret( key, group, gid, I ) @ i1 
+        & KU( key ) @ i2)"
+
+
+
+/* ************************************************************* */
+/* Executability lemma                                           */
+/* ************************************************************* */
+
+// run tamarin with -Dexecutable to include this lemma
+#ifdef executable
+
+lemma key_reachable_3:
+  exists-trace
+  "Ex A B C gid key #ia #ib #ic.
+         Secret(key, A+B+C, gid, A) @ ia
+       & Secret(key, A+B+C, gid, B) @ ib
+       & Secret(key, A+B+C, gid, C) @ ic
+       & not (A = B)
+       & not (A = C)
+       & not (B = C)
+"
+
+#endif
+
+
+/* **************************************************************** */
+/* Testing the tree generation before the comment                   */
+/* "TREE GENERATION ABOVE".                                         */
+/* **************************************************************** */
+
+// run tamarin with -Dgenerationtest to include these lemmas
+#ifdef generationtest
+
+/* **************************************************************** */
+/* In this part there are comments ahead of lemmas explaining how   */
+/* to manually prove the lemma.                                     */
+/* **************************************************************** */
+
+// pick D first, then fully solve before touching E; always pick the bottom rule application choice, and here is the cases to choose:
+// 4; 1
+// now on solving E, simply go through, choice points are 1;1 
+lemma create_2_participants:
+  exists-trace
+  "Ex D E #id #ie k.
+      ( GP(1+1+'nil', D, k, (<1+1+'nil', D> + <1+'nil', E> + 'nil' + 'nil')) @ id &
+        GP(1+'nil', E, k, (<1+1+'nil', D> + <1+'nil', E> + 'nil' + 'nil')) @ ie &
+        not (D = E) 
+       )"
+
+// pick C first, then D, then E, fully solve each before going to next; here are the cases to choose (when a choice exists!)
+// C: 8 ; 9 ; Start_1_case_2
+// D: 7 ; 9 ; Start_1_case_2
+// E: 1 ; 9 ; Start_1_case_2
+lemma create_3_participants:
+  exists-trace
+  "Ex  C D E  #ic #id #ie k.
+      ( GP(1+1+1+'nil', C, k, (<1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil' + 'nil')) @ ic &
+        GP(1+1+'nil', D, k, (<1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil' + 'nil')) @ id &
+        GP(1+'nil', E, k, (<1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil' + 'nil')) @ ie &
+        not (C = D) &
+        not (C = E) &
+        not (D = E) 
+       )"
+
+// 3join: <1,C+D+E>
+// 1join: <1,C+D+E>, <1,B>
+// 2join: <1,C+D+E>, <1,B>, <2,E,B>
+// final1join: see above
+// ///////////////////////////
+// pick B first, then C, then D, then E, fully solve each before going to next; here are the cases to choose (when a choice exists!)
+// 14; 10; ClusterParticipants_1_case_7; Start_1_3 [for B]
+// 13; 10; ClusterParticipants_1_case_7; Start_1_3 [for C]
+// 12; 10; ClusterParticipants_1_case_7; Start_1_3 [for D]
+// 1;  10; ClusterParticipants_1_case_7; Start_1_3 [for E]
+lemma create_4_participants:
+  exists-trace
+  "Ex B C D E #ib #ic #id #ie k.
+      ( GP(1+1+1+1+'nil', B, k, (<1+1+1+1+'nil', B> + <1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil'+ 'nil')) @ ib &
+        GP(1+1+1+'nil', C, k, (<1+1+1+1+'nil', B> + <1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil'+ 'nil')) @ ic &
+        GP(1+1+'nil', D, k, (<1+1+1+1+'nil', B> + <1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil'+ 'nil')) @ id &
+        GP(1+'nil', E, k, (<1+1+1+1+'nil', B> + <1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil'+ 'nil')) @ ie &
+        not (B = C) &
+        not (B = D) &
+        not (B = E) &
+        not (C = D) &
+        not (C = E) &
+        not (D = E) 
+       )"
+
+// 3join: <1,C+D+E>
+// 2join: <1,C+D+E>, <1,B,A>
+// 2join: <1,C+D+E>, <1,B,A>, <2,E,B>
+// final1join: see above
+// /////////////////////////////
+// pick A first, then B, then C, then D, then E, fully solve each before going to next; 
+//here are the cases to choose (when a choice exists!)
+//[A] 24; 14; ClusterParticipants_2_case_20; ClusterParticipants_3_case_1; Start_1_case_4 
+//[B] 23; 14; ClusterParticipants_2_case_20; ClusterParticipants_3_case_1; Start_1_case_4 
+//[C] 22; 14; ClusterParticipants_2_case_20; ClusterParticipants_3_case_1; Start_1_case_4 
+//[D] 21; 14; ClusterParticipants_2_case_20; ClusterParticipants_3_case_1; Start_1_case_4 
+//[E]  1; 14; ClusterParticipants_2_case_20; ClusterParticipants_3_case_1; Start_1_case_4  
+lemma create_5_participants:
+  exists-trace
+  "Ex A B C D E #ia #ib #ic #id #ie k.
+      ( GP(1+1+1+1+1+'nil', A, k, (<1+1+1+1+1+'nil', A> + <1+1+1+1+'nil', B> + <1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil'+'nil')) @ ia &
+        GP(1+1+1+1+'nil',   B, k, (<1+1+1+1+1+'nil', A> + <1+1+1+1+'nil', B> + <1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil'+'nil')) @ ib &
+        GP(1+1+1+'nil',     C, k, (<1+1+1+1+1+'nil', A> + <1+1+1+1+'nil', B> + <1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil'+'nil')) @ ic &
+        GP(1+1+'nil',       D, k, (<1+1+1+1+1+'nil', A> + <1+1+1+1+'nil', B> + <1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil'+'nil')) @ id &
+        GP(1+'nil',         E, k, (<1+1+1+1+1+'nil', A> + <1+1+1+1+'nil', B> + <1+1+1+'nil', C> + <1+1+'nil', D> + <1+'nil', E> + 'nil'+'nil')) @ ie &
+        not (A = B) &
+        not (A = C) &
+        not (A = D) &
+        not (A = E) &
+        not (B = C) &
+        not (B = D) &
+        not (B = E) &
+        not (C = D) &
+        not (C = E) &
+        not (D = E) 
+       )"
+
+#endif
+
+end

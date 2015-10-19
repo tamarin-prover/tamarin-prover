@@ -25,20 +25,23 @@ type Position = [Int]
 --   applications @*[t1,t2,..tk-1,tk]@ as binary applications
 --   @t1*(t2*..(tk-1*tk)..)@.
 atPos :: Ord a => Term a -> Position -> Term a
-atPos t                                     []     = t
-atPos (viewTerm -> FApp (AC _) (a:_))       (0:ps) =
+atPos = atPos' DiffBoth
+
+atPos' :: Ord a => DiffType -> Term a -> Position -> Term a
+atPos' _  t                                         []     = t
+atPos' dt (viewTerm' dt -> FApp (AC _) (a:_))       (0:ps) =
     a `atPos` ps
-atPos (viewTerm -> FApp (AC _) [_])         _      =
+atPos' dt (viewTerm' dt -> FApp (AC _) [_])         _      =
     error "Term.Positions.atPos: invalid position given"
-atPos (viewTerm -> FApp fsym@(AC _) (_:as)) (1:ps) =
+atPos' dt (viewTerm' dt -> FApp fsym@(AC _) (_:as)) (1:ps) =
     (fApp fsym as) `atPos` ps
-atPos (viewTerm -> FApp (AC _) [])          _      =
+atPos' dt (viewTerm' dt -> FApp (AC _) [])          _      =
     error $ "Term.Positions.atPos: impossible, "
             ++"nullary AC symbol appliction"
-atPos (viewTerm -> FApp  _ as)              (i:ps) = case atMay as i of
+atPos' dt (viewTerm' dt -> FApp  _ as)              (i:ps) = case atMay as i of
     Nothing -> error "Term.Positions.atPos: invalid position given"
     Just a  -> a `atPos` ps
-atPos (viewTerm -> Lit _)                   (_:_)  =
+atPos' dt (viewTerm' dt -> Lit _)                   (_:_)  =
     error "Term.Positions.atPos: invalid position given"
 
 

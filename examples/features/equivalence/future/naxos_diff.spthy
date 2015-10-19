@@ -1,0 +1,157 @@
+theory NAXOS_eCK_diff
+begin
+
+builtins: diffie-hellman
+
+section{* NAXOS *}
+
+/* NAXOS with a single, so far useless diff-term, need to consider how to make this interesting */
+
+/*
+ * Protocol:	NAXOS
+ * Modeler: 	Jannik Dreier and Ralf Sasse
+ * Date: 	April 2015
+ * Source:	based on Model by Cas Cremers, Benedikt Schmidt 
+ *              from January 2012/April 2012
+ *              "Stronger Security of Authenticated Key Exchange"
+ * 		LaMacchia, Lauter, Mityagin, 2007
+ * Property: 	eCK security
+ *
+ * Status: 	???
+ */
+
+functions: h1/1
+functions: h2/1
+
+/* Protocol rules */
+
+/* In the description in the paper, we omitted the sorts. 
+ * In this description they are made explicit.
+ * '$A' is equivalent to 'A:pub'
+ * '~x' is equivalent to 'x:fresh'
+ */
+
+/* Generate long-term keypair */
+rule generate_ltk:
+   let pkA = 'g'^~lkA 
+   in
+   [ Fr(~lkA) ] 
+   --[ RegKey($A) ]->
+   [ !Ltk( $A, ~lkA ), !Pk( $A, pkA ), Out( pkA ) ]
+
+/* Initiator */
+rule Init_1:
+  let exI = diff(h1(<~eskI, ~lkI >), $X)
+      hkI = 'g'^exI
+  in
+   [   Fr( ~eskI ), !Ltk( $I, ~lkI ) ]
+   -->
+   [   Init_1( ~eskI, $I, $R, ~lkI, hkI )
+     , !Ephk(~eskI, ~eskI)
+     , Out( hkI ) ]
+
+rule Init_2:
+  let pkR = 'g'^~lkR
+      exI = h1(< ~eskI, ~lkI >)
+      kI  = h2(< Y^~lkI, pkR^exI, Y^exI, $I, $R >) 
+  in
+   [   Init_1( ~eskI, $I, $R, ~lkI , hkI), !Pk( $R, pkR ), In( Y ) ]
+   --[ Accept( ~eskI, $I, $R, kI)
+     , Sid( ~eskI, < 'Init', $I, $R, hkI, Y >)
+     , Match( ~eskI, < 'Resp', $R, $I, hkI, Y >)
+     ]->
+   [   !Sessk( ~eskI, kI) ]
+
+/* Responder */
+rule Resp_1:
+  let pkI = 'g'^~lkI
+      exR = h1(< ~eskR, ~lkR >)
+      hkr = 'g'^exR
+      kR  = h2(< pkI^exR, X^~lkR, X^exR, $I, $R >) 
+  in
+   [   Fr( ~eskR ), !Ltk($R, ~lkR), !Pk($I, pkI), In( X ) ]
+   --[ Accept( ~eskR, $R, $I, kR )
+     , Sid( ~eskR, <'Resp', $R, $I, X, hkr >)
+     , Match( ~eskR, <'Init', $I, $R, X, hkr> )
+     ]->
+   [   Out( hkr ),
+       !Ephk(~eskR, ~eskR),
+       !Sessk( ~eskR, kR) ]
+
+/* Key Reveals for the eCK model */
+rule Sessk_reveal: 
+   [ !Sessk(~tid, k) ] --[ SesskRev(~tid) ]-> [ Out(k) ]
+
+rule Ltk_reveal:
+   [ !Ltk($A, lkA) ] --[ LtkRev($A) ]-> [ Out(lkA) ]
+
+rule Ephk_reveal:
+   [ !Ephk(~s, ~ek) ] --[ EphkRev(~s) ]-> [ Out(~ek) ]
+
+
+/* Security properties */
+/*
+lemma eCK_same_key:
+  " // If every agent registered at most one public key
+  (All A #i #j. RegKey(A)@i & RegKey(A)@j ==> (#i = #j))
+  ==> // then matching sessions accept the same key
+  (not (Ex #i1 #i2 #i3 #i4 s ss k kk A B minfo .
+              Accept(s, A, B, k ) @ i1
+	    & Accept(ss, B, A, kk) @ i2
+	    & Sid(s, minfo) @ i3
+	    & Match(ss, minfo) @i4
+	    & not( k = kk )
+  ) )"
+*/
+
+lemma eCK_key_secrecy:
+  /* 
+   * The property specification very closely follows the original eCK
+   * (ProvSec) paper:
+   *
+   * If there exists a Test session whose key k is known to the
+   * Adversary, then...
+   */
+  "(All #i1 #i2 Test A B k.
+    Accept(Test, A, B, k) @ i1 & K( k ) @ i2
+    ==> ( 
+    /* ... the Test session must be "not clean".
+     * Test is not clean if one of the following has happened:
+     */
+    /* 1a. session-key-reveal of test thread. */
+      (Ex #i3. SesskRev( Test ) @ i3 )
+
+    /* 1b. session-key-reveal of matching session */
+    | (Ex MatchingSession #i3 #i4 ms.
+    	   /* ( MatchingSession's 'ms' info matches with Test ) */
+           ( Sid ( MatchingSession, ms ) @ i3 & Match( Test, ms ) @ i4)
+	   & (
+	     (Ex #i5. SesskRev( MatchingSession ) @ i5 )
+	   )
+      )
+    /* 2. If matching session exists and ... */
+    | (Ex MatchingSession #i3 #i4 ms.
+    	   /* ( MatchingSession's 'ms' info matches with Test ) */
+           ( Sid ( MatchingSession, ms ) @ i3 & Match( Test, ms ) @ i4)
+	   & (
+	   /* 2a. reveal either both sk_A and esk_A, or */
+	     (Ex #i5 #i6. LtkRev  ( A ) @ i5  & EphkRev ( Test  ) @ i6 )
+	   /* 2b. both sk_B and esk_B */
+	   | (Ex #i5 #i6. LtkRev  ( B ) @ i5  & EphkRev ( MatchingSession ) @ i6 )
+	   )
+      )
+    /* 3. No matching session exists and ... */
+    | ( ( not(Ex MatchingSession #i3 #i4 ms.
+    	   /* ( MatchingSession's 'ms' info matches with Test ) */
+           Sid ( MatchingSession, ms ) @ i3 & Match( Test, ms ) @ i4 ) )
+	   & (
+	   /* 3a. reveal either sk_B, or */
+	     (Ex #i5    . LtkRev (B) @ i5 )
+	   /* 3b. both sk_A and esk_A */
+	   | (Ex #i5 #i6. LtkRev (A) @ i5 & EphkRev ( Test ) @ i6 )
+	   )
+      )
+    )
+  )"
+
+end

@@ -1,1 +1,266 @@
-data/CHANGES
+* 1.0.0
+  - Change build system to use stack, see https://stackage.org,
+    builds with lts-2.22 (GHC 7.8)
+
+  - Adds observational equivalence feature. Available via --diff flag.
+
+  - Some minor fixes:
+     + issue #144
+     + saving and loading theories with proofs
+
+* 0.9.0
+  - Improve build-stability by switching to Stackage-based precise
+    version-constraints: tamarin-prover should now build under GHC
+    7.8.4, GHC 7.6.2, and GHC 7.4.2. See
+
+      https://travis-ci.org/tamarin-prover/tamarin-prover
+
+    for it's build status.
+
+  - Make executable relocatable => this means we can now offer pre-built
+    binaries. This is the preferred way for distributin tamarin-prover. We no
+    longer support publishing to Hackage and downloading from Hackage.
+
+  - We no longer include examples, manuals, and licence files. They should be
+    downloaded from the github repository:
+    https://github.com/tamarin-prover/tamarin-prover
+
+* 0.8.6.0
+  - Incorporate a patch contributed by Ognjen Maric that improves reasoning
+    about injective facts in inductive proofs.
+
+* 0.8.5.1
+  - Added KEA+ models with adversarial key registration.
+  - Make case splitting more extensive. This possibly increases precomputation
+    time, but in some cases it enables proving more properties.
+  - fix: restrict aeson depedency to 0.6.*
+
+* 0.8.5 Dropped support for GHC 7.0.x and GHC 7.2.x in favor of GHC 7.6.x
+
+  - fix: faster and simpler variant computation
+  - fix: parse errors when loading files with non-ASCII characters from GUI
+  - fix: compiles with GHC 7.6.x
+
+* 0.8.4
+    features:
+      1. irreducible function symbols are now allowed in formulas
+      2. Support for an AC operator "+" which can also be used
+         in formulas.
+         See the examples
+           - "ake/bilinear/{Joux,TAK1}.spthy" for modeling multisets,
+           - "features/multiset/counter.spthy" for modeling natural
+             numbers as counters, and
+           - "ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy" for
+             modeling lists with an "isPrefixOf" operation.
+         See below for documentation.
+      3. Support for reasoning about protocols that use bilinear pairing
+         (see "ake/bilinear/" for examples).
+      4. Support for private function symbols (see "cav13/DH_example.spthy"
+         and "features/private_function_symbols/" for examples.
+
+    documentation:
+      - Schmidt's PhD thesis on "Formal Analysis of Key Exchange and Physical
+        Protocols" is now available online at
+
+          http://www.infsec.ethz.ch/research/software/tamarin
+
+        and provides a detailed explanation of the theory and application of
+        Tamarin including the reasoning about Diffie-Hellman exponentiation
+        and bilinear pairing.
+
+    new protocol models (most of them referenced in Schmidt's thesis):
+      - Identity-based key exchange protocols (RYY, Scott, Chen-Kudla)
+      - tripartite group key exchange protocols (Joux, TAK1)
+      - multiprotocol scenarios for 3-pass AKE protocols (DHKEA+NAXOS-C, UM-C+UM-1)
+      - new Yubikey models that model counters with multisets (contributed by
+        Robert Künnemann).
+
+* 0.8.2.1 bugfix release
+    Should fix the ominous "no such lemma or proof path" GUI bug.
+
+* 0.8.2.0
+    documentation:
+      - The submitted draft of the Meier's PhD thesis on "Advancing Automated
+        Security Protocol Analysis" is now available online at
+
+          http://www.infsec.ethz.ch/research/software/tamarin
+
+        It explains the theory underlying Tamarin in much more detail than our
+        CSF'12 paper. It also explains the theory underlying trace induction
+        and type assertions.
+
+    user interface:
+      - allow lemma selection with '--prove': The lemmas being analyzed are the
+        ones whose name is an extension of one of the prefixes given with a
+        '--prove' flag.
+      - disallow parsing of reserved rule names:
+        Fresh, irecv, isend, coerce, fresh, pub
+
+    new protocol models (referenced in Meier's PhD thesis):
+      - models of TESLA Scheme 1 and 2
+      - modeled the
+      - injective agreement for TLS and NSLPK
+
+      - include the contributed YubiKey models from:
+        "R. Kuennemann and G. Steel. Yubisecure? formal security analysis
+        results for the Yubikey and YubiHSM. In Proc. of the 8th Workshop on
+        Security and Trust Management (STM 2012), Pisa, Italy, September 2012."
+
+      - minimal hash chain example: this demonstrates a short-coming in our
+        current proof calculus. It does not suffice to reason about iterated
+        function application.
+
+    architectural changes:
+      - upgraded the GUI to use version 1.1 of the Yesod web-framework
+      - split off Theory module hierarchy as a separate library called
+        'tamarin-prover-theory'
+
+
+* 0.8.1.0
+    - enabled parallelization by default when compiling `tamarin-prover` with
+      GHC 7.4 and higher. It uses as many threads as there are CPU cores on
+      the system. Use `tamarin-prover +RTS -N1 -RTS` to use only one thread.
+
+    - fixed: lemmas proven for some trace ('exists-trace') and marked with
+        the [reuse] attribute were wrongly used in the proof of other lemmas.
+    - fixed: axioms that are not safety formulas were not transformed
+        properly when applying induction.
+    - fixed: fresh name generation was not always handled properly when
+        applying a precomputed case distinction to a goal that uses
+        DH-exponentiation. Security protocol models that use DH-exponentiation
+        should be checked again. Some of our case studies were indeed missing
+        a few cases, but no property changed its validity.
+    - fixed: no more case names containing spaces,
+        when solving deconstruction chains.
+    - fixed: avoid solving KU-goals for nullary function symbols
+
+* 0.8.0.0
+    - new homepage:  http://www.infsec.ethz.ch/research/software/tamarin
+    - mailing list:  https://groups.google.com/group/tamarin-prover
+    - issue tracker: https://github.com/tamarin-prover/tamarin-prover/issues
+
+    - GUI:
+        - new: added shortcuts for bounded autoprover and searching for all
+          solutions, which can be used to characterize the set of solutions of
+          a constraint system.
+
+        - improved: pretty-printing of formulas and constraint systems using
+          Unicode characters.
+
+    - .spthy files:
+        - new: support for restricting the set of considered traces using
+          axioms. This allows for example to conveniently model equality
+          checks using actions and a corresponding axiom. See the 'Tutorial'
+          for more information.
+
+        - new: proof checking support. This allows you to save interactive
+          proofs from the GUI for later verification. Just copy the proof or a
+          prefix of the proof into your input file. 'sorry' steps are
+          then automatically expanded when using 'tamarin-prover --prove'.
+
+        - new: formulas can now use mathematical symbols represented using
+          their Unicode characters.
+
+        - removed: support for (* ... *) style comments.
+
+    - prover:
+        - We now use the following additional normal form condition.
+
+            > There is no edge (i,1)>->(j,1) between two exponentiation rules
+            > i and j.
+
+          This removes the need for exponentiation tags and thereby simplifies
+          the constraint-reduction rules, both in theory and in code. Note
+          that the arity of the 'KU' fact changed from arity two to arity one.
+          Theories using typing invariants must thus be adapted, which is the
+          reason for the minor version bump.
+
+        - improved: error messages of wellformedness checks
+        - reduced: memory usage of the autoprover by a factor 2 to 10.
+        - improved parallelization: 10% speed increase on an i7 Quad-Core
+
+    - editor support: Tomas Zgraggen contributed a syntax highligthing file
+      for .spthy files for Notepad++ (http://notepad-plus-plus.org/).  This is
+      great text editor for Windows. The syntax-highlighting file is installed
+      in the same directory as the 'examples' directory under
+      'etc/notepad_plus_plus_stphy.xml'.
+
+    - fixed: bug in unique facts computation and application.
+    - fixed: induction now generates cases for the empty and the non-empty trace
+    - fixed: We no longer use local 'tamarin-prover-img' directories to cache
+             rendered constraint systems. All images are now cached in
+             a 'tamarin-prover-cache/img' subdirectory of the OS specific
+             temporary directory.
+
+* 0.6.1.0
+   - fixed: parallel exploration of proof tree was using too much memory
+   - fixed: reference to Tutorial.spthy broken in help message
+
+* 0.6.0.0
+   - open-sourced the code: https://github.com/tamarin-prover/tamarin-prover
+
+   - core prover:
+       - Normal form construction rules now log their conclusion as a
+         KU-action. This allows to refer to the conclusions of construction
+         rules in security properties. We exploit this to formalize typing
+         invariants, which describe the structure of the instantiation of
+         message variables precisely enough for getting rid of
+         Chain-constraints starting from these message variables.
+
+       - Reimplemented the constraint solver using a modified set of
+         constraint rules that also supports attack extraction, when using
+         inductive strengthening of security properties. As a nice side effect
+         this allowed us to get rid of implicit construction dependencies.
+         Moreover, the new prover's code is extensively documented, thereby
+         facilitating further extensions.
+
+       - Removed preliminary support for typing invariants based on
+         Ded-actions and the deducible-before-atom (--|).
+
+       - See the MANUAL for an explanation of the theory that we changed with
+         respect to our CSF'12 paper.
+
+   - GUI:
+       - action atoms are also displayed graphically
+       - the autoprover now respect all flags from the command line; e.g.,
+         using `tamarin-prover interactive --bound=7` will give you a
+         bounded-depth prover in the interactive GUI.
+
+* 0.4.1.0
+   - core prover:
+       - detect maude errors earlier
+
+   - GUI
+       - support for SVG output
+       - the network interface for the webserver is configurable now
+
+   - bugfixes:
+       - fix unit-test executed by 'test' mode
+
+* 0.4.0.0 The version we used for our CSF'12 paper
+
+   - core prover:
+       - improved speed of constraint solver
+       - improved goal selection heuristic
+       - compute better loop-breakers for precomputing case splits
+       - experimental support for partial forward evaluation
+       - experimental support for loop invariants about construction rules
+
+   - input syntax:
+       - allow searching for trace existence using 'exists-trace'
+       - allow local let-block in rule definitions
+
+   - GUI:
+       - normalize variable indices before display
+       - more compact and beautiful default style for graph layout
+
+   - bugfixes: quite a slew, most notably
+       - compilation on Windows and GHC 7.4.1
+       - intruder rule generation works now correctly again
+
+* 0.1.1.0 Bug-fix release
+
+  - fixed: automatically create output directory, if it does not exist
+  - fixed: wrong flags given in help message for starting interactive mode
+
+* 0.1.0.0 First public release

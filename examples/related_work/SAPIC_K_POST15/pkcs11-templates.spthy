@@ -1,0 +1,423 @@
+theory PKCS11TemplatePolicy
+begin
+
+
+builtins: symmetric-encryption
+
+functions: key/1, attwrap/1, attunwrap/1, attenc/1, attdec/1, attsens/1, attextr/1, atttrus/1, attwwt/1, attwt/1, attut/1, key/1, tem/1
+
+equations: attwrap(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=wrap,attunwrap(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=unwrap,attenc(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=enc,attdec(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=dec,attsens(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=sens,attextr(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=extr,atttrus(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=trus,attwwt(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=wwt,attwt(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=wt,attut(<wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut>)=ut,key(<k, templ>)=k,tem(<k, templ>)=templ
+rule 0: // 
+ [ ] --[Init()]-> [State_0()]
+
+rule insert___template____trusted_____on____on____off____off____on____on____on____on____usage____usage__0: //insert <'template', 'trusted'>,<'on', 'on', 'off', 'off', 'on', 'on', 'on', 'on', 'usage', 'usage'> 
+ [ State_0()] --[Insert(<'template', 'trusted'>, <'on', 'on', 'off', 'off', 'on', 'on', 'on', 'on', 'usage', 'usage'>)]-> [State_01()]
+
+rule insert___template____usage_____off____off____on____on____on____on____off____on____undef____undef__01: //insert <'template', 'usage'>,<'off', 'off', 'on', 'on', 'on', 'on', 'off', 'on', 'undef', 'undef'> 
+ [ State_01()] --[Insert(<'template', 'usage'>, <'off', 'off', 'on', 'on', 'on', 'on', 'off', 'on', 'undef', 'undef'>)]-> [State_011()]
+
+rule insert___template____untrusted_____off____off____on____on____off____on____off____off____undef____undef__011: //insert <'template', 'untrusted'>,<'off', 'off', 'on', 'on', 'off', 'on', 'off', 'off', 'undef', 'undef'> 
+ [ State_011()] --[Insert(<'template', 'untrusted'>, <'off', 'off', 'on', 'on', 'off', 'on', 'off', 'off', 'undef', 'undef'>)]-> [!State_0111()]
+
+rule Rep0111: //Rep 
+ [ !State_0111()] --[]-> [State_01111()]
+
+rule Par01111: //Par 
+ [ State_01111()] --[]-> [State_011111(), State_011112()]
+
+rule Par011111: //Par 
+ [ State_011111()] --[]-> [State_0111111(), State_0111112()]
+
+rule Par0111111: //Par 
+ [ State_0111111()] --[]-> [State_01111111(), State_01111112()]
+
+rule Par01111111: //Par 
+ [ State_01111111()] --[]-> [State_011111111(), State_011111112()]
+
+rule Par011111111: //Par 
+ [ State_011111111()] --[]-> [State_0111111111(), State_0111111112()]
+
+rule in___create___atts__ptr_0111111111: //in <'create', atts, ptr> 
+ [ State_0111111111(), In(<'create', atts, ptr>)] --[]-> [State_01111111111(atts, ptr)]
+
+rule lock__device_01111111111: //lock 'device' 
+ [ State_01111111111(atts, ptr), Fr(~lock13)] --[Lock(~lock13, 'device')]-> [State_011111111111(~lock13, atts, ptr)]
+
+rule new_h011111111111: //new h 
+ [ State_011111111111(~lock13, atts, ptr), Fr(h)] --[]-> [State_0111111111111(~lock13, atts, h, ptr)]
+
+rule new_k0111111111111: //new k 
+ [ State_0111111111111(~lock13, atts, h, ptr), Fr(k)] --[]-> [State_01111111111111(~lock13, atts, h, k, ptr)]
+
+rule lookup___template___ptr__as_templ01111111111111: //lookup <'template', ptr> as templ 
+ [ State_01111111111111(~lock13, atts, h, k, ptr)] --[IsIn(<'template', ptr>, templ)]-> [State_011111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule else__lookup___template___ptr__as_templ01111111111111: //else, lookup <'template', ptr> as templ 
+ [ State_01111111111111(~lock13, atts, h, k, ptr)] --[IsNotSet(<'template', ptr>)]-> [State_011111111111112(~lock13, atts, h, k, ptr)]
+
+rule if_permits_attwrap_templ___attunwrap_templ___attenc_templ___attdec_templ___attsens_templ___attextr_templ___atttrus_templ___attwwt_templ___attwt_templ___attut_templ___attwrap_atts___attunwrap_atts___attenc_atts___attdec_atts___attsens_atts___attextr_atts___atttrus_atts___attwwt_atts___attwt_atts___attut_atts__011111111111111: //if permits(attwrap(templ), attunwrap(templ), attenc(templ), attdec(templ), attsens(templ), attextr(templ), atttrus(templ), attwwt(templ), attwt(templ), attut(templ), attwrap(atts), attunwrap(atts), attenc(atts), attdec(atts), attsens(atts), attextr(atts), atttrus(atts), attwwt(atts), attwt(atts), attut(atts)) 
+ [ State_011111111111111(~lock13, atts, h, k, ptr, templ)] --[Pred_permits(attwrap(templ), attunwrap(templ), attenc(templ), attdec(templ), attsens(templ), attextr(templ), atttrus(templ), attwwt(templ), attwt(templ), attut(templ), attwrap(atts), attunwrap(atts), attenc(atts), attdec(atts), attsens(atts), attextr(atts), atttrus(atts), attwwt(atts), attwt(atts), attut(atts))]-> [State_0111111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule else__if_permits_attwrap_templ___attunwrap_templ___attenc_templ___attdec_templ___attsens_templ___attextr_templ___atttrus_templ___attwwt_templ___attwt_templ___attut_templ___attwrap_atts___attunwrap_atts___attenc_atts___attdec_atts___attsens_atts___attextr_atts___atttrus_atts___attwwt_atts___attwt_atts___attut_atts__011111111111111: //else, if permits(attwrap(templ), attunwrap(templ), attenc(templ), attdec(templ), attsens(templ), attextr(templ), atttrus(templ), attwwt(templ), attwt(templ), attut(templ), attwrap(atts), attunwrap(atts), attenc(atts), attdec(atts), attsens(atts), attextr(atts), atttrus(atts), attwwt(atts), attwt(atts), attut(atts)) 
+ [ State_011111111111111(~lock13, atts, h, k, ptr, templ)] --[Pred_not_permits(attwrap(templ), attunwrap(templ), attenc(templ), attdec(templ), attsens(templ), attextr(templ), atttrus(templ), attwwt(templ), attwt(templ), attut(templ), attwrap(atts), attunwrap(atts), attenc(atts), attdec(atts), attsens(atts), attextr(atts), atttrus(atts), attwwt(atts), attwt(atts), attut(atts))]-> [State_0111111111111112(~lock13, atts, h, k, ptr, templ)]
+
+rule event_NewKey_h__k__attsens_atts__0111111111111111: //event NewKey(h, k, attsens(atts)) 
+ [ State_0111111111111111(~lock13, atts, h, k, ptr, templ)] --[Event(), NewKey(h, k, attsens(atts))]-> [State_01111111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule insert___obj___h___k__atts_01111111111111111: //insert <'obj', h>,<k, atts> 
+ [ State_01111111111111111(~lock13, atts, h, k, ptr, templ)] --[Insert(<'obj', h>, <k, atts>)]-> [State_011111111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule event_WrapKey_h__k__attwrap_atts__011111111111111111: //event WrapKey(h, k, attwrap(atts)) 
+ [ State_011111111111111111(~lock13, atts, h, k, ptr, templ)] --[Event(), WrapKey(h, k, attwrap(atts))]-> [State_0111111111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule event_DecKey_h__k__attdec_atts__0111111111111111111: //event DecKey(h, k, attdec(atts)) 
+ [ State_0111111111111111111(~lock13, atts, h, k, ptr, templ)] --[Event(), DecKey(h, k, attdec(atts))]-> [State_01111111111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule event_EncKey_h__k__attenc_atts__01111111111111111111: //event EncKey(h, k, attenc(atts)) 
+ [ State_01111111111111111111(~lock13, atts, h, k, ptr, templ)] --[Event(), EncKey(h, k, attenc(atts))]-> [State_011111111111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule event_UnwrapKey_h__k__attunwrap_atts__011111111111111111111: //event UnwrapKey(h, k, attunwrap(atts)) 
+ [ State_011111111111111111111(~lock13, atts, h, k, ptr, templ)] --[Event(), UnwrapKey(h, k, attunwrap(atts))]-> [State_0111111111111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule out_h0111111111111111111111: //out h 
+ [ State_0111111111111111111111(~lock13, atts, h, k, ptr, templ)] --[]-> [Out(h), State_01111111111111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule unlock__device_01111111111111111111111: //unlock 'device' 
+ [ State_01111111111111111111111(~lock13, atts, h, k, ptr, templ)] --[Unlock(~lock13, 'device')]-> [State_011111111111111111111111(~lock13, atts, h, k, ptr, templ)]
+
+rule Zero0111111111111112: //Zero 
+ [ State_0111111111111112(~lock13, atts, h, k, ptr, templ)] --[]-> []
+
+rule in__h__senc_m__k__0111111112: //in <h, senc(m, k)> 
+ [ State_0111111112(), In(<h, senc(m, k)>)] --[]-> [State_01111111121(h, k, m)]
+
+rule lock__device_01111111121: //lock 'device' 
+ [ State_01111111121(h, k, m), Fr(~lock7)] --[Lock(~lock7, 'device')]-> [State_011111111211(~lock7, h, k, m)]
+
+rule lookup___obj___h__as_v011111111211: //lookup <'obj', h> as v 
+ [ State_011111111211(~lock7, h, k, m)] --[IsIn(<'obj', h>, v)]-> [State_0111111112111(~lock7, h, k, m, v)]
+
+rule else__lookup___obj___h__as_v011111111211: //else, lookup <'obj', h> as v 
+ [ State_011111111211(~lock7, h, k, m)] --[IsNotSet(<'obj', h>)]-> [State_0111111112112(~lock7, h, k, m)]
+
+rule if_can_decrypt_attwrap_tem_v____attunwrap_tem_v____attenc_tem_v____attdec_tem_v____attsens_tem_v____attextr_tem_v____atttrus_tem_v____attwwt_tem_v____attwt_tem_v____attut_tem_v___0111111112111: //if can_decrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v))) 
+ [ State_0111111112111(~lock7, h, k, m, v)] --[Pred_can_decrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v)))]-> [State_01111111121111(~lock7, h, k, m, v)]
+
+rule else__if_can_decrypt_attwrap_tem_v____attunwrap_tem_v____attenc_tem_v____attdec_tem_v____attsens_tem_v____attextr_tem_v____atttrus_tem_v____attwwt_tem_v____attwt_tem_v____attut_tem_v___0111111112111: //else, if can_decrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v))) 
+ [ State_0111111112111(~lock7, h, k, m, v)] --[Pred_not_can_decrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v)))]-> [State_01111111121112(~lock7, h, k, m, v)]
+
+rule if_eq_key_v___k_01111111121111: //if eq(key(v), k) 
+ [ State_01111111121111(~lock7, h, k, m, v)] --[Pred_eq(key(v), k)]-> [State_011111111211111(~lock7, h, k, m, v)]
+
+rule else__if_eq_key_v___k_01111111121111: //else, if eq(key(v), k) 
+ [ State_01111111121111(~lock7, h, k, m, v)] --[Pred_not_eq(key(v), k)]-> [State_011111111211112(~lock7, h, k, m, v)]
+
+rule event_DecUsing_k__m_011111111211111: //event DecUsing(k, m) 
+ [ State_011111111211111(~lock7, h, k, m, v)] --[Event(), DecUsing(k, m)]-> [State_0111111112111111(~lock7, h, k, m, v)]
+
+rule out_m0111111112111111: //out m 
+ [ State_0111111112111111(~lock7, h, k, m, v)] --[]-> [Out(m), State_01111111121111111(~lock7, h, k, m, v)]
+
+rule unlock__device_01111111121111111: //unlock 'device' 
+ [ State_01111111121111111(~lock7, h, k, m, v)] --[Unlock(~lock7, 'device')]-> [State_011111111211111111(~lock7, h, k, m, v)]
+
+rule Zero011111111211112: //Zero 
+ [ State_011111111211112(~lock7, h, k, m, v)] --[]-> []
+
+rule Zero01111111121112: //Zero 
+ [ State_01111111121112(~lock7, h, k, m, v)] --[]-> []
+
+rule in__h__m_011111112: //in <h, m> 
+ [ State_011111112(), In(<h, m>)] --[]-> [State_0111111121(h, m)]
+
+rule lock__device_0111111121: //lock 'device' 
+ [ State_0111111121(h, m), Fr(~lock6)] --[Lock(~lock6, 'device')]-> [State_01111111211(~lock6, h, m)]
+
+rule lookup___obj___h__as_v01111111211: //lookup <'obj', h> as v 
+ [ State_01111111211(~lock6, h, m)] --[IsIn(<'obj', h>, v)]-> [State_011111112111(~lock6, h, m, v)]
+
+rule else__lookup___obj___h__as_v01111111211: //else, lookup <'obj', h> as v 
+ [ State_01111111211(~lock6, h, m)] --[IsNotSet(<'obj', h>)]-> [State_011111112112(~lock6, h, m)]
+
+rule if_can_encrypt_attwrap_tem_v____attunwrap_tem_v____attenc_tem_v____attdec_tem_v____attsens_tem_v____attextr_tem_v____atttrus_tem_v____attwwt_tem_v____attwt_tem_v____attut_tem_v___011111112111: //if can_encrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v))) 
+ [ State_011111112111(~lock6, h, m, v)] --[Pred_can_encrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v)))]-> [State_0111111121111(~lock6, h, m, v)]
+
+rule else__if_can_encrypt_attwrap_tem_v____attunwrap_tem_v____attenc_tem_v____attdec_tem_v____attsens_tem_v____attextr_tem_v____atttrus_tem_v____attwwt_tem_v____attwt_tem_v____attut_tem_v___011111112111: //else, if can_encrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v))) 
+ [ State_011111112111(~lock6, h, m, v)] --[Pred_not_can_encrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v)))]-> [State_0111111121112(~lock6, h, m, v)]
+
+rule event_EncUsing_key_v___m_0111111121111: //event EncUsing(key(v), m) 
+ [ State_0111111121111(~lock6, h, m, v)] --[Event(), EncUsing(key(v), m)]-> [State_01111111211111(~lock6, h, m, v)]
+
+rule out_senc_m__key_v__01111111211111: //out senc(m, key(v)) 
+ [ State_01111111211111(~lock6, h, m, v)] --[]-> [Out(senc(m, key(v))), State_011111112111111(~lock6, h, m, v)]
+
+rule unlock__device_011111112111111: //unlock 'device' 
+ [ State_011111112111111(~lock6, h, m, v)] --[Unlock(~lock6, 'device')]-> [State_0111111121111111(~lock6, h, m, v)]
+
+rule Zero0111111121112: //Zero 
+ [ State_0111111121112(~lock6, h, m, v)] --[]-> []
+
+rule in__h1__h2_01111112: //in <h1, h2> 
+ [ State_01111112(), In(<h1, h2>)] --[]-> [State_011111121(h1, h2)]
+
+rule lock__device_011111121: //lock 'device' 
+ [ State_011111121(h1, h2), Fr(~lock9)] --[Lock(~lock9, 'device')]-> [State_0111111211(~lock9, h1, h2)]
+
+rule lookup___obj___h1__as_v10111111211: //lookup <'obj', h1> as v1 
+ [ State_0111111211(~lock9, h1, h2)] --[IsIn(<'obj', h1>, v1)]-> [State_01111112111(~lock9, h1, h2, v1)]
+
+rule else__lookup___obj___h1__as_v10111111211: //else, lookup <'obj', h1> as v1 
+ [ State_0111111211(~lock9, h1, h2)] --[IsNotSet(<'obj', h1>)]-> [State_01111112112(~lock9, h1, h2)]
+
+rule lookup___obj___h2__as_v201111112111: //lookup <'obj', h2> as v2 
+ [ State_01111112111(~lock9, h1, h2, v1)] --[IsIn(<'obj', h2>, v2)]-> [State_011111121111(~lock9, h1, h2, v1, v2)]
+
+rule else__lookup___obj___h2__as_v201111112111: //else, lookup <'obj', h2> as v2 
+ [ State_01111112111(~lock9, h1, h2, v1)] --[IsNotSet(<'obj', h2>)]-> [State_011111121112(~lock9, h1, h2, v1)]
+
+rule if_can_wrap_attwrap_tem_v1____attunwrap_tem_v1____attenc_tem_v1____attdec_tem_v1____attsens_tem_v1____attextr_tem_v1____atttrus_tem_v1____attwwt_tem_v1____attwt_tem_v1____attut_tem_v1____attwrap_tem_v2____attunwrap_tem_v2____attenc_tem_v2____attdec_tem_v2____attsens_tem_v2____attextr_tem_v2____atttrus_tem_v2____attwwt_tem_v2____attwt_tem_v2____attut_tem_v2___011111121111: //if can_wrap(attwrap(tem(v1)), attunwrap(tem(v1)), attenc(tem(v1)), attdec(tem(v1)), attsens(tem(v1)), attextr(tem(v1)), atttrus(tem(v1)), attwwt(tem(v1)), attwt(tem(v1)), attut(tem(v1)), attwrap(tem(v2)), attunwrap(tem(v2)), attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)), atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2))) 
+ [ State_011111121111(~lock9, h1, h2, v1, v2)] --[Pred_can_wrap(attwrap(tem(v1)), attunwrap(tem(v1)), attenc(tem(v1)), attdec(tem(v1)), attsens(tem(v1)), attextr(tem(v1)), atttrus(tem(v1)), attwwt(tem(v1)), attwt(tem(v1)), attut(tem(v1)), attwrap(tem(v2)), attunwrap(tem(v2)), attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)), atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2)))]-> [State_0111111211111(~lock9, h1, h2, v1, v2)]
+
+rule else__if_can_wrap_attwrap_tem_v1____attunwrap_tem_v1____attenc_tem_v1____attdec_tem_v1____attsens_tem_v1____attextr_tem_v1____atttrus_tem_v1____attwwt_tem_v1____attwt_tem_v1____attut_tem_v1____attwrap_tem_v2____attunwrap_tem_v2____attenc_tem_v2____attdec_tem_v2____attsens_tem_v2____attextr_tem_v2____atttrus_tem_v2____attwwt_tem_v2____attwt_tem_v2____attut_tem_v2___011111121111: //else, if can_wrap(attwrap(tem(v1)), attunwrap(tem(v1)), attenc(tem(v1)), attdec(tem(v1)), attsens(tem(v1)), attextr(tem(v1)), atttrus(tem(v1)), attwwt(tem(v1)), attwt(tem(v1)), attut(tem(v1)), attwrap(tem(v2)), attunwrap(tem(v2)), attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)), atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2))) 
+ [ State_011111121111(~lock9, h1, h2, v1, v2)] --[Pred_not_can_wrap(attwrap(tem(v1)), attunwrap(tem(v1)), attenc(tem(v1)), attdec(tem(v1)), attsens(tem(v1)), attextr(tem(v1)), atttrus(tem(v1)), attwwt(tem(v1)), attwt(tem(v1)), attut(tem(v1)), attwrap(tem(v2)), attunwrap(tem(v2)), attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)), atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2)))]-> [State_0111111211112(~lock9, h1, h2, v1, v2)]
+
+rule lookup___template___attwt_tem_v1____as_wt0111111211111: //lookup <'template', attwt(tem(v1))> as wt 
+ [ State_0111111211111(~lock9, h1, h2, v1, v2)] --[IsIn(<'template', attwt(tem(v1))>, wt)]-> [State_01111112111111(~lock9, h1, h2, v1, v2, wt)]
+
+rule else__lookup___template___attwt_tem_v1____as_wt0111111211111: //else, lookup <'template', attwt(tem(v1))> as wt 
+ [ State_0111111211111(~lock9, h1, h2, v1, v2)] --[IsNotSet(<'template', attwt(tem(v1))>)]-> [State_01111112111112(~lock9, h1, h2, v1, v2)]
+
+rule if_permits_attwrap_wt___attunwrap_wt___attenc_wt___attdec_wt___attsens_wt___attextr_wt___atttrus_wt___attwwt_wt___attwt_wt___attut_wt___attwrap_tem_v2____attunwrap_tem_v2____attenc_tem_v2____attdec_tem_v2____attsens_tem_v2____attextr_tem_v2____atttrus_tem_v2____attwwt_tem_v2____attwt_tem_v2____attut_tem_v2___01111112111111: //if permits(attwrap(wt), attunwrap(wt), attenc(wt), attdec(wt), attsens(wt), attextr(wt), atttrus(wt), attwwt(wt), attwt(wt), attut(wt), attwrap(tem(v2)), attunwrap(tem(v2)), attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)), atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2))) 
+ [ State_01111112111111(~lock9, h1, h2, v1, v2, wt)] --[Pred_permits(attwrap(wt), attunwrap(wt), attenc(wt), attdec(wt), attsens(wt), attextr(wt), atttrus(wt), attwwt(wt), attwt(wt), attut(wt), attwrap(tem(v2)), attunwrap(tem(v2)), attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)), atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2)))]-> [State_011111121111111(~lock9, h1, h2, v1, v2, wt)]
+
+rule else__if_permits_attwrap_wt___attunwrap_wt___attenc_wt___attdec_wt___attsens_wt___attextr_wt___atttrus_wt___attwwt_wt___attwt_wt___attut_wt___attwrap_tem_v2____attunwrap_tem_v2____attenc_tem_v2____attdec_tem_v2____attsens_tem_v2____attextr_tem_v2____atttrus_tem_v2____attwwt_tem_v2____attwt_tem_v2____attut_tem_v2___01111112111111: //else, if permits(attwrap(wt), attunwrap(wt), attenc(wt), attdec(wt), attsens(wt), attextr(wt), atttrus(wt), attwwt(wt), attwt(wt), attut(wt), attwrap(tem(v2)), attunwrap(tem(v2)), attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)), atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2))) 
+ [ State_01111112111111(~lock9, h1, h2, v1, v2, wt)] --[Pred_not_permits(attwrap(wt), attunwrap(wt), attenc(wt), attdec(wt), attsens(wt), attextr(wt), atttrus(wt), attwwt(wt), attwt(wt), attut(wt), attwrap(tem(v2)), attunwrap(tem(v2)), attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)), atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2)))]-> [State_011111121111112(~lock9, h1, h2, v1, v2, wt)]
+
+rule event_Wrap_key_v1___key_v2__011111121111111: //event Wrap(key(v1), key(v2)) 
+ [ State_011111121111111(~lock9, h1, h2, v1, v2, wt)] --[Event(), Wrap(key(v1), key(v2))]-> [State_0111111211111111(~lock9, h1, h2, v1, v2, wt)]
+
+rule out_senc_key_v2___key_v1__0111111211111111: //out senc(key(v2), key(v1)) 
+ [ State_0111111211111111(~lock9, h1, h2, v1, v2, wt)] --[]-> [Out(senc(key(v2), key(v1))), State_01111112111111111(~lock9, h1, h2, v1, v2, wt)]
+
+rule unlock__device_01111112111111111: //unlock 'device' 
+ [ State_01111112111111111(~lock9, h1, h2, v1, v2, wt)] --[Unlock(~lock9, 'device')]-> [State_011111121111111111(~lock9, h1, h2, v1, v2, wt)]
+
+rule Zero011111121111112: //Zero 
+ [ State_011111121111112(~lock9, h1, h2, v1, v2, wt)] --[]-> []
+
+rule Zero0111111211112: //Zero 
+ [ State_0111111211112(~lock9, h1, h2, v1, v2)] --[]-> []
+
+rule in__h__senc_m__k___atts_0111112: //in <h, senc(m, k), atts> 
+ [ State_0111112(), In(<h, senc(m, k), atts>)] --[]-> [State_01111121(atts, h, k, m)]
+
+rule lock__device_01111121: //lock 'device' 
+ [ State_01111121(atts, h, k, m), Fr(~lock15)] --[Lock(~lock15, 'device')]-> [State_011111211(~lock15, atts, h, k, m)]
+
+rule lookup___obj___h__as_v011111211: //lookup <'obj', h> as v 
+ [ State_011111211(~lock15, atts, h, k, m)] --[IsIn(<'obj', h>, v)]-> [State_0111112111(~lock15, atts, h, k, m, v)]
+
+rule else__lookup___obj___h__as_v011111211: //else, lookup <'obj', h> as v 
+ [ State_011111211(~lock15, atts, h, k, m)] --[IsNotSet(<'obj', h>)]-> [State_0111112112(~lock15, atts, h, k, m)]
+
+rule if_can_unwrap_attwrap_tem_v____attunwrap_tem_v____attenc_tem_v____attdec_tem_v____attsens_tem_v____attextr_tem_v____atttrus_tem_v____attwwt_tem_v____attwt_tem_v____attut_tem_v___0111112111: //if can_unwrap(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v))) 
+ [ State_0111112111(~lock15, atts, h, k, m, v)] --[Pred_can_unwrap(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v)))]-> [State_01111121111(~lock15, atts, h, k, m, v)]
+
+rule else__if_can_unwrap_attwrap_tem_v____attunwrap_tem_v____attenc_tem_v____attdec_tem_v____attsens_tem_v____attextr_tem_v____atttrus_tem_v____attwwt_tem_v____attwt_tem_v____attut_tem_v___0111112111: //else, if can_unwrap(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v))) 
+ [ State_0111112111(~lock15, atts, h, k, m, v)] --[Pred_not_can_unwrap(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v)))]-> [State_01111121112(~lock15, atts, h, k, m, v)]
+
+rule if_eq_key_v___k_01111121111: //if eq(key(v), k) 
+ [ State_01111121111(~lock15, atts, h, k, m, v)] --[Pred_eq(key(v), k)]-> [State_011111211111(~lock15, atts, h, k, m, v)]
+
+rule else__if_eq_key_v___k_01111121111: //else, if eq(key(v), k) 
+ [ State_01111121111(~lock15, atts, h, k, m, v)] --[Pred_not_eq(key(v), k)]-> [State_011111211112(~lock15, atts, h, k, m, v)]
+
+rule lookup___template___attut_tem_v____as_ut011111211111: //lookup <'template', attut(tem(v))> as ut 
+ [ State_011111211111(~lock15, atts, h, k, m, v)] --[IsIn(<'template', attut(tem(v))>, ut)]-> [State_0111112111111(~lock15, atts, h, k, m, ut, v)]
+
+rule else__lookup___template___attut_tem_v____as_ut011111211111: //else, lookup <'template', attut(tem(v))> as ut 
+ [ State_011111211111(~lock15, atts, h, k, m, v)] --[IsNotSet(<'template', attut(tem(v))>)]-> [State_0111112111112(~lock15, atts, h, k, m, v)]
+
+rule if_permits_attwrap_ut___attunwrap_ut___attenc_ut___attdec_ut___attsens_ut___attextr_ut___atttrus_ut___attwwt_ut___attwt_ut___attut_ut___attwrap_atts___attunwrap_atts___attenc_atts___attdec_atts___attsens_atts___attextr_atts___atttrus_atts___attwwt_atts___attwt_atts___attut_atts__0111112111111: //if permits(attwrap(ut), attunwrap(ut), attenc(ut), attdec(ut), attsens(ut), attextr(ut), atttrus(ut), attwwt(ut), attwt(ut), attut(ut), attwrap(atts), attunwrap(atts), attenc(atts), attdec(atts), attsens(atts), attextr(atts), atttrus(atts), attwwt(atts), attwt(atts), attut(atts)) 
+ [ State_0111112111111(~lock15, atts, h, k, m, ut, v)] --[Pred_permits(attwrap(ut), attunwrap(ut), attenc(ut), attdec(ut), attsens(ut), attextr(ut), atttrus(ut), attwwt(ut), attwt(ut), attut(ut), attwrap(atts), attunwrap(atts), attenc(atts), attdec(atts), attsens(atts), attextr(atts), atttrus(atts), attwwt(atts), attwt(atts), attut(atts))]-> [State_01111121111111(~lock15, atts, h, k, m, ut, v)]
+
+rule else__if_permits_attwrap_ut___attunwrap_ut___attenc_ut___attdec_ut___attsens_ut___attextr_ut___atttrus_ut___attwwt_ut___attwt_ut___attut_ut___attwrap_atts___attunwrap_atts___attenc_atts___attdec_atts___attsens_atts___attextr_atts___atttrus_atts___attwwt_atts___attwt_atts___attut_atts__0111112111111: //else, if permits(attwrap(ut), attunwrap(ut), attenc(ut), attdec(ut), attsens(ut), attextr(ut), atttrus(ut), attwwt(ut), attwt(ut), attut(ut), attwrap(atts), attunwrap(atts), attenc(atts), attdec(atts), attsens(atts), attextr(atts), atttrus(atts), attwwt(atts), attwt(atts), attut(atts)) 
+ [ State_0111112111111(~lock15, atts, h, k, m, ut, v)] --[Pred_not_permits(attwrap(ut), attunwrap(ut), attenc(ut), attdec(ut), attsens(ut), attextr(ut), atttrus(ut), attwwt(ut), attwt(ut), attut(ut), attwrap(atts), attunwrap(atts), attenc(atts), attdec(atts), attsens(atts), attextr(atts), atttrus(atts), attwwt(atts), attwt(atts), attut(atts))]-> [State_01111121111112(~lock15, atts, h, k, m, ut, v)]
+
+rule new_h201111121111111: //new h2 
+ [ State_01111121111111(~lock15, atts, h, k, m, ut, v), Fr(h2)] --[]-> [State_011111211111111(~lock15, atts, h, h2, k, m, ut, v)]
+
+rule insert___obj___h2___m__atts_011111211111111: //insert <'obj', h2>,<m, atts> 
+ [ State_011111211111111(~lock15, atts, h, h2, k, m, ut, v)] --[Insert(<'obj', h2>, <m, atts>)]-> [State_0111112111111111(~lock15, atts, h, h2, k, m, ut, v)]
+
+rule event_Unwrapped_h2__m__atts_0111112111111111: //event Unwrapped(h2, m, atts) 
+ [ State_0111112111111111(~lock15, atts, h, h2, k, m, ut, v)] --[Event(), Unwrapped(h2, m, atts)]-> [State_01111121111111111(~lock15, atts, h, h2, k, m, ut, v)]
+
+rule event_WrapKey_h2__m__attwrap_atts__01111121111111111: //event WrapKey(h2, m, attwrap(atts)) 
+ [ State_01111121111111111(~lock15, atts, h, h2, k, m, ut, v)] --[Event(), WrapKey(h2, m, attwrap(atts))]-> [State_011111211111111111(~lock15, atts, h, h2, k, m, ut, v)]
+
+rule event_DecKey_h2__m__attdec_atts__011111211111111111: //event DecKey(h2, m, attdec(atts)) 
+ [ State_011111211111111111(~lock15, atts, h, h2, k, m, ut, v)] --[Event(), DecKey(h2, m, attdec(atts))]-> [State_0111112111111111111(~lock15, atts, h, h2, k, m, ut, v)]
+
+rule event_EncKey_h2__m__attenc_atts__0111112111111111111: //event EncKey(h2, m, attenc(atts)) 
+ [ State_0111112111111111111(~lock15, atts, h, h2, k, m, ut, v)] --[Event(), EncKey(h2, m, attenc(atts))]-> [State_01111121111111111111(~lock15, atts, h, h2, k, m, ut, v)]
+
+rule event_UnwrapKey_h2__m__attunwrap_atts__01111121111111111111: //event UnwrapKey(h2, m, attunwrap(atts)) 
+ [ State_01111121111111111111(~lock15, atts, h, h2, k, m, ut, v)] --[Event(), UnwrapKey(h2, m, attunwrap(atts))]-> [State_011111211111111111111(~lock15, atts, h, h2, k, m, ut, v)]
+
+rule out_h2011111211111111111111: //out h2 
+ [ State_011111211111111111111(~lock15, atts, h, h2, k, m, ut, v)] --[]-> [Out(h2), State_0111112111111111111111(~lock15, atts, h, h2, k, m, ut, v)]
+
+rule unlock__device_0111112111111111111111: //unlock 'device' 
+ [ State_0111112111111111111111(~lock15, atts, h, h2, k, m, ut, v)] --[Unlock(~lock15, 'device')]-> [State_01111121111111111111111(~lock15, atts, h, h2, k, m, ut, v)]
+
+rule Zero01111121111112: //Zero 
+ [ State_01111121111112(~lock15, atts, h, k, m, ut, v)] --[]-> []
+
+rule Zero011111211112: //Zero 
+ [ State_011111211112(~lock15, atts, h, k, m, v)] --[]-> []
+
+rule Zero01111121112: //Zero 
+ [ State_01111121112(~lock15, atts, h, k, m, v)] --[]-> []
+
+rule in_h011112: //in h 
+ [ State_011112(), In(h)] --[]-> [State_0111121(h)]
+
+rule lock__device_0111121: //lock 'device' 
+ [ State_0111121(h), Fr(~lock6)] --[Lock(~lock6, 'device')]-> [State_01111211(~lock6, h)]
+
+rule lookup___obj___h__as_v01111211: //lookup <'obj', h> as v 
+ [ State_01111211(~lock6, h)] --[IsIn(<'obj', h>, v)]-> [State_011112111(~lock6, h, v)]
+
+rule else__lookup___obj___h__as_v01111211: //else, lookup <'obj', h> as v 
+ [ State_01111211(~lock6, h)] --[IsNotSet(<'obj', h>)]-> [State_011112112(~lock6, h)]
+
+rule if_can_get_keyvalue_attwrap_tem_v____attunwrap_tem_v____attenc_tem_v____attdec_tem_v____attsens_tem_v____attextr_tem_v____atttrus_tem_v____attwwt_tem_v____attwt_tem_v____attut_tem_v___011112111: //if can_get_keyvalue(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v))) 
+ [ State_011112111(~lock6, h, v)] --[Pred_can_get_keyvalue(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v)))]-> [State_0111121111(~lock6, h, v)]
+
+rule else__if_can_get_keyvalue_attwrap_tem_v____attunwrap_tem_v____attenc_tem_v____attdec_tem_v____attsens_tem_v____attextr_tem_v____atttrus_tem_v____attwwt_tem_v____attwt_tem_v____attut_tem_v___011112111: //else, if can_get_keyvalue(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v))) 
+ [ State_011112111(~lock6, h, v)] --[Pred_not_can_get_keyvalue(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)), attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)), attwt(tem(v)), attut(tem(v)))]-> [State_0111121112(~lock6, h, v)]
+
+rule event_GetKeyValue_key_v__0111121111: //event GetKeyValue(key(v)) 
+ [ State_0111121111(~lock6, h, v)] --[Event(), GetKeyValue(key(v))]-> [State_01111211111(~lock6, h, v)]
+
+rule out_key_v_01111211111: //out key(v) 
+ [ State_01111211111(~lock6, h, v)] --[]-> [Out(key(v)), State_011112111111(~lock6, h, v)]
+
+rule unlock__device_011112111111: //unlock 'device' 
+ [ State_011112111111(~lock6, h, v)] --[Unlock(~lock6, 'device')]-> [State_0111121111111(~lock6, h, v)]
+
+rule Zero0111121112: //Zero 
+ [ State_0111121112(~lock6, h, v)] --[]-> []
+
+axiom single_session: // for a single session
+	"All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+
+axiom set_in:
+	"All x y #t3 . IsIn(x,y)@t3 ==>
+		(Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
+			& ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
+			& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
+	)"
+
+axiom set_notin:
+	"All x #t3 . IsNotSet(x)@t3 ==> 
+		(All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
+	  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 
+			&  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
+
+
+axiom predicate_not_eq:
+	"All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)"
+
+axiom predicate_eq:
+	"All #i a b. Pred_eq(a,b)@i ==> a = b"
+
+axiom immeadiate_in:
+	"All t #i . ChannelInEvent(t)@i
+		==> Ex #j. K(t)@j & #j<#i
+			& (All #k. Event()@k  ==> #k<#j | #i<#k)
+			& (All #k t2 . K(t2)@k  ==> #k<#j | #i<#k | #k=#j)
+                                     "
+                
+axiom locking:
+	"All n x np #i #j . Lock(n,x)@i & Lock(np,x)@j 
+		==> 
+		( #i<#j 
+			& (Ex #k. Unlock(n,x)@k & #i<#k & #k<#j 
+            /* WARNING need to incorporate this in the proof. */
+                         & (All  #l . Unlock(n,x)@l ==> #l=#k) 
+            /* WARNING need to incorporate this in the proof and paper. */
+                         & (All np #l . Lock(np,x)@l ==> #l<#i | #l=#i | #k<#l) 
+			 & (All np #l . Unlock(np,x)@l ==> #l<#i | #k<#l | #k=#l )
+			))
+		| #j<#i | #i=#j "
+
+axiom predicate11:
+	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_can_encrypt(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not(enc = 'on')"
+
+axiom predicate10:
+	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_can_encrypt(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> enc = 'on'"
+
+axiom predicate9:
+	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_can_decrypt(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not(dec = 'on')"
+
+axiom predicate8:
+	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_can_decrypt(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> dec = 'on'"
+
+axiom predicate7:
+	"All #i wrap1 unwrap1 enc1 dec1 sens1 extr1 trus1 wwt1 wt1 ut1 wrap2 unwrap2 enc2 dec2 sens2 extr2 trus2 wwt2 wt2 ut2. Pred_not_can_wrap(wrap1,unwrap1,enc1,dec1,sens1,extr1,trus1,wwt1,wt1,ut1,wrap2,unwrap2,enc2,dec2,sens2,extr2,trus2,wwt2,wt2,ut2)@i ==> not(((wrap1 = 'on' & extr2 = 'on') & (wwt2 = 'off' | (wwt2 = 'on' & trus1 = 'on'))))"
+
+axiom predicate6:
+	"All #i wrap1 unwrap1 enc1 dec1 sens1 extr1 trus1 wwt1 wt1 ut1 wrap2 unwrap2 enc2 dec2 sens2 extr2 trus2 wwt2 wt2 ut2. Pred_can_wrap(wrap1,unwrap1,enc1,dec1,sens1,extr1,trus1,wwt1,wt1,ut1,wrap2,unwrap2,enc2,dec2,sens2,extr2,trus2,wwt2,wt2,ut2)@i ==> ((wrap1 = 'on' & extr2 = 'on') & (wwt2 = 'off' | (wwt2 = 'on' & trus1 = 'on')))"
+
+axiom predicate5:
+	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_can_unwrap(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not(unwrap = 'on')"
+
+axiom predicate4:
+	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_can_unwrap(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> unwrap = 'on'"
+
+axiom predicate3:
+	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_can_get_keyvalue(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not(sens = 'off')"
+
+axiom predicate2:
+	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_can_get_keyvalue(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> sens = 'off'"
+
+axiom predicate1:
+	"All #i t_wrap t_unwrap t_enc t_dec t_sens t_extr t_trus t_wwt t_wt t_ut wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_permits(t_wrap,t_unwrap,t_enc,t_dec,t_sens,t_extr,t_trus,t_wwt,t_wt,t_ut,wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not((t_wrap = wrap & (t_unwrap = unwrap & (t_enc = enc & (t_dec = dec & (t_sens = sens & (t_extr = extr & (t_trus = trus & (t_wwt = wwt & (t_wt = wt & t_ut = ut))))))))))"
+
+axiom predicate0:
+	"All #i t_wrap t_unwrap t_enc t_dec t_sens t_extr t_trus t_wwt t_wt t_ut wrap unwrap enc dec sens extr trus wwt wt ut. Pred_permits(t_wrap,t_unwrap,t_enc,t_dec,t_sens,t_extr,t_trus,t_wwt,t_wt,t_ut,wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> (t_wrap = wrap & (t_unwrap = unwrap & (t_enc = enc & (t_dec = dec & (t_sens = sens & (t_extr = extr & (t_trus = trus & (t_wwt = wwt & (t_wt = wt & t_ut = ut)))))))))"
+
+lemma dec_limits [typing]:
+"	( All k m #t1. DecUsing(k, m) @ t1 ==> ( Ex h2 k2 #t2 #t3. NewKey(h2, k2, 'on') @ t2 & KU(k2) @ t3 & t2 < t1 & t3 < t1 ) | ( Ex h2 #t2 #t3 #t4. NewKey(h2, k, 'off') @ t2 & KU(k) @ t3 & KU(m) @ t4 & t2 < t1 & t3 < t1 & t4 < t1 ) | ( Ex #t2. EncUsing(k, m) @ t2 & t2 < t1 ) | ( Ex h2 k2 #t2 #t3 a. Unwrapped(h2, k2, a) @ t2 & KU(k2) @ t3 & t2 < t1 & t3 < t1 ) | ( Ex #t2 #t3 h1 h2 k2. WrapKey(h2, k2, 'on') @ t2 & DecKey(h1, k2, 'on') @ t3 & t2 < t1 & t3 < t1 ) ) & ( All k #t2. GetKeyValue(k) @ t2 ==> Ex h #t1. NewKey(h, k, 'off') @ t1 ) & ( not( Ex h k wrap unwrap enc dec sens extr trus wwt wt #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'trusted'>) @ t ) ) & ( not( Ex h k wrap unwrap enc dec sens extr trus wwt wt #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'untrusted'>) @ t ) ) & ( not( Ex h k wrap unwrap enc dec sens extr trus wwt ut #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'trusted', ut>) @ t ) ) & ( not( Ex h k wrap unwrap enc dec sens extr trus wwt ut #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'untrusted', ut>) @ t ) )"
+
+lemma trusted_as_ut_impossible [reuse]:
+"	not( Ex h k wrap unwrap enc dec sens extr trus wwt wt #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'trusted'>) @ t )"
+
+lemma untrusted_as_ut_impossible [reuse]:
+"	not( Ex h k wrap unwrap enc dec sens extr trus wwt wt #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'untrusted'>) @ t )"
+
+lemma untrusted_as_wt_impossible [reuse]:
+"	not( Ex h k wrap unwrap enc dec sens extr trus wwt ut #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'untrusted', ut>) @ t )"
+
+lemma trusted_as_wt_impossible [reuse]:
+"	not( Ex h k wrap unwrap enc dec sens extr trus wwt ut #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'trusted', ut>) @ t )"
+
+lemma bad_keys [reuse, use_induction]:
+"	All h2 k #t2 a. Unwrapped(h2, k, a) @ t2 ==> ( Ex h1 #t1. NewKey(h1, k, 'on') @ t1 & t1 < t2 ) | ( Ex h k2 #t1 #t0. NewKey(h, k2, 'on') @ t0 & KU(k2) @ t1 & t1 < t2 & t0 < t2 ) | ( Ex #t0 #t1 h1 h2 k. WrapKey(h2, k, 'on') @ t0 & DecKey(h1, k, 'on') @ t1 & t0 < t2 & t1 < t2 ) | ( Ex #t0 #t1 h1 h2 k. UnwrapKey(h2, k, 'on') @ t0 & EncKey(h1, k, 'on') @ t1 & t0 < t2 & t1 < t2 )"
+
+lemma no_key_is_wrap_and_dec__or_unwrap_and_dec_ind [use_induction, reuse]:
+"	( All #t2 #t3 h1 h2 k. ( DecKey(h1, k, 'on') @ t2 & WrapKey(h2, k, 'on') @ t3 ) ==> ( Ex h k2 #t1 #t0. NewKey(h, k2, 'on') @ t0 & KU(k2) @ t1 & ( ( t1 < t3 & t0 < t3 ) | ( t1 < t2 & t0 < t2 ) ) ) | ( Ex #t0 #t1 h1 h2 k. UnwrapKey(h2, k, 'on') @ t0 & EncKey(h1, k, 'on') @ t1 & ( ( t0 < t2 & t1 < t2 ) | ( t0 < t3 & t1 < t3 ) ) ) )"
+
+lemma no_key_is_enc_and_unwrap [use_induction, reuse]:
+"	( All #t2 #t3 h1 h2 k. ( EncKey(h1, k, 'on') @ t2 & UnwrapKey(h2, k, 'on') @ t3 ) ==> ( Ex h k2 #t1 #t0. NewKey(h, k2, 'on') @ t0 & KU(k2) @ t1 & ( ( t1 < t3 & t0 < t3 ) | ( t1 < t2 & t0 < t2 ) ) ) )"
+
+lemma cannot_obtain_key_ind [reuse, use_induction]:
+"	not( Ex #i #j h k. NewKey(h, k, 'on') @ i & KU(k) @ j )"
+
+lemma cannot_obtain_key :
+"	not( Ex #i #j h k. NewKey(h, k, 'on') @ i & K(k) @ j )"
+
+end

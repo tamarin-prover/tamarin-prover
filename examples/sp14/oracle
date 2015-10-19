@@ -1,0 +1,110 @@
+#!/usr/bin/python
+
+import re
+import os
+import sys
+
+lines = sys.stdin.readlines()
+
+l1 = []
+l2 = []
+l3 = []
+l4 = []
+l5 = []
+l6 = []
+l7 = []
+
+lemma = sys.argv[1]
+
+use_ih = True
+
+for line in lines:
+  num = line.split(':')[0]
+
+  if lemma == "Exp_nonce_or_product2":
+    if re.match('.*Group.*', line):
+      l1.append(num)
+    if re.match('.*last.*', line) and use_ih:
+      l2.append(num)
+      # if there are too many induction hypotheses, we ignore them
+      if len(l2) > 2:
+        l2 = []
+        use_ih = False
+    if re.match('.*ExpRoundKey.*', line) or re.match('.*ExpKeyFor.*', line):
+      l3.append(num)
+    if re.match('.*splitEqs.*', line):
+      l4.append(num)
+    if re.match('.*AO.*', line):
+      l5.append(num)
+
+  elif lemma == "key_secret_last":
+    if (   re.match('.*Group.*', line)
+        or re.match(".*'RoundKey', 'g'>.*", line)
+        or re.match(".*KU\(\s~.*", line)):
+      l1.append(num)
+    if (  re.match(".*Pstate.*", line)
+        or re.match('.*splitEqs.*', line)):
+      l2.append(num)
+    if re.match('.*\^\(~.*\*.*\).*', line): # product in exponent
+      l3.append(num)
+    if re.match('.*AO.*', line):
+      l4.append(num)
+
+  elif lemma == "key_secret":
+    if (   re.match('.*Group.*', line)
+        or re.match(".*'RoundKey', 'g'>.*", line)):
+      l1.append(num)
+    if (  re.match(".*Pstate.*", line)
+        or re.match('.*splitEqs.*', line)):
+      l2.append(num)
+    if re.match(".*KU\(\s~.*", line):
+      l3.append(num)
+    if re.match(".*AO.*'1'\+.*k.*",line):
+      l4.append(num)
+    if re.match('.*\^\(~.*\*.*\).*', line): # product in exponent
+      l5.append(num)
+    if re.match(".*WaitAccept.*", line):
+      l6.append(num)
+    if re.match('.*AO.*', line):
+      l7.append(num)
+
+  elif lemma == "Exp_subterm":
+    if (   re.match('.*Group.*', line)
+        or re.match(".*'RoundKey', 'g'>.*", line)
+        or re.match(".*ExpKeyFor\(.*", line)        
+        or re.match(".*ExpRoundKey\(.*", line)                  
+        or re.match(".*last.*", line)):
+      l1.append(num)
+    if (  re.match(".*Pstate.*", line)
+        or re.match('.*splitEqs.*', line)):
+      l2.append(num)
+    if re.match(".*KU\(\s~.*", line):
+      l3.append(num)
+    if re.match(".*AO.*'1'\+.*k.*",line):
+      l4.append(num)
+    if re.match('.*\^\(~.*\*.*\).*', line): # product in exponent
+      l5.append(num)
+    if re.match(".*WaitAccept.*", line):
+      l6.append(num)
+    if re.match('.*AO.*', line):
+      l7.append(num)
+
+  elif lemma == "Relate_KeyFor_RoundKey":
+    if re.match('.*Group.*', line) or re.match('.*last.*', line):
+      l1.append(num)
+    if re.match('.*ExpRoundKey.*', line) or re.match('.*ExpKeyFor.*', line):
+      l2.append(num)
+    if re.match('.*Pstate.*', line):
+      l3.append(num)      
+    if re.match('.*splitEqs.*', line):
+      l4.append(num)
+    if re.match('.*AO.*', line):
+      l5.append(num)
+
+  else:
+    exit(0)
+
+ranked = l1 + l2 + l3 + l4 + l5 + l6 + l7
+
+for i in ranked:
+  print i

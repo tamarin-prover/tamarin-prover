@@ -1,0 +1,233 @@
+theory STR begin
+
+builtins: diffie-hellman, multiset
+
+functions: te/1, te_inv/1    // convert group element to exponent
+equations: te_inv(te(x)) = x // te is not hiding
+
+axiom Unique: "All x #i #j. Uniq(x) @ i & Uniq(x) @ j ==> #i = #j"
+axiom Less:   "All x y #i. Less(x,y) @ i ==> Ex z. x + z = y"
+axiom Leq:   "All x y #i. Leq(x,y) @ i ==> ((Ex z. x + z = y) | x = y)"
+axiom InEq:   "not (Ex x #i. InEq(x,x) @ i)"
+
+/* ********************************************************************* */
+/* Setup and reveal rules                                                */
+/*                                                                       */
+/* We use the following message format:                                  */
+/* <'EpkOf',gid,i,Y> for the ephemeral public key of Ai in gid           */
+/* <'GpkFor',gid,i,Y> for the public subgroup-key of {A1,..,Ai-1} in gid */
+/* which is meant for Ai                                                 */
+/*                                                                       */
+/* We use Accept($gid,$A,i,j,k,key) to denote that $A has accepted the   */
+/* key for the sub-group {A1,..,Aj} of the group $gid, that $A is the    */
+/* i-th participant ($A = Ai), and k is the size of the complete group.  */
+/* For the subgroup-keys, we have j < k while we have j=k for the final  */
+/* keys.                                                                 */
+/* ********************************************************************* */
+
+rule AuthOut:
+  [ !AO( A, x ) ] --> [ Out( x ) ]
+
+#ifdef corrupt
+
+rule Corrupt:
+  [ In( < 'Corrupt', $A, x > ) ] --[ Corrupt( $A ) ]-> [ !AO( $A, x ) ]
+
+#endif
+
+rule CreateGroup:
+  [ In( < 'CreateGroup', $gid, k, pM > ) ]  // pM is a map represented as 'empty' + <1,A1> + ... + <k,Ak>
+  --[ Uniq( < 'CreateGroup', $gid >)
+    , CreateGroup( $gid, k, pM ) ]->
+  [ !Group( $gid, k, pM ) ]
+
+/* ********************************************************************* */
+/* Rules for group leader                                                */
+/* ********************************************************************* */  
+
+rule StartLeader:
+  let q   = < 'StartLeader', $gid >
+      key = Y^~x
+  in
+  [ In( q )
+  , !Group( $gid, k, <'1', $A>  + <'1' + '1', $B> + pM_rest )
+  , Fr( ~x )
+  , !AO( $B, < 'EpkOf', $gid, '1' + '1', Y > )
+  ]
+  --[ Accept($gid, $A, '1', '1' + '1', k, key )
+    , Uniq( q )  // if k = 2, then this is the final accept
+    ]->  
+  [ LoopLeader( $gid, $A, '1' + '1' + '1', key )
+  , !AO( $A, < 'GpkFor', $gid, '1' + '1', 'g'^~x > )
+  ]
+
+rule StepLeader: 
+  let q = < 'StepLeader', $gid, j >
+      newkey = Y^te(key)
+  in
+  [ In( q )
+  , LoopLeader( $gid, $A, j, key )
+  , !Group( $gid, k, <j, $B> + pM_rest )
+  , !AO( $B, < 'EpkOf', $gid, j, Y > )
+  ]
+  --[ Accept($gid, $A, '1', j, k, newkey) // if j = k, then we still have to
+    , Uniq( q )                           // send out the public subgroup-key for {A1,..,Aj-1}
+    , Leq(j,k)
+    ]->
+  [ LoopLeader( $gid, $A, j + '1', newkey)
+  , !AO( $A, < 'GpkFor', $gid, j, 'g'^te(key) > )
+  ]
+
+/* ********************************************************************* */
+/* Rules for other participants                                          */
+/* ********************************************************************* */  
+
+rule StartOther:
+  let q = < 'StartOther', $gid, i > in
+  [ In( q )
+  , !Group( $gid, k, <i, $A> + pM_rest )
+  , Fr( ~x )
+  ]
+  --[ Uniq(q)
+    , InEq(i,'1')
+    ]->
+  [ RecvOther( $gid, $A, i, ~x)
+  , !AO( $A, < 'EpkOf', $gid, i, 'g'^~x > )
+  ]
+
+rule RecvOther:
+  let q   = < 'RecvOther', $gid, i >
+      key = Y^~x
+  in
+  [ In( q )
+  , !Group( $gid, k, <'1', $B> + pM_rest)
+  , RecvOther( $gid, $A, i, ~x)
+  , !AO( $B, < 'GpkFor', $gid, i, Y > )
+  ]
+  --[ Accept($gid, $A, i, i, k, key)
+    , Uniq( q )  // if i=k, then this is the final key
+    , InEq( i, '1' )
+    ]->
+  [ LoopOther( $gid, $A, i, i + '1', key ) ]
+
+rule StepOther:
+  let q = < 'StepOther', $gid, i, j >
+      newkey = Y^te(key)
+  in
+  [ In( q )
+  , LoopOther( $gid, $A, i, j, key)
+  , !Group( $gid, k, <j, $B> + pM_rest )
+  , !AO( $B, < 'EpkOf', $gid, j, Y > )
+  ]
+  --[ Accept($gid, $A, i, j, k, newkey)
+    , Less(i, j)
+    , InEq(i,'1')
+    ]->
+  [ LoopOther( $gid, $A, i, j + '1', newkey) ]
+
+
+/* ********************************************************************* */
+/* Security lemma                                                        */
+/* ********************************************************************* */  
+
+// run tamarin with -Dsecure to include this lemma
+#ifdef secure
+
+lemma key_secret[use_induction]:
+  all-traces
+  "not (Ex gid A i j k key #i1 #i2.
+            Accept( gid, A, i, j ,k, key ) @ i1
+          & KU( key ) @ i2)"
+
+#endif
+
+// run tamarin with -Dcorrupt to include this lemma
+// and the required corruption rules
+#ifdef corrupt
+
+lemma key_secret_corrupt_pfs[use_induction]:
+  all-traces
+  "All gid A i j k key #i1 #i2.
+        (  Accept( gid, A, i, j ,k, key ) @ i1
+         & KU( key ) @ i2)
+    ==> (Ex #i3 #i4 j B mP_rest.
+            (  CreateGroup( gid, k, <j,B> + mP_rest ) @ i3
+             & Corrupt( B ) @ i4
+             & i4 < i1))"
+
+#endif
+
+/* ********************************************************************* */
+/* Executability lemmas                                                  */
+/* ********************************************************************* */  
+
+// run tamarin with -Dexecutable2 to include this lemma
+#ifdef executable2
+
+lemma key_reachable_2:
+  exists-trace
+  "Ex gid A1 A2 key #j1 #j2.
+         Accept( gid, A1, '1'      , '1' + '1', '1' + '1', key ) @ j1
+       & Accept( gid, A2, '1' + '1', '1' + '1', '1' + '1', key ) @ j2
+       & not (A1 = A2)"
+
+#endif
+
+// run tamarin with -Dexecutable3 to include this lemma
+#ifdef executable3
+
+lemma key_reachable_3:
+  exists-trace
+  "Ex gid A1 A2 A3 key #j1 #j2 #j3.
+         Accept( gid, A1, '1'            , '1' + '1' + '1', '1' + '1' + '1', key ) @ j1
+       & Accept( gid, A2, '1' + '1'      , '1' + '1' + '1', '1' + '1' + '1', key ) @ j2
+       & Accept( gid, A3, '1' + '1' + '1', '1' + '1' + '1', '1' + '1' + '1', key ) @ j3
+       & not (A1 = A2)
+       & not (A1 = A3)
+       & not (A2 = A3)"
+#endif
+
+// run tamarin with -Dexecutable4 to include this lemma
+#ifdef executable4
+
+lemma key_reachable_4:
+  exists-trace
+  "Ex gid A1 A2 A3 A4 key #j1 #j2 #j3 #j4.
+         Accept( gid, A1, '1'                  , '1' + '1' + '1' + '1', '1' + '1' + '1' + '1', key ) @ j1
+       & Accept( gid, A2, '1' + '1'            , '1' + '1' + '1' + '1', '1' + '1' + '1' + '1', key ) @ j2
+       & Accept( gid, A3, '1' + '1' + '1'      , '1' + '1' + '1' + '1', '1' + '1' + '1' + '1', key ) @ j3
+       & Accept( gid, A4, '1' + '1' + '1' + '1', '1' + '1' + '1' + '1', '1' + '1' + '1' + '1', key ) @ j4       
+       & not (A1 = A2)
+       & not (A1 = A3)
+       & not (A1 = A4)       
+       & not (A2 = A3)
+       & not (A2 = A4)
+       & not (A3 = A4)"
+
+#endif
+
+// run tamarin with -Dexecutable5 to include this lemma
+#ifdef executable5
+
+lemma key_reachable_5:
+  exists-trace
+  "Ex gid A1 A2 A3 A4 A5 key #j1 #j2 #j3 #j4 #j5.
+         Accept( gid, A1, '1'                        , '1' + '1' + '1' + '1' + '1', '1' + '1' + '1' + '1' + '1', key ) @ j1
+       & Accept( gid, A2, '1' + '1'                  , '1' + '1' + '1' + '1' + '1', '1' + '1' + '1' + '1' + '1', key ) @ j2
+       & Accept( gid, A3, '1' + '1' + '1'            , '1' + '1' + '1' + '1' + '1', '1' + '1' + '1' + '1' + '1', key ) @ j3
+       & Accept( gid, A4, '1' + '1' + '1' + '1'      , '1' + '1' + '1' + '1' + '1', '1' + '1' + '1' + '1' + '1', key ) @ j4       
+       & Accept( gid, A5, '1' + '1' + '1' + '1' + '1', '1' + '1' + '1' + '1' + '1', '1' + '1' + '1' + '1' + '1', key ) @ j5
+       & not (A1 = A2)
+       & not (A1 = A3)
+       & not (A1 = A4)
+       & not (A1 = A5)       
+       & not (A2 = A3)
+       & not (A2 = A4)
+       & not (A2 = A5)       
+       & not (A3 = A4)
+       & not (A3 = A5)
+       & not (A4 = A5)"
+
+#endif
+
+end
