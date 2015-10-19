@@ -16,7 +16,7 @@ clean:
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.0.0
+VERSION=1.1.0
 
 #source-dists:
 #	cd lib/utils; cabal sdist
