@@ -555,8 +555,9 @@ sapicRanking ctxt sys =
         -- move the Last proto facts (L_) to the end.
 
     solveFirst =
-        [ isChainGoal . fst
-        , isDisjGoal . fst
+        [ 
+          isChainGoal . fst
+        , isDisjGoalButNotProgress . fst
         , isFirstProtoFact . fst
         , isStateFact . fst
         , isUnlockAction . fst
@@ -564,6 +565,7 @@ sapicRanking ctxt sys =
         , isFirstInsertAction . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoalButNotInsert  . fst
+        , isProgressDisj . fst
         , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
         -- , isFreshKnowsGoal . fst
@@ -624,6 +626,22 @@ sapicRanking ctxt sys =
 
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing
+
+    isProgressDisj (DisjG (Disj disj )) = all (\f -> case f of 
+            GGuarded Ex _ _ _             -> True
+            -- TODO erwische diese formeln
+ -- (∃ #t2.
+ --             (ProgressTo_1111111111111111( ~prog_111111111.1 ) @ #t2)) ∥
+ --           (∃ #t2. (ProgressTo_11111111111112( ~prog_111111111.1 ) @ #t2)) ∥
+ --           (∃ #t2.
+ --             (ProgressTo_1111111111111112( ~prog_111111111.1
+ --              ) @ #t2)) 
+            _                              -> False
+            ) disj
+    
+    isProgressDisj _ = False
+
+    isDisjGoalButNotProgress g = (isDisjGoal g) && not (isProgressDisj g)
 
 --  Problematic when using handles.
 --    isFreshKnowsGoal goal = case msgPremise goal of
