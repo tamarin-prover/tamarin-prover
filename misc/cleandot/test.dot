@@ -1,0 +1,38 @@
+// blaat: niet
+// abbreviate: True
+// simplification: "2"
+digraph G {
+nodesep="0.3";
+ranksep="0.3";
+node[fontsize="8",fontname="Helvetica",width="0.3",height="0.2"];
+edge[fontsize="8",fontname="Helvetica"];
+n5[shape="record",label="{{<n0> Init_1( ~eskI, $I, $R, ~lkI, 'g'^h1(\<~eskI, ~lkI\>) )|<n1> !Pk( $R, 'g'^~x )|<n2> In( 'g'^x.1 )}|{<n3> #i1 : Init_2[Accept( ~eskI, $I, $R,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h2(\<'g'^(~x.2*h1(\<~tid, ~lkR\>)), 'g'^(~x*h1(\<~eskI, ~lkI\>)), 'g'^(x.3*x.4), $I, $R\>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sid( ~eskI, \<'Init', $I, $R, 'g'^h1(\<~eskI, ~lkI\>), 'g'^x.1\> ),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Match( ~eskI, \<'Resp', $R, $I, 'g'^h1(\<~eskI, ~lkI\>), 'g'^x.1\> )]\l}|{<n4> !Sessk( ~eskI,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h2(\<'g'^(~x.2*h1(\<~tid, ~lkR\>)), 'g'^(~x*h1(\<~eskI, ~lkI\>)), 'g'^(x.3*x.4), $I, $R\>)\l)\l}}",fillcolor="#d5d897",style="filled"];
+n6[label="#i2 : isend[K( h2(<'g'^(~x.2*h1(<~tid, ~lkR>)), 'g'^(~x*h1(<~eskI, ~lkI>)), \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'g'^(x.3*x.4), $I, $R>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)]\l",shape="ellipse"];
+n7[label="#vf : isend",shape="ellipse"];
+n8[label="#vk : coerce[!KU( h2(<'g'^(~x.2*h1(<~tid, ~lkR>)), 'g'^(~x*h1(<~eskI, ~lkI>)), \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'g'^(x.3*x.4), $I, $R>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)]\l",shape="ellipse"];
+n15[shape="record",label="{{<n9> Fr( ~eskI )|<n10> !Ltk( $I, ~lkI )}|{<n11> #vr : Init_1[]}|{<n12> Init_1( ~eskI, $I, $R, ~lkI,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'g'^h1(\<~eskI, ~lkI\>)\l)\l|<n13> !Ephk( ~eskI, ~eskI\l)\l|<n14> Out( 'g'^h1(\<~eskI, ~lkI\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\>)\l)\l}}",fillcolor="#ced997",style="filled"];
+n21[shape="record",label="{{<n16> Fr( ~lkI )}|{<n17> #vr.1 : generate_ltk[RegKey( $I )]}|{<n18> !Ltk( $I, ~lkI )|<n19> !Pk( $I, 'g'^~lkI )|<n20> Out( 'g'^~lkI )}}",fillcolor="#a5dd9a",style="filled"];
+n27[shape="record",label="{{<n22> Fr( ~x )}|{<n23> #vr.2 : generate_ltk[RegKey( $R )]}|{<n24> !Ltk( $R, ~x )|<n25> !Pk( $R, 'g'^~x )|<n26> Out( 'g'^~x )}}",fillcolor="#a5dd9a",style="filled"];
+n31[shape="record",label="{{<n28> !Sessk( ~tid,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h2(\<'g'^(~x.2*h1(\<~tid, ~lkR\>)), 'g'^(~x*h1(\<~eskI, ~lkI\>)), 'g'^(x.3*x.4), $I, $R\>)\l)\l}|{<n29> #vr.3 : Sessk_reveal[SesskRev( ~tid )]}|{<n30> Out( h2(\<'g'^(~x.2*h1(\<~tid, ~lkR\>)), 'g'^(~x*h1(\<~eskI, ~lkI\>)), 'g'^(x.3*x.4), $I, $R\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\>)\l)\l}}",fillcolor="#badb99",style="filled"];
+n40[shape="record",label="{{<n32> Fr( ~tid )|<n33> !Ltk( $R, ~lkR )|<n34> !Pk( $I, 'g'^~x.2 )|<n35> In( 'g'^x.5 )}|{<n36> #vr.4 : Resp_1[Accept( ~tid, $R, $I,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h2(\<'g'^(~x.2*h1(\<~tid, ~lkR\>)), 'g'^(~x*h1(\<~eskI, ~lkI\>)), 'g'^(x.3*x.4), $I, $R\>)\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sid( ~tid, \<'Resp', $R, $I, 'g'^x.5, 'g'^h1(\<~tid, ~lkR\>)\> ),\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Match( ~tid, \<'Init', $I, $R, 'g'^x.5, 'g'^h1(\<~tid, ~lkR\>)\> )]\l}|{<n37> Out( 'g'^h1(\<~tid, \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~lkR\>)\l)\l|<n38> !Ephk( ~tid, ~tid )|<n39> !Sessk( ~tid,\l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h2(\<'g'^(~x.2*h1(\<~tid, ~lkR\>)), 'g'^(~x*h1(\<~eskI, ~lkI\>)), \l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'g'^(x.3*x.4), $I, $R\>)\l)\l}}",fillcolor="#b3db99",style="filled"];
+n41[label="#vf.5 : isend",shape="ellipse"];
+n47[shape="record",label="{{<n42> Fr( ~lkR )}|{<n43> #vr.5 : generate_ltk[RegKey( $R )]}|{<n44> !Ltk( $R, ~lkR )|<n45> !Pk( $R, 'g'^~lkR )|<n46> Out( 'g'^~lkR )}}",fillcolor="#a5dd9a",style="filled"];
+n53[shape="record",label="{{<n48> Fr( ~x.2 )}|{<n49> #vr.6 : generate_ltk[RegKey( $I )]}|{<n50> !Ltk( $I, ~x.2 )|<n51> !Pk( $I, 'g'^~x.2 )|<n52> Out( 'g'^~x.2 )}}",fillcolor="#a5dd9a",style="filled"];
+n54[label="!KU( 'g'^x.1 ) @ #vk.1",shape="ellipse",color="gray"];
+n55[label="!KU( 'g'^x.5 ) @ #vk.2",shape="ellipse",color="gray"];
+n55b[label="!KU( 'g'^x.999 ) @ #vk.2",shape="ellipse",color="gray"];
+n7 -> n5:n2[color="gray30"];
+n15:n12 -> n5:n0[style="bold",weight="10.0"];
+n21:n18 -> n15:n10[style="bold",weight="10.0",color="gray50"];
+n27:n25 -> n5:n1[style="bold",weight="10.0",color="gray50"];
+n31:n30 -> n8[color="orangered2"];
+n40:n39 -> n31:n28[style="bold",weight="10.0",color="gray50"];
+n41 -> n40:n35[color="gray30"];
+n47:n44 -> n40:n33[style="bold",weight="10.0",color="gray50"];
+n53:n51 -> n40:n34[style="bold",weight="10.0",color="gray50"];
+n8 -> n6[color="black",style="dotted"];
+n54 -> n7[color="black",style="dotted"];
+n55 -> n41[color="black",style="dotted"];
+n55b -> n41[color="black",style="dotted"];
+
+}

@@ -1,5 +1,5 @@
 # Please make sure that you have 'stack' installed. 
-# https://github.com/commercialhaskell/stack/wiki/Downloads
+# https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 TAMARIN=~/.local/bin/tamarin-prover
 
@@ -16,7 +16,7 @@ clean:
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=0.9.0
+VERSION=1.1.0
 
 #source-dists:
 #	cd lib/utils; cabal sdist

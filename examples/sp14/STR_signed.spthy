@@ -1,0 +1,226 @@
+theory STR_signed // based on: ml_authentic_channel_2args_intruder_can_corrupt_rulenamechange
+begin
+
+builtins: diffie-hellman, multiset
+
+functions: blindedRandomOf/1, blindedKeyFor/1
+functions: te/1, te_inv/1  // convert group element to exponent
+equations: te_inv(te(x)) = x // te is not hiding
+
+/* We use the private function symbol sk to model the longterm secret
+   key of an agent. For example, sk('A') is 'A's longterm secret key.
+   We also allow recipients to check who the sender was in the form of
+   matching for "m, sign(sk(A),m)" for expected sender A. */
+functions: sk/1 [private]
+functions: sign/2
+
+
+/* Determine group participants */
+rule StartGroup_1: //Init:
+  [ Fr(~gid) ] -->
+  [ StartGroup( $I             // the initiator
+              , 1              // number of responders
+              , <1,$R> + 'nil' // the list of responders (*)
+              , ~gid)          // the group id, not secret
+  , Out(~gid)
+  ]
+
+// (*) we encode lists [x1,..,xk] as multisets <i,x_1> + <i+1,x_2> + .. + <i+k,x_k> + 'nil'
+// we also use pairs ([x_1, .., x_j], [x_{j+1},..,x_k])  to traverse a list
+
+rule StartGroup_2: //Extend:
+  let nextnum = num + 1
+  in
+  [ StartGroup( $I, num,     resps                , ~gid) ]
+  -->
+  [ StartGroup( $I, nextnum, resps + <nextnum, $R>, ~gid) ]
+
+
+
+/* Start one Initiator and Responders */
+
+rule StartGroup_0: //:
+  [ StartGroup( $I, num, resps, ~gid) ]
+  -->
+  [ Initiator($I, resps, ~gid)
+  , StartGroupResponders( 1      // number of responders that have been started
+                        , $I     // the initiator
+                        , 'nil'  // list of started responders
+                        , resps  // list of responders that have not been started yet
+                        , ~gid) ]
+
+rule StartGroup_3: //Responders:
+  let newstarted = started + <j,$R>
+  in
+  [ StartGroupResponders(j,     $I, started,    <j,$R> + notStarted, ~gid) ]
+  -->
+  [ StartGroupResponders(j + 1, $I, newstarted, notStarted,          ~gid)
+  , Responder( $R
+             , $I
+             , j          // the index in the list / position in the three
+             , started    // below
+             , notStarted // above   
+             , ~gid) ]
+
+
+
+/* Responders */
+
+
+rule Responder_0: //:
+  let mOut = < blindedRandomOf(j,~gid), 'g'^~r >
+  in 
+  [ Responder($R1, $I, j, below, above, ~gid)
+  , Fr(~r) ]
+  -->
+  [ Out(< sign(sk($R1), mOut), mOut > )
+  , ResponderBRSent($R1, $I, j, below + <j,$R1>, above, ~gid, ~r) ]
+
+rule Responder_1: //BKRecv:
+  let mIn = < blindedKeyFor(j,~gid), bk >
+  in
+  [ ResponderBRSent($R1, $I, j, below, above, ~gid, ~r)
+  , In(< sign(sk($I), mIn), mIn > )
+  ]
+  -->
+  [ ResponderLoop( $R1
+                 , $I
+                 , j      // index of $R1 in list
+                 , j + 1  // index of first element of above
+                 , below
+                 , above
+                 , ~gid
+                 , bk ^ ~r) ]
+  
+
+rule Responder_2: //Loop:
+    let mIn  = < blindedRandomOf(k, ~gid), br >
+    in
+    [ ResponderLoop( $R1, $I, j, k, below, <k, $R2> + above, ~gid, key )
+    , In(< sign(sk($R2), mIn), mIn >  ) 
+    ]
+    --[ IKey( $R1, below + <'zero',$I>, ~gid, key ) ]->
+    [ ResponderLoop($R1, $I, j, k + 1, <k, $R2> + below, above, ~gid, br ^ te(key)) ]
+
+rule Responder_3: //Done:
+  [ ResponderLoop($R1, $I, j, k_, below, 'nil', ~gid, key) ]
+  --[  Key($R1, below + <'zero',$I>, ~gid, key )
+    , IKey($R1, below + <'zero',$I>, ~gid, key ) ]-> []
+
+/* Initiator */
+
+rule Initiator_0: //:
+  let key  = br^~r  // here, ~r is an exponent and can be directly used
+      mIn  = < blindedRandomOf(1, ~gid), br>
+      mOut = < blindedKeyFor(1, ~gid), 'g'^~r> 
+  in
+  [ Initiator($I, resps + <1,$R1>, ~gid)
+  , Fr(~r)
+  , In(< sign(sk($R1), mIn), mIn > ) ]
+  -->
+  [ InitiatorLoop( $I
+                 , 1 + 1            // index of first not-done
+                 , <1,$R1> + 'nil'  // done
+                 , resps            // not-done
+                 , ~gid
+                 , key)
+  , Out(< sign(sk($I), mOut), mOut > ) ]
+
+rule Initiator_1: //Loop:
+  let newkey = br^te(key) // here, key is a group element and has to be converted to
+      mIn  = < blindedRandomOf(j, ~gid), br>
+      mOut = < blindedKeyFor(j, ~gid), 'g'^te(key)>
+  in
+  [ InitiatorLoop($I, j, handled, <j,$R1> + notHandled, ~gid, key)
+  , In(< sign(sk($R1), mIn), mIn >  ) ]
+  --[ IKey($I, handled + <'zero',$I>, ~gid, key ) ]->
+  [ Out(< sign(sk($I), mOut), mOut > )
+  , InitiatorLoop($I, j + 1, <j,$R1> + handled, notHandled, ~gid, newkey) ]
+
+rule Initiator_2: //Done:
+  [ InitiatorLoop($I, j_, handled, 'nil', ~gid, key) ]
+  --[ Key($I, handled + <'zero',$I>, ~gid, key )
+    , IKey($I, handled + <'zero',$I>, ~gid, key )
+  ]-> []
+
+rule IntruderCorrupts:
+  [] 
+  --[Corrupt($A)]-> 
+  [Out(sk($A))]
+
+#ifdef secure
+lemma key_secrecy_with_corruption[use_induction]:
+  all-traces
+  "(All #i1 I group gid key #i2.
+          IKey( I,  group, gid, key ) @ i1 
+        & KU( key ) @ i2
+   ==> Ex A indexA others #i3. 
+             (Corrupt(A) @ i3
+            & i3 < i1
+            & others + <indexA, A> = group))"
+
+#endif
+
+#ifdef executable
+
+lemma key_reachable_2:
+  exists-trace
+  "Ex #i1 I R1 gid key #i2.
+         Key(I,  <'zero', I> + <1, R1> + 'nil', gid, key ) @ i1
+       & Key(R1, <'zero', I> + <1, R1> + 'nil', gid, key ) @ i2
+       & not (I = R1)
+       & not (Ex A #i5. Corrupt(A) @ i5) 
+"
+
+lemma key_reachable_3:
+  exists-trace
+  "Ex #i1 I R1 R2 gid key #i2 #i3.
+         Key( I,  <'zero', I> + <1, R1> + <1+1, R2> + 'nil', gid, key ) @ i1
+       & Key( R1, <'zero', I> + <1, R1> + <1+1, R2> + 'nil', gid, key ) @ i2
+       & Key( R2, <'zero', I> + <1, R1> + <1+1, R2> + 'nil', gid, key ) @ i3
+       & not (I = R1)
+       & not (R1 = R2)
+       & not (I = R2)
+       & not (Ex A #i5. Corrupt(A) @ i5) 
+"
+
+lemma key_reachable_4:
+  exists-trace
+  "Ex #i1 I R1 R2 R3 gid key #i2 #i3 #i4.
+         Key( I,  <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + 'nil', gid, key ) @ i1
+       & Key( R1, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + 'nil', gid, key ) @ i2
+       & Key( R2, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + 'nil', gid, key ) @ i3
+       & Key( R3, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + 'nil', gid, key ) @ i4
+       & not (I = R1)
+       & not (R1 = R2)
+       & not (I = R2)
+       & not (I = R3)
+       & not (R1 = R3)
+       & not (R2 = R3)
+       & not (Ex A #i5. Corrupt(A) @ i5) 
+" 
+
+lemma key_reachable_5:
+  exists-trace
+  "Ex #i1 I R1 R2 R3 R4 gid key #i2 #i3 #i4 #i5.
+         Key( I,  <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i1
+       & Key( R1, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i2
+       & Key( R2, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i3
+       & Key( R3, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i4
+       & Key( R4, <'zero', I> + <1, R1> + <1+1, R2> + <1+1+1, R3> + <1+1+1+1, R4> + 'nil', gid, key ) @ i5
+       & not (I = R1)
+       & not (R1 = R2)
+       & not (I = R2)
+       & not (I = R3)
+       & not (R1 = R3)
+       & not (R2 = R3)
+       & not (I = R4)
+       & not (R1 = R4)
+       & not (R2 = R4)
+       & not (R3 = R4)
+       & not (Ex A #i6. Corrupt(A) @ i6) 
+" 
+
+#endif
+
+end

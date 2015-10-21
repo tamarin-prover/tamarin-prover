@@ -509,6 +509,7 @@ lemmaAttribute = asum
   [ symbol "typing"        *> pure TypingLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
+  , symbol "hide_lemma="   *> (HideLemma <$> identifier)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
@@ -532,6 +533,7 @@ lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
 -- | Parse a diff lemma.
 diffLemma :: Parser (DiffLemma DiffProofSkeleton)
 diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
+                              <*> (option [] $ list lemmaAttribute)
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
                       

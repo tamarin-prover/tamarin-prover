@@ -19,7 +19,7 @@ https://github.com/tamarin-prover/bin-dists
 You can also compile tamarin-prover from source.  We manage the
 Haskell dependencies automatically, using 'stack'. First install
 'stack' according to
-https://github.com/commercialhaskell/stack/wiki/Downloads
+https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 After cloning the tamarin-prover repository run 'make default', which
 will install an appropriate GHC for your system, including all
@@ -47,7 +47,7 @@ Detailed instructions for Linux - from source
    ```
 
 2. Install the Haskell tool `stack` by following the instructions at 
-   https://github.com/commercialhaskell/stack/wiki/Downloads.
+   https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 3. Clone the `tamarin-prover` repository
 
@@ -63,6 +63,40 @@ Detailed instructions for Linux - from source
    
    The `tamarin-prover` executable will be installed in `~/.local/bin/tamarin-prover`.
 
+   Starting 'tamarin-prover' without arguments will output its help message,
+   including the paths to the installed example protocol models and the
+   case studies from our papers. We recommend opening the `Tutorial.spthy`
+   example file in a text editor and start exploring from there. 
+
+   Happy proving :-)
+
+
+Detailed instructions for MacOS X - from source
+---------------------------------------------
+
+1. Use your package manager to install maude and graphviz:
+
+   ```
+     sudo apt-get install maude graphviz
+   ```
+
+2. Install the Haskell tool `stack` by following the instructions at 
+   https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
+
+3. Clone the `tamarin-prover` repository
+
+   ```
+     git clone https://github.com/tamarin-prover/tamarin-prover.git
+   ```
+
+4. Build the tamarin-prover
+
+   ```
+     make default
+   ```
+
+   The installation process lets you know where the `tamarin-prover` executable will be installed in.
+   
    Starting 'tamarin-prover' without arguments will output its help message,
    including the paths to the installed example protocol models and the
    case studies from our papers. We recommend opening the `Tutorial.spthy`

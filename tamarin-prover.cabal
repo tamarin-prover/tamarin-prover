@@ -1,7 +1,7 @@
 cabal-version:      >= 1.18
 build-type:         Simple
 name:               tamarin-prover
-version:            0.9.0
+version:            1.1.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -16,6 +16,10 @@ copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ET
 synopsis:           The Tamarin prover for security protocol analysis.
 description:
 
+    Note that the @tamarin-prover@ should be installed from source as
+    described in its README at
+    <https://github.com/tamarin-prover/tamarin-prover>.
+    .
     The Tamarin prover is a tool for the analysis of security protocols. It
     implements a constraint solving algorithm that supports both falsification
     and verification of security protocols with respect to an unbounded number
@@ -166,9 +170,9 @@ executable tamarin-prover
       , yesod-json
       , yesod-static
 
-      , tamarin-prover-utils  == 0.9.0
-      , tamarin-prover-term   == 0.9.0
-      , tamarin-prover-theory == 0.9.0
+      , tamarin-prover-utils  == 1.1.0
+      , tamarin-prover-term   == 1.1.0
+      , tamarin-prover-theory == 1.1.0
 
     other-modules:
       Paths_tamarin_prover
@@ -193,3 +197,8 @@ executable tamarin-prover
       Web.Types
 
       Test.ParserTests
+
+
+source-repository head
+  type:     git
+  location: https://github.com/tamarin-prover/tamarin-prover.git

@@ -1,0 +1,9 @@
+This directory contains the ARPKI specification in Tamarin for 
+the key security property as described in the CCS14 paper. 
+This specification has been generated using a number of macros 
+and thus is hard to read in this final, verifiable form. Note
+that you need 32GB of memory and about 600 minutes of 
+(single-core equivalent) processing time to complete the proof
+by running the tool with the right heuristic:
+
+tamarin-prover --prove --heuristic=S arpki-NoThreeUntrusted.spthy

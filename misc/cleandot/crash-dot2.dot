@@ -1,0 +1,84 @@
+digraph G {
+ranksep="0.3";
+nodesep="0.3";
+n21 [shape="record", style="filled", fillcolor="#edb9ea", label="{{<n17>In(\<$A,$CA1,SIG3\>)}|{<n18>#vr.1:ILS_Reg_CA1_Forward[ExecutionTestComplete2(),ExecutionTestComplete2ARG(SIG3)]}|{<n19>Out(\<$CA1,$ILSk,SIG3\>)|<n20>ContactCAStateILSReg($A,$CA1,SIG3)}}"];
+n28 [shape="record", style="filled", fillcolor="#edb9ea", label="{{<n24>IN|<n25>LTK}|{<n26>#vr.2:ILS_Reg_CA2[]}|{<n27>Out(T1)}}"];
+node [width="0.3", fontname="Helvetica", fontsize="8", height="0.2"];
+edge [fontname="Helvetica", fontsize="8"];
+n5 [shape="record", style="filled", fillcolor="#edb9ea", label="{{<n0>In(T1)|<n1>LTK|<n2>ContactCAStateILSReg($A,$CA1,SIG3)}|{<n3>#i:ILS_Reg_CA1[AcceptedAKICert($A,~ltkA)]}|{<n4>OUT}}"];
+n15 [shape="record", style="filled", fillcolor="#c7d998", label="{{<n9>Fr(~ltkCAx1)}|{<n10>#vr:Generate_Keypair_trusted[GEN_LTK($CA1,~ltkCAx1,'trusted')]}|{<n11>LTK|<n12>F_CERT($CA1,pk(~ltkCAx1))|<n13>Out(pk(~ltkCAx1))|<n14>TrustedKey($CA1,~ltkCAx1)}}"];
+n38 [shape="record", style="filled", fillcolor="#acdc9a", label="{{<n34>Fr(~ltkA)}|{<n35>#vr.5:PubFr[]}|{<n36>Out(~ltkA)|<n37>PubFr(~ltkA)}}"];
+n45 [shape="record", style="filled", fillcolor="#acdc9a", label="{{<n41>Fr(~ltkK)}|{<n42>#vr.6:PubFr[]}|{<n43>Out(~ltkK)|<n44>PubFr(~ltkK)}}"];
+n52 [shape="record", style="filled", fillcolor="#a5dd9a", label="{{<n47>In(\<$A,$CA1,SIG5\>)|<n48>LTK}|{<n49>#vr.7:CA_Sig_Acq_CA[IsType('Agent',$A),IsType('CA',$CA1),Clock(TA.1),IdentityProof($A,SIG5)]}|{<n50>Out(\<$CA1,$A,SIG2\>)|<n51>Out(SIG1)}}"];
+n55 [color="gray", shape="ellipse", label="!KU(($CA1+$CA1))@#vk.27"];
+n56 [color="gray", shape="ellipse", label="!KU(K)@#vk.38"];
+n57 [color="gray", shape="ellipse", label="!KU(TA)@#vk.41"];
+n58 [color="gray", shape="ellipse", label="!KU(RESPONSESkA)@#vk.42"];
+n59 [color="gray", shape="ellipse", label="!KU(pkA)@#vk.44"];
+n60 [color="gray", shape="ellipse", label="!KU(ILSlist)@#vk.45"];
+n61 [color="gray", shape="ellipse", label="!KU(TILSk)@#vk.48"];
+n62 [color="gray", shape="ellipse", label="!KU(TA.1)@#vk.51"];
+n15:n11 -> n5:n1  [color="gray50", style="bold", weight="10.0"];
+n15:n11 -> n28:n25  [color="gray50", style="bold", weight="10.0"];
+n15:n11 -> n52:n48  [color="gray50", style="bold", weight="10.0"];
+n21:n20 -> n5:n2  [style="bold", weight="10.0"];
+subgraph cluster__CLUSTER_ILS_Reg_CA_1 {
+color="#f2e8f2";
+style=filled;
+fillcolor="#e8d4e6";
+label="ILS_Reg_CA (1)";
+n28 [shape="record", style="filled", fillcolor="#edb9ea", label="{{<n24>IN|<n25>LTK}|{<n26>#vr.2:ILS_Reg_CA2[]}|{<n27>Out(T1)}}"];
+}
+
+subgraph cluster__CLUSTER_ILS_Reg_CA_2 {
+color="#f2e8f2";
+style=filled;
+fillcolor="#e8d4e6";
+label="ILS_Reg_CA (2)";
+n21 [shape="record", style="filled", fillcolor="#edb9ea", label="{{<n17>In(\<$A,$CA1,SIG3\>)}|{<n18>#vr.1:ILS_Reg_CA1_Forward[ExecutionTestComplete2(),ExecutionTestComplete2ARG(SIG3)]}|{<n19>Out(\<$CA1,$ILSk,SIG3\>)|<n20>ContactCAStateILSReg($A,$CA1,SIG3)}}"];
+n5 [shape="record", style="filled", fillcolor="#edb9ea", label="{{<n0>In(T1)|<n1>LTK|<n2>ContactCAStateILSReg($A,$CA1,SIG3)}|{<n3>#i:ILS_Reg_CA1[AcceptedAKICert($A,~ltkA)]}|{<n4>OUT}}"];
+}
+
+n62 -> n52:n47  [color="#000000", style=dashed, penwidth=2];
+n55 -> n52:n47  [color="#000000", style=dashed, penwidth=2];
+n60 -> n52:n47  [color="#000000", style=dashed, penwidth=2];
+n59 -> n52:n47  [color="#000000", style=dashed, penwidth=2];
+n59 -> n28:n24  [color="#000000", style=dashed, penwidth=2];
+n58 -> n28:n24  [color="#000000", style=dashed, penwidth=2];
+n45:n43 -> n28:n24  [color="#000000", style=dashed, penwidth=2];
+n52:n50 -> n28:n24  [color="#000000", style=dashed, penwidth=2];
+n56 -> n28:n24  [color="#000000", style=dashed, penwidth=2];
+n61 -> n28:n24  [color="#000000", style=dashed, penwidth=2];
+n60 -> n28:n24  [color="#000000", style=dashed, penwidth=2];
+n55 -> n28:n24  [color="#000000", style=dashed, penwidth=2];
+n38:n36 -> n52:n47  [color="#000000", style=dashed, penwidth=2];
+n38:n36 -> n28:n24  [color="#000000", style=dashed, penwidth=2];
+n60 -> n21:n17  [color="#000000", style=dashed, penwidth=2];
+n52:n50 -> n21:n17  [color="#000000", style=dashed, penwidth=2];
+n38:n36 -> n21:n17  [color="#000000", style=dashed, penwidth=2];
+n55 -> n21:n17  [color="#000000", style=dashed, penwidth=2];
+n59 -> n21:n17  [color="#000000", style=dashed, penwidth=2];
+n57 -> n21:n17  [color="#000000", style=dashed, penwidth=2];
+n28:n27 -> n5:n0  [color="#000000", style=dashed, penwidth=2];
+subgraph LegendCluster {
+style=invis;
+rank=sink;
+Legend [shape=box, label="Abbreviations\l\lSIG1 = sig(\<'Cert',$A,pkA,ILSlist,($CA1+$CA1)\>,~ltkA)\lSIG2 = sig(\<'CACert',SIG1\>,~ltkCAx1)\lSIG3 = sig(\<'RegistrationRequest',\<SIG1,SIG2,SIG2\>,$CA1,$ILSk,$CA1,TA\>,~ltkA)\lSIG4 = sig(\<'Accepted',h(\<SIG1,SIG2,SIG2\>),TILSk\>,~ltkK)\lT1 = \<$CA1,$CA1,sig(\<sig(\<'OK1',SIG4\>,~ltkCAx1),RESPONSESkA\>,~ltkCAx1)\>\lLTK = !Ltk($CA1,~ltkCAx1)\lT2 = \<K,$CA1,sig(\<SIG4,\<SIG1,SIG2,SIG2\>,$CA1,RESPONSESkA,$CA1\>,~ltkK)\>\lIN = In(T2)\lOUT = Out(\<$CA1,$A,sig(\<'OK2',sig(\<'OK1',SIG4\>,~ltkCAx1)\>,~ltkCAx1)\>)\lSIG5 = sig(\<'SignRequest',SIG1,TA.1\>,~ltkA)\l"];
+}
+
+n58 -> Legend  [style=invis];
+n15 -> Legend  [style=invis];
+n56 -> Legend  [style=invis];
+n57 -> Legend  [style=invis];
+n55 -> Legend  [style=invis];
+n52 -> Legend  [style=invis];
+n38 -> Legend  [style=invis];
+n59 -> Legend  [style=invis];
+n62 -> Legend  [style=invis];
+n61 -> Legend  [style=invis];
+n60 -> Legend  [style=invis];
+n45 -> Legend  [style=invis];
+n28 -> Legend  [style=invis];
+n21 -> Legend  [style=invis];
+n5 -> Legend  [style=invis];
+}

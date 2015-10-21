@@ -1,0 +1,303 @@
+theory GDH begin
+
+/*
+
+Note that in our modeling, we consider each exponentiated term
+received and sent by a participant as a separate message. To reduce
+authentic channel overhead, the usual presentation of GDH for each
+participant receives the list of all such terms, exponentiates them
+all, and sends the resulting list. But, our model just gives the
+adversary more fine-grained access to the messages, and it is not hard
+to see that each attack on the list-version also is an attack for
+separate messages. Therefore, our proof is valid in both versions of
+the protocol.
+
+*/
+
+builtins: diffie-hellman, multiset
+
+functions: te/1, te_inv/1    // convert group element to exponent
+equations: te_inv(te(x)) = x // te is not hiding
+
+axiom Unique: "All x #i #j. Uniq(x) @ i & Uniq(x) @ j ==> #i = #j"
+// Instead of using the axiom for "x < y" directly, 
+// axiom Less:   "All x y #i. Less(x,y) @ i ==> Ex z. x + z = y"
+// we use two axioms for "x <> y" and "not (y < x)"
+axiom Less1:   "not (Ex x #i. Less(x,x) @ i)"
+axiom Less2:   "not (Ex x y #i. Less(x+y,x) @ i)"
+axiom InEq:   "not (Ex x #i. InEq(x,x) @ i)"
+
+rule AuthOut:
+  [ !AO( A, x ) ] --> [ Out( x ) ]
+
+rule CreateGroup:
+ let q = < 'CreateGroup', $gid, k > in
+ [ In( q ) ]
+ --[ Uniq( < 'CreateGroup', $gid > )
+   , InEq( k, '1' )
+   ]->
+ [ !Group( $gid, k) ]
+
+rule StartParticipant:
+  let q = < 'StartParticipant', $gid , i, $A> in
+  [ In( q ) 
+  , !Group( $gid, k )
+  , Fr( ~esk )
+  ]
+  --[ Uniq( < $gid , i > )
+    , Uniq( < $gid , $A > )
+    , Less(i, k + '1')
+    , Esk( $gid, i, ~esk )
+    ]->
+  [ !Pstate( $gid, i, $A, ~esk)
+  , !Pmap( $gid, i, $A )
+  ]
+
+rule SendFirst:
+  let q = < 'SendFirst', $gid > in
+  [ In( q )
+  , !Pstate( $gid, '1', $A, ~esk )
+  ]
+  --[ Uniq( q )
+    , AExp( 1 )
+    , AExp( ~esk )    
+    ]->
+  [ !AO( $A, < $gid, '1' + '1', 'KeyFor', '1', 'g' > )
+  , !AO( $A, < $gid, '1' + '1', 'RoundKey', 'g'^~esk >)
+  , WaitAccept( $gid, '1', $A, ~esk )
+  ]
+
+rule RecvOthers:
+  let q = < 'RecvOthers', $gid, i, j > in
+  [ In ( q )
+  , !Pstate( $gid, i, $A, ~esk)
+  , !Pmap( $gid, l, $B)
+  , !AO( $B, < $gid, i , 'KeyFor', j, 'g'^y > )
+  ]
+  --[ Uniq( q )
+    , Exp( $gid, i, y)
+    , ExpKeyFor( $gid, i, j, y )
+    , Eq(l + '1', i)
+    , AExp( y * ~esk )
+    , AExp( y )
+    ]->
+  [ !AO( $A, < $gid, i + '1', 'KeyFor', j, ('g'^y)^~esk> ) ]
+
+rule RecvRoundkey:
+  let q = < 'RecvRoundkey', $gid, i> in
+  [ In ( q )
+  , !Pstate( $gid, i, $A, ~esk )
+  , !Pmap( $gid, l, $B)
+  , !Group( $gid, k)
+  , !AO( $B, < $gid, i, 'RoundKey', 'g'^y >)
+  ]
+  --[ Uniq( q )
+    , InEq(i, k)
+    , Eq(l + '1', i)
+    , Exp( $gid, i, y)
+    , ExpRoundKey( $gid, i, y )    
+    , AExp( y )
+    , AExp( y * ~esk )
+    ]->
+  [ !AO( $A, < $gid, i + '1', 'KeyFor', i, 'g'^y > )
+  , !AO( $A, < $gid, i + '1', 'RoundKey', ('g'^y)^~esk > )
+  , WaitAccept( $gid, i, $A, ~esk )
+  ]
+
+rule RecvRoundkeyLast:
+  let q = < 'RecvRoundkeyLast', $gid > in
+  [ In ( q )
+  , !Pstate( $gid, k, $A, ~esk)
+  , !Pmap( $gid, l, $B)
+  , !Group( $gid, k )
+  , !AO( $B, < $gid, k, 'RoundKey', 'g'^y > )
+  ]
+  --[ Uniq( q )
+    , Exp( $gid, k, y)
+    , Eq(l + '1', k)
+//    , Accept( $gid, $A, k, ('g'^y)^~esk ) // we prove the lemma key_secret_last separately
+    , AcceptLast( $gid, $A, k, ('g'^y)^~esk )    
+    , ExpRoundKey( $gid, k, y)
+    , AExp( y )
+    ]->
+  [ ]
+
+rule Accept:
+  let q = < 'Accept', $gid, i > in
+  [ In ( q )
+  , WaitAccept( $gid, i, $A, ~esk)
+  , !Group( $gid, k )
+  , !Pmap( $gid, k, $B)
+  , !AO( $B, < $gid, k + '1', 'KeyFor', i, 'g'^y > )
+  ]
+  --[ Accept( $gid, $A, i, ('g'^y)^~esk )
+    , Uniq( q )
+    , Exp( $gid, k+'1', y )
+    //, ExpKeyFor( k+'1', i, y )
+    , AExp( y )
+    ]->
+  []
+
+/* ********************************************************************* */
+/* Security lemmas                                                       */
+/* ********************************************************************* */ 
+
+// run tamarin with -Dsecure to include these lemmas
+#ifdef secure
+
+/* This lemma is interpreted module AC, we can therefore safely ignore
+   the Tamarin warning */
+lemma No_Inv_exp[use_induction,reuse,typing]:
+  all-traces
+  "not ((Ex #i x. AExp(inv(x) ) @ i) | (Ex #i x y. AExp(x * inv(y) ) @ i))"
+
+lemma Esk_secret[reuse]:
+  all-traces
+  "not (Ex #i #j gid x r. KU(x) @ i & Esk( gid, r, x ) @ j)"
+
+/* The Tamarin warning is concerned with the fresh variables ~n.
+   We ignore the warning because the restriction is only enforced
+   to extract attacks and it is perfectly fine to use fresh variables
+   to perform proofs. It might only happen that a counterexample is
+   spurious.
+*/
+lemma Esk_fresh_name[reuse]:
+  "All #i x r gid. Esk( gid, r, x ) @ i ==> Ex ~n. x = ~n"
+
+lemma ExpKeyFor_one[reuse]:
+  "All #v i r gid. ExpKeyFor( gid, r, i, 1 ) @ v ==> i = '1' & r = '1' + '1'"
+
+lemma Relate_KeyFor_RoundKey[reuse,hide_lemma=Exp_earlier_Esk, use_induction]:
+  all-traces
+  "All #v1 #v2 gid r j ej e.
+     ExpKeyFor( gid, r, j, ej) @ v1 & ExpRoundKey( gid, r, e) @ v2
+     ==>
+     (Ex #v3 xj. Esk( gid, j, xj) @ v3 & ej * xj = e) | ej = 1"
+
+
+lemma Exp_subterm[use_induction, reuse]:
+  all-traces
+  "not (Ex gid r i j e x #v1 #v2.
+          ExpKeyFor(gid, '1' + r, j, e) @ v1 & ExpKeyFor(gid, '1' + r, i, e * x) @ v2)"
+
+/* See above for warning. */
+lemma Exp_earlier_Esk[use_induction, reuse,hide_lemma=Relate_KeyFor_RoundKey]:
+  "All #i x ~n r1 gid. Exp( gid, r1, x * ~n) @ i
+     ==> Ex r2 r3 #j. Esk( gid, r2, ~n) @ j & r1 = r2 + r3"
+
+/* We can prove this one using the earlier lemma. */
+lemma Exp_earlier_Esk_2[reuse,hide_lemma=Relate_KeyFor_RoundKey]:
+  all-traces
+  "All #i #j gid x n r1 r2. Exp( gid, r2, x * n) @ i & Esk( gid, r1, n) @ j
+     ==> Ex r3. r2 = r1 + r3"
+
+lemma roundkey_keyfor_different[use_induction,reuse,hide_lemma=Exp_earlier_Esk,hide_lemma=Relate_KeyFor_RoundKey]:
+  all-traces
+    "not (Ex #i #j gid r1 i y.
+              ExpKeyFor( gid, r1, i, y ) @ i
+            & ExpRoundKey( gid, r1, y ) @ j)"
+
+lemma Exp_nonce_or_product2[use_induction,reuse,hide_lemma=Exp_earlier_Esk,hide_lemma=Relate_KeyFor_RoundKey]:
+  all-traces
+  "All #i j x z gid. Exp( gid, j, x * z) @ i ==>
+     (Ex #j r.  Esk( gid, r, x ) @ j) | (Ex #j ~n r. Esk( gid, r, ~n ) @ j & Ex y. x = y * ~n)"
+
+lemma Exp_factor_secret[reuse,hide_lemma=Exp_earlier_Esk,hide_lemma=Relate_KeyFor_RoundKey]:
+  all-traces
+  "not (Ex #v1 #v2 i x y gid. Exp(gid, i, x * y ) @ v1 & KU( x ) @ v2)"
+
+lemma Exp_name_secret[reuse,hide_lemma=Exp_earlier_Esk,hide_lemma=Relate_KeyFor_RoundKey]:
+  all-traces
+  "not (Ex #v1 #v2 i ~x gid. Exp( gid, i, ~x ) @ v1 & KU( ~x ) @ v2)"
+
+lemma Esk_Exp_same_gid[hide_lemma=Exp_earlier_Esk,reuse,use_induction,hide_lemma=Relate_KeyFor_RoundKey]:
+  all-traces
+  "All gid1 gid2 i j x e #v1 #v2.
+     Esk( gid1, i, x ) @ v1 & Exp(gid2, j, e * x) @ v2 ==> gid1 = gid2"
+
+lemma key_secret_last[hide_lemma=Exp_earlier_Esk,hide_lemma=Exp_nonce_or_product2,hide_lemma=Relate_KeyFor_RoundKey]:
+  all-traces
+  "not (Ex gid A i key #i1 #i2.
+            AcceptLast( gid, A, i, key ) @ i1
+          & KU( key ) @ i2)"
+
+lemma key_secret[hide_lemma=Exp_earlier_Esk,hide_lemma=Exp_nonce_or_product2,hide_lemma=Relate_KeyFor_RoundKey]:
+  all-traces
+  "not (Ex gid A i key #i1 #i2.
+            Accept( gid, A, i, key ) @ i1
+          & KU( key ) @ i2)"
+#endif
+
+/* ********************************************************************* */
+/* Executability lemmas                                                  */
+/* ********************************************************************* */  
+
+// run tamarin with -Dexecutable2 to include this lemma
+#ifdef executable2
+
+lemma key_reachable_2:
+  exists-trace
+  "Ex gid A1 A2 key #j1 #j2.
+         Accept( gid, A1, '1'      , key ) @ j1
+       & Accept( gid, A2, '1' + '1', key ) @ j2
+       & not (A1 = A2)"
+
+#endif
+
+// run tamarin with -Dexecutable3 to include this lemma
+#ifdef executable3
+
+lemma key_reachable_3:
+  exists-trace
+  "Ex gid A1 A2 A3 key #j1 #j2 #j3.
+         Accept( gid, A1, '1'            , key ) @ j1
+       & Accept( gid, A2, '1' + '1'      , key ) @ j2
+       & Accept( gid, A3, '1' + '1' + '1', key ) @ j3
+       & not (A1 = A2)
+       & not (A1 = A3)
+       & not (A2 = A3)"
+#endif
+
+// run tamarin with -Dexecutable4 to include this lemma
+#ifdef executable4
+
+lemma key_reachable_4:
+  exists-trace
+  "Ex gid A1 A2 A3 A4 key #j1 #j2 #j3 #j4.
+         Accept( gid, A1, '1'                  , key ) @ j1
+       & Accept( gid, A2, '1' + '1'            , key ) @ j2
+       & Accept( gid, A3, '1' + '1' + '1'      , key ) @ j3
+       & Accept( gid, A4, '1' + '1' + '1' + '1', key ) @ j4       
+       & not (A1 = A2)
+       & not (A1 = A3)
+       & not (A1 = A4)       
+       & not (A2 = A3)
+       & not (A2 = A4)
+       & not (A3 = A4)"
+
+#endif
+
+// run tamarin with -Dexecutable4 to include this lemma
+#ifdef executable5
+
+lemma key_reachable_5:
+  exists-trace
+  "Ex gid A1 A2 A3 A4 A5 key #j1 #j2 #j3 #j4 #j5.
+         Accept( gid, A1, '1'                        , key ) @ j1
+       & Accept( gid, A2, '1' + '1'                  , key ) @ j2
+       & Accept( gid, A3, '1' + '1' + '1'            , key ) @ j3
+       & Accept( gid, A4, '1' + '1' + '1' + '1'      , key ) @ j4       
+       & Accept( gid, A5, '1' + '1' + '1' + '1' + '1', key ) @ j5
+       & not (A1 = A2)
+       & not (A1 = A3)
+       & not (A1 = A4)
+       & not (A1 = A5)       
+       & not (A2 = A3)
+       & not (A2 = A4)
+       & not (A2 = A5)       
+       & not (A3 = A4)
+       & not (A3 = A5)
+       & not (A4 = A5)"
+
+#endif
+end
