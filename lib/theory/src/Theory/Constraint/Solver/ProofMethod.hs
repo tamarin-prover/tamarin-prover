@@ -627,8 +627,9 @@ sapicRanking ctxt sys =
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing
 
-    isProgressDisj (DisjG (Disj disj )) = all (\f -> case f of 
+    isProgressDisj (DisjG (Disj disj )) = all (\f -> (trace (show f) (case f of 
             GGuarded Ex _ _ _             -> True
+            -- GGuarded Ex [("t2",LSortNode)] [Action Bound 0 (Fact {factTag = ProtoFact Linear "ProgressTo_1111111111111112" 1, factTerms = [Free ~prog_111111111]})] (GConj (Conj {getConj = []}))
             -- TODO erwische diese formeln
  -- (∃ #t2.
  --             (ProgressTo_1111111111111111( ~prog_111111111.1 ) @ #t2)) ∥
@@ -637,7 +638,7 @@ sapicRanking ctxt sys =
  --             (ProgressTo_1111111111111112( ~prog_111111111.1
  --              ) @ #t2)) 
             _                              -> False
-            ) disj
+            ))) disj
     
     isProgressDisj _ = False
 
