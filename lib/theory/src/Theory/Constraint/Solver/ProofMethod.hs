@@ -564,7 +564,7 @@ sapicRanking ctxt sys =
         , isKnowsFirstNameGoal . fst
         , isFirstInsertAction . fst
         , isNonLoopBreakerProtoFactGoal
-        , isStandardActionGoalButNotInsert  . fst
+        , isStandardActionGoalButNotInsertOrReceive  . fst
         , isProgressDisj . fst
         , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
@@ -611,8 +611,11 @@ sapicRanking ctxt sys =
     isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _)) = False
     isNotInsertAction  _                                 = True
 
-    isStandardActionGoalButNotInsert g = 
-       (isStandardActionGoal g) &&  (isNotInsertAction g)
+    isNotReceiveAction (ActionG _ (Fact (ProtoFact _ "Receive" _) _)) = False
+    isNotReceiveAction  _                                 = True
+
+    isStandardActionGoalButNotInsertOrReceive g = 
+       (isStandardActionGoal g) && (isNotInsertAction g) && (isNotReceiveAction g)
 
 
     isNonLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
@@ -627,18 +630,13 @@ sapicRanking ctxt sys =
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing
 
-    isProgressDisj (DisjG (Disj disj )) = all (\f -> (trace (show f) (case f of 
-            GGuarded Ex _ _ _             -> True
-            -- GGuarded Ex [("t2",LSortNode)] [Action Bound 0 (Fact {factTag = ProtoFact Linear "ProgressTo_1111111111111112" 1, factTerms = [Free ~prog_111111111]})] (GConj (Conj {getConj = []}))
-            -- TODO erwische diese formeln
- -- (∃ #t2.
- --             (ProgressTo_1111111111111111( ~prog_111111111.1 ) @ #t2)) ∥
- --           (∃ #t2. (ProgressTo_11111111111112( ~prog_111111111.1 ) @ #t2)) ∥
- --           (∃ #t2.
- --             (ProgressTo_1111111111111112( ~prog_111111111.1
- --              ) @ #t2)) 
-            _                              -> False
-            ))) disj
+    isProgressFact (factTag -> ProtoFact Linear name 1) = isPrefixOf "ProgressTo_" name
+    isProgressFact _ = False
+
+    isProgressDisj (DisjG (Disj disj )) = all (\f ->  (case f of 
+            GGuarded Ex [(_,LSortNode)] [Action _ f ] _ -> isProgressFact f
+            _                                           -> False
+            )) disj
     
     isProgressDisj _ = False
 
