@@ -48,13 +48,13 @@ import Term.Builtin.Rules
 import Term.SubtermRule
 
 import Control.Monad.Fresh
-import Control.Applicative
+-- import Control.Applicative
 import Control.DeepSeq
 
 import Data.DeriveTH
 import Data.Binary
 import Data.Foldable (asum)
-import Data.Monoid
+-- import Data.Monoid
 import Data.Set (Set)
 import qualified Data.Set as S
 

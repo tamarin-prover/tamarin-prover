@@ -91,7 +91,7 @@ import           Control.Monad.State                     (StateT, execStateT, ge
 import           Text.PrettyPrint.Class
 
 import           Extension.Data.Label
-import           Extension.Data.Monoid                   (Monoid(..))
+-- import           Extension.Data.Monoid                   (Monoid(..))
 import           Extension.Prelude
 
 import           Logic.Connectives
@@ -516,7 +516,7 @@ markGoalAsSolved how goal =
               modM sGoals $ M.insert goal $ set gsSolved True status
           Nothing     -> trace ("markGoalAsSolved: inexistent goal " ++ show goal) $ return ()
 
-    msg status = render $ nest 2 $ fsep $
+    msg status = render $ getDoc $ nest 2 $ fsep $
         [ text ("solved goal nr. "++ show (get gsNr status))
           <-> parens (text how) <> colon
         , nest 2 (prettyGoal goal) ]

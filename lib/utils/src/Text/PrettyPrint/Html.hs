@@ -30,7 +30,7 @@ module Text.PrettyPrint.Html (
   ) where
 
 import Data.Char (isSpace)
-import Data.Traversable (sequenceA)
+-- import Data.Traversable (sequenceA)
 import Data.Monoid
 
 import Control.Arrow (first)
@@ -150,8 +150,8 @@ escapeHtmlEntities (c:cs) = case c of
     x    -> x : escapeHtmlEntities cs
 
 -- | @renderHtmlDoc = 'postprocessHtmlDoc' . 'render' . 'getHtmlDoc'@ 
-renderHtmlDoc :: HtmlDoc Doc -> String
-renderHtmlDoc = postprocessHtmlDoc . render . getHtmlDoc
+renderHtmlDoc :: HtmlDoc MyDoc -> String
+renderHtmlDoc = postprocessHtmlDoc . render . getDoc . getHtmlDoc
 
 -- | @postprocessHtmlDoc cs@ converts the line-breaks of @cs@ to @<br>@ tags and
 -- the prefixed spaces in every line of @cs@ by non-breaing HTML spaces @&nbsp;@.

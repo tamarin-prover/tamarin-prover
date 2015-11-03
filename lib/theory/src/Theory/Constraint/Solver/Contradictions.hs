@@ -32,7 +32,7 @@ import qualified Data.Foldable                  as F
 import           Data.List
 import qualified Data.Map                       as M
 import           Data.Maybe                     (fromMaybe, listToMaybe)
-import           Data.Monoid
+-- import           Data.Monoid
 import qualified Data.Set                       as S
 import           Safe                           (headMay)
 

@@ -53,12 +53,12 @@ module Web.Types
 where
 
 
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.Concurrent
 import           Data.Label
 import qualified Data.Map            as M
 import           Data.Maybe          (listToMaybe)
-import           Data.Monoid         (mconcat)
+-- import           Data.Monoid         (mconcat)
 import           Data.Ord            (comparing)
 import qualified Data.Text           as T
 import           Data.Time.LocalTime

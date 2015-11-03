@@ -14,7 +14,7 @@ module Theory.Tools.LoopBreakers (
   useAutoLoopBreakersAC
   ) where
 
-import Control.Applicative
+-- import Control.Applicative
 import Control.Monad.Fresh
 import Control.Monad.Reader
 

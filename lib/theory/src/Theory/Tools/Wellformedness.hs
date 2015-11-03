@@ -77,9 +77,9 @@ import           Data.Generics.Uniplate.Data (universeBi)
 import           Data.Label
 import           Data.List                   (intersperse,(\\))
 import           Data.Maybe
-import           Data.Monoid                 (mappend, mempty)
+-- import           Data.Monoid                 (mappend, mempty)
 import qualified Data.Set                    as S
-import           Data.Traversable            (traverse)
+-- import           Data.Traversable            (traverse)
 
 import           Control.Monad.Bind
 
@@ -94,10 +94,10 @@ import           Theory.Text.Pretty
 ------------------------------------------------------------------------------
 
 type Topic         = String
-type WfError       = (Topic, Doc)
+type WfError       = (Topic, MyDoc)
 type WfErrorReport = [WfError]
 
-prettyWfErrorReport :: WfErrorReport -> Doc
+prettyWfErrorReport :: WfErrorReport -> MyDoc
 prettyWfErrorReport =
     vcat . intersperse (text "") . map ppTopic . groupOn fst
   where
@@ -880,7 +880,7 @@ noteWellformedness report thy quitOnWarning =
       | null report = text "All well-formedness checks were successful."
       | otherwise   = if quitOnWarning
                       then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render (prettyWfErrorReport report)))
+                                 ++ (render $ getDoc (prettyWfErrorReport report)))
                       else vsep
           [ text "WARNING: the following wellformedness checks failed!"
           , prettyWfErrorReport report
@@ -895,7 +895,7 @@ noteWellformednessDiff report thy quitOnWarning =
       | null report = text "All well-formedness checks were successful."
       | otherwise   = if quitOnWarning
                       then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render (prettyWfErrorReport report)))
+                                 ++ (render $ getDoc (prettyWfErrorReport report)))
                       else vsep
           [ text "WARNING: the following wellformedness checks failed!"
           , prettyWfErrorReport report

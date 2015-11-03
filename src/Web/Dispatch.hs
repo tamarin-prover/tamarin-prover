@@ -43,7 +43,7 @@ import qualified Data.ByteString        as B
 import qualified Data.Map               as M
 import qualified Data.Text              as T
 
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.Concurrent
 import           Control.Monad
 import           Data.List

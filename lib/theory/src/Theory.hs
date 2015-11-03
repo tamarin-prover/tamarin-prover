@@ -181,12 +181,12 @@ import           Prelude                             hiding (id, (.))
 
 import           Data.Binary
 import           Data.DeriveTH
-import           Data.Foldable                       (Foldable, foldMap)
+-- import           Data.Foldable                       (Foldable, foldMap)
 import           Data.List
 import           Data.Maybe
 import           Data.Monoid                         (Sum(..))
 import qualified Data.Set                            as S
-import           Data.Traversable                    (Traversable, traverse)
+-- import           Data.Traversable                    (Traversable, traverse)
 
 import           Control.Basics
 import           Control.Category
@@ -779,12 +779,12 @@ lookupDiffLemma :: String -> DiffTheory sig c r r2 p p2 -> Maybe (DiffLemma p)
 lookupDiffLemma name = find ((name ==) . L.get lDiffName) . diffTheoryDiffLemmas
 
 -- | Add a comment to the theory.
-addComment :: Doc -> Theory sig c r p -> Theory sig c r p
-addComment c = modify thyItems (++ [TextItem ("", render c)])
+addComment :: MyDoc -> Theory sig c r p -> Theory sig c r p
+addComment c = modify thyItems (++ [TextItem ("", render $ getDoc c)])
 
 -- | Add a comment to the diff theory.
-addDiffComment :: Doc -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
-addDiffComment c = modify diffThyItems (++ [DiffTextItem ("", render c)])
+addDiffComment :: MyDoc -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
+addDiffComment c = modify diffThyItems (++ [DiffTextItem ("", render $ getDoc c)])
 
 -- | Add a comment represented as a string to the theory.
 addStringComment :: String -> Theory sig c r p -> Theory sig c r p
@@ -1271,7 +1271,7 @@ applyPartialEvaluation evalStyle thy0 =
     replaceProtoRules [] = []
     replaceProtoRules (item:items)
       | isRuleItem item  =
-          [ TextItem ("text", render ppAbsState)
+          [ TextItem ("text", render $ getDoc ppAbsState)
 
           ] ++ map RuleItem ruEs' ++ filter (not . isRuleItem) items
       | otherwise        = item : replaceProtoRules items
@@ -1304,7 +1304,7 @@ applyPartialEvaluationDiff evalStyle thy0 =
     replaceProtoRules [] = []
     replaceProtoRules (item:items)
       | isEitherRuleItem item  =
-          [ DiffTextItem ("text", render ppAbsState)
+          [ DiffTextItem ("text", render $ getDoc ppAbsState)
 
           ] ++ map (\x -> EitherRuleItem (LHS, x)) ruEsL' ++ map (\x -> EitherRuleItem (RHS, x)) ruEsR' ++ filter (not . isEitherRuleItem) items
       | otherwise        = item : replaceProtoRules items

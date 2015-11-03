@@ -28,7 +28,7 @@ module Theory.Constraint.Solver.Goals (
 import           Prelude                                 hiding (id, (.))
 
 import qualified Data.DAG.Simple                         as D (cyclic)
-import           Data.Foldable                           (foldMap)
+-- import           Data.Foldable                           (foldMap)
 import qualified Data.Map                                as M
 import qualified Data.Monoid                             as Mono
 import qualified Data.Set                                as S

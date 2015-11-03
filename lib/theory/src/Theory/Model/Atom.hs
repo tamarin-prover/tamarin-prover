@@ -37,15 +37,15 @@ module Theory.Model.Atom(
   )
 where
 
-import           Control.Basics
+-- import           Control.Basics
 import           Control.DeepSeq
 
 import           Data.Binary
 import           Data.DeriveTH
-import           Data.Foldable      (Foldable, foldMap)
+-- import           Data.Foldable      (Foldable, foldMap)
 import           Data.Generics
-import           Data.Monoid        (mappend, mempty)
-import           Data.Traversable
+-- import           Data.Monoid        (mappend, mempty)
+-- import           Data.Traversable
 
 import           Term.LTerm
 import           Term.Unification

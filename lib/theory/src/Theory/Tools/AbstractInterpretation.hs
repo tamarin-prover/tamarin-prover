@@ -29,7 +29,7 @@ import           Control.Monad.Reader
 import           Data.Label
 import           Data.List
 import qualified Data.Set             as S
-import           Data.Traversable     (traverse)
+-- import           Data.Traversable     (traverse)
 
 import           Term.Substitution
 import           Theory.Model
@@ -115,7 +115,7 @@ partialEvaluation evalStyle ruEs = reader $ \hnd ->
               Silent  -> id
               Summary -> trace incDesc
               Tracing -> trace $ incDesc ++ "\n\n" ++
-                ( render $ nest 2 $ numbered' $ map prettyLNFact $
+                ( render $ getDoc $ nest 2 $ numbered' $ map prettyLNFact $
                   S.toList $ st' `S.difference` st ) ++ "\n"
 
 

@@ -30,8 +30,8 @@ module Term.VTerm (
     , module Term.Term
     ) where
 
-import Data.Foldable
-import Data.Traversable
+-- import Data.Foldable
+-- import Data.Traversable
 import qualified Data.DList as D
 import Data.Typeable
 import Data.Generics
@@ -39,7 +39,7 @@ import Data.DeriveTH
 import Data.Binary
 import Data.Monoid
 import Control.DeepSeq
-import Control.Basics
+-- import Control.Basics
 
 import Extension.Prelude
 

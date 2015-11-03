@@ -32,7 +32,7 @@ import Term.Substitution.SubstVFresh
 import Extension.Prelude
 
 import Control.Monad.Bind
-import Control.Basics
+-- import Control.Basics
 
 -- Composition of VFresh and VFresh substitutions
 ----------------------------------------------------------------------

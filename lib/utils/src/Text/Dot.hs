@@ -53,7 +53,7 @@ module Text.Dot
 import Data.Char           (isSpace)
 import Data.List           (intersperse)
 import Control.Monad       (liftM, ap)
-import Control.Applicative (Applicative(..))
+-- import Control.Applicative (Applicative(..))
 
 data NodeId = NodeId String
             | UserNodeId Int

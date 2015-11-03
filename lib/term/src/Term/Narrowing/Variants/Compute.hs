@@ -24,7 +24,7 @@ import Data.Ord
 import Data.List                     (partition,sortBy)
 import Data.Maybe
 import Control.Arrow
-import Control.Applicative
+-- import Control.Applicative
 import Control.Monad.Reader
 
 import Debug.Trace.Ignore

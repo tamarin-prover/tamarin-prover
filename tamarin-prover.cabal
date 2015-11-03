@@ -196,6 +196,9 @@ executable tamarin-prover
       Web.Types
 
       Test.ParserTests
+      
+    other-extensions:
+      TemplateHaskell
 
 
 source-repository head

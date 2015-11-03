@@ -9,9 +9,9 @@
 -- Types and instances to handle series of disjunctions and conjunctions.
 module Logic.Connectives where
 
-import Data.Monoid
-import Data.Foldable
-import Data.Traversable
+-- import Data.Monoid
+-- import Data.Foldable
+-- import Data.Traversable
 import Data.Typeable
 import Data.Generics
 import Data.Binary

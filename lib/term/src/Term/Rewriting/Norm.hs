@@ -17,7 +17,7 @@ module Term.Rewriting.Norm (
 
 import           Utils.Misc
 
-import           Control.Basics
+-- import           Control.Basics
 import           Control.Monad.Reader
 
 import           Data.List

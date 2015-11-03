@@ -24,14 +24,14 @@ import           Theory.Tools.EquationStore
 import           Extension.Prelude
 import           Logic.Connectives
 
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.Monad.Bind
 import           Control.Monad.Reader
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Map                         as M
 import qualified Data.Set                         as S
-import           Data.Traversable                 (traverse)
+-- import           Data.Traversable                 (traverse)
 
 -- import           Utils.Misc (stringSHA256)
  

@@ -71,16 +71,16 @@ module Theory.Model.Fact (
 
   ) where
 
-import           Control.Basics
+-- import           Control.Basics
 import           Control.DeepSeq
 
 import           Data.Binary
 import           Data.DeriveTH
-import           Data.Foldable          (Foldable(..))
+-- import           Data.Foldable          (Foldable(..))
 import           Data.Generics
 import           Data.Maybe             (isJust)
 import           Data.Monoid
-import           Data.Traversable       (Traversable(..))
+-- import           Data.Traversable       (Traversable(..))
 import qualified Data.Set               as S
 
 import           Term.Unification

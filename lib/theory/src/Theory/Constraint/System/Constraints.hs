@@ -39,9 +39,9 @@ module Theory.Constraint.System.Constraints (
 import           Data.Binary
 import           Data.DeriveTH
 import           Data.Generics
-import           Extension.Data.Monoid            (Monoid(..))
+-- import           Extension.Data.Monoid            (Monoid(..))
 
-import           Control.Basics
+-- import           Control.Basics
 import           Control.DeepSeq
 
 import           Text.PrettyPrint.Class

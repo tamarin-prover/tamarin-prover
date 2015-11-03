@@ -61,7 +61,7 @@ module Term.Unification (
   , module Term.Rewriting.Definitions
 ) where
 
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.Monad.RWS
 import           Control.Monad.Error
 import           Control.Monad.State

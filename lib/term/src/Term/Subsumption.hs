@@ -20,9 +20,9 @@ module Term.Subsumption (
   , varOccurences
 ) where
 
-import Control.Basics
+-- import Control.Basics
 
-import Data.Monoid
+-- import Data.Monoid
 
 import Extension.Prelude
 

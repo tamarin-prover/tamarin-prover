@@ -10,7 +10,7 @@ module Extension.Data.Bounded (
   , BoundedMin(..)
   ) where
 
-import Data.Monoid
+-- import Data.Monoid
 
 -- | A newtype wrapper for a monoid of the maximum of a bounded type.
 newtype BoundedMax a = BoundedMax {getBoundedMax :: a}

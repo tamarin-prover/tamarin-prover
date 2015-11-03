@@ -10,7 +10,7 @@ module Control.Monad.Fresh.Class (
   MonadFresh(..)
 ) where
 
-import Control.Basics
+-- import Control.Basics
 
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe

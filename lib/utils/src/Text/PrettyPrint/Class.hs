@@ -8,7 +8,8 @@
 -- 'Document' class allowing to have different interpretations of the
 -- HughesPJ pretty-printing combinators.
 module Text.PrettyPrint.Class (
-        P.Doc
+        MyDoc
+     ,  getDoc
      ,  Document(..)
      ,  P.isEmpty
      ,  P.render
@@ -62,13 +63,18 @@ import           Control.DeepSeq        (NFData(..))
 
 import           Data.List              (intersperse)
 
-import           Extension.Data.Monoid  (Monoid(..), (<>))
+import           Extension.Data.Monoid  ((<>))
 import           Extension.Prelude      (flushRight)
 
 import qualified Text.PrettyPrint.HughesPJ as P
 
 infixr 6 <->
 infixl 5 $$, $-$, $--$
+
+newtype MyDoc = MyDoc P.Doc
+
+getDoc :: MyDoc -> P.Doc
+getDoc (MyDoc d) = d
 
 -- emptyDoc = P.empty
 -- (<>)  = (P.<>)
@@ -156,26 +162,30 @@ punctuate p (d:ds) = go d ds
 ------------------------------------------------------------------------------
 
 -- Must be removed for GHC 7.10, needed before
-instance NFData P.Doc where
-  rnf = rnf . P.render
+instance NFData MyDoc where
+  rnf = rnf . P.render . getDoc
 
-instance Document P.Doc where
-  char = P.char
-  text = P.text
-  zeroWidthText = P.zeroWidthText
-  (<->) = (P.<+>)
-  hcat  = P.hcat
-  hsep  = P.hsep
-  ($$)  = (P.$$)
-  ($-$) = (P.$+$)
-  vcat  = P.vcat
-  sep   = P.sep
-  cat   = P.cat
-  fsep  = P.fsep
-  fcat  = P.fcat
-  nest  = P.nest
-  caseEmptyDoc yes no d = if P.isEmpty d then yes else no
+instance Document MyDoc where
+  char = MyDoc . P.char
+  text = MyDoc . P.text
+  zeroWidthText = MyDoc . P.zeroWidthText
+  (<->) (MyDoc d1) (MyDoc d2) = MyDoc $ (P.<+>) d1 d2
+  hcat  = MyDoc . P.hcat . map getDoc 
+  hsep  = MyDoc . P.hsep . map getDoc 
+  ($$) (MyDoc d1) (MyDoc d2) = MyDoc $ (P.$$) d1 d2
+  ($-$) (MyDoc d1) (MyDoc d2) = MyDoc $ (P.$+$) d1 d2
+  vcat  = MyDoc . P.vcat . map getDoc
+  sep   = MyDoc . P.sep . map getDoc
+  cat   = MyDoc . P.cat . map getDoc
+  fsep  = MyDoc . P.fsep . map getDoc
+  fcat  = MyDoc . P.fcat . map getDoc
+  nest i (MyDoc d) = MyDoc $ P.nest i d
+  caseEmptyDoc yes no (MyDoc d) = if P.isEmpty d then yes else no
 
+instance Monoid MyDoc where
+    mempty = MyDoc $ P.empty
+    mappend (MyDoc d1) (MyDoc d2) = MyDoc $ (P.<>) d1 d2
+  
 ------------------------------------------------------------------------------
 -- Additional combinators
 ------------------------------------------------------------------------------

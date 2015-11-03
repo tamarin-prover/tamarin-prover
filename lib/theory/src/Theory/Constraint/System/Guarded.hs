@@ -93,11 +93,11 @@ import           Data.Data
 import           Data.Binary
 import           Data.DeriveTH
 import           Data.Either                      (partitionEithers)
-import           Data.Foldable                    (Foldable(..), foldMap)
+-- import           Data.Foldable                    (Foldable(..), foldMap)
 import           Data.List
 import qualified Data.DList as D
-import           Data.Monoid                      (Monoid(..))
-import           Data.Traversable                 hiding (mapM, sequence)
+-- import           Data.Monoid                      (Monoid(..))
+-- import           Data.Traversable                 hiding (mapM, sequence)
 
 import           Logic.Connectives
 
@@ -441,7 +441,7 @@ instance Document d => Error (ErrorDoc d) where
 -- equivalent to @fm@ under the assumption that this is possible.
 -- If not, then 'error' is called.
 formulaToGuarded_ :: LNFormula  -> LNGuarded
-formulaToGuarded_ = either (error . render) id . formulaToGuarded
+formulaToGuarded_ = either (error . render . getDoc) id . formulaToGuarded
 
 -- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
 -- equivalent to @fm@ if possible.
@@ -627,7 +627,7 @@ simplifyGuarded :: (LNAtom -> Maybe Bool)
                 -- ^ Simplified formula, provided some simplification was
                 -- performed.
 simplifyGuarded valuation fm0
-    | fm1 /= fm0 = trace (render ppMsg) (Just fm1)
+    | fm1 /= fm0 = trace (render $ getDoc ppMsg) (Just fm1)
     | otherwise  = Nothing
   where
     fm1 = simplifyGuardedOrReturn valuation fm0
