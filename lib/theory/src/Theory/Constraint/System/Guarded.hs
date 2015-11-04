@@ -83,7 +83,7 @@ module Theory.Constraint.System.Guarded (
 import           Control.Applicative
 import           Control.Arrow
 import           Control.DeepSeq
-import           Control.Monad.Error
+import           Control.Monad.Except
 import           Control.Monad.Fresh              (MonadFresh, scopeFreshness)
 import qualified Control.Monad.Trans.PreciseFresh as Precise (Fresh, evalFresh, evalFreshT)
 
@@ -431,11 +431,6 @@ gall ss atos gf               = GGuarded All ss atos gf
 -- | Local newtype to avoid orphan instance.
 newtype ErrorDoc d = ErrorDoc { unErrorDoc :: d }
     deriving( Monoid, NFData, Document, HighlightDocument )
-
-instance Document d => Error (ErrorDoc d) where
-    noMsg  = emptyDoc
-    strMsg = text
-
 
 -- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
 -- equivalent to @fm@ under the assumption that this is possible.
