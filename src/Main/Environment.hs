@@ -81,8 +81,9 @@ testProcess
   -> FilePath       -- ^ Process to start
   -> [String]       -- ^ Arguments
   -> String         -- ^ Stdin
+  -> Bool           -- ^ Whether Maude is being tested - hard fail for exceptions on Maude.
   -> IO Bool        -- ^ True, if test was successful
-testProcess check defaultMsg testName prog args inp = do
+testProcess check defaultMsg testName prog args inp maudeTest = do
     putStr testName
     hFlush stdout
     handle handler $ do
@@ -109,14 +110,16 @@ testProcess check defaultMsg testName prog args inp = do
     handler _ = do putStrLn "caught exception while executing:"
                    putStrLn $ commandLine prog args
                    putStrLn $ "with input: " ++ inp
-                   error "Some of the required software is not installed. Ensure both GraphViz and Maude are available and in the path on your system."
+                   if maudeTest then
+                     error "Maude is not installed. Ensure Maude is available and on the path."
+                     else putStrLn ""
                    return False
 
 -- | Ensure a suitable version of the Graphviz dot tool is installed.
 ensureGraphVizDot :: Arguments -> IO Bool
 ensureGraphVizDot as = do
     putStrLn $ "GraphViz tool: '" ++ dot ++ "'"
-    testProcess check errMsg " checking version: " dot ["-V"] ""
+    testProcess check errMsg " checking version: " dot ["-V"] "" False
   where
     dot = dotPath as
     check _ err
@@ -135,8 +138,8 @@ ensureGraphVizDot as = do
 ensureMaude :: Arguments -> IO Bool
 ensureMaude as = do
     putStrLn $ "maude tool: '" ++ maude ++ "'"
-    t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] ""
-    t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n"
+    t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" True
+    t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" True
     return (t1 && t2)
   where
     maude = maudePath as
