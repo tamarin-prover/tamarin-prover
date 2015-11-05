@@ -109,6 +109,7 @@ testProcess check defaultMsg testName prog args inp = do
     handler _ = do putStrLn "caught exception while executing:"
                    putStrLn $ commandLine prog args
                    putStrLn $ "with input: " ++ inp
+                   error "Some of the required software is not installed. Ensure both GraphViz and Maude are available and in the path on your system."
                    return False
 
 -- | Ensure a suitable version of the Graphviz dot tool is installed.
