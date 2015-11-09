@@ -559,6 +559,8 @@ sapicRanking ctxt sys =
           isChainGoal . fst
         , isDisjGoalButNotProgress . fst
         , isFirstProtoFact . fst
+        , isMID_Receiver . fst
+        , isMID_Sender . fst
         , isStateFact . fst
         , isUnlockAction . fst
         , isKnowsFirstNameGoal . fst
@@ -589,6 +591,12 @@ sapicRanking ctxt sys =
 
     isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _) = True
     isAuthOutFact  _                                 = False
+
+    isMID_Receiver (PremiseG _ (Fact (ProtoFact _ "MID_Receiver" _) _)) = True
+    isMID_Receiver  _                                 = False
+
+    isMID_Sender (PremiseG _ (Fact (ProtoFact _ "MID_Sender" _) _)) = True
+    isMID_Sender  _                                 = False
 
     isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _)) = isPrefixOf "State_" n
     isStateFact  _                                 = False
