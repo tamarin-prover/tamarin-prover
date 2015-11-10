@@ -45,7 +45,7 @@ import           Data.Version          (showVersion)
 -- import           System.Locale
 -- #endif
 -- For GHC 7.10 comment line below
-import           System.Locale
+-- import           System.Locale
 
 import           Paths_tamarin_prover  (version)
 

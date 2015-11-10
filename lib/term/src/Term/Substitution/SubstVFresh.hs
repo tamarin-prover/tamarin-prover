@@ -53,7 +53,7 @@ module Term.Substitution.SubstVFresh (
 import           Term.LTerm
 import           Text.PrettyPrint.Highlight
 
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.Monad.Fresh
 import           Control.DeepSeq
 
@@ -65,9 +65,9 @@ import           Data.Map ( Map )
 import qualified Data.Map as M
 import qualified Data.Set as S
 import           Data.List
-import           Data.Traversable hiding ( mapM )
+-- import           Data.Traversable hiding ( mapM )
 import           Data.Binary
-import           Data.Monoid ( mempty )
+-- import           Data.Monoid ( mempty )
 
 ----------------------------------------------------------------------
 -- Substitutions

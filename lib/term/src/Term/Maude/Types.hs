@@ -30,9 +30,9 @@ import           Utils.Misc
 
 import           Control.Monad.Fresh
 import           Control.Monad.Bind
-import           Control.Applicative
+-- import           Control.Applicative
 
-import           Data.Traversable hiding (mapM)
+-- import           Data.Traversable hiding (mapM)
 import           Data.Maybe
 import qualified Data.Map as M
 import           Data.Map (Map)

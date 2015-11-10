@@ -39,16 +39,16 @@ module Term.Term.Raw (
     ) where
 
 import           Data.List
-import           Data.Monoid
-import           Data.Foldable (Foldable, foldMap)
-import           Data.Traversable
+-- import           Data.Monoid
+-- import           Data.Foldable (Foldable, foldMap)
+-- import           Data.Traversable
 import           Data.Typeable
 import           Data.Generics
 import           Data.DeriveTH
 import           Data.Binary
 
 import           Control.DeepSeq
-import           Control.Basics
+-- import           Control.Basics
 
 import qualified Data.ByteString.Char8 as BC
 import           Extension.Data.ByteString ()

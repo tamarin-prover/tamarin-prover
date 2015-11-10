@@ -40,7 +40,7 @@ module Theory.Model.Signature (
 import           Data.Binary
 import qualified Data.Label           as L
 
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.DeepSeq
 
 import           System.IO.Unsafe     (unsafePerformIO)

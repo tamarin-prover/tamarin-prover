@@ -57,10 +57,10 @@ import           Control.Concurrent           (threadDelay)
 import           System.Directory
 import           System.FilePath
 -- #if MIN_VERSION_time(1,5,0)
----import           Data.Time.Format             (defaultTimeLocale)
+import           Data.Time.Format             (defaultTimeLocale)
 -- #else
 -- For GHC 7.10 comment line below and uncoment line 2 above
-import           System.Locale                (defaultTimeLocale)
+-- import           System.Locale                (defaultTimeLocale)
 -- #endif
 
 import           Extension.Data.Label
@@ -868,7 +868,7 @@ htmlThyPath renderUrl info path =
     tidx = tiIndex  info
 
     -- Rendering a HtmlDoc to Html
-    pp :: HtmlDoc Doc -> Html
+    pp :: HtmlDoc MyDoc -> Html
     pp d = case renderHtmlDoc d of
       [] -> toHtml "Trying to render document yielded empty string. This is a bug."
       cs -> preEscapedToMarkup cs
@@ -981,7 +981,7 @@ htmlDiffThyPath renderUrl info path =
     tidx = dtiIndex  info
 
     -- Rendering a HtmlDoc to Html
-    pp :: HtmlDoc Doc -> Html
+    pp :: HtmlDoc MyDoc -> Html
     pp d = case renderHtmlDoc d of
       [] -> toHtml "Trying to render document yielded empty string. This is a bug."
       cs -> preEscapedToMarkup cs

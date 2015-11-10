@@ -30,7 +30,7 @@ import           Main.Environment
 import           Main.TheoryLoader
 import           Main.Utils
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 -- | Batch processing mode.
 batchMode :: TamarinMode
@@ -111,7 +111,7 @@ run thisMode as
     -- theory processing functions
     ------------------------------
 
-    processThy :: FilePath -> IO (Pretty.Doc)
+    processThy :: FilePath -> IO (Pretty.MyDoc)
     processThy inFile
       -- | argExists "html" as =
       --     generateHtml inFile =<< loadClosedThy as inFile
@@ -145,7 +145,7 @@ run thisMode as
                           , "         The analysis results might be wrong!" ]
             Pretty.$--$ prettyClosedDiffSummary thy
 
-        out :: (a -> Pretty.Doc) -> (a -> Pretty.Doc) -> IO a -> IO Pretty.Doc
+        out :: (a -> Pretty.MyDoc) -> (a -> Pretty.MyDoc) -> IO a -> IO Pretty.MyDoc
         out summaryDoc fullDoc load
           | dryRun    = do
               thy <- load

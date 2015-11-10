@@ -106,7 +106,7 @@ module Term.LTerm (
 
 import           Text.PrettyPrint.Class
 
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.DeepSeq
 import           Control.Monad.Bind
 import           Control.Monad.Identity
@@ -120,7 +120,7 @@ import           Data.Generics                    hiding (GT)
 import qualified Data.Map                         as M
 import           Data.Monoid
 import qualified Data.Set                         as S
-import           Data.Traversable
+-- import           Data.Traversable
 import qualified Data.ByteString.Char8            as BC
 
 import           Safe                             (fromJustNote)

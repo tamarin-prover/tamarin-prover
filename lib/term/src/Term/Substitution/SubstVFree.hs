@@ -68,9 +68,9 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import           Data.List
 import           Data.Binary
-import           Data.Monoid (mempty)
+-- import           Data.Monoid (mempty)
 
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.DeepSeq
 
 ----------------------------------------------------------------------

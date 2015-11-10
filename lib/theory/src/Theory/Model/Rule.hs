@@ -120,7 +120,7 @@ import           Prelude              hiding (id, (.))
 import           Data.Binary
 import qualified Data.ByteString.Char8 as BC
 import           Data.DeriveTH
-import           Data.Foldable        (foldMap)
+-- import           Data.Foldable        (foldMap)
 import           Data.Generics
 import           Data.List
 import qualified Data.Set              as S
@@ -129,7 +129,7 @@ import           Data.Monoid
 import           Data.Maybe            (fromMaybe)
 import           Safe
 
-import           Control.Basics
+-- import           Control.Basics
 import           Control.Category
 import           Control.DeepSeq
 import           Control.Monad.Bind
@@ -821,7 +821,7 @@ prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
 showRuleCaseName =
-    render . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
+    render . getDoc . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
 prettyIntrRuleACInfo :: Document d => IntrRuleACInfo -> d
 prettyIntrRuleACInfo rn = text $ case rn of

@@ -38,7 +38,7 @@ module Control.Monad.Trans.FastFresh (
 import Control.Basics
 import Control.Monad.Identity
 import Control.Monad.State.Strict
-import Control.Monad.Error
+import Control.Monad.Except
 import Control.Monad.Reader
 
 ------------------------------------------------------------------------------

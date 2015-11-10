@@ -42,7 +42,7 @@ import qualified Data.Label                                as L
 import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf)
 import qualified Data.Map                                  as M
 import           Data.Maybe                                (catMaybes)
-import           Data.Monoid
+-- import           Data.Monoid
 import           Data.Ord                                  (comparing)
 import qualified Data.Set                                  as S
 import           Extension.Prelude                         (sortOn)
@@ -499,7 +499,7 @@ oracleRanking ctxt _sys ags0
     unsafePerformIO $ do
       let ags = goalNrRanking ags0
       let inp = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ getDoc $ pgoal ag))
                        (zip [(0::Int)..] ags))
       outp <- readProcess "./oracle" [ L.get pcLemmaName ctxt ] inp
       let indices = catMaybes . map readMay . lines $ outp

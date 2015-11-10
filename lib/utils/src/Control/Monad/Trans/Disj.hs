@@ -18,7 +18,7 @@ module Control.Monad.Trans.Disj (
   , runDisjT
   ) where
 
-import Control.Applicative
+-- import Control.Applicative
 import Control.Monad.List
 import Control.Monad.Reader
 import Control.Monad.Disj.Class

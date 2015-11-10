@@ -22,11 +22,11 @@ module Term.Rewriting.Definitions (
     ) where
 
 import Control.Arrow        ( (***) )
-import Control.Applicative
+-- import Control.Applicative
 
 import Extension.Data.Monoid
-import Data.Foldable
-import Data.Traversable
+-- import Data.Foldable
+-- import Data.Traversable
 
 ----------------------------------------------------------------------
 -- Equalities, matching problems, and rewriting rules

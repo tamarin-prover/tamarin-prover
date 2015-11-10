@@ -29,7 +29,7 @@ import Data.Label.Monadic ( (=:) )
 import qualified Data.Label.Monadic as LM
 
 import Control.Arrow (first, second)
-import Control.Applicative (Applicative, (<$>), (<*>), pure)
+-- import Control.Applicative (Applicative, (<$>), (<*>), pure)
 import Control.Monad.State (MonadState)
 import Control.Monad.Reader (MonadReader)
 

@@ -50,10 +50,10 @@ import           Prelude                          hiding (negate)
 
 import           Data.Binary
 import           Data.DeriveTH
-import           Data.Foldable                    (Foldable, foldMap)
+-- import           Data.Foldable                    (Foldable, foldMap)
 import           Data.Generics
 import           Data.Monoid                      hiding (All)
-import           Data.Traversable
+-- import           Data.Traversable
 
 import           Control.Basics
 import           Control.DeepSeq

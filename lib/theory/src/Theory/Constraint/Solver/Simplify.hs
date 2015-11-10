@@ -30,7 +30,7 @@ import qualified Data.DAG.Simple                    as D
 import qualified Data.Foldable                      as F
 import           Data.List
 import qualified Data.Map                           as M
-import           Data.Monoid                        (Monoid(..))
+-- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
 
 import           Control.Basics
@@ -103,7 +103,7 @@ simplifySystem = do
                     ]
                   traceIfLooping
                     | n <= 10   = id
-                    | otherwise = trace $ render $ vsep
+                    | otherwise = trace $ render $ getDoc $ vsep
                         [ text "Simplifier iteration" <-> int n <> colon
                         , fsep $ text "The reduction-rules for" :
                                 (punctuate comma $ map (text . fst) changes) ++
@@ -133,7 +133,7 @@ simplifySystem = do
                     ]
                   traceIfLooping
                     | n <= 10   = id
-                    | otherwise = trace $ render $ vsep
+                    | otherwise = trace $ render $ getDoc $ vsep
                         [ text "Simplifier iteration" <-> int n <> colon
                         , fsep $ text "The reduction-rules for" :
                                 (punctuate comma $ map (text . fst) changes) ++

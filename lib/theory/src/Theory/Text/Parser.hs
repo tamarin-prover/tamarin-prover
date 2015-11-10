@@ -24,7 +24,7 @@ import           Data.Char                  (isUpper, toUpper)
 import           Data.Foldable              (asum)
 import           Data.Label
 import qualified Data.Map                   as M
-import           Data.Monoid                hiding (Last)
+-- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
@@ -34,7 +34,7 @@ import           Control.Category
 import           Control.Monad
 
 import           Text.Parsec                hiding ((<|>))
-import           Text.PrettyPrint.Class     (render)
+import           Text.PrettyPrint.Class     (render, getDoc)
 
 -- import qualified Extension.Data.Label       as L
 
@@ -468,7 +468,7 @@ guardedFormula :: Parser LNGuarded
 guardedFormula = try $ do
     res <- formulaToGuarded <$> standardFormula
     case res of
-        Left d   -> fail $ render d
+        Left d   -> fail $ render $ getDoc d
         Right gf -> return gf
 
 
@@ -761,7 +761,7 @@ theory flags0 = do
 
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
+        Nothing   -> fail $ "duplicate rule: " ++ render (getDoc $ prettyRuleName ru)
 
     liftedAddLemma thy lem = case addLemma lem thy of
         Just thy' -> return thy'
@@ -831,11 +831,11 @@ diffTheory flags0 = do
 
     liftedAddProtoRule thy ru = case addProtoDiffRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
+        Nothing   -> fail $ "duplicate rule: " ++ render (getDoc $ prettyRuleName ru)
 
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (prettyDiffLemmaName ru)
+        Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (getDoc $ prettyDiffLemmaName ru)
         
     liftedAddLemma thy lem = if isLeftLemma lem
                                 then case addLemmaDiff LHS lem thy of

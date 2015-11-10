@@ -18,7 +18,7 @@ module Theory.Tools.InjectiveFactInstances (
 
 import           Extension.Prelude   (sortednub)
 
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.Monad.Fresh
 import           Data.Label
 import qualified Data.Set            as S

@@ -19,7 +19,6 @@ described in:
 
 
 builtins: symmetric-encryption
-functions: h/1
 
 rule Setup_Shared_Key:
   [ Fr(~k1), Fr(~k2) ]
@@ -35,8 +34,8 @@ rule Reader_Start:
 
 // 3
 rule Reader_Finish:
-  let r_in = senc(<h(~nr), hnt> , ~k) 
-      r_out = senc(<hnt, h(~nr)>, ~k)
+  let r_in = senc(<~nr, hnt> , ~k) 
+      r_out = senc(<hnt, ~nr>, ~k)
   in
   [ Reader_Sent(~nr), !Reader(diff(<~k, ~k2>, <~k2,~k>)), In(r_in) ]
 --[ IN_R_1(hnt, r_in) ]->
@@ -44,17 +43,17 @@ rule Reader_Finish:
 
 // 2
 rule Tag_Start:
-  let t_msg = senc(<h(~nr),h(~nt)>, diff(~k1,~k2))
+  let t_msg = senc(<~nr,~nt>, diff(~k1,~k2))
   in
   [ !Tag(<~k1,~k2>) 
   , In(~nr) // we assume by typing we can see if the nr is actually a nonce type!
   , Fr(~nt) ] 
---[ OUT_T_1(h(~nt), t_msg) , InEq(~k1,~k2) ]->
+--[ OUT_T_1(~nt, t_msg) , InEq(~k1,~k2) ]->
   [ Trun(diff(~k1, ~k2), ~nr, ~nt), Out(t_msg) ]
 
 // 4
 rule Tag_Finish:
-  [ Trun(~k, ~nr, ~nt), In(senc(<h(~nt),h(~nr)>, ~k)) ]
+  [ Trun(~k, ~nr, ~nt), In(senc(<~nt,~nr>, ~k)) ]
 --[ Secret(~nt, ~k) ]->
   [ Tdone(~k, ~nr, ~nt) ]
 
