@@ -166,38 +166,46 @@ substCreatesNonNormalTerms hnd sys fsubst =
 --
 --   i < j < k
 --
--- and let there be an edge from (i,u) to (k,w) for some indices u and v
+-- and let there be a chain of edges connecting from (i,u) to (k,w) that
+-- each require a fact 'f(t,...)'
 --
--- Then, we have a contradiction if both the premise (k,w) that requires a
--- fact 'f(t,...)' and there is a premise (j,v) requiring a fact 'f(t,...)'.
---
--- These two premises would have to be merged, but cannot due to the ordering
--- constraint 'j < k'.
+-- Then, we have a contradiction if there is a premise (j,v) requiring a
+-- fact 'f(t,...)' between i and k, as all possible instances are used
 nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId, NodeId)]
 nonInjectiveFactInstances ctxt se = do
-    Edge c@(i, _) (k, _) <- S.toList $ L.get sEdges se
-    let kFaPrem            = nodeConcFact c se
-        kTag               = factTag kFaPrem
-        kTerm              = firstTerm kFaPrem
-        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
+    injectiveFact <- S.toList $ L.get pcInjectiveFactInsts ctxt
+    let faGraph                 = filter (\c -> factTag (nodeConcFact (eSrc c) se) == injectiveFact) (S.toList $ L.get sEdges se)
+        edgesByTerms [] edge                                    = [(firstTerm $ nodeConcFact (eSrc edge) se,
+                                                                        [startEdge (src edge, tgt edge)])]
+        edgesByTerms (x:xs) edge
+            | fst x == firstTerm (nodeConcFact (eSrc edge) se)  = (fst x, extendEdges (snd x) (startEdge (src edge, tgt edge))):xs
+            | otherwise                                         = x:(edgesByTerms xs edge)
+        extendEdges [] nodeEdge     = [nodeEdge]
+        extendEdges ((xi,xk,v):xs) nodeEdge
+            | xi == (kOf nodeEdge)  = extendEdges xs (iOf nodeEdge, xk, S.union (vOf nodeEdge) v)
+            | xk == (iOf nodeEdge)  = extendEdges xs (xi, kOf nodeEdge, S.union (vOf nodeEdge) v)
+            | otherwise             = (xi,xk,v):(extendEdges xs nodeEdge)
 
-    guard (kTag `S.member` L.get pcInjectiveFactInsts ctxt)
-    j <- S.toList $ D.reachableSet [i] less
+    (fTerm, fEdgeandVertices) <- foldl edgesByTerms [] faGraph
+    (i, k, fVertices) <- fEdgeandVertices
 
-    let isCounterExample = (j /= i) && (j /= k) &&
-                           maybe False checkRule (M.lookup j $ L.get sNodes se)
+    j <- S.toList $ S.difference (D.reachableSet [i] less) fVertices
 
-        -- FIXME: There should be a weaker version of the rule that just
-        -- introduces the constraint 'k < j || k == j' here.
-        checkRule jRu    = any conflictingFact (L.get rPrems jRu) &&
-                           (k `S.member` D.reachableSet [j] less
-                             || isLast se k)
-
+    let isCounterExample    = (j /= i) && (j /= k) &&  maybe False checkRule (M.lookup j $ L.get sNodes se)
+        checkRule jRu       = any conflictingFact (L.get rPrems jRu) && (k `S.member` D.reachableSet [j] less)
+        conflictingFact fa  = factTag fa == injectiveFact && firstTerm fa == fTerm
     guard isCounterExample
-    return (i, j, k) -- counter-example to unique fact instances
-  where
-    less      = rawLessRel se
-    firstTerm = headMay . factTerms
+    return (i, j, k)
+ where
+    less            = rawLessRel se
+    firstTerm       = headMay . factTerms
+    src             = fst . eSrc
+    tgt             = fst . eTgt
+    iOf (i,_,_)     = i
+    kOf (_,k,_)     = k
+    vOf (_,_,v)     = v
+    startEdge e     = (fst e, snd e, S.fromList [(fst e), (snd e)])
+
 
 -- | The node-ids that must be instantiated to the trace, but are temporally
 -- after the last node.
