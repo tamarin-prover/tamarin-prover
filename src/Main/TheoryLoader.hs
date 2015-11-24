@@ -305,6 +305,7 @@ constructAutoProver as =
     ranking 'P' = SapicPKCS11Ranking
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
+    ranking 'i' = InjRanking
     ranking r   = error $ render $ getDoc $ fsep $ map text $ words $
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
@@ -312,6 +313,7 @@ constructAutoProver as =
       \ 'o' for oracle ranking,\
       \ 'p' for the smart ranking optimized for translations coming from SAPIC (http://sapic.gforge.inria.fr),\
       \ 'P' for the smart ranking optimized for a specific model of PKCS11, translated using SAPIC (http://sapic.gforge.inria.fr),\
+      \ 'i' for the smart ranking modified for the proof of injective detection protocols,\
       \ 'c' for the creation order and useful goals first,\
       \ and 'C' for the creation order."
 
