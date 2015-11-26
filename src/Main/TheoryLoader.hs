@@ -306,7 +306,7 @@ constructAutoProver as =
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
     ranking 'i' = InjRanking
-    ranking r   = error $ render $ getDoc $ fsep $ map text $ words $
+    ranking r   = error $ render $ fsep $ map text $ words $
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\
@@ -346,7 +346,7 @@ constructAutoDiffProver as =
     ranking 'S' = SmartRanking True
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
-    ranking r   = error $ render $ getDoc $ fsep $ map text $ words $
+    ranking r   = error $ render $ fsep $ map text $ words $
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\

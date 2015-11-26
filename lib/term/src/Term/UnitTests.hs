@@ -111,7 +111,7 @@ testsSubst = TestLabel "Tests for Substitution" $
                       (extendWithRenaming [lx1] (substFromListVFresh [(lx2, x1)]))
       -- trivial, increase coverage
       , testTrue "i" ((>0) . length $ show s1b)
-      , testTrue "j" ((>0) . length $ (render $ getDoc $ prettyLSubstVFresh s1b))
+      , testTrue "j" ((>0) . length $ (render $ prettyLSubstVFresh s1b))
       , testTrue "k" (not . null $ domVFresh s1b)
       , testTrue "l" (not . null $ varsRangeVFresh s1b)
       , testTrue "m" ((>0) . length $ show $ substToListOn [lx1] s4f)
@@ -162,10 +162,10 @@ testsSubs mhnd = TestLabel "Tests for Subsumption" $ TestList
          testEqual ("termCompareSubs "++ppLTerm e1++" "++ppLTerm e2) res (compareTermSubs e1 e2 `runReader` mhnd)
 
 ppLTerm :: LNTerm -> String
-ppLTerm = render . getDoc . prettyNTerm
+ppLTerm = render . prettyNTerm
 
 ppLSubst :: LNSubst -> String
-ppLSubst = render . getDoc . prettyLNSubst
+ppLSubst = render . prettyLNSubst
 
 -- *****************************************************************************
 -- Tests for Norm

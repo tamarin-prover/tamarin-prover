@@ -531,8 +531,8 @@ getTheorySourceR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
-    prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory    
+    prettyRender = render . prettyClosedTheory . tiTheory
+    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory    
 
 -- | Show source (pretty-printed open diff theory).
 getTheorySourceDiffR :: TheoryIdx -> Handler RepPlain
@@ -540,40 +540,40 @@ getTheorySourceDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
-    prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory    
+    prettyRender = render . prettyClosedTheory . tiTheory
+    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory    
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryVariantsR :: TheoryIdx -> Handler RepPlain
 getTheoryVariantsR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 -- | Show variants (pretty-printed closed diff theory).
 getTheoryVariantsDiffR :: TheoryIdx -> Handler RepPlain
 getTheoryVariantsDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionR :: TheoryIdx -> Handler RepPlain
 getTheoryMessageDeductionR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionDiffR :: TheoryIdx -> Handler RepPlain
 getTheoryMessageDeductionDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 
 -- | Show a given path within a theory (main view).
@@ -1102,8 +1102,8 @@ getSaveTheoryR idx = withEitherTheory idx $ \eti -> do
               -- Return message
               jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
   where
-    prettyRender ti  = render $ getDoc $ prettyOpenTheory $ openTheory $ tiTheory ti 
-    prettyRenderD ti = render $ getDoc $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti 
+    prettyRender ti  = render $ prettyOpenTheory $ openTheory $ tiTheory ti 
+    prettyRenderD ti = render $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti 
     same origin (Trace ti) = tiPrimary ti  && (tiOrigin ti  == origin)
     same origin (Diff ti)    = dtiPrimary ti && (dtiOrigin ti == origin)
     setPrimary :: Bool -> EitherTheoryInfo -> EitherTheoryInfo 

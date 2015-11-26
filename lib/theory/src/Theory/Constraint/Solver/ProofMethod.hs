@@ -502,7 +502,7 @@ oracleRanking ctxt _sys ags0
     unsafePerformIO $ do
       let ags = goalNrRanking ags0
       let inp = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ getDoc $ pgoal ag))
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
       outp <- readProcess "./oracle" [ L.get pcLemmaName ctxt ] inp
       let indices = catMaybes . map readMay . lines $ outp
@@ -857,8 +857,8 @@ injRanking ctxt sys =
 
     smallSplitGoalSize = 3
 
-    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) = True
-    isNonLoopBreakerProtoFactGoal _                            = False
+    isNonLoopBreakerProtoFactGoal (PremiseG _ _, (_, Useful)) = True
+    isNonLoopBreakerProtoFactGoal _                           = False
 
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing

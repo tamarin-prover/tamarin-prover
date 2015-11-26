@@ -8,12 +8,11 @@
 -- 'Document' class allowing to have different interpretations of the
 -- HughesPJ pretty-printing combinators.
 module Text.PrettyPrint.Class (
-        MyDoc
-     ,  getDoc
+        Doc
      ,  Document(..)
-     ,  P.isEmpty
-     ,  P.render
-     ,  P.renderStyle
+     ,  isEmpty
+     ,  render
+     ,  renderStyle
      ,  defaultStyle
      ,  P.Style(..)
      ,  P.Mode(..)
@@ -71,10 +70,16 @@ import qualified Text.PrettyPrint.HughesPJ as P
 infixr 6 <->
 infixl 5 $$, $-$, $--$
 
-newtype MyDoc = MyDoc P.Doc
+newtype Doc = Doc { getPrettyLibraryDoc :: P.Doc }
 
-getDoc :: MyDoc -> P.Doc
-getDoc (MyDoc d) = d
+isEmpty :: Doc -> Bool
+isEmpty (Doc d) = P.isEmpty d
+
+render :: Doc -> String
+render (Doc d) = P.render d
+
+renderStyle :: P.Style -> Doc -> String
+renderStyle s (Doc d) = P.renderStyle s d
 
 -- emptyDoc = P.empty
 -- (<>)  = (P.<>)
@@ -162,29 +167,29 @@ punctuate p (d:ds) = go d ds
 ------------------------------------------------------------------------------
 
 -- Must be removed for GHC 7.10, needed before
-instance NFData MyDoc where
-  rnf = rnf . P.render . getDoc
+instance NFData Doc where
+  rnf = rnf . P.render . getPrettyLibraryDoc
 
-instance Document MyDoc where
-  char = MyDoc . P.char
-  text = MyDoc . P.text
-  zeroWidthText = MyDoc . P.zeroWidthText
-  (<->) (MyDoc d1) (MyDoc d2) = MyDoc $ (P.<+>) d1 d2
-  hcat  = MyDoc . P.hcat . map getDoc 
-  hsep  = MyDoc . P.hsep . map getDoc 
-  ($$) (MyDoc d1) (MyDoc d2) = MyDoc $ (P.$$) d1 d2
-  ($-$) (MyDoc d1) (MyDoc d2) = MyDoc $ (P.$+$) d1 d2
-  vcat  = MyDoc . P.vcat . map getDoc
-  sep   = MyDoc . P.sep . map getDoc
-  cat   = MyDoc . P.cat . map getDoc
-  fsep  = MyDoc . P.fsep . map getDoc
-  fcat  = MyDoc . P.fcat . map getDoc
-  nest i (MyDoc d) = MyDoc $ P.nest i d
-  caseEmptyDoc yes no (MyDoc d) = if P.isEmpty d then yes else no
+instance Document Doc where
+  char = Doc . P.char
+  text = Doc . P.text
+  zeroWidthText = Doc . P.zeroWidthText
+  (<->) (Doc d1) (Doc d2) = Doc $ (P.<+>) d1 d2
+  hcat  = Doc . P.hcat . map getPrettyLibraryDoc 
+  hsep  = Doc . P.hsep . map getPrettyLibraryDoc 
+  ($$) (Doc d1) (Doc d2) = Doc $ (P.$$) d1 d2
+  ($-$) (Doc d1) (Doc d2) = Doc $ (P.$+$) d1 d2
+  vcat  = Doc . P.vcat . map getPrettyLibraryDoc
+  sep   = Doc . P.sep . map getPrettyLibraryDoc
+  cat   = Doc . P.cat . map getPrettyLibraryDoc
+  fsep  = Doc . P.fsep . map getPrettyLibraryDoc
+  fcat  = Doc . P.fcat . map getPrettyLibraryDoc
+  nest i (Doc d) = Doc $ P.nest i d
+  caseEmptyDoc yes no (Doc d) = if P.isEmpty d then yes else no
 
-instance Monoid MyDoc where
-    mempty = MyDoc $ P.empty
-    mappend (MyDoc d1) (MyDoc d2) = MyDoc $ (P.<>) d1 d2
+instance Monoid Doc where
+    mempty = Doc $ P.empty
+    mappend (Doc d1) (Doc d2) = Doc $ (P.<>) d1 d2
   
 ------------------------------------------------------------------------------
 -- Additional combinators

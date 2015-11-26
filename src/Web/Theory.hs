@@ -868,7 +868,7 @@ htmlThyPath renderUrl info path =
     tidx = tiIndex  info
 
     -- Rendering a HtmlDoc to Html
-    pp :: HtmlDoc MyDoc -> Html
+    pp :: HtmlDoc Doc -> Html
     pp d = case renderHtmlDoc d of
       [] -> toHtml "Trying to render document yielded empty string. This is a bug."
       cs -> preEscapedToMarkup cs
@@ -981,7 +981,7 @@ htmlDiffThyPath renderUrl info path =
     tidx = dtiIndex  info
 
     -- Rendering a HtmlDoc to Html
-    pp :: HtmlDoc MyDoc -> Html
+    pp :: HtmlDoc Doc -> Html
     pp d = case renderHtmlDoc d of
       [] -> toHtml "Trying to render document yielded empty string. This is a bug."
       cs -> preEscapedToMarkup cs

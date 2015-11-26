@@ -38,27 +38,27 @@ rule Init_1:
   , Out( <$I, $R, 'g' ^ ~ekI, sign{'1', $I, $R,'g' ^ ~ekI }ltkI> ) ]
 
 rule Init_2:
-    let Y = 'g' ^ z // think of this as a group element check
-    in
+//    let Y = 'g' ^ z // think of this as a group element check
+//    in
     [ Init_1( $I, $R, ~ekI )
     , !Pk($R, pk(ltkR))
     , In( <$R, $I, Y, sign{'2', $R, $I, Y }ltkR> ) 
     ]
   --[ SessionKey($I,$R, Y ^ ~ekI)
-    , ExpR(z) 
+    , ExpR(Y) 
     ]->
     [ InitiatorKey($I,$R, Y ^ ~ekI) ]
 
 rule Resp:
-    let X = 'g' ^ z // think of this as a group element check
-    in
+//    let X = 'g' ^ z // think of this as a group element check
+//    in
     [ !Pk($I, pk(ltkI))
     , !Ltk($R, ltkR)
     , Fr(~ekR)
     , In( <$I, $R, X, sign{'1', $I, $R, X }ltkI> ) 
     ]
   --[ SessionKey($I,$R, X ^ ~ekR)
-    , ExpR(z) ]->
+    , ExpR(X) ]->
     [
       ResponderKey($I,$R, X ^ ~ekR)
     , Out( <$R, $I, 'g' ^ ~ekR, sign{'2', $R, $I, 'g' ^ ~ekR }ltkR> ) 
@@ -67,18 +67,22 @@ rule Resp:
 
 rule ChallengeInitiator:
     [ InitiatorKey(I,R, k) , Fr(~z)]
-  --[ Challenge(I,R) ]->
+  --[ Challenge(I,R), Key(k) ]->
     [ Out(diff(k,'g'^~z)) ]
 //    [ Out(diff(k,~z)) ]
 // the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
 
 rule ChallengeResponder:
     [ ResponderKey(I,R, k) , Fr(~z)]
-  --[ Challenge(I,R) ]->
+  --[ Challenge(I,R), Key(k) ]->
     [ Out(diff(k,'g'^~z)) ]
 //    [ Out(diff(k,~z)) ]
 // the other output must be a 'g'^~z or even 'g'^~z^~f (for another fresh ~f)
 
+
+lemma Remove_chains[use_induction,reuse,typing]:
+  all-traces
+  "All #i z. ((Key( z ) @ i) ==> ((Ex x. z = 'g' ^ x) | (Ex #j x y. (z = x ^ y & K( x ) @ j & j < i)) ))"
 
 /*
 // do not represent any element as "inv(x)", rather use the y=inv(x)

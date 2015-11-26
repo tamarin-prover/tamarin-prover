@@ -495,7 +495,7 @@ nodeRule v se =
   where
     errMsg = error $
         "nodeRule: node '" ++ show v ++ "' does not exist in sequent\n" ++
-        render (getDoc (nest 2 $ prettySystem se))
+        render (nest 2 $ prettySystem se)
 
 -- | @nodeRuleSafe v@ accesses the rule label of node @v@.
 nodeRuleSafe :: NodeId -> System -> Maybe RuleACInst

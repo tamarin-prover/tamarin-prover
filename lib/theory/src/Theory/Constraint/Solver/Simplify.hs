@@ -103,7 +103,7 @@ simplifySystem = do
                     ]
                   traceIfLooping
                     | n <= 10   = id
-                    | otherwise = trace $ render $ getDoc $ vsep
+                    | otherwise = trace $ render $ vsep
                         [ text "Simplifier iteration" <-> int n <> colon
                         , fsep $ text "The reduction-rules for" :
                                 (punctuate comma $ map (text . fst) changes) ++
@@ -133,7 +133,7 @@ simplifySystem = do
                     ]
                   traceIfLooping
                     | n <= 10   = id
-                    | otherwise = trace $ render $ getDoc $ vsep
+                    | otherwise = trace $ render $ vsep
                         [ text "Simplifier iteration" <-> int n <> colon
                         , fsep $ text "The reduction-rules for" :
                                 (punctuate comma $ map (text . fst) changes) ++

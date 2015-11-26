@@ -581,7 +581,7 @@ prettyEqStore eqs@(EqStore substFree (Conj disjs) _nextSplitId) = vcat $
 --------------------------------
 
 instance Show EqStore where
-    show = render . getDoc . prettyEqStore
+    show = render . prettyEqStore
 
 $( derive makeBinary ''EqStore)
 $( derive makeNFData ''EqStore)

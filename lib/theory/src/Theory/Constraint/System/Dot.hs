@@ -134,7 +134,7 @@ dotNode v = dotOnce dsNodes v $ do
               sequence_ [ dotIntraRuleEdge premId vId | premId <- premIds ]
               sequence_ [ dotIntraRuleEdge vId concId | concId <- concIds ]
   where
-    label ru = " : " ++ render (getDoc nameAndActs)
+    label ru = " : " ++ render nameAndActs
       where
         nameAndActs =
             ruleInfo (prettyProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru) <->
@@ -165,7 +165,7 @@ dotSingleEdge :: (NodeConc, NodePrem) -> SeDot D.NodeId
 dotSingleEdge edge@(_, to) = dotOnce dsSingles edge $ do
     se <- asks fst
     let fa    = nodePremFact to se
-        label = render $ getDoc $ prettyLNFact fa
+        label = render $ prettyLNFact fa
     liftDot $ D.node $ [("label", label),("shape", "hexagon")]
                        ++ factNodeStyle fa
 
@@ -186,7 +186,7 @@ dotPrem prem@(v, i) =
             (label, moreStyle) = fromMaybe (ppPrem, []) $ do
                 ru <- M.lookup v nodes
                 fa <- lookupPrem i ru
-                return ( render $ getDoc $ prettyLNFact fa
+                return ( render $ prettyLNFact fa
                        , factNodeStyle fa
                        )
         liftDot $ D.node $ [("label", label),("shape",shape)]
@@ -206,7 +206,7 @@ dotConc =
             let (label, moreStyle) = fromMaybe (show x, []) $ do
                     ru <- M.lookup (fst x) nodes
                     fa <- (`atMay` snd x) $ get ruleSel ru
-                    return ( render $ getDoc $ prettyLNFact fa
+                    return ( render $ prettyLNFact fa
                            , factNodeStyle fa
                            )
             liftDot $ D.node $ [("label", label),("shape",shape)]
@@ -319,7 +319,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
                         <-> opAction <-> text (show v)
                   attrs | any (isKUFact . snd) as = [("color","gray")]
                         | otherwise               = [("color","darkblue")]
-              in mkSimpleNode (render $ getDoc lbl) attrs
+              in mkSimpleNode (render lbl) attrs
       Just ru -> do
           let color     = M.lookup (get rInfo ru) colorMap
               nodeColor = maybe "white" (rgbToHex . lighter) color
@@ -368,14 +368,14 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
 
         renderBalanced :: Double           -- ^ Total available width
                        -> (Double -> Int)  -- ^ Convert available space to actual line-width.
-                       -> [MyDoc]          -- ^ Initial documents
+                       -> [Doc]            -- ^ Initial documents
                        -> [String]         -- ^ Rendered documents
         renderBalanced _          _    []   = []
         renderBalanced totalWidth conv docs =
             zipWith (\w d -> widthRender (conv (ratio * w)) d) usedWidths docs
           where
-            oneLineRender  = renderStyle (defaultStyle { mode = OneLineMode }) . getDoc
-            widthRender w  = scaleIndent . renderStyle (defaultStyle { lineLength = w }) . getDoc
+            oneLineRender  = renderStyle (defaultStyle { mode = OneLineMode })
+            widthRender w  = scaleIndent . renderStyle (defaultStyle { lineLength = w })
             usedWidths     = map (fromIntegral . length . oneLineRender) docs
             ratio          = totalWidth / sum usedWidths
             scaleIndent line = case span isSpace line of
@@ -399,7 +399,7 @@ dotSystemCompact boringStyle se =
         F.mapM_ dotChain                           $ unsolvedChains    se
         F.mapM_ dotLess                            $ get sLessAtoms    se
   where
-    missingNode shape label = liftDot $ D.node $ [("label", render (getDoc label)),("shape",shape)]
+    missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
     dotPremC prem = dotOnce dsPrems prem $ missingNode "invtrapezium" $ prettyNodePrem prem
     dotConcC conc = dotOnce dsConcs conc $ missingNode "trapezium" $ prettyNodeConc conc
     dotEdge (Edge src tgt)  = do

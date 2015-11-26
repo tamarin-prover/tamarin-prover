@@ -821,7 +821,7 @@ prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
 showRuleCaseName =
-    render . getDoc . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
+    render . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
 prettyIntrRuleACInfo :: Document d => IntrRuleACInfo -> d
 prettyIntrRuleACInfo rn = text $ case rn of

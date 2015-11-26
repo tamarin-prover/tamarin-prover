@@ -436,7 +436,7 @@ newtype ErrorDoc d = ErrorDoc { unErrorDoc :: d }
 -- equivalent to @fm@ under the assumption that this is possible.
 -- If not, then 'error' is called.
 formulaToGuarded_ :: LNFormula  -> LNGuarded
-formulaToGuarded_ = either (error . render . getDoc) id . formulaToGuarded
+formulaToGuarded_ = either (error . render) id . formulaToGuarded
 
 -- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
 -- equivalent to @fm@ if possible.
@@ -622,7 +622,7 @@ simplifyGuarded :: (LNAtom -> Maybe Bool)
                 -- ^ Simplified formula, provided some simplification was
                 -- performed.
 simplifyGuarded valuation fm0
-    | fm1 /= fm0 = trace (render $ getDoc ppMsg) (Just fm1)
+    | fm1 /= fm0 = trace (render $ ppMsg) (Just fm1)
     | otherwise  = Nothing
   where
     fm1 = simplifyGuardedOrReturn valuation fm0

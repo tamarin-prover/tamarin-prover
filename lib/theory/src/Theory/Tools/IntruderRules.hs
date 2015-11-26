@@ -43,7 +43,7 @@ import           Term.Subsumption
 
 import           Theory.Model
 
-
+import           Debug.Trace
 
 -- Variants of intruder deduction rules
 ----------------------------------------------------------------------
@@ -125,6 +125,7 @@ destructionRules (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)
 
 destructionRules _ = []
 
+-- FIXME (JD) : This minization is unsound with diff!
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
 minimizeIntruderRules :: [IntrRuleAC] -> [IntrRuleAC]
 minimizeIntruderRules rules =
@@ -143,7 +144,7 @@ minimizeIntruderRules rules =
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
 subtermIntruderRules :: MaudeSig -> [IntrRuleAC]
 subtermIntruderRules maudeSig =
-     minimizeIntruderRules $ concatMap destructionRules (S.toList $ stRules maudeSig)
+    minimizeIntruderRules $ concatMap destructionRules (trace (show $ S.toList $ stRules maudeSig) $ S.toList $ stRules maudeSig)
      ++ constructionRules (stFunSyms maudeSig)
 
 -- | @constructionRules fSig@ returns the construction rules for the given
