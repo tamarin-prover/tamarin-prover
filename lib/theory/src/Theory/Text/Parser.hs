@@ -807,7 +807,7 @@ diffTheory flags0 = do
            thy' <- liftedAddProtoRule thy ru
            addItems flags thy'
       , do r <- intrRule
-           addItems flags (addIntrRuleACsDiffBoth [r] thy)
+           addItems flags (addIntrRuleACsDiffAll [r] thy)
       , do c <- formalComment
            addItems flags (addFormalCommentDiff c thy)
       , do ifdef flags thy

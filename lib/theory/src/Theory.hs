@@ -105,8 +105,8 @@ module Theory (
   , applyPartialEvaluationDiff
   , addIntrRuleACs
   , addIntrRuleACsDiffBoth
-  , addIntrRuleACsDiffLeft
-  , addIntrRuleACsDiffRight
+  , addIntrRuleACsDiffBothDiff
+  , addIntrRuleACsDiffAll
   , normalizeTheory
 
   -- ** Closed theories
@@ -895,17 +895,33 @@ addProtoDiffRule ruE thy = do
 addIntrRuleACs :: [IntrRuleAC] -> OpenTheory -> OpenTheory
 addIntrRuleACs rs' = modify (thyCache) (\rs -> nub $ rs ++ rs')
 
--- | Add intruder proof rules.
+-- | Add intruder proof rules for all diff and non-diff caches.
+addIntrRuleACsDiffAll :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffAll rs' thy = addIntrRuleACsDiffBoth rs' (addIntrRuleACsDiffBothDiff rs' thy)
+
+-- | Add intruder proof rules for both diff caches.
+addIntrRuleACsDiffBothDiff :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffBothDiff rs' thy = addIntrRuleACsDiffRightDiff rs' (addIntrRuleACsDiffLeftDiff rs' thy)
+
+-- | Add intruder proof rules for both caches.
 addIntrRuleACsDiffBoth :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
 addIntrRuleACsDiffBoth rs' thy = addIntrRuleACsDiffRight rs' (addIntrRuleACsDiffLeft rs' thy)
 
--- | Add intruder proof rules.
-addIntrRuleACsDiffLeft :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
-addIntrRuleACsDiffLeft rs' thy = modify (diffThyDiffCacheLeft) (\rs -> nub $ rs ++ rs') $ modify (diffThyCacheLeft) (\rs -> nub $ rs ++ rs') thy
+-- | Add intruder proof rules to left diff cache.
+addIntrRuleACsDiffLeftDiff :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffLeftDiff rs' thy = modify (diffThyDiffCacheLeft) (\rs -> nub $ rs ++ rs') thy
 
--- | Add intruder proof rules.
+-- | Add intruder proof rules to left cache.
+addIntrRuleACsDiffLeft :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffLeft rs' thy = modify (diffThyCacheLeft) (\rs -> nub $ rs ++ rs') thy
+
+-- | Add intruder proof rules to right diff cache.
+addIntrRuleACsDiffRightDiff :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffRightDiff rs' thy = modify (diffThyDiffCacheRight) (\rs -> nub $ rs ++ rs') thy
+
+-- | Add intruder proof rules to right cache.
 addIntrRuleACsDiffRight :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
-addIntrRuleACsDiffRight rs' thy = modify (diffThyDiffCacheRight) (\rs -> nub $ rs ++ rs') $ modify (diffThyCacheRight) (\rs -> nub $ rs ++ rs') thy
+addIntrRuleACsDiffRight rs' thy = modify (diffThyCacheRight) (\rs -> nub $ rs ++ rs') thy
 
 -- | Normalize the theory representation such that they remain semantically
 -- equivalent. Use this function when you want to compare two theories (quite

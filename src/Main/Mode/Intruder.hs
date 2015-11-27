@@ -48,8 +48,8 @@ run _thisMode as = do
     _ <- ensureMaude as
     dhHnd <- startMaude (maudePath as) dhMaudeSig
     bpHnd <- startMaude (maudePath as) bpMaudeSig
-    let dhRules    = dhIntruderRules `runReader` dhHnd
-        bpRules    = bpIntruderRules `runReader` bpHnd
+    let dhRules    = (dhIntruderRules False) `runReader` dhHnd
+        bpRules    = (bpIntruderRules False) `runReader` bpHnd
         dhS = renderDoc . prettyIntruderVariants $ dhRules
         bpS = renderDoc . prettyIntruderVariants $ bpRules
 
