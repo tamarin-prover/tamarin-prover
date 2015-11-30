@@ -43,7 +43,7 @@ import           Term.Subsumption
 
 import           Theory.Model
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 -- Variants of intruder deduction rules
 ----------------------------------------------------------------------
@@ -103,7 +103,7 @@ specialIntruderRules diff =
 -- | @destuctionRules st@ returns the destruction rules for the given
 -- subterm rule @st@
 destructionRules :: Bool -> StRule -> [IntrRuleAC]
-destructionRules diff (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)) =
+destructionRules _    (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)) =
     go [] lhs pos
   where
     rhs = lhs `atPos` pos
@@ -123,8 +123,18 @@ destructionRules diff (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition
     go _      (viewTerm -> Lit _)     (_:_)  =
         error "IntruderRules.destructionRules: impossible, position invalid"
         
--- FIXME (JD): if diff generate rules for RhsGround, if not diff generate rules for RhsGround private
-destructionRules _ _ = []
+destructionRules _    (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (RhsGround rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs
+destructionRules True (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (RhsGround rhs@(viewTerm -> FApp (NoEq (_,(0,Public)))  []))) = destrRulesForConstant subterms f rhs
+destructionRules _    _                                                                                                              = []
+
+-- returns destructor rules for equations with ground RHS
+destrRulesForConstant :: [LNTerm] -> ByteString -> LNTerm -> [IntrRuleAC]
+destrRulesForConstant subterms f rhs =
+-- FIXME (JD): avoid unnecessary combinations of KU and KD facts
+    go [] subterms
+  where
+    go _    []     = []
+    go done (x:xs) = (Rule (DestrRule f) ((kdFact  x):(map kuFact (done ++ xs))) [kdFact rhs] []):(go (x:done) xs)
 
 -- returns all equations with private constructors on the RHS
 privateConstructorEquations :: [StRule] -> [(LNTerm, ByteString)]
@@ -170,7 +180,7 @@ minimizeIntruderRules diff rules = if diff then rules else
 -- | @subtermIntruderRules diff maudeSig@ returns the set of intruder rules for
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
 subtermIntruderRules :: Bool -> MaudeSig -> [IntrRuleAC]
-subtermIntruderRules diff maudeSig = trace (show (S.toList $ stRules maudeSig)) $ 
+subtermIntruderRules diff maudeSig =
    minimizeIntruderRules diff $ concatMap (destructionRules diff) (S.toList $ stRules maudeSig)
      ++ constructionRules (stFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig) 
 

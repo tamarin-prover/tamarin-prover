@@ -468,7 +468,7 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     messageLink s isdiff = overview (show s ++ ": Message theory" ++ if isdiff then " [Diff]" else "") (text "") (DiffTheoryMessage s isdiff)
     ruleLink s isdiff    = overview (ruleLinkMsg s isdiff) (rulesInfo s isdiff) (DiffTheoryRules s isdiff)
     ruleLinkMsg s isdiff = show s ++ ": Multiset rewriting rules " ++
-                           if null(diffTheorySideAxioms s thy) then "" else " and axioms" ++ if isdiff then " [Diff]" else ""
+                           (if null(diffTheorySideAxioms s thy) then "" else " and axioms") ++ (if isdiff then " [Diff]" else "")
 
     reqCasesLink s name k isdiff = overview name (casesInfo s k isdiff) (DiffTheoryCaseDist s k isdiff 0 0)
 
@@ -1331,7 +1331,7 @@ titleDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> String
 titleDiffThyPath thy path = go path
   where
     go DiffTheoryHelp                               = "Theory: " ++ get diffThyName thy
-    go (DiffTheoryRules s d)                        = "Multiset rewriting rules axioms [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
+    go (DiffTheoryRules s d)                        = "Multiset rewriting rules and axioms [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
     go DiffTheoryDiffRules                          = "Multiset rewriting rules and axioms - unprocessed"
     go (DiffTheoryMessage s d)                      = "Message theory [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
     go (DiffTheoryCaseDist s UntypedCaseDist d _ _) = "Untyped case distinctions [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
