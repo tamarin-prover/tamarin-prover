@@ -38,6 +38,8 @@ library
 
     build-depends:
         HUnit
+      , aeson
+      , aeson-pretty
       , array
       , base
       , binary
@@ -83,6 +85,7 @@ library
       Theory.Constraint.System
       Theory.Constraint.System.Constraints
       Theory.Constraint.System.Dot
+      Theory.Constraint.System.JSON
       Theory.Constraint.System.Guarded
 
       Theory.Model

@@ -68,6 +68,7 @@ import           Theory                       (
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver, apHeuristic)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
+import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON 
 import           Web.Hamlet
 import           Web.Instances                ()
 import           Web.Settings
@@ -809,6 +810,7 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
           (dotCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress)
+          (sequentToJSONPretty)
           (show simplificationLevel)
           (abbreviate)
           (tiTheory ti) path

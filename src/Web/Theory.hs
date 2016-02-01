@@ -1113,15 +1113,17 @@ imgThyPath :: ImageFormat
            -> FilePath               -- ^ 'dot' command
            -> FilePath               -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())
+           -> (String -> System -> String)     
+                                     -- ^ to export contraint system to JSON
            -> String                 -- ^ Simplification level of graph (string representation of integer >= 0)
            -> Bool                   -- ^ True iff we want abbreviations
            -> ClosedTheory
            -> TheoryPath
            -> IO FilePath
-imgThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate thy path = go path
+imgThyPath imgFormat dotCommand cacheDir_ compact showJsonGraphFunct simplificationLevel abbreviate thy path = go path
   where
-    go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j)
-    go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p)
+    go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j) (casesJsonCode k i j)
+    go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p) (proofPathJsonCode l p)
     go _                      = error "Unhandled theory path. This is a bug."
 
     -- Prefix dot code with comment mentioning all protocol rule names
@@ -1142,17 +1144,32 @@ imgThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate
       where
         cases = map (getDisj . get cdCases) (getCaseDistinction k thy)
 
+   -- Get JSON code for required cases
+    casesJsonCode k i j = 
+        showJsonGraphFunct ("Theory: " ++ (get thyName thy) ++ " Case: " ++ show i ++ ":" ++ show j) 
+        $ snd $ cases !! (i-1) !! (j-1)
+      where
+        cases = map (getDisj . get cdCases) (getCaseDistinction k thy)
+
     -- Get dot code for proof path in lemma
     proofPathDotCode lemma proofPath =
-      D.showDot $ fromMaybe (return ()) $ do
+      prefixedShowDot $ fromMaybe (return ()) $ do
         subProof <- resolveProofPath thy lemma proofPath
         sequent <- psInfo $ root subProof
         return $ compact sequent
 
-    -- Render a piece of dot code
-    renderDotCode code = do
-      let dotPath = cacheDir_ </> getDotPath code
+   -- Get JSON for proof path in lemma
+    proofPathJsonCode lemma proofPath =
+      fromMaybe ("") $ do
+        subProof <- resolveProofPath thy lemma proofPath
+        sequent <- psInfo $ root subProof
+        return $ showJsonGraphFunct ("Theory: " ++ (get thyName thy) ++ " Lemma: " ++ lemma) sequent
+
+    -- Render a piece of dot code and store JSON
+    renderDotCode dotCode jsonCode = do
+      let dotPath = cacheDir_ </> getDotPath dotCode
           imgPath = addExtension dotPath (show imgFormat)
+          jsonPath = addExtension dotPath "json"
 
           -- A busy wait loop with a maximal number of iterations
           renderedOrRendering :: Int -> IO Bool
@@ -1174,7 +1191,8 @@ imgThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate
             -- it a try by ourselves.
             renderedOrRendering 50
             -- create dot-file and render to image
-          , do writeFile dotPath code
+          , do writeFile dotPath dotCode
+               writeFile jsonPath jsonCode
                dotToImg "dot" dotPath imgPath
             -- sometimes 'dot' fails => use 'fdp' as a backup tool
           , dotToImg "fdp" dotPath imgPath
