@@ -16,7 +16,6 @@ import           Data.Maybe                      (fromMaybe)
 import           Control.Exception               as E
 
 import           System.Console.CmdArgs.Explicit
-import           System.Directory                (doesFileExist)
 import           System.Environment
 import           System.Exit
 import           System.IO
