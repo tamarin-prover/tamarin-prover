@@ -126,8 +126,8 @@ data WebUI = WebUI
     -- ^ MVar that holds the thread map
   , autosaveProofstate :: Bool
     -- ^ Automatically store theory map
-  , dotCmd             :: FilePath
-    -- ^ The dot command
+  , graphCmd           :: (String, FilePath)
+    -- ^ The dot or json command with additional flag to indicate choice dot, json, ...
   , imageFormat        :: ImageFormat
     -- ^ The image-format used for rendering graphs
   , defaultAutoProver  :: AutoProver

@@ -177,6 +177,9 @@ refDotDiffPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src"
 getDotPath :: String -> FilePath
 getDotPath code = imageDir </> addExtension (stringSHA256 code) "dot"
 
+getGraphPath :: String -> String -> FilePath
+getGraphPath ext code = imageDir </> addExtension (stringSHA256 code) ext
+
 -- | Create a link to a given theory path.
 linkToPath :: HtmlDocument d
            => RenderUrl   -- ^ Url rendering function.
@@ -1110,7 +1113,7 @@ htmlThyDbgPath thy path = go path
 
 -- | Render the image corresponding to the given theory path.
 imgThyPath :: ImageFormat
-           -> FilePath               -- ^ 'dot' command
+           -> (String, FilePath)     -- ^ choice and command for rendering (dot or json)
            -> FilePath               -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())
            -> (String -> System -> String)     
@@ -1120,10 +1123,14 @@ imgThyPath :: ImageFormat
            -> ClosedTheory
            -> TheoryPath
            -> IO FilePath
-imgThyPath imgFormat dotCommand cacheDir_ compact showJsonGraphFunct simplificationLevel abbreviate thy path = go path
+imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraphFunct simplificationLevel abbreviate thy path = go path
   where
-    go (TheoryCaseDist k i j) = renderDotCode (casesDotCode k i j) (casesJsonCode k i j)
-    go (TheoryProof l p)      = renderDotCode (proofPathDotCode l p) (proofPathJsonCode l p)
+    go (TheoryCaseDist k i j) = case graphChoice of
+                                  "json"  -> renderGraphCode "json" (casesJsonCode k i j)
+                                  _       -> renderGraphCode "dot" (casesDotCode k i j)
+    go (TheoryProof l p)      = case graphChoice of 
+                                  "json"  -> renderGraphCode "json" (proofPathJsonCode l p)
+                                  _       -> renderGraphCode "dot" (proofPathDotCode l p)
     go _                      = error "Unhandled theory path. This is a bug."
 
     -- Prefix dot code with comment mentioning all protocol rule names
@@ -1165,24 +1172,23 @@ imgThyPath imgFormat dotCommand cacheDir_ compact showJsonGraphFunct simplificat
         sequent <- psInfo $ root subProof
         return $ showJsonGraphFunct ("Theory: " ++ (get thyName thy) ++ " Lemma: " ++ lemma) sequent
 
-    -- Render a piece of dot code and store JSON
-    renderDotCode dotCode jsonCode = do
-      let dotPath = cacheDir_ </> getDotPath dotCode
-          imgPath = addExtension dotPath (show imgFormat)
-          jsonPath = addExtension dotPath "json"
+    -- Render a piece of dot or JSON code
+    renderGraphCode choice code = do   
+      let graphPath = cacheDir_ </> getGraphPath choice code
+          imgPath = addExtension graphPath (show imgFormat)
 
           -- A busy wait loop with a maximal number of iterations
           renderedOrRendering :: Int -> IO Bool
           renderedOrRendering n = do
-              dotExists <- doesFileExist dotPath
+              graphExists <- doesFileExist graphPath
               imgExists <- doesFileExist imgPath
-              if (n <= 0 || (dotExists && not imgExists))
+              if (n <= 0 || (graphExists && not imgExists))
                   then do threadDelay 100             -- wait 10 ms
                           renderedOrRendering (n - 1)
                   else return imgExists
 
       -- Ensure that the output directory exists.
-      createDirectoryIfMissing True (takeDirectory dotPath)
+      createDirectoryIfMissing True (takeDirectory graphPath)
 
       imgGenerated <- firstSuccess
           [ -- There might be some other thread that rendered or is rendering
@@ -1191,25 +1197,40 @@ imgThyPath imgFormat dotCommand cacheDir_ compact showJsonGraphFunct simplificat
             -- it a try by ourselves.
             renderedOrRendering 50
             -- create dot-file and render to image
-          , do writeFile dotPath dotCode
-               writeFile jsonPath jsonCode
-               dotToImg "dot" dotPath imgPath
+          , do writeFile graphPath code
+               -- select the correct command to generate img
+               if (choice == "json")
+                   then jsonToImg graphPath imgPath
+                   else dotToImg "dot" graphPath imgPath
             -- sometimes 'dot' fails => use 'fdp' as a backup tool
-          , dotToImg "fdp" dotPath imgPath
+          , if (choice == "dot")
+                then dotToImg "fdp" graphPath imgPath
+                else return False
           ]
       if imgGenerated
         then return imgPath
-        else trace ("WARNING: failed to convert:\n  '" ++ dotPath ++ "'")
+        else trace ("WARNING: failed to convert:\n  '" ++ graphPath ++ "'")
                    (return imgPath)
 
+    -- render img file from json file
+    jsonToImg jsonFile imgFile = do
+      (ecode,_out,err) <- readProcessWithExitCode graphCommand [imgFile, jsonFile] ""
+      case ecode of
+        ExitSuccess   -> return True
+        ExitFailure i -> do
+          putStrLn $ "jsonToImg: "++graphCommand++" failed with code "
+                      ++show i++" for file "++jsonFile++":\n"++err
+          return False
+
+    -- render img file from dot file
     dotToImg dotMode dotFile imgFile = do
-      (ecode,_out,err) <- readProcessWithExitCode dotCommand
+      (ecode,_out,err) <- readProcessWithExitCode graphCommand
                               [ "-T"++show imgFormat, "-K"++dotMode, "-o",imgFile, dotFile]
                               ""
       case ecode of
         ExitSuccess   -> return True
         ExitFailure i -> do
-          putStrLn $ "dotToImg: "++dotCommand++" failed with code "
+          putStrLn $ "dotToImg: "++graphCommand++" failed with code "
                       ++show i++" for file "++dotFile++":\n"++err
           return False
 

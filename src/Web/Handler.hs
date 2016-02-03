@@ -807,7 +807,7 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
       img <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
           (imageFormat yesod)
-          (dotCmd yesod)
+          (graphCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress)
           (sequentToJSONPretty)
@@ -833,7 +833,7 @@ getTheoryGraphDiffR idx path = withDiffTheory idx ( \ti -> do
       img <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
           (imageFormat yesod)
-          (dotCmd yesod)
+          (snd $ graphCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress)
           (show simplificationLevel)
