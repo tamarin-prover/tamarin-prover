@@ -46,6 +46,7 @@ import           Data.Maybe                                (catMaybes)
 import           Data.Ord                                  (comparing)
 import qualified Data.Set                                  as S
 import           Extension.Prelude                         (sortOn)
+import qualified Data.ByteString.Char8 as BC
 
 import           Control.Basics
 import           Control.DeepSeq
@@ -984,6 +985,7 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
         , isFreshKnowsGoal . fst
         , isSplitGoalSmall . fst
         , isMsgOneCaseGoal . fst
+        , isSignatureGoal . fst
         , isDoubleExpGoal . fst
         , isNoLargeSplitGoal . fst ]
         -- move the rest (mostly more expensive KU-goals) before expensive
@@ -1027,6 +1029,10 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     isPrivateKnowsGoal goal = case msgPremise goal of
         Just t -> isPrivateFunction t
         _      -> False
+
+    isSignatureGoal goal = case msgPremise goal of
+        Just (viewTerm -> FApp (NoEq (f, _)) _) | (BC.unpack f) == "sign" -> True
+        _                                                                 -> False
 
     isDoubleExpGoal goal = case msgPremise goal of
         Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
