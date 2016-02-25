@@ -7,7 +7,7 @@ Pre-requisites
 Maude, available at http://maude.cs.illinois.edu/
 (version 2.6 and 2.7 work).
 
-GraphViz, available at http://www.graphviz.org/
+GraphViz, available at http://www.graphviz.org/ or through your system's package manager.
 
 
 Tamarin-prover
