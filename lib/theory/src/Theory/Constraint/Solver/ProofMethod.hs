@@ -377,7 +377,7 @@ goalRankingName ranking =
         SapicPKCS11Ranking          -> "heuristics adapted to a model of PKCS#11 translated using the SAPIC tool"
         SmartRanking useLoopBreakers -> smart useLoopBreakers
         SmartDiffRanking             -> "the 'smart' heuristic (for diff proofs)"
-        InjRanking                  -> "heuristics adapted to detection protocol proofs"
+        InjRanking                  -> "heuristics adapted to stateful injective protocols"
    where
      smart b = "the 'smart' heuristic (loop breakers " ++
                (if b then "allowed" else "delayed") ++ ")."
@@ -834,8 +834,8 @@ injRanking ctxt sys =
 
     tagUsefulness Useful                = 0 :: Int
     tagUsefulness ProbablyConstructible = 1
-    tagUsefulness LoopBreaker           = 1
-    tagUsefulness CurrentlyDeducible    = 0
+    tagUsefulness LoopBreaker           = 0
+    tagUsefulness CurrentlyDeducible    = 2
 
     unmark = map unmarkPremiseG
     unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
@@ -849,17 +849,15 @@ injRanking ctxt sys =
     solveFirst =
         [ isImmediateGoal . fst         -- Goals with the I_ prefix
         , isHighPriorityGoal . fst      -- Goals with the F_ prefix, by goal number
-        , isFreshKnowsGoal . fst        -- Solving fresh K goals is strong in an injective setting
         , isMedPriorityGoal             -- Various important goals, by goal number
-        , isDoubleExpGoal . fst
-        , isNoLargeSplitGoal . fst ]
+        , isLowPriorityGoal . fst ]
         -- move the rest (mostly more expensive KU-goals) before expensive
         -- equation splits
 
     smallSplitGoalSize = 3
 
-    isNonLoopBreakerProtoFactGoal (PremiseG _ _, (_, Useful)) = True
-    isNonLoopBreakerProtoFactGoal _                           = False
+    isProtoFactGoal (PremiseG _ _, (_, _))  = True
+    isProtoFactGoal _                       = False
 
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing
@@ -869,13 +867,17 @@ injRanking ctxt sys =
     -- (assuming the same usefulness)
     isHighPriorityGoal goal = (isKnowsFirstNameGoal goal)
                                 || (isFirstProtoFact goal)
+                                || (isDisjGoal goal) || (isChainGoal goal)
 
-    isMedPriorityGoal goaltuple = (isDisjGoal $ fst goaltuple) || (isChainGoal $ fst goaltuple)
-                                    || (isNonLoopBreakerProtoFactGoal goaltuple)
+    isMedPriorityGoal goaltuple = (isProtoFactGoal goaltuple)
+                                    || (isSignatureGoal $ fst goaltuple)
                                     || (isStandardActionGoal $ fst goaltuple)
+                                    || (isFreshKnowsGoal $ fst goaltuple)
                                     || (isPrivateKnowsGoal $ fst goaltuple)
                                     || (isSplitGoalSmall $ fst goaltuple)
                                     || (isMsgOneCaseGoal $ fst goaltuple)
+
+    isLowPriorityGoal goal = (isDoubleExpGoal goal) || (isNoLargeSplitGoal goal)
 
     -- Detect 'I_' (immediate) fact and term prefix for heuristics
     isImmediateGoal (PremiseG _ (Fact (ProtoFact _ ('I':'_':_) _) _)) = True
@@ -919,6 +921,9 @@ injRanking ctxt sys =
         Just t -> isPrivateFunction t
         _      -> False
 
+    isSignatureGoal goal = case msgPremise goal of
+        Just (viewTerm -> FApp (NoEq (f, _)) _) | (BC.unpack f) == "sign" -> True
+        _                                                                 -> False
     isDoubleExpGoal goal = case msgPremise goal of
         Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
         _                                                  -> False
