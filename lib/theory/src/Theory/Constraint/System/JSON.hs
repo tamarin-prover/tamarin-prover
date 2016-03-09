@@ -224,22 +224,22 @@ itemToJSONGraphNodeFact pretty id f =
                                           False -> ""
                        }
 {-|
-   Generate JSON data structure fot facts in premises and conclusion of rules.
+   Generate JSON data structure for facts in premises and conclusion of rules.
    Since facts are ordered in the premises and conclusions, the ordering number as well as a prefix
-   ("p:" (premise) and "c:" (conclusion)) are given to the function.
+   ("p" (premise) and "c" (conclusion)) are given to the function.
 -}
 factToJSONGraphNodeFact :: Bool -> String -> NodeId -> (Int,LNFact) -> JSONGraphNodeFact
 factToJSONGraphNodeFact pretty prefix n (idx, f) =
-     itemToJSONGraphNodeFact pretty (prefix ++ show n ++ ":" ++ show idx) f
+     itemToJSONGraphNodeFact pretty (show n ++ ":" ++ prefix ++ show idx) f
 
 -- | Generate JSONGraphNode from node of sequent (metadata part).
 -- Facts and actions as are represented as metadata to keep close to the original JSON graph schema.
 nodeToJSONGraphNodeMetadata :: Bool -> (NodeId, RuleACInst) -> JSONGraphNodeMetadata
 nodeToJSONGraphNodeMetadata pretty (n, ru) = 
-    JSONGraphNodeMetadata { jgnPrems = map (factToJSONGraphNodeFact pretty "p:" n) 
+    JSONGraphNodeMetadata { jgnPrems = map (factToJSONGraphNodeFact pretty "p" n) 
                                        $ zip [0..] $ L.get rPrems ru
                           , jgnActs  = map (itemToJSONGraphNodeFact pretty "action") $ L.get rActs ru 
-                          , jgnConcs = map (factToJSONGraphNodeFact pretty "c:" n) 
+                          , jgnConcs = map (factToJSONGraphNodeFact pretty "c" n) 
                                        $ zip [0..] $ L.get rConcs ru
                           }
 
@@ -310,7 +310,7 @@ missingNodesToJSONGraphNodes se ((Edge (sid, _) (tid, _)):el)
                   , jgnActs  = []
                   , jgnConcs = 
                       [ JSONGraphNodeFact 
-                          { jgnFactId    = "c:"++ show sid ++":0"
+                          { jgnFactId    = show sid ++":c0"
                           , jgnFactTag   = ""
                           , jgnFactName  = ""
                           , jgnFactMult  = ""
@@ -329,7 +329,7 @@ missingNodesToJSONGraphNodes se ((Edge (sid, _) (tid, _)):el)
                 Just JSONGraphNodeMetadata 
                   { jgnPrems = 
                       [ JSONGraphNodeFact 
-                          { jgnFactId    = "p:"++ show tid ++":0"
+                          { jgnFactId    = show tid ++":p0"
                           , jgnFactTag   = ""
                           , jgnFactName  = ""
                           , jgnFactMult  = ""
@@ -348,8 +348,8 @@ missingNodesToJSONGraphNodes se ((Edge (sid, _) (tid, _)):el)
 -- | Generate JSON data structure for edges.
 edgeToJSONGraphEdge :: System -> Edge -> JSONGraphEdge
 edgeToJSONGraphEdge se (Edge src tgt)  =
-    JSONGraphEdge { jgeSource = "c:" ++ show sid ++ ":" ++ show concidx
-                  , jgeTarget = "p:" ++ show tid ++ ":" ++ show premidx
+    JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concidx
+                  , jgeTarget = show tid ++ ":p" ++ show premidx
                   , jgeRelation = getRelationType src tgt se
                   }
                   where 
@@ -367,8 +367,8 @@ lessAtomsToJSONGraphEdge (src, tgt) =
 -- | Generate JSON data structure for unsolvedChain edge.
 unsolvedchainToJSONGraphEdge :: (NodeConc, NodePrem) -> JSONGraphEdge
 unsolvedchainToJSONGraphEdge (src, tgt)  =
-    JSONGraphEdge { jgeSource = "c:" ++ show sid ++ ":" ++ show concidx
-                  , jgeTarget = "p:" ++ show tid ++ ":" ++ show premidx
+    JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concidx
+                  , jgeTarget = show tid ++ ":p" ++ show premidx
                   , jgeRelation = "unsolvedChain"
                   }
                   where 

@@ -145,11 +145,11 @@ ensureGraphVizDot as = do
 ensureGraphCommand :: Arguments -> IO Bool
 ensureGraphCommand as = do
     putStrLn $ "Graph rendering command: " ++ cmd
-    testProcess check errMsg "Checking availablity ..." cmd ["param1","param2"] "" False
+    testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False
   where
     cmd = snd $ graphPath as
     check _ err
-      | err == ""  = Right " OK."
+      | err == ""  = Right $ " OK."
       | otherwise  = Left  $ errMsg
     errMsg = unlines
       [ "Command not found" ]
