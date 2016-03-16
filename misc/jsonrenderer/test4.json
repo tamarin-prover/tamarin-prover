@@ -1,0 +1,2484 @@
+{
+    "graphs": [
+        {
+            "jgEdges": [
+                {
+                    "jgeRelation": "ProtoFact",
+                    "jgeSource": "#ia:c1",
+                    "jgeTarget": "#j:p1"
+                },
+                {
+                    "jgeRelation": "default",
+                    "jgeSource": "#vf:c0",
+                    "jgeTarget": "#j:p0"
+                },
+                {
+                    "jgeRelation": "ProtoFact",
+                    "jgeSource": "#vr:c1",
+                    "jgeTarget": "#ia:p1"
+                },
+                {
+                    "jgeRelation": "default",
+                    "jgeSource": "#vf.1:c0",
+                    "jgeTarget": "#ia:p0"
+                },
+                {
+                    "jgeRelation": "ProtoFact",
+                    "jgeSource": "#vr.1:c1",
+                    "jgeTarget": "#vr:p0"
+                },
+                {
+                    "jgeRelation": "default",
+                    "jgeSource": "#vf.2:c0",
+                    "jgeTarget": "#vr:p1"
+                },
+                {
+                    "jgeRelation": "PersistentFact",
+                    "jgeSource": "#vr.2:c0",
+                    "jgeTarget": "#vr.1:p2"
+                },
+                {
+                    "jgeRelation": "default",
+                    "jgeSource": "#vf.3:c0",
+                    "jgeTarget": "#vr.1:p0"
+                },
+                {
+                    "jgeRelation": "PersistentFact",
+                    "jgeSource": "#vr.3:c0",
+                    "jgeTarget": "#vr.1:p3"
+                },
+                {
+                    "jgeRelation": "default",
+                    "jgeSource": "#vf.4:c0",
+                    "jgeTarget": "#vr.1:p1"
+                },
+                {
+                    "jgeRelation": "default",
+                    "jgeSource": "#vf.5:c0",
+                    "jgeTarget": "#vr.2:p0"
+                },
+                {
+                    "jgeRelation": "default",
+                    "jgeSource": "#vf.6:c0",
+                    "jgeTarget": "#ib:p0"
+                },
+                {
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#ia",
+                    "jgeTarget": "#j"
+                },
+                {
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk",
+                    "jgeTarget": "#vf"
+                },
+                {
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.1",
+                    "jgeTarget": "#vk"
+                },
+                {
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.2",
+                    "jgeTarget": "#vk"
+                },
+                {
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.3",
+                    "jgeTarget": "#vf.1"
+                },
+                {
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.4",
+                    "jgeTarget": "#vf.4"
+                },
+                {
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.5",
+                    "jgeTarget": "#vf.6"
+                },
+                {
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.6",
+                    "jgeTarget": "#vk.5"
+                },
+                {
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.7",
+                    "jgeTarget": "#vk.5"
+                }
+            ],
+            "jgDirected": true,
+            "jgType": "Tamarin prover constraint system",
+            "jgLabel": "Theory: BTLE_SC_Auth_NC Lemma: SP1_LTK_not_known_to_adversary",
+            "jgNodes": [
+                {
+                    "jgnId": "#ia",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "Out",
+                                "jgnFactShow": "Out( <$addrB, ~Nb> )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "OutFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrB"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrB,~Nb)",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#ia:c0"
+                            },
+                            {
+                                "jgnFactName": "BS",
+                                "jgnFactShow": "BS( ~r, $B, 'B_display', <~eb, PKa, 'g'^~eb, DHKey, 'Cb', ~Na, ~Nb, 'addrA', $addrB>)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "'B_display'"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~eb"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "PKa"
+                                                    },
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~eb"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~eb)",
+                                                                "jgnFunct": "exp"
+                                                            },
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "DHKey"
+                                                                    },
+                                                                    {
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'Cb'"
+                                                                            },
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "~Na"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "~Nb"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "'addrA'"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrB"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "pair('addrA',$addrB)",
+                                                                                                "jgnFunct": "pair"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair(~Nb,pair('addrA',$addrB))",
+                                                                                        "jgnFunct": "pair"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair(~Na,pair(~Nb,pair('addrA',$addrB)))",
+                                                                                "jgnFunct": "pair"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB))))",
+                                                                        "jgnFunct": "pair"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB)))))",
+                                                                "jgnFunct": "pair"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~eb),pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB))))))",
+                                                        "jgnFunct": "pair"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB)))))))",
+                                                "jgnFunct": "pair"
+                                            }
+                                        ],
+                                        "jgnShow": "pair(~eb,pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB))))))))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#ia:c1"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( ~Na )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~Na"
+                                    }
+                                ],
+                                "jgnFactId": "#ia:p0"
+                            },
+                            {
+                                "jgnFactName": "BS",
+                                "jgnFactShow": "BS( ~r, $B, 'B_commit_sent', <~eb, PKa, 'g'^~eb, DHKey, 'Cb', 'Na', ~Nb, 'addrA', $addrB>)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "'B_commit_sent'"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~eb"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "PKa"
+                                                    },
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~eb"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~eb)",
+                                                                "jgnFunct": "exp"
+                                                            },
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "DHKey"
+                                                                    },
+                                                                    {
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'Cb'"
+                                                                            },
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "'Na'"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "~Nb"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "'addrA'"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrB"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "pair('addrA',$addrB)",
+                                                                                                "jgnFunct": "pair"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair(~Nb,pair('addrA',$addrB))",
+                                                                                        "jgnFunct": "pair"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair('Na',pair(~Nb,pair('addrA',$addrB)))",
+                                                                                "jgnFunct": "pair"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB))))",
+                                                                        "jgnFunct": "pair"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair(DHKey,pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB)))))",
+                                                                "jgnFunct": "pair"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB))))))",
+                                                        "jgnFunct": "pair"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB)))))))",
+                                                "jgnFunct": "pair"
+                                            }
+                                        ],
+                                        "jgnShow": "pair(~eb,pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB))))))))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#ia:p1"
+                            }
+                        ],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "DoNumComp",
+                                "jgnFactShow": "DoNumComp( ~r, 'role_B', $B, g2(PKa, 'g'^~eb, ~Na, ~Nb) )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "'role_B'"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "PKa"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "'g'"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~eb"
+                                                    }
+                                                ],
+                                                "jgnShow": "exp('g',~eb)",
+                                                "jgnFunct": "exp"
+                                            },
+                                            {
+                                                "jgnConst": "~Na"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            }
+                                        ],
+                                        "jgnShow": "g2(PKa,exp('g',~eb),~Na,~Nb)",
+                                        "jgnFunct": "g2"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "B_send_nonce",
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnId": "#ib",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "AS",
+                                "jgnFactShow": "AS( ~r.1, $A, 'A_display', <~ea, PKa, 'g'^~eb, DHKey.1, f4(PKa, 'g'^~eb, ~Nb), ~Na, ~Nb, $addrA, $addrB.1>)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r.1"
+                                    },
+                                    {
+                                        "jgnConst": "$A"
+                                    },
+                                    {
+                                        "jgnConst": "'A_display'"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~ea"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "PKa"
+                                                    },
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~eb"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~eb)",
+                                                                "jgnFunct": "exp"
+                                                            },
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "DHKey.1"
+                                                                    },
+                                                                    {
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "PKa"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "'g'"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnConst": "~eb"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "exp('g',~eb)",
+                                                                                        "jgnFunct": "exp"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnConst": "~Nb"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "f4(PKa,exp('g',~eb),~Nb)",
+                                                                                "jgnFunct": "f4"
+                                                                            },
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "~Na"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "~Nb"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrA"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrB.1"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "pair($addrA,$addrB.1)",
+                                                                                                "jgnFunct": "pair"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair(~Nb,pair($addrA,$addrB.1))",
+                                                                                        "jgnFunct": "pair"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair(~Na,pair(~Nb,pair($addrA,$addrB.1)))",
+                                                                                "jgnFunct": "pair"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(~Nb,pair($addrA,$addrB.1))))",
+                                                                        "jgnFunct": "pair"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair(DHKey.1,pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(~Nb,pair($addrA,$addrB.1)))))",
+                                                                "jgnFunct": "pair"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~eb),pair(DHKey.1,pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(~Nb,pair($addrA,$addrB.1))))))",
+                                                        "jgnFunct": "pair"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair(PKa,pair(exp('g',~eb),pair(DHKey.1,pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(~Nb,pair($addrA,$addrB.1)))))))",
+                                                "jgnFunct": "pair"
+                                            }
+                                        ],
+                                        "jgnShow": "pair(~ea,pair(PKa,pair(exp('g',~eb),pair(DHKey.1,pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(~Nb,pair($addrA,$addrB.1))))))))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#ib:c0"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( <$addrB.1, ~Nb> )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrB.1"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrB.1,~Nb)",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#ib:p0"
+                            },
+                            {
+                                "jgnFactName": "AS",
+                                "jgnFactShow": "AS( ~r.1, $A, 'A_nonce_sent', <~ea, PKa, 'g'^~eb, DHKey.1, f4(PKa, 'g'^~eb, ~Nb), ~Na, d6, $addrA, d8>)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r.1"
+                                    },
+                                    {
+                                        "jgnConst": "$A"
+                                    },
+                                    {
+                                        "jgnConst": "'A_nonce_sent'"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~ea"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "PKa"
+                                                    },
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~eb"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~eb)",
+                                                                "jgnFunct": "exp"
+                                                            },
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "DHKey.1"
+                                                                    },
+                                                                    {
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "PKa"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "'g'"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnConst": "~eb"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "exp('g',~eb)",
+                                                                                        "jgnFunct": "exp"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnConst": "~Nb"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "f4(PKa,exp('g',~eb),~Nb)",
+                                                                                "jgnFunct": "f4"
+                                                                            },
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "~Na"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "d6"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrA"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "d8"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "pair($addrA,d8)",
+                                                                                                "jgnFunct": "pair"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair(d6,pair($addrA,d8))",
+                                                                                        "jgnFunct": "pair"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair(~Na,pair(d6,pair($addrA,d8)))",
+                                                                                "jgnFunct": "pair"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(d6,pair($addrA,d8))))",
+                                                                        "jgnFunct": "pair"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair(DHKey.1,pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(d6,pair($addrA,d8)))))",
+                                                                "jgnFunct": "pair"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~eb),pair(DHKey.1,pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(d6,pair($addrA,d8))))))",
+                                                        "jgnFunct": "pair"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair(PKa,pair(exp('g',~eb),pair(DHKey.1,pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(d6,pair($addrA,d8)))))))",
+                                                "jgnFunct": "pair"
+                                            }
+                                        ],
+                                        "jgnShow": "pair(~ea,pair(PKa,pair(exp('g',~eb),pair(DHKey.1,pair(f4(PKa,exp('g',~eb),~Nb),pair(~Na,pair(d6,pair($addrA,d8))))))))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#ib:p1"
+                            }
+                        ],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "Neq",
+                                "jgnFactShow": "Neq( $addrA, $addrB.1 )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$addrA"
+                                    },
+                                    {
+                                        "jgnConst": "$addrB.1"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            },
+                            {
+                                "jgnFactName": "DoNumComp",
+                                "jgnFactShow": "DoNumComp( ~r.1, 'role_A', $A, g2(PKa, 'g'^~eb, ~Na, ~Nb) )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r.1"
+                                    },
+                                    {
+                                        "jgnConst": "'role_A'"
+                                    },
+                                    {
+                                        "jgnConst": "$A"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "PKa"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "'g'"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~eb"
+                                                    }
+                                                ],
+                                                "jgnShow": "exp('g',~eb)",
+                                                "jgnFunct": "exp"
+                                            },
+                                            {
+                                                "jgnConst": "~Na"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            }
+                                        ],
+                                        "jgnShow": "g2(PKa,exp('g',~eb),~Na,~Nb)",
+                                        "jgnFunct": "g2"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "A_receive_nonce",
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnId": "#j",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "BS",
+                                "jgnFactShow": "BS( ~r, $B, 'B_Eb_sent', <~eb, PKa, 'g'^~eb, DHKey, 'Cb', ~Na, ~Nb, $addrA.1, $addrB>)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "'B_Eb_sent'"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~eb"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "PKa"
+                                                    },
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~eb"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~eb)",
+                                                                "jgnFunct": "exp"
+                                                            },
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "DHKey"
+                                                                    },
+                                                                    {
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'Cb'"
+                                                                            },
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "~Na"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "~Nb"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrA.1"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrB"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "pair($addrA.1,$addrB)",
+                                                                                                "jgnFunct": "pair"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair(~Nb,pair($addrA.1,$addrB))",
+                                                                                        "jgnFunct": "pair"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair(~Na,pair(~Nb,pair($addrA.1,$addrB)))",
+                                                                                "jgnFunct": "pair"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('Cb',pair(~Na,pair(~Nb,pair($addrA.1,$addrB))))",
+                                                                        "jgnFunct": "pair"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair($addrA.1,$addrB)))))",
+                                                                "jgnFunct": "pair"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~eb),pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair($addrA.1,$addrB))))))",
+                                                        "jgnFunct": "pair"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair($addrA.1,$addrB)))))))",
+                                                "jgnFunct": "pair"
+                                            }
+                                        ],
+                                        "jgnShow": "pair(~eb,pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair($addrA.1,$addrB))))))))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#j:c0"
+                            },
+                            {
+                                "jgnFactName": "Out",
+                                "jgnFactShow": "Out( f6(f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB), ~Na, ~Nb, $addrB, $addrA.1))",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "OutFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "DHKey"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Na"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Nb"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrA.1"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrB"
+                                                    }
+                                                ],
+                                                "jgnShow": "f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                                "jgnFunct": "f5mac"
+                                            },
+                                            {
+                                                "jgnConst": "~Na"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            },
+                                            {
+                                                "jgnConst": "$addrB"
+                                            },
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            }
+                                        ],
+                                        "jgnShow": "f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrB,$addrA.1)",
+                                        "jgnFunct": "f6"
+                                    }
+                                ],
+                                "jgnFactId": "#j:c1"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( <$addrA.1, f6(f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB), ~Na, ~Nb, $addrA.1, $addrB) >)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnConst": "DHKey"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Na"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Nb"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrA.1"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrB"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                                        "jgnFunct": "f5mac"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Na"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Nb"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrA.1"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrB"
+                                                    }
+                                                ],
+                                                "jgnShow": "f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB)",
+                                                "jgnFunct": "f6"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrA.1,f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#j:p0"
+                            },
+                            {
+                                "jgnFactName": "BS",
+                                "jgnFactShow": "BS( ~r, $B, 'B_display', <~eb, PKa, 'g'^~eb, DHKey, 'Cb', ~Na, ~Nb, 'addrA', $addrB>)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "'B_display'"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~eb"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "PKa"
+                                                    },
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~eb"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~eb)",
+                                                                "jgnFunct": "exp"
+                                                            },
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "DHKey"
+                                                                    },
+                                                                    {
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'Cb'"
+                                                                            },
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "~Na"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "~Nb"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "'addrA'"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrB"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "pair('addrA',$addrB)",
+                                                                                                "jgnFunct": "pair"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair(~Nb,pair('addrA',$addrB))",
+                                                                                        "jgnFunct": "pair"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair(~Na,pair(~Nb,pair('addrA',$addrB)))",
+                                                                                "jgnFunct": "pair"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB))))",
+                                                                        "jgnFunct": "pair"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB)))))",
+                                                                "jgnFunct": "pair"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~eb),pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB))))))",
+                                                        "jgnFunct": "pair"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB)))))))",
+                                                "jgnFunct": "pair"
+                                            }
+                                        ],
+                                        "jgnShow": "pair(~eb,pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair(~Na,pair(~Nb,pair('addrA',$addrB))))))))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#j:p1"
+                            }
+                        ],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "IsMacKey",
+                                "jgnFactShow": "IsMacKey( $B, f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB) )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "DHKey"
+                                            },
+                                            {
+                                                "jgnConst": "~Na"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            },
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            },
+                                            {
+                                                "jgnConst": "$addrB"
+                                            }
+                                        ],
+                                        "jgnShow": "f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                        "jgnFunct": "f5mac"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            },
+                            {
+                                "jgnFactName": "IsLTK",
+                                "jgnFactShow": "IsLTK( ~r, 'role_B', $B, f5ltk(DHKey, ~Na, ~Nb, $addrA.1, $addrB) )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "'role_B'"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "DHKey"
+                                            },
+                                            {
+                                                "jgnConst": "~Na"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            },
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            },
+                                            {
+                                                "jgnConst": "$addrB"
+                                            }
+                                        ],
+                                        "jgnShow": "f5ltk(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                        "jgnFunct": "f5ltk"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "B_receive_Ea",
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnId": "#vf",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( <$addrA.1, f6(f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB), ~Na, ~Nb, $addrA.1, $addrB) >)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnConst": "DHKey"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Na"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Nb"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrA.1"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrB"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                                        "jgnFunct": "f5mac"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Na"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Nb"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrA.1"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrB"
+                                                    }
+                                                ],
+                                                "jgnShow": "f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB)",
+                                                "jgnFunct": "f6"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrA.1,f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#vf:c0"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( <$addrA.1, f6(f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB), ~Na, ~Nb, $addrA.1, $addrB) >)",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnConst": "DHKey"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Na"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Nb"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrA.1"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrB"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                                        "jgnFunct": "f5mac"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Na"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Nb"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrA.1"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrB"
+                                                    }
+                                                ],
+                                                "jgnShow": "f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB)",
+                                                "jgnFunct": "f6"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrA.1,f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#vf:p0"
+                            }
+                        ],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "K",
+                                "jgnFactShow": "K( <$addrA.1, f6(f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB), ~Na, ~Nb, $addrA.1, $addrB) >)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnConst": "DHKey"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Na"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Nb"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrA.1"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrB"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                                        "jgnFunct": "f5mac"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Na"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Nb"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrA.1"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrB"
+                                                    }
+                                                ],
+                                                "jgnShow": "f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB)",
+                                                "jgnFunct": "f6"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrA.1,f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "Send",
+                    "jgnType": "isIntruderRule"
+                },
+                {
+                    "jgnId": "#vr",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "Out",
+                                "jgnFactShow": "Out( f4(PKa, 'g'^~eb, ~Nb) )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "OutFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "PKa"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "'g'"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~eb"
+                                                    }
+                                                ],
+                                                "jgnShow": "exp('g',~eb)",
+                                                "jgnFunct": "exp"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            }
+                                        ],
+                                        "jgnShow": "f4(PKa,exp('g',~eb),~Nb)",
+                                        "jgnFunct": "f4"
+                                    }
+                                ],
+                                "jgnFactId": "#vr:c0"
+                            },
+                            {
+                                "jgnFactName": "BS",
+                                "jgnFactShow": "BS( ~r, $B, 'B_commit_sent', <~eb, PKa, 'g'^~eb, DHKey, 'Cb', 'Na', ~Nb, 'addrA', $addrB>)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "'B_commit_sent'"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~eb"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "PKa"
+                                                    },
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~eb"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~eb)",
+                                                                "jgnFunct": "exp"
+                                                            },
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "DHKey"
+                                                                    },
+                                                                    {
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'Cb'"
+                                                                            },
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "'Na'"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "~Nb"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "'addrA'"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrB"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "pair('addrA',$addrB)",
+                                                                                                "jgnFunct": "pair"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair(~Nb,pair('addrA',$addrB))",
+                                                                                        "jgnFunct": "pair"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair('Na',pair(~Nb,pair('addrA',$addrB)))",
+                                                                                "jgnFunct": "pair"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB))))",
+                                                                        "jgnFunct": "pair"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair(DHKey,pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB)))))",
+                                                                "jgnFunct": "pair"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB))))))",
+                                                        "jgnFunct": "pair"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB)))))))",
+                                                "jgnFunct": "pair"
+                                            }
+                                        ],
+                                        "jgnShow": "pair(~eb,pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair(~Nb,pair('addrA',$addrB))))))))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#vr:c1"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "BS",
+                                "jgnFactShow": "BS( ~r, $B, 'B_key_sent', <~eb, PKa, 'g'^~eb, DHKey, 'Cb', 'Na', 'Nb', 'addrA', $addrB>)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "'B_key_sent'"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~eb"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "PKa"
+                                                    },
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~eb"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~eb)",
+                                                                "jgnFunct": "exp"
+                                                            },
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "DHKey"
+                                                                    },
+                                                                    {
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'Cb'"
+                                                                            },
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "'Na'"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "'Nb'"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "'addrA'"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrB"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "pair('addrA',$addrB)",
+                                                                                                "jgnFunct": "pair"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair('Nb',pair('addrA',$addrB))",
+                                                                                        "jgnFunct": "pair"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair('Na',pair('Nb',pair('addrA',$addrB)))",
+                                                                                "jgnFunct": "pair"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB))))",
+                                                                        "jgnFunct": "pair"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair(DHKey,pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB)))))",
+                                                                "jgnFunct": "pair"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB))))))",
+                                                        "jgnFunct": "pair"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB)))))))",
+                                                "jgnFunct": "pair"
+                                            }
+                                        ],
+                                        "jgnShow": "pair(~eb,pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB))))))))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#vr:p0"
+                            },
+                            {
+                                "jgnFactName": "Fr",
+                                "jgnFactShow": "Fr( ~Nb )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "FreshFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~Nb"
+                                    }
+                                ],
+                                "jgnFactId": "#vr:p1"
+                            }
+                        ],
+                        "jgnActs": []
+                    },
+                    "jgnLabel": "B_send_commit",
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnId": "#vf.1",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( ~Na )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~Na"
+                                    }
+                                ],
+                                "jgnFactId": "#vf.1:c0"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( ~Na )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~Na"
+                                    }
+                                ],
+                                "jgnFactId": "#vf.1:p0"
+                            }
+                        ],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "K",
+                                "jgnFactShow": "K( ~Na )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~Na"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "Send",
+                    "jgnType": "isIntruderRule"
+                },
+                {
+                    "jgnId": "#vr.1",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "Out",
+                                "jgnFactShow": "Out( 'g'^~eb )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "OutFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "'g'"
+                                            },
+                                            {
+                                                "jgnConst": "~eb"
+                                            }
+                                        ],
+                                        "jgnShow": "exp('g',~eb)",
+                                        "jgnFunct": "exp"
+                                    }
+                                ],
+                                "jgnFactId": "#vr.1:c0"
+                            },
+                            {
+                                "jgnFactName": "BS",
+                                "jgnFactShow": "BS( ~r, $B, 'B_key_sent', <~eb, PKa, 'g'^~eb, DHKey, 'Cb', 'Na', 'Nb', 'addrA', $addrB>)",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "'B_key_sent'"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~eb"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "PKa"
+                                                    },
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~eb"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~eb)",
+                                                                "jgnFunct": "exp"
+                                                            },
+                                                            {
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "DHKey"
+                                                                    },
+                                                                    {
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'Cb'"
+                                                                            },
+                                                                            {
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "'Na'"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "'Nb'"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "'addrA'"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "$addrB"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "pair('addrA',$addrB)",
+                                                                                                "jgnFunct": "pair"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair('Nb',pair('addrA',$addrB))",
+                                                                                        "jgnFunct": "pair"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair('Na',pair('Nb',pair('addrA',$addrB)))",
+                                                                                "jgnFunct": "pair"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB))))",
+                                                                        "jgnFunct": "pair"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair(DHKey,pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB)))))",
+                                                                "jgnFunct": "pair"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB))))))",
+                                                        "jgnFunct": "pair"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB)))))))",
+                                                "jgnFunct": "pair"
+                                            }
+                                        ],
+                                        "jgnShow": "pair(~eb,pair(PKa,pair(exp('g',~eb),pair(DHKey,pair('Cb',pair('Na',pair('Nb',pair('addrA',$addrB))))))))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#vr.1:c1"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "Fr",
+                                "jgnFactShow": "Fr( ~r )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "FreshFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    }
+                                ],
+                                "jgnFactId": "#vr.1:p0"
+                            },
+                            {
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( PKa )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "PKa"
+                                    }
+                                ],
+                                "jgnFactId": "#vr.1:p1"
+                            },
+                            {
+                                "jgnFactName": "!SkPk",
+                                "jgnFactShow": "!SkPk( $B, ~eb, 'g'^~eb )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "~eb"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "'g'"
+                                            },
+                                            {
+                                                "jgnConst": "~eb"
+                                            }
+                                        ],
+                                        "jgnShow": "exp('g',~eb)",
+                                        "jgnFunct": "exp"
+                                    }
+                                ],
+                                "jgnFactId": "#vr.1:p2"
+                            },
+                            {
+                                "jgnFactName": "!Addr",
+                                "jgnFactShow": "!Addr( $B, $addrB )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "$addrB"
+                                    }
+                                ],
+                                "jgnFactId": "#vr.1:p3"
+                            }
+                        ],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "Start",
+                                "jgnFactShow": "Start( ~r, 'role_B', $B )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    },
+                                    {
+                                        "jgnConst": "'role_B'"
+                                    },
+                                    {
+                                        "jgnConst": "$B"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "B_receive_key",
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnId": "#vf.2",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "Fr",
+                                "jgnFactShow": "Fr( ~Nb )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "FreshFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~Nb"
+                                    }
+                                ],
+                                "jgnFactId": "#vf.2:c0"
+                            }
+                        ],
+                        "jgnPrems": [],
+                        "jgnActs": []
+                    },
+                    "jgnLabel": "FreshRule",
+                    "jgnType": "isFreshRule"
+                },
+                {
+                    "jgnId": "#vr.2",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "!SkPk",
+                                "jgnFactShow": "!SkPk( $B, ~eb, 'g'^~eb )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "~eb"
+                                    },
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "'g'"
+                                            },
+                                            {
+                                                "jgnConst": "~eb"
+                                            }
+                                        ],
+                                        "jgnShow": "exp('g',~eb)",
+                                        "jgnFunct": "exp"
+                                    }
+                                ],
+                                "jgnFactId": "#vr.2:c0"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "Fr",
+                                "jgnFactShow": "Fr( ~eb )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "FreshFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~eb"
+                                    }
+                                ],
+                                "jgnFactId": "#vr.2:p0"
+                            }
+                        ],
+                        "jgnActs": []
+                    },
+                    "jgnLabel": "Generate_key",
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnId": "#vf.3",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "Fr",
+                                "jgnFactShow": "Fr( ~r )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "FreshFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~r"
+                                    }
+                                ],
+                                "jgnFactId": "#vf.3:c0"
+                            }
+                        ],
+                        "jgnPrems": [],
+                        "jgnActs": []
+                    },
+                    "jgnLabel": "FreshRule",
+                    "jgnType": "isFreshRule"
+                },
+                {
+                    "jgnId": "#vr.3",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "!Addr",
+                                "jgnFactShow": "!Addr( $B, $addrB )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "$addrB"
+                                    }
+                                ],
+                                "jgnFactId": "#vr.3:c0"
+                            }
+                        ],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "ChooseAddr",
+                                "jgnFactShow": "ChooseAddr( $B, $addrB )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$B"
+                                    },
+                                    {
+                                        "jgnConst": "$addrB"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            },
+                            {
+                                "jgnFactName": "AtMostOnce",
+                                "jgnFactShow": "AtMostOnce( <'Addr', $B> )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "'Addr'"
+                                            },
+                                            {
+                                                "jgnConst": "$B"
+                                            }
+                                        ],
+                                        "jgnShow": "pair('Addr',$B)",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "Choose_bd_addr",
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnId": "#vf.4",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( PKa )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "PKa"
+                                    }
+                                ],
+                                "jgnFactId": "#vf.4:c0"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( PKa )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "PKa"
+                                    }
+                                ],
+                                "jgnFactId": "#vf.4:p0"
+                            }
+                        ],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "K",
+                                "jgnFactShow": "K( PKa )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "PKa"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "Send",
+                    "jgnType": "isIntruderRule"
+                },
+                {
+                    "jgnId": "#vf.5",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "Fr",
+                                "jgnFactShow": "Fr( ~eb )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "FreshFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~eb"
+                                    }
+                                ],
+                                "jgnFactId": "#vf.5:c0"
+                            }
+                        ],
+                        "jgnPrems": [],
+                        "jgnActs": []
+                    },
+                    "jgnLabel": "FreshRule",
+                    "jgnType": "isFreshRule"
+                },
+                {
+                    "jgnId": "#vf.6",
+                    "jgnMetadata": {
+                        "jgnConcs": [
+                            {
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( <$addrB.1, ~Nb> )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrB.1"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrB.1,~Nb)",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#vf.6:c0"
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( <$addrB.1, ~Nb> )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrB.1"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrB.1,~Nb)",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "#vf.6:p0"
+                            }
+                        ],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "K",
+                                "jgnFactShow": "K( <$addrB.1, ~Nb> )",
+                                "jgnFactMult": "",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrB.1"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrB.1,~Nb)",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "Send",
+                    "jgnType": "isIntruderRule"
+                },
+                {
+                    "jgnId": "#k",
+                    "jgnMetadata": {
+                        "jgnConcs": [],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( f5ltk(DHKey, ~Na, ~Nb, $addrA.1, $addrB) )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "DHKey"
+                                            },
+                                            {
+                                                "jgnConst": "~Na"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            },
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            },
+                                            {
+                                                "jgnConst": "$addrB"
+                                            }
+                                        ],
+                                        "jgnShow": "f5ltk(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                        "jgnFunct": "f5ltk"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "!KU( f5ltk(DHKey, ~Na, ~Nb, $addrA.1, $addrB) )",
+                    "jgnType": "unsolvedActionAtom"
+                },
+                {
+                    "jgnId": "#vk",
+                    "jgnMetadata": {
+                        "jgnConcs": [],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( <$addrA.1, f6(f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB), ~Na, ~Nb, $addrA.1, $addrB) >)",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            },
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnConst": "DHKey"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Na"
+                                                            },
+                                                            {
+                                                                "jgnConst": "~Nb"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrA.1"
+                                                            },
+                                                            {
+                                                                "jgnConst": "$addrB"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                                        "jgnFunct": "f5mac"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Na"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Nb"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrA.1"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrB"
+                                                    }
+                                                ],
+                                                "jgnShow": "f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB)",
+                                                "jgnFunct": "f6"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrA.1,f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB))",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "!KU( <$addrA.1, f6(f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB), ~Na, ~Nb, $addrA.1, $addrB) >)",
+                    "jgnType": "unsolvedActionAtom"
+                },
+                {
+                    "jgnId": "#vk.1",
+                    "jgnMetadata": {
+                        "jgnConcs": [],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( $addrA.1 )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$addrA.1"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "!KU( $addrA.1 )",
+                    "jgnType": "unsolvedActionAtom"
+                },
+                {
+                    "jgnId": "#vk.2",
+                    "jgnMetadata": {
+                        "jgnConcs": [],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( f6(f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB), ~Na, ~Nb, $addrA.1, $addrB))",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "DHKey"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Na"
+                                                    },
+                                                    {
+                                                        "jgnConst": "~Nb"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrA.1"
+                                                    },
+                                                    {
+                                                        "jgnConst": "$addrB"
+                                                    }
+                                                ],
+                                                "jgnShow": "f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB)",
+                                                "jgnFunct": "f5mac"
+                                            },
+                                            {
+                                                "jgnConst": "~Na"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            },
+                                            {
+                                                "jgnConst": "$addrA.1"
+                                            },
+                                            {
+                                                "jgnConst": "$addrB"
+                                            }
+                                        ],
+                                        "jgnShow": "f6(f5mac(DHKey,~Na,~Nb,$addrA.1,$addrB),~Na,~Nb,$addrA.1,$addrB)",
+                                        "jgnFunct": "f6"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "!KU( f6(f5mac(DHKey, ~Na, ~Nb, $addrA.1, $addrB), ~Na, ~Nb, $addrA.1, $addrB))",
+                    "jgnType": "unsolvedActionAtom"
+                },
+                {
+                    "jgnId": "#vk.3",
+                    "jgnMetadata": {
+                        "jgnConcs": [],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( ~Na )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~Na"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "!KU( ~Na )",
+                    "jgnType": "unsolvedActionAtom"
+                },
+                {
+                    "jgnId": "#vk.4",
+                    "jgnMetadata": {
+                        "jgnConcs": [],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( PKa )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "PKa"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "!KU( PKa )",
+                    "jgnType": "unsolvedActionAtom"
+                },
+                {
+                    "jgnId": "#vk.5",
+                    "jgnMetadata": {
+                        "jgnConcs": [],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( <$addrB.1, ~Nb> )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$addrB.1"
+                                            },
+                                            {
+                                                "jgnConst": "~Nb"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($addrB.1,~Nb)",
+                                        "jgnFunct": "pair"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "!KU( <$addrB.1, ~Nb> )",
+                    "jgnType": "unsolvedActionAtom"
+                },
+                {
+                    "jgnId": "#vk.6",
+                    "jgnMetadata": {
+                        "jgnConcs": [],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( $addrB.1 )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$addrB.1"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "!KU( $addrB.1 )",
+                    "jgnType": "unsolvedActionAtom"
+                },
+                {
+                    "jgnId": "#vk.7",
+                    "jgnMetadata": {
+                        "jgnConcs": [],
+                        "jgnPrems": [],
+                        "jgnActs": [
+                            {
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( ~Nb )",
+                                "jgnFactMult": "!",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~Nb"
+                                    }
+                                ],
+                                "jgnFactId": "action"
+                            }
+                        ]
+                    },
+                    "jgnLabel": "!KU( ~Nb )",
+                    "jgnType": "unsolvedActionAtom"
+                }
+            ]
+        }
+    ]
+}

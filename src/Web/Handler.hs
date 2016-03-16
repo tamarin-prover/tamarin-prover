@@ -68,6 +68,7 @@ import           Theory                       (
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver, apHeuristic)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
+import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON 
 import           Web.Hamlet
 import           Web.Instances                ()
 import           Web.Settings
@@ -806,9 +807,10 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
       img <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
           (imageFormat yesod)
-          (dotCmd yesod)
+          (graphCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress)
+          (sequentToJSONPretty)
           (show simplificationLevel)
           (abbreviate)
           (tiTheory ti) path
@@ -831,7 +833,7 @@ getTheoryGraphDiffR idx path = withDiffTheory idx ( \ti -> do
       img <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
           (imageFormat yesod)
-          (dotCmd yesod)
+          (snd $ graphCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress)
           (show simplificationLevel)

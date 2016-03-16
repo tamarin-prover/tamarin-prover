@@ -28,11 +28,12 @@ import           Main.Console
 -- Retrieving the paths to required tools.
 ------------------------------------------------------------------------------
 
--- | Flags for handing over the path to the maude and 'dot' tool.
+-- | Flags for handing over the path to the maude and graph rendering tool (dot or json).
 toolFlags :: [Flag Arguments]
 toolFlags =
   [ flagOpt "dot" ["with-dot"] (updateArg "withDot") "FILE" "Path to GraphViz 'dot' tool"
-  , flagOpt "maude" ["with-maude"] (updateArg "withMaude") "FILE"  "Path to 'maude' rewriting tool"
+  , flagOpt "json" ["with-json"] (updateArg "withJson") "FILE" "Path to JSON rendering tool (not working with --diff)"
+  , flagOpt "maude" ["with-maude"] (updateArg "withMaude") "FILE" "Path to 'maude' rewriting tool"
   ]
 
 -- | Path to maude tool
@@ -42,6 +43,12 @@ maudePath = fromMaybe "maude" . findArg "withMaude"
 -- | Path to dot tool
 dotPath :: Arguments -> FilePath
 dotPath = fromMaybe "dot" . findArg "withDot"
+
+-- | Path to dot or json tool
+graphPath :: Arguments -> (String, FilePath)
+graphPath as = 
+  if (argExists "withJson" as) then ("json", (fromMaybe "json" . findArg "withJson") as)
+                               else ("dot", (fromMaybe "dot" . findArg "withDot") as)
 
 
 ------------------------------------------------------------------------------
@@ -133,6 +140,19 @@ ensureGraphVizDot as = do
       , " Please download an official version from:"
       , "         http://www.graphviz.org/"
       ]
+
+-- | Check whether a the graph rendering command supplied is pointing to an existing file
+ensureGraphCommand :: Arguments -> IO Bool
+ensureGraphCommand as = do
+    putStrLn $ "Graph rendering command: " ++ cmd
+    testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False
+  where
+    cmd = snd $ graphPath as
+    check _ err
+      | err == ""  = Right $ " OK."
+      | otherwise  = Left  $ errMsg
+    errMsg = unlines
+      [ "Command not found" ]
 
 -- | Ensure a suitable version of Maude is installed.
 ensureMaude :: Arguments -> IO Bool
