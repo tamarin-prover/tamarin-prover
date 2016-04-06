@@ -190,6 +190,9 @@ next
   case Rule_Destrdsnd
   by sorry
 next
+  case Rule_Destrdverify
+  by sorry
+next
   case Rule_Equality
   backward-search
     case LHS
@@ -334,6 +337,9 @@ next
       next
         case dadec
         by sorry
+      next
+        case dverify
+        by sorry
       qed
     next
       case Challenge
@@ -393,7 +399,7 @@ analyzing: examples/ccs15/Attack_TPM_Envelope.spthy
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.414954s
+  processing time: 0.372227s
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
@@ -402,7 +408,7 @@ analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
   LHS :  executable (exists-trace): analysis incomplete (1 steps)
   RHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
   LHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (71 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (73 steps)
 
 ------------------------------------------------------------------------------
 
@@ -412,7 +418,7 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.414954s
+  processing time: 0.372227s
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
@@ -421,7 +427,7 @@ analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
   LHS :  executable (exists-trace): analysis incomplete (1 steps)
   RHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
   LHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (71 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (73 steps)
 
 ==============================================================================
 */

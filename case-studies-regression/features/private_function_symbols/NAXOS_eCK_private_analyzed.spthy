@@ -588,7 +588,7 @@ analyzing: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.107114s
+  processing time: 2.987091s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ------------------------------------------------------------------------------
@@ -599,7 +599,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.107114s
+  processing time: 2.987091s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ==============================================================================

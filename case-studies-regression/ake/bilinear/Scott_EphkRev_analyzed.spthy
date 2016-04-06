@@ -305,7 +305,7 @@ analyzing: examples/ake/bilinear/Scott_EphkRev.spthy
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 28.431219s
+  processing time: 24.835599s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 
@@ -317,7 +317,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 28.431219s
+  processing time: 24.835599s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 

@@ -280,12 +280,12 @@ solve( !TTP( skT ) ▶₁ #i )
   case Setup_TTP
   solve( !KU( sign(~n, pcs(sign(sk1, ct), pk(ysk), pk(~n))) ) @ #vk )
     case Abort1
-    solve( !KU( pk(sk1) ) @ #vk.8 )
-      case cpk
-      solve( !KU( pk(ysk) ) @ #vk.9 )
-        case Setup_TTP
-        solve( !KU( sign(sk1, ct) ) @ #vk.10 )
-          case csign
+    solve( !KU( sign(sk1, ct) ) @ #vk.10 )
+      case csign
+      solve( !KU( pk(sk1) ) @ #vk.9 )
+        case cpk
+        solve( !KU( pk(ysk) ) @ #vk.10 )
+          case Setup_TTP
           solve( !KU( pk(~n) ) @ #vk.11 )
             case Setup_TTP
             SOLVED // trace found
@@ -316,14 +316,14 @@ solve( !TTP( skT ) ▶₁ #i )
   case Setup_TTP
   solve( !KU( sign(~n, <sign(sk1, ct), sign(sk2, ct)>) ) @ #vk )
     case Resolve1
-    solve( !KU( pk(sk1) ) @ #vk.8 )
-      case cpk
-      solve( !KU( pk(sk2) ) @ #vk.10 )
-        case cpk
-        solve( !KU( sign(sk1, ct) ) @ #vk.11 )
-          case csign
-          solve( !KU( sign(sk2, ct) ) @ #vk.12 )
-            case csign
+    solve( !KU( sign(sk1, ct) ) @ #vk.11 )
+      case csign
+      solve( !KU( sign(sk2, ct) ) @ #vk.12 )
+        case csign
+        solve( !KU( pk(sk1) ) @ #vk.11 )
+          case cpk
+          solve( !KU( pk(sk2) ) @ #vk.12 )
+            case cpk
             solve( !KU( pk(~n) ) @ #vk.13 )
               case Setup_TTP
               SOLVED // trace found
@@ -355,14 +355,14 @@ solve( !TTP( skT ) ▶₁ #i )
   case Setup_TTP
   solve( !KU( sign(~n, <sign(sk1, ct), sign(sk2, ct)>) ) @ #vk )
     case Resolve2
-    solve( !KU( pk(sk1) ) @ #vk.8 )
-      case cpk
-      solve( !KU( pk(sk2) ) @ #vk.10 )
-        case cpk
-        solve( !KU( sign(sk2, ct) ) @ #vk.11 )
-          case csign
-          solve( !KU( sign(sk1, ct) ) @ #vk.12 )
-            case csign
+    solve( !KU( sign(sk2, ct) ) @ #vk.11 )
+      case csign
+      solve( !KU( sign(sk1, ct) ) @ #vk.12 )
+        case csign
+        solve( !KU( pk(sk1) ) @ #vk.11 )
+          case cpk
+          solve( !KU( pk(sk2) ) @ #vk.12 )
+            case cpk
             solve( !KU( pk(~n) ) @ #vk.13 )
               case Setup_TTP
               SOLVED // trace found
@@ -389,7 +389,7 @@ analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signi
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.745912s
+  processing time: 0.632468s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)
@@ -403,7 +403,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.745912s
+  processing time: 0.632468s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)
