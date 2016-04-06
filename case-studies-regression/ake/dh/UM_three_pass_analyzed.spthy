@@ -13334,7 +13334,7 @@ analyzing: examples/ake/dh/UM_three_pass.spthy
 analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 162.88655s
+  processing time: 151.643365s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 
@@ -13346,7 +13346,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 162.88655s
+  processing time: 151.643365s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 
