@@ -195,6 +195,7 @@ import           Data.List                            (foldl', partition, inters
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe)
 -- import           Data.Monoid                          (Monoid(..))
+import qualified Data.Monoid                             as Mono
 import qualified Data.Set                             as S
 import           Data.Either                          (partitionEithers)
 
@@ -1101,6 +1102,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
   , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
   , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
+  , ("unsolved goals",  prettyGoals False se)
   , ("solved goals",    prettyGoals True se)
 --   , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
 --   , ("DEBUG: Nodes",    text $ show $ M.toList $ L.get sNodes se) -- prettyGoals False se)
@@ -1113,7 +1115,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
 -- clauses.
 prettyNonGraphSystemDiff :: HighlightDocument d => DiffProofContext -> DiffSystem -> d
 prettyNonGraphSystemDiff ctxt se = vsep $ map combine
--- FIXME!!!
+-- FIXME: graphical output of mirror system
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
   , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
@@ -1164,8 +1166,64 @@ prettyGoals solved sys = vsep $ do
     let nr  = L.get gsNr status
         loopBreaker | L.get gsLoopBreaker status = " (loop breaker)"
                     | otherwise                  = ""
-    return $ prettyGoal goal <-> lineComment_ ("nr: " ++ show nr ++ loopBreaker)
-    
+        useful = case goal of
+          _ | L.get gsLoopBreaker status              -> " (loop breaker)"
+          ActionG i (kFactView -> Just (UpK, m))
+              -- if there are KU-guards then all knowledge goals are useful
+            | hasKUGuards             -> " (useful1)"
+            | currentlyDeducible i m  -> " (currently deducible)"
+            | probablyConstructible m -> " (probably constructible)"
+          _                           -> " (useful2)"
+    return $ prettyGoal goal <-> lineComment_ ("nr: " ++ show nr ++ loopBreaker ++ show useful)
+  where
+    existingDeps = rawLessRel sys
+    hasKUGuards  =
+        any ((KUFact `elem`) . guardFactTags) $ S.toList $ L.get sFormulas sys
+
+    checkTermLits :: (LSort -> Bool) -> LNTerm -> Bool
+    checkTermLits p =
+        Mono.getAll . foldMap (Mono.All . p . sortOfLit)
+
+    -- KU goals of messages that are likely to be constructible by the
+    -- adversary. These are terms that do not contain a fresh name or a fresh
+    -- name variable. For protocols without loops they are very likely to be
+    -- constructible. For protocols with loops, such terms have to be given
+    -- similar priority as loop-breakers.
+    probablyConstructible  m = checkTermLits (LSortFresh /=) m
+                               && not (containsPrivate m)
+
+    -- KU goals of messages that are currently deducible. Either because they
+    -- are composed of public names only and do not contain private function
+    -- symbols or because they can be extracted from a sent message using
+    -- unpairing or inversion only.
+    currentlyDeducible i m = (checkTermLits (LSortPub ==) m
+                              && not (containsPrivate m))
+                          || extractible i m
+
+    extractible i m = or $ do
+        (j, ru) <- M.toList $ L.get sNodes sys
+        -- We cannot deduce a message from a last node.
+        guard (not $ isLast sys j)
+        let derivedMsgs = concatMap toplevelTerms $
+                [ t | Fact OutFact [t] <- L.get rConcs ru] <|>
+                [ t | Just (DnK, t)    <- kFactView <$> L.get rConcs ru]
+        -- m is deducible from j without an immediate contradiction
+        -- if it is a derived message of 'ru' and the dependency does
+        -- not make the graph cyclic.
+        return $ m `elem` derivedMsgs &&
+                 not (D.cyclic ((j, i) : existingDeps))
+
+    toplevelTerms t@(viewTerm2 -> FPair t1 t2) =
+        t : toplevelTerms t1 ++ toplevelTerms t2
+    toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
+    toplevelTerms t = [t]
+
+
+    allMsgVarsKnownEarlier (i,_) args =
+        all (`elem` earlierMsgVars) (filter isMsgVar args)
+      where earlierMsgVars = do (j, _, t) <- allKUActions sys
+                                guard $ isMsgVar t && alwaysBefore sys j i
+                                return t
 -- | Pretty print a case distinction
 prettyCaseDistinction :: HighlightDocument d => CaseDistinction -> d
 prettyCaseDistinction th = vcat $
