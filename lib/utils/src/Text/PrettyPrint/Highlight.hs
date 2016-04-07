@@ -39,7 +39,7 @@ class Document d => HighlightDocument d where
     -- using the @style@.
     highlight :: HighlightStyle -> d -> d
 
-instance HighlightDocument MyDoc where
+instance HighlightDocument Doc where
     highlight _ = id
 
 ------------------------------------------------------------------------------

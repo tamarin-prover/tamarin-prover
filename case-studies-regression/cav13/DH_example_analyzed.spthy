@@ -130,7 +130,7 @@ analyzing: examples/cav13/DH_example.spthy
 analyzed: examples/cav13/DH_example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.235448s
+  processing time: 0.245847s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 
@@ -142,7 +142,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.235448s
+  processing time: 0.245847s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 

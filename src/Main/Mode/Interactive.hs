@@ -19,6 +19,7 @@ import           Data.Maybe
 import           Data.String                     (fromString)
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.Directory                (doesDirectoryExist, doesFileExist, getTemporaryDirectory)
+import           System.Environment              (lookupEnv)
 import           System.FilePath
 
 import           Network.Wai.Handler.Warp        (defaultSettings, setHost, setPort)
@@ -74,9 +75,15 @@ run thisMode as = case findArg "workDir" as of
         then do
           -- determine caching directory
           tempDir <- getTemporaryDirectory
-          let cacheDir = tempDir </> "tamarin-prover-cache"
+          winLoginName <- lookupEnv "USERNAME"
+	  unixLoginName <- lookupEnv "USER"
+	  let loginName = fromMaybe "" (winLoginName <|> unixLoginName)
+	      cacheDir = tempDir </> ("tamarin-prover-cache-" ++ loginName)
           -- process theories
-          _ <- ensureGraphVizDot as
+          case (fst $ graphPath as) of
+              "dot"  -> ensureGraphVizDot as
+              "json" -> ensureGraphCommand as
+              _      -> return True
           _ <- ensureMaude as
           putStrLn ""
           port <- readPort
@@ -103,7 +110,7 @@ run thisMode as = case findArg "workDir" as of
                 cacheDir
                 workDir (argExists "loadstate" as) (argExists "autosave" as)
                 (loadClosedThyWfReport as) (loadClosedThyString as)
-                (argExists "debug" as) (dotPath as) readImageFormat
+                (argExists "debug" as) (graphPath as) readImageFormat
                 (constructAutoProver as)
                 (runWarp port)
         else

@@ -224,144 +224,141 @@ next
               case Recv1
               solve( !KU( ~k2 ) @ #vk.5 )
                 case SendN
-                solve( !KU( MAC(<m.1, commit_k, kOld>, ~k2) ) @ #vk.13 )
-                  case SendN
-                  solve( !KU( MAC(<~m1, f(~k2)>, ~kOld) ) @ #vk.18 )
-                    case Send1
-                    solve( !KU( f(~k1) ) @ #vk.24 )
-                      case Sender0a
-                      solve( !KU( sign(<f(~k1), ~nR>, ~ltk) ) @ #vk.26 )
-                        case Sender0a
+                solve( !KU( sign(<f(kOld), ~nR>, ~ltk) ) @ #vk.25 )
+                  case Sender0a
+                  solve( !KU( ~k1 ) @ #vk.13 )
+                    case SendN
+                    solve( !KU( MAC(<m.1, commit_k, ~k1>, ~k2) ) @ #vk.15 )
+                      case SendN
+                      solve( !KU( MAC(<~m1, f(~k2)>, ~k1) ) @ #vk.21 )
+                        case Send1
                         solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                           case SendN
-                          solve( Sender( S.2, ~k1, ~k2 ) ▶₀ #vr.11 )
+                          solve( Sender( S.2, ~k1, ~k.1 ) ▶₀ #vr.15 )
                             case Send1
-                            by contradiction /* from formulas */
-                          qed
-                        qed
-                      next
-                        case csign
-                        solve( !KU( ~ltk.1 ) @ #vk.31 )
-                          case Reveal_Ltk
-                          by contradiction /* from formulas */
-                        next
-                          case SendN
-                          solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
+                            solve( Sender( S.2, ~k1, ~k2 ) ▶₀ #vr.19 )
+                              case Send1
+                              by contradiction /* from formulas */
+                            qed
+                          next
                             case SendN
-                            solve( Sender( S.2, ~k1, ~k2 ) ▶₀ #vr.11 )
+                            solve( Sender( S.3, ~k1, ~k2 ) ▶₀ #vr.19 )
                               case Send1
                               by contradiction /* from formulas */
                             qed
                           qed
                         qed
+                      next
+                        case cMAC
+                        by contradiction /* cyclic */
                       qed
                     next
-                      case cf
-                      solve( !KU( ~k1 ) @ #vk.16 )
-                        case SendN
-                        by contradiction /* from formulas */
-                      qed
-                    qed
-                  next
-                    case cMAC
-                    solve( !KU( ~kOld ) @ #vk.14 )
-                      case Receiver0a
-                      solve( !KU( f(~kOld) ) @ #vk.24 )
-                        case cf
-                        solve( !KU( sign(<f(~kOld), ~nR>, ~ltk) ) @ #vk.25 )
-                          case csign
-                          solve( !KU( ~ltk ) @ #vk.27 )
-                            case Reveal_Ltk
-                            by contradiction /* from formulas */
-                          next
-                            case SendN
-                            solve( Sender( S.2, ~k2, ~k ) ▶₀ #vr.7 )
-                              case SendN
-                              by solve( Sender( S.3, ~kOld, ~k2 ) ▶₀ #vr.11 )
-                            qed
-                          qed
-                        qed
-                      qed
-                    next
-                      case Reveal_Ltk
-                      solve( !KU( f(~kOld) ) @ #vk.24 )
-                        case cf
-                        solve( !KU( sign(<f(~kOld), ~nR>, ~ltk) ) @ #vk.25 )
-                          case csign
-                          solve( !KU( ~ltk ) @ #vk.27 )
-                            case Reveal_Ltk
-                            by contradiction /* from formulas */
-                          next
-                            case SendN
-                            solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
-                              case SendN
-                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.11 )
-                            qed
-                          qed
-                        qed
-                      qed
-                    next
-                      case Send1
-                      solve( !KU( f(~kOld) ) @ #vk.24 )
-                        case cf
-                        solve( !KU( sign(<f(~kOld), ~nR>, ~ltk) ) @ #vk.25 )
-                          case csign
-                          solve( !KU( ~ltk ) @ #vk.27 )
-                            case Reveal_Ltk
-                            by contradiction /* from formulas */
-                          next
-                            case SendN
-                            solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
-                              case SendN
-                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.11 )
-                            qed
-                          qed
-                        qed
-                      qed
-                    next
-                      case SendN_case_1
-                      solve( !KU( f(~kOld) ) @ #vk.24 )
-                        case cf
-                        solve( !KU( sign(<f(~kOld), ~nR>, ~ltk) ) @ #vk.25 )
-                          case csign
-                          solve( !KU( ~ltk ) @ #vk.27 )
-                            case Reveal_Ltk
-                            by contradiction /* from formulas */
-                          next
-                            case SendN
-                            solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
-                              case SendN
-                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.11 )
-                            qed
-                          qed
-                        qed
-                      qed
-                    next
-                      case SendN_case_2
-                      by contradiction /* from formulas */
-                    next
-                      case fresh
-                      solve( !KU( f(~kOld) ) @ #vk.24 )
-                        case cf
-                        solve( !KU( sign(<f(~kOld), ~nR>, ~ltk) ) @ #vk.25 )
-                          case csign
-                          solve( !KU( ~ltk ) @ #vk.27 )
-                            case Reveal_Ltk
-                            by contradiction /* from formulas */
-                          next
-                            case SendN
-                            solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
-                              case SendN
-                              by solve( Sender( S.2, ~kOld, ~k2 ) ▶₀ #vr.11 )
-                            qed
-                          qed
-                        qed
-                      qed
+                      case cMAC
+                      by contradiction /* cyclic */
                     qed
                   qed
                 next
-                  case cMAC
-                  by contradiction /* cyclic */
+                  case csign
+                  solve( !KU( ~ltk ) @ #vk.27 )
+                    case Reveal_Ltk
+                    by contradiction /* from formulas */
+                  next
+                    case SendN
+                    solve( !KU( MAC(<m.1, commit_k, kOld>, ~k2) ) @ #vk.16 )
+                      case SendN
+                      solve( !KU( MAC(<~m1, f(~k2)>, ~kOld) ) @ #vk.22 )
+                        case Send1
+                        solve( !KU( f(~k1) ) @ #vk.26 )
+                          case Sender0a
+                          solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
+                            case SendN
+                            solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.11 )
+                              case SendN
+                              solve( Sender( S.3, ~k1, ~k2 ) ▶₀ #vr.15 )
+                                case Send1
+                                by contradiction /* from formulas */
+                              qed
+                            qed
+                          qed
+                        next
+                          case cf
+                          solve( !KU( ~k1 ) @ #vk.21 )
+                            case SendN
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      next
+                        case cMAC
+                        solve( !KU( ~kOld ) @ #vk.19 )
+                          case Receiver0a
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
+                            case cf
+                            solve( Sender( S.2, ~k2, ~k ) ▶₀ #vr.7 )
+                              case SendN
+                              solve( Sender( S.3, ~ltk, ~k.1 ) ▶₀ #vr.11 )
+                                case SendN
+                                by solve( Sender( S.4, ~kOld, ~k2 ) ▶₀ #vr.15 )
+                              qed
+                            qed
+                          qed
+                        next
+                          case Reveal_Ltk
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
+                            case cf
+                            solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
+                              case SendN
+                              solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.11 )
+                                case SendN
+                                by solve( Sender( S.3, ~kOld, ~k2 ) ▶₀ #vr.15 )
+                              qed
+                            qed
+                          qed
+                        next
+                          case Send1
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
+                            case cf
+                            solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
+                              case SendN
+                              solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.11 )
+                                case SendN
+                                by solve( Sender( S.3, ~kOld, ~k2 ) ▶₀ #vr.15 )
+                              qed
+                            qed
+                          qed
+                        next
+                          case SendN_case_1
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
+                            case cf
+                            solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
+                              case SendN
+                              solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.11 )
+                                case SendN
+                                by solve( Sender( S.3, ~kOld, ~k2 ) ▶₀ #vr.15 )
+                              qed
+                            qed
+                          qed
+                        next
+                          case SendN_case_2
+                          by contradiction /* from formulas */
+                        next
+                          case fresh
+                          solve( !KU( f(~kOld) ) @ #vk.26 )
+                            case cf
+                            solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
+                              case SendN
+                              solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.11 )
+                                case SendN
+                                by solve( Sender( S.3, ~kOld, ~k2 ) ▶₀ #vr.15 )
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    next
+                      case cMAC
+                      by contradiction /* cyclic */
+                    qed
+                  qed
                 qed
               qed
             qed
@@ -400,24 +397,24 @@ next
                                            f(~kOld), f(~k)
                                  ) ▶₁ #vr.1 )
                             case Recv1
-                            solve( !KU( f(~k1) ) @ #vk.31 )
+                            solve( !KU( sign(<f(~k1), ~nR>, ~ltk) ) @ #vk.32 )
                               case Sender0a
-                              solve( !KU( sign(<f(~k1), ~nR>, ~ltk) ) @ #vk.33 )
-                                case Sender0a
-                                solve( Sender( S.1, ~kNew, ~k.1 ) ▶₀ #vr.3 )
+                              solve( Sender( S.1, ~kNew, ~k.1 ) ▶₀ #vr.3 )
+                                case SendN
+                                solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.7 )
                                   case SendN
-                                  solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.7 )
-                                    case SendN
-                                    by contradiction /* from formulas */
-                                  qed
-                                qed
-                              next
-                                case csign
-                                solve( !KU( ~ltk.1 ) @ #vk.38 )
-                                  case Reveal_Ltk
                                   by contradiction /* from formulas */
-                                next
-                                  case SendN
+                                qed
+                              qed
+                            next
+                              case csign
+                              solve( !KU( ~ltk ) @ #vk.34 )
+                                case Reveal_Ltk
+                                by contradiction /* from formulas */
+                              next
+                                case SendN
+                                solve( !KU( f(~k1) ) @ #vk.33 )
+                                  case Sender0a
                                   solve( Sender( S.1, ~kNew, ~k.1 ) ▶₀ #vr.3 )
                                     case SendN
                                     solve( Sender( S.2, ~k, ~kNew ) ▶₀ #vr.7 )
@@ -425,13 +422,13 @@ next
                                       by contradiction /* from formulas */
                                     qed
                                   qed
+                                next
+                                  case cf
+                                  solve( !KU( ~k1 ) @ #vk.25 )
+                                    case SendN
+                                    by contradiction /* from formulas */
+                                  qed
                                 qed
-                              qed
-                            next
-                              case cf
-                              solve( !KU( ~k1 ) @ #vk.21 )
-                                case SendN
-                                by contradiction /* from formulas */
                               qed
                             qed
                           qed
@@ -784,8 +781,8 @@ analyzing: examples/loops/TESLA_Scheme1.spthy
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.238373s
-  authentic (all-traces): verified (159 steps)
+  processing time: 5.216163s
+  authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
 ------------------------------------------------------------------------------
@@ -796,8 +793,8 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.238373s
-  authentic (all-traces): verified (159 steps)
+  processing time: 5.216163s
+  authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
 ==============================================================================

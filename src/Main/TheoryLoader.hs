@@ -85,7 +85,7 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|p|P|c|C)+"
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|p|P|c|C|i)+"
       "Sequence of goal rankings to use (default 's')"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
@@ -305,13 +305,15 @@ constructAutoProver as =
     ranking 'P' = SapicPKCS11Ranking
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
-    ranking r   = error $ render $ getDoc $ fsep $ map text $ words $
+    ranking 'i' = InjRanking
+    ranking r   = error $ render $ fsep $ map text $ words $
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\
       \ 'o' for oracle ranking,\
       \ 'p' for the smart ranking optimized for translations coming from SAPIC (http://sapic.gforge.inria.fr),\
       \ 'P' for the smart ranking optimized for a specific model of PKCS11, translated using SAPIC (http://sapic.gforge.inria.fr),\
+      \ 'i' for the smart ranking modified for the proof of injective detection protocols,\
       \ 'c' for the creation order and useful goals first,\
       \ and 'C' for the creation order."
 
@@ -344,7 +346,7 @@ constructAutoDiffProver as =
     ranking 'S' = SmartRanking True
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
-    ranking r   = error $ render $ getDoc $ fsep $ map text $ words $
+    ranking r   = error $ render $ fsep $ map text $ words $
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\
@@ -397,7 +399,7 @@ addMessageDeductionRuleVariants thy0
   | otherwise     = return thy
   where
     msig         = get (sigpMaudeSig . thySignature) thy0
-    rules        = subtermIntruderRules msig ++ specialIntruderRules
+    rules        = subtermIntruderRules False msig ++ specialIntruderRules False
                    ++ if enableMSet msig then multisetIntruderRules else []
     thy          = addIntrRuleACs rules thy0
     addIntruderVariants mkRuless = do
@@ -414,8 +416,8 @@ addMessageDeductionRuleVariantsDiff thy0
   | otherwise     = return $ addIntrRuleLabels thy
   where
     msig         = get (sigpMaudeSig . diffThySignature) thy0
-    rules        = subtermIntruderRules msig ++ specialIntruderRules
+    rules diff = subtermIntruderRules diff msig ++ specialIntruderRules diff
                    ++ if enableMSet msig then multisetIntruderRules else []
-    thy          = addIntrRuleACsDiffBoth rules thy0
+    thy          = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
     addIntruderVariantsDiff mkRuless = do
-        return $ addIntrRuleLabels (addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)
+        return $ addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)

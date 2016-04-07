@@ -115,7 +115,7 @@ partialEvaluation evalStyle ruEs = reader $ \hnd ->
               Silent  -> id
               Summary -> trace incDesc
               Tracing -> trace $ incDesc ++ "\n\n" ++
-                ( render $ getDoc $ nest 2 $ numbered' $ map prettyLNFact $
+                ( render $ nest 2 $ numbered' $ map prettyLNFact $
                   S.toList $ st' `S.difference` st ) ++ "\n"
 
 

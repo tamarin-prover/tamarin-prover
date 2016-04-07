@@ -274,14 +274,14 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
     case Resp_1
     solve( !KU( sign(<hki, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
       case Init_2_case_2
-      solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.10 )
-        case Sessionkey_Reveal_case_2
-        solve( splitEqs(2) )
-          case split_case_1
-          solve( !KU( sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.17 )
-            case Resp_1
+      solve( !KU( sign(<'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.17 )
+        case Resp_1
+        solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.12 )
+          case Sessionkey_Reveal_case_2
+          solve( splitEqs(2) )
+            case split_case_1
             solve( !KU( mac('g'^(~ekI*~ekR), sign(<'g'^~ekI, 'g'^~ekR>, ~ltkI))
-                   ) @ #vk.12 )
+                   ) @ #vk.14 )
               case Init_2
               solve( !KU( 'g'^~ekR ) @ #vk.17 )
                 case Resp_1
@@ -317,7 +317,7 @@ analyzing: examples/csf12/STS_MAC.spthy
 analyzed: examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.851486s
+  processing time: 2.704055s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (12 steps)
 
@@ -329,7 +329,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.851486s
+  processing time: 2.704055s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (12 steps)
 

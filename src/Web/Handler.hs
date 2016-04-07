@@ -68,6 +68,7 @@ import           Theory                       (
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver, apHeuristic)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
+import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON 
 import           Web.Hamlet
 import           Web.Instances                ()
 import           Web.Settings
@@ -531,8 +532,8 @@ getTheorySourceR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
-    prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory    
+    prettyRender = render . prettyClosedTheory . tiTheory
+    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory    
 
 -- | Show source (pretty-printed open diff theory).
 getTheorySourceDiffR :: TheoryIdx -> Handler RepPlain
@@ -540,40 +541,40 @@ getTheorySourceDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
-    prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory    
+    prettyRender = render . prettyClosedTheory . tiTheory
+    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory    
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryVariantsR :: TheoryIdx -> Handler RepPlain
 getTheoryVariantsR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 -- | Show variants (pretty-printed closed diff theory).
 getTheoryVariantsDiffR :: TheoryIdx -> Handler RepPlain
 getTheoryVariantsDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionR :: TheoryIdx -> Handler RepPlain
 getTheoryMessageDeductionR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionDiffR :: TheoryIdx -> Handler RepPlain
 getTheoryMessageDeductionDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . getDoc . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . getDoc . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 
 -- | Show a given path within a theory (main view).
@@ -806,9 +807,10 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
       img <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
           (imageFormat yesod)
-          (dotCmd yesod)
+          (graphCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress)
+          (sequentToJSONPretty)
           (show simplificationLevel)
           (abbreviate)
           (tiTheory ti) path
@@ -831,7 +833,7 @@ getTheoryGraphDiffR idx path = withDiffTheory idx ( \ti -> do
       img <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
           (imageFormat yesod)
-          (dotCmd yesod)
+          (snd $ graphCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress)
           (show simplificationLevel)
@@ -1102,8 +1104,8 @@ getSaveTheoryR idx = withEitherTheory idx $ \eti -> do
               -- Return message
               jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
   where
-    prettyRender ti  = render $ getDoc $ prettyOpenTheory $ openTheory $ tiTheory ti 
-    prettyRenderD ti = render $ getDoc $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti 
+    prettyRender ti  = render $ prettyOpenTheory $ openTheory $ tiTheory ti 
+    prettyRenderD ti = render $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti 
     same origin (Trace ti) = tiPrimary ti  && (tiOrigin ti  == origin)
     same origin (Diff ti)    = dtiPrimary ti && (dtiOrigin ti == origin)
     setPrimary :: Bool -> EitherTheoryInfo -> EitherTheoryInfo 

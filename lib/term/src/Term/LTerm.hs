@@ -54,6 +54,7 @@ module Term.LTerm (
   , getMsgVar
   , niFactors
   , containsPrivate
+  , containsNoPrivateExcept
   , neverContainsFreshPriv
 
   -- ** Destructors
@@ -313,6 +314,14 @@ containsPrivate t = case viewTerm t of
     FApp (NoEq (_,(_,Private))) _  -> True
     FApp _                      as -> any containsPrivate as
 
+-- | @containsPrivate t@ returns @True@ if @t@ contains private function symbols.
+containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool
+containsNoPrivateExcept funs t = case viewTerm t of
+    Lit _                          -> True
+    FApp (NoEq (f,(_,Private))) _  -> elem f funs
+    FApp _                      as -> any (containsNoPrivateExcept funs) as
+
+    
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any
 -- fresh names, fresh variables, or private function symbols.

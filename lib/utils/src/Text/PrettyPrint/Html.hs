@@ -150,8 +150,8 @@ escapeHtmlEntities (c:cs) = case c of
     x    -> x : escapeHtmlEntities cs
 
 -- | @renderHtmlDoc = 'postprocessHtmlDoc' . 'render' . 'getHtmlDoc'@ 
-renderHtmlDoc :: HtmlDoc MyDoc -> String
-renderHtmlDoc = postprocessHtmlDoc . render . getDoc . getHtmlDoc
+renderHtmlDoc :: HtmlDoc Doc -> String
+renderHtmlDoc = postprocessHtmlDoc . render . getHtmlDoc
 
 -- | @postprocessHtmlDoc cs@ converts the line-breaks of @cs@ to @<br>@ tags and
 -- the prefixed spaces in every line of @cs@ by non-breaing HTML spaces @&nbsp;@.

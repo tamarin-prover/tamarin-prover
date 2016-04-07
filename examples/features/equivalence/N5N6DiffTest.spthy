@@ -20,12 +20,6 @@ rule Test:
   [ Out(diff(h($A),~f)) ]
 
 
-lemma Diff_test:
-  all-traces
-  "
-  not( Ex #i. DiffIntrEquality() @ i)
-  "
-
-//This MUST find an attack, otherwise conditions N5+N6 are still used and cases are probably missed! (auto prover works)
+//This MUST find an attack on observational equivalence, otherwise conditions N5+N6 are still used and cases are probably missed! (auto prover works)
   
 end

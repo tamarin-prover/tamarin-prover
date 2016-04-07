@@ -231,5 +231,5 @@ defaultMain firstMode otherModes = do
 ------------------------------------------------------------------------------
 
 -- | Render a pretty-printing document.
-renderDoc :: PP.MyDoc -> String
-renderDoc = PP.renderStyle (PP.defaultStyle { PP.lineLength = lineWidth }) . PP.getDoc
+renderDoc :: PP.Doc -> String
+renderDoc = PP.renderStyle (PP.defaultStyle { PP.lineLength = lineWidth })

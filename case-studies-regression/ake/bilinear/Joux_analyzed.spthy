@@ -1054,7 +1054,7 @@ analyzing: examples/ake/bilinear/Joux.spthy
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 151.16027s
+  processing time: 134.764234s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
 
@@ -1066,7 +1066,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 151.16027s
+  processing time: 134.764234s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
 

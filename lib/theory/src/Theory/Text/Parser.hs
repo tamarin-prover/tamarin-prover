@@ -34,7 +34,7 @@ import           Control.Category
 import           Control.Monad
 
 import           Text.Parsec                hiding ((<|>))
-import           Text.PrettyPrint.Class     (render, getDoc)
+import           Text.PrettyPrint.Class     (render)
 
 -- import qualified Extension.Data.Label       as L
 
@@ -468,7 +468,7 @@ guardedFormula :: Parser LNGuarded
 guardedFormula = try $ do
     res <- formulaToGuarded <$> standardFormula
     case res of
-        Left d   -> fail $ render $ getDoc d
+        Left d   -> fail $ render d
         Right gf -> return gf
 
 
@@ -761,7 +761,7 @@ theory flags0 = do
 
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (getDoc $ prettyRuleName ru)
+        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
 
     liftedAddLemma thy lem = case addLemma lem thy of
         Just thy' -> return thy'
@@ -807,7 +807,7 @@ diffTheory flags0 = do
            thy' <- liftedAddProtoRule thy ru
            addItems flags thy'
       , do r <- intrRule
-           addItems flags (addIntrRuleACsDiffBoth [r] thy)
+           addItems flags (addIntrRuleACsDiffAll [r] thy)
       , do c <- formalComment
            addItems flags (addFormalCommentDiff c thy)
       , do ifdef flags thy
@@ -831,11 +831,11 @@ diffTheory flags0 = do
 
     liftedAddProtoRule thy ru = case addProtoDiffRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (getDoc $ prettyRuleName ru)
+        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
 
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (getDoc $ prettyDiffLemmaName ru)
+        Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (prettyDiffLemmaName ru)
         
     liftedAddLemma thy lem = if isLeftLemma lem
                                 then case addLemmaDiff LHS lem thy of

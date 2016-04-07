@@ -94,10 +94,10 @@ import           Theory.Text.Pretty
 ------------------------------------------------------------------------------
 
 type Topic         = String
-type WfError       = (Topic, MyDoc)
+type WfError       = (Topic, Doc)
 type WfErrorReport = [WfError]
 
-prettyWfErrorReport :: WfErrorReport -> MyDoc
+prettyWfErrorReport :: WfErrorReport -> Doc
 prettyWfErrorReport =
     vcat . intersperse (text "") . map ppTopic . groupOn fst
   where
@@ -880,7 +880,7 @@ noteWellformedness report thy quitOnWarning =
       | null report = text "All well-formedness checks were successful."
       | otherwise   = if quitOnWarning
                       then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render $ getDoc (prettyWfErrorReport report)))
+                                 ++ (render (prettyWfErrorReport report)))
                       else vsep
           [ text "WARNING: the following wellformedness checks failed!"
           , prettyWfErrorReport report
@@ -895,7 +895,7 @@ noteWellformednessDiff report thy quitOnWarning =
       | null report = text "All well-formedness checks were successful."
       | otherwise   = if quitOnWarning
                       then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render $ getDoc (prettyWfErrorReport report)))
+                                 ++ (render (prettyWfErrorReport report)))
                       else vsep
           [ text "WARNING: the following wellformedness checks failed!"
           , prettyWfErrorReport report

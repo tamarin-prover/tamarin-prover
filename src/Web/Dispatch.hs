@@ -85,13 +85,14 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -- ^ Theory loader (from string).
           -- -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
-          -> FilePath                        -- ^ Path to dot binary
+          -> (String, FilePath)              -- ^ Path to graph rendering binary (dot or json)
+                                             -- ^ together with indication of choice "dot", "json", ...
           -> ImageFormat                     -- ^ The preferred image format
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
 withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
-          dotCmd' imgFormat' defaultAutoProver' f
+          graphCmd' imgFormat' defaultAutoProver' f
   = do
     thy    <- getTheos
     thrVar <- newMVar M.empty
@@ -111,7 +112,7 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
         , theoryVar          = thyVar
         , threadVar          = thrVar
         , autosaveProofstate = autosave
-        , dotCmd             = dotCmd'
+        , graphCmd           = graphCmd'
         , imageFormat        = imgFormat'
         , defaultAutoProver  = defaultAutoProver'
         , debug              = debug'
@@ -179,7 +180,7 @@ withWebUIDiff readyMsg cacheDir_ thDir loadState autosave thLoader thParser debu
         , theoryVar          = thyVar
         , threadVar          = thrVar
         , autosaveProofstate = autosave
-        , dotCmd             = dotCmd'
+        , graphCmd           = ("dot",dotCmd')
         , imageFormat        = imgFormat'
         , defaultAutoProver  = defaultAutoProver'
         , debug              = debug'

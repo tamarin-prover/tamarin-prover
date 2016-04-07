@@ -105,8 +105,8 @@ module Theory (
   , applyPartialEvaluationDiff
   , addIntrRuleACs
   , addIntrRuleACsDiffBoth
-  , addIntrRuleACsDiffLeft
-  , addIntrRuleACsDiffRight
+  , addIntrRuleACsDiffBothDiff
+  , addIntrRuleACsDiffAll
   , normalizeTheory
 
   -- ** Closed theories
@@ -779,12 +779,12 @@ lookupDiffLemma :: String -> DiffTheory sig c r r2 p p2 -> Maybe (DiffLemma p)
 lookupDiffLemma name = find ((name ==) . L.get lDiffName) . diffTheoryDiffLemmas
 
 -- | Add a comment to the theory.
-addComment :: MyDoc -> Theory sig c r p -> Theory sig c r p
-addComment c = modify thyItems (++ [TextItem ("", render $ getDoc c)])
+addComment :: Doc -> Theory sig c r p -> Theory sig c r p
+addComment c = modify thyItems (++ [TextItem ("", render c)])
 
 -- | Add a comment to the diff theory.
-addDiffComment :: MyDoc -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
-addDiffComment c = modify diffThyItems (++ [DiffTextItem ("", render $ getDoc c)])
+addDiffComment :: Doc -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
+addDiffComment c = modify diffThyItems (++ [DiffTextItem ("", render c)])
 
 -- | Add a comment represented as a string to the theory.
 addStringComment :: String -> Theory sig c r p -> Theory sig c r p
@@ -895,17 +895,33 @@ addProtoDiffRule ruE thy = do
 addIntrRuleACs :: [IntrRuleAC] -> OpenTheory -> OpenTheory
 addIntrRuleACs rs' = modify (thyCache) (\rs -> nub $ rs ++ rs')
 
--- | Add intruder proof rules.
+-- | Add intruder proof rules for all diff and non-diff caches.
+addIntrRuleACsDiffAll :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffAll rs' thy = addIntrRuleACsDiffBoth rs' (addIntrRuleACsDiffBothDiff rs' thy)
+
+-- | Add intruder proof rules for both diff caches.
+addIntrRuleACsDiffBothDiff :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffBothDiff rs' thy = addIntrRuleACsDiffRightDiff rs' (addIntrRuleACsDiffLeftDiff rs' thy)
+
+-- | Add intruder proof rules for both caches.
 addIntrRuleACsDiffBoth :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
 addIntrRuleACsDiffBoth rs' thy = addIntrRuleACsDiffRight rs' (addIntrRuleACsDiffLeft rs' thy)
 
--- | Add intruder proof rules.
-addIntrRuleACsDiffLeft :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
-addIntrRuleACsDiffLeft rs' thy = modify (diffThyDiffCacheLeft) (\rs -> nub $ rs ++ rs') $ modify (diffThyCacheLeft) (\rs -> nub $ rs ++ rs') thy
+-- | Add intruder proof rules to left diff cache.
+addIntrRuleACsDiffLeftDiff :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffLeftDiff rs' thy = modify (diffThyDiffCacheLeft) (\rs -> nub $ rs ++ rs') thy
 
--- | Add intruder proof rules.
+-- | Add intruder proof rules to left cache.
+addIntrRuleACsDiffLeft :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffLeft rs' thy = modify (diffThyCacheLeft) (\rs -> nub $ rs ++ rs') thy
+
+-- | Add intruder proof rules to right diff cache.
+addIntrRuleACsDiffRightDiff :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
+addIntrRuleACsDiffRightDiff rs' thy = modify (diffThyDiffCacheRight) (\rs -> nub $ rs ++ rs') thy
+
+-- | Add intruder proof rules to right cache.
 addIntrRuleACsDiffRight :: [IntrRuleAC] -> OpenDiffTheory -> OpenDiffTheory
-addIntrRuleACsDiffRight rs' thy = modify (diffThyDiffCacheRight) (\rs -> nub $ rs ++ rs') $ modify (diffThyCacheRight) (\rs -> nub $ rs ++ rs') thy
+addIntrRuleACsDiffRight rs' thy = modify (diffThyCacheRight) (\rs -> nub $ rs ++ rs') thy
 
 -- | Normalize the theory representation such that they remain semantically
 -- equivalent. Use this function when you want to compare two theories (quite
@@ -1271,7 +1287,7 @@ applyPartialEvaluation evalStyle thy0 =
     replaceProtoRules [] = []
     replaceProtoRules (item:items)
       | isRuleItem item  =
-          [ TextItem ("text", render $ getDoc ppAbsState)
+          [ TextItem ("text", render ppAbsState)
 
           ] ++ map RuleItem ruEs' ++ filter (not . isRuleItem) items
       | otherwise        = item : replaceProtoRules items
@@ -1304,7 +1320,7 @@ applyPartialEvaluationDiff evalStyle thy0 =
     replaceProtoRules [] = []
     replaceProtoRules (item:items)
       | isEitherRuleItem item  =
-          [ DiffTextItem ("text", render $ getDoc ppAbsState)
+          [ DiffTextItem ("text", render ppAbsState)
 
           ] ++ map (\x -> EitherRuleItem (LHS, x)) ruEsL' ++ map (\x -> EitherRuleItem (RHS, x)) ruEsR' ++ filter (not . isEitherRuleItem) items
       | otherwise        = item : replaceProtoRules items

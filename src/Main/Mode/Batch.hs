@@ -111,7 +111,7 @@ run thisMode as
     -- theory processing functions
     ------------------------------
 
-    processThy :: FilePath -> IO (Pretty.MyDoc)
+    processThy :: FilePath -> IO (Pretty.Doc)
     processThy inFile
       -- | argExists "html" as =
       --     generateHtml inFile =<< loadClosedThy as inFile
@@ -145,7 +145,7 @@ run thisMode as
                           , "         The analysis results might be wrong!" ]
             Pretty.$--$ prettyClosedDiffSummary thy
 
-        out :: (a -> Pretty.MyDoc) -> (a -> Pretty.MyDoc) -> IO a -> IO Pretty.MyDoc
+        out :: (a -> Pretty.Doc) -> (a -> Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load
           | dryRun    = do
               thy <- load

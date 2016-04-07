@@ -43,7 +43,7 @@ import           Term.Subsumption
 
 import           Theory.Model
 
-
+-- import           Debug.Trace
 
 -- Variants of intruder deduction rules
 ----------------------------------------------------------------------
@@ -77,17 +77,17 @@ rule iequality:
 -}
 -- | @specialIntruderRules@ returns the special intruder rules that are
 --   included independently of the message theory
-specialIntruderRules :: [IntrRuleAC]
-specialIntruderRules =
+specialIntruderRules :: Bool -> [IntrRuleAC]
+specialIntruderRules diff =
     [ kuRule CoerceRule      [kdFact x_var]                 (x_var)
     , kuRule PubConstrRule   []                             (x_pub_var)
     , kuRule FreshConstrRule [Fact FreshFact [x_fresh_var]] (x_fresh_var)
     , Rule ISendRule [kuFact x_var]  [Fact InFact [x_var]] [kLogFact x_var]
     , Rule IRecvRule [Fact OutFact [x_var]] [Fact KDFact [x_var]] []
-    , Rule IEqualityRule [kuFact x_var, kdFact x_var]  [] []
-    -- for testing purposes:
-    -- , Rule IEqualityRule [kuFact x_var, kdFact x_var] [kdfact x_var] [kLogFact x_var]
-    ]
+    ] ++
+    if diff 
+       then [ Rule IEqualityRule [kuFact x_var, kdFact x_var]  [] [] ]
+       else []
   where
     kuRule name prems t = Rule name prems [kuFact t] [kuFact t]
 
@@ -102,8 +102,8 @@ specialIntruderRules =
 
 -- | @destuctionRules st@ returns the destruction rules for the given
 -- subterm rule @st@
-destructionRules :: StRule -> [IntrRuleAC]
-destructionRules (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)) =
+destructionRules :: Bool -> StRule -> [IntrRuleAC]
+destructionRules _    (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)) =
     go [] lhs pos
   where
     rhs = lhs `atPos` pos
@@ -122,12 +122,50 @@ destructionRules (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)
                 else []
     go _      (viewTerm -> Lit _)     (_:_)  =
         error "IntruderRules.destructionRules: impossible, position invalid"
+        
+destructionRules _    (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (RhsGround rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs
+destructionRules True (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (RhsGround rhs@(viewTerm -> FApp (NoEq (_,(0,Public)))  []))) = destrRulesForConstant subterms f rhs
+destructionRules _    _                                                                                                              = []
 
-destructionRules _ = []
+-- returns destructor rules for equations with ground RHS
+destrRulesForConstant :: [LNTerm] -> ByteString -> LNTerm -> [IntrRuleAC]
+destrRulesForConstant subterms f rhs =
+-- FIXME (JD): avoid unnecessary combinations of KU and KD facts
+    go [] subterms
+  where
+    go _    []     = []
+    go done (x:xs) = (Rule (DestrRule f) ((kdFact  x):(map kuFact (done ++ xs))) [kdFact rhs] []):(go (x:done) xs)
+
+-- returns all equations with private constructors on the RHS
+privateConstructorEquations :: [StRule] -> [(LNTerm, ByteString)]
+privateConstructorEquations rs = case rs of
+    []    -> []
+    (StRule lhs (RhsGround (viewTerm -> FApp (NoEq (vname,(0,Private))) []))):xs
+          -> (lhs, vname):(privateConstructorEquations xs)
+    _:xs  -> privateConstructorEquations xs
+    
+-- given equations with priavte constructors on the RHS and a list of private function names x,
+-- returns the list of all such constructors such that the LHS only contains public functions or functions in x
+derivablePrivateConstants :: [(LNTerm, ByteString)] -> [ByteString] -> [ByteString]
+derivablePrivateConstants eqs x =
+    if any (containsNoPrivateExcept x) (map fst eqs)
+        then
+            derivablePrivateConstants (filter (\(l, _) -> not $ containsNoPrivateExcept x l) eqs) (x ++ map snd (filter (\(l, _) -> containsNoPrivateExcept x l) eqs)) 
+        else
+            x
+
+-- | @privateConstructorRules st@ returns the constructor rules for private constants that are consequences of rewrite rules in @st@
+privateConstructorRules :: [StRule] -> [IntrRuleAC]
+privateConstructorRules rules = map createRule $ derivablePrivateConstants (privateConstructorEquations rules) []
+  where
+    -- creates a constructor rule for constant s
+    createRule s = Rule (ConstrRule s) [] [concfact] [concfact]
+      where m        = fAppNoEq (s,(0,Private)) []
+            concfact = kuFact m
 
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
-minimizeIntruderRules :: [IntrRuleAC] -> [IntrRuleAC]
-minimizeIntruderRules rules =
+minimizeIntruderRules :: Bool -> [IntrRuleAC] -> [IntrRuleAC]
+minimizeIntruderRules diff rules = if diff then rules else
     go [] rules
   where
     go checked [] = reverse checked
@@ -139,12 +177,12 @@ minimizeIntruderRules rules =
                    then checked
                    else r:checked
 
--- | @subtermIntruderRules maudeSig@ returns the set of intruder rules for
+-- | @subtermIntruderRules diff maudeSig@ returns the set of intruder rules for
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
-subtermIntruderRules :: MaudeSig -> [IntrRuleAC]
-subtermIntruderRules maudeSig =
-     minimizeIntruderRules $ concatMap destructionRules (S.toList $ stRules maudeSig)
-     ++ constructionRules (stFunSyms maudeSig)
+subtermIntruderRules :: Bool -> MaudeSig -> [IntrRuleAC]
+subtermIntruderRules diff maudeSig =
+   minimizeIntruderRules diff $ concatMap (destructionRules diff) (S.toList $ stRules maudeSig)
+     ++ constructionRules (stFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig) 
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@
@@ -163,8 +201,8 @@ constructionRules fSig =
 ------------------------------------------------------------------------------
 
 -- | @dhIntruderRules@ computes the intruder rules for DH
-dhIntruderRules :: WithMaude [IntrRuleAC]
-dhIntruderRules = reader $ \hnd -> minimizeIntruderRules $
+dhIntruderRules :: Bool -> WithMaude [IntrRuleAC]
+dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     [ expRule ConstrRule kuFact return
     , invRule ConstrRule kuFact return
     ] ++
@@ -239,8 +277,8 @@ mkDUnionRule t_prems t_conc =
 -- Bilinear Pairing Intruder rules.
 ------------------------------------------------------------------------------
 
-bpIntruderRules :: WithMaude [IntrRuleAC]
-bpIntruderRules = reader $ \hnd -> minimizeIntruderRules $
+bpIntruderRules :: Bool -> WithMaude [IntrRuleAC]
+bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     [ pmultRule ConstrRule kuFact return
     , emapRule  ConstrRule kuFact return
     ]
