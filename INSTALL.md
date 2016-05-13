@@ -83,7 +83,7 @@ Detailed instructions for MacOS X - from source
   For Homebrew:
 
    ```
-     sudo brew install maude graphviz
+     brew install maude graphviz
    ```
 
   Alternatively, download and install both by following the instructions at their respective websites.
