@@ -86,7 +86,6 @@ Detailed instructions for MacOS X - from source
      sudo brew install maude graphviz
    ```
 
-
   Alternatively, download and install both by following the instructions at their respective websites.
 
   For Maude you can download core Maude 2.7 from:
