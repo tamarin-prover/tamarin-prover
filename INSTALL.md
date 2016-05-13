@@ -87,13 +87,13 @@ Detailed instructions for MacOS X - from source
    ```
 
 
- Alternatively, download and install both by following the instructions at their respective websites.
+  Alternatively, download and install both by following the instructions at their respective websites.
 
-For Maude you can download core Maude 2.7 from:
-http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation
+  For Maude you can download core Maude 2.7 from:
+  http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation
 
-For GraphViz you can download it from:
-http://www.graphviz.org/Download.php
+  For GraphViz you can download it from:
+  http://www.graphviz.org/Download.php
 
 2. Install the Haskell tool `stack` by following the instructions at 
    https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
