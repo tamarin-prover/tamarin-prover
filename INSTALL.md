@@ -118,4 +118,4 @@ Detailed instructions for MacOS X - from source
    case studies from our papers. We recommend opening the `Tutorial.spthy`
    example file in a text editor and start exploring from there.
 
-   Happy proving :-)
+   Happy proving :smile:
