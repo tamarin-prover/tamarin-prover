@@ -40,12 +40,14 @@ dependencies, and the tamarin-prover executable will be copied to
   ~/.local/bin/tamarin-prover
 ```
 
+
 Limitations on Windows
 ---
 
 To the best of our knowledge, there is no current GraphViz version
 available for Windows, so only the command-line parts of the tool are
 functional there.
+
 
 Installation
 ---
@@ -74,19 +76,29 @@ Installation
      make default
    ```
 
-   The `tamarin-prover` executable will be installed in `~/.local/bin/tamarin-prover`.
+5. Test the install by running the following in your terminal
 
-   Starting 'tamarin-prover' without arguments will output its help message,
-   including the paths to the installed example protocol models and the
-   case studies from our papers. We recommend opening the `Tutorial.spthy`
-   example file in a text editor and start exploring from there.
+  ```
+    ~/.local/bin/tamarin-prover test
+  ```
 
-   Happy proving :-)
+The `tamarin-prover` executable will be installed in `~/.local/bin/tamarin-prover`.
+
+Starting 'tamarin-prover' without arguments will output its help message,
+including the paths to the installed example protocol models and the
+case studies from our papers. We recommend opening the [Tutorial.spthy]
+example file in a text editor and start exploring from there.
+
+Happy proving :smile:
 
 
 ### MacOS X
 
-1. Use your package manager (MacPorts or Homebrew) to install maude and graphviz. For MacPorts:
+1. Install Command Line tools if you have not already. Open a terminal and enter
+   the following: `xcode-select --install`. From the popup press the "Install"
+   button and wait for it to install.
+
+2. Use your package manager ([MacPorts] or [Homebrew]) to install maude and graphviz. For [MacPorts]:
 
    ```
      sudo port install maude graphviz
@@ -94,7 +106,7 @@ Installation
 
   *Please follow instructions to also install Haskell 'stack' tool, if using MacPorts.*
 
-  For [Homebrew](http://brew.sh/):
+  For [Homebrew]:
 
    ```
      brew install homebrew/science/maude graphviz haskell-stack
@@ -111,13 +123,13 @@ Installation
   For Haskell tool 'stack' can download it from:
   https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md#manual-download-1
 
-2. Clone the `tamarin-prover` repository
+3. Clone the `tamarin-prover` repository
 
    ```
      git clone https://github.com/tamarin-prover/tamarin-prover.git
    ```
 
-3. Build the tamarin-prover
+4. Build the tamarin-prover
 
    ```
      make default
@@ -125,9 +137,20 @@ Installation
 
    The installation process lets you know where the `tamarin-prover` executable will be installed in.
 
-   Starting 'tamarin-prover' without arguments will output its help message,
-   including the paths to the installed example protocol models and the
-   case studies from our papers. We recommend opening the `Tutorial.spthy`
-   example file in a text editor and start exploring from there.
+5. Test the install by running the following in your terminal
 
-   Happy proving :smile:
+  ```
+    ~/.local/bin/tamarin-prover test
+  ```
+
+Starting `tamarin-prover` without arguments will output its help message,
+including the paths to the installed example protocol models and the
+case studies from our papers. We recommend opening the [Tutorial.spthy]
+example file in a text editor and start exploring from there.
+
+Happy proving :smile:
+
+
+[MacPorts]: https://www.macports.org/
+[Homebrew]: http://brew.sh/
+[Tutorial.spthy]: examples/Tutorial.spthy
