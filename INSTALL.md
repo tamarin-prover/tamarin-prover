@@ -1,8 +1,19 @@
 Installing tamarin-prover
--------------------------
+===
+
+Table of Contents
+---
+
+* [Pre-requisites](#Pre-requisites)
+* [Tamarin Prover](#Tamarin-prover)
+* [Limitations on Windows](#Limitations-on-Windows)
+* [Installation](#Installation)
+  + [Linux](#Linux)
+  + [MacOS X](#MacOS-X)
+
 
 Pre-requisites
---------------
+---
 
 Maude, available at http://maude.cs.illinois.edu/
 (version 2.6 and 2.7 work).
@@ -11,7 +22,7 @@ GraphViz, available at http://www.graphviz.org/ or through your system's package
 
 
 Tamarin-prover
---------------
+---
 
 You can download the binaries appropriate for your system from
 https://github.com/tamarin-prover/bin-dists
@@ -30,15 +41,17 @@ dependencies, and the tamarin-prover executable will be copied to
 ```
 
 Limitations on Windows
-----------------------
+---
 
 To the best of our knowledge, there is no current GraphViz version
 available for Windows, so only the command-line parts of the tool are
 functional there.
 
+Installation
+---
 
-Detailed instructions for Linux - from source
----------------------------------------------
+### Linux
+
 
 1. Use your package manager to install maude and graphviz:
 
@@ -71,8 +84,7 @@ Detailed instructions for Linux - from source
    Happy proving :-)
 
 
-Detailed instructions for MacOS X - from source
----------------------------------------------
+### MacOS X
 
 1. Use your package manager (MacPorts or Homebrew) to install maude and graphviz. For MacPorts:
 
