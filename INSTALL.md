@@ -80,10 +80,12 @@ Detailed instructions for MacOS X - from source
      sudo port install maude graphviz
    ```
 
-  For Homebrew:
+  *Please follow below `brew` instructions to also install Haskell 'stack' tool.*
+
+  For [Homebrew](http://brew.sh/):
 
    ```
-     brew install homebrew/science/maude graphviz
+     brew install homebrew/science/maude graphviz haskell-stack
    ```
 
   Alternatively, download and install both by following the instructions at their respective websites.
@@ -94,16 +96,16 @@ Detailed instructions for MacOS X - from source
   For GraphViz you can download it from:
   http://www.graphviz.org/Download.php
 
-2. Install the Haskell tool `stack` by following the instructions at
-   https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
+  For Haskell tool 'stack' can download it from:
+  https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md#manual-download-1
 
-3. Clone the `tamarin-prover` repository
+2. Clone the `tamarin-prover` repository
 
    ```
      git clone https://github.com/tamarin-prover/tamarin-prover.git
    ```
 
-4. Build the tamarin-prover
+3. Build the tamarin-prover
 
    ```
      make default
