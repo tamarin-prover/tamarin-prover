@@ -92,7 +92,7 @@ Installation
      sudo port install maude graphviz
    ```
 
-  *Please follow below `brew` instructions to also install Haskell 'stack' tool.*
+  *Please follow instructions to also install Haskell 'stack' tool, if using MacPorts.*
 
   For [Homebrew](http://brew.sh/):
 
