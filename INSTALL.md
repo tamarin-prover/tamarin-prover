@@ -4,12 +4,12 @@ Installing tamarin-prover
 Table of Contents
 ---
 
-* [Pre-requisites](#Pre-requisites)
-* [Tamarin Prover](#Tamarin-prover)
-* [Limitations on Windows](#Limitations-on-Windows)
-* [Installation](#Installation)
-  + [Linux](#Linux)
-  + [MacOS X](#MacOS-X)
+* [Pre-requisites](#pre-requisites)
+* [Tamarin Prover](#tamarin-prover)
+* [Limitations on Windows](#limitations-on-Windows)
+* [Installation](#installation)
+  + [Linux](#linux)
+  + [MacOS X](#macos-x)
 
 
 Pre-requisites
