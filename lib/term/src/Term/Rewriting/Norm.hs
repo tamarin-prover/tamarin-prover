@@ -98,9 +98,9 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             case solveMatchLNTerm (t `matchWith` lhs) `runReader` hnd of
               []  -> False
               _:_ -> case rhs of
-                       RhsPosition _ -> True
-                       RhsGround   s -> not (t == s)
+                       StRhs [] s -> not (t == s)
                            -- reducible, but RHS might be already equal to t
+                       StRhs _  _ -> True
 
         invalidMult ts = case partition isInverse ts of
             ([],_)     -> False

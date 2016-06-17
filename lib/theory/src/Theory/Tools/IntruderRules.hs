@@ -100,13 +100,12 @@ specialIntruderRules diff =
 -- Subterm Intruder theory
 ------------------------------------------------------------------------------
 
--- | @destuctionRules st@ returns the destruction rules for the given
+-- | @destuctionRules diff st@ returns the destruction rules for the given
 -- subterm rule @st@
 destructionRules :: Bool -> StRule -> [IntrRuleAC]
-destructionRules _    (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)) =
+destructionRules _    (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (StRhs (pos:[]) rhs)) =
     go [] lhs pos
   where
-    rhs = lhs `atPos` pos
     go _      _                       []     = []
     -- term already in premises
     go _      (viewTerm -> FApp _ _)  (_:[]) = []
@@ -121,10 +120,11 @@ destructionRules _    (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition
                             [kdFact rhs] [] ]
                 else []
     go _      (viewTerm -> Lit _)     (_:_)  =
-        error "IntruderRules.destructionRules: impossible, position invalid"
-        
-destructionRules _    (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (RhsGround rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs
-destructionRules True (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (RhsGround rhs@(viewTerm -> FApp (NoEq (_,(0,Public)))  []))) = destrRulesForConstant subterms f rhs
+        error "IntruderRules.destructionRules: impossible, position invalid"        
+destructionRules bool (StRule lhs (StRhs (pos:posit) rhs)) = destructionRules bool (StRule lhs (StRhs [pos] rhs)) ++ destructionRules bool (StRule lhs (StRhs posit rhs))
+
+destructionRules _    (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs
+destructionRules True (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Public)))  []))) = destrRulesForConstant subterms f rhs
 destructionRules _    _                                                                                                              = []
 
 -- returns destructor rules for equations with ground RHS
@@ -140,7 +140,7 @@ destrRulesForConstant subterms f rhs =
 privateConstructorEquations :: [StRule] -> [(LNTerm, ByteString)]
 privateConstructorEquations rs = case rs of
     []    -> []
-    (StRule lhs (RhsGround (viewTerm -> FApp (NoEq (vname,(0,Private))) []))):xs
+    (StRule lhs (StRhs [] (viewTerm -> FApp (NoEq (vname,(0,Private))) []))):xs
           -> (lhs, vname):(privateConstructorEquations xs)
     _:xs  -> privateConstructorEquations xs
     
@@ -194,7 +194,6 @@ constructionRules fSig =
       where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
             m        = fAppNoEq (s,(k,Public)) vars
             concfact = kuFact m
-
 
 ------------------------------------------------------------------------------
 -- Diffie-Hellman Intruder Rules

@@ -31,32 +31,36 @@ import Text.PrettyPrint.Highlight
 
 -- | The righthand-side of a subterm rewrite rule.
 --   Does not enforce that the term for RhsGround must be ground.
-data StRhs = RhsGround LNTerm | RhsPosition Position
+data StRhs = StRhs [Position] LNTerm
     deriving (Show,Ord,Eq)
 
--- | A subterm rewrite rule.
+-- | A subterm rewrite rule. To be renamed.
 data StRule = StRule LNTerm StRhs
     deriving (Show,Ord,Eq)
 
 -- | Convert a rewrite rule to a subterm rewrite rule if possible.
 rRuleToStRule :: RRule LNTerm -> Maybe StRule
 rRuleToStRule (lhs `RRule` rhs)
-  | frees rhs == [] = Just $ StRule lhs (RhsGround rhs)
-  | otherwise       = case findSubterm lhs [] of
+  | frees rhs == [] = Just $ StRule lhs (StRhs [] rhs)
+  | otherwise       = case findAllSubterms lhs rhs of
                         []:_     -> Nothing  -- proper subterm required
-                        pos:_    -> Just $ StRule lhs (RhsPosition (reverse pos))
                         []       -> Nothing
+                        pos      -> Just $ StRule lhs (StRhs pos rhs)
   where
-    findSubterm t rpos | t == rhs  = [rpos]
-    findSubterm (viewTerm -> FApp _ args) rpos =
-        concat $ zipWith (\t i -> findSubterm t (i:rpos)) args [0..]
-    findSubterm (viewTerm -> Lit _)         _  = []
+    findSubterm lst r rpos | lst == r            = [reverse rpos]
+    findSubterm (viewTerm -> FApp _ args) r rpos =
+        concat $ zipWith (\lst i -> findSubterm lst r (i:rpos)) args [0..]
+    findSubterm (viewTerm -> Lit _)         _ _  = []
+    
+    findAllSubterms l r@(viewTerm -> FApp _ args)
+        | fSt == [] = concat $ map (\rst -> findAllSubterms l rst) args
+        | otherwise = fSt
+            where fSt = findSubterm l r []
+    findAllSubterms l r@(viewTerm -> Lit _)       = findSubterm l r []
 
 -- | Convert a subterm rewrite rule to a rewrite rule.
 stRuleToRRule :: StRule -> RRule LNTerm
-stRuleToRRule (StRule lhs rhs) = case rhs of
-                                     RhsGround t   -> lhs `RRule` t
-                                     RhsPosition p -> lhs `RRule` (lhs `atPos` p)
+stRuleToRRule (StRule lhs (StRhs _ rhsterm)) = lhs `RRule` rhsterm
 
 ------------------------------------------------------------------------------
 -- Pretty Printing
