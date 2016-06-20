@@ -18,7 +18,7 @@ endif
 TEMPLATE_HTML = templates/template.html
 TEMPLATE_TEX = templates/template.latex
 
-SRC = $(wildcard src/*.md)
+SRC = $(sort $(wildcard src/*.md))
 OBJ = $(subst .md,.html,$(subst src,book,$(SRC)))
 
 all: $(OBJ)
@@ -31,7 +31,7 @@ book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros
 
 
 pdf:
-	$(PANDOC) --filter ${FILTER} -f $(IFORMAT) \
+	$(PANDOC) ${FILTER} -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
 	  -o tex/tamarin-manual.tex $(SRC)
 
