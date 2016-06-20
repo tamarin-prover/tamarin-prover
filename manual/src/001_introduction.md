@@ -10,7 +10,7 @@ of the adversary, and a specification of the protocol's desired properties.
 Tamarin can then be used to automatically construct a
 proof that, even when arbitrarily many instances of the protocol's roles 
 are interleaved in parallel, together
-with the actions of the adversary, the protocol has its
+with the actions of the adversary, the protocol fulfils its
 specified properties.  In this manual, we 
 provide an overview of this tool and its use.
 
