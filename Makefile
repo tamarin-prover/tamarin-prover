@@ -19,6 +19,7 @@ all: $(OBJ)
 
 book/%.html: src/%.md $(FILTER) $(TEMPLATE_HTML) $(FILTER) latex_macros
 	$(PANDOC) -c $(STYLE) \
+	  --filter ${FILTER} \
 	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
 	  -t html $(FLAGS) -o $@ $<
 
