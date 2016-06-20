@@ -3,9 +3,9 @@ Introduction
 
 The Tamarin prover is a powerful tool for the symbolic
 modeling and analysis of security protocols.
-It takes as input a security protocol, specifying the actions taken by
+It takes as input a security protocol model, specifying the actions taken by
 agents running the protocol in different roles (e.g., the
-initiator, the responder, and the trusted key server), a specification
+protocol initiator, the responder, and the trusted key server), a specification
 of the adversary, and a specification of the protocol's desired properties.
 Tamarin can then be used to automatically construct a
 proof that, even when arbitrarily many instances of the protocol's roles 
@@ -18,15 +18,15 @@ Tamarin provides general support for modeling and reasoning about
 security protocols.  Protocols and adversaries are specified using an
 expressive language based on multiset rewriting rules.  These rules
 define a labeled transition system whose state consists of a symbolic
-repersentation of the adversary’s knowledge, the messages on the
-network, information about freshly generated values, and the state of
-the protocol's state.  The adversary and the protocol interact by
-updating network messages and generating new messages.  Tamarin also
-supports the equational specification of some cryptographic operators,
-notably Diffie-Hellman exponentiation.  Security properties are modeled
-as trace properties, checked against the traces of the transition
-system, or in terms of the observational equivalence of two transition
-systems.
+representation of the adversary’s knowledge, the messages on the
+network, information about freshly generated values, and the protocol's
+state.  The adversary and the protocol interact by updating network
+messages and generating new messages.  Tamarin also supports the
+equational specification of some cryptographic operators, such as
+Diffie-Hellman exponentiation and bilinear pairings.  Security
+properties are modeled as trace properties, checked against the traces
+of the transition system, or in terms of the observational equivalence
+of two transition systems.
 
 Tamarin provides two ways of constructing proofs.  It has an efficient,
 fully *automated mode* that combines efficient deduction and equational
