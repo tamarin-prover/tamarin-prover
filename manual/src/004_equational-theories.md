@@ -1,2 +1,0 @@
-Equational Theories
-===================
