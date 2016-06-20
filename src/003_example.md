@@ -377,6 +377,13 @@ the following:
 Rules](../images/tamarin-tutorial-case-distinctions.jpg 
  "Tutorial Case Distinctions")
  
+To improve the efficiency of its internal reasoning, Tamarin precomputes case 
+distinctions. A case distinction gives all possible sources for a fact, i.e. 
+all rules (or combinations of rules) that produce this fact, and can then be 
+used during Tamarin's backward search. These case distinctions are 
+then used to avoid computing the same thing again and again. On the right hand 
+side you can now see the result of the precomputations for our Tutorial theory.
+
 
  
 ![Tutorial Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
