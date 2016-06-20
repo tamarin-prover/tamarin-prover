@@ -37,7 +37,7 @@ After running `git clone` of the Tamarin
 repository you have the current development version ready for
 compilation. If you rather want to use the master version just run
 `git checkout master`. In either case, you can then run `make
-default', which will install an appropriate GHC for your system,
+default`, which will install an appropriate GHC for your system,
 including all dependencies, and the `tamarin-prover` executable
 will be copied to
 `~/.local/bin/tamarin-prover`
