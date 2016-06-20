@@ -2,15 +2,17 @@ Introduction
 ========
 
 The Tamarin prover is a powerful tool for the symbolic
-modeling and analysis of security protocols. 
-Given a protocol, consisting of different protocol roles (e.g., an
-initiator, a responder, a trusted key server, etc.), Tamarin
-can be used to automatically construct a
-proof that, even when arbitrarily many instances of these roles 
+modeling and analysis of security protocols.
+It takes as input a security protocol, specifying the actions taken by
+agents running the protocol in different roles (e.g., the
+initiator, the responder, and the trusted key server), a specification
+of the adversary, and a specification of the protocol's desired properties.
+Tamarin can then be used to automatically construct a
+proof that, even when arbitrarily many instances of the protocol's roles 
 are interleaved in parallel, together
-with the actions of an active adversary, the protocol still has its
+with the actions of the adversary, the protocol has its
 specified properties.  In this manual, we 
-provide an overview of the tool and its use.
+provide an overview of this tool and its use.
 
 Tamarin provides general support for modeling and reasoning about
 security protocols.  Protocols and adversaries are specified using an
@@ -38,27 +40,57 @@ may need to resort to Tamarin's *interactive mode* to explore the proof
 states, inspect attack graphs, and seamlessly combine manual proof
 guidance with automated proof search.
 
+*N.B. If this is too technical it can be dumbed down or deleted or
+moved elsewhere.*
+A formal treatment of Tamarin's foundations is given in the theses of
+[@benediktthesis]
+and [@meierthesis].  We give a very brief (technical) summary here.
+For an equational theory $E$ defining cryptographic operators,
+a multiset rewriting system $R$ defining a
+protocol, and a formula $\phi$ defining a trace property, Tamarin can
+either check the validity or the satisfiability of $\phi$ for the traces
+of $R$ modulo $E$.  As usual, validity checking is reduced to checking
+the satisfiability of the negated formula. Here, constraint solving is
+used to perform an exhaustive, symbolic search for executions with
+satisfying traces. The states of the search are constraint systems. For
+example, a constraint can express that some multiset rewriting step
+occurs in an execution or that one step occurs before another step. We
+can also directly use formulas as constraints to express that some
+behavior does not occur in an execution. Applications of constraint
+reduction rules, such as simplifications or case distinctions,
+correspond to the incremental construction of a satisfying trace. If no
+further rules can be applied and no satisfying trace was found, then no
+satisfying trace exists. For symbolic reasoning, we exploit the finite
+variant property *CITE* to reduce reasoning modulo $E$ with respect to
+$R$ to reasoning modulo $AC$ with respect to the variants of $R$.
 
-High level points
+*Do we really want to explain here how it  distinguishes itself from 
+other tools.*
 
-* Tool for protocol analysis: verification and falsification of
-  cryptographic protocols  *DONE*
-* Scope: protocols, attackers, properties.  (high level!)  *DONE*
-* Limitations, e.g., symbolic model, large search space, may not
-  terminate.
-* But yet highly successful.   How it distinguishes itself from
-  other tools.
-* Who is this written for?  Our expectations for reader and where
-  additional information can be found for those readers with fewer
-  prerequisites.
-* Mention key publications
+This manual is written for researchers who wish to use Tamarin
+to model and analyze security protocols.  We assume the reader
+is familiar with basic cryptography and the basic workings
+of security protocols.  Our focus is on explaining Tamarin's usage
+so that a new user can download, install, and use the system.
+We do not attempt to describe Tamarin's formal foundations and
+refer to the related theses and scientific papers for these details.
 
-CSF~\cite{TamarinCSF}, CAV~\cite{TamarinCAV}
-
-Highlights
+Highlights and Limitations
 ----------
 
+
 success stories: briefly
+
+In practice, the Tamarin tool has proven to be highly successful.
+Its applications include *enumerate here and cite key papers*.
+CSF~\cite{TamarinCSF}, CAV~\cite{TamarinCAV}
+
+*Add something about limitations: 
+e.g., symbolic model, large search space, may not
+terminate.*
+
+
+
 
 Organization [Ralf/Jannik]
 --------------------------

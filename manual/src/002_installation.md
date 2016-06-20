@@ -42,8 +42,7 @@ compilation. If you rather want to use the master version just run
 `git checkout master`. In either case, you can then run `make
 default`, which will install an appropriate GHC for your system,
 including all dependencies, and the `tamarin-prover` executable
-will be copied to
-`~/.local/bin/tamarin-prover`
+will be copied to `~/.local/bin/tamarin-prover`.
 Note that this process will take between 30 and 60 minutes, as all
 dependencies (roughly 120) are compiled from scratch. If you later pull a newer
 version of Tamarin (or switch to/from the `master` branch), then only
@@ -73,6 +72,8 @@ Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for
 Mac OS X {#sec:macosx}
 --------
 
+### Installing Tamarin using the pre-built binary {#sec:MacOSBinInstall}
+
 To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz. 
 
 1.  Download and install Maude 2.7 from
@@ -81,9 +82,7 @@ To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz.
 2.  Download and install GraphViz from  
 <http://www.graphviz.org/Download.php>
 
-### Installing Tamarin using the pre-built binary ###
-
-You can download the Tamarin binary `tamarin-prover-1.x.y-macosx` from 
+3.  Download the Tamarin binary `tamarin-prover-1.x.y-macosx` from 
 <https://github.com/tamarin-prover/bin-dists>
 
 Only the current master is available as binary, while the sources
@@ -93,10 +92,25 @@ Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for
 
 ### Installing Tamarin from sources ###
 
-3.  Install the Haskell tool `stack` by following the instructions at 
-<https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md>
+1. To compile Tamarin you need the Haskell tool [stack](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md#manual-download-1)
+and to run Tamarin you need to have [Maude 2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation) and [GraphViz](http://www.graphviz.org/Download.php). 
+You can download these tools from their respective sites *or* use one of the package managers 'MacPorts' or 'Homebrew'. 
 
-4. Clone the `tamarin-prover` repository by typing
+  *  For 'MacPorts':
+```
+  sudo port install maude graphviz
+```
+
+The Haskell tool `stack` is not in the MacPorts repository and must be installed by following the instructions at 
+  <https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md>
+
+  *   For 'Homebrew':
+```
+  brew install homebrew/science/maude graphviz haskell-stack
+```
+
+
+2. Clone the `tamarin-prover` repository by typing
 ```
   git clone https://github.com/tamarin-prover/tamarin-prover.git
 ```
@@ -104,7 +118,7 @@ or download the source files from
   <https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
 
 
-5. Build the tamarin-prover by changing to the `tamarin-prover` directory and 
+3. Build Tamarin by changing to the `tamarin-prover` directory and 
    typing
 ```
   make default
@@ -123,6 +137,10 @@ Windows {#sec:windows}
 
 Windows is not supported at the moment. 
 
+To the best of our knowledge, there is no current GraphViz version
+available for Windows and there is no Maude binary for Windows 10. 
+Therefore only the command-line parts of the tool are
+functional for Windows systems prior to Windows 10.
 
 
 Running Tamarin {#sec:running-tamarin}
