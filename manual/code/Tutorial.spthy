@@ -88,7 +88,7 @@ lemma Client_auth:
        ==>
          /* there is a server that answered the request */
        ( (Ex #a. AnswerRequest(S, k) @ a)
-         /* or the intruder performed a long-term key reveal on 'S'
+         /* or the adversary performed a long-term key reveal on 'S'
             before the key was setup. */
        | (Ex #r. LtkReveal(S) @ r & r < i)
        )
@@ -104,7 +104,7 @@ lemma Client_auth_injective:
            /* and there is no other client that had the same request */
            & (All #j. SessKeyC(S, k) @ #j ==> #i = #j)
        )
-         /* or the intruder performed a long-term key reveal on 'S'
+         /* or the adversary performed a long-term key reveal on 'S'
             before the key was setup. */
        | (Ex #r. LtkReveal(S) @ r & r < i)
        )

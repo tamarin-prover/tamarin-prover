@@ -174,14 +174,25 @@ a protocol execution.
 
 First, note that we can specify additional axioms that restrict the
 set of considered traces. In this example, we restrict our attention
-to traces where all equality checks succeed.
+to traces where all equality checks succeed. In detail the axiom says
+that for all parameters `x`, `y` to the `Eq` action fact at some time
+point `i` it has to be the case that `x=y`.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=68 upper=68}
 ~~~~
 
-The following two properties should be self-explanatory.
-Note that the order between axioms and lemmas does not matter. All axioms are
-always available/assumed in the proofs of all security properties.
+Note that the order between axioms and lemmas does not matter. All
+axioms are always available/assumed in the proofs of all security
+properties. Now we have two lemmas, the first on the secrecy of
+session key secrecy from the client point of view. The lemma
+`Client_session_key_secrecy` says that it cannot be that a client has
+set up a session key `k` with a server `S` and the adversary learned
+that `k` unless the adversary performed a long-term key reveal on the
+server `S`. The second lemma `Client_auth` specifies client authentication, which is
+that for all session keys `k` that the clients have setup with a
+server `S` there must be a server that has answered the request, or
+the adversary has performed a long-term key reveal on `S` previously
+in time.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=70 upper=95}
 ~~~~
@@ -191,7 +202,8 @@ injective authentication. Our formulation is stronger than the standard
 formulation of injective authentication, as it is based on uniqueness instead
 of counting. For most protocols, that guarantee injective authentication one
 can also prove such a uniqueness claim, as they agree on appropriate fresh
-data.
+data. This is shown in lemma `Client_auth_injective`.
+
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=97 upper=111}
 ~~~~
