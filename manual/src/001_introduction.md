@@ -21,14 +21,15 @@ against the traces of the transition system,
 or in terms of the observational equivalence
 of two transition systems.
 
-
-Tamarin provides two ways of constructing proofs: an efficient, fully auto-
-mated mode that uses heuristics to guide proof search, and an interactive mode. If
-the tool's automated proof search terminates, it returns either a proof of correct-
-ness (for an unbounded number of threads and fresh values) or a counterexample
-(e. g., an attack). Due to the undecidable nature of most properties in our setting,
-the tool may not terminate. The interactive mode enables the user to explore
-the proof states, inspect attack graphs, and seamlessly combine manual proof
+Tamarin provides two ways of constructing proofs.  It has an efficient,
+fully automated mode that uses heuristics to guide proof search.
+If the tool's automated proof search terminates, it
+returns either a proof of correctness (for an unbounded number of
+threads and fresh values) or a counterexample (i.e., an attack). Due to
+the undecidable nature of most properties in our setting, the tool may
+not terminate.  In such cases, users may use an 
+interactive mode enables to explore the
+proof states, inspect attack graphs, and seamlessly combine manual proof
 guidance with automated proof search.
 
 
