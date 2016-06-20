@@ -29,13 +29,14 @@ of the transition system, or in terms of the observational equivalence
 of two transition systems.
 
 Tamarin provides two ways of constructing proofs.  It has an efficient,
-fully *automated mode* that combines efficient deduction and equational
+fully *automated mode* that combines deduction and equational
 reasoning with heuristics to guide proof search.  If the tool's
 automated proof search terminates, it returns either a proof of
 correctness (for an unbounded number of role instances and fresh values)
 or a counterexample, representing an attack that violates the stated
 property.  However, since the correctness of security protocols is an
-undecidable problem, the tool does not always terminate.  Hence, users
+undecidable problem, the tool may not terminate on a given
+verification problem.  Hence, users
 may need to resort to Tamarin's *interactive mode* to explore the proof
 states, inspect attack graphs, and seamlessly combine manual proof
 guidance with automated proof search.
