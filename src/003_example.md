@@ -254,7 +254,7 @@ Just call
 
     tamarin-prover interactive Tutorial.spthy
 
-FIX: Syntax errors here?
+FIX: explain how the tool shows one Syntax errors in general  
     
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
@@ -328,7 +328,7 @@ Now click on *Multiset rewriting rules and axioms* on the left.
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
  "Tutorial Multiset Rewriting Rules")
 
-On the right side of the screen you should now see the send your protocol's 
+On the right side of the screen you should now see your protocol's 
 rewriting rules, plus two additional rules: the `isend` and `irecv` rules, 
 which iterface the protocols output and input with the intruder deduction.
 The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` the intruder knows, 
@@ -351,7 +351,7 @@ Rules](../images/tamarin-tutorial-case-distinctions.jpg
  "Tutorial Case Distinctions")
  
 To improve the efficiency of its internal reasoning, Tamarin precomputes case 
-distinctions. A case distinction gives all possible sources for a fact, i.e. 
+distinctions. A case distinction gives all possible sources for a fact, i.e., 
 all rules (or combinations of rules) that produce this fact, and can then be 
 used during Tamarin's backward search. These case distinctions are 
 then used to avoid computing the same thing again and again. On the right hand 
