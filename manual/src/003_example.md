@@ -209,33 +209,20 @@ data. This is shown in lemma `Client_auth_injective`.
 ~~~~
 
 
-GO ON HERE...
-
-Always have an "Exists-lemma":
+To ensure that our lemmas do not just hold vacuously because the model
+is not executable, we make it a point to always have an executability
+lemma, that shows that the model can run to completion. This is given
+as a regular lemma, but with the `exists-trace` keyword, as seen in
+the lemma `Client_session_key_honest_setup` below
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=113 upper=118}
 ~~~~
 
+Note that when adding inconsistent axioms, you can prove any
+property. To check that there still exist traces, we always want an
+`exists-trace` lemma.  When modeling protocols such existence proofs
+are very useful sanity checks.
 
-
-
-Verification
-------------
-
-You can verify them by calling
-
-    tamarin-prover --prove Tutorial.spthy
-
-  This will first output some logging from the constraint solver and then the
-  Tutorial security protocol theory with the lemmas and their attached
-  (dis)proofs.
-
-  Note that when adding inconsistent axioms, you can prove any property. To
-  check that there still exist traces, you can state an 'exists-trace' lemma.
-  When modeling protocols such existence proofs are very useful sanity checks.
-
-  The following property must be provable, as otherwise there would be no
-  possibility to setup a session key with a honest sever.
 
 
 Running Tamarin on Tutorial
@@ -253,7 +240,10 @@ flag `--prove` to the call; i.e.,
 
   `tamarin-prover Tutorial.spthy --prove`
 
-However, let's not go there yet. TODO: YES, GO THERE
+This will first output some logging from the constraint solver and
+then the Tutorial security protocol theory with the lemmas and their
+attached (dis)proofs.
+
 
 
 
