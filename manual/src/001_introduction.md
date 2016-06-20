@@ -38,6 +38,28 @@ may need to resort to Tamarin's *interactive mode* to explore the proof
 states, inspect attack graphs, and seamlessly combine manual proof
 guidance with automated proof search.
 
+*N.B. If this is too technical it can be dumbed down or deleted or ...*
+A formal treatment of Tamarin's foundations is given in the theses of
+Schmidt *CITE*
+and Meier *CITE*.  We give a very brief (technical) summary here.
+For an equational theory $E$ defining cryptographic operators,
+a multiset rewriting system $R$ defining a
+protocol, and a formula $\phi$ defining a trace property, Tamarin can
+either check the validity or the satisfiability of $\phi$ for the traces
+of $R$ modulo $E$.  As usual, validity checking is reduced to checking
+the satisfiability of the negated formula. Here, constraint solving is
+used to perform an exhaustive, symbolic search for executions with
+satisfying traces. The states of the search are constraint systems. For
+example, a constraint can express that some multiset rewriting step
+occurs in an execution or that one step occurs before another step. We
+can also directly use formulas as constraints to express that some
+behavior does not occur in an execution. Applications of constraint
+reduction rules, such as simplifications or case distinctions,
+correspond to the incremental construction of a satisfying trace. If no
+further rules can be applied and no satisfying trace was found, then no
+satisfying trace exists. For symbolic reasoning, we exploit the finite
+variant property *CITE* to reduce reasoning modulo $E$ with respect to
+$R$ to reasoning modulo $AC$ with respect to the variants of $R$.
 
 High level points
 
