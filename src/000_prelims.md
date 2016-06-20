@@ -7,26 +7,15 @@ with a document that is consistent and as easy to read as possible.
 We aim to write this document using American English.
 
 
-Notation in general
--------------------
-
-Take a look at the notation.sty file which contains a lot of the
-abbreviations and keywords we will likely need for the document.
-Rather than defining new commands in your section, put them there so
-everyone can use them and there is one single spot to look for them.
-
-For LaTeX labels use the label's type as the start: sec:introduction,
-fig:example, def:syntax, etc.
-
 Protocol notation
 -----------------
 
 We will use spthy description for all protocols. In the introduction,
 we can additionally(!), give mathematical notation for the first few
 examples. Also ensure all protocols are available as executable spthy
-files, and are stored in a sub-directory of the repository for easy
+files, and are stored in the sub-directory `code` of the repository for easy
 distribution. The best way to ensure everything fits together is to
-*autognp* on the spthy files.
+include the spthy files as follows.
 
 ~~~~ {.autognp include="code/example.spthy"}
 ~~~~
