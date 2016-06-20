@@ -38,7 +38,8 @@ may need to resort to Tamarin's *interactive mode* to explore the proof
 states, inspect attack graphs, and seamlessly combine manual proof
 guidance with automated proof search.
 
-*N.B. If this is too technical it can be dumbed down or deleted or ...*
+*N.B. If this is too technical it can be dumbed down or deleted or
+moved elsewhere.*
 A formal treatment of Tamarin's foundations is given in the theses of
 Schmidt *CITE*
 and Meier *CITE*.  We give a very brief (technical) summary here.
@@ -60,6 +61,10 @@ further rules can be applied and no satisfying trace was found, then no
 satisfying trace exists. For symbolic reasoning, we exploit the finite
 variant property *CITE* to reduce reasoning modulo $E$ with respect to
 $R$ to reasoning modulo $AC$ with respect to the variants of $R$.
+
+In practice, the Tamarin tool has proven to be highly successful.
+Its applications include *enumerate here and cite key papers*.
+
 
 High level points
 
