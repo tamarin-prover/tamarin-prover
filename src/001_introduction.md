@@ -2,15 +2,17 @@ Introduction
 ========
 
 The Tamarin prover is a powerful tool for the symbolic
-modeling and analysis of security protocols. 
-Given a protocol, consisting of different protocol roles (e.g., an
-initiator, a responder, a trusted key server, etc.), Tamarin
-can be used to automatically construct a
-proof that, even when arbitrarily many instances of these roles 
+modeling and analysis of security protocols.
+It takes as input a security protocol, specifying the actions taken by
+agents running the protocol in different roles (e.g., the
+initiator, the responder, and the trusted key server), a specification
+of the adversary, and a specification of the protocol's desired properties.
+Tamarin can then be used to automatically construct a
+proof that, even when arbitrarily many instances of the protocol's roles 
 are interleaved in parallel, together
-with the actions of an active adversary, the protocol still has its
+with the actions of the adversary, the protocol has its
 specified properties.  In this manual, we 
-provide an overview of the tool and its use.
+provide an overview of this tool and its use.
 
 Tamarin provides general support for modeling and reasoning about
 security protocols.  Protocols and adversaries are specified using an
