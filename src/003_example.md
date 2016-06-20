@@ -35,7 +35,14 @@ modeling this simple protocol in detail.
 Function Signature and Equational Theory
 ----------------------------------------
 
-TODO: WHY FUNCTIONS AND EQUATIONAL THEORY???
+We are working in the symbolic model of security protocol
+verification, which means that we model the messages as terms, built
+from functions, satisfying an underlying equational theory. This will
+be explained in detail later, but for now note that there are function
+names which we explicitly declare together with their arity, and
+equalities that define the semantic equivalence of terms, e.g., the
+decryption of an encrypted ciphertext is the original message, when
+the correct keys are used.
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
@@ -59,7 +66,8 @@ models the interaction between calls to these three algorithms. All
 such user-specified equations must be subterm-convergent rewriting
 rules, when oriented from left to right. This means that the
 right-hand-side must be a subterm of the left-hand-side or a nullary
-function symbol (a constant).
+function symbol (a constant), see the section on [Equational
+Theory](004_equational-theories.html).
 
 
 Modeling the Public Key Infrastructure
