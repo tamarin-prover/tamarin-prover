@@ -1,6 +1,9 @@
 Model Specification
 ===================
 
+In this manual, we provide an informal description of the underlying model. The
+full details of the underlying model can be found in [@benediktthesis].
+
 Models are specificied in Tamarin using three main ingredients:
 
    1. Terms
@@ -12,46 +15,48 @@ the Naxos protocol, displayed below.
 
 ![The Naxos protocol](../images/naxos.png)
 
-Each party `x` has a long-term private key `lkx` and a corresponding public key
-`pkx = g^lkx`, where `g` is a generator of the Diffie-Hellman group. To start a
-session, the initiator `I` first creates a fresh nonce `eskI`, also known as
-`I`'s ephemeral (private) key. He then concatenates eskI with `I`'s long-term
-private key `lkI`, hashes the result using the hash function `h1`, and sends
-`g^h1(eskI ,lkI )` to the responder. The responder `R` stores the received value
-in a variable `X`, computes a similar value based on his own nonce `eskR` and
-long-term private key `lkR`, and sends the result to the initiator, who stores
-the received value in the variable `Y`. Finally, both parties compute a session
-key (`kI` and `kR`, respectively) whose computation includes their own long-term
-private keys, such that only the intended partner can compute the same key.
+In this protocol, Each party `x` has a long-term private key `lkx` and a
+corresponding public key `pkx = g^lkx`, where `g` is a generator of the
+Diffie-Hellman group. 
+
+To start a session, the initiator `I` first creates a fresh nonce `eskI`, also
+known as `I`’s ephemeral (private) key. He then concatenates eskI with `I`’s
+long-term private key `lkI`, hashes the result using the hash function `h1`, and
+sends `g^h1(eskI ,lkI )` to the responder. The responder `R` stores the received
+value in a variable `X`, computes a similar value based on his own nonce `eskR`
+and long-term private key `lkR`, and sends the result to the initiator, who
+stores the received value in the variable `Y`. Finally, both parties compute a
+session key (`kI` and `kR`, respectively) whose computation includes their own
+long-term private keys, such that only the intended partner can compute the same
+key.
 
 Note that the messages exchanged are not authenticated, as the recipients cannot
-verify that the expected longterm key was used in the construction of the
-message.  The authentication is implicit and only guaranteed through ownership
-of the correct key. Explicit authentication (e.g., the intended partner was
-recently alive or agrees on some values) is commonly achieved in AKE protocols
-by adding a key-confirmation step, where the parties exchange a MAC of the
-exchanged messages that is keyed with (a variant of) the computed session key.
+verify that the expected long-term key was used in the construction of the
+message. The authentication is implicit and only guaranteed through ownership of
+the correct key. Explicit authentication (e.g., the intended partner was
+recently alive or agrees on some values) is commonly achieved in authenticated
+key exchange protocols by adding a key-confirmation step, where the parties
+exchange a MAC of the exchanged messages that is keyed with (a variant of) the
+computed session key.
 
-In this manual, we provide an informal description of the underlying model. The full details of the underlying model can be found in [@benediktthesis].
-
-Cryptographic messages as Terms
+Cryptographic messages as terms
 -------------------------------
 
 To model cryptographic messages we use terms, which are represented by trees
 where the nodes are operators (such as pairing, function application,
 concatenation, encryption) and the leaves are constants or variables.
 
-For the leaves, we have 
-We use the set of
-sorts consisting of the top sort msg and two incomparable subsorts `fr` and
-`pub` for fresh and public names. We assume there are two countably infinite
-sets `FN` and `PN` of fresh and public names. We use fresh names to model
-random messages such as keys or nonces and public names to model known
-constants such as agent identities.
+For the leaves, we have two main sorts:
 
+[fresh names]:
+	Model random messages such as keys or nonces.
 
+[public names]:
+	Model known constants such as agent identities.
 
-
+For example, in the Naxos protocol, `eskI` and `eskR` are freshly generated
+for each new session. Additionally, the long term key of each agent is freshly
+generated before the agent starts communicating.
 
 Facts
 -----
