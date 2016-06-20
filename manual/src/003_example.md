@@ -143,19 +143,24 @@ We model it using the following three rules.
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=34 upper=65}
 ~~~~
 
-Above, we model all applications of cryptographic algorithms
+The first rule models the client sending its message, while the second
+rule models it receiving a response. The third rule models the server,
+both receiving the message and responding in one single rule.
+
+Note that we model all applications of cryptographic algorithms
 explicitly.  Call `tamarin-prover Tutorial.spthy` to inspect the
 finite variants of the `Serv_1` rule, which list all possible
-interactions of the destructors used.  In our proof search, we will
-consider all these interactions.
+interactions of the destructors used, or see below for detail.  In our
+proof search, we will consider all these interactions.
+
+TODO: SAY SOMETHING ABOUT THE DIFFERENCE BETWEEN ACTION FACTS AND FACTS?
 
 We also model that the server explicitly checks that the first
 component of the request is equal to `'1'`. We model this by logging
 the claimed equality and then adapting the security property such that
 it only considers traces where all `Eq` actions occur with two equal
-arguments. Note that `Eq` is NOT a built-in fact. Guarded trace
-properties are strong enough to formalize this requirement without
-built-in support. Note that inequalities can be modeled analogously.
+arguments. Note that `Eq` is NOT a built-in fact, but one can pick any
+name. Note that inequalities can be modeled analogously.
 
 We log the session-key setup requests received by servers to allow
 formalizing the authentication property for the client.
