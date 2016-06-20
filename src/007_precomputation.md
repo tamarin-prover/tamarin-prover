@@ -7,7 +7,7 @@ To better understand the precomputation of Tamarin and how it can cause open
 chains, let us look at the example of the Needham-Schroeder-Lowe Public Key
 Protocol. 
 
-~~~~ {.tamarin include="code/example.spthy"}
+~~~~ {.tamarin include="code/NSLPK3.spthy" lower=24 upper=29}
 ~~~~
 
 It is specified in Tamarin by the following rules:
