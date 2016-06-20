@@ -335,11 +335,27 @@ In a nutshell this rule says that if the intruder knows the pair `<x.1, x.2>`
 (represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
 value `x.1` (represented by the fact `!KD( x.1 )`) from it. (This stems from 
 the applying `fst` to the pair and then using the equation 
-`fst(<x.1, x.2>) = x.1`.)
+`fst(<x.1, x.2>) = x.1`.) The precise difference between `!KD( )` and `!KU( )` 
+facts is not important for now, and will be explained below. As a first 
+approximation, both represente they intruder's knowledge and are only used to 
+make the tool's reasoning more efficient.
 
-![Tutorial Multiset Rewrite 
+Now click on *Multiset rewriting rules and axioms* on the left.
+
+![Tutorial Multiset Rewriting 
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
- "Tutorial Multiset Rewrite Rules")
+ "Tutorial Multiset Rewriting Rules")
+
+On the right side of the screen you should now see the send your protocol's 
+rewriting rules, plus two additional rules: the `isend` and `irecv` rules, 
+which iterface the protocols output and input with the intruder deduction.
+The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` the intruder knows, 
+and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
+output `Out(x)` and passes it to the intruder knowledge, represented by the 
+`!KD(x)` fact.
+
+Just below you have the list of all axioms, here only the axiom 
+`Equality_Checks_Succeed`.
 
 ![Tutorial Case Distinctions 
 Rules](../images/tamarin-tutorial-case-distinctions.jpg 
