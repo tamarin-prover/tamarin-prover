@@ -2,10 +2,10 @@ Intial Example
 ==============
 
 We will start with a simple example of a protocol that only consists of two 
-messages (in Alice-and-Bob notation):
+messages (given in Alice-and-Bob notation):
 
-  C -> S: aenc{k}pk(S)
-  C <- S: h(k)
+    C -> S: aenc{k}pk(S)
+    C <- S: h(k)
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
 with the public key of a server 'S' and sends it to 'S'. The server confirms
@@ -16,18 +16,19 @@ We will use it to illustrate the general Tamarin workflow by proving that from
 the perspective of the client, the freshly generated key is secret provided that 
 the server is uncompromised.
 
-The Tamarin modeling of this protocol and the security properties is given in 
-the file <code/Tutorial.spthy>:
+The Tamarin modeling of this protocol and the security properties are given in 
+the file [Tutorial](code/Tutorial.spthy) presented here:
 
-~~~~ {.autognp include="code/Tutorial.spthy"}
+~~~~ {.tamarin include="code/Tutorial.spthy"}
 ~~~~
 
-\Obviously, you can replace 'Tutorial' with any name you like to give
-your theory. After 'begin', you can declare function symbols,
-equations that they must satisfy, multiset rewriting rules, and lemmas
-specifying security properties. Moreover, you can also insert formal
-comments, to structure your theory. We give examples of each of these
-elements while modeling a simple protocol.
+Obviously, you can replace 'Tutorial' with any name you like to give
+your theory. After the keyword `begin`, you can declare function
+symbols, equations that these function symbols must satisfy, multiset
+rewriting rules modeling the protocol, and lemmas specifying security
+properties. Moreover, you can also insert formal comments, to
+structure your theory. We give examples of each of these elements
+while modeling a simple protocol.
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
 with the public key of a server 'S' and sends it to 'S'. The server confirms
