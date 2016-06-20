@@ -1,5 +1,6 @@
 SOURCE=tamarin-manual.tex
+TEX=pdflatex -interaction nonstopmode
 
 pdf: $(SOURCE)
-	pdflatex $(SOURCE)
-	pdflatex $(SOURCE)
+	$(TEX) $(SOURCE)
+	$(TEX) $(SOURCE)
