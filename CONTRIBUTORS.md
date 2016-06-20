@@ -1,4 +1,4 @@
 Contributors
 ============
 
-* Giuseppe Guagliardo
+* ...
