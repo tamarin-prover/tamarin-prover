@@ -283,6 +283,8 @@ you want to prove. We will explain each of these points in the following.
 On the right hand side, you have a quick summary of the available commands and 
 keyboard shortcuts you can use to navigate inside the theory.
 
+FIX top right corner
+
 If you click on "Message theory" on the left, you should see the following:
 
 ![Tutorial Message Theory](../images/tamarin-tutorial-message-theory.jpg 
@@ -381,28 +383,53 @@ the necessary `!Ltk` fact. The other two sources are given below.
 3](../images/tamarin-tutorial-case-distinctions-2.jpg 
  "Tutorial Case Distinctions 2 of 3")
 
- ![Tutorial Case Distinctions 3 of 
+![Tutorial Case Distinctions 3 of 
 3](../images/tamarin-tutorial-case-distinctions-3.jpg 
  "Tutorial Case Distinctions 3 of 3")
  
- 
- 
+Now we will see how to prove lemmas in the interactive mode. For that, click on 
+the `sorry` (indicating that the proof has not been started) after the first 
+lemma in the left frame to obtain the following screen:
 
- ![Tutorial Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
+![Tutorial Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
  "Tutorial Lemma 1")
+
+Tamarin proves lemmas using constraint solving, i.e., by refining the knowledge 
+he has about the property and the protocol (called a *constraint system*) until 
+he can either conclude that the property holds in all possible cases, or until 
+he finds a counterexample invalidating the lemma.
+
+On the right we now have the possible proof steps at the top, and the current 
+state of the constraint system just below (which is empty, as we haven't 
+started the proof yet). A proof always starts with either a simplification step 
+(`1. simplify`) which translates the lemma into an initial constraint system 
+that needs to be resolved, or an induction setup step (`2. induction`) which 
+generates the necessary constraints to prove the lemma using induction on the 
+length of the trace. Here we use the default strategy, i.e., a simplification 
+step by clicking on `1. simplify`, to obtain the following screen:
  
 ![Tutorial Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpg 
  "Tutorial Lemma 1 Step 1")
 
+Tamarin has now translated the lemma into a constraint system. Since it looks 
+for counterexamples to the lemma, it looks for a protocol execution that 
+contains a `SessKeyC( S, k )` and a `K( k )` action, but does not use an 
+`LtkReveal( S )`. This is visualized in the graph as follows. The only way of 
+getting a `SessKeyC( S, k )` action is using an instance of the `Client_2` 
+rule on the left, and the `K( k )` rule is symbolized on the right using a 
+round box (the intruder reasoning is always visualized using round boxes).
+
+FIX explain formula
+
+To finish the proof we can either continue manually by selecting the constraint 
+to resolve next, or by calling the `autoprover` which selects the next steps 
+based on a heuristic. Note that that the proof methods in the GUI are also 
+sorted according to the same heuristic. Always selecting the first proof method 
+will result in the same proof as the ones constructed by the 'autoprover'.
+
 ![Tutorial Lemma 1 Finished](../images/tamarin-tutorial-lemma-1-finished.jpg 
  "Tutorial Lemma 1 Finished")
  
- You can prove a lemma
-interactively by clicking on the available proof methods (corresponding to
-applications of constraint reduction rules) or by calling the 'autoprover' by
-right-clicking on a node in the theory overview. Note that that the proof
-methods in the GUI are sorted according to our heuristic. Always selecting the
-first proof method will result in the same proof as the ones constructed by
-the 'autoprover' and '--prove'.
+FIX explain end
 
 
