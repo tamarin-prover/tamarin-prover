@@ -12,12 +12,12 @@ Protocol.
 
 It is specified in Tamarin by the following rules:
 
-~~~~ {.tamarin slice="../code/NSLPK3.spthy" lower=32 upper=71}
+~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=32 upper=71}
 ~~~~
 
 We want to examine if the following lemma holds:
 
-~~~~ {.tamarin slice="../code/NSLPK3.spthy" lower=105 upper=118}
+~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=105 upper=118}
 ~~~~
 
 
@@ -73,7 +73,7 @@ lemma will be assumed when proving the other lemmas. Also, typing lemmas
 always use induction.
 In our example we can add the following lemma:
 
-~~~~ {.tamarin slice="../code/NSLPK3.spthy" lower=86 upper=102}
+~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=86 upper=102}
 ~~~~
 
 This lemma relates the point of instantiation to the point of sending by
