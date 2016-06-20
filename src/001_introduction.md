@@ -41,11 +41,11 @@ may need to resort to Tamarin's *interactive mode* to explore the proof
 states, inspect attack graphs, and seamlessly combine manual proof
 guidance with automated proof search.
 
-*N.B. If this is too technical it can be dumbed down or deleted or
+*N.B. If this paragraph is too technical it can be dumbed down or deleted or
 moved elsewhere.*
 A formal treatment of Tamarin's foundations is given in the theses of
 [@benediktthesis]
-and [@meierthesis].  We give a very brief (technical) summary here.
+and [@meierthesis].  We give just a brief (technical) summary here.
 For an equational theory $E$ defining cryptographic operators,
 a multiset rewriting system $R$ defining a
 protocol, and a formula $\phi$ defining a trace property, Tamarin can
@@ -62,11 +62,12 @@ reduction rules, such as simplifications or case distinctions,
 correspond to the incremental construction of a satisfying trace. If no
 further rules can be applied and no satisfying trace was found, then no
 satisfying trace exists. For symbolic reasoning, we exploit the finite
-variant property *CITE* to reduce reasoning modulo $E$ with respect to
+variant property [@Comon-LundhD05]
+to reduce reasoning modulo $E$ with respect to
 $R$ to reasoning modulo $AC$ with respect to the variants of $R$.
 
-*Do we really want to explain here how it  distinguishes itself from 
-other tools.*
+*Do we want to explain here how it  distinguishes itself from 
+other tools?*
 
 This manual is written for researchers who wish to use Tamarin
 to model and analyze security protocols.  We assume the reader
@@ -74,7 +75,7 @@ is familiar with basic cryptography and the basic workings
 of security protocols.  Our focus is on explaining Tamarin's usage
 so that a new user can download, install, and use the system.
 We do not attempt to describe Tamarin's formal foundations and
-refer to the related theses and scientific papers for these details.
+refer the reader to the related theses and scientific papers for these details.
 
 Highlights and Limitations
 ----------
