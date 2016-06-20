@@ -97,7 +97,7 @@ the term that is claimed to be secret.  Moreover, the lemma references
 the actions `Reveal` and `Honest`. We use `Reveal(B)` to label rules
 in which an agent `B` is compromised and `Honest(B)` to indicate
 agents that are assumed to be honest. For this mechanism to work,
-Honest(B) must occur in the same rule as Secret(A,x).
+`Honest(B)` must occur in the same rule as `Secret(A,x)`.
 ```
 lemma secrecy:
   "All A x #i. 
