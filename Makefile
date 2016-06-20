@@ -27,6 +27,7 @@ book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros
 	$(PANDOC) -c $(STYLE) \
 	  ${FILTER} \
 	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
+	  --bibliography=src/manual.bib \
 	  -t html $(FLAGS) -o $@ $<
 
 

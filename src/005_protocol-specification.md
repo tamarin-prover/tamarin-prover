@@ -32,7 +32,7 @@ recently alive or agrees on some values) is commonly achieved in AKE protocols
 by adding a key-confirmation step, where the parties exchange a MAC of the
 exchanged messages that is keyed with (a variant of) the computed session key.
 
-In this manual, we provide an informal description of the underlying model. The full details of the underlying model can be found in [@
+In this manual, we provide an informal description of the underlying model. The full details of the underlying model can be found in [@benediktthesis].
 
 Cryptographic messages as Terms
 -------------------------------
