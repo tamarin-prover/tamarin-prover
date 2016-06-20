@@ -35,7 +35,14 @@ modeling this simple protocol in detail.
 Function Signature and Equational Theory
 ----------------------------------------
 
-TODO: WHY FUNCTIONS AND EQUATIONAL THEORY???
+We are working in the symbolic model of security protocol
+verification, which means that we model the messages as terms, built
+from functions, satisfying an underlying equational theory. This will
+be explained in detail later, but for now note that there are function
+names which we explicitly declare together with their arity, and
+equalities that define the semantic equivalence of terms, e.g., the
+decryption of an encrypted ciphertext is the original message, when
+the correct keys are used.
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
@@ -59,7 +66,8 @@ models the interaction between calls to these three algorithms. All
 such user-specified equations must be subterm-convergent rewriting
 rules, when oriented from left to right. This means that the
 right-hand-side must be a subterm of the left-hand-side or a nullary
-function symbol (a constant).
+function symbol (a constant), see the section on [Equational
+Theory](004_cryptographic-messages).
 
 
 Modeling the Public Key Infrastructure
@@ -82,7 +90,7 @@ the same arity, casing, and multiplicity. Otherwise, Tamarin complains
 that the theory is not wellformed.
 
 The `Fr` fact is a built-in fact. It denotes a freshly generated fresh
-name, used to model random numbers, i.e., nonces.  See later in this
+name, used to model random numbers, i.e., nonces or keys. See later in this
 manual for details.
 
 We denote the sort of variables using prefixes:
@@ -135,19 +143,24 @@ We model it using the following three rules.
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=34 upper=65}
 ~~~~
 
-Above, we model all applications of cryptographic algorithms
+The first rule models the client sending its message, while the second
+rule models it receiving a response. The third rule models the server,
+both receiving the message and responding in one single rule.
+
+Note that we model all applications of cryptographic algorithms
 explicitly.  Call `tamarin-prover Tutorial.spthy` to inspect the
 finite variants of the `Serv_1` rule, which list all possible
-interactions of the destructors used.  In our proof search, we will
-consider all these interactions.
+interactions of the destructors used, or see below for detail.  In our
+proof search, we will consider all these interactions.
+
+TODO: SAY SOMETHING ABOUT THE DIFFERENCE BETWEEN ACTION FACTS AND FACTS?
 
 We also model that the server explicitly checks that the first
 component of the request is equal to `'1'`. We model this by logging
 the claimed equality and then adapting the security property such that
 it only considers traces where all `Eq` actions occur with two equal
-arguments. Note that `Eq` is NOT a built-in fact. Guarded trace
-properties are strong enough to formalize this requirement without
-built-in support. Note that inequalities can be modeled analogously.
+arguments. Note that `Eq` is NOT a built-in fact, but one can pick any
+name. Note that inequalities can be modeled analogously.
 
 We log the session-key setup requests received by servers to allow
 formalizing the authentication property for the client.
@@ -156,54 +169,30 @@ formalizing the authentication property for the client.
 Modeling the security properties
 --------------------------------
 
-The syntax for specifying security properties is defined as follows:
+The security properties are defined over traces of the action facts of
+a protocol execution.
 
- *  `All`      for universal quantification, temporal variables are prefixed with #
- *  `Ex`       for existential quantification, temporal variables are prefixed with #
- *  `==>`      for implication
- *  `&`        for conjunction
- *  `|`        for disjunction
- *  `not`      for  negation
-
-*  `f @ i`    for action constraints, the sort prefix for the temporal variable 'i'
-           is optional
-
- * `i < j`    for temporal ordering, the sort prefix for the temporal variables 'i'
-           and 'j' is optional
-
- * `#i = #j`  for an equality between temporal variables 'i' and 'j'
- * `x = y`    for an equality between message variables 'x' and 'y'
-
-
-CUT TEXT BELOW
-
-Note that apart from public names (delimited using single-quotes), no terms
-may occur in guarded trace properties. Moreover, all variables must be
-guarded. The error message for an unguarded variable is currently not very
-good.
-
-For universally quantified variables, one has to check that they all
-occur in an action constraint right after the quantifier and that the
-outermost logical operator inside the quantifier is an implication.
-For existentially quantified variables, one has to check that they all
-occur in an action constraint right after the quantifier and that the
-outermost logical operator inside the quantifier is a conjunction.
-Note also that currently the precedence of the logical connectives is
-not specified. We therefore recommend to use parentheses, when in
-doubt.
-
-Note that you can specify additional axioms that restrict the set of
-considered traces. In this example, we restrict our attention to
-traces where all equality checks succeed.
+First, note that we can specify additional axioms that restrict the
+set of considered traces. In this example, we restrict our attention
+to traces where all equality checks succeed. In detail the axiom says
+that for all parameters `x`, `y` to the `Eq` action fact at some time
+point `i` it has to be the case that `x=y`.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=68 upper=68}
 ~~~~
 
-CUT TEXT ABOVE
-
-The following two properties should be self-explanatory.
-Note that the order between axioms and lemmas does not matter. All axioms are
-always available/assumed in the proofs of all security properties.
+Note that the order between axioms and lemmas does not matter. All
+axioms are always available/assumed in the proofs of all security
+properties. Now we have two lemmas, the first on the secrecy of
+session key secrecy from the client point of view. The lemma
+`Client_session_key_secrecy` says that it cannot be that a client has
+set up a session key `k` with a server `S` and the adversary learned
+that `k` unless the adversary performed a long-term key reveal on the
+server `S`. The second lemma `Client_auth` specifies client authentication, which is
+that for all session keys `k` that the clients have setup with a
+server `S` there must be a server that has answered the request, or
+the adversary has performed a long-term key reveal on `S` previously
+in time.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=70 upper=95}
 ~~~~
@@ -213,39 +202,27 @@ injective authentication. Our formulation is stronger than the standard
 formulation of injective authentication, as it is based on uniqueness instead
 of counting. For most protocols, that guarantee injective authentication one
 can also prove such a uniqueness claim, as they agree on appropriate fresh
-data.
+data. This is shown in lemma `Client_auth_injective`.
+
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=97 upper=111}
 ~~~~
 
 
-GO ON HERE...
-
-Always have an "Exists-lemma":
+To ensure that our lemmas do not just hold vacuously because the model
+is not executable, we make it a point to always have an executability
+lemma, that shows that the model can run to completion. This is given
+as a regular lemma, but with the `exists-trace` keyword, as seen in
+the lemma `Client_session_key_honest_setup` below
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=113 upper=118}
 ~~~~
 
+Note that when adding inconsistent axioms, you can prove any
+property. To check that there still exist traces, we always want an
+`exists-trace` lemma.  When modeling protocols such existence proofs
+are very useful sanity checks.
 
-
-
-Verification
-------------
-
-You can verify them by calling
-
-    tamarin-prover --prove Tutorial.spthy
-
-  This will first output some logging from the constraint solver and then the
-  Tutorial security protocol theory with the lemmas and their attached
-  (dis)proofs.
-
-  Note that when adding inconsistent axioms, you can prove any property. To
-  check that there still exist traces, you can state an 'exists-trace' lemma.
-  When modeling protocols such existence proofs are very useful sanity checks.
-
-  The following property must be provable, as otherwise there would be no
-  possibility to setup a session key with a honest sever.
 
 
 Running Tamarin on Tutorial
@@ -263,7 +240,10 @@ flag `--prove` to the call; i.e.,
 
   `tamarin-prover Tutorial.spthy --prove`
 
-However, let's not go there yet. TODO: YES, GO THERE
+This will first output some logging from the constraint solver and
+then the Tutorial security protocol theory with the lemmas and their
+attached (dis)proofs.
+
 
 
 
@@ -335,15 +315,47 @@ In a nutshell this rule says that if the intruder knows the pair `<x.1, x.2>`
 (represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
 value `x.1` (represented by the fact `!KD( x.1 )`) from it. (This stems from 
 the applying `fst` to the pair and then using the equation 
-`fst(<x.1, x.2>) = x.1`.)
+`fst(<x.1, x.2>) = x.1`.) The precise difference between `!KD( )` and `!KU( )` 
+facts is not important for now, and will be explained below. As a first 
+approximation, both represente they intruder's knowledge and are only used to 
+make the tool's reasoning more efficient.
 
-![Tutorial Multiset Rewrite 
+Now click on *Multiset rewriting rules and axioms* on the left.
+
+![Tutorial Multiset Rewriting 
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
- "Tutorial Multiset Rewrite Rules")
+ "Tutorial Multiset Rewriting Rules")
+
+On the right side of the screen you should now see the send your protocol's 
+rewriting rules, plus two additional rules: the `isend` and `irecv` rules, 
+which iterface the protocols output and input with the intruder deduction.
+The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` the intruder knows, 
+and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
+output `Out(x)` and passes it to the intruder knowledge, represented by the 
+`!KD(x)` fact. Note that the rule `Serv_1` from the protocol has three 
+*variants (modulo AC)*. The precise meaning of this is not important right now 
+(it stems from the way Tamarin deals with equations) and will be explained in 
+the [section on cryptographic
+messages](004_cryptographic-messages.html#sec:cryptographic-messages).
+
+Just below you have the list of all axioms, here only the axiom 
+`Equality_Checks_Succeed`.
+
+Now click on `Untyped case distinctions (10 cases, all chains solved)` to see 
+the following:
 
 ![Tutorial Case Distinctions 
 Rules](../images/tamarin-tutorial-case-distinctions.jpg 
  "Tutorial Case Distinctions")
+ 
+To improve the efficiency of its internal reasoning, Tamarin precomputes case 
+distinctions. A case distinction gives all possible sources for a fact, i.e. 
+all rules (or combinations of rules) that produce this fact, and can then be 
+used during Tamarin's backward search. These case distinctions are 
+then used to avoid computing the same thing again and again. On the right hand 
+side you can now see the result of the precomputations for our Tutorial theory.
+
+
  
 ![Tutorial Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
  "Tutorial Lemma 1")
