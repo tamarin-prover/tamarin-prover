@@ -281,9 +281,12 @@ protocol, and the typed and untyped case distinctions, followed by the lemmas
 you want to prove. We will explain each of these points in the following.
 
 On the right hand side, you have a quick summary of the available commands and 
-keyboard shortcuts you can use to navigate inside the theory.
-
-FIX top right corner
+keyboard shortcuts you can use to navigate inside the theory. In the top right 
+corner there are some links: `Index` leads back to the welcome page, 
+`Download` allows you to download the current theory (including proofs if they 
+exist), `Action` and then `Show source` shows the source code of the theory, 
+and `Options` allows you to configure the level of details in the graph 
+visualisation (see below for examples).
 
 If you click on "Message theory" on the left, you should see the following:
 
@@ -417,9 +420,12 @@ contains a `SessKeyC( S, k )` and a `K( k )` action, but does not use an
 `LtkReveal( S )`. This is visualized in the graph as follows. The only way of 
 getting a `SessKeyC( S, k )` action is using an instance of the `Client_2` 
 rule on the left, and the `K( k )` rule is symbolized on the right using a 
-round box (the intruder reasoning is always visualized using round boxes).
+round box (intruder reasoning is always visualized using round boxes).
+Just below the graph, the formula
 
-FIX explain formula
+    formulas: ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥
+
+now states that any occurrence of `LtkReveal( S )` will lead to a contradiction.
 
 To finish the proof we can either continue manually by selecting the constraint 
 to resolve next, or by calling the `autoprover` which selects the next steps 
@@ -427,9 +433,12 @@ based on a heuristic. Note that that the proof methods in the GUI are also
 sorted according to the same heuristic. Always selecting the first proof method 
 will result in the same proof as the ones constructed by the 'autoprover'.
 
+In both cases we end with the following final state, where the constructed 
+graph leads to a contradiction as it contains `LtkReveal( S )`:
+
 ![Tutorial Lemma 1 Finished](../images/tamarin-tutorial-lemma-1-finished.jpg 
  "Tutorial Lemma 1 Finished")
  
-FIX explain end
-
+The lemma is now colored in green, as it was successfully proven. If we had 
+found a counterexample, it would be colored in red.
 
