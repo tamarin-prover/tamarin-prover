@@ -41,8 +41,8 @@ guidance with automated proof search.
 *N.B. If this is too technical it can be dumbed down or deleted or
 moved elsewhere.*
 A formal treatment of Tamarin's foundations is given in the theses of
-Schmidt *CITE*
-and Meier *CITE*.  We give a very brief (technical) summary here.
+[@benediktthesis]
+and [@meierthesis].  We give a very brief (technical) summary here.
 For an equational theory $E$ defining cryptographic operators,
 a multiset rewriting system $R$ defining a
 protocol, and a formula $\phi$ defining a trace property, Tamarin can
@@ -62,30 +62,33 @@ satisfying trace exists. For symbolic reasoning, we exploit the finite
 variant property *CITE* to reduce reasoning modulo $E$ with respect to
 $R$ to reasoning modulo $AC$ with respect to the variants of $R$.
 
-In practice, the Tamarin tool has proven to be highly successful.
-Its applications include *enumerate here and cite key papers*.
+*Do we really want to explain here how it  distinguishes itself from 
+other tools.*
 
+This manual is written for researchers who wish to use Tamarin
+to model and analyze security protocols.  We assume the reader
+is familiar with basic cryptography and the basic workings
+of security protocols.  Our focus is on explaining Tamarin's usage
+so that a new user can download, install, and use the system.
+We do not attempt to describe Tamarin's formal foundations and
+refer to the related theses and scientific papers for these details.
 
-High level points
-
-* Tool for protocol analysis: verification and falsification of
-  cryptographic protocols  *DONE*
-* Scope: protocols, attackers, properties.  (high level!)  *DONE*
-* Limitations, e.g., symbolic model, large search space, may not
-  terminate.
-* But yet highly successful.   How it distinguishes itself from
-  other tools.
-* Who is this written for?  Our expectations for reader and where
-  additional information can be found for those readers with fewer
-  prerequisites.
-* Mention key publications
-
-CSF~\cite{TamarinCSF}, CAV~\cite{TamarinCAV}
-
-Highlights
+Highlights and Limitations
 ----------
 
+
 success stories: briefly
+
+In practice, the Tamarin tool has proven to be highly successful.
+Its applications include *enumerate here and cite key papers*.
+CSF~\cite{TamarinCSF}, CAV~\cite{TamarinCAV}
+
+*Add something about limitations: 
+e.g., symbolic model, large search space, may not
+terminate.*
+
+
+
 
 Organization [Ralf/Jannik]
 --------------------------
