@@ -2,7 +2,7 @@ PANDOC = pandoc
 IFORMAT = markdown
 FLAGS = --standalone --toc --toc-depth=2 --mathjax=$(MATHJAX)
 STYLE = css/style.css
-FILTER = includes.hs
+#FILTER = includes.hs
 ifdef MATHJAX_LOCAL
   MATHJAX = ${MATHJAX_LOCAL}
 else
@@ -18,9 +18,11 @@ OBJ = $(subst .md,.html,$(subst src,book,$(SRC)))
 all: $(OBJ)
 
 book/%.html: src/%.md $(FILTER) $(TEMPLATE_HTML) $(FILTER) latex_macros
-	$(PANDOC) -c $(STYLE) --filter ${FILTER} \
+	$(PANDOC) -c $(STYLE) \
 	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
 	  -t html $(FLAGS) -o $@ $<
+
+# --filter ${FILTER} \
 
 pdf: $(FILTER)
 	$(PANDOC) --filter ${FILTER} -f $(IFORMAT) \
