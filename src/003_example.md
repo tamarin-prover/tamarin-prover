@@ -361,7 +361,11 @@ which iterface the protocols output and input with the intruder deduction.
 The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` the intruder knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
 output `Out(x)` and passes it to the intruder knowledge, represented by the 
-`!KD(x)` fact.
+`!KD(x)` fact. Note that the rule `Serv_1` from the protocol has three 
+*variants (modulo AC)*. The precise meaning of this is not important right now, 
+it stems from the way Tamarin deals with equations, and will be explained in 
+the [section on algebraic 
+properties](004_equational-theories.html#sec:equational-theories)
 
 Just below you have the list of all axioms, here only the axiom 
 `Equality_Checks_Succeed`.
