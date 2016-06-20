@@ -1,6 +1,3 @@
-<p class="halfbreak">
-</p>
-
 Installation {#sec:installation}
 ============
 
@@ -40,7 +37,7 @@ After running `git clone` of the Tamarin
 repository you have the current development version ready for
 compilation. If you rather want to use the master version just run
 `git checkout master`. In either case, you can then run `make
-default', which will install an appropriate GHC for your system,
+default`, which will install an appropriate GHC for your system,
 including all dependencies, and the `tamarin-prover` executable
 will be copied to
 `~/.local/bin/tamarin-prover`
@@ -50,3 +47,95 @@ version of Tamarin (or switch to/from the `master` branch), then only
 the tool itself needs to be recompiled, which takes a few minutes at
 most.
 
+Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+
+### Using binaries ###
+
+You can download the binaries appropriate for your system from
+<https://github.com/tamarin-prover/bin-dists>
+
+Only the current master is available as binary, while the sources
+contain both the master and the current development state.
+
+Similarly to installing from source, now starting
+Tamarin without arguments will output its help
+message, including the paths to the installed example protocol models
+and all case studies from published papers. We recommend opening the
+`Tutorial.spthy` example file in a text editor and start exploring from
+there, or to continue reading this document.
+
+Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+
+
+Mac OS X {#sec:macosx}
+--------
+
+MacOS X instructions \index{MacOS X}
+
+
+
+Windows {#sec:windows}
+-------
+
+Windows is not supported at the moment. 
+
+
+
+
+Running Tamarin {#sec:running-tamarin}
+---------------
+
+Starting ```tamarin-prover``` without arguments will output its
+help message, including the paths to the installed example protocol
+models and all case studies from published papers. We recommend
+opening the Tutorial.spthy example file in a text editor and start
+exploring from there, or to continue reading this document.
+
+Running ```tamarin-prover test``` will check the Maude and GraphViz
+versions and run some tests, its output should be:
+
+```
+$ tamarin-prover test
+Self-testing the tamarin-prover installation.
+
+*** Testing the availability of the required tools ***
+maude tool: 'maude'
+ checking version: 2.7. OK.
+ checking installation: OK.
+
+GraphViz tool: 'dot'
+ checking version: dot - graphviz version 2.39.20150613.2112 
+                   (20150613.2112). OK.
+
+*** Testing the unification infrastructure ***
+Cases: 55  Tried: 55  Errors: 0  Failures: 0
+
+*** TEST SUMMARY ***
+All tests successful.
+The tamarin-prover should work as intended.
+
+           :-) happy proving (-:
+```
+
+You are now ready to use the \tamarin for verification of cryptographic protocols.
+
+Running Tamarin on remote machine
+---------------------------------
+
+If you have access to a faster desktop or server, but prefer using
+Tamarin on your laptop, you can do that. The cpu/memory intensive
+reasoning part of the tool will run on the bigger machine, while you
+only run the GUI, i.e., the web browser of your choice, locally. To do
+this, you can forward your port 3001 to the port 3001 of your server
+(replace ```SERVERNAME``` appropriately) with the following
+command:
+
+```
+ssh -L 3001:localhost:3001 SERVERNAME
+```
+
+If you do this, we recommend that you run your Tamarin instance on
+the server inside a ```screen``` instance, which will continue
+running even if the network drops your connection as you can later
+reconnect to it. Otherwise, any network failure may require you to
+restart Tamarin and start over on the proof.
