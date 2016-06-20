@@ -22,24 +22,14 @@ the file [Tutorial](code/Tutorial.spthy) presented here:
 ~~~~ {.tamarin include="code/Tutorial.spthy"}
 ~~~~
 
-You can replace 'Tutorial' with any name you like to give to your
-theory. After the keyword `begin`, you first declare function symbols,
-and equations that these function symbols must satisfy. Then you
-declare multiset rewriting rules that model the protocol, and finally
-lemmas that specify the security properties. Moreover, you can also
-insert comments, to structure your theory. We give examples of each of
-these elements while modeling this simple protocol.
-
-Recall the Alice-and-Bob notation of the protocol:
-
-  C -> S: aenc{k}pk(S)
-  C <- S: h(k)
-
-We model this particular protocol in three steps. First, we declare
-the function symbols and the equations defining them. Then, we
-introduce multiset rewriting rules modeling a public key
-infrastructure (PKI) and the protocol. Finally, we state the expected
-security properties.
+Note that we use C-style comments. The Tamarin file starts with
+`theory` followed by the name, here 'Tutorial'.  After the keyword
+`begin`, we first declare function symbols, and equations that these
+function symbols must satisfy. Then we declare multiset rewriting
+rules that model the protocol, and finally we write lemmas that
+specify the security properties. Moreover, we also inserted comments,
+to structure the theory. Now, we describe these elements while
+modeling this simple protocol in detail.
 
 
 Function Signature and Equational Theory
@@ -53,9 +43,14 @@ We model asymmetric encryption by declaring
   *  a unary function 'pk' denoting the algorithm computing a public
   key from a private key.
 
+This is done by declaring the function symbols:
+
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=15 upper=15}
+~~~~
+
 The equation 
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=17 upper=18}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=16 upper=16}
 ~~~~
 
 models the interaction between calls to these three algorithms. All
@@ -64,111 +59,94 @@ rules, when oriented from left to right. This means that the
 right-hand-side must be a subterm of the left-hand-side or a nullary
 function symbol (a constant).
 
-Certain equational theories are used very often when modeling
-cryptographic messages. We therefore provide builtins definitions for
-them, using the keyword 'builtins'. The above theory could also be
-enabled using the declaration
-
-  builtins: hashing, asymmetric-encryption
-
-We support the following builtins theories:
-
-  diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
-  hashing
-
-Note that the theory for hashing only introduces the function symbol 'h/1'
-and contains no equations.
-Apart from 'diffie-hellman', all of these theories are subterm-convergent and
-can therefore also be declared directly, as above. You can inspect their
-definitions by uncommenting the following two line-comments and calling
-
-  tamarin-prover Tutorial.spthy
-
-// builtins: diffie-hellman, signing, asymmetric-encryption, 
-symmetric-encryption,
-//          hashing
-
-The call 'tamarin-prover Tutorial.spthy' parses the Tutorial.spthy file,
-computes the variants of the multiset rewriting rules, checks their
-wellformedness (explained below), and pretty-prints the theory. The
-declaration of the signature and the equations can be found at the top of the
-pretty-printed theory.
-
-Proving all lemmas contained in the theory is as simple as adding the
-flag '--prove' to the call; i.e.,
-
-  tamarin-prover Tutorial.spthy --prove
-
-However, let's not go there yet. We first have to model the PKI and our
-protocol.
-
 
 Modeling the Public Key Infrastructure
 --------------------------------------
 
+Now, we introduce multiset rewriting rules modeling a public
+key infrastructure (PKI):
+
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=19 upper=22}
+~~~~
+
 The above rule models registering a public key. It makes use of the
-   following syntax.
+following syntax.
 
-   Facts always start with an upper-case letter and do not have to be declared.
-   If their name is prefixed with an exclamation mark '!', then they are
-   persistent. Otherwise, they are linear. Note that you must use every fact
-   name consistently; i.e., you must always use it with the same arity, casing,
-   and multiplicity. Otherwise, the tamarin prover complains that the theory
-   is not wellformed.
+Facts always start with an upper-case letter and do not have to be
+declared.  If their name is prefixed with an exclamation mark '!',
+then they are persistent. Otherwise, they are linear. Note that every
+fact name must be used consistently; i.e., it must always be used with
+the same arity, casing, and multiplicity. Otherwise, Tamarin complains
+that the theory is not wellformed.
 
-   The 'Fr' fact is a builtins fact. It denotes a freshly generated fresh name.
-   See the paper for details.
+The `Fr` fact is a built-in fact. It denotes a freshly generated fresh
+name, used to model random numbers, i.e.., nonces.  See later in this
+manual for details.
 
-   We denote the sort of variables using prefixes:
+We denote the sort of variables using prefixes:
 
-     ~x  denotes  x:fresh
-     $x  denotes  x:pub
-     #i  denotes  i:temporal
-     i   denotes  i:msg
+ *    ~x  denotes  x:fresh
+ *    $x  denotes  x:pub
+ *    #i  denotes  i:temporal
+ *    i   denotes  i:msg
 
-     'c' denotes a public name 'c \in PN'; i.e., a fixed, global constant
+ and a string constant 'c' denotes a public name 'c \in PN'; i.e., a
+ fixed, global constant
 
-   Thus, the above rule can be read as follows. First, freshly generate a
-   fresh name 'ltk', the new private key and nondeterministically choose a
-   public name 'A', the agent for which we are generating the key-pair.
-   Then, generate the persistent fact !Ltk($A, ~ltk), which denotes the
-   association between agent 'A' and its private key 'ltk, and generate the
-   persistent fact !Pk($A, pk(~ltk)), which denotes the association between the
-   agent 'A' and its public key 'pk(~ltk)'.
+Thus, the above rule can be read as follows. First, freshly generate a
+fresh name `~ltk`, the new private key, and nondeterministically choose
+a public name `A`, the agent for which we are generating the key-pair.
+Then, generate the persistent fact `!Ltk($A, ~ltk)`, which denotes the
+association between agent `A` and its private key `~ltk`, and generate
+the persistent fact `!Pk($A, pk(~ltk))`, which denotes the association
+between the agent `A` and its public key `pk(~ltk)`.
 
-   We allow the adversary to retrieve any public key using the following rule.
-   Intuitively, it just reads a public-key database entry and sends the public
-   key to the network using the builtins fact 'Out' denoting a message sent to
-   the network. See our paper for more information.
+We allow the adversary to retrieve any public key using the following
+rule.  Intuitively, it just reads a public-key database entry and
+sends the public key to the network using the built-in fact `Out`
+denoting a message sent to the network. See later for more
+information:
 
-   We model the dynamic compromise of long-term private keys using the following
-   rule. Intuitively, it reads a private-key database entry and sends it to
-   the adversary. This rule has an observable 'LtkReveal' action stating that
-   the long-term key of agent 'A' was compromised. We will use this action in
-   the security property below to determine which agents are compromised.
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=24 upper=27}
+~~~~
+
+We model the dynamic compromise of long-term private keys using the
+following rule. Intuitively, it reads a private-key database entry and
+sends it to the adversary. This rule has an observable `LtkReveal`
+action stating that the long-term key of agent `A` was compromised. We
+will use this action in the security property below to determine which
+agents are compromised.
+
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=29 upper=32}
+~~~~
 
 Modeling the protocol
 ----------------------
 
-Recall that we want to model the following protocol.
+Recall the Alice-and-Bob notation of the protocol we want to model:
 
   C -> S: aenc{k}pk(S)
   C <- S: h(k)
 
 We model it using the following three rules.
 
-Above, we model all applications of cryptographic algorithms explicitly.
-   Call 'tamarin-prover Tutorial.spthy' to inspect the finite variants of the
-   Serv_1 rule, which list all possible interactions of the destructors used.
-   In our proof search, we will consider all these interactions.
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=34 upper=65}
+~~~~
 
-   We also model that the server explicitly checks that the first component of
-   the request is equal to '1'. We  model this by logging the claimed equality
-   and then adapting the security property such that it only considers traces
-   where all 'Eq' actions occur with two equal arguments. Note that 'Eq' is NO
-   builtin fact. Guarded trace properties are strong enough to formalize this
-   requirement without builtin support. Note that inequalities can be modeled
-   analogously.
+
+Above, we model all applications of cryptographic algorithms
+explicitly.  Call `tamarin-prover Tutorial.spthy` to inspect the
+finite variants of the `Serv_1` rule, which list all possible
+interactions of the destructors used.  In our proof search, we will
+consider all these interactions.
+
+We also model that the server explicitly checks that the first
+component of the request is equal to `'1'`. We model this by logging the
+claimed equality and then adapting the security property such that it
+only considers traces where all 'Eq' actions occur with two equal
+arguments. Note that 'Eq' is NO builtin fact. Guarded trace properties
+are strong enough to formalize this requirement without builtin
+support. Note that inequalities can be modeled analogously.
 
    We log the session-key setup requests received by servers to allow
    formalizing the authentication property for the client.
@@ -226,6 +204,12 @@ of counting. For most protocols, that guarantee injective authentication one
 can also prove such a uniqueness claim, as they agree on appropriate fresh
 data.
 
+
+
+
+Verification
+------------
+
 You can verify them by calling
 
     tamarin-prover --prove Tutorial.spthy
@@ -240,6 +224,25 @@ You can verify them by calling
 
   The following property must be provable, as otherwise there would be no
   possibility to setup a session key with a honest sever.
+
+
+Running Tamarin on Tutorial
+---------------------------
+
+
+The call `tamarin-prover Tutorial.spthy` parses the `Tutorial.spthy`
+file, computes the variants of the multiset rewriting rules, checks
+their wellformedness (explained below), and pretty-prints the
+theory. The declaration of the signature and the equations can be
+found at the top of the pretty-printed theory.
+
+Proving all lemmas contained in the theory is as simple as adding the
+flag `--prove` to the call; i.e.,
+
+  `tamarin-prover Tutorial.spthy --prove`
+
+However, let's not go there yet. TODO: YES, GO THERE
+
 
 
 Graphical User Interface
