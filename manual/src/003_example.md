@@ -355,9 +355,40 @@ used during Tamarin's backward search. These case distinctions are
 then used to avoid computing the same thing again and again. On the right hand 
 side you can now see the result of the precomputations for our Tutorial theory.
 
+For example, here Tamarin tells us that there is one possible source of the 
+fact `!Ltk( t.1, t.2 )`, namely the rule `Register_pk`. The image shows the 
+(incomplete) graph representing the execution. The green box symbolizes the 
+instance of the `Register_pk` rule, and the trapezoid on the bottom stands for 
+the "sink" of the `!Ltk( t.1, t.2 )` fact. Here the case distinction consists 
+of only one rule instance, but there can be potentially multiple rule 
+instances, and multiple cases inside the case distinction, as in the following 
+images.
 
+The technical information given below the image is not important for now, it 
+gives details about how the case distinction was computed and if there are 
+other constraints such as equations or substitutions which still need to be 
+resolved.
+
+![Tutorial Case Distinctions 1 of 
+3](../images/tamarin-tutorial-case-distinctions-1.jpg 
+ "Tutorial Case Distinctions 1 of 3")
  
-![Tutorial Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
+Here the fact `!KU( ~t.1 )` has three sources, the first one is the rule 
+`Reveal_ltk`, which requires an instance of the rule `Register_pk` to create 
+the necessary `!Ltk` fact. The other two sources are given below.
+ 
+![Tutorial Case Distinctions 2 of 
+3](../images/tamarin-tutorial-case-distinctions-2.jpg 
+ "Tutorial Case Distinctions 2 of 3")
+
+ ![Tutorial Case Distinctions 3 of 
+3](../images/tamarin-tutorial-case-distinctions-3.jpg 
+ "Tutorial Case Distinctions 3 of 3")
+ 
+ 
+ 
+
+ ![Tutorial Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
  "Tutorial Lemma 1")
  
 ![Tutorial Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpg 
