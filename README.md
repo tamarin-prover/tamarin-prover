@@ -1,4 +1,4 @@
-This is the manual for [AutoGnP](http://www.github.com/ZooCrypt/AutoGnP).
+This is the manual for [Tamarin](https://github.com/tamarin-prover/tamarin-prover).
 
 To compile the manual, you need [pandoc](http://pandoc.org), see
 [installing.html](http://pandoc.org/installing.html) for the installation
