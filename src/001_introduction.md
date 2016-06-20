@@ -69,13 +69,13 @@ $R$ to reasoning modulo $AC$ with respect to the variants of $R$.
 *Do we want to explain here how it  distinguishes itself from 
 other tools?*
 
-This manual is written for researchers who wish to use Tamarin
-to model and analyze security protocols.  We assume the reader
-is familiar with basic cryptography and the basic workings
-of security protocols.  Our focus is on explaining Tamarin's usage
-so that a new user can download, install, and use the system.
-We do not attempt to describe Tamarin's formal foundations and
-refer the reader to the related theses and scientific papers for these details.
+This manual is written for researchers who wish to use Tamarin to model
+and analyze security protocols.  We assume the reader is familiar with
+basic cryptography and the basic workings of security protocols.  Our
+focus is on explaining Tamarin's usage so that a new user can download,
+install, and use the system.  We do not attempt to describe Tamarin's
+formal foundations and refer the reader to the related theses and
+scientific papers for these details.
 
 Highlights and Limitations
 ----------
