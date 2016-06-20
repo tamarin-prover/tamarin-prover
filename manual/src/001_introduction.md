@@ -80,12 +80,18 @@ scientific papers for these details.
 Highlights and Limitations
 ----------
 
-
-success stories: briefly
-
 In practice, the Tamarin tool has proven to be highly successful.
-Its applications include *enumerate here and cite key papers*.
-CSF~\cite{TamarinCSF}, CAV~\cite{TamarinCAV}
+It has been applied to numerous protocols from different domains
+including:
+
+* Advanced key agreement protocols based on Diffie-Hellman
+exponentiation, such as verifying Naxos with respect to the
+eCK (extended Canetti Krzwczyk) model; see [@SchmidtMCB12]..
+* APRKI [@ARPKI].
+* TLS
+* WHATELSE DO WE WANT TO ENUMERATE/CITE?
+
+
 
 *Add something about limitations: 
 e.g., symbolic model, large search space, may not
