@@ -82,7 +82,7 @@ the same arity, casing, and multiplicity. Otherwise, Tamarin complains
 that the theory is not wellformed.
 
 The `Fr` fact is a built-in fact. It denotes a freshly generated fresh
-name, used to model random numbers, i.e., nonces.  See later in this
+name, used to model random numbers, i.e., nonces or keys. See later in this
 manual for details.
 
 We denote the sort of variables using prefixes:
@@ -156,6 +156,8 @@ formalizing the authentication property for the client.
 Modeling the security properties
 --------------------------------
 
+CUT TEXT BELOW - MOVE SYNTAX OVER TO 004
+
 The syntax for specifying security properties is defined as follows:
 
  *  `All`      for universal quantification, temporal variables are prefixed with #
@@ -175,7 +177,6 @@ The syntax for specifying security properties is defined as follows:
  * `x = y`    for an equality between message variables 'x' and 'y'
 
 
-CUT TEXT BELOW
 
 Note that apart from public names (delimited using single-quotes), no terms
 may occur in guarded trace properties. Moreover, all variables must be
