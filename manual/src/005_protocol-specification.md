@@ -6,14 +6,16 @@ full details of the underlying model can be found in [@benediktthesis].
 
 Models are specificied in Tamarin using three main ingredients:
 
-   1. Terms
+   1. Rules
    2. Facts
-   3. Rules
+   3. Terms
 
 We will discuss each of them in turn and illustrate their use with respect to
 the Naxos protocol, displayed below.
 
 ![The Naxos protocol](../images/naxos.png)
+
+**FIX** Cas: Picture should be updated and use vector graphics, ideally.
 
 In this protocol, Each party `x` has a long-term private key `lkx` and a
 corresponding public key `pkx = g^lkx`, where `g` is a generator of the
@@ -39,6 +41,97 @@ key exchange protocols by adding a key-confirmation step, where the parties
 exchange a MAC of the exchanged messages that is keyed with (a variant of) the
 computed session key.
 
+
+Rules
+-----
+
+We use multiset rewriting to specify the concurrent execution of protocol and
+adversary.  Multiset rewriting is a formalism that is commonly used to model
+concurrent systems since it naturally supports independent transitions. 
+
+A multiset rewriting system defines a transition system, which in our case will
+be a labeled transition system. The state of the system is a multiset (bag) of
+facts. We will explain the types of facts and their use below.
+
+Tamarin's rewrite rules have sequences of facts as left-hand-sides, labels, and
+right-hand-sides. For example:
+
+**FIX** Cas: Maybe better to use Naxos rules here.
+
+	MyRule1:
+	[ ]--[ G(u) ]->[ H(t), F(t) ]
+
+	MyRule2:
+	[ F(t) ]--[ G(u) ]->[ H(t), F(h(t)) ]
+
+For now, we will ignore the labels and return to them when discussing
+properties.
+
+### Executions
+
+Initially, the state is the empty multiset.
+The rules define the way in which the system can transition to a new state. A
+rule can be applied to a state if it can be instantiated such that its left hand
+side is contained in the current state. In this case, the left-hand side facts
+are removed from the state, and replaced by the right hand side.
+
+For example, in the initial state, `MyRule1` can be instantiated for any value
+of the symbols `u` and `t`. This would lead to a new state that contains `H(t)`
+and `F(t)`.
+
+
+
+Facts
+-----
+
+Facts are of the form `F(t1,...,tN)` for a fact symbol `F` and terms `tI`.
+
+There are three types of special facts built in to Tamarin. These are used to
+model interaction with the untrusted network and to model the generation of
+unique fresh (random) values.
+
+`In`
+
+:	This fact is used to model a party receiving a message from the
+	untrusted network that is controlled by a Dolev-Yao adversary, and can
+	occur on the left-hand side of a rewrite rule.
+
+`Out`
+
+:	This fact is used to model a party sending a message to the untrusted
+	network that is controlled by a Dolev-Yao adversary, and can occur on
+	the right-hand side of a rewrite rule.
+
+`Fr`
+
+:	This fact must be used when generating fresh (random) values, and can
+	occur on the left-hand side of a rewrite rule, where its argument is the
+	fresh term. Tamarin's underlying execution model has a built-in rule for
+	generating `Fr(x)` facts, and also ensures that each instantiation of
+	this rule produces a term that is different from all others.
+
+
+
+
+
+### Linear versus persistent facts
+
+Some facts in our models will never be removed from the state once they are
+introduced. This would require that every rule that has such a fact in the
+left-hand-side, will also have an exact copy of this fact in the right-hand
+side.
+
+While there is no fundamental problem with this modeling, it is inconvenient for
+the user and it also might case Tamarin to explore rule instantiations that are
+irrelevant for tracing such facts. 
+
+For these two reasons, we introduce linear facts. These are never removed from
+the state, and we denote them by prefixing the fact with a bang (`!`).
+
+
+
+
+
 Cryptographic messages as terms
 -------------------------------
 
@@ -54,36 +147,10 @@ For the leaves, we have two main sorts:
 [public names]:
 	Model known constants such as agent identities.
 
-For example, in the Naxos protocol, `eskI` and `eskR` are freshly generated
-for each new session. Additionally, the long term key of each agent is freshly
-generated before the agent starts communicating.
+For example, in the Naxos protocol, `eskI` and `eskR` are freshly generated for
+each new session. Additionally, the agent's long-term keys (`lkI`, `lkR') are
+freshly generated before the agent starts communicating. We therefore model them
+as fresh names.
 
-Facts
------
-
-Facts are of the form `F(t1,...,tN)` for a fact symbol `F` and terms `tI`.
-
-
-[`In`]:
-
-[`Out`]:
-
-[`Fr`]:
-
-
-
-
-Rules
------
-
-We use multiset rewriting to specify the concurrent execution of protocol and
-adversary.  Multiset rewriting is commonly used to model concurrent systems
-since it naturally sup- ports independent transitions. If two rewriting steps
-rewrite the state at positions that do not overlap, then they can be applied in
-parallel. We extend standard multiset rewriting with support for creating fresh
-names. Additionally, we introduce persistent facts and enrich rewriting rules
-with actions to obtain labeled transition systems.
-
-Concretely, Tamarin's rewrite rules have sequences of facts as left-hand-sides,
-labels, and right-hand-sides.
-
+The identities `I` and `R` can be instantiated by any concrete agent identity,
+modeled as public names.
