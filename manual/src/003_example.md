@@ -35,6 +35,8 @@ modeling this simple protocol in detail.
 Function Signature and Equational Theory
 ----------------------------------------
 
+TODO: WHY FUNCTIONS AND EQUATIONAL THEORY???
+
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
 
@@ -73,24 +75,24 @@ The above rule models registering a public key. It makes use of the
 following syntax.
 
 Facts always start with an upper-case letter and do not have to be
-declared.  If their name is prefixed with an exclamation mark '!',
+declared.  If their name is prefixed with an exclamation mark `!`,
 then they are persistent. Otherwise, they are linear. Note that every
 fact name must be used consistently; i.e., it must always be used with
 the same arity, casing, and multiplicity. Otherwise, Tamarin complains
 that the theory is not wellformed.
 
 The `Fr` fact is a built-in fact. It denotes a freshly generated fresh
-name, used to model random numbers, i.e.., nonces.  See later in this
+name, used to model random numbers, i.e., nonces.  See later in this
 manual for details.
 
 We denote the sort of variables using prefixes:
 
- *    ~x  denotes  x:fresh
- *    $x  denotes  x:pub
- *    #i  denotes  i:temporal
- *    i   denotes  i:msg
+ *    `~x`  denotes  `x:fresh`
+ *    `$x`  denotes  `x:pub`
+ *    `#i`  denotes  `i:temporal`
+ *    `i`   denotes  `i:msg`
 
- and a string constant 'c' denotes a public name 'c \in PN'; i.e., a
+ and a string constant `'c'` denotes a public name `'c \in PN'`; i.e., a
  fixed, global constant
 
 Thus, the above rule can be read as follows. First, freshly generate a
@@ -133,7 +135,6 @@ We model it using the following three rules.
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=34 upper=65}
 ~~~~
 
-
 Above, we model all applications of cryptographic algorithms
 explicitly.  Call `tamarin-prover Tutorial.spthy` to inspect the
 finite variants of the `Serv_1` rule, which list all possible
@@ -141,61 +142,71 @@ interactions of the destructors used.  In our proof search, we will
 consider all these interactions.
 
 We also model that the server explicitly checks that the first
-component of the request is equal to `'1'`. We model this by logging the
-claimed equality and then adapting the security property such that it
-only considers traces where all 'Eq' actions occur with two equal
-arguments. Note that 'Eq' is NO builtin fact. Guarded trace properties
-are strong enough to formalize this requirement without builtin
-support. Note that inequalities can be modeled analogously.
+component of the request is equal to `'1'`. We model this by logging
+the claimed equality and then adapting the security property such that
+it only considers traces where all `Eq` actions occur with two equal
+arguments. Note that `Eq` is NOT a built-in fact. Guarded trace
+properties are strong enough to formalize this requirement without
+built-in support. Note that inequalities can be modeled analogously.
 
-   We log the session-key setup requests received by servers to allow
-   formalizing the authentication property for the client.
+We log the session-key setup requests received by servers to allow
+formalizing the authentication property for the client.
 
 
 Modeling the security properties
 --------------------------------
 
-The syntax for specifying security properties uses
+The syntax for specifying security properties is defined as follows:
 
-  All      for universal quantification, temporal variables are prefixed with #
-  Ex       for existential quantification, temporal variables are prefixed with 
-#
-  ==>      for implication
-  &        for conjunction
-  |        for disjunction
-  not      for  negation
+ *  `All`      for universal quantification, temporal variables are prefixed with #
+ *  `Ex`       for existential quantification, temporal variables are prefixed with #
+ *  `==>`      for implication
+ *  `&`        for conjunction
+ *  `|`        for disjunction
+ *  `not`      for  negation
 
-  f @ i    for action constraints, the sort prefix for the temporal variable 'i'
+*  `f @ i`    for action constraints, the sort prefix for the temporal variable 'i'
            is optional
 
-  i < j    for temporal ordering, the sort prefix for the temporal variables 'i'
+ * `i < j`    for temporal ordering, the sort prefix for the temporal variables 'i'
            and 'j' is optional
 
-  #i = #j  for an equality between temporal variables 'i' and 'j'
-  x = y    for an equality between message variables 'x' and 'y'
+ * `#i = #j`  for an equality between temporal variables 'i' and 'j'
+ * `x = y`    for an equality between message variables 'x' and 'y'
+
+
+CUT TEXT BELOW
 
 Note that apart from public names (delimited using single-quotes), no terms
 may occur in guarded trace properties. Moreover, all variables must be
 guarded. The error message for an unguarded variable is currently not very
 good.
 
-For universally quantified variables, one has to check that they all occur in
-an action constraint right after the quantifier and that the outermost logical 
-operator
-inside the quantifier is an implication.
-For existentially quantified variables, one has to check that they all occur in
-an action constraint right after the quantifier and that the outermost logical
-operator inside the quantifier is a conjunction.
-Note also that currently the precedence of the logical connectives is not
-specified. We therefore recommend to use parentheses, when in doubt.
+For universally quantified variables, one has to check that they all
+occur in an action constraint right after the quantifier and that the
+outermost logical operator inside the quantifier is an implication.
+For existentially quantified variables, one has to check that they all
+occur in an action constraint right after the quantifier and that the
+outermost logical operator inside the quantifier is a conjunction.
+Note also that currently the precedence of the logical connectives is
+not specified. We therefore recommend to use parentheses, when in
+doubt.
 
 Note that you can specify additional axioms that restrict the set of
-considered traces. In this example, we restrict our attention to traces where
-all equality checks succeed.
+considered traces. In this example, we restrict our attention to
+traces where all equality checks succeed.
+
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=68 upper=68}
+~~~~
+
+CUT TEXT ABOVE
 
 The following two properties should be self-explanatory.
 Note that the order between axioms and lemmas does not matter. All axioms are
 always available/assumed in the proofs of all security properties.
+
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=70 upper=95}
+~~~~
 
 Note that we can also strengthen the authentication property to a version of
 injective authentication. Our formulation is stronger than the standard
@@ -203,6 +214,17 @@ formulation of injective authentication, as it is based on uniqueness instead
 of counting. For most protocols, that guarantee injective authentication one
 can also prove such a uniqueness claim, as they agree on appropriate fresh
 data.
+
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=97 upper=111}
+~~~~
+
+
+GO ON HERE...
+
+Always have an "Exists-lemma":
+
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=113 upper=118}
+~~~~
 
 
 
