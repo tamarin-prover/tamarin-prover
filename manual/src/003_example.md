@@ -1,6 +1,3 @@
-<p class="halfbreak">
-</p>
-
 Intial Example
 ==============
 

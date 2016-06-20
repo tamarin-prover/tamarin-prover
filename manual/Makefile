@@ -2,7 +2,13 @@ PANDOC = pandoc
 IFORMAT = markdown
 FLAGS = --standalone --toc --toc-depth=2 --mathjax=$(MATHJAX)
 STYLE = css/style.css
-FILTER = includes.hs
+
+ifdef USE_FILTER
+  FILTER = --filter includes.hs
+else
+  FILTER =
+endif
+
 ifdef MATHJAX_LOCAL
   MATHJAX = ${MATHJAX_LOCAL}
 else
@@ -17,20 +23,14 @@ OBJ = $(subst .md,.html,$(subst src,book,$(SRC)))
 
 all: $(OBJ)
 
-book/%.html: src/%.md $(FILTER) $(TEMPLATE_HTML) $(FILTER) latex_macros
+book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros
 	$(PANDOC) -c $(STYLE) \
-	  --filter ${FILTER} \
-	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
-	  -t html $(FLAGS) -o $@ $<
-
-html: src/%.md $(FILTER) $(TEMPLATE_HTML) $(FILTER) latex_macros
-	$(PANDOC) -c $(STYLE) \
-          --filter ${FILTER} \
+	  ${FILTER} \
 	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
 	  -t html $(FLAGS) -o $@ $<
 
 
-pdf: $(FILTER)
+pdf:
 	$(PANDOC) --filter ${FILTER} -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
 	  -o tex/tamarin-manual.tex $(SRC)
