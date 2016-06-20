@@ -67,7 +67,7 @@ such user-specified equations must be subterm-convergent rewriting
 rules, when oriented from left to right. This means that the
 right-hand-side must be a subterm of the left-hand-side or a nullary
 function symbol (a constant), see the section on [Equational
-Theory](004_equational-theories.html).
+Theory](004_cryptographic-messages).
 
 
 Modeling the Public Key Infrastructure
@@ -169,51 +169,15 @@ formalizing the authentication property for the client.
 Modeling the security properties
 --------------------------------
 
-CUT TEXT BELOW - MOVE SYNTAX OVER TO 004
+The security properties are defined over traces of the action facts of
+a protocol execution.
 
-The syntax for specifying security properties is defined as follows:
-
- *  `All`      for universal quantification, temporal variables are prefixed with #
- *  `Ex`       for existential quantification, temporal variables are prefixed with #
- *  `==>`      for implication
- *  `&`        for conjunction
- *  `|`        for disjunction
- *  `not`      for  negation
-
-*  `f @ i`    for action constraints, the sort prefix for the temporal variable 'i'
-           is optional
-
- * `i < j`    for temporal ordering, the sort prefix for the temporal variables 'i'
-           and 'j' is optional
-
- * `#i = #j`  for an equality between temporal variables 'i' and 'j'
- * `x = y`    for an equality between message variables 'x' and 'y'
-
-
-
-Note that apart from public names (delimited using single-quotes), no terms
-may occur in guarded trace properties. Moreover, all variables must be
-guarded. The error message for an unguarded variable is currently not very
-good.
-
-For universally quantified variables, one has to check that they all
-occur in an action constraint right after the quantifier and that the
-outermost logical operator inside the quantifier is an implication.
-For existentially quantified variables, one has to check that they all
-occur in an action constraint right after the quantifier and that the
-outermost logical operator inside the quantifier is a conjunction.
-Note also that currently the precedence of the logical connectives is
-not specified. We therefore recommend to use parentheses, when in
-doubt.
-
-Note that you can specify additional axioms that restrict the set of
-considered traces. In this example, we restrict our attention to
-traces where all equality checks succeed.
+First, note that we can specify additional axioms that restrict the
+set of considered traces. In this example, we restrict our attention
+to traces where all equality checks succeed.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=68 upper=68}
 ~~~~
-
-CUT TEXT ABOVE
 
 The following two properties should be self-explanatory.
 Note that the order between axioms and lemmas does not matter. All axioms are
