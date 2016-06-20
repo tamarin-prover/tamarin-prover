@@ -264,8 +264,27 @@ You can explore the the Tutorial theory interactively by clicking on the
 ![Tutorial Theory Overview](../images/tamarin-tutorial-overview.jpg "Tutorial 
 Theory Overview")
 
+![Tutorial Message Theory](../images/tamarin-tutorial-message-theory.jpg 
+ "Tutorial Message Theory")
 
-You can prove a lemma
+![Tutorial Multiset Rewrite 
+Rules](../images/tamarin-tutorial-multiset-rules.jpg 
+ "Tutorial Multiset Rewrite Rules")
+
+![Tutorial Case Distinctions 
+Rules](../images/tamarin-tutorial-case-distinctions.jpg 
+ "Tutorial Case Distinctions")
+ 
+![Tutorial Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
+ "Tutorial Lemma 1")
+ 
+![Tutorial Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpg 
+ "Tutorial Lemma 1 Step 1")
+
+![Tutorial Lemma 1 Finished](../images/tamarin-tutorial-lemma-1-finished.jpg 
+ "Tutorial Lemma 1 Finished")
+ 
+ You can prove a lemma
 interactively by clicking on the available proof methods (corresponding to
 applications of constraint reduction rules) or by calling the 'autoprover' by
 right-clicking on a node in the theory overview. Note that that the proof
