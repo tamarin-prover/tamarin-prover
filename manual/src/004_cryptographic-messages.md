@@ -92,39 +92,3 @@ symmetric-encryption,
 
 
 
-TODO: THIS SHOULD GO TO EQUATIONAL THEORY, OR LATER TO DEFINING LEMMAS
-
-The syntax for specifying security properties is defined as follows:
-
- *  `All`      for universal quantification, temporal variables are prefixed with #
- *  `Ex`       for existential quantification, temporal variables are prefixed with #
- *  `==>`      for implication
- *  `&`        for conjunction
- *  `|`        for disjunction
- *  `not`      for  negation
-
-*  `f @ i`    for action constraints, the sort prefix for the temporal variable 'i'
-           is optional
-
- * `i < j`    for temporal ordering, the sort prefix for the temporal variables 'i'
-           and 'j' is optional
-
- * `#i = #j`  for an equality between temporal variables 'i' and 'j'
- * `x = y`    for an equality between message variables 'x' and 'y'
-
-
-
-Note that apart from public names (delimited using single-quotes), no terms
-may occur in guarded trace properties. Moreover, all variables must be
-guarded. The error message for an unguarded variable is currently not very
-good.
-
-For universally quantified variables, one has to check that they all
-occur in an action constraint right after the quantifier and that the
-outermost logical operator inside the quantifier is an implication.
-For existentially quantified variables, one has to check that they all
-occur in an action constraint right after the quantifier and that the
-outermost logical operator inside the quantifier is a conjunction.
-Note also that currently the precedence of the logical connectives is
-not specified. We therefore recommend to use parentheses, when in
-doubt.

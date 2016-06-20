@@ -72,7 +72,7 @@ Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for
 Mac OS X {#sec:macosx}
 --------
 
-### Installing Tamarin using the pre-built binary {#sec:MacOSBinInstall}
+### Installing the pre-built Tamarin binary {#sec:MacOSBinInstall}
 
 To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz. 
 
