@@ -1,10 +1,14 @@
 Introduction
 ========
 
-The Tamarin prover supports the automated, unbounded,
-symbolic analysis of security protocols. It features expressive languages
+The Tamarin prover is a powerful tool for modeling and analyzing
+security protocols.    It  supports the automated
+symbolic analysis of security protocols, where a given protocol is analyzed
+in the presence of unboundedly many *threads* representing different
+agents executing different protocol roles in the presence of an active
+adversary.  Tamarin features expressive languages
 for specifying protocols, adversary models, and properties, and
-it supports efficient deduction and equational reasoning.
+it supports efficient deduction and equational reasoning for protocol analysis.
 In this manual, we provide an overview of the tool and its use.
 
 Tamarin provides general support for protocol modeling and reasoning.
