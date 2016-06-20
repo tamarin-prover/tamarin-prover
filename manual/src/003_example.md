@@ -285,6 +285,35 @@ If you click on "Message theory" on the left, you should see the following:
 
 ![Tutorial Message Theory](../images/tamarin-tutorial-message-theory.jpg 
  "Tutorial Message Theory")
+ 
+On the right side you can now see the message theory, starting with the 
+*Signature*, i.e., functions and equations you defined. Note that Tamarin 
+automatically added a function `pair` to create pairs, and functions `fst` and 
+`snd` together with two equations to access the first and second value of a 
+pair.
+
+Just below you have the *Construction rules* which describe which functions the 
+intruder can apply. Consider for example the following rule:
+
+    rule (modulo AC) ch:
+     [ !KU( x ) ] --[ !KU( h(x) ) ]-> [ !KU( h(x) ) ]
+
+Essentially this rule says that if the intruder knows `x` (represented by the 
+fact `!KU(x)`), then he can compute `h(x)` (represented by the fact 
+`!KU(h(x))`), i.e., the hash of `x`.
+
+Finally, there are the *Deconstruction rules* which describe which terms the 
+intruder can extract from lager terms by applying functions. Consider for 
+example the following rule:
+
+    rule (modulo AC) dfst:
+     [ !KD( <x.1, x.2> ) ] --> [ !KD( x.1 ) ]
+
+In a nutshell this rule says that if the intruder knows the pair `<x.1, x.2>` 
+(represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
+value `x.1` (represented by the fact `!KD( x.1 )`) from it. (This stems from 
+the applying `fst` to the pair and then using the equation 
+`fst(<x.1, x.2>) = x.1`.)
 
 ![Tutorial Multiset Rewrite 
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
