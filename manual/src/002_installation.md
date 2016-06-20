@@ -50,3 +50,23 @@ version of Tamarin (or switch to/from the `master` branch), then only
 the tool itself needs to be recompiled, which takes a few minutes at
 most.
 
+Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+
+### Using binaries ###
+
+You can download the binaries appropriate for your system from
+<https://github.com/tamarin-prover/bin-dists>
+
+Only the current master is available as binary, while the sources
+contain both the master and the current development state.
+
+Similarly to installing from source, now starting
+Tamarin without arguments will output its help
+message, including the paths to the installed example protocol models
+and all case studies from published papers. We recommend opening the
+`Tutorial.spthy` example file in a text editor and start exploring from
+there, or to continue reading this document.
+
+Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+
+
