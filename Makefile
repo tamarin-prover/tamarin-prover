@@ -29,6 +29,11 @@ pdf: $(FILTER)
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
 	  -o tex/tamarin-manual.tex $(SRC)
 
+simple: 
+	$(PANDOC) -f $(IFORMAT) \
+	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
+	  -o tex/tamarin-manual.tex $(SRC)
+	make -C tex
 
 clean:
 	-rm book/*.html *.pdf
