@@ -1,4 +1,4 @@
-Cryptographic Messages
+Cryptographic Messages {#sec:cryptographic-messages}
 ======================
 
 A cryptographic message is either a constant `c` or a message `f(m1,...,mN)`
