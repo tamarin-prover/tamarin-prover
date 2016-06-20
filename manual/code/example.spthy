@@ -1,0 +1,36 @@
+theory ex1 begin
+
+/*
+ * Protocol:	 Diffie-Hellman with MAC
+ * Modeler: 	 Benedikt Schmidt
+ * Described in: CAV 2013 Submission
+ * Date: 	 January 2013
+ *
+ * Status: 	 Working
+ */
+
+
+builtins: diffie-hellman
+functions: mac/2, g/0, shk/0 [private]
+
+rule Step1:
+  [ Fr(tid:fresh), Fr(x:fresh) ]
+  --[ ]->
+  [ Out(<g^(x:fresh), mac(shk, <g^(x:fresh), A:pub, B:pub>)>)
+  , Step1(tid:fresh, A:pub, B:pub, x:fresh) ]
+
+rule Step2:
+  [ Step1(tid, A, B, x:fresh), In(<Y, mac(shk, <Y, B, A>)>) ]
+    --[ Accept(tid, Y^(x:fresh)) ]-> []
+
+rule RevealKey: [ ] --[ Reveal() ]-> [ Out(shk) ]
+
+
+lemma Accept_Secret:
+  "∀ #i #j tid key. Accept(tid, key) @ i & K(key) @ j
+  ==> ∃ #l. Reveal() @ l & l < i"
+
+lemma Accept_Secret_Counter:
+  "∀ #i #j tid key. Accept(tid, key) @ i & K(key) @ j ==> F"
+
+end
