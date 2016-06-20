@@ -9,12 +9,12 @@ messages (given in Alice-and-Bob notation):
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
 with the public key of a server 'S' and sends it to 'S'. The server confirms
-the receipt of the key by sending back its hash to the client.
+the receipt of the key by sending its hash back to the client.
 
-This protocol is artificial and it satisfies only very weak security guarantees. 
-We will use it to illustrate the general Tamarin workflow by proving that from 
-the perspective of the client, the freshly generated key is secret provided that 
-the server is uncompromised.
+This protocol is artificial and satisfies only very weak security
+guarantees.  We will use it to illustrate the general Tamarin workflow
+by proving that from the perspective of the client, the freshly
+generated key is secret provided that the server is uncompromised.
 
 The Tamarin modeling of this protocol and the security properties are given in 
 the file [Tutorial](code/Tutorial.spthy) presented here:
@@ -22,30 +22,24 @@ the file [Tutorial](code/Tutorial.spthy) presented here:
 ~~~~ {.tamarin include="code/Tutorial.spthy"}
 ~~~~
 
-Obviously, you can replace 'Tutorial' with any name you like to give
-your theory. After the keyword `begin`, you can declare function
-symbols, equations that these function symbols must satisfy, multiset
-rewriting rules modeling the protocol, and lemmas specifying security
-properties. Moreover, you can also insert formal comments, to
-structure your theory. We give examples of each of these elements
-while modeling a simple protocol.
+You can replace 'Tutorial' with any name you like to give to your
+theory. After the keyword `begin`, you first declare function symbols,
+and equations that these function symbols must satisfy. Then you
+declare multiset rewriting rules that model the protocol, and finally
+lemmas that specify the security properties. Moreover, you can also
+insert comments, to structure your theory. We give examples of each of
+these elements while modeling this simple protocol.
 
-In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
-with the public key of a server 'S' and sends it to 'S'. The server confirms
-the receipt of the key by sending back its hash to the client. In
-Alice-and-Bob notation the protocol would read as follows.
+Recall the Alice-and-Bob notation of the protocol:
 
   C -> S: aenc{k}pk(S)
   C <- S: h(k)
 
-This protocol is artificial and it satisfies only very weak security
-guarantees. We can prove that from the perspective of the client, the freshly
-generated key is secret provided that the server is uncompromised.
-
-We model this protocol in three steps. First, we declare the function symbols
-and the equations defining them. Then, we introduce multiset rewriting rules
-modeling a public key infrastructure (PKI) and the protocol. Finally, we state
-the expected security properties.
+We model this particular protocol in three steps. First, we declare
+the function symbols and the equations defining them. Then, we
+introduce multiset rewriting rules modeling a public key
+infrastructure (PKI) and the protocol. Finally, we state the expected
+security properties.
 
 
 Function Signature and Equational Theory
@@ -53,16 +47,22 @@ Function Signature and Equational Theory
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
-  a binary function 'aenc' denoting the encryption algorithm,
-  a binary function 'adec' denoting the decryption algorithm, and
-  a unary function 'pk' denoting the algorithm computing a public
+
+  * a binary function 'aenc' denoting the encryption algorithm,
+  * a binary function 'adec' denoting the decryption algorithm, and
+  *  a unary function 'pk' denoting the algorithm computing a public
   key from a private key.
 
-The above equation models the interaction between calls to these three
-algorithms. All such user-specified  equations must be subterm-convergent
-rewriting rules, when oriented from left to right. This means that the
+The equation 
+
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=17 upper=18}
+~~~~
+
+models the interaction between calls to these three algorithms. All
+such user-specified equations must be subterm-convergent rewriting
+rules, when oriented from left to right. This means that the
 right-hand-side must be a subterm of the left-hand-side or a nullary
-function symbol.
+function symbol (a constant).
 
 Certain equational theories are used very often when modeling
 cryptographic messages. We therefore provide builtins definitions for
