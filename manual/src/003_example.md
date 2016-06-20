@@ -364,8 +364,8 @@ output `Out(x)` and passes it to the intruder knowledge, represented by the
 `!KD(x)` fact. Note that the rule `Serv_1` from the protocol has three 
 *variants (modulo AC)*. The precise meaning of this is not important right now 
 (it stems from the way Tamarin deals with equations) and will be explained in 
-the [section on algebraic 
-properties](004_graphic-messages.html#sec:cryptographic-messages).
+the [section on cryptographic
+messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
 Just below you have the list of all axioms, here only the axiom 
 `Equality_Checks_Succeed`.
