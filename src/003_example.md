@@ -1,5 +1,5 @@
-Intial Example
-==============
+Initial Example
+===============
 
 We will start with a simple example of a protocol that only consists of two 
 messages (given in Alice-and-Bob notation):
@@ -242,20 +242,30 @@ You can verify them by calling
   possibility to setup a session key with a honest sever.
 
 
-Interactive proof visualization and construction
-------------------------------------------------
+Graphical User Interface
+------------------------
 
 Just call
 
-  tamarin-prover interactive Tutorial.spthy
+    tamarin-prover interactive Tutorial.spthy
 
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
 
-  http://localhost:3001
+<http://localhost:3001>
 
-and explore the the Tutorial theory interactively by clicking on the
-'Tutorial' entry in the table of loaded theories. You can prove a lemma
+and you will see the following:
+
+![Tamarin Web Interface](../images/tamarin-welcome.jpg "Welcome Screen")
+
+You can explore the the Tutorial theory interactively by clicking on the
+'Tutorial' entry in the table of loaded theories.
+
+![Tutorial Theory Overview](../images/tamarin-tutorial-overview.jpg "Tutorial 
+Theory Overview")
+
+
+You can prove a lemma
 interactively by clicking on the available proof methods (corresponding to
 applications of constraint reduction rules) or by calling the 'autoprover' by
 right-clicking on a node in the theory overview. Note that that the proof
@@ -263,29 +273,4 @@ methods in the GUI are sorted according to our heuristic. Always selecting the
 first proof method will result in the same proof as the ones constructed by
 the 'autoprover' and '--prove'.
 
-
-Conclusion
-----------
-
-By now, you should have enough knowledge to understand the case studies
-included with Tamarin. Recall that you can find them in the directory listed
-at the bottom of the help message, when calling 'tamarin-prover' without any
-arguments. Note that Tamarin also outputs the path to the reference MANUAL
-specifying and explaining the grammar of security protocol theories and giving
-some additional hints on additional theory exploited by Tamarin. If you have
-further questions, please do not hesitate to contact either
-
-  Benedikt Schmidt    benedikt.schmidt@inf.ethz.ch
-  Simon Meier         iridcode@gmail.com
-  Cas Cremers         cas.cremers@cs.ox.ac.uk
-
-
-BTW, every security protocol theory must be delimited with 'end'.
-
-             (-: HAPPY PROVING :-)
-
-
-Go to <http://127.0.0.1:3001>.
-
-![Tamarin Web Interface](../images/tamarin-welcome.jpg "Welcome Screen")
 
