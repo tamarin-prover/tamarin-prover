@@ -7,17 +7,18 @@ for specifying protocols, adversary models, and properties, and
 it supports efficient deduction and equational reasoning.
 In this manual, we provide an overview of the tool and its use.
 
-Tamarin is provides general support for protocol modeling and reasoning.
+Tamarin provides general support for protocol modeling and reasoning.
 Protocols and adversaries  are specified using multiset rewriting rules.
-These rules define a labeleded transition system whose 
+These rules define a labeled transition system whose 
 state consists of the adversary’s knowledge, the messages on
 the network, information about freshly generated values, and
 the protocol’s state. The adversary and the protocol interact
 by updating network messages and generating new messages.
 Tamarin also supports the equational specification of some cryptographic
 operators, notably Diffie-Hellman exponentiation. 
-Security properties are are modeled as trace properties
-the transition system or in terms of the observational equivalence
+Security properties are modeled as trace properties, checked
+against the traces of the transition system,
+or in terms of the observational equivalence
 of two transition systems.
 
 
