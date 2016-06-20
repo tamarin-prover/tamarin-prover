@@ -29,7 +29,7 @@ we can additionally(!), give mathematical notation for the first few
 examples. Also ensure all protocols are available as executable spthy
 files, and are stored in a sub-directory of the repository for easy
 distribution. The best way to ensure everything fits together is to
-*lstinputlisting* on the spthy files.
+*autognp* on the spthy files.
 
 ~~~~ {.autognp include="code/example.spthy"}
 ~~~~

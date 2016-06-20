@@ -1,5 +1,9 @@
 <p class="halfbreak">
 </p>
 
-Example
-=======
+Intial Example
+==============
+
+~~~~ {.autognp include="code/Tutorial.spthy"}
+~~~~
+
