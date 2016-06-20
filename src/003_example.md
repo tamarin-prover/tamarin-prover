@@ -55,7 +55,7 @@ We model asymmetric encryption by declaring
 
 The equation 
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=17 upper=18}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=15 upper=15}
 ~~~~
 
 models the interaction between calls to these three algorithms. All
@@ -249,20 +249,36 @@ Just call
 
     tamarin-prover interactive Tutorial.spthy
 
+FIX: Syntax errors here?
+    
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
 
 <http://localhost:3001>
 
-and you will see the following:
+and you will see the following welcome screen:
 
 ![Tamarin Web Interface](../images/tamarin-welcome.jpg "Welcome Screen")
 
-You can explore the the Tutorial theory interactively by clicking on the
-'Tutorial' entry in the table of loaded theories.
+The table in the middle shows all loaded theories. You can either click on a 
+theory to explore it and prove your security properties, or upload further 
+theories using the upload form below.
+
+If you click on the 'Tutorial' entry in the table of loaded theories, you 
+should see the following:
 
 ![Tutorial Theory Overview](../images/tamarin-tutorial-overview.jpg "Tutorial 
 Theory Overview")
+
+On the left hand side you see the theory: links to the message theory 
+describing the intruder, the multiset rewrite rules and axioms describing your 
+protocol, and the typed and untyped case distinctions, followed by the lemmas 
+you want to prove. We will explain each of these points in the following.
+
+On the right hand side, you have a quick summary of the available commands and 
+keyboard shortcuts you can use to navigate inside the theory.
+
+If you click on "Message theory" on the left, you should see the following:
 
 ![Tutorial Message Theory](../images/tamarin-tutorial-message-theory.jpg 
  "Tutorial Message Theory")
