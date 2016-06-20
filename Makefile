@@ -34,6 +34,7 @@ pdf:
 	$(PANDOC) ${FILTER} -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
 	  -o tex/tamarin-manual.tex $(SRC)
+	make -C tex
 
 simple: 
 	$(PANDOC) -f $(IFORMAT) \
