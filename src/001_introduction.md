@@ -41,8 +41,8 @@ guidance with automated proof search.
 *N.B. If this is too technical it can be dumbed down or deleted or
 moved elsewhere.*
 A formal treatment of Tamarin's foundations is given in the theses of
-Schmidt *CITE*
-and Meier *CITE*.  We give a very brief (technical) summary here.
+[@benediktthesis]
+and [@meierthesis].  We give a very brief (technical) summary here.
 For an equational theory $E$ defining cryptographic operators,
 a multiset rewriting system $R$ defining a
 protocol, and a formula $\phi$ defining a trace property, Tamarin can
