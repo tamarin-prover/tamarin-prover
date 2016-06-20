@@ -27,6 +27,7 @@ book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros
 	$(PANDOC) -c $(STYLE) \
 	  ${FILTER} \
 	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
+	  --bibliography=src/manual.bib \
 	  -t html $(FLAGS) -o $@ $<
 
 
@@ -34,6 +35,7 @@ pdf:
 	$(PANDOC) ${FILTER} -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
 	  -o tex/tamarin-manual.tex $(SRC)
+	make -C tex
 
 simple: 
 	$(PANDOC) -f $(IFORMAT) \

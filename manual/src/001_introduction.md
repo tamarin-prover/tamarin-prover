@@ -1,5 +1,36 @@
 Introduction
-============
+========
+
+The Tamarin prover supports the automated, unbounded,
+symbolic analysis of security protocols. It features expressive languages
+for specifying protocols, adversary models, and properties, and
+it supports efficient deduction and equational reasoning.
+In this manual, we provide an overview of the tool and its use.
+
+Tamarin provides general support for protocol modeling and reasoning.
+Protocols and adversaries  are specified using multiset rewriting rules.
+These rules define a labeled transition system whose 
+state consists of the adversary’s knowledge, the messages on
+the network, information about freshly generated values, and
+the protocol’s state. The adversary and the protocol interact
+by updating network messages and generating new messages.
+Tamarin also supports the equational specification of some cryptographic
+operators, notably Diffie-Hellman exponentiation. 
+Security properties are modeled as trace properties, checked
+against the traces of the transition system,
+or in terms of the observational equivalence
+of two transition systems.
+
+
+Tamarin provides two ways of constructing proofs: an efficient, fully auto-
+mated mode that uses heuristics to guide proof search, and an interactive mode. If
+the tool's automated proof search terminates, it returns either a proof of correct-
+ness (for an unbounded number of threads and fresh values) or a counterexample
+(e. g., an attack). Due to the undecidable nature of most properties in our setting,
+the tool may not terminate. The interactive mode enables the user to explore
+the proof states, inspect attack graphs, and seamlessly combine manual proof
+guidance with automated proof search.
+
 
 High level points
 
