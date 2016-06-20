@@ -12,11 +12,6 @@ with the actions of an active adversary, the protocol still has its
 specified properties.  In this manual, we 
 provide an overview of the tool and its use.
 
-Tamarin features expressive languages for specifying protocols,
-adversary models, and properties, and it supports efficient deduction
-and equational reasoning for protocol analysis.
-
-
 Tamarin provides general support for modeling and reasoning about
 security protocols.  Protocols and adversaries are specified using
 an expressive language based on multiset rewriting rules.  These rules define a labeled transition
