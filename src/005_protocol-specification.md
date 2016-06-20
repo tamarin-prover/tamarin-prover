@@ -7,7 +7,7 @@ Models are specificied in Tamarin using three main ingredients:
    2. Facts
    3. Rules
 
-We will discuss each of them in term and illustrate their use with respect to
+We will discuss each of them in turn and illustrate their use with respect to
 the Naxos protocol, displayed below.
 
 ![The Naxos protocol](../images/naxos.png)
@@ -15,7 +15,7 @@ the Naxos protocol, displayed below.
 Each party `x` has a long-term private key `lkx` and a corresponding public key
 `pkx = g^lkx`, where `g` is a generator of the Diffie-Hellman group. To start a
 session, the initiator `I` first creates a fresh nonce `eskI`, also known as
-`I`’s ephemeral (private) key. He then concatenates eskI with `I`’s long-term
+`I`'s ephemeral (private) key. He then concatenates eskI with `I`'s long-term
 private key `lkI`, hashes the result using the hash function `h1`, and sends
 `g^h1(eskI ,lkI )` to the responder. The responder `R` stores the received value
 in a variable `X`, computes a similar value based on his own nonce `eskR` and
