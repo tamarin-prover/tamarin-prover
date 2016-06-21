@@ -79,14 +79,20 @@ To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz.
 1.  Download and install Maude 2.7 from
   <http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation>
 
-2.  Download and install GraphViz from  
+2.  Download and install GraphViz from 
 <http://www.graphviz.org/Download.php>
 
 3.  Download the Tamarin binary `tamarin-prover-1.x.y-macosx` from 
 <https://github.com/tamarin-prover/bin-dists>
 
-Only the current master is available as binary, while the sources
+**Note:** 
+
+  * Only the current master is available as binary, while the sources
 contain both the master and the current development state.
+
+  * The Tamarin source archive 
+<https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
+contains numerous protocol examples and the `Tutorial.spthy` file that this manual refers to. 
 
 Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
@@ -149,8 +155,9 @@ Running Tamarin {#sec:running-tamarin}
 Starting `tamarin-prover` without arguments will output its
 help message, including the paths to the installed example protocol
 models and all case studies from published papers. We recommend
-opening the Tutorial.spthy example file in a text editor and start
+opening the [Tutorial.spthy](https://github.com/tamarin-prover/tamarin-prover/tree/develop/examples/Tutorial.spthy) example file in a text editor and start
 exploring from there, or to continue reading this document.
+**Note:** The `Tutorial.spthy` file can be found in the `examples` directory of the Tamarin source.
 
 Running ```tamarin-prover test``` will check the Maude and GraphViz
 versions and run some tests, its output should be:
