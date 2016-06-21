@@ -1,15 +1,16 @@
 Initial Example
 ===============
 
-We will start with a simple example of a protocol that only consists of two 
-messages (given in Alice-and-Bob notation):
+We will start with a simple example of a protocol that only consists
+of two messages (given in Alice-and-Bob notation):
 
-    C -> S: aenc{k}pk(S)
+    C -> S: aenc(k, pk(S))
     C <- S: h(k)
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
-with the public key of a server 'S' and sends it to 'S'. The server confirms
-the receipt of the key by sending its hash back to the client.
+with the public key of a server 'S' (`aenc` stands for *asymmetric encryption*) 
+and sends it to 'S'. The server confirms the receipt of the key by sending its 
+hash back to the client.
 
 This protocol is artificial and satisfies only very weak security
 guarantees.  We will use it to illustrate the general Tamarin workflow
@@ -22,7 +23,7 @@ the file [Tutorial](code/Tutorial.spthy) presented here:
 ~~~~ {.tamarin include="code/Tutorial.spthy"}
 ~~~~
 
-Note that we use C-style comments. The Tamarin file starts with
+Note that Tamarin uses C-style comments. The Tamarin file starts with
 `theory` followed by the name, here 'Tutorial'.  After the keyword
 `begin`, we first declare function symbols, and equations that these
 function symbols must satisfy. Then we declare multiset rewriting
@@ -42,14 +43,14 @@ be explained in detail later, but for now note that there are function
 names which we explicitly declare together with their arity, and
 equalities that define the semantic equivalence of terms, e.g., the
 decryption of an encrypted ciphertext is the original message, when
-the correct keys are used.
+the correct keys are used. We generally use lower-case for function names.
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
 
   * a binary function 'aenc' denoting the encryption algorithm,
   * a binary function 'adec' denoting the decryption algorithm, and
-  *  a unary function 'pk' denoting the algorithm computing a public
+  * a unary function 'pk' denoting the algorithm computing a public
   key from a private key.
 
 This is done by declaring the function symbols:
@@ -73,8 +74,10 @@ Theory](004_cryptographic-messages).
 Modeling the Public Key Infrastructure
 --------------------------------------
 
-Now, we introduce multiset rewriting rules modeling a public
-key infrastructure (PKI):
+Now, we introduce multiset rewriting rules modeling a public key
+infrastructure (PKI). In these rules we use facts to store information
+about the state in their arguments. The rules have a premise and a
+conclusion, separated by the arrow `-->`:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=19 upper=22}
 ~~~~
@@ -125,7 +128,10 @@ following rule. Intuitively, it reads a private-key database entry and
 sends it to the adversary. This rule has an observable `LtkReveal`
 action stating that the long-term key of agent `A` was compromised. We
 will use this action in the security property below to determine which
-agents are compromised.
+agents are compromised. Action facts are just like facts, but *should*
+be from a different namespace, though this is not enforced. The rule
+now has a premise, conclusion, and action facts within the arrow: `-[
+FACT ]->`:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=29 upper=32}
 ~~~~
@@ -135,8 +141,8 @@ Modeling the protocol
 
 Recall the Alice-and-Bob notation of the protocol we want to model:
 
-  C -> S: aenc{k}pk(S)
-  C <- S: h(k)
+    C -> S: aenc{k}pk(S)
+    C <- S: h(k)
 
 We model it using the following three rules.
 
@@ -150,10 +156,9 @@ both receiving the message and responding in one single rule.
 Note that we model all applications of cryptographic algorithms
 explicitly.  Call `tamarin-prover Tutorial.spthy` to inspect the
 finite variants of the `Serv_1` rule, which list all possible
-interactions of the destructors used, or see below for detail.  In our
+interactions of the destructors used, or see below for detail. In our
 proof search, we will consider all these interactions.
 
-TODO: SAY SOMETHING ABOUT THE DIFFERENCE BETWEEN ACTION FACTS AND FACTS?
 
 We also model that the server explicitly checks that the first
 component of the request is equal to `'1'`. We model this by logging
@@ -254,7 +259,27 @@ Just call
 
     tamarin-prover interactive Tutorial.spthy
 
-FIX: explain how the tool shows one Syntax errors in general  
+you will then see the following output on the command line
+
+    GraphViz tool: 'dot'
+     checking version: dot - graphviz version 2.39.20150613.2112 (20150613.2112). OK.
+    maude tool: 'maude'
+     checking version: 2.7. OK.
+     checking installation: OK.
+    
+    The server is starting up on port 3001.
+    Browse to http://127.0.0.1:3001 once the server is ready.
+    
+    Loading the security protocol theories './*.spthy' ...
+    Finished loading theories ... server ready at 
+    
+        http://127.0.0.1:3001
+
+    21/Jun/2016:09:16:01 +0200 [Info#yesod-core] Application launched @(yesod_83PxojfItaB8w9Rj9nFdZm:Yesod.Core.Dispatch ./Yesod/Core/Dispatch.hs:157:11)
+
+If there were any syntax errors you would see them at this point, but
+there are none in the 'Tutorial'. See later for details on how to deal
+with errors.
     
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
