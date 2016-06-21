@@ -4,12 +4,13 @@ Initial Example
 We will start with a simple example of a protocol that only consists
 of two messages (given in Alice-and-Bob notation):
 
-    C -> S: aenc{k}pk(S)
+    C -> S: aenc(k, pk(S))
     C <- S: h(k)
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
-with the public key of a server 'S' and sends it to 'S'. The server confirms
-the receipt of the key by sending its hash back to the client.
+with the public key of a server 'S' (`aenc` stands for *asymmetric encryption*) 
+and sends it to 'S'. The server confirms the receipt of the key by sending its 
+hash back to the client.
 
 This protocol is artificial and satisfies only very weak security
 guarantees.  We will use it to illustrate the general Tamarin workflow
