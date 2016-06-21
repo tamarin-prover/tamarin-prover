@@ -71,8 +71,8 @@ For example:
 	  [ F(u,v) ] --[ M(u,v) ]-> [ H(t), G('3',h(t)) ]
 
 For now, we will ignore the action labels (`L(...)` and `M(...)`) and return to
-them when discussing properties in the next section. If a rule has no action
-labels, the arrow notation `--[ ]->` can be abbreviated to `-->`.
+them when discussing properties in the next section. If a rule is not
+labelled by action facts, the arrow notation `--[ ]->` can be abbreviated to `-->`.
 
 The rule names are only used for referencing specific rules. The have no
 specific meaning and can be chosen arbitrarily, as long as each rule has a
@@ -82,25 +82,25 @@ unique name.
 
 The initial state of the transition system the empty multiset.
 
-The rules define the way in which the system can transition to a new state. A
+The rules define how the system can make a transition to a new state. A
 rule can be applied to a state if it can be instantiated such that its left hand
 side is contained in the current state. In this case, the left-hand side facts
 are removed from the state, and replaced by the right hand side.
 
 For example, in the initial state, `MyRule1` can be instantiated for any value
 of `t`. For any specific instantiation of `t`, this leads to a second state that
-contains `F('1',t)` and `F('2',t)`. `MyRule2` can not be applied in the initial
+contains `F('1',t)` and `F('2',t)`. `MyRule2` cannot be applied in the initial
 state since it contains no `F` facts.
-
-In each possible second state, both rules can now be applied. The second rule
+In each of these two 
+possible successor states, both rules can now be applied. The second rule
 can be instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is
-equal to the instantiation of `t` that occurred in the first transition, each
-possible instantiation leading to next state.
+equal to the instantiation of `t` that occurred in the first transition.
+Each of these instantiations leads to a new successor state.
 
 ### Using `let` in rules for local macros
 
-When modeling more complex protocols, it can often be the case that a term
-occurs multiple times (possibly as a subterm) within the same rule. To make such
+When modeling more complex protocols,  a term
+may occur multiple times (possibly as a subterm) within the same rule. To make such
 specifications more readable, Tamarin offers support for `let ... in`, as in the
 following example:
 
