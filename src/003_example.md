@@ -131,7 +131,7 @@ action stating that the long-term key of agent `A` was compromised. Action facts
 are just like facts, but *should* be from a different namespace, though this is 
 not enforced. We will use this action in the security property below to 
 determine which agents are compromised. The rule now has a premise, conclusion, 
-and action facts within the arrow: `-[ FACT ]->`:
+and action facts within the arrow: `--[ FACT ]->`:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=29 upper=32}
 ~~~~
@@ -157,11 +157,10 @@ We also model that the server explicitly checks that the first
 component of the request is equal to `'1'`. We model this by logging
 the claimed equality and then adapting the security property such that
 it only considers traces where all `Eq` actions occur with two equal
-arguments. Note that `Eq` is NOT a built-in fact, but one can pick any
-name. Note that inequalities can be modeled analogously.
+arguments.
 
-We log the session-key setup requests received by servers to allow
-formalizing the authentication property for the client.
+Note that we log the session-key setup requests received by servers using an 
+action to allow formalizing the authentication property for the client later on.
 
 
 Modeling the security properties
@@ -270,9 +269,9 @@ you will then see the following output on the command line
 
     21/Jun/2016:09:16:01 +0200 [Info#yesod-core] Application launched @(yesod_83PxojfItaB8w9Rj9nFdZm:Yesod.Core.Dispatch ./Yesod/Core/Dispatch.hs:157:11)
 
-If there were any syntax errors you would see them at this point, but
-there are none in the 'Tutorial'. See later for details on how to deal
-with such errors.
+If there were any syntax r wellformedness errors you would see them at this 
+point, but there are none in the 'Tutorial'. See later for details on how to 
+deal with such errors.
     
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
