@@ -5,7 +5,6 @@ In this section, we now provide an informal description of the
 underlying model. The full details of this model can be found
 in [@benediktthesis].
 
-<<<<<<< HEAD
 Tamarin models are specified using three main ingredients:
 
    1. Rules
@@ -15,12 +14,6 @@ Tamarin models are specified using three main ingredients:
 We have already seen the definition of terms in the previous section. Here we
 will discuss facts and rules, and illustrate their use with respect to the Naxos
 protocol, displayed below.
-=======
-Models are specificity in Tamarin using three main ingredients: cryptographic
-messages or terms, facts, and rules.  We have already seen the definition of
-terms in the previous section. Here we will discuss facts and rules, and
-illustrate their use with respect to the Naxos protocol, displayed below.
->>>>>>> a673f8b1de4b3d7809c9f2601e1a94721a2ad746
 
 ![The Naxos protocol](../images/naxos.png)
 
