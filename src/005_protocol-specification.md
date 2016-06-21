@@ -62,7 +62,7 @@ is a sequence of facts: one for the rule's left-hand side, one labelleing the
 transition (which we call 'action facts'),  and one for the rule's right-hand side.
 For example:
 
-**FIX Cas: Maybe better to use Naxos rules here.**
+**FIX Cas: Maybe better to use Naxos rules here. Also, the "t" on right-hand side is unbound!**
 
 	rule MyRule1:
 	  [ ] --[ L(t) ]-> [ F('1',t), F('2',t) ]
