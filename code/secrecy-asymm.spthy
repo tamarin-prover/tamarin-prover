@@ -18,50 +18,35 @@ rule Register_pk:
   , Out(pk(~ltkA)) 
   ] 
 
+// Compromising an agent's long-term key
 rule Reveal_ltk:
   [ !Ltk(A, ltkA) ] --[ Reveal(A) ]-> [ Out(ltkA) ]
 
-// Initialize Role A
-rule Init_A:
-  [ Fr(~id)
+// Role A sends first message
+rule A_1_send:
+  [ Fr(~id)  
+  , Fr(~na)
   , !Ltk(A, ltkA)
   , !Pk(B, pkB)
   ]
---[ Create_A(A, ~id) ]->
-  [ St_A_1(A, ~id, ltkA, pkB, B)
-  ]
-
-// Initialize Role B
-rule Init_B:
-  [ Fr(~id)
-  , !Ltk(B, ltkB)
-  , !Pk(A, pkA)
-  ]
---[ Create_B(B, ~id) ]->
-  [ St_B_1(B, ~id, ltkB, pkA, A)
-  ]
-
-// Role A sends first message
-rule A_1_send:
-  [ St_A_1(A, ~id, ltkA, pkB, B) 
-  , Fr(~na)
-  ]
 --[ Send(A, aenc{A, ~na}pkB) 
-  , Secret_A(A, ~na), Honest(A), Honest(B)
+  , Secret_A(~na), Honest(A), Honest(B)
   ]->
-  [ St_A_2(A, ~id, ltkA, pkB, B, ~na) 
+  [ St_A_1(A, ~id, ltkA, pkB, B, ~na) 
   , Out(aenc{A, ~na}pkB)
   ]
 
 // Role B receives first message
 rule B_1_receive:
-  [ St_B_1(B, ~id, ltkB, pkA, A)
+  [ Fr(~id)
+  , !Ltk(B, ltkB)
+  , !Pk(A, pkA)
   , In(aenc{A, na}pkB)
   ]
 --[ Recv(B, aenc{A, na}pkB) 
-  , Secret_B(B, na), Honest(B), Honest(A)
+  , Secret_B(na), Honest(B), Honest(A)
   ]->
-  [ St_B_2(B, ~id, ltkB, pkA, A, na)
+  [ St_B_1(B, ~id, ltkB, pkA, A, na)
   ]
 
 lemma executable:
@@ -70,11 +55,11 @@ lemma executable:
 
 lemma secret_A:
   all-traces
-    "All A n #i. Secret_A(A,n) @i ==> (not (Ex #j. K(n)@j)) | (Ex X #j. Reveal(X)@j & Honest(X)@i)"
+    "All n #i. Secret_A(n) @i ==> (not (Ex #j. K(n)@j)) | (Ex B #j. Reveal(B)@j & Honest(B)@i)"
 
 lemma secret_B:
   all-traces
-    "All B n #i. Secret_B(B,n) @i ==> (not (Ex #j. K(n)@j)) | (Ex X #j. Reveal(X)@j & Honest(X)@i)"
+    "All n #i. Secret_B(n) @i ==> (not (Ex #j. K(n)@j)) | (Ex B #j. Reveal(B)@j & Honest(B)@i)"
 
 
 end
