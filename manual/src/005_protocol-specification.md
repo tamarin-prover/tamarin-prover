@@ -1,4 +1,4 @@
-Model Specification
+Model Specification {#sec:model-specification}
 ===================
 
 In this manual, we provide an informal description of the underlying model. The
