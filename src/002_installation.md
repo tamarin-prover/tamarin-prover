@@ -74,7 +74,7 @@ Mac OS X {#sec:macosx}
 
 To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz. 
 
-1.  Download and install Maude 2.7 from
+1.  Download and install Core Maude 2.7 from
   <http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation>.
 
 2.  Download and install GraphViz from 
