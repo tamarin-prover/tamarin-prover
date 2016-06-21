@@ -7,7 +7,7 @@ Precomputation
 To better understand the precomputation of Tamarin and how it can
 cause [open chains](#sec:openchains) and how they are problematic, let
 us look at the example of the Needham-Schroeder-Lowe Public Key
-Protocol.
+Protocol, given here in Alice&Bob notation:
 
 ~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=24 upper=29}
 ~~~~

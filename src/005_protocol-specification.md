@@ -5,6 +5,7 @@ In this section, we now provide an informal description of the
 underlying model. The full details of this model can be found
 in [@benediktthesis].
 
+<<<<<<< HEAD
 Tamarin models are specified using three main ingredients:
 
    1. Rules
@@ -14,14 +15,21 @@ Tamarin models are specified using three main ingredients:
 We have already seen the definition of terms in the previous section. Here we
 will discuss facts and rules, and illustrate their use with respect to the Naxos
 protocol, displayed below.
+=======
+Models are specificity in Tamarin using three main ingredients: cryptographic
+messages or terms, facts, and rules.  We have already seen the definition of
+terms in the previous section. Here we will discuss facts and rules, and
+illustrate their use with respect to the Naxos protocol, displayed below.
+>>>>>>> a673f8b1de4b3d7809c9f2601e1a94721a2ad746
 
 ![The Naxos protocol](../images/naxos.png)
 
 **FIX Cas: Picture should be updated and use vector graphics, ideally.**
 
 In this protocol, Each party `x` has a long-term private key `lkx` and a
-corresponding public key `pkx = g^lkx`, where `g` is a generator of the
-Diffie-Hellman group. 
+corresponding public key `pkx = 'g'^lkx`, where `'g'` is a generator of the
+Diffie-Hellman group. Because `'g'` can be public, we model it as a public
+constant.
 
 To start a session, the initiator `I` first creates a fresh nonce `eskI`, also
 known as `I`’s ephemeral (private) key. He then concatenates eskI with `I`’s
@@ -60,16 +68,19 @@ labels, and right-hand-sides. For example:
 
 **FIX Cas: Maybe better to use Naxos rules here.**
 
-	MyRule1:
-	[ ]--[ L(t) ]->[ F('1',t), F('2',t) ]
+	rule MyRule1:
+	  [ ] --[ L(t) ]-> [ F('1',t), F('2',t) ]
 
-	MyRule2:
-	[ F(u,v) ]--[ M(u,v) ]->[ H(t), G('3',h(t)) ]
+	rule MyRule2:
+	  [ F(u,v) ] --[ M(u,v) ]-> [ H(t), G('3',h(t)) ]
 
-For now, we will ignore the actions (`L(...)` and `M(...)`) and return to them
-when discussing properties in the next section.
+For now, we will ignore the action labels (`L(...)` and `M(...)`) and return to
+them when discussing properties in the next section. If a rule has no action
+labels, the arrow notation `--[ ]->` can be abbreviated to `-->`.
 
-
+The rule names are only used for referencing specific rules. The have no
+specific meaning and can be chosen arbitrarily, as long as each rule has a
+unique name.
 
 ### Executions
 
@@ -90,6 +101,26 @@ can be instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is
 equal to the instantiation of `t` that occurred in the first transition, each
 possible instantiation leading to next state.
 
+### Using `let` in rules for local macros
+
+When modeling more complex protocols, it can often be the case that a term
+occurs multiple times (possibly as a subterm) within the same rule. To make such
+specifications more readable, Tamarin offers support for `let ... in`, as in the
+following example:
+
+	rule MyRuleName:
+		let foo1 = h(bar)
+		    foo2 = <`bars`, foo1>
+		    ...
+		    var5 = pk(~x)
+		in
+		[ ... ] --[ ... ]-> [ ... ]
+
+`let ... in` can be used to specify local term macros within the context of a
+rule.  Each macro should be on a separate line and defines a substitution: on
+the left-hand side of the `=` sign there should be a variable, and there can be
+an arbitrary term on the right-hand side. The rule will be interpreted after
+substituting all variables occurring in the let by their right-hand sides.
 
 Facts
 -----
@@ -143,6 +174,7 @@ instantiations that are irrelevant for tracing such facts.
 For these two reasons, we introduce persistent facts. These are never removed
 from the state, and we denote them by prefixing the fact with a bang (`!`).
 
+<<<<<<< HEAD
 FIX: use the following paragraph
 
 Facts always start with an upper-case letter and do not have to be
@@ -151,6 +183,13 @@ then they are persistent. Otherwise, they are linear. Note that every
 fact name must be used consistently; i.e., it must always be used with
 the same arity, casing, and multiplicity. Otherwise, Tamarin complains
 that the theory is not wellformed.
+=======
+Facts always start with an upper-case letter and do not have to be declared
+explicitly. If their name is prefixed with an exclamation mark `!`, then they
+are persistent. Otherwise, they are linear. Note that every fact name must be
+used consistently; i.e., it must always be used with the same arity, casing, and
+multiplicity. Otherwise, Tamarin complains that the theory is not wellformed.
+>>>>>>> a673f8b1de4b3d7809c9f2601e1a94721a2ad746
 
 Modeling protocols
 ------------------
@@ -175,7 +214,8 @@ we model them as persistent facts. We use the abstract function `pk(x)` to
 denote the public key corresponding to the private key `x`, leading to the
 following rule.
 
-	[ Fr(~x) ]--[ ]->[ !Pk($A,pk(~x)), !Ltk($A,~x) ]
+	rule Generate_key_pair:
+	  [ Fr(~x) ] --> [ !Pk($A,pk(~x)), !Ltk($A,~x) ]
 
 **FIX Cas: for the above rule, need to point out relation to builtins**
 
@@ -184,9 +224,10 @@ following rule.
 Some protocols, such as Naxos, rely on the algebraic properties of the key
 pairs. In many DH-based protocols, the public key is $g^x$ for the private key
 $x$, which enables exploiting the commutativity of the exponents to establish
-keys. In this case, we model the following rule.
+keys. In this case, we specify model the following rule instead.
 
-	[ Fr(~x) ]--[ ]->[ !Pk($A,'g'^~x)), !Ltk($A,~x) ]
+	rule Generate_DH_key_pair:
+	  [ Fr(~x) ] --> [ !Pk($A,'g'^~x)), !Ltk($A,~x) ]
 
 ### Modeling a protocol step
 
@@ -199,9 +240,205 @@ or starting a session.
 We first model the responder role, which is easier since it can be done in one
 rule.
 
-Each time a responder thread of an agent receives a message, it will generate a
-fresh value `eskR`, send a response message, and compute a key $kR$
+The protocol uses a Diffie-Hellman exponentiation, and two hashfunctions `h1`
+and `h2`, which we need to declare. We can model this using:
 
+	builtins: diffie-hellman
+
+and
+
+	functions: h1/1
+	functions: h2/1
+
+Without any further equational theories, a function declared in this fashion
+will behave as a one-way function.
+
+
+Each time a responder thread of an agent `$R` receives a message, it will
+generate a fresh value `eskR`, send a response message, and compute a key `kR`.
+We can model receiving of a message by specifying an `In` fact on the left-hand
+side of a rule. To model the generation of a fresh value, we require it to be
+generated by a fresh rule. Finally, the rule depends on the actor's long-term
+private key, which we can obtain from the persistent fact generated by the
+`Generate_DH_key_pair` rule presented previously.
+
+The response message is an exponentiation of `g` to the power of a computed
+hash function. Since the hash function has arity one, if we want to invoke it
+on the concatenation of two messages, we model them as a pair `<x,y>` which
+will be used as the single argument of `h1`.
+
+Thus, in a first attempt the rule becomes:
+
+        rule NaxosR_attempt1:
+                [
+                  In(X),
+                  Fr(~eskR),
+                  !Ltk($R, lkr)
+                ]
+                -->
+                [
+                  Out( 'g'^h1(< ~eskR, lkR >) )
+                ]
+
+However, the responder also computes a session key `kR`. Since the session key
+does not affect the sent or received messages, we can omit it from the left- and
+right-hand side of the rule. Instead, we would later to make a statement about
+the session key in the security property. We therefore add the computed key to
+the actions:
+
+        rule NaxosR_attempt2:
+                [ 
+                  In(X), 
+                  Fr(~eskR),
+                  !Ltk($R, lkr)
+                ] 
+                --[ SessionKey($R, kR ) ]->
+                [ 
+                  Out( 'g'^h1(< ~eskR, lkR >) ) 
+                ]
+
+The computation of `kR` is not yet specified in the above. We could replace
+`kR` in the above rule by its full unfolding, but this would decrease
+readability.  Instead, we use the `let ... in` construction to avoid
+duplication and reduces the probability of mismatches. Additionally, for the
+key computation we need the public key of the communication parter `$I`, which
+we bind to a unique thread identifier `~tid`: the purpose of this action label
+is to be able to specify security properties, as we will see in the next
+section.  This leads to:
+
+        rule NaxosR_attempt3:
+            let pkI = 'g'^lkI
+                exR = h1(< ~eskR, lkR >)
+                hkr = 'g'^exR
+                kR  = h2(< pkI^exR, X^lkR, X^exR, $I, $R >)
+            in
+             [
+                 In(X),
+                 Fr( ~eskR ),
+                 Fr( ~tid ),
+                 !Ltk($R, lkR),
+                 !Pk($I, pkI)
+             ]
+             --[ SessionKey( ~tid, $R, $I, kR ) ]->
+             [
+                 Out( hkr )
+             ]
+
+The above rule models the responder role accurately, and computes the
+appropriate key.
+
+We note one further optimisation that helps Tamarin's backwards search. In
+`NaxosR_attempt3`, the rule specifies that `lkR` might be instantiated with any
+term, hence also non-fresh terms. However, since the key generation rule is the
+only rule that produces `Ltk` facts, and it will always use a fresh value for
+the key, it is clear that in any reachable state of the system, `lkR` can only
+become instantiated by fresh values. We can therefore mark `lkR` as being of
+sort fresh, therefore replacing it by `~lkR`.^[Note that in contrast,
+replacing `X` by `~X` would change the interpretation of the model, effectively
+restricting the instantiations of the rule to those where `X` is a fresh
+value.]
+
+        rule NaxosR_attempt4:
+            let pkI = 'g'^~lkI
+                exR = h1(< ~eskR, ~lkR >)
+                hkr = 'g'^exR
+                kR  = h2(< pkI^exR, X^~lkR, X^exR, $I, $R >)
+            in
+             [
+                 In(X),
+                 Fr( ~eskR ),
+                 Fr( ~tid ),
+                 !Ltk($R, ~lkR),
+                 !Pk($I, pkI)
+             ]
+             --[ SessionKey( ~tid, $R, $I, kR ) ]->
+             [
+                 Out( hkr )
+             ]
+
+The above rule suffices to model basic security properties, as we will see later.
+
+### Modeling the Naxos initiator role
+
+The initiator role of the Naxos protocol consists of sending a message, waiting
+for the response, and sending a message again. While the initiator is waiting
+for a response, other agents might also perform steps. We therefore choose to
+model the initiator using two rules.^[This modeling approach, as with the
+responder, is similar to the approach taken in cryptographic security models in
+the game-based setting, where each rule corresponds to a "query".]
+
+The first rule models an agent starting the initiator role, generating a fresh
+value, and sending the appropriate message. As before, we use `let ... in` to
+simplify the presentation and use `~lkI` instead of `lkI` since we know that
+`!Ltk` facts are only produced with a fresh value as the second argument.
+
+        rule NaxosI_1_attempt1:
+          let exI = h1(<~eskI, ~lkI >)
+              hkI = 'g'^exI
+          in
+           [   Fr( ~eskI ),
+               !Ltk( $I, ~lkI ) ]
+           -->
+           [   Out( hkI ) ]
+
+#### Using state facts to model progress
+
+After triggering the previous rule, an initiator will wait for the response
+message. We still need to model the second part, in which the response is
+received and the key is computed. To model the second part of the initiator
+rule, we must be able to specify that it was preceded by the first part and
+with specific parameters. Intuitively, we must store in the state of the
+transition system that there is an initiator thread that has performed the
+first send with specific parameters, so it can continue where it left off.
+
+To model this, we introduce a new fact, which we often refer to as a *state
+fact*: a fact that indicates that a certain process or thread is at a specific
+point in its execution, effectively operating both as a program counter and as
+a container for the contents of the memory of the process or thread.  Since
+there can be any number of initiators in parallel, we need to provide a unique
+handle for each of their state facts.
+
+Below we provide an updated version of the initiator's first rule that produces
+a state fact `Init_1` and introduces a unique thread identifier `~tid` for each
+instance of the rule.
+
+        rule NaxosI_1_attempt2:
+          let exI = h1(<~eskI, ~lkI >)
+              hkI = 'g'^exI
+          in
+           [   Fr( ~eskI ),
+           [   Fr( ~tid ),
+               !Ltk( $I, ~lkI ) ]
+           -->
+           [   Init_1( ~tid, $I, $R, ~lkI, exI ),
+               Out( hkI ) ]
+
+Note that the state fact has several parameters: the unique thread identifier
+`~tid`^[Note that we could have re-used `~eskI` for this purpose, since it will
+also be unique for each instance.], the agent identities `$I` and `$R`, and the
+actor's long-term private key `~lkI` and the private exponent. This now enables
+us to specify the second initiator rule.
+
+        rule NaxosI_2_attempt2:
+          let
+              kI  = h2(< Y^~lkI, pkR^exI, Y^exI, $I, $R >)
+          in
+           [   Init_1( ~tid, $I, $R, ~lkI , exI),
+               !Pk( $R, pkR ),
+               In( Y ) ]
+           --[ SessionKey( ~tid, $I, $R, kI ) ]->
+          []
+
+This second rule requires receiving a message `Y` from the network but also
+that previously, an initiator fact was generated. This rule then consumes this
+fact, and since there are no further steps in the protocol, does not need to
+output a similar fact. As the `Init_1` fact is instantiated with the same
+parameters, the second step will use the same agent identities and the exponent
+`exI` computed in the first step.
+
+Thus, the complete specification becomes:
+
+**FIX Cas: need to update Naxos file with new conventions and include here.
 
 **FIX Cas: need to do either pattern matching or explicit construct/deconstruct;
 not a big deal for naxos, but should pop up somewhere**
