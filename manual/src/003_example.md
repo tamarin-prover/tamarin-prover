@@ -243,9 +243,10 @@ you will then see the following output on the command line
 
     21/Jun/2016:09:16:01 +0200 [Info#yesod-core] Application launched @(yesod_83PxojfItaB8w9Rj9nFdZm:Yesod.Core.Dispatch ./Yesod/Core/Dispatch.hs:157:11)
 
-If there were any syntax or wellformedness errors you would see them at this 
-point, but there are none in the 'Tutorial'. See later for details on how to 
-deal with such errors.
+If there were any syntax or wellformedness errors (for example if the same fact 
+is used with different arities an error would be displayed) you would see them 
+at this point, but there are none in the 'Tutorial'. See later for details on 
+how to deal with such errors.
     
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
@@ -446,7 +447,7 @@ The call
 
     tamarin-prover Tutorial.spthy
 
-parses the `Tutorial.spthy` file, checks its wellformedness (explained below), 
+parses the `Tutorial.spthy` file, checks its wellformedness, 
 and pretty-prints the theory. The declaration of the signature and the 
 equations can be found at the top of the pretty-printed theory.
 
