@@ -134,14 +134,47 @@ lemma secrecy_PFS:
 
 How to express standard authentication properties, examples
 
+#### Entity Authentication ####
 
+We propose the following lemmas to formalize the entity authentication
+properties from Lowe's hierarchy of authentication specifications
+[@Lowe].
+
+1. Aliveness
+
+A protocol guarantees to an agent `a` in role `A`
+*aliveness* of another agent `b` if, whenever `a` completes a run
+of the protocol, apparently with `b` in role `B`, then `b` has
+previously been running the protocol.
+
+2. Non-injective (weak) agreement
+
+A protocol guarantees to an agent `a` in role `A` *weak agreement*
+with another agent `b` if, whenever agent `a` completes a run of the
+protocol, apparently with `b` in role `B`, then `b` has previously
+been running the protocol, apparently with `a`.
+
+To analyze a protocol with respect to the weak agreement property we label the
+appropriate rule in role `A` with the `Commit(a,b,<'A','B'>)` action
+and in role `B` with the `Running(b,a,<'A','B'>)` action.
 ```
 lemma noninjectiveagreement:
-  "All A B t #i. 
-    Commit(A,B,t) @i
-    ==> (Ex #j. Running(B,A,t) @j)
+  "All a b t #i. 
+    Commit(a,b,t) @i
+    ==> (Ex #j. Running(b,a,t) @j)
         | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
+
+We can use the same lemma to analyze the *non-injective agreement*
+property.  A protocol guarantees to an agent `a` in role `A`
+non-injective agreement with an agent `b` in role `B` on a message `M`
+if, whenever `a` completes a run of the protocol, apparently with `b`
+in role `B`, then `b` has previously been running the protocol,
+apparently with `a`, and `b` was acting in role `B` in his run, and
+the two principals agreed on the message `M`.
+
+
+3. Injective agreement
 
 ```
 lemma injectiveagreement:
@@ -153,6 +186,9 @@ lemma injectiveagreement:
                            & not (#i2 = #i)))
               | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
+
+#### Message Authentication ####
+
 
 
 TODO:
