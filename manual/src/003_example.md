@@ -225,7 +225,8 @@ you will then see the following output on the command line:
 If there were any syntax or wellformedness errors (for example if the same fact 
 is used with different arities an error would be displayed)
 the would be displayed at this point. Howevever, there are none in our example. 
-See later *REFERENCE SECTION* for details on how to deal with such errors.
+See the part on [Modeling Issues](008_modeling-issues.html#sec:modeling-issues) 
+for details on how to deal with such errors.
 
 The above command will start a web-server that loads all security protocol 
 theories in the same directory as FirstExample.spthy. Point your browser to
