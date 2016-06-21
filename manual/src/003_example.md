@@ -244,9 +244,9 @@ theories using the upload form below.
 If you click on the 'FirstExample' entry in the table of loaded theories, you 
 should see the following:
 
-![FirstExample Theory Overview](../images/tamarin-tutorial-overview.jpg 
-"FirstExample 
-Theory Overview")
+![FirstExample Theory 
+Overview](../images/tamarin-tutorial-overview.jpg "FirstExample Theory 
+Overview")
 
 On the left hand side, you see the theory: links to the message theory 
 describing the intruder, the multiset rewrite rules and axioms describing your 
@@ -268,8 +268,9 @@ If you click on `Message theory` on the left, you should see the following:
  "FirstExample Message Theory")
  
 On the right side, you can now see the message theory, starting with
-the so-called *Signature*, which consists of all the functions and equations you
-defined. Note that Tamarin automatically adds a function `pair` to
+the so-called *Signature*, which consists of all the functions and equations. 
+These can be either user-defined or imported using the built-ins, as in our 
+example. Note that Tamarin automatically adds a function `pair` to
 create pairs, and the functions `fst` and `snd` together with two
 equations to access the first and second parts of a pair. There is a
 shorthand for the `pair` using `<` and `>`, which is used here for
@@ -304,7 +305,7 @@ facts is not important for now, and will be explained below. As a first
 approximation, both represent they intruder's knowledge and are only used to 
 make the tool's reasoning more efficient.
 
-Now click on *Multiset rewriting rules and axioms* on the left.
+Now click on *Multiset rewriting rules* on the left.
 
 ![FirstExample Multiset Rewriting 
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
@@ -322,9 +323,6 @@ output `Out(x)` and passes it to the intruder knowledge, represented by the
 (it stems from the way Tamarin deals with equations) and will be explained in 
 the 
 [section on cryptographic messages](004_cryptographic-messages.html#sec:cryptographic-messages).
-
-Just below is the list of all axioms. In this example, there is
-only the one axiom `Equality_Checks_Succeed`.
 
 Now click on `Untyped case distinctions (10 cases, all chains solved)` to see 
 the following:
