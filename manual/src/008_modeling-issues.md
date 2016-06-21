@@ -7,11 +7,11 @@ First-time users
 ----------------
 In this section we discuss some problems that a first-time user might face.
 This includes some error messages and what you can do in order to fix them. 
-Also, we discuss how you can find out that your rule do not model the protocol
+Also, we discuss how you can find out that your rules do not model the protocol
 that you wanted and how you can avoid this with `exists-trace` lemmas.
 
 For illustrating these concepts, consider the following protocol, where an
-initiator `$I` and a receiver `$R` share a symmetric key. `$I` then sends the
+initiator `$I` and a receiver `$R` share a symmetric key `~k`. `$I` then sends the
 message `~m`, encrypted with their shared key `~k` to `$R`.
 
 ~~~~ {.tamarin slice="code/FirstTimeUser.spthy" lower=12 upper=33}
@@ -22,7 +22,7 @@ perspective of the receiver.
 
 
 ### Exists lemma ### 
-Imagine that you forgot in the setup the agent state fact for the receiver
+Imagine that in the setup rule you forgot the agent state fact for the receiver
 `AgSt($R,~k)` as follows:
 
 ~~~~ {.tamarin slice="code/FirstTimeUser_Error1.spthy" lower=16 upper=20}
@@ -32,8 +32,8 @@ If you then use Tamarin to prove the lemma `nonce_secret` it will be verified.
 The lemma says that whenever the action `Secret(R,m)` is reached in a trace,
 then the adversary does not learn `m`. However, with this error, the rule `R_1`
 will never be executed, and consequently there will never be an action 
-`Secret(R,m)` in the trace. For this reason the lemmas is always true.
-To avoid the case of proving a lemma but with an empty protocol, we define
+`Secret(R,m)` in the trace. For this reason the lemma is always true.
+To avoid the case of proving a lemma but with an empty protocol, we use
 `exist-trace` lemmas.
 
 With such a lemma we define what functionality we want to achieve in a protocol.
@@ -44,28 +44,31 @@ We express this with the following lemma:
 ~~~~ {.tamarin slice="code/FirstTimeUser.spthy" lower=34 upper=38}
 ~~~~
 
-If we evaluate this lemma with Tamarin it will be falsified. This indicates
-that there exists no trace where the initiator sends a message to the receiver.
-Often, this is the case if we forget to add a fact that connects several rules 
-and some rules can never be reached. 
-So it is generally recommended to add a `exists-trace` lemma from the beginning
-to make sure the protocol provides the functionality you want.
+If we evaluate this lemma with Tamarin, in the model with the error,
+it will be falsified. This indicates that there exists no trace where
+the initiator sends a message to the receiver.  Often, this is the
+case if we forget to add a fact that connects several rules and some
+rules can never be reached.  So it is generally recommended to add an
+`exists-trace` lemma from the beginning to make sure the protocol
+provides the functionality you want.
 
 ### Error Messages ###
 In this section we will intentionally add some mistakes to the above protocol 
 to go through some common error messages of Tamarin.
-We will always present one changed rule and a corresponding error message and 
+We will always present one modified rule and a corresponding error message and 
 then explain what the error message means. 
 In practice, this can help in understanding error messages that one gets
 when specifying a new protocol.
+
+### Inconsistent Fact usage ###
 
 First we change the setup rule as follows:
 
 ~~~~ {.tamarin slice="code/FirstTimeUser_Error2.spthy" lower=16 upper=20}
 ~~~~
 
-What is always first visible is the following statement that some 
-wellformedness check failed.
+The following statement that some wellformedness check failed will
+appear at the very end of the text when loading this theory.
 
 ![ ](../images/ErrorMsg_wellformedness.png)
 
@@ -81,7 +84,9 @@ This is not consistent with its use in other rules. For example
 `2. rule 'setup', fact "agst": ("AgSt",2,Linear)` indicates that it is also 
 used with 2 arguments in the `setup` rule.
 To solve this problem we have to make sure that we only use the same fact with 
-the same amount of arguments.
+the same number of arguments.
+
+### Unbound variables ###
 
 If we change the rule `R_1` to
 
@@ -92,7 +97,7 @@ we get the error message
 
 ![ ](../images/ErrorMsg_3.png)
 
-The warning `unbound variable` indicates that there is a fresh term, here 
+The warning `unbound variables` indicates that there is a term, here the fresh 
 `~n`, in the action or conclusion that never appeared in the premisse. 
 Here this is the case because we mistyped `~n` instead of `~m`. Generally,
 if such a warning appears one should make sure that all the fresh variables 
