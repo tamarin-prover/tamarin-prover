@@ -10,7 +10,7 @@ This file is documented in the Tamarin user manual.
 
 */
 
-theory Tutorial
+theory FirstExample
 begin
 
 builtins: hashing, asymmetric-encryption
