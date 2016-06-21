@@ -92,3 +92,9 @@ symmetric-encryption,
 
 
 
+
+
+
+There is a
+shorthand for the `pair` using `<` and `>` which is right-associative
+and allows one to write `<a,b,c>` to represent `pair(a,pair(b,c))`.
