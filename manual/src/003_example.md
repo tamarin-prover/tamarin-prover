@@ -19,21 +19,19 @@ generated key is secret provided that the server is uncompromised.
 
 The Tamarin modeling of this protocol and the security properties are given in 
 the file [Tutorial.spthy](code/Tutorial.spthy) (`.spthy` stands for *security 
-protocol theory*) presented here:
+protocol theory*). The Tamarin file starts with `theory` followed by the 
+theory's name, here `Tutorial`.  
 
-~~~~ {.tamarin include="code/Tutorial.spthy"}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=12 upper=13}
 ~~~~
 
-First of all note that Tamarin uses C-style comments, so everything between 
-`/*` and `*/` or the line following `//` is a comment. The Tamarin file starts 
-with `theory` followed by the theory's name, here `Tutorial`.  After the 
-keyword `begin`, we first declare function symbols, and equations that these 
-function symbols must satisfy. These functions and equations describe the 
-cryptographic primitives and their properties used in the protocol. Then we 
-declare multiset rewriting rules that model the protocol, and finally we write 
-lemmas that specify the security properties. Moreover, we also inserted 
-comments, to structure the theory. Now, we explain the above model of the 
-simple protocol in detail.
+After the keyword `begin`, we first declare function symbols, and 
+equations that these function symbols must satisfy. These functions and 
+equations describe the cryptographic primitives and their properties used in the 
+protocol. Then we declare multiset rewriting rules that model the protocol, and 
+finally we write lemmas that specify the security properties. Moreover, we also 
+inserted comments, to structure the theory. Now, we explain the above model of 
+the simple protocol in detail.
 
 Function Signature and Equational Theory
 ----------------------------------------
@@ -146,6 +144,9 @@ We model it using the following three rules.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=34 upper=65}
 ~~~~
+
+First of all note that Tamarin uses C-style comments, so everything between 
+`/*` and `*/` or the line following `//` is a comment. 
 
 The first rule models the client sending its message, while the second
 rule models it receiving a response. The third rule models the server,
