@@ -54,19 +54,21 @@ A multiset rewriting system defines a transition system, which in our case will
 be a labeled transition system. The state of the system is a multiset (bag) of
 facts. We will explain the types of facts and their use below.
 
-Tamarin's rewrite rules have sequences of facts as left-hand-sides, labels, and
-right-hand-sides. For example:
+Tamarin's rewrite rules have a name, and sequences of facts as left-hand-sides,
+labels, and right-hand-sides. For example:
 
 **FIX Cas: Maybe better to use Naxos rules here.**
 
 	MyRule1:
-	[ ]--[ G(u) ]->[ H(t), F(t) ]
+	[ ]--[ L(t) ]->[ F('1',t), F('2',t) ]
 
 	MyRule2:
-	[ F(t) ]--[ G(u) ]->[ H(t), F(h(t)) ]
+	[ F(u,v) ]--[ M(u,v) ]->[ H(t), G('3',h(t)) ]
 
-For now, we will ignore the labels and return to them when discussing
-properties.
+For now, we will ignore the actions (`L(...)` and `M(...)`) and return to them
+when discussing properties in the next section.
+
+
 
 ### Executions
 
@@ -78,15 +80,22 @@ side is contained in the current state. In this case, the left-hand side facts
 are removed from the state, and replaced by the right hand side.
 
 For example, in the initial state, `MyRule1` can be instantiated for any value
-of the symbols `u` and `t`. This would lead to a new state that contains `H(t)`
-and `F(t)`.
+of `t`. For any specific instantiation of `t`, this leads to a second state that
+contains `F('1',t)` and `F('2',t)`. `MyRule2` can not be applied in the initial
+state since it contains no `F` facts.
 
+In each possible second state, both rules can now be applied. The second rule
+can be instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is
+equal to the instantiation of `t` that occurred in the first transition, each
+possible instantiation leading to next state.
 
 
 Facts
 -----
 
-Facts are of the form `F(t1,...,tN)` for a fact symbol `F` and terms `tI`.
+Facts are of the form `F(t1,...,tN)` for a fact symbol `F` and terms `tI`. They
+have a fixed arity (in this case `N`). Note that i a Tamarin model uses the same
+fact with two different arities, Tamarin will report an error.
 
 There are three types of special facts built in to Tamarin. These are used to
 model interaction with the untrusted network and to model the generation of
@@ -184,12 +193,14 @@ Protocols describe the behaviour of agents in the system. Agent can perform
 protocol steps, such as receiving a message and responding by sending a message,
 or starting a session.
 
-### Modeling the responder of the Naxos protocol
+### Modeling the Naxos responder role
 
 We first model the responder role, which is easier since it can be done in one
 rule.
 
-The responder in the Naxos protocol only accepts messages ...
+Each time a responder thread of an agent receives a message, it will generate a
+fresh value `eskR`, send a response message, and compute a key $kR$
+
 
 **FIX Cas: need to do either pattern matching or explicit construct/deconstruct;
 not a big deal for naxos, but should pop up somewhere**
@@ -198,6 +209,8 @@ Alternative modeling approaches
 -------------------------------
 
 **FIX Cas: splitting send/receive, etc.**
+
+**FIX Cas: pattern matching vs deconstructors**
 
 
 
