@@ -32,10 +32,10 @@ Imagine that in the setup rule you forgot the agent state fact for the receiver
 ~~~~
 
 With this, Tamarin verifies the lemma `nonce_secret`.
-The lemma says that whenever the action `Secret(R,m)` is reached in a trace,
+The lemma says that whenever the action `Secret(m)` is reached in a trace,
 then the adversary does not learn `m`. However, in the modified specification
 the rule `R_1` will never be executed. Consequently there will never be an
-action `Secret(R,m)` in the trace. For this reason the lemma is always vacuously true
+action `Secret(m)` in the trace. For this reason the lemma is always vacuously true
 and verifying the lemma does not mean that the protocol that we intended has
 this property.
 To avoid the case of proving a lemma but with an empty protocol, we define

@@ -25,23 +25,23 @@ rule ChanIn_A:
 
 rule I_1: 
 	[ Fr(~n) ]
- 	--[ Send($I,$R,~n), SecretI($I,~n) ]-> 
+ 	--[ Send($I,~n), Secret_I(~n) ]-> 
 	[ Out_A($I,$R,~n) ]
 		
 rule R_1:
 	[ In_A($I,$R,~n)  ]
-	--[ SecretR($R,~n), Authentic($R,$I,~n) ]->
+	--[ Secret_R(~n), Authentic($I,~n) ]->
 	[ ]
 
 /* Security Properties */
 
 lemma nonce_secret_initiator: 
-	"All R n #i #j. SecretI(R,n) @i & K(n) @j ==> F"
+	"All n #i #j. Secret_I(n) @i & K(n) @j ==> F"
 
 lemma nonce_secret_receiver: 
-	"All R n #i #j. SecretR(R,n) @i & K(n) @j ==> F"
+	"All n #i #j. Secret_R(n) @i & K(n) @j ==> F"
 
 lemma message_authentication: 
-	"All R I n #j. Authentic(R,I,n) @j ==> Ex R2 #i. Send(I,R2,n) @i &i<j"
+	"All I n #j. Authentic(I,n) @j ==> Ex #i. Send(I,n) @i &i<j"
 
 end
