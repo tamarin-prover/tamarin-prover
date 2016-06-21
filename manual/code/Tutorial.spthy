@@ -39,11 +39,11 @@ rule Client_1:
     , !Pk($S, pkS)   // lookup public-key of server
     ]
   -->
-    [ Client_1( $S, ~k )       // Store server and key for next step of thread
-    , Out( aenc{'1', ~k}pkS )  // Send the encrypted session key to the server
-                               // We add the tag '1' to the request to allow
-                               // the server to check whether the decryption
-                               // was successful.
+    [ Client_1( $S, ~k )           // Store server and key for next step of thread
+    , Out( aenc(<'1', ~k>, pkS) )  // Send the encrypted session key to the server
+                                   // We add the tag '1' to the request to allow
+                                   // the server to check whether the decryption
+                                   // was successful.
     ]
 
 rule Client_2:
