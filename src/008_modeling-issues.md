@@ -28,7 +28,7 @@ perspective of the receiver.
 Imagine that in the setup rule you forgot the agent state fact for the receiver
 `AgSt($R,~k)` as follows:
 
-~~~~ {.tamarin slice="code/FirstTimeUser_Error1.spthy" lower=16 upper=20}
+~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error1.spthy" lower=16 upper=20}
 ~~~~
 
 With this, Tamarin verifies the lemma `nonce_secret`.
@@ -69,7 +69,7 @@ when specifying a new protocol.
 
 First we change the setup rule as follows:
 
-~~~~ {.tamarin slice="code/FirstTimeUser_Error2.spthy" lower=16 upper=20}
+~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error2.spthy" lower=16 upper=20}
 ~~~~
 
 The following statement that some wellformedness check failed will
@@ -95,7 +95,7 @@ the same number of arguments.
 
 If we change the rule `R_1` to
 
-~~~~ {.tamarin slice="code/FirstTimeUser_Error3.spthy" lower=26 upper=30}
+~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error3.spthy" lower=26 upper=30}
 ~~~~
 
 we get the error message
@@ -112,7 +112,7 @@ premise.
 
 Next, we change the functional lemma as follows
 
-~~~~ {.tamarin slice="code/FirstTimeUser_Error4.spthy" lower=34 upper=38}
+~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error4.spthy" lower=34 upper=38}
 ~~~~
 
 This causes the following warning:
@@ -126,7 +126,7 @@ one forgets to list all the variables that are used in the formula after the
 
 Next, we change the lemma `nonce_secret` and get the following warning:
 
-~~~~ {.tamarin slice="code/FirstTimeUser_Error5.spthy" lower=31 upper=33}
+~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error5.spthy" lower=31 upper=33}
 ~~~~
 
 ![ ](../images/ErrorMsg_5.png)
@@ -159,7 +159,7 @@ built-in function.
 
 If we change the `setup` rule to 
 
-~~~~ {.tamarin slice="code/FirstTimeUser_Error7.spthy" lower=16 upper=20}
+~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error7.spthy" lower=16 upper=20}
 ~~~~
 
 we get the error message
