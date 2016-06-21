@@ -91,40 +91,41 @@ rule isend:
 ```
 allows us to reason about the Dolev-Yao adversary's knowledge.  To
 specify the property that a message `x` is secret, we propose to label a
-suitable protocol rule with a `Secret` action.  In the following
-lemma, the `Secret` action contains two arguments. The first argument
-`A` is the agent in whose role the secrecy claim is made and the
-second argument `x` is the message that is claimed to be secret.
-Moreover, the lemma references the actions `Reveal` and `Honest`. We
+suitable protocol rule with a `Secret` action.  
+In addition to `Secret(x)` the following
+lemma references the actions `Reveal` and `Honest`. We
 use `Reveal(B)` to label rules in which an agent `B` is compromised
-and `Honest(B)` to indicate agents that are assumed to be honest. For
+and `Honest(B)` to mark agents that are assumed to be honest. For
 this mechanism to work, `Honest(B)` must occur in the same rule as
-`Secret(A,x)`.
+`Secret(x)`.
+
 ```
 lemma secrecy:
-  "All A x #i. 
-    Secret(A,x) @i ==> 
+  "All x #i. 
+    Secret(x) @i ==> 
     not (Ex #j. K(x)@j)
         | (Ex B #r. Reveal(B)@r & Honest(B) @i)"
 ```
+The lemma states that whenever a secret action `Secret(x)` occurs at timepoint `i`, the adversary does not know `x` or an agent claimed to be honest at time point `i` has been compromised at a timepoint `r`.
 
 A stronger secrecy property is *perfect forward secrecy*. It requires
 that messages labeled with a `Secret` action before a compromise remain secret.
 
 ```
 lemma secrecy_PFS:
-  "All A x #i. 
-    Secret(A,x) @i ==> 
+  "All x #i. 
+    Secret(x) @i ==> 
     not (Ex #j. K(x)@j)
-        | (Ex X #r. Reveal(X)@r & Honest(X) @i & r < i)"
+        | (Ex B #r. Reveal(B)@r & Honest(B) @i & r < i)"
 ```
 
 **Example.** The following Tamarin theory specifies a simple
   one-message protocol. Agent `A` sends a message encrypted with agent
   `B`'s public key to `B`. Both agents claim secrecy of a message, but
-  only agent `A`'s claim is true. To distinguish between the two claims
-  we specify two lemmas and differentiate between two secret actions, 
-  `Secret_A` for agent `A` and `Secret_B` for agent `B`.
+  only agent `A`'s claim is true. To distinguish between the two
+  claims we use two different secrecy action facts, `Secret_A` for
+  agent `A` and `Secret_B` for agent `B`, and we specify two secrecy lemmas, 
+  one for each of the two actions.
 
 ~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
 ~~~~
@@ -136,21 +137,21 @@ How to express standard authentication properties, examples
 
 ```
 lemma noninjectiveagreement:
-  "All a b t #i. 
-    Commit(a,b,t) @i
-    ==> (Ex #j. Running(b,a,t) @j)
-        | (Ex X #r. Reveal(X)@r & Honest(X) @i)"
+  "All A B t #i. 
+    Commit(A,B,t) @i
+    ==> (Ex #j. Running(B,A,t) @j)
+        | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
 
 ```
 lemma injectiveagreement:
-  "All a b t #i. 
-    Commit(a,b,t) @i
-    ==> (Ex #j. Running(b,a,t) @j 
+  "All A B t #i. 
+    Commit(A,B,t) @i
+    ==> (Ex #j. Running(B,A,t) @j 
         & j < i
-        & not (Ex a2 b2 #i2. Commit(a2,b2,t) @i2
+        & not (Ex A2 B2 #i2. Commit(A2,B2,t) @i2
                            & not (#i2 = #i)))
-              | (Ex X #r. Reveal(X)@r & Honest(X) @i)"
+              | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
 
 
