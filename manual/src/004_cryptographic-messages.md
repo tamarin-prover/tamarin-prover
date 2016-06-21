@@ -91,4 +91,29 @@ symmetric-encryption,
 
 
 
+**FIX: Cas has moved the below from 005_, to be integrated into this section**
+
+Cryptographic messages as terms
+-------------------------------
+
+To model cryptographic messages we use terms, represented by trees where the
+nodes are operators (such as pairing, function application, concatenation,
+encryption) and the leaves are constants or variables.
+
+For the leaves, we have two main sorts:
+
+[fresh names]:
+	Model random messages such as keys or nonces.
+
+[public names]:
+	Model known constants such as agent identities.
+
+For example, in the Naxos protocol, `eskI` and `eskR` are freshly generated for
+each new session. Additionally, the agent's long-term keys (`lkI`, `lkR') are
+freshly generated before the agent starts communicating. We therefore model them
+as fresh names.
+
+The identities `I` and `R` can be instantiated by any concrete agent identity,
+modeled as public names.
+
 
