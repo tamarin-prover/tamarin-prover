@@ -69,7 +69,7 @@ The equation
 models the interaction between calls to these three function symbols
 by specifying that the decryption of the cyphertext using the correct private key returns the 
 initial plaintext. For more details on user-specified equations, see the section 
-on [Cryptographic Messages](004_cryptographic-messages).
+on [Cryptographic Messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
 
 Modeling a Public Key Infrastructure
@@ -118,11 +118,14 @@ denotes the association between agent `A` and its private key `~ltk`,
 and generate the fact `!Pk($A, pk(~ltk))`, which associates
 agent `A` and its public key `pk(~ltk)`.
 
-In the example, we allow the adversary to retrieve any public key using the 
-following rule. Essentially, it reads a public-key database entry and
-sends the public key to the network using the built-in fact `Out`,
-which denotes sending a message to the network (see the section on protocol 
-specification for more information):*ADD SECTION REFERENCE*
+In the example, we allow the adversary to retrieve any public key
+using the following rule. Essentially, it reads a public-key database
+entry and sends the public key to the network using the built-in fact
+`Out`, which denotes sending a message to the network, see the):
+[section on model
+specification](005_protocol-specification.html#sec:model-specification)
+for more information.
+
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=24 upper=27}
 ~~~~
@@ -351,8 +354,8 @@ output `Out(x)` and passes it to the intruder knowledge, represented by the
 `!KD(x)` fact. Note that the rule `Serv_1` from the protocol has three 
 *variants (modulo AC)*. The precise meaning of this is not important right now 
 (it stems from the way Tamarin deals with equations) and will be explained in 
-the [section on cryptographic
-messages](004_cryptographic-messages.html#sec:cryptographic-messages).
+the 
+[section on cryptographic messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
 Just below you have the list of all axioms. In this example there is
 only the one axiom `Equality_Checks_Succeed`.
