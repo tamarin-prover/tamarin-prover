@@ -26,9 +26,10 @@ book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros includes
 
 
 pdf:
+	sed 's,[0-9]*_.*.html#,#,' < $(SRC) > tex/all.md
 	$(PANDOC) ${FILTER} -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
-	  -o tex/tamarin-manual.tex $(SRC)
+	  -o tex/tamarin-manual.tex tex/all.md
 	make -C tex
 
 simple: 
