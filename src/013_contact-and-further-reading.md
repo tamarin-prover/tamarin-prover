@@ -49,6 +49,18 @@ page: <http://tamarin-prover.github.io/>.
 Acknowledgments
 ---------------
 
-List everyone that was involved with Tamarin: developers,
-contributors, extension developers, bug reporters, manual writers,
-...  “a short history of Tamarin prover”?
+Tamarin was initially developed at the [Institute of Information Security at 
+ETH Zurich](/http://www.infsec.ethz.ch/) by Simon Meier and Benedikt Schmidt, 
+working with David Basin and Cas Cremers.
+
+Cedric Staub contributed the graphical user interface.
+
+Jannik Dreier and Ralf Sasse developed the extension to deal with observational 
+Equivalence.
+
+Other contributers to the code include: Katriel Cohn-Gordon, Kevin Milner,  
+Dominik Schoop, Sam Scott, Jorden Whitefield, oggy- and many others.
+
+This manual was initially written by David Basin, Cas Cremers, Jannik 
+Dreier, Sasa Radomirovic, Ralf Sasse, Benedikt Schmidt, Lara Schmid. It 
+includes part of the initial tutorial by Simon Meier and Benedikt Schmidt.
