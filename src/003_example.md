@@ -1,36 +1,39 @@
 Initial Example
 ===============
 
-We will start with a simple example of a protocol that only consists
-of two messages (given in Alice-and-Bob notation):
+We will start with a simple example of a protocol that consists
+of just two messages, written here in Alice-and-Bob notation:
 
     C -> S: aenc(k, pk(S))
     C <- S: h(k)
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
 with the public key of a server 'S' (`aenc` stands for *asymmetric encryption*) 
-and sends it to 'S'. The server confirms the receipt of the key by sending its 
+and sends it to 'S'. The server confirms the key's receipt by sending its 
 hash back to the client.
 
-This protocol is artificial and satisfies only very weak security
+This protocol is a artificially simple and satisfies only very weak security
 guarantees.  We will use it to illustrate the general Tamarin workflow
-by proving that from the perspective of the client, the freshly
+by proving that, from the client's perspective, the freshly
 generated key is secret provided that the server is uncompromised.
 
-The Tamarin modeling of this protocol and the security properties are given in 
+The protocol's Tamarin model and its security properties are given in 
 the file [Tutorial.spthy](code/Tutorial.spthy) (`.spthy` stands for *security 
-protocol theory*) presented here:
+protocol theory*) presented below:
 
 ~~~~ {.tamarin include="code/Tutorial.spthy"}
 ~~~~
 
-First of all note that Tamarin uses C-style comments, so everything between 
+As the example illustrates,  Tamarin uses C-style comments;
+hence  everything between 
 `/*` and `*/` or the line following `//` is a comment. The Tamarin file starts 
 with `theory` followed by the theory's name, here `Tutorial`.  After the 
-keyword `begin`, we first declare function symbols, and equations that these 
+keyword `begin`, we declare function symbols, and equations that these 
 function symbols must satisfy. These functions and equations describe the 
-cryptographic primitives and their properties used in the protocol. Then we 
-declare multiset rewriting rules that model the protocol, and finally we write 
+cryptographic primitives and their properties used in the
+protocol. Afterward we 
+declare multiset rewriting rules that model the protocol.
+Finally we write 
 lemmas that specify the security properties. Moreover, we also inserted 
 comments, to structure the theory. Now, we explain the above model of the 
 simple protocol in detail.
@@ -65,7 +68,7 @@ The equation
 ~~~~
 
 models the interaction between calls to these three algorithms by specifying 
-that the decryption of the cypertext using the correct private key returns the 
+that the decryption of the cyphertext using the correct private key returns the 
 initial plaintext. For more details on user-specified equations see the section 
 on [Cryptographic Messages](004_cryptographic-messages).
 
