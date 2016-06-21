@@ -1,38 +1,15 @@
-theory ChannelExample
+theory ChannelExample_sec
 begin
 
 
-/* built-ins */
-builtins: signing, asymmetric-encryption, hashing, symmetric-encryption
-functions: otpw/1, pw/1 
+/* Alice&Bob specification (sent over a secure channel)
 
+	I: 	fresh(n)
+	I -> R: n 
+
+*/
 
 /* Channel rules */
-
-rule ChanOut_A:
-	[Out_A($A,$B,x)]
-	--[ChanOut_A($A,$B,x)]->
-	[!Auth($A,x), Out(<$A,$B,x>)]
-
-rule ChanIn_A:
-	[!Auth($A,x), In($B)]
-	--[ChanIn_A($A,$B,x)]->
-	[In_A($A,$B,x)]
-
-rule ChanOut_C:
-	[Out_C($A,$B,x)]
-	--[ChanOut_C($A,$B,x)]->
-	[!Conf($B,x)]
-
-rule ChanIn_C:
-	[!Conf($B,x), In($A)]
-	--[ChanIn_C($A,$B,x)]->
-	[In_C($A,$B,x)]
-
-rule ChanIn_CAdv:
-	[In(<$A,$B,x>)]
-	--[]->
-	[In_C($A,$B,x)]
 
 rule ChanOut_S:
 	[Out_S($A,$B,x)]
@@ -44,6 +21,7 @@ rule ChanIn_S:
 	--[ChanIn_S($A,$B,x)]->
 	[In_S($A,$B,x)]
 
+/* Protocol */
 
 rule I_1: 
 	[ Fr(~n) ]
@@ -55,6 +33,7 @@ rule R_1:
 	--[ SecretR($R,~n), Authentic($R,$I,~n) ]->
 	[ ]
 
+/* Security Properties */
 
 lemma nonce_secret_initiator: 
 	"All R n #i #j. SecretI(R,n) @i & K(n) @j ==> F"
