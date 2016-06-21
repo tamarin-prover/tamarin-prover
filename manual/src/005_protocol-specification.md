@@ -116,16 +116,18 @@ Such let expressions  can be used to specify local term macros within the contex
 rule.  Each macro should occur on a separate line and defines a
 substitution:
 the left-hand side of the `=` sign should be a variable and
-the right-hand side is an arbitrary term (not containing the variable on
-the left-hand side).
-The rule will be interpreted after
-substituting all variables occurring in the let by their right-hand sides.
+the right-hand side is an arbitrary term. The rule will be interpreted after
+substituting all variables occurring in the let by their right-hand
+sides.
+As the above example indicates, macros may use the right-hand sides of
+earlier defined macros.
+
 
 Facts
 -----
 
-Facts are of the form `F(t1,...,tN)` for a fact symbol `F` and terms `tI`. They
-have a fixed arity (in this case `N`). Note that i a Tamarin model uses the same
+Facts are of the form `F(t1,...,tn)` for a fact symbol `F` and terms `ti`. They
+have a fixed arity (in this case `n`). Note that if a Tamarin model uses the same
 fact with two different arities, Tamarin will report an error.
 
 There are three types of special facts built in to Tamarin. These are used to
@@ -149,8 +151,8 @@ unique fresh (random) values.
 :	This fact must be used when generating fresh (random) values, and can
 	occur on the left-hand side of a rewrite rule, where its argument is the
 	fresh term. Tamarin's underlying execution model has a built-in rule for
-	generating `Fr(x)` facts, and also ensures that each instantiation of
-	this rule produces a term that is different from all others.
+	generating insteances of `Fr(x)` facts, and also ensures that each
+	instance produces a term (instantiating `x`) that is different from all others.
 
 For the above three facts, Tamarin has built-in rules. In particular, there is a
 fresh rule that produces unique `Fr(...)` facts, and there is a set of rules for
@@ -159,36 +161,30 @@ adversary knowledge derivation, which consume `Out(...)` facts and produce
 
 ### Linear versus persistent facts
 
-The facts that we have mentioned so far are called linear facts. They can be
-produced but also be consumed by rules, and hence the might appear in one state
+The facts mentioned above are called 'linear facts'. They are not only
+produced by rules, they also can be consumed by rules.
+Hence they might appear in one state
 but not in the next.
 
 In contrast, some facts in our models will never be removed from the state once
-they are introduced. This would require that every rule that has such a fact in
-the left-hand-side, will also have an exact copy of this fact in the right-hand
+they are introduced. Modeling this using linear facts would
+require that every rule that has such a fact in
+the left-hand-side, also has an exact copy of this fact in the right-hand
 side.  While there is no fundamental problem with this modeling, it is
 inconvenient for the user and it also might case Tamarin to explore rule
 instantiations that are irrelevant for tracing such facts. 
 
-For these two reasons, we introduce persistent facts. These are never removed
-from the state, and we denote them by prefixing the fact with a bang (`!`).
+For the above two reasons, we introduce 'persistent facts', which
+are never removed from the state. We denote these facts by prefixing
+them with a bang (`!`).
 
-<<<<<<< HEAD
-FIX: use the following paragraph
 
-Facts always start with an upper-case letter and do not have to be
+Facts always start with an upper-case letter and need not  be
 declared explicitly. If their name is prefixed with an exclamation mark `!`,
 then they are persistent. Otherwise, they are linear. Note that every
 fact name must be used consistently; i.e., it must always be used with
-the same arity, casing, and multiplicity. Otherwise, Tamarin complains
+the same arity, case, and multiplicity. Otherwise, Tamarin complains
 that the theory is not wellformed.
-=======
-Facts always start with an upper-case letter and do not have to be declared
-explicitly. If their name is prefixed with an exclamation mark `!`, then they
-are persistent. Otherwise, they are linear. Note that every fact name must be
-used consistently; i.e., it must always be used with the same arity, casing, and
-multiplicity. Otherwise, Tamarin complains that the theory is not wellformed.
->>>>>>> a673f8b1de4b3d7809c9f2601e1a94721a2ad746
 
 Modeling protocols
 ------------------
