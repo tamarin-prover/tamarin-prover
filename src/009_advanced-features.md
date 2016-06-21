@@ -146,7 +146,7 @@ The final kind of channels that we want to consider in detail are secure
 channels. Secure channels are both confidential and authentic. This means that 
 an adversary can neither modify nor learn messagages that are sent over it.
 However, an adversary can store a message sent over a secure channel to replay
-it in a later point of time.
+it at a later point in time.
 The protocol to send the messages over a secure channel can be modeled as
 follows.
 
@@ -174,11 +174,9 @@ For example, we can model a secure channel with the additional property
 that it does not allow for replay. This could be done by changing the secure
 channel rules above by chaning `!Sec($A,$B,x)` to be a linear fact 
 `Sec($A,$B,x)`. Consequently, this fact can only be consumed once and not be
-replayed by the adversary at a later point of time.
+replayed by the adversary at a later point in time.
 In a similar mannor, the other channel properties can be changed or more 
 properties can be imagined.
-
-
 
 
 
