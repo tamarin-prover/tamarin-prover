@@ -81,7 +81,6 @@ lemma Client_session_key_secrecy:
     )
   "
 
-
 lemma Client_auth:
   " /* For all session keys 'k' setup by clients with a server 'S' */
     ( All S k #i.  SessKeyC(S, k) @ #i

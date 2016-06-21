@@ -125,10 +125,11 @@ We model the dynamic compromise of long-term private keys using the
 following rule. Intuitively, it reads a private-key database entry and
 sends it to the adversary. This rule has an observable `LtkReveal`
 action stating that the long-term key of agent `A` was compromised. Action facts 
-are just like facts, but *should* be from a different namespace, though this is 
-not enforced. We will use this action in the security property below to 
-determine which agents are compromised. The rule now has a premise, conclusion, 
-and action facts within the arrow: `--[ FACT ]->`:
+are just like facts, but instead of the other facts do not appear in state, 
+but only on the trace. The security properties are specified on the traces, and 
+the action `LtkReveal` is used below to determine which agents are compromised. 
+The rule now has a premise, conclusion, and action facts within the arrow: `--[ 
+FACT ]->`:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=29 upper=32}
 ~~~~
@@ -166,11 +167,11 @@ Modeling the security properties
 The security properties are defined over traces of the action facts of
 a protocol execution.
 
-First, note that we can specify additional axioms that restrict the
-set of considered traces. In this example, we restrict our attention
-to traces where all equality checks succeed. In detail the following axiom says
-that for all parameters `x`, `y` to the `Eq` action fact at some time
-point `i` it has to be the case that `x=y`.
+First, we specify an additional axiom that restricts the set of considered 
+traces. In this example, we restrict our attention to traces where all equality 
+checks succeed. In detail the following axiom says that for all parameters `x`, 
+`y` to the `Eq` action fact at some time point `i` it has to be the case that 
+`x=y`.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=68 upper=68}
 ~~~~
@@ -188,49 +189,33 @@ server `S` there must be a server that has answered the request, or
 the adversary has performed a long-term key reveal on `S` previously
 in time.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=70 upper=95}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=70 upper=94}
 ~~~~
 
 Note that we can also strengthen the authentication property to a version of
 injective authentication. Our formulation is stronger than the standard
 formulation of injective authentication, as it is based on uniqueness instead
-of counting. For most protocols, that guarantee injective authentication one
+of counting. For most protocols that guarantee injective authentication one
 can also prove such a uniqueness claim, as they agree on appropriate fresh
 data. This is shown in lemma `Client_auth_injective`.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=97 upper=111}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=96 upper=110}
 ~~~~
 
 To ensure that our lemmas do not just hold vacuously because the model
-is not executable, we make it a point to always have an executability
-lemma, that shows that the model can run to completion. This is given
-as a regular lemma, but with the `exists-trace` keyword, as seen in
-the lemma `Client_session_key_honest_setup` below.
+is not executable, we also include an executability lemma that shows that the 
+model can run to completion. This is given as a regular lemma, but with the 
+`exists-trace` keyword, as seen in the lemma `Client_session_key_honest_setup` 
+below. This keyword says that the lemma is true if there *exists* a trace on 
+which the formula holds, in contrast to the previous lemmas where we required 
+the formula to hold on *all* traces.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=113 upper=118}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=112 upper=117}
 ~~~~
 
-Note that when adding inconsistent axioms, you can prove any
-property. To check that there still exist traces, we always want an
-`exists-trace` lemma.  When modeling protocols such existence proofs
-are very useful sanity checks.
-
-Running Tamarin on the Command Line
------------------------------------
-
-The call `tamarin-prover Tutorial.spthy` parses the `Tutorial.spthy`
-file, checks its wellformedness (explained below), and pretty-prints the
-theory. The declaration of the signature and the equations can be
-found at the top of the pretty-printed theory.
-
-Proving all lemmas contained in the theory using the automatic prover is as 
-simple as adding the flag `--prove` to the call; i.e.,
-
-    tamarin-prover Tutorial.spthy --prove
-
-This will first output some logging from the constraint solver and
-then the Tutorial security protocol theory with the lemmas and their
-attached (dis)proofs.
+Note that when adding inconsistent axioms, you can prove any property. To check 
+that there still exist traces, we always want an `exists-trace` lemma. When 
+modeling protocols such existence proofs are very useful sanity checks.
 
 
 Graphical User Interface
@@ -258,9 +243,10 @@ you will then see the following output on the command line
 
     21/Jun/2016:09:16:01 +0200 [Info#yesod-core] Application launched @(yesod_83PxojfItaB8w9Rj9nFdZm:Yesod.Core.Dispatch ./Yesod/Core/Dispatch.hs:157:11)
 
-If there were any syntax or wellformedness errors you would see them at this 
-point, but there are none in the 'Tutorial'. See later for details on how to 
-deal with such errors.
+If there were any syntax or wellformedness errors (for example if the same fact 
+is used with different arities an error would be displayed) you would see them 
+at this point, but there are none in the 'Tutorial'. See later for details on 
+how to deal with such errors.
     
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
@@ -451,15 +437,29 @@ graph leads to a contradiction as it contains `LtkReveal( S )`:
  "Tutorial Lemma 1 Finished")
  
 The lemma is now colored in green, as it was successfully proven. If we had 
-found a counterexample, it would be colored in red.
+found a counterexample, it would be colored in red. You can prove the other 
+lemmas in the same way.
 
-All other properties in the 'Tutorial' can also be proven by Tamarin, just run
+Running Tamarin on the Command Line
+-----------------------------------
 
-     $ tamarin-prover Tutorial.spthy --prove
+The call
 
-and you will see this output:
+    tamarin-prover Tutorial.spthy
 
-    ==============================================================================
+parses the `Tutorial.spthy` file, checks its wellformedness, 
+and pretty-prints the theory. The declaration of the signature and the 
+equations can be found at the top of the pretty-printed theory.
+
+Proving all lemmas contained in the theory using the automatic prover is as 
+simple as adding the flag `--prove` to the call; i.e.,
+
+    tamarin-prover Tutorial.spthy --prove
+
+This will first output some logging from the constraint solver and
+then the Tutorial security protocol theory with the lemmas and their
+attached (dis)proofs:
+
     summary of summaries:
     
     analyzed: Tutorial.spthy
@@ -469,4 +469,3 @@ and you will see this output:
       Client_auth_injective (all-traces): verified (15 steps)
       Client_session_key_honest_setup (exists-trace): verified (5 steps)
 
-meaning all properties have been verified indeed.
