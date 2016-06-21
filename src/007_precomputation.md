@@ -9,7 +9,7 @@ cause [open chains](#sec:openchains) and how they are problematic, let
 us look at the example of the Needham-Schroeder-Lowe Public Key
 Protocol.
 
-~~~~ {.tamarin include="code/NSLPK3.spthy" lower=24 upper=29}
+~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=24 upper=29}
 ~~~~
 
 It is specified in Tamarin by the following rules:

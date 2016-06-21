@@ -39,12 +39,12 @@ For modeling such properties we can define channel rules.
 Let us consider the following protocol, where an initiator generates a new 
 fresh nonce and sends it to a receiver.
 
-~~~~ {.tamarin include="code/ChannelExample.spthy" lower=3 upper=8}
+~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=5 upper=6}
 ~~~~
 
-We can model this protocol with the following Tamarin rules.
+We can model this protocol with the following Tamarin specification.
 
-~~~~ {.tamarin include="code/ChannelExample.spthy" lower=12 upper=33}
+~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=10 upper=31}
 ~~~~
 
 We want to examine whether the nonce remains secret from the perspective 
@@ -63,7 +63,7 @@ confidential channel. By confidential we mean that only the intended receiver
 can read the message but anybody, including the adversary, can send a message
 on this channel.
 
-~~~~ {.tamarin include="code/ChannelExample_conf.spthy" lower=11 upper=40}
+~~~~ {.tamarin slice="code/ChannelExample_conf.spthy" lower=11 upper=38}
 ~~~~
 
 The first three rule denote the channel rules for a confidential channel.
@@ -96,7 +96,7 @@ modify the messages or the sender of it.
 We modify the protocol again to use an authentic channel for sending the 
 message.
 
-~~~~ {.tamarin include="code/ChannelExample_auth.spthy" lower=11 upper=35}
+~~~~ {.tamarin slice="code/ChannelExample_auth.spthy" lower=11 upper=33}
 ~~~~
 
 The first channel rule binds the sender `$A` of a message `x` to it, by the 
@@ -123,7 +123,7 @@ it in a later point of time.
 The protocol to send the messages over a secure channel can be modeled as
 follows.
 
-~~~~ {.tamarin include="code/ChannelExample_sec.spthy" lower=13 upper=35}
+~~~~ {.tamarin slice="code/ChannelExample_sec.spthy" lower=11 upper=33}
 ~~~~
 
 The channel rules bind both the sender `$A` and the receiver `$B` to the
@@ -150,38 +150,6 @@ channel rules above by chaning `!Sec($A,$B,x)` to be a linear fact
 replayed by the adversary at a later point of time.
 In a similar mannor, the other channel properties can be changed or more 
 properties can be imagined.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
