@@ -38,22 +38,23 @@ We next explain in detail the protocol modeled above.
 Function Signature and Equational Theory
 ----------------------------------------
 
-We are working in the symbolic model of security protocols.  This means
-that we model the messages as terms, built from functions, that satisfy
+We are working in a symbolic model of security protocols.  This means
+that we model messages as terms, built from functions, that satisfy
 an underlying equational theory. This will be explained in detail later.
-But for now note that there are function names, which we explicitly
+But note for now that there are function names, which we explicitly
 declare together with their arity, and equalities that define the
 semantic equivalence of terms, e.g., the decryption of an encrypted
-ciphertext is the original message, when the correct keys are used. We
+ciphertext is the original message when the correct keys are used. We
 generally use lower-case for function names.
 
-We model hashing using the unary function 'h'.
-We model asymmetric encryption by declaring
+As an example,
+we model hashing using the unary function 'h'
+and we model asymmetric encryption by giving declarations for:
 
   * a binary function 'aenc' denoting the asymmetric encryption algorithm,
   * a binary function 'adec' denoting the asymmetric decryption algorithm, and
-  * a unary function 'pk' denoting the algorithm computing a public
-  key from a private key.
+  * a unary function 'pk' denoting the public
+  key corresponding to a private key.
 
 This is done by declaring the function symbols:
 
@@ -65,59 +66,63 @@ The equation
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=16 upper=16}
 ~~~~
 
-models the interaction between calls to these three algorithms by specifying 
-that the decryption of the cyphertext using the correct private key returns the 
-initial plaintext. For more details on user-specified equations see the section 
+models the interaction between calls to these three function symbols
+by specifying that the decryption of the cyphertext using the correct private key returns the 
+initial plaintext. For more details on user-specified equations, see the section 
 on [Cryptographic Messages](004_cryptographic-messages).
 
 
-Modeling the Public Key Infrastructure
+Modeling a Public Key Infrastructure
 --------------------------------------
 
-In Tamarin the protocol and its environment are modeled using *multiset 
+In Tamarin, the protocol and its environment are modeled using *multiset 
 rewriting rules*. The rules operate on the system's state expressed as a 
-multiset of facts. Facts can be seen like predicates storing state information, 
-for example `Out(h(k))` models the fact that the protocol send out the message 
+multiset of facts. Facts can be seen as predicates storing state information. 
+For example, the fact `Out(h(k))` models that the protocol sent out the message 
 `h(k)` on the public channel.
 
 The example starts with the model of a public key infrastructure (PKI). Again, 
-we use facts to store information about the state in their arguments. The rules 
-have a premise and a conclusion, separated by the arrow `-->`. Executing the 
-rule requires that all facts in the premise are present in the current state, 
-and as a result of the execution the facts in the conclusion will be added to 
+we use facts to store information about the state given by their arguments. The rules 
+have a premise and a conclusion, separated by the arrow symbol `-->`. Executing the 
+rule requires that all facts in the premise are present in the current state 
+and, as a result of the execution, the facts in the conclusion will be added to 
 the state, while the premises are removed. Now consider the first rule, 
 modeling the registration of a public key:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=19 upper=22}
 ~~~~
 
-Here the only premise is an instance of the `Fr` fact. The `Fr` fact is a 
-built-in fact. It denotes a freshly generated fresh name, used to model random 
-numbers, i.e., nonces or keys. See later in this manual for details.
+Here the only premise is an instance of the `Fr` fact. The `Fr` fact is
+a built-in fact that denotes a freshly generated fresh name, which is used to
+model random numbers such as nonces or keys. See later in this manual
+for further details. *CAN WE GIVE A REFERENCE HERE.  I.E. "See Section ... for
+further details"*
 
-In Tamarin the sort of variables is expressed using prefixes:
+In Tamarin, the sort of variable is expressed using prefixes:
 
  *    `~x`  denotes  `x:fresh`
  *    `$x`  denotes  `x:pub`
  *    `#i`  denotes  `i:temporal`
  *    `i`   denotes  `i:msg`
 
-and a string constant `'c'` denotes a public name `'c \in PN'`; i.e., a fixed, 
-global constant.
+Moreover, a string constant `'c'` denotes a public name `'c \in PN'`, which is
+a fixed, global constant.
 
-Thus, the above rule can be read as follows. First, freshly generate a
-fresh name `~ltk` of sort fresh, the new private key, and nondeterministically 
-choose a public name `A`, the agent for which we are generating the key-pair.
-Then, generate the fact `!Ltk($A, ~ltk)` (`!` denotes that it is persistent, 
-i.e., cannot be consumed), which denotes the association between agent `A` and 
-its private key `~ltk`, and generate the fact `!Pk($A, pk(~ltk))`, which 
-denotes the association between the agent `A` and its public key `pk(~ltk)`.
+The above rule can therefore be read as follows. First, freshly generate
+a fresh name `~ltk` of sort fresh, which is the new private key, and
+nondeterministically choose a public name `A`, for the agent for whom we
+are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
+(the exclamation mark `!` denotes that the fact is persistent, i.e., it
+is never consumed), which
+denotes the association between agent `A` and its private key `~ltk`,
+and generate the fact `!Pk($A, pk(~ltk))`, which associates
+agent `A` and its public key `pk(~ltk)`.
 
 In the example, we allow the adversary to retrieve any public key using the 
-following rule. Intuitively, it just reads a public-key database entry and
-sends the public key to the network using the built-in fact `Out`
-denoting a message sent to the network (see the section on protocol 
-specification for more information):
+following rule. Essentially, it reads a public-key database entry and
+sends the public key to the network using the built-in fact `Out`,
+which denotes sending a message to the network (see the section on protocol 
+specification for more information):*ADD SECTION REFERENCE*
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=24 upper=27}
 ~~~~
@@ -148,25 +153,24 @@ We model it using the following three rules.
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=34 upper=65}
 ~~~~
 
-First of all note that Tamarin uses C-style comments, so everything between 
-`/*` and `*/` or the line following `//` is a comment. 
-
-The first rule models the client sending its message, while the second
+Here, the first rule models the client sending its message, while the second
 rule models it receiving a response. The third rule models the server,
 both receiving the message and responding in one single rule.
 
-We also model that the server explicitly checks that the first
+Several explanations are in order.
+First, Tamarin uses C-style comments, so everything between 
+`/*` and `*/` or the line following `//` is a comment. 
+Second, we model that the server explicitly checks that the first
 component of the request is equal to `'1'`. We model this by logging
-the claimed equality and then adapting the security property such that
+the claimed equality and then adapting the security property so that
 it only considers traces where all `Eq` actions occur with two equal
 arguments.
+Finally, we log the session-key setup requests received by servers using an 
+action to allow the formalization of the authentication property for the
+client later.
 
-Note that we log the session-key setup requests received by servers using an 
-action to allow formalizing the authentication property for the client later on.
-
-
-Modeling the security properties
---------------------------------
+Modeling security properties
+---------------------------
 
 The security properties are defined over traces of the action facts of
 a protocol execution.
