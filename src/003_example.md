@@ -18,58 +18,47 @@ by proving that, from the client's perspective, the freshly
 generated key is secret provided that the server is uncompromised.
 
 The protocol's Tamarin model and its security properties are given in 
-the file [Tutorial.spthy](code/Tutorial.spthy) (`.spthy` stands for *security 
-protocol theory*). The Tamarin file starts with `theory` followed by the 
-theory's name, here `Tutorial`.  
+the file [Tutorial.spthy](../code/Tutorial.spthy) (`.spthy` stands for 
+*security protocol theory*). The Tamarin file starts with `theory` followed by 
+the theory's name, here `Tutorial`.  
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=12 upper=13}
 ~~~~
 
-After the keyword `begin`, we first declare function symbols and the
-equations that these functions satisfy. The functions and equations
-describe the cryptographic primitives used in the protocol and their
-properties. Afterward, we declare multiset rewriting rules that model
+After the keyword `begin`, we first declare the cryptographic primitives the 
+protocol uses. Afterward, we declare multiset rewriting rules that model
 the protocol and finally we write the properties to be proven (called
 `lemmas'), which specify the protocol's desired security properties.
 Note that we have also inserted comments to structure the theory.
 
 We next explain in detail the protocol modeled above.
 
-Function Signature and Equational Theory
-----------------------------------------
+Cryptographic primitives
+------------------------
 
 We are working in a symbolic model of security protocols.  This means
 that we model messages as terms, built from functions, that satisfy
-an underlying equational theory. This will be explained in detail later.
-But note for now that there are function names, which we explicitly
-declare together with their arity, and equalities that define the
-semantic equivalence of terms, e.g., the decryption of an encrypted
-ciphertext is the original message when the correct keys are used. We
-generally use lower-case for function names.
+an underlying equational theory describing their properties. This will be 
+explained in detail in part on [Cryptographic 
+Messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
-As an example,
-we model hashing using the unary function 'h'
-and we model asymmetric encryption by giving declarations for:
-
-  * a binary function 'aenc' denoting the asymmetric encryption algorithm,
-  * a binary function 'adec' denoting the asymmetric decryption algorithm, and
-  * a unary function 'pk' denoting the public
-  key corresponding to a private key.
-
-This is done by declaring the function symbols:
+In this example, we simply use the pre-defined functions for hashing and 
+asymmetric-encryption, declared in the following line:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=15 upper=15}
 ~~~~
 
-The equation 
+These built-ins give us
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=16 upper=16}
-~~~~
+  * a unary function `h`, denoting a cryptographic hash function
+  * a binary function `aenc` denoting the asymmetric encryption algorithm,
+  * a binary function `adec` denoting the asymmetric decryption algorithm, and
+  * a unary function `pk` denoting the public key corresponding to a private 
+  key.
 
-models the interaction between calls to these three function symbols
-by specifying that the decryption of the cyphertext using the correct private key returns the 
-initial plaintext. For more details on user-specified equations, see the section 
-on [Cryptographic Messages](004_cryptographic-messages.html#sec:cryptographic-messages).
+Moreover the built-in also specifies that the decryption of the cyphertext 
+using the correct private key returns the initial plaintext, i.e., 
+`adec(aenc(m, pk(sk)), sk)` is reduced to `m`.
 
 
 Modeling a Public Key Infrastructure
@@ -89,14 +78,14 @@ and, as a result of the execution, the facts in the conclusion will be added to
 the state, while the premises are removed. Now consider the first rule, 
 modeling the registration of a public key:
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=19 upper=22}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=18 upper=21}
 ~~~~
 
 Here the only premise is an instance of the `Fr` fact. The `Fr` fact is
 a built-in fact that denotes a freshly generated fresh name, which is used to
-model random numbers such as nonces or keys. See later in this manual
-for further details. *CAN WE GIVE A REFERENCE HERE.  I.E. "See Section ... for
-further details"*
+model random numbers such as nonces or keys (see [Model 
+Specification](005_protocol-specification.html#sec:model-specification) for 
+details).
 
 In Tamarin, the sort of variable is expressed using prefixes:
 
@@ -121,13 +110,12 @@ agent `A` and its public key `pk(~ltk)`.
 In the example, we allow the adversary to retrieve any public key
 using the following rule. Essentially, it reads a public-key database
 entry and sends the public key to the network using the built-in fact
-`Out`, which denotes sending a message to the network, see the):
-[section on model
-specification](005_protocol-specification.html#sec:model-specification)
-for more information.
+`Out`, which denotes sending a message to the network (see the section on 
+[Model Specification](005_protocol-specification.html#sec:model-specification)
+for more information).
 
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=24 upper=27}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=23 upper=26}
 ~~~~
 
 We model the dynamic compromise of long-term private keys using the
@@ -140,7 +128,7 @@ the action `LtkReveal` is used below to determine which agents are compromised.
 The rule now has a premise, conclusion, and action facts within the arrow: `--[ 
 FACT ]->`:
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=29 upper=32}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=28 upper=31}
 ~~~~
 
 Modeling the protocol
@@ -153,22 +141,16 @@ Recall the Alice-and-Bob notation of the protocol we want to model:
 
 We model it using the following three rules.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=34 upper=65}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=33 upper=59}
 ~~~~
 
 Here, the first rule models the client sending its message, while the second
 rule models it receiving a response. The third rule models the server,
 both receiving the message and responding in one single rule.
 
-Several explanations are in order.
-First, Tamarin uses C-style comments, so everything between 
-`/*` and `*/` or the line following `//` is a comment. 
-Second, we model that the server explicitly checks that the first
-component of the request is equal to `'1'`. We model this by logging
-the claimed equality and then adapting the security property so that
-it only considers traces where all `Eq` actions occur with two equal
-arguments.
-Finally, we log the session-key setup requests received by servers using an 
+Several explanations are in order. First, Tamarin uses C-style comments, so 
+everything between  `/*` and `*/` or the line following `//` is a comment. 
+Second, we log the session-key setup requests received by servers using an 
 action to allow the formalization of the authentication property for the
 client later.
 
@@ -178,18 +160,7 @@ Modeling security properties
 Security properties are defined over traces of the action facts of
 a protocol execution.
 
-First, we specify an additional axiom that restricts the set of traces
-considered. In this example, we restrict our attention to traces where
-all equality checks succeed. In detail, the following axiom says that for
-all parameters `x`, `y` to the `Eq` action fact at some time point `i`,
-it must be the case that `x=y`.
-
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=68 upper=68}
-~~~~
-
-Note that the order between axioms and lemmas does not matter. All
-axioms are always available/assumed in the proofs of all security
-properties. Now we have two lemmas, the first on the secrecy of session
+We have two lemmas, the first on the secrecy of session
 key secrecy from the client point of view. The lemma
 `Client_session_key_secrecy` says that it cannot be that a client has
 set up a session key `k` with a server `S` and the adversary learned
@@ -200,7 +171,7 @@ that the clients have setup with a server `S`, there must be a server
 that has answered the request or the adversary has previously performed
 a long-term key reveal on `S`.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=70 upper=94}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=62 upper=86}
 ~~~~
 
 Note that we can also strengthen the authentication property to a version of
@@ -210,7 +181,7 @@ of counting. For most protocols that guarantee injective authentication, one
 can also prove such a uniqueness claim, as they agree on appropriate fresh
 data. This is shown in lemma `Client_auth_injective`.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=96 upper=110}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=88 upper=102}
 ~~~~
 
 To ensure that our lemmas do not just hold vacuously because the model
@@ -220,26 +191,21 @@ but with the `exists-trace` keyword, as seen in the lemma
 `Client_session_key_honest_setup` below. This keyword says that the
 lemma is true if there *exists* a trace on which the formula holds; this
 is in contrast to the previous lemmas where we required the formula to
-hold on *all* traces.
+hold on *all* traces. When modeling protocols, such existence proofs are useful 
+sanity checks.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=112 upper=117}
+
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=104 upper=109}
 ~~~~
-
-Note that when inconsistent axioms are given, one can prove any
-property. To check that the axioms are consistent, i.e., 
-there still are traces, we always want an
-`exists-trace` lemma. When modeling protocols, such existence proofs are
-useful sanity checks.
-
 
 Graphical User Interface
 ------------------------
 
-If you call
+How do you now prove that your lemmas are correct? If you call
 
     tamarin-prover interactive Tutorial.spthy
 
-you will then see the following output on the command line
+you will then see the following output on the command line:
 
     GraphViz tool: 'dot'
      checking version: dot - graphviz version 2.39.20150613.2112 (20150613.2112). OK.
@@ -259,13 +225,11 @@ you will then see the following output on the command line
 
 If there were any syntax or wellformedness errors (for example if the same fact 
 is used with different arities an error would be displayed)
-the would be displayed at this point.  Howevever, there are none in the 'Tutorial'. See later
-*REFERENCE SECTION* for details on 
-how to deal with such errors.
+the would be displayed at this point. Howevever, there are none in our example. 
+See later *REFERENCE SECTION* for details on how to deal with such errors.
 
-*THIS PARAGRAPH SEEMS OUT OF PLACE.  FLOW UNCLEAR.*
-This will start a web-server that loads all security protocol theories in the
-same directory as Tutorial.spthy. Point your browser to
+The above command will start a web-server that loads all security protocol 
+theories in the same directory as Tutorial.spthy. Point your browser to
 
 <http://localhost:3001>
 
