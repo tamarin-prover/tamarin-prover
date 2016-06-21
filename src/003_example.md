@@ -303,12 +303,12 @@ On the right side, you can now see the message theory, starting with
 the so-called *Signature*, which consists of all the functions and equations you
 defined. Note that Tamarin automatically adds a function `pair` to
 create pairs, and the functions `fst` and `snd` together with two
-equations to access the first and second value of a pair. There is a
+equations to access the first and second parts of a pair. There is a
 shorthand for the `pair` using `<` and `>`, which is used here for
 example for `fst(<x.1, x.2>)`.
 
 Just below come the *Construction rules*. These rules describe which functions the 
-intruder can apply. Consider for example the following rule:
+intruder can apply. Consider, for example, the following rule:
 
     rule (modulo AC) ch:
      [ !KU( x ) ] --[ !KU( h(x) ) ]-> [ !KU( h(x) ) ]
@@ -319,14 +319,15 @@ by the fact `!KU(x)` in the premise), then he can compute `h(x)`
 hash of `x`. The action fact `!KU(h(x))` in the label also records this
 for reasoning purposes.
 
-Finally, there are the *Deconstruction rules* which describe which terms the 
+Finally, there are the *Deconstruction rules*. These rules
+describe which terms the 
 intruder can extract from larger terms by applying functions. Consider for 
 example the following rule:
 
     rule (modulo AC) dfst:
      [ !KD( <x.1, x.2> ) ] --> [ !KD( x.1 ) ]
 
-In a nutshell this rule says that if the intruder knows the pair `<x.1, x.2>` 
+In a nutshell, this rule says that if the intruder knows the pair `<x.1, x.2>` 
 (represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
 value `x.1` (represented by the fact `!KD( x.1 )`) from it. This stems from 
 the applying `fst` to the pair and then using the equation 
