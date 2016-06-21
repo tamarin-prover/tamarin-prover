@@ -133,7 +133,14 @@ instantiations that are irrelevant for tracing such facts.
 For these two reasons, we introduce persistent facts. These are never removed
 from the state, and we denote them by prefixing the fact with a bang (`!`).
 
+FIX: use the following paragraph
 
+Facts always start with an upper-case letter and do not have to be
+declared explicitely. If their name is prefixed with an exclamation mark `!`,
+then they are persistent. Otherwise, they are linear. Note that every
+fact name must be used consistently; i.e., it must always be used with
+the same arity, casing, and multiplicity. Otherwise, Tamarin complains
+that the theory is not wellformed.
 
 Modeling protocols
 ------------------
