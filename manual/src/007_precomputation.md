@@ -107,3 +107,6 @@ with an axiom. But, we need to ensure that the resulting model is the
 one we want, so use this with care.
 
 
+TODO:
+      * Typing lemmas in particular - how to tell when one would help, the
+        best way to write one, and what you can’t prove in a typing lemma
