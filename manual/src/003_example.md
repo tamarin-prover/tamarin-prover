@@ -346,19 +346,19 @@ Rules](../images/tamarin-tutorial-multiset-rules.jpg
  "Tutorial Multiset Rewriting Rules")
 
 On the right side of the screen are the protocol's 
-rewriting rules, plus two additional rules: the `isend` and `irecv`
-rules. These two additional rules provide an interface between the protocols output and input
+rewriting rules, plus two additional rules:  `isend` and `irecv`.
+These two extra rules provide an interface between the protocols output and input
 and the intruder deduction.
-The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` the intruder knows, 
+The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` that the intruder knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
 output `Out(x)` and passes it to the intruder knowledge, represented by the 
 `!KD(x)` fact. Note that the rule `Serv_1` from the protocol has three 
-*variants (modulo AC)*. The precise meaning of this is not important right now 
+*variants (modulo AC)*. The precise meaning of this is unimportant right now 
 (it stems from the way Tamarin deals with equations) and will be explained in 
 the 
 [section on cryptographic messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
-Just below you have the list of all axioms. In this example there is
+Just below is the list of all axioms. In this example, there is
 only the one axiom `Equality_Checks_Succeed`.
 
 Now click on `Untyped case distinctions (10 cases, all chains solved)` to see 
@@ -372,8 +372,8 @@ To improve the efficiency of its internal reasoning, Tamarin precomputes case
 distinctions. A case distinction gives all possible sources for a fact, i.e., 
 all rules (or combinations of rules) that produce this fact, and can then be 
 used during Tamarin's backward search. These case distinctions are 
-then used to avoid computing the same thing again and again. On the right hand 
-side you can now see the result of the precomputations for our Tutorial theory.
+used to avoid repeatedly computing the same things. On the right hand 
+side is the result of the precomputations for our Tutorial theory.
 
 For example, here Tamarin tells us that there is one possible source of the 
 fact `!Ltk( t.1, t.2 )`, namely the rule `Register_pk`. The image shows the 
@@ -384,9 +384,9 @@ of only one rule instance, but there can be potentially multiple rule
 instances, and multiple cases inside the case distinction, as in the following 
 images.
 
-The technical information given below the image is not important for now, it 
-gives details about how the case distinction was computed and if there are 
-other constraints such as equations or substitutions which still need to be 
+The technical information given below the image is unimportant for now, it 
+provides details about how the case distinction was computed and if there are 
+other constraints such as equations or substitutions that still must be 
 resolved.
 
 ![Tutorial Case Distinctions 1 of 
@@ -406,16 +406,17 @@ the necessary `!Ltk` fact. The other two sources are given below.
  "Tutorial Case Distinctions 3 of 3")
  
 Now we will see how to prove lemmas in the interactive mode. For that, click on 
-the `sorry` (indicating that the proof has not been started) after the first 
+`sorry` (indicating that the proof has not been started) after the first 
 lemma in the left frame to obtain the following screen:
 
 ![Tutorial Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
  "Tutorial Lemma 1")
 
-Tamarin proves lemmas using constraint solving, i.e., by refining the knowledge 
+Tamarin proves lemmas using constraint solving.
+Namely, it refines the knowledge 
 it has about the property and the protocol (called a *constraint system*) until 
 it can either conclude that the property holds in all possible cases, or until 
-it finds a counterexample invalidating the lemma.
+it finds a counterexample to the lemma.
 
 On the right we now have the possible proof steps at the top, and the current 
 state of the constraint system just below (which is empty, as we haven't 
