@@ -117,3 +117,9 @@ The identities `I` and `R` can be instantiated by any concrete agent identity,
 modeled as public names.
 
 
+
+
+
+There is a
+shorthand for the `pair` using `<` and `>` which is right-associative
+and allows one to write `<a,b,c>` to represent `pair(a,pair(b,c))`.
