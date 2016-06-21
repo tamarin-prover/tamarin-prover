@@ -28,10 +28,10 @@ the theory's name, here `FirstExample`.
 After the keyword `begin`, we first declare the cryptographic primitives the 
 protocol uses. Afterward, we declare multiset rewriting rules that model
 the protocol and finally we write the properties to be proven (called
-`lemmas'), which specify the protocol's desired security properties.
+"lemmas"), which specify the protocol's desired security properties.
 Note that we have also inserted comments to structure the theory.
 
-We next explain in detail the protocol modeled above.
+We next explain in detail the protocol model.
 
 Cryptographic primitives
 ------------------------
@@ -39,7 +39,7 @@ Cryptographic primitives
 We are working in a symbolic model of security protocols.  This means
 that we model messages as terms, built from functions, that satisfy
 an underlying equational theory describing their properties. This will be 
-explained in detail in part on [Cryptographic 
+explained in detail in the part on [Cryptographic 
 Messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
 In this example, we simply use the pre-defined functions for hashing and 
@@ -56,7 +56,7 @@ These built-ins give us
   * a unary function `pk` denoting the public key corresponding to a private 
   key.
 
-Moreover the built-in also specifies that the decryption of the cyphertext 
+Moreover the built-in also specifies that the decryption of the ciphertext 
 using the correct private key returns the initial plaintext, i.e., 
 `adec(aenc(m, pk(sk)), sk)` is reduced to `m`.
 
@@ -87,22 +87,24 @@ model random numbers such as nonces or keys (see [Model
 Specification](005_protocol-specification.html#sec:model-specification) for 
 details).
 
-In Tamarin, the sort of variable is expressed using prefixes:
+In Tamarin, the sort of a variable is expressed using prefixes:
 
  *    `~x`  denotes  `x:fresh`
  *    `$x`  denotes  `x:pub`
  *    `#i`  denotes  `i:temporal`
- *    `i`   denotes  `i:msg`
+ *    `m`   denotes  `m:msg`
 
-Moreover, a string constant `'c'` denotes a public name `'c \in PN'`, which is
-a fixed, global constant.
+Moreover, a string constant `'c'` denotes a public name in `pub`,
+which is a fixed, global constant. We have a top sort `msg` and two
+incomparable subsorts `fresh` and `pub` of that top sort. Timepoint
+variables of sort `temporal` are unconnected.
 
-The above rule can therefore be read as follows. First, freshly generate
-a fresh name `~ltk` of sort fresh, which is the new private key, and
+The above rule can therefore be read as follows. First, generate
+a fresh name `~ltk` (of sort fresh), which is the new private key, and
 nondeterministically choose a public name `A`, for the agent for whom we
 are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
 (the exclamation mark `!` denotes that the fact is persistent, i.e., it
-is never consumed), which
+can be consumed arbitrarily often), which
 denotes the association between agent `A` and its private key `~ltk`,
 and generate the fact `!Pk($A, pk(~ltk))`, which associates
 agent `A` and its public key `pk(~ltk)`.
@@ -121,11 +123,11 @@ We model the dynamic compromise of long-term private keys using the
 following rule. Intuitively, it reads a private-key database entry and
 sends it to the adversary. This rule has an observable `LtkReveal`
 action stating that the long-term key of agent `A` was compromised. Action facts 
-are just like facts, but instead of the other facts do not appear in state, 
+are just like facts, but unlike the other facts do not appear in state, 
 but only on the trace. The security properties are specified on the traces, and 
 the action `LtkReveal` is used below to determine which agents are compromised. 
 The rule now has a premise, conclusion, and action facts within the arrow: `--[ 
-FACT ]->`:
+ACTIONFACT ]->`:
 
 ~~~~ {.tamarin slice="code/FirstExample.spthy" lower=28 upper=31}
 ~~~~
@@ -224,7 +226,7 @@ you will then see the following output on the command line:
 
 If there were any syntax or wellformedness errors (for example if the same fact 
 is used with different arities an error would be displayed)
-the would be displayed at this point. Howevever, there are none in our example. 
+they would be displayed at this point. Howevever, there are none in our example. 
 See the part on [Modeling Issues](008_modeling-issues.html#sec:modeling-issues) 
 for details on how to deal with such errors.
 
@@ -237,9 +239,12 @@ and you will see the following welcome screen:
 
 ![Tamarin Web Interface](../images/tamarin-welcome.jpg "Welcome Screen")
 
-The table in the middle shows all loaded theories. You can either click on a 
-theory to explore it and prove your security properties, or upload further 
-theories using the upload form below.
+The table in the middle shows all loaded theories. You can either
+click on a theory to explore it and prove your security properties, or
+upload further theories using the upload form at the bottom. Do note
+that no warnings will be displayed if you use the GUI in such a manner
+to load further theories, so we do recommend starting Tamarin from the
+command line in the appropriate directory.
 
 If you click on the 'FirstExample' entry in the table of loaded theories, you 
 should see the following:
