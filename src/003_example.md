@@ -470,3 +470,10 @@ attached (dis)proofs:
       Client_auth_injective (all-traces): verified (15 steps)
       Client_session_key_honest_setup (exists-trace): verified (5 steps)
 
+Complete Example
+----------------
+
+Here is the complete input file:
+
+~~~~ {.tamarin include="code/Tutorial.spthy"}
+~~~~
