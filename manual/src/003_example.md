@@ -269,7 +269,7 @@ you will then see the following output on the command line
 
     21/Jun/2016:09:16:01 +0200 [Info#yesod-core] Application launched @(yesod_83PxojfItaB8w9Rj9nFdZm:Yesod.Core.Dispatch ./Yesod/Core/Dispatch.hs:157:11)
 
-If there were any syntax r wellformedness errors you would see them at this 
+If there were any syntax or wellformedness errors you would see them at this 
 point, but there are none in the 'Tutorial'. See later for details on how to 
 deal with such errors.
     
