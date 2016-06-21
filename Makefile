@@ -6,7 +6,11 @@ STYLE = css/style.css
 ifdef USE_FILTER
   FILTER = --filter includes.hs
 else
-  FILTER =
+  ifdef USE_STACK_FILTER
+    FILTER = --filter ./includes
+  else
+    FILTER =
+  endif
 endif
 
 ifdef MATHJAX_LOCAL
@@ -42,6 +46,9 @@ simple:
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
 	  -o tex/tamarin-manual.tex $(SRC)
 	make -C tex
+
+includes:
+	stack ghc -- --make includes.hs -o includes
 
 clean:
 	-rm book/*.html *.pdf
