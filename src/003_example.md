@@ -18,11 +18,11 @@ by proving that, from the client's perspective, the freshly
 generated key is secret provided that the server is uncompromised.
 
 The protocol's Tamarin model and its security properties are given in 
-the file [Tutorial.spthy](../code/Tutorial.spthy) (`.spthy` stands for 
+the file [FirstExample.spthy](../code/FirstExample.spthy) (`.spthy` stands for 
 *security protocol theory*). The Tamarin file starts with `theory` followed by 
-the theory's name, here `Tutorial`.  
+the theory's name, here `FirstExample`.  
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=12 upper=13}
+~~~~ {.tamarin slice="code/FirstExample.spthy" lower=12 upper=13}
 ~~~~
 
 After the keyword `begin`, we first declare the cryptographic primitives the 
@@ -45,7 +45,7 @@ Messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 In this example, we simply use the pre-defined functions for hashing and 
 asymmetric-encryption, declared in the following line:
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=15 upper=15}
+~~~~ {.tamarin slice="code/FirstExample.spthy" lower=15 upper=15}
 ~~~~
 
 These built-ins give us
@@ -78,7 +78,7 @@ and, as a result of the execution, the facts in the conclusion will be added to
 the state, while the premises are removed. Now consider the first rule, 
 modeling the registration of a public key:
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=18 upper=21}
+~~~~ {.tamarin slice="code/FirstExample.spthy" lower=18 upper=21}
 ~~~~
 
 Here the only premise is an instance of the `Fr` fact. The `Fr` fact is
@@ -114,7 +114,7 @@ entry and sends the public key to the network using the built-in fact
 [Model Specification](005_protocol-specification.html#sec:model-specification)
 for more information).
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=23 upper=26}
+~~~~ {.tamarin slice="code/FirstExample.spthy" lower=23 upper=26}
 ~~~~
 
 We model the dynamic compromise of long-term private keys using the
@@ -127,7 +127,7 @@ the action `LtkReveal` is used below to determine which agents are compromised.
 The rule now has a premise, conclusion, and action facts within the arrow: `--[ 
 FACT ]->`:
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=28 upper=31}
+~~~~ {.tamarin slice="code/FirstExample.spthy" lower=28 upper=31}
 ~~~~
 
 Modeling the protocol
@@ -140,7 +140,7 @@ Recall the Alice-and-Bob notation of the protocol we want to model:
 
 We model it using the following three rules.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=33 upper=59}
+~~~~ {.tamarin slice="code/FirstExample.spthy" lower=33 upper=59}
 ~~~~
 
 Here, the first rule models the client sending its message, while the second
@@ -170,7 +170,7 @@ that the clients have setup with a server `S`, there must be a server
 that has answered the request or the adversary has previously performed
 a long-term key reveal on `S`.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=62 upper=86}
+~~~~ {.tamarin slice="code/FirstExample.spthy" lower=62 upper=86}
 ~~~~
 
 Note that we can also strengthen the authentication property to a version of
@@ -180,7 +180,7 @@ of counting. For most protocols that guarantee injective authentication, one
 can also prove such a uniqueness claim, as they agree on appropriate fresh
 data. This is shown in lemma `Client_auth_injective`.
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=88 upper=102}
+~~~~ {.tamarin slice="code/FirstExample.spthy" lower=88 upper=102}
 ~~~~
 
 To ensure that our lemmas do not just hold vacuously because the model
@@ -194,7 +194,7 @@ hold on *all* traces. When modeling protocols, such existence proofs are useful
 sanity checks.
 
 
-~~~~ {.tamarin slice="code/Tutorial.spthy" lower=104 upper=109}
+~~~~ {.tamarin slice="code/FirstExample.spthy" lower=104 upper=109}
 ~~~~
 
 Graphical User Interface
@@ -202,7 +202,7 @@ Graphical User Interface
 
 How do you now prove that your lemmas are correct? If you call
 
-    tamarin-prover interactive Tutorial.spthy
+    tamarin-prover interactive FirstExample.spthy
 
 you will then see the following output on the command line:
 
@@ -228,7 +228,7 @@ the would be displayed at this point. Howevever, there are none in our example.
 See later *REFERENCE SECTION* for details on how to deal with such errors.
 
 The above command will start a web-server that loads all security protocol 
-theories in the same directory as Tutorial.spthy. Point your browser to
+theories in the same directory as FirstExample.spthy. Point your browser to
 
 <http://localhost:3001>
 
@@ -240,10 +240,11 @@ The table in the middle shows all loaded theories. You can either click on a
 theory to explore it and prove your security properties, or upload further 
 theories using the upload form below.
 
-If you click on the 'Tutorial' entry in the table of loaded theories, you 
+If you click on the 'FirstExample' entry in the table of loaded theories, you 
 should see the following:
 
-![Tutorial Theory Overview](../images/tamarin-tutorial-overview.jpg "Tutorial 
+![FirstExample Theory Overview](../images/tamarin-tutorial-overview.jpg 
+"FirstExample 
 Theory Overview")
 
 On the left hand side, you see the theory: links to the message theory 
@@ -262,8 +263,8 @@ graph visualisation (see below for examples).
 
 If you click on `Message theory` on the left, you should see the following:
 
-![Tutorial Message Theory](../images/tamarin-tutorial-message-theory.jpg 
- "Tutorial Message Theory")
+![FirstExample Message Theory](../images/tamarin-tutorial-message-theory.jpg 
+ "FirstExample Message Theory")
  
 On the right side, you can now see the message theory, starting with
 the so-called *Signature*, which consists of all the functions and equations you
@@ -304,9 +305,9 @@ make the tool's reasoning more efficient.
 
 Now click on *Multiset rewriting rules and axioms* on the left.
 
-![Tutorial Multiset Rewriting 
+![FirstExample Multiset Rewriting 
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
- "Tutorial Multiset Rewriting Rules")
+ "FirstExample Multiset Rewriting Rules")
 
 On the right side of the screen are the protocol's 
 rewriting rules, plus two additional rules:  `isend` and `irecv`.
@@ -327,16 +328,16 @@ only the one axiom `Equality_Checks_Succeed`.
 Now click on `Untyped case distinctions (10 cases, all chains solved)` to see 
 the following:
 
-![Tutorial Case Distinctions 
+![FirstExample Case Distinctions 
 Rules](../images/tamarin-tutorial-case-distinctions.jpg 
- "Tutorial Case Distinctions")
+ "FirstExample Case Distinctions")
  
 To improve the efficiency of its internal reasoning, Tamarin precomputes case 
 distinctions. A case distinction gives all possible sources for a fact, i.e., 
 all rules (or combinations of rules) that produce this fact, and can then be 
 used during Tamarin's backward search. These case distinctions are 
 used to avoid repeatedly computing the same things. On the right hand 
-side is the result of the precomputations for our Tutorial theory.
+side is the result of the precomputations for our FirstExample theory.
 
 For example, here Tamarin tells us that there is one possible source of the 
 fact `!Ltk( t.1, t.2 )`, namely the rule `Register_pk`. The image shows the 
@@ -352,28 +353,28 @@ provides details about how the case distinction was computed and if there are
 other constraints such as equations or substitutions that still must be 
 resolved.
 
-![Tutorial Case Distinctions 1 of 
+![FirstExample Case Distinctions 1 of 
 3](../images/tamarin-tutorial-case-distinctions-1.jpg 
- "Tutorial Case Distinctions 1 of 3")
+ "FirstExample Case Distinctions 1 of 3")
  
 Here the fact `!KU( ~t.1 )` has three sources, the first one is the rule 
 `Reveal_ltk`, which requires an instance of the rule `Register_pk` to create 
 the necessary `!Ltk` fact. The other two sources are given below.
  
-![Tutorial Case Distinctions 2 of 
+![FirstExample Case Distinctions 2 of 
 3](../images/tamarin-tutorial-case-distinctions-2.jpg 
- "Tutorial Case Distinctions 2 of 3")
+ "FirstExample Case Distinctions 2 of 3")
 
-![Tutorial Case Distinctions 3 of 
+![FirstExample Case Distinctions 3 of 
 3](../images/tamarin-tutorial-case-distinctions-3.jpg 
- "Tutorial Case Distinctions 3 of 3")
+ "FirstExample Case Distinctions 3 of 3")
  
 Now we will see how to prove lemmas in the interactive mode. For that, click on 
 `sorry` (indicating that the proof has not been started) after the first 
 lemma in the left frame to obtain the following screen:
 
-![Tutorial Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
- "Tutorial Lemma 1")
+![FirstExample Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
+ "FirstExample Lemma 1")
 
 Tamarin proves lemmas using constraint solving.
 Namely, it refines the knowledge 
@@ -390,8 +391,8 @@ generates the necessary constraints to prove the lemma using induction on the
 length of the trace. Here we use the default strategy, i.e., a simplification 
 step by clicking on `1. simplify`, to obtain the following screen:
  
-![Tutorial Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpg 
- "Tutorial Lemma 1 Step 1")
+![FirstExample Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpg 
+ "FirstExample Lemma 1 Step 1")
 
 Tamarin has now translated the lemma into a constraint system. Since
 Tamarin looks for counterexamples to the lemma, it looks for a protocol
@@ -415,8 +416,9 @@ will result in the same proof as the one constructed by the 'autoprover'.
 In both cases we end with the following final state, where the constructed 
 graph leads to a contradiction as it contains `LtkReveal( S )`:
 
-![Tutorial Lemma 1 Finished](../images/tamarin-tutorial-lemma-1-finished.jpg 
- "Tutorial Lemma 1 Finished")
+![FirstExample Lemma 1 
+Finished](../images/tamarin-tutorial-lemma-1-finished.jpg 
+ "FirstExample Lemma 1 Finished")
  
 The lemma is now colored in green as it was successfully proven. If we had 
 found a counterexample, it would be colored in red. You can prove the other 
@@ -427,24 +429,24 @@ Running Tamarin on the Command Line
 
 The call
 
-    tamarin-prover Tutorial.spthy
+    tamarin-prover FirstExample.spthy
 
-parses the `Tutorial.spthy` file, checks its wellformedness, 
+parses the `FirstExample.spthy` file, checks its wellformedness, 
 and pretty-prints the theory. The declaration of the signature and the 
 equations can be found at the top of the pretty-printed theory.
 
 Proving all lemmas contained in the theory using the automatic prover is as 
 simple as adding the flag `--prove` to the call; i.e.,
 
-    tamarin-prover Tutorial.spthy --prove
+    tamarin-prover FirstExample.spthy --prove
 
 This will first output some logging from the constraint solver and
-then the Tutorial security protocol theory with the lemmas and their
+then the FirstExample security protocol theory with the lemmas and their
 attached (dis)proofs:
 
     summary of summaries:
     
-    analyzed: Tutorial.spthy
+    analyzed: FirstExample.spthy
     
       Client_session_key_secrecy (all-traces): verified (5 steps)
       Client_auth (all-traces): verified (11 steps)
@@ -456,5 +458,5 @@ Complete Example
 
 Here is the complete input file:
 
-~~~~ {.tamarin include="code/Tutorial.spthy"}
+~~~~ {.tamarin include="code/FirstExample.spthy"}
 ~~~~
