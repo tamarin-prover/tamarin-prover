@@ -110,18 +110,19 @@ a fixed, global constant.
 
 The above rule can therefore be read as follows. First, freshly generate
 a fresh name `~ltk` of sort fresh, which is the new private key, and
-nondeterministically choose a public name `A`, the agent for which we
+nondeterministically choose a public name `A`, for the agent for whom we
 are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
-(`!` denotes that it is persistent, i.e., cannot be consumed), which
+(the exclamation mark `!` denotes that the fact is persistent, i.e., it
+is never consumed), which
 denotes the association between agent `A` and its private key `~ltk`,
-and generate the fact `!Pk($A, pk(~ltk))`, which denotes the association
-between the agent `A` and its public key `pk(~ltk)`.
+and generate the fact `!Pk($A, pk(~ltk))`, which associates
+agent `A` and its public key `pk(~ltk)`.
 
 In the example, we allow the adversary to retrieve any public key using the 
-following rule. Intuitively, it just reads a public-key database entry and
-sends the public key to the network using the built-in fact `Out`
-denoting a message sent to the network (see the section on protocol 
-specification for more information):
+following rule. Essentially, it reads a public-key database entry and
+sends the public key to the network using the built-in fact `Out`,
+which denotes sending a message to the network (see the section on protocol 
+specification for more information):*ADD SECTION REFERENCE*
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=24 upper=27}
 ~~~~
@@ -152,50 +153,49 @@ We model it using the following three rules.
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=34 upper=65}
 ~~~~
 
-First of all note that Tamarin uses C-style comments, so everything between 
-`/*` and `*/` or the line following `//` is a comment. 
-
-The first rule models the client sending its message, while the second
+Here, the first rule models the client sending its message, while the second
 rule models it receiving a response. The third rule models the server,
 both receiving the message and responding in one single rule.
 
-We also model that the server explicitly checks that the first
+Several explanations are in order.
+First, Tamarin uses C-style comments, so everything between 
+`/*` and `*/` or the line following `//` is a comment. 
+Second, we model that the server explicitly checks that the first
 component of the request is equal to `'1'`. We model this by logging
-the claimed equality and then adapting the security property such that
+the claimed equality and then adapting the security property so that
 it only considers traces where all `Eq` actions occur with two equal
 arguments.
+Finally, we log the session-key setup requests received by servers using an 
+action to allow the formalization of the authentication property for the
+client later.
 
-Note that we log the session-key setup requests received by servers using an 
-action to allow formalizing the authentication property for the client later on.
+Modeling security properties
+---------------------------
 
-
-Modeling the security properties
---------------------------------
-
-The security properties are defined over traces of the action facts of
+Security properties are defined over traces of the action facts of
 a protocol execution.
 
-First, we specify an additional axiom that restricts the set of considered 
-traces. In this example, we restrict our attention to traces where all equality 
-checks succeed. In detail the following axiom says that for all parameters `x`, 
-`y` to the `Eq` action fact at some time point `i` it has to be the case that 
-`x=y`.
+First, we specify an additional axiom that restricts the set of traces
+considered. In this example, we restrict our attention to traces where
+all equality checks succeed. In detail, the following axiom says that for
+all parameters `x`, `y` to the `Eq` action fact at some time point `i`,
+it must be the case that `x=y`.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=68 upper=68}
 ~~~~
 
 Note that the order between axioms and lemmas does not matter. All
 axioms are always available/assumed in the proofs of all security
-properties. Now we have two lemmas, the first on the secrecy of
-session key secrecy from the client point of view. The lemma
+properties. Now we have two lemmas, the first on the secrecy of session
+key secrecy from the client point of view. The lemma
 `Client_session_key_secrecy` says that it cannot be that a client has
 set up a session key `k` with a server `S` and the adversary learned
 that `k` unless the adversary performed a long-term key reveal on the
-server `S`. The second lemma `Client_auth` specifies client authentication, 
-which is that for all session keys `k` that the clients have setup with a
-server `S` there must be a server that has answered the request, or
-the adversary has performed a long-term key reveal on `S` previously
-in time.
+server `S`. The second lemma `Client_auth` specifies client
+authentication.  This is the statement that, for all session keys `k`
+that the clients have setup with a server `S`, there must be a server
+that has answered the request or the adversary has previously performed
+a long-term key reveal on `S`.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=70 upper=94}
 ~~~~
