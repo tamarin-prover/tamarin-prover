@@ -235,7 +235,16 @@ simple as adding the flag `--prove` to the call; i.e.,
 
 This will first output some logging from the constraint solver and
 then the Tutorial security protocol theory with the lemmas and their
-attached (dis)proofs.
+attached (dis)proofs:
+
+    summary of summaries:
+    
+    analyzed: Tutorial.spthy
+    
+      Client_session_key_secrecy (all-traces): verified (5 steps)
+      Client_auth (all-traces): verified (11 steps)
+      Client_auth_injective (all-traces): verified (15 steps)
+      Client_session_key_honest_setup (exists-trace): verified (5 steps)
 
 
 Graphical User Interface
@@ -456,22 +465,5 @@ graph leads to a contradiction as it contains `LtkReveal( S )`:
  "Tutorial Lemma 1 Finished")
  
 The lemma is now colored in green, as it was successfully proven. If we had 
-found a counterexample, it would be colored in red.
-
-All other properties in the 'Tutorial' can also be proven by Tamarin, just run
-
-     $ tamarin-prover Tutorial.spthy --prove
-
-and you will see this output:
-
-    ==============================================================================
-    summary of summaries:
-    
-    analyzed: Tutorial.spthy
-    
-      Client_session_key_secrecy (all-traces): verified (5 steps)
-      Client_auth (all-traces): verified (11 steps)
-      Client_auth_injective (all-traces): verified (15 steps)
-      Client_session_key_honest_setup (exists-trace): verified (5 steps)
-
-meaning all properties have been verified indeed.
+found a counterexample, it would be colored in red. You can prove the other 
+lemmas in the same way.
