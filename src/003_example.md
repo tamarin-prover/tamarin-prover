@@ -93,7 +93,7 @@ modeling the registration of a public key:
 ~~~~
 
 Here the only premise is an instance of the `Fr` fact. The `Fr` fact is
-a built-in fact that denotes a freshly generated name, which is used to
+a built-in fact that denotes a freshly generated fresh name, which is used to
 model random numbers such as nonces or keys. See later in this manual
 for further details. *CAN WE GIVE A REFERENCE HERE.  I.E. "See Section ... for
 further details"*
@@ -105,16 +105,17 @@ In Tamarin, the sort of variable is expressed using prefixes:
  *    `#i`  denotes  `i:temporal`
  *    `i`   denotes  `i:msg`
 
-and a string constant `'c'` denotes a public name `'c \in PN'`, which is
+Moreover, a string constant `'c'` denotes a public name `'c \in PN'`, which is
 a fixed, global constant.
 
-Thus, the above rule can be read as follows. First, freshly generate a
-fresh name `~ltk` of sort fresh, the new private key, and nondeterministically 
-choose a public name `A`, the agent for which we are generating the key-pair.
-Then, generate the fact `!Ltk($A, ~ltk)` (`!` denotes that it is persistent, 
-i.e., cannot be consumed), which denotes the association between agent `A` and 
-its private key `~ltk`, and generate the fact `!Pk($A, pk(~ltk))`, which 
-denotes the association between the agent `A` and its public key `pk(~ltk)`.
+The above rule can therefore be read as follows. First, freshly generate
+a fresh name `~ltk` of sort fresh, which is the new private key, and
+nondeterministically choose a public name `A`, the agent for which we
+are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
+(`!` denotes that it is persistent, i.e., cannot be consumed), which
+denotes the association between agent `A` and its private key `~ltk`,
+and generate the fact `!Pk($A, pk(~ltk))`, which denotes the association
+between the agent `A` and its public key `pk(~ltk)`.
 
 In the example, we allow the adversary to retrieve any public key using the 
 following rule. Intuitively, it just reads a public-key database entry and
