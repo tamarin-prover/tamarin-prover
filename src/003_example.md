@@ -122,8 +122,7 @@ In the example, we allow the adversary to retrieve any public key
 using the following rule. Essentially, it reads a public-key database
 entry and sends the public key to the network using the built-in fact
 `Out`, which denotes sending a message to the network, see the):
-[section on model
-specification](005_protocol-specification.html#sec:model-specification)
+[section on model specification](005_protocol-specification.html#sec:model-specification)
 for more information.
 
 
