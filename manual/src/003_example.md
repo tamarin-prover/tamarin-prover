@@ -66,11 +66,8 @@ The equation
 
 models the interaction between calls to these three algorithms by specifying 
 that the decryption of the cypertext using the correct private key returns the 
-initial plaintext. All such user-specified equations must be subterm-convergent 
-rewriting rules, when oriented from left to right. This means that the 
-right-hand-side must be a subterm of the left-hand-side (here: `m`) or a nullary 
-function symbol (a constant), see the section on [Equational
-Theory](004_cryptographic-messages).
+initial plaintext. For more details on user-specified equations see the section 
+on [Cryptographic Messages](004_cryptographic-messages).
 
 
 Modeling the Public Key Infrastructure
@@ -88,7 +85,7 @@ have a premise and a conclusion, separated by the arrow `-->`. Executing the
 rule requires that all facts in the premise are present in the current state, 
 and as a result of the execution the facts in the conclusion will be added to 
 the state, while the premises are removed. Now consider the first rule, 
-modeling the registeration of a public key:
+modeling the registration of a public key:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=19 upper=22}
 ~~~~
@@ -141,7 +138,7 @@ Modeling the protocol
 
 Recall the Alice-and-Bob notation of the protocol we want to model:
 
-    C -> S: aenc{k}pk(S)
+    C -> S: aenc(k, pk(S))
     C <- S: h(k)
 
 We model it using the following three rules.
@@ -185,8 +182,8 @@ session key secrecy from the client point of view. The lemma
 `Client_session_key_secrecy` says that it cannot be that a client has
 set up a session key `k` with a server `S` and the adversary learned
 that `k` unless the adversary performed a long-term key reveal on the
-server `S`. The second lemma `Client_auth` specifies client authentication, which is
-that for all session keys `k` that the clients have setup with a
+server `S`. The second lemma `Client_auth` specifies client authentication, 
+which is that for all session keys `k` that the clients have setup with a
 server `S` there must be a server that has answered the request, or
 the adversary has performed a long-term key reveal on `S` previously
 in time.
@@ -201,16 +198,14 @@ of counting. For most protocols, that guarantee injective authentication one
 can also prove such a uniqueness claim, as they agree on appropriate fresh
 data. This is shown in lemma `Client_auth_injective`.
 
-
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=97 upper=111}
 ~~~~
-
 
 To ensure that our lemmas do not just hold vacuously because the model
 is not executable, we make it a point to always have an executability
 lemma, that shows that the model can run to completion. This is given
 as a regular lemma, but with the `exists-trace` keyword, as seen in
-the lemma `Client_session_key_honest_setup` below
+the lemma `Client_session_key_honest_setup` below.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=113 upper=118}
 ~~~~
@@ -220,22 +215,18 @@ property. To check that there still exist traces, we always want an
 `exists-trace` lemma.  When modeling protocols such existence proofs
 are very useful sanity checks.
 
-
-
-Running Tamarin on Tutorial
----------------------------
-
+Running Tamarin on the Command Line
+-----------------------------------
 
 The call `tamarin-prover Tutorial.spthy` parses the `Tutorial.spthy`
-file, computes the variants of the multiset rewriting rules, checks
-their wellformedness (explained below), and pretty-prints the
+file, checks its wellformedness (explained below), and pretty-prints the
 theory. The declaration of the signature and the equations can be
 found at the top of the pretty-printed theory.
 
-Proving all lemmas contained in the theory is as simple as adding the
-flag `--prove` to the call; i.e.,
+Proving all lemmas contained in the theory using the automatic prover is as 
+simple as adding the flag `--prove` to the call; i.e.,
 
-  `tamarin-prover Tutorial.spthy --prove`
+    tamarin-prover Tutorial.spthy --prove
 
 This will first output some logging from the constraint solver and
 then the Tutorial security protocol theory with the lemmas and their
