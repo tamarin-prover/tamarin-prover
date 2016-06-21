@@ -36,7 +36,7 @@ automatically using the tool `stack`. You must first install
 [Stack's install page](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md).
 
 After running `git clone` of the Tamarin
-repository you have the current development version ready for
+repository, you have the current development version ready for
 compilation. If you would prefer to use the master version, just run
 `git checkout master`. In either case, you can then run `make
 default`, which will install an appropriate GHC (the Glasgow Haskell Compiler)
@@ -46,27 +46,25 @@ will be copied to `~/.local/bin/tamarin-prover`.
 Note that this process will take between 30 and 60 minutes, as all
 dependencies (roughly 120) are compiled from scratch. If you later pull a newer
 version of Tamarin (or switch to/from the `master` branch), then only
-the tool itself needs to be recompiled, which takes a few minutes at
-most.
+the tool itself needs to be recompiled, which takes a few minutes, at most.
 
-Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
 ### Using binaries ###
 
-You can download the binaries appropriate for your system from
-<https://github.com/tamarin-prover/bin-dists>
-
-Only the current master is available as binary, while the sources
+You can download the  appropriate binaries for your system from
+<https://github.com/tamarin-prover/bin-dists>.
+Only the current master is available as a binary, whereas the sources
 contain both the master and the current development state.
 
-Similarly to installing from source, now starting
+Similar to installing from source, now starting
 Tamarin without arguments will output its help
-message, including the paths to the installed example protocol models
+message, including the paths to the installed, example protocol models,
 and all case studies from published papers. We recommend opening the
 `Tutorial.spthy` example file in a text editor and start exploring from
 there, or to continue reading this document.
 
-Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
 
 Mac OS X {#sec:macosx}
@@ -94,7 +92,7 @@ contain both the master and the current development state.
 <https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
 contains numerous protocol examples and the `Tutorial.spthy` file that this manual refers to. 
 
-Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
 ### Installing Tamarin from sources ###
 
@@ -135,7 +133,7 @@ or download the source files from
    binary to a directory in your executables path or add
    `~/.local/bin/` to your path.
 
-Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
 
 Windows {#sec:windows}
