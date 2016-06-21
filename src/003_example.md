@@ -202,8 +202,8 @@ a long-term key reveal on `S`.
 
 Note that we can also strengthen the authentication property to a version of
 injective authentication. Our formulation is stronger than the standard
-formulation of injective authentication, as it is based on uniqueness instead
-of counting. For most protocols that guarantee injective authentication one
+formulation of injective authentication as it is based on uniqueness instead
+of counting. For most protocols that guarantee injective authentication, one
 can also prove such a uniqueness claim, as they agree on appropriate fresh
 data. This is shown in lemma `Client_auth_injective`.
 
@@ -211,19 +211,20 @@ data. This is shown in lemma `Client_auth_injective`.
 ~~~~
 
 To ensure that our lemmas do not just hold vacuously because the model
-is not executable, we also include an executability lemma that shows that the 
-model can run to completion. This is given as a regular lemma, but with the 
-`exists-trace` keyword, as seen in the lemma `Client_session_key_honest_setup` 
-below. This keyword says that the lemma is true if there *exists* a trace on 
-which the formula holds, in contrast to the previous lemmas where we required 
-the formula to hold on *all* traces.
+is not executable, we also include an executability lemma that shows
+that the model can run to completion. This is given as a regular lemma,
+but with the `exists-trace` keyword, as seen in the lemma
+`Client_session_key_honest_setup` below. This keyword says that the
+lemma is true if there *exists* a trace on which the formula holds; this
+is in contrast to the previous lemmas where we required the formula to
+hold on *all* traces.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=112 upper=117}
 ~~~~
 
 Note that when adding inconsistent axioms, you can prove any property. To check 
 that there still exist traces, we always want an `exists-trace` lemma. When 
-modeling protocols such existence proofs are very useful sanity checks.
+modeling protocols, such existence proofs are useful sanity checks.
 
 
 Graphical User Interface
@@ -253,9 +254,11 @@ you will then see the following output on the command line
 
 If there were any syntax or wellformedness errors (for example if the same fact 
 is used with different arities an error would be displayed) you would see them 
-at this point, but there are none in the 'Tutorial'. See later for details on 
+at this point.  Howevever, there are none in the 'Tutorial'. See later
+*REFERENCE SECTION* for details on 
 how to deal with such errors.
-    
+
+*THIS PARAGRAPH SEEMS OUT OF PLACE.  FLOW UNCLEAR.*
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
 
@@ -278,14 +281,14 @@ Theory Overview")
 On the left hand side you see the theory: links to the message theory 
 describing the intruder, the multiset rewrite rules and axioms describing your 
 protocol, and the typed and untyped case distinctions, followed by the lemmas 
-you want to prove. We will explain each of these points in the following.
+you want to prove. We will explain each of these in the following.
 
 On the right hand side, you have a quick summary of the available
 commands and keyboard shortcuts you can use to navigate inside the
 theory. In the top right corner there are some links: `Index` leads
 back to the welcome page, `Download` allows you to download the
 current theory (including partial proofs if they exist), `Actions` and
-then the sub-bullet `Show source` shows the source code of the theory,
+the sub-bullet `Show source` shows the theory's source code,
 and `Options` allows you to configure the level of details in the
 graph visualisation (see below for examples).
 
@@ -295,14 +298,14 @@ If you click on `Message theory` on the left, you should see the following:
  "Tutorial Message Theory")
  
 On the right side you can now see the message theory, starting with
-the so-called *Signature*, i.e., all functions and equations you
+the so-called *Signature*, which consists of all the functions and equations you
 defined. Note that Tamarin automatically added a function `pair` to
-create pairs, and functions `fst` and `snd` together with two
+create pairs, and the functions `fst` and `snd` together with two
 equations to access the first and second value of a pair. There is a
-shorthand for the `pair` using `<` and `>` which is used here for
+shorthand for the `pair` using `<` and `>`, which is used here for
 example for `fst(<x.1, x.2>)`.
 
-Just below you have the *Construction rules* which describe which functions the 
+Just below you have the *Construction rules*. These rules describe which functions the 
 intruder can apply. Consider for example the following rule:
 
     rule (modulo AC) ch:
