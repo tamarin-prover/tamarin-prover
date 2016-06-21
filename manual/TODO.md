@@ -68,4 +68,8 @@ unbound:
     X
 */
 
+
+  * TODO: Maybe variables and sort annotations should be introduced by Cas in
+    005.
+
 ------------------------------
