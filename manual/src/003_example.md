@@ -153,13 +153,6 @@ The first rule models the client sending its message, while the second
 rule models it receiving a response. The third rule models the server,
 both receiving the message and responding in one single rule.
 
-Note that we model all applications of cryptographic algorithms
-explicitly.  Call `tamarin-prover Tutorial.spthy` to inspect the
-finite variants of the `Serv_1` rule, which list all possible
-interactions of the destructors used, or see below for detail. In our
-proof search, we will consider all these interactions.
-
-
 We also model that the server explicitly checks that the first
 component of the request is equal to `'1'`. We model this by logging
 the claimed equality and then adapting the security property such that
