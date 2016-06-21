@@ -191,8 +191,9 @@ Modeling protocols
 
 There are several ways in which the execution of security protocols can be
 defined, e.g., as in [@opsem2012]. In Tamarin, there is no pre-defined protocol
-concept  and the user is free to model them in the preferred way. Below we give
-one example of how protocols can be modeled and discuss alternatives afterwards.
+concept  and the user is free to model them as she or he chooses.
+Below we give an example of how protocols can be modeled
+and discuss alternatives afterwards.
 
 ### Public-key infrastructure
 
@@ -226,14 +227,14 @@ keys. In this case, we specify model the following rule instead.
 
 ### Modeling a protocol step
 
-Protocols describe the behaviour of agents in the system. Agent can perform
+Protocols describe the behavior of agents in the system. Agent can perform
 protocol steps, such as receiving a message and responding by sending a message,
 or starting a session.
 
 ### Modeling the Naxos responder role
 
-We first model the responder role, which is easier since it can be done in one
-rule.
+We first model the responder role, which is simpler than the 
+initiator role since it can be done in one rule.
 
 The protocol uses a Diffie-Hellman exponentiation, and two hash functions `h1`
 and `h2`, which we need to declare. We can model this using:
