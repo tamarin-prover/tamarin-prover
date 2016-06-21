@@ -18,20 +18,22 @@ by proving that from the perspective of the client, the freshly
 generated key is secret provided that the server is uncompromised.
 
 The Tamarin modeling of this protocol and the security properties are given in 
-the file [Tutorial](code/Tutorial.spthy) presented here:
+the file [Tutorial.spthy](code/Tutorial.spthy) (`.spthy` stands for *security 
+protocol theory*) presented here:
 
 ~~~~ {.tamarin include="code/Tutorial.spthy"}
 ~~~~
 
-Note that Tamarin uses C-style comments. The Tamarin file starts with
-`theory` followed by the name, here 'Tutorial'.  After the keyword
-`begin`, we first declare function symbols, and equations that these
-function symbols must satisfy. Then we declare multiset rewriting
-rules that model the protocol, and finally we write lemmas that
-specify the security properties. Moreover, we also inserted comments,
-to structure the theory. Now, we describe these elements while
-modeling this simple protocol in detail.
-
+First of all note that Tamarin uses C-style comments, so everything between 
+`/*` and `*/` or following `//` is a comment. The Tamarin file starts with
+`theory` followed by the name, here `Tutorial`.  After the keyword `begin`, we 
+first declare function symbols, and equations that these function symbols must 
+satisfy. These functions and equations describe the cryptographic primitives 
+and their properties used in the protocol. Then we declare multiset rewriting 
+rules that model the protocol, and finally we write lemmas that specify the 
+security properties. Moreover, we also inserted comments, to structure the 
+theory. Now, we describe these elements while modeling this simple protocol in 
+detail.
 
 Function Signature and Equational Theory
 ----------------------------------------
