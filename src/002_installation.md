@@ -98,7 +98,8 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run 
 
 1. To compile Tamarin, you need the Haskell tool [stack](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md#manual-download-1).
 To run Tamarin you need [Maude 2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation) and [GraphViz](http://www.graphviz.org/Download.php). 
-You can download these tools from their respective sites *or* use one of the package managers 'MacPorts' or 'Homebrew'. 
+You can download these tools from their respective sites.
+Alternatively, you can use either the 'MacPorts' or 'Homebrew' package managers. 
 
   *  For 'MacPorts':
 ```
