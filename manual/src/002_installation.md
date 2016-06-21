@@ -77,22 +77,26 @@ To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz.
 1.  Download and install Core Maude 2.7 from
   <http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation>.
 
+    Make sure that the Maude binary is called `maude` (as opposed to, e.g.,  `maude.darwin64`) and that `prelude.maude` is in your executables path, for instance by placing it in the same folder as the maude binary.
+
 2.  Download and install GraphViz from 
 <http://www.graphviz.org/Download.php>.
 
-3.  Download the Tamarin binary `tamarin-prover-1.x.y-macosx` from 
-<https://github.com/tamarin-prover/bin-dists>.
+3.  Download the latest Tamarin binary `tamarin-prover-1.x.y-macosx` from 
+<https://github.com/tamarin-prover/bin-dists/blob/master/tamarin-prover-1.0.0/tamarin-prover-1.0.0-macosx?raw=true>.
 
-**Note:** 
+4.  Install Tamarin by renaming `tamarin-prover-1.x.y-macosx` to `tamarin-prover` and moving it to a folder in your executables path.
+ 
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+
+**Notes:** 
 
   * Only the current master is available as binary, while the sources
 contain both the master and the current development state.
 
   * The Tamarin source archive 
 <https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
-contains numerous protocol examples and the `Tutorial.spthy` file that this manual refers to. 
-
-Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+contains numerous protocol examples as well as the `Tutorial.spthy` file that this manual refers to. 
 
 ### Installing Tamarin from sources ###
 
@@ -153,12 +157,13 @@ functional for Windows systems prior to Windows 10.
 Running Tamarin {#sec:running-tamarin}
 ---------------
 
-Starting `tamarin-prover` without arguments will output its
-help message, including the paths to the installed example protocol
-models and all case studies from published papers. We recommend
-opening the [Tutorial.spthy](https://github.com/tamarin-prover/tamarin-prover/tree/develop/examples/Tutorial.spthy) example file in a text editor and start
-exploring from there, or to continue reading this document.
-Note that the `Tutorial.spthy` file can be found in the `examples` directory of the Tamarin source.
+Starting `tamarin-prover` without arguments will output its help
+message, including the paths to the installed example protocol models
+and all case studies from published papers. We recommend opening the
+[Tutorial.spthy](https://raw.githubusercontent.com/tamarin-prover/tamarin-prover/develop/examples/Tutorial.spthy)
+example file in a text editor and start exploring from there, or to
+continue reading this document.  Note that the `Tutorial.spthy` file
+can be found in the `examples` directory of the Tamarin source.
 
 Running ```tamarin-prover test``` will check the Maude and GraphViz
 versions and run some tests Its output should be:
