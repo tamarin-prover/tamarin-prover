@@ -57,12 +57,12 @@ You can download the  appropriate binaries for your system from
 Only the current master is available as a binary, whereas the sources
 contain both the master and the current development state.
 
-Similar to installing from source, now starting
+Similar to installing from source, starting
 Tamarin without arguments will output its help
 message, including the paths to the installed, example protocol models,
 and all case studies from published papers. We recommend opening the
-`Tutorial.spthy` example file in a text editor and start exploring from
-there, or to continue reading this document.
+`Tutorial.spthy` example file in a text editor and to start exploring from
+there, or alternatively to continue reading this document.
 
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
@@ -75,13 +75,13 @@ Mac OS X {#sec:macosx}
 To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz. 
 
 1.  Download and install Maude 2.7 from
-  <http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation>
+  <http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation>.
 
 2.  Download and install GraphViz from 
-<http://www.graphviz.org/Download.php>
+<http://www.graphviz.org/Download.php>.
 
 3.  Download the Tamarin binary `tamarin-prover-1.x.y-macosx` from 
-<https://github.com/tamarin-prover/bin-dists>
+<https://github.com/tamarin-prover/bin-dists>.
 
 **Note:** 
 
@@ -96,8 +96,8 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run 
 
 ### Installing Tamarin from sources ###
 
-1. To compile Tamarin you need the Haskell tool [stack](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md#manual-download-1)
-and to run Tamarin you need to have [Maude 2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation) and [GraphViz](http://www.graphviz.org/Download.php). 
+1. To compile Tamarin, you need the Haskell tool [stack](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md#manual-download-1).
+To run Tamarin you need [Maude 2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation) and [GraphViz](http://www.graphviz.org/Download.php). 
 You can download these tools from their respective sites *or* use one of the package managers 'MacPorts' or 'Homebrew'. 
 
   *  For 'MacPorts':
