@@ -1,10 +1,11 @@
 Model Specification {#sec:model-specification}
 ===================
 
-In this manual, we provide an informal description of the underlying model. The
-full details of the underlying model can be found in [@benediktthesis].
+In this section, we now provide an informal description of the
+underlying model. The full details of this model can be found
+in [@benediktthesis].
 
-Models are specificity in Tamarin using three main ingredients:
+Tamarin models are specified using three main ingredients:
 
    1. Rules
    2. Facts
@@ -145,7 +146,7 @@ from the state, and we denote them by prefixing the fact with a bang (`!`).
 FIX: use the following paragraph
 
 Facts always start with an upper-case letter and do not have to be
-declared explicitely. If their name is prefixed with an exclamation mark `!`,
+declared explicitly. If their name is prefixed with an exclamation mark `!`,
 then they are persistent. Otherwise, they are linear. Note that every
 fact name must be used consistently; i.e., it must always be used with
 the same arity, casing, and multiplicity. Otherwise, Tamarin complains
