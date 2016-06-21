@@ -19,7 +19,7 @@ protocol, displayed below.
 
 **FIX Cas: Picture should be updated and use vector graphics, ideally.**
 
-In this protocol, Each party `x` has a long-term private key `lkx` and a
+In this protocol, each party `x` has a long-term private key `lkx` and a
 corresponding public key `pkx = 'g'^lkx`, where `'g'` is a generator of the
 Diffie-Hellman group. Because `'g'` can be public, we model it as a public
 constant.
