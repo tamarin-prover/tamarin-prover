@@ -27,7 +27,7 @@ constant.
 To start a session, the initiator `I` first creates a fresh nonce `eskI`, also
 known as `I`’s ephemeral (private) key. He then concatenates eskI with `I`’s
 long-term private key `lkI`, hashes the result using the hash function `h1`, and
-sends `g^h1(eskI ,lkI )` to the responder. The responder `R` stores the received
+sends `g^h1(eskI ,lkI)` to the responder. The responder `R` stores the received
 value in a variable `X`, computes a similar value based on his own nonce `eskR`
 and long-term private key `lkR`, and sends the result to the initiator, who
 stores the received value in the variable `Y`. Finally, both parties compute a
@@ -35,7 +35,7 @@ session key (`kI` and `kR`, respectively) whose computation includes their own
 long-term private keys, such that only the intended partner can compute the same
 key.
 
-Note that the messages exchanged are not authenticated, as the recipients cannot
+Note that the messages exchanged are not authenticated as the recipients cannot
 verify that the expected long-term key was used in the construction of the
 message. The authentication is implicit and only guaranteed through ownership of
 the correct key. Explicit authentication (e.g., the intended partner was
@@ -48,16 +48,19 @@ computed session key.
 Rules
 -----
 
-We use multiset rewriting to specify the concurrent execution of protocol and
-adversary.  Multiset rewriting is a formalism that is commonly used to model
+We use multiset rewriting to specify the concurrent execution of
+the protocol and the adversary.  Multiset rewriting is a formalism that is commonly used to model
 concurrent systems since it naturally supports independent transitions. 
 
-A multiset rewriting system defines a transition system, which in our case will
-be a labeled transition system. The state of the system is a multiset (bag) of
+A multiset rewriting system defines a transition system, where, in our
+case,
+the transitions will be labeled. The system's state is a multiset (bag) of
 facts. We will explain the types of facts and their use below.
 
-Tamarin's rewrite rules have a name, and sequences of facts as left-hand-sides,
-labels, and right-hand-sides. For example:
+A rewrite rule in Tamarin has a name and three parts, each of which
+is a sequence of facts: one for the rule's left-hand side, one labelleing the
+transition (which we call 'action facts'),  and one for the rule's right-hand side.
+For example:
 
 **FIX Cas: Maybe better to use Naxos rules here.**
 
@@ -233,7 +236,7 @@ or starting a session.
 We first model the responder role, which is easier since it can be done in one
 rule.
 
-The protocol uses a Diffie-Hellman exponentiation, and two hashfunctions `h1`
+The protocol uses a Diffie-Hellman exponentiation, and two hash functions `h1`
 and `h2`, which we need to declare. We can model this using:
 
 	builtins: diffie-hellman
