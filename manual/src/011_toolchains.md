@@ -11,11 +11,11 @@ Applied-Pi Calculus (SAPIC)
 SAPIC (Stateful Applied Pi Calculus) is available at 
 <http://sapic.gforge.inria.fr/>.
 
-TODO: Steve Kremer and Robert Kuennemann?
+TODO: To be written by Steve Kremer and Robert Kuennemann?
 
 Alice&Bob input 
 ---------------
 
 <http://www.infsec.ethz.ch/research/software/anb.html>
 
-TODO: Sasa & Ralf
+TODO: To be written by Sasa & Ralf
