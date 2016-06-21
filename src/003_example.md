@@ -82,27 +82,20 @@ multiset of facts. Facts can be seen like predicates storing state information,
 for example `Out(h(k))` models the fact that the protocol send out the message 
 `h(k)` on the public channel.
 
-The example starts with the model of a public key infrastructure (PKI). In 
-the first rules we again use facts to store information about the state in 
-their arguments. The rules have a premise and a conclusion, separated by the 
-arrow `-->`:
+The example starts with the model of a public key infrastructure (PKI). Again, 
+we use facts to store information about the state in their arguments. The rules 
+have a premise and a conclusion, separated by the arrow `-->`. Executing the 
+rule requires that all facts in the premise are present in the current state, 
+and as a result of the execution the facts in the conclusion will be added to 
+the state, while the premises are removed. Now consider the first rule, 
+modeling the registeration of a public key:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=19 upper=22}
 ~~~~
 
-The above rule models registering a public key. It makes use of the
-following syntax.
-
-Facts always start with an upper-case letter and do not have to be
-declared.  If their name is prefixed with an exclamation mark `!`,
-then they are persistent. Otherwise, they are linear. Note that every
-fact name must be used consistently; i.e., it must always be used with
-the same arity, casing, and multiplicity. Otherwise, Tamarin complains
-that the theory is not wellformed.
-
-The `Fr` fact is a built-in fact. It denotes a freshly generated fresh
-name, used to model random numbers, i.e., nonces or keys. See later in this
-manual for details.
+Here the only premise is an instance of the `Fr` fact. The `Fr` fact is a 
+built-in fact. It denotes a freshly generated fresh name, used to model random 
+numbers, i.e., nonces or keys. See later in this manual for details.
 
 We denote the sort of variables using prefixes:
 
