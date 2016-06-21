@@ -4,12 +4,13 @@ Initial Example
 We will start with a simple example of a protocol that only consists
 of two messages (given in Alice-and-Bob notation):
 
-    C -> S: aenc{k}pk(S)
+    C -> S: aenc(k, pk(S))
     C <- S: h(k)
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
-with the public key of a server 'S' and sends it to 'S'. The server confirms
-the receipt of the key by sending its hash back to the client.
+with the public key of a server 'S' (`aenc` stands for *asymmetric encryption*) 
+and sends it to 'S'. The server confirms the receipt of the key by sending its 
+hash back to the client.
 
 This protocol is artificial and satisfies only very weak security
 guarantees.  We will use it to illustrate the general Tamarin workflow
@@ -17,38 +18,39 @@ by proving that from the perspective of the client, the freshly
 generated key is secret provided that the server is uncompromised.
 
 The Tamarin modeling of this protocol and the security properties are given in 
-the file [Tutorial](code/Tutorial.spthy) presented here:
+the file [Tutorial.spthy](code/Tutorial.spthy) (`.spthy` stands for *security 
+protocol theory*) presented here:
 
 ~~~~ {.tamarin include="code/Tutorial.spthy"}
 ~~~~
 
-Note that Tamarin uses C-style comments. The Tamarin file starts with
-`theory` followed by the name, here 'Tutorial'.  After the keyword
-`begin`, we first declare function symbols, and equations that these
-function symbols must satisfy. Then we declare multiset rewriting
-rules that model the protocol, and finally we write lemmas that
-specify the security properties. Moreover, we also inserted comments,
-to structure the theory. Now, we describe these elements while
-modeling this simple protocol in detail.
-
+First of all note that Tamarin uses C-style comments, so everything between 
+`/*` and `*/` or the line following `//` is a comment. The Tamarin file starts 
+with `theory` followed by the theory's name, here `Tutorial`.  After the 
+keyword `begin`, we first declare function symbols, and equations that these 
+function symbols must satisfy. These functions and equations describe the 
+cryptographic primitives and their properties used in the protocol. Then we 
+declare multiset rewriting rules that model the protocol, and finally we write 
+lemmas that specify the security properties. Moreover, we also inserted 
+comments, to structure the theory. Now, we explain the above model of the 
+simple protocol in detail.
 
 Function Signature and Equational Theory
 ----------------------------------------
 
-We are working in the symbolic model of security protocol
-verification, which means that we model the messages as terms, built
-from functions, satisfying an underlying equational theory. This will
-be explained in detail later, but for now note that there are function
-names which we explicitly declare together with their arity, and
-equalities that define the semantic equivalence of terms, e.g., the
-decryption of an encrypted ciphertext is the original message, when
-the correct keys are used. We generally use lower-case for function names.
+We are working in the symbolic model of security protocol verification, which 
+means that we model the messages as terms, built from functions, satisfying an 
+underlying equational theory. This will be explained in detail later, but for 
+now note that there are function names which we explicitly declare together with 
+their arity, and equalities that define the semantic equivalence of terms, e.g., 
+the decryption of an encrypted ciphertext is the original message, when the 
+correct keys are used. We generally use lower-case for function names.
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
 
-  * a binary function 'aenc' denoting the encryption algorithm,
-  * a binary function 'adec' denoting the decryption algorithm, and
+  * a binary function 'aenc' denoting the asymmetric encryption algorithm,
+  * a binary function 'adec' denoting the asymmetric decryption algorithm, and
   * a unary function 'pk' denoting the algorithm computing a public
   key from a private key.
 
@@ -62,10 +64,11 @@ The equation
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=16 upper=16}
 ~~~~
 
-models the interaction between calls to these three algorithms. All
-such user-specified equations must be subterm-convergent rewriting
-rules, when oriented from left to right. This means that the
-right-hand-side must be a subterm of the left-hand-side or a nullary
+models the interaction between calls to these three algorithms by specifying 
+that the decryption of the cypertext using the correct private key returns the 
+initial plaintext. All such user-specified equations must be subterm-convergent 
+rewriting rules, when oriented from left to right. This means that the 
+right-hand-side must be a subterm of the left-hand-side (here: `m`) or a nullary 
 function symbol (a constant), see the section on [Equational
 Theory](004_cryptographic-messages).
 
@@ -73,51 +76,50 @@ Theory](004_cryptographic-messages).
 Modeling the Public Key Infrastructure
 --------------------------------------
 
-Now, we introduce multiset rewriting rules modeling a public key
-infrastructure (PKI). In these rules we use facts to store information
-about the state in their arguments. The rules have a premise and a
-conclusion, separated by the arrow `-->`:
+In Tamarin the protocol and its environment are modeled using *multiset 
+rewriting rules*. The rules operate on the system's state expressed as a 
+multiset of facts. Facts can be seen like predicates storing state information, 
+for example `Out(h(k))` models the fact that the protocol send out the message 
+`h(k)` on the public channel.
+
+The example starts with the model of a public key infrastructure (PKI). Again, 
+we use facts to store information about the state in their arguments. The rules 
+have a premise and a conclusion, separated by the arrow `-->`. Executing the 
+rule requires that all facts in the premise are present in the current state, 
+and as a result of the execution the facts in the conclusion will be added to 
+the state, while the premises are removed. Now consider the first rule, 
+modeling the registeration of a public key:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=19 upper=22}
 ~~~~
 
-The above rule models registering a public key. It makes use of the
-following syntax.
+Here the only premise is an instance of the `Fr` fact. The `Fr` fact is a 
+built-in fact. It denotes a freshly generated fresh name, used to model random 
+numbers, i.e., nonces or keys. See later in this manual for details.
 
-Facts always start with an upper-case letter and do not have to be
-declared.  If their name is prefixed with an exclamation mark `!`,
-then they are persistent. Otherwise, they are linear. Note that every
-fact name must be used consistently; i.e., it must always be used with
-the same arity, casing, and multiplicity. Otherwise, Tamarin complains
-that the theory is not wellformed.
-
-The `Fr` fact is a built-in fact. It denotes a freshly generated fresh
-name, used to model random numbers, i.e., nonces or keys. See later in this
-manual for details.
-
-We denote the sort of variables using prefixes:
+In Tamarin the sort of variables is expressed using prefixes:
 
  *    `~x`  denotes  `x:fresh`
  *    `$x`  denotes  `x:pub`
  *    `#i`  denotes  `i:temporal`
  *    `i`   denotes  `i:msg`
 
- and a string constant `'c'` denotes a public name `'c \in PN'`; i.e., a
- fixed, global constant
+and a string constant `'c'` denotes a public name `'c \in PN'`; i.e., a fixed, 
+global constant.
 
 Thus, the above rule can be read as follows. First, freshly generate a
-fresh name `~ltk`, the new private key, and nondeterministically choose
-a public name `A`, the agent for which we are generating the key-pair.
-Then, generate the persistent fact `!Ltk($A, ~ltk)`, which denotes the
-association between agent `A` and its private key `~ltk`, and generate
-the persistent fact `!Pk($A, pk(~ltk))`, which denotes the association
-between the agent `A` and its public key `pk(~ltk)`.
+fresh name `~ltk` of sort fresh, the new private key, and nondeterministically 
+choose a public name `A`, the agent for which we are generating the key-pair.
+Then, generate the fact `!Ltk($A, ~ltk)` (`!` denotes that it is persistent, 
+i.e., cannot be consumed), which denotes the association between agent `A` and 
+its private key `~ltk`, and generate the fact `!Pk($A, pk(~ltk))`, which 
+denotes the association between the agent `A` and its public key `pk(~ltk)`.
 
-We allow the adversary to retrieve any public key using the following
-rule.  Intuitively, it just reads a public-key database entry and
+In the example, we allow the adversary to retrieve any public key using the 
+following rule. Intuitively, it just reads a public-key database entry and
 sends the public key to the network using the built-in fact `Out`
-denoting a message sent to the network. See later for more
-information:
+denoting a message sent to the network (see the section on protocol 
+specification for more information):
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=24 upper=27}
 ~~~~
@@ -125,12 +127,11 @@ information:
 We model the dynamic compromise of long-term private keys using the
 following rule. Intuitively, it reads a private-key database entry and
 sends it to the adversary. This rule has an observable `LtkReveal`
-action stating that the long-term key of agent `A` was compromised. We
-will use this action in the security property below to determine which
-agents are compromised. Action facts are just like facts, but *should*
-be from a different namespace, though this is not enforced. The rule
-now has a premise, conclusion, and action facts within the arrow: `-[
-FACT ]->`:
+action stating that the long-term key of agent `A` was compromised. Action facts 
+are just like facts, but *should* be from a different namespace, though this is 
+not enforced. We will use this action in the security property below to 
+determine which agents are compromised. The rule now has a premise, conclusion, 
+and action facts within the arrow: `-[ FACT ]->`:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=29 upper=32}
 ~~~~
