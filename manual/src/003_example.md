@@ -4,11 +4,11 @@ Initial Example
 We will start with a simple example of a protocol that consists
 of just two messages, written here in Alice-and-Bob notation:
 
-    C -> S: aenc(k, pk(S))
+    C -> S: aenc(k, pkS)
     C <- S: h(k)
 
-In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
-with the public key of a server 'S' (`aenc` stands for *asymmetric encryption*),
+In this protocol, a client 'C' generates a fresh symmetric key 'k', encrypts it
+with the public key 'pkS' of a server 'S' (`aenc` stands for *asymmetric encryption*),
 and sends it to 'S'. The server confirms the key's receipt by sending its 
 hash back to the client.
 
@@ -148,7 +148,7 @@ Modeling the protocol
 
 Recall the Alice-and-Bob notation of the protocol we want to model:
 
-    C -> S: aenc(k, pk(S))
+    C -> S: aenc(k, pkS)
     C <- S: h(k)
 
 We model it using the following three rules.
