@@ -69,7 +69,7 @@ The equation
 models the interaction between calls to these three function symbols
 by specifying that the decryption of the cyphertext using the correct private key returns the 
 initial plaintext. For more details on user-specified equations, see the section 
-on [Cryptographic Messages](004_cryptographic-messages).
+on [Cryptographic Messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
 
 Modeling a Public Key Infrastructure
@@ -118,11 +118,14 @@ denotes the association between agent `A` and its private key `~ltk`,
 and generate the fact `!Pk($A, pk(~ltk))`, which associates
 agent `A` and its public key `pk(~ltk)`.
 
-In the example, we allow the adversary to retrieve any public key using the 
-following rule. Essentially, it reads a public-key database entry and
-sends the public key to the network using the built-in fact `Out`,
-which denotes sending a message to the network (see the section on protocol 
-specification for more information):*ADD SECTION REFERENCE*
+In the example, we allow the adversary to retrieve any public key
+using the following rule. Essentially, it reads a public-key database
+entry and sends the public key to the network using the built-in fact
+`Out`, which denotes sending a message to the network, see the):
+[section on model
+specification](005_protocol-specification.html#sec:model-specification)
+for more information.
+
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=24 upper=27}
 ~~~~
@@ -222,9 +225,11 @@ hold on *all* traces.
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=112 upper=117}
 ~~~~
 
-Note that when adding inconsistent axioms, you can prove any property. To check 
-that there still exist traces, we always want an `exists-trace` lemma. When 
-modeling protocols, such existence proofs are useful sanity checks.
+Note that when inconsistent axioms are given, one can prove any
+property. To check that the axioms are consistent, i.e., 
+there still are traces, we always want an
+`exists-trace` lemma. When modeling protocols, such existence proofs are
+useful sanity checks.
 
 
 Graphical User Interface
@@ -253,8 +258,8 @@ you will then see the following output on the command line
     21/Jun/2016:09:16:01 +0200 [Info#yesod-core] Application launched @(yesod_83PxojfItaB8w9Rj9nFdZm:Yesod.Core.Dispatch ./Yesod/Core/Dispatch.hs:157:11)
 
 If there were any syntax or wellformedness errors (for example if the same fact 
-is used with different arities an error would be displayed) you would see them 
-at this point.  Howevever, there are none in the 'Tutorial'. See later
+is used with different arities an error would be displayed)
+the would be displayed at this point.  Howevever, there are none in the 'Tutorial'. See later
 *REFERENCE SECTION* for details on 
 how to deal with such errors.
 
@@ -278,7 +283,7 @@ should see the following:
 ![Tutorial Theory Overview](../images/tamarin-tutorial-overview.jpg "Tutorial 
 Theory Overview")
 
-On the left hand side you see the theory: links to the message theory 
+On the left hand side, you see the theory: links to the message theory 
 describing the intruder, the multiset rewrite rules and axioms describing your 
 protocol, and the typed and untyped case distinctions, followed by the lemmas 
 you want to prove. We will explain each of these in the following.
@@ -297,16 +302,16 @@ If you click on `Message theory` on the left, you should see the following:
 ![Tutorial Message Theory](../images/tamarin-tutorial-message-theory.jpg 
  "Tutorial Message Theory")
  
-On the right side you can now see the message theory, starting with
+On the right side, you can now see the message theory, starting with
 the so-called *Signature*, which consists of all the functions and equations you
-defined. Note that Tamarin automatically added a function `pair` to
+defined. Note that Tamarin automatically adds a function `pair` to
 create pairs, and the functions `fst` and `snd` together with two
-equations to access the first and second value of a pair. There is a
+equations to access the first and second parts of a pair. There is a
 shorthand for the `pair` using `<` and `>`, which is used here for
 example for `fst(<x.1, x.2>)`.
 
-Just below you have the *Construction rules*. These rules describe which functions the 
-intruder can apply. Consider for example the following rule:
+Just below come the *Construction rules*. These rules describe which functions the 
+intruder can apply. Consider, for example, the following rule:
 
     rule (modulo AC) ch:
      [ !KU( x ) ] --[ !KU( h(x) ) ]-> [ !KU( h(x) ) ]
@@ -314,17 +319,18 @@ intruder can apply. Consider for example the following rule:
 Essentially this rule says that if the intruder knows `x` (represented
 by the fact `!KU(x)` in the premise), then he can compute `h(x)`
 (represented by the fact `!KU(h(x))` in the conclusion), i.e., the
-hash of `x`. The action fact `!KU(h(x))` in the label also notes this
+hash of `x`. The action fact `!KU(h(x))` in the label also records this
 for reasoning purposes.
 
-Finally, there are the *Deconstruction rules* which describe which terms the 
+Finally, there are the *Deconstruction rules*. These rules
+describe which terms the 
 intruder can extract from larger terms by applying functions. Consider for 
 example the following rule:
 
     rule (modulo AC) dfst:
      [ !KD( <x.1, x.2> ) ] --> [ !KD( x.1 ) ]
 
-In a nutshell this rule says that if the intruder knows the pair `<x.1, x.2>` 
+In a nutshell, this rule says that if the intruder knows the pair `<x.1, x.2>` 
 (represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
 value `x.1` (represented by the fact `!KD( x.1 )`) from it. This stems from 
 the applying `fst` to the pair and then using the equation 
@@ -348,8 +354,8 @@ output `Out(x)` and passes it to the intruder knowledge, represented by the
 `!KD(x)` fact. Note that the rule `Serv_1` from the protocol has three 
 *variants (modulo AC)*. The precise meaning of this is not important right now 
 (it stems from the way Tamarin deals with equations) and will be explained in 
-the [section on cryptographic
-messages](004_cryptographic-messages.html#sec:cryptographic-messages).
+the 
+[section on cryptographic messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
 Just below you have the list of all axioms. In this example there is
 only the one axiom `Equality_Checks_Succeed`.
