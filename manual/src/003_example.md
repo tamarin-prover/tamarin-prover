@@ -171,7 +171,7 @@ a protocol execution.
 
 First, note that we can specify additional axioms that restrict the
 set of considered traces. In this example, we restrict our attention
-to traces where all equality checks succeed. In detail the axiom says
+to traces where all equality checks succeed. In detail the following axiom says
 that for all parameters `x`, `y` to the `Eq` action fact at some time
 point `i` it has to be the case that `x=y`.
 
@@ -240,8 +240,6 @@ flag `--prove` to the call; i.e.,
 This will first output some logging from the constraint solver and
 then the Tutorial security protocol theory with the lemmas and their
 attached (dis)proofs.
-
-
 
 
 Graphical User Interface
