@@ -1,6 +1,15 @@
 Cryptographic Messages {#sec:cryptographic-messages}
 ====================================================
 
+TODO:
+  * A complete list of the builtins and exactly what symbols/functions they
+    add (e.g. some parts of the term grammar in the current manual only
+    actually exist with particular builtins, I believe)
+  * When to annotate variables with symbols e.g. ~,$,'
+
+
+
+
 A cryptographic message is either a constant `c` or a message `f(m1,...,mN)`
 corresponding to the application of the `N`-ary function `f` to `N` cryptographic
 messages `m1`, ..., `mN`.
