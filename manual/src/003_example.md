@@ -302,8 +302,8 @@ value `x.1` (represented by the fact `!KD( x.1 )`) from it. This results from
 applying `fst` to the pair and then using the equation 
 `fst(<x.1, x.2>) = x.1`. The precise difference between `!KD( )` and `!KU( )` 
 facts is not important for now, and will be explained below. As a first 
-approximation, both represent they intruder's knowledge and are only used to 
-make the tool's reasoning more efficient.
+approximation, both represent they intruder's knowledge and the distinction is 
+only used to make the tool's reasoning more efficient.
 
 Now click on *Multiset rewriting rules* on the left.
 
