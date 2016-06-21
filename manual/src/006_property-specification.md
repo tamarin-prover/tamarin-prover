@@ -215,7 +215,7 @@ lemma injectiveagreement:
 
 TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree?
 
-#### Message Authentication ####
+#### Message Authentication #### {#sec:message-authentication}
 
 TODO: ???
 
@@ -236,9 +236,9 @@ that one can use axioms to simplify writing lemmas
 
 
 
-## Example axioms ##
+## Common axioms ##
 
-Here is a list of example axioms. Do note that you need to add the
+Here is a list of common axioms. Do note that you need to add the
 appropriate action facts to your rules for these axioms to have
 impact. 
 
