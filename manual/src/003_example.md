@@ -50,8 +50,8 @@ the correct keys are used. We generally use lower-case for function names.
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
 
-  * a binary function 'aenc' denoting the encryption algorithm,
-  * a binary function 'adec' denoting the decryption algorithm, and
+  * a binary function 'aenc' denoting the asymmetric encryption algorithm,
+  * a binary function 'adec' denoting the asymmetric decryption algorithm, and
   * a unary function 'pk' denoting the algorithm computing a public
   key from a private key.
 
@@ -65,10 +65,11 @@ The equation
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=16 upper=16}
 ~~~~
 
-models the interaction between calls to these three algorithms. All
-such user-specified equations must be subterm-convergent rewriting
-rules, when oriented from left to right. This means that the
-right-hand-side must be a subterm of the left-hand-side or a nullary
+models the interaction between calls to these three algorithms by specifying 
+that the decryption of the cypertext using the correct private key returns the 
+initial plaintext. All such user-specified equations must be subterm-convergent 
+rewriting rules, when oriented from left to right. This means that the 
+right-hand-side must be a subterm of the left-hand-side (here: `m`) or a nullary 
 function symbol (a constant), see the section on [Equational
 Theory](004_cryptographic-messages).
 
