@@ -3,12 +3,6 @@ IFORMAT = markdown
 FLAGS = --standalone --toc --toc-depth=2 --mathjax=$(MATHJAX)
 STYLE = css/style.css
 
-ifdef USE_FILTER
-  FILTER = --filter includes.hs
-else
-  FILTER =
-endif
-
 ifdef MATHJAX_LOCAL
   MATHJAX = ${MATHJAX_LOCAL}
 else
@@ -23,9 +17,9 @@ OBJ = $(subst .md,.html,$(subst src,book,$(SRC)))
 
 all: $(OBJ)
 
-book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros
+book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros includes
 	$(PANDOC) -c $(STYLE) \
-	  ${FILTER} \
+	  --filter ./includes \
 	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
 	  --bibliography=src/manual.bib \
 	  -t html $(FLAGS) -o $@ $<
@@ -42,6 +36,9 @@ simple:
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
 	  -o tex/tamarin-manual.tex $(SRC)
 	make -C tex
+
+includes: includes.hs
+	stack ghc -- --make includes.hs -o includes
 
 clean:
 	-rm book/*.html *.pdf

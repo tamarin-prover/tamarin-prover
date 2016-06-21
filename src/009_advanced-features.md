@@ -1,7 +1,24 @@
 Advanced Features
 =================
 
+Advanced features for advanced users: manual proofs, custom heuristics, encod-
+ing tricks, induction, channel models, internal preprocessor, how to do timings
 
+Manual Exploration using GUI
+----------------------------
+
+TODO: Cas?
+
+
+Heuristics
+----------
+
+TODO: python "oracle" script? [Benedikt/Sasa]
+
+How to Improve your encoding
+----------------------------
+
+to encoding using alternative more efficient descriptions
 
 
 
@@ -171,3 +188,15 @@ properties can be imagined.
 
 
 
+Induction
+---------
+
+
+
+Integrated Preprocessor
+-----------------------
+
+
+
+How to do Timings in Tamarin
+----------------------------

@@ -1,5 +1,5 @@
 Cryptographic Messages {#sec:cryptographic-messages}
-======================
+====================================================
 
 A cryptographic message is either a constant `c` or a message `f(m1,...,mN)`
 corresponding to the application of the `N`-ary function `f` to `N` cryptographic
@@ -30,7 +30,7 @@ Function Symbols
 
 Tamarin supports a fixed set of builtin function symbols and additional user-defined
 function symbols. The builtin function symbols are included in signatures. To include
-a signature `some-sig`, include the line `builtin: some-sig` in your file. The
+a signature `some-sig`, include the line `builtins: some-sig` in your file. The
 builtin signatures are.
 
 diffie-hellman
@@ -91,4 +91,35 @@ symmetric-encryption,
 
 
 
+**FIX: Cas has moved the below from 005_, to be integrated into this section**
 
+Cryptographic messages as terms
+-------------------------------
+
+To model cryptographic messages we use terms, represented by trees where the
+nodes are operators (such as pairing, function application, concatenation,
+encryption) and the leaves are constants or variables.
+
+For the leaves, we have two main sorts:
+
+[fresh names]:
+	Model random messages such as keys or nonces.
+
+[public names]:
+	Model known constants such as agent identities.
+
+For example, in the Naxos protocol, `eskI` and `eskR` are freshly generated for
+each new session. Additionally, the agent's long-term keys (`lkI`, `lkR') are
+freshly generated before the agent starts communicating. We therefore model them
+as fresh names.
+
+The identities `I` and `R` can be instantiated by any concrete agent identity,
+modeled as public names.
+
+
+
+
+
+There is a
+shorthand for the `pair` using `<` and `>` which is right-associative
+and allows one to write `<a,b,c>` to represent `pair(a,pair(b,c))`.

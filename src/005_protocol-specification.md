@@ -4,18 +4,19 @@ Model Specification
 In this manual, we provide an informal description of the underlying model. The
 full details of the underlying model can be found in [@benediktthesis].
 
-Models are specificied in Tamarin using three main ingredients:
+Models are specificity in Tamarin using three main ingredients:
 
    1. Rules
    2. Facts
    3. Terms
 
-We will discuss each of them in turn and illustrate their use with respect to
-the Naxos protocol, displayed below.
+We have already seen the definition of terms in the previous section. Here we
+will discuss facts and rules, and illustrate their use with respect to the Naxos
+protocol, displayed below.
 
 ![The Naxos protocol](../images/naxos.png)
 
-**FIX** Cas: Picture should be updated and use vector graphics, ideally.
+**FIX Cas: Picture should be updated and use vector graphics, ideally.**
 
 In this protocol, Each party `x` has a long-term private key `lkx` and a
 corresponding public key `pkx = g^lkx`, where `g` is a generator of the
@@ -53,38 +54,48 @@ A multiset rewriting system defines a transition system, which in our case will
 be a labeled transition system. The state of the system is a multiset (bag) of
 facts. We will explain the types of facts and their use below.
 
-Tamarin's rewrite rules have sequences of facts as left-hand-sides, labels, and
-right-hand-sides. For example:
+Tamarin's rewrite rules have a name, and sequences of facts as left-hand-sides,
+labels, and right-hand-sides. For example:
 
-**FIX** Cas: Maybe better to use Naxos rules here.
+**FIX Cas: Maybe better to use Naxos rules here.**
 
 	MyRule1:
-	[ ]--[ G(u) ]->[ H(t), F(t) ]
+	[ ]--[ L(t) ]->[ F('1',t), F('2',t) ]
 
 	MyRule2:
-	[ F(t) ]--[ G(u) ]->[ H(t), F(h(t)) ]
+	[ F(u,v) ]--[ M(u,v) ]->[ H(t), G('3',h(t)) ]
 
-For now, we will ignore the labels and return to them when discussing
-properties.
+For now, we will ignore the actions (`L(...)` and `M(...)`) and return to them
+when discussing properties in the next section.
+
+
 
 ### Executions
 
-Initially, the state is the empty multiset.
+The initial state of the transition system the empty multiset.
+
 The rules define the way in which the system can transition to a new state. A
 rule can be applied to a state if it can be instantiated such that its left hand
 side is contained in the current state. In this case, the left-hand side facts
 are removed from the state, and replaced by the right hand side.
 
 For example, in the initial state, `MyRule1` can be instantiated for any value
-of the symbols `u` and `t`. This would lead to a new state that contains `H(t)`
-and `F(t)`.
+of `t`. For any specific instantiation of `t`, this leads to a second state that
+contains `F('1',t)` and `F('2',t)`. `MyRule2` can not be applied in the initial
+state since it contains no `F` facts.
 
+In each possible second state, both rules can now be applied. The second rule
+can be instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is
+equal to the instantiation of `t` that occurred in the first transition, each
+possible instantiation leading to next state.
 
 
 Facts
 -----
 
-Facts are of the form `F(t1,...,tN)` for a fact symbol `F` and terms `tI`.
+Facts are of the form `F(t1,...,tN)` for a fact symbol `F` and terms `tI`. They
+have a fixed arity (in this case `N`). Note that i a Tamarin model uses the same
+fact with two different arities, Tamarin will report an error.
 
 There are three types of special facts built in to Tamarin. These are used to
 model interaction with the untrusted network and to model the generation of
@@ -110,47 +121,97 @@ unique fresh (random) values.
 	generating `Fr(x)` facts, and also ensures that each instantiation of
 	this rule produces a term that is different from all others.
 
-
-
-
+For the above three facts, Tamarin has built-in rules. In particular, there is a
+fresh rule that produces unique `Fr(...)` facts, and there is a set of rules for
+adversary knowledge derivation, which consume `Out(...)` facts and produce
+`In(...)` facts.
 
 ### Linear versus persistent facts
 
-Some facts in our models will never be removed from the state once they are
-introduced. This would require that every rule that has such a fact in the
-left-hand-side, will also have an exact copy of this fact in the right-hand
-side.
+The facts that we have mentioned so far are called linear facts. They can be
+produced but also be consumed by rules, and hence the might appear in one state
+but not in the next.
 
-While there is no fundamental problem with this modeling, it is inconvenient for
-the user and it also might case Tamarin to explore rule instantiations that are
-irrelevant for tracing such facts. 
+In contrast, some facts in our models will never be removed from the state once
+they are introduced. This would require that every rule that has such a fact in
+the left-hand-side, will also have an exact copy of this fact in the right-hand
+side.  While there is no fundamental problem with this modeling, it is
+inconvenient for the user and it also might case Tamarin to explore rule
+instantiations that are irrelevant for tracing such facts. 
 
-For these two reasons, we introduce linear facts. These are never removed from
-the state, and we denote them by prefixing the fact with a bang (`!`).
+For these two reasons, we introduce persistent facts. These are never removed
+from the state, and we denote them by prefixing the fact with a bang (`!`).
+
+FIX: use the following paragraph
+
+Facts always start with an upper-case letter and do not have to be
+declared explicitely. If their name is prefixed with an exclamation mark `!`,
+then they are persistent. Otherwise, they are linear. Note that every
+fact name must be used consistently; i.e., it must always be used with
+the same arity, casing, and multiplicity. Otherwise, Tamarin complains
+that the theory is not wellformed.
+
+Modeling protocols
+------------------
+
+There are several ways in which the execution of security protocols can be
+defined, e.g., as in [@opsem2012]. In Tamarin, there is no pre-defined protocol
+concept  and the user is free to model them in the preferred way. Below we give
+one example of how protocols can be modeled and discuss alternatives afterwards.
+
+### Public-key infrastructure
+
+**FIX Cas: this might well be duplicating a part from elsewhere.**
+
+In the Tamarin model, there is no pre-defined notion of public key
+infrastructure (PKI). A pre-distributed PKI with asymmetric keys for each party
+can be modeled by a single rule that generates a key for a party. The party's
+identity and public/private keys are then stored as facts in the state, enabling
+protocol rules to retrieve them. For the public key, we commonly use the `Pk`
+fact, and for the corresponding private key we use the `Ltk` fact. Since these
+facts will only be used by other rules to retrieve the keys, but never updated,
+we model them as persistent facts. We use the abstract function `pk(x)` to
+denote the public key corresponding to the private key `x`, leading to the
+following rule.
+
+	[ Fr(~x) ]--[ ]->[ !Pk($A,pk(~x)), !Ltk($A,~x) ]
+
+**FIX Cas: for the above rule, need to point out relation to builtins**
+
+**FIX Cas: what about signatures and builtins**
+
+Some protocols, such as Naxos, rely on the algebraic properties of the key
+pairs. In many DH-based protocols, the public key is $g^x$ for the private key
+$x$, which enables exploiting the commutativity of the exponents to establish
+keys. In this case, we model the following rule.
+
+	[ Fr(~x) ]--[ ]->[ !Pk($A,'g'^~x)), !Ltk($A,~x) ]
+
+### Modeling a protocol step
+
+Protocols describe the behaviour of agents in the system. Agent can perform
+protocol steps, such as receiving a message and responding by sending a message,
+or starting a session.
+
+### Modeling the Naxos responder role
+
+We first model the responder role, which is easier since it can be done in one
+rule.
+
+Each time a responder thread of an agent receives a message, it will generate a
+fresh value `eskR`, send a response message, and compute a key $kR$
 
 
+**FIX Cas: need to do either pattern matching or explicit construct/deconstruct;
+not a big deal for naxos, but should pop up somewhere**
 
-
-
-Cryptographic messages as terms
+Alternative modeling approaches
 -------------------------------
 
-To model cryptographic messages we use terms, which are represented by trees
-where the nodes are operators (such as pairing, function application,
-concatenation, encryption) and the leaves are constants or variables.
+**FIX Cas: splitting send/receive, etc.**
 
-For the leaves, we have two main sorts:
+**FIX Cas: pattern matching vs deconstructors**
 
-[fresh names]:
-	Model random messages such as keys or nonces.
 
-[public names]:
-	Model known constants such as agent identities.
 
-For example, in the Naxos protocol, `eskI` and `eskR` are freshly generated for
-each new session. Additionally, the agent's long-term keys (`lkI`, `lkR') are
-freshly generated before the agent starts communicating. We therefore model them
-as fresh names.
 
-The identities `I` and `R` can be instantiated by any concrete agent identity,
-modeled as public names.
