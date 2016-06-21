@@ -7,6 +7,11 @@ First-time users
 ----------------
 
 TODO: Lara?
+function-> where does it go? doesn have support:
+local to rule with "let"
+
+arity 
+unused variable
 
 
 
