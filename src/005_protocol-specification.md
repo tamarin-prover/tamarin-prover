@@ -112,10 +112,13 @@ following example:
 		in
 		[ ... ] --[ ... ]-> [ ... ]
 
-`let ... in` can be used to specify local term macros within the context of a
-rule.  Each macro should be on a separate line and defines a substitution: on
-the left-hand side of the `=` sign there should be a variable, and there can be
-an arbitrary term on the right-hand side. The rule will be interpreted after
+Such let expressions  can be used to specify local term macros within the context of a
+rule.  Each macro should occur on a separate line and defines a
+substitution:
+the left-hand side of the `=` sign should be a variable and
+the right-hand side is an arbitrary term (not containing the variable on
+the left-hand side).
+The rule will be interpreted after
 substituting all variables occurring in the let by their right-hand sides.
 
 Facts
