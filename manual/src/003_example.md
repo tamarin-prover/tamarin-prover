@@ -298,14 +298,14 @@ If you click on `Message theory` on the left, you should see the following:
  "Tutorial Message Theory")
  
 On the right side you can now see the message theory, starting with
-the so-called *Signature*, i.e., all functions and equations you
+the so-called *Signature*, which consists of all the functions and equations you
 defined. Note that Tamarin automatically added a function `pair` to
-create pairs, and functions `fst` and `snd` together with two
+create pairs, and the functions `fst` and `snd` together with two
 equations to access the first and second value of a pair. There is a
-shorthand for the `pair` using `<` and `>` which is used here for
+shorthand for the `pair` using `<` and `>`, which is used here for
 example for `fst(<x.1, x.2>)`.
 
-Just below you have the *Construction rules* which describe which functions the 
+Just below you have the *Construction rules*. These rules describe which functions the 
 intruder can apply. Consider for example the following rule:
 
     rule (modulo AC) ch:
