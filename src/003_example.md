@@ -131,7 +131,7 @@ action stating that the long-term key of agent `A` was compromised. Action facts
 are just like facts, but *should* be from a different namespace, though this is 
 not enforced. We will use this action in the security property below to 
 determine which agents are compromised. The rule now has a premise, conclusion, 
-and action facts within the arrow: `-[ FACT ]->`:
+and action facts within the arrow: `--[ FACT ]->`:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=29 upper=32}
 ~~~~
@@ -153,22 +153,14 @@ The first rule models the client sending its message, while the second
 rule models it receiving a response. The third rule models the server,
 both receiving the message and responding in one single rule.
 
-Note that we model all applications of cryptographic algorithms
-explicitly.  Call `tamarin-prover Tutorial.spthy` to inspect the
-finite variants of the `Serv_1` rule, which list all possible
-interactions of the destructors used, or see below for detail. In our
-proof search, we will consider all these interactions.
-
-
 We also model that the server explicitly checks that the first
 component of the request is equal to `'1'`. We model this by logging
 the claimed equality and then adapting the security property such that
 it only considers traces where all `Eq` actions occur with two equal
-arguments. Note that `Eq` is NOT a built-in fact, but one can pick any
-name. Note that inequalities can be modeled analogously.
+arguments.
 
-We log the session-key setup requests received by servers to allow
-formalizing the authentication property for the client.
+Note that we log the session-key setup requests received by servers using an 
+action to allow formalizing the authentication property for the client later on.
 
 
 Modeling the security properties
@@ -179,7 +171,7 @@ a protocol execution.
 
 First, note that we can specify additional axioms that restrict the
 set of considered traces. In this example, we restrict our attention
-to traces where all equality checks succeed. In detail the axiom says
+to traces where all equality checks succeed. In detail the following axiom says
 that for all parameters `x`, `y` to the `Eq` action fact at some time
 point `i` it has to be the case that `x=y`.
 
@@ -250,8 +242,6 @@ then the Tutorial security protocol theory with the lemmas and their
 attached (dis)proofs.
 
 
-
-
 Graphical User Interface
 ------------------------
 
@@ -277,9 +267,9 @@ you will then see the following output on the command line
 
     21/Jun/2016:09:16:01 +0200 [Info#yesod-core] Application launched @(yesod_83PxojfItaB8w9Rj9nFdZm:Yesod.Core.Dispatch ./Yesod/Core/Dispatch.hs:157:11)
 
-If there were any syntax errors you would see them at this point, but
-there are none in the 'Tutorial'. See later for details on how to deal
-with such errors.
+If there were any syntax or wellformedness errors you would see them at this 
+point, but there are none in the 'Tutorial'. See later for details on how to 
+deal with such errors.
     
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
