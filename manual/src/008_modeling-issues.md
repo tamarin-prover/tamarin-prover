@@ -110,6 +110,8 @@ variables already occur in the premise. If it is a fresh variable that appears
 for the first time in this rule, a `Fr(~n)` fact should be added to the 
 premise.
 
+### Free Term in formula ###
+
 Next, we change the functional lemma as follows
 
 ~~~~ {.tamarin slice="code/FirstTimeUser_Error4.spthy" lower=34 upper=38}
@@ -119,10 +121,12 @@ This causes the following warning:
 
 ![ ](../images/ErrorMsg_4.png)
 
-The warning indicates that in this lemma the term `m` is occures free. This
+The warning indicates that in this lemma the term `m` is occurs free. This
 means that it is not bound to any quantifier. Often such an error occurs if
 one forgets to list all the variables that are used in the formula after the
 `Ex` or `All` quantifier. In our example the problem occured because we deleted the `m` in `Ex I R m #i #j.` 
+
+### Undefined Action Fact in Lemma ###
 
 Next, we change the lemma `nonce_secret` and get the following warning:
 
@@ -138,6 +142,8 @@ The cause of this is either that the fact is spelled differently (here
 protocol rules. 
 Generally, it is a good advice to double check that the facts that are used in
 the lemmas are appearing in the relevant protocol rules as actions.
+
+### Undeclared function symbols ###
 
 If we omit the line 
 
@@ -156,6 +162,8 @@ not declared.
 Here in the example the problem arises because we used the symmetric 
 encryption `senc`, but omitted the line where we declare that we use this
 built-in function.
+
+### Inconsistent sorts ###
 
 If we change the `setup` rule to 
 
