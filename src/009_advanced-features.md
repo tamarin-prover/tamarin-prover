@@ -1,8 +1,9 @@
 Advanced Features
 =================
 
-Advanced features for advanced users: manual proofs, custom heuristics, encod-
-ing tricks, induction, channel models, internal preprocessor, how to do timings
+Advanced features for advanced users: manual proofs, custom
+heuristics, encoding tricks, induction, channel models, internal
+preprocessor, how to do timings
 
 Manual Exploration using GUI
 ----------------------------
@@ -24,19 +25,42 @@ to encoding using alternative more efficient descriptions
 
 Different Channel Models
 -------------------------
-Generally, the Dolev-Yao adversary that we consider can read and modify
-all messages sent over the network and also inject his own messages.
-If we want to achieve authentication or confidentiality properties, we
-use cryptography to sign or encrypt messages sent over the insecure network.
- 
-Alternatively, we can assume that a channel between two roles already has
-some properties and abstract away from the fact how this property is achieved.
-For example, we can assume that a channel between two roles is confidential
-without considering how this property is achieved. The adversary can then not 
-learn messages that are sent over this channel. 
-For modeling such properties we can define channel rules.
 
-Let us consider the following protocol, where an initiator generates a new 
+Tamarin's built-in adversary model is the classical Dolev-Yao
+adversary that completely controls the communication network.  In
+particular, the Dolev-Yao adversary can eavesdrop on, block, and
+modify messages sent over the network and inject any messages in his
+knowledge into the network.
+
+The Dolev-Yao adversary's control over the communication network is
+modeled with the following two built-in rules:
+
+1.  
+```
+rule irecv:
+   [ Out( x ) ] --> [ !KD( x ) ]
+```
+
+2.  
+```
+rule isend:
+   [ !KU( x ) ] --[ K( x ) ]-> [ In( x ) ]
+```
+
+The `irecv` rule states that any message sent by an agent using the
+`Out` fact is learned by the adversary. Such messages are then
+analyzed with the adversary's message deduction rules that depend on
+the specified equational theory.
+
+The `isend` rule states that any message that any message received by
+an agent by means of the `In` fact has been constructed by the
+adversary.
+
+We can limit the adversary's control over the protocol agents'
+communication channels by specifying channel rules.  In the following
+we illustrate the modelling of confidential, authentic, and secure
+channel rules.
+Consider for this purpose the following protocol, where an initiator generates a 
 fresh nonce and sends it to a receiver.
 
 ~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=5 upper=6}
@@ -47,16 +71,16 @@ We can model this protocol with the following Tamarin specification.
 ~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=10 upper=31}
 ~~~~
 
-We want to examine whether the nonce remains secret from the perspective 
-of both the initiator, with lemma `nonce_secret_initiator`, and the
-receiver, with lemma `nonce_secret_receiver`. Further, with lemma
-`message_authentication` we examine if the receiver can be sure that the
-agent who he thinks is in the initiating role really is the one who sent the
-nonce.
+We state the nonce secrecy property for the 
+initiator and responder with the `nonce_secret_initiator` and the
+`nonce_secret_receiver` lemma, respectively. The lemma
+`message_authentication` specifies a [message authentication](006_property-specification.html#sec:message-authentication) property for the responder role. 
 
-If we consider the protocol with insecure channels, none of the properties
-hold, because the adversary can learn the nonce but also send his own one
-to the receiver.
+If we analyze the protocol with insecure channels, none of the
+properties hold, because the adversary can learn the nonce sent by the
+initiator and send his own one to the receiver.
+
+#### Confidential Channel Rules
 
 Let us now modify the protocol such that the same message is sent over a
 confidential channel. By confidential we mean that only the intended receiver
@@ -83,12 +107,13 @@ send a message from his knowledge on a confidential channel.
 
 Finally, we need to specify in the protocol rules that the message `~n` is
 sent and received on a confidential channel. We do this by changing the `Out` 
-and `In` fact to a  `Out_C` and `In_C` fact, respectively.
+and `In` fact to the `Out_C` and `In_C` fact, respectively.
 
 In this modified protocol the lemma `nonce_secret_initiator` holds. 
 As the initiator sends the nonce on a confidential channel, only the intended
 receiver can read the message, but the adversary cannot learn it.
 
+#### Authentic Channel Rules
 
 Unlike a confidential channel, an adversary can read messages sent on an
 authentic channel. However, on an authentic channel, the adversary cannot
@@ -114,6 +139,8 @@ In the resulting protocol, the lemma `message_authentication` is proven to hold
 by Tamarin. The adversary cannot change the sender of the message nor 
 the message itself. For this reason the receiver can be sure that the agent in 
 the initiator role indeed sent it.
+
+#### Secure Channel Rules
 
 The final kind of channels that we want to consider in detail are secure 
 channels. Secure channels are both confidential and authentic. This means that 
