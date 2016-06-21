@@ -9,7 +9,7 @@ OS X](#sec:macosx), and [Microsoft Windows](#sec:windows).
 Linux {#sec:linux}
 -----
 
-For Tamarin to run on Linux\index{Linux}, a number of dependencies
+To run Tamarin on Linux\index{Linux}, a number of dependencies
 must be installed, namely GraphViz and Maude 2.7. You can install
 GraphViz using your standard package manager or directly from
 <http://www.graphviz.org/>. You can also
@@ -35,7 +35,7 @@ automatically using the tool `stack`. You must first install
 `stack`, following the instructions given at
 [Stack's install page](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md).
 
-After running `git clone` of the Tamarin
+After running `git clone` on the Tamarin
 repository, you have the current development version ready for
 compilation. If you would prefer to use the master version, just run
 `git checkout master`. In either case, you can then run `make
@@ -132,7 +132,7 @@ or download the source files from
   make default
 ```
 
-   The installation process lets you know where the `tamarin-prover`
+   The installation process informs you where the `tamarin-prover`
    executable will be installed, for example, in `~/.local/bin/`. Move the
    binary to a directory in your executables path or add
    `~/.local/bin/` to your path.
@@ -161,7 +161,7 @@ exploring from there, or to continue reading this document.
 Note that the `Tutorial.spthy` file can be found in the `examples` directory of the Tamarin source.
 
 Running ```tamarin-prover test``` will check the Maude and GraphViz
-versions and run some tests, its output should be:
+versions and run some tests Its output should be:
 
 ```
 $ tamarin-prover test
@@ -193,8 +193,8 @@ Running Tamarin on a remote machine
 
 If you have access to a faster desktop or server, but prefer using
 Tamarin on your laptop, you can do that. The cpu/memory intensive
-reasoning part of the tool will run on the faster machine, while you
-run just the GUI locally, i.e., the web browser of your choice. To do
+reasoning part of the tool will then run on the faster machine, while you
+just run the GUI locally, i.e., the web browser of your choice. To do
 this, you forward your port 3001 to the port 3001 of your server
 with the following command, replacing ```SERVERNAME``` appropriately.
 
