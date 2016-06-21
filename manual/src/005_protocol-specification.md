@@ -58,8 +58,8 @@ the transitions will be labeled. The system's state is a multiset (bag) of
 facts. We will explain the types of facts and their use below.
 
 A rewrite rule in Tamarin has a name and three parts, each of which
-is a sequence of facts: one for the left-hand side, one labelleing the
-transition (which we call 'action facts'),  and one for the right-hand side.
+is a sequence of facts: one for the rule's left-hand side, one labelleing the
+transition (which we call 'action facts'),  and one for the rule's right-hand side.
 For example:
 
 **FIX Cas: Maybe better to use Naxos rules here.**
