@@ -345,9 +345,9 @@ Now click on *Multiset rewriting rules and axioms* on the left.
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
  "Tutorial Multiset Rewriting Rules")
 
-On the right side of the screen, you should now see the protocol's 
+On the right side of the screen, are the protocol's 
 rewriting rules, plus two additional rules: the `isend` and `irecv`
-rules, which provide an interface between the protocols output and input
+rules. These two additional rules provide an interface between the protocols output and input
 and the intruder deduction.
 The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` the intruder knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
