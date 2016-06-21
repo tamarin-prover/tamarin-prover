@@ -97,7 +97,7 @@ Here the only premise is an instance of the `Fr` fact. The `Fr` fact is a
 built-in fact. It denotes a freshly generated fresh name, used to model random 
 numbers, i.e., nonces or keys. See later in this manual for details.
 
-We denote the sort of variables using prefixes:
+In Tamarin the sort of variables is expressed using prefixes:
 
  *    `~x`  denotes  `x:fresh`
  *    `$x`  denotes  `x:pub`
@@ -108,18 +108,18 @@ and a string constant `'c'` denotes a public name `'c \in PN'`; i.e., a fixed,
 global constant.
 
 Thus, the above rule can be read as follows. First, freshly generate a
-fresh name `~ltk`, the new private key, and nondeterministically choose
-a public name `A`, the agent for which we are generating the key-pair.
-Then, generate the persistent fact `!Ltk($A, ~ltk)`, which denotes the
-association between agent `A` and its private key `~ltk`, and generate
-the persistent fact `!Pk($A, pk(~ltk))`, which denotes the association
-between the agent `A` and its public key `pk(~ltk)`.
+fresh name `~ltk` of sort fresh, the new private key, and nondeterministically 
+choose a public name `A`, the agent for which we are generating the key-pair.
+Then, generate the fact `!Ltk($A, ~ltk)` (`!` denotes that it is persistent, 
+i.e., cannot be consumed), which denotes the association between agent `A` and 
+its private key `~ltk`, and generate the fact `!Pk($A, pk(~ltk))`, which 
+denotes the association between the agent `A` and its public key `pk(~ltk)`.
 
-We allow the adversary to retrieve any public key using the following
-rule.  Intuitively, it just reads a public-key database entry and
+In the example, we allow the adversary to retrieve any public key using the 
+following rule. Intuitively, it just reads a public-key database entry and
 sends the public key to the network using the built-in fact `Out`
-denoting a message sent to the network. See later for more
-information:
+denoting a message sent to the network (see the section on protocol 
+specification for more information):
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=24 upper=27}
 ~~~~
@@ -127,12 +127,11 @@ information:
 We model the dynamic compromise of long-term private keys using the
 following rule. Intuitively, it reads a private-key database entry and
 sends it to the adversary. This rule has an observable `LtkReveal`
-action stating that the long-term key of agent `A` was compromised. We
-will use this action in the security property below to determine which
-agents are compromised. Action facts are just like facts, but *should*
-be from a different namespace, though this is not enforced. The rule
-now has a premise, conclusion, and action facts within the arrow: `-[
-FACT ]->`:
+action stating that the long-term key of agent `A` was compromised. Action facts 
+are just like facts, but *should* be from a different namespace, though this is 
+not enforced. We will use this action in the security property below to 
+determine which agents are compromised. The rule now has a premise, conclusion, 
+and action facts within the arrow: `-[ FACT ]->`:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=29 upper=32}
 ~~~~
