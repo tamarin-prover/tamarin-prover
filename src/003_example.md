@@ -217,35 +217,6 @@ Note that when adding inconsistent axioms, you can prove any property. To check
 that there still exist traces, we always want an `exists-trace` lemma. When 
 modeling protocols such existence proofs are very useful sanity checks.
 
-Running Tamarin on the Command Line
------------------------------------
-
-The call
-
-    tamarin-prover Tutorial.spthy
-
-parses the `Tutorial.spthy` file, checks its wellformedness (explained below), 
-and pretty-prints the theory. The declaration of the signature and the equations 
-can be found at the top of the pretty-printed theory.
-
-Proving all lemmas contained in the theory using the automatic prover is as 
-simple as adding the flag `--prove` to the call; i.e.,
-
-    tamarin-prover Tutorial.spthy --prove
-
-This will first output some logging from the constraint solver and
-then the Tutorial security protocol theory with the lemmas and their
-attached (dis)proofs:
-
-    summary of summaries:
-    
-    analyzed: Tutorial.spthy
-    
-      Client_session_key_secrecy (all-traces): verified (5 steps)
-      Client_auth (all-traces): verified (11 steps)
-      Client_auth_injective (all-traces): verified (15 steps)
-      Client_session_key_honest_setup (exists-trace): verified (5 steps)
-
 
 Graphical User Interface
 ------------------------
@@ -467,3 +438,33 @@ graph leads to a contradiction as it contains `LtkReveal( S )`:
 The lemma is now colored in green, as it was successfully proven. If we had 
 found a counterexample, it would be colored in red. You can prove the other 
 lemmas in the same way.
+
+Running Tamarin on the Command Line
+-----------------------------------
+
+The call
+
+    tamarin-prover Tutorial.spthy
+
+parses the `Tutorial.spthy` file, checks its wellformedness (explained below), 
+and pretty-prints the theory. The declaration of the signature and the 
+equations can be found at the top of the pretty-printed theory.
+
+Proving all lemmas contained in the theory using the automatic prover is as 
+simple as adding the flag `--prove` to the call; i.e.,
+
+    tamarin-prover Tutorial.spthy --prove
+
+This will first output some logging from the constraint solver and
+then the Tutorial security protocol theory with the lemmas and their
+attached (dis)proofs:
+
+    summary of summaries:
+    
+    analyzed: Tutorial.spthy
+    
+      Client_session_key_secrecy (all-traces): verified (5 steps)
+      Client_auth (all-traces): verified (11 steps)
+      Client_auth_injective (all-traces): verified (15 steps)
+      Client_session_key_honest_setup (exists-trace): verified (5 steps)
+
