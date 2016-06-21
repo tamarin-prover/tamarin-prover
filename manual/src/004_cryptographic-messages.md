@@ -1,15 +1,6 @@
 Cryptographic Messages {#sec:cryptographic-messages}
 ====================================================
 
-TODO:
-  * A complete list of the builtins and exactly what symbols/functions they
-    add (e.g. some parts of the term grammar in the current manual only
-    actually exist with particular builtins, I believe)
-  * When to annotate variables with symbols e.g. ~,$,'
-
-
-
-
 A cryptographic message is either a constant `c` or a message `f(m1,...,mN)`
 corresponding to the application of the `N`-ary function `f` to `N` cryptographic
 messages `m1`, ..., `mN`.
@@ -40,22 +31,7 @@ Function Symbols
 Tamarin supports a fixed set of builtin function symbols and additional user-defined
 function symbols. The builtin function symbols are included in signatures. To include
 a signature `some-sig`, include the line `builtins: some-sig` in your file. The
-builtin signatures are.
-
-diffie-hellman
-
-: FIXME
-
-bilinear-pairing
-
-: FIXME
-
-some more
-
-: FIXME
-
-
-
+builtin message theories are given in Section [Builtin message theories](#sec:linux).
 
 Sorts/Types
 -----------
@@ -66,69 +42,48 @@ Variables
 Equational theories
 -------------------
 
-OLD
----
+Builtin message theories {#subsec:builtin-sigs}
+------------------------
+
+In the following, we write `f/n` to denote that the function symbol `f` is
+`n`-ary. **FIXME: Also explain pairing, which is always included.**
+
+
+`hashing`:
+
+: This theory models a hash function. It defines the function symbol
+  `h/1` and no equations.
+
+`asymmetric-encryption`:
+
+: This theory models a public key encryption scheme. It defines the
+  function symbols `aenc/2`, `adec/2`, and `pk/1`. These function symbols are
+  related by the equation `adec(aenc(m, pk(sk)), sk) = m`.
+
+`signing`:
+
+: This theory models a signature scheme. It defines the function symbols
+  `sign/2`, `verify/3`, `pk/1`, and `true`. These function symbols are related by
+  the equation `verify(sign(m,sk),m,pk(sk)) = true`.
+
+`symmetric-encryption`:
+
+: This theory models a symmetric encryption scheme. It defines the function symbols
+  `senc/2`  and `sdec/2`. These function symbols are related by the equation
+  ` sdec(senc(m,k),k) = m`.
+
+`diffie-hellman`:
+
+: This theory models Diffie-Hellman groups. **FIXME**
+
+`bilinear-pairing`:
+
+: This theory models Pairing groups. **FIXME**
+
+`multiset`:
+
+: This theory introduces associative operators which can be used to model
+  multisets. **FIXME**
 
 
 
-
-Certain equational theories are used very often when modeling
-cryptographic messages. We therefore provide builtins definitions for
-them, using the keyword 'builtins'. The above theory could also be
-enabled using the declaration
-
-  builtins: hashing, asymmetric-encryption
-
-We support the following builtins theories:
-
-  diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
-  hashing
-
-
-
-Note that the theory for hashing only introduces the function symbol 'h/1'
-and contains no equations.
-Apart from 'diffie-hellman', all of these theories are subterm-convergent and
-can therefore also be declared directly, as above. You can inspect their
-definitions by uncommenting the following two line-comments and calling
-
-  tamarin-prover Tutorial.spthy
-
-// builtins: diffie-hellman, signing, asymmetric-encryption, 
-symmetric-encryption,
-//          hashing
-
-
-
-**FIX: Cas has moved the below from 005_, to be integrated into this section**
-
-Cryptographic messages as terms
--------------------------------
-
-To model cryptographic messages we use terms, represented by trees where the
-nodes are operators (such as pairing, function application, concatenation,
-encryption) and the leaves are constants or variables.
-
-For the leaves, we have two main sorts:
-
-[fresh names]:
-	Model random messages such as keys or nonces.
-
-[public names]:
-	Model known constants such as agent identities.
-
-For example, in the Naxos protocol, `eskI` and `eskR` are freshly generated for
-each new session. Additionally, the agent's long-term keys (`lkI`, `lkR') are
-freshly generated before the agent starts communicating. We therefore model them
-as fresh names.
-
-The identities `I` and `R` can be instantiated by any concrete agent identity,
-modeled as public names.
-
-
-
-
-
-There is a
-shorthand for the `pair` using `<` and `>` which is right-associative
-and allows one to write `<a,b,c>` to represent `pair(a,pair(b,c))`.
