@@ -6,6 +6,8 @@ Trace Properties
 
 **FIXME: what are trace properties**
 
+**FIXME: what is a guarded formula/variable**
+
 We reason about a protocol's behaviour by annotating its
 rules with *action facts*.  
 For instance, consider the following fictitious rule 
@@ -57,11 +59,12 @@ delimited using single-quotes), and free function symbols including
 pairing. This excludes function symbols that appear in any of the equations.
 Moreover, all variables must be
 guarded. The error message for an unguarded variable is currently not very
-helpful.
+helpful. **FIXME: This sentence is currently not very helpful for the reader. 
+Give an example of the error message.**
 
-For universally quantified variables, one has to check that they all
-occur in an action constraint right after the quantifier and that the
-outermost logical operator inside the quantifier is an implication.
+To ensure guardedness, for universally quantified variables, one has to check 
+that they all occur in an action constraint right after the quantifier and that 
+the outermost logical operator inside the quantifier is an implication.
 For existentially quantified variables, one has to check that they all
 occur in an action constraint right after the quantifier and that the
 outermost logical operator inside the quantifier is a conjunction.
@@ -212,7 +215,7 @@ lemma injectiveagreement:
 
 TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree?
 
-#### Message Authentication ####
+#### Message Authentication #### {#sec:message-authentication}
 
 TODO: ???
 
@@ -233,9 +236,9 @@ that one can use axioms to simplify writing lemmas
 
 
 
-## Example axioms ##
+## Common axioms ##
 
-Here is a list of example axioms. Do note that you need to add the
+Here is a list of common axioms. Do note that you need to add the
 appropriate action facts to your rules for these axioms to have
 impact. 
 
