@@ -118,6 +118,16 @@ lemma secrecy_PFS:
         | (Ex X #r. Reveal(X)@r & Honest(X) @i & r < i)"
 ```
 
+**Example.** The following Tamarin theory specifies a simple
+  one-message protocol. Agent `A` sends a message encrypted with agent
+  `B`'s public key to `B`. Both agents claim secrecy of a message, but
+  only agent `A`'s claim is true. To distinguish between the two claims
+  we specify two lemmas and differentiate between two secret actions, 
+  `Secret_A` for agent `A` and `Secret_B` for agent `B`.
+
+~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
+~~~~
+
 ### Authentication ###
 
 How to express standard authentication properties, examples
