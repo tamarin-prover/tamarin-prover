@@ -25,11 +25,11 @@ theory's name, here `Tutorial`.
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=12 upper=13}
 ~~~~
 
-After the keyword `begin`, we first declare function symbols, and the
+After the keyword `begin`, we first declare function symbols and the
 equations that these functions satisfy. The functions and equations
 describe the cryptographic primitives used in the protocol and their
 properties. Afterward, we declare multiset rewriting rules that model
-the protocol and finally we write properties to be proven (called
+the protocol and finally we write the properties to be proven (called
 `lemmas'), which specify the protocol's desired security properties.
 Note that we have also inserted comments to structure the theory.
 
@@ -38,13 +38,14 @@ We next explain in detail the protocol modeled above.
 Function Signature and Equational Theory
 ----------------------------------------
 
-We are working in the symbolic model of security protocol verification, which 
-means that we model the messages as terms, built from functions, satisfying an 
-underlying equational theory. This will be explained in detail later, but for 
-now note that there are function names which we explicitly declare together with 
-their arity, and equalities that define the semantic equivalence of terms, e.g., 
-the decryption of an encrypted ciphertext is the original message, when the 
-correct keys are used. We generally use lower-case for function names.
+We are working in the symbolic model of security protocols.  This means
+that we model the messages as terms, built from functions, that satisfy
+an underlying equational theory. This will be explained in detail later.
+But for now note that there are function names, which we explicitly
+declare together with their arity, and equalities that define the
+semantic equivalence of terms, e.g., the decryption of an encrypted
+ciphertext is the original message, when the correct keys are used. We
+generally use lower-case for function names.
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
