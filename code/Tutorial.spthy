@@ -13,19 +13,18 @@ This file is documented in the Tamarin user manual.
 theory Tutorial
 begin
 
-functions: h/1, aenc/2, adec/2, pk/1
-equations: adec(aenc(m, pk(k)), k) = m
+builtins: hashing, asymmetric-encryption
 
 // Registering a public key
 rule Register_pk:
-  [ Fr(~ltk) ]
+    [ Fr(~ltk) ]
   -->
-  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+    [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
 
 rule Get_pk:
-  [ !Pk(A, pk) ]
+    [ !Pk(A, pk) ]
   -->
-  [ Out(pk) ]
+    [ Out(pk) ]
 
 rule Reveal_ltk:
     [ !Ltk(A, ltk) ]
@@ -39,11 +38,8 @@ rule Client_1:
     , !Pk($S, pkS)   // lookup public-key of server
     ]
   -->
-    [ Client_1( $S, ~k )           // Store server and key for next step of thread
-    , Out( aenc(<'1', ~k>, pkS) )  // Send the encrypted session key to the server
-                                   // We add the tag '1' to the request to allow
-                                   // the server to check whether the decryption
-                                   // was successful.
+    [ Client_1( $S, ~k )    // Store server and key for next step of thread
+    , Out( aenc(~k, pkS) )  // Send the encrypted session key to the server
     ]
 
 rule Client_2:
@@ -56,17 +52,13 @@ rule Client_2:
 // A server thread answering in one-step to a session-key setup request from
 // some client.
 rule Serv_1:
-    [ !Ltk($S, ~ltkS)                          // lookup the private-key
-    , In( request )                            // receive a request
+    [ !Ltk($S, ~ltkS)                             // lookup the private-key
+    , In( request )                               // receive a request
     ]
-  --[ Eq(fst(adec(request, ~ltkS)), '1')
-    , AnswerRequest($S, snd(adec(request, ~ltkS)))   // Explanation below
-    ]->
-    [ Out( h(snd(adec(request, ~ltkS))) ) ]    // Return the hash of the
-                                               // decrypted request.
+  --[ AnswerRequest($S, adec(request, ~ltkS)) ]-> // Explanation below
+    [ Out( h(adec(request, ~ltkS)) ) ]            // Return the hash of the
+                                                  // decrypted request.
 
-
-axiom Equality_Checks_Succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
 
 lemma Client_session_key_secrecy:
   " /* It cannot be that a  */

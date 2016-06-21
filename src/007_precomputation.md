@@ -7,9 +7,9 @@ Precomputation
 To better understand the precomputation of Tamarin and how it can
 cause [open chains](#sec:openchains) and how they are problematic, let
 us look at the example of the Needham-Schroeder-Lowe Public Key
-Protocol.
+Protocol, given here in Alice&Bob notation:
 
-~~~~ {.tamarin include="code/NSLPK3.spthy" lower=24 upper=29}
+~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=24 upper=29}
 ~~~~
 
 It is specified in Tamarin by the following rules:
@@ -107,3 +107,6 @@ with an axiom. But, we need to ensure that the resulting model is the
 one we want, so use this with care.
 
 
+TODO:
+      * Typing lemmas in particular - how to tell when one would help, the
+        best way to write one, and what you can’t prove in a typing lemma
