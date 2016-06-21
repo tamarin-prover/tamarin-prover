@@ -77,8 +77,10 @@ appear at the very end of the text when loading this theory.
 
 ![ ](../images/ErrorMsg_wellformedness.png)
 
-This indicates that there might be a problem. However, for getting more 
-information, one has to scroll up in the command line.
+Such a wellformedness warning appears in many different error messages at the 
+bottom and indicates that there might be a problem. However, for getting more 
+information, one has to scroll up in the command line to look at the more 
+detailed error messages.
 
 ![ ](../images/ErrorMsg_2.png)
 
