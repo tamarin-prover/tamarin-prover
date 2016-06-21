@@ -17,12 +17,12 @@ files, and are stored in the sub-directory `code` of the repository for easy
 distribution. The best way to ensure everything fits together is to
 include the spthy files as follows.
 
-~~~~ {.autognp include="code/Tutorial.spthy"}
+~~~~ {.autognp include="code/example.spthy"}
 ~~~~
 
 You can also include a slice of a file.
 
-~~~~ {.autognp slice="code/Tutorial.spthy" lower=12 upper=13}
+~~~~ {.autognp slice="code/example.spthy" lower=12 upper=13}
 ~~~~
 
 
