@@ -323,7 +323,7 @@ and the intruder deduction.
 The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` that the intruder knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
 output `Out(x)` and passes it to the intruder knowledge, represented by the 
-`!KD(x)` fact. Note that the rule `Serv_1` from the protocol has three 
+`!KD(x)` fact. Note that the rule `Serv_1` from the protocol has two 
 *variants (modulo AC)*. The precise meaning of this is unimportant right now 
 (it stems from the way Tamarin deals with equations) and will be explained in 
 the 
