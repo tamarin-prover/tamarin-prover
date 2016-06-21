@@ -10,12 +10,13 @@ Models are specificied in Tamarin using three main ingredients:
    2. Facts
    3. Terms
 
-We will discuss each of them in turn and illustrate their use with respect to
-the Naxos protocol, displayed below.
+We have already seen the definition of terms in the previous section. Here we
+will discuss facts and rules, and illustrate their use with respect to the Naxos
+protocol, displayed below.
 
 ![The Naxos protocol](../images/naxos.png)
 
-**FIX** Cas: Picture should be updated and use vector graphics, ideally.
+**FIX Cas: Picture should be updated and use vector graphics, ideally.**
 
 In this protocol, Each party `x` has a long-term private key `lkx` and a
 corresponding public key `pkx = g^lkx`, where `g` is a generator of the
@@ -56,7 +57,7 @@ facts. We will explain the types of facts and their use below.
 Tamarin's rewrite rules have sequences of facts as left-hand-sides, labels, and
 right-hand-sides. For example:
 
-**FIX** Cas: Maybe better to use Naxos rules here.
+**FIX Cas: Maybe better to use Naxos rules here.**
 
 	MyRule1:
 	[ ]--[ G(u) ]->[ H(t), F(t) ]
@@ -69,7 +70,8 @@ properties.
 
 ### Executions
 
-Initially, the state is the empty multiset.
+The initial state of the transition system the empty multiset.
+
 The rules define the way in which the system can transition to a new state. A
 rule can be applied to a state if it can be instantiated such that its left hand
 side is contained in the current state. In this case, the left-hand side facts
@@ -110,47 +112,34 @@ unique fresh (random) values.
 	generating `Fr(x)` facts, and also ensures that each instantiation of
 	this rule produces a term that is different from all others.
 
-
-
-
+For the above three facts, Tamarin has built-in rules. In particular, there is a
+fresh rule that produces unique `Fr(...)` facts, and there is a set of rules for
+adversary knowledge derivation, which consumer `Out(...)` facts and produce
+`In(...)` facts.
 
 ### Linear versus persistent facts
 
-Some facts in our models will never be removed from the state once they are
-introduced. This would require that every rule that has such a fact in the
-left-hand-side, will also have an exact copy of this fact in the right-hand
-side.
+The facts that we have mentioned so far are called linear facts. They can be
+produced but also be consumed by rules, and hence the might appear in one state
+but not in the next.
 
-While there is no fundamental problem with this modeling, it is inconvenient for
-the user and it also might case Tamarin to explore rule instantiations that are
-irrelevant for tracing such facts. 
+In contrast, some facts in our models will never be removed from the state once
+they are introduced. This would require that every rule that has such a fact in
+the left-hand-side, will also have an exact copy of this fact in the right-hand
+side.  While there is no fundamental problem with this modeling, it is
+inconvenient for the user and it also might case Tamarin to explore rule
+instantiations that are irrelevant for tracing such facts. 
 
-For these two reasons, we introduce linear facts. These are never removed from
-the state, and we denote them by prefixing the fact with a bang (`!`).
+For these two reasons, we introduce persistent facts. These are never removed
+from the state, and we denote them by prefixing the fact with a bang (`!`).
+
+FIX: use the following paragraph
+
+Facts always start with an upper-case letter and do not have to be
+declared explicitely. If their name is prefixed with an exclamation mark `!`,
+then they are persistent. Otherwise, they are linear. Note that every
+fact name must be used consistently; i.e., it must always be used with
+the same arity, casing, and multiplicity. Otherwise, Tamarin complains
+that the theory is not wellformed.
 
 
-
-
-
-Cryptographic messages as terms
--------------------------------
-
-To model cryptographic messages we use terms, which are represented by trees
-where the nodes are operators (such as pairing, function application,
-concatenation, encryption) and the leaves are constants or variables.
-
-For the leaves, we have two main sorts:
-
-[fresh names]:
-	Model random messages such as keys or nonces.
-
-[public names]:
-	Model known constants such as agent identities.
-
-For example, in the Naxos protocol, `eskI` and `eskR` are freshly generated for
-each new session. Additionally, the agent's long-term keys (`lkI`, `lkR') are
-freshly generated before the agent starts communicating. We therefore model them
-as fresh names.
-
-The identities `I` and `R` can be instantiated by any concrete agent identity,
-modeled as public names.
