@@ -96,7 +96,7 @@ contain both the master and the current development state.
 
   * The Tamarin source archive 
 <https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
-contains numerous protocol examples and the `Tutorial.spthy` file that this manual refers to. 
+contains numerous protocol examples as well as the `Tutorial.spthy` file that this manual refers to. 
 
 ### Installing Tamarin from sources ###
 
@@ -157,12 +157,13 @@ functional for Windows systems prior to Windows 10.
 Running Tamarin {#sec:running-tamarin}
 ---------------
 
-Starting `tamarin-prover` without arguments will output its
-help message, including the paths to the installed example protocol
-models and all case studies from published papers. We recommend
-opening the [Tutorial.spthy](https://github.com/tamarin-prover/tamarin-prover/tree/develop/examples/Tutorial.spthy) example file in a text editor and start
-exploring from there, or to continue reading this document.
-Note that the `Tutorial.spthy` file can be found in the `examples` directory of the Tamarin source.
+Starting `tamarin-prover` without arguments will output its help
+message, including the paths to the installed example protocol models
+and all case studies from published papers. We recommend opening the
+[Tutorial.spthy](https://raw.githubusercontent.com/tamarin-prover/tamarin-prover/develop/examples/Tutorial.spthy)
+example file in a text editor and start exploring from there, or to
+continue reading this document.  Note that the `Tutorial.spthy` file
+can be found in the `examples` directory of the Tamarin source.
 
 Running ```tamarin-prover test``` will check the Maude and GraphViz
 versions and run some tests Its output should be:
