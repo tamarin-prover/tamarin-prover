@@ -4,7 +4,7 @@ Property Specification{#sec:property_specification}
 Trace Properties
 ----------------
 
-Guarded FOL fragment, what are trace properties
+**FIXME: what are trace properties**
 
 We reason about a protocol's behaviour by annotating its
 rules with *action facts*.  
@@ -26,8 +26,8 @@ state transition is labelled with the instantiations of `Act1(~n)` and
 *trace* and considered to have occurred at the same timepoint. 
 We analyze a protocol by reasoning about actions in all of its traces.
 
-Tamarin's property specification language
-is a fragment of a many-sorted first-order logic with a sort for
+**Tamarin's property specification language**
+is a guarded fragment of a many-sorted first-order logic with a sort for
 timepoints.  This logic supports quantification over both messages and
 timepoints. 
 
@@ -50,8 +50,9 @@ The syntax for specifying security properties is defined as follows:
  * `x = y`    for an equality between message variables 'x' and 'y'
 
 
-Note that apart from public names (delimited using single-quotes), no terms
-may occur in guarded trace properties. Moreover, all variables must be
+**FIXME:** Note that apart from public names (delimited using single-quotes), no terms may occur in guarded trace properties. (Terms in guarded trace properties may be built from variables, public names, pairs, and free function symbols.)
+**END-FIXME**
+Moreover, all variables must be
 guarded. The error message for an unguarded variable is currently not very
 good.
 
