@@ -1,5 +1,5 @@
 Cryptographic Messages {#sec:cryptographic-messages}
-======================
+====================================================
 
 A cryptographic message is either a constant `c` or a message `f(m1,...,mN)`
 corresponding to the application of the `N`-ary function `f` to `N` cryptographic
@@ -30,7 +30,7 @@ Function Symbols
 
 Tamarin supports a fixed set of builtin function symbols and additional user-defined
 function symbols. The builtin function symbols are included in signatures. To include
-a signature `some-sig`, include the line `builtin: some-sig` in your file. The
+a signature `some-sig`, include the line `builtins: some-sig` in your file. The
 builtin signatures are.
 
 diffie-hellman
