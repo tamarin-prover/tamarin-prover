@@ -14,7 +14,7 @@ purpose of demonstrating various error messages that could occur
 */
 builtins: symmetric-encryption
 
-//ERROR: forgot fact AgSt($R,~k) in setup
+// WARNING: this rule illustrates a non-functional protocol
 rule setup:
 	[ Fr(~k), Fr(~m) ]
 	--[]->
