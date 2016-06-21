@@ -1,4 +1,4 @@
-theory FirstTimeUser_Error1
+theory FirstTimeUser_Error5
 begin
 
 
@@ -8,17 +8,16 @@ begin
 	R knows:k
 	I -> R: senc(n,k) 
 
-This model contains WRONG RULES, that are commented out but left here for the
-purpose of demonstrating various error messages that could occur
-
 */
+
 builtins: symmetric-encryption
 
-//ERROR: forgot fact AgSt($R,~k) in setup
+/* protocol */
+
 rule setup:
 	[ Fr(~k), Fr(~m) ]
 	--[]->
-	[ AgSt($I,<~k,~m>) ]
+	[ AgSt($I,<~k,~m>), AgSt($R,~k) ]
 
 rule I_1: 
 	[ AgSt($I,<~k,~m>) ]
@@ -30,13 +29,18 @@ rule R_1:
 	--[ Receive($R,$I,m), Secret($R,m) ]->
 	[ ]
 
+// WARNING: this lemma illustrates an error message
 lemma nonce_secret: 
-	"All R m #i #j. Secret(R,m) @i & K(m) @j ==> F"
+	"All R m #i #j. Secr(R,m) @i & K(m) @j ==> F"
+
 
 lemma functional: exists-trace
 	"Ex I R m #i #j.
 		Send(I,R,m) @i
 		& Receive(R,I,m) @j "
+
+
+
 
 
 end
