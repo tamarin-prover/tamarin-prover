@@ -1,4 +1,4 @@
-theory FirstTimeUser_Error1
+theory FirstTimeUser_Error7
 begin
 
 
@@ -8,17 +8,17 @@ begin
 	R knows:k
 	I -> R: senc(n,k) 
 
-This model contains WRONG RULES, that are commented out but left here for the
-purpose of demonstrating various error messages that could occur
-
 */
+
 builtins: symmetric-encryption
 
-//ERROR: forgot fact AgSt($R,~k) in setup
+/* protocol */
+
+// WARNING: this rule illustrates an error message
 rule setup:
 	[ Fr(~k), Fr(~m) ]
 	--[]->
-	[ AgSt($I,<~k,~m>) ]
+	[ AgSt($I,<~k,m>), AgSt($R,~k) ]
 
 rule I_1: 
 	[ AgSt($I,<~k,~m>) ]
