@@ -334,7 +334,7 @@ precomputeCaseDistinctions
     -> [LNGuarded]       -- ^ Axioms.
     -> [CaseDistinction]
 precomputeCaseDistinctions ctxt axioms =
-    map cleanupCaseNames $ saturateCaseDistinctions ctxt rawCaseDists
+    map cleanupCaseNames {- $ saturateCaseDistinctions ctxt -} rawCaseDists
   where
     cleanupCaseNames = modify cdCases $ fmap $ first $
         filter (not . null)
