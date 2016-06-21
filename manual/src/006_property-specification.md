@@ -73,7 +73,7 @@ For instance, to express the property that the fresh constant `~n` is
 distinct in all applications of the fictitious rule, we write
 
 ```
-lemma "All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
+lemma distinct_nonces: "All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
 ```
 
 
@@ -85,19 +85,20 @@ Tamarin's built-in message deduction rule
 ```
 rule isend: 
    [ !KU(x) ]
- --[ K(x)   ]-->
+ --[  K(x)  ]-->
    [ In(x)  ]
 ```
 allows us to reason about the Dolev-Yao adversary's knowledge.  To
-specify that a term is secret, we propose to label a suitable protocol
-rule with a `Secret` action.  In the following `lemma`, the `Secret`
-action contains two arguments. The first argument `A` is the agent in
-whose role the secrecy claim is made and the second argument `x` is
-the term that is claimed to be secret.  Moreover, the lemma references
-the actions `Reveal` and `Honest`. We use `Reveal(B)` to label rules
-in which an agent `B` is compromised and `Honest(B)` to indicate
-agents that are assumed to be honest. For this mechanism to work,
-`Honest(B)` must occur in the same rule as `Secret(A,x)`.
+specify the property that a message `x` is secret, we propose to label a
+suitable protocol rule with a `Secret` action.  In the following
+lemma, the `Secret` action contains two arguments. The first argument
+`A` is the agent in whose role the secrecy claim is made and the
+second argument `x` is the message that is claimed to be secret.
+Moreover, the lemma references the actions `Reveal` and `Honest`. We
+use `Reveal(B)` to label rules in which an agent `B` is compromised
+and `Honest(B)` to indicate agents that are assumed to be honest. For
+this mechanism to work, `Honest(B)` must occur in the same rule as
+`Secret(A,x)`.
 ```
 lemma secrecy:
   "All A x #i. 
@@ -106,6 +107,8 @@ lemma secrecy:
         | (Ex B #r. Reveal(B)@r & Honest(B) @i)"
 ```
 
+A stronger secrecy property is *perfect forward secrecy*. It requires
+that messages labeled with a `Secret` action before a compromise remain secret.
 
 ```
 lemma secrecy_PFS:
@@ -131,7 +134,7 @@ lemma noninjectiveagreement:
 ```
 lemma injectiveagreement:
   "All a b t #i. 
-    Commit(a,b,<'I','R',t>) @i
+    Commit(a,b,t) @i
     ==> (Ex #j. Running(b,a,t) @j 
         & j < i
         & not (Ex a2 b2 #i2. Commit(a2,b2,t) @i2

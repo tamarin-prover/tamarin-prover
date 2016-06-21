@@ -4,7 +4,7 @@ Model Specification
 In this manual, we provide an informal description of the underlying model. The
 full details of the underlying model can be found in [@benediktthesis].
 
-Models are specificied in Tamarin using three main ingredients:
+Models are specificity in Tamarin using three main ingredients:
 
    1. Rules
    2. Facts
@@ -114,7 +114,7 @@ unique fresh (random) values.
 
 For the above three facts, Tamarin has built-in rules. In particular, there is a
 fresh rule that produces unique `Fr(...)` facts, and there is a set of rules for
-adversary knowledge derivation, which consumer `Out(...)` facts and produce
+adversary knowledge derivation, which consume `Out(...)` facts and produce
 `In(...)` facts.
 
 ### Linear versus persistent facts
@@ -141,5 +141,64 @@ then they are persistent. Otherwise, they are linear. Note that every
 fact name must be used consistently; i.e., it must always be used with
 the same arity, casing, and multiplicity. Otherwise, Tamarin complains
 that the theory is not wellformed.
+
+Modeling protocols
+------------------
+
+There are several ways in which the execution of security protocols can be
+defined, e.g., as in [@opsem2012]. In Tamarin, there is no pre-defined protocol
+concept  and the user is free to model them in the preferred way. Below we give
+one example of how protocols can be modeled and discuss alternatives afterwards.
+
+### Public-key infrastructure
+
+**FIX Cas: this might well be duplicating a part from elsewhere.**
+
+In the Tamarin model, there is no pre-defined notion of public key
+infrastructure (PKI). A pre-distributed PKI with asymmetric keys for each party
+can be modeled by a single rule that generates a key for a party. The party's
+identity and public/private keys are then stored as facts in the state, enabling
+protocol rules to retrieve them. For the public key, we commonly use the `Pk`
+fact, and for the corresponding private key we use the `Ltk` fact. Since these
+facts will only be used by other rules to retrieve the keys, but never updated,
+we model them as persistent facts. We use the abstract function `pk(x)` to
+denote the public key corresponding to the private key `x`, leading to the
+following rule.
+
+	[ Fr(~x) ]--[ ]->[ !Pk($A,pk(~x)), !Ltk($A,~x) ]
+
+**FIX Cas: for the above rule, need to point out relation to builtins**
+
+**FIX Cas: what about signatures and builtins**
+
+Some protocols, such as Naxos, rely on the algebraic properties of the key
+pairs. In many DH-based protocols, the public key is $g^x$ for the private key
+$x$, which enables exploiting the commutativity of the exponents to establish
+keys. In this case, we model the following rule.
+
+	[ Fr(~x) ]--[ ]->[ !Pk($A,'g'^~x)), !Ltk($A,~x) ]
+
+### Modeling a protocol step
+
+Protocols describe the behaviour of agents in the system. Agent can perform
+protocol steps, such as receiving a message and responding by sending a message,
+or starting a session.
+
+### Modeling the responder of the Naxos protocol
+
+We first model the responder role, which is easier since it can be done in one
+rule.
+
+The responder in the Naxos protocol only accepts messages ...
+
+**FIX Cas: need to do either pattern matching or explicit construct/deconstruct;
+not a big deal for naxos, but should pop up somewhere**
+
+Alternative modeling approaches
+-------------------------------
+
+**FIX Cas: splitting send/receive, etc.**
+
+
 
 
