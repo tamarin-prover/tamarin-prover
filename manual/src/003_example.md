@@ -25,12 +25,12 @@ theory's name, here `Tutorial`.
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=12 upper=13}
 ~~~~
 
-After the keyword `begin`, we first declare function symbols, and 
-the equations that these functions must satisfy. The functions and 
-equations describe the cryptographic primitives and their properties used in the 
-protocol. Afterward, we declare multiset rewriting rules that model the protocol and 
-finally we write properties to be proven (and hence called lemmas),
-which specify the protocol's desired security properties.
+After the keyword `begin`, we first declare function symbols, and the
+equations that these functions satisfy. The functions and equations
+describe the cryptographic primitives used in the protocol and their
+properties. Afterward, we declare multiset rewriting rules that model
+the protocol and finally we write properties to be proven (called
+`lemmas'), which specify the protocol's desired security properties.
 Note that we have also inserted comments to structure the theory.
 
 We next explain in detail the protocol modeled above.
