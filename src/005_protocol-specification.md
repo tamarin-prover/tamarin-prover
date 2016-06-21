@@ -413,7 +413,7 @@ instance of the rule.
 Note that the state fact has several parameters: the unique thread identifier
 `~tid`^[Note that we could have re-used `~eskI` for this purpose, since it will
 also be unique for each instance.], the agent identities `$I` and `$R`, and the
-actor's long-term private key `~lkI` and the private exponent. This now enables
+actor's long-term private key `~lkI`, and the private exponent. This now enables
 us to specify the second initiator rule.
 
         rule NaxosI_2_attempt2:
@@ -427,7 +427,7 @@ us to specify the second initiator rule.
           []
 
 This second rule requires receiving a message `Y` from the network but also
-that previously, an initiator fact was generated. This rule then consumes this
+that an initiator fact was previously generated. This rule then consumes this
 fact, and since there are no further steps in the protocol, does not need to
 output a similar fact. As the `Init_1` fact is instantiated with the same
 parameters, the second step will use the same agent identities and the exponent
