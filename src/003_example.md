@@ -235,7 +235,7 @@ useful sanity checks.
 Graphical User Interface
 ------------------------
 
-Just call
+If you call
 
     tamarin-prover interactive Tutorial.spthy
 
@@ -332,8 +332,8 @@ example the following rule:
 
 In a nutshell, this rule says that if the intruder knows the pair `<x.1, x.2>` 
 (represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
-value `x.1` (represented by the fact `!KD( x.1 )`) from it. This stems from 
-the applying `fst` to the pair and then using the equation 
+value `x.1` (represented by the fact `!KD( x.1 )`) from it. This results from 
+applying `fst` to the pair and then using the equation 
 `fst(<x.1, x.2>) = x.1`. The precise difference between `!KD( )` and `!KU( )` 
 facts is not important for now, and will be explained below. As a first 
 approximation, both represent they intruder's knowledge and are only used to 
@@ -345,9 +345,10 @@ Now click on *Multiset rewriting rules and axioms* on the left.
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
  "Tutorial Multiset Rewriting Rules")
 
-On the right side of the screen you should now see your protocol's 
-rewriting rules, plus two additional rules: the `isend` and `irecv` rules, 
-which interface the protocols output and input with the intruder deduction.
+On the right side of the screen, you should now see the protocol's 
+rewriting rules, plus two additional rules: the `isend` and `irecv`
+rules, which provide an interface between the protocols output and input
+and the intruder deduction.
 The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` the intruder knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
 output `Out(x)` and passes it to the intruder knowledge, represented by the 
