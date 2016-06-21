@@ -12,14 +12,14 @@ begin
 /* Channel rules */
 
 rule ChanOut_A:
-	[Out_A($A,$B,x)]
-	--[ChanOut_A($A,$B,x)]->
-	[!Auth($A,x), Out(<$A,$B,x>)]
+	[ Out_A($A,$B,x) ]
+	--[ ChanOut_A($A,$B,x) ]->
+	[ !Auth($A,x), Out(<$A,$B,x>) ]
 
 rule ChanIn_A:
-	[!Auth($A,x), In($B)]
-	--[ChanIn_A($A,$B,x)]->
-	[In_A($A,$B,x)]
+	[ !Auth($A,x), In($B) ]
+	--[ ChanIn_A($A,$B,x) ]->
+	[ In_A($A,$B,x) ]
 
 /* Protocol */
 
@@ -44,11 +44,4 @@ lemma nonce_secret_receiver:
 lemma message_authentication: 
 	"All R I n #j. Authentic(R,I,n) @j ==> Ex R2 #i. Send(I,R2,n) @i &i<j"
 
-
-
-
-
-
 end
-
- 
