@@ -25,27 +25,26 @@ protocol theory*) presented here:
 ~~~~
 
 First of all note that Tamarin uses C-style comments, so everything between 
-`/*` and `*/` or following `//` is a comment. The Tamarin file starts with
-`theory` followed by the name, here `Tutorial`.  After the keyword `begin`, we 
-first declare function symbols, and equations that these function symbols must 
-satisfy. These functions and equations describe the cryptographic primitives 
-and their properties used in the protocol. Then we declare multiset rewriting 
-rules that model the protocol, and finally we write lemmas that specify the 
-security properties. Moreover, we also inserted comments, to structure the 
-theory. Now, we describe these elements while modeling this simple protocol in 
-detail.
+`/*` and `*/` or the line following `//` is a comment. The Tamarin file starts 
+with `theory` followed by the theory's name, here `Tutorial`.  After the 
+keyword `begin`, we first declare function symbols, and equations that these 
+function symbols must satisfy. These functions and equations describe the 
+cryptographic primitives and their properties used in the protocol. Then we 
+declare multiset rewriting rules that model the protocol, and finally we write 
+lemmas that specify the security properties. Moreover, we also inserted 
+comments, to structure the theory. Now, we explain the above model of the 
+simple protocol in detail.
 
 Function Signature and Equational Theory
 ----------------------------------------
 
-We are working in the symbolic model of security protocol
-verification, which means that we model the messages as terms, built
-from functions, satisfying an underlying equational theory. This will
-be explained in detail later, but for now note that there are function
-names which we explicitly declare together with their arity, and
-equalities that define the semantic equivalence of terms, e.g., the
-decryption of an encrypted ciphertext is the original message, when
-the correct keys are used. We generally use lower-case for function names.
+We are working in the symbolic model of security protocol verification, which 
+means that we model the messages as terms, built from functions, satisfying an 
+underlying equational theory. This will be explained in detail later, but for 
+now note that there are function names which we explicitly declare together with 
+their arity, and equalities that define the semantic equivalence of terms, e.g., 
+the decryption of an encrypted ciphertext is the original message, when the 
+correct keys are used. We generally use lower-case for function names.
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
@@ -77,10 +76,16 @@ Theory](004_cryptographic-messages).
 Modeling the Public Key Infrastructure
 --------------------------------------
 
-Now, we introduce multiset rewriting rules modeling a public key
-infrastructure (PKI). In these rules we use facts to store information
-about the state in their arguments. The rules have a premise and a
-conclusion, separated by the arrow `-->`:
+In Tamarin the protocol and its environment are modeled using *multiset 
+rewriting rules*. The rules operate on the system's state expressed as a 
+multiset of facts. Facts can be seen like predicates storing state information, 
+for example `Out(h(k))` models the fact that the protocol send out the message 
+`h(k)` on the public channel.
+
+The example starts with the model of a public key infrastructure (PKI). In 
+the first rules we again use facts to store information about the state in 
+their arguments. The rules have a premise and a conclusion, separated by the 
+arrow `-->`:
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=19 upper=22}
 ~~~~
@@ -106,8 +111,8 @@ We denote the sort of variables using prefixes:
  *    `#i`  denotes  `i:temporal`
  *    `i`   denotes  `i:msg`
 
- and a string constant `'c'` denotes a public name `'c \in PN'`; i.e., a
- fixed, global constant
+and a string constant `'c'` denotes a public name `'c \in PN'`; i.e., a fixed, 
+global constant.
 
 Thus, the above rule can be read as follows. First, freshly generate a
 fresh name `~ltk`, the new private key, and nondeterministically choose
