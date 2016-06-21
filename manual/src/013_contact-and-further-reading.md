@@ -16,16 +16,25 @@ Tamarin Repository
 The official Tamarin repository is available at 
 <https://github.com/tamarin-prover/tamarin-prover>.
 
+Reporting a Bug
+---------------
+
 If you want to report a bug, please use the bug tracker interface at 
 <https://github.com/tamarin-prover/tamarin-prover/issues>. Before submitting, 
 please check that your issue is not already known. Please submit a detailed and 
 precise description of the issue, including a minimal example file that allows 
 to reproduce the error.
 
+Contributing and Developing Extensions
+--------------------------------------
+
 If you want to develop an extension, please fork your own repository and 
 send us a pull request once your feature is stable. See 
 <https://github.com/tamarin-prover/tamarin-prover/blob/develop/CONTRIBUTING.md> 
 for more details.
+
+Tamarin Manual
+--------------
 
 The source of this manual can be found in 
 <https://github.com/tamarin-prover/manual-pandoc>.
@@ -50,17 +59,17 @@ Acknowledgments
 ---------------
 
 Tamarin was initially developed at the [Institute of Information Security at 
-ETH Zurich](/http://www.infsec.ethz.ch/) by Simon Meier and Benedikt Schmidt, 
+ETH Zurich](http://www.infsec.ethz.ch/) by Simon Meier and Benedikt Schmidt, 
 working with David Basin and Cas Cremers.
 
-Cedric Staub contributed the graphical user interface.
+Cedric Staub contributed to the graphical user interface.
 
-Jannik Dreier and Ralf Sasse developed the extension to deal with observational 
+Jannik Dreier and Ralf Sasse developed the extension to deal with Observational 
 Equivalence.
 
 Other contributers to the code include: Katriel Cohn-Gordon, Kevin Milner,  
-Dominik Schoop, Sam Scott, Jorden Whitefield, oggy- and many others.
+Dominik Schoop, Sam Scott, Jorden Whitefield, Ognjen Maric, and many others.
 
 This manual was initially written by David Basin, Cas Cremers, Jannik 
-Dreier, Sasa Radomirovic, Ralf Sasse, Benedikt Schmidt, Lara Schmid. It 
+Dreier, Sasa Radomirovic, Ralf Sasse, Lara Schmid, Benedikt Schmidt. It 
 includes part of the initial tutorial by Simon Meier and Benedikt Schmidt.

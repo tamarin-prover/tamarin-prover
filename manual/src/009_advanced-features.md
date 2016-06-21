@@ -66,18 +66,18 @@ on this channel.
 ~~~~ {.tamarin slice="code/ChannelExample_conf.spthy" lower=11 upper=38}
 ~~~~
 
-The first three rule denote the channel rules for a confidential channel.
+The first three rules denote the channel rules for a confidential channel.
 They specify that whenever a message `x` is sent on a confidential channel 
 from `$A` to `$B`, a fact `!Conf($B,x)` can be derived. This fact binds the 
-receiver `$B` to the to the message `x`, because only he will be able to read
+receiver `$B` to the  message `x`, because only he will be able to read
 the message. The rule `ChanIn_C` models that at the incoming end of a
 confidential channel, there must be a `!Conf($B,x)` fact but any apparent
 sender `$A` from the adversary knowledge can be added. This models the fact
-that a confidential channel is not authentic, and anybody could have sent it.
+that a confidential channel is not authentic, and anybody could have sent the message.
 
 Note that the fact `!Conf($B,x)` is persistent. With this we model that a
 message once sent confidentially to `$B` can be replayed by the adversary at
-a later point of time.
+a later point in time.
 The last rule `ChanIn_CAdv` denotes that the adversary can also directly
 send a message from his knowledge on a confidential channel.
 
