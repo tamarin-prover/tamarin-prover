@@ -2,71 +2,69 @@ Installation {#sec:installation}
 ============
 
 
-We explain how to install Tamarin for each operating system
-separately.  Refer to the Linux instructions in Section on
-[Linux](#sec:linux), the Mac OS X instructions in the section on [Mac
-OS X](#sec:macosx), and the Windows instructions in the section on
-[Windows](#sec:windows). 
-
-
+We explain below how to install Tamarin on different operating systems:
+[Linux](#sec:linux),  [Mac
+OS X](#sec:macosx), and [Microsoft Windows](#sec:windows). 
 
 Linux {#sec:linux}
 -----
 
-For Tamarin to run on Linux\index{Linux}, a number of dependencies
+To run Tamarin on Linux\index{Linux}, a number of dependencies
 must be installed, namely GraphViz and Maude 2.7. You can install
-GraphViz through your regular package manager, or from
-<http://www.graphviz.org/>. Similarly you can install Maude using your
-package manager, but if that installs Maude 2.6 you need to go to
-<http://maude.cs.illinois.edu/> to install version 2.7, [Core Maude
+GraphViz using your standard package manager or directly from
+<http://www.graphviz.org/>. You can also
+install Maude using your
+package manager.  However, if your package manager installs Maude 2.6,
+then you must install version 2.7, [Core Maude
 2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation#Core_Maude_2.7),
-and make sure that the install path is in your path variable, so that
-calling `maude` starts version 2.7. Note that even though the maude
+directly from <http://maude.cs.illinois.edu/>.
+In this case, you should ensure 
+that your `PATH` includes the install path, so that
+calling `maude` starts version 2.7. Note that even though the Maude
 executable is movable, the `prelude.maude` file must be in the same
-folder you start Maude from.
+folder that you start Maude from.
 
-With these dependencies available, you can then either compile
+Once these dependencies have been installed, you can then either compile
 Tamarin from source, or download the binaries of the latest master
 version. Development versions require compilation from source.
 
 ### Compiling from source ###
 
-To help compile Tamarin from source we manage Haskell dependencies
-automatically, using the tool `stack`. First you must install
-`stack` according to
-[Stack's install page](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md)
+To help compile Tamarin from source, we manage Haskell dependencies
+automatically using the tool `stack`. You must first install
+`stack`, following the instructions given at
+[Stack's install page](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md).
 
-After running `git clone` of the Tamarin
-repository you have the current development version ready for
-compilation. If you rather want to use the master version just run
+After running `git clone` on the Tamarin
+repository, you have the current development version ready for
+compilation. If you would prefer to use the master version, just run
 `git checkout master`. In either case, you can then run `make
-default`, which will install an appropriate GHC for your system,
+default`, which will install an appropriate GHC (the Glasgow Haskell Compiler)
+for your system,
 including all dependencies, and the `tamarin-prover` executable
 will be copied to `~/.local/bin/tamarin-prover`.
 Note that this process will take between 30 and 60 minutes, as all
 dependencies (roughly 120) are compiled from scratch. If you later pull a newer
 version of Tamarin (or switch to/from the `master` branch), then only
-the tool itself needs to be recompiled, which takes a few minutes at
-most.
+the tool itself needs to be recompiled, which takes a few minutes, at most.
 
-Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
 ### Using binaries ###
 
-You can download the binaries appropriate for your system from
-<https://github.com/tamarin-prover/bin-dists>
-
-Only the current master is available as binary, while the sources
+You can download the  appropriate binaries for your system from
+<https://github.com/tamarin-prover/bin-dists>.
+Only the current master is available as a binary, whereas the sources
 contain both the master and the current development state.
 
-Similarly to installing from source, now starting
+Similar to installing from source, starting
 Tamarin without arguments will output its help
-message, including the paths to the installed example protocol models
+message, including the paths to the installed, example protocol models,
 and all case studies from published papers. We recommend opening the
-`Tutorial.spthy` example file in a text editor and start exploring from
-there, or to continue reading this document.
+`Tutorial.spthy` example file in a text editor and to start exploring from
+there, or alternatively to continue reading this document.
 
-Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
 
 Mac OS X {#sec:macosx}
@@ -76,35 +74,45 @@ Mac OS X {#sec:macosx}
 
 To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz. 
 
-1.  Download and install Maude 2.7 from
-  <http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation>
+1.  Download and install Core Maude 2.7 from
+  <http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation>.
 
-2.  Download and install GraphViz from  
-<http://www.graphviz.org/Download.php>
+2.  Download and install GraphViz from 
+<http://www.graphviz.org/Download.php>.
 
 3.  Download the Tamarin binary `tamarin-prover-1.x.y-macosx` from 
-<https://github.com/tamarin-prover/bin-dists>
+<https://github.com/tamarin-prover/bin-dists>.
 
-Only the current master is available as binary, while the sources
+**Note:** 
+
+  * Only the current master is available as binary, while the sources
 contain both the master and the current development state.
 
-Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+  * The Tamarin source archive 
+<https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
+contains numerous protocol examples and the `Tutorial.spthy` file that this manual refers to. 
+
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
 ### Installing Tamarin from sources ###
 
-1. To compile Tamarin you need the Haskell tool [stack](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md#manual-download-1)
-and to run Tamarin you need to have [Maude 2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation) and [GraphViz](http://www.graphviz.org/Download.php). 
-You can download these tools from their respective sites *or* use one of the package managers 'MacPorts' or 'Homebrew'. 
+1. To compile Tamarin, you need the Haskell tool [stack](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md#manual-download-1).
+To run Tamarin you need [Maude 2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation) and [GraphViz](http://www.graphviz.org/Download.php). 
+You can download these tools from their respective sites.
+Alternatively, you can use either the
+[MacPorts](https://www.macports.org) or
+[Homebrew](http://brew.sh)
+package managers. 
 
-  *  For 'MacPorts':
+  *  For MacPorts:
 ```
   sudo port install maude graphviz
 ```
 
 The Haskell tool `stack` is not in the MacPorts repository and must be installed by following the instructions at 
-  <https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md>
+  <https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md>.
 
-  *   For 'Homebrew':
+  *   For Homebrew:
 ```
   brew install homebrew/science/maude graphviz haskell-stack
 ```
@@ -115,29 +123,28 @@ The Haskell tool `stack` is not in the MacPorts repository and must be installed
   git clone https://github.com/tamarin-prover/tamarin-prover.git
 ```
 or download the source files from 
-  <https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
+  <https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>.
 
 
-3. Build Tamarin by changing to the `tamarin-prover` directory and 
+3. Build Tamarin by changing into the `tamarin-prover` directory and 
    typing
 ```
   make default
 ```
 
-   The installation process lets you know where the `tamarin-prover`
-   executable will be installed in, e.g., in `~/.local/bin/`. Move the
+   The installation process informs you where the `tamarin-prover`
+   executable will be installed, for example, in `~/.local/bin/`. Move the
    binary to a directory in your executables path or add
    `~/.local/bin/` to your path.
 
-Continue with Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
 
 Windows {#sec:windows}
 -------
 
-Windows is not supported at the moment. 
-
-To the best of our knowledge, there is no current GraphViz version
+Windows is not currently supported.
+To the best of our knowledge, there is not a current GraphViz version
 available for Windows and there is no Maude binary for Windows 10. 
 Therefore only the command-line parts of the tool are
 functional for Windows systems prior to Windows 10.
@@ -149,11 +156,12 @@ Running Tamarin {#sec:running-tamarin}
 Starting `tamarin-prover` without arguments will output its
 help message, including the paths to the installed example protocol
 models and all case studies from published papers. We recommend
-opening the Tutorial.spthy example file in a text editor and start
+opening the [Tutorial.spthy](https://github.com/tamarin-prover/tamarin-prover/tree/develop/examples/Tutorial.spthy) example file in a text editor and start
 exploring from there, or to continue reading this document.
+Note that the `Tutorial.spthy` file can be found in the `examples` directory of the Tamarin source.
 
 Running ```tamarin-prover test``` will check the Maude and GraphViz
-versions and run some tests, its output should be:
+versions and run some tests Its output should be:
 
 ```
 $ tamarin-prover test
@@ -178,15 +186,15 @@ The tamarin-prover should work as intended.
            :-) happy proving (-:
 ```
 
-You are now ready to use the \tamarin for verification of cryptographic protocols.
+You are now ready to use Tamarin to verify cryptographic protocols.
 
 Running Tamarin on a remote machine
 ---------------------------------
 
 If you have access to a faster desktop or server, but prefer using
 Tamarin on your laptop, you can do that. The cpu/memory intensive
-reasoning part of the tool will run on the faster machine, while you
-only run the GUI, i.e., the web browser of your choice, locally. To do
+reasoning part of the tool will then run on the faster machine, while you
+just run the GUI locally, i.e., the web browser of your choice. To do
 this, you forward your port 3001 to the port 3001 of your server
 with the following command, replacing ```SERVERNAME``` appropriately.
 
