@@ -46,7 +46,7 @@ Builtin message theories {#subsec:builtin-sigs}
 ------------------------
 
 In the following, we write `f/n` to denote that the function symbol `f` is
-`n`-ary.
+`n`-ary. **FIXME: Also explain pairing, which is always included.**
 
 
 `hashing`:
@@ -74,49 +74,16 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 
 `diffie-hellman`:
 
-: This theory models one or multiple Diffie-Hellman group. 
+: This theory models Diffie-Hellman groups. **FIXME**
 
 `bilinear-pairing`:
 
-: FIXME
+: This theory models Pairing groups. **FIXME**
 
 `multiset`:
 
-: FIXME
-
-
-OLD
----
-
-
-
-
-Certain equational theories are used very often when modeling
-cryptographic messages. We therefore provide builtins definitions for
-them, using the keyword 'builtins'. The above theory could also be
-enabled using the declaration
-
-  builtins: hashing, asymmetric-encryption
-
-We support the following builtins theories:
-
-  diffie-hellman, signing, asymmetric-encryption, symmetric-encryption,
-  hashing
-
-
-
-Note that the theory for hashing only introduces the function symbol 'h/1'
-and contains no equations.
-Apart from 'diffie-hellman', all of these theories are subterm-convergent and
-can therefore also be declared directly, as above. You can inspect their
-definitions by uncommenting the following two line-comments and calling
-
-  tamarin-prover Tutorial.spthy
-
-// builtins: diffie-hellman, signing, asymmetric-encryption, 
-symmetric-encryption,
-//          hashing
-
+: This theory introduces associative operators which can be used to model
+  multisets. **FIXME**
 
 
 
