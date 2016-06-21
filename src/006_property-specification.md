@@ -118,6 +118,16 @@ lemma secrecy_PFS:
         | (Ex X #r. Reveal(X)@r & Honest(X) @i & r < i)"
 ```
 
+**Example.** The following Tamarin theory specifies a simple
+  one-message protocol. Agent `A` sends a message encrypted with agent
+  `B`'s public key to `B`. Both agents claim secrecy of a message, but
+  only agent `A`'s claim is true. To distinguish between the two claims
+  we specify two lemmas and differentiate between two secret actions, 
+  `Secret_A` for agent `A` and `Secret_B` for agent `B`.
+
+~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
+~~~~
+
 ### Authentication ###
 
 How to express standard authentication properties, examples
@@ -142,6 +152,12 @@ lemma injectiveagreement:
               | (Ex X #r. Reveal(X)@r & Honest(X) @i)"
 ```
 
+
+TODO:
+  * A standard package of lemmas .e.g Secrecy and so on? 
+    **NOTE** feature request; also very model-specific.
+
+
 Observational Equivalence
 -------------------------
 
@@ -153,3 +169,21 @@ axioms for trace and equivalence properties with motivating example
 
 As there are no lemmas in observational equivalence you can use axioms to remove state space, essentially remove degenerate cases. Do note that one can use axioms to simplify writing lemmas
 
+TODO:
+  * A standard package of axioms e.g. Unique, Eq, Neq, and so on. 
+    **NOTE** Cas: perhaps this is more like a feature request?
+
+
+
+
+Lemma Annotations
+-----------------
+
+
+TODO:
+
+  * A complete list of the things that can annotate lemmas and what they do
+    [use_induction,reuse,typing,hide_lemma=LEMMANAME] -- in observational equivalence: [left,right]
+
+      * Typing lemmas in particular - how to tell when one would help, the
+        best way to write one, and what you can’t prove in a typing lemma

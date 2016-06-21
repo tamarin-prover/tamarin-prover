@@ -1,50 +1,51 @@
 Initial Example
 ===============
 
-We will start with a simple example of a protocol that only consists
-of two messages (given in Alice-and-Bob notation):
+We will start with a simple example of a protocol that consists
+of just two messages, written here in Alice-and-Bob notation:
 
     C -> S: aenc(k, pk(S))
     C <- S: h(k)
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
-with the public key of a server 'S' (`aenc` stands for *asymmetric encryption*) 
-and sends it to 'S'. The server confirms the receipt of the key by sending its 
+with the public key of a server 'S' (`aenc` stands for *asymmetric encryption*),
+and sends it to 'S'. The server confirms the key's receipt by sending its 
 hash back to the client.
 
-This protocol is artificial and satisfies only very weak security
+This protocol is a artificially simple and satisfies only very weak security
 guarantees.  We will use it to illustrate the general Tamarin workflow
-by proving that from the perspective of the client, the freshly
+by proving that, from the client's perspective, the freshly
 generated key is secret provided that the server is uncompromised.
 
-The Tamarin modeling of this protocol and the security properties are given in 
+The protocol's Tamarin model and its security properties are given in 
 the file [Tutorial.spthy](code/Tutorial.spthy) (`.spthy` stands for *security 
-protocol theory*) presented here:
+protocol theory*). The Tamarin file starts with `theory` followed by the 
+theory's name, here `Tutorial`.  
 
-~~~~ {.tamarin include="code/Tutorial.spthy"}
+~~~~ {.tamarin slice="code/Tutorial.spthy" lower=12 upper=13}
 ~~~~
 
-First of all note that Tamarin uses C-style comments, so everything between 
-`/*` and `*/` or the line following `//` is a comment. The Tamarin file starts 
-with `theory` followed by the theory's name, here `Tutorial`.  After the 
-keyword `begin`, we first declare function symbols, and equations that these 
-function symbols must satisfy. These functions and equations describe the 
-cryptographic primitives and their properties used in the protocol. Then we 
-declare multiset rewriting rules that model the protocol, and finally we write 
-lemmas that specify the security properties. Moreover, we also inserted 
-comments, to structure the theory. Now, we explain the above model of the 
-simple protocol in detail.
+After the keyword `begin`, we first declare function symbols and the
+equations that these functions satisfy. The functions and equations
+describe the cryptographic primitives used in the protocol and their
+properties. Afterward, we declare multiset rewriting rules that model
+the protocol and finally we write the properties to be proven (called
+`lemmas'), which specify the protocol's desired security properties.
+Note that we have also inserted comments to structure the theory.
+
+We next explain in detail the protocol modeled above.
 
 Function Signature and Equational Theory
 ----------------------------------------
 
-We are working in the symbolic model of security protocol verification, which 
-means that we model the messages as terms, built from functions, satisfying an 
-underlying equational theory. This will be explained in detail later, but for 
-now note that there are function names which we explicitly declare together with 
-their arity, and equalities that define the semantic equivalence of terms, e.g., 
-the decryption of an encrypted ciphertext is the original message, when the 
-correct keys are used. We generally use lower-case for function names.
+We are working in the symbolic model of security protocols.  This means
+that we model the messages as terms, built from functions, that satisfy
+an underlying equational theory. This will be explained in detail later.
+But for now note that there are function names, which we explicitly
+declare together with their arity, and equalities that define the
+semantic equivalence of terms, e.g., the decryption of an encrypted
+ciphertext is the original message, when the correct keys are used. We
+generally use lower-case for function names.
 
 We model hashing using the unary function 'h'.
 We model asymmetric encryption by declaring
@@ -65,7 +66,7 @@ The equation
 ~~~~
 
 models the interaction between calls to these three algorithms by specifying 
-that the decryption of the cypertext using the correct private key returns the 
+that the decryption of the cyphertext using the correct private key returns the 
 initial plaintext. For more details on user-specified equations see the section 
 on [Cryptographic Messages](004_cryptographic-messages).
 
@@ -146,6 +147,9 @@ We model it using the following three rules.
 
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=34 upper=65}
 ~~~~
+
+First of all note that Tamarin uses C-style comments, so everything between 
+`/*` and `*/` or the line following `//` is a comment. 
 
 The first rule models the client sending its message, while the second
 rule models it receiving a response. The third rule models the server,
@@ -469,3 +473,10 @@ attached (dis)proofs:
       Client_auth_injective (all-traces): verified (15 steps)
       Client_session_key_honest_setup (exists-trace): verified (5 steps)
 
+Complete Example
+----------------
+
+Here is the complete input file:
+
+~~~~ {.tamarin include="code/Tutorial.spthy"}
+~~~~
