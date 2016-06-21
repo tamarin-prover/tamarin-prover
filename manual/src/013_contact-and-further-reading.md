@@ -62,5 +62,5 @@ Other contributers to the code include: Katriel Cohn-Gordon, Kevin Milner,
 Dominik Schoop, Sam Scott, Jorden Whitefield, oggy- and many others.
 
 This manual was initially written by David Basin, Cas Cremers, Jannik 
-Dreier, Sasa Radomirovic, Ralf Sasse, Benedikt Schmidt, Lara Schmidt. It 
+Dreier, Sasa Radomirovic, Ralf Sasse, Benedikt Schmidt, Lara Schmid. It 
 includes part of the initial tutorial by Simon Meier and Benedikt Schmidt.
