@@ -202,3 +202,12 @@ Alternative modeling approaches
 
 
 
+
+TODO:
+  * Example use-cases for variable annotations ($ ~), and any caveats that
+    might come with them (like if incorrect ~ use can make things unsound)
+
+  * An explanation/examples of the difference between K, KU, and KD, and when
+    you would use each.
+
+
