@@ -114,7 +114,6 @@ entry and sends the public key to the network using the built-in fact
 [Model Specification](005_protocol-specification.html#sec:model-specification)
 for more information).
 
-
 ~~~~ {.tamarin slice="code/Tutorial.spthy" lower=23 upper=26}
 ~~~~
 
