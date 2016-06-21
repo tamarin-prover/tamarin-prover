@@ -272,7 +272,7 @@ you will then see the following output on the command line
 
 If there were any syntax errors you would see them at this point, but
 there are none in the 'Tutorial'. See later for details on how to deal
-with errors.
+with such errors.
     
 This will start a web-server that loads all security protocol theories in the
 same directory as Tutorial.spthy. Point your browser to
@@ -298,24 +298,27 @@ describing the intruder, the multiset rewrite rules and axioms describing your
 protocol, and the typed and untyped case distinctions, followed by the lemmas 
 you want to prove. We will explain each of these points in the following.
 
-On the right hand side, you have a quick summary of the available commands and 
-keyboard shortcuts you can use to navigate inside the theory. In the top right 
-corner there are some links: `Index` leads back to the welcome page, 
-`Download` allows you to download the current theory (including proofs if they 
-exist), `Action` and then `Show source` shows the source code of the theory, 
-and `Options` allows you to configure the level of details in the graph 
-visualisation (see below for examples).
+On the right hand side, you have a quick summary of the available
+commands and keyboard shortcuts you can use to navigate inside the
+theory. In the top right corner there are some links: `Index` leads
+back to the welcome page, `Download` allows you to download the
+current theory (including partial proofs if they exist), `Actions` and
+then the sub-bullet `Show source` shows the source code of the theory,
+and `Options` allows you to configure the level of details in the
+graph visualisation (see below for examples).
 
-If you click on "Message theory" on the left, you should see the following:
+If you click on `Message theory` on the left, you should see the following:
 
 ![Tutorial Message Theory](../images/tamarin-tutorial-message-theory.jpg 
  "Tutorial Message Theory")
  
-On the right side you can now see the message theory, starting with the 
-*Signature*, i.e., functions and equations you defined. Note that Tamarin 
-automatically added a function `pair` to create pairs, and functions `fst` and 
-`snd` together with two equations to access the first and second value of a 
-pair.
+On the right side you can now see the message theory, starting with
+the so-called *Signature*, i.e., all functions and equations you
+defined. Note that Tamarin automatically added a function `pair` to
+create pairs, and functions `fst` and `snd` together with two
+equations to access the first and second value of a pair. There is a
+shorthand for the `pair` using `<` and `>` which is used here for
+example for `fst(<x.1, x.2>)`.
 
 Just below you have the *Construction rules* which describe which functions the 
 intruder can apply. Consider for example the following rule:
@@ -323,12 +326,14 @@ intruder can apply. Consider for example the following rule:
     rule (modulo AC) ch:
      [ !KU( x ) ] --[ !KU( h(x) ) ]-> [ !KU( h(x) ) ]
 
-Essentially this rule says that if the intruder knows `x` (represented by the 
-fact `!KU(x)`), then he can compute `h(x)` (represented by the fact 
-`!KU(h(x))`), i.e., the hash of `x`.
+Essentially this rule says that if the intruder knows `x` (represented
+by the fact `!KU(x)` in the premise), then he can compute `h(x)`
+(represented by the fact `!KU(h(x))` in the conclusion), i.e., the
+hash of `x`. The action fact `!KU(h(x))` in the label also notes this
+for reasoning purposes.
 
 Finally, there are the *Deconstruction rules* which describe which terms the 
-intruder can extract from lager terms by applying functions. Consider for 
+intruder can extract from larger terms by applying functions. Consider for 
 example the following rule:
 
     rule (modulo AC) dfst:
@@ -336,11 +341,11 @@ example the following rule:
 
 In a nutshell this rule says that if the intruder knows the pair `<x.1, x.2>` 
 (represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
-value `x.1` (represented by the fact `!KD( x.1 )`) from it. (This stems from 
+value `x.1` (represented by the fact `!KD( x.1 )`) from it. This stems from 
 the applying `fst` to the pair and then using the equation 
-`fst(<x.1, x.2>) = x.1`.) The precise difference between `!KD( )` and `!KU( )` 
+`fst(<x.1, x.2>) = x.1`. The precise difference between `!KD( )` and `!KU( )` 
 facts is not important for now, and will be explained below. As a first 
-approximation, both represente they intruder's knowledge and are only used to 
+approximation, both represent they intruder's knowledge and are only used to 
 make the tool's reasoning more efficient.
 
 Now click on *Multiset rewriting rules and axioms* on the left.
@@ -351,7 +356,7 @@ Rules](../images/tamarin-tutorial-multiset-rules.jpg
 
 On the right side of the screen you should now see your protocol's 
 rewriting rules, plus two additional rules: the `isend` and `irecv` rules, 
-which iterface the protocols output and input with the intruder deduction.
+which interface the protocols output and input with the intruder deduction.
 The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` the intruder knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
 output `Out(x)` and passes it to the intruder knowledge, represented by the 
@@ -361,8 +366,8 @@ output `Out(x)` and passes it to the intruder knowledge, represented by the
 the [section on cryptographic
 messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
-Just below you have the list of all axioms, here only the axiom 
-`Equality_Checks_Succeed`.
+Just below you have the list of all axioms. In this example there is
+only the one axiom `Equality_Checks_Succeed`.
 
 Now click on `Untyped case distinctions (10 cases, all chains solved)` to see 
 the following:
@@ -416,9 +421,9 @@ lemma in the left frame to obtain the following screen:
  "Tutorial Lemma 1")
 
 Tamarin proves lemmas using constraint solving, i.e., by refining the knowledge 
-he has about the property and the protocol (called a *constraint system*) until 
-he can either conclude that the property holds in all possible cases, or until 
-he finds a counterexample invalidating the lemma.
+it has about the property and the protocol (called a *constraint system*) until 
+it can either conclude that the property holds in all possible cases, or until 
+it finds a counterexample invalidating the lemma.
 
 On the right we now have the possible proof steps at the top, and the current 
 state of the constraint system just below (which is empty, as we haven't 
@@ -446,10 +451,10 @@ Just below the graph, the formula
 now states that any occurrence of `LtkReveal( S )` will lead to a contradiction.
 
 To finish the proof we can either continue manually by selecting the constraint 
-to resolve next, or by calling the `autoprover` which selects the next steps 
+to resolve next, or by calling the `autoprove` command which selects the next steps 
 based on a heuristic. Note that that the proof methods in the GUI are also 
 sorted according to the same heuristic. Always selecting the first proof method 
-will result in the same proof as the ones constructed by the 'autoprover'.
+will result in the same proof as the one constructed by the 'autoprover'.
 
 In both cases we end with the following final state, where the constructed 
 graph leads to a contradiction as it contains `LtkReveal( S )`:
@@ -460,3 +465,20 @@ graph leads to a contradiction as it contains `LtkReveal( S )`:
 The lemma is now colored in green, as it was successfully proven. If we had 
 found a counterexample, it would be colored in red.
 
+All other properties in the 'Tutorial' can also be proven by Tamarin, just run
+
+     $ tamarin-prover Tutorial.spthy --prove
+
+and you will see this output:
+
+    ==============================================================================
+    summary of summaries:
+    
+    analyzed: Tutorial.spthy
+    
+      Client_session_key_secrecy (all-traces): verified (5 steps)
+      Client_auth (all-traces): verified (11 steps)
+      Client_auth_injective (all-traces): verified (15 steps)
+      Client_session_key_honest_setup (exists-trace): verified (5 steps)
+
+meaning all properties have been verified indeed.
