@@ -85,7 +85,10 @@ To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz.
 3.  Download the latest Tamarin binary `tamarin-prover-1.x.y-macosx` from 
 <https://github.com/tamarin-prover/bin-dists/blob/master/tamarin-prover-1.0.0/tamarin-prover-1.0.0-macosx?raw=true>.
 
-4.  Install Tamarin by renaming `tamarin-prover-1.x.y-macosx` to `tamarin-prover` and moving it to a folder in your executables path.
+4.  Install Tamarin by renaming `tamarin-prover-1.x.y-macosx` to `tamarin-prover` and moving it to a folder in your executables path. Make the binary executable with the following command.
+```
+  chmod u+x tamarin-prover
+```
  
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 

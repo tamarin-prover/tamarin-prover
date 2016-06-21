@@ -29,11 +29,11 @@ rule A_1_send:
   , !Ltk(A, ltkA)
   , !Pk(B, pkB)
   ]
---[ Send(A, aenc{A, ~na}pkB) 
+--[ Send(A, aenc(<A, ~na>, pkB)) 
   , Secret_A(~na), Honest(A), Honest(B)
   ]->
   [ St_A_1(A, ~id, ltkA, pkB, B, ~na) 
-  , Out(aenc{A, ~na}pkB)
+  , Out(aenc(<A, ~na>, pkB))
   ]
 
 // Role B receives first message
@@ -41,9 +41,9 @@ rule B_1_receive:
   [ Fr(~id)
   , !Ltk(B, ltkB)
   , !Pk(A, pkA)
-  , In(aenc{A, na}pkB)
+  , In(aenc(<A, na>,pkB))
   ]
---[ Recv(B, aenc{A, na}pkB) 
+--[ Recv(B, aenc(<A, na>, pkB)) 
   , Secret_B(na), Honest(B), Honest(A)
   ]->
   [ St_B_1(B, ~id, ltkB, pkA, A, na)

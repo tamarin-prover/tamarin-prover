@@ -22,7 +22,7 @@ with the actions `Act1(~n)` and `Act2(x)`.
 The rule can be applied if there are two facts `Pre` and `Fr` in the system state whose arguments are matched by the variables `x` and `~n`. In the application of 
 this rule, `~n` and `x` are instantiated with the matched values and the
 state transition is labelled with the instantiations of `Act1(~n)` and
-`Act2(x)`. The two instantiations are thus appeneded to the
+`Act2(x)`. The two instantiations are thus appended to the
 *trace* and considered to have occurred at the same timepoint. 
 We analyze a protocol by reasoning about actions in all of its traces.
 
@@ -50,11 +50,14 @@ The syntax for specifying security properties is defined as follows:
  * `x = y`    for an equality between message variables 'x' and 'y'
 
 
-**FIXME:** Note that apart from public names (delimited using single-quotes), no terms may occur in guarded trace properties. (Terms in guarded trace properties may be built from variables, public names, pairs, and free function symbols.)
-**END-FIXME**
+All action fact symbols may be used in formulas. The terms (as
+arguments of those action facts) are more limited. Terms are only
+allowed to be built from quantified variables, public constants (names
+delimited using single-quotes), and free function symbols including
+pairing. This excludes function symbols that appear in any of the equations.
 Moreover, all variables must be
 guarded. The error message for an unguarded variable is currently not very
-good.
+helpful.
 
 For universally quantified variables, one has to check that they all
 occur in an action constraint right after the quantifier and that the
@@ -69,18 +72,22 @@ doubt.
 
 To specify a property about a protocol that includes the fictitious
 rule above, we use the keyword `lemma` followed by a name for the
-property and a guarded first-order formula.
-For instance, to express the property that the fresh constant `~n` is
-distinct in all applications of the fictitious rule, we write
+property and a guarded first-order formula.  For instance, to express
+the property that the fresh value `~n` is distinct in all applications
+of the fictitious rule (or rather, if an action with the same fresh
+value appears twice, it actually is the same instance, identified by
+the timepoint), we write
 
 ```
 lemma distinct_nonces: "All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
 ```
 
 
+
 ### Secrecy ###
 
-How to express standard secrecy properties in Tamarin, examples
+In this section we explain how you can express standard secrecy
+properties in Tamarin and give examples.
 
 Tamarin's built-in message deduction rule
 ```
@@ -132,16 +139,65 @@ lemma secrecy_PFS:
 
 ### Authentication ###
 
-How to express standard authentication properties, examples
+In this section we explain how to express standard authentication properties, and give examples.
 
+#### Entity Authentication ####
 
+We propose the following lemmas to formalize the entity authentication
+properties from Lowe's hierarchy of authentication specifications
+[@Lowe].
+
+1. Aliveness
+
+A protocol guarantees to an agent `a` in role `A`
+*aliveness* of another agent `b` if, whenever `a` completes a run
+of the protocol, apparently with `b` in role `B`, then `b` has
+previously been running the protocol.
+
+2. Weak agreement
+
+A protocol guarantees to an agent `a` in role `A` *weak agreement*
+with another agent `b` if, whenever agent `a` completes a run of the
+protocol, apparently with `b` in role `B`, then `b` has previously
+been running the protocol, apparently with `a`.
+
+To analyze a protocol with respect to the weak agreement property we label the
+appropriate rule in role `A` with the `Commit(a,b,<'A','B'>)` action
+and in role `B` with the `Running(b,a,<'A','B'>)` action.
 ```
-lemma noninjectiveagreement:
-  "All A B t #i. 
-    Commit(A,B,t) @i
-    ==> (Ex #j. Running(B,A,t) @j)
+lemma weakagreement:
+  "All a b t #i. 
+    Commit(a,b,t) @i
+    ==> (Ex #j. Running(b,a,t) @j)
         | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
+
+3. Non-injective agreement
+
+We can use the above lemma to analyze the *non-injective agreement*
+property as well.  A protocol guarantees to an agent `a` in role `A`
+non-injective agreement with an agent `b` in role `B` on a message `M`
+if, whenever `a` completes a run of the protocol, apparently with `b`
+in role `B`, then `b` has previously been running the protocol,
+apparently with `a`, and `b` was acting in role `B` in his run, and
+the two principals agreed on the message `M`. 
+
+That message `M` is then added to the `Commit` and `Running` claims,
+inside the angled bracket following the constants `'A'` and `'B'` and
+automatically matched by the `t` in the lemma above.
+
+
+4. Injective agreement
+
+We next show the lemma to analyze *injective agreement*. A protocol
+guarantees to an agent `a` in role `A` injective agreement with an
+agent `b` in role `B` on a message `M` if, whenever `a` completes a
+run of the protocol, apparently with `b` in role `B`, then `b` has
+previously been running the protocol, apparently with `a`, and `b` was
+acting in role `B` in his run, and the two principals agreed on the
+message `M`. Additionally, there is a unique matching partner instance
+for each completed run of an agent, i.e., for each `Commit` by an
+agent there is a unique `Running` by the supposed partner.
 
 ```
 lemma injectiveagreement:
@@ -154,10 +210,11 @@ lemma injectiveagreement:
               | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
 
+TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree?
 
-TODO:
-  * A standard package of lemmas .e.g Secrecy and so on? 
-    **NOTE** feature request; also very model-specific.
+#### Message Authentication ####
+
+TODO: ???
 
 
 Observational Equivalence
