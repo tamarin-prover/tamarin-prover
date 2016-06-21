@@ -50,17 +50,17 @@ Acknowledgments
 ---------------
 
 Tamarin was initially developed at the [Institute of Information Security at 
-ETH Zurich](/http://www.infsec.ethz.ch/) by Simon Meier and Benedikt Schmidt, 
+ETH Zurich](http://www.infsec.ethz.ch/) by Simon Meier and Benedikt Schmidt, 
 working with David Basin and Cas Cremers.
 
-Cedric Staub contributed the graphical user interface.
+Cedric Staub contributed to the graphical user interface.
 
-Jannik Dreier and Ralf Sasse developed the extension to deal with observational 
+Jannik Dreier and Ralf Sasse developed the extension to deal with Observational 
 Equivalence.
 
 Other contributers to the code include: Katriel Cohn-Gordon, Kevin Milner,  
-Dominik Schoop, Sam Scott, Jorden Whitefield, oggy- and many others.
+Dominik Schoop, Sam Scott, Jorden Whitefield, Ognjen Maric, and many others.
 
 This manual was initially written by David Basin, Cas Cremers, Jannik 
-Dreier, Sasa Radomirovic, Ralf Sasse, Benedikt Schmidt, Lara Schmid. It 
+Dreier, Sasa Radomirovic, Ralf Sasse, Lara Schmid, Benedikt Schmidt. It 
 includes part of the initial tutorial by Simon Meier and Benedikt Schmidt.
