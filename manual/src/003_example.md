@@ -8,7 +8,7 @@ of just two messages, written here in Alice-and-Bob notation:
     C <- S: h(k)
 
 In this protocol, a client C generates a fresh symmetric key 'k', encrypts it
-with the public key of a server 'S' (`aenc` stands for *asymmetric encryption*) 
+with the public key of a server 'S' (`aenc` stands for *asymmetric encryption*),
 and sends it to 'S'. The server confirms the key's receipt by sending its 
 hash back to the client.
 
@@ -26,13 +26,14 @@ theory's name, here `Tutorial`.
 ~~~~
 
 After the keyword `begin`, we first declare function symbols, and 
-equations that these function symbols must satisfy. These functions and 
+the equations that these functions must satisfy. The functions and 
 equations describe the cryptographic primitives and their properties used in the 
-protocol. Then we declare multiset rewriting rules that model the protocol, and 
-finally we write lemmas that specify the security properties. Moreover, we also 
-inserted comments, to structure the theory. Now, we explain the above model of 
-the simple protocol in detail.
+protocol. Afterward, we declare multiset rewriting rules that model the protocol and 
+finally we write properties to be proven (and hence called lemmas),
+which specify the protocol's desired security properties.
+Note that we have also inserted comments to structure the theory.
 
+We next explain in detail the protocol modeled above.
 
 Function Signature and Equational Theory
 ----------------------------------------
