@@ -418,11 +418,11 @@ it has about the property and the protocol (called a *constraint system*) until
 it can either conclude that the property holds in all possible cases, or until 
 it finds a counterexample to the lemma.
 
-On the right we now have the possible proof steps at the top, and the current 
-state of the constraint system just below (which is empty, as we haven't 
+On the right, we now have the possible proof steps at the top, and the current 
+state of the constraint system just below (which is empty, as we have not 
 started the proof yet). A proof always starts with either a simplification step 
-(`1. simplify`) which translates the lemma into an initial constraint system 
-that needs to be resolved, or an induction setup step (`2. induction`) which 
+(`1. simplify`), which translates the lemma into an initial constraint system 
+that needs to be resolved, or an induction setup step (`2. induction`), which 
 generates the necessary constraints to prove the lemma using induction on the 
 length of the trace. Here we use the default strategy, i.e., a simplification 
 step by clicking on `1. simplify`, to obtain the following screen:
@@ -430,21 +430,21 @@ step by clicking on `1. simplify`, to obtain the following screen:
 ![Tutorial Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpg 
  "Tutorial Lemma 1 Step 1")
 
-Tamarin has now translated the lemma into a constraint system. Since it looks 
-for counterexamples to the lemma, it looks for a protocol execution that 
-contains a `SessKeyC( S, k )` and a `K( k )` action, but does not use an 
-`LtkReveal( S )`. This is visualized in the graph as follows. The only way of 
-getting a `SessKeyC( S, k )` action is using an instance of the `Client_2` 
-rule on the left, and the `K( k )` rule is symbolized on the right using a 
-round box (intruder reasoning is always visualized using round boxes).
-Just below the graph, the formula
+Tamarin has now translated the lemma into a constraint system. Since
+Tamarin looks for counterexamples to the lemma, it looks for a protocol
+execution that contains a `SessKeyC( S, k )` and a `K( k )` action, but
+does not use an `LtkReveal( S )`. This is visualized in the graph as
+follows. The only way of getting a `SessKeyC( S, k )` action is using an
+instance of the `Client_2` rule on the left, and the `K( k )` rule is
+symbolized on the right using a round box (intruder reasoning is always
+visualized using round boxes).  Just below the graph, the formula
 
     formulas: ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥
 
 now states that any occurrence of `LtkReveal( S )` will lead to a contradiction.
 
-To finish the proof we can either continue manually by selecting the constraint 
-to resolve next, or by calling the `autoprove` command which selects the next steps 
+To finish the proof, we can either continue manually by selecting the constraint 
+to resolve next, or by calling the `autoprove` command, which selects the next steps 
 based on a heuristic. Note that that the proof methods in the GUI are also 
 sorted according to the same heuristic. Always selecting the first proof method 
 will result in the same proof as the one constructed by the 'autoprover'.
@@ -455,7 +455,7 @@ graph leads to a contradiction as it contains `LtkReveal( S )`:
 ![Tutorial Lemma 1 Finished](../images/tamarin-tutorial-lemma-1-finished.jpg 
  "Tutorial Lemma 1 Finished")
  
-The lemma is now colored in green, as it was successfully proven. If we had 
+The lemma is now colored in green as it was successfully proven. If we had 
 found a counterexample, it would be colored in red. You can prove the other 
 lemmas in the same way.
 
