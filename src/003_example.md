@@ -17,7 +17,7 @@ This simple protocol is artificial and satisfies only very weak security
 guarantees.  We will use it to illustrate the general Tamarin workflow by
 proving that, from the client's perspective, the freshly generated key is secret
 provided that the server is not compromised. By default, the adversary is a
-Dolev-Yao intruder that controls the network and can delete, inject, modify and
+Dolev-Yao adversary that controls the network and can delete, inject, modify and
 intercept messages on the network.
 
 The protocol's Tamarin model and its security properties are given in 
@@ -266,10 +266,10 @@ should see the following:
 Overview](../images/tamarin-tutorial-overview.jpg "FirstExample Theory 
 Overview"){width=100%}
 
-On the left hand side, you see the theory: links to the message theory 
-describing the intruder, the multiset rewrite rules and axioms describing your 
-protocol, and the typed and untyped case distinctions, followed by the lemmas 
-you want to prove. We will explain each of these in the following.
+On the left hand side, you see the theory: links to the message theory
+describing the adversary, the multiset rewrite rules and axioms describing
+your protocol, and the typed and untyped case distinctions, followed by the
+lemmas you want to prove. We will explain each of these in the following.
 
 On the right hand side, you have a quick summary of the available
 commands and keyboard shortcuts you can use to navigate inside the
@@ -295,31 +295,31 @@ shorthand for the `pair` using `<` and `>`, which is used here for
 example for `fst(<x.1, x.2>)`.
 
 Just below come the *Construction rules*. These rules describe the functions
-that the intruder can apply. Consider, for example, the following rule:
+that the adversary can apply. Consider, for example, the following rule:
 
     rule (modulo AC) ch:
      [ !KU( x ) ] --[ !KU( h(x) ) ]-> [ !KU( h(x) ) ]
 
-Intuitively, this rule expresses that if the intruder knows `x` (represented by
+Intuitively, this rule expresses that if the adversary knows `x` (represented by
 the fact `!KU(x)` in the premise), then he can compute `h(x)` (represented by
 the fact `!KU(h(x))` in the conclusion), i.e., the hash of `x`. The action fact
 `!KU(h(x))` in the label also records this for reasoning purposes.
 
 Finally, there are the *Deconstruction rules*. These rules
 describe which terms the 
-intruder can extract from larger terms by applying functions. Consider for 
+adversary can extract from larger terms by applying functions. Consider for 
 example the following rule:
 
     rule (modulo AC) dfst:
      [ !KD( <x.1, x.2> ) ] --> [ !KD( x.1 ) ]
 
-In a nutshell, this rule says that if the intruder knows the pair `<x.1, x.2>` 
+In a nutshell, this rule says that if the adversary knows the pair `<x.1, x.2>` 
 (represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
 value `x.1` (represented by the fact `!KD( x.1 )`) from it. This results from 
 applying `fst` to the pair and then using the equation 
 `fst(<x.1, x.2>) = x.1`. The precise difference between `!KD( )` and `!KU( )` 
 facts is not important for now, and will be explained below. As a first 
-approximation, both represent they intruder's knowledge and the distinction is 
+approximation, both represent they adversary's knowledge and the distinction is 
 only used to make the tool's reasoning more efficient.
 
 Now click on *Multiset rewriting rules* on the left.
@@ -329,12 +329,13 @@ Rules](../images/tamarin-tutorial-multiset-rules.jpg
  "FirstExample Multiset Rewriting Rules"){width=100%}
 
 On the right side of the screen are the protocol's 
-rewriting rules, plus two additional rules:  `isend` and `irecv`.
+rewriting rules, plus two additional rules:  `isend` and `irecv`^[The 'i'
+historically stems from "intruder", but here we use "adversary".].
 These two extra rules provide an interface between the protocols output and input
-and the intruder deduction.
-The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` that the intruder knows, 
+and the adversary deduction.
+The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` that the adversary knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
-output `Out(x)` and passes it to the intruder knowledge, represented by the 
+output `Out(x)` and passes it to the adversary knowledge, represented by the 
 `!KD(x)` fact. Note that the rule `Serv_1` from the protocol has two 
 *variants (modulo AC)*. The precise meaning of this is unimportant right now 
 (it stems from the way Tamarin deals with equations) and will be explained in 
@@ -416,7 +417,7 @@ execution that contains a `SessKeyC( S, k )` and a `K( k )` action, but
 does not use an `LtkReveal( S )`. This is visualized in the graph as
 follows. The only way of getting a `SessKeyC( S, k )` action is using an
 instance of the `Client_2` rule on the left, and the `K( k )` rule is
-symbolized on the right using a round box (intruder reasoning is always
+symbolized on the right using a round box (adversary reasoning is always
 visualized using round boxes).  Just below the graph, the formula
 
     formulas: ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥
