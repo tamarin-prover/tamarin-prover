@@ -80,8 +80,9 @@ Highlights
 In practice, the Tamarin tool has proven to be highly successful.
 It features support for trace and observational equivalence properties, 
 automatic and interactive modes, and has built-in support for equational 
-theories such as the one modeling Diffie-Hellman Key exchanges. It has been 
-applied to numerous protocols from different domains including:
+theories such as the one modeling Diffie-Hellman Key exchanges. It supports a 
+(limited) form of induction, and efficiently parallelizes its proof search. 
+It has been applied to numerous protocols from different domains including:
 
 * Advanced key agreement protocols based on Diffie-Hellman
 exponentiation, such as verifying Naxos with respect to the

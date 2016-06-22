@@ -37,7 +37,7 @@ rule NaxosI_1:
       hkI = 'g'^exI
   in
    [   Fr( ~eskI ),
-   [   Fr( ~tid ),
+       Fr( ~tid ),
        !Ltk( $I, ~lkI ) ]
    -->
    [   Init_1( ~tid, $I, $R, ~lkI, exI ),
