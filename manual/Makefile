@@ -29,6 +29,7 @@ pdf:
 	sed 's,[0-9]*_.*.html#,#,' < $(SRC) > tex/all.md
 	$(PANDOC) -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
+	  --filter ./includes \
 	  --bibliography=src/manual.bib \
 	  -o tex/tamarin-manual.tex tex/all.md
 	make -C tex
