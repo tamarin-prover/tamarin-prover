@@ -101,7 +101,8 @@ value appears twice, it actually is the same instance, identified by
 the timepoint), we write
 
 ```
-lemma distinct_nonces: "All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
+lemma distinct_nonces: 
+    "All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
 ```
 or equivalently
 ```
@@ -343,11 +344,37 @@ not always sufficient.
 Axioms
 ------
 
-TODO: axioms for trace and equivalence properties with motivating example
+Axioms restrict the set of traces to be considered in the protocol
+analysis.  They can be used for purposes ranging from modeling
+branching behavior of protocols to the verification of signatures.  We
+give a brief example of the latter. Consider the simple message
+authentication protocol, where an agent `A` sends a signed message to
+an agent `B`. We use Tamarin's built-in equational [theory for
+signing](004_cryptographic-messages.html#sec:builtin-theories).
 
-TODO: As there are no lemmas in observational equivalence you can use axioms
-to remove state space, essentially remove degenerate cases. Do note
-that one can use axioms to simplify writing lemmas
+~~~~ {.tamarin slice="code/auth-signing.spthy" lower=26 upper=52}
+~~~~
+
+In the above protocol, agent `B` verifies the signature `sig` on the
+received message `m`. We model this by considering only those traces
+of the protocol in which the application of the `verify` function to
+the received message equals the constant `true`.
+To this end, we specify the equality axiom
+
+~~~~ {.tamarin slice="code/auth-signing.spthy" lower=53 upper=55}
+~~~~
+
+The full protocol theory is given below.
+
+~~~~ {.tamarin include="code/auth-signing.spthy"}
+~~~~
+
+Note that axioms can also be used to verify observational equivalence
+properties. As there are no user-specifiable lemmas for observational
+equivalence, axioms can be used to remove state space, which
+essentially removes degenerate cases.  
+
+<!-- Finally, one can use also use axioms to simplify the writing of lemmas. -->
 
 ## Common axioms ##
 

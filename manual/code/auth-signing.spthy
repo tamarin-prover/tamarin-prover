@@ -1,11 +1,13 @@
-theory secrecy_asym_enc
+theory auth_signing
 begin
 
-builtins: asymmetric-encryption
+builtins: signing
 
 /* We formalize the following protocol:
 
     1. A -> B: {B,na}sk(A)
+
+using Tamarin's builtin signin and verification functions.
 
 */
 
@@ -24,40 +26,41 @@ rule Reveal_ltk:
 
 // Role A sends first message
 rule A_1_send:
+  let m = <A, ~na>
+  in 
   [ Fr(~na)
   , !Ltk(A, ltkA)
   , !Pk(B, pkB)
   ]
---[ Send(A, aenc(<A, ~na>, pkB)) 
-  , Secret(~na), Honest(A), Honest(B), Role('A')
+--[ Send(A, m) 
   ]->
   [ St_A_1(A, ltkA, pkB, B, ~na) 
-  , Out(aenc(<A, ~na>, pkB))
+  , Out(<m,sign(m,ltkA)>)
   ]
 
 // Role B receives first message
 rule B_1_receive:
   [ !Ltk(B, ltkB)
   , !Pk(A, pkA)
-  , In(aenc(<A, na>,pkB))
+  , In(<m,sig>)
   ]
---[ Recv(B, aenc(<A, na>, pkB)) 
-  , Secret(na), Honest(B), Honest(A), Role('B')
+--[ Recv(B, m)
+  , Eq(verify(sig,m,pkA),true) 
+  , Authentic(A,m), Honest(B), Honest(A)
   ]->
-  [ St_B_1(B, ltkB, pkA, A, na)
+  [ St_B_1(B, ltkB, pkA, A, m)
   ]
+
+axiom Equality:
+  "All x y #i. Eq(x,y) @i ==> x = y"
 
 lemma executable:
   exists-trace
     "Ex A B m #i #j. Send(A,m)@i & Recv(B,m) @j"
 
-lemma secret_A:
-  all-traces
-    "All n #i. Secret(n) @i & Role('A') @i ==> (not (Ex #j. K(n)@j)) | (Ex B #j. Reveal(B)@j & Honest(B)@i)"
-
-lemma secret_B:
-  all-traces
-    "All n #i. Secret(n) @i & Role('B') @i ==> (not (Ex #j. K(n)@j)) | (Ex B #j. Reveal(B)@j & Honest(B)@i)"
-
+lemma message_authentication: 
+    "All b m #i. Authentic(b,m) @i
+     ==> (Ex #j. Send(b,m) @j & j<i)
+         | (Ex B #r. Reveal(B)@r & Honest(B) @i & r < i)"
 
 end

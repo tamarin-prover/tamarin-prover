@@ -1,4 +1,4 @@
-theory SECRECYASYMM2
+theory secrecy_template
 begin
 
 builtins: asymmetric-encryption
