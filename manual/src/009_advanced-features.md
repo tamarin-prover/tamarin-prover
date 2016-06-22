@@ -217,9 +217,9 @@ constraint solving phase and thereby allows more properties to be proven.
 Integrated Preprocessor {#sec:integrated-preprocessor}
 -----------------------
 
-You can use the integrated preprocessor to include or exclude
-parts of your file. We use this mostly when we are interested in
-only a subset of lemmas. You do this by putting the relevant part of
+Tamarin's integrated preprocessor can be used to include or exclude
+parts of your file.  You can use this, for example, to restrict your
+focus to just some subset of lemmas. This is done by putting the relevant part of
 your file within an `#ifdef` block with a keyword `KEYWORD`
 
 ```
