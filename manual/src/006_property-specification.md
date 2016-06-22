@@ -244,7 +244,16 @@ might learn the result, i.e., that there is one vote for a and one for b.
 Tamarin can prove such properties for two systems that only differ in terms 
 using the `diff( , )` operator. Consider the following example:
 
+~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
+upper=27}
+~~~~
 
+In this example, the intruder cannot compute `~b` as formalized by the 
+following lemma:
+
+~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=29 
+upper=36}
+~~~~
 
 Axioms
 ------
