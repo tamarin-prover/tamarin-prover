@@ -226,6 +226,13 @@ properties can be imagined.
 Induction
 ---------
 
+Tamarin's constraint solving approach is similar to a backwards search, in the
+sense that it starts from later states and reasons backwards to derive
+information about possible earlier states. For some properties, it is more
+useful to reason forwards, by making assumptions about earlier states and
+deriving conclusions about later states. To support this, Tamarin offers a
+specialised inductive proof method.
+
 We start by motivating the need for an inductive proof method on a simple example with two rules and one lemma:
 
 ~~~~ {.tamarin slice="code/InductionExample.spthy" lower=5 upper=23}
@@ -245,9 +252,9 @@ this can be understood as a form of *wellfounded induction*.
 The induction hypothesis then becomes an additional constraint during the
 constraint solving phase and thereby allows more properties to be proven.
 
-<!--
-**FIXME:** adjust the induction section
--->
+For example, this is particularly useful when reasoning about state facts that
+must always be preceded by certain other facts.
+
 
 Integrated Preprocessor {#sec:integrated-preprocessor}
 -----------------------
