@@ -1,5 +1,5 @@
 
-Precomputation
+Precomputation {#sec:precomputation}
 ============== 
 
 In this section, we will explain some of the aspects of the

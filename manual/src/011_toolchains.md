@@ -1,5 +1,5 @@
 
-Toolchains
+Toolchains {#sec:tool-chains}
 ==========
 
 There are multiple tools that use Tamarin as a backend, notably SAPIC which 
@@ -12,12 +12,13 @@ Applied-Pi Calculus (SAPIC)
 SAPIC (Stateful Applied Pi Calculus) is available at 
 <http://sapic.gforge.inria.fr/>.
 
-TODO: To be written by Steve Kremer and Robert Kuennemann?
+<!-- FIX: To be written by Steve Kremer and Robert Kuennemann? -->
 
 Alice&Bob input 
 ---------------
 
+There exists a tool that translates Ailice&Bob-specifications to Tamarin:
 <http://www.infsec.ethz.ch/research/software/anb.html>
 
-TODO: To be written by Sasa & Ralf
+<!-- FIX: To be written by Sasa & Ralf -->
 
