@@ -168,10 +168,11 @@ lemma message_authentication:
 Observational Equivalence
 -------------------------
 
-All the previous properties are trace properties, i.e., properties that are 
-defined on traces. For example, the definition of secrecy required that there 
-is no trace where the intruder could compute the secret without having 
-previously corrupted the agent.
+All the previous properties are trace properties, i.e., properties
+that are defined on each trace independently. For example, the
+definition of secrecy required that there is no trace where the
+intruder could compute the secret without having previously corrupted
+the agent.
 
 In contrast, Observational Equivalence properties reason about two systems (for 
 example two instances of a protocol), by showing that an intruder cannot 
@@ -180,17 +181,17 @@ properties, or cryptographic indistinguishability properties.
 
 For example, a simple definition of privacy for voting requires that an 
 adversary cannot distinguish two instances of a voting protocol where two 
-voters swap votes. That is, in the first instance, voter A votes for candidate 
-a and voter B votes for b, and in the second instance voter A votes for 
-candidate b and voter B votes for a. If the intruder cannot tell both instances 
+voters swap votes. That is, in the first instance, voter `A` votes for candidate 
+`a` and voter `B` votes for `b`, and in the second instance voter `A` votes for 
+candidate `b` and voter `B` votes for `a`. If the intruder cannot tell both instances 
 apart, he does not know which voter votes for which candidate, even though he 
 might learn the result, i.e., that there is one vote for a and one for b.
 
 Tamarin can prove such properties for two systems that only differ in terms 
 using the `diff( , )` operator. Consider the following toy example, where one 
 creates a public key, two fresh values `~a` and `~b`, and publishes `~a`. Then 
-one encrypts either `~a` or `~b` (modeled using the `diff` operator) and sends 
-the ciphertext out:
+one encrypts either `~a` or `~b` (modeled using the `diff` operator) and sends out
+the ciphertext:
 
 ~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
 upper=27}
