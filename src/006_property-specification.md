@@ -259,7 +259,9 @@ apart, he does not know which voter votes for which candidate, even though he
 might learn the result, i.e., that there is one vote for a and one for b.
 
 Tamarin can prove such properties for two systems that only differ in terms 
-using the `diff( , )` operator. Consider the following example:
+using the `diff( , )` operator. Consider the following example, where one 
+creates a public key, two fresh values `~a` and `~b`, and publishes `~a`. Then 
+one encrypts either `~a` or `~b` (modeled using the `diff` operator):
 
 ~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
 upper=27}
@@ -276,6 +278,7 @@ However, he can know whether in the last message `~a` or `~b` was encrypted by
 simply taking the output `~a`, encrypting it with the public key and comparing 
 it to the published cyphertext. This can be captured using observational 
 equivalence as follows.
+
 
 Axioms
 ------
