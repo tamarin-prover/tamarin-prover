@@ -184,7 +184,26 @@ properties can be imagined.
 Induction
 ---------
 
-**TODO:** write on induction
+Let us first motivate the need for an inductive method on a simple example with two rules and one lemma:
+
+~~~~ {.tamarin slice="code/InductionExample.spthy" lower=5 upper=23}
+~~~~
+
+If we try to prove this with Tamarin without using induction (comment
+out the `[use_induction]` to try) the tool will loop on the backwards
+search over the repeating `A(x)` fact. That `A(x)` fact can have two
+sources, either the `start` rule, which ends the search, or another
+instantiation of the `loop` rule, which continues.
+
+The induction method works by distinguishing the last timepoint `#i`
+in the trace, as `last(#i)`, from all other timepoints. It assumes the
+property holds for all timepoints but this one (*wellfounded induction*).
+
+The induction hypothesis then becomes another constraint during the
+constraint solving phase. Essentially trace induction allows to prove
+slightly more properties.
+
+**FIXME:** adjust the induction section
 
 
 Integrated Preprocessor {#sec:integrated-preprocessor}
