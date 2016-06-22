@@ -85,7 +85,7 @@ The initial state of the transition system is the empty multiset.
 The rules define how the system can make a transition to a new state. A
 rule can be applied to a state if it can be instantiated such that its left hand
 side is contained in the current state. In this case, the left-hand side facts
-are removed from the state, and replaced by the instatiated right hand side.
+are removed from the state, and replaced by the instantiated right hand side.
 
 **FIXME**: The unbound variable `t` on the right-hand side is going to be very confusing to readers.**/FIXME**
 
