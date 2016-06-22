@@ -429,11 +429,13 @@ visualized using round boxes).  Just below the graph, the formula
 
 now states that any occurrence of `LtkReveal( S )` will lead to a contradiction.
 
-To finish the proof, we can either continue manually by selecting the constraint 
-to resolve next, or by calling the `autoprove` command, which selects the next steps 
-based on a heuristic. Note that that the proof methods in the GUI are also 
-sorted according to the same heuristic. Always selecting the first proof method 
-will result in the same proof as the one constructed by the 'autoprover'.
+To finish the proof, we can either continue manually by selecting the constraint
+to resolve next, or by calling the `autoprove` command, which selects the next
+steps based on a heuristic. Note that that the proof methods in the GUI are also
+sorted according to the same heuristic. Because the general problem is
+undecidable, the algorithm may not terminate for every protocol and property.
+Any proof found by always selecting the first proof method will be identical to
+the one constructed by the `autoprove` command.
 
 In both cases we end with the following final state, where the constructed 
 graph leads to a contradiction as it contains `LtkReveal( S )`:
