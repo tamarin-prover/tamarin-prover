@@ -314,3 +314,7 @@ complete input file, with an artificial protocol:
 ~~~~ {.tamarin include="code/TimingExample.spthy"}
 ~~~~
 
+<!-- One could add information on injective instances and the equation
+store from the old "doc/MANUAL.md" in the Tamarin source code
+repository here.  -->
+
