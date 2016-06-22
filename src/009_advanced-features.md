@@ -7,23 +7,57 @@ We cover manual proofs, custom
 heuristics, encoding tricks, induction, channel models, internal
 preprocessor, and how to measure the time needed for proofs.
 
-Manual Exploration using GUI
-----------------------------
-
-TODO: Cas?
-
 
 Heuristics
 ----------
 
-TODO: python "oracle" script? [Benedikt/Sasa]
+The commandline option `--heuristic` can be used to select which heuristic for
+goal selection should be used by the automated proof methods. 
+The argument of the `--heuristic` flag is a word built from the
+alphabet `{s,S,c,C}`. Each of these letters describes a different way to rank
+the open goals of a constraint system.
+
+`s`:
+: the 'smart' ranking is the ranking described in the extended version of
+  our CSF'12 paper. It is the default ranking and works very well in a wide
+  range of situations.
+
+`S`:
+: is like the 'smart' ranking, but does not delay the solving of premises
+  marked as loop-breakers. What premises are loop breakers is determined
+  from the protocol using a simple under-approximation to the vertex
+  feedback set of the conclusion-may-unify-to-premise graph. We require
+  these loop-breakers for example to guarantee the termination of the case
+  distinction precomputation. You can inspect which premises are marked as
+  loop breakers in the 'Multiset rewriting rules' page in the GUI.
+
+`c`:
+: is the 'consecutive' or 'conservative' ranking. It solves goals in the
+  order they occur in the constraint system. This guarantees that no goal
+  is delayed indefinitely, but often leads to large proofs because some
+  of the early goals are not worth solving.
+
+`C`:
+: is like 'c' but without delaying loop breakers.
+
+If several rankings are given for the heuristic flag, then they are employed
+in a round-robin fashion depending on the proof-depth. For example, a flag
+`--heuristic=ssC` always uses two times the smart ranking and then once the
+'Consecutive' goal ranking. The idea is that you can mix goal rankings easily
+in this way.
+
+<!-- FIXME: Describe oracle script mechanism -->
 
 How to Improve your Encoding
 ----------------------------
 
 to encoding using alternative more efficient descriptions
 
+Manual Exploration using GUI
+----------------------------
 
+See Section [Example](003_example.html#sec:gui) for a short demonstration
+of the main features of the GUI.
 
 Different Channel Models
 -------------------------
@@ -211,8 +245,9 @@ this can be understood as a form of *wellfounded induction*.
 The induction hypothesis then becomes an additional constraint during the
 constraint solving phase and thereby allows more properties to be proven.
 
+<!--
 **FIXME:** adjust the induction section
-
+-->
 
 Integrated Preprocessor {#sec:integrated-preprocessor}
 -----------------------
@@ -249,7 +284,7 @@ At the same time this would be excluded:
 
 
 How to Time Proofs in Tamarin
-----------------------------
+-----------------------------
 
 If you want to measure the time taken to verify 
 a particular lemma you can use the previously described preprocessor to mark
