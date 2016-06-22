@@ -27,14 +27,16 @@ book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros includes
 
 pdf:
 	sed 's,[0-9]*_.*.html#,#,' < $(SRC) > tex/all.md
-	$(PANDOC) ${FILTER} -f $(IFORMAT) \
+	$(PANDOC) -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
+	  --bibliography=src/manual.bib \
 	  -o tex/tamarin-manual.tex tex/all.md
 	make -C tex
 
 simple: 
 	$(PANDOC) -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
+	  --bibliography=src/manual.bib \
 	  -o tex/tamarin-manual.tex $(SRC)
 	make -C tex
 

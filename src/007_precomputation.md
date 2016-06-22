@@ -47,7 +47,7 @@ In the interactive mode you can find open chains as follows.  On the top left,
 under "Untyped case distinction", one can find the chains that were precomputed
 by Tamarin.
 
-![Tamarin GUI](../images/FindOpenChains1.png "Untyped case distinctions")
+![Tamarin GUI](../images/FindOpenChains1.png "Untyped case distinctions"){ width=50% }
 
 The unsolved chains can be identified by the light green arrows as in the
 following example:
@@ -66,7 +66,7 @@ this?**
 ### Why open chains complicate proofs
 
 To get a better understanding of the problem we can look at what happens if
-Tamarin wants to prove the lemma `nonce_secrecy`.  If we manually always choose
+we try to prove the lemma `nonce_secrecy`.  If we manually always choose
 the first case for the proof, we can see that Tamarin derives the secret key to
 decrypt the output of rule `I_2` by repeatedly using this rule `I_2`.
 
@@ -85,11 +85,9 @@ Once we identified the rules and cases in which open chains occur, we
 can try to avoid them. A good mechanism to get rid of open chains is the use of
 so-called *typing lemmas*.
 
-**FIX Cas: Did we ever explicitly explain case distinctions?**
-
 Typing lemmas are a special case of lemmas, and are applied in a particular
-phase of Tamarin's pre-computation. Abstractly, Tamarin takes the following
-steps:
+phase of Tamarin's pre-computation. Roughly, verification in Tamarin involves
+the following steps:
 
   1. It first determines the possible sources of all premises. We call these the
      untyped case distinctions.
