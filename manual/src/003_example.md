@@ -1,5 +1,5 @@
 
-Initial Example
+Initial Example {#initial-example}
 ===============
 
 We will start with a simple example of a protocol that consists of just two
@@ -209,7 +209,7 @@ sanity checks.
 ~~~~ {.tamarin slice="code/FirstExample.spthy" lower=104 upper=109}
 ~~~~
 
-Graphical User Interface
+Graphical User Interface {#sec:gui}
 ------------------------
 
 How do you now prove that your lemmas are correct? If you execute the
