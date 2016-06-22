@@ -62,10 +62,8 @@ is a sequence of facts: one for the rule's left-hand side, one labelleing the
 transition (which we call 'action facts'),  and one for the rule's right-hand side.
 For example:
 
-**FIX Cas: Maybe better to use Naxos rules here. Also, the "t" on right-hand side is unbound!**
-
 	rule MyRule1:
-	  [ ] --[ L(t) ]-> [ F('1',t), F('2',t) ]
+	  [ In(t) ] --[ L(t) ]-> [ F('1',t), F('2',t) ]
 
 	rule MyRule2:
 	  [ F(u,v) ] --[ M(u,v) ]-> [ H(t), G('3',h(t)) ]
@@ -85,19 +83,16 @@ The initial state of the transition system is the empty multiset.
 The rules define how the system can make a transition to a new state. A
 rule can be applied to a state if it can be instantiated such that its left hand
 side is contained in the current state. In this case, the left-hand side facts
-are removed from the state, and replaced by the instatiated right hand side.
-
-**FIXME**: The unbound variable `t` on the right-hand side is going to be very confusing to readers.**/FIXME**
+are removed from the state, and replaced by the instantiated right hand side.
 
 For example, in the initial state, `MyRule1` can be instantiated for any value
-of `t`. For any specific instantiation of `t`, this leads to a second state that
-contains `F('1',t)` and `F('2',t)`. `MyRule2` cannot be applied in the initial
-state since it contains no `F` facts.
-In the 
- successor state, the rule `MyRule2` can now be applied twice. It
-can be instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is
-equal to the instantiation of `t` that occurred in the first transition.
-Each of these instantiations leads to a new successor state.
+of `t` that the adversary can produce. For any specific instantiation of `t`,
+this leads to a second state that contains `F('1',t)` and `F('2',t)`. `MyRule2`
+cannot be applied in the initial state since it contains no `F` facts.  In the
+successor state, the rule `MyRule2` can now be applied twice. It can be
+instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is equal
+to the instantiation of `t` that occurred in the first transition.  Each of
+these instantiations leads to a new successor state.
 
 ### Using `let' binding in rules for local macros
 
@@ -199,8 +194,6 @@ and discuss alternatives afterwards.
 
 ### Public-key infrastructure
 
-**FIX Cas: this might well be duplicating a part from elsewhere.** **FIXME**: indeed, see initial example, but may be good to duplicate anyway.**/FIXME**
-
 In the Tamarin model, there is no pre-defined notion of public key
 infrastructure (PKI). A pre-distributed PKI with asymmetric keys for each party
 can be modeled by a single rule that generates a key for a party. The party's
@@ -210,10 +203,16 @@ fact, and for the corresponding private key we use the `Ltk` fact. Since these
 facts will only be used by other rules to retrieve the keys, but never updated,
 we model them as persistent facts. We use the abstract function `pk(x)` to
 denote the public key corresponding to the private key `x`, leading to the
-following rule.
+following rule. Note that we also directly give all public keys to the attacker,
+modeled by the `Out` on the right-hand side.
 
 	rule Generate_key_pair:
-	  [ Fr(~x) ] --> [ !Pk($A,pk(~x)), !Ltk($A,~x) ]
+	  [ Fr(~x) ] 
+	  --> 
+	  [ !Pk($A,pk(~x))
+	  , Out(pk(~x))
+	  , !Ltk($A,~x)
+	  ]
 
 **FIX Cas: for the above rule, need to point out relation to builtins**
 
@@ -225,7 +224,12 @@ $x$, which enables exploiting the commutativity of the exponents to establish
 keys. In this case, we specify model the following rule instead.
 
 	rule Generate_DH_key_pair:
-	  [ Fr(~x) ] --> [ !Pk($A,'g'^~x)), !Ltk($A,~x) ]
+	  [ Fr(~x) ] 
+	  --> 
+	  [ !Pk($A,'g'^~x)
+	  , Out('g'^~x)
+	  , !Ltk($A,~x)
+	  ]
 
 ### Modeling a protocol step
 
