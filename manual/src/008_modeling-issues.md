@@ -2,11 +2,6 @@
 Modeling Issues {#sec:modeling-issues}
 ===============
 
-TODO: Explain common errors and misconceptions and how to avoid them
-
-**TODO Cas: perhaps we should have the error messages as code blocks, so they
-get indexed and people can search for them.**
-
 First-time users
 ----------------
 In this section we discuss some problems that a first-time user might face.
