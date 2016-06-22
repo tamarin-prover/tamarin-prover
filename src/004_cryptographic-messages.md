@@ -3,8 +3,13 @@ Cryptographic Messages {#sec:cryptographic-messages}
 ====================================================
 
 Tamarin analyzes protocols with respect to a symbolic model of cryptography.
-This means cryptographic messages are modeled as terms [^1] rather than
-bit strings..
+This means cryptographic messages are modeled as terms rather than
+bit strings.
+
+<!--  
+[^1]: FIXME: Should we write more about terms and equations.
+-->
+
 The properties of the employed cryptographic algorithms are
 modeled by equations.
 More concretely, a cryptographic message is either a constant `c` or a
@@ -127,17 +132,35 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 
 `diffie-hellman`:
 
-: This theory models Diffie-Hellman groups. **FIXME: add function symbols and equations**
+: This theory models Diffie-Hellman groups. It defines the function symbols
+  `inv/1`, `1/0`, and the symbols `^` and `*`. We use `g ^ a` to denote exponentiation
+  in the group and `*`, `inv` and `1` to model the (multiplicative) abelian group
+  of exponents (the integers modulo the group order). The set of defined equations is:
+
+~~~
+(x^y)^z  = x^(y*z)
+x^1      = x
+x*y      = y*x
+x*1      = x
+x*inv(x) = 1
+~~~
 
 `bilinear-pairing`:
 
-: This theory models Pairing groups. **FIXME: add functions symbols and equations**
+: This theory models Pairing groups. It extends the `diffie-hellman` theory with
+  the function symbols `pmult/2` and `em/2`. Here, `pmult(x,p)` denotes the
+  multiplication of the point `p` by the scalar `x` and `em(p,q)` denotes
+  the application of the bilinear map to the points `p` and `q`. The additional
+  equations are:
+
+~~~
+pmult(x,(pmult(y,p)) = pmult(x*y,p)
+pmult(1,p)           = p
+em(p,q)              = em(q,p)
+em(pmult(x,p),q)     = pmult(x,em(q,p))
+~~~
 
 `multiset`:
 
-: This theory introduces associative operators, which can be used to model
-  multisets. **FIXME: add function symbols and equations**
-
-[^1]: FIXME: Should we write more about terms and equations.
-
-
+: This theory introduces the associative-commutative operator `+` which is usually
+  used to model multisets.
