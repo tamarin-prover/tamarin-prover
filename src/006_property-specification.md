@@ -648,6 +648,6 @@ lemma injectiveagreement:
               | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
 
-TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree?
+**TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree? CAS: It looks OK except that the injectiveagreement lemma is sufficient but perhaps not necessary for actual injective agreement.**
 
 
