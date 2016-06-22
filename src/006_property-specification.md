@@ -50,7 +50,7 @@ Tamarin using first-order logic formulas over action facts and
 timepoints. More precisely, Tamarin's property specification language
 is a guarded fragment of a many-sorted first-order logic with a sort for
 timepoints.  This logic supports quantification over both messages and
-timepoints. **FIXME: what is a guarded formula/variable**
+timepoints. 
 
 The syntax for specifying security properties is defined as follows:
 
@@ -79,6 +79,7 @@ pairing. This excludes function symbols that appear in any of the equations.
 Moreover, all variables must be 
 guarded. If they are not guarded, Tamarin will produce an error.
 
+**Guardedness. **
 To ensure guardedness, for universally quantified variables, one has to check 
 that they all occur in an action constraint right after the quantifier and that 
 the outermost logical operator inside the quantifier is an implication.
@@ -88,9 +89,8 @@ outermost logical operator inside the quantifier is a conjunction.
 We do recommend to use parentheses, when in doubt about the precedence
 of logical connectives, but we follow the standard
 precedence. Negation binds tightest, then conjunction, then
-disjunction and then implication. Equivalence binds weakest.
-
-**FIXME: Did the above explain "what is a guarded formula/variable" well enough?**
+disjunction and then implication. 
+<!-- Equivalence binds weakest (and nobody uses it). -->
 
 
 To specify a property about a protocol that includes the fictitious
