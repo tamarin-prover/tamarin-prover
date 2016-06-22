@@ -65,10 +65,10 @@ transition (which we call 'action facts'),  and one for the rule's right-hand si
 For example:
 
 	rule MyRule1:
-	  [ In(t) ] --[ L(t) ]-> [ F('1',t), F('2',t) ]
+	  [ ] --[ L('x') ]-> [ F('1','x'), F('2','y') ]
 
 	rule MyRule2:
-	  [ F(u,v) ] --[ M(u,v) ]-> [ H(t), G('3',h(t)) ]
+	  [ F(u,v) ] --[ M(u,v) ]-> [ H(u), G('3',h(v)) ]
 
 For now, we will ignore the action facts (`L(...)` and `M(...)`) and return to
 them when discussing properties in the next section. If a rule is not
@@ -87,17 +87,13 @@ rule can be applied to a state if it can be instantiated such that its left hand
 side is contained in the current state. In this case, the left-hand side facts
 are removed from the state, and replaced by the instantiated right hand side.
 
-For example, in the initial state, `MyRule1` can be instantiated for any value
-of `t` that the adversary can produce. 
+For example, in the initial state, `MyRule1` can be instantiated repeatedly. 
 
-TODO:'In' only explained later, (suggestion was to change to empty premise and constant in output)
-
-For any specific instantiation of `t`,
-this leads to a second state that contains `F('1',t)` and `F('2',t)`. `MyRule2`
+For any instantiation of `MyRule1`,
+this leads to follow-up  state that contains `F('1','x')` and `F('2','y')`. `MyRule2`
 cannot be applied in the initial state since it contains no `F` facts.  In the
 successor state, the rule `MyRule2` can now be applied twice. It can be
-instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is equal
-to the instantiation of `t` that occurred in the first transition.  Each of
+instantiated either by `u` equal to `'1'` (with `v` equal to `'x'`) or to `'2'` (with `v`  equal to `'y'`). Each of
 these instantiations leads to a new successor state.
 
 ### Using 'let' binding in rules for local macros
