@@ -87,7 +87,7 @@ applied to numerous protocols from different domains including:
 exponentiation, such as verifying Naxos with respect to the
 eCK (extended Canetti Krawczyk) model; see [@SchmidtMCB12].
 * The Attack Resilient Public Key Infrastructure (ARPKI) [@ARPKI].
-* Transport Layout Security (TLS) [@TLS]
+* Transport Layer Security (TLS) [@TLS]
 * and many others
 
 
