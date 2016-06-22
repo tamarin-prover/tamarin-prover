@@ -7,6 +7,11 @@ Trace Properties
 
 **FIXME: what are trace properties**
 
+The Tamarin multiset rewriting rules define a labeled transition
+system. The system's state is a multiset (bag) of facts. The initial
+system state is the empty multiset. The types of facts and their use 
+are described in Section [Rules](#sec:rules). Here we focus on the action facts. 
+
 **FIXME: what is a guarded formula/variable**
 
 We reason about a protocol's behaviour by annotating its
@@ -129,7 +134,17 @@ Lowe's hierarchy of authentication specifications [@Lowe] see the
 Section [Protocol Specification and Standard Security
 Properties](#sec:elsewhere).
 
-**TODO: ???**
+We specify the following *message authentication* property: If an agent `a`
+believes that a message `m` was sent by an agent `b`, then `m` was
+indeed sent by `b`.  To specify `a`'s belief we label an appropriate
+rule in `a`'s role specification with the action `Authentic(b,m)`.
+The following lemma defines the set of traces that satisfy the message
+authentication property.
+
+```
+lemma message_authentication: 
+	"All b m #j. Authentic(b,m) @j ==> Ex #i. Send(b,m) @i &i<j"
+```
 
 
 Observational Equivalence
@@ -531,7 +546,4 @@ lemma injectiveagreement:
 
 TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree?
 
-#### Message Authentication #### {#sec:message-authentication}
-
-TODO: ???
 
