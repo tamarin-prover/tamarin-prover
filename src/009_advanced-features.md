@@ -170,13 +170,13 @@ As `!Sec($A,$B,x)` is a persistent fact, it can be reused several times as the
 premise of the rule `ChanIn_S`. This models that an adversary can replay
 such a message block arbitrary many times.
 
-For the protocol sending the message over a secure channel, Tamarin proves
-all the considered lemmas. The nonce is secret from the perspective of both
-the initiator and the receiver because the adversary cannot read anything on
-a secure channel. 
-Furthermore, as the adversary cannot send his own messages on the secure channel
-nor modify the messages, the receiver can be sure that the nonce was sent by
-the agent who he believes to be in the initiator role.
+For the protocol sending the message over a secure channel, Tamarin
+proves all the considered lemmas. The nonce is secret from the
+perspective of both the initiator and the receiver because the adversary
+cannot read anything on a secure channel.  Furthermore, as the adversary
+cannot send his own messages on the secure channel nor modify messages
+transmitted on the channel, the receiver can be sure that the nonce was
+sent by the agent who he believes to be in the initiator role.
 
 
 Similarly, one can define other channels with other properties.
@@ -194,7 +194,7 @@ properties can be imagined.
 Induction
 ---------
 
-Let us first motivate the need for an inductive proof method on a simple example with two rules and one lemma:
+We start by motivating the need for an inductive proof method on a simple example with two rules and one lemma:
 
 ~~~~ {.tamarin slice="code/InductionExample.spthy" lower=5 upper=23}
 ~~~~
