@@ -98,19 +98,19 @@ They specify that whenever a message `x` is sent on a confidential channel
 from `$A` to `$B`, a fact `!Conf($B,x)` can be derived. This fact binds the 
 receiver `$B` to the  message `x`, because only he will be able to read
 the message. The rule `ChanIn_C` models that at the incoming end of a
-confidential channel: there must be a `!Conf($B,x)` fact but any apparent
-sender `$A` from the adversary knowledge can be added. This models the fact
+confidential channel, there must be a `!Conf($B,x)` fact, but any apparent
+sender `$A` from the adversary knowledge can be added. This models 
 that a confidential channel is not authentic, and anybody could have sent the message.
 
 Note that the fact `!Conf($B,x)` is persistent. With this we model that a
-message once sent confidentially to `$B` can be replayed by the adversary at
+message that was sent confidentially to `$B` can be replayed by the adversary at
 a later point in time.
 The last rule, `ChanIn_CAdv`, denotes that the adversary can also directly
 send a message from his knowledge on a confidential channel.
 
 Finally, we need to given protocol rules specifying that the message `~n` is
 sent and received on a confidential channel. We do this by changing the `Out` 
-and `In` fact to the `Out_C` and `In_C` fact, respectively.
+and `In` facts to the `Out_C` and `In_C` facts, respectively.
 
 In this modified protocol, the lemma `nonce_secret_initiator` holds. 
 As the initiator sends the nonce on a confidential channel, only the intended
@@ -120,15 +120,15 @@ receiver can read the message, but the adversary cannot learn it.
 
 Unlike a confidential channel, an adversary can read messages sent on an
 authentic channel. However, on an authentic channel, the adversary cannot
-modify the messages or the sender of it.
+modify the messages or their sender.
 We modify the protocol again to use an authentic channel for sending the 
 message.
 
 ~~~~ {.tamarin slice="code/ChannelExample_auth.spthy" lower=11 upper=33}
 ~~~~
 
-The first channel rule binds the sender `$A` of a message `x` to it, by the 
-fact `!Auth($A,x)`. Additionally, the rule produces an `Out` fact, which models
+The first channel rule binds a sender `$A` to a message `x` by the 
+fact `!Auth($A,x)`. Additionally, the rule produces an `Out` fact that models
 that the adversary can learn everything sent on an authentic channel.
 The second rule says that whenever there is a fact `!Auth($A,x)`, the message
 can be sent to any receiver `$B`. This fact is again persistent, which means 
