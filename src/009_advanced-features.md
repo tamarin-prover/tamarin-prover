@@ -2,10 +2,10 @@
 Advanced Features
 =================
 
-Here we discuss advanced features for advanced users.
-Namely manual proofs, custom
+We now turn to some of Tamarin's more advanced features.
+We cover manual proofs, custom
 heuristics, encoding tricks, induction, channel models, internal
-preprocessor, and how to do timings
+preprocessor, and how to measure the time needed for proofs.
 
 Manual Exploration using GUI
 ----------------------------
@@ -28,14 +28,17 @@ to encoding using alternative more efficient descriptions
 Different Channel Models
 -------------------------
 
-Tamarin's built-in adversary model is the classical Dolev-Yao
-adversary that has complete control of the communication network.  In
-particular, this adversary can eavesdrop on, block, and
-modify messages sent over the network and inject any message
-from his knowledge (the messages he has learned or can construct
-from learned messages) into the network.
+Tamarin's built-in adversary model is often referred to as
+the  Dolev-Yao adversary.  This models an active adversary that has
+complete control of the communication network.  Hence
+this adversary can eavesdrop on, block, and
+modify messages sent over the network and can actively inject messages
+into the network.  The injected messages though must be those
+that the adversary can construct from his knowledge, i.e., the messages
+he initially knew, the messages he has learned from observing network traffic,
+and the messages that he can construct from messages he knows.
 
-The Dolev-Yao adversary's control over the communication network is
+The adversary's control over the communication network is
 modeled with the following two built-in rules:
 
 1.  
@@ -52,7 +55,7 @@ rule isend:
 
 The `irecv` rule states that any message sent by an agent using the
 `Out` fact is learned by the adversary. Such messages are then
-analyzed with the adversary's message deduction rules that depend on
+analyzed with the adversary's message deduction rules, which depend on
 the specified equational theory.
 
 The `isend` rule states that any message received by
@@ -60,10 +63,11 @@ an agent by means of the `In` fact has been constructed by the
 adversary.
 
 We can limit the adversary's control over the protocol agents'
-communication channels by specifying channel rules.  In the following,
+communication channels by specifying channel rules, which model channels
+with intrinsic security properties.
+In the following,
 we illustrate the modelling of confidential, authentic, and secure
-channels.
-Consider for this purpose the following protocol, where an initiator generates a 
+channels. Consider for this purpose the following protocol, where an initiator generates a 
 fresh nonce and sends it to a receiver.
 
 ~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=5 upper=6}
@@ -87,7 +91,7 @@ initiator and send his own one to the receiver.
 
 Let us now modify the protocol such that the same message is sent over a
 confidential channel. By confidential we mean that only the intended receiver
-can read the message but anybody, including the adversary, can send a message
+can read the message but everyone, including the adversary, can send a message
 on this channel.
 
 ~~~~ {.tamarin slice="code/ChannelExample_conf.spthy" lower=11 upper=38}
@@ -102,13 +106,13 @@ confidential channel, there must be a `!Conf($B,x)` fact, but any apparent
 sender `$A` from the adversary knowledge can be added. This models 
 that a confidential channel is not authentic, and anybody could have sent the message.
 
-Note that the fact `!Conf($B,x)` is persistent. With this we model that a
+Note that `!Conf($B,x)` is a persistent fact. With this, we model that a
 message that was sent confidentially to `$B` can be replayed by the adversary at
 a later point in time.
 The last rule, `ChanIn_CAdv`, denotes that the adversary can also directly
 send a message from his knowledge on a confidential channel.
 
-Finally, we need to given protocol rules specifying that the message `~n` is
+Finally, we need to give protocol rules specifying that the message `~n` is
 sent and received on a confidential channel. We do this by changing the `Out` 
 and `In` facts to the `Out_C` and `In_C` facts, respectively.
 
@@ -132,7 +136,7 @@ fact `!Auth($A,x)`. Additionally, the rule produces an `Out` fact that models
 that the adversary can learn everything sent on an authentic channel.
 The second rule says that whenever there is a fact `!Auth($A,x)`, the message
 can be sent to any receiver `$B`. This fact is again persistent, which means 
-that the adversary can replay it several times, potentially to different 
+that the adversary can replay it multiple times, possibly to different 
 receivers.
 
 Again, if we want the nonce in the protocol to be sent over the authentic 
@@ -145,9 +149,11 @@ the initiator role indeed sent it.
 
 #### Secure Channel Rules
 
-The final kind of channels that we consider in detail are secure 
-channels. Secure channels are both confidential and authentic. Hence
-an adversary can neither modify nor learn messages that are sent over it.
+The final kind of channel that we consider in detail are secure 
+channels. Secure channels have the property of being both
+confidential and authentic. Hence
+an adversary can neither modify nor learn messages that are sent over a
+secure channel.
 However, an adversary can store a message sent over a secure channel for replay
 at a later point in time.
 
@@ -164,13 +170,13 @@ As `!Sec($A,$B,x)` is a persistent fact, it can be reused several times as the
 premise of the rule `ChanIn_S`. This models that an adversary can replay
 such a message block arbitrary many times.
 
-For the protocol sending the message over a secure channel, Tamarin proves
-all the considered lemmas. The nonce is secret from the perspective of both
-the imitator and the receiver because the adversary cannot read anything on
-a secure channel. 
-Furthermore, as the adversary cannot send his own messages on the secure channel
-nor modify the messages, the receiver can be sure that the nonce was sent by
-the agent who he believes to be in the initiator role.
+For the protocol sending the message over a secure channel, Tamarin
+proves all the considered lemmas. The nonce is secret from the
+perspective of both the initiator and the receiver because the adversary
+cannot read anything on a secure channel.  Furthermore, as the adversary
+cannot send his own messages on the secure channel nor modify messages
+transmitted on the channel, the receiver can be sure that the nonce was
+sent by the agent who he believes to be in the initiator role.
 
 
 Similarly, one can define other channels with other properties.
@@ -188,24 +194,24 @@ properties can be imagined.
 Induction
 ---------
 
-Let us first motivate the need for an inductive proof method on a simple example with two rules and one lemma:
+We start by motivating the need for an inductive proof method on a simple example with two rules and one lemma:
 
 ~~~~ {.tamarin slice="code/InductionExample.spthy" lower=5 upper=23}
 ~~~~
 
 If we try to prove this with Tamarin without using induction (comment
-out the `[use_induction]` to try) the tool will loop on the backwards
-search over the repeating `A(x)` fact. That `A(x)` fact can have two
+out the `[use_induction]` to try this) the tool will loop on the backwards
+search over the repeating `A(x)` fact. This fact can have two
 sources, either the `start` rule, which ends the search, or another
 instantiation of the `loop` rule, which continues.
 
 The induction method works by distinguishing the last timepoint `#i`
 in the trace, as `last(#i)`, from all other timepoints. It assumes the
-property holds for all timepoints but this one (*wellfounded induction*).
+property holds for all other timepoints (which are therefore occur
+earlier) than this one (*wellfounded induction*).
 
 The induction hypothesis then becomes another constraint during the
-constraint solving phase. Essentially trace induction allows to prove
-slightly more properties.
+constraint solving phase. It thereby allows more properties to be proven.
 
 **FIXME:** adjust the induction section
 
@@ -213,8 +219,8 @@ slightly more properties.
 Integrated Preprocessor {#sec:integrated-preprocessor}
 -----------------------
 
-You can use the integrated preprocessor to activate or deactivate
-particular of your file. We use this mostly when we are interested in
+You can use the integrated preprocessor to include or exclude
+parts of your file. We use this mostly when we are interested in
 only a subset of lemmas. You do this by putting the relevant part of
 your file within an `#ifdef` block with a keyword `KEYWORD`
 
@@ -227,41 +233,42 @@ your file within an `#ifdef` block with a keyword `KEYWORD`
 and then running Tamarin with the option `-DKEYWORD` to have this part included.
 
 If you use this feature to exclude typing lemmas, your case
-distinctions will change, and you may not be able to find proofs that
-were found previously anymore. Similarly, if you have `reuse` marked
-lemmas that are removed, other following lemmas may not be provable anymore.
+distinctions will change, and you may no longer be able to construct
+proofs automatically that were constructed before.
+Similarly, if you have `reuse` marked
+lemmas that are removed, then other following lemmas may not be provable anymore.
 
 
-See this code for a lemma that will be included when `timethis` is
+The following is an example of a lemma that will be included when `timethis` is
 given as parameter to `-D`:
 
 ~~~~ {.tamarin slice="code/TimingExample.spthy" lower=20 upper=24}
 ~~~~
 
-while at the same time this would be excluded:
+At the same time this would be excluded:
 
 ~~~~ {.tamarin slice="code/TimingExample.spthy" lower=26 upper=30}
 ~~~~
 
 
-How to do Timings in Tamarin
+How to Time Proofs in Tamarin
 ----------------------------
 
-If you want to time the verification duration of a particular lemma
-you can use the previously described integrated preprocessor to mark
-each lemma, and only include the one you are timing. For example, wrap
+If you want to measure the time taken to verify 
+a particular lemma you can use the previously described preprocessor to mark
+each lemma, and only include the one you wish to time. For example, wrap
 the relevant lemma within `#ifdef timethis`. Also make sure to include
 `reuse` and `typing` lemmas in this.  All other lemmas should be
-covered under a different keyword, in the example here we use `nottimed`.
+covered under a different keyword; in the example here we use `nottimed`.
 
-You then run
+By running
 
 ```
 time tamarin-prover -Dtimethis TimingExample.spthy --prove
 ```
 
-to get the timing for only those lemmas of interest. Here is the
-complete input file, with an entirely artificial protocol:
+the timing are computed for just the lemmas of interest. Here is the
+complete input file, with an artificial protocol:
 
 ~~~~ {.tamarin include="code/TimingExample.spthy"}
 ~~~~
