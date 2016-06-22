@@ -72,7 +72,7 @@ defines the private function `g` and the public functions `f` and `h`.
 We will describe in the next section how you can define equations that capture
 properties of functions.
 
-Equational theories {#sec:builtin-theories}
+Equational theories {#sec:equational-theories}
 -------------------
 
 Equational theories can be used to model properties of functions, e.g., that
