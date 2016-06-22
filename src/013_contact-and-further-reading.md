@@ -1,3 +1,4 @@
+
 Contact and Further Reading
 ===========================
 
@@ -36,7 +37,7 @@ for more details.
 Tamarin Manual
 --------------
 
-The source of this manual can be found in 
+The manual's source can be found in 
 <https://github.com/tamarin-prover/manual-pandoc>.
 You are invited to also contribute to this manual, just send us a pull request.
 
@@ -45,7 +46,6 @@ Tamarin Mailing list
 
 There is a low-volume mailing-list used by the developers and users of Tamarin: 
 <https://groups.google.com/group/tamarin-prover>
-
 It can be used to get help from the community, and to contact the developers 
 and experienced users.
 
@@ -64,12 +64,14 @@ working with David Basin and Cas Cremers.
 
 Cedric Staub contributed to the graphical user interface.
 
-Jannik Dreier and Ralf Sasse developed the extension to deal with Observational 
+Jannik Dreier and Ralf Sasse developed the extension to handle Observational 
 Equivalence.
 
-Other contributers to the code include: Katriel Cohn-Gordon, Kevin Milner,  
-Dominik Schoop, Sam Scott, Jorden Whitefield, Ognjen Maric, and many others.
+Other contributers to the code include: Katriel Cohn-Gordon, Kevin
+Milner, Dominik Schoop, Sam Scott, Jorden Whitefield, Ognjen Maric, and
+many others.
 
 This manual was initially written by David Basin, Cas Cremers, Jannik 
 Dreier, Sasa Radomirovic, Ralf Sasse, Lara Schmid, Benedikt Schmidt. It 
-includes part of the initial tutorial by Simon Meier and Benedikt Schmidt.
+includes part of a  tutorial initially written by Simon Meier and Benedikt Schmidt.
+

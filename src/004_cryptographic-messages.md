@@ -1,3 +1,4 @@
+
 Cryptographic Messages {#sec:cryptographic-messages}
 ====================================================
 
@@ -138,4 +139,5 @@ In the following, we write `f/n` to denote that the function symbol `f` is
   multisets. **FIXME: add function symbols and equations**
 
 [^1]: FIXME: Should we write more about terms and equations.
+
 

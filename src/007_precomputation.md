@@ -1,3 +1,4 @@
+
 Precomputation
 ============== 
 
@@ -17,7 +18,7 @@ It is specified in Tamarin by the following rules:
 ~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=32 upper=71}
 ~~~~
 
-We want to examine if the following lemma holds:
+We now want to prove the following lemma:
 
 ~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=105 upper=118}
 ~~~~
@@ -29,16 +30,18 @@ Open Chains {#sec:openchains}
 
 In the precomputation phase, Tamarin goes through all rules and inspects their
 premises. For each of these facts, Tamarin will precompute a set of possible
-sources. Each such source is referred to as a *chain* and represents
+*sources*. Each such source is called a *chain* and represents
 combinations of rules from which the fact could be obtained.  For each fact,
 this leads to a set of possible sources and we refer to these sets as the *case
 distinctions*.
+
+**FIX: above notions are confusing: chain versus sources versus case distinctions.**
 
 However, for some rules Tamarin cannot resolve where a fact must have come from.
 We call such a chain an *open chain*, and we will explain them in more detail
 below.
 
-The existence of open chains complicates the automatic proof generation and
+The existence of open chains complicates automated proof generation and
 often (but not always) means that no proof will be found automatically.  For
 this reason, it is useful for users to be able to find open chains and examine
 if it is possible to remove them.
@@ -65,7 +68,7 @@ this?**
 
 ### Why open chains complicate proofs
 
-To get a better understanding of the problem we can look at what happens if
+To get a better understanding of the problem, consider  what happens if
 we try to prove the lemma `nonce_secrecy`.  If we manually always choose
 the first case for the proof, we can see that Tamarin derives the secret key to
 decrypt the output of rule `I_2` by repeatedly using this rule `I_2`.
@@ -76,7 +79,7 @@ from part `c)` where the same will happen repeatedly.
 
 ![Secret derived by using `I_2`](../images/FindOpenChains3_RepetitionHilighted.jpg "`I_2` repeatedly"){ width=90% }
 
-As Tamarin is not able to conclude that the secret key could not have come from
+As Tamarin is unable to conclude that the secret key could not have come from
 the rule `I_2`, the algorithm derives the secret key that is needed. The proof
 uses the same strategy recursively but will not terminate.
 
@@ -89,14 +92,14 @@ Once we identified the rules and cases in which open chains occur, we
 can try to avoid them. A good mechanism to get rid of open chains is the use of
 so-called *typing lemmas*.
 
-Typing lemmas are a special case of lemmas, and are applied in a particular
-phase of Tamarin's pre-computation. Roughly, verification in Tamarin involves
+Typing lemmas are a special case of lemmas, and are applied
+during Tamarin's pre-computation. Roughly, verification in Tamarin involves
 the following steps:
 
-  1. It first determines the possible sources of all premises. We call these the
+  1. Tamarin first determines the possible sources of all premises. We call these the
      untyped case distinctions.
 
-  2. Next, the algorithm uses the automatic proof mode to discharge any typing lemmas using induction.
+  2. Next, automatic proof mode is used to discharge any typing lemmas using induction.
 
   3. The typing lemmas are applied to the untyped case distinctions, yielding a
      new set of sources, which we call the typed case distinctions.
@@ -106,14 +109,14 @@ the following steps:
 
 For full technical details, we refer the reader to [@meierthesis].
 
-In our example we can add the following lemma:
+In our example, we can add the following lemma:
 
 ~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=86 upper=102}
 ~~~~
 
 This typing lemma is applied to the untyped case distinctions to compute the
 typed case distinctions. All non-typing lemmas are proven with the resulting
-typed case distinctions, while typing lemmas of course need to be proved with
+typed case distinctions, while typing lemmas must be proved with
 the untyped case distinctions.
 
 This lemma relates the point of instantiation to the point of sending by either
@@ -129,12 +132,14 @@ Tamarin can then automatically prove the lemma `nonce_secrecy`.
 
 
 Another possibility is that the open chains only occur in an undesired
-application of a rule that we do not want to consider in our model.
-In such a case we can explicitly exclude this application of the rule
-with an axiom. But, we need to ensure that the resulting model is the
-one we want, so use this with care.
+application of a rule that we do not wish to consider in our model.
+In such a case, we can explicitly exclude this application of the rule
+with an axiom. But, we should ensure that the resulting model is the
+one we want; so use this with care.
 
 
 TODO:
       * Typing lemmas in particular - how to tell when one would help, the
         best way to write one, and what you can’t prove in a typing lemma
+
+
