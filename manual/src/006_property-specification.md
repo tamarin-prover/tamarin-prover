@@ -3,9 +3,9 @@ Property Specification{#sec:property_specification}
 ======================
 
 In this section we present how to specify protocol properties as trace
-properties, based on the action facts given in the model. Properties
-are given as guarded first-order logic formulas, which we will see in
-detail.
+and observational equivalence properties, based on the action facts
+given in the model. Trace properties are given as guarded first-order logic
+formulas and observational equivalence properties are specified using the `diff` operator, both of which we will see in detail below. 
 
 Trace Properties
 ----------------
@@ -50,7 +50,7 @@ Tamarin using first-order logic formulas over action facts and
 timepoints. More precisely, Tamarin's property specification language
 is a guarded fragment of a many-sorted first-order logic with a sort for
 timepoints.  This logic supports quantification over both messages and
-timepoints. **FIXME: what is a guarded formula/variable**
+timepoints. 
 
 The syntax for specifying security properties is defined as follows:
 
@@ -79,6 +79,7 @@ pairing. This excludes function symbols that appear in any of the equations.
 Moreover, all variables must be 
 guarded. If they are not guarded, Tamarin will produce an error.
 
+**Guardedness. **
 To ensure guardedness, for universally quantified variables, one has to check 
 that they all occur in an action constraint right after the quantifier and that 
 the outermost logical operator inside the quantifier is an implication.
@@ -88,9 +89,8 @@ outermost logical operator inside the quantifier is a conjunction.
 We do recommend to use parentheses, when in doubt about the precedence
 of logical connectives, but we follow the standard
 precedence. Negation binds tightest, then conjunction, then
-disjunction and then implication. Equivalence binds weakest.
-
-**FIXME: Did the above explain "what is a guarded formula/variable" well enough?**
+disjunction and then implication. 
+<!-- Equivalence binds weakest (and nobody uses it). -->
 
 
 To specify a property about a protocol that includes the fictitious
@@ -248,9 +248,25 @@ by Tamarin (so no need to define it in the `.spthy` input file). By proving
 this lemma we can prove observational equivalence between the LHS and RHS 
 models.
 
+In the `Diff Rules`, we have the rules as written in the input file:
+
 ![Observational Equivalence 
 Diff Rules](../images/tamarin-obseq-diff-rules.jpg "Observational Equivalence 
 Diff Rules"){width=100%}
+
+If we click on `LHS: Multiset rewriting rules`, we get the LHS interpretation 
+of the rules (here `diff(~a, ~b)` was replaced by `~a`):
+
+![Observational Equivalence 
+LHS Rules](../images/tamarin-obseq-lhs-rules.jpg "Observational Equivalence 
+LHS Rules"){width=100%}
+
+If we click on `RHS: Multiset rewriting rules`, we get the RHS interpretation 
+of the rules (here `diff(~a, ~b)` was replaced by `~b`):
+
+![Observational Equivalence 
+RHS Rules](../images/tamarin-obseq-rhs-rules.jpg "Observational Equivalence 
+RHS Rules"){width=100%}
 
 We can easily prove the `B_is_secret` lemma on both sides:
 
@@ -299,6 +315,10 @@ corresponds to a potential attack, and thus invalidates the
 Attack](../images/tamarin-obseq-lemma-attack.jpg "Proving the 
 Observational Equivalence Lemma: Attack"){width=100%}
 
+Note that Tamarin needs to potentially consider numerous possible executions, 
+which can result in long proof times or even non-termination. If possible it 
+tries not to resolve parts of the execution that are irrelevant, but this is 
+not always sufficient.
 
 
 Axioms
@@ -473,6 +493,18 @@ you did not annotate it with either of `left` or `right`.
 
 Protocol Specification and Standard Security Properties{#sec:elsewhere}
 -------------------------------------------------------
+
+In this section we provide templates for specifying protocols and
+standard security properties in a unified manner.
+
+### Protocol Rules ##
+
+A protocol specifies two or more roles. For each role we specify an
+initialization rule that generates a fresh run identifier `id` (to
+distinguish parallel protocol runs of an agent), sets up an agent's
+initial knowledge including long term keys, private keys, shared keys,
+and other agent's public keys. We label such a rule with the action
+fact `Create(A,id)`, where `A` is the agent name (a public constant) and `id` the run identifier and the action fact `Role('A')`, where `'A'` is a publi
 
 ### Secrecy ###
 
