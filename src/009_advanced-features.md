@@ -91,7 +91,7 @@ initiator and send his own one to the receiver.
 
 Let us now modify the protocol such that the same message is sent over a
 confidential channel. By confidential we mean that only the intended receiver
-can read the message but anybody, including the adversary, can send a message
+can read the message but everyone, including the adversary, can send a message
 on this channel.
 
 ~~~~ {.tamarin slice="code/ChannelExample_conf.spthy" lower=11 upper=38}
@@ -106,13 +106,13 @@ confidential channel, there must be a `!Conf($B,x)` fact, but any apparent
 sender `$A` from the adversary knowledge can be added. This models 
 that a confidential channel is not authentic, and anybody could have sent the message.
 
-Note that the fact `!Conf($B,x)` is persistent. With this we model that a
+Note that `!Conf($B,x)` is a persistent fact. With this, we model that a
 message that was sent confidentially to `$B` can be replayed by the adversary at
 a later point in time.
 The last rule, `ChanIn_CAdv`, denotes that the adversary can also directly
 send a message from his knowledge on a confidential channel.
 
-Finally, we need to given protocol rules specifying that the message `~n` is
+Finally, we need to give protocol rules specifying that the message `~n` is
 sent and received on a confidential channel. We do this by changing the `Out` 
 and `In` facts to the `Out_C` and `In_C` facts, respectively.
 
@@ -136,7 +136,7 @@ fact `!Auth($A,x)`. Additionally, the rule produces an `Out` fact that models
 that the adversary can learn everything sent on an authentic channel.
 The second rule says that whenever there is a fact `!Auth($A,x)`, the message
 can be sent to any receiver `$B`. This fact is again persistent, which means 
-that the adversary can replay it several times, potentially to different 
+that the adversary can replay it multiple times, possibly to different 
 receivers.
 
 Again, if we want the nonce in the protocol to be sent over the authentic 
@@ -149,9 +149,11 @@ the initiator role indeed sent it.
 
 #### Secure Channel Rules
 
-The final kind of channels that we consider in detail are secure 
-channels. Secure channels are both confidential and authentic. Hence
-an adversary can neither modify nor learn messages that are sent over it.
+The final kind of channel that we consider in detail are secure 
+channels. Secure channels have the property of being both
+confidential and authentic. Hence
+an adversary can neither modify nor learn messages that are sent over a
+secure channel.
 However, an adversary can store a message sent over a secure channel for replay
 at a later point in time.
 
@@ -170,7 +172,7 @@ such a message block arbitrary many times.
 
 For the protocol sending the message over a secure channel, Tamarin proves
 all the considered lemmas. The nonce is secret from the perspective of both
-the imitator and the receiver because the adversary cannot read anything on
+the initiator and the receiver because the adversary cannot read anything on
 a secure channel. 
 Furthermore, as the adversary cannot send his own messages on the secure channel
 nor modify the messages, the receiver can be sure that the nonce was sent by
