@@ -52,7 +52,7 @@ by Tamarin.
 The unsolved chains can be identified by the light green arrows as in the
 following example:
 
-![Open chain visible in green](../images/FindOpenChains2.png "Open chain visible")
+![Open chain visible in green](../images/FindOpenChains2.png "Open chain visible"){ width=100% }
 
 The green arrow indicates that Tamarin cannot exclude the possibility that the
 adversary can derive any fresh term `~t.1` with this rule `I_2`.  As we are
@@ -74,7 +74,7 @@ adversary. To get the relevant key for this, in part `b)` again the output
 from rule `I_2` is decrypted by the adversary. This is done with a key coming
 from part `c)` where the same will happen repeatedly.
 
-![Secret derived by using `I_2`](../images/FindOpenChains3_RepetitionHilighted.jpg "`I_2` repeatedly")
+![Secret derived by using `I_2`](../images/FindOpenChains3_RepetitionHilighted.jpg "`I_2` repeatedly"){ width=90% }
 
 As Tamarin is not able to conclude that the secret key could not have come from
 the rule `I_2`, the algorithm derives the secret key that is needed. The proof
