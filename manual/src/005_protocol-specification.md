@@ -46,7 +46,7 @@ exchange a MAC of the exchanged messages that is keyed with (a variant of) the
 computed session key.
 
 
-Rules
+Rules{#sec:rules}
 -----
 
 We use multiset rewriting to specify the concurrent execution of
@@ -73,7 +73,7 @@ For now, we will ignore the action facts (`L(...)` and `M(...)`) and return to
 them when discussing properties in the next section. If a rule is not
 labelled by action facts, the arrow notation `--[ ]->` can be abbreviated to `-->`.
 
-The rule names are only used for referencing specific rules. The have no
+The rule names are only used for referencing specific rules. They have no
 specific meaning and can be chosen arbitrarily, as long as each rule has a
 unique name.
 
