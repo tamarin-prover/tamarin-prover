@@ -223,7 +223,28 @@ TODO: ???
 Observational Equivalence
 -------------------------
 
-TODO: difference to trace properties, examples
+All the previous properties are trace properties, i.e., properties that are 
+definied on traces. For example, the definition of secrecy required that there 
+is no trace where the intruder could compute the secret without having 
+previously corrupted the agent.
+
+In contrast, Observational Equivalence properties reason about two systems (for 
+example two instances of a protocol), by showing that an intruder cannot 
+distinguish these two systems. This can be used to express privacy-type 
+properties, or cryptographic indistinguishability properties.
+
+For example, a simple definition of privacy for voting requires that an 
+adversary cannot distinguish two instances of a voting protocol where two 
+voters swap votes. That is, in the first instance, voter A votes for candidate 
+a and voter B votes for b, and in the second instance voter A votes for 
+candidate b and voter B votes for a. If the intruder cannot tell both instances 
+apart, he does not know which voter votes for which candidate, even though he 
+might learn the result, i.e., that there is one vote for a and one for b.
+
+Tamarin can prove such properties for two systems that only differ in terms 
+using the `diff( , )` operator. Consider the following example:
+
+
 
 Axioms
 ------
@@ -233,8 +254,6 @@ TODO: axioms for trace and equivalence properties with motivating example
 TODO: As there are no lemmas in observational equivalence you can use axioms
 to remove state space, essentially remove degenerate cases. Do note
 that one can use axioms to simplify writing lemmas
-
-
 
 ## Common axioms ##
 
