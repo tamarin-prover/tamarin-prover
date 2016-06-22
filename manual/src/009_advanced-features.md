@@ -28,14 +28,17 @@ to encoding using alternative more efficient descriptions
 Different Channel Models
 -------------------------
 
-Tamarin's built-in adversary model is the classical Dolev-Yao
-adversary that has complete control of the communication network.  In
-particular, this adversary can eavesdrop on, block, and
-modify messages sent over the network and inject any message
-from his knowledge (the messages he has learned or can construct
-from learned messages) into the network.
+Tamarin's built-in adversary model is often referred to as
+the  Dolev-Yao adversary.  This models an active adversary that has
+complete control of the communication network.  Hence
+this adversary can eavesdrop on, block, and
+modify messages sent over the network and can actively inject messages
+into the network.  The injected messages though must be those
+that the adversary can construct from his knowledge, i.e., the messages
+he initially knew, the messages he has learned from observing network traffic,
+and the messages that he can construct from messages he knows.
 
-The Dolev-Yao adversary's control over the communication network is
+The adversary's control over the communication network is
 modeled with the following two built-in rules:
 
 1.  
@@ -52,7 +55,7 @@ rule isend:
 
 The `irecv` rule states that any message sent by an agent using the
 `Out` fact is learned by the adversary. Such messages are then
-analyzed with the adversary's message deduction rules that depend on
+analyzed with the adversary's message deduction rules, which depend on
 the specified equational theory.
 
 The `isend` rule states that any message received by
@@ -60,10 +63,11 @@ an agent by means of the `In` fact has been constructed by the
 adversary.
 
 We can limit the adversary's control over the protocol agents'
-communication channels by specifying channel rules.  In the following,
+communication channels by specifying channel rules, which model channels
+with intrinsic security properties.
+In the following,
 we illustrate the modelling of confidential, authentic, and secure
-channels.
-Consider for this purpose the following protocol, where an initiator generates a 
+channels. Consider for this purpose the following protocol, where an initiator generates a 
 fresh nonce and sends it to a receiver.
 
 ~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=5 upper=6}
