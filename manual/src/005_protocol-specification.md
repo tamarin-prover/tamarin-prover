@@ -62,10 +62,8 @@ is a sequence of facts: one for the rule's left-hand side, one labelleing the
 transition (which we call 'action facts'),  and one for the rule's right-hand side.
 For example:
 
-**FIX Cas: Maybe better to use Naxos rules here. Also, the "t" on right-hand side is unbound!**
-
 	rule MyRule1:
-	  [ ] --[ L(t) ]-> [ F('1',t), F('2',t) ]
+	  [ In(t) ] --[ L(t) ]-> [ F('1',t), F('2',t) ]
 
 	rule MyRule2:
 	  [ F(u,v) ] --[ M(u,v) ]-> [ H(t), G('3',h(t)) ]
@@ -87,17 +85,14 @@ rule can be applied to a state if it can be instantiated such that its left hand
 side is contained in the current state. In this case, the left-hand side facts
 are removed from the state, and replaced by the instantiated right hand side.
 
-**FIXME**: The unbound variable `t` on the right-hand side is going to be very confusing to readers.**/FIXME**
-
 For example, in the initial state, `MyRule1` can be instantiated for any value
-of `t`. For any specific instantiation of `t`, this leads to a second state that
-contains `F('1',t)` and `F('2',t)`. `MyRule2` cannot be applied in the initial
-state since it contains no `F` facts.
-In the 
- successor state, the rule `MyRule2` can now be applied twice. It
-can be instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is
-equal to the instantiation of `t` that occurred in the first transition.
-Each of these instantiations leads to a new successor state.
+of `t` that the adversary can produce. For any specific instantiation of `t`,
+this leads to a second state that contains `F('1',t)` and `F('2',t)`. `MyRule2`
+cannot be applied in the initial state since it contains no `F` facts.  In the
+successor state, the rule `MyRule2` can now be applied twice. It can be
+instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is equal
+to the instantiation of `t` that occurred in the first transition.  Each of
+these instantiations leads to a new successor state.
 
 ### Using `let' binding in rules for local macros
 
@@ -198,8 +193,6 @@ Below we give an example of how protocols can be modeled
 and discuss alternatives afterwards.
 
 ### Public-key infrastructure
-
-**FIX Cas: this might well be duplicating a part from elsewhere.**
 
 In the Tamarin model, there is no pre-defined notion of public key
 infrastructure (PKI). A pre-distributed PKI with asymmetric keys for each party
