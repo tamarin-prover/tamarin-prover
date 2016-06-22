@@ -1,3 +1,4 @@
+
 Property Specification{#sec:property_specification}
 ======================
 
@@ -85,12 +86,12 @@ the timepoint), we write
 lemma distinct_nonces: "All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
 ```
 
-
-
 ### Secrecy ###
 
-In this section we explain how you can express standard secrecy
-properties in Tamarin and give examples.
+In this section we briefly explain how you can express standard
+secrecy properties in Tamarin and give a short example. See [Protocol
+Specification and Standard Security Properties](#sec:elsewhere) for an
+in-depth discussion.
 
 Tamarin's built-in message deduction rule
 ```
@@ -101,146 +102,41 @@ rule isend:
 ```
 allows us to reason about the Dolev-Yao adversary's knowledge.  To
 specify the property that a message `x` is secret, we propose to label a
-suitable protocol rule with a `Secret` action.  
-In addition to `Secret(x)` the following
-lemma references the actions `Reveal` and `Honest`. We
-use `Reveal(B)` to label rules in which an agent `B` is compromised
-and `Honest(B)` to mark agents that are assumed to be honest. For
-this mechanism to work, `Honest(B)` must occur in the same rule as
-`Secret(x)`.
+suitable protocol rule with a `Secret` action.  We then specify a secrecy lemma that states whenever the `Secret(x)` action occurs at timepoint `i`, the adversary does not know `x`.
 
 ```
 lemma secrecy:
   "All x #i. 
-    Secret(x) @i ==> 
-    not (Ex #j. K(x)@j)
-        | (Ex B #r. Reveal(B)@r & Honest(B) @i)"
-```
-The lemma states that whenever a secret action `Secret(x)` occurs at timepoint `i`, the adversary does not know `x` or an agent claimed to be honest at time point `i` has been compromised at a timepoint `r`.
-
-A stronger secrecy property is *perfect forward secrecy*. It requires
-that messages labeled with a `Secret` action before a compromise remain secret.
-
-```
-lemma secrecy_PFS:
-  "All x #i. 
-    Secret(x) @i ==> 
-    not (Ex #j. K(x)@j)
-        | (Ex B #r. Reveal(B)@r & Honest(B) @i & r < i)"
+    Secret(x) @i ==> not (Ex #j. K(x)@j)"
 ```
 
 **Example.** The following Tamarin theory specifies a simple
   one-message protocol. Agent `A` sends a message encrypted with agent
   `B`'s public key to `B`. Both agents claim secrecy of a message, but
   only agent `A`'s claim is true. To distinguish between the two
-  claims we use two different secrecy action facts, `Secret_A` for
-  agent `A` and `Secret_B` for agent `B`, and we specify two secrecy lemmas, 
-  one for each of the two actions.
+  claims we add the action facts `Role('A')` and `Role('B')` for role
+  `A` and `B`, respectively and specify two secrecy lemmas, one for
+  each role.
 
 ~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
 ~~~~
 
-### Authentication ###
+### Authentication ### {#sec:message-authentication}
 
-In this section we explain how to express standard authentication properties, and give examples.
+In this section we show how to specify a simple message authentication
+property. For specifications of the properties in
+Lowe's hierarchy of authentication specifications [@Lowe] see the
+Section [Protocol Specification and Standard Security
+Properties](#sec:elsewhere).
 
-#### Entity Authentication ####
-
-We show how to formalize the entity authentication properties of
-Lowe's hierarchy of authentication specifications [@Lowe] for
-two-party protocols.  
-
-All the properties defined below concern the authentication of an
-agent in role `'B'` to an agent in role `'A'`.  To analyze a protocol
-with respect to these properties we label an appropriate rule in role
-`A` with a `Commit(a,b,<'A','B',t>)` action and in role `B` with the
-`Running(b,a,<'A','B',t>)` action. Here `a` and `b` are the agent
-names (public constants) of roles `A` and `B`, respectively and `t` is
-a term. 
-
-
-1. Aliveness
-
-A protocol guarantees to an agent `a` in role `A`
-*aliveness* of another agent `b` if, whenever `a` completes a run
-of the protocol, apparently with `b` in role `B`, then `b` has
-previously been running the protocol.
-```
-lemma aliveness:
-   "All a b t #i. 
-     Commit(a,b,t)@i 
-     ==>  (Ex R id #j. Create(R,b,id) @ j)
-          | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
-```
-
-2. Weak agreement
-
-A protocol guarantees to an agent `a` in role `A` *weak agreement*
-with another agent `b` if, whenever agent `a` completes a run of the
-protocol, apparently with `b` in role `B`, then `b` has previously
-been running the protocol, apparently with `a`.
-
-```
-lemma weak_agreement:
-  "All a b t1 #i. 
-    Commit(a,b,t1) @i
-    ==> (Ex t2 #j. Running(b,a,t2) @j)
-        | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
-```
-
-3. Non-injective agreement
-
-A protocol guarantees to an agent `a` in role `A`
-*non-injective agreement* with an agent `b` in role `B` on a message `t`
-if, whenever `a` completes a run of the protocol, apparently with `b`
-in role `B`, then `b` has previously been running the protocol,
-apparently with `a`, and `b` was acting in role `B` in his run, and
-the two principals agreed on the message `t`. 
-
-```
-lemma noninjective_agreement:
-  "All a b t #i. 
-    Commit(a,b,t) @i
-    ==> (Ex #j. Running(b,a,t) @j)
-        | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
-```
-
-
-4. Injective agreement
-
-We next show the lemma to analyze *injective agreement*. A protocol
-guarantees to an agent `a` in role `A` injective agreement with an
-agent `b` in role `B` on a message `t` if, whenever `a` completes a
-run of the protocol, apparently with `b` in role `B`, then `b` has
-previously been running the protocol, apparently with `a`, and `b` was
-acting in role `B` in his run, and the two principals agreed on the
-message `t`. Additionally, there is a unique matching partner instance
-for each completed run of an agent, i.e., for each `Commit` by an
-agent there is a unique `Running` by the supposed partner.
-
-```
-lemma injectiveagreement:
-  "All A B t #i. 
-    Commit(A,B,t) @i
-    ==> (Ex #j. Running(B,A,t) @j 
-        & j < i
-        & not (Ex A2 B2 #i2. Commit(A2,B2,t) @i2
-                           & not (#i2 = #i)))
-              | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
-```
-
-TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree?
-
-#### Message Authentication #### {#sec:message-authentication}
-
-TODO: ???
+**TODO: ???**
 
 
 Observational Equivalence
 -------------------------
 
 All the previous properties are trace properties, i.e., properties that are 
-definied on traces. For example, the definition of secrecy required that there 
+defined on traces. For example, the definition of secrecy required that there 
 is no trace where the intruder could compute the secret without having 
 previously corrupted the agent.
 
@@ -260,7 +156,21 @@ might learn the result, i.e., that there is one vote for a and one for b.
 Tamarin can prove such properties for two systems that only differ in terms 
 using the `diff( , )` operator. Consider the following example:
 
+~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
+upper=27}
+~~~~
 
+In this example, the intruder cannot compute `~b` as formalized by the 
+following lemma:
+
+~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=29 
+upper=36}
+~~~~
+
+However, he can know whether in the last message `~a` or `~b` was encrypted by 
+simply taking the output `~a`, encrypting it with the public key and comparing 
+it to the published cyphertext. This can be captured using observational 
+equivalence as follows.
 
 Axioms
 ------
@@ -430,4 +340,156 @@ you want to consider a lemma only on the left or right instantiation
 you annotate it with `left`, respectively `right`. If you annotate a
 lemma with `[left,right]` then both lemmas get generated, just as if
 you did not annotate it with either of `left` or `right`.
+
+
+Protocol Specification and Standard Security Properties{#sec:elsewhere}
+-------------------------------------------------------
+
+### Secrecy ###
+
+In this section we explain how you can express standard secrecy
+properties in Tamarin and give examples.
+
+Tamarin's built-in message deduction rule
+```
+rule isend: 
+   [ !KU(x) ]
+ --[  K(x)  ]-->
+   [ In(x)  ]
+```
+allows us to reason about the Dolev-Yao adversary's knowledge.  To
+specify the property that a message `x` is secret, we propose to label a
+suitable protocol rule with a `Secret` action.  
+In addition to `Secret(x)` the following
+lemma references the actions `Reveal` and `Honest`. We
+use `Reveal(B)` to label rules in which an agent `B` is compromised
+and `Honest(B)` to mark agents that are assumed to be honest. For
+this mechanism to work, `Honest(B)` must occur in the same rule as
+`Secret(x)`.
+
+```
+lemma secrecy:
+  "All x #i. 
+    Secret(x) @i ==> 
+    not (Ex #j. K(x)@j)
+        | (Ex B #r. Reveal(B)@r & Honest(B) @i)"
+```
+The lemma states that whenever a secret action `Secret(x)` occurs at timepoint `i`, the adversary does not know `x` or an agent claimed to be honest at time point `i` has been compromised at a timepoint `r`.
+
+A stronger secrecy property is *perfect forward secrecy*. It requires
+that messages labeled with a `Secret` action before a compromise remain secret.
+
+```
+lemma secrecy_PFS:
+  "All x #i. 
+    Secret(x) @i ==> 
+    not (Ex #j. K(x)@j)
+        | (Ex B #r. Reveal(B)@r & Honest(B) @i & r < i)"
+```
+
+**Example.** The following Tamarin theory specifies a simple
+  one-message protocol. Agent `A` sends a message encrypted with agent
+  `B`'s public key to `B`. Both agents claim secrecy of a message, but
+  only agent `A`'s claim is true. To distinguish between the two
+  claims we add the action facts `Role('A')` and `Role('B')` for role
+  `A` and `B`, respectively and specify two secrecy lemmas, one for
+  each role.
+
+~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
+~~~~
+
+### Authentication ###
+
+In this section we explain how to express standard authentication properties, and give examples.
+
+#### Entity Authentication ####
+
+We show how to formalize the entity authentication properties of
+Lowe's hierarchy of authentication specifications [@Lowe] for
+two-party protocols.  
+
+All the properties defined below concern the authentication of an
+agent in role `'B'` to an agent in role `'A'`.  To analyze a protocol
+with respect to these properties we label an appropriate rule in role
+`A` with a `Commit(a,b,<'A','B',t>)` action and in role `B` with the
+`Running(b,a,<'A','B',t>)` action. Here `a` and `b` are the agent
+names (public constants) of roles `A` and `B`, respectively and `t` is
+a term. 
+
+
+1. Aliveness
+
+A protocol guarantees to an agent `a` in role `A`
+*aliveness* of another agent `b` if, whenever `a` completes a run
+of the protocol, apparently with `b` in role `B`, then `b` has
+previously been running the protocol.
+```
+lemma aliveness:
+   "All a b t #i. 
+     Commit(a,b,t)@i 
+     ==>  (Ex id #j. Create(b,id) @ j)
+          | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
+```
+
+2. Weak agreement
+
+A protocol guarantees to an agent `a` in role `A` *weak agreement*
+with another agent `b` if, whenever agent `a` completes a run of the
+protocol, apparently with `b` in role `B`, then `b` has previously
+been running the protocol, apparently with `a`.
+
+```
+lemma weak_agreement:
+  "All a b t1 #i. 
+    Commit(a,b,t1) @i
+    ==> (Ex t2 #j. Running(b,a,t2) @j)
+        | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
+```
+
+3. Non-injective agreement
+
+A protocol guarantees to an agent `a` in role `A`
+*non-injective agreement* with an agent `b` in role `B` on a message `t`
+if, whenever `a` completes a run of the protocol, apparently with `b`
+in role `B`, then `b` has previously been running the protocol,
+apparently with `a`, and `b` was acting in role `B` in his run, and
+the two principals agreed on the message `t`. 
+
+```
+lemma noninjective_agreement:
+  "All a b t #i. 
+    Commit(a,b,t) @i
+    ==> (Ex #j. Running(b,a,t) @j)
+        | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
+```
+
+
+4. Injective agreement
+
+We next show the lemma to analyze *injective agreement*. A protocol
+guarantees to an agent `a` in role `A` injective agreement with an
+agent `b` in role `B` on a message `t` if, whenever `a` completes a
+run of the protocol, apparently with `b` in role `B`, then `b` has
+previously been running the protocol, apparently with `a`, and `b` was
+acting in role `B` in his run, and the two principals agreed on the
+message `t`. Additionally, there is a unique matching partner instance
+for each completed run of an agent, i.e., for each `Commit` by an
+agent there is a unique `Running` by the supposed partner.
+
+```
+lemma injectiveagreement:
+  "All A B t #i. 
+    Commit(A,B,t) @i
+    ==> (Ex #j. Running(B,A,t) @j 
+        & j < i
+        & not (Ex A2 B2 #i2. Commit(A2,B2,t) @i2
+                           & not (#i2 = #i)))
+              | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
+```
+
+TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree?
+
+#### Message Authentication #### {#sec:message-authentication}
+
+TODO: ???
 
