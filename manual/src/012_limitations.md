@@ -3,17 +3,16 @@ Limitations {#sec:limitations}
 ===========
 
 Tamarin operates in the symbolic model and thus can only capture attacks within 
-that model, and given a certain equational theory. Currently apart from the 
-builtins only subterm-convergent theories are supported. The underlying 
+that model, and given a certain equational theory. Currently, apart from the 
+builtins, only subterm-convergent theories are supported. The underlying 
 verification problems are undecidable in general, so Tamarin is not guaranteed 
 to terminate.
 
-In contrast to the trace mode, which is sound an complete, the observational 
+In contrast to the trace mode, which is sound and complete, the observational 
 equivalence mode currently only (soundly) approximates observational equivalence 
 by requiring a strict one-to-one mapping between rules, which is too strict for 
 some applications. Moreover the support of axioms in this mode is rather 
 limited.
-
 
 <!--
 TODO:
