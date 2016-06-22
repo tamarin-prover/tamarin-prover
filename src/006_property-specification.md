@@ -154,9 +154,10 @@ apart, he does not know which voter votes for which candidate, even though he
 might learn the result, i.e., that there is one vote for a and one for b.
 
 Tamarin can prove such properties for two systems that only differ in terms 
-using the `diff( , )` operator. Consider the following example, where one 
+using the `diff( , )` operator. Consider the following toy example, where one 
 creates a public key, two fresh values `~a` and `~b`, and publishes `~a`. Then 
-one encrypts either `~a` or `~b` (modeled using the `diff` operator):
+one encrypts either `~a` or `~b` (modeled using the `diff` operator) and sends 
+the ciphertext out:
 
 ~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
 upper=27}
@@ -171,9 +172,47 @@ upper=36}
 
 However, he can know whether in the last message `~a` or `~b` was encrypted by 
 simply taking the output `~a`, encrypting it with the public key and comparing 
-it to the published cyphertext. This can be captured using observational 
-equivalence as follows.
+it to the published ciphertext. This is captured using observational 
+equivalence.
 
+To see how this works, we need to start Tamarin in observational equivalence 
+mode by adding a `--diff` to the command:
+
+    tamarin-prover interactive --diff ObservationalEquivalenceExample.spthy
+
+Now point you browser to <http://localhost:3001>. After clicking on the theory 
+`ObservationalEquivalenceExample`, you should see the following.
+
+![Observational Equivalence 
+Overview](../images/tamarin-obseq-overview.jpg "Observational Equivalence 
+Overview"){width=100%}
+
+There are mutiple differences to the 'normal' trace mode. First, there is a 
+new option `Diff Rules`, which will simply present the rewrite rules from the 
+`.spthy` file. (See image below.) Second, all the other points (Message Theory, 
+Multiset Rewrite Rules, Untyped/Typed Case Distinctions) have been 
+quadruplicated. The reason for this is that any input file with the `diff` 
+operator actually specifies two models: one model where each instance of 
+`diff(x,y)` is replaced with `x` (the *left hand side*, or LHS for short), and 
+one model where each instance of `diff(x,y)` is replaced with `y` (the *right 
+hand side*, or RHS for short). Moreover, as the observational equivalence mode 
+requires different precomputations, each of the two models is treated twice. 
+For examle, the point `RHS: Untyped case distinctions [Diff]` gives the untyped 
+case distinctions for the RHS interpretation of the model in observational 
+equivalence mode, whereas `LHS: Untyped case distinctions` gives the untyped 
+case distinctions for the LHS interpretation of the model in the 'trace' mode.
+
+Third, all lemmas have been duplicated: the lemma `B_is_secret` exists 
+once on the left hand side (marked using `[left]`) and once on the right hand 
+side (marked using `[right]`), as both sides can differ and thus the lemma 
+needs to be proven on both sides.
+
+Finally, there is a new lemma `Observational_equivalence` added automatically 
+by Tamarin.
+
+![Observational Equivalence 
+Diff Rules](../images/tamarin-obseq-diff-rules.jpg "Observational Equivalence 
+Diff Rules"){width=100%}
 
 Axioms
 ------
