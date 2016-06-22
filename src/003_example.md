@@ -209,7 +209,7 @@ sanity checks.
 ~~~~ {.tamarin slice="code/FirstExample.spthy" lower=104 upper=109}
 ~~~~
 
-Graphical User Interface
+Graphical User Interface {#sec:gui}
 ------------------------
 
 How do you now prove that your lemmas are correct? If you execute the
