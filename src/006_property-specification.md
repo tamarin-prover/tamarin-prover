@@ -209,14 +209,16 @@ creates a public key, two fresh values `~a` and `~b`, and publishes `~a`. Then
 one encrypts either `~a` or `~b` (modeled using the `diff` operator) and sends out
 the ciphertext:
 
-~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
+~~~~ {.tamarin slice="code_ObsEquiv/ObservationalEquivalenceExample.spthy" 
+lower=16 
 upper=27}
 ~~~~
 
 In this example, the intruder cannot compute `~b` as formalized by the 
 following lemma:
 
-~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=29 
+~~~~ {.tamarin slice="code_ObsEquiv/ObservationalEquivalenceExample.spthy" 
+lower=29 
 upper=36}
 ~~~~
 
