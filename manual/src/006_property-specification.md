@@ -10,8 +10,6 @@ formulas and observational equivalence properties are specified using the `diff`
 Trace Properties
 ----------------
 
-**FIXME: what are trace properties**
-
 The Tamarin multiset rewriting rules define a labeled transition
 system. The system's state is a multiset (bag) of facts and the
 initial system state is the empty multiset.  The rules define how the
@@ -93,9 +91,10 @@ disjunction and then implication.
 <!-- Equivalence binds weakest (and nobody uses it). -->
 
 
-To specify a property about a protocol that includes the fictitious
-rule above, we use the keyword `lemma` followed by a name for the
-property and a guarded first-order formula.  For instance, to express
+To specify a property about a protocol to be verified, we use the
+keyword `lemma` followed by a name for the property and a guarded
+first-order formula. This expresses that the property must hold for
+all traces of the protocol. For instance, to express
 the property that the fresh value `~n` is distinct in all applications
 of the fictitious rule (or rather, if an action with the same fresh
 value appears twice, it actually is the same instance, identified by
@@ -104,6 +103,24 @@ the timepoint), we write
 ```
 lemma distinct_nonces: "All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
 ```
+or equivalently
+```
+lemma distinct_nonces: 
+  all-traces
+    "All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
+```
+
+We can also express that there exists a trace for which the property
+holds. We do this by adding the keyword `exists-trace` after the name
+and before the property. For instance, the following lemma is true
+if and only if the preceding lemma is false:
+
+```
+lemma distinct_nonces: 
+  exists-trace 
+    "not All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
+```
+
 
 ### Secrecy ###
 
