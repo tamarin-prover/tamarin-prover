@@ -146,9 +146,18 @@ In this section we explain how to express standard authentication properties, an
 
 #### Entity Authentication ####
 
-We propose the following lemmas to formalize the entity authentication
-properties from Lowe's hierarchy of authentication specifications
-[@Lowe].
+We show how to formalize the entity authentication properties of
+Lowe's hierarchy of authentication specifications [@Lowe] for
+two-party protocols.  
+
+All the properties defined below concern the authentication of an
+agent in role `'B'` to an agent in role `'A'`.  To analyze a protocol
+with respect to these properties we label an appropriate rule in role
+`A` with a `Commit(a,b,<'A','B',t>)` action and in role `B` with the
+`Running(b,a,<'A','B',t>)` action. Here `a` and `b` are the agent
+names (public constants) of roles `A` and `B`, respectively and `t` is
+a term. 
+
 
 1. Aliveness
 
@@ -156,6 +165,13 @@ A protocol guarantees to an agent `a` in role `A`
 *aliveness* of another agent `b` if, whenever `a` completes a run
 of the protocol, apparently with `b` in role `B`, then `b` has
 previously been running the protocol.
+```
+lemma aliveness:
+   "All a b t #i. 
+     Commit(a,b,t)@i 
+     ==>  (Ex R id #j. Create(R,b,id) @ j)
+          | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
+```
 
 2. Weak agreement
 
@@ -164,41 +180,41 @@ with another agent `b` if, whenever agent `a` completes a run of the
 protocol, apparently with `b` in role `B`, then `b` has previously
 been running the protocol, apparently with `a`.
 
-To analyze a protocol with respect to the weak agreement property we label the
-appropriate rule in role `A` with the `Commit(a,b,<'A','B'>)` action
-and in role `B` with the `Running(b,a,<'A','B'>)` action.
 ```
-lemma weakagreement:
-  "All a b t #i. 
-    Commit(a,b,t) @i
-    ==> (Ex #j. Running(b,a,t) @j)
-        | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
+lemma weak_agreement:
+  "All a b t1 #i. 
+    Commit(a,b,t1) @i
+    ==> (Ex t2 #j. Running(b,a,t2) @j)
+        | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
 ```
 
 3. Non-injective agreement
 
-We can use the above lemma to analyze the *non-injective agreement*
-property as well.  A protocol guarantees to an agent `a` in role `A`
-non-injective agreement with an agent `b` in role `B` on a message `M`
+A protocol guarantees to an agent `a` in role `A`
+*non-injective agreement* with an agent `b` in role `B` on a message `t`
 if, whenever `a` completes a run of the protocol, apparently with `b`
 in role `B`, then `b` has previously been running the protocol,
 apparently with `a`, and `b` was acting in role `B` in his run, and
-the two principals agreed on the message `M`. 
+the two principals agreed on the message `t`. 
 
-That message `M` is then added to the `Commit` and `Running` claims,
-inside the angled bracket following the constants `'A'` and `'B'` and
-automatically matched by the `t` in the lemma above.
+```
+lemma noninjective_agreement:
+  "All a b t #i. 
+    Commit(a,b,t) @i
+    ==> (Ex #j. Running(b,a,t) @j)
+        | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
+```
 
 
 4. Injective agreement
 
 We next show the lemma to analyze *injective agreement*. A protocol
 guarantees to an agent `a` in role `A` injective agreement with an
-agent `b` in role `B` on a message `M` if, whenever `a` completes a
+agent `b` in role `B` on a message `t` if, whenever `a` completes a
 run of the protocol, apparently with `b` in role `B`, then `b` has
 previously been running the protocol, apparently with `a`, and `b` was
 acting in role `B` in his run, and the two principals agreed on the
-message `M`. Additionally, there is a unique matching partner instance
+message `t`. Additionally, there is a unique matching partner instance
 for each completed run of an agent, i.e., for each `Commit` by an
 agent there is a unique `Running` by the supposed partner.
 
