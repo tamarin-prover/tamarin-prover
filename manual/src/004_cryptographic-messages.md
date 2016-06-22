@@ -1,8 +1,9 @@
 Cryptographic Messages {#sec:cryptographic-messages}
 ====================================================
 
-Tamarin analyzes protocols in the so-called symbolic model.
-This means cryptographic messages are modeled as terms [^1].
+Tamarin analyzes protocols with respect to a symbolic model of cryptography.
+This means cryptographic messages are modeled as terms [^1] rather than
+bit strings..
 The properties of the employed cryptographic algorithms are
 modeled by equations.
 More concretely, a cryptographic message is either a constant `c` or a
