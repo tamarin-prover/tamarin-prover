@@ -147,7 +147,7 @@ x*inv(x) = 1
 
 `bilinear-pairing`:
 
-: This theory models Pairing groups. It extends the `diffie-hellman` theory with
+: This theory models bilinear groups. It extends the `diffie-hellman` theory with
   the function symbols `pmult/2` and `em/2`. Here, `pmult(x,p)` denotes the
   multiplication of the point `p` by the scalar `x` and `em(p,q)` denotes
   the application of the bilinear map to the points `p` and `q`. The additional
