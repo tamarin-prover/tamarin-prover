@@ -108,9 +108,8 @@ lemma distinct_nonces: "All n #i #j. Act1(n)@i & Act1(n)@j ==> #i=#j"
 ### Secrecy ###
 
 In this section we briefly explain how you can express standard
-secrecy properties in Tamarin and give a short example. See [Protocol
-Specification and Standard Security Properties](#sec:elsewhere) for an
-in-depth discussion.
+secrecy properties in Tamarin and give a short example. See 
+[Protocol and Standard Security Property Specification Templates](#sec:elsewhere) for an in-depth discussion.
 
 Tamarin's built-in message deduction rule
 ```
@@ -149,8 +148,8 @@ i.e., lemma `secret_B` yields an attack.
 In this section we show how to specify a simple message authentication
 property. For specifications of the properties in
 Lowe's hierarchy of authentication specifications [@Lowe] see the
-Section [Protocol Specification and Standard Security
-Properties](#sec:elsewhere).
+Section 
+[Protocol and Standard Security Property Specification Templates](#sec:elsewhere).
 
 We specify the following *message authentication* property: If an agent `a`
 believes that a message `m` was sent by an agent `b`, then `m` was
@@ -487,7 +486,7 @@ lemma with `[left,right]` then both lemmas get generated, just as if
 you did not annotate it with either of `left` or `right`.
 
 
-Protocol Specification and Standard Security Properties{#sec:elsewhere}
+Protocol and Standard Security Property Specification Templates{#sec:elsewhere}
 -------------------------------------------------------
 
 In this section we provide templates for specifying protocols and
@@ -497,32 +496,43 @@ standard security properties in a unified manner.
 
 A protocol specifies two or more roles. For each role we specify an
 initialization rule that generates a fresh run identifier `id` (to
-distinguish parallel protocol runs of an agent), sets up an agent's
+distinguish parallel protocol runs of an agent) and sets up an agent's
 initial knowledge including long term keys, private keys, shared keys,
 and other agent's public keys. We label such a rule with the action
-fact `Create(A,id)`, where `A` is the agent name (a public constant) and `id` the run identifier and the action fact `Role('A')`, where `'A'` is a publi
+fact `Create(A,id)`, where `A` is the agent name (a public constant)
+and `id` the run identifier and the action fact `Role('A')`, where
+`'A'` is a public constant string.
+An example of this is the following initialization rule:
+
+~~~~ {.tamarin slice="code/secrecy-asymm-large.spthy" lower=23 upper=32}
+~~~~
+
+The pre-distributed key infrastructure is modeled with a dedicated
+rule that may be accompanied by a key compromise rule. The latter is
+to model compromised agents and is labeled with a `Reveal(A)` action
+fact, where `A` is the public constant denoting the compromised agent.
+For instance, a public key infrastructure is modeled with the following two rules:
+
+~~~~ {.tamarin slice="code/secrecy-asymm-large.spthy" lower=11 upper=22}
+~~~~
 
 ### Secrecy ###
 
-In this section we explain how you can express standard secrecy
-properties in Tamarin and give examples.
+We use the `Secret(x)` action fact to indicate that the message `x` is
+supposed to be secret.  The simple secrecy property ``` "All x
+#i. Secret(x) @i ==> not (Ex #j. K(x)@j)" ``` may not be satisfiable
+when agents' keys are compromised. We call an agent whose keys are not
+compromised an *honest* agent. We indicate assumptions on honest
+agents by labeling the same rule that the `Secret` action fact appears
+in with an `Honest(B)` action fact, where `B` is the agent name that
+is assumed to be honest. For instance, in the following rule the agent
+in role `'A'` is sending a message, where the nonce `~na` is supposed to be secret assuming that agents `A` and `B` are honest.
 
-Tamarin's built-in message deduction rule
-```
-rule isend: 
-   [ !KU(x) ]
- --[  K(x)  ]-->
-   [ In(x)  ]
-```
-allows us to reason about the Dolev-Yao adversary's knowledge.  To
-specify the property that a message `x` is secret, we propose to label a
-suitable protocol rule with a `Secret` action.  
-In addition to `Secret(x)` the following
-lemma references the actions `Reveal` and `Honest`. We
-use `Reveal(B)` to label rules in which an agent `B` is compromised
-and `Honest(B)` to mark agents that are assumed to be honest. For
-this mechanism to work, `Honest(B)` must occur in the same rule as
-`Secret(x)`.
+~~~~ {.tamarin slice="code/secrecy-asymm-large.spthy" lower=43 upper=52}
+~~~~
+
+We then specify the property that a message `x` is secret as long as agents
+assumed to be honest have not been compromised as follows
 
 ```
 lemma secrecy:
@@ -552,18 +562,14 @@ lemma secrecy_PFS:
   `A` and `B`, respectively and specify two secrecy lemmas, one for
   each role.
 
-~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
+~~~~ {.tamarin include="code/secrecy-asymm-large.spthy"}
 ~~~~
 
 ### Authentication ###
 
-In this section we explain how to express standard authentication properties, and give examples.
-
-#### Entity Authentication ####
-
-We show how to formalize the entity authentication properties of
-Lowe's hierarchy of authentication specifications [@Lowe] for
-two-party protocols.  
+In this section we show how to formalize the entity authentication
+properties of Lowe's hierarchy of authentication specifications
+[@Lowe] for two-party protocols.
 
 All the properties defined below concern the authentication of an
 agent in role `'B'` to an agent in role `'A'`.  To analyze a protocol
@@ -574,7 +580,7 @@ names (public constants) of roles `A` and `B`, respectively and `t` is
 a term. 
 
 
-1. Aliveness
+1.  Aliveness
 
 A protocol guarantees to an agent `a` in role `A`
 *aliveness* of another agent `b` if, whenever `a` completes a run
@@ -588,7 +594,7 @@ lemma aliveness:
           | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
 ```
 
-2. Weak agreement
+2.  Weak agreement
 
 A protocol guarantees to an agent `a` in role `A` *weak agreement*
 with another agent `b` if, whenever agent `a` completes a run of the
@@ -603,7 +609,7 @@ lemma weak_agreement:
         | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
 ```
 
-3. Non-injective agreement
+3.  Non-injective agreement
 
 A protocol guarantees to an agent `a` in role `A`
 *non-injective agreement* with an agent `b` in role `B` on a message `t`
@@ -621,7 +627,7 @@ lemma noninjective_agreement:
 ```
 
 
-4. Injective agreement
+4.  Injective agreement
 
 We next show the lemma to analyze *injective agreement*. A protocol
 guarantees to an agent `a` in role `A` injective agreement with an
