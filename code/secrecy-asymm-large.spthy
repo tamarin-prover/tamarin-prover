@@ -75,7 +75,7 @@ lemma secret_A:
 
 lemma secret_B:
   all-traces
-    "All B n #i. Secret(n) @i & Role('B') @i ==> 
+    "All n #i. Secret(n) @i & Role('B') @i ==> 
      (not (Ex #j. K(n)@j)) | (Ex X #j. Reveal(X)@j & Honest(X)@i)"
 
 end
