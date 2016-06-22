@@ -210,10 +210,16 @@ fact, and for the corresponding private key we use the `Ltk` fact. Since these
 facts will only be used by other rules to retrieve the keys, but never updated,
 we model them as persistent facts. We use the abstract function `pk(x)` to
 denote the public key corresponding to the private key `x`, leading to the
-following rule.
+following rule. Note that we also directly give all public keys to the attacker,
+modeled by the `Out` on the right-hand side.
 
 	rule Generate_key_pair:
-	  [ Fr(~x) ] --> [ !Pk($A,pk(~x)), !Ltk($A,~x) ]
+	  [ Fr(~x) ] 
+	  --> 
+	  [ !Pk($A,pk(~x))
+	  , Out(pk(~x))
+	  , !Ltk($A,~x)
+	  ]
 
 **FIX Cas: for the above rule, need to point out relation to builtins**
 
@@ -225,7 +231,12 @@ $x$, which enables exploiting the commutativity of the exponents to establish
 keys. In this case, we specify model the following rule instead.
 
 	rule Generate_DH_key_pair:
-	  [ Fr(~x) ] --> [ !Pk($A,'g'^~x)), !Ltk($A,~x) ]
+	  [ Fr(~x) ] 
+	  --> 
+	  [ !Pk($A,'g'^~x)
+	  , Out('g'^~x)
+	  , !Ltk($A,~x)
+	  ]
 
 ### Modeling a protocol step
 
