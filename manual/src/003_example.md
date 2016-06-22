@@ -1,3 +1,4 @@
+
 Initial Example
 ===============
 
@@ -473,3 +474,6 @@ Here is the complete input file:
 
 ~~~~ {.tamarin include="code/FirstExample.spthy"}
 ~~~~
+
+
+
