@@ -66,7 +66,7 @@ this?**
 ### Why open chains complicate proofs
 
 To get a better understanding of the problem we can look at what happens if
-Tamarin wants to prove the lemma `nonce_secrecy`.  If we manually always choose
+we try to prove the lemma `nonce_secrecy`.  If we manually always choose
 the first case for the proof, we can see that Tamarin derives the secret key to
 decrypt the output of rule `I_2` by repeatedly using this rule `I_2`.
 
