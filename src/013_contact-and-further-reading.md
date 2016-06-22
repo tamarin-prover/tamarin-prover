@@ -72,6 +72,6 @@ Milner, Dominik Schoop, Sam Scott, Jorden Whitefield, Ognjen Maric, and
 many others.
 
 This manual was initially written by David Basin, Cas Cremers, Jannik 
-Dreier, Sasa Radomirovic, Ralf Sasse, Lara Schmid, Benedikt Schmidt. It 
+Dreier, Sasa Radomirovic, Ralf Sasse, Lara Schmid, and Benedikt Schmidt. It 
 includes part of a  tutorial initially written by Simon Meier and Benedikt Schmidt.
 
