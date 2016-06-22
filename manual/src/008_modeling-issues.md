@@ -3,6 +3,9 @@ Modeling Issues {#sec:modeling-issues}
 
 TODO: Explain common errors and misconceptions and how to avoid them
 
+**TODO Cas: perhaps we should have the error messages as code blocks, so they
+get indexed and people can search for them.**
+
 First-time users
 ----------------
 In this section we discuss some problems that a first-time user might face.
@@ -75,14 +78,14 @@ First we change the setup rule as follows:
 The following statement that some wellformedness check failed will
 appear at the very end of the text when loading this theory.
 
-![ ](../images/ErrorMsg_wellformedness.png)
+![ ](../images/ErrorMsg_wellformedness.png){ width=40% }
 
 Such a wellformedness warning appears in many different error messages at the 
 bottom and indicates that there might be a problem. However, for getting more 
 information, one has to scroll up in the command line to look at the more 
 detailed error messages.
 
-![ ](../images/ErrorMsg_2.png)
+![ ](../images/ErrorMsg_2.png){ width=45% }
 
 The problem lists all the fact usages of fact `AgSt`.
 The statement `1. rule 'setup', fact "agst":("AgSt",3,Linear)` means that
@@ -102,7 +105,7 @@ If we change the rule `R_1` to
 
 we get the error message
 
-![ ](../images/ErrorMsg_3.png)
+![ ](../images/ErrorMsg_3.png){ width=32% }
 
 The warning `unbound variables` indicates that there is a term, here the fresh 
 `~n`, in the action or conclusion that never appeared in the premisse. 
@@ -121,7 +124,7 @@ Next, we change the functional lemma as follows
 
 This causes the following warning:
 
-![ ](../images/ErrorMsg_4.png)
+![ ](../images/ErrorMsg_4.png){ width=60% }
 
 The warning indicates that in this lemma the term `m` is occurs free. This
 means that it is not bound to any quantifier. Often such an error occurs if
@@ -135,7 +138,7 @@ Next, we change the lemma `nonce_secret` and get the following warning:
 ~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error5.spthy" lower=31 upper=33}
 ~~~~
 
-![ ](../images/ErrorMsg_5.png)
+![ ](../images/ErrorMsg_5.png){ width=37% }
 
 Such a warning always occurs if a lemma uses a fact that never appears as an
 action fact in any rule.
@@ -154,7 +157,7 @@ If we omit the line
 
 the following warning will be output
 
-![ ](../images/ErrorMsg_6.png)
+![ ](../images/ErrorMsg_6.png){ width=37% }
 
 The warning indicates that Tamarin did not expect opening brackets. This means,
 that a function is used that Tamarin does not recognize.  
@@ -174,16 +177,13 @@ If we change the `setup` rule to
 
 we get the error message
 
-![ ](../images/ErrorMsg_7.png)
+![ ](../images/ErrorMsg_7.png){ width=51% }
 
 This indicates that the sorts of a message was not used consistently.
 In the rule `setup` this is the case because we once used m as a fresh value
 `~m` and once without the `~`.
 
-
-TODO: any important error messages missing?
-
-### why not doing anything ###
+### Why is Tamarin not proving my lemmas ? ###
 open chains
 
 
