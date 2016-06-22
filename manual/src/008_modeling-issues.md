@@ -232,7 +232,7 @@ This indicates that the sorts of a message were inconsistently used.
 In the rule `setup`, this is the case because we used m once as a fresh value
 `~m` and another time without the `~`.
 
-### What to do if proofs are not terminating ###
+### What to do when Tamarin does not terminating ###
 Tamarin may fail to terminate when it automatically constructs proofs.
 One reason for this is that there are open chains.
 For advice how to find and remove open chains, see [open chains](007_precomputation.html#sec:openchains).
