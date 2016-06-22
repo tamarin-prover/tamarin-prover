@@ -133,9 +133,9 @@ lemma secrecy_PFS:
   one-message protocol. Agent `A` sends a message encrypted with agent
   `B`'s public key to `B`. Both agents claim secrecy of a message, but
   only agent `A`'s claim is true. To distinguish between the two
-  claims we use two different secrecy action facts, `Secret_A` for
-  agent `A` and `Secret_B` for agent `B`, and we specify two secrecy lemmas, 
-  one for each of the two actions.
+  claims we add the action facts `Role('A')` and `Role('B')` for role
+  `A` and `B`, respectively and specify two secrecy lemmas, one for
+  each role.
 
 ~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
 ~~~~
@@ -169,7 +169,7 @@ previously been running the protocol.
 lemma aliveness:
    "All a b t #i. 
      Commit(a,b,t)@i 
-     ==>  (Ex R id #j. Create(R,b,id) @ j)
+     ==>  (Ex id #j. Create(b,id) @ j)
           | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
 ```
 
