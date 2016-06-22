@@ -1,3 +1,4 @@
+
 Property Specification{#sec:property_specification}
 ======================
 
@@ -240,7 +241,7 @@ Observational Equivalence
 -------------------------
 
 All the previous properties are trace properties, i.e., properties that are 
-definied on traces. For example, the definition of secrecy required that there 
+defined on traces. For example, the definition of secrecy required that there 
 is no trace where the intruder could compute the secret without having 
 previously corrupted the agent.
 
@@ -260,7 +261,21 @@ might learn the result, i.e., that there is one vote for a and one for b.
 Tamarin can prove such properties for two systems that only differ in terms 
 using the `diff( , )` operator. Consider the following example:
 
+~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
+upper=27}
+~~~~
 
+In this example, the intruder cannot compute `~b` as formalized by the 
+following lemma:
+
+~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=29 
+upper=36}
+~~~~
+
+However, he can know whether in the last message `~a` or `~b` was encrypted by 
+simply taking the output `~a`, encrypting it with the public key and comparing 
+it to the published cyphertext. This can be captured using observational 
+equivalence as follows.
 
 Axioms
 ------
