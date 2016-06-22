@@ -181,6 +181,14 @@ lemma message_authentication:
 	"All b m #j. Authentic(b,m) @j ==> Ex #i. Send(b,m) @i &i<j"
 ```
 
+A simple message authentication example is the following one-message
+protocol. Agent `A` sends a signed message to agent `B`. We model the
+signature using asymmetric encryption. A better model is shown in the
+section on Axioms.
+
+~~~~ {.tamarin include="code/auth-signing-simple.spthy"}
+~~~~
+
 
 Observational Equivalence
 -------------------------
