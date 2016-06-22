@@ -232,9 +232,8 @@ and then running Tamarin with the option `-DKEYWORD` to have this part included.
 
 If you use this feature to exclude typing lemmas, your case
 distinctions will change, and you may no longer be able to construct
-proofs automatically that were constructed before.
-Similarly, if you have `reuse` marked
-lemmas that are removed, then other following lemmas may not be provable anymore.
+some proofs automatically.  Similarly, if you have `reuse` marked
+lemmas that are removed, then other following lemmas may no longer be provable.
 
 
 The following is an example of a lemma that will be included when `timethis` is
@@ -254,7 +253,8 @@ How to Time Proofs in Tamarin
 
 If you want to measure the time taken to verify 
 a particular lemma you can use the previously described preprocessor to mark
-each lemma, and only include the one you wish to time. For example, wrap
+each lemma, and only include the one you wish to time. This can be
+done, for example, by  wrapping
 the relevant lemma within `#ifdef timethis`. Also make sure to include
 `reuse` and `typing` lemmas in this.  All other lemmas should be
 covered under a different keyword; in the example here we use `nottimed`.
