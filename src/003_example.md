@@ -15,7 +15,9 @@ hash back to the client.
 This protocol is a artificially simple and satisfies only very weak security
 guarantees.  We will use it to illustrate the general Tamarin workflow
 by proving that, from the client's perspective, the freshly
-generated key is secret provided that the server is uncompromised.
+generated key is secret provided that the server is uncompromised. In our 
+model, the adversary is a Dolev-Yao intruder that controls the network and can 
+delete, inject, modify and intercept messages on the network.
 
 The protocol's Tamarin model and its security properties are given in 
 the file [FirstExample.spthy](../code/FirstExample.spthy) (`.spthy` stands for 
@@ -62,13 +64,16 @@ using the correct private key returns the initial plaintext, i.e.,
 
 
 Modeling a Public Key Infrastructure
---------------------------------------
+------------------------------------
 
 In Tamarin, the protocol and its environment are modeled using *multiset 
 rewriting rules*. The rules operate on the system's state expressed as a 
 multiset of facts. Facts can be seen as predicates storing state information. 
 For example, the fact `Out(h(k))` models that the protocol sent out the message 
-`h(k)` on the public channel.
+`h(k)` on the public channel. (In Tamarin there is only one public channel 
+modeling the network controlled by the adversary. Private channels can be added 
+if required, see [Channel 
+Models](009_advanced-features.html#sec:channel-models) for details.)
 
 The example starts with the model of a public key infrastructure (PKI). Again, 
 we use facts to store information about the state given by their arguments. The rules 
@@ -133,7 +138,7 @@ ACTIONFACT ]->`:
 ~~~~
 
 Modeling the protocol
-----------------------
+---------------------
 
 Recall the Alice-and-Bob notation of the protocol we want to model:
 
@@ -156,7 +161,7 @@ action to allow the formalization of the authentication property for the
 client later.
 
 Modeling security properties
----------------------------
+----------------------------
 
 Security properties are defined over traces of the action facts of
 a protocol execution.
