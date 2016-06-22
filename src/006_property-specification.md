@@ -2,15 +2,32 @@
 Property Specification{#sec:property_specification}
 ======================
 
+In this section we present how to specify protocol properties as trace
+and observational equivalence properties, based on the action facts
+given in the model. Trace properties are given as guarded first-order logic
+formulas and observational equivalence properties are specified using the `diff` operator, both of which we will see in detail below. 
+
 Trace Properties
 ----------------
 
 **FIXME: what are trace properties**
 
-**FIXME: what is a guarded formula/variable**
+The Tamarin multiset rewriting rules define a labeled transition
+system. The system's state is a multiset (bag) of facts and the
+initial system state is the empty multiset.  The rules define how the
+system can make a transition to a new state. The types of facts and
+their use are described in Section
+[Rules](005_protocol-specification.html#sec:rules). Here we focus on
+the *action facts* which are used to reason about a protocol's
+behaviour.
 
-We reason about a protocol's behaviour by annotating its
-rules with *action facts*.  
+A rule can be applied to a state if it can be instantiated such that
+its left hand side is contained in the current state. In this case,
+the left-hand side facts are removed from the state, and replaced by
+the instantiated right hand side. The application of the rule is
+recorded in the *trace* by appending the instantiated action facts to
+the trace.
+
 For instance, consider the following fictitious rule 
 ```
 rule fictitious:
@@ -18,18 +35,19 @@ rule fictitious:
  --[ Act1(~n), Act2(x) ]-->
    [ Out(<x,~n>) ]
 ```
-
 The rule rewrites the system state by consuming the facts `Pre(x)` and
-`Fr(~n)` and producing the fact `Out(<x,~n>)`. The rule is labelled
-with the actions `Act1(~n)` and `Act2(x)`.  
-The rule can be applied if there are two facts `Pre` and `Fr` in the system state whose arguments are matched by the variables `x` and `~n`. In the application of 
-this rule, `~n` and `x` are instantiated with the matched values and the
-state transition is labelled with the instantiations of `Act1(~n)` and
-`Act2(x)`. The two instantiations are thus appended to the
-*trace* and considered to have occurred at the same timepoint. 
-We analyze a protocol by reasoning about actions in all of its traces.
+`Fr(~n)` and producing the fact `Out(<x,~n>)`. The rule is labeled
+with the actions `Act1(~n)` and `Act2(x)`.  The rule can be applied if
+there are two facts `Pre` and `Fr` in the system state whose arguments
+are matched by the variables `x` and `~n`. In the application of this
+rule, `~n` and `x` are instantiated with the matched values and the
+state transition is labeled with the instantiations of `Act1(~n)` and
+`Act2(x)`. The two instantiations are considered to have occurred at
+the same timepoint.
 
-**Tamarin's property specification language**
+A *trace property* is a set of traces. We define a set of traces in
+Tamarin using first-order logic formulas over action facts and
+timepoints. More precisely, Tamarin's property specification language
 is a guarded fragment of a many-sorted first-order logic with a sort for
 timepoints.  This logic supports quantification over both messages and
 timepoints. 
@@ -58,20 +76,21 @@ arguments of those action facts) are more limited. Terms are only
 allowed to be built from quantified variables, public constants (names
 delimited using single-quotes), and free function symbols including
 pairing. This excludes function symbols that appear in any of the equations.
-Moreover, all variables must be
-guarded. The error message for an unguarded variable is currently not very
-helpful. **FIXME: This sentence is currently not very helpful for the reader. 
-Give an example of the error message.**
+Moreover, all variables must be 
+guarded. If they are not guarded, Tamarin will produce an error.
 
+**Guardedness. **
 To ensure guardedness, for universally quantified variables, one has to check 
 that they all occur in an action constraint right after the quantifier and that 
 the outermost logical operator inside the quantifier is an implication.
 For existentially quantified variables, one has to check that they all
 occur in an action constraint right after the quantifier and that the
 outermost logical operator inside the quantifier is a conjunction.
-Note also that currently the precedence of the logical connectives is
-not specified. We therefore recommend to use parentheses, when in
-doubt.
+We do recommend to use parentheses, when in doubt about the precedence
+of logical connectives, but we follow the standard
+precedence. Negation binds tightest, then conjunction, then
+disjunction and then implication. 
+<!-- Equivalence binds weakest (and nobody uses it). -->
 
 
 To specify a property about a protocol that includes the fictitious
@@ -114,12 +133,16 @@ lemma secrecy:
   one-message protocol. Agent `A` sends a message encrypted with agent
   `B`'s public key to `B`. Both agents claim secrecy of a message, but
   only agent `A`'s claim is true. To distinguish between the two
-  claims we add the action facts `Role('A')` and `Role('B')` for role
-  `A` and `B`, respectively and specify two secrecy lemmas, one for
+  claims we add the action facts `Role('A')`  (respectively `Role('B')`) to the rule modeling  role
+  `A` (respectively to the rule for role `B`). We then specify two secrecy lemmas, one for
   each role.
 
 ~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
 ~~~~
+
+In the above example the lemma `secret_A` holds as the initiator
+generated the fresh value, while the responder has no guarantees,
+i.e., lemma `secret_B` yields an attack.
 
 ### Authentication ### {#sec:message-authentication}
 
@@ -129,7 +152,17 @@ Lowe's hierarchy of authentication specifications [@Lowe] see the
 Section [Protocol Specification and Standard Security
 Properties](#sec:elsewhere).
 
-**TODO: ???**
+We specify the following *message authentication* property: If an agent `a`
+believes that a message `m` was sent by an agent `b`, then `m` was
+indeed sent by `b`.  To specify `a`'s belief we label an appropriate
+rule in `a`'s role specification with the action `Authentic(b,m)`.
+The following lemma defines the set of traces that satisfy the message
+authentication property.
+
+```
+lemma message_authentication: 
+	"All b m #j. Authentic(b,m) @j ==> Ex #i. Send(b,m) @i &i<j"
+```
 
 
 Observational Equivalence
@@ -154,9 +187,10 @@ apart, he does not know which voter votes for which candidate, even though he
 might learn the result, i.e., that there is one vote for a and one for b.
 
 Tamarin can prove such properties for two systems that only differ in terms 
-using the `diff( , )` operator. Consider the following example, where one 
+using the `diff( , )` operator. Consider the following toy example, where one 
 creates a public key, two fresh values `~a` and `~b`, and publishes `~a`. Then 
-one encrypts either `~a` or `~b` (modeled using the `diff` operator):
+one encrypts either `~a` or `~b` (modeled using the `diff` operator) and sends 
+the ciphertext out:
 
 ~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
 upper=27}
@@ -171,8 +205,120 @@ upper=36}
 
 However, he can know whether in the last message `~a` or `~b` was encrypted by 
 simply taking the output `~a`, encrypting it with the public key and comparing 
-it to the published cyphertext. This can be captured using observational 
-equivalence as follows.
+it to the published ciphertext. This is captured using observational 
+equivalence.
+
+To see how this works, we need to start Tamarin in observational equivalence 
+mode by adding a `--diff` to the command:
+
+    tamarin-prover interactive --diff ObservationalEquivalenceExample.spthy
+
+Now point you browser to <http://localhost:3001>. After clicking on the theory 
+`ObservationalEquivalenceExample`, you should see the following.
+
+![Observational Equivalence 
+Overview](../images/tamarin-obseq-overview.jpg "Observational Equivalence 
+Overview"){width=100%}
+
+There are mutiple differences to the 'normal' trace mode.
+
+First, there is a new option `Diff Rules`, which will simply present the 
+rewrite rules from the `.spthy` file. (See image below.)
+
+Second, all the other points (Message Theory, Multiset Rewrite Rules, 
+Untyped/Typed Case Distinctions) have been quadruplicated. The reason for this 
+is that any input file with the `diff` operator actually specifies two models: 
+one model where each instance of `diff(x,y)` is replaced with `x` (the *left 
+hand side*, or LHS for short), and one model where each instance of `diff(x,y)` 
+is replaced with `y` (the *right hand side*, or RHS for short). Moreover, as 
+the observational equivalence mode requires different precomputations, each of 
+the two models is treated twice. 
+For examle, the point `RHS: Untyped case distinctions [Diff]` gives the untyped 
+case distinctions for the RHS interpretation of the model in observational 
+equivalence mode, whereas `LHS: Untyped case distinctions` gives the untyped 
+case distinctions for the LHS interpretation of the model in the 'trace' mode.
+
+Third, all lemmas have been duplicated: the lemma `B_is_secret` exists 
+once on the left hand side (marked using `[left]`) and once on the right hand 
+side (marked using `[right]`), as both models can differ and thus the lemma 
+needs to be proven on both sides.
+
+Finally, there is a new lemma `Observational_equivalence`, added automatically 
+by Tamarin (so no need to define it in the `.spthy` input file). By proving 
+this lemma we can prove observational equivalence between the LHS and RHS 
+models.
+
+In the `Diff Rules`, we have the rules as written in the input file:
+
+![Observational Equivalence 
+Diff Rules](../images/tamarin-obseq-diff-rules.jpg "Observational Equivalence 
+Diff Rules"){width=100%}
+
+If we click on `LHS: Multiset rewriting rules`, we get the LHS interpretation 
+of the rules (here `diff(~a, ~b)` was replaced by `~a`):
+
+![Observational Equivalence 
+LHS Rules](../images/tamarin-obseq-lhs-rules.jpg "Observational Equivalence 
+LHS Rules"){width=100%}
+
+If we click on `RHS: Multiset rewriting rules`, we get the RHS interpretation 
+of the rules (here `diff(~a, ~b)` was replaced by `~b`):
+
+![Observational Equivalence 
+RHS Rules](../images/tamarin-obseq-rhs-rules.jpg "Observational Equivalence 
+RHS Rules"){width=100%}
+
+We can easily prove the `B_is_secret` lemma on both sides:
+
+![Observational Equivalence 
+Lemmas](../images/tamarin-obseq-lemmas.jpg "Observational Equivalence 
+Lemmas"){width=100%}
+
+To start proving observational equivalence, we only have the proof step `1. 
+rule-equivalence`. This generates multiple subcases:
+
+![Proving the Observational Equivalence 
+Lemma](../images/tamarin-obseq-lemma-step1.jpg "Proving the Observational 
+Equivalence Lemma"){width=100%}
+
+Essentially, there is a subcase per protocol rule, and there are also cases for 
+several adversary rules. The idea of the proof is to show that whenever a rule 
+can be executed on either the LHS or RHS, it can also be executed on the other 
+side. Thus, no matter what the adversary does, he will always see 'equivalent' 
+executions. To prove this, Tamarin computes for each rule all possible 
+executions on both sides, and verifies whether an 'equivalent' execution exists 
+on the other side. If we continue our proof by clicking on `backward-search`, 
+Tamarin generates two sub-cases, one for each side. For each side, Tamarin will 
+continue by constructing all possible executions of this rule.
+
+![Proving the Observational Equivalence 
+Lemma](../images/tamarin-obseq-lemma-step2.jpg "Proving the Observational 
+Equivalence Lemma"){width=100%}
+
+During this search, Tamarin can encounter executions that can be 'mirrored' on 
+the other side, for example the following execution where the published key is 
+successfully compared to itself:
+
+![Proving the Observational Equivalence 
+Lemma: Mirrored](../images/tamarin-obseq-lemma-mirrored.jpg "Proving the 
+Observational 
+Equivalence Lemma: Mirrored"){width=100%}
+
+Or, Tamarin can encounter executions that do not map to the other side. For 
+example the following execution on the LHS that encrypts `~a` using the public 
+key and successfully compares the result to the published ciphertext, is not 
+possible on the RHS (as there the ciphertext contains `~b`). Such an execution 
+corresponds to a potential attack, and thus invalidates the 
+"Observational_equivalence" lemma.
+
+![Proving the Observational Equivalence Lemma: 
+Attack](../images/tamarin-obseq-lemma-attack.jpg "Proving the 
+Observational Equivalence Lemma: Attack"){width=100%}
+
+Note that Tamarin needs to potentially consider numerous possible executions, 
+which can result in long proof times or even non-termination. If possible it 
+tries not to resolve parts of the execution that are irrelevant, but this is 
+not always sufficient.
 
 
 Axioms
@@ -348,6 +494,18 @@ you did not annotate it with either of `left` or `right`.
 Protocol Specification and Standard Security Properties{#sec:elsewhere}
 -------------------------------------------------------
 
+In this section we provide templates for specifying protocols and
+standard security properties in a unified manner.
+
+### Protocol Rules ##
+
+A protocol specifies two or more roles. For each role we specify an
+initialization rule that generates a fresh run identifier `id` (to
+distinguish parallel protocol runs of an agent), sets up an agent's
+initial knowledge including long term keys, private keys, shared keys,
+and other agent's public keys. We label such a rule with the action
+fact `Create(A,id)`, where `A` is the agent name (a public constant) and `id` the run identifier and the action fact `Role('A')`, where `'A'` is a publi
+
 ### Secrecy ###
 
 In this section we explain how you can express standard secrecy
@@ -492,7 +650,4 @@ lemma injectiveagreement:
 
 TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree?
 
-#### Message Authentication #### {#sec:message-authentication}
-
-TODO: ???
 

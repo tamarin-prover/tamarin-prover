@@ -55,15 +55,22 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run 
 
 You can download the  appropriate binaries for your system from
 <https://github.com/tamarin-prover/bin-dists>.
-Only the current master is available as a binary, whereas the sources
-contain both the master and the current development state.
 
 Similar to installing from source, starting
 Tamarin without arguments will output its help
-message, including the paths to the installed, example protocol models,
-and all case studies from published papers. We recommend opening the
+message. We recommend opening the
 `Tutorial.spthy` example file in a text editor and to start exploring from
 there, or alternatively to continue reading this document.
+
+**Notes:** 
+
+  * Only the current master is available as binary, while the sources
+contain both the master and the current development state.
+
+  * The Tamarin source archive 
+<https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
+contains numerous protocol examples including the `Tutorial.spthy` file, all of which you can find in the `examples/` directory. 
+
 
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
@@ -100,7 +107,7 @@ contain both the master and the current development state.
 
   * The Tamarin source archive 
 <https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
-contains numerous protocol examples as well as the `Tutorial.spthy` file that this manual refers to. 
+contains numerous protocol examples including the `Tutorial.spthy` file you can start with, or continue reading this document. 
 
 ### Installing Tamarin from sources ###
 
