@@ -51,12 +51,12 @@ In the interactive mode you can find open chains as follows.  On the top left,
 under "Untyped case distinction", one can find the chains that were precomputed
 by Tamarin.
 
-![Tamarin GUI](../images/FindOpenChains1.png "Untyped case distinctions"){ width=50% }
+![Tamarin GUI](../images/FindOpenChains1.png "Untyped case distinctions"){ width=50% }\
 
 The unsolved chains can be identified by the light green arrows as in the
 following example:
 
-![Open chain visible in green](../images/FindOpenChains2.png "Open chain visible"){ width=100% }
+![Open chain visible in green](../images/FindOpenChains2.png "Open chain visible"){ width=100% }\
 
 The green arrow indicates that Tamarin cannot exclude the possibility that the
 adversary can derive any fresh term `~t.1` with this rule `I_2`.  As we are
@@ -78,7 +78,7 @@ adversary. To get the relevant key for this, in part `b)` again the output
 from rule `I_2` is decrypted by the adversary. This is done with a key coming
 from part `c)` where the same will happen repeatedly.
 
-![Secret derived by using `I_2`](../images/FindOpenChains3_RepetitionHilighted.jpg "`I_2` repeatedly"){ width=90% }
+![Secret derived by using `I_2`](../images/FindOpenChains3_RepetitionHilighted.jpg "`I_2` repeatedly"){ width=90% }\
 
 As Tamarin is unable to conclude that the secret key could not have come from
 the rule `I_2`, the algorithm derives the secret key that is needed. The proof
@@ -127,9 +127,13 @@ the adversary or the initiator sent the first message prior to that moment.
 Similarly, the second part states that whenever the initiator receives the
 second message, either the adversary knew the corresponding nonce or the
 responder has sent the second message before.
+Generally, it is a good idea to specify a typing lemma that goes through
+all possible sources of a term and the adversary knowledge. That is, as here,
+we can try to say that the term can either originate from one of a list of
+rules or from the adversary knowledge.
 
-This typing lemma can be automatically proven by Tamarin. With the typing lemma,
-Tamarin can then automatically prove the lemma `nonce_secrecy`.
+The above typing lemma can be automatically proven by Tamarin. With the typing 
+lemma, Tamarin can then automatically prove the lemma `nonce_secrecy`.
 
 
 Another possibility is that the open chains only occur in an undesired
@@ -138,9 +142,5 @@ In such a case, we can explicitly exclude this application of the rule
 with an axiom. But, we should ensure that the resulting model is the
 one we want; so use this with care.
 
-
-TODO:
-      * Typing lemmas in particular - how to tell when one would help, the
-        best way to write one, and what you can’t prove in a typing lemma
 
 
