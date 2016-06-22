@@ -564,7 +564,12 @@ lemma secrecy_PFS:
   only agent `A`'s claim is true. To distinguish between the two
   claims we add the action facts `Role('A')` and `Role('B')` for role
   `A` and `B`, respectively and specify two secrecy lemmas, one for
-  each role.
+  each role. 
+
+  The perfect forward secrecy claim does not hold for agent `A`.  We
+  show this by negating the perfect forward secrecy property and
+  stating an exists-trace lemma.
+
 
 ~~~~ {.tamarin include="code/secrecy-asymm-large.spthy"}
 ~~~~

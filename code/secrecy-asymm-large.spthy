@@ -69,13 +69,18 @@ lemma executable:
     "Ex A B m #i #j. Send(A,m)@i & Recv(B,m) @j"
 
 lemma secret_A:
-  all-traces
     "All n #i. Secret(n) @i & Role('A') @i ==> 
      (not (Ex #j. K(n)@j)) | (Ex X #j. Reveal(X)@j & Honest(X)@i)"
 
 lemma secret_B:
-  all-traces
     "All n #i. Secret(n) @i & Role('B') @i ==> 
      (not (Ex #j. K(n)@j)) | (Ex X #j. Reveal(X)@j & Honest(X)@i)"
+
+lemma secrecy_PFS_A:
+  exists-trace
+  "not All x #i. 
+    Secret(x) @i & Role('A') @i ==> 
+    not (Ex #j. K(x)@j)
+        | (Ex B #r. Reveal(B)@r & Honest(B) @i & r < i)"
 
 end
