@@ -78,14 +78,30 @@ First we change the setup rule as follows:
 The following statement that some wellformedness check failed will
 appear at the very end of the text when loading this theory.
 
-![ ](../images/ErrorMsg_wellformedness.png){ width=40% }
+	WARNING: 1 wellformedness check failed!
+          	 The analysis results might be wrong!
 
 Such a wellformedness warning appears in many different error messages at the 
 bottom and indicates that there might be a problem. However, for getting more 
 information, one has to scroll up in the command line to look at the more 
 detailed error messages.
 
-![ ](../images/ErrorMsg_2.png){ width=45% }
+	/*
+	WARNING: the following wellformedness checks failed!
+
+	fact usage:
+  	1. rule `setup', fact "agst": ("AgSt",3,Linear)
+       		AgSt( $I, ~k, ~m )
+  
+  	2. rule `setup', fact "agst": ("AgSt",2,Linear)
+       		AgSt( $R, ~k )
+  
+  	3. rule `I_1', fact "agst": ("AgSt",2,Linear)
+       		AgSt( $I, <~k, ~m> )
+  
+  	4. rule `R_1', fact "agst": ("AgSt",2,Linear)
+       		AgSt( $R, ~k )
+	*/
 
 The problem lists all the fact usages of fact `AgSt`.
 The statement `1. rule 'setup', fact "agst":("AgSt",3,Linear)` means that
@@ -105,7 +121,13 @@ If we change the rule `R_1` to
 
 we get the error message
 
-![ ](../images/ErrorMsg_3.png){ width=32% }
+	/*
+	WARNING: the following wellformedness checks failed!
+
+	unbound:
+	  rule `R_1' has unbound variables: 
+	    ~n
+	*/
 
 The warning `unbound variables` indicates that there is a term, here the fresh 
 `~n`, in the action or conclusion that never appeared in the premisse. 
@@ -124,7 +146,17 @@ Next, we change the functional lemma as follows
 
 This causes the following warning:
 
-![ ](../images/ErrorMsg_4.png){ width=60% }
+	/*
+	WARNING: the following wellformedness checks failed!
+
+	formula terms:
+	  lemma `functional' uses terms of the wrong form: `Free m', `Free m'
+	  
+	  The only allowed terms are public names and bound node and message
+	  variables. If you encounter free message variables, then you might
+	  have forgotten a #-prefix. Sort prefixes can only be dropped where
+	  this is unambiguous.
+	*/
 
 The warning indicates that in this lemma the term `m` is occurs free. This
 means that it is not bound to any quantifier. Often such an error occurs if
@@ -133,12 +165,21 @@ one forgets to list all the variables that are used in the formula after the
 
 ### Undefined Action Fact in Lemma ###
 
-Next, we change the lemma `nonce_secret` and get the following warning:
+Next, we change the lemma `nonce_secret`.
 
 ~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error5.spthy" lower=31 upper=33}
 ~~~~
+	
+We get the following warning:
 
-![ ](../images/ErrorMsg_5.png){ width=37% }
+	/*
+	WARNING: the following wellformedness checks failed!
+
+	lemma actions:
+	  lemma `nonce_secret' references action 
+	    (ProtoFact Linear "Secr" 2,2,Linear)
+	  but no rule has such an action.
+	*/
 
 Such a warning always occurs if a lemma uses a fact that never appears as an
 action fact in any rule.
@@ -157,7 +198,8 @@ If we omit the line
 
 the following warning will be output
 
-![ ](../images/ErrorMsg_6.png){ width=37% }
+	unexpected "("
+	expecting letter or digit, ".", "," or ")"
 
 The warning indicates that Tamarin did not expect opening brackets. This means,
 that a function is used that Tamarin does not recognize.  
@@ -177,7 +219,17 @@ If we change the `setup` rule to
 
 we get the error message
 
-![ ](../images/ErrorMsg_7.png){ width=51% }
+	/*
+	WARNING: the following wellformedness checks failed!
+
+	unbound:
+	  rule `setup' has unbound variables: 
+	    m
+
+	sorts:
+	  rule `setup' clashing sorts, casings, or multiplicities:
+	    1. ~m, m
+	*/
 
 This indicates that the sorts of a message was not used consistently.
 In the rule `setup` this is the case because we once used m as a fresh value
