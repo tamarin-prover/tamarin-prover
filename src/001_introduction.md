@@ -97,9 +97,36 @@ terminate.*
 
 
 
-Organization [Ralf/Jannik]
---------------------------
+Organization
+------------
 
-Summary and outline of what is in the document.
+This document starts with the introduction you just read. In Section
+[Installation](002_installation.html#sec:installation) we describe how
+to install Tamarin. First-time users are then recommended to read
+Section [First Example](003_example.html#initial-example) which
+describes a simple protocol analysis in detail without
+technicalities. Then, we systematically build up the technical
+background a user needs, by first presenting the cryptographic
+messages in Section [Cryptographic
+Messages](004_cryptographic-messages.html#equational-theories), followed by
+the modeling approach in Section [Model
+Specification](005_protocol-specification.html#sec:model-specification) and
+the property specification in Section [Property
+Specification](006_property-specification.html#sec:property_specification).
 
-
+We then continue with information on precomputation in Section
+[Precomputation](007_precomputation.html#sec:precomputation) and
+possible modeling issues in Section [Modeling
+Issues](008_modeling-issues.html#sec:modeling-issues). Afterwards,
+advanced features for experienced users are described in Section
+[Advanced
+Features](009_advanced-features.html#sec:advanced-features). We have a
+list of completed case studies in Section [Case
+Studies](010_case-studies.html#sec:case-studies). Alternative input
+toolchains are described in Section
+[Toolchains](011_toolchains.html#sec:tool-chains). Limitations are
+described in Section
+[Limitations](012_limitations.html#sec:limitations). We conclude the
+manual with contact information and further reading in [Contact
+Information and Further
+Reading](013_contact-and-further-information.html#sec:contact).

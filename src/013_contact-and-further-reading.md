@@ -1,5 +1,5 @@
 
-Contact and Further Reading
+Contact and Further Reading {#sec:contact}
 ===========================
 
 For further information, see the Tamarin web page, repositories, mailing list, 
@@ -46,6 +46,7 @@ Tamarin Mailing list
 
 There is a low-volume mailing-list used by the developers and users of Tamarin: 
 <https://groups.google.com/group/tamarin-prover>
+
 It can be used to get help from the community, and to contact the developers 
 and experienced users.
 
