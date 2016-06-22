@@ -371,7 +371,7 @@ resolved.
 
 ![FirstExample Case Distinctions 1 of 
 3](../images/tamarin-tutorial-case-distinctions-1.jpg 
- "FirstExample Case Distinctions 1 of 3")
+ "FirstExample Case Distinctions 1 of 3"){width=60%}
  
 Here the fact `!KU( ~t.1 )` has three sources, the first one is the rule 
 `Reveal_ltk`, which requires an instance of the rule `Register_pk` to create 
@@ -379,11 +379,11 @@ the necessary `!Ltk` fact. The other two sources are given below.
  
 ![FirstExample Case Distinctions 2 of 
 3](../images/tamarin-tutorial-case-distinctions-2.jpg 
- "FirstExample Case Distinctions 2 of 3")
+ "FirstExample Case Distinctions 2 of 3"){width=60%}
 
 ![FirstExample Case Distinctions 3 of 
 3](../images/tamarin-tutorial-case-distinctions-3.jpg 
- "FirstExample Case Distinctions 3 of 3")
+ "FirstExample Case Distinctions 3 of 3"){width=60%}
  
 Now we will see how to prove lemmas in the interactive mode. For that, click on 
 `sorry` (indicating that the proof has not been started) after the first 
