@@ -199,7 +199,7 @@ and discuss alternatives afterwards.
 
 ### Public-key infrastructure
 
-**FIX Cas: this might well be duplicating a part from elsewhere.**
+**FIX Cas: this might well be duplicating a part from elsewhere.** **FIXME**: indeed, see initial example, but may be good to duplicate anyway.**/FIXME**
 
 In the Tamarin model, there is no pre-defined notion of public key
 infrastructure (PKI). A pre-distributed PKI with asymmetric keys for each party
