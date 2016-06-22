@@ -32,7 +32,8 @@ Tamarin's built-in adversary model is the classical Dolev-Yao
 adversary that has complete control of the communication network.  In
 particular, this adversary can eavesdrop on, block, and
 modify messages sent over the network and inject any message
-in his knowledge (he knows or can construct from his knowledge) into the network.
+from his knowledge (the messages he has learned or can construct
+from learned messages) into the network.
 
 The Dolev-Yao adversary's control over the communication network is
 modeled with the following two built-in rules:
@@ -54,21 +55,21 @@ The `irecv` rule states that any message sent by an agent using the
 analyzed with the adversary's message deduction rules that depend on
 the specified equational theory.
 
-The `isend` rule states that any message that any message received by
+The `isend` rule states that any message received by
 an agent by means of the `In` fact has been constructed by the
 adversary.
 
 We can limit the adversary's control over the protocol agents'
-communication channels by specifying channel rules.  In the following
+communication channels by specifying channel rules.  In the following,
 we illustrate the modelling of confidential, authentic, and secure
-channel rules.
+channels.
 Consider for this purpose the following protocol, where an initiator generates a 
 fresh nonce and sends it to a receiver.
 
 ~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=5 upper=6}
 ~~~~
 
-We can model this protocol with the following Tamarin specification.
+We can model this protocol as follows.
 
 ~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=10 upper=31}
 ~~~~
@@ -79,7 +80,7 @@ initiator and responder with the `nonce_secret_initiator` and the
 `message_authentication` specifies a [message authentication](006_property-specification.html#sec:message-authentication) property for the responder role. 
 
 If we analyze the protocol with insecure channels, none of the
-properties hold, because the adversary can learn the nonce sent by the
+properties hold because the adversary can learn the nonce sent by the
 initiator and send his own one to the receiver.
 
 #### Confidential Channel Rules
@@ -97,21 +98,21 @@ They specify that whenever a message `x` is sent on a confidential channel
 from `$A` to `$B`, a fact `!Conf($B,x)` can be derived. This fact binds the 
 receiver `$B` to the  message `x`, because only he will be able to read
 the message. The rule `ChanIn_C` models that at the incoming end of a
-confidential channel, there must be a `!Conf($B,x)` fact but any apparent
+confidential channel: there must be a `!Conf($B,x)` fact but any apparent
 sender `$A` from the adversary knowledge can be added. This models the fact
 that a confidential channel is not authentic, and anybody could have sent the message.
 
 Note that the fact `!Conf($B,x)` is persistent. With this we model that a
 message once sent confidentially to `$B` can be replayed by the adversary at
 a later point in time.
-The last rule `ChanIn_CAdv` denotes that the adversary can also directly
+The last rule, `ChanIn_CAdv`, denotes that the adversary can also directly
 send a message from his knowledge on a confidential channel.
 
-Finally, we need to specify in the protocol rules that the message `~n` is
+Finally, we need to given protocol rules specifying that the message `~n` is
 sent and received on a confidential channel. We do this by changing the `Out` 
 and `In` fact to the `Out_C` and `In_C` fact, respectively.
 
-In this modified protocol the lemma `nonce_secret_initiator` holds. 
+In this modified protocol, the lemma `nonce_secret_initiator` holds. 
 As the initiator sends the nonce on a confidential channel, only the intended
 receiver can read the message, but the adversary cannot learn it.
 
