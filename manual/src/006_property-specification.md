@@ -2,20 +2,32 @@
 Property Specification{#sec:property_specification}
 ======================
 
+In this section we present how to specify protocol properties as trace
+properties, based on the action facts given in the model. Properties
+are given as guarded first-order logic formulas, which we will see in
+detail.
+
 Trace Properties
 ----------------
 
 **FIXME: what are trace properties**
 
 The Tamarin multiset rewriting rules define a labeled transition
-system. The system's state is a multiset (bag) of facts. The initial
-system state is the empty multiset. The types of facts and their use 
-are described in Section [Rules](#sec:rules). Here we focus on the action facts. 
+system. The system's state is a multiset (bag) of facts and the
+initial system state is the empty multiset.  The rules define how the
+system can make a transition to a new state. The types of facts and
+their use are described in Section
+[Rules](005_protocol-specification.html#sec:rules). Here we focus on
+the *action facts* which are used to reason about a protocol's
+behaviour.
 
-**FIXME: what is a guarded formula/variable**
+A rule can be applied to a state if it can be instantiated such that
+its left hand side is contained in the current state. In this case,
+the left-hand side facts are removed from the state, and replaced by
+the instantiated right hand side. The application of the rule is
+recorded in the *trace* by appending the instantiated action facts to
+the trace.
 
-We reason about a protocol's behaviour by annotating its
-rules with *action facts*.  
 For instance, consider the following fictitious rule 
 ```
 rule fictitious:
@@ -23,21 +35,22 @@ rule fictitious:
  --[ Act1(~n), Act2(x) ]-->
    [ Out(<x,~n>) ]
 ```
-
 The rule rewrites the system state by consuming the facts `Pre(x)` and
-`Fr(~n)` and producing the fact `Out(<x,~n>)`. The rule is labelled
-with the actions `Act1(~n)` and `Act2(x)`.  
-The rule can be applied if there are two facts `Pre` and `Fr` in the system state whose arguments are matched by the variables `x` and `~n`. In the application of 
-this rule, `~n` and `x` are instantiated with the matched values and the
-state transition is labelled with the instantiations of `Act1(~n)` and
-`Act2(x)`. The two instantiations are thus appended to the
-*trace* and considered to have occurred at the same timepoint. 
-We analyze a protocol by reasoning about actions in all of its traces.
+`Fr(~n)` and producing the fact `Out(<x,~n>)`. The rule is labeled
+with the actions `Act1(~n)` and `Act2(x)`.  The rule can be applied if
+there are two facts `Pre` and `Fr` in the system state whose arguments
+are matched by the variables `x` and `~n`. In the application of this
+rule, `~n` and `x` are instantiated with the matched values and the
+state transition is labeled with the instantiations of `Act1(~n)` and
+`Act2(x)`. The two instantiations are considered to have occurred at
+the same timepoint.
 
-**Tamarin's property specification language**
+A *trace property* is a set of traces. We define a set of traces in
+Tamarin using first-order logic formulas over action facts and
+timepoints. More precisely, Tamarin's property specification language
 is a guarded fragment of a many-sorted first-order logic with a sort for
 timepoints.  This logic supports quantification over both messages and
-timepoints. 
+timepoints. **FIXME: what is a guarded formula/variable**
 
 The syntax for specifying security properties is defined as follows:
 
@@ -63,10 +76,8 @@ arguments of those action facts) are more limited. Terms are only
 allowed to be built from quantified variables, public constants (names
 delimited using single-quotes), and free function symbols including
 pairing. This excludes function symbols that appear in any of the equations.
-Moreover, all variables must be
-guarded. The error message for an unguarded variable is currently not very
-helpful. **FIXME: This sentence is currently not very helpful for the reader. 
-Give an example of the error message.**
+Moreover, all variables must be 
+guarded. If they are not guarded, Tamarin will produce an error.
 
 To ensure guardedness, for universally quantified variables, one has to check 
 that they all occur in an action constraint right after the quantifier and that 
@@ -74,9 +85,12 @@ the outermost logical operator inside the quantifier is an implication.
 For existentially quantified variables, one has to check that they all
 occur in an action constraint right after the quantifier and that the
 outermost logical operator inside the quantifier is a conjunction.
-Note also that currently the precedence of the logical connectives is
-not specified. We therefore recommend to use parentheses, when in
-doubt.
+We do recommend to use parentheses, when in doubt about the precedence
+of logical connectives, but we follow the standard
+precedence. Negation binds tightest, then conjunction, then
+disjunction and then implication. Equivalence binds weakest.
+
+**FIXME: Did the above explain "what is a guarded formula/variable" well enough?**
 
 
 To specify a property about a protocol that includes the fictitious
@@ -119,12 +133,16 @@ lemma secrecy:
   one-message protocol. Agent `A` sends a message encrypted with agent
   `B`'s public key to `B`. Both agents claim secrecy of a message, but
   only agent `A`'s claim is true. To distinguish between the two
-  claims we add the action facts `Role('A')` and `Role('B')` for role
-  `A` and `B`, respectively and specify two secrecy lemmas, one for
+  claims we add the action facts `Role('A')`  (respectively `Role('B')`) to the rule modeling  role
+  `A` (respectively to the rule for role `B`). We then specify two secrecy lemmas, one for
   each role.
 
 ~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
 ~~~~
+
+In the above example the lemma `secret_A` holds as the initiator
+generated the fresh value, while the responder has no guarantees,
+i.e., lemma `secret_B` yields an attack.
 
 ### Authentication ### {#sec:message-authentication}
 
