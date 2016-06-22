@@ -15,7 +15,7 @@ We have already seen the definition of terms in the previous section. Here we
 will discuss facts and rules, and illustrate their use with respect to the Naxos
 protocol, displayed below.
 
-![The Naxos protocol](../images/naxos.png)
+![The Naxos protocol](../images/naxos.png){ width=80% }
 
 **FIX Cas: Picture should be updated and use vector graphics, ideally.**
 
