@@ -235,22 +235,18 @@ In the rule `setup`, this is the case because we used m once as a fresh value
 ### What to do when Tamarin does not terminating ###
 Tamarin may fail to terminate when it automatically constructs proofs.
 One reason for this is that there are open chains.
-For advice how to find and remove open chains, see [open chains](007_precomputation.html#sec:openchains).
+For advice on how to find and remove open chains, see [open chains](007_precomputation.html#sec:openchains).
 
 
+<!-- 
 ### functions ###
 function-> where does it go? doesn have support:
 local to rule with "let"
-
+--!>
  
 
+<!-- Using rewrite rules to 'share'
+  ------------------------------
 
-
-
-
-
-Using rewrite rules to 'share'
-------------------------------
-
-TODO: Katriel?
-
+  TODO: Katriel?
+--!>
