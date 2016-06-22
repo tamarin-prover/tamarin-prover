@@ -250,7 +250,7 @@ directory as FirstExample.spthy. Point your browser to
 and you will see the following welcome screen:
 
 ![Tamarin Web Interface](../images/tamarin-welcome.jpg "Welcome 
-Screen"){width=80%}
+Screen"){width=80%}\
 
 The table in the middle shows all loaded theories. You can either
 click on a theory to explore it and prove your security properties, or
@@ -264,7 +264,7 @@ should see the following:
 
 ![FirstExample Theory 
 Overview](../images/tamarin-tutorial-overview.jpg "FirstExample Theory 
-Overview"){width=100%}
+Overview"){width=100%}\
 
 On the left hand side, you see the theory: links to the message theory
 describing the adversary, the multiset rewrite rules and axioms describing
@@ -283,7 +283,7 @@ graph visualisation (see below for examples).
 If you click on `Message theory` on the left, you should see the following:
 
 ![FirstExample Message Theory](../images/tamarin-tutorial-message-theory.jpg 
- "FirstExample Message Theory"){width=100%}
+ "FirstExample Message Theory"){width=100%}\
 
 On the right side, you can now see the message theory, starting with
 the so-called *Signature*, which consists of all the functions and equations. 
@@ -326,7 +326,7 @@ Now click on *Multiset rewriting rules* on the left.
 
 ![FirstExample Multiset Rewriting 
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
- "FirstExample Multiset Rewriting Rules"){width=100%}
+ "FirstExample Multiset Rewriting Rules"){width=100%}\
 
 On the right side of the screen are the protocol's 
 rewriting rules, plus two additional rules:  `isend` and `irecv`^[The 'i'
@@ -352,7 +352,7 @@ uninteresting intermediate result. -->
 
 ![FirstExample Case Distinctions 
 Rules](../images/tamarin-tutorial-case-distinctions.jpg 
- "FirstExample Case Distinctions"){width=100%}
+ "FirstExample Case Distinctions"){width=100%}\
  
 To improve the efficiency of its internal reasoning, Tamarin precomputes case 
 distinctions. A case distinction gives all possible sources for a fact, i.e., 
@@ -377,7 +377,7 @@ resolved.
 
 ![FirstExample Case Distinctions 1 of 
 3](../images/tamarin-tutorial-case-distinctions-1.jpg 
- "FirstExample Case Distinctions 1 of 3"){width=60%}
+ "FirstExample Case Distinctions 1 of 3"){width=60%}\
  
 Here the fact `!KU( ~t.1 )` has three sources, the first one is the rule 
 `Reveal_ltk`, which requires an instance of the rule `Register_pk` to create 
@@ -385,18 +385,18 @@ the necessary `!Ltk` fact. The other two sources are given below.
  
 ![FirstExample Case Distinctions 2 of 
 3](../images/tamarin-tutorial-case-distinctions-2.jpg 
- "FirstExample Case Distinctions 2 of 3"){width=60%}
+ "FirstExample Case Distinctions 2 of 3"){width=70%}\
 
 ![FirstExample Case Distinctions 3 of 
 3](../images/tamarin-tutorial-case-distinctions-3.jpg 
- "FirstExample Case Distinctions 3 of 3"){width=60%}
+ "FirstExample Case Distinctions 3 of 3"){width=40%}\
  
 Now we will see how to prove lemmas in the interactive mode. For that, click on 
 `sorry` (indicating that the proof has not been started) after the first 
 lemma in the left frame to obtain the following screen:
 
 ![FirstExample Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
- "FirstExample Lemma 1"){width=100%}
+ "FirstExample Lemma 1"){width=100%}\
 
 Tamarin proves lemmas using constraint solving.
 Namely, it refines the knowledge 
@@ -414,7 +414,7 @@ length of the trace. Here we use the default strategy, i.e., a simplification
 step by clicking on `1. simplify`, to obtain the following screen:
  
 ![FirstExample Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpg 
- "FirstExample Lemma 1 Step 1"){width=100%}
+ "FirstExample Lemma 1 Step 1"){width=100%}\
 
 Tamarin has now translated the lemma into a constraint system. Since
 Tamarin looks for counterexamples to the lemma, it looks for a protocol
@@ -442,7 +442,7 @@ graph leads to a contradiction as it contains `LtkReveal( S )`:
 
 ![FirstExample Lemma 1 
 Finished](../images/tamarin-tutorial-lemma-1-finished.jpg 
- "FirstExample Lemma 1 Finished"){width=100%}
+ "FirstExample Lemma 1 Finished"){width=100%}\
  
 The lemma is now colored in green as it was successfully proven. If we had 
 found a counterexample, it would be colored in red. You can prove the other 
