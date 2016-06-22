@@ -1,10 +1,10 @@
 Precomputation
 ============== 
 
-In this section we will explain some of the aspects of the precomputation
-performed by Tamarin.  This is relevant for users that model complex protocols,
-because they may run into so-called [open chains](#sec:openchains) that can be
-problematic for verification.
+In this section, we will explain some of the aspects of the
+precomputation performed by Tamarin.  This is relevant for users that
+model complex protocols since they may at some point run into so-called
+[open chains](#sec:openchains), which can be problematic for verification.
 
 To illustrate the concepts, consider the example of the Needham-Schroeder-Lowe
 Public Key Protocol, given here in Alice&Bob notation:
@@ -52,7 +52,7 @@ by Tamarin.
 The unsolved chains can be identified by the light green arrows as in the
 following example:
 
-![Open chain visible in green](../images/FindOpenChains2.png "Open chain visible")
+![Open chain visible in green](../images/FindOpenChains2.png "Open chain visible"){ width=100% }
 
 The green arrow indicates that Tamarin cannot exclude the possibility that the
 adversary can derive any fresh term `~t.1` with this rule `I_2`.  As we are
@@ -69,8 +69,12 @@ To get a better understanding of the problem we can look at what happens if
 we try to prove the lemma `nonce_secrecy`.  If we manually always choose
 the first case for the proof, we can see that Tamarin derives the secret key to
 decrypt the output of rule `I_2` by repeatedly using this rule `I_2`.
+More specifically, in `a)` the output of rule `I_2` is decrypted by the 
+adversary. To get the relevant key for this, in part `b)` again the output
+from rule `I_2` is decrypted by the adversary. This is done with a key coming
+from part `c)` where the same will happen repeatedly.
 
-![Secret derived by using `I_2`](../images/FindOpenChains3.png "`I_2` repeatedly")
+![Secret derived by using `I_2`](../images/FindOpenChains3_RepetitionHilighted.jpg "`I_2` repeatedly"){ width=90% }
 
 As Tamarin is not able to conclude that the secret key could not have come from
 the rule `I_2`, the algorithm derives the secret key that is needed. The proof

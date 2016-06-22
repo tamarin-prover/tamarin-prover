@@ -1,0 +1,33 @@
+/*
+This is an artificial protocol to show how to include/exclude parts of
+the file based on the built-in preprocessor, particularly for timing
+of lemmas.
+*/
+
+theory TimingExample
+begin
+
+rule artificial:
+    [ Fr(~f) ]
+  --[ Action1(~f) , Action2(~f) ]->
+    [ Out(~f) ]
+
+#ifdef nottimed
+lemma otherlemma1:
+  exists-trace
+  "Ex r #i. Action1(r)@i & Action2(r)@i"
+#endif
+
+#ifdef timethis
+lemma tobemeasured:
+  exists-trace
+  "Ex r #i. Action1(r)@i"
+#endif
+
+#ifdef nottimed
+lemma otherlemma2:
+  exists-trace
+  "Ex r #i. Action2(r)@i"
+#endif
+
+end
