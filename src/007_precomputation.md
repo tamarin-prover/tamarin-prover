@@ -1,10 +1,10 @@
 Precomputation
 ============== 
 
-In this section we will explain some of the aspects of the precomputation
-performed by Tamarin.  This is relevant for users that model complex protocols,
-because they may run into so-called [open chains](#sec:openchains) that can be
-problematic for verification.
+In this section, we will explain some of the aspects of the
+precomputation performed by Tamarin.  This is relevant for users that
+model complex protocols since they may at some point run into so-called
+[open chains](#sec:openchains), which can be problematic for verification.
 
 To illustrate the concepts, consider the example of the Needham-Schroeder-Lowe
 Public Key Protocol, given here in Alice&Bob notation:
