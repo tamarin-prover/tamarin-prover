@@ -23,7 +23,8 @@ We now want to prove the following lemma:
 ~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=105 upper=118}
 ~~~~
 
-
+This proof attempt will not terminate due to there being `12 chains
+left` when looking at this example in the GUI as described in detail below.
 
 Open Chains {#sec:openchains}
 -----------

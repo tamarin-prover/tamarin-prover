@@ -95,7 +95,7 @@ instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is equal
 to the instantiation of `t` that occurred in the first transition.  Each of
 these instantiations leads to a new successor state.
 
-### Using `let' binding in rules for local macros
+### Using 'let' binding in rules for local macros
 
 When modeling more complex protocols,  a term
 may occur multiple times (possibly as a subterm) within the same rule. To make such

@@ -42,8 +42,6 @@ may need to resort to Tamarin's *interactive mode* to explore the proof
 states, inspect attack graphs, and seamlessly combine manual proof
 guidance with automated proof search.
 
-*N.B. If this paragraph is too technical it can be dumbed down or deleted or
-moved elsewhere.*
 A formal treatment of Tamarin's foundations is given in the theses of
 [@benediktthesis]
 and [@meierthesis].  We give just a brief (technical) summary here.
@@ -67,16 +65,14 @@ variant property [@Comon-LundhD05]
 to reduce reasoning modulo $E$ with respect to
 $R$ to reasoning modulo $AC$ with respect to the variants of $R$.
 
-*Do we want to explain here how it  distinguishes itself from 
-other tools?*
 
-This manual is written for researchers who wish to use Tamarin to model
-and analyze security protocols.  We assume the reader is familiar with
-basic cryptography and the basic workings of security protocols.  Our
-focus is on explaining Tamarin's usage so that a new user can download,
-install, and use the system.  We do not attempt to describe Tamarin's
-formal foundations and refer the reader to the related theses and
-scientific papers for these details.
+This manual is written for researchers and practitioners who wish to
+use Tamarin to model and analyze security protocols. We assume the
+reader is familiar with basic cryptography and the basic workings of
+security protocols. Our focus is on explaining Tamarin's usage so that
+a new user can download, install, and use the system. We do not
+attempt to describe Tamarin's formal foundations and refer the reader
+to the related theses and scientific papers for these details.
 
 Highlights and Limitations
 ----------
@@ -87,8 +83,8 @@ including:
 
 * Advanced key agreement protocols based on Diffie-Hellman
 exponentiation, such as verifying Naxos with respect to the
-eCK (extended Canetti Krzwczyk) model; see [@SchmidtMCB12]..
-* APRKI [@ARPKI].
+eCK (extended Canetti Krawczyk) model; see [@SchmidtMCB12]..
+* ARPKI [@ARPKI].
 * TLS
 * WHATELSE DO WE WANT TO ENUMERATE/CITE?
 
