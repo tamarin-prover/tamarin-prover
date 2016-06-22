@@ -3,9 +3,9 @@ Property Specification{#sec:property_specification}
 ======================
 
 In this section we present how to specify protocol properties as trace
-properties, based on the action facts given in the model. Properties
-are given as guarded first-order logic formulas, which we will see in
-detail.
+and observational equivalence properties, based on the action facts
+given in the model. Trace properties are given as guarded first-order logic
+formulas and observational equivalence properties are specified using the `diff` operator, both of which we will see in detail below. 
 
 Trace Properties
 ----------------
@@ -473,6 +473,18 @@ you did not annotate it with either of `left` or `right`.
 
 Protocol Specification and Standard Security Properties{#sec:elsewhere}
 -------------------------------------------------------
+
+In this section we provide templates for specifying protocols and
+standard security properties in a unified manner.
+
+### Protocol Rules ##
+
+A protocol specifies two or more roles. For each role we specify an
+initialization rule that generates a fresh run identifier `id` (to
+distinguish parallel protocol runs of an agent), sets up an agent's
+initial knowledge including long term keys, private keys, shared keys,
+and other agent's public keys. We label such a rule with the action
+fact `Create(A,id)`, where `A` is the agent name (a public constant) and `id` the run identifier and the action fact `Role('A')`, where `'A'` is a publi
 
 ### Secrecy ###
 
