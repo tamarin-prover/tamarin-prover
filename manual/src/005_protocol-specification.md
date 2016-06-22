@@ -80,19 +80,21 @@ unique name.
 
 ### Executions
 
-The initial state of the transition system the empty multiset.
+The initial state of the transition system is the empty multiset.
 
 The rules define how the system can make a transition to a new state. A
 rule can be applied to a state if it can be instantiated such that its left hand
 side is contained in the current state. In this case, the left-hand side facts
-are removed from the state, and replaced by the right hand side.
+are removed from the state, and replaced by the instatiated right hand side.
+
+**FIXME**: The unbound variable `t` on the right-hand side is going to be very confusing to readers.**/FIXME**
 
 For example, in the initial state, `MyRule1` can be instantiated for any value
 of `t`. For any specific instantiation of `t`, this leads to a second state that
 contains `F('1',t)` and `F('2',t)`. `MyRule2` cannot be applied in the initial
 state since it contains no `F` facts.
-In each of these two 
-possible successor states, both rules can now be applied. The second rule
+In the 
+ successor state, the rule `MyRule2` can now be applied twice. It
 can be instantiated either by `u` equal to `'1'` or to `'2'`, as long as `v` is
 equal to the instantiation of `t` that occurred in the first transition.
 Each of these instantiations leads to a new successor state.
@@ -106,7 +108,7 @@ following example:
 
 	rule MyRuleName:
 		let foo1 = h(bar)
-		    foo2 = <`bars`, foo1>
+		    foo2 = <'bars', foo1>
 		    ...
 		    var5 = pk(~x)
 		in
@@ -115,7 +117,7 @@ following example:
 Such let-binding expressions  can be used to specify local term macros within the context of a
 rule.  Each macro should occur on a separate line and defines a
 substitution:
-the left-hand side of the `=` sign should be a variable and
+the left-hand side of the `=` sign must be a variable and
 the right-hand side is an arbitrary term. The rule will be interpreted after
 substituting all variables occurring in the let by their right-hand
 sides.
@@ -138,20 +140,20 @@ unique fresh (random) values.
 
 :	This fact is used to model a party receiving a message from the
 	untrusted network that is controlled by a Dolev-Yao adversary, and can
-	occur on the left-hand side of a rewrite rule.
+	only occur on the left-hand side of a rewrite rule.
 
 `Out`
 
 :	This fact is used to model a party sending a message to the untrusted
-	network that is controlled by a Dolev-Yao adversary, and can occur on
+	network that is controlled by a Dolev-Yao adversary, and can only occur on
 	the right-hand side of a rewrite rule.
 
 `Fr`
 
 :	This fact must be used when generating fresh (random) values, and can
-	occur on the left-hand side of a rewrite rule, where its argument is the
+	only occur on the left-hand side of a rewrite rule, where its argument is the
 	fresh term. Tamarin's underlying execution model has a built-in rule for
-	generating insteances of `Fr(x)` facts, and also ensures that each
+	generating instances of `Fr(x)` facts, and also ensures that each
 	instance produces a term (instantiating `x`) that is different from all others.
 
 For the above three facts, Tamarin has built-in rules. In particular, there is a
@@ -171,7 +173,7 @@ they are introduced. Modeling this using linear facts would
 require that every rule that has such a fact in
 the left-hand-side, also has an exact copy of this fact in the right-hand
 side.  While there is no fundamental problem with this modeling, it is
-inconvenient for the user and it also might case Tamarin to explore rule
+inconvenient for the user and it also might lead Tamarin to explore rule
 instantiations that are irrelevant for tracing such facts. 
 
 For the above two reasons, we introduce 'persistent facts', which
@@ -183,7 +185,7 @@ Facts always start with an upper-case letter and need not  be
 declared explicitly. If their name is prefixed with an exclamation mark `!`,
 then they are persistent. Otherwise, they are linear. Note that every
 fact name must be used consistently; i.e., it must always be used with
-the same arity, case, and multiplicity. Otherwise, Tamarin complains
+the same arity, case, persistence, and multiplicity. Otherwise, Tamarin complains
 that the theory is not wellformed.
 
 Modeling protocols
@@ -303,6 +305,8 @@ resulting action fact
 to specify security properties, as we will see in the next
 section.  This leads to:
 
+**FIXME**: the `pkI='g'^lkI` should probably be explained somehow (group element check)**/FIXME**
+
         rule NaxosR_attempt3:
             let pkI = 'g'^lkI
                 exR = h1(< ~eskR, lkR >)
@@ -357,8 +361,8 @@ The above rule suffices to model basic security properties, as we will see later
 
 ### Modeling the Naxos initiator role
 
-The initiator role of the Naxos protocol consists of sending a message, waiting
-for the response, and sending a message again. While the initiator is waiting
+The initiator role of the Naxos protocol consists of sending a message and waiting
+for the response. While the initiator is waiting
 for a response, other agents might also perform steps. We therefore 
 model the initiator using two rules.^[This modeling approach, as with the
 responder, is similar to the approach taken in cryptographic security models in
