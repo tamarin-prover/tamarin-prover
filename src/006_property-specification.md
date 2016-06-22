@@ -188,7 +188,7 @@ Observational Equivalence
 All the previous properties are trace properties, i.e., properties
 that are defined on each trace independently. For example, the
 definition of secrecy required that there is no trace where the
-intruder could compute the secret without having previously corrupted
+adversary could compute the secret without having previously corrupted
 the agent.
 
 In contrast, Observational Equivalence properties reason about two systems (for 
@@ -210,14 +210,16 @@ creates a public key, two fresh values `~a` and `~b`, and publishes `~a`. Then
 one encrypts either `~a` or `~b` (modeled using the `diff` operator) and sends out
 the ciphertext:
 
-~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
+~~~~ {.tamarin slice="code_ObsEquiv/ObservationalEquivalenceExample.spthy" 
+lower=16 
 upper=27}
 ~~~~
 
 In this example, the intruder cannot compute `~b` as formalized by the 
 following lemma:
 
-~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=29 
+~~~~ {.tamarin slice="code_ObsEquiv/ObservationalEquivalenceExample.spthy" 
+lower=29 
 upper=36}
 ~~~~
 
@@ -236,7 +238,7 @@ Now point you browser to <http://localhost:3001>. After clicking on the theory
 
 ![Observational Equivalence 
 Overview](../images/tamarin-obseq-overview.jpg "Observational Equivalence 
-Overview"){width=100%}
+Overview"){width=100%}\
 
 There are mutiple differences to the 'normal' trace mode.
 
@@ -270,34 +272,34 @@ In the `Diff Rules`, we have the rules as written in the input file:
 
 ![Observational Equivalence 
 Diff Rules](../images/tamarin-obseq-diff-rules.jpg "Observational Equivalence 
-Diff Rules"){width=100%}
+Diff Rules"){width=100%}\
 
 If we click on `LHS: Multiset rewriting rules`, we get the LHS interpretation 
 of the rules (here `diff(~a, ~b)` was replaced by `~a`):
 
 ![Observational Equivalence 
 LHS Rules](../images/tamarin-obseq-lhs-rules.jpg "Observational Equivalence 
-LHS Rules"){width=100%}
+LHS Rules"){width=100%}\
 
 If we click on `RHS: Multiset rewriting rules`, we get the RHS interpretation 
 of the rules (here `diff(~a, ~b)` was replaced by `~b`):
 
 ![Observational Equivalence 
 RHS Rules](../images/tamarin-obseq-rhs-rules.jpg "Observational Equivalence 
-RHS Rules"){width=100%}
+RHS Rules"){width=100%}\
 
 We can easily prove the `B_is_secret` lemma on both sides:
 
 ![Observational Equivalence 
 Lemmas](../images/tamarin-obseq-lemmas.jpg "Observational Equivalence 
-Lemmas"){width=100%}
+Lemmas"){width=100%}\
 
 To start proving observational equivalence, we only have the proof step `1. 
 rule-equivalence`. This generates multiple subcases:
 
 ![Proving the Observational Equivalence 
 Lemma](../images/tamarin-obseq-lemma-step1.jpg "Proving the Observational 
-Equivalence Lemma"){width=100%}
+Equivalence Lemma"){width=100%}\
 
 Essentially, there is a subcase per protocol rule, and there are also cases for 
 several adversary rules. The idea of the proof is to show that whenever a rule 
@@ -311,7 +313,7 @@ continue by constructing all possible executions of this rule.
 
 ![Proving the Observational Equivalence 
 Lemma](../images/tamarin-obseq-lemma-step2.jpg "Proving the Observational 
-Equivalence Lemma"){width=100%}
+Equivalence Lemma"){width=100%}\
 
 During this search, Tamarin can encounter executions that can be 'mirrored' on 
 the other side, for example the following execution where the published key is 
@@ -320,7 +322,7 @@ successfully compared to itself:
 ![Proving the Observational Equivalence 
 Lemma: Mirrored](../images/tamarin-obseq-lemma-mirrored.jpg "Proving the 
 Observational 
-Equivalence Lemma: Mirrored"){width=100%}
+Equivalence Lemma: Mirrored"){width=100%}\
 
 Or, Tamarin can encounter executions that do not map to the other side. For 
 example the following execution on the LHS that encrypts `~a` using the public 
@@ -331,7 +333,7 @@ corresponds to a potential attack, and thus invalidates the
 
 ![Proving the Observational Equivalence Lemma: 
 Attack](../images/tamarin-obseq-lemma-attack.jpg "Proving the 
-Observational Equivalence Lemma: Attack"){width=100%}
+Observational Equivalence Lemma: Attack"){width=100%}\
 
 Note that Tamarin needs to potentially consider numerous possible executions, 
 which can result in long proof times or even non-termination. If possible it 
@@ -575,7 +577,7 @@ compromised an *honest* agent. We indicate assumptions on honest
 agents by labeling the same rule that the `Secret` action fact appears
 in with an `Honest(B)` action fact, where `B` is the agent name that
 is assumed to be honest. For instance, in the following rule the agent
-in role `'A'` is sending a message, where the nonce `~na` is supposed to be secret assuming that agents `A` and `B` are honest.
+in role `'A'` is sending a message, where the nonce `~na` is supposed to be secret assuming that both agents `A` and `B` are honest.
 
 ~~~~ {.tamarin slice="code/secrecy-asymm-large.spthy" lower=43 upper=52}
 ~~~~
@@ -703,7 +705,5 @@ lemma injectiveagreement:
                            & not (#i2 = #i)))
               | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
-
-**TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree? CAS: It looks OK except that the injectiveagreement lemma is sufficient but perhaps not necessary for actual injective agreement.**
 
 

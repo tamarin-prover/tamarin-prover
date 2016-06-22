@@ -17,7 +17,7 @@ SAPIC (Stateful Applied Pi Calculus) is available at
 Alice&Bob input 
 ---------------
 
-There exists a tool that translates Ailice&Bob-specifications to Tamarin:
+There exists a tool that translates Alice&Bob-specifications to Tamarin:
 <http://www.infsec.ethz.ch/research/software/anb.html>
 
 <!-- FIX: To be written by Sasa & Ralf -->
