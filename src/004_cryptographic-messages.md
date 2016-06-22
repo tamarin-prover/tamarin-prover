@@ -21,7 +21,7 @@ We distinguish between two types of constants:
   constants in Tamarin.
 * *Fresh constants* model random values such as secret keys or random
   nonces. We use the notation `~'ident'` to denote fresh
-  constants in Tamarin. Note that fresh *constants* are seldomly used
+  constants in Tamarin. Note that fresh *constants* are rarely used
   in protocol specifications. A fresh *variable* is almost always the
   right choice.
 
