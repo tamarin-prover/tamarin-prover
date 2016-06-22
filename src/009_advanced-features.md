@@ -185,13 +185,62 @@ properties can be imagined.
 Induction
 ---------
 
+**TODO:** write on induction
 
 
-Integrated Preprocessor
+Integrated Preprocessor {#sec:integrated-preprocessor}
 -----------------------
 
+You can use the integrated preprocessor to activate or deactivate
+particular of your file. We use this mostly when we are interested in
+only a subset of lemmas. You do this by putting the relevant part of
+your file within an `#ifdef` block with a keyword `KEYWORD`
+
+```
+#ifdef KEYWORD
+...
+#endif
+```
+
+and then running Tamarin with the option `-DKEYWORD` to have this part included.
+
+If you use this feature to exclude typing lemmas, your case
+distinctions will change, and you may not be able to find proofs that
+were found previously anymore. Similarly, if you have `reuse` marked
+lemmas that are removed, other following lemmas may not be provable anymore.
+
+
+See this code for a lemma that will be included when `timethis` is
+given as parameter to `-D`:
+
+~~~~ {.tamarin slice="code/TimingExample.spthy" lower=20 upper=24}
+~~~~
+
+while at the same time this would be excluded:
+
+~~~~ {.tamarin slice="code/TimingExample.spthy" lower=26 upper=30}
+~~~~
 
 
 How to do Timings in Tamarin
 ----------------------------
+
+If you want to time the verification duration of a particular lemma
+you can use the previously described integrated preprocessor to mark
+each lemma, and only include the one you are timing. For example, wrap
+the relevant lemma within `#ifdef timethis`. Also make sure to include
+`reuse` and `typing` lemmas in this.  All other lemmas should be
+covered under a different keyword, in the example here we use `nottimed`.
+
+You then run
+
+```
+time tamarin-prover -Dtimethis TimingExample.spthy --prove
+```
+
+to get the timing for only those lemmas of interest. Here is the
+complete input file, with an entirely artificial protocol:
+
+~~~~ {.tamarin include="code/TimingExample.spthy"}
+~~~~
 

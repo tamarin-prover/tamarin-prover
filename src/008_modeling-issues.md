@@ -184,10 +184,7 @@ This indicates that the sorts of a message was not used consistently.
 In the rule `setup` this is the case because we once used m as a fresh value
 `~m` and once without the `~`.
 
-
-TODO: any important error messages missing?
-
-### why not doing anything ###
+### Why is Tamarin not proving my lemmas ? ###
 open chains
 
 
