@@ -189,8 +189,6 @@ In a similar manner, the other channel properties can be changed and additional
 properties can be imagined.
 
 
-
-
 Induction
 ---------
 
@@ -207,11 +205,11 @@ instantiation of the `loop` rule, which continues.
 
 The induction method works by distinguishing the last timepoint `#i`
 in the trace, as `last(#i)`, from all other timepoints. It assumes the
-property holds for all other timepoints (which are therefore occur
-earlier) than this one (*wellfounded induction*).
-
-The induction hypothesis then becomes another constraint during the
-constraint solving phase. It thereby allows more properties to be proven.
+property holds for all other timepoints
+than this one.  As these other time points must occur earlier,
+this can be understood as a form of *wellfounded induction*.
+The induction hypothesis then becomes an additional constraint during the
+constraint solving phase and thereby allows more properties to be proven.
 
 **FIXME:** adjust the induction section
 
