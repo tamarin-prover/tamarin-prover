@@ -70,10 +70,13 @@ In Tamarin, the protocol and its environment are modeled using *multiset
 rewriting rules*. The rules operate on the system's state expressed as a 
 multiset of facts. Facts can be seen as predicates storing state information. 
 For example, the fact `Out(h(k))` models that the protocol sent out the message 
-`h(k)` on the public channel. (In Tamarin there is only one public channel 
-modeling the network controlled by the adversary. Private channels can be added 
-if required, see [Channel 
-Models](009_advanced-features.html#sec:channel-models) for details.)
+`h(k)` on the public channel, and the fact `In(x)` models that the protocol 
+receives the message `x` on the public channel. (In Tamarin there is only 
+one public channel modeling the network controlled by the adversary, i.e., the 
+adversary receives all messages from the `Out( )` facts, and generates the 
+protocol's inputs in the `In( )` facts. Private channels can be added if 
+required, see [Channel Models](009_advanced-features.html#sec:channel-models) 
+for details.)
 
 The example starts with the model of a public key infrastructure (PKI). Again, 
 we use facts to store information about the state given by their arguments. The rules 
@@ -242,7 +245,8 @@ theories in the same directory as FirstExample.spthy. Point your browser to
 
 and you will see the following welcome screen:
 
-![Tamarin Web Interface](../images/tamarin-welcome.jpg "Welcome Screen")
+![Tamarin Web Interface](../images/tamarin-welcome.jpg "Welcome 
+Screen"){width=100%}
 
 The table in the middle shows all loaded theories. You can either
 click on a theory to explore it and prove your security properties, or
@@ -256,7 +260,7 @@ should see the following:
 
 ![FirstExample Theory 
 Overview](../images/tamarin-tutorial-overview.jpg "FirstExample Theory 
-Overview")
+Overview"){width=100%}
 
 On the left hand side, you see the theory: links to the message theory 
 describing the intruder, the multiset rewrite rules and axioms describing your 
@@ -275,8 +279,8 @@ graph visualisation (see below for examples).
 If you click on `Message theory` on the left, you should see the following:
 
 ![FirstExample Message Theory](../images/tamarin-tutorial-message-theory.jpg 
- "FirstExample Message Theory")
- 
+ "FirstExample Message Theory"){width=100%}
+
 On the right side, you can now see the message theory, starting with
 the so-called *Signature*, which consists of all the functions and equations. 
 These can be either user-defined or imported using the built-ins, as in our 
@@ -319,7 +323,7 @@ Now click on *Multiset rewriting rules* on the left.
 
 ![FirstExample Multiset Rewriting 
 Rules](../images/tamarin-tutorial-multiset-rules.jpg 
- "FirstExample Multiset Rewriting Rules")
+ "FirstExample Multiset Rewriting Rules"){width=100%}
 
 On the right side of the screen are the protocol's 
 rewriting rules, plus two additional rules:  `isend` and `irecv`.
@@ -339,7 +343,7 @@ the following:
 
 ![FirstExample Case Distinctions 
 Rules](../images/tamarin-tutorial-case-distinctions.jpg 
- "FirstExample Case Distinctions")
+ "FirstExample Case Distinctions"){width=100%}
  
 To improve the efficiency of its internal reasoning, Tamarin precomputes case 
 distinctions. A case distinction gives all possible sources for a fact, i.e., 
@@ -383,7 +387,7 @@ Now we will see how to prove lemmas in the interactive mode. For that, click on
 lemma in the left frame to obtain the following screen:
 
 ![FirstExample Lemma 1](../images/tamarin-tutorial-lemma-1.jpg 
- "FirstExample Lemma 1")
+ "FirstExample Lemma 1"){width=100%}
 
 Tamarin proves lemmas using constraint solving.
 Namely, it refines the knowledge 
@@ -401,7 +405,7 @@ length of the trace. Here we use the default strategy, i.e., a simplification
 step by clicking on `1. simplify`, to obtain the following screen:
  
 ![FirstExample Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpg 
- "FirstExample Lemma 1 Step 1")
+ "FirstExample Lemma 1 Step 1"){width=100%}
 
 Tamarin has now translated the lemma into a constraint system. Since
 Tamarin looks for counterexamples to the lemma, it looks for a protocol
@@ -427,7 +431,7 @@ graph leads to a contradiction as it contains `LtkReveal( S )`:
 
 ![FirstExample Lemma 1 
 Finished](../images/tamarin-tutorial-lemma-1-finished.jpg 
- "FirstExample Lemma 1 Finished")
+ "FirstExample Lemma 1 Finished"){width=100%}
  
 The lemma is now colored in green as it was successfully proven. If we had 
 found a counterexample, it would be colored in red. You can prove the other 
