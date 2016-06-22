@@ -136,20 +136,21 @@ that the adversary can replay it several times, potentially to different
 receivers.
 
 Again, if we want the nonce in the protocol to be sent over the authentic 
-channel, the corresponding `Out` and `In` facts in the protocol rules have to 
+channel, the corresponding `Out` and `In` facts in the protocol rules must
 be changed to `Out_A` and `In_A`, respectively.
-In the resulting protocol, the lemma `message_authentication` is proven to hold
-by Tamarin. The adversary cannot change the sender of the message nor 
-the message itself. For this reason the receiver can be sure that the agent in 
+In the resulting protocol, the lemma `message_authentication` is proven 
+by Tamarin. The adversary can neither change the sender of the message nor 
+the message itself. For this reason, the receiver can be sure that the agent in 
 the initiator role indeed sent it.
 
 #### Secure Channel Rules
 
-The final kind of channels that we want to consider in detail are secure 
-channels. Secure channels are both confidential and authentic. This means that 
-an adversary can neither modify nor learn messagages that are sent over it.
-However, an adversary can store a message sent over a secure channel to replay
-it at a later point in time.
+The final kind of channels that we consider in detail are secure 
+channels. Secure channels are both confidential and authentic. Hence
+an adversary can neither modify nor learn messages that are sent over it.
+However, an adversary can store a message sent over a secure channel for replay
+at a later point in time.
+
 The protocol to send the messages over a secure channel can be modeled as
 follows.
 
@@ -163,22 +164,22 @@ As `!Sec($A,$B,x)` is a persistent fact, it can be reused several times as the
 premise of the rule `ChanIn_S`. This models that an adversary can replay
 such a message block arbitrary many times.
 
-With the protocol sending the message over a secure channel, Tamarin proves
+For the protocol sending the message over a secure channel, Tamarin proves
 all the considered lemmas. The nonce is secret from the perspective of both
-the initator and the receiver because the adversary cannot read anything on
+the imitator and the receiver because the adversary cannot read anything on
 a secure channel. 
-Further, as the adversary cannot send his own messages on the secure channel
+Furthermore, as the adversary cannot send his own messages on the secure channel
 nor modify the messages, the receiver can be sure that the nonce was sent by
-the agent who he thinks to be in the initiator role.
+the agent who he believes to be in the initiator role.
 
 
-Similarly, other channels with yet different properties can be defined. 
+Similarly, one can define other channels with other properties.
 For example, we can model a secure channel with the additional property
 that it does not allow for replay. This could be done by changing the secure
-channel rules above by chaning `!Sec($A,$B,x)` to be a linear fact 
+channel rules above by chaining `!Sec($A,$B,x)` to be a linear fact 
 `Sec($A,$B,x)`. Consequently, this fact can only be consumed once and not be
 replayed by the adversary at a later point in time.
-In a similar mannor, the other channel properties can be changed or more 
+In a similar manner, the other channel properties can be changed and additional
 properties can be imagined.
 
 
