@@ -3,10 +3,9 @@ Advanced Features {#sec:advanced-features}
 =================
 
 We now turn to some of Tamarin's more advanced features.
-We cover manual proofs, custom
-heuristics, encoding tricks, induction, channel models, internal
+We cover custom heuristics, the GUI, channel models, induction, internal
 preprocessor, and how to measure the time needed for proofs.
-
+<!--manual proofs,encoding tricks,-->
 
 Heuristics
 ----------
@@ -48,10 +47,10 @@ in this way.
 
 <!-- FIXME: Describe oracle script mechanism -->
 
-How to Improve your Encoding
+<!--Advanced Encoding
 ----------------------------
 
-to encoding using alternative more efficient descriptions
+to encoding using alternative more efficient descriptions-->
 
 Manual Exploration using GUI
 ----------------------------
