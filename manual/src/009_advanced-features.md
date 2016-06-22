@@ -1,5 +1,5 @@
 
-Advanced Features
+Advanced Features {#sec:advanced-features}
 =================
 
 We now turn to some of Tamarin's more advanced features.

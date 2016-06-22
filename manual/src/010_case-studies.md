@@ -1,5 +1,5 @@
 
-Case Studies
+Case Studies {#sec:case-studies}
 ============
 
 The Tamarin repository contains many examples from the various papers in the 
