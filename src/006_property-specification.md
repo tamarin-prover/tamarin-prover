@@ -248,9 +248,25 @@ by Tamarin (so no need to define it in the `.spthy` input file). By proving
 this lemma we can prove observational equivalence between the LHS and RHS 
 models.
 
+In the `Diff Rules`, we have the rules as written in the input file:
+
 ![Observational Equivalence 
 Diff Rules](../images/tamarin-obseq-diff-rules.jpg "Observational Equivalence 
 Diff Rules"){width=100%}
+
+If we click on `LHS: Multiset rewriting rules`, we get the LHS interpretation 
+of the rules (here `diff(~a, ~b)` was replaced by `~a`):
+
+![Observational Equivalence 
+LHS Rules](../images/tamarin-obseq-lhs-rules.jpg "Observational Equivalence 
+LHS Rules"){width=100%}
+
+If we click on `RHS: Multiset rewriting rules`, we get the RHS interpretation 
+of the rules (here `diff(~a, ~b)` was replaced by `~b`):
+
+![Observational Equivalence 
+RHS Rules](../images/tamarin-obseq-rhs-rules.jpg "Observational Equivalence 
+RHS Rules"){width=100%}
 
 We can easily prove the `B_is_secret` lemma on both sides:
 
