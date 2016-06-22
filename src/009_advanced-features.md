@@ -194,18 +194,18 @@ Let us first motivate the need for an inductive proof method on a simple example
 ~~~~
 
 If we try to prove this with Tamarin without using induction (comment
-out the `[use_induction]` to try) the tool will loop on the backwards
-search over the repeating `A(x)` fact. That `A(x)` fact can have two
+out the `[use_induction]` to try this) the tool will loop on the backwards
+search over the repeating `A(x)` fact. This fact can have two
 sources, either the `start` rule, which ends the search, or another
 instantiation of the `loop` rule, which continues.
 
 The induction method works by distinguishing the last timepoint `#i`
 in the trace, as `last(#i)`, from all other timepoints. It assumes the
-property holds for all timepoints but this one (*wellfounded induction*).
+property holds for all other timepoints (which are therefore occur
+earlier) than this one (*wellfounded induction*).
 
 The induction hypothesis then becomes another constraint during the
-constraint solving phase. Essentially trace induction allows to prove
-slightly more properties.
+constraint solving phase. It thereby allows more properties to be proven.
 
 **FIXME:** adjust the induction section
 
@@ -213,8 +213,8 @@ slightly more properties.
 Integrated Preprocessor {#sec:integrated-preprocessor}
 -----------------------
 
-You can use the integrated preprocessor to activate or deactivate
-particular of your file. We use this mostly when we are interested in
+You can use the integrated preprocessor to include or exclude
+parts of your file. We use this mostly when we are interested in
 only a subset of lemmas. You do this by putting the relevant part of
 your file within an `#ifdef` block with a keyword `KEYWORD`
 
@@ -227,41 +227,42 @@ your file within an `#ifdef` block with a keyword `KEYWORD`
 and then running Tamarin with the option `-DKEYWORD` to have this part included.
 
 If you use this feature to exclude typing lemmas, your case
-distinctions will change, and you may not be able to find proofs that
-were found previously anymore. Similarly, if you have `reuse` marked
-lemmas that are removed, other following lemmas may not be provable anymore.
+distinctions will change, and you may no longer be able to construct
+proofs automatically that were constructed before.
+Similarly, if you have `reuse` marked
+lemmas that are removed, then other following lemmas may not be provable anymore.
 
 
-See this code for a lemma that will be included when `timethis` is
+The following is an example of a lemma that will be included when `timethis` is
 given as parameter to `-D`:
 
 ~~~~ {.tamarin slice="code/TimingExample.spthy" lower=20 upper=24}
 ~~~~
 
-while at the same time this would be excluded:
+At the same time this would be excluded:
 
 ~~~~ {.tamarin slice="code/TimingExample.spthy" lower=26 upper=30}
 ~~~~
 
 
-How to do Timings in Tamarin
+How to Time Proofs in Tamarin
 ----------------------------
 
-If you want to time the verification duration of a particular lemma
-you can use the previously described integrated preprocessor to mark
-each lemma, and only include the one you are timing. For example, wrap
+If you want to measure the time taken to verify 
+a particular lemma you can use the previously described preprocessor to mark
+each lemma, and only include the one you wish to time. For example, wrap
 the relevant lemma within `#ifdef timethis`. Also make sure to include
 `reuse` and `typing` lemmas in this.  All other lemmas should be
-covered under a different keyword, in the example here we use `nottimed`.
+covered under a different keyword; in the example here we use `nottimed`.
 
-You then run
+By running
 
 ```
 time tamarin-prover -Dtimethis TimingExample.spthy --prove
 ```
 
-to get the timing for only those lemmas of interest. Here is the
-complete input file, with an entirely artificial protocol:
+the timing are computed for just the lemmas of interest. Here is the
+complete input file, with an artificial protocol:
 
 ~~~~ {.tamarin include="code/TimingExample.spthy"}
 ~~~~
