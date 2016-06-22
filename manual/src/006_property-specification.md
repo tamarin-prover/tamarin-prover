@@ -202,16 +202,19 @@ Now point you browser to <http://localhost:3001>. After clicking on the theory
 Overview](../images/tamarin-obseq-overview.jpg "Observational Equivalence 
 Overview"){width=100%}
 
-There are mutiple differences to the 'normal' trace mode. First, there is a 
-new option `Diff Rules`, which will simply present the rewrite rules from the 
-`.spthy` file. (See image below.) Second, all the other points (Message Theory, 
-Multiset Rewrite Rules, Untyped/Typed Case Distinctions) have been 
-quadruplicated. The reason for this is that any input file with the `diff` 
-operator actually specifies two models: one model where each instance of 
-`diff(x,y)` is replaced with `x` (the *left hand side*, or LHS for short), and 
-one model where each instance of `diff(x,y)` is replaced with `y` (the *right 
-hand side*, or RHS for short). Moreover, as the observational equivalence mode 
-requires different precomputations, each of the two models is treated twice. 
+There are mutiple differences to the 'normal' trace mode.
+
+First, there is a new option `Diff Rules`, which will simply present the 
+rewrite rules from the `.spthy` file. (See image below.)
+
+Second, all the other points (Message Theory, Multiset Rewrite Rules, 
+Untyped/Typed Case Distinctions) have been quadruplicated. The reason for this 
+is that any input file with the `diff` operator actually specifies two models: 
+one model where each instance of `diff(x,y)` is replaced with `x` (the *left 
+hand side*, or LHS for short), and one model where each instance of `diff(x,y)` 
+is replaced with `y` (the *right hand side*, or RHS for short). Moreover, as 
+the observational equivalence mode requires different precomputations, each of 
+the two models is treated twice. 
 For examle, the point `RHS: Untyped case distinctions [Diff]` gives the untyped 
 case distinctions for the RHS interpretation of the model in observational 
 equivalence mode, whereas `LHS: Untyped case distinctions` gives the untyped 
@@ -219,15 +222,66 @@ case distinctions for the LHS interpretation of the model in the 'trace' mode.
 
 Third, all lemmas have been duplicated: the lemma `B_is_secret` exists 
 once on the left hand side (marked using `[left]`) and once on the right hand 
-side (marked using `[right]`), as both sides can differ and thus the lemma 
+side (marked using `[right]`), as both models can differ and thus the lemma 
 needs to be proven on both sides.
 
-Finally, there is a new lemma `Observational_equivalence` added automatically 
-by Tamarin.
+Finally, there is a new lemma `Observational_equivalence`, added automatically 
+by Tamarin (so no need to define it in the `.spthy` input file). By proving 
+this lemma we can prove observational equivalence between the LHS and RHS 
+models.
 
 ![Observational Equivalence 
 Diff Rules](../images/tamarin-obseq-diff-rules.jpg "Observational Equivalence 
 Diff Rules"){width=100%}
+
+We can easily prove the `B_is_secret` lemma on both sides:
+
+![Observational Equivalence 
+Lemmas](../images/tamarin-obseq-lemmas.jpg "Observational Equivalence 
+Lemmas"){width=100%}
+
+To start proving observational equivalence, we only have the proof step `1. 
+rule-equivalence`. This generates multiple subcases:
+
+![Proving the Observational Equivalence 
+Lemma](../images/tamarin-obseq-lemma-step1.jpg "Proving the Observational 
+Equivalence Lemma"){width=100%}
+
+Essentially, there is a subcase per protocol rule, and there are also cases for 
+several adversary rules. The idea of the proof is to show that whenever a rule 
+can be executed on either the LHS or RHS, it can also be executed on the other 
+side. Thus, no matter what the adversary does, he will always see 'equivalent' 
+executions. To prove this, Tamarin computes for each rule all possible 
+executions on both sides, and verifies whether an 'equivalent' execution exists 
+on the other side. If we continue our proof by clicking on `backward-search`, 
+Tamarin generates two sub-cases, one for each side. For each side, Tamarin will 
+continue by constructing all possible executions of this rule.
+
+![Proving the Observational Equivalence 
+Lemma](../images/tamarin-obseq-lemma-step2.jpg "Proving the Observational 
+Equivalence Lemma"){width=100%}
+
+During this search, Tamarin can encounter executions that can be 'mirrored' on 
+the other side, for example the following execution where the published key is 
+successfully compared to itself:
+
+![Proving the Observational Equivalence 
+Lemma: Mirrored](../images/tamarin-obseq-lemma-mirrored.jpg "Proving the 
+Observational 
+Equivalence Lemma: Mirrored"){width=100%}
+
+Or, Tamarin can encounter executions that do not map to the other side. For 
+example the following execution on the LHS that encrypts `~a` using the public 
+key and successfully compares the result to the published ciphertext, is not 
+possible on the RHS (as there the ciphertext contains `~b`). Such an execution 
+corresponds to a potential attack, and thus invalidates the 
+"Observational_equivalence" lemma.
+
+![Proving the Observational Equivalence Lemma: 
+Attack](../images/tamarin-obseq-lemma-attack.jpg "Proving the 
+Observational Equivalence Lemma: Attack"){width=100%}
+
+
 
 Axioms
 ------
