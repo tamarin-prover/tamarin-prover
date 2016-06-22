@@ -548,7 +548,7 @@ compromised an *honest* agent. We indicate assumptions on honest
 agents by labeling the same rule that the `Secret` action fact appears
 in with an `Honest(B)` action fact, where `B` is the agent name that
 is assumed to be honest. For instance, in the following rule the agent
-in role `'A'` is sending a message, where the nonce `~na` is supposed to be secret assuming that agents `A` and `B` are honest.
+in role `'A'` is sending a message, where the nonce `~na` is supposed to be secret assuming that both agents `A` and `B` are honest.
 
 ~~~~ {.tamarin slice="code/secrecy-asymm-large.spthy" lower=43 upper=52}
 ~~~~
@@ -676,7 +676,5 @@ lemma injectiveagreement:
                            & not (#i2 = #i)))
               | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
-
-**TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree? CAS: It looks OK except that the injectiveagreement lemma is sufficient but perhaps not necessary for actual injective agreement.**
 
 
