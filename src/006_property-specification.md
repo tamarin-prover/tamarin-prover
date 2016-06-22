@@ -187,7 +187,7 @@ Observational Equivalence
 All the previous properties are trace properties, i.e., properties
 that are defined on each trace independently. For example, the
 definition of secrecy required that there is no trace where the
-intruder could compute the secret without having previously corrupted
+adversary could compute the secret without having previously corrupted
 the agent.
 
 In contrast, Observational Equivalence properties reason about two systems (for 
