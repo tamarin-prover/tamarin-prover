@@ -1,5 +1,5 @@
 
-Case Studies
+Case Studies {#sec:case-studies}
 ============
 
 

@@ -1,5 +1,5 @@
 
-Contact and Further Reading
+Contact and Further Reading {#sec:contact}
 ===========================
 
 For further information, see the Tamarin web page, repositories, mailing list, 
