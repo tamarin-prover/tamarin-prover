@@ -3,7 +3,7 @@ Property Specification{#sec:property_specification}
 ======================
 
 In this section we present how to specify protocol properties as trace
-properties, based on the actoin facts given in the model. Properties
+properties, based on the action facts given in the model. Properties
 are given as guarded first-order logic formulas, which we will see in
 detail.
 
@@ -15,9 +15,7 @@ Trace Properties
 The Tamarin multiset rewriting rules define a labeled transition
 system. The system's state is a multiset (bag) of facts. The initial
 system state is the empty multiset. The types of facts and their use 
-are described in Section [Rules](#sec:rules). Here we focus on the action facts. 
-
-**FIXME: what is a guarded formula/variable**
+are described in Section [Rules](005_protocol-specification.html#sec:rules). Here we focus on the action facts. 
 
 We reason about a protocol's behaviour by annotating its
 rules with *action facts*.  
@@ -80,7 +78,10 @@ outermost logical operator inside the quantifier is a conjunction.
 We do recommend to use parentheses, when in doubt about the precedence
 of logical connectives, but we follow the standard
 precedence. Negation binds tightest, then conjunction, then
-disjunction and then implication. Equivalence bind weakest.
+disjunction and then implication. Equivalence binds weakest.
+
+**FIXME: Did the above explain "what is a guarded formula/variable" well enough?**
+
 
 To specify a property about a protocol that includes the fictitious
 rule above, we use the keyword `lemma` followed by a name for the
@@ -122,12 +123,16 @@ lemma secrecy:
   one-message protocol. Agent `A` sends a message encrypted with agent
   `B`'s public key to `B`. Both agents claim secrecy of a message, but
   only agent `A`'s claim is true. To distinguish between the two
-  claims we add the action facts `Role('A')` and `Role('B')` for role
-  `A` and `B`, respectively and specify two secrecy lemmas, one for
+  claims we add the action facts `Role('A')`  (respectively `Role('B')`) to the rule modeling  role
+  `A` (respectively to the rule for role `B`). We then specify two secrecy lemmas, one for
   each role.
 
 ~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
 ~~~~
+
+In the above example the lemma `secret_A` holds as the initiator
+generated the fresh value, while the responder has no guarantees,
+i.e., lemma `secret_B` yields an attack.
 
 ### Authentication ### {#sec:message-authentication}
 
