@@ -2,9 +2,10 @@
 Advanced Features
 =================
 
-Advanced features for advanced users: manual proofs, custom
+Here we discuss advanced features for advanced users.
+Namely manual proofs, custom
 heuristics, encoding tricks, induction, channel models, internal
-preprocessor, how to do timings
+preprocessor, and how to do timings
 
 Manual Exploration using GUI
 ----------------------------
@@ -17,7 +18,7 @@ Heuristics
 
 TODO: python "oracle" script? [Benedikt/Sasa]
 
-How to Improve your encoding
+How to Improve your Encoding
 ----------------------------
 
 to encoding using alternative more efficient descriptions
