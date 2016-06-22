@@ -1,5 +1,5 @@
 
-Limitations
+Limitations {#sec:limitations}
 ===========
 
 Explain limitations and planned extensions

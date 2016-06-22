@@ -1,5 +1,5 @@
 
-Initial Example
+Initial Example {#initial-example}
 ===============
 
 We will start with a simple example of a protocol that consists of just two
