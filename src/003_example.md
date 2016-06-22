@@ -345,6 +345,11 @@ the
 Now click on `Untyped case distinctions (10 cases, all chains solved)` to see 
 the following:
 
+<!-- FIX: When we switch to raw/refined sources, change this whole thing to look
+at the second set (refined/type case distinctions) also in the pictures, since
+those are the ones actually used in the proof, and 'raw' is just an
+uninteresting intermediate result. -->
+
 ![FirstExample Case Distinctions 
 Rules](../images/tamarin-tutorial-case-distinctions.jpg 
  "FirstExample Case Distinctions"){width=100%}
