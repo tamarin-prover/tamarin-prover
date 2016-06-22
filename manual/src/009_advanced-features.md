@@ -29,10 +29,10 @@ Different Channel Models
 -------------------------
 
 Tamarin's built-in adversary model is the classical Dolev-Yao
-adversary that completely controls the communication network.  In
-particular, the Dolev-Yao adversary can eavesdrop on, block, and
-modify messages sent over the network and inject any messages in his
-knowledge into the network.
+adversary that has complete control of the communication network.  In
+particular, this adversary can eavesdrop on, block, and
+modify messages sent over the network and inject any message
+in his knowledge (he knows or can construct from his knowledge) into the network.
 
 The Dolev-Yao adversary's control over the communication network is
 modeled with the following two built-in rules:
