@@ -74,27 +74,21 @@ a new user can download, install, and use the system. We do not
 attempt to describe Tamarin's formal foundations and refer the reader
 to the related theses and scientific papers for these details.
 
-Highlights and Limitations
+Highlights
 ----------
 
 In practice, the Tamarin tool has proven to be highly successful.
-It has been applied to numerous protocols from different domains
-including:
+It features support for trace and observational equivalence properties, 
+automatic and interactive modes, and has built-in support for equational 
+theories such as the one modeling Diffie-Hellman Key exchanges. It has been 
+applied to numerous protocols from different domains including:
 
 * Advanced key agreement protocols based on Diffie-Hellman
 exponentiation, such as verifying Naxos with respect to the
-eCK (extended Canetti Krawczyk) model; see [@SchmidtMCB12]..
-* ARPKI [@ARPKI].
-* TLS
-* WHATELSE DO WE WANT TO ENUMERATE/CITE?
-
-
-
-*Add something about limitations: 
-e.g., symbolic model, large search space, may not
-terminate.*
-
-
+eCK (extended Canetti Krawczyk) model; see [@SchmidtMCB12].
+* The Attack Resilient Public Key Infrastructure (ARPKI) [@ARPKI].
+* Transport Layout Security (TLS) [@TLS]
+* and many others
 
 
 Organization and Contents of the Manual
