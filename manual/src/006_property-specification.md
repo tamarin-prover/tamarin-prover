@@ -134,9 +134,9 @@ lemma secrecy_PFS:
   one-message protocol. Agent `A` sends a message encrypted with agent
   `B`'s public key to `B`. Both agents claim secrecy of a message, but
   only agent `A`'s claim is true. To distinguish between the two
-  claims we use two different secrecy action facts, `Secret_A` for
-  agent `A` and `Secret_B` for agent `B`, and we specify two secrecy lemmas, 
-  one for each of the two actions.
+  claims we add the action facts `Role('A')` and `Role('B')` for role
+  `A` and `B`, respectively and specify two secrecy lemmas, one for
+  each role.
 
 ~~~~ {.tamarin include="code/secrecy-asymm.spthy"}
 ~~~~
@@ -147,9 +147,18 @@ In this section we explain how to express standard authentication properties, an
 
 #### Entity Authentication ####
 
-We propose the following lemmas to formalize the entity authentication
-properties from Lowe's hierarchy of authentication specifications
-[@Lowe].
+We show how to formalize the entity authentication properties of
+Lowe's hierarchy of authentication specifications [@Lowe] for
+two-party protocols.  
+
+All the properties defined below concern the authentication of an
+agent in role `'B'` to an agent in role `'A'`.  To analyze a protocol
+with respect to these properties we label an appropriate rule in role
+`A` with a `Commit(a,b,<'A','B',t>)` action and in role `B` with the
+`Running(b,a,<'A','B',t>)` action. Here `a` and `b` are the agent
+names (public constants) of roles `A` and `B`, respectively and `t` is
+a term. 
+
 
 1. Aliveness
 
@@ -157,6 +166,13 @@ A protocol guarantees to an agent `a` in role `A`
 *aliveness* of another agent `b` if, whenever `a` completes a run
 of the protocol, apparently with `b` in role `B`, then `b` has
 previously been running the protocol.
+```
+lemma aliveness:
+   "All a b t #i. 
+     Commit(a,b,t)@i 
+     ==>  (Ex id #j. Create(b,id) @ j)
+          | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
+```
 
 2. Weak agreement
 
@@ -165,41 +181,41 @@ with another agent `b` if, whenever agent `a` completes a run of the
 protocol, apparently with `b` in role `B`, then `b` has previously
 been running the protocol, apparently with `a`.
 
-To analyze a protocol with respect to the weak agreement property we label the
-appropriate rule in role `A` with the `Commit(a,b,<'A','B'>)` action
-and in role `B` with the `Running(b,a,<'A','B'>)` action.
 ```
-lemma weakagreement:
-  "All a b t #i. 
-    Commit(a,b,t) @i
-    ==> (Ex #j. Running(b,a,t) @j)
-        | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
+lemma weak_agreement:
+  "All a b t1 #i. 
+    Commit(a,b,t1) @i
+    ==> (Ex t2 #j. Running(b,a,t2) @j)
+        | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
 ```
 
 3. Non-injective agreement
 
-We can use the above lemma to analyze the *non-injective agreement*
-property as well.  A protocol guarantees to an agent `a` in role `A`
-non-injective agreement with an agent `b` in role `B` on a message `M`
+A protocol guarantees to an agent `a` in role `A`
+*non-injective agreement* with an agent `b` in role `B` on a message `t`
 if, whenever `a` completes a run of the protocol, apparently with `b`
 in role `B`, then `b` has previously been running the protocol,
 apparently with `a`, and `b` was acting in role `B` in his run, and
-the two principals agreed on the message `M`. 
+the two principals agreed on the message `t`. 
 
-That message `M` is then added to the `Commit` and `Running` claims,
-inside the angled bracket following the constants `'A'` and `'B'` and
-automatically matched by the `t` in the lemma above.
+```
+lemma noninjective_agreement:
+  "All a b t #i. 
+    Commit(a,b,t) @i
+    ==> (Ex #j. Running(b,a,t) @j)
+        | (Ex C #r. Reveal(C) @ r & Honest(C) @ i)"
+```
 
 
 4. Injective agreement
 
 We next show the lemma to analyze *injective agreement*. A protocol
 guarantees to an agent `a` in role `A` injective agreement with an
-agent `b` in role `B` on a message `M` if, whenever `a` completes a
+agent `b` in role `B` on a message `t` if, whenever `a` completes a
 run of the protocol, apparently with `b` in role `B`, then `b` has
 previously been running the protocol, apparently with `a`, and `b` was
 acting in role `B` in his run, and the two principals agreed on the
-message `M`. Additionally, there is a unique matching partner instance
+message `t`. Additionally, there is a unique matching partner instance
 for each completed run of an agent, i.e., for each `Commit` by an
 agent there is a unique `Running` by the supposed partner.
 
@@ -224,7 +240,42 @@ TODO: ???
 Observational Equivalence
 -------------------------
 
-TODO: difference to trace properties, examples
+All the previous properties are trace properties, i.e., properties that are 
+defined on traces. For example, the definition of secrecy required that there 
+is no trace where the intruder could compute the secret without having 
+previously corrupted the agent.
+
+In contrast, Observational Equivalence properties reason about two systems (for 
+example two instances of a protocol), by showing that an intruder cannot 
+distinguish these two systems. This can be used to express privacy-type 
+properties, or cryptographic indistinguishability properties.
+
+For example, a simple definition of privacy for voting requires that an 
+adversary cannot distinguish two instances of a voting protocol where two 
+voters swap votes. That is, in the first instance, voter A votes for candidate 
+a and voter B votes for b, and in the second instance voter A votes for 
+candidate b and voter B votes for a. If the intruder cannot tell both instances 
+apart, he does not know which voter votes for which candidate, even though he 
+might learn the result, i.e., that there is one vote for a and one for b.
+
+Tamarin can prove such properties for two systems that only differ in terms 
+using the `diff( , )` operator. Consider the following example:
+
+~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=16 
+upper=27}
+~~~~
+
+In this example, the intruder cannot compute `~b` as formalized by the 
+following lemma:
+
+~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=29 
+upper=36}
+~~~~
+
+However, he can know whether in the last message `~a` or `~b` was encrypted by 
+simply taking the output `~a`, encrypting it with the public key and comparing 
+it to the published cyphertext. This can be captured using observational 
+equivalence as follows.
 
 Axioms
 ------
@@ -234,8 +285,6 @@ TODO: axioms for trace and equivalence properties with motivating example
 TODO: As there are no lemmas in observational equivalence you can use axioms
 to remove state space, essentially remove degenerate cases. Do note
 that one can use axioms to simplify writing lemmas
-
-
 
 ## Common axioms ##
 
