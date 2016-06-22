@@ -17,7 +17,7 @@ It is specified in Tamarin by the following rules:
 ~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=32 upper=71}
 ~~~~
 
-We want to examine if the following lemma holds:
+We now want to prove the following lemma:
 
 ~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=105 upper=118}
 ~~~~
@@ -29,7 +29,7 @@ Open Chains {#sec:openchains}
 
 In the precomputation phase, Tamarin goes through all rules and inspects their
 premises. For each of these facts, Tamarin will precompute a set of possible
-sources. Each such source is referred to as a *chain* and represents
+*sources*. Each such source is called a *chain* and represents
 combinations of rules from which the fact could be obtained.  For each fact,
 this leads to a set of possible sources and we refer to these sets as the *case
 distinctions*.
