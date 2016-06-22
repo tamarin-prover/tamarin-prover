@@ -235,8 +235,9 @@ This indicates that the sorts of a message was not used consistently.
 In the rule `setup` this is the case because we once used m as a fresh value
 `~m` and once without the `~`.
 
-### Why is Tamarin not proving my lemmas ? ###
-open chains
+### What to do if proofs are not terminating ###
+One main cause for proofs not terminating is that there are open chains.
+For advice how to find and remove open chains, see [open chains](007_precomputation.html#sec:openchains).
 
 
 ### functions ###
