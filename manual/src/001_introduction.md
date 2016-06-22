@@ -129,4 +129,4 @@ described in Section
 [Limitations](012_limitations.html#sec:limitations). We conclude the
 manual with contact information and further reading in [Contact
 Information and Further
-Reading](013_contact-and-further-information.html#sec:contact).
+Reading](013_contact-and-further-reading.html#sec:contact).
