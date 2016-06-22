@@ -314,6 +314,10 @@ corresponds to a potential attack, and thus invalidates the
 Attack](../images/tamarin-obseq-lemma-attack.jpg "Proving the 
 Observational Equivalence Lemma: Attack"){width=100%}
 
+Note that Tamarin needs to potentially consider numerous possible executions, 
+which can result in long proof times or even non-termination. If possible it 
+tries not to resolve parts of the execution that are irrelevant, but this is 
+not always sufficient.
 
 
 Axioms
@@ -650,6 +654,6 @@ lemma injectiveagreement:
               | (Ex C #r. Reveal(C)@r & Honest(C) @i)"
 ```
 
-TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree?
+**TODO: This completes the standard lemmas for secrecy and authentication - Cas: do you agree? CAS: It looks OK except that the injectiveagreement lemma is sufficient but perhaps not necessary for actual injective agreement.**
 
 
