@@ -2,23 +2,23 @@
 Initial Example
 ===============
 
-We will start with a simple example of a protocol that consists
-of just two messages, written here in Alice-and-Bob notation:
+We will start with a simple example of a protocol that consists of just two
+messages, written here in so-called Alice-and-Bob notation:
 
     C -> S: aenc(k, pkS)
     C <- S: h(k)
 
-In this protocol, a client 'C' generates a fresh symmetric key 'k', encrypts it
-with the public key 'pkS' of a server 'S' (`aenc` stands for *asymmetric encryption*),
-and sends it to 'S'. The server confirms the key's receipt by sending its 
-hash back to the client.
+In this protocol, a client `C` generates a fresh symmetric key `k`, encrypts it
+with the public key `pkS` of a server `S` (`aenc` stands for *asymmetric
+encryption*), and sends it to `S`. The server confirms the key's receipt by
+sending the hash of the key back to the client.
 
-This protocol is a artificially simple and satisfies only very weak security
-guarantees.  We will use it to illustrate the general Tamarin workflow
-by proving that, from the client's perspective, the freshly
-generated key is secret provided that the server is uncompromised. In our 
-model, the adversary is a Dolev-Yao intruder that controls the network and can 
-delete, inject, modify and intercept messages on the network.
+This simple protocol is artificial and satisfies only very weak security
+guarantees.  We will use it to illustrate the general Tamarin workflow by
+proving that, from the client's perspective, the freshly generated key is secret
+provided that the server is not compromised. By default, the adversary is a
+Dolev-Yao adversary that controls the network and can delete, inject, modify and
+intercept messages on the network.
 
 The protocol's Tamarin model and its security properties are given in 
 the file [FirstExample.spthy](../code/FirstExample.spthy) (`.spthy` stands for 
@@ -30,9 +30,10 @@ the theory's name, here `FirstExample`.
 
 After the keyword `begin`, we first declare the cryptographic primitives the 
 protocol uses. Afterward, we declare multiset rewriting rules that model
-the protocol and finally we write the properties to be proven (called
-"lemmas"), which specify the protocol's desired security properties.
-Note that we have also inserted comments to structure the theory.
+the protocol, and finally we write the properties to be proven (called
+*lemmas* within the Tamarin framework), which specify the protocol's desired
+security properties.  Note that we have also inserted comments to structure the
+theory.
 
 We next explain in detail the protocol model.
 
@@ -45,7 +46,7 @@ an underlying equational theory describing their properties. This will be
 explained in detail in the part on [Cryptographic 
 Messages](004_cryptographic-messages.html#sec:cryptographic-messages).
 
-In this example, we simply use the pre-defined functions for hashing and 
+In this example, we use Tamarin's built-in functions for hashing and 
 asymmetric-encryption, declared in the following line:
 
 ~~~~ {.tamarin slice="code/FirstExample.spthy" lower=15 upper=15}
@@ -67,17 +68,17 @@ using the correct private key returns the initial plaintext, i.e.,
 Modeling a Public Key Infrastructure
 ------------------------------------
 
-In Tamarin, the protocol and its environment are modeled using *multiset 
-rewriting rules*. The rules operate on the system's state expressed as a 
-multiset of facts. Facts can be seen as predicates storing state information. 
-For example, the fact `Out(h(k))` models that the protocol sent out the message 
-`h(k)` on the public channel, and the fact `In(x)` models that the protocol 
-receives the message `x` on the public channel. (In Tamarin there is only 
-one public channel modeling the network controlled by the adversary, i.e., the 
-adversary receives all messages from the `Out( )` facts, and generates the 
-protocol's inputs in the `In( )` facts. Private channels can be added if 
-required, see [Channel Models](009_advanced-features.html#sec:channel-models) 
-for details.)
+In Tamarin, the protocol and its environment are modeled using *multiset
+rewriting rules*. The rules operate on the system's state, which is expressed as
+a multiset (i.e., a bag) of facts. Facts can be seen as predicates storing state
+information.  For example, the fact `Out(h(k))` models that the protocol sent
+out the message `h(k)` on the public channel, and the fact `In(x)` models that
+the protocol receives the message `x` on the public channel. ^[When using the
+default Tamarin setup, there is only one public channel modeling the network
+controlled by the adversary, i.e., the adversary receives all messages from the
+`Out( )` facts, and generates the protocol's inputs in the `In( )` facts.
+Private channels can be added if required, see [Channel
+Models](009_advanced-features.html#sec:channel-models) for details.]
 
 The example starts with the model of a public key infrastructure (PKI). Again, 
 we use facts to store information about the state given by their arguments. The rules 
@@ -91,9 +92,9 @@ modeling the registration of a public key:
 ~~~~
 
 Here the only premise is an instance of the `Fr` fact. The `Fr` fact is
-a built-in fact that denotes a freshly generated fresh name, which is used to
-model random numbers such as nonces or keys (see [Model 
-Specification](005_protocol-specification.html#sec:model-specification) for 
+a built-in fact that denotes a freshly generated name. This mechanism is used to
+model random numbers such as nonces or keys (see [Model
+Specification](005_protocol-specification.html#sec:model-specification) for
 details).
 
 In Tamarin, the sort of a variable is expressed using prefixes:
@@ -110,7 +111,7 @@ variables of sort `temporal` are unconnected.
 
 The above rule can therefore be read as follows. First, generate
 a fresh name `~ltk` (of sort fresh), which is the new private key, and
-nondeterministically choose a public name `A`, for the agent for whom we
+non-deterministically choose a public name `A`, for the agent for whom we
 are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
 (the exclamation mark `!` denotes that the fact is persistent, i.e., it
 can be consumed arbitrarily often), which
@@ -170,16 +171,16 @@ Modeling security properties
 Security properties are defined over traces of the action facts of
 a protocol execution.
 
-We have two lemmas, the first on the secrecy of session
-key secrecy from the client point of view. The lemma
-`Client_session_key_secrecy` says that it cannot be that a client has
-set up a session key `k` with a server `S` and the adversary learned
-that `k` unless the adversary performed a long-term key reveal on the
-server `S`. The second lemma `Client_auth` specifies client
-authentication.  This is the statement that, for all session keys `k`
-that the clients have setup with a server `S`, there must be a server
-that has answered the request or the adversary has previously performed
-a long-term key reveal on `S`.
+We have two properties that we would like to evaluate. In the Tamarin framework,
+properties to be evaluated are denoted by lemmas. The first of these is on the
+secrecy of session key secrecy from the client point of view. The lemma
+`Client_session_key_secrecy` says that it cannot be that a client has set up a
+session key `k` with a server `S` and the adversary learned that `k` unless the
+adversary performed a long-term key reveal on the server `S`. The second lemma
+`Client_auth` specifies client authentication.  This is the statement that, for
+all session keys `k` that the clients have setup with a server `S`, there must
+be a server that has answered the request or the adversary has previously
+performed a long-term key reveal on `S`.
 
 ~~~~ {.tamarin slice="code/FirstExample.spthy" lower=62 upper=86}
 ~~~~
@@ -211,7 +212,8 @@ sanity checks.
 Graphical User Interface
 ------------------------
 
-How do you now prove that your lemmas are correct? If you call
+How do you now prove that your lemmas are correct? If you execute the
+command line
 
     tamarin-prover interactive FirstExample.spthy
 
@@ -233,21 +235,22 @@ you will then see the following output on the command line:
 
     21/Jun/2016:09:16:01 +0200 [Info#yesod-core] Application launched @(yesod_83PxojfItaB8w9Rj9nFdZm:Yesod.Core.Dispatch ./Yesod/Core/Dispatch.hs:157:11)
 
-If there were any syntax or wellformedness errors (for example if the same fact 
-is used with different arities an error would be displayed)
-they would be displayed at this point. Howevever, there are none in our example. 
-See the part on [Modeling Issues](008_modeling-issues.html#sec:modeling-issues) 
-for details on how to deal with such errors.
+At this point, if there were any syntax or wellformedness errors (for example if
+the same fact is used with different arities an error would be displayed) they
+would be displayed. See the part on [Modeling
+Issues](008_modeling-issues.html#sec:modeling-issues) for details on how to deal
+with such errors.
 
-The above command will start a web-server that loads all security protocol 
-theories in the same directory as FirstExample.spthy. Point your browser to
+However, there are no such errors in our example, and thus the above command
+will start a web-server that loads all security protocol theories in the same
+directory as FirstExample.spthy. Point your browser to
 
 <http://localhost:3001>
 
 and you will see the following welcome screen:
 
 ![Tamarin Web Interface](../images/tamarin-welcome.jpg "Welcome 
-Screen"){width=100%}
+Screen"){width=80%}
 
 The table in the middle shows all loaded theories. You can either
 click on a theory to explore it and prove your security properties, or
@@ -263,10 +266,10 @@ should see the following:
 Overview](../images/tamarin-tutorial-overview.jpg "FirstExample Theory 
 Overview"){width=100%}
 
-On the left hand side, you see the theory: links to the message theory 
-describing the intruder, the multiset rewrite rules and axioms describing your 
-protocol, and the typed and untyped case distinctions, followed by the lemmas 
-you want to prove. We will explain each of these in the following.
+On the left hand side, you see the theory: links to the message theory
+describing the adversary, the multiset rewrite rules and axioms describing
+your protocol, and the typed and untyped case distinctions, followed by the
+lemmas you want to prove. We will explain each of these in the following.
 
 On the right hand side, you have a quick summary of the available
 commands and keyboard shortcuts you can use to navigate inside the
@@ -291,33 +294,32 @@ equations to access the first and second parts of a pair. There is a
 shorthand for the `pair` using `<` and `>`, which is used here for
 example for `fst(<x.1, x.2>)`.
 
-Just below come the *Construction rules*. These rules describe which functions the 
-intruder can apply. Consider, for example, the following rule:
+Just below come the *Construction rules*. These rules describe the functions
+that the adversary can apply. Consider, for example, the following rule:
 
     rule (modulo AC) ch:
      [ !KU( x ) ] --[ !KU( h(x) ) ]-> [ !KU( h(x) ) ]
 
-Essentially this rule says that if the intruder knows `x` (represented
-by the fact `!KU(x)` in the premise), then he can compute `h(x)`
-(represented by the fact `!KU(h(x))` in the conclusion), i.e., the
-hash of `x`. The action fact `!KU(h(x))` in the label also records this
-for reasoning purposes.
+Intuitively, this rule expresses that if the adversary knows `x` (represented by
+the fact `!KU(x)` in the premise), then he can compute `h(x)` (represented by
+the fact `!KU(h(x))` in the conclusion), i.e., the hash of `x`. The action fact
+`!KU(h(x))` in the label also records this for reasoning purposes.
 
 Finally, there are the *Deconstruction rules*. These rules
 describe which terms the 
-intruder can extract from larger terms by applying functions. Consider for 
+adversary can extract from larger terms by applying functions. Consider for 
 example the following rule:
 
     rule (modulo AC) dfst:
      [ !KD( <x.1, x.2> ) ] --> [ !KD( x.1 ) ]
 
-In a nutshell, this rule says that if the intruder knows the pair `<x.1, x.2>` 
+In a nutshell, this rule says that if the adversary knows the pair `<x.1, x.2>` 
 (represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
 value `x.1` (represented by the fact `!KD( x.1 )`) from it. This results from 
 applying `fst` to the pair and then using the equation 
 `fst(<x.1, x.2>) = x.1`. The precise difference between `!KD( )` and `!KU( )` 
 facts is not important for now, and will be explained below. As a first 
-approximation, both represent they intruder's knowledge and the distinction is 
+approximation, both represent they adversary's knowledge and the distinction is 
 only used to make the tool's reasoning more efficient.
 
 Now click on *Multiset rewriting rules* on the left.
@@ -327,12 +329,13 @@ Rules](../images/tamarin-tutorial-multiset-rules.jpg
  "FirstExample Multiset Rewriting Rules"){width=100%}
 
 On the right side of the screen are the protocol's 
-rewriting rules, plus two additional rules:  `isend` and `irecv`.
+rewriting rules, plus two additional rules:  `isend` and `irecv`^[The 'i'
+historically stems from "intruder", but here we use "adversary".].
 These two extra rules provide an interface between the protocols output and input
-and the intruder deduction.
-The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` that the intruder knows, 
+and the adversary deduction.
+The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` that the adversary knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
-output `Out(x)` and passes it to the intruder knowledge, represented by the 
+output `Out(x)` and passes it to the adversary knowledge, represented by the 
 `!KD(x)` fact. Note that the rule `Serv_1` from the protocol has two 
 *variants (modulo AC)*. The precise meaning of this is unimportant right now 
 (it stems from the way Tamarin deals with equations) and will be explained in 
@@ -341,6 +344,11 @@ the
 
 Now click on `Untyped case distinctions (10 cases, all chains solved)` to see 
 the following:
+
+<!-- FIX: When we switch to raw/refined sources, change this whole thing to look
+at the second set (refined/type case distinctions) also in the pictures, since
+those are the ones actually used in the proof, and 'raw' is just an
+uninteresting intermediate result. -->
 
 ![FirstExample Case Distinctions 
 Rules](../images/tamarin-tutorial-case-distinctions.jpg 
@@ -369,7 +377,7 @@ resolved.
 
 ![FirstExample Case Distinctions 1 of 
 3](../images/tamarin-tutorial-case-distinctions-1.jpg 
- "FirstExample Case Distinctions 1 of 3")
+ "FirstExample Case Distinctions 1 of 3"){width=60%}
  
 Here the fact `!KU( ~t.1 )` has three sources, the first one is the rule 
 `Reveal_ltk`, which requires an instance of the rule `Register_pk` to create 
@@ -377,11 +385,11 @@ the necessary `!Ltk` fact. The other two sources are given below.
  
 ![FirstExample Case Distinctions 2 of 
 3](../images/tamarin-tutorial-case-distinctions-2.jpg 
- "FirstExample Case Distinctions 2 of 3")
+ "FirstExample Case Distinctions 2 of 3"){width=60%}
 
 ![FirstExample Case Distinctions 3 of 
 3](../images/tamarin-tutorial-case-distinctions-3.jpg 
- "FirstExample Case Distinctions 3 of 3")
+ "FirstExample Case Distinctions 3 of 3"){width=60%}
  
 Now we will see how to prove lemmas in the interactive mode. For that, click on 
 `sorry` (indicating that the proof has not been started) after the first 
@@ -414,7 +422,7 @@ execution that contains a `SessKeyC( S, k )` and a `K( k )` action, but
 does not use an `LtkReveal( S )`. This is visualized in the graph as
 follows. The only way of getting a `SessKeyC( S, k )` action is using an
 instance of the `Client_2` rule on the left, and the `K( k )` rule is
-symbolized on the right using a round box (intruder reasoning is always
+symbolized on the right using a round box (adversary reasoning is always
 visualized using round boxes).  Just below the graph, the formula
 
     formulas: ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥
