@@ -2,10 +2,10 @@
 Advanced Features
 =================
 
-Here we discuss advanced features for advanced users.
-Namely manual proofs, custom
+We now turn to some of Tamarin's more advanced features.
+We cover manual proofs, custom
 heuristics, encoding tricks, induction, channel models, internal
-preprocessor, and how to do timings
+preprocessor, and how to measure the time needed for proofs.
 
 Manual Exploration using GUI
 ----------------------------
