@@ -47,7 +47,7 @@ In the interactive mode you can find open chains as follows.  On the top left,
 under "Untyped case distinction", one can find the chains that were precomputed
 by Tamarin.
 
-![Tamarin GUI](../images/FindOpenChains1.png "Untyped case distinctions")
+![Tamarin GUI](../images/FindOpenChains1.png "Untyped case distinctions"){ width=50% }
 
 The unsolved chains can be identified by the light green arrows as in the
 following example:
