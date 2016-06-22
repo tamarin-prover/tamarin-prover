@@ -59,7 +59,7 @@ The definitions of the builtin message theories are given in Section
 To define function symbols `f1`, ..., `fN` with arity `n1`,...,`nN` include the
   following line in your file:
 
-    functions: f/n1, ..., f/nN
+    functions: f1/n1, ..., fN/nN
 
 Tamarin also supports *private function symbols*. In contrast to regular function
 symbols, Tamarin assumes that private function symbols cannot be applied by the adversary.
@@ -73,20 +73,20 @@ defines the private function `g` and the public functions `f` and `h`.
 We will describe in the next section how you can define equations that capture
 properties of functions.
 
-Equational theories {#sec:builtin-theories}
+Equational theories {#sec:equational-theories}
 -------------------
 
 Equational theories can be used to model properties of functions, e.g., that
 symmetric decryption is the inverse of symmetric encryption whenever both use
 the same key. The syntax for adding equations to the context is:
 
-    equations: rhs1 = lhs1, ..., rhsN = rhN
+    equations: lhs1 = rhs1, ..., lhsN = rhsN
 
-Both `rhs` and `lhs` can contain variables.
+Both `lhs` and `rhs` can contain variables.
 The symbolic proof search used by Tamarin only supports a restricted class of
 user-defined equations.
-Concretely, the left-hand-side must be either a ground term (i.e., it does not contain
-any variables) or a proper subterm of the right-hand-side.
+Concretely, the right-hand-side must be either a ground term (i.e., it does not contain
+any variables) or a proper subterm of the left-hand-side.
 Note that the equations modeled by the builtin message theories `diffie-hellman`,
 `bilinear-pairing`, and `multiset` do not belong to this restricted class since they
 include for example associativity and commutativity. All other builtin message theories
