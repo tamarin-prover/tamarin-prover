@@ -97,14 +97,14 @@ terminate.*
 
 
 
-Organization
-------------
+Organization and Contents of the Manual
+---------------------------------------
 
-This document starts with the introduction you just read. In Section
+In the next Section
 [Installation](002_installation.html#sec:installation) we describe how
 to install Tamarin. First-time users are then recommended to read
 Section [First Example](003_example.html#initial-example) which
-describes a simple protocol analysis in detail without
+describes a simple protocol analysis in detail, but without
 technicalities. Then, we systematically build up the technical
 background a user needs, by first presenting the cryptographic
 messages in Section [Cryptographic
