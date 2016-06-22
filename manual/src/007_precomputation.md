@@ -36,7 +36,7 @@ combinations of rules from which the fact could be obtained.  For each fact,
 this leads to a set of possible sources and we refer to these sets as the *case
 distinctions*.
 
-**FIX: above notions are confusing: chain versus sources versus case distinctions.**
+<!--**FIX: above notions are confusing: chain versus sources versus case distinctions.**-->
 
 However, for some rules Tamarin cannot resolve where a fact must have come from.
 We call such a chain an *open chain*, and we will explain them in more detail
@@ -64,8 +64,8 @@ using an untyped protocol model, the tool cannot determine that `nr.7` should be
 a fresh nonce, but that it could be any message. For this reason Tamarin
 concludes that it can derive any message with this rule.
 
-**FIX Cas: In the above, we mention untyped protocol model. Did we explain
-this?**
+<!--**FIX Cas: In the above, we mention untyped protocol model. Did we explain
+this?**-->
 
 ### Why open chains complicate proofs
 
@@ -127,10 +127,12 @@ the adversary or the initiator sent the first message prior to that moment.
 Similarly, the second part states that whenever the initiator receives the
 second message, either the adversary knew the corresponding nonce or the
 responder has sent the second message before.
-Generally, it is a good idea to specify a typing lemma that goes through
-all possible sources of a term and the adversary knowledge. That is, as here,
-we can try to say that the term can either originate from one of a list of
-rules or from the adversary knowledge.
+Generally, in a protocol with open chains it is advisable to try if the problem
+can be solved by a typing lemma that considers where a term could be coming
+from.
+As in the above example, one idea to do so is by stating that a used term 
+must either have occured in a one of a list of rules before or it must have 
+come from the adversary.
 
 The above typing lemma can be automatically proven by Tamarin. With the typing 
 lemma, Tamarin can then automatically prove the lemma `nonce_secrecy`.
