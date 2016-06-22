@@ -2,6 +2,11 @@
 Property Specification{#sec:property_specification}
 ======================
 
+In this section we present how to specify protocol properties as trace
+properties, based on the actoin facts given in the model. Properties
+are given as guarded first-order logic formulas, which we will see in
+detail.
+
 Trace Properties
 ----------------
 
@@ -59,9 +64,7 @@ allowed to be built from quantified variables, public constants (names
 delimited using single-quotes), and free function symbols including
 pairing. This excludes function symbols that appear in any of the equations.
 Moreover, all variables must be
-guarded. The error message for an unguarded variable is currently not very
-helpful. **FIXME: This sentence is currently not very helpful for the reader. 
-Give an example of the error message.**
+guarded. If they are not guarded, Tamarin will produce an error.
 
 To ensure guardedness, for universally quantified variables, one has to check 
 that they all occur in an action constraint right after the quantifier and that 
@@ -69,10 +72,10 @@ the outermost logical operator inside the quantifier is an implication.
 For existentially quantified variables, one has to check that they all
 occur in an action constraint right after the quantifier and that the
 outermost logical operator inside the quantifier is a conjunction.
-Note also that currently the precedence of the logical connectives is
-not specified. We therefore recommend to use parentheses, when in
-doubt.
-
+We do recommend to use parentheses, when in doubt about the precedence
+of logical connectives, but we follow the standard
+precedence. Negation binds tightest, then conjunction, then
+disjunction and then implication. Equivalence bind weakest.
 
 To specify a property about a protocol that includes the fictitious
 rule above, we use the keyword `lemma` followed by a name for the
