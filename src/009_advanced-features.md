@@ -188,7 +188,7 @@ properties can be imagined.
 Induction
 ---------
 
-Let us first motivate the need for an inductive method on a simple example with two rules and one lemma:
+Let us first motivate the need for an inductive proof method on a simple example with two rules and one lemma:
 
 ~~~~ {.tamarin slice="code/InductionExample.spthy" lower=5 upper=23}
 ~~~~
