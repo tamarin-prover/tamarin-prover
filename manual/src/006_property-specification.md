@@ -240,7 +240,7 @@ Observational Equivalence
 -------------------------
 
 All the previous properties are trace properties, i.e., properties that are 
-definied on traces. For example, the definition of secrecy required that there 
+defined on traces. For example, the definition of secrecy required that there 
 is no trace where the intruder could compute the secret without having 
 previously corrupted the agent.
 
@@ -270,6 +270,11 @@ following lemma:
 ~~~~ {.tamarin slice="code/ObservationalEquivalenceExample.spthy" lower=29 
 upper=36}
 ~~~~
+
+However, he can know whether in the last message `~a` or `~b` was encrypted by 
+simply taking the output `~a`, encrypting it with the public key and comparing 
+it to the published cyphertext. This can be captured using observational 
+equivalence as follows.
 
 Axioms
 ------
