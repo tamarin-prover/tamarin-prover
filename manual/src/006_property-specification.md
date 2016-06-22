@@ -315,6 +315,10 @@ corresponds to a potential attack, and thus invalidates the
 Attack](../images/tamarin-obseq-lemma-attack.jpg "Proving the 
 Observational Equivalence Lemma: Attack"){width=100%}
 
+Note that Tamarin needs to potentially consider numerous possible executions, 
+which can result in long proof times or even non-termination. If possible it 
+tries not to resolve parts of the execution that are irrelevant, but this is 
+not always sufficient.
 
 
 Axioms
