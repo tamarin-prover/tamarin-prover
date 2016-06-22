@@ -7,6 +7,11 @@ Trace Properties
 
 **FIXME: what are trace properties**
 
+The Tamarin multiset rewriting rules define a labeled transition
+system. The system's state is a multiset (bag) of facts. The initial
+system state is the empty multiset. The types of facts and their use 
+are described in Section [Rules](#sec:rules). Here we focus on the action facts. 
+
 **FIXME: what is a guarded formula/variable**
 
 We reason about a protocol's behaviour by annotating its
