@@ -66,8 +66,8 @@ of the main features of the GUI.
 
 <!-- downloading proofs, keyboard commands (a vs A vs b vs B) etc. -->
 
-Different Channel Models
--------------------------
+Different Channel Models {#sec:channel-models}
+------------------------
 
 Tamarin's built-in adversary model is often referred to as
 the  Dolev-Yao adversary.  This models an active adversary that has
