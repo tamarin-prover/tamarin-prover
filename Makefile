@@ -46,4 +46,4 @@ includes: includes.hs
 	stack ghc -- --make includes.hs -o includes
 
 clean:
-	-rm book/*.html *.pdf
+	-rm book/*.html tex/*.pdf
