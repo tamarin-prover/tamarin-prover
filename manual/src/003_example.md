@@ -431,13 +431,18 @@ now states that any occurrence of `LtkReveal( S )` will lead to a contradiction.
 
 To finish the proof, we can either continue manually by selecting the constraint
 to resolve next, or by calling the `autoprove` command, which selects the next
-steps based on a heuristic. Note that that the proof methods in the GUI are also
-sorted according to the same heuristic. Because the general problem is
-undecidable, the algorithm may not terminate for every protocol and property.
-Any proof found by always selecting the first proof method will be identical to
-the one constructed by the `autoprove` command.
+steps based on a heuristic. Here we have two constraints to resolve: 
+`Client_1( S, k )` and `KU( k )`, both of which are premises for the rules in 
+the unfinished current constraint system.
 
-In both cases we end with the following final state, where the constructed 
+Note that that the proof methods in the GUI are sorted according to the same 
+heuristic as is used by the `autoprove` command. Any proof found by always 
+selecting the first proof method will be identical to the one constructed by 
+the `autoprove` command. However, because the general problem is
+undecidable, the algorithm may not terminate for every protocol and property.
+
+In this example, both by clicking multiple times on the first constraint or by 
+using the autoprover, we end with the following final state, where the constructed 
 graph leads to a contradiction as it contains `LtkReveal( S )`:
 
 ![FirstExample Lemma 1 

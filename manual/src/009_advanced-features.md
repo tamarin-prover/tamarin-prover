@@ -45,6 +45,12 @@ in a round-robin fashion depending on the proof-depth. For example, a flag
 'Consecutive' goal ranking. The idea is that you can mix goal rankings easily
 in this way.
 
+### Marking facts to be solved preferentially or delayed
+
+By starting a fact name with `F_` (for first) the tool will solve instances 
+of that fact earlier than normal, while putting `L_` (for last) as the prefix 
+will delay solving the fact. This can have a performance impact.
+
 <!-- FIXME: Describe oracle script mechanism -->
 
 <!--Advanced Encoding
@@ -57,6 +63,8 @@ Manual Exploration using GUI
 
 See Section [Example](003_example.html#sec:gui) for a short demonstration
 of the main features of the GUI.
+
+<!-- downloading proofs, keyboard commands (a vs A vs b vs B) etc. -->
 
 Different Channel Models
 -------------------------
