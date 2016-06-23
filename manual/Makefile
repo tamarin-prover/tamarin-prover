@@ -27,6 +27,7 @@ book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros includes
 
 pdf:
 	sed 's,[0-9]*_.*.html#,#,' < $(SRC) > tex/all.md
+	echo "\n# References\n\n" >> tex/all.md
 	$(PANDOC) -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
 	  --filter ./includes \
