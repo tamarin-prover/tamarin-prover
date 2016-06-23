@@ -16,7 +16,6 @@ rule Generate_DH_key_pair:
 
 rule NaxosR:
   let 
-      pkI = 'g'^~lkI
       exR = h1(< ~eskR, ~lkR >)
       hkr = 'g'^exR
       kR  = h2(< pkI^exR, X^~lkR, X^exR, $I, $R >)
@@ -46,7 +45,6 @@ rule NaxosI_1:
 
 rule NaxosI_2:
   let
-      pkR = 'g'^~lkR
       exI = h1(< ~eskI, ~lkI >)
       kI  = h2(< Y^~lkI, pkR^exI, Y^exI, $I, $R >)
   in
