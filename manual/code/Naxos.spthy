@@ -41,15 +41,16 @@ rule NaxosI_1:
        Fr( ~tid ),
        !Ltk( $I, ~lkI ) ]
    -->
-   [   Init_1( ~tid, $I, $R, ~lkI, exI ),
+   [   Init_1( ~tid, $I, $R, ~lkI, ~eskI ),
        Out( hkI ) ]
 
 rule NaxosI_2:
   let
       pkR = 'g'^~lkR
+      exI = h1(< ~eskI, ~lkI >)
       kI  = h2(< Y^~lkI, pkR^exI, Y^exI, $I, $R >)
   in
-   [   Init_1( ~tid, $I, $R, ~lkI , exI),
+   [   Init_1( ~tid, $I, $R, ~lkI , ~eskI),
        !Pk( $R, pkR ),
        In( Y ) ]
    --[ SessionKey( ~tid, $I, $R, kI ) ]->
