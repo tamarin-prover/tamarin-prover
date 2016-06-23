@@ -312,15 +312,15 @@ section.  This leads to:
 
         rule NaxosR_attempt3:
             let 
-                exR = h1(< ~eskR, lkR >)
+                exR = h1(< ~eskR, ~lkR >)
                 hkr = 'g'^exR
-                kR  = h2(< pkI^exR, X^lkR, X^exR, $I, $R >)
+                kR  = h2(< pkI^exR, X^~lkR, X^exR, $I, $R >)
             in
              [
                  In(X),
                  Fr( ~eskR ),
                  Fr( ~tid ),
-                 !Ltk($R, lkR),
+                 !Ltk($R, ~lkR),
                  !Pk($I, pkI)
              ]
              --[ SessionKey( ~tid, $R, $I, kR ) ]->
@@ -342,23 +342,8 @@ replacing `X` by `~X` would change the interpretation of the model, effectively
 restricting the instantiations of the rule to those where `X` is a fresh
 value.]
 
-        rule NaxosR_attempt4:
-            let 
-                exR = h1(< ~eskR, ~lkR >)
-                hkr = 'g'^exR
-                kR  = h2(< pkI^exR, X^~lkR, X^exR, $I, $R >)
-            in
-             [
-                 In(X),
-                 Fr( ~eskR ),
-                 Fr( ~tid ),
-                 !Ltk($R, ~lkR),
-                 !Pk($I, pkI)
-             ]
-             --[ SessionKey( ~tid, $R, $I, kR ) ]->
-             [
-                 Out( hkr )
-             ]
+~~~~ {.tamarin slice="code/Naxos.spthy" lower=16 upper=32}
+~~~~
 
 The above rule suffices to model basic security properties, as we will see later.
 
@@ -406,16 +391,8 @@ Below we provide an updated version of the initiator's first rule that produces
 a state fact `Init_1` and introduces a unique thread identifier `~tid` for each
 instance of the rule.
 
-        rule NaxosI_1_attempt2:
-          let exI = h1(<~eskI, ~lkI >)
-              hkI = 'g'^exI
-          in
-           [   Fr( ~eskI ),
-           [   Fr( ~tid ),
-               !Ltk( $I, ~lkI ) ]
-           -->
-           [   Init_1( ~tid, $I, $R, ~lkI, exI ),
-               Out( hkI ) ]
+~~~~ {.tamarin slice="code/Naxos.spthy" lower=34 upper=43}
+~~~~
 
 Note that the state fact has several parameters: the unique thread identifier
 `~tid`^[Note that we could have re-used `~eskI` for this purpose, since it will
@@ -423,15 +400,8 @@ also be unique for each instance.], the agent identities `$I` and `$R`, and the
 actor's long-term private key `~lkI`, and the private exponent. This now enables
 us to specify the second initiator rule.
 
-        rule NaxosI_2_attempt2:
-          let
-              kI  = h2(< Y^~lkI, pkR^exI, Y^exI, $I, $R >)
-          in
-           [   Init_1( ~tid, $I, $R, ~lkI , exI),
-               !Pk( $R, pkR ),
-               In( Y ) ]
-           --[ SessionKey( ~tid, $I, $R, kI ) ]->
-          []
+~~~~ {.tamarin slice="code/Naxos.spthy" lower=45 upper=54}
+~~~~
 
 This second rule requires receiving a message `Y` from the network but also
 that an initiator fact was previously generated. This rule then consumes this
