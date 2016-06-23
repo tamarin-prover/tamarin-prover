@@ -65,6 +65,11 @@ security protocol theory.
 
     axiom := 'axiom' ident ':' '"' formula '"'
 
+In observational equivalence mode, axioms can be associated to one side.
+
+    axiom := 'axiom' ident [axiom_attrs] ':' '"' formula '"'
+    axiom_attrs      := '[' ('left' | 'right') ']'
+
 Lemmas specify security properties. By default, the given formula is
 interpreted as a property that must hold for all traces of the protocol of the
 security protocol theory. You can change this using the 'exists-trace' trace
@@ -74,10 +79,15 @@ quantifier.
              [trace_quantifier]
              '"' formula '"'
              proof
-    lemma_attrs      := '[' ('typing' | 'reuse' | 'use_induction') ']'
+    lemma_attrs      := '[' ('typing' | 'reuse' | 'use_induction' | 
+                             'hide_lemma=' ident) ']'
     trace_quantifier := 'all-traces' | 'exists-trace'
     proof            := ... a proof as output by the Tamarin prover ..
 
+In observational equivalence mode, lemmas can be associated to one side.
+
+    lemma_attrs      := '[' ('typing' | 'reuse' | 'use_induction' | 
+                             'hide_lemma=' ident | 'left' | 'right') ']'
 
 Formal comments are used to make the input more readable. In contrast
 to /*...*/ and //... comments, formal comments are stored and output
@@ -132,7 +142,7 @@ information.
     facts := fact list
     fact := ['!'] ident '(' multterm list ')'
 
-Formulas are trace formulas as described in our paper. Note that we are a bit
+Formulas are trace formulas as described previously. Note that we are a bit
 more liberal with respect to guardedness. We accept a conjunction of atoms as
 guards.
 
