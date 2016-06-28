@@ -46,7 +46,7 @@ rule Reveal_ltk:
 rule C_1:
   let bld = blind(~x,~r)
   in
-    [ Fr(x), Fr(~r) ]
+    [ Fr(~x), Fr(~r) ]
   --[ ]->
     [ Out( < $C, bld > ), St_C_1($C, ~x, ~r )]
 
