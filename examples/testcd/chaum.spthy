@@ -75,11 +75,11 @@ rule C_3:
     [ Out( aenc{'1', x, xs }pkS ) ]
 
 rule S_1:
-  let xs = sign(~x,ltkB)
+  let xs = sign(x,ltkB)
   in
-    [ !Ltk($S, ltkS), !Pk(B, pk(ltkB)), In( aenc{'1', ~x, xs }pk(ltkS)  ) ]
-  --[ Spend (~x) ]->
-    [ Out( <~x, xs> ) ]
+    [ !Ltk($S, ltkS), !Pk(B, pk(ltkB)), In( aenc{'1', x, xs }pk(ltkS)  ) ]
+  --[ Spend (x) ]->
+    [ Out( <x, xs> ) ]
 
 rule B_2:
   let xs = sign(x,ltkB)
