@@ -18,7 +18,7 @@ equations: open(commit(m,r),r)=m, checksign( sign(m,sk),pk(sk) ) = m, unblind(si
 
 // Public key infrastructure
 rule Register_pk:
-  [ Fr(~ltkA) ] --[Elligible ($A)]-> [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+  [ Fr(~ltkA) ] --[]-> [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
 rule Reveal_ltk:
   [ !Ltk(A, ltkA) ] --[ RevLtk(A)    ]-> [ Out(ltkA) ]
@@ -41,7 +41,7 @@ rule V_1:
   let m = blind( commit(~vote, ~r), ~b)
   in
     [ Fr( ~vote ), Fr( ~r ), Fr( ~b ), !Ltk( $V, ltkV ) ]
-  --[ ]->
+  --[ Elligible (~vote)]->
     [ Out( sign( m, ltkV ) ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
@@ -74,7 +74,7 @@ rule C_2:
   let m = sign(commit(~vote,r),ltkA)
   in
     [ In( aenc{l, r}pk(skC) ), !Ltk( $C, skC ), St_C_1($C, $V, A, l, m ),!Pk( A, pk(ltkA) ) ]
-  --[ Voted ($V) ]->
+  --[ Voted (~vote) ]->
     [ Out( ~vote ) ]
 
 
