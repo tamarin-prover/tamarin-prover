@@ -45,7 +45,7 @@ rule V_1:
     [ Out( sign( m, ltkV ) ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
-  let m = blind( commit(vote, r), b)
+  let m = blind( commit(~vote, r), b)
   in
     [ In( sign( m, ltkV ) ), !Ltk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
   --[ ]->
