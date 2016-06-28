@@ -14,36 +14,35 @@ TEMPLATE_TEX = templates/template.latex
 
 SRC = $(sort $(wildcard src/*.md))
 OBJ = $(subst .md,.html,$(subst src,book,$(SRC)))
+TMP = $(subst src,tmp,$(SRC))
 
 all: $(OBJ)
 
-book/%.html: src/%.md $(TEMPLATE_HTML) latex_macros includes
+tmp/%.md: src/%.md ./filter.py
+	./filter.py $< $@
+
+book/%.html: tmp/%.md $(TEMPLATE_HTML) latex_macros
 	$(PANDOC) -c $(STYLE) \
-	  --filter ./includes \
 	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
 	  --bibliography=src/manual.bib \
 	  -t html $(FLAGS) -o $@ $<
 
 
-pdf:
-	sed 's,[0-9]*_.*.html#,#,' < $(SRC) > tex/all.md
+pdf:	$(TMP) $(TEMPLATE_LATEX) latex_macros
+	sed 's,[0-9]*_.*.html#,#,' < $(TMP) > tex/all.md
 	echo "\n# References\n\n" >> tex/all.md
 	$(PANDOC) -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
-	  --filter ./includes \
 	  --bibliography=src/manual.bib \
 	  -o tex/tamarin-manual.tex tex/all.md
 	make -C tex
 
-simple: 
+simple: $(TMP) $(TEMPLATE_LATEX) latex_macros
 	$(PANDOC) -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
 	  --bibliography=src/manual.bib \
-	  -o tex/tamarin-manual.tex $(SRC)
+	  -o tex/tamarin-manual.tex $(TMP)
 	make -C tex
 
-includes: includes.hs
-	stack ghc -- --make includes.hs -o includes
-
 clean:
-	-rm book/*.html tex/*.pdf
+	-rm -f book/*.html tex/*.pdf tmp/*.md
