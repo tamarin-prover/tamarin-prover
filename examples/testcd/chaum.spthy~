@@ -46,14 +46,14 @@ rule Reveal_ltk:
 rule C_1:
   let bld = blind(~x,~r)
   in
-    [ Fr(~x), Fr(~r) ]
+    [ Fr(x), Fr(~r) ]
   --[ ]->
     [ Out( < $C, bld > ), St_C_1($C, ~x, ~r )]
 
 rule B_1:
-    [ In( <C, blind(~x,r)> ), !Ltk($B, ltkB) ]
-  --[ Withdraw(~x) ]->
-    [ St_B_1( $B, C, blind(~x,r) ), Out( sign( blind(~x,r), ltkB) ) ]
+    [ In( <C, blind(x,r)> ), !Ltk($B, ltkB) ]
+  --[ Withdraw(x) ]->
+    [ St_B_1( $B, C, blind(x,r) ), Out( sign( blind(x,r), ltkB) ) ]
 
 rule C_2:
   let bld = blind(x,r)
@@ -66,19 +66,19 @@ rule C_2:
 /* Payment and deposit phase */
 
 rule C_3:
-  let bld = blind(~x,r)
+  let bld = blind(x,r)
       bs = sign(bld,ltkB)
-      xs = sign(~x,ltkB)
+      xs = sign(x,ltkB)
   in
-    [ St_C_2(C, ~x, r, bs ), !Pk(B, pk(ltkB)), !Pk($S, pkS) ]
-  --[ Spend (~x)  ]->
-    [ Out( aenc{'1', ~x, xs }pkS ) ]
+    [ St_C_2(C, x, r, bs ), !Pk(B, pk(ltkB)), !Pk($S, pkS) ]
+  --[   ]->
+    [ Out( aenc{'1', x, xs }pkS ) ]
 
 rule S_1:
   let xs = sign(x,ltkB)
   in
     [ !Ltk($S, ltkS), !Pk(B, pk(ltkB)), In( aenc{'1', x, xs }pk(ltkS)  ) ]
-  --[ ]->
+  --[ Spend (x) ]->
     [ Out( <x, xs> ) ]
 
 rule B_2:
