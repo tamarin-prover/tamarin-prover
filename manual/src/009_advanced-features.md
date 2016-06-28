@@ -19,7 +19,11 @@ the open goals of a constraint system.
 `s`:
 : the 'smart' ranking is the ranking described in the extended version of
   our CSF'12 paper. It is the default ranking and works very well in a wide
-  range of situations.
+  range of situations. Roughly, this ranking prioritizes chain goals,
+  disjunctions, facts, actions, and adversary knowledge of private and
+  fresh terms in that order (e.g., every action will be solved before any
+  knowledge goal). Goals marked 'Probably Constructable' and
+  'Currently Deducible' in the GUI are lower priority.
 
 `S`:
 : is like the 'smart' ranking, but does not delay the solving of premises
@@ -38,6 +42,19 @@ the open goals of a constraint system.
 
 `C`:
 : is like 'c' but without delaying loop breakers.
+
+`i`: 
+: is a ranking developed to be well-suited to injective stateful protocols.
+  The priority of goals is similar to the 'S' ranking, but instead of a
+  strict priority hierarchy, the fact, action, and knowledge goals are
+  considered equal priority and solved by their age. This is useful for
+  stateful protocols with an unbounded number of runs, in which for example
+  solving a fact goal may create a new fact goal for the previous protocol
+  run. This ranking will prioritize existing fact, action, and knowledge goals
+  before following up on the fact goal of that previous run. In contrast the 'S'
+  ranking would prioritize this new fact goal ahead of any existing action or
+  knowledge goal, although solving the new goal may create yet another 
+  earlier fact goal and so on, preventing termination. 
 
 If several rankings are given for the heuristic flag, then they are employed
 in a round-robin fashion depending on the proof-depth. For example, a flag
