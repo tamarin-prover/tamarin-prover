@@ -71,11 +71,11 @@ rule V_3:
     [ Out( aenc{l, r}pkC ) ]
 
 rule C_2:
-  let m = sign(commit(vote,r),ltkA)
+  let m = sign(commit(~vote,r),ltkA)
   in
     [ In( aenc{l, r}pk(skC) ), !Ltk( $C, skC ), St_C_1($C, $V, A, l, m ),!Pk( A, pk(ltkA) ) ]
   --[ Voted ($V) ]->
-    [ Out( vote ) ]
+    [ Out( ~vote ) ]
 
 
 lemma elligibilty:
