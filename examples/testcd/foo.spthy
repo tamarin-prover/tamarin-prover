@@ -38,44 +38,44 @@ rule Reveal_ltk:
 */
 
 rule V_1:
-  let m = blind( commit(~v, ~r), ~b)
+  let m = blind( commit(~vote, ~r), ~b)
   in
-    [ Fr( ~v ), Fr( ~r ), Fr( ~b ), !Ltk( $V, ltkV ) ]
+    [ Fr( ~vote ), Fr( ~r ), Fr( ~b ), !Ltk( $V, ltkV ) ]
   --[ ]->
-    [ Out( sign( m, ltkV ) ), St_V_1( $V, ~v, ~r, ~b ) ]
+    [ Out( sign( m, ltkV ) ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
-  let m = blind( commit(v, r), b)
+  let m = blind( commit(vote, r), b)
   in
     [ In( sign( m, ltkV ) ), !Ltk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
   --[ ]->
     [ Out( sign( m, ltkA ) ) ]
 
 rule V_2:
-  let m = blind( commit(v, r), b)
+  let m = blind( commit(vote, r), b)
   in
-    [ In( sign( m, ltkA ) ), St_V_1( V, v, r, b), Fr( ~l ), !Pk( A, pk(ltkA) ) ]
+    [ In( sign( m, ltkA ) ), St_V_1( V, vote, r, b), Fr( ~l ), !Pk( $A, pk(ltkA) ) ]
   --[ ]->
-    [ Out( <V, ~l, sign( commit( v, r ), ltkA )> ), St_V_2( V, $A, v, r, b, ~l ) ]
+    [ Out( <V, ~l, sign( commit( vote, r ), ltkA )> ), St_V_2( V, $A, vote, r, b, ~l ) ]
 
 rule C_1:
-  let m = sign(commit(v,r),ltkA)
+  let m = sign(commit(vote,r),ltkA)
   in
     [ In( <V, l, m> ), !Pk( A, pk(ltkA) ) ]
   --[ ]->
     [ St_C_1($C, V, A, l, m ) ]
 
 rule V_3:
-    [ St_V_2( V, A, v, r, b, l ), !Pk( $C, pkC ) ]
+    [ St_V_2( V, A, vote, r, b, l ), !Pk( $C, pkC ) ]
   --[ ]->
     [ Out( aenc{l, r}pkC ) ]
 
 rule C_2:
-  let m = sign(commit(v,r),ltkA)
+  let m = sign(commit(vote,r),ltkA)
   in
     [ In( aenc{l, r}pk(skC) ), !Ltk( $C, skC ), St_C_1($C, $V, A, l, m ),!Pk( A, pk(ltkA) ) ]
   --[ Voted ($V) ]->
-    [ Out( v ) ]
+    [ Out( vote ) ]
 
 
 lemma elligibilty:
