@@ -94,10 +94,10 @@ lemma unforgeability:
   All c #j.
   Spend(c) @ j
   ==> 
-  ( ( Ex #i.  Withdraw(c) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )
+  ( ( Ex #i.  Withdraw(c) @ i & #i < #j  & not (Ex #l. ( Spend (c) @ l & not ( #l = #j ) ) )  | (Ex #k A. RevLtk( A ) @ k ) )
   "
 
-lemma unforgeability2:
+axiom bankOnlyAcceptsOnce:
   " not( Ex c #j #k. Spend(c) @ j & Spend(c) @ k & not (#j = #k) ) "
 
 end
