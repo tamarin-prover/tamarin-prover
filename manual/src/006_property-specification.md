@@ -397,7 +397,7 @@ particular value) to be unique:
 
 ```
 axiom unique:
-  "All x #i #j. UniqueFact(x) @i & UniqueFact(x) @j ==> #i = #j"
+  "All x #i #j. UniqueFact(x) @#i & UniqueFact(x) @#j ==> #i = #j"
 ```
 
 We call the action `UniqueFact` and give it one argument. If it
@@ -412,7 +412,7 @@ the decryption of an encrypted value is the original value, assuming correct key
 
 ```
 axiom Equality:
-  "All x y #i. Eq(x,y) @i ==> x = y"
+  "All x y #i. Eq(x,y) @#i ==> x = y"
 ```
 
 which means that all instances of the `Eq` action on the trace have
@@ -425,7 +425,7 @@ Now, let us consider an inequality axiom, which ensures that the two arguments o
 
 ```
 axiom Inequality:
-  "All x #i. Neq(x,x) @ i ==> F"
+  "All x #i. Neq(x,x) @ #i ==> F"
 ```
 
 This is very useful to ensure that certain arguments are different.
@@ -437,7 +437,7 @@ as an action fact for that rule and add this axiom:
 
 ```
 axiom OnlyOnce:
-  "All #i #j. OnlyOnce() & OnlyOnce()@j ==> #i = #j"
+  "All #i #j. OnlyOnce() & OnlyOnce()@#j ==> #i = #j"
 ```
 
 Then that rule can only be executed once. Note that if you have
@@ -452,7 +452,7 @@ another, say `LessThan`:
 
 ```
 axiom LessThan:
-  "All x y #i. LessThan(x,y)@i ==> Ex z. x + z = y"
+  "All x y #i. LessThan(x,y)@#i ==> Ex z. x + z = y"
 ```
 
 You would then add the `LessThan` action fact to a rule where you want
@@ -462,7 +462,7 @@ Similarly you can use a `GreaterThan` where we want `x` to be strictly larger th
 
 ```
 axiom GreaterThan:
-  "All x y #i. GreaterThan(x,y)@i ==> Ex z. x = y + z"
+  "All x y #i. GreaterThan(x,y)@#i ==> Ex z. x = y + z"
 ```
 
 
