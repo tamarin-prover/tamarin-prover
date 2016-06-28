@@ -80,10 +80,10 @@ rule C_2:
 
 lemma elligibilty:
   " // Voted(c)=>Elligible(c) before
-  All $V #j.
-  Voted($V) @ j
+  All V #j.
+  Voted(V) @ j
   ==> 
-  ( ( Ex #i.  Elligible($V) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
+  ( ( Ex #i.  Elligible(V) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
 
 end
 
