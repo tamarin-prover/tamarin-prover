@@ -1,0 +1,62 @@
+theory untraceable
+begin
+
+/*
+ * Protocol:	 Toy example of RFID unlinkability
+ * Modeler: 	 Sasa Radomirovic, Ralf Sasse, Jannik Dreier
+ * Described in: -
+ * Date: 	 Mai 2016
+ *
+ * Status: 	 working (expected not to return an attack)
+ */
+
+
+builtins: hashing, multiset
+
+// We want to show equivalence between an instance where the reader communicates 
+// with two diferrent tags and an instance where he communicates twice with the 
+// same tag:
+rule setup:
+  [ Fr(key1), Fr(key2) ]
+  --[ Setup() ]->
+  [ Reader('1'+diff(key1+key2,key1+key1)), Tag('1'+diff(key1+key2,key1+key1)) ]
+
+rule select_tag:
+  [ Tag(~k+z) ]
+  --[ Tag(~k+z) ]->
+  [ TagRun(~k), Tag(z) ]
+
+rule select_reader:
+  [ Reader(~k+z) ]
+  --[ Reader(~k+z) ]->
+  [ ReaderRun(~k), Reader(z) ]
+
+// The protocol is simple: the reader sends out a nonce, and the tag responds 
+// with a new nonce and a hash of both nonces and the shared key.
+rule reader1:
+  [ Fr(~nr) ]
+  -->
+  [ Reader1(~nr) , Out(~nr) ]
+
+rule tag1:
+  [ In(x) , TagRun(k), Fr(~nt) ]
+  --[ TagRun(k) ]->
+  [ Out(<~nt,h(x,k,~nt)>) ]
+
+rule reader2:
+  [ Reader1(~nr), ReaderRun(k), In(<nt,h(~nr,k,nt)>) ]
+  --[ Finished() ]->
+  [ ]
+
+// These axioms state that there cannot be more than two keys in the set of keys
+// to prevent loops in the backwards search.
+axiom tag_limited_keys:
+  "All a b c d #i. Tag(a+b+c+d)@i ==> F"
+
+axiom reader_limited_keys:
+  "All a b c d #i. Reader(a+b+c+d)@i ==> F"
+
+lemma executable:
+  exists-trace "Ex #i. Finished() @i"
+
+end
