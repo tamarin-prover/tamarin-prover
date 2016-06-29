@@ -48,7 +48,7 @@ rule A_1:
   let m = blind( commit(~vote, r), b)
   in
     [ In( sign( m, ltkV ) ), !Ltk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ BankSignature (~vote)]->
+  --[ BankSignature (~vote), Antiloop (m)]->
     [ Out( sign( m, ltkA ) ) ]
 
 rule V_2:
@@ -93,5 +93,7 @@ lemma test2:
   exists-trace
   " Ex k #i #j. Elligible (k) @ #i & BankSignature(k) @ j "
 
+axiom antiloop:
+  "All m #i #j.  Antiloop (m)@i & Antiloop (m)@j ==> (#i = #j) "
 end
 

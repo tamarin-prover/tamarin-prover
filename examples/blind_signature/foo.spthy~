@@ -48,20 +48,20 @@ rule A_1:
   let m = blind( commit(~vote, r), b)
   in
     [ In( sign( m, ltkV ) ), !Ltk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ BankSignature (~vote)]->
+  --[ BankSignature (~vote), Antiloop (m)]->
     [ Out( sign( m, ltkA ) ) ]
 
 rule V_2:
   let m = blind( commit(vote, r), b)
   in
-    [ In( sign( m, ltkA ) ), St_V_1( V, vote, r, b), Fr( ~l ), !Pk( $A, pk(ltkA) ) ]
+    [ In( sign( m, ltkA ) ), St_V_1( V, vote, r, b), Fr( ~l ), !Pk( $C, pkC ), !Pk( $A, pk(ltkA) ) ]
   --[ ]->
-    [ Out( <V, ~l, sign( commit( vote, r ), ltkA )> ), St_V_2( V, $A, vote, r, b, ~l ) ]
+    [ Out( aenc{V, ~l, sign( commit( vote, r ), ltkA )}pkC ), St_V_2( V, $A, vote, r, b, ~l ) ]
 
 rule C_1:
   let m = sign(commit(vote,r),ltkA)
   in
-    [ In( <$V, l, m >), !Pk( A, pk(ltkA) ) ]
+    [ In( aenc{$V, l, m }pk(skC) ), !Pk( A, pk(ltkA) ), !Ltk( $C, skC )]
   --[ ]->
     [ St_C_1($C, $V, A, l, m ) ]
 
@@ -93,5 +93,7 @@ lemma test2:
   exists-trace
   " Ex k #i #j. Elligible (k) @ #i & BankSignature(k) @ j "
 
+axiom antiloop:
+  "All m, #i, #j.  Antiloop (m)@i & Antiloop (m)@j ==> (#i = #j) "
 end
 
