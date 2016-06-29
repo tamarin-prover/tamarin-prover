@@ -1,4 +1,4 @@
-theory foo
+theory Blind_Signature
 begin
 
 builtins: asymmetric-encryption
@@ -48,7 +48,7 @@ rule A_1:
   let m = blind( commit(~vote, r), b)
   in
     [ In( sign( m, ltkV ) ), !Ltk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ ]->
+  --[ BankSignature (~vote)]->
     [ Out( sign( m, ltkA ) ) ]
 
 rule V_2:
@@ -61,19 +61,19 @@ rule V_2:
 rule C_1:
   let m = sign(commit(vote,r),ltkA)
   in
-    [ In( <V, l, m> ), !Pk( A, pk(ltkA) ) ]
+    [ In( <$V, l, m >), !Pk( A, pk(ltkA) ) ]
   --[ ]->
-    [ St_C_1($C, V, A, l, m ) ]
+    [ St_C_1($C, $V, A, l, m ) ]
 
 rule V_3:
     [ St_V_2( V, A, vote, r, b, l ), !Pk( $C, pkC ) ]
   --[ ]->
-    [ Out( aenc{l, r}pkC ) ]
+    [ Out( aenc{l, r}pkC) ]
 
 rule C_2:
   let m = sign(commit(~vote,r),ltkA)
   in
-    [ In( aenc{l, r}pk(skC) ), !Ltk( $C, skC ), St_C_1($C, $V, A, l, m ),!Pk( A, pk(ltkA) ) ]
+    [ In( aenc{l, r}pk(skC)), !Ltk( $C, skC ), St_C_1($C, $V, A, l, m ),!Pk( A, pk(ltkA) ) ]
   --[ Voted (~vote) ]->
     [ Out( ~vote ) ]
 
@@ -84,6 +84,14 @@ lemma elligibilty:
   Voted(V) @ j
   ==> 
   ( ( Ex #i.  Elligible(V) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
+
+lemma test1:
+  exists-trace
+  " Ex k #i #j. Elligible (k) @ #i & Voted(k) @ j "
+
+lemma test2:
+  exists-trace
+  " Ex k #i #j. Elligible (k) @ #i & BankSignature(k) @ j "
 
 end
 

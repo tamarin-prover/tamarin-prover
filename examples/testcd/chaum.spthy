@@ -1,4 +1,4 @@
-theory Chaum
+theory Blind_Signature
 begin
 
 builtins: asymmetric-encryption
