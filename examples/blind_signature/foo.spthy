@@ -1,0 +1,97 @@
+theory Blind_Signature
+begin
+
+builtins: asymmetric-encryption
+
+/*
+ * Protocol: Foo	
+ * Modeler: 	
+ * Date: 	
+ * Source:	
+ *
+ * Status: 	
+ */
+
+functions: blind/2, sign/2, unblind/2, open/2, commit/2, checksign/2
+
+equations: open(commit(m,r),r)=m, checksign( sign(m,sk),pk(sk) ) = m, unblind(sign(blind(m,r),sk),r)=sign(m,sk)
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltkA) ] --[]-> [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+
+rule Reveal_ltk:
+  [ !Ltk(A, ltkA) ] --[ RevLtk(A)    ]-> [ Out(ltkA) ]
+
+/* We formalize the following protocol
+
+  protocol FOO {
+    Phase 1:
+    1. V -> A: sign(blind(commit(v,r),b),skV)
+    2. A -> V: sign(blind(commit(v,r),b),skA)
+    Phase 2:
+    3. V -> C: <l, sign(commit(v,r),skA)>
+    Phase 3
+    5. V -> C: <l, r> 
+    6. C -> Pub: v
+  }
+*/
+
+rule V_1:
+  let m = blind( commit(~vote, ~r), ~b)
+  in
+    [ Fr( ~vote ), Fr( ~r ), Fr( ~b ), !Ltk( $V, ltkV ) ]
+  --[ Elligible (~vote)]->
+    [ Out( sign( m, ltkV ) ), St_V_1( $V, ~vote, ~r, ~b ) ]
+
+rule A_1:
+  let m = blind( commit(~vote, r), b)
+  in
+    [ In( sign( m, ltkV ) ), !Ltk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
+  --[ BankSignature (~vote)]->
+    [ Out( sign( m, ltkA ) ) ]
+
+rule V_2:
+  let m = blind( commit(vote, r), b)
+  in
+    [ In( sign( m, ltkA ) ), St_V_1( V, vote, r, b), Fr( ~l ), !Pk( $C, pkC ), !Pk( $A, pk(ltkA) ) ]
+  --[ ]->
+    [ Out( aenc{V, ~l, sign( commit( vote, r ), ltkA )}pkC ), St_V_2( V, $A, vote, r, b, ~l ) ]
+
+rule C_1:
+  let m = sign(commit(vote,r),ltkA)
+  in
+    [ In( aenc{$V, l, m }pk(skC) ), !Pk( A, pk(ltkA) ), !Ltk( $C, skC )]
+  --[ ]->
+    [ St_C_1($C, $V, A, l, m ) ]
+
+rule V_3:
+    [ St_V_2( V, A, vote, r, b, l ), !Pk( $C, pkC ) ]
+  --[ ]->
+    [ Out( aenc{l, r}pkC) ]
+
+rule C_2:
+  let m = sign(commit(~vote,r),ltkA)
+  in
+    [ In( aenc{l, r}pk(skC)), !Ltk( $C, skC ), St_C_1($C, $V, A, l, m ),!Pk( A, pk(ltkA) ) ]
+  --[ Voted (~vote) ]->
+    [ Out( ~vote ) ]
+
+
+lemma elligibilty:
+  " // Voted(c)=>Elligible(c) before
+  All V #j.
+  Voted(V) @ j
+  ==> 
+  ( ( Ex #i.  Elligible(V) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
+
+lemma test1:
+  exists-trace
+  " Ex k #i #j. Elligible (k) @ #i & Voted(k) @ j "
+
+lemma test2:
+  exists-trace
+  " Ex k #i #j. Elligible (k) @ #i & BankSignature(k) @ j "
+
+end
+
