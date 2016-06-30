@@ -94,6 +94,6 @@ lemma test2:
   " Ex k #i #j. Elligible (k) @ #i & BankSignature(k) @ j "
 
 axiom antiloop:
-  "All m #i #j.  Antiloop (m)@i & Antiloop (m)@j ==> (#i = #j) "
+  "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
 end
 
