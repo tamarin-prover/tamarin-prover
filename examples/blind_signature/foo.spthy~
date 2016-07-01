@@ -17,17 +17,20 @@ functions: blind/2, sign/2, unblind/2, open/2, commit/2, checksign/2
 equations: open(commit(m,r),r)=m, checksign( sign(m,sk),pk(sk) ) = m, unblind(sign(blind(m,r),sk),r)=sign(m,sk)
 
 // Public key infrastructure
-rule Init:
-  [Fr(~s)]--[ Init(~s) ]->[ St_Count(<~s,~s>) ]
+rule Register_Voter_pk:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
 
-rule Register_pk:
-  [ Fr(~ltkA) , St_Count(nb) ] --[ Count(nb) ]-> [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)), St_Count(<fst(nb),nb>  ) ]
+rule Register_Collect_pk:
+  [ Fr(~ltkC) ] --[ ]-> [ !CollectLtk($C, ~ltkC), !CollectPk($C, pk(~ltkC)), Out(pk(~ltkC)) ]
 
 rule Register_Admin_pk:
- [ Fr(~ltkA)] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
-rule Reveal_ltk:
+rule Reveal_Voter_ltk:
   [ !Ltk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
+
+rule Reveal_Collect_ltk:
+  [ !CollectLtk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
 
 rule Reveal_Adminltk:
   [ !AdminLtk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
@@ -47,30 +50,32 @@ rule Reveal_Adminltk:
 */
 
 rule V_1:
-  let m = blind( commit(~vote, ~r), ~b)
+  let m1 = sign (blind( commit(~vote, ~r), ~b), ltkV)
   in
     [ Fr( ~vote ), Fr( ~r ), Fr( ~b ), !Ltk( $V, ltkV ) ]
   --[ Elligible (~vote)]->
-    [ Out( sign( m, ltkV ) ), St_V_1( $V, ~vote, ~r, ~b ) ]
+    [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
-  let m = blind( commit(~vote, r), b)
+  let rm = sign (blind( commit(~vote, ~r), ~b), ltkV)
+      im = checksign( rm , pk(ltkV) )
+      sm = sign ( im , ltkA )
   in
-    [ In( sign( m, ltkV ) ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ Signature (~vote), Antiloop (m)]->
-    [ Out( sign( m, ltkA ) ) ]
+    [ In( rm ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
+  --[ Signature (~vote), Antiloop (sm) ]->
+    [ Out( sm ) ]
 
 rule V_2:
   let m = blind( commit(vote, r), b)
   in
-    [ In( sign( m, ltkA ) ), St_V_1( V, vote, r, b), Fr( ~l ), !Pk( $C, pkC ), !AdminPk( $A, pk(ltkA) ) ]
+    [ In( sign( m, ltkA ) ), St_V_1( V, vote, r, b), Fr( ~l ), !CollectPk( $C, pkC ), !AdminPk( $A, pk(ltkA) ) ]
   --[ ]->
     [ Out( aenc{V, ~l, sign( commit( vote, r ), ltkA )}pkC ), St_V_2( V, $A, vote, r, b, ~l ) ]
 
 rule C_1:
   let m = sign(commit(vote,r),ltkA)
   in
-    [ In( aenc{$V, l, m }pk(skC) ), !AdminPk( A, pk(ltkA) ), !Ltk( $C, skC )]
+    [ In( aenc{$V, l, m }pk(skC) ), !AdminPk( A, pk(ltkA) ), !CollectLtk( $C, skC )]
   --[ ]->
     [ St_C_1($C, $V, A, l, m ) ]
 
@@ -82,7 +87,7 @@ rule V_3:
 rule C_2:
   let m = sign(commit(~vote,r),ltkA)
   in
-    [ In( aenc{l, r}pk(skC)), !Ltk( $C, skC ), St_C_1($C, $V, A, l, m ),!AdminPk( A, pk(ltkA) ) ]
+    [ In( aenc{l, r}pk(skC)), !CollectLtk( $C, skC ), St_C_1($C, $V, A, l, m ),!AdminPk( A, pk(ltkA) ) ]
   --[ Voted (~vote) ]->
     [ Out( ~vote ) ]
 
@@ -105,11 +110,6 @@ lemma test2:
 axiom antiloop:
   "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
 
-axiom counter:
-  " All s t #i #j.  Init(s)@i & Init(t) @j ==> (#i = #j) & s=t"
-
-axiom usermax:
-  "not( Ex s nb #i. Count(nb)@i & nb=<s,s,s,s,s,s,s,_>)"
 
 end
 
