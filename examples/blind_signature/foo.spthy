@@ -1,8 +1,6 @@
 theory Blind_Signature
 begin
 
-builtins: asymmetric-encryption
-
 /*
  * Protocol: Foo	
  * Modeler: 	
@@ -12,7 +10,7 @@ builtins: asymmetric-encryption
  * Status: 	
  */
 
-functions: blind/2, sign/2, unblind/2, open/2, commit/2, checksign/2
+functions: blind/2, sign/2, unblind/2, open/2, commit/2, checksign/2, pk/1
 
 equations: open(commit(m,r),r)=m, checksign( sign(m,sk),pk(sk) ) = m, unblind(sign(blind(m,r),sk),r)=sign(m,sk)
 
@@ -52,17 +50,17 @@ rule Reveal_Adminltk:
 rule V_1:
   let m1 = sign (blind( commit(~vote, ~r), ~b), ltkV)
   in
-    [ Fr( ~vote ), Fr( ~r ), Fr( ~b ), !Ltk( $V, ltkV ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( $V, ltkV ) ]
   --[ Elligible (~vote)]->
     [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
-  let rm = sign (blind( commit(~vote, ~r), ~b), ltkV)
+  let rm = sign (blind( commit(vote, ~r), ~b), ltkV)
       im = checksign( rm , pk(ltkV) )
       sm = sign ( im , ltkA )
   in
     [ In( rm ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ Signature (~vote), Antiloop (sm) ]->
+  --[ Signature (vote), Antiloop (sm) ]->
     [ Out( sm ) ]
 
 rule V_2:
@@ -70,42 +68,39 @@ rule V_2:
   in
     [ In( sign( m, ltkA ) ), St_V_1( V, vote, r, b), Fr( ~l ), !CollectPk( $C, pkC ), !AdminPk( $A, pk(ltkA) ) ]
   --[ ]->
-    [ Out( aenc{V, ~l, sign( commit( vote, r ), ltkA )}pkC ), St_V_2( V, $A, vote, r, b, ~l ) ]
+    [ P_Ch_1( V, ~l, sign( commit( vote, r ), ltkA ) ), St_V_2( V, $A, vote, r, b, ~l ) ]
 
 rule C_1:
   let m = sign(commit(vote,r),ltkA)
   in
-    [ In( aenc{$V, l, m }pk(skC) ), !AdminPk( A, pk(ltkA) ), !CollectLtk( $C, skC )]
+    [ P_Ch_1( V, l, m ), !AdminPk( A, pk(ltkA) ), !CollectLtk( $C, skC )]
   --[ ]->
-    [ St_C_1($C, $V, A, l, m ) ]
+    [ St_C_1($C, V, A, l, m ) ]
 
 rule V_3:
-    [ St_V_2( V, A, vote, r, b, l ), !Pk( $C, pkC ) ]
+    [ St_V_2( V, A, vote, r, b, l ), !CollectPk( $C, pkC ) ]
   --[ ]->
-    [ Out( aenc{l, r}pkC) ]
+    [ P_Ch_2( l, r) ]
 
 rule C_2:
-  let m = sign(commit(~vote,r),ltkA)
+  let m = sign(commit(vote,r),ltkA)
   in
-    [ In( aenc{l, r}pk(skC)), !CollectLtk( $C, skC ), St_C_1($C, $V, A, l, m ),!AdminPk( A, pk(ltkA) ) ]
-  --[ Voted (~vote) ]->
-    [ Out( ~vote ) ]
+    [ P_Ch_2( l, r), !CollectLtk( $C, skC ), St_C_1($C, $V, A, l, m ),!AdminPk( A, pk(ltkA) ) ]
+  --[ Voted (vote) ]->
+    [ Out( vote ) ]
 
 
-lemma elligibilty:
-  " // Voted(c)=>Elligible(c) before
+lemma elligibility:
+  " 
   All vote #j.
   Voted(vote) @ j
   ==> 
-  ( ( Ex #i.  Elligible(vote) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
+  ( ( Ex #i.  Signature(vote) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
 
 lemma test1:
   exists-trace
-  " Ex k #i #j. Elligible (k) @ #i & Voted(k) @ j "
+  " Ex k #i #j. Voted (k) @ #i & Signature(k) @ j "
 
-lemma test2:
-  exists-trace
-  " Ex k #i #j. Elligible (k) @ #i & Signature(k) @ j "
 
 axiom antiloop:
   "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
