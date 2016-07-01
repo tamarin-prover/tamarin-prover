@@ -1,0 +1,54 @@
+theory traceable
+begin
+
+/*
+ * Protocol:	 Toy example of RFID unlinkability
+ * Modeler: 	 Sasa Radomirovic, Ralf Sasse, Jannik Dreier
+ * Described in: -
+ * Date: 	 Mai 2016
+ *
+ * Status: 	 working (expected to return an attack)
+ */
+
+
+builtins: hashing, multiset
+
+// We want to show equivalence between an instance where the reader communicates 
+// with two diferrent tags and an instance where he communicates twice with the 
+// same tag:
+rule setup:
+  [ Fr(key1), Fr(key2) ]
+  --[ Setup() ]->
+  [ Reader('1'+diff(key1+key2,key1+key1)), Tag('1'+diff(key1+key2,key1+key1)) ]
+
+rule select_tag:
+  [ Tag(~k+z) ]
+  -->
+  [ TagRun(~k), Tag(z) ]
+
+rule select_reader:
+  [ Reader(~k+z) ]
+  -->
+  [ ReaderRun(~k), Reader(z) ]
+
+// The protocol is simple: the reader sends out a nonce, and the tag responds 
+// with a hash of the nonce and the shared key.
+rule reader1:
+  [ Fr(~nr) ]
+  -->
+  [ Reader1(~nr) , Out(~nr) ]
+
+rule tag1:
+  [ In(x) , TagRun(k), Fr(~nt) ]
+  --[ TagRun(k) ]->
+  [ Out(h(x,k)) ]
+
+rule reader2:
+  [ Reader1(~nr), ReaderRun(k), In(h(~nr,k)) ]
+  --[ Finished() ]->
+  [ ]
+
+lemma executable:
+  exists-trace "Ex #i. Finished() @i"
+
+end
