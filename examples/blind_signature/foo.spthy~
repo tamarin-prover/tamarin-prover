@@ -52,7 +52,7 @@ rule V_1:
   in
     [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( $V, ltkV ) ]
   --[ Elligible (~vote)]->
-    [ Out( m1 ), St_V_1( $V, vote, ~r, ~b ) ]
+    [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
   let rm = sign (blind( commit(vote, ~r), ~b), ltkV)
@@ -102,8 +102,8 @@ lemma test1:
   " Ex k #i #j. Voted (k) @ #i & Signature(k) @ j "
 
 
-axiom antiloop:
-  "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
+// axiom antiloop:
+//  "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
 
 
 end

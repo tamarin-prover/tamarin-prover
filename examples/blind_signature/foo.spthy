@@ -55,7 +55,7 @@ rule V_1:
     [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
-  let rm = sign (blind( commit(vote, ~r), ~b), ltkV)
+  let rm = sign (blind( commit(vote, r), b), ltkV)
       im = checksign( rm , pk(ltkV) )
       sm = sign ( im , ltkA )
   in
@@ -102,7 +102,7 @@ lemma test1:
   " Ex k #i #j. Voted (k) @ #i & Signature(k) @ j "
 
 
-axiom antiloop:
+ axiom antiloop:
   "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
 
 
