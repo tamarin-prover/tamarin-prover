@@ -22,7 +22,7 @@ rule Register_Collect_pk:
   [ Fr(~ltkC) ] --[ ]-> [ !CollectLtk($C, ~ltkC), !CollectPk($C, pk(~ltkC)), Out(pk(~ltkC)) ]
 
 rule Register_Admin_pk:
-  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+  [ Fr(~ltkA) ] --[ Admin($A) ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
 rule Reveal_Voter_ltk:
   [ !Ltk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
@@ -55,12 +55,12 @@ rule V_1:
     [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
-  let rm = sign (blind( commit(vote, ~r), ~b), ltkV)
+  let rm = sign (blind( commit(vote, r), b), ltkV)
       im = checksign( rm , pk(ltkV) )
       sm = sign ( im , ltkA )
   in
     [ In( rm ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ Signature (vote), Antiloop (sm) ]->
+  --[ Signature (vote), Antiloop (sm), IN_A_v(vote, rm), OUT_A(rm) ]->
     [ Out( sm ) ]
 
 rule V_2:
@@ -102,9 +102,21 @@ lemma test1:
   " Ex k #i #j. Voted (k) @ #i & Signature(k) @ j "
 
 
-// axiom antiloop:
+lemma types [typing]:
+  " (All v m1 #i.
+       IN_A_v( v, m) @ i
+       ==>
+       ( (Ex #j. KU(v) @ j & j < i)
+       | (Ex #j. OUT_A( m) @ j)
+       )
+    )"
+
+
+//axiom antiloop:
 //  "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
 
+axiom uniqAdmin:
+  "All A1 A2 #i #j.  Admin(A1)@i & Admin(A2)@j ==> (#i = #j) & (A1 = A2)  "
 
 end
 
