@@ -107,6 +107,7 @@ lemma types [typing]:
        IN_A_v( v, m) @ i
        ==>
        ( (Ex #j. KU(v) @ j & j < i)
+       | (Ex #j V. RevLtk(A) @ j)
        | (Ex #j. OUT_A( m) @ j)
        )
     )"
