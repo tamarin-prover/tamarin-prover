@@ -2,7 +2,21 @@ theory Blind_Signature
 begin
 
 functions: a/2, b/2, c/2, d/2, f/3, g/2
-equations: b(a(b(c(x,y),f(x,y,z)),d(c(x,y),y)),t)=g(y,x)
+equations: b(a(b(c(x,y),f(x,y,z)),d(c(x,y),y)),t)=b(x,y)
+
+rule R_1:
+  let m1 =  b(a(b(c(~x,~y),~var),d(c(~x,~y),~y)),~t)
+  in
+    [ Fr(~var), Fr( ~x ), Fr( ~y ), Fr( ~z ), Fr(~t) ]
+  --[ Pas_1 (~var)]->
+    [ St1( m1 ) ]
+
+rule R_2:
+  let m2 = b(a(b(c(x,y),var),d(c(x,y),y)),t)
+  in
+    [ St1( m2 ) ]
+  --[ Pas_2 (m2) ]->
+    [ Out( var ) ]
 
 end
 

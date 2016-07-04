@@ -24,7 +24,7 @@ begin
   }
 */
 
-functions: blind/2, sign/2, unblind/2, open/2, tdcommit/3, checksign/2, f/3, pk/1
+functions: blind/2, sign/2, unblind/2, open/2, tdcommit/3, checksign/2, f/4, pk/1
 
 equations: checksign( sign(m,sk), pk(sk) ) = m,
            unblind( blind(m,b), b ) = m,
