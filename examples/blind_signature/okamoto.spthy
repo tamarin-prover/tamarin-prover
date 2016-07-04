@@ -30,7 +30,7 @@ equations: checksign( sign(m,sk), pk(sk) ) = m,
            unblind( blind(m,b), b ) = m,
            unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
            open( tdcommit(m,r,td), r ) = m,
-           tdcommit( m2,f(m1,r,m2), td ) = tdcommit(m1,r,td)
+           tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td)
 
 
 // Public key infrastructure
