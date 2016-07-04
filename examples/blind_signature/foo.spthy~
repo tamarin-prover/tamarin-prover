@@ -103,7 +103,7 @@ lemma test1:
 
 
 lemma types [typing]:
-  " (All v m1 #i.
+  " (All v m #i.
        IN_A_v( v, m) @ i
        ==>
        ( (Ex #j. KU(v) @ j & j < i)
@@ -115,8 +115,8 @@ lemma types [typing]:
 //axiom antiloop:
 //  "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
 
-axiom uniqAdmin:
-  "All A1 A2 #i #j.  Admin(A1)@i & Admin(A2)@j ==> (#i = #j) & (A1 = A2)  "
+//axiom uniqAdmin:
+//  "All A1 A2 #i #j.  Admin(A1)@i & Admin(A2)@j ==> (#i = #j) & (A1 = A2)  "
 
 end
 

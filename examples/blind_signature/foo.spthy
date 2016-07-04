@@ -51,7 +51,7 @@ rule V_1:
   let m1 = sign (blind( commit(~vote, ~r), ~b), ltkV)
   in
     [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( $V, ltkV ) ]
-  --[ Elligible (~vote)]->
+  --[ Elligible (~vote), OUT_A(m1)]->
     [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
@@ -60,7 +60,7 @@ rule A_1:
       sm = sign ( im , ltkA )
   in
     [ In( rm ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ Signature (vote), Antiloop (sm), IN_A_v(vote, rm), OUT_A(rm) ]->
+  --[ Signature (vote), Antiloop (sm), IN_A_v(vote, rm) ]->
     [ Out( sm ) ]
 
 rule V_2:
