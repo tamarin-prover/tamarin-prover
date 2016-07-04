@@ -33,6 +33,7 @@ rule Reveal_Collect_ltk:
 rule Reveal_Adminltk:
   [ !AdminLtk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
 
+
 /* We formalize the following protocol
 
   protocol FOO {
@@ -46,6 +47,8 @@ rule Reveal_Adminltk:
     6. C -> Pub: v
   }
 */
+
+//Rules
 
 rule V_1:
   let m1 = sign (blind( commit(~vote, ~r), ~b), ltkV)
@@ -90,6 +93,18 @@ rule C_2:
     [ Out( vote ) ]
 
 
+// Avoid cycling with A_1
+lemma types [typing]:
+  " (All v m #i.
+       IN_A_v( v, m) @ i
+       ==>
+       ( (Ex #j. KU(v) @ j & j < i)
+       | (Ex #j V. RevLtk(V) @ j)
+       | (Ex #j. OUT_A( m) @ j)
+       )
+    )"
+
+
 lemma elligibility:
   " 
   All vote #j.
@@ -102,22 +117,9 @@ lemma test1:
   " Ex k #i #j. Voted (k) @ #i & Signature(k) @ j "
 
 
-lemma types [typing]:
-  " (All v m #i.
-       IN_A_v( v, m) @ i
-       ==>
-       ( (Ex #j. KU(v) @ j & j < i)
-       | (Ex #j V. RevLtk(V) @ j)
-       | (Ex #j. OUT_A( m) @ j)
-       )
-    )"
 
 
-//axiom antiloop:
-//  "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
 
-//axiom uniqAdmin:
-//  "All A1 A2 #i #j.  Admin(A1)@i & Admin(A2)@j ==> (#i = #j) & (A1 = A2)  "
 
 end
 
