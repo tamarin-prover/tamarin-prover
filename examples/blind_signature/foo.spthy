@@ -7,7 +7,7 @@ begin
  * Date: 	
  * Source:	
  *
- * Status: 	
+ * Status: Working	
  */
 
 functions: blind/2, sign/2, unblind/2, open/2, commit/2, checksign/2, pk/1
@@ -54,16 +54,15 @@ rule V_1:
   let m1 = sign (blind( commit(~vote, ~r), ~b), ltkV)
   in
     [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( $V, ltkV ) ]
-  --[ Elligible (~vote), OUT_A(m1)]->
+  --[ OUT_A(m1)]->
     [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
-  let rm = sign (blind( commit(vote, r), b), ltkV)
-      im = checksign( rm , pk(ltkV) )
-      sm = sign ( im , ltkA )
+  let rm = sign( blind( commit(vote, r), b), ltkV)
+      sm = sign( blind( commit(vote, r), b), ltkA )
   in
     [ In( rm ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ Signature (vote), Antiloop (sm), IN_A_v(vote, rm) ]->
+  --[ Signature (vote), IN_A_v(vote, rm) ]->
     [ Out( sm ) ]
 
 rule V_2:
@@ -115,10 +114,6 @@ lemma elligibility:
 lemma test1:
   exists-trace
   " Ex k #i #j. Voted (k) @ #i & Signature(k) @ j "
-
-
-
-
 
 
 end

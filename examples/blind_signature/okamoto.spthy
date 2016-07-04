@@ -24,17 +24,13 @@ begin
   }
 */
 
-
-
-builtins: asymmetric-encryption
-
-functions: blind/2, sign/2, unblind/2, open/2, tdcommit/3, checksign/2, f/4, pk/1
+functions: blind/2, sign/2, unblind/2, open/2, tdcommit/3, checksign/2, f/3, pk/1
 
 equations: checksign( sign(m,sk), pk(sk) ) = m,
-           unblind( blind(m,r), r ) = m,
-           unblind( sign( blind(m,r), sk), r ) = sign(m,sk),
+           unblind( blind(m,b), b ) = m,
+           unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
            open( tdcommit(m,r,td), r ) = m,
-           tdcommit( m2,f(m1,r,td,m2), r ) = tdcommit(m1,r,td)
+           tdcommit( m2,f(m1,r,m2), td ) = tdcommit(m1,r,td)
 
 
 // Public key infrastructure
@@ -71,39 +67,39 @@ rule V_1:
     [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b, ~td ) ]
 
 rule A_1:
-  let rm1 = sign (blind( tdcommit(~vote, ~r, ~td), ~b), ltkV)
-      im1 = checksign( rm1 , pk(ltkV) )
-      sm1 = sign ( im1 , ltkA )
+  let rm = sign (blind( tdcommit(vote, r, td), b), ltkV)
+      sm = sign (blind( tdcommit(vote, r, td), b), ltkA )
   in
-    [ In( rm1 ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ Signature (~vote), Antiloop (sm1) ]->
-    [ Out( sm1 ) ]
-
+    [ In( rm ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
+  --[ Signature (vote), Antiloop (sm) ]->
+    [ Out( sm ) ]
+/*
 rule V_2:
-  let m2 = sign( blind( tdcommit(vote, ~r, ~td ), ~b) , ltkA )
+  let rm = sign( blind( tdcommit(vote, r, td ), b), ltkA )
+      sm = sign( tdcommit(vote, r, td ), ltkA )
   in
-    [ In( m2 ), St_V_1( $V, vote, ~r, ~b, ~td), !CollectPk( $C, pkC ), !AdminPk( $A, pk(ltkA) ) ]
+    [ In( m ), St_V_1( V, vote, r, b, td), !CollectPk( $C, pkC ), !AdminPk( $A, pk(ltkA) ) ]
   --[ ]->
-    [ Out( aenc{ $V, unblind( m2, ~b ) }pkC ), St_V_2( $V, $A, vote, ~r, ~td) ]
+    [ Private_Channel_1( V, sm ), St_V_2( V, $A, vote, r, td) ]
 
 rule C_1:
-  let m = sign(tdcommit(~vote,~r,~td),ltkA)
+  let m = sign(tdcommit(vote,r,td),ltkA)
   in
-    [ In( aenc{ $V, m }pk(skC) ), !AdminPk( $A, pk(ltkA) ), !CollectLtk( $C, skC )]
-  --[ Checksign(~vote)]->
-    [ Out (tdcommit(~vote,~r,~td)), St_C_1($C, $A, $V, m ) ]
+    [ Private_Channel_1( V, m), !AdminPk( $A, pk(ltkA) ), !CollectLtk( $C, skC )]
+  --[ Checksign(vote)]->
+    [ Out ( tdcommit( vote, r, td ) ), St_C_1( $C, $A, V, m ) ]
 
 rule V_3:
-    [ St_V_2( V, A, vote, ~r, ~td), !TPk( $T, pkT ) ]
+    [ St_V_2( V, A, vote, r, td), !TPk( $T, pkT ) ]
   --[ ]->
-    [ Out( aenc{ vote, ~r, tdcommit(vote,~r,~td) }pkT) ]
+    [ Private_Channel_2( vote, r, tdcommit(vote,r,td) ) ]
 
 rule T_1:
-    [ Private_Channel( aenc{ vote, ~r, tdcommit(vote,~r,td)}pkT ), In( tdcommit(vote2,~r2,td2) ), !Pk( $T, pkT ) ]
+    [ Private_Channel_2(vote, r, tdcommit(vote,r,td) ), In( tdcommit(vote2,r2,td2) ), !Pk( $T, pkT ) ]
   --[ Verifycorrectness(vote,vote2),Voted (vote)]->
     [ Out(vote) ]
-
-
+*/
+/*
 lemma elligibility:
   " // Voted(c)=>Elligible(c) before
   All vote #j.
@@ -121,7 +117,7 @@ lemma test2:
 lemma test3:
   exists-trace
   " Ex k #i #j. Elligible (k) @ #i & Voted(k) @ j "
-
+*/
 axiom antiloop:
   "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
 

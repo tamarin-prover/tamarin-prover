@@ -1,19 +1,8 @@
-theory testcd
+theory Blind_Signature
 begin
-
-/*
- * Protocol:	
- * Modeler: 	
- * Date: 	
- * Source:	
- *
- * Status: 	
- */
 
 functions: a/2, b/2, c/2, d/2, f/3, g/2
 equations: b(a(b(c(x,y),f(x,y,z)),d(c(x,y),y)),t)=g(y,x)
-
-
 
 end
 
