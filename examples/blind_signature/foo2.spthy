@@ -1,0 +1,121 @@
+theory Blind_Signature
+begin
+
+/*
+ * Protocol: Foo	
+ * Modeler: 	
+ * Date: 	
+ * Source:	
+ *
+ * Status: Testing	
+ */
+
+functions: blind/2, sign/2, unblind/2, open/2, commit/2, checksign/2, pk/1
+
+equations: open(commit(m,r),r)=m, checksign( sign(m,sk),pk(sk) ) = m, unblind(sign(blind(m,r),sk),r)=sign(m,sk)
+
+// Public key infrastructure
+rule Register_Voter_pk:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
+
+rule Register_Collect_pk:
+  [ Fr(~ltkC) ] --[ ]-> [ !CollectLtk($C, ~ltkC), !CollectPk($C, pk(~ltkC)), Out(pk(~ltkC)) ]
+
+rule Register_Admin_pk:
+  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+
+rule Reveal_Voter_ltk:
+  [ !Ltk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
+
+rule Reveal_Collect_ltk:
+  [ !CollectLtk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
+
+rule Reveal_Adminltk:
+  [ !AdminLtk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
+
+
+/* We formalize the following protocol
+
+  protocol FOO {
+    Phase 1:
+    1. V -> A: sign(blind(commit(v,r),b),skV)
+    2. A -> V: sign(blind(commit(v,r),b),skA)
+    Phase 2:
+    3. V -> C: Private: <l, sign(commit(v,r),skA)>
+    Phase 3
+    5. V -> C: Private: <l, r> 
+    6. C -> Pub: v
+  }
+*/
+
+//Rules
+
+rule V_1:
+  let sVbcv = sign (blind( commit(~vote, ~r), ~b), ltkV)
+  in
+    [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( $V, ltkV ) ]
+  --[ OUT_V(sVbcv)]->
+    [ Out( sVbcv ), St_V_1( $V, ~vote, ~r, ~b ) ]
+
+rule A_1:
+  let bcv = checksign( sVbcv, pk(ltkV))
+      sAbcv = sign( bcv, ltkA )
+  in
+    [ In( sVbcv ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
+  --[ Signature (bcv), IN_A_v(bcv, sVbcv) ]->
+    [ Out( sAbcv ) ]
+
+rule V_2:
+  let sAcv = unblind(sAbcv,b)
+  in
+    [ In( sAbcv ), St_V_1( V, vote, r, b), Fr( ~l ) ]
+  --[ ]->
+    [ P_Ch_1( V, ~l, sAcv ), St_V_2( V, $A, vote, r, b, ~l ) ]
+
+rule C_1:
+  let cv = checksign(sAcv, pk(ltkA) )
+  in
+    [ P_Ch_1( $V, l, sAcv ), !AdminPk($A, pk(ltkA))]
+  --[ Checksign(sAcv)]->
+    [ St_C_1($C, $V, $A, l, cv ) ]
+
+rule V_3:
+    [ St_V_2( $V, $A, vote, r, b, l )]
+  --[ ]->
+    [ P_Ch_2( l, r) ]
+
+rule C_2:
+  let v = open( cv,r)
+  in
+    [ P_Ch_2( l, r), St_C_1($C, $V, $A, l, cv ) ]
+  --[ Voted( v ) ]->
+    [ Out( v ) ]
+
+
+// Avoid cycling with A_1
+lemma types [typing]:
+  " (All bcv sVbcv #i.
+       IN_A_v( bcv, sVbcv) @ i
+       ==>
+       ( (Ex #j. KU( bcv ) @ j & j < i)
+       | (Ex #j V. RevLtk( V ) @ j)
+       | (Ex #j. OUT_V( sVbcv ) @ j)
+       )
+    )"
+
+/*
+lemma elligibility:
+  " 
+  All vote #j.
+  Voted(vote) @ j
+  ==> 
+  ( ( Ex #i.  Signature(vote) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
+*/
+
+lemma test1:
+  exists-trace
+  " Ex v r b #i #j. Voted (v) @ #i & Signature( blind(commit(v,r),b) ) @ j "
+
+
+end
+
