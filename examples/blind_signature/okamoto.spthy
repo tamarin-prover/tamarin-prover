@@ -14,10 +14,10 @@ begin
 
   protocol FOO {
     Phase 1:
-    1. V -> A: sign(blind(tdcommit(vote,r),b,td),skV)
-    2. A -> V: sign(blind(tdcommit(vote,r),b,td),skA)
+    1. V -> A: sign(blind(tdcommit(vote,r,td),b),skV)
+    2. A -> V: sign(blind(tdcommit(vote,r,td),b),skA)
     Phase 2:
-    3. V -> C: { V,sign(tdcommit(vote,r,td),skA) }pkC
+    3. V -> C: Private:< V,sign(tdcommit(vote,r,td),skA)>
     Phase 3
     5. V -> T: { vote, r, tdcommit(vote,r,td) }pkT
     6. T -> Pub: vote
@@ -30,7 +30,9 @@ equations: checksign( sign(m,sk), pk(sk) ) = m,
            unblind( blind(m,b), b ) = m,
            unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
            open( tdcommit(m,r,td), r ) = m,
-           tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td)
+           tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td),
+           open( tdcommit(m1,r,td), f(m1,r,td,m2) )=m2,
+           f(m1, f (m, r, td, m1), td, m2) = f (m, r, td, m2)    //The two last rules are needed for the convergence
 
 
 // Public key infrastructure
@@ -63,7 +65,7 @@ rule V_1:
   let m1 = sign (blind( tdcommit(~vote, ~r, ~td), ~b), ltkV)
   in
     [ Fr( ~vote ), Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( $V, ltkV ) ]
-  --[ Elligible (~vote)]->
+  --[ OUT_V( m1)]->
     [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b, ~td ) ]
 
 rule A_1:
@@ -71,9 +73,9 @@ rule A_1:
       sm = sign (blind( tdcommit(vote, r, td), b), ltkA )
   in
     [ In( rm ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ Signature (vote), Antiloop (sm) ]->
+  --[ Signature (vote), IN_A_v( vote, rm) ]->
     [ Out( sm ) ]
-/*
+
 rule V_2:
   let rm = sign( blind( tdcommit(vote, r, td ), b), ltkA )
       sm = sign( tdcommit(vote, r, td ), ltkA )
@@ -98,28 +100,30 @@ rule T_1:
     [ Private_Channel_2(vote, r, tdcommit(vote,r,td) ), In( tdcommit(vote2,r2,td2) ), !Pk( $T, pkT ) ]
   --[ Verifycorrectness(vote,vote2),Voted (vote)]->
     [ Out(vote) ]
-*/
-/*
+
+
+// Avoid cycling with A_1
+lemma types [typing]:
+  " (All v m #i.
+       IN_A_v( v, m) @ i
+       ==>
+       ( (Ex #j. KU(v) @ j & j < i)
+       | (Ex #j V. RevLtk(V) @ j)
+       | (Ex #j. OUT_V( m) @ j)
+       )
+    )"
+
+
 lemma elligibility:
-  " // Voted(c)=>Elligible(c) before
+  " 
   All vote #j.
   Voted(vote) @ j
   ==> 
-  ( ( Ex #i.  Elligible(vote) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
+  ( ( Ex #i.  Signature(vote) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
+
 lemma test1:
   exists-trace
-  " Ex k #i #j. Elligible (k) @ #i & Signature(k) @ j "
-
-lemma test2:
-  exists-trace
-  " Ex k #i #j. Elligible (k) @ #i & Checksign(k) @ j "
-
-lemma test3:
-  exists-trace
-  " Ex k #i #j. Elligible (k) @ #i & Voted(k) @ j "
-*/
-axiom antiloop:
-  "All mi mj #i #j.  Antiloop (mi)@i & Antiloop (mj)@j ==> (#i = #j) & (mi = mj)  "
+  " Ex k #i #j. Voted (k) @ #i & Signature(k) @ j "
 
 
 end

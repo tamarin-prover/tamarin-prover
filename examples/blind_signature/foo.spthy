@@ -54,7 +54,7 @@ rule V_1:
   let m1 = sign (blind( commit(~vote, ~r), ~b), ltkV)
   in
     [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( $V, ltkV ) ]
-  --[ OUT_A(m1)]->
+  --[ OUT_V(m1)]->
     [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b ) ]
 
 rule A_1:
@@ -99,7 +99,7 @@ lemma types [typing]:
        ==>
        ( (Ex #j. KU(v) @ j & j < i)
        | (Ex #j V. RevLtk(V) @ j)
-       | (Ex #j. OUT_A( m) @ j)
+       | (Ex #j. OUT_V( m) @ j)
        )
     )"
 
