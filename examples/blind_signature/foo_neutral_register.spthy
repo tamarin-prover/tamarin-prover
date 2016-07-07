@@ -7,7 +7,7 @@ begin
  * Date: 	
  * Source:	
  *
- * Status: Working, proven not secure
+ * Status: Work in progress, proven not secure
  */
 
 functions: blind/2, sign/2, unblind/2, open/2, commit/2, checksign/2, pk/1
@@ -85,8 +85,7 @@ lemma types [typing]:
   " (All v m #i.
        IN_A_v( v, m) @ i
        ==>
-       ( (Ex #j. KU(v) @ j & j < i)
-       | (Ex #j V. RevLtk(V) @ j)
+       ( (Ex #j V. RevLtk(V) @ j)
        | (Ex #j. OUT_V( m) @ j)
        )
     )"

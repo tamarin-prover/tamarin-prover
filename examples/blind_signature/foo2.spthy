@@ -1,6 +1,8 @@
 theory Blind_Signature
 begin
 
+builtins: signing
+
 /*
  * Protocol: Foo	
  * Modeler: 	
@@ -10,9 +12,9 @@ begin
  * Status: Testing	
  */
 
-functions: blind/2, sign/2, unblind/2, open/2, commit/2, checksign/2, pk/1
-
-equations: open(commit(m,r),r)=m, checksign( sign(m,sk),pk(sk) ) = m, unblind(sign(blind(m,r),sk),r)=sign(m,sk)
+builtins: signing
+functions: blind/2, unblind/2, open/2, commit/2, checksign/2
+equations: open(commit(m,r),r)=m, checksign( sign(m,sk),pk(sk) ) = m, unblind(blind(m,r),r) = m, unblind(sign(blind(m,r),sk),r)=sign(m,sk)
 
 // Public key infrastructure
 rule Register_Voter_pk:
@@ -51,70 +53,87 @@ rule Reveal_Adminltk:
 //Rules
 
 rule V_1:
-  let sVbcv = sign (blind( commit(~vote, ~r), ~b), ltkV)
+  let x = commit( ~vote , ~r )
+      e = blind( x, ~b )
+      s = sign ( e , ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( $V, ltkV ) ]
-  --[ OUT_V(sVbcv)]->
-    [ Out( sVbcv ), St_V_1( $V, ~vote, ~r, ~b ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( V, ltkV ) ]
+  --[ Voted(~vote), Create_V_1(e)]->
+    [ Out( < e , s , V> ), St_V_1( V, ~vote, ~r, ~b ) ]
 
 rule A_1:
-  let bcv = checksign( sVbcv, pk(ltkV))
-      sAbcv = sign( bcv, ltkA )
+  let d = sign( e, ltkA )
+      verif = verify (s,e,pkV)
   in
-    [ In( sVbcv ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ Signature (bcv), IN_A_v(bcv, sVbcv) ]->
-    [ Out( sAbcv ) ]
+    [ In( < e , s , V>), !AdminLtk( A, ltkA ), !Pk( V, pkV ) ]
+  --[ Eq(verif, true),  Signature(e,V), In_A_1(e) ]->
+    [ Out( < e , d > ) ]
 
 rule V_2:
-  let sAcv = unblind(sAbcv,b)
+  let y = unblind(d,b)   // = sign(x,ltkA)
+      x = commit(vote,r)
+      verif = verify(d, e, pkA)
   in
-    [ In( sAbcv ), St_V_1( V, vote, r, b), Fr( ~l ) ]
-  --[ ]->
-    [ P_Ch_1( V, ~l, sAcv ), St_V_2( V, $A, vote, r, b, ~l ) ]
+    [ In(< e, d>), St_V_1( V, vote, r, b),  !AdminPk(A, pkA) ]
+  --[ Eq( verif, true ) ,  Eq( open(checksign(y,pkA),r), vote ) , In_V_2( e ) ]->     //check signature A
+    [ P_Ch_1( V, x, y ) , St_V_2( V, A, vote, r, b ) ]
 
 rule C_1:
-  let cv = checksign(sAcv, pk(ltkA) )
+  let verif = verify(y, x, pkA)
   in
-    [ P_Ch_1( $V, l, sAcv ), !AdminPk($A, pk(ltkA))]
-  --[ Checksign(sAcv)]->
-    [ St_C_1($C, $V, $A, l, cv ) ]
+    [ P_Ch_1( V, x, y ), Fr(~l), !AdminPk(A, pkA)]
+  --[ Eq( verif, true ) ]->
+    [ St_C_1(V, A, x ), Out(<x,~l>) ]
 
 rule V_3:
-    [ St_V_2( $V, $A, vote, r, b, l )]
+    [ In(<x,l>), St_V_2( V, A, vote, r, b )]
   --[ ]->
     [ P_Ch_2( l, r) ]
 
 rule C_2:
-  let v = open( cv,r)
+  let v = open( x, r)
   in
-    [ P_Ch_2( l, r), St_C_1($C, $V, $A, l, cv ) ]
-  --[ Voted( v ) ]->
+    [ P_Ch_2( l, r), St_C_1(V, A,  x ) ]
+  --[ VotePublished( v ) ]->
     [ Out( v ) ]
 
 
-// Avoid cycling with A_1
-lemma types [typing]:
-  " (All bcv sVbcv #i.
-       IN_A_v( bcv, sVbcv) @ i
-       ==>
-       ( (Ex #j. KU( bcv ) @ j & j < i)
-       | (Ex #j V. RevLtk( V ) @ j)
-       | (Ex #j. OUT_V( sVbcv ) @ j)
-       )
-    )"
+lemma types [use_induction, reuse]:
+  " (
+  All e #i. In_A_1(e) @ i
+  ==>
+  ( (Ex x b #j .  Create_V_1( e )  @ j & j<i & e=blind(x,b) )
+  | (Ex #j V. RevLtk( V ) @ j) )
+  ) & (
+  All e #i. In_V_2(e) @ i
+  ==>
+  ( (Ex #j. In_A_1(e)@j & j<i )
+  | (Ex #j V. RevLtk( V ) @ j ) )
+  ) "
 
-/*
+axiom Equality:
+"All x y #i. Eq(x,y) @i ==> x = y"
+
+axiom OnlyOneVotPerVoter:
+"not (Ex e1 e2 V #i #j. Signature(e1,V) @i & Signature(e2,V)@j & not(#i = #j) )"
+
+
 lemma elligibility:
   " 
   All vote #j.
-  Voted(vote) @ j
+  VotePublished (vote) @ j
   ==> 
-  ( ( Ex #i.  Signature(vote) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
-*/
+  ( ( Ex r b V #i.  Signature(blind(commit(vote,r),b),V) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
+
 
 lemma test1:
   exists-trace
-  " Ex v r b #i #j. Voted (v) @ #i & Signature( blind(commit(v,r),b) ) @ j "
+  " Ex v r b V #i #j. VotePublished (v) @ #i & Signature( blind(commit(v,r),b) ,V) @ j "
+
+lemma test11:
+  exists-trace
+  " Ex v#i #j. VotePublished(v)@i & Voted(v)@j "
+
 
 
 end
