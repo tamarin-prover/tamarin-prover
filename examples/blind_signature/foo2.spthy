@@ -9,7 +9,7 @@ builtins: signing
  * Date: 	
  * Source:	
  *
- * Status: Testing	
+ * Status: Working, to be optimized
  */
 
 builtins: signing
@@ -69,32 +69,32 @@ rule A_1:
   --[ Eq(verif, true),  Signature(e,V), In_A_1(e) ]->
     [ Out( < e , d > ) ]
 
-rule V_2:
+rule V_2:    // Check Admin signature & 
   let y = unblind(d,b)   // = sign(x,ltkA)
       x = commit(vote,r)
       verif = verify(d, e, pkA)
   in
     [ In(< e, d>), St_V_1( V, vote, r, b),  !AdminPk(A, pkA) ]
   --[ Eq( verif, true ) ,  Eq( open(checksign(y,pkA),r), vote ) , In_V_2( e ) ]->     //check signature A
-    [ P_Ch_1( V, x, y ) , St_V_2( V, A, vote, r, b ) ]
+    [ P_Ch_1( x, y ) , St_V_2( V, A, vote, r, b ) ]
 
 rule C_1:
   let verif = verify(y, x, pkA)
   in
-    [ P_Ch_1( V, x, y ), Fr(~l), !AdminPk(A, pkA)]
-  --[ Eq( verif, true ) ]->
-    [ St_C_1(V, A, x ), Out(<x,~l>) ]
+    [ P_Ch_1(  x, y ), Fr(~l), !AdminPk(A, pkA)]
+  --[ /*Eq( verif, true )*/ ]->
+    [ St_C_1( A, x, ~l ), Out(<x,~l>) ]
 
 rule V_3:
-    [ In(<x,l>), St_V_2( V, A, vote, r, b )]
-  --[ ]->
+    [ In(<x,l>), St_V_2(V, A, vote, r, b )]
+  --[ /*Eq( x , commit( vote , r ) )*/ ]->
     [ P_Ch_2( l, r) ]
 
-rule C_2:
+rule C_2:                //Check if r is correct
   let v = open( x, r)
   in
-    [ P_Ch_2( l, r), St_C_1(V, A,  x ) ]
-  --[ VotePublished( v ) ]->
+    [ P_Ch_2( l1, r), St_C_1( A, x, l2 ) ]
+  --[ /*Eq(l1,l2),*/ Eq (x, commit(open(x,r),r)), VotePublished( v ) ]->
     [ Out( v ) ]
 
 
@@ -102,7 +102,7 @@ lemma types [use_induction, reuse]:
   " (
   All e #i. In_A_1(e) @ i
   ==>
-  ( (Ex x b #j .  Create_V_1( e )  @ j & j<i & e=blind(x,b) )
+  ( (Ex #j .  Create_V_1( e )  @ j & j<i )
   | (Ex #j V. RevLtk( V ) @ j) )
   ) & (
   All e #i. In_V_2(e) @ i
