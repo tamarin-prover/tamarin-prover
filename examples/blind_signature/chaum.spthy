@@ -89,10 +89,10 @@ rule S_2:
 
 
 axiom Equality:
-"All x y #i. Eq(x,y) @i ==> x = y"
+"All x y #i. Eq(x,y)@i ==> x = y"
 
 axiom BankOnlyAcceptsOnce:
-  " not( Ex c #j #k. Deposited(c) @ j & Deposited(c) @ k & not (#j = #k) ) "
+  " All c #j #k. Deposited(c)@j & Deposited(c)@k ==> #j = #k "
 
 lemma types [typing]:
   " (

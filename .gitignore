@@ -15,11 +15,5 @@ cabal.sandbox.config
 *.o
 *.prof
 *.un~
-
-*.hpc
-unit.tix
-
-narrow
-unit
-
-client_session_key.aes
+*~
+*.aes

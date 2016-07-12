@@ -108,7 +108,10 @@ axiom Equality:
 "All x y #i. Eq(x,y) @i ==> x = y"
 
 axiom OnlyOneVotPerVoter:
-"not (Ex e1 e2 V #i #j. Registered(e1,V) @i & Registered(e2,V)@j & not(#i = #j) )"
+  "
+  All e1 e2 V #i #j. Registered(e1,V) @i & Registered(e2,V)@j
+  ==>
+  #i = #j"
 
 
 lemma elligibility:

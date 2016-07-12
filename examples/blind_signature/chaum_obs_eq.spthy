@@ -83,9 +83,9 @@ rule B_2:
     [ Private_Ch( C, x ) ]
 
 rule S_2:
-    [ Private_Ch( C, ~x )  ]
-  --[ Spend ( ~x ) ]->
-    [ Out( diff( $client0, C) ) ]
+    [ Private_Ch( C, ~x ) ]
+  --[ Spend ( ~x,diff(C,$C0) ) ]->
+    [ ]
 
 
 axiom Equality:
@@ -95,18 +95,18 @@ axiom BankOnlyAcceptsOnce:
   " All c #j #k. Deposited(c) @ j & Deposited(c) @ k
   ==> 
   #j = #k "
-
-lemma types [typing]:
+/*
+lemma types [use_induction, reuse]:
   " (
   All x #i. In_C_2(x) @ i
   ==>
   ( (Ex #j #k.  In_B_1(x) @ j & j<i & Create_C_1( x )  @ k & k<j)
   ) )
   "
-
+*/
 lemma unforgeability:
-  " // Spend(c)=>withdraw(c) before
-  All x #j. Spend(x) @ j
+  "
+  All x C #j. Spend(x,C) @ j
   ==> 
   ( ( Ex #i. Withdraw( x )@i & #i < #j
   & not (Ex #l. Spend(x)@l & not ( #l = #j ) )
