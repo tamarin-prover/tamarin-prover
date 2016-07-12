@@ -95,15 +95,15 @@ axiom BankOnlyAcceptsOnce:
   " All c #j #k. Deposited(c) @ j & Deposited(c) @ k
   ==> 
   #j = #k "
-/*
-lemma types [use_induction, reuse]:
+
+lemma types [typing]:
   " (
   All x #i. In_C_2(x) @ i
   ==>
   ( (Ex #j #k.  In_B_1(x) @ j & j<i & Create_C_1( x )  @ k & k<j)
   ) )
   "
-*/
+
 lemma unforgeability:
   "
   All x C #j. Spend(x,C) @ j
