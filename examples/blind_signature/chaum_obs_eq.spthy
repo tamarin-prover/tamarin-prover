@@ -46,27 +46,40 @@ rule Register_Bank_pk:
 rule C_1:
     [ Fr(~x), Fr(~r) ]
   --[ Create_C_1(~x)]->
-    [ Out( < $C, blind(~x,~r) > ), St_C_1($C, ~x, ~r )]
+    [ Out( < 'C1', blind(~x,~r) > ), St_C_11('C1', ~x, ~r )]
+
+rule C_12:
+    [ Fr(~x), Fr(~r) ]
+  --[ Create_C_1(~x)]->
+    [ Out( < 'C2', blind(~x,~r) > ), St_C_12('C2', ~x, ~r )]
 
 rule B_1:
     [ In( <C, blind(~x,r)> ), !Bank_Ltk($B, ltkB) ]
   --[ Withdraw(~x), In_B_1(~x)]->
     [ St_B_1( $B, C, pk(ltkB) ), Out( sign( blind(~x,r), ltkB) ) ]
 
-rule C_2:
+rule C_21:
  let sBx = unblind(sBbx,r)
      verif = verify( sBbx, blind(x,r), pkB)
   in
-    [ St_C_1(C, x, r ), In( sBbx ), !Bank_Pk(B, pkB) ]
+    [ St_C_11('C1', x, r ), In( sBbx ), !Bank_Pk(B, pkB) ]
   --[ Eq( verif, true  ), In_C_2(x)]->
-    [ St_C_2(C, x, r, sBx ) ]
+    [ St_C_21('C1', x, r, sBx ) ]
+
+rule C_22:
+ let sBx = unblind(sBbx,r)
+     verif = verify( sBbx, blind(x,r), pkB)
+  in
+    [ St_C_12('C2', x, r ), In( sBbx ), !Bank_Pk(B, pkB) ]
+  --[ Eq( verif, true  ), In_C_2(x)]->
+    [ St_C_22('C2', x, r, sBx ) ]
 
 /* Payment and deposit phase */
 
 rule C_3:
-    [ St_C_2(C, x, r, sBx ) ]
+    [ St_C_21('C1', x1, r1, sBx1 ),St_C_22('C2', x2, r2, sBx2 ) ]
   --[  ]->
-    [ Out(< x, sBx >) ]
+    [ Out(diff(< x1, sBx1 >,< x2, sBx2 >)) ]
 
 rule S_1:
   let verif = verify( sBx, x, pkB )
@@ -84,7 +97,7 @@ rule B_2:
 
 rule S_2:
     [ Private_Ch( C, ~x ) ]
-  --[ Spend ( ~x,diff(C,$C0) ) ]->
+  --[ Spend ( ~x ) ]->
     [ ]
 
 
@@ -96,6 +109,7 @@ axiom BankOnlyAcceptsOnce:
   ==> 
   #j = #k "
 
+/*
 lemma types [typing]:
   " (
   All x #i. In_C_2(x) @ i
@@ -103,15 +117,6 @@ lemma types [typing]:
   ( (Ex #j #k.  In_B_1(x) @ j & j<i & Create_C_1( x )  @ k & k<j)
   ) )
   "
-
-lemma unforgeability:
-  "
-  All x C #j. Spend(x,C) @ j
-  ==> 
-  ( ( Ex #i. Withdraw( x )@i & #i < #j
-  & not (Ex #l. Spend(x)@l & not ( #l = #j ) )
-  ) )
-  "
-
+*/
 end
 
