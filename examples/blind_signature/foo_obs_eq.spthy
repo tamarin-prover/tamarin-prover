@@ -1,4 +1,4 @@
-theory Blind_Signature
+theory FOO_Equiv
 begin
 
 /*

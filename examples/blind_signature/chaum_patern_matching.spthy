@@ -1,4 +1,4 @@
-theory Blind_Signature
+theory Chaum_Pattern_Matching
 begin
 
 builtins: asymmetric-encryption
