@@ -1,0 +1,129 @@
+theory Blind_Signature
+begin
+
+/*
+ * Protocol: Foo	
+ * Modeler: 	
+ * Date: 	
+ * Source:	
+ *
+ * Status: Working, to be optimized
+ */
+
+builtins: signing
+functions: blind/2, sign/2, unblind/2, open/2, commit/2, checksign/2, pk/1
+equations: open(commit(m,r),r)=m, checksign( sign(m,sk),pk(sk) ) = m, unblind(blind(m,r),r) = m, unblind(sign(blind(m,r),sk),r)=sign(m,sk)
+
+// Public key infrastructure
+rule Register_Voter_pk:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
+
+rule Register_Collect_pk:
+  [ Fr(~ltkC) ] --[ ]-> [ !CollectLtk($C, ~ltkC), !CollectPk($C, pk(~ltkC)), Out(pk(~ltkC)) ]
+
+rule Register_Admin_pk:
+  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+
+
+/* We formalize the following protocol
+
+  protocol FOO {
+    Phase 1:
+    1. V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV), V >
+    2. A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) > 
+    Phase 2:
+    3. V -> C: Private: < commit(vote,r), sign(commit(vote,r),ltkA) >
+    Phase 3:
+    4. V -> C: Private: <l, r> 
+    5. C -> Pub: v
+  }
+*/
+
+//Rules
+
+rule V_1:
+  let x = commit( ~vote , ~r )
+      e = blind( x, ~b )
+      s = sign ( e , ltkV )
+  in
+    [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( V, ltkV ) ]
+  --[ Voted(~vote), Create_V_1(e)]->
+    [ Out( < e , s , V> ), St_V_1( V, ~vote, ~r, ~b ) ]
+
+rule A_1:
+  let d = sign( e, ltkA )
+      verif = verify( s,e, pkV)
+  in
+    [ In( < e , s , V>), !AdminLtk( A, ltkA ), !Pk( V, pkV ) ]
+  --[ Eq( verif, true ),  Registered(e,V), In_A_1(e) ]->
+    [ Out( < e , d > ) ]
+
+rule V_2:    // Check Admin_Signature & Check the commit 
+  let y = unblind(d,b)   // = sign(x,ltkA)
+      x = commit(vote,r)
+      verif = verify( d, e, pkA)
+  in
+    [ In(< e, d>), St_V_1( V, vote, r, b),  !AdminPk(A, pkA) ]
+  --[ Eq( verif, true ) , In_V_2( e ) ]->     
+    [ P_Ch_1( x, y ) , St_V_2( V, A, vote, r, b ) ]
+
+rule C_1:
+  let verif = verify( y, x, pkA)
+  in
+    [ P_Ch_1(  x, y ), !AdminPk(A, pkA)]
+  --[ Eq( verif, true ) ]->
+    [ St_C_1( A, x), Out(x) ]
+
+rule V_3:
+    [ In(x), St_V_2(V, A, vote, r, b )]
+  --[  ]->
+    [ P_Ch_2( r ) ]
+
+rule C_2:                //Check if r is correct( avoid r1<->r2)
+  let v = open( x, r)
+  in
+    [ P_Ch_2( r ), St_C_1( A, x ) ]
+  --[ Eq (x, commit(open(x,r),r)), VotePublished( v ) ]->
+    [ Out( v ) ]
+
+
+lemma types [typing]:
+  " (
+  All e #i. In_A_1(e) @ i
+  ==>
+  ( (Ex #j .  Create_V_1( e )  @ j & j<i )
+  // | (Ex #j V. RevLtk( V ) @ j)
+  ) ) & (
+  All e #i. In_V_2(e) @ i
+  ==>
+  ( (Ex #j. In_A_1(e)@j & j<i )
+  // | (Ex #j V. RevLtk( V ) @ j ) 
+  ) )"
+
+axiom Equality:
+"All x y #i. Eq(x,y) @i ==> x = y"
+
+axiom OnlyOneVotPerVoter:
+"not (Ex e1 e2 V #i #j. Registered(e1,V) @i & Registered(e2,V)@j & not(#i = #j) )"
+
+
+lemma elligibility:
+  " 
+  All v #j.
+  VotePublished (v) @ j
+  ==> 
+  ( ( Ex r b V #i.  Registered(blind(commit(v,r),b),V) @ i & #i < #j )  )"
+
+lemma test1:
+  exists-trace
+  " Ex v r b V #i #j. VotePublished (v) @ #i & Registered( blind(commit(v,r),b) ,V) @ j "
+
+
+lemma test11:
+  exists-trace
+  " Ex v#i #j. VotePublished(v)@i & Voted(v)@j "
+
+
+
+end
+

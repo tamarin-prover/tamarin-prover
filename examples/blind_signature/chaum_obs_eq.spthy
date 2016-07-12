@@ -1,0 +1,117 @@
+theory Blind_Signature
+begin
+
+/*
+ * Protocol: Chaum's On-line Protocol
+ * Modeler: 	
+ * Date: 	
+ * Source:	
+ *
+ * Status: work	in progress
+ */
+
+builtins: signing
+functions: blind/2, unblind/2, getmess/1, checksign/2
+equations: getmess(sign(m,r)) = m, checksign(sign(m,k),pk(k)) = m, unblind(blind(m,r),r) = m , unblind(sign(blind(m,r),k),r) = sign(m,k)
+
+
+// Public key infrastructure
+
+rule Register_pk:
+  [ Fr(~ltkA) ]
+  -->
+  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+
+rule Register_Bank_pk:
+  [ Fr(~ltkB) ]
+  -->
+  [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(pk(~ltkB)) ]
+
+/* We formalize the following protocol
+
+  protocol Chaum {
+    Withdrawal phase
+    1. C -> B: <C, b=blind(x,r)>
+    2. C <- B: sign(b,skB) + B:Debit + C:Check sign
+
+    Payment and deposit phase
+    3. C -> S: (x, bs )
+    4. B <- S: (x, sign(x,skB)) + check signature + check not yet deposited
+  }
+*/
+
+
+/*Withdrawal Phase*/
+
+rule C_1:
+    [ Fr(~x), Fr(~r) ]
+  --[ Create_C_1(~x)]->
+    [ Out( < $C, blind(~x,~r) > ), St_C_1($C, ~x, ~r )]
+
+rule B_1:
+    [ In( <C, blind(~x,r)> ), !Bank_Ltk($B, ltkB) ]
+  --[ Withdraw(~x), In_B_1(~x)]->
+    [ St_B_1( $B, C, pk(ltkB) ), Out( sign( blind(~x,r), ltkB) ) ]
+
+rule C_2:
+ let sBx = unblind(sBbx,r)
+     verif = verify( sBbx, blind(x,r), pkB)
+  in
+    [ St_C_1(C, x, r ), In( sBbx ), !Bank_Pk(B, pkB) ]
+  --[ Eq( verif, true  ), In_C_2(x)]->
+    [ St_C_2(C, x, r, sBx ) ]
+
+/* Payment and deposit phase */
+
+rule C_3:
+    [ St_C_2(C, x, r, sBx ) ]
+  --[  ]->
+    [ Out(< x, sBx >) ]
+
+rule S_1:
+  let verif = verify( sBx, x, pkB )
+  in
+    [ !Ltk(S, ltkS), !Bank_Pk(B, pkB), In( < x, sBx >  ) ]
+  --[ Eq( verif,true ) ]->
+    [ Out( < x, sBx > ) ]
+
+rule B_2:
+  let verif = verify( sBx, x, pkB )
+  in
+    [ St_B_1( B, C, pkB ), In(<x, sBx> ) ]
+  --[ Eq( verif,true ), Deposited(x)]->
+    [ Private_Ch( C, x ) ]
+
+rule S_2:
+    [ Private_Ch( C, ~x )  ]
+  --[ Spend ( ~x ) ]->
+    [ Out( diff( $client0, C) ) ]
+
+
+axiom Equality:
+  "All x y #i. Eq(x,y) @i ==> x = y"
+
+axiom BankOnlyAcceptsOnce:
+  " All c #j #k. Deposited(c) @ j & Deposited(c) @ k
+  ==> 
+  #j = #k "
+
+lemma types [typing]:
+  " (
+  All x #i. In_C_2(x) @ i
+  ==>
+  ( (Ex #j #k.  In_B_1(x) @ j & j<i & Create_C_1( x )  @ k & k<j)
+  ) )
+  "
+
+lemma unforgeability:
+  " // Spend(c)=>withdraw(c) before
+  All x #j. Spend(x) @ j
+  ==> 
+  ( ( Ex #i. Withdraw( x )@i & #i < #j
+  & not (Ex #l. Spend(x)@l & not ( #l = #j ) )
+  ) )
+  "
+
+end
+
