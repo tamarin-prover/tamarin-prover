@@ -24,7 +24,9 @@ begin
   }
 */
 
-functions: blind/2, sign/2, unblind/2, open/2, tdcommit/3, checksign/2, f/4, pk/1
+builtins: signing
+
+functions: blind/2, unblind/2, open/2, tdcommit/3, checksign/2, f/4
 
 equations: checksign( sign(m,sk), pk(sk) ) = m,
            unblind( blind(m,b), b ) = m,
@@ -48,6 +50,7 @@ rule Register_Admin_pk:
 rule Register_Timeliness_pk:
   [ Fr(~ltkT) ] --[ ]-> [ !TLtk($T, ~ltkT), !TPk($T, pk(~ltkT)), Out(pk(~ltkT)) ]
 
+/*
 rule Reveal_Voter_ltk:
   [ !Ltk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
 
@@ -59,71 +62,98 @@ rule Reveal_Adminltk:
 
 rule Reveal_Timeliness_ltk:
   [ !TLtk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
+*/
 
+//Rules
 
 rule V_1:
-  let m1 = sign (blind( tdcommit(~vote, ~r, ~td), ~b), ltkV)
+  let x = tdcommit( ~vote , ~r, ~td )
+      e = blind( x, ~b )
+      s = sign ( e , ltkV )
   in
-    [ Fr( ~vote ), Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( $V, ltkV ) ]
-  --[ OUT_V( m1)]->
-    [ Out( m1 ), St_V_1( $V, ~vote, ~r, ~b, ~td ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Fr( ~vote ), !Ltk( V, ltkV ) ]
+  --[ Voted(~vote), Create_V_1(e)]->
+    [ Out( < e , s , V> ), St_V_1( V, ~vote, ~r, ~b, ~td ) ]
 
 rule A_1:
-  let rm = sign (blind( tdcommit(vote, r, td), b), ltkV)
-      sm = sign (blind( tdcommit(vote, r, td), b), ltkA )
+  let d = sign( e, ltkA )
+      verif = verify(s, e, pkV)
   in
-    [ In( rm ), !AdminLtk( $A, ltkA ), !Pk( $V, pk(ltkV) ) ]
-  --[ Signature (vote), IN_A_v( vote, rm) ]->
-    [ Out( sm ) ]
+    [ In( < e , s , V>), !AdminLtk( A, ltkA ), !Pk( V, pkV ) ]
+  --[ Eq( verif, true ),  Signature(e,V), In_A_1(e) ]->
+    [ Out( < e , d > ) ]
 
-rule V_2:
-  let rm = sign( blind( tdcommit(vote, r, td ), b), ltkA )
-      sm = sign( tdcommit(vote, r, td ), ltkA )
+rule V_2:    // Check Admin_Signature & Check the commit 
+  let y = unblind(d,b)   // = sign(x,ltkA)
+      x = tdcommit(vote,r,td)
+      verif1 = verify( d, e, pkA )
+      verif2 = verify( y, x, pkA )
   in
-    [ In( m ), St_V_1( V, vote, r, b, td), !CollectPk( $C, pkC ), !AdminPk( $A, pk(ltkA) ) ]
-  --[ ]->
-    [ Private_Channel_1( V, sm ), St_V_2( V, $A, vote, r, td) ]
+    [ In(< e, d>), St_V_1( V, vote, r, b, td),  !AdminPk(A, pkA) ]
+  --[ Eq( verif1, true ), Eq(verif2,true), In_V_2( e ) ]->     
+    [ P_Ch_Collector( x,y ) , St_V_2( V, A, vote, r, td ) ]
 
 rule C_1:
-  let m = sign(tdcommit(vote,r,td),ltkA)
-  in
-    [ Private_Channel_1( V, m), !AdminPk( $A, pk(ltkA) ), !CollectLtk( $C, skC )]
-  --[ Checksign(vote)]->
-    [ Out ( tdcommit( vote, r, td ) ), St_C_1( $C, $A, V, m ) ]
+    [ P_Ch_Collector( x,y ), !AdminPk(A, pkA)]
+  --[ Eq( checksign(y,pkA), x )  ]->
+    [ Out( <x,y> ) ]
 
 rule V_3:
-    [ St_V_2( V, A, vote, r, td), !TPk( $T, pkT ) ]
-  --[ ]->
-    [ Private_Channel_2( vote, r, tdcommit(vote,r,td) ) ]
+    [ In (<x,y>), St_V_2(V, A, vote, r, td )]
+  --[  ]->
+    [ P_Ch_Timeliness( vote, r, x ), St_V_3(V, A, vote, x )  ]
+
+rule V_4:
+    [ In (x1), St_V_3(V, A, vote, x2 )]
+  --[ Eq( x1 , x2) ]->
+    [  ]
 
 rule T_1:
-    [ Private_Channel_2(vote, r, tdcommit(vote,r,td) ), In( tdcommit(vote2,r2,td2) ), !Pk( $T, pkT ) ]
-  --[ Verifycorrectness(vote,vote2),Voted (vote)]->
-    [ Out(vote) ]
+  let v = open( x, r)
+  in
+    [ P_Ch_Timeliness( vote, r, x ) ]
+  --[ VotePublished( vote ) ]->
+    [ Out( vote ) ]
 
 
-// Avoid cycling with A_1
 lemma types [typing]:
-  " (All v m #i.
-       IN_A_v( v, m) @ i
-       ==>
-       ( (Ex #j. KU(v) @ j & j < i)
-       | (Ex #j V. RevLtk(V) @ j)
-       | (Ex #j. OUT_V( m) @ j)
-       )
-    )"
+  " (
+  All e #i. In_A_1(e) @ i
+  ==>
+  ( (Ex #j .  Create_V_1( e )@j & j<i )
+  ) ) & (
+  All e #i. In_V_2(e) @ i
+  ==>
+  ( (Ex #j. In_A_1(e)@j & j<i)
+  ) ) "
 
+
+axiom Equality:
+"All x y #i. Eq(x,y) @i ==> x = y"
+
+axiom OnlyOneVotPerVoter:
+"not (Ex e1 e2 V #i #j. Signature(e1,V) @i & Signature(e2,V)@j & not(#i = #j) )"
 
 lemma elligibility:
   " 
-  All vote #j.
-  Voted(vote) @ j
+  All v #j.
+  VotePublished (v) @ j
   ==> 
-  ( ( Ex #i.  Signature(vote) @ i & #i < #j )  | (Ex #k A. RevLtk( A ) @ k ) )"
+  ( ( Ex r b td V #i.  Signature( blind( tdcommit(v,r,td) ,b) ,V) @ i & #i < #j  )  )"
 
 lemma test1:
   exists-trace
-  " Ex k #i #j. Voted (k) @ #i & Signature(k) @ j "
+  " Ex v r b td V #i #j. VotePublished (v) @ #i & Signature( blind( tdcommit(v,r,td) ,b) ,V) @ j "
 
+lemma test11:
+  exists-trace
+  " Ex v#i #j. VotePublished(v)@i & Voted(v)@j "
+
+lemma test12:
+  " 
+  All v #j.
+  VotePublished (v) @ j
+  ==> 
+  ( (Ex  #i.  Voted(v) @ i & #i < #j  )   )"
 
 end
