@@ -93,12 +93,10 @@ lemma types [typing]:
   All e #i. In_A_1(e) @ i
   ==>
   ( (Ex #j .  Create_V_1( e )  @ j & j<i )
-  // | (Ex #j V. RevLtk( V ) @ j)
   ) ) & (
   All e #i. In_V_2(e) @ i
   ==>
   ( (Ex #j. In_A_1(e)@j & j<i )
-  // | (Ex #j V. RevLtk( V ) @ j ) 
   ) )"
 
 axiom Equality:
