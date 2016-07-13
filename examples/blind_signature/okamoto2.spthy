@@ -1,4 +1,32 @@
-theory Okamoto
+
+Skip to content
+This repository
+
+    Pull requests
+    Issues
+    Gist
+
+    @cdumenil
+
+2
+0
+
+    16
+
+cdumenil/tamarin-prover forked from tamarin-prover/tamarin-prover
+Code
+Pull requests 0
+Wiki
+Pulse
+Graphs
+Settings
+tamarin-prover/examples/blind_signature/okamoto2.spthy
+903fa2d 17 hours ago
+@jdreier jdreier names
+@jdreier
+@cdumenil
+160 lines (126 sloc) 3.86 KB
+theory Okamoto2
 begin
 
 /*
@@ -41,9 +69,28 @@ equations: checksign( sign(m,sk), pk(sk) ) = m,
 rule Register_Voter_pk:
   [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
 
+rule Register_Collect_pk:
+  [ Fr(~ltkC) ] --[ ]-> [ !CollectLtk($C, ~ltkC), !CollectPk($C, pk(~ltkC)), Out(pk(~ltkC)) ]
+
 rule Register_Admin_pk:
   [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
+rule Register_Timeliness_pk:
+  [ Fr(~ltkT) ] --[ ]-> [ !TLtk($T, ~ltkT), !TPk($T, pk(~ltkT)), Out(pk(~ltkT)) ]
+
+/*
+rule Reveal_Voter_ltk:
+  [ !Ltk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
+
+rule Reveal_Collect_ltk:
+  [ !CollectLtk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
+
+rule Reveal_Adminltk:
+  [ !AdminLtk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
+
+rule Reveal_Timeliness_ltk:
+  [ !TLtk(A, ltkA) ] --[ RevLtk(A) ]-> [ Out(ltkA) ]
+*/
 
 //Rules
 
@@ -101,7 +148,7 @@ lemma types [typing]:
   " (
   All e #i. In_A_1(e) @ i
   ==>
-  ( (Ex #j .  Create_V_1( e )@j & j<i )
+  ( (Ex #j. Create_V_1( e )@j & j<i )
   ) ) & (
   All e #i. In_V_2(e) @ i
   ==>
@@ -138,3 +185,4 @@ lemma test12:
   ( (Ex  #i.  Voted(v) @ i & #i < #j  )   )"
 
 end
+
