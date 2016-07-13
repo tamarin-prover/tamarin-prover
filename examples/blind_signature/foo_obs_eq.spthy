@@ -18,9 +18,6 @@ equations: open(commit(m,r),r)=m, checksign( sign(m,sk),pk(sk) ) = m, unblind(bl
 rule Register_Voter_pk:
   [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
 
-rule Register_Collect_pk:
-  [ Fr(~ltkC) ] --[ ]-> [ !CollectLtk($C, ~ltkC), !CollectPk($C, pk(~ltkC)), Out(pk(~ltkC)) ]
-
 rule Register_Admin_pk:
   [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
@@ -41,14 +38,19 @@ rule Register_Admin_pk:
 
 //Rules
 
-rule V_1:
-  let x = commit( ~vote , ~r )
-      e = blind( x, ~b )
-      s = sign ( e , ltkV )
+rule V_10:
+  let vote0 = diff('Clinton', 'Trump')
+      x0 = commit( vote0 , ~r0 )
+      e0 = blind( x0, ~b0 )
+      s0 = sign ( e0 , ltkV0 )
+      vote1 = diff('Trump', 'Clinton')
+      x1 = commit( vote1 , ~r1 )
+      e1 = blind( x1, ~b1 )
+      s1 = sign ( e1 , ltkV1 )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( V, ltkV ) ]
-  --[ Voted(~vote), Create_V_1(e)]->
-    [ Out( < e , s , V> ), St_V_1( V, ~vote, ~r, ~b ) ]
+    [ Fr( ~r0 ), Fr( ~b0 ), !Ltk( 'V0', ltkV0 ), Fr( ~r1 ), Fr( ~b1 ), !Ltk( 'V1', ltkV1 ) ]
+  --[ Create_V_1(e0), Create_V_1(e1)]->
+    [ Out( < e0 , s0 , 'V0' > ), St_V_1( 'V0', vote0, ~r0, ~b0 ), Out( < e1 , s1 , 'V1'> ), St_V_1( 'V1', vote1, ~r1, ~b1 ) ]
 
 rule A_1:
   let d = sign( e, ltkA )
@@ -63,26 +65,26 @@ rule V_2:    // Check Admin_Signature & Check the commit
       x = commit(vote,r)
       verif = verify( d, e, pkA)
   in
-    [ In(< e, d>), St_V_1( V, vote, r, b),  !AdminPk(A, pkA) ]
+    [ In(< e, d>), St_V_1( V, vote , r, b), !AdminPk(A, pkA) ]
   --[ Eq( verif, true ) , In_V_2( e ) ]->     
-    [ P_Ch_1( x, y ) , St_V_2( V, A, vote, r, b ) ]
+    [ P_Ch_1( x, y ), St_V_2sync( V, vote, r) ]
 
 rule C_1:
   let verif = verify( y, x, pkA)
   in
     [ P_Ch_1(  x, y ), !AdminPk(A, pkA)]
   --[ Eq( verif, true ) ]->
-    [ St_C_1( A, x), Out(x) ]
+    [ St_C_1( x ), Out(x) ]
 
 rule V_3:
-    [ In(x), St_V_2(V, A, vote, r, b )]
+    [ In(x), St_V_3(V, vote, r)]
   --[  ]->
     [ P_Ch_2( r ) ]
 
 rule C_2:                //Check if r is correct( avoid r1<->r2)
   let v = open( x, r)
   in
-    [ P_Ch_2( r ), St_C_1( A, x ) ]
+    [ P_Ch_2( r ), St_C_1( x ) ]
   --[ Eq (x, commit(open(x,r),r)), VotePublished( v ) ]->
     [ Out( v ) ]
 
@@ -105,25 +107,6 @@ axiom Equality:
 
 axiom OnlyOneVotPerVoter:
 "not (Ex e1 e2 V #i #j. Registered(e1,V) @i & Registered(e2,V)@j & not(#i = #j) )"
-
-
-lemma elligibility:
-  " 
-  All v #j.
-  VotePublished (v) @ j
-  ==> 
-  ( ( Ex r b V #i.  Registered(blind(commit(v,r),b),V) @ i & #i < #j )  )"
-
-lemma test1:
-  exists-trace
-  " Ex v r b V #i #j. VotePublished (v) @ #i & Registered( blind(commit(v,r),b) ,V) @ j "
-
-
-lemma test11:
-  exists-trace
-  " Ex v#i #j. VotePublished(v)@i & Voted(v)@j "
-
-
 
 end
 

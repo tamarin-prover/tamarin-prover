@@ -17,11 +17,6 @@ equations: getmess(sign(m,r)) = m, checksign(sign(m,k),pk(k)) = m, unblind(blind
 
 // Public key infrastructure
 
-rule Register_pk:
-  [ Fr(~ltkA) ]
-  -->
-  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
-
 rule Register_Bank_pk:
   [ Fr(~ltkB) ]
   -->

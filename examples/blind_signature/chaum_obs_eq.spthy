@@ -17,11 +17,6 @@ equations: getmess(sign(m,r)) = m, checksign(sign(m,k),pk(k)) = m, unblind(blind
 
 // Public key infrastructure
 
-rule Register_pk:
-  [ Fr(~ltkA) ]
-  -->
-  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
-
 rule Register_Bank_pk:
   [ Fr(~ltkB) ]
   -->
@@ -43,41 +38,34 @@ rule Register_Bank_pk:
 
 /*Withdrawal Phase*/
 
-rule C_1:
+rule C_11:
     [ Fr(~x), Fr(~r) ]
   --[ Create_C_1(~x)]->
-    [ Out( < 'C1', blind(~x,~r) > ), St_C_11('C1', ~x, ~r )]
+    [ Out( < 'C1', blind(~x,~r) > ), St_C_1('C1', ~x, ~r )]
 
 rule C_12:
     [ Fr(~x), Fr(~r) ]
   --[ Create_C_1(~x)]->
-    [ Out( < 'C2', blind(~x,~r) > ), St_C_12('C2', ~x, ~r )]
+    [ Out( < 'C2', blind(~x,~r) > ), St_C_1('C2', ~x, ~r )]
 
 rule B_1:
     [ In( <C, blind(~x,r)> ), !Bank_Ltk($B, ltkB) ]
   --[ Withdraw(~x), In_B_1(~x)]->
     [ St_B_1( $B, C, pk(ltkB) ), Out( sign( blind(~x,r), ltkB) ) ]
 
-rule C_21:
+rule C_2:
  let sBx = unblind(sBbx,r)
      verif = verify( sBbx, blind(x,r), pkB)
   in
-    [ St_C_11('C1', x, r ), In( sBbx ), !Bank_Pk(B, pkB) ]
+    [ St_C_1(C, x, r ), In( sBbx ), !Bank_Pk(B, pkB) ]
   --[ Eq( verif, true  ), In_C_2(x)]->
-    [ St_C_21('C1', x, r, sBx ) ]
+    [ St_C_2(C, x, r, sBx ) ]
 
-rule C_22:
- let sBx = unblind(sBbx,r)
-     verif = verify( sBbx, blind(x,r), pkB)
-  in
-    [ St_C_12('C2', x, r ), In( sBbx ), !Bank_Pk(B, pkB) ]
-  --[ Eq( verif, true  ), In_C_2(x)]->
-    [ St_C_22('C2', x, r, sBx ) ]
 
 /* Payment and deposit phase */
 
-rule C_3:
-    [ St_C_21('C1', x1, r1, sBx1 ),St_C_22('C2', x2, r2, sBx2 ) ]
+rule C_2sync:
+    [ St_C_2('C1', x1, r1, sBx1 ),St_C_2('C2', x2, r2, sBx2 ) ]
   --[  ]->
     [ Out(diff(< x1, sBx1 >,< x2, sBx2 >)) ]
 
@@ -109,14 +97,14 @@ axiom BankOnlyAcceptsOnce:
   ==> 
   #j = #k "
 
-/*
-lemma types [typing]:
+
+lemma types [use_induction, reuse]:
   " (
   All x #i. In_C_2(x) @ i
   ==>
   ( (Ex #j #k.  In_B_1(x) @ j & j<i & Create_C_1( x )  @ k & k<j)
   ) )
   "
-*/
+
 end
 

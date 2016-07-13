@@ -23,9 +23,6 @@ equations: open(commit(m,r),r)=m,
 rule Register_Voter_pk:
   [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
 
-rule Register_Collect_pk:
-  [ Fr(~ltkC) ] --[ ]-> [ !CollectLtk($C, ~ltkC), !CollectPk($C, pk(~ltkC)), Out(pk(~ltkC)) ]
-
 rule Register_Admin_pk:
   [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
