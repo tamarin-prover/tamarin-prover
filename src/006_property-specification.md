@@ -444,6 +444,18 @@ Then that rule can only be executed once. Note that if you have
 multiple rules that all have this action fact, at most one of them can
 be executed a single time.
 
+A similar construction can be used to limit multiple occurrences of an action for
+specific instantiations of variables, by adding these as arguments to the
+action. For example, one could put `OnlyOnceV('Initiator')` in a rule creating
+an initiator process, and `OnlyOnceV('Responder')` in the rule for the
+responder. If used with the following axiom, this would then yield the expected
+result of at most one initiator and at most one responder:
+
+```
+axiom OnlyOnceV:
+  "All #i #j x. OnlyOnceV(x)@#i & OnlyOnceV(x)@#j ==> #i = #j"
+```
+
 ### Less than ###
 
 If we use the `multiset` built-in we can construct numbers as
