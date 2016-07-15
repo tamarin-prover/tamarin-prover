@@ -437,7 +437,7 @@ as an action fact for that rule and add this axiom:
 
 ```
 axiom OnlyOnce:
-  "All #i #j. OnlyOnce() & OnlyOnce()@#j ==> #i = #j"
+  "All #i #j. OnlyOnce()@#i & OnlyOnce()@#j ==> #i = #j"
 ```
 
 Then that rule can only be executed once. Note that if you have
