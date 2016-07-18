@@ -64,11 +64,11 @@ rule C_3:
     [ Out(< x, sBx >) ]
 
 rule S_1:
-  let verif = verify( sBx, x, pkB )
+  let verif = verify( sBx, ~x, pkB )
   in
-    [ !Ltk(S, ltkS), !Bank_Pk(B, pkB), In( < x, sBx >  ) ]
-  --[ Eq( verif,true ), Spend(x ) ]->
-    [ Out( < x, sBx > ) ]
+    [ !Bank_Pk(B, pkB), In( < ~x, sBx >  ) ]
+  --[ Eq( verif,true ), Spend(~x ) ]->
+    [ Out( < ~x, sBx > ) ]
 
 rule B_2:
   let verif = verify( sBx, x, pkB )
@@ -81,10 +81,10 @@ rule B_2:
 axiom Equality:
 "All x y #i. Eq(x,y)@i ==> x = y"
 
-/*
+
 axiom BankOnlyAcceptsOnce:
   " All C x #j #k. Deposited(x,C)@j & Deposited(x,C)@k ==> #j = #k "
-*/
+
 
 lemma types [typing]:
   " (

@@ -72,7 +72,7 @@ rule C_2sync:
 rule S_1:
   let verif = verify( sBx, x, pkB )
   in
-    [ !Ltk(S, ltkS), !Bank_Pk(B, pkB), In( < x, sBx >  ) ]
+    [ !Bank_Pk(B, pkB), In( < x, sBx >  ) ]
   --[ Eq( verif,true ) ]->
     [ Out( < x, sBx > ) ]
 
