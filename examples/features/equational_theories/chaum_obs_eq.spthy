@@ -102,7 +102,7 @@ axiom BankOnlyAcceptsOnce:
 
 lemma types [typing]:
   "
-  All x #i. In_S_1(x) ==> Ex ~y. x=~y"
+  All x #i. In_S_1(x)@i ==> Ex ~y. x=~y"
 
 
 // Lemma simplifying the proof
