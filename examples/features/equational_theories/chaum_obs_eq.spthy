@@ -58,9 +58,9 @@ rule C_2:
  let s = unblind(sb,r)
      verif = verify( sb, blind(x,r), pkB)
   in
-    [ St_C_1($C, x, r ), In( sb ), !Bank_Pk($B, pkB) ]
+    [ St_C_1(C, x, r ), In( sb ), !Bank_Pk($B, pkB) ]
   --[ Eq( verif, true  ), In_C_2(x)]->
-    [ St_C_2($C, x, s ) ]
+    [ St_C_2(C, x, s ) ]
 
 rule C_2sync:
     [ St_C_2('C1', x1,  s1 ),St_C_2('C2', x2, s2 ) ]
