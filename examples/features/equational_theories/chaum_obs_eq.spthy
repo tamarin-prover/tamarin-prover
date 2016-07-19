@@ -25,7 +25,7 @@ begin
 
 
 builtins: signing
-functions: blind/2, unblind/2, getmess/1
+functions: blind/2, unblind/2, c1/0, c2/0 //, getmess/1
 equations: // getmess(sign(m,r)) = m,
            unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),k),r) = sign(m,k)
@@ -44,12 +44,12 @@ rule Register_Bank_pk:
 rule C_11:
     [ Fr(~x), Fr(~r) ]
   --[ Create_C_1(~x)]->
-    [ Out( blind(~x,~r) ), St_C_1('C1', ~x, ~r )]
+    [ Out( blind(~x,~r) ), St_C_1(c1, ~x, ~r )]
 
 rule C_12:
     [ Fr(~x), Fr(~r) ]
   --[ Create_C_1(~x)]->
-    [ Out( blind(~x,~r) ), St_C_1('C2', ~x, ~r )]
+    [ Out( blind(~x,~r) ), St_C_1(c2, ~x, ~r )]
 
 
 // Payment and deposit phase
@@ -63,7 +63,7 @@ rule C_2:
     [ St_C_2(C, x, s ) ]
 
 rule C_2sync:
-    [ St_C_2('C1', x1,  s1 ),St_C_2('C2', x2, s2 ) ]
+    [ St_C_2(c1, x1,  s1 ),St_C_2(c2, x2, s2 ) ]
   --[  ]->
     [ Out(diff(< x1, s1 >,< x2, s2 >)) ]
 
