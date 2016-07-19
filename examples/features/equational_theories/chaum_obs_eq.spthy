@@ -26,7 +26,7 @@ begin
 
 builtins: signing
 functions: blind/2, unblind/2, getmess/1
-equations: getmess(sign(m,r)) = m,
+equations: // getmess(sign(m,r)) = m,
            unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),k),r) = sign(m,k)
 
