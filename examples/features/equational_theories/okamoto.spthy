@@ -26,9 +26,10 @@ begin
 
 builtins: signing
 
-functions: blind/2, unblind/2, open/2, tdcommit/3, checksign/2, f/4
+functions: getmess/1, blind/2, unblind/2, open/2, tdcommit/3, checksign/2, f/4
 
-equations: checksign( sign(m,sk), pk(sk) ) = m,
+equations: getmess( sign(m,sk) ) = m,
+           checksign( sign(m,sk), pk(sk) ) = m,
            unblind( blind(m,b), b ) = m,
            unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
            open( tdcommit(m,r,td), r ) = m,
@@ -50,54 +51,44 @@ rule Register_Admin_pk:
 rule V_1:
   let x = tdcommit( ~vote , ~r, ~td )
       e = blind( x, ~b )
-      s = sign ( e , ltkV )
+      s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), Fr( ~vote ), !Ltk( V, ltkV ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Fr( ~vote ), !Ltk( V, ~ltkV ) ]
   --[ Voted(~vote), Create_V_1(e)]->
-    [ Out( < e , s , V> ), St_V_1( V, ~vote, ~r, ~b, ~td ) ]
+    [ Out( < e , s > ), St_V_1( V, ~vote, ~r, ~b, ~td ) ]
 
 rule A_1:
-  let d = sign( e, ltkA )
+  let d = sign( e, ~ltkA )
       verif = verify(s, e, pkV)
   in
-    [ In( < e , s , V>), !AdminLtk( A, ltkA ), !Pk( V, pkV ) ]
-  --[ Eq( verif, true ),  Signature(e,V), In_A_1(e) ]->
+    [ In( < e , s >), !AdminLtk( A, ~ltkA ), !Pk( V, pkV ) ]
+  --[ Eq( verif, true ),  Registered(e,V), In_A_1(e) ]->
     [ Out( < e , d > ) ]
 
 rule V_2:    // Check Admin_Signature & Check the commit 
-  let y = unblind(d,b)   // = sign(x,ltkA)
-      x = tdcommit(vote,r,td)
+  let y = unblind(d,~b)   // = sign(x,ltkA)
+      x = tdcommit(~vote,~r,~td)
       verif1 = verify( d, e, pkA )
       verif2 = verify( y, x, pkA )
   in
-    [ In(< e, d>), St_V_1( V, vote, r, b, td),  !AdminPk(A, pkA) ]
+    [ In(< e, d>), St_V_1( V, ~vote, ~r, ~b, ~td),  !AdminPk(A, pkA) ]
   --[ Eq( verif1, true ), Eq(verif2,true), In_V_2( e ) ]->     
-    [ P_Ch_Collector( x,y ) , St_V_2( V, A, vote, r, td ) ]
+    [ Out( <x,y> ) , P_Ch_Timeliness( ~vote, ~r, x ) ]
 
 rule C_1:
-    [ P_Ch_Collector( x,y ), !AdminPk(A, pkA)]
+    [ In( <x,y> ), !AdminPk(A, pkA)]
   --[ Eq( checksign(y,pkA), x )  ]->
     [ Out( <x,y> ) ]
 
-rule V_3:
-    [ In (<x,y>), St_V_2(V, A, vote, r, td )]
-  --[  ]->
-    [ P_Ch_Timeliness( vote, r, x ), St_V_3(V, A, vote, x )  ]
-
-rule V_4:
-    [ In (x1), St_V_3(V, A, vote, x2 )]
-  --[ Eq( x1 , x2) ]->
-    [  ]
-
 rule T_1:
-  let v = open( x, r)
+  let v = open( x, ~r)
   in
-    [ P_Ch_Timeliness( vote, r, x ) ]
-  --[ VotePublished( vote ) ]->
-    [ Out( vote ) ]
+    [ P_Ch_Timeliness( ~vote, ~r, x ) ]
+  --[ VotePublished( ~vote ) ]->
+    [ Out( ~vote ) ]
 
 
-lemma types [typing]:
+lemma types [reuse, use_induction]:
   " (
   All e #i. In_A_1(e) @ i
   ==>
@@ -113,18 +104,18 @@ axiom Equality:
 "All x y #i. Eq(x,y) @i ==> x = y"
 
 axiom OnlyOneVotPerVoter:
-"not (Ex e1 e2 V #i #j. Signature(e1,V) @i & Signature(e2,V)@j & not(#i = #j) )"
+"not (Ex e1 e2 V #i #j. Registered(e1,V) @i & Registered(e2,V)@j & not(#i = #j) )"
 
 lemma elligibility:
   " 
-  All v #j.
-  VotePublished (v) @ j
+  All vote #j.
+  VotePublished(vote)@j
   ==> 
-  ( ( Ex r b td V #i.  Signature( blind( tdcommit(v,r,td) ,b) ,V) @ i & #i < #j  )  )"
+  ( ( Ex r td b V #i.  Registered( blind( tdcommit(vote,r,td) ,b) ,V)@i & #i < #j  )  )"
 
 lemma test1:
   exists-trace
-  " Ex v r b td V #i #j. VotePublished (v) @ #i & Signature( blind( tdcommit(v,r,td) ,b) ,V) @ j "
+  " Ex v r b td V #i #j. VotePublished (v) @ #i & Registered( blind( tdcommit(v,r,td) ,b) ,V) @ j "
 
 lemma test11:
   exists-trace

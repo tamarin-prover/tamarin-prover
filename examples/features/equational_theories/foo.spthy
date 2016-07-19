@@ -12,9 +12,10 @@ begin
 
 builtins: signing
 
-functions: blind/2, unblind/2, open/2, commit/2
+functions: getmess/1, blind/2, unblind/2, open/2, commit/2
 
-equations: open(commit(m,r),r)=m,
+equations: getmess(sign(m,sk)) = m,
+           open(commit(m,r),r) = m,
            unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),sk),r)=sign(m,sk)
 
@@ -26,7 +27,6 @@ rule Register_Admin_pk:
   [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
 /* We formalize the following protocol
-
   protocol FOO {
     Phase 1:
     1. V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV), V >
@@ -47,43 +47,43 @@ rule V_1:
       s = sign ( e , ~ltkV )
   in
     [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( V, ~ltkV ) ]
-  --[ Voted(~vote), Create_V_1(e)]->
-    [ Out( < e , s , V> ), St_V_1( V, ~vote, ~r, ~b ) ]
+  --[ Created_V_1(~vote), Create_V_1(e) ]->
+    [ Out( <e,s> ), St_V_1( V, ~vote, ~r, ~b ) ]
 
 rule A_1:
   let d = sign( e, ~ltkA )
       verif = verify( s,e, pkV)
   in
-    [ In( < e , s , V>), !AdminLtk( A, ~ltkA ), !Pk( V, pkV ) ]
-  --[ Eq( verif, true ) ,  Registered(e,V), In_A_1(e) ]->
-    [ Out( < e , d > ) ]
+    [ In( <e,s> ), !AdminLtk( A, ~ltkA ), !Pk( V, pkV ) ]
+  --[ Eq( verif, true ) ,  Registered(e), In_A_1(e) ]->
+    [ Out(  <e,d>  ) ]
 
 rule V_2:    // Check Admin_Signature & Check the commit 
   let y = unblind(d,~b)   // = sign(x,ltkA)
       x = commit(vote,~r)
       verif = verify( d, e, pkA)
   in
-    [ In(< e, d>), St_V_1( V, vote, ~r, ~b),  !AdminPk(A, pkA) ]
-  --[ Eq( verif, true ) , Eq( e, blind(commit(vote,~r),~b) ), In_V_2( e ) ]->     
-    [ Out( <x, y> ) , St_V_2( V, A, vote, ~r, ~b ) ]
+    [ In( <e,d> ), St_V_1( V, vote, ~r, ~b),  !AdminPk(A, pkA) ]
+  --[ Eq( verif, true ) , Eq( e, blind(commit(vote,~r),~b) ), In_V_2( e )]->     
+    [ Out( <x,y> ) , St_V_2( V, A, vote, ~r ) ]
 
 rule C_1:
   let verif = verify( y, x, pkA)
   in
-    [ In(  <x, y> ), !AdminPk(A, pkA)]
-  --[ Eq( verif, true ) ]->
+    [ In( <x,y> ), !AdminPk(A, pkA)]
+  --[ Eq( verif, true ), In(y) ]->
     [ St_C_1( A, x), Out(x) ]
 
 rule V_3:
-    [ In(commit(vote,~r)), St_V_2(V, A, vote, ~r, ~b )]
-  --[  ]->
+    [ In(x), St_V_2(V, A, vote, ~r )]
+  --[ Eq(x,commit(vote,~r)) ]->
     [ Out( ~r ) ]
 
 rule C_2:                //Check if r is correct( avoid r1<->r2)
   let v = open( x, r)
   in
     [ In( r ), St_C_1( A, x ) ]
-  --[ Eq (x, commit(open(x,r),r)), VotePublished( v ) ]->
+  --[ Eq (x, commit(open(x,r),r)), VotePublished( v ), Out_C_2(v) ]->
     [ Out( v ) ]
 
 
@@ -91,15 +91,15 @@ lemma types [reuse,use_induction]:
   " (
   All e #i. In_A_1(e) @ i
   ==>
-  ( (Ex #j .  Create_V_1( e )  @ j & j<i )
+  ( (Ex #j . Create_V_1( e )  @ j & j<i )
   ) ) & (
   All e #i. In_V_2(e) @ i
   ==>
   ( (Ex #j. In_A_1(e)@j & j<i )
   ) ) & (
-  All v #i. VotePublished( v ) @ i
+  All v #i. Out_C_2(v) @ i
   ==>
-  ( (Ex #j. Voted(v)@j & j<i )
+  ( (Ex #j. Created_V_1(v)@j & j<i )
   ) )"
 
 axiom Equality:
@@ -107,7 +107,7 @@ axiom Equality:
 
 axiom OnlyOneVotPerVoter:
   "
-  All e1 e2 V #i #j. Registered(e1,V) @i & Registered(e2,V)@j
+  All e1 e2 #i #j. Registered(e1) @i & Registered(e2)@j
   ==>
   #i = #j"
 
@@ -117,18 +117,11 @@ lemma elligibility:
   All v #j.
   VotePublished (v) @ j
   ==> 
-  ( ( Ex r b V #i.  Registered(blind(commit(v,r),b),V) @ i & #i < #j )  )"
+  ( ( Ex r b #i.  Registered(blind(commit(v,r),b)) @ i & #i < #j )  )"
 
 lemma test1:
   exists-trace
-  " Ex v r b V #i #j. VotePublished (v) @ #i & Registered( blind(commit(v,r),b) ,V) @ j "
-
-
-lemma test11:
-  exists-trace
-  " Ex v#i #j. VotePublished(v)@i & Voted(v)@j "
-
-
+  " Ex v r b #i #j. VotePublished (v) @ #i & Registered( blind(commit(v,r),b)) @ j "
 
 end
 
