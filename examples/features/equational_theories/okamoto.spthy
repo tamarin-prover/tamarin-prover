@@ -2,32 +2,31 @@ theory Okamoto
 begin
 
 /*
- * Protocol: Okamoto	
- * Modeler: 	
- * Date: 	
- * Source:	
- *
- * Status: 	
+ * Protocol: Protocol by Okamoto 
+ * Modeler: Charles Duménil
+ * Date: 19/07/2016	
+ * Source: Formal verification of voting and auction protocols by Jannik Dreier
+ * Status: Working 
  */
 
-/* We formalize the following protocol
 
-  protocol FOO {
+/*
+  Protocol FOO {
     Phase 1:
-    1. V -> A: sign(blind(tdcommit(vote,r,td),b),skV)
-    2. A -> V: sign(blind(tdcommit(vote,r,td),b),skA)
+    V -> A: sign(blind(tdcommit(vote,r,td),b),skV)
+    A -> V: sign(blind(tdcommit(vote,r,td),b),skA)
     Phase 2:
-    3. V -> C: Private:< V,sign(tdcommit(vote,r,td),skA)>
+    V -> C: sign(tdcommit(vote,r,td),skA)
+    V -> T: <vote, r, x>
     Phase 3
-    5. V -> T: { vote, r, tdcommit(vote,r,td) }pkT
-    6. T -> Pub: vote
+    C -> Pub: vote
+    T -> Pub: vote
   }
 */
 
+
 builtins: signing
-
 functions: getmess/1, blind/2, unblind/2, open/2, tdcommit/3, checksign/2, f/4
-
 equations: getmess( sign(m,sk) ) = m,
            checksign( sign(m,sk), pk(sk) ) = m,
            unblind( blind(m,b), b ) = m,
@@ -88,7 +87,18 @@ rule T_1:
     [ Out( ~vote ) ]
 
 
-lemma types [reuse, use_induction]:
+// Axioms
+
+axiom Equality:
+"All x y #i. Eq(x,y) @i ==> x = y"
+
+axiom OnlyOneVotPerVoter:
+"not (Ex e1 e2 V #i #j. Registered(e1,V) @i & Registered(e2,V)@j & not(#i = #j) )"
+
+
+// Lemma simplifying the proof
+
+lemma skiploops [reuse, use_induction]:
   " (
   All e #i. In_A_1(e) @ i
   ==>
@@ -99,12 +109,7 @@ lemma types [reuse, use_induction]:
   ( (Ex #j. In_A_1(e)@j & j<i)
   ) ) "
 
-
-axiom Equality:
-"All x y #i. Eq(x,y) @i ==> x = y"
-
-axiom OnlyOneVotPerVoter:
-"not (Ex e1 e2 V #i #j. Registered(e1,V) @i & Registered(e2,V)@j & not(#i = #j) )"
+// Property
 
 lemma elligibility:
   " 
@@ -113,19 +118,5 @@ lemma elligibility:
   ==> 
   ( ( Ex r td b V #i.  Registered( blind( tdcommit(vote,r,td) ,b) ,V)@i & #i < #j  )  )"
 
-lemma test1:
-  exists-trace
-  " Ex v r b td V #i #j. VotePublished (v) @ #i & Registered( blind( tdcommit(v,r,td) ,b) ,V) @ j "
-
-lemma test11:
-  exists-trace
-  " Ex v#i #j. VotePublished(v)@i & Voted(v)@j "
-
-lemma test12:
-  " 
-  All v #j.
-  VotePublished (v) @ j
-  ==> 
-  ( (Ex  #i.  Voted(v) @ i & #i < #j  )   )"
 
 end

@@ -2,18 +2,31 @@ theory FOO
 begin
 
 /*
- * Protocol: Foo	
- * Modeler: 	
- * Date: 	
- * Source:	
- *
- * Status: Working, to be optimized
+ * Protocol: Protocol by Fujioka, Okamoto and Ohta (FOO)
+ * Modeler: Charles Duménil
+ * Date: 19/07/2016	
+ * Source: Formal verification of voting and auction protocols by Jannik Dreier
+ * Status: Working 
  */
 
+
+/*
+  Protocol FOO {
+    Phase 1:
+     V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV) >
+     A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) >      "Registered" + "Check sign Voter"
+    Phase 2:
+     V -> C: < commit(vote,r), sign(commit(vote,r),ltkA) >                 "Check sign Admin" + "Check commit"
+    Phase 3:
+     C -> Pub: commit(vote,r)                                              "Check sign Admin"
+     V -> C:  r                                                            "Check commit"
+     C -> Pub: v                                                           "VotePublished" + "Check r"
+  }
+*/
+
+
 builtins: signing
-
 functions: getmess/1, blind/2, unblind/2, open/2, commit/2
-
 equations: getmess(sign(m,sk)) = m,
            open(commit(m,r),r) = m,
            unblind(blind(m,r),r) = m,
@@ -26,18 +39,6 @@ rule Register_Voter_pk:
 rule Register_Admin_pk:
   [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
-/* We formalize the following protocol
-  protocol FOO {
-    Phase 1:
-    1. V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV), V >
-    2. A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) > 
-    Phase 2:
-    3. V -> C: Private: < commit(vote,r), sign(commit(vote,r),ltkA) >
-    Phase 3:
-    4. V -> C: Private: <l, r> 
-    5. C -> Pub: v
-  }
-*/
 
 //Rules
 
@@ -60,34 +61,48 @@ rule A_1:
 
 rule V_2:    // Check Admin_Signature & Check the commit 
   let y = unblind(d,~b)   // = sign(x,ltkA)
-      x = commit(vote,~r)
+      x = commit(~vote,~r)
       verif = verify( d, e, pkA)
   in
-    [ In( <e,d> ), St_V_1( V, vote, ~r, ~b),  !AdminPk(A, pkA) ]
-  --[ Eq( verif, true ) , Eq( e, blind(commit(vote,~r),~b) ), In_V_2( e )]->     
-    [ Out( <x,y> ) , St_V_2( V, A, vote, ~r ) ]
+    [ In( <e,d> ), St_V_1( V, ~vote, ~r, ~b),  !AdminPk(A, pkA) ]
+  --[ Eq( verif, true ) , Eq( e, blind(commit(~vote,~r),~b) ), In_V_2( e ) ]->     
+    [ Out( <x,y> ) , St_V_2( V, A, ~vote, ~r ) ]
 
 rule C_1:
   let verif = verify( y, x, pkA)
   in
     [ In( <x,y> ), !AdminPk(A, pkA)]
-  --[ Eq( verif, true ), In(y) ]->
+  --[ Eq( verif, true ) ]->
     [ St_C_1( A, x), Out(x) ]
 
 rule V_3:
-    [ In(x), St_V_2(V, A, vote, ~r )]
-  --[ Eq(x,commit(vote,~r)) ]->
+    [ In(x), St_V_2(V, A, ~vote, ~r )]
+  --[ Eq( x, commit(~vote,~r) ) ]->
     [ Out( ~r ) ]
 
-rule C_2:                //Check if r is correct( avoid r1<->r2)
+rule C_2:
   let v = open( x, r)
   in
     [ In( r ), St_C_1( A, x ) ]
-  --[ Eq (x, commit(open(x,r),r)), VotePublished( v ), Out_C_2(v) ]->
+  --[ Eq ( x, commit(open(x,r),r) ), VotePublished( v ), Out_C_2(v) ]->
     [ Out( v ) ]
 
 
-lemma types [reuse,use_induction]:
+// Axioms
+
+axiom Equality:
+"All x y #i. Eq(x,y) @i ==> x = y"
+
+axiom OnlyOneVotPerVoter:
+  "
+  All e1 e2 #i #j. Registered(e1) @i & Registered(e2)@j
+  ==>
+  #i = #j"
+
+
+// Lemma simplifying the proof
+
+lemma skiploops [reuse,use_induction]:
   " (
   All e #i. In_A_1(e) @ i
   ==>
@@ -102,15 +117,8 @@ lemma types [reuse,use_induction]:
   ( (Ex #j. Created_V_1(v)@j & j<i )
   ) )"
 
-axiom Equality:
-"All x y #i. Eq(x,y) @i ==> x = y"
 
-axiom OnlyOneVotPerVoter:
-  "
-  All e1 e2 #i #j. Registered(e1) @i & Registered(e2)@j
-  ==>
-  #i = #j"
-
+// Property
 
 lemma elligibility:
   " 
@@ -119,9 +127,6 @@ lemma elligibility:
   ==> 
   ( ( Ex r b #i.  Registered(blind(commit(v,r),b)) @ i & #i < #j )  )"
 
-lemma test1:
-  exists-trace
-  " Ex v r b #i #j. VotePublished (v) @ #i & Registered( blind(commit(v,r),b)) @ j "
 
 end
 

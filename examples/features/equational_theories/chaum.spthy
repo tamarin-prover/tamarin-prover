@@ -3,16 +3,32 @@ begin
 
 /*
  * Protocol: Chaum's On-line Protocol
- * Modeler: 	
- * Date: 	
- * Source:	
- *
- * Status: work	in progress
+ * Modeler: Charles Duménil
+ * Date: 19/07/2016	
+ * Source: Formal Analysis of E-Cash Protocols by Jannik Dreier, Ali Kassem and Pascal Lafourcade
+ * Status: working
  */
+
+
+/*
+  Protocol Chaum {
+    Withdrawal phase
+     C -> B: blind(x,r)
+     B -> C: sign(blind(x,r),skB)    "Withdraw"
+    Payment and deposit phase
+     C -> S: <x, sign(x,skB)>        "Check sign"
+     S -> B: <x, sign(x,skB)>        "Check sign" 
+     B -> C: Private(x)              "Check sign" + "Deposite"
+     S     :                         "Spend"
+  }
+*/
+
 
 builtins: signing
 functions: blind/2, unblind/2, getmess/1
-equations: getmess(sign(m,r)) = m, unblind(blind(m,r),r) = m , unblind(sign(blind(m,r),k),r) = sign(m,k)
+equations: getmess(sign(m,r)) = m,
+           unblind(blind(m,r),r) = m,
+           unblind(sign(blind(m,r),k),r) = sign(m,k)
 
 
 // Public key infrastructure
@@ -22,21 +38,8 @@ rule Register_Bank_pk:
   -->
   [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(pk(~ltkB)) ]
 
-/* We formalize the following protocol
 
-  protocol Chaum {
-    Withdrawal phase
-    1. C -> B: <C, b=blind(x,r)>
-    2. C <- B: sign(b,skB) + B:Debit + C:Check sign
-
-    Payment and deposit phase
-    3. C -> S: (x, bs )
-    4. B <- S: (x, sign(x,skB)) + check signature + check not yet deposited
-  }
-*/
-
-
-/*Withdrawal Phase*/
+// Withdrawal Phase
 
 rule C_1:
     [ Fr(~x), Fr(~r) ]
@@ -48,19 +51,15 @@ rule B_1:
   --[ Withdraw(~x), In_B_1(~x)]->
     [ St_B_1( $B ), Out( sign( blind(~x,r), ~ltkB) ) ]
 
+
+//Payment and deposit phase
+
 rule C_2:
  let s = unblind(sb,r)
      verif = verify( sb, blind(x,r), pkB)
   in
     [ St_C_1( $C, x, r ), In( sb ), !Bank_Pk(B, pkB) ]
   --[ Eq( verif, true  ), In_C_2(x)]->
-    [ St_C_2( $C, x, s ) ]
-
-/* Payment and deposit phase */
-
-rule C_3:
-    [ St_C_2($C, x, s ) ]
-  --[  ]->
     [ Out( <x,s> ) ]
 
 rule S_1:
@@ -82,6 +81,9 @@ rule S_2:
   --[ Spend(~x ) ]->
     [  ]
 
+
+// Axioms
+
 axiom Equality:
 "All x y #i. Eq(x,y)@i ==> x = y"
 
@@ -89,7 +91,9 @@ axiom BankOnlyAcceptsOnce:
   " All x #j #k. Deposited(x)@j & Deposited(x)@k ==> #j = #k "
 
 
-lemma types [reuse, use_induction]:
+// Lemma simplifying the proof
+
+lemma skiploops [reuse, use_induction]:
   " (
   All x #i. In_C_2(x) @ i
   ==>
@@ -97,6 +101,9 @@ lemma types [reuse, use_induction]:
   ) )
    
   "
+
+
+// Property
 
 lemma unforgeability:
   "
@@ -106,13 +113,6 @@ lemma unforgeability:
   & not (Ex #l. Spend(x)@l & not ( #l = #j ) )
   ) )
   "
-
-lemma test:
-"not( Ex x #i #j. Deposited(x)@i & Deposited(x)@j & not (#i=#j) )"
-
-
-lemma test2:
-"not( Ex x #i #j. Spend(x)@i & Spend(x)@j & not (#i=#j) )"
 
 
 end
