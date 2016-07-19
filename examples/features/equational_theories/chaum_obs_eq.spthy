@@ -102,7 +102,7 @@ axiom BankOnlyAcceptsOnce:
 
 lemma types [typing]:
   "
-  All x r #i. In_S_1(blind(x,r))@i ==> F"
+  All x r1 r2 #i. In_S_1(blind(blind(x,r1),r2))@i ==> F"
 
 
 // Lemma simplifying the proof
