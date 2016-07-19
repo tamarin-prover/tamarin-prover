@@ -76,7 +76,7 @@ rule S_1:
   let verif = verify( s, x , pkB )
   in
     [ In( <x,s> ), !Bank_Pk($B, pkB) ]
-  --[ Eq( verif,true ) ]->
+  --[ Eq( verif,true ), In_S_1(x) ]->
     [ Out( <x,s> ) ]
 
 rule B_2:
@@ -99,6 +99,10 @@ axiom Equality:
 
 axiom BankOnlyAcceptsOnce:
   " All x #j #k. Deposited(x)@j & Deposited(x)@k ==> #j = #k "
+
+lemma types [typing]:
+  "
+  All x #i. In_S_1(x) ==> Ex ~y. x=~y"
 
 
 // Lemma simplifying the proof

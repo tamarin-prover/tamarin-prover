@@ -83,7 +83,7 @@ rule T_1:
   let v = open( x, ~r)
   in
     [ P_Ch_Timeliness( ~vote, ~r, x ) ]
-  --[ VotePublished( ~vote ) ]->
+  --[ VotePublished( x ) ]->
     [ Out( ~vote ) ]
 
 
@@ -113,10 +113,10 @@ lemma skiploops [reuse, use_induction]:
 
 lemma elligibility:
   " 
-  All vote #j.
-  VotePublished(vote)@j
+  All x #j.
+  VotePublished(x)@j
   ==> 
-  ( ( Ex r td b V #i.  Registered( blind( tdcommit(vote,r,td) ,b) ,V)@i & #i < #j  )  )"
+  ( ( Ex b V #i.  Registered( blind(x ,b) ,V)@i & #i < #j  )  )"
 
 
 end
