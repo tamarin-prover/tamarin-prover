@@ -25,9 +25,8 @@ begin
 
 
 builtins: signing
-functions: blind/2, unblind/2, c1/0, c2/0 //, getmess/1
-equations: // getmess(sign(m,r)) = m,
-           unblind(blind(m,r),r) = m,
+functions: blind/2, unblind/2, c1/0, c2/0
+equations: unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),k),r) = sign(m,k)
 
 
@@ -35,7 +34,7 @@ equations: // getmess(sign(m,r)) = m,
 
 rule Register_Bank_pk:
   [ Fr(~ltkB) ]
-  -->
+  --[ OnlyOnce() ]->
   [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(<~ltkB,pk(~ltkB)>) ]
 
 
@@ -55,11 +54,11 @@ rule C_12:
 // Payment and deposit phase
 
 rule C_2:
- let s = unblind(sb,r)
-     verif = verify( sb, blind(x,r), pkB)
+ let s = unblind(sign(blind(x,r), ~skB),r)
+     // verif = verify( sb, blind(x,r), pkB)
   in
-    [ St_C_1(C, x, r ), In( sb ), !Bank_Pk($B, pkB) ]
-  --[ Eq( verif, true  ), In_C_2(x)]->
+    [ St_C_1(C, x, r ), In( sign(blind(x,r), ~skB) ), !Bank_Pk($B, pk(~skB)) ]
+  --[ /* Eq(verif, true), */ In_C_2(x) ]->
     [ St_C_2(C, x, s ) ]
 
 rule C_2sync:
@@ -70,8 +69,12 @@ rule C_2sync:
 
 // Axioms
 
-axiom Equality:
-"All x y #i. Eq(x,y)@i ==> x = y"
+axiom OnlyOneBank:
+"All #i #j. ((OnlyOnce() @ #i & OnlyOnce() @ #j) ==> #i = #j)"
+
+
+//axiom Equality:
+//"All x y #i. Eq(x,y)@i ==> x = y"
 
 
 
