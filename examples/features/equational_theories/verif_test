@@ -1,0 +1,66 @@
+theory SignTest
+begin
+/*
+ * Modeler: Charles Duménil
+ * Date:    July 2016
+ * Status:  Working
+ */
+
+
+
+// Test comparing the differences between, pattern_matching in axioms with checksign or verify.
+// Uncomment one of the B_1 rules to compare.
+
+
+functions: pk/1, sign/2, checksign/2, verify/3
+equations: checksign( sign(m,k), pk(k) ) = m, verify( sign(m,k), m, pk(k) ) = true
+
+rule Reg:
+  [Fr(~k)] --[ ]-> [ Pub_k($I, pk(~k)), Priv_k($I, ~k), Out( pk(~k))]  
+
+rule A_1:
+  [ Fr(~a),Priv_k(A, ~k) ] --[ Create(~a) ]-> [ Out( <~a,sign(~a, ~k)> ) ]
+
+
+//Those two rules are equivalent
+/*
+rule B_1_pattern_matching_sign:                 // ==> s=sign(a,k)
+  let s=sign(a,skA)
+  in
+  [ In( <a,s> ),Pub_k(A, pk(skA)) ] --[ Check(a) ]-> [ ]
+
+
+rule B_1_verify:                                // ==> verif=true ==> s=sign(a,k)
+  let verif = verify( s, a, pkA)
+  in  
+  [ In( <a,s> ),Pub_k(A, pkA) ] --[ Check(a), Eq( verif, true ) ]-> [ ]
+
+
+
+
+//But different than these one (which are equivalent)
+
+rule B_1_pattern_matching_checksign:
+  let a=checksign(s,pkA)
+  in
+  [ In( <a,s> ),Pub_k(A, pkA) ] --[ Check(a) ]-> [ ]
+
+rule B_1_checksign:                             // ==> a=checksign( s, pkA )  but =/=> s=sign(a,k)
+  let ch = checksign( s, pkA )
+  in
+  [ In( <a,s> ),Pub_k(A, pkA) ] --[ Check(a), Eq( a, ch ) ]-> [ ]
+*/
+
+
+axioms:
+  " All x y #i. Eq(x,y)@i ==> x=y "
+
+
+//This lemma is true for the two first rules, but false for the two last rules  
+
+lemma test: 
+  " All a #i. Check(a)@i ==> Ex #j. Create(a)@j "
+
+end
+
+
