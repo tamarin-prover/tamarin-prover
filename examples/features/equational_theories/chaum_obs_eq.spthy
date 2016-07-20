@@ -23,8 +23,9 @@ begin
   }
 */
 
-builtins: signing
-functions: sign/2, checksign/2, blind/2, unblind/2, c1/0, c2/0
+
+//builtins: signing
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, c1/0, c2/0
 equations: unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),k),r) = sign(m,k),
            checksign(sign(m,k),k)=m
