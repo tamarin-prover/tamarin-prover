@@ -11,7 +11,7 @@ begin
 
 
 /*
-  Protocol Chaum {
+  Protocol Chaum { (Seller an bank are considered corrupted)
     Withdrawal phase
      C -> B: blind(x,r)
      B -> C: sign(blind(x,r),skB)    "Withdraw"
@@ -23,11 +23,11 @@ begin
   }
 */
 
-
 builtins: signing
-functions: blind/2, unblind/2, c1/0, c2/0
+functions: sign/2, checksign/2, blind/2, unblind/2, c1/0, c2/0
 equations: unblind(blind(m,r),r) = m,
-           unblind(sign(blind(m,r),k),r) = sign(m,k)
+           unblind(sign(blind(m,r),k),r) = sign(m,k),
+           checksign(sign(m,k),k)=m
 
 
 // Public key infrastructure

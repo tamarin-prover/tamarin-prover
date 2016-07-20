@@ -100,9 +100,9 @@ axiom OnlyOneVotPerVoter:
   #i = #j"
 
 
-// Lemma simplifying the proof
+// typing lemma
 
-lemma skiploops [reuse,use_induction]:
+lemma types [typing]:
   " (
   All e #i. In_A_1(e) @ i
   ==>

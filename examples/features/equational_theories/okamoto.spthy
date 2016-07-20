@@ -96,9 +96,9 @@ axiom OnlyOneVotPerVoter:
 "not (Ex e1 e2 V #i #j. Registered(e1,V) @i & Registered(e2,V)@j & not(#i = #j) )"
 
 
-// Lemma simplifying the proof
+// Typing lemma
 
-lemma skiploops [reuse, use_induction]:
+lemma types [typing]:
   " (
   All e #i. In_A_1(e) @ i
   ==>
