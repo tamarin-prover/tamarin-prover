@@ -25,7 +25,7 @@ begin
 
 
 //builtins: signing
-functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, c1/0, c2/0
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2
 equations: unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),k),r) = sign(m,k),
            checksign(sign(m,k),k)=m
@@ -35,48 +35,42 @@ equations: unblind(blind(m,r),r) = m,
 
 rule Register_Bank_pk:
   [ Fr(~ltkB) ]
-  --[ OnlyOnce() ]->
-  [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(<~ltkB,pk(~ltkB)>) ]
+  --[ ]->
+  [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(<~ltkB>) ]
 
 
 // Withdrawal Phase
 
-rule C_11:
+rule C_1_1:
     [ Fr(~x), Fr(~r) ]
-  --[ Create_C_1(~x)]->
-    [ Out( blind(~x,~r) ), St_C_1(c1, ~x, ~r )]
+  --[ C_1_1() ]->
+    [ Out( blind(~x,~r) ), St_C_1('c1', ~x, ~r )]
 
-rule C_12:
+rule C_1_2:
     [ Fr(~x), Fr(~r) ]
-  --[ Create_C_1(~x)]->
-    [ Out( blind(~x,~r) ), St_C_1(c2, ~x, ~r )]
+  --[ C_1_2() ]->
+    [ Out( blind(~x,~r) ), St_C_1('c2', ~x, ~r )]
 
 
 // Payment and deposit phase
 
 rule C_2:
- let s = unblind(sign(blind(x,r), ~skB),r)
-     // verif = verify( sb, blind(x,r), pkB)
+  let s = unblind(sign(blind(x,r), ~skB),r)
   in
     [ St_C_1(C, x, r ), In( sign(blind(x,r), ~skB) ), !Bank_Pk($B, pk(~skB)) ]
-  --[ /* Eq(verif, true), */ In_C_2(x) ]->
+  --[  ]->
     [ St_C_2(C, x, s ) ]
 
 rule C_2sync:
-    [ St_C_2(c1, x1,  s1 ),St_C_2(c2, x2, s2 ) ]
-  --[  ]->
+    [ St_C_2('c1', x1,  s1 ),St_C_2('c2', x2, s2 ) ]
+  --[ Finish() ]->
     [ Out(diff(< x1, s1 >,< x2, s2 >)) ]
 
 
-// Axioms
 
-axiom OnlyOneBank:
-"All #i #j. ((OnlyOnce() @ #i & OnlyOnce() @ #j) ==> #i = #j)"
-
-
-//axiom Equality:
-//"All x y #i. Eq(x,y)@i ==> x = y"
-
+lemma test:
+exists-trace
+  " Ex #i. Finish()@i"
 
 
 end

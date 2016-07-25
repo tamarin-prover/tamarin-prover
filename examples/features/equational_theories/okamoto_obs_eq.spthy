@@ -1,0 +1,116 @@
+theory Okamoto_Equiv
+begin
+
+/*
+ * Protocol: Protocol by Okamoto 
+ * Modeler: Charles Duménil
+ * Date: 19/07/2016	
+ * Source: Formal verification of voting and auction protocols by Jannik Dreier
+ * Status: Working 
+ */
+
+
+/*
+  Protocol FOO {
+    Phase 1:
+    V -> A: sign(blind(tdcommit(vote,r,td),b),skV)
+    A -> V: sign(blind(tdcommit(vote,r,td),b),skA)
+    Phase 2:
+    V -> C: sign(tdcommit(vote,r,td),skA)
+    V -> T: <vote, r, x>
+    Phase 3
+    C -> Pub: vote
+    T -> Pub: vote
+  }
+*/
+
+
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, tdcommit/3, f/4, v1/0, v2/0
+equations: checksign( sign(m,sk), pk(sk) ) = m,
+           unblind( blind(m,b), b ) = m,
+           unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
+           open( tdcommit(m,r,td), r ) = m,
+           tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td),
+           open( tdcommit(m1,r,td), f(m1,r,td,m2) )=m2,
+           f(m1, f (m, r, td, m1), td, m2) = f (m, r, td, m2)    //The two last rules are needed for the convergence
+
+
+// Public key infrastructure
+
+rule Register_Voter_pk:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk(v1, ~ltkV), !Pk(v1, pk(~ltkV)), Out(pk(~ltkV)) ]
+
+rule Register_Voter_pk2:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk(v2, ~ltkV), !Pk(v2, pk(~ltkV)), Out(pk(~ltkV)) ]
+
+rule Register_Admin_pk:
+  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(~ltkA) ]
+
+
+// Generates votes
+
+rule setup:
+  [ Fr(candA), Fr(candB) ]
+  --[ Setup() ]->
+  [ Vote1( candA ), Vote2( candB ), Vote2( candB ) ]
+
+
+//Rules
+
+rule V_1_1:
+  let x = tdcommit( ~truevote , ~r, ~td )
+      e = blind( x, ~b )
+      s = sign ( e , ~ltkV )
+  in
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( ~truevote ), Vote2(~fakevote), !Ltk( v1, ~ltkV ) ]
+  --[ V_1_1( ) ]->
+    [ Out( < e , s > ), St_V_1( v1, ~truevote, ~r, ~b, ~td ), Out(< ~fakevote, diff(~r,f(~fakevote, ~r, ~td, ~truevote) ), ~td >) ]
+
+rule V_1_2:
+  let x = tdcommit( ~vote , ~r, ~td )
+      e = blind( x, ~b )
+      s = sign ( e , ~ltkV )
+  in
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote2( ~vote ), !Ltk( v1, ~ltkV ) ]
+  --[ V_1_2( ) ]->
+    [ Out( < e , s > ), St_V_1( v1, ~vote, ~r, ~b, ~td )]
+
+rule V_2:    // Check Admin_Signature & Check the commit 
+  let e = blind(tdcommit(~vote,~r,~td),~b)
+      d = sign(blind(tdcommit(~vote,~r,~td),~b),~ltkA)
+      y = sign(tdcommit(~vote,~r,~td),~ltkA)
+      x = tdcommit(~vote,~r,~td)
+  in
+    [ In(< e, d>), St_V_1( V, ~vote, ~r, ~b, ~td),  !AdminPk(A, pk(~ltkA)) ]
+  --[ V_2( ) ]->     
+    [ Out( <x,y> ) , P_Ch_Timeliness( ~vote, ~r, x ) ]
+
+rule T_1:
+  let v1 = open( x1, ~r1)
+      v2 = open( x2, ~r2)
+  in
+    [ P_Ch_Timeliness( ~vote1, ~r1, x1 ) , P_Ch_Timeliness( ~vote2, ~r2, x2 )]
+  --[ T_1( ) ]->
+    [ Out( <v1, v2> ) ]
+
+axiom uniqueSetup:
+  "(All #i #j. Setup()@i & Setup()@j ==> #i=#j)"
+
+lemma executable_1_1:
+  exists-trace
+  "Ex #i. V_1_1() @i"
+
+lemma executable_1_2:
+  exists-trace
+  "Ex #i. V_1_2() @i"
+
+lemma executable_2:
+  exists-trace
+  "Ex #i. V_2() @i"
+
+lemma executable_3:
+  exists-trace
+  "Ex #i. T_1() @i"
+
+
+end

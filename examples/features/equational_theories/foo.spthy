@@ -26,9 +26,8 @@ begin
 
 
 builtins: signing
-functions: getmess/1, blind/2, unblind/2, open/2, commit/2
-equations: getmess(sign(m,sk)) = m,
-           open(commit(m,r),r) = m,
+functions: blind/2, unblind/2, open/2, commit/2
+equations: open(commit(m,r),r) = m,
            unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),sk),r)=sign(m,sk)
 
