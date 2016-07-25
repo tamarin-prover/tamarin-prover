@@ -579,10 +579,10 @@ getNewVariablesWithIndex ru = getFacts $ S.toList newvars
     concvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumConcs ru
     
     getFacts []     = []
-    getFacts (x:xs) = (map (\(idx, f) -> (f, idx, x)) $ filter (\(_, f) -> varOccurences f /= []) $ enumConcs ru) ++ (getFacts xs)
+    getFacts (x:xs) = (map (\(idx, f) -> (f, idx, x)) $ filter (\(_, f) -> x `elem` getFactVariables f) $ enumConcs ru) ++ (getFacts xs)
 
     
--- | Given a rule instance, returns a substiution determining how all new variables have been instantiated.
+-- | Given a rule instance, returns a substitution determining how all new variables have been instantiated.
 getSubstitutionsFixingNewVars :: RuleACInst -> RuleAC -> LNSubst
 getSubstitutionsFixingNewVars rule orig = Subst $ M.fromList $ concat $ map getSubst newvars
   where
