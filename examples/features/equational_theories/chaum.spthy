@@ -1,10 +1,11 @@
 theory Chaum
 begin
 
+
 /*
  * Protocol: Chaum's On-line Protocol
  * Modeler: Charles Duménil
- * Date: 19/07/2016	
+ * Date: July 2016	
  * Source: Formal Analysis of E-Cash Protocols by Jannik Dreier, Ali Kassem and Pascal Lafourcade
  * Status: working
  */
@@ -43,13 +44,13 @@ rule Register_Bank_pk:
 
 rule C_1:
     [ Fr(~x), Fr(~r) ]
-  --[ Create_C_1(~x)]->
+  --[ ]->
     [ Out( blind(~x,~r) ), St_C_1( $C, ~x, ~r )]
 
 rule B_1:
     [ In( blind(~x,r) ), !Bank_Ltk($B, ~ltkB) ]
-  --[ Withdraw(~x), In_B_1(~x)]->
-    [ St_B_1( $B ), Out( sign( blind(~x,r), ~ltkB) ) ]
+  --[ Withdraw(~x)]->
+    [ Out( sign( blind(~x,r), ~ltkB) ) ]
 
 
 //Payment and deposit phase
@@ -59,7 +60,7 @@ rule C_2:
      verif = verify( sb, blind(x,r), pkB)
   in
     [ St_C_1( $C, x, r ), In( sb ), !Bank_Pk(B, pkB) ]
-  --[ Eq( verif, true  ), In_C_2(x)]->
+  --[ Eq( verif, true  )]->
     [ Out( <x,s> ) ]
 
 rule S_1:
@@ -72,7 +73,7 @@ rule S_1:
 rule B_2:
   let verif = verify( s, x , pkB )
   in
-    [ In( <x,s> ), St_B_1( $B ), !Bank_Pk($B, pkB) ]
+    [ In( <x,s> ), !Bank_Pk($B, pkB) ]
   --[ Eq( verif,true ), Deposited(x)]->
     [ Private_Ch(x) ]
 
@@ -85,34 +86,18 @@ rule S_2:
 // Axioms
 
 axiom Equality:
-"All x y #i. Eq(x,y)@i ==> x = y"
+  " All x y #i. Eq(x,y)@i ==> x = y "
 
 axiom BankOnlyAcceptsOnce:
   " All x #j #k. Deposited(x)@j & Deposited(x)@k ==> #j = #k "
 
 
-// Lemma simplifying the proof
-
-lemma skiploops [reuse, use_induction]:
-  " (
-  All x #i. In_C_2(x) @ i
-  ==>
-  ( (Ex #j #k.  In_B_1(x) @ j & j<i & Create_C_1( x )  @ k & k<j)
-  ) )
-   
-  "
-
-
 // Property
 
 lemma unforgeability:
-  "
-  All x #j. Spend(x) @ j
+  "  All x #j. Spend(x) @ j
   ==> 
-  ( ( Ex #i. Withdraw( x )@i & #i < #j
-  & not (Ex #l. Spend(x)@l & not ( #l = #j ) )
-  ) )
-  "
+  ( Ex #i. Withdraw( x )@i & #i < #j & not (Ex #l. Spend(x)@l & not ( #l = #j ) ) ) "
 
 
 end

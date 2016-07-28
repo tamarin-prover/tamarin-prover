@@ -2,24 +2,23 @@ theory FOO_Equiv
 begin
 
 /*
- * Protocol: Foo	
- * Modeler: 	
- * Date: 	
- * Source:	
- *
- * Status: Working, to be optimized
+ * Protocol: Protocol by Fujioka, Okamoto and Ohta (FOO) (Vote-Privacy)
+ * Modeler: Charles Duménil
+ * Date: July 2016	
+ * Source: Formal verification of voting and auction protocols by Jannik Dreier
+ * Status: Working 
  */
 
+
 builtins: multiset
-
-functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, commit/2, v1/0, v2/0
-
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, commit/2
 equations: open(commit(m,r),r)=m,
            checksign( sign(m,sk),pk(sk) ) = m,
            unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),sk),r)=sign(m,sk)
 
-/* We formalize the following protocol
+
+/* We formalize the following protocol where the administration and the collector are considered corrupted
 
   protocol FOO {
     Phase 1:
@@ -38,10 +37,10 @@ equations: open(commit(m,r),r)=m,
 // Public key infrastructure
 
 rule Register_Voter_pk:
-  [ Fr(~ltkV) ] --[ ]-> [ !Ltk(v1, ~ltkV), !Pk(v1, pk(~ltkV)), Out(pk(~ltkV)) ]
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v1', ~ltkV), !Pk('v1', pk(~ltkV)), Out(pk(~ltkV)) ]
 
 rule Register_Voter_pk2:
-  [ Fr(~ltkV) ] --[ ]-> [ !Ltk(v2, ~ltkV), !Pk(v2, pk(~ltkV)), Out(pk(~ltkV)) ]
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v2', ~ltkV), !Pk('v2', pk(~ltkV)), Out(pk(~ltkV)) ]
 
 rule Register_Admin_pk:
   [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(~ltkA) ]
@@ -60,20 +59,19 @@ rule setup:
 rule V_1_1:
   let e = blind( commit( $vote , ~r ), ~b )
       s = sign ( blind( commit( $vote , ~r ), ~b ) , ~ltkV1 )
- 
 in
-    [ Fr( ~r ), Fr( ~b ), Vote1($vote), !Ltk( v1, ~ltkV1 )]
+    [ Fr( ~r ), Fr( ~b ), Vote1($vote), !Ltk( 'v1', ~ltkV1 )]
   --[ V_1_1( ) ]->
-    [ Out( < e , s > ), St_V_1( v1, $vote, ~r, ~b )]
+    [ Out( < e , s > ), St_V_1( 'v1', $vote, ~r, ~b )]
 
 rule V_1_2:
   let e = blind( commit( $vote , ~r ), ~b )
       s = sign ( blind( commit( $vote , ~r ), ~b ) , ~ltkV2 )
  
 in
-    [ Fr( ~r ), Fr( ~b ), Vote2($vote), !Ltk( v2, ~ltkV2 )]
+    [ Fr( ~r ), Fr( ~b ), Vote2($vote), !Ltk( 'v2', ~ltkV2 )]
   --[ V_1_2( ) ]->
-    [ Out( < e , s > ), St_V_1( v2, $vote, ~r, ~b )]
+    [ Out( < e , s > ), St_V_1( 'v2', $vote, ~r, ~b )]
 
 rule V_2:
   let e = blind(commit($vote,~r),~b)
@@ -82,26 +80,16 @@ rule V_2:
     [ In( <e,d> ), St_V_1( V, $vote, ~r, ~b),  !AdminPk(A, pk(~ltkA)) ]
   --[ V_2( ) ]->     
     [ St_V_sync( V, pk(~ltkA), $vote, ~r)]
-/*
-rule V_2_sync:    
-    [ St_V_sync( v1, pkA, $vote1, ~r1), St_V_sync( v2, pkA, $vote2, ~r2) ]
-  --[ V_2_sync( ) ]->     
-    [ St_V_2( v1, pkA, $vote1, ~r1), St_V_2( v2, pkA, $vote2, ~r2) ]
-*/
-
 
 rule V_2_sync:    
-    [ St_V_sync( v1, pkA, $vote1, ~r1), St_V_sync( v2, pkA, $vote2, ~r2) ]
+    [ St_V_sync( 'v1', pkA, $vote1, ~r1), St_V_sync( 'v2', pkA, $vote2, ~r2) ]
   --[ V_2_sync( ) ]->     
-    [ Select_voter( '1' + <v1, pkA, $vote1, ~r1> + <v2, pkA, $vote2, ~r2>) ]
-
+    [ Select_voter( '1' + <'v1', pkA, $vote1, ~r1> + <'v2', pkA, $vote2, ~r2>) ]
 
 rule select_Voter:
   [ Select_voter(<V, pkA, $vote, ~r>+z) ]
   --[ Select_voter(<V, pkA, $vote, ~r>+z) ]->
   [ St_V_2(V, pkA, $vote, ~r), Select_voter(z) ]
-
-
 
 rule V_3:    
   let y = sign(commit($vote,~r),~ltkA)
@@ -122,31 +110,12 @@ rule V_4:
 axiom uniqueSetup:
   "All #i #j. Setup()@i & Setup()@j ==> #i=#j"
 
-axiom select_limited_keys:
-  "All a b c d #i. Select(a+b+c+d)@i ==> F"
-
 axiom select_limited_voters:
   "All a b c d #i. Select_voter(a+b+c+d)@i ==> F"
 
-lemma executable_1_1:
-  exists-trace
-  "Ex #i. V_1_1() @i"
+lemma exec:
+exists-trace " Ex #i #j. V_4( )@i&V_4( )@j &not( #i=#j) "
 
-lemma executable_1_2:
-  exists-trace
-  "Ex #i. V_1_2() @i"
-
-lemma executable_2:
-  exists-trace
-  "Ex #i. V_2() @i"
-
-lemma executable_3:
-  exists-trace
-  "Ex #i. V_3() @i"
-
-lemma executable_4:
-  exists-trace
-  "Ex #i. V_4() @i"
 
 end
 

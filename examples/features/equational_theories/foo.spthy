@@ -4,7 +4,7 @@ begin
 /*
  * Protocol: Protocol by Fujioka, Okamoto and Ohta (FOO)
  * Modeler: Charles Duménil
- * Date: 19/07/2016	
+ * Date: July 2016	
  * Source: Formal verification of voting and auction protocols by Jannik Dreier
  * Status: Working 
  */
@@ -31,7 +31,9 @@ equations: open(commit(m,r),r) = m,
            unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),sk),r)=sign(m,sk)
 
+
 // Public key infrastructure
+
 rule Register_Voter_pk:
   [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
 
@@ -42,13 +44,13 @@ rule Register_Admin_pk:
 //Rules
 
 rule V_1:
-  let x = commit( ~vote , ~r )
+  let x = commit( $vote , ~r )
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr( ~vote ), !Ltk( V, ~ltkV ) ]
-  --[ Created_V_1(~vote), Create_V_1(e) ]->
-    [ Out( <e,s> ), St_V_1( V, ~vote, ~r, ~b ) ]
+    [ Fr( ~r ), Fr( ~b ), !Ltk( V, ~ltkV ) ]
+  --[ Created_V_1($vote), Create_V_1(e) ]->
+    [ Out( <e,s> ), St_V_1( V, $vote, ~r, ~b ) ]
 
 rule A_1:
   let d = sign( e, ~ltkA )
@@ -59,13 +61,13 @@ rule A_1:
     [ Out(  <e,d>  ) ]
 
 rule V_2:    // Check Admin_Signature & Check the commit 
-  let y = unblind(d,~b)   // = sign(x,ltkA)
-      x = commit(~vote,~r)
+  let y = unblind(d,~b)
+      x = commit($vote,~r)
       verif = verify( d, e, pkA)
   in
-    [ In( <e,d> ), St_V_1( V, ~vote, ~r, ~b),  !AdminPk(A, pkA) ]
-  --[ Eq( verif, true ) , Eq( e, blind(commit(~vote,~r),~b) ), In_V_2( e ) ]->     
-    [ Out( <x,y> ) , St_V_2( V, A, ~vote, ~r ) ]
+    [ In( <e,d> ), St_V_1( V, $vote, ~r, ~b),  !AdminPk(A, pkA) ]
+  --[ Eq( verif, true ) , Eq( e, blind(commit($vote,~r),~b) ), In_V_2( e ) ]->     
+    [ Out( <x,y> ) , St_V_2( V, A, $vote, ~r ) ]
 
 rule C_1:
   let verif = verify( y, x, pkA)
@@ -75,8 +77,8 @@ rule C_1:
     [ St_C_1( A, x), Out(x) ]
 
 rule V_3:
-    [ In(x), St_V_2(V, A, ~vote, ~r )]
-  --[ Eq( x, commit(~vote,~r) ) ]->
+    [ In(x), St_V_2(V, A, $vote, ~r )]
+  --[ Eq( x, commit($vote,~r) ) ]->
     [ Out( ~r ) ]
 
 rule C_2:
@@ -96,19 +98,13 @@ axiom Equality:
 // typing lemma
 
 lemma types [typing]:
-  " (
-  All e #i. In_A_1(e) @ i
+  " ( All e #i. In_A_1(e) @ i
   ==>
-  ( (Ex #j . Create_V_1( e )  @ j & j<i )
-  ) ) & (
-  All e #i. In_V_2(e) @ i
+  Ex #j . Create_V_1(e)  @ j & j<i )
+  &
+  ( All v #i. Out_C_2(v) @ i
   ==>
-  ( (Ex #j. In_A_1(e)@j & j<i )
-  ) ) & (
-  All v #i. Out_C_2(v) @ i
-  ==>
-  ( (Ex #j. Created_V_1(v)@j & j<i )
-  ) )"
+  Ex #j. Created_V_1(v)@j & j<i ) "
 
 
 // Property
@@ -118,7 +114,7 @@ lemma elligibility:
   All vote #j.
   VotePublished (vote) @ j
   ==> 
-  ( ( Ex r b #i.  Registered(blind(commit(vote,r),b)) @ i & #i < #j )  )"
+  ( Ex r b #i.  Registered(blind(commit(vote,r),b)) @ i & #i < #j )"
 
 
 end

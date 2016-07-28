@@ -1,26 +1,28 @@
 theory Okamoto_pm
 begin
 
+
 /*
  * Protocol: Protocol by Okamoto 
  * Modeler: Charles Duménil
- * Date: 19/07/2016	
+ * Date: July 2016	
  * Source: Formal verification of voting and auction protocols by Jannik Dreier
- * Status: Working 
+ * Status: Working (same as okamoto but with pattern matching instead of equality axiom and different equations,
+ * see verity_checksign_test.spthy for more details)
  */
 
 
 /*
   Protocol Okamoto {
     Phase 1:
-    V -> A: sign(blind(tdcommit(vote,r,td),b),skV)
-    A -> V: sign(blind(tdcommit(vote,r,td),b),skA)
+    V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>
+    A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
     Phase 2:
-    V -> C: sign(tdcommit(vote,r,td),skA)
+    V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
     V -> T: <vote, r, x>
     Phase 3
-    C -> Pub: vote
-    T -> Pub: vote
+    C -> Pub: vote                                                                    "Check sign Admin"
+    T -> Pub: vote                                                                    "VotePublished"
   }
 */
 
@@ -36,6 +38,7 @@ equations: checksign( sign(m,sk), pk(sk) ) = m,
 
 
 // Public key infrastructure
+
 rule Register_Voter_pk:
   [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
 
@@ -46,31 +49,31 @@ rule Register_Admin_pk:
 //Rules
 
 rule V_1:
-  let x = tdcommit( ~vote , ~r, ~td )
+  let x = tdcommit( $vote , ~r, ~td )
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), Fr( ~vote ), !Ltk( V, ~ltkV ) ]
-  --[ Voted(~vote), Create_V_1(e)]->
-    [ Out( < e , s > ), St_V_1( V, ~vote, ~r, ~b, ~td ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( V, ~ltkV ) ]
+  --[ Voted($vote), Create_V_1(e)]->
+    [ Out( < e , s > ), St_V_1( V, $vote, ~r, ~b, ~td ) ]
 
 rule A_1:
   let s = sign( e, ~ltkV )
       d = sign( e, ~ltkA )
   in
     [ In( < e , s >), !AdminLtk( A, ~ltkA ), !Pk( V, pk(~ltkV) ) ]
-  --[ Registered(e,V), In_A_1(e) ]->
+  --[ Registered(e), In_A_1(e) ]->
     [ Out( < e , d > ) ]
 
 rule V_2:    // Check Admin_Signature & Check the commit 
-  let e = blind(tdcommit(~vote,~r,~td),~b)
-      d = sign(blind(tdcommit(~vote,~r,~td),~b),~ltkA)
-      y = sign(tdcommit(~vote,~r,~td),~ltkA)
-      x = tdcommit(~vote,~r,~td)
+  let e = blind(tdcommit($vote,~r,~td),~b)
+      d = sign(blind(tdcommit($vote,~r,~td),~b),~ltkA)
+      y = sign(tdcommit($vote,~r,~td),~ltkA)
+      x = tdcommit($vote,~r,~td)
   in
-    [ In(< e, d>), St_V_1( V, ~vote, ~r, ~b, ~td),  !AdminPk(A, pk(~ltkA)) ]
+    [ In(< e, d>), St_V_1( V, $vote, ~r, ~b, ~td),  !AdminPk(A, pk(~ltkA)) ]
   --[ In_V_2( e ) ]->     
-    [ Out( <x,y> ) , P_Ch_Timeliness( ~vote, ~r, x ) ]
+    [ Out( <x,y> ) , P_Ch_Timeliness( $vote, ~r, x ) ]
 
 rule C_1:
   let y = sign( x, ~ltkA )
@@ -82,24 +85,18 @@ rule C_1:
 rule T_1:
   let v = open( x, ~r)
   in
-    [ P_Ch_Timeliness( ~vote, ~r, x ) ]
+    [ P_Ch_Timeliness( $vote, ~r, x ) ]
   --[ VotePublished( x ) ]->
     [ Out( v ) ]
-
 
 
 // Typing lemma
 
 lemma types [typing]:
-  " (
-  All e #i. In_A_1(e) @ i
+  " All e #i. In_A_1(e) @ i
   ==>
-  ( (Ex #j . Create_V_1( e )@j & j<i )
-  ) )/* & (
-  All e #i. In_V_2(e) @ i
-  ==>
-  ( (Ex #j. In_A_1(e)@j & j<i)
-  ) ) */"
+  Ex #j . Create_V_1( e )@j & j<i "
+
 
 // Property
 
@@ -108,7 +105,7 @@ lemma elligibility:
   All x #j.
   VotePublished(x)@j
   ==> 
-  ( ( Ex b V #i.  Registered( blind(x ,b) ,V)@i & #i < #j  )  )"
+  ( Ex b #i.  Registered(blind(x,b))@i & #i < #j )"
 
 
 end

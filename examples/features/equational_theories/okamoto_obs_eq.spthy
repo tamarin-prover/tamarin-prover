@@ -2,46 +2,48 @@ theory Okamoto_Equiv
 begin
 
 /*
- * Protocol: Protocol by Okamoto 
+ * Protocol: Protocol by Okamoto (Receipt-Freeness)
  * Modeler: Charles Duménil
  * Date: 19/07/2016	
  * Source: Formal verification of voting and auction protocols by Jannik Dreier
- * Status: Working 
+ * Status: Work in progress, last equation need to be fixed
  */
 
 
-/*
+/*We formalize the following protocol where the administration and the collector are considered corrupted
+
   Protocol Okamoto {
     Phase 1:
-    V -> A: sign(blind(tdcommit(vote,r,td),b),skV)
-    A -> V: sign(blind(tdcommit(vote,r,td),b),skA)
+    V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>
+    A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
     Phase 2:
-    V -> C: sign(tdcommit(vote,r,td),skA)
+    V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
     V -> T: <vote, r, x>
     Phase 3
-    C -> Pub: vote
-    T -> Pub: vote
+    C -> Pub: vote                                                                    "Check sign Admin"
+    T -> Pub: vote                                                                    "VotePublished"
   }
 */
 
+
 builtins: multiset
-functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, tdcommit/3, f/4, v1/0, v2/0
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, tdcommit/3, f/4
 equations: checksign( sign(m,sk), pk(sk) ) = m,
            unblind( blind(m,b), b ) = m,
            unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
            open( tdcommit(m,r,td), r ) = m,
            tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td),
-           open( tdcommit(m1,r,td), f(m1,r,td,m2) )=m2,
-           f(m2, f (m1, r, td, m2), td, m3) = f(m1, r, td, m3)    //The two last rules are needed for the convergence
+           open( tdcommit(m1,r,td), f(m1,r,td,m2) ) = m2 /*,
+           f(m2, f (m1, r, td, m2), td, m3) = f(m1, r, td, m3)*/   
           
 
 // Public key infrastructure
 
 rule Register_Voter_pk:
-  [ Fr(~ltkV) ] --[ ]-> [ !Ltk(v1, ~ltkV), !Pk(v1, pk(~ltkV)), Out(pk(~ltkV)) ]
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v1', ~ltkV), !Pk('v1', pk(~ltkV)), Out(pk(~ltkV)) ]
 
 rule Register_Voter_pk2:
-  [ Fr(~ltkV) ] --[ ]-> [ !Ltk(v2, ~ltkV), !Pk(v2, pk(~ltkV)), Out(pk(~ltkV)) ]
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v2', ~ltkV), !Pk('v2', pk(~ltkV)), Out(pk(~ltkV)) ]
 
 rule Register_Admin_pk:
   [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(~ltkA) ]
@@ -62,18 +64,18 @@ rule V_1_1:
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( $vote ), !Ltk( v1, ~ltkV ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( $vote ), !Ltk( 'v1', ~ltkV ) ]
   --[ V_1_1( ), Out_V_1( f($vote, ~r, ~td, $candA) ) ]->
-    [ Out( < e , s > ), St_V_1( v1, $vote, ~r, ~b, ~td ), Out(< $candA, f($vote, ~r, ~td, $candA), ~td >) ]
+    [ Out( < e , s > ), St_V_1( 'v1', $vote, ~r, ~b, ~td ), Out(< $candA, f($vote, ~r, ~td, $candA), ~td >) ]
 
 rule V_1_2:
   let x = tdcommit( $vote , ~r, ~td )
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote2( $vote ), !Ltk( v2, ~ltkV ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote2( $vote ), !Ltk( 'v2', ~ltkV ) ]
   --[ V_1_2( ) ]->
-    [ Out( < e , s > ), St_V_1( v2, $vote, ~r, ~b, ~td )]
+    [ Out( < e , s > ), St_V_1( 'v2', $vote, ~r, ~b, ~td )]
 
 rule V_2:
   let e = blind(tdcommit($vote,~r,~td),~b)
@@ -84,9 +86,9 @@ rule V_2:
     [ St_V_sync( V, pk(~ltkA), $vote, ~r, ~td)]
 
 rule V_2_sync:   
-    [ St_V_sync( v1, pkA, $vote1, ~r1, ~td1 ), St_V_sync( v2, pkA, $vote2, ~r2, ~td2 ) ]
+    [ St_V_sync( 'v1', pkA, $vote1, ~r1, ~td1 ), St_V_sync( 'v2', pkA, $vote2, ~r2, ~td2 ) ]
   --[ V_2_sync( ) ]->     
-    [ St_V_3( v1, pkA, $vote1, ~r1, ~td1 ),St_V_3( v2, pkA, $vote2, ~r2, ~td2 ) ]
+    [ St_V_3( 'v1', pkA, $vote1, ~r1, ~td1 ),St_V_3( 'v2', pkA, $vote2, ~r2, ~td2 ) ]
 
 rule V_3:    
   let y = sign(tdcommit($vote,~r,~td),~ltkA)
@@ -96,45 +98,22 @@ rule V_3:
   --[ V_3( ) ]->     
     [ Out( <x,y> ), P_Ch_Timeliness( $vote, ~r, x ) ]
 
-rule T_1:
-  let v1 = open( x1, ~r1)
-      v2 = open( x2, ~r2)
-  in
-    [ P_Ch_Timeliness( $vote1, ~r1, x1 ) , P_Ch_Timeliness( $vote2, ~r2, x2 )]
-  --[ T_1( ) ]->
-    [ Out( <v1, v2> ) ]
+rule T_1_sync:
+    [ P_Ch_Timeliness( $vote1, ~r1, x1 ) , P_Ch_Timeliness( $vote2, ~r2, x2 ), Fr(fr)]
+  --[ T_1_sync( ) ]->
+    [ Select_vote( fr + $vote1 + $vote2 ) ]
+
+rule select_vote:
+  [ Select_vote($v+z) ]
+  --[ Select_vote($v+z) ]->
+  [ Out($v), Select_vote(z) ]
+
 
 axiom uniqueSetup:
   "(All #i #j. Setup()@i & Setup()@j ==> #i=#j)"
 
-/*
-lemma types [typing]:
-  " All vote r td cand #i. !KD( f(vote, r, td, cand) )@i ==> (cand = $candA | Ex #j. KU(cand)@j )"  
-*/
-
-lemma executable_1_1:
-  exists-trace
-  "Ex #i. V_1_1() @i"
-
-lemma executable_1_2:
-  exists-trace
-  "Ex #i. V_1_2() @i"
-
-lemma executable_2:
-  exists-trace
-  "Ex #i. V_2() @i"
-
-lemma executable_2_sync:
-  exists-trace
-  "Ex #i. V_2_sync() @i"
-
-lemma executable_3:
-  exists-trace
-  "Ex #i. V_3() @i"
-
-lemma executable_4:
-  exists-trace
-  "Ex #i. T_1() @i"
+axiom select_limited_votes:
+  "All a b c d #i. Select_vote(a+b+c+d)@i ==> F"
 
 
 end

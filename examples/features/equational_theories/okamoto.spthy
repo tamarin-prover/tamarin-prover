@@ -1,10 +1,11 @@
 theory Okamoto
 begin
 
+
 /*
  * Protocol: Protocol by Okamoto 
  * Modeler: Charles Duménil
- * Date: 19/07/2016	
+ * Date: July 2016	
  * Source: Formal verification of voting and auction protocols by Jannik Dreier
  * Status: Working 
  */
@@ -13,14 +14,14 @@ begin
 /*
   Protocol Okamoto {
     Phase 1:
-    V -> A: sign(blind(tdcommit(vote,r,td),b),skV)
-    A -> V: sign(blind(tdcommit(vote,r,td),b),skA)
+    V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>
+    A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
     Phase 2:
-    V -> C: sign(tdcommit(vote,r,td),skA)
+    V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
     V -> T: <vote, r, x>
     Phase 3
-    C -> Pub: vote
-    T -> Pub: vote
+    C -> Pub: vote                                                                    "Check sign Admin"
+    T -> Pub: vote                                                                    "VotePublished"
   }
 */
 
@@ -33,10 +34,11 @@ equations: getmess( sign( m, sk) ) = m,
            open( tdcommit(m,r,td), r ) = m,
            tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td),
            open( tdcommit(m1,r,td), f(m1,r,td,m2) )=m2 ,
-           f(m1, f (m, r, td, m1), td, m2) = f (m, r, td, m2)    //The two last rules are needed for the convergence
+           f(m1, f (m, r, td, m1), td, m2) = f (m, r, td, m2)
 
 
 // Public key infrastructure
+
 rule Register_Voter_pk:
   [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
 
@@ -47,13 +49,13 @@ rule Register_Admin_pk:
 //Rules
 
 rule V_1:
-  let x = tdcommit( ~vote , ~r, ~td )
+  let x = tdcommit( $vote , ~r, ~td )
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), Fr( ~vote ), !Ltk( V, ~ltkV ) ]
-  --[ Voted(~vote), Create_V_1(e)]->
-    [ Out( < e , s > ), St_V_1( V, ~vote, ~r, ~b, ~td ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( V, ~ltkV ) ]
+  --[ Voted($vote), Create_V_1(e)]->
+    [ Out( < e , s > ), St_V_1( V, $vote, ~r, ~b, ~td ) ]
 
 rule A_1:
   let d = sign( e, ~ltkA )
@@ -65,13 +67,13 @@ rule A_1:
 
 rule V_2:    // Check Admin_Signature & Check the commit 
   let y = unblind(d,~b)   // = sign(x,ltkA)
-      x = tdcommit(~vote,~r,~td)
+      x = tdcommit($vote,~r,~td)
       verif1 = verify( d, e, pkA )
       verif2 = verify( y, x, pkA )
   in
-    [ In(< e, d>), St_V_1( V, ~vote, ~r, ~b, ~td),  !AdminPk(A, pkA) ]
+    [ In(< e, d>), St_V_1( V, $vote, ~r, ~b, ~td),  !AdminPk(A, pkA) ]
   --[ Eq( verif1, true ), Eq(verif2,true), In_V_2( e ) ]->     
-    [ Out( <x,y> ) , P_Ch_Timeliness( ~vote, ~r, x ) ]
+    [ Out( <x,y> ) , P_Ch_Timeliness( $vote, ~r, x ) ]
 
 rule C_1:
   let verif = verify( y, x, pkA )
@@ -83,9 +85,9 @@ rule C_1:
 rule T_1:
   let v = open( x, ~r)
   in
-    [ P_Ch_Timeliness( ~vote, ~r, x ) ]
+    [ P_Ch_Timeliness( $vote, ~r, x ) ]
   --[ VotePublished( x ) ]->
-    [ Out( ~vote ) ]
+    [ Out( v ) ]
 
 
 // Axioms
@@ -97,15 +99,9 @@ axiom Equality:
 // Typing lemma
 
 lemma types [typing]:
-  " (
-  All e #i. In_A_1(e) @ i
+  " All e #i. In_A_1(e) @ i
   ==>
-  ( (Ex #j . Create_V_1( e )@j & j<i )
-  ) ) & (
-  All e #i. In_V_2(e) @ i
-  ==>
-  ( (Ex #j. In_A_1(e)@j & j<i)
-  ) ) "
+  Ex #j . Create_V_1( e )@j & j<i "
 
 // Property
 
@@ -114,7 +110,7 @@ lemma elligibility:
   All x #j.
   VotePublished(x)@j
   ==> 
-  ( ( Ex b #i.  Registered( blind(x ,b))@i & #i < #j  )  )"
+  ( Ex b #i.  Registered( blind(x ,b))@i & #i < #j )"
 
 
 end

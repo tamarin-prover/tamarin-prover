@@ -6,7 +6,7 @@ equations: f(a,f(b,r,c),b) = f(a,r,c)
 
 rule R_1:
     [ Fr( ~x ), Fr( ~y ), Fr( ~z ) ]
-  --[ Pas_1 ()]->
+  --[ Step_1 (f( ~x,~y,~z ))]->
     [ Out ( f( ~x,~y,~z ) ) ]
 
 end
