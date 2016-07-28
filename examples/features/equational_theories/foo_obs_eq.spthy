@@ -1,4 +1,4 @@
-theory FOO_Equiv2
+theory FOO_Equiv
 begin
 
 /*
@@ -50,54 +50,83 @@ rule Register_Admin_pk:
 // Generates votes
 
 rule setup:
-  [ Fr(candA), Fr(candB) ]
+  [  ]
   --[ Setup() ]->
-  [ Vote1( diff(candA, candB) ), Vote2( diff(candB, candA) ) ]
+  [ Vote1( diff($candA, $candB) ), Vote2( diff($candB, $candA) ) ]
 
 
 // Rules
 
 rule V_1_1:
-  let e = blind( commit( ~vote , ~r ), ~b )
-      s = sign ( blind( commit( ~vote , ~r ), ~b ) , ltkV1 )
+  let e = blind( commit( $vote , ~r ), ~b )
+      s = sign ( blind( commit( $vote , ~r ), ~b ) , ~ltkV1 )
  
 in
-    [ Fr( ~r ), Fr( ~b ), Vote1(~vote), !Ltk( v1, ltkV1 )]
+    [ Fr( ~r ), Fr( ~b ), Vote1($vote), !Ltk( v1, ~ltkV1 )]
   --[ V_1_1( ) ]->
-    [ Out( < e , s > ), St_V_1( v1, ~vote, ~r, ~b )]
+    [ Out( < e , s > ), St_V_1( v1, $vote, ~r, ~b )]
 
 rule V_1_2:
-  let e = blind( commit( ~vote , ~r ), ~b )
-      s = sign ( blind( commit( ~vote , ~r ), ~b ) , ltkV2 )
+  let e = blind( commit( $vote , ~r ), ~b )
+      s = sign ( blind( commit( $vote , ~r ), ~b ) , ~ltkV2 )
  
 in
-    [ Fr( ~r ), Fr( ~b ), Vote2(~vote), !Ltk( v2, ltkV2 )]
+    [ Fr( ~r ), Fr( ~b ), Vote2($vote), !Ltk( v2, ~ltkV2 )]
   --[ V_1_2( ) ]->
-    [ Out( < e , s > ), St_V_1( v2, ~vote, ~r, ~b )]
+    [ Out( < e , s > ), St_V_1( v2, $vote, ~r, ~b )]
 
-
-rule V_2:    
-  let e = blind(commit(~vote,~r),~b)
-      d = sign(blind(commit(~vote,~r),~b),~ltkA)
-      y = sign(commit(~vote,~r),~ltkA)
-      x = commit(~vote,~r)
+rule V_2:
+  let e = blind(commit($vote,~r),~b)
+      d = sign(blind(commit($vote,~r),~b),~ltkA)
   in
-    [ In( <e,d> ), St_V_1( V, ~vote, ~r, ~b),  !AdminPk(A, pk(~ltkA)) ]
+    [ In( <e,d> ), St_V_1( V, $vote, ~r, ~b),  !AdminPk(A, pk(~ltkA)) ]
   --[ V_2( ) ]->     
-    [ Out( <x,y> ) , St_V_2( V, A, ~vote, ~r) ]
+    [ St_V_sync( V, pk(~ltkA), $vote, ~r)]
+/*
+rule V_2_sync:    
+    [ St_V_sync( v1, pkA, $vote1, ~r1), St_V_sync( v2, pkA, $vote2, ~r2) ]
+  --[ V_2_sync( ) ]->     
+    [ St_V_2( v1, pkA, $vote1, ~r1), St_V_2( v2, pkA, $vote2, ~r2) ]
+*/
 
-rule V_3:
-  let x1 = commit(~vote1,~r1)
-      x2 = commit(~vote2,~r2)
+
+rule V_2_sync:    
+    [ St_V_sync( v1, pkA, $vote1, ~r1), St_V_sync( v2, pkA, $vote2, ~r2) ]
+  --[ V_2_sync( ) ]->     
+    [ Select_voter( '1' + <v1, pkA, $vote1, ~r1> + <v2, pkA, $vote2, ~r2>) ]
+
+
+rule select_Voter:
+  [ Select_voter(<V, pkA, $vote, ~r>+z) ]
+  --[ Select_voter(<V, pkA, $vote, ~r>+z) ]->
+  [ St_V_2(V, pkA, $vote, ~r), Select_voter(z) ]
+
+
+
+rule V_3:    
+  let y = sign(commit($vote,~r),~ltkA)
+      x = commit($vote,~r)
   in
-    [ In(x1), St_V_2(v1, A, ~vote1, ~r1), In(x2), St_V_2(v2, A, ~vote2, ~r2)]
-  --[ V_3( ) ]->
-    [ Out(<~r1,~r2>) ]
+    [ St_V_2( V, pk(~ltkA), $vote, ~r), !AdminPk(A, pk(~ltkA)) ]
+  --[ V_3( ) ]->     
+    [ Out( <x,y> ) , St_V_3( V, $vote, ~r) ]
+
+rule V_4:
+  let x = commit($vote,~r)
+  in
+    [ In(x), St_V_3(V, $vote, ~r) ]
+  --[ V_4( ) ]->
+    [ Out(~r) ]
 
 
 axiom uniqueSetup:
   "All #i #j. Setup()@i & Setup()@j ==> #i=#j"
 
+axiom select_limited_keys:
+  "All a b c d #i. Select(a+b+c+d)@i ==> F"
+
+axiom select_limited_voters:
+  "All a b c d #i. Select_voter(a+b+c+d)@i ==> F"
 
 lemma executable_1_1:
   exists-trace
@@ -115,6 +144,9 @@ lemma executable_3:
   exists-trace
   "Ex #i. V_3() @i"
 
+lemma executable_4:
+  exists-trace
+  "Ex #i. V_4() @i"
 
 end
 

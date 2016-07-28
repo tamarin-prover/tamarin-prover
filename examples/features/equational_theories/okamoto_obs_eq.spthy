@@ -11,7 +11,7 @@ begin
 
 
 /*
-  Protocol FOO {
+  Protocol Okamoto {
     Phase 1:
     V -> A: sign(blind(tdcommit(vote,r,td),b),skV)
     A -> V: sign(blind(tdcommit(vote,r,td),b),skA)
@@ -24,7 +24,7 @@ begin
   }
 */
 
-
+builtins: multiset
 functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, tdcommit/3, f/4, v1/0, v2/0
 equations: checksign( sign(m,sk), pk(sk) ) = m,
            unblind( blind(m,b), b ) = m,
@@ -32,8 +32,8 @@ equations: checksign( sign(m,sk), pk(sk) ) = m,
            open( tdcommit(m,r,td), r ) = m,
            tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td),
            open( tdcommit(m1,r,td), f(m1,r,td,m2) )=m2,
-           f(m1, f (m, r, td, m1), td, m2) = f (m, r, td, m2)    //The two last rules are needed for the convergence
-
+           f(m2, f (m1, r, td, m2), td, m3) = f(m1, r, td, m3)    //The two last rules are needed for the convergence
+          
 
 // Public key infrastructure
 
@@ -50,51 +50,67 @@ rule Register_Admin_pk:
 // Generates votes
 
 rule setup:
-  [ Fr(candA), Fr(candB) ]
+  [  ]
   --[ Setup() ]->
-  [ Vote1( candA ), Vote2( candB ), Vote2( candB ) ]
+  [ Vote1( diff($candA, $candB) ), Vote2( diff($candB, $candA) ) ]
 
 
 //Rules
 
 rule V_1_1:
-  let x = tdcommit( ~truevote , ~r, ~td )
+  let x = tdcommit( $vote, ~r, ~td )
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( ~truevote ), Vote2(~fakevote), !Ltk( v1, ~ltkV ) ]
-  --[ V_1_1( ) ]->
-    [ Out( < e , s > ), St_V_1( v1, ~truevote, ~r, ~b, ~td ), Out(< ~fakevote, diff(~r,f(~fakevote, ~r, ~td, ~truevote) ), ~td >) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( $vote ), !Ltk( v1, ~ltkV ) ]
+  --[ V_1_1( ), Out_V_1( f($vote, ~r, ~td, $candA) ) ]->
+    [ Out( < e , s > ), St_V_1( v1, $vote, ~r, ~b, ~td ), Out(< $candA, f($vote, ~r, ~td, $candA), ~td >) ]
 
 rule V_1_2:
-  let x = tdcommit( ~vote , ~r, ~td )
+  let x = tdcommit( $vote , ~r, ~td )
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote2( ~vote ), !Ltk( v1, ~ltkV ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote2( $vote ), !Ltk( v2, ~ltkV ) ]
   --[ V_1_2( ) ]->
-    [ Out( < e , s > ), St_V_1( v1, ~vote, ~r, ~b, ~td )]
+    [ Out( < e , s > ), St_V_1( v2, $vote, ~r, ~b, ~td )]
 
-rule V_2:    // Check Admin_Signature & Check the commit 
-  let e = blind(tdcommit(~vote,~r,~td),~b)
-      d = sign(blind(tdcommit(~vote,~r,~td),~b),~ltkA)
-      y = sign(tdcommit(~vote,~r,~td),~ltkA)
-      x = tdcommit(~vote,~r,~td)
+rule V_2:
+  let e = blind(tdcommit($vote,~r,~td),~b)
+      d = sign(blind(tdcommit($vote,~r,~td),~b),~ltkA)
   in
-    [ In(< e, d>), St_V_1( V, ~vote, ~r, ~b, ~td),  !AdminPk(A, pk(~ltkA)) ]
+    [ In( <e,d> ), St_V_1( V, $vote, ~r, ~b,~td),  !AdminPk(A, pk(~ltkA)) ]
   --[ V_2( ) ]->     
-    [ Out( <x,y> ) , P_Ch_Timeliness( ~vote, ~r, x ) ]
+    [ St_V_sync( V, pk(~ltkA), $vote, ~r, ~td)]
+
+rule V_2_sync:   
+    [ St_V_sync( v1, pkA, $vote1, ~r1, ~td1 ), St_V_sync( v2, pkA, $vote2, ~r2, ~td2 ) ]
+  --[ V_2_sync( ) ]->     
+    [ St_V_3( v1, pkA, $vote1, ~r1, ~td1 ),St_V_3( v2, pkA, $vote2, ~r2, ~td2 ) ]
+
+rule V_3:    
+  let y = sign(tdcommit($vote,~r,~td),~ltkA)
+      x = tdcommit($vote,~r,~td)
+  in
+    [ St_V_3( V, pk(~ltkA), $vote, ~r, ~td ), !AdminPk(A, pk(~ltkA)) ]
+  --[ V_3( ) ]->     
+    [ Out( <x,y> ), P_Ch_Timeliness( $vote, ~r, x ) ]
 
 rule T_1:
   let v1 = open( x1, ~r1)
       v2 = open( x2, ~r2)
   in
-    [ P_Ch_Timeliness( ~vote1, ~r1, x1 ) , P_Ch_Timeliness( ~vote2, ~r2, x2 )]
+    [ P_Ch_Timeliness( $vote1, ~r1, x1 ) , P_Ch_Timeliness( $vote2, ~r2, x2 )]
   --[ T_1( ) ]->
     [ Out( <v1, v2> ) ]
 
 axiom uniqueSetup:
   "(All #i #j. Setup()@i & Setup()@j ==> #i=#j)"
+
+/*
+lemma types [typing]:
+  " All vote r td cand #i. !KD( f(vote, r, td, cand) )@i ==> (cand = $candA | Ex #j. KU(cand)@j )"  
+*/
 
 lemma executable_1_1:
   exists-trace
@@ -108,7 +124,15 @@ lemma executable_2:
   exists-trace
   "Ex #i. V_2() @i"
 
+lemma executable_2_sync:
+  exists-trace
+  "Ex #i. V_2_sync() @i"
+
 lemma executable_3:
+  exists-trace
+  "Ex #i. V_3() @i"
+
+lemma executable_4:
   exists-trace
   "Ex #i. T_1() @i"
 

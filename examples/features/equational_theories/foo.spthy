@@ -92,12 +92,6 @@ rule C_2:
 axiom Equality:
 "All x y #i. Eq(x,y) @i ==> x = y"
 
-axiom OnlyOneVotPerVoter:
-  "
-  All e1 e2 #i #j. Registered(e1) @i & Registered(e2)@j
-  ==>
-  #i = #j"
-
 
 // typing lemma
 
@@ -121,10 +115,10 @@ lemma types [typing]:
 
 lemma elligibility:
   " 
-  All v #j.
-  VotePublished (v) @ j
+  All vote #j.
+  VotePublished (vote) @ j
   ==> 
-  ( ( Ex r b #i.  Registered(blind(commit(v,r),b)) @ i & #i < #j )  )"
+  ( ( Ex r b #i.  Registered(blind(commit(vote,r),b)) @ i & #i < #j )  )"
 
 
 end

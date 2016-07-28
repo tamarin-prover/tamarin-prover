@@ -1,22 +1,13 @@
-theory Blind_Signature
+theory Equa_theories
 begin
 
-functions: op/2, tc/2, f/2
-equations: op( tc(x,z),z ) = x,
-           tc(x,f(y, z)) = tc(y,z)
+functions: f/3
+equations: f(a,f(b,r,c),b) = f(a,r,c)
+
 rule R_1:
-  let m1 = tc(~x, ~z)
-  in
     [ Fr( ~x ), Fr( ~y ), Fr( ~z ) ]
-  --[ Pas_1 (m1)]->
-    [ St1( m1,~z ) ]
-/*
-rule R_2:
-  let m2 =  tc(x,z)
-  in
-    [ St1( m2,z) ]
-  --[ Pas_2 (m2) ]->
-    [ Out( op(m2,z) ) ]
-*/
+  --[ Pas_1 ()]->
+    [ Out ( f( ~x,~y,~z ) ) ]
+
 end
 
