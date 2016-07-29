@@ -1,0 +1,127 @@
+theory Okamoto_Vote_Privacy
+begin
+
+
+/*
+ * Protocol: Protocol by Okamoto 
+ * Modeler: Charles Duménil
+ * Date: July 2016	
+ * Source: Formal verification of voting and auction protocols by Jannik Dreier
+ * Status: Working 
+ */
+
+
+/*
+  Protocol Okamoto {                                 ( Administration and collector are considered corrupted )
+    Phase 1:
+     V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>                                            " v1( diff(A,B) ) & v2( diff(B,A) ) "
+     A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
+    Phase 2:
+     V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
+     V -> T: <vote, r, x>
+    Phase 3
+     C -> Pub: vote                                                                    "Check sign Admin"
+     T -> Pub: vote                                                                    "VotePublished"
+  }
+*/
+
+
+builtins: multiset
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, tdcommit/3, f/4
+equations: checksign( sign(m,sk),pk(sk) ) = m,
+           unblind( blind(m,b), b ) = m,
+           unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
+           open( tdcommit(m,r,td), r ) = m,
+           tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td),
+           open( tdcommit(m1,r,td), f(m1,r,td,m2) )=m2 ,
+           f(m1, f (m, r, td, m1), td, m2) = f (m, r, td, m2)
+
+
+// Public key infrastructure
+
+rule Register_Voter_pk1:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v1', ~ltkV), !Pk('v1', pk(~ltkV)), Out(pk(~ltkV)) ]
+
+rule Register_Voter_pk2:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v2', ~ltkV), !Pk('v2', pk(~ltkV)), Out(pk(~ltkV)) ]
+
+rule Register_Admin_pk:
+  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(~ltkA) ]
+
+
+// Generates votes
+
+rule setup:
+  [  ]
+  --[ OnlyOnce() ]->
+  [ Vote1( diff($candA, $candB) ), Vote2( diff($candB, $candA) ) ]
+
+//Rules
+
+rule V_1_1:
+  let x = tdcommit( $vote, ~r, ~td )
+      e = blind( x, ~b )
+      s = sign ( e , ~ltkV )
+  in
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( $vote ), !Ltk( 'v1', ~ltkV ) ]
+  --[ V_1_1( ) ]->
+    [ Out( < e , s > ), St_V_1( 'v1', $vote, ~r, ~b, ~td ) ]
+
+rule V_1_2:
+  let x = tdcommit( $vote , ~r, ~td )
+      e = blind( x, ~b )
+      s = sign ( e , ~ltkV )
+  in
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote2( $vote ), !Ltk( 'v2', ~ltkV ) ]
+  --[ V_1_2( ) ]->
+    [ Out( < e , s > ), St_V_1( 'v2', $vote, ~r, ~b, ~td )]
+
+rule V_2:
+  let e = blind(tdcommit($vote,~r,~td),~b)
+      d = sign(blind(tdcommit($vote,~r,~td),~b),~ltkA)
+  in
+    [ In( <e,d> ), St_V_1( V, $vote, ~r, ~b,~td),  !AdminPk(A, pk(~ltkA)) ]
+  --[ V_2( ) ]->     
+    [ St_V_sync( V, pk(~ltkA), $vote, ~r, ~td)]
+
+rule V_2_sync:   
+    [ St_V_sync( 'v1', pkA, $vote1, ~r1, ~td1 ), St_V_sync( 'v2', pkA, $vote2, ~r2, ~td2 ) ]
+  --[ V_2_sync( ) ]->     
+    [ St_V_3( 'v1', pkA, $vote1, ~r1, ~td1 ),St_V_3( 'v2', pkA, $vote2, ~r2, ~td2 ) ]
+
+rule V_3:    
+  let y = sign(tdcommit($vote,~r,~td),~ltkA)
+      x = tdcommit($vote,~r,~td)
+  in
+    [ St_V_3( V, pk(~ltkA), $vote, ~r, ~td ), !AdminPk(A, pk(~ltkA)) ]
+  --[ V_3( ) ]->     
+    [ Out( <x,y> ), P_Ch_Timeliness( $vote, ~r, x ) ]
+
+rule T_1_sync:
+    [ P_Ch_Timeliness( $vote1, ~r1, x1 ) , P_Ch_Timeliness( $vote2, ~r2, x2 ), Fr(fr)]
+  --[ T_1_sync( ) ]->
+    [ Select_vote( fr + $vote1 + $vote2 ) ]
+
+rule select_vote:
+  [ Select_vote($v+z) ]
+  --[ Select_vote($v+z) ]->
+  [ Out($v), Select_vote(z) ]
+
+
+// Axioms
+
+axiom onlyOnce:
+  "All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i=#j"
+
+axiom select_limited_votes:
+  "All a b c d #i. Select_vote(a+b+c+d)@i ==> F"
+
+
+// Executability
+
+lemma exec:
+  exists-trace
+  " Ex x y #i #j. Select_vote(x+y)@i & Select_vote(x)@j & not(#i=#j) "
+
+
+end

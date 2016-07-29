@@ -1,5 +1,6 @@
-theory FOO
+theory FOO_Eligibility
 begin
+
 
 /*
  * Protocol: Protocol by Fujioka, Okamoto and Ohta (FOO)
@@ -105,6 +106,13 @@ lemma types [typing]:
   ( All v #i. Out_C_2(v) @ i
   ==>
   Ex #j. Created_V_1(v)@j & j<i ) "
+
+
+// Executability
+
+lemma exec:
+  exists-trace
+  " Ex v #i. VotePublished( v )@i "
 
 
 // Property

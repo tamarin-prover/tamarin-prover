@@ -1,41 +1,41 @@
-theory Chaum_Equiv
+theory Chaum_Weak_Anonymity
 begin
+
 
 /*
  * Protocol: Chaum's On-line Protocol
  * Modeler: Charles Duménil
- * Date: 	
+ * Date: July 2016	
  * Source: Formal Analysis of E-Cash Protocols by Jannik Dreier, Ali Kassem and Pascal Lafourcade
- * Status: work in progress
+ * Status: working
  */
 
 
 /*
-  Protocol Chaum { (Seller an bank are considered corrupted)
+  Protocol Chaum {                          ( Seller and bank are considered corrupted )
     Withdrawal phase
-     C -> B: blind(x,r)
+     C -> B: blind(x,r)                                           " c1(x1) & c2(x2) "
      B -> C: sign(blind(x,r),skB)    "Withdraw"
     Payment and deposit phase
-     C -> S: <x, sign(x,skB)>        "Check sign"
+     C -> S: <x, sign(x,skB)>        "Check sign"                 " Out( diff( x1, x2 ) ) "
      S -> B: <x, sign(x,skB)>        "Check sign" 
-     B -> C: Private(x)              "Check sign" + "Deposite"
+     B -> S: Private(x)              "Check sign" + "Deposite"
      S     :                         "Spend"
   }
 */
 
 
-//builtins: signing
 functions: pk/1, sign/2, checksign/2, blind/2, unblind/2
-equations: unblind(blind(m,r),r) = m,
-           unblind(sign(blind(m,r),k),r) = sign(m,k),
-           checksign(sign(m,k),k)=m
+equations: checksign( sign(m,k),pk(k) ) = m,
+           unblind( blind(m,r),r ) = m,
+           unblind( sign(blind(m,r),k),r ) = sign(m,k)
 
 
 // Public key infrastructure
 
 rule Register_Bank_pk:
   [ Fr(~ltkB) ]
-  --[ ]->
+  --[ OnlyOnce() ]->
   [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(<~ltkB>) ]
 
 
@@ -67,12 +67,17 @@ rule C_2sync:
     [ Out(diff(< x1, s1 >,< x2, s2 >)) ]
 
 
+// Axioms
 
-lemma test:
-exists-trace
-  " Ex #i. Finish()@i"
+axiom OnlyOnce:
+  " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j " 
+
+
+// Executability
+
+lemma exec:
+  exists-trace
+  " Ex #i. Finish()@i "
 
 
 end
-
-

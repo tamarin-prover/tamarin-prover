@@ -1,5 +1,6 @@
-theory FOO_Equiv
+theory FOO_Vote_Privacy
 begin
+
 
 /*
  * Protocol: Protocol by Fujioka, Okamoto and Ohta (FOO) (Vote-Privacy)
@@ -10,19 +11,10 @@ begin
  */
 
 
-builtins: multiset
-functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, commit/2
-equations: open(commit(m,r),r)=m,
-           checksign( sign(m,sk),pk(sk) ) = m,
-           unblind(blind(m,r),r) = m,
-           unblind(sign(blind(m,r),sk),r)=sign(m,sk)
-
-
-/* We formalize the following protocol where the administration and the collector are considered corrupted
-
-  protocol FOO {
+/*
+  Protocol FOO {                                 ( Administration and collector are considered corrupted )
     Phase 1:
-     V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV) >
+     V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV) >                                                 " v1( diff(A,B) ) & v2( diff(B,A) ) "
      A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) >      "Registered" + "Check sign Voter"
     Phase 2:
      V -> C: < commit(vote,r), sign(commit(vote,r),ltkA) >                 "Check sign Admin" + "Check commit"
@@ -32,6 +24,14 @@ equations: open(commit(m,r),r)=m,
      C -> Pub: v                                                           "VotePublished" + "Check r"
   }
 */
+
+
+builtins: multiset
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, commit/2
+equations: open(commit(m,r),r)=m,
+           checksign( sign(m,sk),pk(sk) ) = m,
+           unblind(blind(m,r),r) = m,
+           unblind(sign(blind(m,r),sk),r) = sign(m,sk)
 
 
 // Public key infrastructure
@@ -50,7 +50,7 @@ rule Register_Admin_pk:
 
 rule setup:
   [  ]
-  --[ Setup() ]->
+  --[ OnlyOnce() ]->
   [ Vote1( diff($candA, $candB) ), Vote2( diff($candB, $candA) ) ]
 
 
@@ -67,7 +67,6 @@ in
 rule V_1_2:
   let e = blind( commit( $vote , ~r ), ~b )
       s = sign ( blind( commit( $vote , ~r ), ~b ) , ~ltkV2 )
- 
 in
     [ Fr( ~r ), Fr( ~b ), Vote2($vote), !Ltk( 'v2', ~ltkV2 )]
   --[ V_1_2( ) ]->
@@ -107,15 +106,20 @@ rule V_4:
     [ Out(~r) ]
 
 
-axiom uniqueSetup:
-  "All #i #j. Setup()@i & Setup()@j ==> #i=#j"
+// Axioms
+
+axiom onlyOnce:
+  " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j "
 
 axiom select_limited_voters:
-  "All a b c d #i. Select_voter(a+b+c+d)@i ==> F"
+  " All a b c d #i. Select_voter(a+b+c+d)@i ==> F "
+
+
+// Executability
 
 lemma exec:
-exists-trace " Ex #i #j. V_4( )@i&V_4( )@j &not( #i=#j) "
+  exists-trace
+  " Ex #i #j. V_4( )@i & V_4( )@j & not( #i=#j) "
 
 
 end
-

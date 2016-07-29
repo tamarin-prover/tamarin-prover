@@ -1,27 +1,28 @@
-theory Okamoto_Equiv
+theory Okamoto_Receipt_Freeness
 begin
+
 
 /*
  * Protocol: Protocol by Okamoto (Receipt-Freeness)
  * Modeler: Charles Duménil
- * Date: 19/07/2016	
+ * Date: July 2016	
  * Source: Formal verification of voting and auction protocols by Jannik Dreier
  * Status: Work in progress, last equation need to be fixed
  */
 
 
-/*We formalize the following protocol where the administration and the collector are considered corrupted
-
-  Protocol Okamoto {
+/*
+  Protocol Okamoto {                               ( Administration and collector are considered corrupted )
     Phase 1:
-    V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>
-    A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
+     V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV) >    " v1( diff(candA,candB) ) & v2( diff(candB,candA) ) "
+     V1 -> Pub: < candA, f(vote, r, td, candA), td > 
+     A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
     Phase 2:
-    V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
-    V -> T: <vote, r, x>
+     V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
+     V -> T: <vote, r, x>
     Phase 3
-    C -> Pub: vote                                                                    "Check sign Admin"
-    T -> Pub: vote                                                                    "VotePublished"
+     C -> Pub: vote                                                                    "Check sign Admin"
+     T -> Pub: vote                                                                    "VotePublished"
   }
 */
 
@@ -53,7 +54,7 @@ rule Register_Admin_pk:
 
 rule setup:
   [  ]
-  --[ Setup() ]->
+  --[ OnlyOnce() ]->
   [ Vote1( diff($candA, $candB) ), Vote2( diff($candB, $candA) ) ]
 
 
@@ -65,7 +66,7 @@ rule V_1_1:
       s = sign ( e , ~ltkV )
   in
     [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( $vote ), !Ltk( 'v1', ~ltkV ) ]
-  --[ V_1_1( ), Out_V_1( f($vote, ~r, ~td, $candA) ) ]->
+  --[ V_1_1( ) ]->
     [ Out( < e , s > ), St_V_1( 'v1', $vote, ~r, ~b, ~td ), Out(< $candA, f($vote, ~r, ~td, $candA), ~td >) ]
 
 rule V_1_2:
@@ -109,11 +110,20 @@ rule select_vote:
   [ Out($v), Select_vote(z) ]
 
 
-axiom uniqueSetup:
-  "(All #i #j. Setup()@i & Setup()@j ==> #i=#j)"
+// Axioms
+
+axiom onlyOnce:
+  " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i=#j "
 
 axiom select_limited_votes:
-  "All a b c d #i. Select_vote(a+b+c+d)@i ==> F"
+  " All a b c d #i. Select_vote(a+b+c+d)@i ==> F "
+
+
+// Executability
+
+lemma exec:
+  exists-trace
+  " Ex x y #i #j. Select_vote(x+y)@i & Select_vote(x)@j & not(#i=#j) "
 
 
 end

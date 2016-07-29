@@ -1,4 +1,4 @@
-theory Okamoto
+theory Okamoto_Eligibility
 begin
 
 
@@ -14,14 +14,14 @@ begin
 /*
   Protocol Okamoto {
     Phase 1:
-    V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>
-    A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
+     V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>
+     A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
     Phase 2:
-    V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
-    V -> T: <vote, r, x>
+     V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
+     V -> T: <vote, r, x>
     Phase 3
-    C -> Pub: vote                                                                    "Check sign Admin"
-    T -> Pub: vote                                                                    "VotePublished"
+     C -> Pub: vote                                                                    "Check sign Admin"
+     T -> Pub: vote                                                                    "VotePublished"
   }
 */
 
@@ -65,14 +65,14 @@ rule A_1:
   --[ Eq( verif, true ),  Registered(e), In_A_1(e) ]->
     [ Out( < e , d > ) ]
 
-rule V_2:    // Check Admin_Signature & Check the commit 
-  let y = unblind(d,~b)   // = sign(x,ltkA)
+rule V_2:    
+  let y = unblind(d,~b)
       x = tdcommit($vote,~r,~td)
       verif1 = verify( d, e, pkA )
       verif2 = verify( y, x, pkA )
   in
     [ In(< e, d>), St_V_1( V, $vote, ~r, ~b, ~td),  !AdminPk(A, pkA) ]
-  --[ Eq( verif1, true ), Eq(verif2,true), In_V_2( e ) ]->     
+  --[ Eq( verif1, true ), Eq(verif2,true) ]->     
     [ Out( <x,y> ) , P_Ch_Timeliness( $vote, ~r, x ) ]
 
 rule C_1:
@@ -83,11 +83,9 @@ rule C_1:
     [ Out( <x,y> ) ]
 
 rule T_1:
-  let v = open( x, ~r)
-  in
     [ P_Ch_Timeliness( $vote, ~r, x ) ]
   --[ VotePublished( x ) ]->
-    [ Out( v ) ]
+    [ Out( $vote ) ]
 
 
 // Axioms
@@ -103,6 +101,14 @@ lemma types [typing]:
   ==>
   Ex #j . Create_V_1( e )@j & j<i "
 
+
+// Executability
+
+lemma exec:
+  exists-trace
+  " Ex x #i. VotePublished( x )@i "
+
+
 // Property
 
 lemma elligibility:
@@ -110,7 +116,7 @@ lemma elligibility:
   All x #j.
   VotePublished(x)@j
   ==> 
-  ( Ex b #i.  Registered( blind(x ,b))@i & #i < #j )"
+  ( Ex b #i.  Registered( blind(x,b) )@i & #i < #j )"
 
 
 end
