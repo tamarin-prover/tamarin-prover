@@ -821,7 +821,7 @@ injRanking :: ProofContext
             -> System
             -> [AnnotatedGoal] -> [AnnotatedGoal]
 injRanking ctxt sys =
-    sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
+    (sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking)
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
 
@@ -850,7 +850,7 @@ injRanking ctxt sys =
         [ isImmediateGoal . fst         -- Goals with the I_ prefix
         , isHighPriorityGoal . fst      -- Goals with the F_ prefix, by goal number
         , isMedPriorityGoal             -- Various important goals, by goal number
-        , isLowPriorityGoal . fst ]
+        , isLowPriorityGoal ]
         -- move the rest (mostly more expensive KU-goals) before expensive
         -- equation splits
 
@@ -867,18 +867,19 @@ injRanking ctxt sys =
     -- (assuming the same usefulness)
     isHighPriorityGoal goal = (isKnowsFirstNameGoal goal)
                                 || (isFirstProtoFact goal)
-                                || (isDisjGoal goal) || (isChainGoal goal)
+                                || (isChainGoal goal)
+                                || (isFreshKnowsGoal goal)
 
-    isMedPriorityGoal goaltuple = (isProtoFactGoal goaltuple)
-                                    || (isSignatureGoal $ fst goaltuple)
-                                    || (isStandardActionGoal $ fst goaltuple)
-                                    || (isFreshKnowsGoal $ fst goaltuple)
+    isMedPriorityGoal goaltuple = (isStandardActionGoal $ fst goaltuple)
+                                    || (isDisjGoal $ fst goaltuple)
                                     || (isPrivateKnowsGoal $ fst goaltuple)
                                     || (isSplitGoalSmall $ fst goaltuple)
                                     || (isMsgOneCaseGoal $ fst goaltuple)
 
-    isLowPriorityGoal goal = (isDoubleExpGoal goal) || (isNoLargeSplitGoal goal)
-
+    isLowPriorityGoal goaltuple = (isDoubleExpGoal $ fst goaltuple)
+                                || (isNoLargeSplitGoal $ fst goaltuple)
+                                || (isSignatureGoal $ fst goaltuple)
+                                || (isProtoFactGoal goaltuple)
     -- Detect 'I_' (immediate) fact and term prefix for heuristics
     isImmediateGoal (PremiseG _ (Fact (ProtoFact _ ('I':'_':_) _) _)) = True
     isImmediateGoal (ActionG  _ (Fact (ProtoFact _ ('I':'_':_) _) _)) = True
