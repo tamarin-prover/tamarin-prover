@@ -288,15 +288,15 @@ guarded formula characterizing all counter-examples:
   (∀ matchingSession #i3.1 matchingRole.
     (Sid( matchingSession, <B, A, recvd, sent, matchingRole> ) @ #i3.1)
    ⇒
-    (matchingRole = role) ∨
-    ((∀ #i5. (RevealSessk( matchingSession ) @ #i5) ⇒ ⊥) ∧
-     (∀ #i5 #i6.
-       (RevealLtk( B ) @ #i5) ∧ (RevealEphk( matchingSession ) @ #i6) ⇒ ⊥))) ∧
-  ((∃ matchingSession #i3.1 matchingRole.
-     (Sid( matchingSession, <B, A, recvd, sent, matchingRole> ) @ #i3.1)
-    ∧
-     ¬(matchingRole = role)) ∨
-   (∀ #i5. (RevealLtk( B ) @ #i5) ⇒ ⊥))"
+    ((matchingRole = role) ∨
+     ((∀ #i5. (RevealSessk( matchingSession ) @ #i5) ⇒ ⊥) ∧
+      (∀ #i5 #i6.
+        (RevealLtk( B ) @ #i5) ∧ (RevealEphk( matchingSession ) @ #i6) ⇒ ⊥)))) ∧
+  (((∃ matchingSession #i3.1 matchingRole.
+      (Sid( matchingSession, <B, A, recvd, sent, matchingRole> ) @ #i3.1)
+     ∧
+      ¬(matchingRole = role)) ∨
+    (∀ #i5. (RevealLtk( B ) @ #i5) ⇒ ⊥)))"
 */
 simplify
 solve( (∃ matchingSession #i3 matchingRole.
@@ -733,7 +733,7 @@ analyzing: examples/ake/dh/NAXOS_eCK.spthy
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.961441s
+  processing time: 5.112958s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ------------------------------------------------------------------------------
@@ -744,7 +744,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.961441s
+  processing time: 5.112958s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ==============================================================================

@@ -121,9 +121,9 @@ guarded formula characterizing all counter-examples:
     (∀ #i6. (SesskRev( ss ) @ #i6) ⇒ ⊥) ∧
     (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ⊥) ∧
     (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (LtkRev( B ) @ #i7) ⇒ ⊥)) ∧
-  ((∃ ss #i4 #i5 C D ms.
-     (SidR( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
-   (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1)))"
+  (((∃ ss #i4 #i5 C D ms.
+      (SidR( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
+    (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1))))"
 */
 simplify
 solve( (∃ ss #i4 #i5 C D ms.
@@ -257,7 +257,7 @@ analyzing: examples/csf12/KAS1.spthy
 analyzed: examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.860742s
+  processing time: 0.635877s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ------------------------------------------------------------------------------
@@ -268,7 +268,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.860742s
+  processing time: 0.635877s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ==============================================================================

@@ -216,10 +216,10 @@ guarded formula characterizing all counter-examples:
     (∀ #i6 #i7. (LtkRev( B ) @ #i6) ∧ (EphkRev( ss ) @ #i7) ⇒ ⊥) ∧
     (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (LtkRev( B ) @ #i7) ⇒ ⊥) ∧
     (∀ #i6 #i7. (EphkRev( s ) @ #i6) ∧ (EphkRev( ss ) @ #i7) ⇒ ⊥)) ∧
-  ((∃ ss #i4 #i5 C D ms.
-     (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
-   ((∀ #i6. (EphkRev( s ) @ #i6) ⇒ ⊥) ∧
-    (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1))))"
+  (((∃ ss #i4 #i5 C D ms.
+      (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
+    ((∀ #i6. (EphkRev( s ) @ #i6) ⇒ ⊥) ∧
+     (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1)))))"
 */
 simplify
 solve( (∃ ss #i4 #i5 C D ms.
@@ -1826,7 +1826,7 @@ analyzing: examples/csf12/DH2_original.spthy
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 29.549815s
+  processing time: 26.780075s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ------------------------------------------------------------------------------
@@ -1837,7 +1837,7 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 29.549815s
+  processing time: 26.780075s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ==============================================================================

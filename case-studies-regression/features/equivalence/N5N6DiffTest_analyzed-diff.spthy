@@ -45,7 +45,7 @@ analyzing: examples/features/equivalence/N5N6DiffTest.spthy
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.084384s
+  processing time: 0.079538s
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.084384s
+  processing time: 0.079538s
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ==============================================================================

@@ -234,11 +234,11 @@ guarded formula characterizing all counter-examples:
    ⇒
     (∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
     (∀ #i5. (EphkRev( matching ) @ #i5) ⇒ ∀ #i6. (LtkRev( B ) @ #i6) ⇒ ⊥)) ∧
-  ((∃ matching #i3 #i4 sid.
-     (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
-   ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
-    (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
-    (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥)))"
+  (((∃ matching #i3 #i4 sid.
+      (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
+    ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+     (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
+     (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥))))"
 */
 simplify
 solve( (∃ matching #i3 #i4 sid.
@@ -305,7 +305,7 @@ analyzing: examples/ake/bilinear/Scott_EphkRev.spthy
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 24.835599s
+  processing time: 26.410975s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 
@@ -317,7 +317,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 24.835599s
+  processing time: 26.410975s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 

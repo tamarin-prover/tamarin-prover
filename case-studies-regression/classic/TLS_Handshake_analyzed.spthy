@@ -196,7 +196,7 @@ guarded formula characterizing all counter-examples:
 "∃ S C keyS keyC #k.
   (SessionKeys( S, C, keyS, keyC ) @ #k)
  ∧
-  ((∃ #i. (K( keyS ) @ #i)) ∨ (∃ #i. (K( keyC ) @ #i))) ∧
+  (((∃ #i. (K( keyS ) @ #i)) ∨ (∃ #i. (K( keyC ) @ #i)))) ∧
   (∀ #r. (RevLtk( S ) @ #r) ⇒ ⊥) ∧
   (∀ #r. (RevLtk( C ) @ #r) ⇒ ⊥)"
 */
@@ -329,9 +329,9 @@ guarded formula characterizing all counter-examples:
   (∀ #j.
     (Running( actor, peer, params ) @ #j)
    ⇒
-    (¬(#j < #i)) ∨
-    (∃ actor2 peer2 #i2.
-      (Commit( actor2, peer2, params ) @ #i2) ∧ ¬(#i = #i2))) ∧
+    ((¬(#j < #i)) ∨
+     (∃ actor2 peer2 #i2.
+       (Commit( actor2, peer2, params ) @ #i2) ∧ ¬(#i = #i2)))) ∧
   (∀ #r. (RevLtk( actor ) @ #r) ⇒ ⊥) ∧
   (∀ #r. (RevLtk( peer ) @ #r) ⇒ ⊥)"
 */
@@ -538,7 +538,7 @@ analyzing: examples/classic/TLS_Handshake.spthy
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.720348s
+  processing time: 1.745396s
   session_key_secrecy (all-traces): verified (38 steps)
   injective_agree (all-traces): verified (39 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
@@ -551,7 +551,7 @@ summary of summaries:
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.720348s
+  processing time: 1.745396s
   session_key_secrecy (all-traces): verified (38 steps)
   injective_agree (all-traces): verified (39 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)

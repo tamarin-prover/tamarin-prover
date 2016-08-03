@@ -71,16 +71,16 @@ lemma types [typing, reuse]:
      ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_R_1( m2 ) @ #j)))"
 /*
 guarded formula characterizing all counter-examples:
-"(∃ ni m1 #i.
-   (IN_R_1_ni( ni, m1 ) @ #i)
-  ∧
-   (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
-   (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
- (∃ nr m2 #i.
-   (IN_I_2_nr( nr, m2 ) @ #i)
-  ∧
-   (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
-   (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥))"
+"((∃ ni m1 #i.
+    (IN_R_1_ni( ni, m1 ) @ #i)
+   ∧
+    (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
+  (∃ nr m2 #i.
+    (IN_I_2_nr( nr, m2 ) @ #i)
+   ∧
+    (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)))"
 */
 induction
   case empty_trace
@@ -705,7 +705,7 @@ analyzing: examples/classic/NSLPK3_untagged.spthy
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.269138s
+  processing time: 3.069841s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -718,7 +718,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.269138s
+  processing time: 3.069841s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

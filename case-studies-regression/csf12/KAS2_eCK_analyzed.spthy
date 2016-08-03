@@ -167,10 +167,10 @@ guarded formula characterizing all counter-examples:
     (∀ #i6. (SesskRev( ss ) @ #i6) ⇒ ⊥) ∧
     (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7) ⇒ ⊥) ∧
     (∀ #i6 #i7. (LtkRev( B ) @ #i6) ∧ (EphkRev( ss ) @ #i7) ⇒ ⊥)) ∧
-  ((∃ ss #i4 #i5 C D ms.
-     (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
-   ((∀ #i6. (LtkRev( B ) @ #i6) ⇒ ⊥) ∧
-    (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7) ⇒ ⊥)))"
+  (((∃ ss #i4 #i5 C D ms.
+      (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
+    ((∀ #i6. (LtkRev( B ) @ #i6) ⇒ ⊥) ∧
+     (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7) ⇒ ⊥))))"
 */
 simplify
 solve( (∃ ss #i4 #i5 C D ms.
@@ -241,7 +241,7 @@ analyzing: examples/csf12/KAS2_eCK.spthy
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.448466s
+  processing time: 2.850845s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ------------------------------------------------------------------------------
@@ -252,7 +252,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.448466s
+  processing time: 2.850845s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

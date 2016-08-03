@@ -216,11 +216,11 @@ guarded formula characterizing all counter-examples:
     (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)
    ⇒
     ∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
-  ((∃ matching #i3 #i4 sid.
-     (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
-   ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
-    (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
-    (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥)))"
+  (((∃ matching #i3 #i4 sid.
+      (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
+    ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+     (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
+     (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥))))"
 */
 simplify
 solve( (∃ matching #i3 #i4 sid.
@@ -1804,7 +1804,7 @@ analyzing: examples/ake/bilinear/Scott.spthy
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 23.509533s
+  processing time: 21.020154s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 
@@ -1816,7 +1816,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 23.509533s
+  processing time: 21.020154s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 
