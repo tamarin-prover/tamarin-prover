@@ -690,7 +690,7 @@ equations =
         rrule <- RRule <$> term llit <*> (equalSign *> term llit)
         case rRuleToCtxtStRule rrule of
           Just str ->
-              modifyState (addStRule str)
+              modifyState (addCtxtStRule str)
           Nothing  ->
               fail $ "Not a subterm rule: " ++ show rrule
 

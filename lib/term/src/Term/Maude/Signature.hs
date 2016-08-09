@@ -36,7 +36,7 @@ module Term.Maude.Signature (
 
   -- * extend maude signatures
   , addFunSym
-  , addStRule
+  , addCtxtStRule
 
   -- * pretty printing
   , prettyMaudeSig
@@ -118,8 +118,8 @@ addFunSym funsym msig =
     msig `mappend` mempty {stFunSyms=S.fromList [funsym]}
 
 -- | Add subterm rule to given maude signature.
-addStRule :: CtxtStRule -> MaudeSig -> MaudeSig
-addStRule str msig =
+addCtxtStRule :: CtxtStRule -> MaudeSig -> MaudeSig
+addCtxtStRule str msig =
     msig `mappend` mempty {stRules=S.fromList [str]}
 
 -- | Returns all rewriting rules including the rules

@@ -66,7 +66,7 @@ ctxtStRuleToRRule (CtxtStRule lhs (StRhs _ rhsterm)) = lhs `RRule` rhsterm
 -- Pretty Printing
 ------------------------------------------------------------------------------
 
--- | Pretty print an 'StRule'
+-- | Pretty print an 'CtxtStRule'
 prettyCtxtStRule :: HighlightDocument d => CtxtStRule -> d
 prettyCtxtStRule r = case ctxtStRuleToRRule r of
   (lhs `RRule` rhs) -> sep [ nest 2 $ prettyLNTerm lhs
