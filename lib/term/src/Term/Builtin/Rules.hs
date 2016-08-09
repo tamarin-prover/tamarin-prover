@@ -76,11 +76,11 @@ msetRules :: Set (RRule LNTerm)
 msetRules = S.empty
 
 -- | The rewriting rules for standard subterm operators that are builtin.
-pairRules, symEncRules, asymEncRules, signatureRules :: Set (StRule)
+pairRules, symEncRules, asymEncRules, signatureRules :: Set (CtxtStRule)
 pairRules = S.fromList
-    [ fAppFst (fAppPair (x1,x2)) `StRule` (StRhs [[0,0]] x1)
-    , fAppSnd (fAppPair (x1,x2)) `StRule` (StRhs [[0,1]] x2) ]
-symEncRules    = S.fromList [ sdec (senc (x1,x2), x2)     `StRule` (StRhs [[0,0]] x1) ]
-asymEncRules   = S.fromList [ adec (aenc (x1, pk x2), x2) `StRule` (StRhs [[0,0]] x1) ]
-signatureRules = S.fromList [ verify (sign (x1,x2), x1, pk x2) `StRule` (StRhs [] trueC) ]
+    [ fAppFst (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)
+    , fAppSnd (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,1]] x2) ]
+symEncRules    = S.fromList [ sdec (senc (x1,x2), x2)     `CtxtStRule` (StRhs [[0,0]] x1) ]
+asymEncRules   = S.fromList [ adec (aenc (x1, pk x2), x2) `CtxtStRule` (StRhs [[0,0]] x1) ]
+signatureRules = S.fromList [ verify (sign (x1,x2), x1, pk x2) `CtxtStRule` (StRhs [] trueC) ]
 

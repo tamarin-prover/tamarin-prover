@@ -101,9 +101,9 @@ specialIntruderRules diff =
 ------------------------------------------------------------------------------
 
 -- | @destuctionRules diff st@ returns the destruction rules for the given
--- subterm rule @st@
-destructionRules :: Bool -> StRule -> [IntrRuleAC]
-destructionRules _    (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (StRhs (pos:[]) rhs)) =
+-- context subterm rule @st@
+destructionRules :: Bool -> CtxtStRule -> [IntrRuleAC]
+destructionRules _    (CtxtStRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (StRhs (pos:[]) rhs)) =
     go [] lhs pos
   where
     go _      _                       []     = []
@@ -121,10 +121,10 @@ destructionRules _    (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (StRhs (pos:
                 else []
     go _      (viewTerm -> Lit _)     (_:_)  =
         error "IntruderRules.destructionRules: impossible, position invalid"        
-destructionRules bool (StRule lhs (StRhs (pos:posit) rhs)) = destructionRules bool (StRule lhs (StRhs [pos] rhs)) ++ destructionRules bool (StRule lhs (StRhs posit rhs))
+destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) = destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
 
-destructionRules _    (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs
-destructionRules True (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Public)))  []))) = destrRulesForConstant subterms f rhs
+destructionRules _    (CtxtStRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs
+destructionRules True (CtxtStRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Public)))  []))) = destrRulesForConstant subterms f rhs
 destructionRules _    _                                                                                                              = []
 
 -- returns destructor rules for equations with ground RHS
@@ -137,10 +137,10 @@ destrRulesForConstant subterms f rhs =
     go done (x:xs) = (Rule (DestrRule f) ((kdFact  x):(map kuFact (done ++ xs))) [kdFact rhs] []):(go (x:done) xs)
 
 -- returns all equations with private constructors on the RHS
-privateConstructorEquations :: [StRule] -> [(LNTerm, ByteString)]
+privateConstructorEquations :: [CtxtStRule] -> [(LNTerm, ByteString)]
 privateConstructorEquations rs = case rs of
     []    -> []
-    (StRule lhs (StRhs [] (viewTerm -> FApp (NoEq (vname,(0,Private))) []))):xs
+    (CtxtStRule lhs (StRhs [] (viewTerm -> FApp (NoEq (vname,(0,Private))) []))):xs
           -> (lhs, vname):(privateConstructorEquations xs)
     _:xs  -> privateConstructorEquations xs
     
@@ -155,7 +155,7 @@ derivablePrivateConstants eqs x =
             x
 
 -- | @privateConstructorRules st@ returns the constructor rules for private constants that are consequences of rewrite rules in @st@
-privateConstructorRules :: [StRule] -> [IntrRuleAC]
+privateConstructorRules :: [CtxtStRule] -> [IntrRuleAC]
 privateConstructorRules rules = map createRule $ derivablePrivateConstants (privateConstructorEquations rules) []
   where
     -- creates a constructor rule for constant s

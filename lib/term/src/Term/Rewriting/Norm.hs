@@ -94,7 +94,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FAppNoEq _ ts    -> all go ts
             FAppC _    ts    -> all go ts
 
-        struleApplicable t (StRule lhs rhs) =
+        struleApplicable t (CtxtStRule lhs rhs) =
             case solveMatchLNTerm (t `matchWith` lhs) `runReader` hnd of
               []  -> False
               _:_ -> case rhs of

@@ -688,7 +688,7 @@ equations =
   where
     equation = do
         rrule <- RRule <$> term llit <*> (equalSign *> term llit)
-        case rRuleToStRule rrule of
+        case rRuleToCtxtStRule rrule of
           Just str ->
               modifyState (addStRule str)
           Nothing  ->

@@ -7,15 +7,15 @@
 -- 
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
--- Subterm rewriting rules.
+-- Context Subterm rewriting rules.
 module Term.SubtermRule (
       StRhs(..)
-    , StRule(..)
-    , rRuleToStRule
-    , stRuleToRRule
+    , CtxtStRule(..)
+    , rRuleToCtxtStRule
+    , ctxtStRuleToRRule
 
     -- * Pretty Printing
-    , prettyStRule
+    , prettyCtxtStRule
     , module Term.Rewriting.Definitions
     ) where
 
@@ -29,23 +29,23 @@ import Term.Positions
 import Term.Rewriting.Definitions
 import Text.PrettyPrint.Highlight
 
--- | The righthand-side of a subterm rewrite rule.
+-- | The righthand-side of a context subterm rewrite rule.
 --   Does not enforce that the term for RhsGround must be ground.
 data StRhs = StRhs [Position] LNTerm
     deriving (Show,Ord,Eq)
 
--- | A subterm rewrite rule. To be renamed.
-data StRule = StRule LNTerm StRhs
+-- | A context subterm rewrite rule. To be renamed.
+data CtxtStRule = CtxtStRule LNTerm StRhs
     deriving (Show,Ord,Eq)
 
--- | Convert a rewrite rule to a subterm rewrite rule if possible.
-rRuleToStRule :: RRule LNTerm -> Maybe StRule
-rRuleToStRule (lhs `RRule` rhs)
-  | frees rhs == [] = Just $ StRule lhs (StRhs [] rhs)
+-- | Convert a rewrite rule to a context subterm rewrite rule if possible.
+rRuleToCtxtStRule :: RRule LNTerm -> Maybe CtxtStRule
+rRuleToCtxtStRule (lhs `RRule` rhs)
+  | frees rhs == [] = Just $ CtxtStRule lhs (StRhs [] rhs)
   | otherwise       = case findAllSubterms lhs rhs of
                         []:_     -> Nothing  -- proper subterm required
                         []       -> Nothing
-                        pos      -> Just $ StRule lhs (StRhs pos rhs)
+                        pos      -> Just $ CtxtStRule lhs (StRhs pos rhs)
   where
     findSubterm lst r rpos | lst == r            = [reverse rpos]
     findSubterm (viewTerm -> FApp _ args) r rpos =
@@ -58,17 +58,17 @@ rRuleToStRule (lhs `RRule` rhs)
             where fSt = findSubterm l r []
     findAllSubterms l r@(viewTerm -> Lit _)       = findSubterm l r []
 
--- | Convert a subterm rewrite rule to a rewrite rule.
-stRuleToRRule :: StRule -> RRule LNTerm
-stRuleToRRule (StRule lhs (StRhs _ rhsterm)) = lhs `RRule` rhsterm
+-- | Convert a context subterm rewrite rule to a rewrite rule.
+ctxtStRuleToRRule :: CtxtStRule -> RRule LNTerm
+ctxtStRuleToRRule (CtxtStRule lhs (StRhs _ rhsterm)) = lhs `RRule` rhsterm
 
 ------------------------------------------------------------------------------
 -- Pretty Printing
 ------------------------------------------------------------------------------
 
 -- | Pretty print an 'StRule'
-prettyStRule :: HighlightDocument d => StRule -> d
-prettyStRule r = case stRuleToRRule r of
+prettyCtxtStRule :: HighlightDocument d => CtxtStRule -> d
+prettyCtxtStRule r = case ctxtStRuleToRRule r of
   (lhs `RRule` rhs) -> sep [ nest 2 $ prettyLNTerm lhs
                            , operator_ "=" <-> prettyLNTerm rhs ]
 
@@ -76,7 +76,7 @@ prettyStRule r = case stRuleToRRule r of
 --------------------
 
 $(derive makeBinary ''StRhs)
-$(derive makeBinary ''StRule)
+$(derive makeBinary ''CtxtStRule)
 
 $(derive makeNFData ''StRhs)
-$(derive makeNFData ''StRule)
+$(derive makeNFData ''CtxtStRule)

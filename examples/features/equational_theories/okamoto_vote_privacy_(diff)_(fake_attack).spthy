@@ -27,7 +27,7 @@ begin
 
 
 builtins: multiset
-functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, tdcommit/3, f/4
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, tdcommit/3, f/4, v1/0, v2/0
 equations: checksign( sign(m,sk),pk(sk) ) = m,
            unblind( blind(m,b), b ) = m,
            unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
@@ -40,13 +40,13 @@ equations: checksign( sign(m,sk),pk(sk) ) = m,
 // Public key infrastructure
 
 rule Register_Voter_pk1:
-  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v1', ~ltkV), !Pk('v1', pk(~ltkV)), Out(pk(~ltkV)) ]
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk(v1, ~ltkV), !Pk(v1, pk(~ltkV)), Out(pk(~ltkV)) ]
 
 rule Register_Voter_pk2:
-  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v2', ~ltkV), !Pk('v2', pk(~ltkV)), Out(pk(~ltkV)) ]
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk(v2, ~ltkV), !Pk(v2, pk(~ltkV)), Out(pk(~ltkV)) ]
 
 rule Register_Admin_pk:
-  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(~ltkA) ]
+  [ Fr(~ltkA) ] --[ UniqueFact2() ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(~ltkA) ]
 
 
 //Rules
@@ -57,9 +57,9 @@ rule V_1_1:
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( 'v1', ~ltkV ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( v1, ~ltkV ) ]
   --[ V_1_1( ) ]->
-    [ Out( < e , s > ), St_V_1( 'v1', vote, ~r, ~b, ~td ) ]
+    [ Out( < e , s > ), St_V_1( v1, vote, ~r, ~b, ~td ) ]
 
 rule V_1_2:
   let vote = diff($candB, $candA)
@@ -67,9 +67,9 @@ rule V_1_2:
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( 'v2', ~ltkV ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( v2, ~ltkV ) ]
   --[ V_1_2( ) ]->
-    [ Out( < e , s > ), St_V_1( 'v2', vote, ~r, ~b, ~td )]
+    [ Out( < e , s > ), St_V_1( v2, vote, ~r, ~b, ~td )]
 
 rule V_2:
   let e = blind(tdcommit($vote,~r,~td),~b)
@@ -80,9 +80,9 @@ rule V_2:
     [ St_V_sync( V, pk(~ltkA), $vote, ~r, ~td)]
 
 rule V_2_sync:   
-    [ St_V_sync( 'v1', pkA, $vote1, ~r1, ~td1 ), St_V_sync( 'v2', pkA, $vote2, ~r2, ~td2 ) ]
-  --[ V_2_sync( ), UniqueFact() ]->     
-    [ St_V_3( 'v1', pkA, $vote1, ~r1, ~td1 ),St_V_3( 'v2', pkA, $vote2, ~r2, ~td2 ) ]
+    [ St_V_sync( v1, pkA, $vote1, ~r1, ~td1 ), St_V_sync( v2, pkA, $vote2, ~r2, ~td2 ) ]
+  --[ V_2_sync( )]->     
+    [ St_V_3( v1, pkA, $vote1, ~r1, ~td1 ),St_V_3( v2, pkA, $vote2, ~r2, ~td2 ) ]
 
 rule V_3:    
   let y = sign(tdcommit($vote,~r,~td),~ltkA)
@@ -108,6 +108,8 @@ rule select_vote:
 axiom unique:
   "All  #i #j. UniqueFact() @i & UniqueFact() @j ==> #i = #j"
 
+axiom unique2:
+  "All  #i #j. UniqueFact2() @i & UniqueFact2() @j ==> #i = #j"
 
 axiom select_limited_votes:
   "All a b c d #i. Select_vote(a+b+c+d)@i ==> F"
