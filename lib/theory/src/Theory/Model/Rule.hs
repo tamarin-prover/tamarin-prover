@@ -69,7 +69,6 @@ module Theory.Model.Rule (
   , isISendRule
   , isCoerceRule
   , isProtocolRule
-  , isTrivialProtoDiffRule
   , containsNewVars
   , getRuleName
   , getRuleNameDiff
@@ -485,23 +484,6 @@ isTrivialProtoVariantAC :: ProtoRuleAC -> ProtoRuleE -> Bool
 isTrivialProtoVariantAC (Rule info ps as cs) (Rule _ ps' as' cs') =
     L.get pracVariants info == Disj [emptySubstVFresh]
     && ps == ps' && as == as' && cs == cs'
-
--- | True if the protocol is trivially observational equivalent.
-isTrivialProtoDiffRule :: ProtoRuleE -> Bool
-isTrivialProtoDiffRule r = (getLeftRule r == getRightRule r) && (isTrivialDiffRule r)
-    
--- | True if the rule is trivially observational equivalent.
--- | Assumes that left and right variant of the rule are identical.
-isTrivialDiffRule :: Rule a -> Bool
-isTrivialDiffRule (Rule _ pms _ _) = case pms of
-      []   -> True
-      x:xs -> (foldl combine (isTrivialFact x) (map isTrivialFact xs)) /= Nothing
-    where
-      combine Nothing    _        = Nothing
-      combine (Just _)   Nothing  = Nothing
-      combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
-      
-      noDuplicates l1 l2 = ((length l1) + (length l2)) == S.size (S.union (S.fromList l1) (S.fromList l2))
 
 -- | Returns a rule's name
 getRuleName :: HasRuleName (Rule i) => Rule i -> String
