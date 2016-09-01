@@ -60,7 +60,7 @@ the transitions will be labeled. The system's state is a multiset (bag) of
 facts. We will explain the types of facts and their use below.
 
 A rewrite rule in Tamarin has a name and three parts, each of which
-is a sequence of facts: one for the rule's left-hand side, one labelleing the
+is a sequence of facts: one for the rule's left-hand side, one labelling the
 transition (which we call 'action facts'),  and one for the rule's right-hand side.
 For example:
 
@@ -311,22 +311,22 @@ to specify security properties, as we will see in the next
 section.  This leads to:
 
         rule NaxosR_attempt3:
-            let 
-                exR = h1(< ~eskR, ~lkR >)
-                hkr = 'g'^exR
-                kR  = h2(< pkI^exR, X^~lkR, X^exR, $I, $R >)
-            in
-             [
-                 In(X),
-                 Fr( ~eskR ),
-                 Fr( ~tid ),
-                 !Ltk($R, ~lkR),
-                 !Pk($I, pkI)
-             ]
-             --[ SessionKey( ~tid, $R, $I, kR ) ]->
-             [
-                 Out( hkr )
-             ]
+          let 
+              exR = h1(< ~eskR, lkR >)
+              hkr = 'g'^exR
+              kR  = h2(< pkI^exR, X^lkR, X^exR, $I, $R >)
+          in
+           [
+               In(X),
+               Fr( ~eskR ),
+               Fr( ~tid ),
+               !Ltk($R, lkR),
+               !Pk($I, pkI)
+           ]
+           --[ SessionKey( ~tid, $R, $I, kR ) ]->
+           [
+               Out( hkr )
+           ]
 
 The above rule models the responder role accurately, and computes the
 appropriate key.
