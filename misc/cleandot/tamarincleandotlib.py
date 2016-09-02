@@ -1973,7 +1973,9 @@ def newDot(infile):
     fp = os.fdopen(fpint,'w')
 
     appendLog("Parsing graph from '%s'.\n" % infile)
-    G = graph_from_dot_file(infile)[0]
+    G = graph_from_dot_file(infile)
+    if isinstance(G, list):
+        G = G[0]
     if G == None:
         appendLog("Could not prase graph sensibly.\n")
         return None
