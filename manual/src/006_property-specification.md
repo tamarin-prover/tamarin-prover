@@ -599,7 +599,7 @@ in with an `Honest(B)` action fact, where `B` is the agent name that
 is assumed to be honest. For instance, in the following rule the agent
 in role `'A'` is sending a message, where the nonce `~na` is supposed to be secret assuming that both agents `A` and `B` are honest.
 
-~~~~ {.tamarin slice="code/secrecy-asymm-large.spthy" lower=43 upper=52}
+~~~~ {.tamarin slice="code/secrecy-asymm-large.spthy" lower=43 upper=54}
 ~~~~
 
 We then specify the property that a message `x` is secret as long as agents
