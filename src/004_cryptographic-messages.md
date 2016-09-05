@@ -117,6 +117,9 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 : This theory models a public key encryption scheme. It defines the
   function symbols `aenc/2`, `adec/2`, and `pk/1`, which are
   related by the equation `adec(aenc(m, pk(sk)), sk) = m`.
+  Note that as described in [Syntax Description](014_syntax_description.html), 
+  `aenc{x,y}pkB` is syntactic sugar for `aenc(<x,y>, pkB)`.
+  <!-- This is otherwise not mentioned until Ch14: Syntax Description -->
 
 `signing`:
 

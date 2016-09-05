@@ -49,10 +49,9 @@ message.  We express this as follows:
 If we try to prove this with Tamarin in the model with the error, the
 lemma statement will be falsified. This indicates that there exists no
 trace where the initiator sends a message to the receiver.
-Such errors arise, for example, when
-e forget to add a fact that connects several rules and
-some rules can never be reached.  Generally it is recommended to first
-prove an `exists-trace` lemma before other properties are examined.
+Such errors arise, for example, when we forget to add a fact that connects
+several rules and some rules can never be reached.  Generally it is recommended
+first to prove an `exists-trace` lemma before other properties are examined.
 
 ### Error Messages ###
 In this section, we review common error messages produced by Tamarin.
@@ -65,6 +64,10 @@ First we change the setup rule as follows:
 
 ~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error2.spthy" lower=16 upper=20}
 ~~~~
+
+Note that the the first `AgSt(...)` in the conclusion has arity three, with
+variables `$I,~k,~m`, rather than the original arity two, with variables
+`$I,<~k,~m>` where the second argument is paired.
 
 The following statement that some wellformedness check failed will
 appear at the very end of the text when loading this theory.
@@ -121,7 +124,7 @@ we get the error message
 	*/
 
 The warning `unbound variables` indicates that there is a term, here the fresh 
-`~n`, in the action or conclusion that never appeared in the premisse. 
+`~n`, in the action or conclusion that never appeared in the premise.
 Here this is the case because we mistyped `~n` instead of `~m`. Generally,
 when such a warning appears, you should check that all the fresh variables 
 variables already occur in the premise. If it is a fresh variable that appears
