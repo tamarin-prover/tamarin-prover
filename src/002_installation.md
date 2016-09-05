@@ -94,8 +94,7 @@ currently give you a warning when you run `tamarin-prover test` but it is safe
 to ignore this.)
 
 #### Installing Homebrew & Cask
-If you don't have Homebrew and/or Cask installed, (which is highly recommended
-more generally): 
+If you don't have Homebrew and/or Cask installed:
 
 1. Install [Homebrew](http://brew.sh/), by following the instructions on their
 website (this is a one-line copy paste install). Update everything with: `brew update`.
