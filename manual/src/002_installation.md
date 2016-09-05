@@ -78,17 +78,58 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run 
 Mac OS X {#sec:macosx}
 --------
 
-### Installing the pre-built Tamarin binary {#sec:MacOSBinInstall}
+### Automatic Installation of the Tamarin binary {#sec:MacOSBinInstall}
 
-To run Tamarin on Mac OS X you need to have Maude 2.7 and GraphViz. If you have [HomeBrew](http://brew.sh) installed, you can simply 
-`brew install homebrew/science/maude graphviz` to satisfy the pre-requisites of running the binary. Then follow from step 3 onwards.
+The fastest way to install Tamarin on Mac OS X is to use [Homebrew](http://brew.sh/) [Cask](https://caskroom.github.io/).
 
-Otherwise, to install Maude and GraphViz manually:
+If you already have this installed, it is as simple as running the following in your terminal:
+
+  * `brew cask install tamarin-prover`
+
+You can now run Tamarin from the command line by typing `tamarin-prover`. 
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
+run Tamarin for the first time. (Warning: the current stable version of Tamarin
+v1.0.0 does not realise that Maude v2.7.1 is more than sufficient; it will
+currently give you a warning when you run `tamarin-prover test` but it is safe
+to ignore this.)
+
+#### Installing Homebrew & Cask
+If you don't have Homebrew and/or Cask installed, (which is highly recommended
+more generally): 
+
+1. Install [Homebrew](http://brew.sh/), by running this from the command line
+(no line-break): 
+```
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+2. 'Tap' (add) Homebrew [Cask](https://caskroom.github.io/): 
+`brew tap caskroom/cask`, and then update everything with: `brew update`
+
+3. Install Tamarin: `brew cask install tamarin-prover`
+
+4. You can now run Tamarin from the terminal by typing `tamarin-prover`
+
+That's it! Homebrew will automatically update Tamarin when new versions are
+released, if you `brew update` on a semi-regular basis. 
+
+For reference, Homebrew will place the binary in `/usr/local/bin/tamarin-prover`,
+but you should never need to touch this. 
+To uninstall, just `brew cask remove tamarin-prover`, and if you want, also
+remove `maude` and `graphviz`, two dependencies which are automatically
+installed with Tamarin.
+
+
+### Manual installation of the Tamarin binary
+
+Alternatively, it is possible to install Tamarin, Maude and GraphViz manually:
 
 1.  Download and install Core Maude 2.7 from
   <http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation>.
 
-    Make sure that the Maude binary is called `maude` (as opposed to, e.g.,  `maude.darwin64`) and that `prelude.maude` is in your executables path, for instance by placing it in the same folder as the maude binary.
+    Make sure that the Maude binary is called `maude` (as opposed to, e.g.,
+    `maude.darwin64`) and that `prelude.maude` is in your executables path,
+    for instance by placing it in the same folder as the maude binary.
 
 2.  Download and install GraphViz from 
 <http://www.graphviz.org/Download.php>.
@@ -96,7 +137,9 @@ Otherwise, to install Maude and GraphViz manually:
 3.  Download the latest Tamarin binary `tamarin-prover-1.x.y-macosx` from 
 <https://github.com/tamarin-prover/bin-dists/blob/master/tamarin-prover-1.0.0/tamarin-prover-1.0.0-macosx?raw=true>.
 
-4.  Install Tamarin by renaming `tamarin-prover-1.x.y-macosx` to `tamarin-prover` and moving it to a folder in your executables path. Make the binary executable with the following command.
+4.  Install Tamarin by renaming `tamarin-prover-1.x.y-macosx` to`tamarin-prover`
+and moving it to a folder in your executables path.
+Make the binary executable with the following command.
 ```
   chmod u+x tamarin-prover
 ```
