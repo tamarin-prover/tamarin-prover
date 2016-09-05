@@ -97,24 +97,26 @@ to ignore this.)
 If you don't have Homebrew and/or Cask installed, (which is highly recommended
 more generally): 
 
-1. Install [Homebrew](http://brew.sh/), by running this from the command line
-(no line-break): 
-```
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-```
+1. Install [Homebrew](http://brew.sh/), by following the instructions on their
+website (this is a one-line copy paste install). Update everything with: `brew update`.
+Any issues, run `brew doctor` for more information.
 
-2. 'Tap' (add) Homebrew [Cask](https://caskroom.github.io/): 
-`brew tap caskroom/cask`, and then update everything with: `brew update`
+2. Install Tamarin: `brew cask install tamarin-prover`
+  
+    * If for any reason this doesn't work, you might have to 'tap' (add) Homebrew 
+    [Cask](https://caskroom.github.io/) manually. This is currently achieved by
+    `brew tap caskroom/cask`, but might change. Check 
+    [the website](https://caskroom.github.io/) for the latest.
+    * Tamarin's dependencies Maude and GraphViz are automatically installed
+    and added to your path.
 
-3. Install Tamarin: `brew cask install tamarin-prover`
-
-4. You can now run Tamarin from the terminal by typing `tamarin-prover`
+3. You can now run Tamarin from the terminal by typing `tamarin-prover`
 
 That's it! Homebrew will automatically update Tamarin when new versions are
 released, if you `brew update` on a semi-regular basis. 
 
-For reference, Homebrew will place the binary in `/usr/local/bin/tamarin-prover`,
-but you should never need to touch this. 
+For reference, Homebrew will place a symlink to the binary in 
+`/usr/local/bin/tamarin-prover`, but you should never need to touch this. 
 To uninstall, just `brew cask remove tamarin-prover`, and if you want, also
 remove `maude` and `graphviz`, two dependencies which are automatically
 installed with Tamarin.
