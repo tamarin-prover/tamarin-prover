@@ -13,7 +13,7 @@ Heuristics
 The commandline option `--heuristic` can be used to select which heuristic for
 goal selection should be used by the automated proof methods. 
 The argument of the `--heuristic` flag is a word built from the
-alphabet `{s,S,c,C}`. Each of these letters describes a different way to rank
+alphabet `{s,S,c,C,i}`. Each of these letters describes a different way to rank
 the open goals of a constraint system.
 
 `s`:
@@ -176,7 +176,7 @@ and `In` facts to the `Out_C` and `In_C` facts, respectively.
 
 In this modified protocol, the lemma `nonce_secret_initiator` holds. 
 As the initiator sends the nonce on a confidential channel, only the intended
-receiver can read the message, but the adversary cannot learn it.
+receiver can read the message, and the adversary cannot learn it.
 
 #### Authentic Channel Rules
 
