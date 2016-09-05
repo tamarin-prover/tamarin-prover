@@ -105,7 +105,7 @@ Any issues, run `brew doctor` for more information.
     * If for any reason this doesn't work, you might have to 'tap' (add) Homebrew 
     [Cask](https://caskroom.github.io/) manually. This is currently achieved by
     `brew tap caskroom/cask`, but might change. Check 
-    [the website](https://caskroom.github.io/) for the latest.
+    [the website](https://caskroom.github.io/) for the latest instructions.
     * Tamarin's dependencies Maude and GraphViz are automatically installed
     and added to your path.
 
