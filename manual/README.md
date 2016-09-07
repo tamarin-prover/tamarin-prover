@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/tamarin-prover/manual.svg?branch=master)](https://travis-ci.org/tamarin-prover/manual)
+
 # Tamarin Manual README
 
 This is the manual for
