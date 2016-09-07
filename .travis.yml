@@ -1,0 +1,20 @@
+language: generic
+script: bash ./deploy.sh
+
+# This is the Official Way to get travis to run a 14.04 build.
+# We need sudo to install texlive-xelatex for the pdf.
+sudo: required
+dist: trusty
+addons:
+  apt:
+    packages:
+    - pandoc
+    - pandoc-citeproc
+    - texlive-xetex
+env:
+  global:
+  - ENCRYPTION_LABEL: 6fcf0ddd2a20
+  - COMMIT_AUTHOR_EMAIL: deploy@travis-ci.org
+notifications:
+  slack:
+    secure: PqgM8yZMEPNSoA8wHsX3XxHmvEtDmto+QNNhuT3v5djq+ttvJM6YUznKGb+N2HR5ev3Thm5MEdYnOTVRlQBB5OJJr491jHTIebGCyiUdGewhlD8AOvor3m9NNSUjMtDxebhVQtRcaVLHTaSA8pjwxyJfJhS+j2t2bn7s5LbIitZdUY8m7Q4W+l4k8slUgaLvReXs8/NAxT447qfceA45yx7MgypiH8D1C/SSjSChb9Pe2DyXiMe7/addN6RuCEXMH7CmGlukrEmnVH6DvMNV7Ni9BJxLW7klLHZ5E8FEsrJl43G8xmln5Kxyefo7gLePNj69+uvcPfLIWku/qnBSOSn41IQqA6iGm4f8EXkUNObG/kVvuiRjRBXACyec1duUdjd7adse5JHmMOUC0hl18g9GyInq4KvghEa12MLFT5BwDeWdHjtwi8QhgQTeVWVTfUhx+z9pNJgu8zRYU/0Vv6i9mwpwJ83NYge3tGl6+umCULRrT/tZVIrwrOPsC9n7Kk341x8S5rc2K2C7tyi3Tkx/5ImwEqNMKcHwDZ1zQI/HO8//WVgAE4CfYgPNmd3yRTUGBF7y4qkir0EJvFxSSqtmJ/mBkJUPppuRhgVUq8nWR2w0FAe84f5FpBFFGUmvF/OF3BnFlsHrTRoVhNHWwL6mtn4EdS2Hvt0eqCadLC4=
