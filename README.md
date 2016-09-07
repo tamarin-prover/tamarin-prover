@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/tamarin-prover/manual.svg?branch=master)](https://travis-ci.org/tamarin-prover/manual)
-
 # Tamarin Manual README
 
 This is the manual for
@@ -9,6 +7,7 @@ PDF book.
 
 The source files can be found in the `src` directory.
 
+[![Build Status](https://travis-ci.org/tamarin-prover/manual.svg?branch=master)](https://travis-ci.org/tamarin-prover/manual) Travis monitors the master branch of this repository. Commits to master trigger a new Travis build, which will commit the updated manual to the gh-pages branch of this repository. This is served by Github Pages at https://tamarin-prover.github.io/manual.
 
 ## Prerequisites
 
@@ -21,7 +20,7 @@ To create the PDF, [xelatex](http://xetex.sourceforge.net/) is required,
 which is part of the texlive packages. On Ubuntu/Debian systems it can
 usually be installed directly.
 
-    sudo apt-get install texlive-xetex
+    sudo apt-get install texlive-xetex texlive-latex-extra texlive-fonts-recommended latex-xcolor lmodern
 
 The build process additionally depends on the `make` toolchain.
 
