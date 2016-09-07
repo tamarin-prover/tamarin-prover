@@ -11,6 +11,10 @@ addons:
     - pandoc
     - pandoc-citeproc
     - texlive-xetex
+    - texlive-latex-extra
+    - texlive-fonts-recommended
+    - latex-xcolor
+    - lmodern
 env:
   global:
   - ENCRYPTION_LABEL: 6fcf0ddd2a20

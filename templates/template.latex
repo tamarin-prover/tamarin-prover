@@ -4,7 +4,6 @@
 \usepackage{xcolor}
 \usepackage{makeidx}
 \usepackage{graphicx}
-\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[labelformat=empty]{caption}
 \usepackage{afterpage}
