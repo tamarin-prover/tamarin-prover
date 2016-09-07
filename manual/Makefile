@@ -6,7 +6,7 @@ STYLE = css/style.css
 ifdef MATHJAX_LOCAL
   MATHJAX = ${MATHJAX_LOCAL}
 else
-  MATHJAX ?= "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+  MATHJAX ?= "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 endif
 
 TEMPLATE_HTML = templates/template.html
