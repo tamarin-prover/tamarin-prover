@@ -31,9 +31,13 @@ git -C $CHECKOUT checkout $TARGET_BRANCH || git -C $CHECKOUT checkout --orphan $
 # Replace existing contents of checkout with the results of a fresh compile.
 rm -rf $CHECKOUT/* || exit 0
 doCompile
-mv book code code_ERRORexamples code_ObsEquiv images $CHECKOUT
+for x in book code code_ERRORexamples code_ObsEquiv images
+do
+    cp -r $x $CHECKOUT
+done
 mkdir -p $CHECKOUT/tex
-mv tex/tamarin-manual.pdf $CHECKOUT/tex/tamarin-manual.pdf
+cp tex/tamarin-manual.pdf $CHECKOUT/tex/tamarin-manual.pdf
+cp index.html $CHECKOUT/index.html
 
 # If there are no changes to the compiled book (e.g. this is a README update) then just bail.
 if [[ -z `git -C $CHECKOUT status --porcelain` ]]; then
@@ -42,7 +46,8 @@ if [[ -z `git -C $CHECKOUT status --porcelain` ]]; then
 fi
 
 # Commit the "changes", i.e. the new version. The delta will show diffs between new and old versions.
-git -C $CHECKOUT commit -am "Deploy to GitHub Pages: ${SHA}"
+git -C $CHECKOUT add \*
+git -C $CHECKOUT commit -m "Deploy to GitHub Pages: ${SHA}"
 
 # Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc.
 ENCRYPTED_KEY_VAR="encrypted_${ENCRYPTION_LABEL}_key"
