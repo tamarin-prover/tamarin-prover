@@ -120,7 +120,8 @@ destructionRules _    (CtxtStRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (StRhs (
                             [kdFact rhs] [] ]
                 else []
     go _      (viewTerm -> Lit _)     (_:_)  =
-        error "IntruderRules.destructionRules: impossible, position invalid"        
+        error "IntruderRules.destructionRules: impossible, position invalid"   
+     
 destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) = destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
 
 destructionRules _    (CtxtStRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs

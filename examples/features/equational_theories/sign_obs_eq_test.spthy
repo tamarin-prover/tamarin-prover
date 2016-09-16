@@ -3,7 +3,7 @@ begin
 
 builtins: signing
 functions: checksign/2
-equations: verify( sign(m,k), m, pk(k) ) = true//, checksign( sign(m,k), pk(k) ) = m
+equations: checksign( sign(m,k), pk(k) ) = m
 
 
 rule R_1:

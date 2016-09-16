@@ -17,10 +17,10 @@ begin
      V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>                                            " v1( diff(A,B) ) & v2( diff(B,A) ) "
      A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
     Phase 2:
-     V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
+     V -> C: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                      "Check sign Admin" + "Check commit"
      V -> T: <vote, r, x>
     Phase 3
-     C -> Pub: vote                                                                    "Check sign Admin"
+     C -> Pub: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                    "Check sign Admin"
      T -> Pub: vote                                                                    "VotePublished"
   }
 */

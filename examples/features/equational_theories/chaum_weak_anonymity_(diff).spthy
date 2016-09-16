@@ -33,22 +33,22 @@ equations: checksign( sign(m,k),pk(k) ) = m,
 
 // Public key infrastructure
 
-rule Register_Bank_pk:
+rule Register_Corrupted_Bank_pk:
   [ Fr(~ltkB) ]
   --[ OnlyOnce() ]->
-  [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(<~ltkB>) ]
+  [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(~ltkB) ]
 
 
 // Withdrawal Phase
 
 rule C_1_1:
     [ Fr(~x), Fr(~r) ]
-  --[ C_1_1() ]->
+  --[  ]->
     [ Out( blind(~x,~r) ), St_C_1('c1', ~x, ~r )]
 
 rule C_1_2:
     [ Fr(~x), Fr(~r) ]
-  --[ C_1_2() ]->
+  --[ ]->
     [ Out( blind(~x,~r) ), St_C_1('c2', ~x, ~r )]
 
 

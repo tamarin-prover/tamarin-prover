@@ -18,10 +18,10 @@ begin
      V1 -> Pub: < candA, f(vote, r, td, candA), td > 
      A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
     Phase 2:
-     V -> C: <blind(tdcommit(vote,r,td),b), sign(tdcommit(vote,r,td),skA)>             "Check sign Admin" + "Check commit"
+     V -> C: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                      "Check sign Admin" + "Check commit"
      V -> T: <vote, r, x>
     Phase 3
-     C -> Pub: vote                                                                    "Check sign Admin"
+     C -> Pub: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                    "Check sign Admin"
      T -> Pub: vote                                                                    "VotePublished"
   }
 */
@@ -34,8 +34,8 @@ equations: checksign( sign(m,sk), pk(sk) ) = m,
            unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
            open( tdcommit(m,r,td), r ) = m,
            tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td),
-           open( tdcommit(m1,r,td), f(m1,r,td,m2) ) = m2 /*,
-           f(m2, f (m1, r, td, m2), td, m3) = f(m1, r, td, m3)*/   
+           open( tdcommit(m1,r,td), f(m1,r,td,m2) ) = m2 ,
+           f(m2, f (m1, r, td, m2), td, m3) = f(m1, r, td, m3)  
           
 
 // Public key infrastructure

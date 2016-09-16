@@ -7,9 +7,12 @@ begin
  * Modeler: Charles Duménil
  * Date: July 2016	
  * Source: Formal Analysis of E-Cash Protocols by Jannik Dreier, Ali Kassem and Pascal Lafourcade
- * Status: working
+ * Status: working 
  */
 
+/* Comments:
+   x is imposed as fresh message in B_1 and S_1 to model that the bank, respectively the seller, verify the nature of the received message (cut-and-choose).
+*/
 
 /*
   Protocol Chaum {
@@ -18,82 +21,75 @@ begin
      B -> C: sign(blind(x,r),skB)    "Withdraw"
     Payment and deposit phase
      C -> S: <x, sign(x,skB)>        "Check sign"
-     S -> B: <x, sign(x,skB)>        "Check sign" 
+     S -> B: <x, sign(x,skS)>        "Check sign" 
      B -> S: Private(x)              "Check sign" + "Deposite"
      S     :                         "Spend"
   }
 */
 
-/* Comments:
-   x is imposed as fresh message in B_1 and S_1 to model that the bank, respectively the seller, verify the nature of the received message (cut-and-choose).
-*/
 
 builtins: signing
-functions: blind/2, unblind/2, getmess/1
-equations: getmess(sign(m,r)) = m,
-           unblind(blind(m,r),r) = m,
+functions: blind/2, unblind/2
+equations: unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),k),r) = sign(m,k)
 
 
 // Public key infrastructure
 
-rule Register_Bank_pk:
+rule Register_pk_Bank:
   [ Fr(~ltkB) ]
-  --[]->
+  --[ OnlyOnce() ]->
   [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(pk(~ltkB)) ]
-
 
 // Withdrawal Phase
 
+/*
 rule C_1:
     [ Fr(~x), Fr(~r) ]
   --[ ]->
     [ Out( blind(~x,~r) ), St_C_1( $C, ~x, ~r )]
+*/
 
 rule B_1:
     [ In( blind(~x,r) ), !Bank_Ltk($B, ~ltkB) ]
-  --[ Withdraw(~x)]->
+  --[ Withdraw(~x) ]->
     [ Out( sign( blind(~x,r), ~ltkB) ) ]
 
 
 //Payment and deposit phase
 
+/*
 rule C_2:
- let s = unblind(sb,r)
-     verif = verify( sb, blind(x,r), pkB)
+ let s = unblind(sign(blind(x,r),ltkB),r)
   in
-    [ St_C_1( $C, x, r ), In( sb ), !Bank_Pk(B, pkB) ]
-  --[ Eq( verif, true  )]->
+    [ St_C_1( $C, x, r ), In( sign(blind(x,r),ltkB) ), !Bank_Pk(B, pk(ltkB)) ]
+  --[ ]->
     [ Out( <x,s> ) ]
+*/
 
 rule S_1:
-  let verif = verify( s, x1 , pkB )
-  in
-    [ In( <x1,s> ), !Bank_Pk($B, pkB) ]
-  --[ Eq( verif,true ) ]->
-    [ St_S_1($B,x1), Out( <x1,s> ) ]
+    [ In( <~x,sign(~x,~ltkB)> ), !Bank_Pk($B, pk(~ltkB)) ]
+  --[  ]->
+    [ Out( <~x,sign(~x,~ltkB)> ),St_S_1($B,~x) ]
 
 rule B_2:
-  let verif = verify( s, ~x , pkB )
-  in
-    [ In( <~x,s> ), !Bank_Pk($B, pkB) ]
-  --[ Eq( verif,true ), Deposited(~x)]->
-    [ Private_Ch(~x) ]
+    [ In( <x,sign(x,~ltkB)> ), !Bank_Ltk($B, ~ltkB) ]
+  --[ Deposited(x) ]->
+    [ Private_Ch(x) ]
 
 rule S_2:
-    [ St_S_1($B,x), Private_Ch(x) ]
+    [ Private_Ch(x),St_S_1($B,x) ]
   --[ Spend( x ) ]->
     [  ]
 
 
 // Axioms
 
-axiom Equality:
-  " All x y #i. Eq(x,y)@i ==> x = y "
-
 axiom BankOnlyAcceptsOnce:
   " All x #j #k. Deposited(x)@j & Deposited(x)@k ==> #j = #k "
 
+axiom OnlyOnce:
+  " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j " 
 
 // Executability
 

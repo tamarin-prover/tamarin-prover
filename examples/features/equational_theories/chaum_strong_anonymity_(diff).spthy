@@ -43,12 +43,12 @@ rule Register_Bank_pk:
 
 rule C_1_1:
     [ Fr(~x), Fr(~r) ]
-  --[ C_1_1() ]->
+  --[  ]->
     [ Out( blind(~x,~r) ), St_C_1('c1', ~x, ~r )]
 
 rule C_1_2:
     [ Fr(~x), Fr(~r) ]
-  --[ C_1_2() ]->
+  --[  ]->
     [ Out( blind(~x,~r) ), St_C_1('c2', ~x, ~r )]
 
 

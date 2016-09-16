@@ -19,7 +19,7 @@ begin
     Phase 2:
      V -> C: < commit(vote,r), sign(commit(vote,r),ltkA) >                 "Check sign Admin" + "Check commit"
     Phase 3:
-     C -> Pub: commit(vote,r)                                              "Check sign Admin"
+     C -> Pub: < commit(vote,r), sign(commit(vote,r),ltkA) >               "Check sign Admin"
      V -> C:  r                                                            "Check commit"
      C -> Pub: v                                                           "VotePublished" + "Check r"
   }
@@ -41,7 +41,6 @@ rule Register_Voter_pk:
 rule Register_Admin_pk:
   [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
-
 //Rules
 
 rule V_1:
@@ -50,7 +49,7 @@ rule V_1:
       s = sign ( e , ~ltkV )
   in
     [ Fr( ~r ), Fr( ~b ), !Ltk( V, ~ltkV ) ]
-  --[ Created_V_1($vote), Create_V_1(e) ]->
+  --[ Created_vote_V_1(x), Created_commit_V_1(e) ]->
     [ Out( <e,s> ), St_V_1( V, $vote, ~r, ~b ) ]
 
 rule A_1:
@@ -63,30 +62,30 @@ rule A_1:
 
 rule V_2:    // Check Admin_Signature & Check the commit 
   let y = unblind(d,~b)
-      x = commit($vote,~r)
+      x = commit(vote,~r)
       verif = verify( d, e, pkA)
   in
-    [ In( <e,d> ), St_V_1( V, $vote, ~r, ~b),  !AdminPk(A, pkA) ]
-  --[ Eq( verif, true ) , Eq( e, blind(commit($vote,~r),~b) ), In_V_2( e ) ]->     
-    [ Out( <x,y> ) , St_V_2( V, A, $vote, ~r ) ]
+    [ In( <e,d> ), St_V_1( V, vote, ~r, ~b),  !AdminPk(A, pkA) ]
+  --[ Eq( verif, true ) , Eq( e, blind(commit(vote,~r),~b) ) ]->     
+    [ Out( <x,y> ) , St_V_2( V, A, vote, ~r ) ]
 
 rule C_1:
   let verif = verify( y, x, pkA)
   in
     [ In( <x,y> ), !AdminPk(A, pkA)]
   --[ Eq( verif, true ) ]->
-    [ St_C_1( A, x), Out(x) ]
+    [ St_C_1( A, x), Out(<x,y>) ]
 
 rule V_3:
-    [ In(x), St_V_2(V, A, $vote, ~r )]
-  --[ Eq( x, commit($vote,~r) ) ]->
+    [ In( x ), St_V_2(V, A, vote, ~r )]
+  --[ Eq( x, commit(vote,~r) ) ]->
     [ Out( ~r ) ]
 
 rule C_2:
   let v = open( x, r)
   in
     [ In( r ), St_C_1( A, x ) ]
-  --[ Eq ( x, commit(open(x,r),r) ), VotePublished( v ), Out_C_2(v) ]->
+  --[ Eq ( x, commit(open(x,r),r) ), VotePublished( v ), Out_C_2(x) ]->
     [ Out( v ) ]
 
 
@@ -101,11 +100,11 @@ axiom Equality:
 lemma types [typing]:
   " ( All e #i. In_A_1(e) @ i
   ==>
-  Ex #j . Create_V_1(e)  @ j & j<i )
+  (Ex #j . Created_commit_V_1(e) @ j& j<i ) )
   &
   ( All v #i. Out_C_2(v) @ i
   ==>
-  Ex #j. Created_V_1(v)@j & j<i ) "
+  (Ex #j. Created_vote_V_1(v)@j & j<i) ) "
 
 
 // Executability

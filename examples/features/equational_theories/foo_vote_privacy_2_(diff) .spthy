@@ -7,14 +7,14 @@ begin
  * Modeler: Charles Duménil
  * Date: July 2016	
  * Source: Formal verification of voting and auction protocols by Jannik Dreier
- * Status: Working 
+ * Status: To be tested (Anonymous channels are modelled differently) 
  */
 
 
 /*
   Protocol FOO {                                 ( Administration and collector are considered corrupted )
     Phase 1:
-     V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV) >                                                 " v1( diff(A,B) ) & v2( diff(B,A) ) "
+     V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV) >      " v1( diff(A,B) ) & v2( diff(B,A) ) "
      A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) >      "Registered" + "Check sign Voter"
     Phase 2:
      V -> C: < commit(vote,r), sign(commit(vote,r),ltkA) >                 "Check sign Admin" + "Check commit"
@@ -51,7 +51,7 @@ rule Register_Admin_pk:
 rule setup:
   [  ]
   --[ OnlyOnce() ]->
-  [ Vote1( diff($yes, $no) ), Vote2( diff($no, $yes) ) ]
+  [ Vote1( diff($candA, $candB) ), Vote2( diff($candB, $candA) ) ]
 
 
 // Rules
@@ -75,35 +75,35 @@ in
 rule V_2:
   let e = blind(commit($vote,~r),~b)
       d = sign(blind(commit($vote,~r),~b),~ltkA)
+      y = sign(commit($vote,~r),~ltkA)
+      x = commit($vote,~r)
   in
     [ In( <e,d> ), St_V_1( V, $vote, ~r, ~b),  !AdminPk(A, pk(~ltkA)) ]
   --[ V_2( ) ]->     
-    [ St_V_sync( V, pk(~ltkA), $vote, ~r)]
+    [ St_V_2_sync( <x,y>),St_V_3_sync(V, $vote, ~r) ]
 
-rule V_2_sync:    
-    [ St_V_sync( 'v1', pkA, $vote1, ~r1), St_V_sync( 'v2', pkA, $vote2, ~r2) ]
+rule V_2_sync:  
+    [ St_V_2_sync( m1), St_V_2_sync( m2) ]
   --[ V_2_sync( ) ]->     
-    [ Shuffle( <'v1', pkA, $vote1, ~r1> + <'v2', pkA, $vote2, ~r2>) ]
+    [ Anonym_Ch_Out( m1 + m2) ]
 
-rule shuffle_Vote:
-  [ Shuffle( x + y) ]
+rule V_3:
+  let x = commit($vote1,~r1)
+      y = commit($vote2,~r2)
+  in
+    [ Anonym_Ch_In( x + y), St_V_3_sync(V1, $vote1, ~r1), St_V_3_sync(V2, $vote2, ~r2) ]
+  --[ V_3( ) ]->
+    [ /*Anonym_Ch_Out( ~r1+ ~r2)*/ Out( <~r1, ~r2>) ]
+
+rule Anonymous_Ch_Out:
+  [ Anonym_Ch_Out( m1 + m2) ]
   --[  ]->
-  [ St_V_2(x), St_V_2(y) ]
+  [ Out(m1), Out(m2) ]
 
-rule V_3:    
-  let y = sign(commit($vote,~r),~ltkA)
-      x = commit($vote,~r)
-  in
-    [ St_V_2( <V, pk(~ltkA), $vote, ~r>), !AdminPk(A, pk(~ltkA)) ]
-  --[ V_3( ) ]->     
-    [ Out( <x,y> ) , St_V_3( V, $vote, ~r) ]
-
-rule V_4:
-  let x = commit($vote,~r)
-  in
-    [ In(x), St_V_3(V, $vote, ~r) ]
-  --[ V_4( ) ]->
-    [ Out(~r) ]
+rule Anonymous_Ch_In:
+  [ In(m1), In(m2) ]
+  --[  ]->
+  [ Anonym_Ch_In( m1 + m2) ]
 
 
 // Axioms
@@ -112,12 +112,10 @@ axiom onlyOnce:
   " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j "
 
 
-
 // Executability
 
-lemma exec:
+lemma exec2:
   exists-trace
-  " Ex #i #j. V_4( )@i & V_4( )@j & not( #i=#j) "
-
+  " Ex #i. V_3( )@i  "
 
 end
