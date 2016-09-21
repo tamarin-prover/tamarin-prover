@@ -183,7 +183,7 @@ declared explicitly. If their name is prefixed with an exclamation mark `!`,
 then they are persistent. Otherwise, they are linear. Note that every
 fact name must be used consistently; i.e., it must always be used with
 the same arity, case, persistence, and multiplicity. Otherwise, Tamarin complains
-that the theory is not wellformed.
+that the theory is not well-formed.
 
 Modeling protocols
 ------------------
@@ -304,7 +304,7 @@ The computation of `kR` is not yet specified in the above. We could replace
 `kR` in the above rule by its full unfolding, but this would decrease
 readability.  Instead, we use  let binding to avoid
 duplication and reduce possible mismatches. Additionally, for the
-key computation we need the public key of the communication parter `$I`, which
+key computation we need the public key of the communication partner `$I`, which
 we bind to a unique thread identifier `~tid`; we use the
 resulting action fact
 to specify security properties, as we will see in the next
@@ -331,7 +331,7 @@ section.  This leads to:
 The above rule models the responder role accurately, and computes the
 appropriate key.
 
-We note one further optimisation that helps Tamarin's backwards search. In
+We note one further optimization that helps Tamarin's backwards search. In
 `NaxosR_attempt3`, the rule specifies that `lkR` might be instantiated with any
 term, hence also non-fresh terms. However, since the key generation rule is the
 only rule that produces `Ltk` facts, and it will always use a fresh value for
