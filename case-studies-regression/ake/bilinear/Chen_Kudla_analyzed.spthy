@@ -466,17 +466,17 @@ guarded formula characterizing all counter-examples:
     (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)
    ⇒
     (∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
-    (((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧ (∀ #i5. (MskRev( ) @ #i5) ⇒ ⊥)) ∨
-     (∀ #i5. (EphkRev( matching ) @ #i5) ⇒ ⊥)) ∧
-    ((∀ #i5. (EphkRev( matching ) @ #i5) ⇒ ⊥) ∨
-     (∀ #i5. (EphkRev( test ) @ #i5) ⇒ ⊥)) ∧
-    (((∀ #i5. (LtkRev( A ) @ #i5) ⇒ ⊥) ∧ (∀ #i5. (MskRev( ) @ #i5) ⇒ ⊥)) ∨
-     (∀ #i5. (EphkRev( test ) @ #i5) ⇒ ⊥))) ∧
-  ((∃ matching #i3 #i4 sid.
-     (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
-   ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
-    (∀ #i3. (EphkRev( test ) @ #i3) ⇒ ⊥) ∧
-    (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥)))"
+    ((((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧ (∀ #i5. (MskRev( ) @ #i5) ⇒ ⊥)) ∨
+      (∀ #i5. (EphkRev( matching ) @ #i5) ⇒ ⊥))) ∧
+    (((∀ #i5. (EphkRev( matching ) @ #i5) ⇒ ⊥) ∨
+      (∀ #i5. (EphkRev( test ) @ #i5) ⇒ ⊥))) ∧
+    ((((∀ #i5. (LtkRev( A ) @ #i5) ⇒ ⊥) ∧ (∀ #i5. (MskRev( ) @ #i5) ⇒ ⊥)) ∨
+      (∀ #i5. (EphkRev( test ) @ #i5) ⇒ ⊥)))) ∧
+  (((∃ matching #i3 #i4 sid.
+      (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
+    ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+     (∀ #i3. (EphkRev( test ) @ #i3) ⇒ ⊥) ∧
+     (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥))))"
 */
 simplify
 solve( (∃ matching #i3 #i4 sid.
@@ -2587,7 +2587,7 @@ analyzing: examples/ake/bilinear/Chen_Kudla.spthy
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 75.059783s
+  processing time: 74.919787s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 
@@ -2599,7 +2599,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 75.059783s
+  processing time: 74.919787s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 

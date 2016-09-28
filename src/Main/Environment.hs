@@ -164,8 +164,9 @@ ensureMaude as = do
   where
     maude = maudePath as
     checkVersion out _
-      | filter (not . isSpace) out == "2.6" = Right "2.6. OK."
-      | filter (not . isSpace) out == "2.7" = Right "2.7. OK."
+      | filter (not . isSpace) out == "2.6"   = Right "2.6. OK."
+      | filter (not . isSpace) out == "2.7"   = Right "2.7. OK."
+      | filter (not . isSpace) out == "2.7.1" = Right "2.7.1. OK."
       | otherwise                           = Left  $ errMsg $
           " 'maude --version' returned wrong version '" ++ out ++ "'"
 
@@ -178,7 +179,7 @@ ensureMaude as = do
           , ""
           , reason
           , " " ++ programName ++ " will likely not work."
-          , " Please download 'Core Maude 2.7' (or 2.6) from:"
+          , " Please download 'Core Maude 2.7.1' (or 2.6) from:"
           , "    http://maude.cs.uiuc.edu/download/"
           , " Note that 'prelude.maude' must be in the same directory as the 'maude' executable."
           ]

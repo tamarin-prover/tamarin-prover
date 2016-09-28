@@ -424,19 +424,19 @@ guarded formula characterizing all counter-examples:
  ∧
   (∀ #m #n smatch.
     (Sid( smatch, sessString ) @ #m) ∧ (SesskRev( smatch ) @ #n) ⇒ ⊥) ∧
-  (((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
-    (∃ #k spartner. (Origin( spartner, XB ) @ #k))) ∨
-   ((∀ #m. (LtkRev( A ) @ #m) ⇒ ⊥) ∧
-    (∀ #m. (LtkRev( B ) @ #m) ⇒ ⊥) ∧
-    (∀ #m. (LtkRev( C ) @ #m) ⇒ ⊥))) ∧
+  ((((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
+     (∃ #k spartner. (Origin( spartner, XB ) @ #k))) ∨
+    ((∀ #m. (LtkRev( A ) @ #m) ⇒ ⊥) ∧
+     (∀ #m. (LtkRev( B ) @ #m) ⇒ ⊥) ∧
+     (∀ #m. (LtkRev( C ) @ #m) ⇒ ⊥)))) ∧
   (∀ #k #l spartner1 spartner2.
     (Origin( spartner1, XB ) @ #k) ∧ (Origin( spartner2, XC ) @ #l)
    ⇒
-    (((∀ #v1. (LtkRev( B ) @ #v1) ⇒ ⊥) ∧ (∀ #v1. (LtkRev( C ) @ #v1) ⇒ ⊥)) ∨
-     ((∀ #v2. (EphkRev( spartner1 ) @ #v2) ⇒ ⊥) ∧
-      (∀ #v2. (EphkRev( spartner2 ) @ #v2) ⇒ ⊥))) ∧
-    ((∀ #v1. (LtkRev( A ) @ #v1) ⇒ ⊥) ∨
-     (∀ #v2. (EphkRev( stest ) @ #v2) ⇒ ⊥)))"
+    ((((∀ #v1. (LtkRev( B ) @ #v1) ⇒ ⊥) ∧ (∀ #v1. (LtkRev( C ) @ #v1) ⇒ ⊥)) ∨
+      ((∀ #v2. (EphkRev( spartner1 ) @ #v2) ⇒ ⊥) ∧
+       (∀ #v2. (EphkRev( spartner2 ) @ #v2) ⇒ ⊥)))) ∧
+    (((∀ #v1. (LtkRev( A ) @ #v1) ⇒ ⊥) ∨
+      (∀ #v2. (EphkRev( stest ) @ #v2) ⇒ ⊥))))"
 */
 simplify
 solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
@@ -526,7 +526,7 @@ analyzing: examples/ake/bilinear/TAK1_eCK_like.spthy
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 103.571463s
+  processing time: 99.514484s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 
@@ -538,7 +538,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 103.571463s
+  processing time: 99.514484s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 

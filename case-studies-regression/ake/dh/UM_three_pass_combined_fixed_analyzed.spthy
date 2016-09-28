@@ -764,28 +764,29 @@ guarded formula characterizing all counter-examples:
     (Sid( <'UM3', B, A, matchingComm> ) @ #l) ∧
     (ms = <'UM3', B, A, matchingComm>)
    ⇒
-    ((∀ rest. ((matchingComm+rest) = comm) ⇒ ⊥) ∧ (¬(matchingComm = comm))) ∨
-    (∃ #v. (SidUpdated( ms ) @ #v)) ∨
-    ((∀ #k.1. (SessionKeyReveal( ms ) @ #k.1) ⇒ ⊥) ∧
-     (∀ #k.1.
-       (Corrupt( B ) @ #k.1) ⇒ ∃ #l.1. (Expire( ms ) @ #l.1) ∧ #l.1 < #k.1) ∧
-     (∀ #k.1.
-       (SessionStateReveal( ms ) @ #k.1)
-      ⇒
-       (∀ #l.1. (Corrupt( A ) @ #l.1) ⇒ ⊥) ∧
-       (∀ #l.1. (Corrupt( B ) @ #l.1) ⇒ ⊥)))) ∧
-  ((∃ #l matchingComm.
-     (Sid( <'UM3', B, A, matchingComm> ) @ #l)
-    ∧
-     ((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm)) ∧
-     (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥)) ∨
-   (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ∃ #l. (Expire( s ) @ #l) ∧ #l < #k.1))"
+    (((∀ rest. ((matchingComm+rest) = comm) ⇒ ⊥) ∧
+      (¬(matchingComm = comm))) ∨
+     (∃ #v. (SidUpdated( ms ) @ #v)) ∨
+     ((∀ #k.1. (SessionKeyReveal( ms ) @ #k.1) ⇒ ⊥) ∧
+      (∀ #k.1.
+        (Corrupt( B ) @ #k.1) ⇒ ∃ #l.1. (Expire( ms ) @ #l.1) ∧ #l.1 < #k.1) ∧
+      (∀ #k.1.
+        (SessionStateReveal( ms ) @ #k.1)
+       ⇒
+        (∀ #l.1. (Corrupt( A ) @ #l.1) ⇒ ⊥) ∧
+        (∀ #l.1. (Corrupt( B ) @ #l.1) ⇒ ⊥))))) ∧
+  (((∃ #l matchingComm.
+      (Sid( <'UM3', B, A, matchingComm> ) @ #l)
+     ∧
+      (((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm))) ∧
+      (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥)) ∨
+    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ∃ #l. (Expire( s ) @ #l) ∧ #l < #k.1)))"
 */
 simplify
 solve( (∃ #l matchingComm.
          (Sid( <'UM3', B, A, matchingComm> ) @ #l)
         ∧
-         ((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm)) ∧
+         (((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm))) ∧
          (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥))  ∥
        (∀ #k.
          (Corrupt( B ) @ #k)
@@ -4648,14 +4649,14 @@ guarded formula characterizing all counter-examples:
  ∧
   (∀ #k.1. (SessionKeyReveal( s ) @ #k.1) ⇒ ⊥) ∧
   (∀ #i1. (SessionKeyReveal( sp ) @ #i1) ⇒ ⊥) ∧
-  ((¬(role = 'I')) ∨
-   ((∀ #k.1.
-      (Corrupt( A ) @ #k.1)
-     ⇒
-      (∀ #l. (Expire( s ) @ #l) ⇒ ¬(#k.1 < #l)) ∧ (∃ #l. (Expire( s ) @ #l))) ∧
-    (∀ #k.1 #l. (SessionStateReveal( s ) @ #k.1) ∧ (Corrupt( A ) @ #l) ⇒ ⊥) ∧
-    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥))) ∧
-  ((¬(role = 'R')) ∨ (∀ #k.1. (Corrupt( A ) @ #k.1) ⇒ ⊥)) ∧
+  (((¬(role = 'I')) ∨
+    ((∀ #k.1.
+       (Corrupt( A ) @ #k.1)
+      ⇒
+       (∀ #l. (Expire( s ) @ #l) ⇒ ¬(#k.1 < #l)) ∧ (∃ #l. (Expire( s ) @ #l))) ∧
+     (∀ #k.1 #l. (SessionStateReveal( s ) @ #k.1) ∧ (Corrupt( A ) @ #l) ⇒ ⊥) ∧
+     (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥)))) ∧
+  (((¬(role = 'R')) ∨ (∀ #k.1. (Corrupt( A ) @ #k.1) ⇒ ⊥))) ∧
   (∀ #k.1 k_.
     (UM1_Complete( sp, 'I', k_ ) @ #k.1)
    ⇒
@@ -4666,8 +4667,8 @@ guarded formula characterizing all counter-examples:
       (∃ #l. (Expire( sp ) @ #l))) ∧
     (∀ #k.2 #l.
       (SessionStateReveal( sp ) @ #k.2) ∧ (Corrupt( B ) @ #l) ⇒ ⊥)) ∧
-  ((∃ #k.1 k_. (UM1_Complete( sp, 'I', k_ ) @ #k.1)) ∨
-   (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥))"
+  (((∃ #k.1 k_. (UM1_Complete( sp, 'I', k_ ) @ #k.1)) ∨
+    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥)))"
 */
 simplify
 solve( (¬(role = 'I'))  ∥
@@ -5131,7 +5132,7 @@ analyzing: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 50.172999s
+  processing time: 47.830649s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)
@@ -5144,7 +5145,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 50.172999s
+  processing time: 47.830649s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)

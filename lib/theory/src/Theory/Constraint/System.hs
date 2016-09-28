@@ -974,15 +974,17 @@ allOpenFactGoalsAreIndependent sys = (noCommonVarsInGoals unsolvedGoals) && (all
     unsolvedGoals = unsolvedTrivialGoals sys
 
 -- | Returns true if all open goals in the system are "trivial" fact goals.
-allOpenGoalsAreSimpleFacts :: System -> Bool
-allOpenGoalsAreSimpleFacts sys = M.foldlWithKey goalIsSimpleFact True (L.get sGoals sys)
+allOpenGoalsAreSimpleFacts :: DiffProofContext -> System -> Bool
+allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True (L.get sGoals sys)
   where
     goalIsSimpleFact :: Bool -> Goal -> GoalStatus -> Bool
-    goalIsSimpleFact ret (ActionG _ fact)  (GoalStatus solved _ _) = ret && (solved || ((isTrivialFact fact /= Nothing) && (isKUFact fact)))
-    goalIsSimpleFact ret (ChainG _ _)      (GoalStatus solved _ _) = ret && solved
-    goalIsSimpleFact ret (PremiseG _ fact) (GoalStatus solved _ _) = ret && (solved || (isTrivialFact fact /= Nothing))
-    goalIsSimpleFact ret (SplitG _)        (GoalStatus solved _ _) = ret && solved
-    goalIsSimpleFact ret (DisjG _)         (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (ActionG _ fact)         (GoalStatus solved _ _) = ret && (solved || ((isTrivialFact fact /= Nothing) && (isKUFact fact)))
+    goalIsSimpleFact ret (ChainG _ _)             (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (PremiseG (nid, _) fact) (GoalStatus solved _ _) = ret && (solved || (isTrivialFact fact /= Nothing) && (not (isProtocolRule r) || (getOriginalRule ctxt LHS r == getOriginalRule ctxt RHS r)))
+      where
+        r = nodeRule nid sys
+    goalIsSimpleFact ret (SplitG _)               (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (DisjG _)                (GoalStatus solved _ _) = ret && solved
 
 -- | Returns true if the current system is a diff system
 isDiffSystem :: System -> Bool
@@ -1120,8 +1122,8 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
   , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
   , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
-                                 (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
-                                 _                                                                                                                   -> text "none")
+                                 (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts ctxt sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
+                                 _                                                                                                                        -> text "none")
 --   , ("DEBUG",               maybe (text "none") (\x -> vsep $ map prettyGuarded x) help)
 --   , ("DEBUG2",              maybe (text "none") (\x -> vsep $ map prettyGuarded x) help2)
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)

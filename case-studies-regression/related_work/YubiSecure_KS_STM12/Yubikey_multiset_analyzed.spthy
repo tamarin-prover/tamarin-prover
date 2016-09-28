@@ -125,8 +125,8 @@ next
   solve( (∀ pid sid x otp #t2.
            (Login( pid, sid, x, otp ) @ #t2)
           ⇒
-           (last(#t2)) ∨
-           (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+           ((last(#t2)) ∨
+            (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
          (∃ #i a b.
            (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
     case case_1
@@ -166,7 +166,7 @@ guarded formula characterizing all counter-examples:
   (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
   (LoginCounter( pid, otc2, tc2 ) @ #t2)
  ∧
-  ((¬(#t1 < #t2)) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥)) ∧
+  (((¬(#t1 < #t2)) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
   (¬(#t2 < #t1)) ∧
   (¬(#t1 = #t2))"
 */
@@ -196,11 +196,11 @@ next
                (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
                (LoginCounter( pid, otc2, tc2 ) @ #t2)
               ⇒
-               (last(#t2)) ∨
-               (last(#t1)) ∨
-               ((#t1 < #t2) ∧ (∃ z. ((tc1+z) = tc2))) ∨
-               (#t2 < #t1) ∨
-               (#t1 = #t2))  ∥
+               ((last(#t2)) ∨
+                (last(#t1)) ∨
+                ((#t1 < #t2) ∧ (∃ z. ((tc1+z) = tc2))) ∨
+                (#t2 < #t1) ∨
+                (#t1 = #t2)))  ∥
              (∃ #i a b.
                (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
         case case_1
@@ -1517,8 +1517,8 @@ guarded formula characterizing all counter-examples:
   ∀ #t1.
    (YubiPress( pid, x ) @ #t1)
   ⇒
-   (¬(#t1 < #t2)) ∨
-   (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2))"
+   ((¬(#t1 < #t2)) ∨
+    (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2)))"
 */
 simplify
 solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
@@ -1654,7 +1654,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 23.463767s
+  processing time: 21.495663s
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)
   one_count_foreach_login (all-traces): verified (11 steps)
@@ -1671,7 +1671,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 23.463767s
+  processing time: 21.495663s
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)
   one_count_foreach_login (all-traces): verified (11 steps)

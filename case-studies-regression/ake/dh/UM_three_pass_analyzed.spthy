@@ -657,28 +657,29 @@ guarded formula characterizing all counter-examples:
     (Sid( <'UM3', B, A, matchingComm> ) @ #l) ∧
     (ms = <'UM3', B, A, matchingComm>)
    ⇒
-    ((∀ rest. ((matchingComm+rest) = comm) ⇒ ⊥) ∧ (¬(matchingComm = comm))) ∨
-    (∃ #v. (SidUpdated( ms ) @ #v)) ∨
-    ((∀ #k.1. (SessionKeyReveal( ms ) @ #k.1) ⇒ ⊥) ∧
-     (∀ #k.1.
-       (Corrupt( B ) @ #k.1) ⇒ ∃ #l.1. (Expire( ms ) @ #l.1) ∧ #l.1 < #k.1) ∧
-     (∀ #k.1.
-       (SessionStateReveal( ms ) @ #k.1)
-      ⇒
-       (∀ #l.1. (Corrupt( A ) @ #l.1) ⇒ ⊥) ∧
-       (∀ #l.1. (Corrupt( B ) @ #l.1) ⇒ ⊥)))) ∧
-  ((∃ #l matchingComm.
-     (Sid( <'UM3', B, A, matchingComm> ) @ #l)
-    ∧
-     ((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm)) ∧
-     (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥)) ∨
-   (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ∃ #l. (Expire( s ) @ #l) ∧ #l < #k.1))"
+    (((∀ rest. ((matchingComm+rest) = comm) ⇒ ⊥) ∧
+      (¬(matchingComm = comm))) ∨
+     (∃ #v. (SidUpdated( ms ) @ #v)) ∨
+     ((∀ #k.1. (SessionKeyReveal( ms ) @ #k.1) ⇒ ⊥) ∧
+      (∀ #k.1.
+        (Corrupt( B ) @ #k.1) ⇒ ∃ #l.1. (Expire( ms ) @ #l.1) ∧ #l.1 < #k.1) ∧
+      (∀ #k.1.
+        (SessionStateReveal( ms ) @ #k.1)
+       ⇒
+        (∀ #l.1. (Corrupt( A ) @ #l.1) ⇒ ⊥) ∧
+        (∀ #l.1. (Corrupt( B ) @ #l.1) ⇒ ⊥))))) ∧
+  (((∃ #l matchingComm.
+      (Sid( <'UM3', B, A, matchingComm> ) @ #l)
+     ∧
+      (((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm))) ∧
+      (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥)) ∨
+    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ∃ #l. (Expire( s ) @ #l) ∧ #l < #k.1)))"
 */
 simplify
 solve( (∃ #l matchingComm.
          (Sid( <'UM3', B, A, matchingComm> ) @ #l)
         ∧
-         ((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm)) ∧
+         (((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm))) ∧
          (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥))  ∥
        (∀ #k.
          (Corrupt( B ) @ #k)
@@ -13334,7 +13335,7 @@ analyzing: examples/ake/dh/UM_three_pass.spthy
 analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 151.643365s
+  processing time: 144.56754s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 
@@ -13346,7 +13347,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 151.643365s
+  processing time: 144.56754s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 
