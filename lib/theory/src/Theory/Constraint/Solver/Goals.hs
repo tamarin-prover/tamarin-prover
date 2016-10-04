@@ -20,7 +20,6 @@ module Theory.Constraint.Solver.Goals (
   , AnnotatedGoal
   , openGoals
   , solveGoal
---   , allOpenGoalsAreSimpleFacts
   ) where
 
 -- import           Debug.Trace
@@ -204,7 +203,7 @@ solveAction :: [RuleAC]          -- ^ All rules labelled with an action
 solveAction rules (i, fa) = do
     mayRu <- M.lookup i <$> getM sNodes
     showRuleCaseName <$> case mayRu of
-        Nothing -> do ru  <- labelNodeId i rules
+        Nothing -> do ru  <- labelNodeId i rules Nothing
                       act <- disjunctionOfList $ get rActs ru
                       void (solveFactEqs SplitNow [Equal fa act])
                       return ru
@@ -284,7 +283,7 @@ solveChain rules (c, p) = do
              do -- If the chain does not start at a union message,
                 -- the usual *DG2_chain* extension is perfomed.
                 cRule <- gets $ nodeRule (nodeConcNode c)
-                (i, ru) <- insertFreshNode rules
+                (i, ru) <- insertFreshNode rules (Just cRule)
                 contradictoryIf (forbiddenEdge cRule ru)
                 -- This requires a modified chain constraint def:
                 -- path via first destruction premise of rule ...
@@ -306,9 +305,13 @@ solveChain rules (c, p) = do
     -- no edge from dexp to dexp KD premise, no edge from dpmult
     -- to dpmult KD premise, and no edge from dpmult to demap KD premise
     -- (this condition replaces the exp/noexp tags)
+    -- no more than the allowed consecutive rule applications
+    forbiddenEdge :: RuleACInst -> RuleACInst -> Bool
     forbiddenEdge cRule pRule = isDExpRule   cRule && isDExpRule  pRule  ||
                                 isDPMultRule cRule && isDPMultRule pRule ||
-                                isDPMultRule cRule && isDEMapRule  pRule
+                                isDPMultRule cRule && isDEMapRule  pRule ||
+                                (getRuleName cRule == getRuleName pRule)
+                                    && (getRemainingRuleApplications cRule == 1)
 
     -- Contradicts normal form condition N2:
     -- No coerce of a pair of inverse.

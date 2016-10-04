@@ -79,3 +79,19 @@ positionsNonVar =
 
     position i len | i == len - 1 = replicate i 1
                    | otherwise    = replicate i 1 ++ [0]
+
+-- | @positions t@ returns all the positions in the term @t@.
+--   'positions' accounts for AC symbols in the same ways as 'atPos'.
+positions :: (Show a, Show b) => VTerm a b -> [Position]
+positions =
+    go
+  where
+    go (viewTerm -> Lit  (Con _))    = [[]]
+    go (viewTerm -> Lit  (Var _))    = [[]]
+    go (viewTerm -> FApp (AC _)  as) = []:concat (zipWith (\i a -> map ((position i len)++) (go a))
+                                                          [0..] as)
+        where len = length as
+    go (viewTerm -> FApp _       as) = []:concat (zipWith (\i a -> map (i:) (go a)) [0..] as)
+
+    position i len | i == len - 1 = replicate i 1
+                   | otherwise    = replicate i 1 ++ [0]

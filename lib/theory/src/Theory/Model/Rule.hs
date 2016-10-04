@@ -72,6 +72,8 @@ module Theory.Model.Rule (
   , containsNewVars
   , getRuleName
   , getRuleNameDiff
+  , getRemainingRuleApplications
+  , setRemainingRuleApplications
   , nfRule
   , isTrivialProtoVariantAC
   , getNewVariables
@@ -334,7 +336,7 @@ instance HasFrees ProtoRuleACInstInfo where
 -- | An intruder rule modulo AC is described by its name.
 data IntrRuleACInfo =
     ConstrRule BC.ByteString
-  | DestrRule BC.ByteString
+  | DestrRule BC.ByteString Int -- the number of remaining consecutive applications of this destruction rule, 0 means unbounded, -1 means not yet determined
   | CoerceRule
   | IRecvRule
   | ISendRule
@@ -420,9 +422,9 @@ instance HasRuleName RuleACInst where
 -- | True iff the rule is a destruction rule.
 isDestrRule :: HasRuleName r => r -> Bool
 isDestrRule ru = case ruleName ru of
-  IntrInfo (DestrRule _) -> True
-  IntrInfo IEqualityRule -> True
-  _                      -> False
+  IntrInfo (DestrRule _ _) -> True
+  IntrInfo IEqualityRule   -> True
+  _                        -> False
 
 -- | True iff the rule is an iequality rule.
 isIEqualityRule :: HasRuleName r => r -> Bool
@@ -490,7 +492,7 @@ getRuleName :: HasRuleName (Rule i) => Rule i -> String
 getRuleName ru = case ruleName ru of
                       IntrInfo i  -> case i of
                                       ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
-                                      DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
+                                      DestrRule x _   -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
                                       CoerceRule      -> "Coerce"
                                       IRecvRule       -> "Recv"
                                       ISendRule       -> "Send"
@@ -506,7 +508,7 @@ getRuleNameDiff :: HasRuleName (Rule i) => Rule i -> String
 getRuleNameDiff ru = case ruleName ru of
                       IntrInfo i  -> "Intr" ++ case i of
                                       ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
-                                      DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
+                                      DestrRule x _   -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
                                       CoerceRule      -> "Coerce"
                                       IRecvRule       -> "Recv"
                                       ISendRule       -> "Send"
@@ -516,7 +518,20 @@ getRuleNameDiff ru = case ruleName ru of
                       ProtoInfo p -> "Proto" ++ case p of
                                       FreshRule   -> "FreshRule"
                                       StandRule s -> s
-       
+
+-- | Returns the remaining rule applications within the deconstruction chain if possible, 0 otherwise
+getRemainingRuleApplications :: RuleACInst -> Int
+getRemainingRuleApplications ru = case ruleName ru of
+  IntrInfo (DestrRule _ i) -> i
+  _                        -> 0
+
+-- | Sets the remaining rule applications within the deconstruction chain if possible
+setRemainingRuleApplications :: RuleACInst -> Int -> RuleACInst
+setRemainingRuleApplications (Rule (IntrInfo (DestrRule name _)) prems concs acts) i
+    = Rule (IntrInfo (DestrRule name i)) prems concs acts
+setRemainingRuleApplications rule _
+    = rule
+
 -- | Converts a protocol rule to its "left" variant
 getLeftRule :: ProtoRuleE ->  ProtoRuleE
 getLeftRule (Rule ri ps cs as) =
@@ -803,14 +818,15 @@ showRuleCaseName =
 
 prettyIntrRuleACInfo :: Document d => IntrRuleACInfo -> d
 prettyIntrRuleACInfo rn = text $ case rn of
-    IRecvRule       -> "irecv"
-    ISendRule       -> "isend"
-    CoerceRule      -> "coerce"
-    FreshConstrRule -> "fresh"
-    PubConstrRule   -> "pub"
-    IEqualityRule   -> "iequality"
-    ConstrRule name -> prefixIfReserved ('c' : BC.unpack name)
-    DestrRule name  -> prefixIfReserved ('d' : BC.unpack name)
+    IRecvRule        -> "irecv"
+    ISendRule        -> "isend"
+    CoerceRule       -> "coerce"
+    FreshConstrRule  -> "fresh"
+    PubConstrRule    -> "pub"
+    IEqualityRule    -> "iequality"
+    ConstrRule name  -> prefixIfReserved ('c' : BC.unpack name)
+    DestrRule name _ -> prefixIfReserved ('d' : BC.unpack name)
+--     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
 prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
                 => d           -- ^ Prefix.

@@ -566,8 +566,12 @@ protocolRuleWithName rules name = filter (\(Rule x _ _ _) -> case x of
                                              IntrInfo  _ -> False) rules
 
 -- | 'intruderRuleWithName' @rules@ @name@ returns all rules with intruder rule name @name@ in rules @rules@.
+--   This ignores the number of remaining consecutive rule applications.
 intruderRuleWithName :: [RuleAC] -> IntrRuleACInfo -> [RuleAC]
 intruderRuleWithName rules name = filter (\(Rule x _ _ _) -> case x of
+                                             IntrInfo  (DestrRule i _) -> case name of
+                                                                               (DestrRule j _) -> i == j
+                                                                               _               -> False
                                              IntrInfo  i -> i == name
                                              ProtoInfo _ -> False) rules
     

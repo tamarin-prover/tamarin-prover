@@ -296,9 +296,10 @@ intrRule = do
   where
     intrInfo = do
         name <- identifier
+        limit <- option 0 natural
         case name of
           'c':cname -> return $ ConstrRule (BC.pack cname)
-          'd':dname -> return $ DestrRule (BC.pack dname)
+          'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit)
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
 genericRule :: Parser ([LNFact], [LNFact], [LNFact])

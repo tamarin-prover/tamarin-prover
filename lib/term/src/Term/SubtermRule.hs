@@ -34,7 +34,7 @@ import Text.PrettyPrint.Highlight
 data StRhs = StRhs [Position] LNTerm
     deriving (Show,Ord,Eq)
 
--- | A context subterm rewrite rule. To be renamed.
+-- | A context subterm rewrite rule.
 data CtxtStRule = CtxtStRule LNTerm StRhs
     deriving (Show,Ord,Eq)
 

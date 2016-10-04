@@ -207,6 +207,8 @@ import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
 -- import           Theory.Constraint.Solver.Types
 
+import           Term.Positions
+
 ------------------------------------------------------------------------------
 -- Specific proof types
 ------------------------------------------------------------------------------
@@ -292,6 +294,17 @@ openProtoRule = L.get cprRuleE
 closeProtoRule :: MaudeHandle -> OpenProtoRule -> ClosedProtoRule
 closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 
+-- | Close an intruder rule; i.e., compute maximum number of consecutive applications
+closeIntrRule :: MaudeHandle -> IntrRuleAC -> IntrRuleAC
+closeIntrRule hnd (Rule (DestrRule name (-1)) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts)  =
+    (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
+                              then (length (positions t)) - 2
+                              else 0)) prems concs acts)
+        where
+           runMaude = (`runReader` hnd)
+closeIntrRule hnd ir                                            = ir
+
+
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.
 closeRuleCache :: [LNGuarded]        -- ^ Axioms to use.
@@ -301,7 +314,7 @@ closeRuleCache :: [LNGuarded]        -- ^ Axioms to use.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> Bool               -- ^ Diff or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache axioms typAsms sig protoRules intrRulesAC isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache axioms typAsms sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules untypedCaseDists typedCaseDists injFactInstances
   where
@@ -321,6 +334,12 @@ closeRuleCache axioms typAsms sig protoRules intrRulesAC isdiff = -- trace ("clo
     untypedCaseDists = precomputeCaseDistinctions ctxt0 safetyAxioms
     typedCaseDists   = refineWithTypingAsms typAsms ctxt0 untypedCaseDists
 
+    -- Maude handle
+    hnd = L.get sigmMaudeHandle sig
+    
+    -- close intruder rules
+    intrRulesAC = map (closeIntrRule hnd) intrRules
+    
     -- classifying the rules
     rulesAC = (fmap IntrInfo                      <$> intrRulesAC) <|>
               ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
