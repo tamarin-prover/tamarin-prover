@@ -308,7 +308,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     -- Not checking construction rules is sound, as they are 'trivial' !
     -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in axioms.
-    -- LHS or RHS is not important in this case als we only need the names of the rules.
+    -- LHS or RHS is not important in this case as we only need the names of the rules.
     ruleEquivalence :: M.Map CaseName DiffSystem
     ruleEquivalence = foldl ruleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) (protoRulesAC LHS)
     
@@ -337,7 +337,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     checkOtherSide :: Side -> System -> Maybe Bool
     checkOtherSide s sys'= case getMirrorDG ctxt s sys' of
-                             Just sys'' -> {-trace ("RE: axioms: " ++ (show (axioms s sys'')) ++ " " ++ (show (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys'))))-} (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys'))
+                             Just sys'' -> {-trace ("RE: axioms: " ++ (show (axioms (opposite s) sys'')) ++ " " ++ (show s) ++ " " ++ show (isSolved s sys'))-} (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys'))
                              Nothing    -> Just False
             where
               oppositeCtxt s' = eitherProofContext ctxt (opposite s')
