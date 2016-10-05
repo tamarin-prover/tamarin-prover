@@ -6,8 +6,4 @@ packages:
 - lib/utils/
 extra-deps: 
 - yesod-json-1.2.0
-## comment 3 lines below and uncomment last line (lts-3.0) for GHC 7.10
-#- hamlet-1.2.0
-#- cabal-install-1.22.0.0
-#resolver: lts-2.22
-resolver: lts-3.11
+resolver: lts-6.19

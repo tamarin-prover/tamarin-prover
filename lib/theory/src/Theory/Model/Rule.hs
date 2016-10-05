@@ -143,6 +143,8 @@ import           Term.Unification
 import           Theory.Model.Fact
 import           Theory.Text.Pretty
 
+-- import           Debug.Trace
+
 ------------------------------------------------------------------------------
 -- General Rule
 ------------------------------------------------------------------------------
@@ -528,7 +530,7 @@ getRightRule (Rule ri ps cs as) =
    (Rule ri (map getRightFact ps) (map getRightFact cs) (map getRightFact as))
    
 -- | Returns a list of all new variables introduced in this rule instance and the facts they occur in
-getNewVariables :: RuleACInst -> [(LNFact, LVar)]
+getNewVariables :: Rule a -> [(LNFact, LVar)]
 getNewVariables ru = map (\(x, _, z) -> (x, z)) $ getNewVariablesWithIndex ru
 
 -- | Returns whether a given rule has new variables
@@ -549,7 +551,7 @@ isNewVar ru var = S.member var newvars
     concvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumConcs ru
 
 -- | Returns a list of all new variables introduced in this rule instance and the facts and indices they occur in
-getNewVariablesWithIndex :: RuleACInst -> [(LNFact, ConcIdx, LVar)]
+getNewVariablesWithIndex :: Rule a -> [(LNFact, ConcIdx, LVar)]
 getNewVariablesWithIndex ru = getFacts $ S.toList newvars
   where 
     newvars = S.difference concvars premvars
@@ -564,25 +566,26 @@ getNewVariablesWithIndex ru = getFacts $ S.toList newvars
 getSubstitutionsFixingNewVars :: RuleACInst -> RuleAC -> LNSubst
 getSubstitutionsFixingNewVars rule orig = Subst $ M.fromList $ concat $ map getSubst newvars
   where
-    newvars = getNewVariablesWithIndex rule
+    newvars = getNewVariablesWithIndex orig
     
     getSubst :: (LNFact, ConcIdx, LVar) -> [(LVar, LNTerm)]
-    getSubst (fa, cidx, var) = map (\x -> (x, LIT (Var var))) (getMatchingOrigVar (fa, cidx, var))
+    getSubst (fa, cidx, var) = map (\x -> (var, x)) (getMatchingTerm (fa, cidx, var))
     
-    getMatchingOrigVar :: (LNFact, ConcIdx, LVar) -> [LVar]
-    getMatchingOrigVar ((Fact fi ts), cidx, var') = rec var' ts matchingTs 
+    getMatchingTerm :: (LNFact, ConcIdx, LVar) -> [LNTerm]
+    getMatchingTerm ((Fact fi ts), cidx, var') = rec var' ts matchingTs 
       where
         matchingTs = case matchingConc of
-                          Fact fi' ts' -> if fi == fi' then ts' else (error $ "getMatchingOrigVar: Matching conclusion with different fact: " ++ show (Fact fi ts) ++ " " ++ show cidx ++ " " ++ show var')
-        matchingConc = fromMaybe (error $ "getMatchingOrigVar: No matching conclusion: " ++ show (Fact fi ts) ++ " " ++ show cidx ++ " " ++ show var') (lookupConc cidx orig)
+                          Fact fi' ts' -> if fi == fi' then ts' else (error $ "getMatchingTerm: Matching conclusion with different fact: " ++ show (Fact fi ts) ++ " " ++ show cidx ++ " " ++ show var')
+        matchingConc = fromMaybe (error $ "getMatchingTerm: No matching conclusion: " ++ show (Fact fi ts) ++ " " ++ show cidx ++ " " ++ show var') (lookupConc cidx rule)
         
-        rec :: LVar -> [LNTerm] -> [LNTerm] -> [LVar]
-        rec _   []     []             = []
-        rec var (x:xs) (origt:origts) = case (viewTerm x, viewTerm origt) of
-                                             (Lit (Var a), Lit (Var b))    | a == var && isNewVar orig b -> b:(rec var xs origts)
-                                             (FApp f ts', FApp f' origts') | f == f'                     -> (rec var ts' origts')++(rec var xs origts)
-                                             (_         , _              )                               -> (rec var xs origts)
-        rec _   _      _              = error "getMatchingOrigVar: Different number of terms!"
+        rec :: LVar -> [LNTerm] -> [LNTerm] -> [LNTerm]
+        rec _   []     []       = []
+        rec var (x:xs) (mt:mts) = case (viewTerm x, viewTerm mt) of
+                                       (Lit (Var a), _)            | a == var -> mt:(rec var xs mts)
+                                       (FApp f ts' , FApp f' mts') | f == f'  -> (rec var ts' mts')++(rec var xs mts)
+                                       (FApp f ts' , FApp f' mts') | f /= f'  -> error "getMatchingTerm: Non-matching function terms!"
+                                       (_          , _           )            -> (rec var xs mts)
+        rec _   _      _        = error "getMatchingTerm: Different number of terms!"
         
 
 -- Construction
