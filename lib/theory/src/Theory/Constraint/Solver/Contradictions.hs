@@ -67,7 +67,7 @@ data Contradiction =
   | ForbiddenBP                    -- ^ Forbidden bilinear pairing rule instance
   | ForbiddenKD                    -- ^ has forbidden KD-fact
   | ImpossibleChain                -- ^ has impossible chain
-  | ForbiddenCoerce                -- ^ has forbidden coerce
+  | ForbiddenChain                 -- ^ has forbidden chain
   | NonInjectiveFactInstance (NodeId, NodeId, NodeId)
     -- ^ Contradicts that certain facts have unique instances.
   | IncompatibleEqs                -- ^ Incompatible equalities.
@@ -100,7 +100,7 @@ contradictions ctxt sys = F.asum
     -- FIXME: add CR-rule
     , guard (enableBP msig && hasForbiddenBP sys)   *> pure ForbiddenBP
     -- New CR-Rule *N6'*
-    , guard (hasForbiddenCoerce sys)                *> pure ForbiddenCoerce
+    , guard (hasForbiddenChain sys)                 *> pure ForbiddenChain
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
     , guard (eqsIsFalse $ L.get sEqStore sys)       *> pure IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
@@ -252,26 +252,26 @@ hasImpossibleChain sys =
                  FApp o args -> ((Right o):) . concat <$> mapM possibleRootSyms args
 
 
--- | Detect non-normal chains ending in coerce rules
+-- | Detect non-normal chains ending in rules other than IEquality
 -- and starting from a KD(x) that follows from a KU(x).
-hasForbiddenCoerce :: System -> Bool
-hasForbiddenCoerce sys =
-    any chainToCoerce [ (c,p) | ChainG c p <- M.keys $ L.get sGoals sys ]
+hasForbiddenChain :: System -> Bool
+hasForbiddenChain sys =
+    any illegalChain [ (c,p) | ChainG c p <- M.keys $ L.get sGoals sys ]
   where
-    chainToCoerce :: (NodeConc, NodePrem) -> Bool
-    chainToCoerce (c,p) = fromMaybe False $ do
+    illegalChain :: (NodeConc, NodePrem) -> Bool
+    illegalChain (c,p) = fromMaybe False $ do
         -- start and end terms of the chain
-        (DnK, t_start) <- kFactView $ nodeConcFact c sys
-        (DnK, _)       <- kFactView $ nodePremFact p sys
+        (DnK, t_start)  <- kFactView $ nodeConcFact c sys
+        (DnK, _)        <- kFactView $ nodePremFact p sys
         -- check whether the chain starts with a msg var
-        is_msg_var     <- pure $ isMsgVar t_start
-        -- and whether we have a coerce rule instance at the end
-        is_coerce      <- pure $ isCoerceRule $ nodeRule (fst p) sys
+        is_msg_var      <- pure $ isMsgVar t_start
+        -- and whether we do not have an equality rule instance at the end
+        is_not_equality <- pure $ not $ isIEqualityRule $ nodeRule (fst p) sys
         -- get all KU-facts with the same msg var
-        ku_start       <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys 
+        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys 
         -- and check whether any of them happens before the KD-conclusion
-        ku_before      <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start 
-        return (is_msg_var && is_coerce && ku_before)
+        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start 
+        return (is_msg_var && is_not_equality && ku_before)
 
 -- Diffie-Hellman and Bilinear Pairing
 --------------------------------------
@@ -415,7 +415,7 @@ prettyContradiction contra = case contra of
     ForbiddenExp                 -> text "non-normal exponentiation rule instance"
     ForbiddenBP                  -> text "non-normal bilinear pairing rule instance"
     ForbiddenKD                  -> text "forbidden KD-fact"
-    ForbiddenCoerce              -> text "forbidden coerce rule instance"
+    ForbiddenChain               -> text "forbidden chain"
     ImpossibleChain              -> text "impossible chain"
     NonInjectiveFactInstance cex -> text $ "non-injective facts " ++ show cex
     FormulasFalse                -> text "from formulas"
