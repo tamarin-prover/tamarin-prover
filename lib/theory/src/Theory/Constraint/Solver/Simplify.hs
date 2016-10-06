@@ -70,7 +70,7 @@ simplifySystem = do
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
-      -- reporting any change to the constraint systemm.
+      -- reporting any change to the constraint system.
       | Unchanged == mconcat changes0 = return ()
       | otherwise                     = do
           -- Store original system for reporting

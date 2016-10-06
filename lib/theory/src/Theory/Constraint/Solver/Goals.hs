@@ -99,11 +99,13 @@ openGoals sys = do
         DisjG (Disj [])                           -> False
         DisjG _                                   -> not solved
 
-        ChainG c _     ->
+        ChainG c p     ->
           case kFactView (nodeConcFact c sys) of
               Just (DnK, viewTerm2 -> FUnion args) ->
                   not solved && allMsgVarsKnownEarlier c args
-              Just (DnK,  m) | isMsgVar m          -> False
+              -- open chains for msg vars are only solved if N5'' is applicable
+              Just (DnK,  m) | isMsgVar m          -> (not solved) && 
+                                                      (chainToEquality m c p)
                              | otherwise           -> not solved
               fa -> error $ "openChainGoals: impossible fact: " ++ show fa
 
@@ -171,7 +173,22 @@ openGoals sys = do
       where earlierMsgVars = do (j, _, t) <- allKUActions sys
                                 guard $ isMsgVar t && alwaysBefore sys j i
                                 return t
-
+                                
+    -- check whether we have a chain that fits N5'' (an open chain between an 
+    -- equality rule and a simple msg var conclusion that exists as a K up 
+    -- previously) which needs to be resolved even if it is an open chain
+    chainToEquality :: LNTerm -> NodeConc -> NodePrem -> Bool
+    chainToEquality t_start conc p = is_msg_var && is_equality && ku_before
+        where
+            -- check whether it is a msg var
+            is_msg_var  = isMsgVar t_start
+            -- and whether we do have an equality rule instance at the end
+            is_equality = isIEqualityRule $ nodeRule (fst p) sys
+            -- get all KU-facts with the same msg var
+            ku_start    = filter (\x -> (fst x) == t_start) $ 
+                              map (\(i, _, m) -> (m, i)) $ allKUActions sys
+            -- and check whether any of them happens before the KD-conclusion
+            ku_before   = any (\(_, x) -> alwaysBefore sys x (fst conc)) ku_start 
                                 
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
@@ -279,9 +296,12 @@ solveChain rules (c, p) = do
                 let v = PremIdx 0
                 faPrem <- gets $ nodePremFact (i,v)
                 extendAndMark i ru v faPrem faConc
-         _ ->
+         Just (DnK, m) ->
              do -- If the chain does not start at a union message,
                 -- the usual *DG2_chain* extension is perfomed.
+                -- But we ignore open chains, as we only resolve 
+                -- open chains with a direct chains
+                contradictoryIf (isMsgVar m)
                 cRule <- gets $ nodeRule (nodeConcNode c)
                 (i, ru) <- insertFreshNode rules (Just cRule)
                 contradictoryIf (forbiddenEdge cRule ru)
@@ -289,6 +309,7 @@ solveChain rules (c, p) = do
                 -- path via first destruction premise of rule ...
                 (v, faPrem) <- disjunctionOfList $ take 1 $ enumPrems ru
                 extendAndMark i ru v faPrem faConc
+         _ -> error "solveChain: not a down fact"
      )
   where
     extendAndMark :: NodeId -> RuleACInst -> PremIdx -> LNFact -> LNFact 
@@ -319,7 +340,7 @@ solveChain rules (c, p) = do
                                 isCoerceRule pRule && isInverse mPrem ||
     -- Also: Coercing of products is unnecessary, since the protocol is *-restricted.
                                 isCoerceRule pRule && isProduct mPrem 
-
+    
 
 -- | Solve an equation split. There is no corresponding CR-rule in the rule
 -- system on paper because there we eagerly split over all variants of a rule.
