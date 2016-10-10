@@ -7,7 +7,7 @@ begin
  * Modeler: Charles Duménil
  * Date: July 2016	
  * Source: Formal verification of voting and auction protocols by Jannik Dreier
- * Status: Not Working (finds a (fake) attack in rule Equality)
+ * Status: Working 
  */
 
 
@@ -15,12 +15,12 @@ begin
   Protocol Okamoto {                                 ( Administration and collector are considered corrupted )
     Phase 1:
      V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>                                            " v1( diff(A,B) ) & v2( diff(B,A) ) "
-     A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
+     A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check signature Voter"
     Phase 2:
-     V -> C: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                      "Check sign Admin" + "Check commit"
+     V -> C: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                      "Check signature Admin" + "Check commitment"
      V -> T: <vote, r, x>
     Phase 3
-     C -> Pub: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                    "Check sign Admin"
+     C -> Pub: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                    "Check signature Admin"
      T -> Pub: vote                                                                    "VotePublished"
   }
 */
@@ -46,30 +46,35 @@ rule Register_Voter_pk2:
   [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v2', ~ltkV), !Pk('v2', pk(~ltkV)), Out(pk(~ltkV)) ]
 
 rule Register_Admin_pk:
-  [ Fr(~ltkA) ] --[  ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(~ltkA) ]
+  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(~ltkA) ]
 
 
-//Rules
+// Generates votes
+
+rule setup:
+  [  ]
+  --[ OnlyOnce() ]->
+  [ Vote1( diff($candA, $candB) ), Vote2( diff($candB, $candA) ) ]
+
+// Rules
 
 rule V_1_1:
-  let vote = diff($candA, $candB)
-      x = tdcommit( vote, ~r, ~td )
+  let x = tdcommit( $vote, ~r, ~td )
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( 'v1', ~ltkV ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( $vote ), !Ltk( 'v1', ~ltkV ) ]
   --[ V_1_1( ) ]->
-    [ Out( < e , s > ), St_V_1( 'v1', vote, ~r, ~b, ~td ) ]
+    [ Out( < e , s > ), St_V_1( 'v1', $vote, ~r, ~b, ~td ) ]
 
 rule V_1_2:
-  let vote = diff($candB, $candA)
-      x = tdcommit( vote , ~r, ~td )
+  let x = tdcommit( $vote , ~r, ~td )
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( 'v2', ~ltkV ) ]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote2( $vote ), !Ltk( 'v2', ~ltkV ) ]
   --[ V_1_2( ) ]->
-    [ Out( < e , s > ), St_V_1( 'v2', vote, ~r, ~b, ~td )]
+    [ Out( < e , s > ), St_V_1( 'v2', $vote, ~r, ~b, ~td )]
 
 rule V_2:
   let e = blind(tdcommit($vote,~r,~td),~b)
@@ -81,7 +86,7 @@ rule V_2:
 
 rule V_2_sync:   
     [ St_V_sync( 'v1', pkA, $vote1, ~r1, ~td1 ), St_V_sync( 'v2', pkA, $vote2, ~r2, ~td2 ) ]
-  --[ V_2_sync( ), UniqueFact()]->     
+  --[ V_2_sync( ) ]->     
     [ St_V_3( 'v1', pkA, $vote1, ~r1, ~td1 ),St_V_3( 'v2', pkA, $vote2, ~r2, ~td2 ) ]
 
 rule V_3:    
@@ -105,8 +110,8 @@ rule select_vote:
 
 // Axioms
 
-axiom unique:
-  "All  #i #j. UniqueFact() @i & UniqueFact() @j ==> #i = #j"
+axiom onlyOnce:
+  "All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i=#j"
 
 axiom select_limited_votes:
   "All a b c d #i. Select_vote(a+b+c+d)@i ==> F"
@@ -116,14 +121,7 @@ axiom select_limited_votes:
 
 lemma exec:
   exists-trace
-  " Ex x y #i #j. Select_vote(x+y)@i & Select_vote(x)@j "
+  " Ex x y #i #j. Select_vote(x+y)@i & Select_vote(x)@j & not(#i=#j) "
 
-lemma exec2:
-  exists-trace
-  " Ex #j. T_1_sync( )@j "
-
-lemma exec3:
-  exists-trace
-  " Ex #j. V_2_sync( )@j "
 
 end

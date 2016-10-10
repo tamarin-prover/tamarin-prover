@@ -7,7 +7,7 @@ begin
  * Modeler: Charles Duménil
  * Date: July 2016	
  * Source: Formal verification of voting and auction protocols by Jannik Dreier
- * Status: Work in progress, last equation need to be fixed
+ * Status: Working
  */
 
 
@@ -16,12 +16,12 @@ begin
     Phase 1:
      V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV) >    " v1( diff(candA,candB) ) & v2( diff(candB,candA) ) "
      V1 -> Pub: < candA, f(vote, r, td, candA), td > 
-     A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check sign Voter"
+     A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check signature Voter"
     Phase 2:
-     V -> C: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                      "Check sign Admin" + "Check commit"
+     V -> C: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                      "Check signature Admin" + "Check commitment"
      V -> T: <vote, r, x>
     Phase 3
-     C -> Pub: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                    "Check sign Admin"
+     C -> Pub: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                    "Check signature Admin"
      T -> Pub: vote                                                                    "VotePublished"
   }
 */
