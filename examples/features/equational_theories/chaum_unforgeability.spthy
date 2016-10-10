@@ -17,15 +17,15 @@ begin
      C -> B: blind(x,r)
      B -> C: sign(blind(x,r),skB)    "Withdraw"
     Payment and deposit phase
-     C -> S: <x, sign(x,skB)>        "Check sign"
-     S -> B: <x, sign(x,skB)>        "Check sign" 
-     B -> S: Private(x)              "Check sign" + "Deposite"
+     C -> S: <x, sign(x,skB)>        "Check signature"
+     S -> B: <x, sign(x,skB)>        "Check signature" 
+     B -> S: Private(x)              "Check signature" + "Deposit"
      S     :                         "Spend"
   }
 */
 
 /* Comments:
-   x is imposed as fresh message in B_1 and S_1 to model that the bank, respectively the seller, verify the nature of the received message (cut-and-choose).
+   x is imposed as a fresh value in B_1 and S_1 to model that the bank, respectively the seller, verifies the nature of the received message (e.g. using a ZKP).
 */
 
 builtins: signing
@@ -59,12 +59,12 @@ rule B_1:
 //Payment and deposit phase
 
 rule C_2:
- let s = unblind(sb,r)
-     verif = verify( sb, blind(x,r), pkB)
+ let s = unblind(sb,~r)
+     verif = verify( sb, blind(~x,~r), pkB)
   in
-    [ St_C_1( $C, x, r ), In( sb ), !Bank_Pk(B, pkB) ]
+    [ St_C_1( $C, ~x, ~r ), In( sb ), !Bank_Pk(B, pkB) ]
   --[ Eq( verif, true  )]->
-    [ Out( <x,s> ) ]
+    [ Out( <~x,s> ) ]
 
 rule S_1:
   let verif = verify( s, x1 , pkB )

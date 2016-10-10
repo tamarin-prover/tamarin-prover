@@ -15,12 +15,12 @@ begin
   Protocol FOO {                                 ( Administration and collector are considered corrupted )
     Phase 1:
      V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV) >      " v1( diff(A,B) ) & v2( diff(B,A) ) "
-     A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) >      "Registered" + "Check sign Voter"
+     A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) >      "Registered" + "Check signature Voter"
     Phase 2:
-     V -> C: < commit(vote,r), sign(commit(vote,r),ltkA) >                 "Check sign Admin" + "Check commit"
+     V -> C: < commit(vote,r), sign(commit(vote,r),ltkA) >                 "Check signature Admin" + "Check commitment"
     Phase 3:
-     C -> Pub: < commit(vote,r), sign(commit(vote,r),ltkA) >               "Check sign Admin"
-     V -> C:  r                                                            "Check commit"
+     C -> Pub: < commit(vote,r), sign(commit(vote,r),ltkA) >               "Check signature Admin"
+     V -> C:  r                                                            "Check commitment"
      C -> Pub: v                                                           "VotePublished" + "Check r"
   }
 */

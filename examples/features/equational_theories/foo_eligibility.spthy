@@ -15,12 +15,12 @@ begin
   Protocol FOO {
     Phase 1:
      V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV) >
-     A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) >      "Registered" + "Check sign Voter"
+     A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) >      "Registered" + "Check signature Voter"
     Phase 2:
-     V -> C: < commit(vote,r), sign(commit(vote,r),ltkA) >                 "Check sign Admin" + "Check commit"
+     V -> C: < commit(vote,r), sign(commit(vote,r),ltkA) >                 "Check signature Admin" + "Check commitment"
     Phase 3:
-     C -> Pub: < commit(vote,r), sign(commit(vote,r),ltkA) >               "Check sign Admin"
-     V -> C:  r                                                            "Check commit"
+     C -> Pub: < commit(vote,r), sign(commit(vote,r),ltkA) >               "Check signature Admin"
+     V -> C:  r                                                            "Check commitment"
      C -> Pub: v                                                           "VotePublished" + "Check r"
   }
 */
@@ -41,7 +41,7 @@ rule Register_Voter_pk:
 rule Register_Admin_pk:
   [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
-//Rules
+// Rules
 
 rule V_1:
   let x = commit( $vote , ~r )
@@ -116,7 +116,7 @@ lemma exec:
 
 // Property
 
-lemma elligibility:
+lemma eligibility:
   " 
   All vote #j.
   VotePublished (vote) @ j
