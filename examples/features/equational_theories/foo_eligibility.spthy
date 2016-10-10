@@ -26,11 +26,11 @@ begin
 */
 
 
-builtins: signing
-functions: blind/2, unblind/2, open/2, commit/2
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, commit/2
 equations: open(commit(m,r),r) = m,
            unblind(blind(m,r),r) = m,
-           unblind(sign(blind(m,r),sk),r)=sign(m,sk)
+           unblind(sign(blind(m,r),sk),r) = sign(m,sk),
+           checksign(sign(m,k),pk(k)) = m
 
 
 // Public key infrastructure
@@ -54,45 +54,43 @@ rule V_1:
 
 rule A_1:
   let d = sign( e, ~ltkA )
-      verif = verify( s,e, pkV)
   in
-    [ In( <e,s> ), !AdminLtk( A, ~ltkA ), !Pk( V, pkV ) ]
-  --[ Eq( verif, true ) ,  Registered(e), In_A_1(e) ]->
+    [ In( <e,sign(e,~ltkV)> ), !AdminLtk( A, ~ltkA ), !Ltk( V, ~ltkV ) ]
+  --[ Registered(e), In_A_1(e) ]->
     [ Out(  <e,d>  ) ]
 
 rule V_2:    // Check Admin_Signature & Check the commit 
-  let y = unblind(d,~b)
+  let e = blind(commit(vote,~r),~b)
+      d = sign(blind(commit(vote,~r),~b),~ltkA)
+      y = sign(commit(vote,~r),~ltkA)
       x = commit(vote,~r)
-      verif = verify( d, e, pkA)
   in
-    [ In( <e,d> ), St_V_1( V, vote, ~r, ~b),  !AdminPk(A, pkA) ]
-  --[ Eq( verif, true ) , Eq( e, blind(commit(vote,~r),~b) ) ]->     
-    [ Out( <x,y> ) , St_V_2( V, A, vote, ~r ) ]
+    [ In( <e,sign(e,~ltkA)> ), St_V_1( V, vote, ~r, ~b),  !AdminLtk(A, ~ltkA) ]
+  --[ ]->     
+    [ Out( <x,y> ), St_V_2( V, A, vote, ~r ) ]
 
 rule C_1:
-  let verif = verify( y, x, pkA)
+  let y = sign(x,~ltkA)
   in
-    [ In( <x,y> ), !AdminPk(A, pkA)]
-  --[ Eq( verif, true ) ]->
+    [ In( <x,y> ), !AdminLtk(A, ~ltkA)]
+  --[ ]->
     [ St_C_1( A, x), Out(<x,y>) ]
 
 rule V_3:
+  let x = commit(vote,~r)
+  in
     [ In( x ), St_V_2(V, A, vote, ~r )]
-  --[ Eq( x, commit(vote,~r) ) ]->
+  --[ ]->
     [ Out( ~r ) ]
 
 rule C_2:
-  let v = open( x, r)
+  let v = open(x, r)
+      x = commit(open(x,r),r)
   in
     [ In( r ), St_C_1( A, x ) ]
-  --[ Eq ( x, commit(open(x,r),r) ), VotePublished( v ), Out_C_2(x) ]->
+  --[ VotePublished( v ), Out_C_2(x) ]->
     [ Out( v ) ]
 
-
-// Axioms
-
-axiom Equality:
-"All x y #i. Eq(x,y) @i ==> x = y"
 
 
 // typing lemma
