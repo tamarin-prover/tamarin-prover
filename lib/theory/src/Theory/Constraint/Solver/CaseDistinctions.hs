@@ -132,7 +132,9 @@ solveAllSafeGoals ths' =
     safeGoal _       _          (_,   (_, LoopBreaker)) = False
     safeGoal doSplit chainsLeft (goal, _              ) =
       case goal of
-        ChainG _ _    -> (chainsLeft > 0)
+        ChainG _ _    -> if (chainsLeft > 0) 
+                            then True 
+                            else (trace "Stopping precomputation, too many chain goals." False)
         ActionG _ fa  -> not (isKUFact fa)
         PremiseG _ fa -> not (isKUFact fa)
         DisjG _       -> doSplit
@@ -169,10 +171,10 @@ solveAllSafeGoals ths' =
             usefulGoals     = fst <$> filter usefulGoal goals
             nextStep :: Maybe (Reduction [String], Maybe CaseDistinction)
             nextStep     =
-                ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay ({-trace ("Prem" ++ show kdPremGoals)-} kdPremGoals)) <|>
-                ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay ({-trace ("Safe" ++ show safeGoals)-} safeGoals)) <|>
+                ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay (kdPremGoals)) <|>
+                ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay (safeGoals)) <|>
                 (asum $ map (solveWithCaseDistinctionAndReturn ctxt ths) usefulGoals)
-        case ({-showMe-} nextStep) of
+        case nextStep of
           Nothing   -> return caseNames
           Just (step, Nothing) -> (\x -> solve ths (caseNames ++ x) (remainingChains safeGoals)) =<< step
           Just (step, Just usedCase) -> (\x -> solve (filterCases usedCase ths) (caseNames ++ x) (remainingChains safeGoals)) =<< step
@@ -180,9 +182,6 @@ solveAllSafeGoals ths' =
     filterCases :: CaseDistinction -> [CaseDistinction] -> [CaseDistinction]
     filterCases usedCase cds = filter (\x -> usedCase /= x) cds
 
-    showMe (Nothing)                    = trace "bingo Nothing"      (Nothing)
-    showMe (Just (step, Nothing))       = trace "bingo Just Nothing" (Just (step, Nothing))
-    showMe (Just (step, Just usedCase)) = trace "bingo Just Just"    (Just (step, Just usedCase))
 
 ------------------------------------------------------------------------------
 -- Redundant Case Distinctions                                              --

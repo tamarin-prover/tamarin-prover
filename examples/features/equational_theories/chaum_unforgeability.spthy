@@ -105,6 +105,23 @@ lemma unforgeability:
   ==> 
   ( Ex #i. Withdraw( x )@i & #i < #j & not (Ex #l. Spend(x)@l & not ( #l = #j ) ) ) "
 
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equational_theories/chaum_unforgeability.spthy
+
+  exec (exists-trace): verified (5 steps)
+  unforgeability (all-traces): verified (10 steps)
+
+==============================================================================
+
+real	0m4.847s
+user	0m26.486s
+sys	0m7.261s
+
+*/
 
 end
 
