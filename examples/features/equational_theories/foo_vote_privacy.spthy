@@ -51,26 +51,18 @@ rule Register_Admin_pk:
 rule setup:
   [  ]
   --[ OnlyOnce() ]->
-  [ Vote1( diff($yes, $no) ), Vote2( diff($no, $yes) ) ]
+  [ Vote('v1', diff($yes, $no) ), Vote('v2', diff($no, $yes) ) ]
 
 
 // Rules
 
-rule V_1_1:
+rule V_1:
   let e = blind( commit( $vote , ~r ), ~b )
       s = sign ( blind( commit( $vote , ~r ), ~b ) , ~ltkV1 )
 in
-    [ Fr( ~r ), Fr( ~b ), Vote1($vote), !Ltk( 'v1', ~ltkV1 )]
-  --[ V_1_1( ) ]->
-    [ Out( < e , s > ), St_V_1( 'v1', $vote, ~r, ~b )]
-
-rule V_1_2:
-  let e = blind( commit( $vote , ~r ), ~b )
-      s = sign ( blind( commit( $vote , ~r ), ~b ) , ~ltkV2 )
-in
-    [ Fr( ~r ), Fr( ~b ), Vote2($vote), !Ltk( 'v2', ~ltkV2 )]
-  --[ V_1_2( ) ]->
-    [ Out( < e , s > ), St_V_1( 'v2', $vote, ~r, ~b )]
+    [ Fr( ~r ), Fr( ~b ), Vote( V, $vote ), !Ltk( V, ~ltkV1 )]
+  --[ V_1( V ) ]->
+    [ Out( < e , s > ), St_V_1( V, $vote, ~r, ~b )]
 
 rule V_2:
   let e = blind(commit($vote,~r),~b)

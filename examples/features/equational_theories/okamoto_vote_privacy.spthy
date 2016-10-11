@@ -54,27 +54,18 @@ rule Register_Admin_pk:
 rule setup:
   [  ]
   --[ OnlyOnce() ]->
-  [ Vote1( diff($candA, $candB) ), Vote2( diff($candB, $candA) ) ]
+  [ Vote('v1', diff($candA, $candB) ), Vote('v2', diff($candB, $candA) ) ]
 
 // Rules
 
-rule V_1_1:
+rule V_1:
   let x = tdcommit( $vote, ~r, ~td )
       e = blind( x, ~b )
       s = sign ( e , ~ltkV )
   in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( $vote ), !Ltk( 'v1', ~ltkV ) ]
-  --[ V_1_1( ) ]->
-    [ Out( < e , s > ), St_V_1( 'v1', $vote, ~r, ~b, ~td ) ]
-
-rule V_1_2:
-  let x = tdcommit( $vote , ~r, ~td )
-      e = blind( x, ~b )
-      s = sign ( e , ~ltkV )
-  in
-    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote2( $vote ), !Ltk( 'v2', ~ltkV ) ]
-  --[ V_1_2( ) ]->
-    [ Out( < e , s > ), St_V_1( 'v2', $vote, ~r, ~b, ~td )]
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote( V, $vote ), !Ltk( V, ~ltkV ) ]
+  --[ V_1( v ) ]->
+    [ Out( < e , s > ), St_V_1( V, $vote, ~r, ~b, ~td ) ]
 
 rule V_2:
   let e = blind(tdcommit($vote,~r,~td),~b)
