@@ -117,9 +117,9 @@ analyzed: examples/features/equational_theories/chaum_unforgeability.spthy
 
 ==============================================================================
 
-real	0m4.847s
-user	0m26.486s
-sys	0m7.261s
+real	0m0.163s
+user	0m0.260s
+sys	0m0.056s
 
 */
 

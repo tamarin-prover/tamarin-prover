@@ -64,7 +64,7 @@ rule V_1:
       s = sign ( e , ~ltkV )
   in
     [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote( V, $vote ), !Ltk( V, ~ltkV ) ]
-  --[ V_1( v ) ]->
+  --[ V_1( V ) ]->
     [ Out( < e , s > ), St_V_1( V, $vote, ~r, ~b, ~td ) ]
 
 rule V_2:
@@ -114,5 +114,24 @@ lemma exec:
   exists-trace
   " Ex x y #i #j. Select_vote(x+y)@i & Select_vote(x)@j & not(#i=#j) "
 
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equational_theories/okamoto_vote_privacy.spthy
+
+  RHS :  exec (exists-trace): verified (12 steps)
+  LHS :  exec (exists-trace): verified (12 steps)
+  DiffLemma:  Observational_equivalence : verified (3329 steps)
+
+==============================================================================
+
+real	1m35.338s
+user	3m31.276s
+sys	1m12.144s
+
+*/
 
 end
+

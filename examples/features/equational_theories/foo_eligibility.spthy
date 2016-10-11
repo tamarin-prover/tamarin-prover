@@ -121,6 +121,24 @@ lemma eligibility:
   ==> 
   ( Ex r b #i.  Registered(blind(commit(vote,r),b)) @ i & #i < #j )"
 
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equational_theories/foo_eligibility.spthy
+
+  types (all-traces): verified (32 steps)
+  exec (exists-trace): verified (9 steps)
+  eligibility (all-traces): verified (9 steps)
+
+==============================================================================
+
+real	0m11.061s
+user	0m24.424s
+sys	0m10.584s
+
+*/
 
 end
 

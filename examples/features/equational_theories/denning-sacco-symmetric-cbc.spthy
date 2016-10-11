@@ -66,5 +66,23 @@ lemma executable:
 lemma sessionsmatch:
   "All A B k #i. KeySharedResp(B,A,k)@i ==> (Ex #j. KeySharedInit(A,B,k)@j) |  (Ex #j. Reveal(B)@j)  |  (Ex #j. Reveal(A)@j) "
 
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equational_theories/denning-sacco-symmetric-cbc.spthy
+
+  executable (exists-trace): verified (8 steps)
+  sessionsmatch (all-traces): falsified - found trace (4 steps)
+
+==============================================================================
+
+real	0m0.307s
+user	0m0.636s
+sys	0m0.216s
+
+*/
+
 end
 

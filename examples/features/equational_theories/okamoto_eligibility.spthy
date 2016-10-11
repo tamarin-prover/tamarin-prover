@@ -111,6 +111,24 @@ lemma eligibility:
   ==> 
   ( Ex b #i.  Registered( blind(x,b) )@i & #i < #j )"
 
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equational_theories/okamoto_eligibility.spthy
+
+  types (all-traces): verified (16 steps)
+  exec (exists-trace): verified (6 steps)
+  eligibility (all-traces): verified (5 steps)
+
+==============================================================================
+
+real	0m7.749s
+user	0m18.512s
+sys	0m7.004s
+
+*/
 
 end
 

@@ -79,6 +79,23 @@ lemma executable:
 lemma secrecy:
   "All A B k n #i. KeySharedRespConfirmed(B,A,k,n)@i ==> not (Ex #j. K(k)@j ) |  (Ex #j. Reveal(B)@j)  |  (Ex #j. Reveal(A)@j)  "
 
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equational_theories/needham-schroeder-symmetric-cbc.spthy
+
+  executable (exists-trace): verified (11 steps)
+  secrecy (all-traces): falsified - found trace (8 steps)
+
+==============================================================================
+
+real	0m22.330s
+user	1m8.936s
+sys	0m14.120s
+
+*/
 
 end
 
