@@ -1,0 +1,70 @@
+theory dsscbc begin
+
+/*
+ * Protocol: Denning-Sacco with 'prefix property'
+ * Modeler: Ralf Sasse
+ * Date: October 2016	
+ * Source: "A Survey of Algebraic Properties Used in Cryptographic Protocols" (Cortier, Delaune, Lafourcade)
+ * Status: working (attack)
+ */
+
+/* 
+
+ Protocol:
+ 
+ 1. A -> S: A, B
+ 2. S -> A: {B, Kab, T, {A, Kab, T}Kbs}Kas
+ 3. A -> B: {A, Kab, T}Kbs
+ // we will ignore the "T", it does nothing for us
+
+*/
+
+functions: enc/2, dec/2, prefix/1
+equations: dec(enc(M,k), k) = M
+         , prefix(enc(<X,Y>, k)) = enc(X, k)
+
+rule setup:
+  [ Fr(~k) ]
+--[ KeyGen($A) ]->
+  [ !SharedKeyWithServer($A, ~k) ]
+
+rule reveal:
+  [ !SharedKeyWithServer(X, k) ]
+--[ Reveal(X) ]->
+  [ Out(k) ]
+
+rule Initiator1:
+  []
+--[ Initate($A,$B) ]->
+  [ InitiatorRequested($A,$B), Out(<$A, $B>) ]
+
+rule Initiator2:
+  let X = enc(<$A,~k>,kbs) in // this allows initiator to check that server generated the key for the partner correctly which is unrealistic but as long as we still find an attack that is ok.
+  [ InitiatorRequested($A,$B), !SharedKeyWithServer($A, kas), In(enc(<<$B, ~k> , X>, kas)) 
+  , !SharedKeyWithServer($B, kbs)
+  ]
+--[ KeySharedInit($A,$B,~k) ]->
+  [ Out(X) ]
+
+rule Responder:
+  [ In(enc(<$A,~k>, kbs)), !SharedKeyWithServer($B,kbs) ]
+--[ KeySharedResp($B,$A,~k) ]->
+  [ ]
+
+rule Server:
+  [ In(<$A,$B>), Fr(~k), !SharedKeyWithServer($A,kas), !SharedKeyWithServer($B,kbs)  ]
+--[ CreatedKey($A,$B,~k) ]->
+  [ Out(enc(<<$B,~k>,enc(<$A,~k>,kbs)>, kas)) ]
+
+axiom singlesharedkeyperuser:
+  "All A #i #j. KeyGen(A) @ i & KeyGen(A) @ j ==> #i = #j"
+
+lemma executable:
+  exists-trace "Ex A B k #i #j. KeySharedInit(A,B,k)@i & KeySharedResp(B,A,k)@j"
+
+// an attack for this is found, as expected
+lemma sessionsmatch:
+  "All A B k #i. KeySharedResp(B,A,k)@i ==> (Ex #j. KeySharedInit(A,B,k)@j) |  (Ex #j. Reveal(B)@j)  |  (Ex #j. Reveal(A)@j) "
+
+end
+
