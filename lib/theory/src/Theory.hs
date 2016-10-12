@@ -298,7 +298,10 @@ closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 closeIntrRule :: MaudeHandle -> IntrRuleAC -> IntrRuleAC
 closeIntrRule hnd (Rule (DestrRule name (-1)) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts)  =
     (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
-                              then (length (positions t)) - 2
+                              then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
+                              -- We do not need to count t itself, hence - 1.
+                              -- If t is a private function symbol we need to permit one more rule 
+                              -- application as there is no associated constructor.
                               else 0)) prems concs acts)
         where
            runMaude = (`runReader` hnd)

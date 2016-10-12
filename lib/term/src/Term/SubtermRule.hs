@@ -35,6 +35,7 @@ data StRhs = StRhs [Position] LNTerm
     deriving (Show,Ord,Eq)
 
 -- | A context subterm rewrite rule.
+--   The left hand side as a LNTerm, and a StRHS.
 data CtxtStRule = CtxtStRule LNTerm StRhs
     deriving (Show,Ord,Eq)
 

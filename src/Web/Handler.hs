@@ -76,7 +76,6 @@ import           Web.Theory
 import           Web.Types
 
 import           Yesod.Core
-import           Yesod.Json()
 
 import           Control.Monad.Trans.Resource (runResourceT)
 

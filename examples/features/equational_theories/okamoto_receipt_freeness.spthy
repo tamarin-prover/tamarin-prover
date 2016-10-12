@@ -6,7 +6,7 @@ begin
  * Protocol: Protocol by Okamoto (Receipt-Freeness)
  * Modeler: Charles Duménil
  * Date: July 2016	
- * Source: Formal verification of voting and auction protocols by Jannik Dreier
+ * Source: "Formal verification of voting and auction protocols" by Jannik Dreier
  * Status: Working
  */
 
@@ -67,7 +67,7 @@ rule V_1_1:
   in
     [ Fr( ~r ), Fr( ~b ), Fr(~td), Vote1( $vote ), !Ltk( 'v1', ~ltkV ) ]
   --[ V_1_1( ) ]->
-    [ Out( < e , s > ), St_V_1( 'v1', $vote, ~r, ~b, ~td ), Out(< $candA, f($vote, ~r, ~td, $candA), ~td >) ]
+    [ Out( < e , s > ), St_V_1( 'v1', $vote, ~r, ~b, ~td ), Out(< $candA, f($vote, ~r, ~td, $candA), ~td, ~b, ~ltkV >) ]
 
 rule V_1_2:
   let x = tdcommit( $vote , ~r, ~td )
@@ -125,5 +125,24 @@ lemma exec:
   exists-trace
   " Ex x y #i #j. Select_vote(x+y)@i & Select_vote(x)@j & not(#i=#j) "
 
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equational_theories/okamoto_receipt_freeness.spthy
+
+  RHS :  exec (exists-trace): verified (12 steps)
+  LHS :  exec (exists-trace): verified (12 steps)
+  DiffLemma:  Observational_equivalence : verified (5982 steps)
+
+==============================================================================
+
+real	2m46.666s
+user	5m51.540s
+sys	2m12.060s
+
+*/
 
 end
+

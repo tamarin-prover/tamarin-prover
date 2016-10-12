@@ -4,6 +4,5 @@ packages:
 - lib/theory/
 - lib/term/
 - lib/utils/
-extra-deps: 
-- yesod-json-1.2.0
+extra-deps: []
 resolver: lts-6.19

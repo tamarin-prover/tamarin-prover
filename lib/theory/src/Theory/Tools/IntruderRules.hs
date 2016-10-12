@@ -23,12 +23,12 @@ module Theory.Tools.IntruderRules (
   , isDPMultRule
   ) where
 
-import           Control.Basics
+import           Control.Basics hiding (empty)
 import           Control.Monad.Reader
 
 import           Data.List
-import qualified Data.Set                        as S
-import           Data.ByteString (ByteString)
+import qualified Data.Set                          as S
+import           Data.ByteString.Char8 (ByteString, append, pack, empty)
 
 import           Extension.Data.Label
 
@@ -103,27 +103,26 @@ specialIntruderRules diff =
 -- | @destuctionRules diff st@ returns the destruction rules for the given
 -- context subterm rule @st@
 destructionRules :: Bool -> CtxtStRule -> [IntrRuleAC]
-destructionRules _    (CtxtStRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (StRhs (pos:[]) rhs)) =
-    go [] lhs pos
+destructionRules _    (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs)) =
+    go [] lhs pos empty
   where
-    go _      _                       []     = []
+    go _      _                       []     _ = []
     -- term already in premises
-    go _      (viewTerm -> FApp _ _)  (_:[]) = []
-    go uprems (viewTerm -> FApp _ as) (i:p)  =
-        irule ++ go uprems' t' p
+    go _      (viewTerm -> FApp _ _)  (_:[]) _ = []
+    go uprems (viewTerm -> FApp (NoEq (f,_)) as) (i:p) n  =
+        irule ++ go uprems' t' p (append n f)
       where
         uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
         t'      = as!!i
         irule = if (t' /= rhs && rhs `notElem` uprems')
-                then [ Rule (DestrRule f (-1))
+                then [ Rule (DestrRule (append n f) (-1))
                             ((kdFact  t'):(map kuFact uprems'))
                             [kdFact rhs] [] ]
                 else []
-    go _      (viewTerm -> Lit _)     (_:_)  =
+    go _      (viewTerm -> Lit _)     (_:_)  _ =
         error "IntruderRules.destructionRules: impossible, position invalid"   
      
 destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) = destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
-
 destructionRules _    (CtxtStRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs
 destructionRules True (CtxtStRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Public)))  []))) = destrRulesForConstant subterms f rhs
 destructionRules _    _                                                                                                              = []
