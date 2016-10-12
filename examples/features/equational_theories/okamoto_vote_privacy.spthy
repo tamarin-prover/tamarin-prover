@@ -123,13 +123,13 @@ analyzed: examples/features/equational_theories/okamoto_vote_privacy.spthy
 
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
-  DiffLemma:  Observational_equivalence : verified (3329 steps)
+  DiffLemma:  Observational_equivalence : verified (3332 steps)
 
 ==============================================================================
 
-real	1m35.338s
-user	3m31.276s
-sys	1m12.144s
+real	1m20.280s
+user	3m2.636s
+sys	1m4.012s
 
 */
 

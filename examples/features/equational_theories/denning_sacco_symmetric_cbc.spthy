@@ -71,17 +71,16 @@ lemma sessionsmatch:
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/equational_theories/denning-sacco-symmetric-cbc.spthy
+analyzed: examples/features/equational_theories/denning_sacco_symmetric_cbc.spthy
 
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 
 ==============================================================================
 
-real	0m0.307s
-user	0m0.636s
-sys	0m0.216s
-
+real	0m0.304s
+user	0m0.644s
+sys	0m0.164s
 */
 
 end

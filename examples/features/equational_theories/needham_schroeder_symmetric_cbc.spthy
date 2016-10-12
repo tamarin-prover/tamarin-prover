@@ -84,16 +84,16 @@ lemma secrecy:
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/equational_theories/needham-schroeder-symmetric-cbc.spthy
+analyzed: examples/features/equational_theories/needham_schroeder_symmetric_cbc.spthy
 
   executable (exists-trace): verified (11 steps)
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================
 
-real	0m22.330s
-user	1m8.936s
-sys	0m14.120s
+real	0m24.074s
+user	1m11.616s
+sys	0m15.324s
 
 */
 

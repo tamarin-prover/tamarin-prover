@@ -88,13 +88,13 @@ analyzed: examples/features/equational_theories/chaum_strong_anonymity.spthy
 
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
-  DiffLemma:  Observational_equivalence : verified (2766 steps)
+  DiffLemma:  Observational_equivalence : verified (2769 steps)
 
 ==============================================================================
 
-real	1m16.509s
-user	2m54.632s
-sys	1m2.956s
+real	1m13.664s
+user	2m47.712s
+sys	1m2.692s
 
 */
 

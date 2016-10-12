@@ -134,13 +134,13 @@ analyzed: examples/features/equational_theories/okamoto_receipt_freeness.spthy
 
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
-  DiffLemma:  Observational_equivalence : verified (5982 steps)
+  DiffLemma:  Observational_equivalence : verified (19691 steps)
 
 ==============================================================================
 
-real	2m46.666s
-user	5m51.540s
-sys	2m12.060s
+real	13m35.837s
+user	27m36.308s
+sys	10m51.384s
 
 */
 

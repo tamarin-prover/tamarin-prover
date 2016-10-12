@@ -134,9 +134,9 @@ analyzed: examples/features/equational_theories/foo_eligibility.spthy
 
 ==============================================================================
 
-real	0m11.061s
-user	0m24.424s
-sys	0m10.584s
+real	0m10.292s
+user	0m22.792s
+sys	0m10.180s
 
 */
 

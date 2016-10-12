@@ -124,9 +124,9 @@ analyzed: examples/features/equational_theories/okamoto_eligibility.spthy
 
 ==============================================================================
 
-real	0m7.749s
-user	0m18.512s
-sys	0m7.004s
+real	0m8.367s
+user	0m19.356s
+sys	0m7.120s
 
 */
 
