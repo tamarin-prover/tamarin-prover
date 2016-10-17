@@ -1,4 +1,4 @@
-theory Chaum_Weak_Anonymity
+theory Chaum_Untraceability
 begin
 
 
@@ -14,10 +14,10 @@ begin
 /*
   Protocol Chaum {                          ( Seller and bank are considered corrupted )
     Withdrawal phase
-     C -> B: blind(x,r)                                           " c1(x1) & c2(x2) "
+     C -> B: blind(x,r)                                            " c1(x1,x3) & c2(x2,x4) "
      B -> C: sign(blind(x,r),skB)    "Withdraw"
     Payment and deposit phase
-     C -> S: <x, sign(x,skB)>        "Check signature"            " Out( diff( x1, x2 ) ) "
+     C -> S: <x, sign(x,skB)>        "Check signature"             " Out( x1, x2, diff( x3, x4 ) ) "
      S -> B: <x, sign(x,skB)>        "Check signature" 
      B -> S: Private(x)              "Check signature" + "Deposit"
      S     :                         "Spend"
@@ -33,10 +33,10 @@ equations: checksign( sign(m,k),pk(k) ) = m,
 
 // Public key infrastructure
 
-rule Register_Corrupted_Bank_pk:
+rule Register_Bank_pk:
   [ Fr(~ltkB) ]
   --[ OnlyOnce() ]->
-  [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(~ltkB) ]
+  [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(<~ltkB>) ]
 
 
 // Withdrawal Phase
@@ -48,23 +48,23 @@ rule C_1_1:
 
 rule C_1_2:
     [ Fr(~x), Fr(~r) ]
-  --[ ]->
+  --[  ]->
     [ Out( blind(~x,~r) ), St_C_1('c2', ~x, ~r )]
 
 
 // Payment and deposit phase
 
 rule C_2:
-  let s = unblind(sign(blind(~x,~r), ~skB),~r)
+  let s = unblind(sign(blind(~x, ~r), ~skB),~r)
   in
     [ St_C_1(C, ~x, ~r ), In( sign(blind(~x,~r), ~skB) ), !Bank_Pk($B, pk(~skB)) ]
   --[  ]->
     [ St_C_2(C, ~x, s ) ]
 
 rule C_2sync:
-    [ St_C_2('c1', x1,  s1 ), St_C_2('c2', x2, s2 ) ]
+    [ St_C_2('c1', x1,  s1 ),St_C_2('c2', x2, s2 ),St_C_2('c1', x3, s3 ),St_C_2('c2', x4, s4 ) ]
   --[ Finish() ]->
-    [ Out(diff(< x1, s1 >,< x2, s2 >)) ]
+    [ Out(< x1, s1 >), Out(< x2, s2 >), Out(diff(< x3, s3 >,< x4, s4 >)) ]
 
 
 // Axioms
@@ -84,17 +84,17 @@ lemma exec:
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/equational_theories/chaum_weak_anonymity.spthy
+analyzed: examples/features/equational_theories/chaum_untraceability.spthy
 
-  RHS :  exec (exists-trace): verified (9 steps)
-  LHS :  exec (exists-trace): verified (9 steps)
-  DiffLemma:  Observational_equivalence : verified (673 steps)
+  RHS :  exec (exists-trace): verified (15 steps)
+  LHS :  exec (exists-trace): verified (15 steps)
+  DiffLemma:  Observational_equivalence : verified (2769 steps)
 
 ==============================================================================
 
-real	0m7.634s
-user	0m15.796s
-sys	0m6.416s
+real	1m13.664s
+user	2m47.712s
+sys	1m2.692s
 
 */
 
