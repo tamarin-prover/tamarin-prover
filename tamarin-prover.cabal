@@ -109,10 +109,6 @@ executable tamarin-prover
         ghc-options:   -threaded -eventlog 
     
     -- -XFlexibleInstances
-    -- Note that eager blackholing lead to segfaults: See GHC Ticket #6146
-    -- Morevoer, it seems that the bug is not fully fixed on GHC 7.4.2, as we
-    -- still get segfaults: see GHC Ticket #7076.
-    -- Therefore, we do not use -feager-blackholing (yet).
 
     ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing
     ghc-prof-options:  -auto-all
