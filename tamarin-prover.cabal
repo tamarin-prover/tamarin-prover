@@ -114,7 +114,7 @@ executable tamarin-prover
     -- still get segfaults: see GHC Ticket #7076.
     -- Therefore, we do not use -feager-blackholing (yet).
 
-    ghc-options:       -Wall -fwarn-tabs -rtsopts
+    ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing
     ghc-prof-options:  -auto-all
 
     -- Parallelize by default. Only activated for GHC 7.4, as this flag was
