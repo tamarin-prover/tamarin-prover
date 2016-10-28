@@ -767,7 +767,7 @@ showLitName (Var (LVar v s i))       = "Var_" ++ sortSuffix s ++ "_" ++ body
       where
         body | null v           = show i
              | i == 0           = v
-             | otherwise        = v ++ "." ++ show i
+             | otherwise        = show i ++ "_" ++ v
 
 -- derived instances
 --------------------
