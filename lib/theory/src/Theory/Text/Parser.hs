@@ -152,17 +152,19 @@ binaryAlgApp plit = do
     op <- identifier
     (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm plit)
-    arg2 <- term plit
+    arg2 <- term plit False
     when (k /= 2) $ fail $
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
-diffOp :: Ord l => Parser (Term l) -> Parser (Term l)
-diffOp plit = do
+diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+diffOp eqn plit = do
   ts <- symbol "diff" *> parens (commaSep (multterm plit))
   when (2 /= length ts) $ fail $
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState
+  when eqn $ fail $
+    "diff operator not allowed in equations"
   when (not diff) $ fail $
     "diff operator found, but flag diff not set"
   let arg1 = head ts
@@ -170,8 +172,8 @@ diffOp plit = do
   return $ fAppDiff (arg1, arg2)
 
 -- | Parse a term.
-term :: Ord l => Parser (Term l) -> Parser (Term l)
-term plit = asum
+term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
+term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (multterm plit)
     , symbol "1" *> pure fAppOne
@@ -181,7 +183,7 @@ term plit = asum
     ]
     <?> "term"
   where
-    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp]
+    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp eqn]
     pairing = angled (tupleterm plit)
     nullaryApp = do
       maudeSig <- getState
@@ -206,8 +208,8 @@ msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
 msetterm plit = do
     mset <- enableMSet <$> getState
     if mset -- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (term plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
-        else term plit
+        then chainl1 (term plit False) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        else term plit False
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -619,13 +621,10 @@ diffProofMethod = asum
 -- | Parse a diff proof skeleton.
 diffProofSkeleton :: Parser DiffProofSkeleton
 diffProofSkeleton =
-    solvedProof {-<|> attackProof-} <|> finalProof <|> interProof
+    solvedProof <|> finalProof <|> interProof
   where
     solvedProof =
         symbol "MIRRORED" *> pure (LNode (DiffProofStep DiffMirrored ()) M.empty)
-
---     attackProof =
---         symbol "ATTACK" *> pure (LNode (DiffProofStep DiffAttack ()) M.empty)
         
     finalProof = do
         method <- symbol "by" *> diffProofMethod
@@ -683,11 +682,11 @@ functions =
           _ -> setState (addFunSym (f,(k,priv)) sig)
 
 equations :: Parser ()
-equations =
-    symbol "equations" *> colon *> commaSep1 equation *> pure ()
-  where
-    equation = do
-        rrule <- RRule <$> term llit <*> (equalSign *> term llit)
+equations = do
+      symbol "equations" *> colon *> commaSep1 equation *> pure ()
+    where
+      equation = do
+        rrule <- RRule <$> term llit True <*> (equalSign *> term llit True)
         case rRuleToStRule rrule of
           Just str ->
               modifyState (addStRule str)
