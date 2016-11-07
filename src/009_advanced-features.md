@@ -339,7 +339,29 @@ complete input file, with an artificial protocol:
 ~~~~ {.tamarin include="code/TimingExample.spthy"}
 ~~~~
 
-<!-- One could add information on injective instances and the equation
+Configure the Number of Threads Used by Tamarin
+-----------------------------------------------
+
+Tamarin uses multi-threading to speed up the proof search. By default,
+Haskell automatically counts the number of cores available on the machine
+and uses the same number of threads.
+
+Using the options of Haskell's run-time system this number can be manually 
+configured. To use x threads, add the parameters
+
+```
++RTS -Nx -RTS
+```
+
+to your Tamarin call, e.g.,
+
+```
+tamarin-prover Example.spthy --prove +RTS -N2 -RTS
+```
+
+to prove the lemmas in file `Example.spthy` using two cores.
+
+<!-- One should add information on injective instances and the equation
 store from the old "doc/MANUAL.md" in the Tamarin source code
 repository here.  -->
 
