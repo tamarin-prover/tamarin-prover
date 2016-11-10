@@ -22,7 +22,7 @@ module Theory.Constraint.Solver.Goals (
   , solveGoal
   ) where
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 import           Prelude                                 hiding (id, (.))
 
@@ -219,11 +219,11 @@ solveAction :: [RuleAC]          -- ^ All rules labelled with an action
             -> Reduction String  -- ^ A sensible case name.
 solveAction rules (i, fa) = do
     mayRu <- M.lookup i <$> getM sNodes
-    showRuleCaseName <$> case trace (show mayRu ++ "-" ++ show fa) mayRu of
+    showRuleCaseName <$> case mayRu of
         Nothing -> do ru  <- labelNodeId i rules Nothing
                       act <- disjunctionOfList $ get rActs ru
                       void (solveFactEqs SplitNow [Equal fa act])
-                      return $ trace (show fa ++ "-" ++ show ru) ru
+                      return ru
 
         Just ru -> do unless (fa `elem` get rActs ru) $ do
                           act <- disjunctionOfList $ get rActs ru

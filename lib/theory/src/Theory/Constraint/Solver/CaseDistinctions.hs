@@ -339,14 +339,14 @@ precomputeCaseDistinctions
     -> [LNGuarded]       -- ^ Axioms.
     -> [CaseDistinction]
 precomputeCaseDistinctions ctxt axioms =
-    map cleanupCaseNames $ trace ("saturate: " ++ show (saturateCaseDistinctions ctxt rawCaseDists)) (saturateCaseDistinctions ctxt rawCaseDists)
+    map cleanupCaseNames {-$ trace ("saturate: " ++ show (saturateCaseDistinctions ctxt rawCaseDists))-} (saturateCaseDistinctions ctxt rawCaseDists)
   where
     cleanupCaseNames = modify cdCases $ fmap $ first $
         filter (not . null)
       . map (filter (`elem` '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']))
 
-    rawCaseDists = trace ("raw: " ++ show
-        (initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals)))
+    rawCaseDists = {-trace ("raw: " ++ show
+        (initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals)))-}
         (initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals))
 
     -- construct case distinction starting from facts from non-special rules
