@@ -34,13 +34,13 @@ $( derive makeBinary ''TimeZone)
 $( derive makeBinary ''Day)
 $( derive makeBinary ''TimeOfDay)
 
-instance HasResolution a => Binary (Fixed a) where
-  put f = put (showFixed True f)
-  -- Fixed constructor is private
-  get = do
-    s <- get
-    -- round to seconds for now
-    return . fromInteger . read $ takeWhile (/='.') s
+-- instance HasResolution a => Binary (Fixed a) where
+--   put f = put (showFixed True f)
+--   -- Fixed constructor is private
+--   get = do
+--     s <- get
+--     -- round to seconds for now
+--     return . fromInteger . read $ takeWhile (/='.') s
 
 $( derive makeBinary ''LocalTime)
 $( derive makeBinary ''ZonedTime)
