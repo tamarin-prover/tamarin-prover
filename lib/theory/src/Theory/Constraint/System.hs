@@ -582,8 +582,8 @@ getOppositeRules ctxt side (Rule rule prem _ _) = case rule of
                                    [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnOtherSide ctxt side)
                                    x  -> x
                IntrInfo  i -> case i of
-                                   (ConstrRule x) | x == BC.pack "mult"  -> [(multRuleInstance (length prem))]
-                                   (ConstrRule x) | x == BC.pack "union" -> [(unionRuleInstance (length prem))]
+                                   (ConstrRule x) | x == BC.pack "_mult"  -> [(multRuleInstance (length prem))]
+                                   (ConstrRule x) | x == BC.pack "_union" -> [(unionRuleInstance (length prem))]
                                    _                                     -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
                                                                                  [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
                                                                                  x  -> x
