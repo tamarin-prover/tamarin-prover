@@ -3,15 +3,22 @@
 
 TAMARIN=~/.local/bin/tamarin-prover
 
-# Default installation via stack
+# Default installation via stack, multi-threaded
 default: 
 	stack setup
 	stack install --flag tamarin-prover:threaded
 
+# Single-threaded
+single: 
+	stack setup
+	stack install
+
+# With profiling options, single-threaded
 profiling:
 	stack setup
 	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts"
 
+# Clean up
 clean:
 	stack clean
 

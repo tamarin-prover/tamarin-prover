@@ -8,7 +8,7 @@ Stability   :  experimental
 Portability :  non-portable
 -}
 
-{-# LANGUAGE TemplateHaskell, GADTs #-}
+{-# LANGUAGE TemplateHaskell, GADTs, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Web.Instances where
 
@@ -34,6 +34,8 @@ $( derive makeBinary ''TimeZone)
 $( derive makeBinary ''Day)
 $( derive makeBinary ''TimeOfDay)
 
+-- | Needed for GHC < 8.0
+#if __GLASGOW_HASKELL__ < 800
 instance HasResolution a => Binary (Fixed a) where
   put f = put (showFixed True f)
   -- Fixed constructor is private
@@ -41,6 +43,7 @@ instance HasResolution a => Binary (Fixed a) where
     s <- get
     -- round to seconds for now
     return . fromInteger . read $ takeWhile (/='.') s
+#endif
 
 $( derive makeBinary ''LocalTime)
 $( derive makeBinary ''ZonedTime)

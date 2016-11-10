@@ -328,7 +328,7 @@ saturateCaseDistinctions ctxt thsInit =
             then trace "saturateCaseDistinctions: Saturation aborted, more than 3 iterations." ths'
             else ths'
       where
-        (changes, ths') = unzip $ map (refineCaseDistinction ctxt solver) ({-trace "hello"-} ths)
+        (changes, ths') = unzip $ map (refineCaseDistinction ctxt solver) ths
         goodTh th  = length (getDisj (get cdCases th)) <= 1
         solver     = do names <- solveAllSafeGoals (filter goodTh ths)
                         return (not $ null names, names)
@@ -339,14 +339,15 @@ precomputeCaseDistinctions
     -> [LNGuarded]       -- ^ Axioms.
     -> [CaseDistinction]
 precomputeCaseDistinctions ctxt axioms =
-    map cleanupCaseNames $ saturateCaseDistinctions ctxt rawCaseDists
+    map cleanupCaseNames $ trace ("saturate: " ++ show (saturateCaseDistinctions ctxt rawCaseDists)) (saturateCaseDistinctions ctxt rawCaseDists)
   where
     cleanupCaseNames = modify cdCases $ fmap $ first $
         filter (not . null)
       . map (filter (`elem` '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']))
 
-    rawCaseDists =
-        initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals)
+    rawCaseDists = trace ("raw: " ++ show
+        (initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals)))
+        (initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals))
 
     -- construct case distinction starting from facts from non-special rules
     protoGoals = someProtoGoal <$> absProtoFacts
