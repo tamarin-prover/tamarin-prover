@@ -45,7 +45,7 @@ lemma Diff_test:
 lemma Diff_test2:
   all-traces
   "
-  not( Ex #i. DiffIntrDestrdfst() @ i)
+  not( Ex #i. DiffIntrDestrd_0_fst() @ i)
   "
   
 lemma Ltk_secret:
