@@ -38,7 +38,7 @@ equations: checksign( sign(m,k),pk(k) ) = m,
 
 rule Register_pk_Bank:
   [ Fr(~ltkB) ]
-  --[ OnlyOnce() ]->
+  --[  ]->
   [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(pk(~ltkB)) ]
 
 // Withdrawal Phase
@@ -87,9 +87,6 @@ rule S_2:
 
 axiom BankOnlyAcceptsOnce:
   " All x #j #k. Deposited(x)@j & Deposited(x)@k ==> #j = #k "
-
-axiom OnlyOnce:
-  " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j " 
 
 // Executability
 
