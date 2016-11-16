@@ -42,12 +42,19 @@ data CtxtStRule = CtxtStRule LNTerm StRhs
 -- | Convert a rewrite rule to a context subterm rewrite rule if possible.
 rRuleToCtxtStRule :: RRule LNTerm -> Maybe CtxtStRule
 rRuleToCtxtStRule (lhs `RRule` rhs)
-  | frees rhs == [] = Just $ CtxtStRule lhs (StRhs [] rhs)
+  | frees rhs == [] = Just $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
   | otherwise       = case findAllSubterms lhs rhs of
                         []:_     -> Nothing  -- proper subterm required
                         []       -> Nothing
                         pos      -> Just $ CtxtStRule lhs (StRhs pos rhs)
   where
+    subterms []     _    = []
+    subterms (t:ts) done = (concat $ map (\x -> findSubterm x t []) (ts ++ done)) ++ subterms ts (t:done)
+    
+    constantPositions (viewTerm -> FApp _ args) = case subterms args [] of
+                                                       []  -> positions lhs
+                                                       pos -> pos
+    
     findSubterm lst r rpos | lst == r            = [reverse rpos]
     findSubterm (viewTerm -> FApp _ args) r rpos =
         concat $ zipWith (\lst i -> findSubterm lst r (i:rpos)) args [0..]

@@ -38,7 +38,6 @@ import           Term.Maude.Signature
 import           Term.Narrowing.Variants.Compute
 import           Term.Rewriting.Norm
 import           Term.SubtermRule
--- import           Term.Positions
 import           Term.Subsumption
 
 import           Theory.Model
@@ -103,13 +102,13 @@ specialIntruderRules diff =
 -- | @destuctionRules diff st@ returns the destruction rules for the given
 -- context subterm rule @st@
 destructionRules :: Bool -> CtxtStRule -> [IntrRuleAC]
-destructionRules _    (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs)) =
+destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs)) | (bool || (frees rhs /= []) || (containsPrivate rhs)) =
     go [] lhs pos empty []
   where
-    go _      _                       []     _ _ = []
-    -- term already in premises
-    go _      (viewTerm -> FApp _ _)  (_:[]) _ _ = []
-    go uprems (viewTerm -> FApp (NoEq (f,_)) as) (i:p) n pd =
+    go _      _                       []     _ _                     = []
+    -- term already in premises, but necessary for constant conclusions
+    go _      (viewTerm -> FApp _ _)  (_:[]) _ _ | (frees rhs /= []) = []
+    go uprems (viewTerm -> FApp (NoEq (f,_)) as) (i:p) n pd          =
         irule ++ go uprems' t' p funs posname
       where
         uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
@@ -125,19 +124,9 @@ destructionRules _    (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
     go _      (viewTerm -> Lit _)     (_:_)  _ _ =
         error "IntruderRules.destructionRules: impossible, position invalid"   
      
-destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) = destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
-destructionRules _    (CtxtStRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs
-destructionRules True (CtxtStRule (viewTerm -> FApp (NoEq (f,_)) subterms) (StRhs [] rhs@(viewTerm -> FApp (NoEq (_,(0,Public)))  []))) = destrRulesForConstant subterms f rhs
-destructionRules _    _                                                                                                                 = []
-
--- returns destructor rules for equations with ground RHS
-destrRulesForConstant :: [LNTerm] -> ByteString -> LNTerm -> [IntrRuleAC]
-destrRulesForConstant subterms f rhs =
--- FIXME (JD): avoid unnecessary combinations of KU and KD facts
-    go [] subterms
-  where
-    go _    []     = []
-    go done (x:xs) = (Rule (DestrRule (append (pack "_") f) 0) ((kdFact  x):(map kuFact (done ++ xs))) [kdFact rhs] []):(go (x:done) xs)
+destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) | (bool || (frees rhs /= []) || (containsPrivate rhs)) = 
+    destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
+destructionRules _    _                                                                                               = []
 
 -- returns all equations with private constructors on the RHS
 privateConstructorEquations :: [CtxtStRule] -> [(LNTerm, ByteString)]
