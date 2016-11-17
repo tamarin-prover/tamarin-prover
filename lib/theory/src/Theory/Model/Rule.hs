@@ -556,15 +556,6 @@ containsNewVars ru = not $ S.null newvars
     premvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumPrems ru
     concvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumConcs ru
 
-
--- | Returns whether a given variable is among the new variables introduced in this rule instance
-isNewVar :: Rule i -> LVar -> Bool
-isNewVar ru var = S.member var newvars
-  where 
-    newvars = S.difference concvars premvars
-    premvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumPrems ru
-    concvars = S.fromList $ concat $ map (getFactVariables . snd) $ enumConcs ru
-
 -- | Returns a list of all new variables introduced in this rule instance and the facts and indices they occur in
 getNewVariablesWithIndex :: Rule a -> [(LNFact, ConcIdx, LVar)]
 getNewVariablesWithIndex ru = getFacts $ S.toList newvars
@@ -598,7 +589,7 @@ getSubstitutionsFixingNewVars rule orig = Subst $ M.fromList $ concat $ map getS
         rec var (x:xs) (mt:mts) = case (viewTerm x, viewTerm mt) of
                                        (Lit (Var a), _)            | a == var -> mt:(rec var xs mts)
                                        (FApp f ts' , FApp f' mts') | f == f'  -> (rec var ts' mts')++(rec var xs mts)
-                                       (FApp f ts' , FApp f' mts') | f /= f'  -> error "getMatchingTerm: Non-matching function terms!"
+                                       (FApp f _   , FApp f' _   ) | f /= f'  -> error "getMatchingTerm: Non-matching function terms!"
                                        (_          , _           )            -> (rec var xs mts)
         rec _   _      _        = error "getMatchingTerm: Different number of terms!"
         

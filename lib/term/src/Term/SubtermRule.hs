@@ -48,13 +48,19 @@ rRuleToCtxtStRule (lhs `RRule` rhs)
                         []       -> Nothing
                         pos      -> Just $ CtxtStRule lhs (StRhs pos rhs)
   where
-    subterms []     _    = []
-    subterms (t:ts) done = (concat $ map (\x -> findSubterm x t []) (ts ++ done)) ++ subterms ts (t:done)
+    subterms :: [LNTerm] -> [LNTerm] -> Int -> [Position]
+    subterms []     _    _ = []
+    subterms (t:ts) done i = (concat $ map 
+        (\(x, y) -> (map (x:) (findSubterm y t []))) terms) 
+            ++ subterms ts (done++[t]) (i+1)  
+      where 
+        terms = (zip [i..] ts) ++ (zip [0..] done)
     
-    constantPositions (viewTerm -> FApp _ args) = case subterms args [] of
+    constantPositions (viewTerm -> FApp _ args) = case subterms args [] 1 of
                                                        []  -> positions lhs
                                                        pos -> pos
     
+    findSubterm :: LNTerm -> LNTerm -> Position -> [Position]
     findSubterm lst r rpos | lst == r            = [reverse rpos]
     findSubterm (viewTerm -> FApp _ args) r rpos =
         concat $ zipWith (\lst i -> findSubterm lst r (i:rpos)) args [0..]

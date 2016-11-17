@@ -108,7 +108,7 @@ destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
     go _      _                       []     _ _                     = []
     -- term already in premises, but necessary for constant conclusions
     go _      (viewTerm -> FApp _ _)  (_:[]) _ _ | (frees rhs /= []) = []
-    go uprems (viewTerm -> FApp (NoEq (f,_)) as) (i:p) n pd          =
+    go uprems (viewTerm -> FApp (NoEq (f,(_,Public))) as) (i:p) n pd =
         irule ++ go uprems' t' p funs posname
       where
         uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
@@ -121,18 +121,21 @@ destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
                             ((kdFact  t'):(map kuFact uprems'))
                             [kdFact rhs] [] ]
                 else []
-    go _      (viewTerm -> Lit _)     (_:_)  _ _ =
+    go _      (viewTerm -> FApp (NoEq (_,(_,Private))) _) _     _ _  = []
+    go _      (viewTerm -> Lit _)                         (_:_) _ _  =
         error "IntruderRules.destructionRules: impossible, position invalid"   
      
-destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) | (bool || (frees rhs /= []) || (containsPrivate rhs)) = 
-    destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
-destructionRules _    _                                                                                               = []
+destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) 
+    | (bool || (frees rhs /= []) || (containsPrivate rhs)) = 
+       destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) 
+           ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
+destructionRules _ _ = []
 
 -- returns all equations with private constructors on the RHS
 privateConstructorEquations :: [CtxtStRule] -> [(LNTerm, ByteString)]
 privateConstructorEquations rs = case rs of
     []    -> []
-    (CtxtStRule lhs (StRhs [] (viewTerm -> FApp (NoEq (vname,(0,Private))) []))):xs
+    (CtxtStRule lhs (StRhs _ (viewTerm -> FApp (NoEq (vname,(0,Private))) _))):xs
           -> (lhs, vname):(privateConstructorEquations xs)
     _:xs  -> privateConstructorEquations xs
     
@@ -157,8 +160,9 @@ privateConstructorRules rules = map createRule $ derivablePrivateConstants (priv
 
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
 minimizeIntruderRules :: Bool -> [IntrRuleAC] -> [IntrRuleAC]
-minimizeIntruderRules diff rules = if diff then rules else
-    go [] rules
+minimizeIntruderRules diff rules = 
+    filter (\x -> not $ isDoublePremiseRule x) 
+      $ if diff then rules else go [] rules
   where
     go checked [] = reverse checked
     go checked (r@(Rule _ prems concs _):unchecked) = go checked' unchecked
@@ -168,6 +172,13 @@ minimizeIntruderRules diff rules = if diff then rules else
                           (checked++unchecked)
                    then checked
                    else r:checked
+    
+    -- We assume that the KD-Fact is the first fact, which is the case in destructionRules above
+    isDoublePremiseRule (Rule _ (prem@(Fact KDFact [t]):prems) concs _) = 
+        frees concs == []
+         && not (any containsPrivate (t:(concat $ map getFactTerms prems)))
+         && isMsgVar t && any (==(Fact KUFact [t])) prems
+    isDoublePremiseRule _                                               = False
 
 -- | @subtermIntruderRules diff maudeSig@ returns the set of intruder rules for
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
