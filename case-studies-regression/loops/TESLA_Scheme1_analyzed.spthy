@@ -145,7 +145,7 @@ guarded formula characterizing all counter-examples:
     (AssumeCommitNotExpired( rid, commit ) @ #ne) ∧
     (CommitExpired( commit ) @ #e)
    ⇒
-    (¬(#e < #ne)) ∨ (¬(#ne < #i)))"
+    ((¬(#e < #ne)) ∨ (¬(#ne < #i))))"
 */
 induction
   case empty_trace
@@ -732,7 +732,7 @@ induction
            (AssumeCommitNotExpired( rid, commit ) @ #i) ∧
            (CommitExpired( commit ) @ #j)
           ∧
-           (¬(last(#j))) ∧ (¬(last(#i))) ∧ ((#i = #j) ∨ (#j < #i)))  ∥
+           (¬(last(#j))) ∧ (¬(last(#i))) ∧ (((#i = #j) ∨ (#j < #i))))  ∥
          (∀ rid S m #i. (FromSender( rid, S, m ) @ #i) ⇒ last(#i)) )
     case case_2
     solve( Receiver( rid, S, m.1, MAC(m.1, kOld), f(kOld), commit_k ) ▶₁ #i )
@@ -781,7 +781,7 @@ analyzing: examples/loops/TESLA_Scheme1.spthy
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.216163s
+  processing time: 4.031609s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
@@ -793,7 +793,7 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.216163s
+  processing time: 4.031609s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 

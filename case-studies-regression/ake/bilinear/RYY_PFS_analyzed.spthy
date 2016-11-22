@@ -332,16 +332,16 @@ guarded formula characterizing all counter-examples:
   (∀ matching #i3 role2.
     (Sid( matching, <B, A, Y, X, role2> ) @ #i3)
    ⇒
-    (role1 = role2) ∨
-    ((∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
-     (∀ #i5. (LtkRev( B ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
-     (∀ #i5. (LtkRev( A ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
-     (∀ #i5. (MskRev( ) @ #i5) ⇒ ¬(#i5 < #i1)))) ∧
-  ((∃ matching #i3 role2.
-     (Sid( matching, <B, A, Y, X, role2> ) @ #i3) ∧ ¬(role1 = role2)) ∨
-   ((∀ #i3. (LtkRev( B ) @ #i3) ⇒ ¬(#i3 < #i1)) ∧
-    (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ¬(#i3 < #i1)) ∧
-    (∀ #i3. (MskRev( ) @ #i3) ⇒ ¬(#i3 < #i1))))"
+    ((role1 = role2) ∨
+     ((∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
+      (∀ #i5. (LtkRev( B ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
+      (∀ #i5. (LtkRev( A ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
+      (∀ #i5. (MskRev( ) @ #i5) ⇒ ¬(#i5 < #i1))))) ∧
+  (((∃ matching #i3 role2.
+      (Sid( matching, <B, A, Y, X, role2> ) @ #i3) ∧ ¬(role1 = role2)) ∨
+    ((∀ #i3. (LtkRev( B ) @ #i3) ⇒ ¬(#i3 < #i1)) ∧
+     (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ¬(#i3 < #i1)) ∧
+     (∀ #i3. (MskRev( ) @ #i3) ⇒ ¬(#i3 < #i1)))))"
 */
 simplify
 solve( (∃ matching #i3 role2.
@@ -395,7 +395,7 @@ analyzing: examples/ake/bilinear/RYY_PFS.spthy
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.852591s
+  processing time: 9.246398s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
 
@@ -407,7 +407,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.852591s
+  processing time: 9.246398s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
 

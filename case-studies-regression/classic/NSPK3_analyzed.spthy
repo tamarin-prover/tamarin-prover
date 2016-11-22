@@ -77,16 +77,16 @@ lemma types [typing]:
      ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_R_1( m2 ) @ #j)))"
 /*
 guarded formula characterizing all counter-examples:
-"(∃ ni m1 #i.
-   (IN_R_1_ni( ni, m1 ) @ #i)
-  ∧
-   (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
-   (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
- (∃ nr m2 #i.
-   (IN_I_2_nr( nr, m2 ) @ #i)
-  ∧
-   (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
-   (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥))"
+"((∃ ni m1 #i.
+    (IN_R_1_ni( ni, m1 ) @ #i)
+   ∧
+    (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
+  (∃ nr m2 #i.
+    (IN_I_2_nr( nr, m2 ) @ #i)
+   ∧
+    (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)))"
 */
 induction
   case empty_trace
@@ -283,9 +283,9 @@ guarded formula characterizing all counter-examples:
   (∀ #j.
     (Running( actor, peer, params ) @ #j)
    ⇒
-    (¬(#j < #i)) ∨
-    (∃ actor2 peer2 #i2.
-      (Commit( actor2, peer2, params ) @ #i2) ∧ ¬(#i = #i2))) ∧
+    ((¬(#j < #i)) ∨
+     (∃ actor2 peer2 #i2.
+       (Commit( actor2, peer2, params ) @ #i2) ∧ ¬(#i = #i2)))) ∧
   (∀ #r. (RevLtk( actor ) @ #r) ⇒ ⊥) ∧
   (∀ #r. (RevLtk( peer ) @ #r) ⇒ ⊥)"
 */
@@ -367,7 +367,7 @@ analyzing: examples/classic/NSPK3.spthy
 analyzed: examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.005075s
+  processing time: 2.329052s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)
@@ -381,7 +381,7 @@ summary of summaries:
 analyzed: examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.005075s
+  processing time: 2.329052s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)

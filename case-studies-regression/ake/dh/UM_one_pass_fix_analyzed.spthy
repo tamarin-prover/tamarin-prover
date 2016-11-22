@@ -233,14 +233,14 @@ guarded formula characterizing all counter-examples:
  ∧
   (∀ #k.1. (SessionKeyReveal( s ) @ #k.1) ⇒ ⊥) ∧
   (∀ #i1. (SessionKeyReveal( sp ) @ #i1) ⇒ ⊥) ∧
-  ((¬(role = 'I')) ∨
-   ((∀ #k.1.
-      (Corrupt( A ) @ #k.1)
-     ⇒
-      (∀ #l. (Expire( s ) @ #l) ⇒ ¬(#k.1 < #l)) ∧ (∃ #l. (Expire( s ) @ #l))) ∧
-    (∀ #k.1 #l. (SessionStateReveal( s ) @ #k.1) ∧ (Corrupt( A ) @ #l) ⇒ ⊥) ∧
-    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥))) ∧
-  ((¬(role = 'R')) ∨ (∀ #k.1. (Corrupt( A ) @ #k.1) ⇒ ⊥)) ∧
+  (((¬(role = 'I')) ∨
+    ((∀ #k.1.
+       (Corrupt( A ) @ #k.1)
+      ⇒
+       (∀ #l. (Expire( s ) @ #l) ⇒ ¬(#k.1 < #l)) ∧ (∃ #l. (Expire( s ) @ #l))) ∧
+     (∀ #k.1 #l. (SessionStateReveal( s ) @ #k.1) ∧ (Corrupt( A ) @ #l) ⇒ ⊥) ∧
+     (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥)))) ∧
+  (((¬(role = 'R')) ∨ (∀ #k.1. (Corrupt( A ) @ #k.1) ⇒ ⊥))) ∧
   (∀ #k.1 k_.
     (Complete( sp, 'I', k_ ) @ #k.1)
    ⇒
@@ -251,8 +251,8 @@ guarded formula characterizing all counter-examples:
       (∃ #l. (Expire( sp ) @ #l))) ∧
     (∀ #k.2 #l.
       (SessionStateReveal( sp ) @ #k.2) ∧ (Corrupt( B ) @ #l) ⇒ ⊥)) ∧
-  ((∃ #k.1 k_. (Complete( sp, 'I', k_ ) @ #k.1)) ∨
-   (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥))"
+  (((∃ #k.1 k_. (Complete( sp, 'I', k_ ) @ #k.1)) ∨
+    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥)))"
 */
 simplify
 solve( (¬(role = 'I'))  ∥
@@ -788,7 +788,7 @@ analyzing: examples/ake/dh/UM_one_pass_fix.spthy
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.730234s
+  processing time: 2.519191s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 
@@ -800,7 +800,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.730234s
+  processing time: 2.519191s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 

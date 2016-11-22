@@ -1951,21 +1951,21 @@ guarded formula characterizing all counter-examples:
     (Sid( matchingSession, <B, A, matchingCom, matchingRole, proto>
      ) @ #i3.1)
    ⇒
-    (matchingRole = role) ∨
-    ((∀ rest. ((matchingCom+rest) = com) ⇒ ⊥) ∧ (¬(matchingCom = com))) ∨
-    (∃ #i4.1 sid. (Sid( matchingSession, sid ) @ #i4.1) ∧ #i3.1 < #i4.1) ∨
-    ((∀ #i5. (RevealSessk( matchingSession ) @ #i5) ⇒ ⊥) ∧
-     (∀ #i5 #i6.
-       (RevealLtk( B ) @ #i5) ∧ (RevealEphk( matchingSession ) @ #i6) ⇒ ⊥))) ∧
-  ((∃ matchingSession #i3.1 matchingRole matchingCom.
-     (Sid( matchingSession, <B, A, matchingCom, matchingRole, proto>
-      ) @ #i3.1)
-    ∧
-     (¬(matchingRole = role)) ∧
-     ((∃ rest. ((matchingCom+rest) = com)) ∨ (matchingCom = com)) ∧
-     (∀ #i4.1 sid.
-       (Sid( matchingSession, sid ) @ #i4.1) ⇒ ¬(#i3.1 < #i4.1))) ∨
-   (∀ #i5. (RevealLtk( B ) @ #i5) ⇒ ¬(#i5 < #i1)))"
+    ((matchingRole = role) ∨
+     ((∀ rest. ((matchingCom+rest) = com) ⇒ ⊥) ∧ (¬(matchingCom = com))) ∨
+     (∃ #i4.1 sid. (Sid( matchingSession, sid ) @ #i4.1) ∧ #i3.1 < #i4.1) ∨
+     ((∀ #i5. (RevealSessk( matchingSession ) @ #i5) ⇒ ⊥) ∧
+      (∀ #i5 #i6.
+        (RevealLtk( B ) @ #i5) ∧ (RevealEphk( matchingSession ) @ #i6) ⇒ ⊥)))) ∧
+  (((∃ matchingSession #i3.1 matchingRole matchingCom.
+      (Sid( matchingSession, <B, A, matchingCom, matchingRole, proto>
+       ) @ #i3.1)
+     ∧
+      (¬(matchingRole = role)) ∧
+      (((∃ rest. ((matchingCom+rest) = com)) ∨ (matchingCom = com))) ∧
+      (∀ #i4.1 sid.
+        (Sid( matchingSession, sid ) @ #i4.1) ⇒ ¬(#i3.1 < #i4.1))) ∨
+    (∀ #i5. (RevealLtk( B ) @ #i5) ⇒ ¬(#i5 < #i1))))"
 */
 simplify
 solve( (∃ matchingSession #i3 matchingRole matchingCom.
@@ -1973,7 +1973,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
           ) @ #i3)
         ∧
          (¬(matchingRole = role)) ∧
-         ((∃ rest. ((matchingCom+rest) = com)) ∨ (matchingCom = com)) ∧
+         (((∃ rest. ((matchingCom+rest) = com)) ∨ (matchingCom = com))) ∧
          (∀ #i4 sid. (Sid( matchingSession, sid ) @ #i4) ⇒ ¬(#i3 < #i4)))  ∥
        (∀ #i5. (RevealLtk( $A.1 ) @ #i5) ⇒ ¬(#i5 < #i1)) )
   case case_1
@@ -4861,7 +4861,7 @@ analyzing: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 92.957773s
+  processing time: 90.402822s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)
 
@@ -4873,7 +4873,7 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 92.957773s
+  processing time: 90.402822s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)
 
