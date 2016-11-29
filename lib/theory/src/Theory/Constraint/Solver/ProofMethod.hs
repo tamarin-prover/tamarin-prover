@@ -393,6 +393,7 @@ rankGoals ctxt ranking = case ranking of
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
     SapicRanking -> sapicRanking ctxt
+    SapicLivenessRanking -> sapicLivenessRanking ctxt
     SapicPKCS11Ranking -> sapicPKCS11Ranking ctxt
     SmartRanking useLoopsBreakers -> smartRanking ctxt useLoopsBreakers
     SmartDiffRanking -> smartDiffRanking ctxt
@@ -802,8 +803,8 @@ sapicLivenessRanking ctxt sys =
     isProgressFact _ = False
 
     isProgressDisj (DisjG (Disj disj )) = all (\f ->  (case f of 
-            GGuarded Ex [(_,LSortNode)] [Action _ f ] _ -> isProgressFact f
-            _                                           -> False
+            GGuarded Ex [(_,LSortNode)] [Action _ f' ] _ -> isProgressFact f'
+            _                                            -> False
             )) disj
     
     isProgressDisj _ = False
