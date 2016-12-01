@@ -302,7 +302,7 @@ constructAutoProver as =
     ranking 'S' = SmartRanking True
     ranking 'o' = OracleRanking
     ranking 'p' = SapicRanking
-    ranking 'L' = SapicLivenessRanking
+    ranking 'l' = SapicLivenessRanking
     ranking 'P' = SapicPKCS11Ranking
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
@@ -313,7 +313,7 @@ constructAutoProver as =
       \ 'S' for the smart ranking with loop breakers,\
       \ 'o' for oracle ranking,\
       \ 'p' for the smart ranking optimized for translations coming from SAPIC (http://sapic.gforge.inria.fr),\
-      \ 'L' for the smart ranking optimized for translations coming from SAPIC proving liveness properties),\
+      \ 'l' for the smart ranking optimized for translations coming from SAPIC proving liveness properties,\
       \ 'P' for the smart ranking optimized for a specific model of PKCS11, translated using SAPIC,\
       \ 'i' for the smart ranking modified for the proof of injective detection protocols,\
       \ 'c' for the creation order and useful goals first,\
