@@ -36,12 +36,12 @@ class (Applicative m, Monad m) => MonadFresh m where
     -- variables are not marked as used once the scope is left.
     scopeFreshness :: m a -> m a
 
-instance (Functor m, Monad m) => MonadFresh (Fast.FreshT m) where
+instance Monad m => MonadFresh (Fast.FreshT m) where
     freshIdent _name = Fast.freshIdents 1
     freshIdents      = Fast.freshIdents
     scopeFreshness   = Fast.scopeFreshness
 
-instance (Functor m, Monad m) => MonadFresh (Precise.FreshT m) where
+instance Monad m => MonadFresh (Precise.FreshT m) where
     freshIdent     = Precise.freshIdent
     freshIdents    = Precise.freshIdents
     scopeFreshness = Precise.scopeFreshness

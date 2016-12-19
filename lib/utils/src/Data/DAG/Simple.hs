@@ -112,7 +112,7 @@ dfsLoopBreakers rel =
 type Relation a = [(a,a)]
 
 -- | Restrict a relation to elements satisfying a predicate.
-restrict :: Eq a => (a -> Bool) -> Relation a -> Relation a
+restrict :: (a -> Bool) -> Relation a -> Relation a
 restrict p = filter (\(x,y) -> p x && p y)
 
 -- | The image of an element under a 'Relation'.

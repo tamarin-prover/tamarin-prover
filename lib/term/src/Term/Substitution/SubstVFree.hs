@@ -100,7 +100,7 @@ applyLit _     c@(Con _)  = lit c
 
 
 -- | @applyVTerm subst t@ applies the substitution @subst@ to the term @t@.
-applyVTerm :: (IsConst c, IsVar v, Ord c) => Subst c v -> VTerm c v -> VTerm c v
+applyVTerm :: (IsConst c, IsVar v) => Subst c v -> VTerm c v -> VTerm c v
 applyVTerm subst t = case viewTerm t of
     Lit l            -> applyLit subst l
     FApp (AC o) ts   -> fAppAC   o (map (applyVTerm subst) ts)
@@ -156,7 +156,7 @@ restrict :: IsVar v => [v] -> Subst c v -> Subst c v
 restrict vs (Subst smap) = Subst (M.filterWithKey (\v _ -> v `elem` vs) smap)
 
 -- | @mapRange f subst@ maps the function @f@ over the range of the substitution @subst@.
-mapRange :: (IsConst c, IsVar v, IsConst c2)
+mapRange :: (IsVar v)
          => (VTerm c v -> VTerm c2 v)
          -> Subst c v  -> Subst c2 v
 mapRange f subst@(Subst _) =
@@ -190,7 +190,7 @@ substToList = M.toList . sMap
 
 -- | @substToPairOn vs sigma@ converts the list of variables @[x1,..,xk]@ to
 --   @[sigma(x1),..,sigma(xk)]@.
-substToListOn :: (IsConst c, IsVar v) => [v] -> Subst c v -> [VTerm c v]
+substToListOn :: (IsVar v) => [v] -> Subst c v -> [VTerm c v]
 substToListOn vs subst = map (applyLit subst) (map Var vs)
 
 -- | Returns the image of @i@ under @subst@ if @i@ is in the domain of @subst@.

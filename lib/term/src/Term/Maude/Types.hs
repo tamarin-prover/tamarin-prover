@@ -62,7 +62,7 @@ lTermToMTerm' = lTermToMTerm sortOfName
 
 
 -- | Convert an @LNTerm@ with arbitrary names to an @MTerm@.
-lTermToMTerm :: (MonadBind (Lit c LVar) MaudeLit m, MonadFresh m, Show c, Show (Lit c LVar), Ord c)
+lTermToMTerm :: (MonadBind (Lit c LVar) MaudeLit m, MonadFresh m, Ord c)
              => (c -> LSort) -- ^ A function that returns the sort of a constant.
              -> VTerm c LVar -- ^ The term to translate.
              -> m MTerm
@@ -99,8 +99,7 @@ mTermToLNTerm nameHint =
 -- | Run a @BindT (Lit c LVar) MaudeLit Fresh@ computation
 --   with an empty fresh supply and an empty binding map and return
 --   the result and the resulting inverted binding map.
-runConversion :: Ord c
-              => BindT (Lit c LVar) MaudeLit Fresh a -- ^ Computation to execute.
+runConversion :: BindT (Lit c LVar) MaudeLit Fresh a -- ^ Computation to execute.
               -> (a, Map MaudeLit (Lit c LVar))
 runConversion to =
     (x, invertMap bindings)

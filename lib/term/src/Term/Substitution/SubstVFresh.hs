@@ -106,15 +106,14 @@ restrictVFresh vs (SubstVFresh smap) = SubstVFresh (M.filterWithKey (\v _ -> v `
 
 -- | @mapRangeVFresh f subst@ maps the function @f@ over the range of the substitution @subst@.
 --   Note that all introduced variables are considered fresh.
-mapRangeVFresh :: (IsConst c, IsVar v, IsConst c2)
-               => (VTerm c v      -> VTerm c2 v)
+mapRangeVFresh :: (VTerm c v      -> VTerm c2 v)
                -> SubstVFresh c v -> SubstVFresh c2 v
 mapRangeVFresh f subst = SubstVFresh $ M.map f (svMap subst)
 
 
 -- | @extendWithRenaming vs s@ extends the substitution @s@ with renamings (with
 --   fresh variables) for the variables in @vs@ that are not already in @dom s@.
-extendWithRenaming :: (Ord c, Show (Lit c LVar))
+extendWithRenaming :: Ord c
                    => [LVar] -> SubstVFresh c LVar -> SubstVFresh c LVar
 extendWithRenaming vs0 s =
     substFromListVFresh $

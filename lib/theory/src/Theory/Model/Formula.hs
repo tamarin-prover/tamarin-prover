@@ -245,7 +245,7 @@ instance Apply LNFormula where
 ------------------------------------------------------------------------------
 
 -- | Introduce a bound variable for a free variable.
-quantify :: (Ord c, Ord v, Eq v) => v -> Formula s c v -> Formula s c v
+quantify :: (Ord c, Ord v) => v -> Formula s c v -> Formula s c v
 quantify x =
     mapAtoms (\i a -> fmap (mapLits (fmap (>>= subst i))) a)
   where
@@ -253,11 +253,11 @@ quantify x =
               | otherwise = Free v
 
 -- | Create a universal quantification with a sort hint for the bound variable.
-forall :: (Ord c, Ord v, Eq v) => s -> v -> Formula s c v -> Formula s c v
+forall :: (Ord c, Ord v) => s -> v -> Formula s c v -> Formula s c v
 forall hint x = Qua All hint . quantify x
 
 -- | Create a existential quantification with a sort hint for the bound variable.
-exists :: (Ord c, Ord v, Eq v) => s -> v -> Formula s c v -> Formula s c v
+exists :: (Ord c, Ord v) => s -> v -> Formula s c v -> Formula s c v
 exists hint x = Qua Ex hint . quantify x
 
 ------------------------------------------------------------------------------

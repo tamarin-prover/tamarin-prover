@@ -16,15 +16,10 @@ import           Data.Binary
 import           Data.DeriveTH
 
 import           Control.DeepSeq
-import           Data.Fixed
 import           Data.Time.Calendar
 import           Data.Time.LocalTime
 import           Web.Types
--- import           Theory
 
--- $( derive makeBinary ''DiffTheory)
--- $( derive makeBinary ''ClosedDiffTheory)
--- $( derive makeBinary ''ClosedDiffTheory)
 $( derive makeBinary ''TheoryOrigin)
 $( derive makeBinary ''TheoryInfo)
 $( derive makeBinary ''DiffTheoryInfo)
