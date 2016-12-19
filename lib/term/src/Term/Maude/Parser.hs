@@ -73,6 +73,28 @@ funSymPrefix = "tamX"
 funSymPrefixPriv :: ByteString
 funSymPrefixPriv = "tamP"
 
+-- | Replace underscores "_" with minus "-" for Maude.
+replaceUnderscore :: ByteString -> ByteString
+replaceUnderscore s = BC.map f s
+    where
+       f x | x == '_'  = '-'
+       f x | otherwise = x
+
+-- | Replace underscores "_" with minus "-" for Maude.
+replaceUnderscoreFun :: NoEqSym -> NoEqSym
+replaceUnderscoreFun (s, p) = (replaceUnderscore s, p)
+
+-- | Replace minus "-" with underscores "_" when parsing back from Maude.
+replaceMinus :: ByteString -> ByteString
+replaceMinus s = BC.map f s
+    where
+       f x | x == '-'  = '_'
+       f x | otherwise = x
+
+-- | Replace minus "-" with underscores "_" when parsing back from Maude.
+replaceMinusFun :: NoEqSym -> NoEqSym
+replaceMinusFun (s, p) = (replaceMinus s, p)
+
 -- | Pretty print an AC symbol for Maude.
 ppMaudeACSym :: ACSym -> ByteString
 ppMaudeACSym o =
@@ -82,8 +104,8 @@ ppMaudeACSym o =
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
-ppMaudeNoEqSym (o,(_,Private)) = funSymPrefixPriv <> o
-ppMaudeNoEqSym (o,(_,Public))  = funSymPrefix     <> o
+ppMaudeNoEqSym (o,(_,Private)) = funSymPrefixPriv <> replaceUnderscore o
+ppMaudeNoEqSym (o,(_,Public))  = funSymPrefix     <> replaceUnderscore o
 
 -- | Pretty print a C symbol for Maude.
 ppMaudeCSym :: CSym -> ByteString
@@ -161,7 +183,7 @@ ppTheory msig = BC.unlines $
         "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."
     theoryOp = theoryOpNoEq Public
     theoryFunSym (s,(ar,priv)) =
-        theoryOpNoEq priv (s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
+        theoryOpNoEq priv (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
@@ -228,18 +250,19 @@ parseTerm msig = choice
     nilSym  = ("nil",(0,Public))
 
     parseFunSym ident args
-      | op `elem` allowedfunSyms = op
+      | op `elem` allowedfunSyms = replaceMinusFun op
       | otherwise                =
           error $ "Maude.Parser.parseTerm: unknown function "
                   ++ "symbol `"++ show op ++"', not in "
-                  ++show allowedfunSyms
+                  ++ show allowedfunSyms
       where prefixLen      = BC.length funSymPrefix
             special        = ident `elem` ["list", "cons", "nil" ]
             priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident 
                                then Private else Public
             op             = (if special then ident else BC.drop prefixLen ident
                              , ( length args, priv))
-            allowedfunSyms = [consSym, nilSym]++(S.toList $ noEqFunSyms msig)
+            allowedfunSyms = [consSym, nilSym]
+                ++ (map replaceUnderscoreFun $ S.toList $ noEqFunSyms msig)
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
 
