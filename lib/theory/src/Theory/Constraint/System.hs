@@ -1220,12 +1220,6 @@ prettyGoals solved sys = vsep $ do
     toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
     toplevelTerms t = [t]
 
-
-    allMsgVarsKnownEarlier (i,_) args =
-        all (`elem` earlierMsgVars) (filter isMsgVar args)
-      where earlierMsgVars = do (j, _, t) <- allKUActions sys
-                                guard $ isMsgVar t && alwaysBefore sys j i
-                                return t
 -- | Pretty print a case distinction
 prettyCaseDistinction :: HighlightDocument d => CaseDistinction -> d
 prettyCaseDistinction th = vcat $

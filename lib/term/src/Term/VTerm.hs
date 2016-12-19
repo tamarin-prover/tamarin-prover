@@ -113,7 +113,7 @@ isVar (viewTerm -> Lit (Var _)) = True
 isVar _ = False
 
 -- | @vars t@ returns a duplicate-free list of variables that occur in @t@.
-varsVTerm :: (Eq v, Ord v) => VTerm c v -> [v]
+varsVTerm :: Ord v => VTerm c v -> [v]
 varsVTerm = sortednub . D.toList . foldMap (foldMap return)
 
 -- | @occurs v t@ returns @True@ if @v@ occurs in @t@

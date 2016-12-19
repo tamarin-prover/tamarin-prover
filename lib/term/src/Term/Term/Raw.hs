@@ -204,11 +204,11 @@ traverseTerm f (LIT x)         = LIT <$> f x
 traverseTerm f (FAPP fsym  as) = fApp fsym <$> traverse (traverseTerm f) as
 
 {-# INLINE fmapTerm #-}
-fmapTerm :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
+fmapTerm :: Ord b => (a -> b) -> Term a -> Term b
 fmapTerm f = foldTerm (lit . f) fApp
 
 {-# INLINE bindTerm #-}
-bindTerm :: (Ord a, Ord b) => Term a -> (a -> Term b) -> Term b
+bindTerm :: Ord b => Term a -> (a -> Term b) -> Term b
 bindTerm m f = foldTerm f fApp m
 
 instance Foldable Term where

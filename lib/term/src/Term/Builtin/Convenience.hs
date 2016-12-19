@@ -20,20 +20,20 @@ b *: e = fAppAC Mult [b,e]
 (#) :: Ord a => Term a -> Term a -> Term a
 b # e  = fAppAC Union [b,e]
 
-adec, aenc, sdec, senc, sign :: Ord a => (Term a,Term a) -> Term a
+adec, aenc, sdec, senc, sign :: (Term a,Term a) -> Term a
 adec (a,b)   = fAppNoEq adecSym [a,b]
 aenc (a,b)   = fAppNoEq aencSym [a,b]
 sdec (a,b)   = fAppNoEq sdecSym [a,b]
 senc (a,b)   = fAppNoEq sencSym [a,b]
 sign (a,b)   = fAppNoEq signSym [a,b]
 
-verify :: Ord a => (Term a,Term a,Term a) -> Term a
+verify :: (Term a,Term a,Term a) -> Term a
 verify (a,b,c) = fAppNoEq verifySym [a,b,c]
 
-pk :: Ord a => Term a -> Term a
+pk :: Term a -> Term a
 pk a = fAppNoEq pkSym [a]
 
-trueC :: Ord a => Term a
+trueC :: Term a
 trueC = fAppNoEq trueSym []
 
 var :: String -> Integer -> LNTerm

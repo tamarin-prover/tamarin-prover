@@ -324,7 +324,7 @@ runTest $ matchLNTerm [ pair(xor [x5,x6],xor [x4,x5,x6]) `MatchWith` pair(x5,xor
 -- convenience abbreviations
 ----------------------------------------------------------------------------------
 
-pair, expo :: Ord a => (Term a, Term a) -> Term a
+pair, expo :: (Term a, Term a) -> Term a
 expo = fAppExp
 pair = fAppPair
 
