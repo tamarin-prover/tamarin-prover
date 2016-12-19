@@ -111,11 +111,11 @@ instance FromJSON JSONGraphNode where
         <*> o .:? "jgnMetadata"
 
 instance ToJSON JSONGraphNode where
-    toJSON (JSONGraphNode jgnId jgnType jgnLabel jgnMetadata) = object $ catMaybes
-        [ ("jgnId" .=) <$> pure jgnId      
-        , ("jgnType" .=) <$> pure jgnType
-        , ("jgnLabel" .=) <$> pure jgnLabel
-        , ("jgnMetadata" .=) <$> jgnMetadata ]
+    toJSON (JSONGraphNode jgnId' jgnType' jgnLabel' jgnMetadata') = object $ catMaybes
+        [ ("jgnId" .=) <$> pure jgnId'
+        , ("jgnType" .=) <$> pure jgnType'
+        , ("jgnLabel" .=) <$> pure jgnLabel'
+        , ("jgnMetadata" .=) <$> jgnMetadata' ]
 
 -- | Representation of an edge of a JSON graph.
 data JSONGraphEdge = JSONGraphEdge 
@@ -209,8 +209,8 @@ lntermToJSONGraphNodeTerm pretty t =
 
 -- | Generate the JSON data structure for items such as facts and actions. 
 itemToJSONGraphNodeFact :: Bool -> String -> LNFact -> JSONGraphNodeFact
-itemToJSONGraphNodeFact pretty id f =
-     JSONGraphNodeFact { jgnFactId    = id
+itemToJSONGraphNodeFact pretty id' f =
+     JSONGraphNodeFact { jgnFactId    = id'
                        , jgnFactTag   = case isProtoFact f of
                                           True  -> "ProtoFact"
                                           False -> show (factTag f)
@@ -268,11 +268,11 @@ getRelationType src tgt se =
 lastAtomToJSONGraphNode :: Maybe NodeId -> [JSONGraphNode]
 lastAtomToJSONGraphNode n = case n of
     Nothing -> [] 
-    Just n -> [JSONGraphNode { jgnId = show n
-                             , jgnType = "lastAtom"
-                             , jgnLabel = show n
-                             , jgnMetadata = Nothing 
-                             }] 
+    Just n' -> [JSONGraphNode { jgnId = show n'
+                              , jgnType = "lastAtom"
+                              , jgnLabel = show n'
+                              , jgnMetadata = Nothing 
+                              }] 
 
 -- | Generate JSON data structure for unsolvedActionAtom.
 unsolvedActionAtomsToJSONGraphNode :: Bool -> (NodeId, LNFact) -> JSONGraphNode

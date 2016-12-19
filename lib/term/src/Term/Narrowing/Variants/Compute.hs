@@ -93,8 +93,7 @@ narrowVariant tstart maxdepth =
 
 -- | @filterMaximalBy flags fastcmp alreadyFiltered cmp xs@ returns a
 --   list of maximal elements of @xs@ with respect to @cmp@.
-filterMaximalBy :: Eq a
-                => (a -> Bool)                -- ^ a function to check if an element has been
+filterMaximalBy :: (a -> Bool)                -- ^ a function to check if an element has been
                                               --   already filtered in the last iteration
                 -> (a -> a -> Maybe Ordering) -- ^ the comparison function
                 -> [a]                        -- ^ the list that we want to filter

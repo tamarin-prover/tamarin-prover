@@ -66,7 +66,7 @@ replacePos (viewTerm -> Lit _)        (_,_:_)             =
 
 -- | @positionsNonVar t@ returns all the non-variable positions in the term @t@.
 --   'positionsNonVar' accounts for AC symbols in the same ways as 'atPos'.
-positionsNonVar :: (Show a, Show b) => VTerm a b -> [Position]
+positionsNonVar :: VTerm a b -> [Position]
 positionsNonVar =
     go
   where

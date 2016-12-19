@@ -38,7 +38,7 @@ import           Term.Unification
 ----------------------------------------------------------------------
 
 -- | @norm t@ normalizes the term @t@ using Maude.
-norm :: (Show (Lit c LVar), Ord c, IsConst c)
+norm :: (IsConst c)
      => (c -> LSort) -> LTerm c -> WithMaude (LTerm c)
 norm _      t@(viewTerm -> Lit _) = return t
 norm sortOf t         = reader $ \hnd -> unsafePerformIO $ normViaMaude hnd sortOf t
@@ -119,7 +119,7 @@ nf' :: LNTerm -> WithMaude Bool
 nf' = nfViaHaskell
 
 -- | @nfViaMaude t@ returns @True@ if the term @t@ is in normal form.
-nfViaMaude :: (Show (Lit c LVar), Ord c, IsConst c)
+nfViaMaude :: (Ord c, IsConst c)
            => (c -> LSort) -> LTerm c -> WithMaude Bool
 nfViaMaude sortOf t = (t ==) <$> norm sortOf t
 

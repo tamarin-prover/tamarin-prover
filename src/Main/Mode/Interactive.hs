@@ -76,9 +76,9 @@ run thisMode as = case findArg "workDir" as of
           -- determine caching directory
           tempDir <- getTemporaryDirectory
           winLoginName <- lookupEnv "USERNAME"
-	  unixLoginName <- lookupEnv "USER"
-	  let loginName = fromMaybe "" (winLoginName <|> unixLoginName)
-	      cacheDir = tempDir </> ("tamarin-prover-cache-" ++ loginName)
+          unixLoginName <- lookupEnv "USER"
+          let loginName = fromMaybe "" (winLoginName <|> unixLoginName)
+              cacheDir = tempDir </> ("tamarin-prover-cache-" ++ loginName)
           -- process theories
           case (fst $ graphPath as) of
               "dot"  -> ensureGraphVizDot as
