@@ -707,12 +707,7 @@ theory flags0 = do
     symbol_ "theory"
     thyId <- identifier
     symbol_ "begin"
---        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory)
         *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
---        *> addItems (S.fromList flags0) (set (sigpMaudeSig . thySignature) (TEMPORARY.MaudeSig False False False True pairFunSig TEMP2.pairRules S.empty S.empty)  (set thyName thyId (defaultOpenTheory True)))  -- instead of "True" use: ("diff" `S.member` (S.fromList flags0))
---           set (enableDiff . sigpMaudeSig . thySignature) msig thy
--- debugging:    fail $ "hallo" ++ show msig
---set (enableDiff . sigpMaudeSig . thySignature) (True)    
         <* symbol "end"
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
