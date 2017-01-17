@@ -1,0 +1,17 @@
+theory mini10
+begin
+
+section{* small example for progression function *}
+builtins: signing, hashing
+options: progress
+
+event A(); in('r',m); event B()
+
+lemma A_enforced:
+      "Ex #t. A()@t"
+
+lemma B_not_enforced:
+    exists-trace
+      "(Ex #t0. A()@t0) & not(Ex #t. B()@t)"
+
+end

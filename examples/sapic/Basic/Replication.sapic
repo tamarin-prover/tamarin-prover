@@ -1,0 +1,16 @@
+/* 
+example illustrates replication (!)
+*/
+
+theory Replication
+begin
+
+! new s; event Secret(s); out(s); 0
+
+// only a single secret can be learned by the attacker
+// lemma falsified by tamarin
+lemma onlyOneSecret:
+      "All #i #j x y.  Secret(x)@i & Secret(y)@j ==> x = y"
+
+end
+

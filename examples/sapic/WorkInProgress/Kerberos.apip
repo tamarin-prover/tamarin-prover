@@ -1,0 +1,148 @@
+theory Kerberos
+
+begin
+
+functions: owf/1
+
+builtins: symmetric-encryption, signing
+
+let KAS=
+! ( //registering names .. NOT SURE HOW THIS WORKS IN REAL SPEC..
+	in(<user,password>);
+	lookup <'userpw',user> as nothing in 0
+	else
+		insert <'userpw',user>,password;
+		out(sign(<'added',user,password>,kas))
+)
+||
+!( //user asking for a authentication
+	in(<username, kas, n1>);
+	lookup <'userpw',username> as pw in
+		new clientTGS;
+		new tK; event Clock(tK); out(tK);
+		event KAS_OUT_1(senc(<clientTGS, n1, tK, kas>, owf(pw)),username,n1);
+		event KAS_OUT_2(senc(<clientTGS,username,tK>,skTGS), skTGS );
+		out(senc(<clientTGS, n1, tK, kas>, owf(pw))); //TGS for client
+		out(senc(<clientTGS,username,tK>,skTGS)) //TGT
+)
+let TGS=(
+	in(<senc(<clientTGS,username,tK>,skTGS),service_id,n2>); 
+	lookup <'serviceKey',service_id> as skV in
+		in(senc(<username, tC>,clientTGS)); 
+		event TGS_IN_1(senc(<clientTGS,username,tK>,skTGS),senc(<username,tC>,clientTGS),skTGS);
+		new sessionkey;
+		new tT; event Clock(tT); out(tT);
+		event TGS_OUT_2(senc(<sessionkey, n2, tT, service_id>,clientTGS), sessionkey, n2, skV);
+		out(senc(<sessionkey, username, tT>,skV)); //ticket to give to the service
+		out(senc(<sessionkey, n2, tT, service_id>,clientTGS));
+		0
+	)
+let V=(
+	in(senc(<sessionkey, username, tT >,skV));
+	in(senc(<username, tC2>,sessionkey));
+	event SessionV(username,service_id,sessionkey);
+	out(senc(tC2,sessionkey))
+)
+let C=( insert <'userpw',username>, pw; //registering using a secure channel...
+		!(  new n1;
+			in(service_id); //Adv asks C to connect to service
+
+			out(<username, kas, n1>); //request tgs, tgt
+
+			in(senc(<clientTGS, n1, tK, kas>,owf(pw))); 
+			event C_IN_1(senc(<clientTGS, n1, tK, kas>,owf(pw)), username, n1);
+			in(tgt);
+			new tC; event Clock(tC); out(tC);
+			new n2;
+			out(<tgt,service_id,n2>); //request session key
+			out(senc(<username,tC>,clientTGS));
+
+			in(C2Sticket);
+			in(senc(<sessionkey, n2, tT, service_id>,clientTGS));
+
+			event C_IN_2(senc(<sessionkey, n2, tT, service_id>,clientTGS),sessionkey,n2);
+			/* new tC2; event Clock(tC2); out(tC2); */
+			/* out(C2Sticket); //request service */
+			/* out(senc(<username, tC2>,sessionkey)); */
+			/* in(senc(tC2,sessionkey)); */
+			/* event SessionC(username,service_id, sessionkey); */
+			0
+		 )
+	  )
+
+//Many networks
+!( //Running a KAS and a TGS that know each other..
+		(new kas; new skTGS; out(kas);
+		 ( KAS  || TGS
+		  || //many services
+		  !( new service_id; new skV; 
+			 //register service with tgc
+			 insert <'serviceKey',service_id>, skV; out(service_id);
+			 //V;
+			 0
+			) 
+		  || //many clients
+		  !(new username; new pw; C) 
+		 )
+		)
+ )
+
+// TODO:
+
+lemma types [typing, reuse]:
+  " (All m1 username n1 #i .
+		C_IN_1(m1,username, n1) @ i
+       ==>
+       ( (Ex #j #k . KU(n1) @ j & j < i & KU(username)@k & k < i
+
+		)
+       | (Ex #j. KAS_OUT_1(m1,username,n1 ) @ j)
+       )
+    )
+	& (All tgt m1 skTGS #i .
+		TGS_IN_1(tgt, m1, skTGS) @ i
+		  ==> 
+		  (   (Ex #j . KU(skTGS) @ #j & #j<#i)
+			| (Ex #j . KAS_OUT_2(tgt,skTGS)@ #j)
+		  )	
+		)
+	& (All m2 sessionkey n2  #i .
+		C_IN_2(m2,sessionkey,n2) @ i
+		==> 
+		  (   (Ex #j . KU(n2) @ #j & #j<#i )
+			| (Ex #j skv . TGS_OUT_2(m2,sessionkey,n2, skv)@ #j)
+		  )	
+	)
+  /* & (All nr m2 #i. */
+  /*      IN_I_2_nr( nr, m2) @ i */
+  /*      ==> */
+  /*      ( (Ex #j. KU(nr) @ j & j < i) */
+  /*      | (Ex #j. OUT_R_1( m2 ) @ j) */
+  /*      ) */
+  /*   ) */
+"
+
+
+/* lemma sanity1: //make sure that a valid protocol run exists */
+/* exists-trace */
+/* 	"Ex c v sessionkey #t1 . SessionC(c,v,sessionkey)@t1" */
+
+/* lemma sanity2: */ 
+/* exists-trace */
+/* 	"Ex c v sessionkey #t1 . SessionV(c,v,sessionkey)@t1" */
+
+/* lemma authenticity[use_induction, reuse]: */
+/* 	"All c v k #i. SessionC(c,v,k)@i */
+/* 	==> Ex #j. SessionV(c,v,k)@j & j<i" */
+	
+//lemma secrecy:
+//	"not (
+//		Ex a b k #t1 #t2 .
+//		 SessionA(a,b,k)@t1 
+//		& K(k)@t2
+//		& ( Ex #i . Honest(a)@i)
+//		& ( Ex #i . Honest(b)@i)
+//	)"
+
+end
+

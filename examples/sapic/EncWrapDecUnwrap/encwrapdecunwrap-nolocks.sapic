@@ -1,0 +1,85 @@
+theory EncWrapDecUnwrap
+
+/*
+ * Protocol:    Enc/Wrap/Dec/Unwrap 
+ * Modeller:    Robert Kunnemann
+ * Date:    	November 2014
+ *
+ * Status:	working 
+ */
+
+/* Some more comments: This is supposed to model typical problems that
+ * arise from keys having the roles wrap and dec in PKCS\#11. We model
+ * four commands, besides the creation of a key: Encryption of userdata,
+ * Decryption of arbitrary Cyphertexts, Key-wrapping and Unwrapping, that
+ * is: re-importing of keys. The configuration allows to move from 'init'
+ * to 'wrap', or to move from 'init' to 'dec'. 
+ *
+ * 'dec' allows to encrypt/decrypt
+ * 'wrap' allows to wrap/unwrap
+ *
+ */
+
+begin
+
+builtins: symmetric-encryption
+
+!(
+	( in('create'); new h; new k; event NewKey(h,k); 
+		insert <'key',h>,k; 
+	 	insert <'att',h>, 'init'; out(h) )
+  ||
+	( in(<'set_wrap',h>); lookup <'att',h> as a in
+		if a='init'	then delete <'att',h>; 
+			insert <'att',h>, 'wrap'; 
+			event WrapHandle(h)
+	)
+  ||
+	( in(<'set_dec',h>); lookup <'att',h> as a in
+		if a='init' then delete <'att',h>; insert <'att',h>, 'dec'
+	)
+  || //Dec
+	( in(<h,senc(m,k)>); lookup <'att',h> as a in 
+			if a='dec' then 
+				lookup <'key',h> as kp in
+					if kp=k then
+				event DecUsing(k,m); out(m) 
+			)
+  || //Enc
+	( in(<h,m>); lookup <'att',h> as a in 
+			if a='dec' then lookup <'key',h> as k in
+				event EncUsing(k,m); out(senc(m,k)) 
+			else 0
+			else 0
+			else 0			)
+  || //Wrap
+	( in(<h1,h2>); lookup <'att',h1> as a1 in 
+			if a1='wrap' then lookup <'key',h1> as k1 in
+			lookup <'key',h2> as k2 in
+				event Wrap(k1,k2);
+				out(senc(k2,k1))
+			else 0
+			else 0
+			else 0
+			else 0			)
+  || //Unwrap
+	( in(<h1,senc(m,k)>); lookup <'att',h1> as a1 in 
+			if a1='wrap' then lookup <'key',h1> as k1 in
+				if k1=k then
+					new h2;
+                                        event Unwrapped(h2,m);
+					insert <'key',h2>, m;
+					insert <'attr',h2>, 'wrap'
+				else 0
+			else 0
+			else 0
+			else 0
+			)
+)
+
+// This can be shown by hand, which shows that we need locks.
+lemma can_obtain_key:
+      exists-trace
+	"(Ex #i #j  h k. NewKey(h,k)@i & K(k) @j)"
+
+end

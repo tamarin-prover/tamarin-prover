@@ -1,0 +1,25 @@
+theory nestedNDC3
+begin
+
+section{* small example for progression function *}
+builtins: signing, hashing
+options: progress
+
+event A() + ( (! event B() ) + (! event C()) )
+
+lemma A_possible: 
+	exists-trace 
+        "Ex #t. A()@t"
+
+lemma B_possible: 
+	exists-trace 
+        "Ex #t. B()@t"
+
+lemma C_possible: 
+	exists-trace 
+        "Ex #t. C()@t"
+
+lemma oneEventAlways:
+    "(Ex #t. A()@t) | (Ex #t. B()@t) | (Ex #t. C()@t)"
+
+end

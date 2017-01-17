@@ -1,0 +1,182 @@
+theory Contract
+begin
+
+section{* GM Protocol for Contract signing *}
+
+/*
+ * Protocol:    GM contract signing 
+ * Modeler:     Robert Kunnemann 
+ * Date:    	March 2013
+ *
+ * Status:  working 
+ */
+
+/* Some more comments:
+ * the security property depends only on the fact that the
+ * trusted party never answers two requests for the same
+ * contract. It does not so much depend on the actualy
+ * crypto used. We could  show that if all participants
+ * reach some kind of "End"-state, fairness is given, i.e.
+ * either both parties have a signature, or none has. 
+ *
+ * We furthermore added an equation to the signature that
+ * allows the communication partner to fake a pcs (but the
+ * trusted party can make out that difference).
+ */
+
+builtins: signing
+
+functions: pcs/3, checkpcs/5, convertpcs/2, check_getmsg/2, fakepcs/4
+
+equations:
+check_getmsg(sign(xm, xsk), pk(xsk)) = xm,
+checkpcs(xc, pk(xsk), ypk, zpk, pcs(sign(xc, xsk), ypk, zpk)) = true(),
+convertpcs(zsk, pcs(sign(xc, xsk), ypk, pk(zsk))) = sign(xc, xsk),
+/* fakepcs () */
+checkpcs(xc, xpk, pk(ysk), zpk, fakepcs(xpk, ysk, zpk, xc)) = true()
+
+
+  /* Taken from tamarin examples, quote:
+
+    The above two equations are inspired by the following design decisions.
+    We model a private signature of a contract 'xc' that is
+      - meant for 'y' identified by his public key 'ypk'
+      - privately signed by 'x' using his private key 'xsk'
+      - to be converted by the trusted party 'z' identified by its public key
+        'zpk'
+     using the term 'pcs(sign(xsk, xc), ypk, zpk)'.
+
+     This term chan be checked against 'xc', 'pk(xsk)', ypk, and zpk using
+     the 'checkpcs' algorithm.
+
+     It can be converted to a standard signature using the 'convertpcs'
+     algorithm provided one has access to the private key of the trusted
+     party.
+
+     Note that we embedd the proper standard signature immediately into the
+     'pcs' term, as the resulting equational theory is not subterm-convergent
+     otherwise.
+  */
+
+
+let Abort1 =
+  in(<'abort',<ct,pk1,pk2,ysig>>);
+	if check_getmsg(ysig, pk1) = <ct,pk1,pk2> then
+	  (lock  ct;
+	   lookup ct as state in unlock ct
+	   else
+		(
+			  insert ct, 'aborted';
+			  event Abort1(ct);
+			  unlock ct;
+			  out(sign(<<ct,pk1,pk2>,ysig>,skT))
+		)
+	  )
+
+let Resolve2 =
+in(<'resolve2',<ct,pk1,pk2,ypcs1,ysig2>>);
+if check_getmsg(ysig2, pk2)=ct then 
+(
+	/* check validity of the pcs ..something not done in StatVerif/Tamarin modelling */
+	if check_getmsg(convertpcs(skT,ypcs1),pk1) = ct then 
+	(
+		if checkpcs(ct, pk1, pk2, pk(skT), ypcs1)=true() then 
+		(
+			lock ct;
+			lookup ct as status in unlock ct
+			else 
+			(
+				insert ct, 'resolved2';
+				event Resolve2(ct);
+				unlock ct;
+				out(sign(<convertpcs(skT,ypcs1), ysig2>,skT))
+			)
+		)
+	)
+)
+
+let Resolve1 =
+in(<'resolve1',<ct,pk1,pk2,ysig1,ypcs2>>);
+if check_getmsg(ysig1,pk1)=ct then 
+(
+	if check_getmsg(convertpcs(skT,ypcs2),pk2) = ct then 
+	(
+		if checkpcs(ct, pk2, pk1, pk(skT), ypcs2)=true() then
+		(
+			lock ct;
+			lookup ct as status in unlock ct
+			else 
+			(
+				insert ct, 'resolved1';
+				event Resolve1(ct);
+				unlock ct;
+				out(sign(<ysig1,convertpcs(skT, ypcs2)>,skT))
+			)
+		)
+	)
+)
+		
+let WitnessAbort = 
+ in (sign(pcs(sign(ct,sk1), pk(ysk), pk(skT)),skT) );
+	event AbortCert(ct)
+let WitnessResolved =
+ in (sign(<sign(ct,sk1), sign(ct,sk2)>,skT));
+  event ResolveCert(ct)
+
+let HonestClient = 
+	new skA;
+	out(pk(skA));
+	in (<ct,xpkB>);
+	( //First decision: Sign the contract!
+		out(sign(ct,skA));
+		( 
+			in(sigB); 
+			if verify(sigB,ct,xpkB)=true() then
+				//if we get a signature back..good!
+				event AhasSignature(ct)
+			else //if not
+				0 //would continue here..
+		)
+	)
+	|| //Or we decide not to sign it
+	0
+
+
+
+!(
+new skT;
+event TrustedParty(skT);
+out(pk(skT));
+      (
+! Abort1 || ! Resolve2 || ! Resolve1  ||
+!WitnessAbort || !WitnessResolved ||
+!HonestClient
+)
+)
+
+/* Lemmas taken from tamarin files */
+
+lemma aborted_and_resolved_exclusive:
+  "not (Ex ct #i #j. AbortCert(ct) @ i & ResolveCert(ct) @ j)"
+
+/* Sanity checks */
+lemma resolved1_contract_reachable:
+  exists-trace
+  " (Ex ct #i. ResolveCert(ct) @ i)
+    // Ensure that this is possible with at most one Resolve1 step.
+  & (All ct #i. Abort1(ct) @ i ==> F)
+  & (All ct1 ct2 #i1 #i2 .
+       Resolve1(ct1) @ i1 & Resolve1(ct2) @ i2 ==> #i1 = #i2)
+  & (All ct #i. Resolve2(ct) @ i ==> F)
+  "
+
+lemma resolved2_contract_reachable:
+  exists-trace
+  "(Ex ct #i. ResolveCert(ct) @ i)
+    // Ensure that this is possible with at most one Resolve1 step.
+  & (All ct #i. Abort1(ct) @ i ==> F)
+  & (All ct #i. Resolve1(ct) @ i ==> F)
+  & (All ct1 ct2 #i1 #i2 .
+       Resolve2(ct1) @ i1 & Resolve2(ct2) @ i2 ==> #i1 = #i2)
+  "
+end	

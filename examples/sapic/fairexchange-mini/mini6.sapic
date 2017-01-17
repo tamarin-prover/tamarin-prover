@@ -1,0 +1,16 @@
+theory mini6
+begin
+
+section{* small example for progression function *}
+builtins: signing, hashing
+options: progress
+
+new a; !( if a=a then in('r',m); event A() else event B())
+
+lemma A_possible: 
+        exists-trace
+        "Ex #t. A()@t"
+
+lemma B_impossible: 
+        "not (Ex #t. B()@t)"
+end

@@ -1,0 +1,318 @@
+theory ASWmod
+begin
+
+section{* The ASW contract signing protocol *}
+
+/*
+ * Protocol:    ASW
+ * Date:        Jan 2016
+ * Status:      wip
+ * 
+ * ASW protocol with the following modifications:
+ *      - The third and fourth message are modified according to [1], in particular:
+ *      m3 = sign {<na,h(nb)>}sk($A) 
+ *      m4 = sign {<nb,h(na)>}sk($B) 
+ *      - The response from the TTP to a resolving responder, in case the initiator
+ *        has already requested abortion contains h(nb) within the signature,
+ *        so as to uniquely identify the responder's current session, i.e.
+ *      	 sign{<'Aborted', a1, h(nb)>}sk(TTPID).
+ *        Note that the Abort-Protocol remains otherwise unmodified, in
+ *        particular the messages to the initiator.
+ *      - We use a weaker notion of contract: two different evidences of
+ *        a contract only imply a different contract, if the contract text t is
+ *        different.
+ *
+ * [1] V. Shmatikov, J.C. Mitchell. Analysis of a Fair Exchange Protocol. NDSS 2000. 
+ *      
+ */
+
+  /* New convention for communication on reliable channel:
+   * <role,from,to,message>
+   */
+
+builtins:  hashing
+
+functions:
+    pk/1,sk/1[private],
+    sign/2, verify/2,extrmsg/1,
+    true/0
+
+equations:
+    verify(sign(m, sk(i)), pk(i)) = true,
+    extrmsg(sign(m,x))=m
+
+options: progress
+
+/* Role of Alice */
+
+let A = in ('c',$TEXT);
+      	new na;
+	let m1 = sign {<$A, $B, TTPID, $TEXT, h(na)>}sk($A) in 
+	let m2 = sign {<h(m1),h(nb)>}sk($B) in
+	let m3 = sign {<na,h(nb)>}sk($A) in
+	let m4 = sign {<nb,h(na)>}sk($B) in
+	let a1 = sign {<'Abort', m1>}sk($A) in
+	event StartA($A, $B, $TEXT, na);
+        event StartAm1(m1);
+      	out('c', m1);
+	(
+	in('c', m2);
+	out('c', m3);
+            (
+             in('c', m4);
+             event ContractA($A,$B,$TEXT,na); event EndA1($A,$B,$TEXT,nb)
+            )
+            +
+            (
+             /* Resolve */
+             out('r',<'originator',$A,TTPID,<m1,m2>>);
+                     /* TODO REMOVED -- make sure this is valid
+                      * strangely enough, verification works in asw-A.sapic
+                      * might be because:
+                      *     - receiving the abort message from TTP after sending
+                      *     a resolve message means that A sent an abort before
+                      *     - hence A could not reach this in the first place.
+                     /* ( */
+                     /* in('r',<'originator',sign{<'Aborted', a1>}sk(TTPID)>); */
+                     /* event AbortA($A, $TEXT, na) */
+                     /* ) */
+                     /* + */
+                     (
+                     in ('r',<'originator',TTPID,$A,sign{<m1, m2>}sk(TTPID)>);
+                     event ContractA($A,$B,$TEXT,na); event EndA2($A,$B,$TEXT,nb)
+                     )
+            )
+        )
+        +
+	(
+	/* Abort */
+	out('r',<'originator',$A,TTPID,a1>);
+		 (
+		 in('r',<'originator',TTPID,$A,sign{<'Aborted', a1>}sk(TTPID)>);
+		 event AbortA($A,$B,$TEXT,na); event EndA3($A,$B,$TEXT,nb)
+		 )
+		 +
+		 (
+		 in ('r',<'originator',TTPID,$A,sign{<m1, m2>}sk(TTPID)>);
+		 event ContractA($A,$B,$TEXT,na); event EndA4($A,$B,$TEXT,nb)
+		 )
+	)
+
+/* Role of Bob */
+
+let B = (
+	let m1 = sign {<$A, $B, TTPID, $TEXT, h(na)>} sk($A) in 
+	let m2 = sign {<h(m1),h(nb)>}sk($B) in
+	let m3 = sign {<na,h(nb)>}sk($A) in
+	let m4 = sign {<nb,h(na)>}sk($B) in
+	let a1 = sign {<'Abort', m1>}sk($A) in
+        in ('c', m1 );
+      	new nb;
+        event StartB($A,$B,$TEXT,nb);
+        out ('c', m2);
+        (
+        in ('c', m3);
+        event ContractB($A,$B,$TEXT,nb); event EndB1($A,$B,$TEXT,nb);
+        out ('c',m4)
+	)
+        +
+        (
+	 /* Resolve */
+	 out('r',<'responder',$B,TTPID,<m1,m2>>);
+	 	 (
+		 in('r',<'responder',TTPID,$B,sign{<'Aborted', a1, h(nb)>}sk(TTPID)>);
+                 /* modified -- aborted message contains h(nb) to link 
+                  * response to right responder session */
+		 event AbortB0(TTPID,$A,$B, $TEXT, na, nb);
+		 event AbortB($A,$B, $TEXT, nb); event EndB2($A,$B,$TEXT,nb)
+		 )
+		 +
+		 (
+		 in ('r',<'responder',TTPID,$B,sign{<m1, m2>}sk(TTPID)>);
+                 event ContractB($A,$B,$TEXT,nb); event EndB3($A,$B,$TEXT,nb)
+		 )
+	)
+)
+
+let TTP =
+  let m1 = sign {<$A, $B, TTPID, $TEXT, h(na)>}sk($A) in 
+  let m2 = sign {<h(m1),h(nb)>}sk($B) in
+  let a1 = sign{<'Abort', m1>}sk($A) in
+  ( /*Abort */
+  in('r',<'originator',$A,TTPID,a1>);
+  lock m1;
+  lookup <'F_Resolved',TTPID,m1> as y in
+        /* event TTPResolvesA($A,$B,$TEXT,na); */
+        /* event TTPEchosm1($A,m1); */
+   	out('r',<'originator',TTPID,$A,sign{<m1, y>}sk(TTPID)>);
+        unlock m1
+  else  insert <'Aborted',TTPID,m1>, 'Aborted';
+        event TTPAbort1(TTPID,$A,$B,$TEXT,nb);
+        event TTPAbort(TTPID,$A,$B,$TEXT,na);
+  	out('r',<'originator',TTPID,$A,sign{<'Aborted', a1>}sk(TTPID)>);
+        unlock m1
+  )
+  ||
+  ( /* Resolve A */
+  in('r',<'originator',$A,TTPID,<m1,m2>>);  
+  /*a                     ^^^^^
+   * TODO need to recheck! added missing ttpid here
+   */
+  lock m1;
+  lookup <'Aborted',TTPID,m1> as x in
+  	 /* if x = 'Aborted' then */ 
+        event TTPAbort(TTPID,$A,$B,$TEXT,na);
+         out('r',<'originator',TTPID,$A,sign{<'Aborted', a1>}sk(TTPID)>);
+         /* Could also output nothing in this case, as an honest originator
+          * should never send out a resolve after she *herself* requested an abort.
+          */
+         unlock m1
+  else	insert <'F_Resolved',TTPID,m1>, m2;
+         event InitiatorResolved(TTPID, $A,$B,$TEXT,na);
+	 out('r',<'originator',TTPID,$A,sign{<m1, m2>}sk(TTPID)>);
+         unlock m1
+  )
+  ||
+  ( /* Resolve B */
+  in('r',<'responder',$B,TTPID,<m1,m2>>);  
+  lock m1;
+  lookup <'Aborted',TTPID,m1> as x in
+  	 /* if x = 'Aborted' then */ 
+         out('r',<'responder',TTPID,$B,sign{<'Aborted', a1, h(nb)>}sk(TTPID)>);
+         event TTPAbort(TTPID,$A,$B,$TEXT,na);
+         unlock m1
+  else	 insert <'F_Resolved',TTPID,m1>, m2;
+         event ResponderResolved(TTPID, $A,$B,$TEXT,na);
+	 out('r',<'responder',TTPID,$B,sign{<m1, m2>}sk(TTPID)>);
+         unlock m1
+  )
+let Judge = 
+  let m1 = sign {<$A, $B, TTPID, $TEXT, h(na)>}sk($A) in 
+  let m2 = sign {<h(m1),h(nb)>}sk($B) in
+  let m3 = sign {<na,h(nb)>}sk($A) in
+  let m4 = sign {<nb,h(na)>}sk($B) in
+             (in('c',<m4,m2,m3,m1>); event ContractJudge($A,$B,$TEXT))
+         ||  (in('c',sign{<m1,m2>}sk(TTPID)); event ContractJudge($A,$B,$TEXT))
+
+let TTPID=<'TTP',$TTP> in
+!(
+in('c',<$A,$B,TTPID>);
+ (A || B || TTP || Judge)
+)
+|| !( in('c',<'corrupt',$x>); 
+        event Corrupt($x);
+        out('c',sk($x));
+        ( !(in('r',<'responder',$x,TTPID,m>);0) 
+       || !(in('r',<'originator',$x,TTPID,m>);0)
+       || !(in('r',<'responder',TTPID,$x,m>);0)
+       || !(in('r',<'originator',TTPID,$x,m>);0)
+       )
+   )
+
+/* new sanity, auto */
+lemma sanity_a1b1:
+exists-trace
+ "Ex #i #j a b t na. 
+    EndA1(a,b,t,na)@i 
+  & EndB1(a,b,t,na)@j 
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+
+/* new sanity, auto */
+lemma sanity_a2b1:
+exists-trace
+ "Ex #i #j a b t nb. 
+    EndA2(a,b,t,nb)@i 
+  & EndB1(a,b,t,nb)@j 
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+
+/* new sanity, no auto */
+lemma sanity_a2b3:
+exists-trace
+ "Ex #i #j a b t nb. 
+    EndA2(a,b,t,nb)@i 
+  & EndB3(a,b,t,nb)@j 
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+
+/* new sanity, wip */
+lemma sanity_a3b2:
+exists-trace
+ "Ex #i #j a b t nb. 
+    EndA3(a,b,t,nb)@i 
+  & EndB2(a,b,t,nb)@j
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+
+/* new sanity, no auto */
+lemma sanity_a4b3:
+exists-trace
+ "Ex #i #j a b t nb. 
+    EndA4(a,b,t,nb)@i 
+  & EndB3(a,b,t,nb)@j 
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+   
+/* /1* auto *1/ */
+/* lemma sanity_optimistic_AB: */
+/* exists-trace */
+/*  "Ex #i #j a b t m1 m2 na nb . */ 
+/*     ContractA(a,b,t,na)@i */ 
+/*   & ContractB(a,b,t,m1,m2,na,nb)@j */
+/*   & not (Ex #k. Corrupt(a)@k) */
+/*   & not (Ex #k. Corrupt(b)@k) */
+/*   " */
+
+/* lemma sanity_optimistic_A: */
+/* exists-trace */
+/*  "Ex #i a b t na . ContractA(a,b,t,na)@i */ 
+/*   & not (Ex #j. Corrupt(a)@j)" */
+
+
+/* automatic */
+lemma timelinessB [reuse]:
+    "All #i a b t nb. StartB(a, b, t, nb)@i
+    	    ==>  ( Ex #j .  ContractB(a, b, t, nb)@j)
+             | ( Ex #j .  AbortB(a, b, t, nb)@j )
+             | ( Ex #j. Corrupt(b)@j)
+             "
+
+/* automatic */
+lemma helper0 [reuse]:
+    "All a b t na nb #i ttp.  AbortB0(ttp,a,b,t,na,nb)@i  
+        ==> Ex #j.  TTPAbort(ttp,a,b,t,na)@j"
+
+/* need to seclect insert aborted in two last of three subcases where abort was
+ * issued previously and is just repeated on attempt to resolve by A or B
+ *
+ * TODO: Consider distinguishing insert of abort or use of previous abort...
+ * but see first im lemma helps in proving fairness..
+ *
+ */
+lemma helper2 [reuse]:
+    " not (Ex #i #j ttp a b t na.
+        TTPAbort(ttp, a, b, t, na)@i & InitiatorResolved(ttp, a, b, t, na)@j 
+        )
+        "
+
+/* lets cassis crash */
+lemma helper3 [reuse]:
+    " not (Ex #i #j ttp a b t na.
+        TTPAbort(ttp, a, b, t, na)@i & ResponderResolved(ttp, a, b, t, na)@j 
+        )
+        "
+
+/* automatic with helper0,2,3 */
+lemma fullfairnessB:
+    "All #i a b t . ContractJudge(a,b,t)@i
+        ==> (Ex #j nb . ContractB(a,b,t, nb)@j) 
+            | (Ex #k. Corrupt(b)@k)
+           "
+
+end

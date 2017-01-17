@@ -1,0 +1,25 @@
+/*
+example illustrating internal communication
+*/
+
+theory ChannelsTestThree
+begin
+
+let P = new a; out ('c', a)
+let Q = in('c', x); event Received(x)
+
+P || Q
+
+// the attacker may learn a secret sent on a public channel
+lemma not_secret : exists-trace
+      "Ex #i #j x. Received(x) @ i & K(x) @j"
+
+
+//communication can be internal, i.e. without the attacker learning
+//the message
+lemma internal_comm : exists-trace 
+      "Ex x #i.  (Received(x) @ i & All y #j. K(y) @j ==> not (x = y))"
+
+end
+
+/* vim: set filetype=apip */

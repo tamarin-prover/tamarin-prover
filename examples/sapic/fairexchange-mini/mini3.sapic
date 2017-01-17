@@ -1,0 +1,25 @@
+theory mini3
+begin
+
+section{* small example for progression function *}
+builtins: signing, hashing
+options: progress
+
+(in('r',m); event A()) + !(in('r',m); event B())
+
+lemma A_possible: 
+	exists-trace 
+        "Ex #t. A()@t"
+
+lemma B_possible: 
+	exists-trace 
+        "Ex #t. B()@t"
+
+lemma A_once: 
+        "not (Ex #t1 #t2 . A()@t1 & A()@t2 & not(#t1=#t2)) "
+
+lemma B_multiple: 
+	exists-trace 
+        "Ex #t1 #t2 . B()@t1 & B()@t2 & not(#t1=#t2)"
+
+end

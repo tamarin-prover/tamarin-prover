@@ -1,0 +1,20 @@
+/*
+
+example illustrates that if the process is not under replication only
+one secret can be learned 
+
+*/
+
+theory NoReplication
+begin
+
+new s; event Secret(s); out(s); 0
+
+
+// only a single secret can be learned by the attacker
+// lemma verified by tamarin
+lemma onlyOneSecret:
+      "All #i #j x y.  Secret(x)@i & Secret(y)@j ==> x = y"
+
+end
+
