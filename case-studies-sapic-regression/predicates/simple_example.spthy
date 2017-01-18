@@ -1,0 +1,40 @@
+theory SimpleIf
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+rule Init_: //Init 
+ [ ] --[Init()]-> [State_()]
+
+rule new_h_: //new h 
+ [ State_(), Fr(h)] --[]-> [State_1(h)]
+
+rule if_equalh_h_0_1: //if equal(h, h), 0 
+ [ State_1(h)] --[Pred_equal(h, h)]-> [State_11(h)]
+
+rule if_equalh_h_1_1: //if equal(h, h), 1 
+ [ State_1(h)] --[Pred_not_equal(h, h)]-> [State_12(h)]
+
+rule event_Bogus_11: //event Bogus() 
+ [ State_11(h)] --[Event(), Bogus()]-> [State_111(h)]
+
+rule Zero_111: //Zero 
+ [ State_111(h)] --[]-> []
+
+rule Zero_12: //Zero 
+ [ State_12(h)] --[]-> []
+
+
+axiom single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+axiom predicate1:
+	"All #i h1 h2. Pred_not_equal(h1,h2)@i ==> not(h1 = h2)"
+
+axiom predicate0:
+	"All #i h1 h2. Pred_equal(h1,h2)@i ==> h1 = h2"
+
+lemma bogus_exists : exists-trace
+"	Ex #i. Bogus() @ i"
+
+end

@@ -1,0 +1,174 @@
+theory Test
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+
+functions: prog/3, list/2
+rule Init_: //Init 
+ [ ] --[Init()]-> [State_()]
+
+rule new_init_: //new init 
+ [ State_(), Fr(init)] --[]-> [State_1(init)]
+
+rule Par_1: //Par 
+ [ State_1(init)] --[]-> [State_11(init), State_12(init)]
+
+rule Rep_0_11: //Rep, 0 
+ [ State_11(init)] --[]-> [!Semistate_111(init)]
+
+rule Rep_1_11: //Rep, 1 
+ [ !Semistate_111(init)] --[]-> [State_111(init)]
+
+rule new_state_111: //new state 
+ [ State_111(init), Fr(state)] --[]-> [State_1111(init, state)]
+
+rule insert_state_init_1111: //insert state,init 
+ [ State_1111(init, state)] --[Insert(state, init)]-> [State_11111(init, state)]
+
+rule Rep_0_11111: //Rep, 0 
+ [ State_11111(init, state)] --[]-> [!Semistate_111111(init, state)]
+
+rule Rep_1_11111: //Rep, 1 
+ [ !Semistate_111111(init, state)] --[]-> [State_111111(init, state)]
+
+rule lock_state_111111: //lock state 
+ [ State_111111(init, state), Fr(~lock9)] --[Lock(~lock9, state)]-> [State_1111111(~lock9, init, state)]
+
+rule lookup_state_as_ipo_0_1111111: //lookup state as ipo, 0 
+ [ State_1111111(~lock9, init, state)] --[IsIn(state, ipo)]-> [State_11111111(~lock9, init, ipo, state)]
+
+rule lookup_state_as_ipo_1_1111111: //lookup state as ipo, 1 
+ [ State_1111111(~lock9, init, state)] --[IsNotSet(state)]-> [State_11111112(~lock9, init, state)]
+
+rule in_ip_11111111: //in ip 
+ [ State_11111111(~lock9, init, ipo, state), In(ip)] --[]-> [State_111111111(~lock9, init, ip, ipo, state)]
+
+rule new_r_111111111: //new r 
+ [ State_111111111(~lock9, init, ip, ipo, state), Fr(r)] --[]-> [State_1111111111(~lock9, init, ip, ipo, r, state)]
+
+rule event_Poutput_progr_ip_ipo_ip_ipo__1111111111: //event Poutput(<prog(r, ip, ipo), ip, ipo>) 
+ [ State_1111111111(~lock9, init, ip, ipo, r, state)] --[Event(), Poutput(<prog(r, ip, ipo), ip, ipo>)]-> [State_11111111111(~lock9, init, ip, ipo, r, state)]
+
+rule out_progr_ip_ipo_rep_progr_ip_ipo_ip_ipo_l___11111111111: //out <prog(r, ip, ipo), rep(<prog(r, ip, ipo), ip, ipo>, 'l')> 
+ [ State_11111111111(~lock9, init, ip, ipo, r, state)] --[]-> [State_111111111111(~lock9, init, ip, ipo, r, state), Out(<prog(r, ip, ipo), rep(<prog(r, ip, ipo), ip, ipo>, 'l')>)]
+
+rule insert_state_progr_ip_ipo_listip_ipo__111111111111: //insert state,<prog(r, ip, ipo), list(ip, ipo)> 
+ [ State_111111111111(~lock9, init, ip, ipo, r, state)] --[Insert(state, <prog(r, ip, ipo), list(ip, ipo)>)]-> [State_1111111111111(~lock9, init, ip, ipo, r, state)]
+
+rule unlock_state_1111111111111: //unlock state 
+ [ State_1111111111111(~lock9, init, ip, ipo, r, state)] --[Unlock(~lock9, state)]-> [State_11111111111111(~lock9, init, ip, ipo, r, state)]
+
+rule Zero_11111111111111: //Zero 
+ [ State_11111111111111(~lock9, init, ip, ipo, r, state)] --[]-> []
+
+rule Zero_11111112: //Zero 
+ [ State_11111112(~lock9, init, state)] --[]-> []
+
+rule Rep_0_12: //Rep, 0 
+ [ State_12(init)] --[]-> [!Semistate_121(init)]
+
+rule Rep_1_12: //Rep, 1 
+ [ !Semistate_121(init)] --[]-> [State_121(init)]
+
+rule new_state_121: //new state 
+ [ State_121(init), Fr(state)] --[]-> [State_1211(init, state)]
+
+rule insert_state_init_1211: //insert state,init 
+ [ State_1211(init, state)] --[Insert(state, init)]-> [State_12111(init, state)]
+
+rule Rep_0_12111: //Rep, 0 
+ [ State_12111(init, state)] --[]-> [!Semistate_121111(init, state)]
+
+rule Rep_1_12111: //Rep, 1 
+ [ !Semistate_121111(init, state)] --[]-> [State_121111(init, state)]
+
+rule lock_state_121111: //lock state 
+ [ State_121111(init, state), Fr(~lock9)] --[Lock(~lock9, state)]-> [State_1211111(~lock9, init, state)]
+
+rule lookup_state_as_ipo_0_1211111: //lookup state as ipo, 0 
+ [ State_1211111(~lock9, init, state)] --[IsIn(state, ipo)]-> [State_12111111(~lock9, init, ipo, state)]
+
+rule lookup_state_as_ipo_1_1211111: //lookup state as ipo, 1 
+ [ State_1211111(~lock9, init, state)] --[IsNotSet(state)]-> [State_12111112(~lock9, init, state)]
+
+rule in_ip_12111111: //in ip 
+ [ State_12111111(~lock9, init, ipo, state), In(ip)] --[]-> [State_121111111(~lock9, init, ip, ipo, state)]
+
+rule in_o_signedios__121111111: //in <o, signedios> 
+ [ State_121111111(~lock9, init, ip, ipo, state), In(<o, signedios>)] --[]-> [State_1211111111(~lock9, init, ip, ipo, o, signedios, state)]
+
+rule if_eq_o_ip_ipo_check_repsignedios_l__0_1211111111: //if eq(<o, ip, ipo>, check_rep(signedios, 'l')), 0 
+ [ State_1211111111(~lock9, init, ip, ipo, o, signedios, state)] --[Pred_eq(<o, ip, ipo>, check_rep(signedios, 'l'))]-> [State_12111111111(~lock9, init, ip, ipo, o, signedios, state)]
+
+rule if_eq_o_ip_ipo_check_repsignedios_l__1_1211111111: //if eq(<o, ip, ipo>, check_rep(signedios, 'l')), 1 
+ [ State_1211111111(~lock9, init, ip, ipo, o, signedios, state)] --[Pred_not_eq(<o, ip, ipo>, check_rep(signedios, 'l'))]-> [State_12111111112(~lock9, init, ip, ipo, o, signedios, state)]
+
+rule event_Voutput_o_ip_ipo__12111111111: //event Voutput(<o, ip, ipo>) 
+ [ State_12111111111(~lock9, init, ip, ipo, o, signedios, state)] --[Event(), Voutput(<o, ip, ipo>)]-> [State_121111111111(~lock9, init, ip, ipo, o, signedios, state)]
+
+rule insert_state_o_listip_ipo__121111111111: //insert state,<o, list(ip, ipo)> 
+ [ State_121111111111(~lock9, init, ip, ipo, o, signedios, state)] --[Insert(state, <o, list(ip, ipo)>)]-> [State_1211111111111(~lock9, init, ip, ipo, o, signedios, state)]
+
+rule unlock_state_1211111111111: //unlock state 
+ [ State_1211111111111(~lock9, init, ip, ipo, o, signedios, state)] --[Unlock(~lock9, state)]-> [State_12111111111111(~lock9, init, ip, ipo, o, signedios, state)]
+
+rule Zero_12111111111111: //Zero 
+ [ State_12111111111111(~lock9, init, ip, ipo, o, signedios, state)] --[]-> []
+
+rule event_Fail_12111111112: //event Fail() 
+ [ State_12111111112(~lock9, init, ip, ipo, o, signedios, state)] --[Event(), Fail()]-> [State_121111111121(~lock9, init, ip, ipo, o, signedios, state)]
+
+rule Zero_121111111121: //Zero 
+ [ State_121111111121(~lock9, init, ip, ipo, o, signedios, state)] --[]-> []
+
+rule Zero_12111112: //Zero 
+ [ State_12111112(~lock9, init, state)] --[]-> []
+
+ axiom set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+        (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
+                & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
+                & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
+)"
+
+axiom set_notin:
+"All x #t3 . IsNotSet(x)@t3 ==> 
+        (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
+  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 
+                &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
+
+
+axiom locking:
+"All l x lp #t1 #t3 . Lock(l,x)@t1 & Lock(lp,x)@t3 
+        ==> 
+        ( #t1<#t3 
+                & (Ex #t2. Unlock(l,x)@t2 & #t1<#t2 & #t2<#t3 
+                 & (All  #t0 . Unlock(l,x)@t0 ==> #t0=#t2) 
+                 & (All lp #t0 . Lock(lp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+                 & (All lp #t0 . Unlock(lp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 )
+                ))
+        | #t3<#t1 | #t1=#t3 "
+
+
+axiom predicate_eq:
+"All #i a b. Pred_eq(a,b)@i ==> a = b"
+
+
+axiom predicate_not_eq:
+"All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)"
+
+
+axiom single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+axiom predicate1:
+	"All #i x y. Pred_not_pred_rep(x,y)@i ==> not(not(y = 'l'))"
+
+axiom predicate0:
+	"All #i x y. Pred_pred_rep(x,y)@i ==> not(y = 'l')"
+
+lemma attested_comput :
+"	All #t1 h. Voutput(h) @ t1 ==> ( Ex #t2. Poutput(h) @ t2 & t2 < t1 )"
+
+end

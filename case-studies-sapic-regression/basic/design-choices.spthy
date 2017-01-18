@@ -1,0 +1,74 @@
+theory DesignChoices
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+rule Init_: //Init 
+ [ ] --[Init()]-> [State_()]
+
+rule Rep_0_: //Rep, 0 
+ [ State_()] --[]-> [!Semistate_1()]
+
+rule Rep_1_: //Rep, 1 
+ [ !Semistate_1()] --[]-> [State_1()]
+
+rule lock_s__1: //lock 's' 
+ [ State_1(), Fr(~lock6)] --[Lock(~lock6, 's')]-> [State_11(~lock6)]
+
+rule lookup_visited_as_v_0_11: //lookup 'visited' as v, 0 
+ [ State_11(~lock6)] --[IsIn('visited', v)]-> [State_111(~lock6, v)]
+
+rule lookup_visited_as_v_1_11: //lookup 'visited' as v, 1 
+ [ State_11(~lock6)] --[IsNotSet('visited')]-> [State_112(~lock6)]
+
+rule unlock_s__111: //unlock 's' 
+ [ State_111(~lock6, v)] --[Unlock(~lock6, 's')]-> [State_1111(~lock6, v)]
+
+rule Zero_1111: //Zero 
+ [ State_1111(~lock6, v)] --[]-> []
+
+rule event_Visit_112: //event Visit() 
+ [ State_112(~lock6)] --[Event(), Visit()]-> [State_1121(~lock6)]
+
+rule insert_visited_s__1121: //insert 'visited','s' 
+ [ State_1121(~lock6)] --[Insert('visited', 's')]-> [State_11211(~lock6)]
+
+rule unlock_s__11211: //unlock 's' 
+ [ State_11211(~lock6)] --[Unlock(~lock6, 's')]-> [State_112111(~lock6)]
+
+rule Zero_112111: //Zero 
+ [ State_112111(~lock6)] --[]-> []
+
+ axiom set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+        (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
+                & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
+                & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
+)"
+
+axiom set_notin:
+"All x #t3 . IsNotSet(x)@t3 ==> 
+        (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
+  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 
+                &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
+
+
+axiom locking:
+"All l x lp #t1 #t3 . Lock(l,x)@t1 & Lock(lp,x)@t3 
+        ==> 
+        ( #t1<#t3 
+                & (Ex #t2. Unlock(l,x)@t2 & #t1<#t2 & #t2<#t3 
+                 & (All  #t0 . Unlock(l,x)@t0 ==> #t0=#t2) 
+                 & (All lp #t0 . Lock(lp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+                 & (All lp #t0 . Unlock(lp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 )
+                ))
+        | #t3<#t1 | #t1=#t3 "
+
+
+axiom single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+lemma visit_once :
+"	All #t1 #t2. ( Visit() @ t1 & Visit() @ t2 ) ==> #t1 = #t2"
+
+end
