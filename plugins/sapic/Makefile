@@ -8,6 +8,7 @@ FLAGS=-g
 
 sapic: 	$(OBJS)
 	ocamlc $(FLAGS) -o $@ str.cma $(OBJS)
+	cp sapic ~/.local/bin
 
 default: .ocaml_ok sapic
 

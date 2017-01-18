@@ -7,9 +7,17 @@ TAMARIN=~/.local/bin/tamarin-prover
 default: 
 	stack setup
 	stack install
+	cd plugins/sapic && $(MAKE)
+
+sapic:
+	cd plugins/sapic && $(MAKE)
 
 clean:
 	stack clean
+	cd plugins/sapic && $(MAKE) clean
+
+sapic-clean:
+	cd plugins/sapic && $(MAKE) clean
 
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.
