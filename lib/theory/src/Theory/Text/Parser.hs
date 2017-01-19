@@ -28,6 +28,7 @@ import qualified Data.Map                   as M
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
+import qualified Data.List                  as L
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -35,6 +36,8 @@ import           Control.Monad
 
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
+
+import           System.Process
 
 -- import qualified Extension.Data.Label       as L
 
@@ -84,7 +87,15 @@ toAxiom ax = Axiom (pAxName ax) (pAxFormula ax)
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags = parseFile (theory flags)
+parseOpenTheory flags file = if ".sapic" `L.isSuffixOf` file 
+    then 
+       do
+          callCommand $ "sapic " ++ file ++ " > " ++ spthyfile
+          parseFile (theory flags) spthyfile
+    else
+          parseFile (theory flags) spthyfile       
+    where
+       spthyfile = (take ((length file) - 6) file) ++ ".spthy"
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags

@@ -4,14 +4,16 @@
 TAMARIN=~/.local/bin/tamarin-prover
 SAPIC=~/.local/bin/sapic
 
-sapic:
+.sapic:
 	cd plugins/sapic && $(MAKE)
 
 # Default installation via stack
-default: 
+.tamarin:
 	stack setup
 	stack install
-	$(MAKE) sapic
+
+# Try to install Tamarin and SAPIC
+default: .tamarin .sapic
 
 sapic-clean:
 	cd plugins/sapic && $(MAKE) clean
@@ -297,21 +299,24 @@ case-studies/%_analyzed-sapic.spthy:	case-studies-sapic-regression/%.spthy $(TAM
 	\rm -f $(TMPOUT)
 
 SAPIC_TAMARIN_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy basic/design-choices.spthy basic/exclusive-secrets.spthy basic/running-example.spthy \
-encWrapDecUnwrap/encwrapdecunwrap.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
 GJM-contract/contract.spthy \
-MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
 NSL/nsl-no_as-untagged.spthy \
 predicates/decwrap_destr.spthy predicates/simple_example.spthy \
-locations/AC.spthy locations/AKE.spthy locations/SOC.spthy locations/licensing.spthy \
+locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
 SCADA/opc_ua_secure_conversation.spthy \
 fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy
+
+# currently not working because of wrong heuristic:
+# encWrapDecUnwrap/encwrapdecunwrap.spthy
+# MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy
+# locations/SOC.spthy 
 
 SAPIC_TAMARIN_CS_TARGETS=$(subst .spthy,_analyzed-sapic.spthy,$(addprefix case-studies/,$(SAPIC_TAMARIN_CASE_STUDIES)))
 
 # case studies
 sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/sapic/basic/*.spthy case-studies/sapic/encWrapDecUnwrap/*.spthy case-studies/sapic/statVerifLeftRight/*.spthy
+	grep "verified\|falsified\|processing time" case-studies/sapic/basic/*.spthy case-studies/sapic/statVerifLeftRight/*.spthy case-studies/sapic/GJM-contract/*.spthy case-studies/sapic/NSL/*.spthy case-studies/sapic/predicates/*.spthy case-studies/sapic/locations/*.spthy case-studies/sapic/SCADA/*.spthy case-studies/sapic/fairexchange-mini/*.spthy
 
 
 ## All case studies
