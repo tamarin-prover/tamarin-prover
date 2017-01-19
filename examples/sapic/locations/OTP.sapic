@@ -1,5 +1,5 @@
 theory OTP
-// Use Tamarin command line options '--heuristic=p'
+// Use Tamarin command line options '--heuristic=S'
 
 begin
 
