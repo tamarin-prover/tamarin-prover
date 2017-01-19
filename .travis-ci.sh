@@ -19,5 +19,5 @@ sudo apt-get install -qq ocaml
 #opam init 
 #opam install ${OPAM_DEPENDS}
 #eval `opam config env`
-make sapic
-#make test
+cd plugins/sapic
+make
