@@ -1,6 +1,8 @@
-theory Test
-// compute exist-trace goal with default heuristic
-// compute all-trace goal with p heuristic
+theory AKE
+
+// Use Tamarin command line options '--heuristic=p' for all-trace properties
+// (default heuristic for exists-trace properties)
+
 begin
 
 builtins: symmetric-encryption,asymmetric-encryption

@@ -1,5 +1,6 @@
-theory computation
-// compute with heuristic=S
+theory OTP
+// Use Tamarin command line options '--heuristic=p'
+
 begin
 
 
