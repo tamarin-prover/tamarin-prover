@@ -1,0 +1,1261 @@
+theory Test begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2, fst/1, get_rep/1, list/2, pair/2, prog/3,
+           rep/2 [private], snd/1
+equations:
+    check_rep(rep(m, loc), loc) = m,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(m, loc)) = m,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Init_:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) new_init_:
+   [ State_( ), Fr( init ) ] --> [ State_1( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Par_1:
+   [ State_1( init ) ] --> [ State_11( init ), State_12( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Rep_0_11:
+   [ State_11( init ) ] --> [ !Semistate_111( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Rep_1_11:
+   [ !Semistate_111( init ) ] --> [ State_111( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) new_state_111:
+   [ State_111( init ), Fr( state ) ] --> [ State_1111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insert_state_init_1111:
+   [ State_1111( init, state ) ]
+  --[ Insert( state, init ) ]->
+   [ State_11111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Rep_0_11111:
+   [ State_11111( init, state ) ] --> [ !Semistate_111111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Rep_1_11111:
+   [ !Semistate_111111( init, state ) ] --> [ State_111111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lock_state_111111:
+   [ State_111111( init, state ), Fr( ~lock9 ) ]
+  --[ Lock( ~lock9, state ) ]->
+   [ State_1111111( ~lock9, init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookup_state_as_ipo_0_1111111:
+   [ State_1111111( ~lock9, init, state ) ]
+  --[ IsIn( state, ipo ) ]->
+   [ State_11111111( ~lock9, init, ipo, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookup_state_as_ipo_1_1111111:
+   [ State_1111111( ~lock9, init, state ) ]
+  --[ IsNotSet( state ) ]->
+   [ State_11111112( ~lock9, init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_ip_11111111:
+   [ State_11111111( ~lock9, init, ipo, state ), In( ip ) ]
+  -->
+   [ State_111111111( ~lock9, init, ip, ipo, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) new_r_111111111:
+   [ State_111111111( ~lock9, init, ip, ipo, state ), Fr( r ) ]
+  -->
+   [ State_1111111111( ~lock9, init, ip, ipo, r, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) event_Poutput_progr_ip_ipo_ip_ipo__1111111111:
+   [ State_1111111111( ~lock9, init, ip, ipo, r, state ) ]
+  --[ Event( ), Poutput( <prog(r, ip, ipo), ip, ipo> ) ]->
+   [ State_11111111111( ~lock9, init, ip, ipo, r, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) out_progr_ip_ipo_rep_progr_ip_ipo_ip_ipo_l___11111111111:
+   [ State_11111111111( ~lock9, init, ip, ipo, r, state ) ]
+  -->
+   [
+   State_111111111111( ~lock9, init, ip, ipo, r, state ),
+   Out( <prog(r, ip, ipo), rep(<prog(r, ip, ipo), ip, ipo>, 'l')> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insert_state_progr_ip_ipo_listip_ipo__111111111111:
+   [ State_111111111111( ~lock9, init, ip, ipo, r, state ) ]
+  --[ Insert( state, <prog(r, ip, ipo), list(ip, ipo)> ) ]->
+   [ State_1111111111111( ~lock9, init, ip, ipo, r, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) unlock_state_1111111111111:
+   [ State_1111111111111( ~lock9, init, ip, ipo, r, state ) ]
+  --[ Unlock( ~lock9, state ) ]->
+   [ State_11111111111111( ~lock9, init, ip, ipo, r, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Zero_11111111111111:
+   [ State_11111111111111( ~lock9, init, ip, ipo, r, state ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Zero_11111112:
+   [ State_11111112( ~lock9, init, state ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Rep_0_12:
+   [ State_12( init ) ] --> [ !Semistate_121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Rep_1_12:
+   [ !Semistate_121( init ) ] --> [ State_121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) new_state_121:
+   [ State_121( init ), Fr( state ) ] --> [ State_1211( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insert_state_init_1211:
+   [ State_1211( init, state ) ]
+  --[ Insert( state, init ) ]->
+   [ State_12111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Rep_0_12111:
+   [ State_12111( init, state ) ] --> [ !Semistate_121111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Rep_1_12111:
+   [ !Semistate_121111( init, state ) ] --> [ State_121111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lock_state_121111:
+   [ State_121111( init, state ), Fr( ~lock9 ) ]
+  --[ Lock( ~lock9, state ) ]->
+   [ State_1211111( ~lock9, init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookup_state_as_ipo_0_1211111:
+   [ State_1211111( ~lock9, init, state ) ]
+  --[ IsIn( state, ipo ) ]->
+   [ State_12111111( ~lock9, init, ipo, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookup_state_as_ipo_1_1211111:
+   [ State_1211111( ~lock9, init, state ) ]
+  --[ IsNotSet( state ) ]->
+   [ State_12111112( ~lock9, init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_ip_12111111:
+   [ State_12111111( ~lock9, init, ipo, state ), In( ip ) ]
+  -->
+   [ State_121111111( ~lock9, init, ip, ipo, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_o_signedios__121111111:
+   [ State_121111111( ~lock9, init, ip, ipo, state ), In( <o, signedios> ) ]
+  -->
+   [ State_1211111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) if_eq_o_ip_ipo_check_repsignedios_l__0_1211111111:
+   [ State_1211111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+  --[ Pred_eq( <o, ip, ipo>, check_rep(signedios, 'l') ) ]->
+   [ State_12111111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+
+  /*
+  rule (modulo AC) if_eq_o_ip_ipo_check_repsignedios_l__0_1211111111:
+     [ State_1211111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+    --[ Pred_eq( <o, ip, ipo>, z ) ]->
+     [ State_12111111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+    variants (modulo AC)
+    1. signedios
+             = signedios.9
+       z     = check_rep(signedios.9, 'l')
+    
+    2. signedios
+             = rep(x.9, 'l')
+       z     = x.9
+  */
+
+rule (modulo E) if_eq_o_ip_ipo_check_repsignedios_l__1_1211111111:
+   [ State_1211111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+  --[ Pred_not_eq( <o, ip, ipo>, check_rep(signedios, 'l') ) ]->
+   [ State_12111111112( ~lock9, init, ip, ipo, o, signedios, state ) ]
+
+  /*
+  rule (modulo AC) if_eq_o_ip_ipo_check_repsignedios_l__1_1211111111:
+     [ State_1211111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+    --[ Pred_not_eq( <o, ip, ipo>, z ) ]->
+     [ State_12111111112( ~lock9, init, ip, ipo, o, signedios, state ) ]
+    variants (modulo AC)
+    1. signedios
+             = signedios.9
+       z     = check_rep(signedios.9, 'l')
+    
+    2. signedios
+             = rep(x.9, 'l')
+       z     = x.9
+  */
+
+rule (modulo E) event_Voutput_o_ip_ipo__12111111111:
+   [ State_12111111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+  --[ Event( ), Voutput( <o, ip, ipo> ) ]->
+   [ State_121111111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insert_state_o_listip_ipo__121111111111:
+   [ State_121111111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+  --[ Insert( state, <o, list(ip, ipo)> ) ]->
+   [ State_1211111111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) unlock_state_1211111111111:
+   [ State_1211111111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+  --[ Unlock( ~lock9, state ) ]->
+   [ State_12111111111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Zero_12111111111111:
+   [ State_12111111111111( ~lock9, init, ip, ipo, o, signedios, state ) ]
+  -->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) event_Fail_12111111112:
+   [ State_12111111112( ~lock9, init, ip, ipo, o, signedios, state ) ]
+  --[ Event( ), Fail( ) ]->
+   [ State_121111111121( ~lock9, init, ip, ipo, o, signedios, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Zero_121111111121:
+   [ State_121111111121( ~lock9, init, ip, ipo, o, signedios, state ) ]
+  -->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Zero_12111112:
+   [ State_12111112( ~lock9, init, state ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+axiom set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      (((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+       (∀ #t1. (Delete( x ) @ #t1) ⇒ ((#t1 < #t2) ∨ (#t3 < #t1)))) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+axiom set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒
+    ((∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1)) ∨
+     (∃ #t1.
+       ((Delete( x ) @ #t1) ∧ (#t1 < #t3)) ∧
+       (∀ #t2 y. ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ⇒ (#t2 < #t1))))"
+
+axiom locking:
+  "∀ l x lp #t1 #t3.
+    ((Lock( l, x ) @ #t1) ∧ (Lock( lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock( l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0. (Unlock( l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ lp.1 #t0.
+            (Lock( lp.1, x ) @ #t0) ⇒ (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ lp.1 #t0.
+           (Unlock( lp.1, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+axiom predicate_eq:
+  "∀ #i a b. (Pred_eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+axiom predicate_not_eq:
+  "∀ #i a b. (Pred_not_eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+axiom single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+axiom predicate1:
+  "∀ #i x y. (Pred_not_pred_rep( x, y ) @ #i) ⇒ (¬(¬(y = 'l')))"
+  // safety formula
+
+axiom predicate0:
+  "∀ #i x y. (Pred_pred_rep( x, y ) @ #i) ⇒ (¬(y = 'l'))"
+  // safety formula
+
+lemma attested_comput:
+  all-traces
+  "∀ #t1 h.
+    (Voutput( h ) @ #t1) ⇒ (∃ #t2. (Poutput( h ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 h.
+  (Voutput( h ) @ #t1) ∧ ∀ #t2. (Poutput( h ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+solve( State_12111111111( ~lock9, init, ip, ipo, o, signedios, state
+       ) ▶₀ #t1 )
+  case if_eq_o_ip_ipo_check_repsignedios_l__0_1211111111_case_1
+  by contradiction /* from formulas */
+next
+  case if_eq_o_ip_ipo_check_repsignedios_l__0_1211111111_case_2
+  solve( (#vr.7 < #t2)  ∥ (#vr.7 = #t2) )
+    case case_1
+    solve( (#vr.26 < #t2.1)  ∥ (#vr.26 = #t2.1) )
+      case case_1
+      solve( Insert( ~n.1, ipo ) @ #t2 )
+        case insert_state_init_1111
+        by solve( State_1111( ipo, ~n.1 ) ▶₀ #t2 )
+      next
+        case insert_state_init_1211
+        solve( State_1211( ipo, ~n.1 ) ▶₀ #t2 )
+          case new_state_121
+          by contradiction /* cyclic */
+        qed
+      next
+        case insert_state_o_listip_ipo__121111111111
+        solve( State_121111111111( ~lock9.1, init, ip.1, ipo, o, signedios, ~n.1
+               ) ▶₀ #t2 )
+          case event_Voutput_o_ip_ipo__12111111111_case_1
+          solve( ((#vr.4 < #vr.35) ∧
+                  (∃ #t2.
+                    (Unlock( ~lock9, ~n.2 ) @ #t2)
+                   ∧
+                    (#vr.4 < #t2) ∧
+                    (#t2 < #vr.35) ∧
+                    (∀ #t0. (Unlock( ~lock9, ~n.2 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ lp #t0.
+                      (Lock( lp, ~n.2 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t0 = #vr.4) ∨ (#t2 < #t0))) ∧
+                    (∀ lp #t0.
+                      (Unlock( lp, ~n.2 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.35 < #vr.4)  ∥ (#vr.4 = #vr.35) )
+            case case_1
+            solve( (#vr.7 < #t2.2)  ∥ (#vr.7 = #t2.2) )
+              case case_1
+              solve( (#vr.46 < #t2.3)  ∥ (#vr.46 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, ipo.1 ) @ #t2.1 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.4 ) ▶₀ #t2.1 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.4 ) ▶₀ #t2.1 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.1,
+                                                  signedios, ~n.4
+                              ) ▶₀ #t2.1 )
+                  next
+                    case dsnd
+                    by solve( (#vr.49, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.49, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.49, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.5, ipo.1 ) @ #t2.2 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.5 ) ▶₀ #t2.2 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.5 ) ▶₀ #t2.2 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.1,
+                                                  signedios, ~n.5
+                              ) ▶₀ #t2.2 )
+                  next
+                    case dsnd
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.45 < #t2.3)  ∥ (#vr.45 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, ipo.1 ) @ #t2.2 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.4 ) ▶₀ #t2.2 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.4 ) ▶₀ #t2.2 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.1,
+                                                  signedios, ~n.4
+                              ) ▶₀ #t2.2 )
+                  next
+                    case dsnd
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.5, ipo.1 ) @ #t2.3 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.5 ) ▶₀ #t2.3 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.5 ) ▶₀ #t2.3 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.1,
+                                                  signedios, ~n.5
+                              ) ▶₀ #t2.3 )
+                  next
+                    case dsnd
+                    by solve( (#vr.47, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.47, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.47, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case case_2
+            solve( (#vr.7 < #t2.2)  ∥ (#vr.7 = #t2.2) )
+              case case_1
+              solve( (#vr.46 < #t2.3)  ∥ (#vr.46 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, ipo.1 ) @ #t2.1 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.4 ) ▶₀ #t2.1 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.4 ) ▶₀ #t2.1 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.1,
+                                                  signedios, ~n.4
+                              ) ▶₀ #t2.1 )
+                  next
+                    case dsnd
+                    by solve( (#vr.49, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.49, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.49, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.5, ipo.1 ) @ #t2.2 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.5 ) ▶₀ #t2.2 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.5 ) ▶₀ #t2.2 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.1,
+                                                  signedios, ~n.5
+                              ) ▶₀ #t2.2 )
+                  next
+                    case dsnd
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.45 < #t2.3)  ∥ (#vr.45 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, ipo.1 ) @ #t2.2 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.4 ) ▶₀ #t2.2 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.4 ) ▶₀ #t2.2 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.1,
+                                                  signedios, ~n.4
+                              ) ▶₀ #t2.2 )
+                  next
+                    case dsnd
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.48, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.5, ipo.1 ) @ #t2.3 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.5 ) ▶₀ #t2.3 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.5 ) ▶₀ #t2.3 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.1,
+                                                  signedios, ~n.5
+                              ) ▶₀ #t2.3 )
+                  next
+                    case dsnd
+                    by solve( (#vr.47, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.47, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.47, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case event_Voutput_o_ip_ipo__12111111111_case_2
+          solve( ((#vr.4 < #vr.35) ∧
+                  (∃ #t2.
+                    (Unlock( ~lock9, ~n.1 ) @ #t2)
+                   ∧
+                    (#vr.4 < #t2) ∧
+                    (#t2 < #vr.35) ∧
+                    (∀ #t0. (Unlock( ~lock9, ~n.1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ lp #t0.
+                      (Lock( lp, ~n.1 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t0 = #vr.4) ∨ (#t2 < #t0))) ∧
+                    (∀ lp #t0.
+                      (Unlock( lp, ~n.1 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.35 < #vr.4)  ∥ (#vr.4 = #vr.35) )
+            case case_1
+            solve( (#vr.7 < #t2.2)  ∥ (#vr.7 = #t2.2) )
+              case case_1
+              solve( (#vr.49 < #t2.3)  ∥ (#vr.49 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, ipo.1 ) @ #t2.1 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.3 ) ▶₀ #t2.1 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.3 ) ▶₀ #t2.1 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.2,
+                                                  signedios, ~n.3
+                              ) ▶₀ #t2.1 )
+                  next
+                    case dsnd
+                    by solve( (#vr.52, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.52, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.52, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.5, ipo.1 ) @ #t2.2 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.5 ) ▶₀ #t2.2 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.5 ) ▶₀ #t2.2 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.2,
+                                                  signedios, ~n.5
+                              ) ▶₀ #t2.2 )
+                  next
+                    case dsnd
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.48 < #t2.3)  ∥ (#vr.48 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, ipo.1 ) @ #t2.2 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.4 ) ▶₀ #t2.2 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.4 ) ▶₀ #t2.2 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.2,
+                                                  signedios, ~n.4
+                              ) ▶₀ #t2.2 )
+                  next
+                    case dsnd
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.5, ipo.1 ) @ #t2.3 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.5 ) ▶₀ #t2.3 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.5 ) ▶₀ #t2.3 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.2,
+                                                  signedios, ~n.5
+                              ) ▶₀ #t2.3 )
+                  next
+                    case dsnd
+                    by solve( (#vr.50, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.50, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.50, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case case_2
+            solve( (#vr.7 < #t2.2)  ∥ (#vr.7 = #t2.2) )
+              case case_1
+              solve( (#vr.49 < #t2.3)  ∥ (#vr.49 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, ipo.1 ) @ #t2.1 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.3 ) ▶₀ #t2.1 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.3 ) ▶₀ #t2.1 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.2,
+                                                  signedios, ~n.3
+                              ) ▶₀ #t2.1 )
+                  next
+                    case dsnd
+                    by solve( (#vr.52, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.52, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.52, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.5, ipo.1 ) @ #t2.2 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.5 ) ▶₀ #t2.2 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.5 ) ▶₀ #t2.2 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.2,
+                                                  signedios, ~n.5
+                              ) ▶₀ #t2.2 )
+                  next
+                    case dsnd
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.18, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.48 < #t2.3)  ∥ (#vr.48 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, ipo.1 ) @ #t2.2 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.4 ) ▶₀ #t2.2 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.4 ) ▶₀ #t2.2 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.2,
+                                                  signedios, ~n.4
+                              ) ▶₀ #t2.2 )
+                  next
+                    case dsnd
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.51, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.5, ipo.1 ) @ #t2.3 )
+                  case insert_state_init_1111
+                  solve( State_1111( ipo.1, ~n.5 ) ▶₀ #t2.3 )
+                    case new_state_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insert_state_init_1211
+                  by solve( State_1211( ipo.1, ~n.5 ) ▶₀ #t2.3 )
+                next
+                  case insert_state_o_listip_ipo__121111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( State_121111111111( ~lock9.2, init, ip.3, ipo.1, o.2,
+                                                  signedios, ~n.5
+                              ) ▶₀ #t2.3 )
+                  next
+                    case dsnd
+                    by solve( (#vr.50, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case insert_state_progr_ip_ipo_listip_ipo__111111111111
+                  solve( (#vr.17, 0) ~~> (#vk, 0) )
+                    case dfst
+                    by solve( (#vr.50, 0) ~~> (#vk, 0) )
+                  next
+                    case dsnd
+                    by solve( (#vr.50, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case insert_state_progr_ip_ipo_listip_ipo__111111111111
+        by solve( State_111111111111( ~lock9.1, init, ip.1, ipo, r, ~n.1
+                  ) ▶₀ #t2 )
+      qed
+    next
+      case case_2
+      solve( Insert( ~n.1, ipo ) @ #t2.1 )
+        case insert_state_init_1111
+        by solve( State_1111( ipo, ~n.1 ) ▶₀ #t2.1 )
+      next
+        case insert_state_init_1211
+        solve( State_1211( ipo, ~n.1 ) ▶₀ #t2.1 )
+          case new_state_121
+          by contradiction /* cyclic */
+        qed
+      next
+        case insert_state_o_listip_ipo__121111111111
+        solve( State_121111111111( ~lock9.1, init, ip.1, ipo, o, signedios, ~n.1
+               ) ▶₀ #t2.1 )
+          case event_Voutput_o_ip_ipo__12111111111_case_1
+          solve( ((#vr.4 < #vr.34) ∧
+                  (∃ #t2.
+                    (Unlock( ~lock9, ~n.2 ) @ #t2)
+                   ∧
+                    (#vr.4 < #t2) ∧
+                    (#t2 < #vr.34) ∧
+                    (∀ #t0. (Unlock( ~lock9, ~n.2 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ lp #t0.
+                      (Lock( lp, ~n.2 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t0 = #vr.4) ∨ (#t2 < #t0))) ∧
+                    (∀ lp #t0.
+                      (Unlock( lp, ~n.2 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.34 < #vr.4)  ∥ (#vr.4 = #vr.34) )
+            case case_1
+            solve( (#vr.7 < #t2.2)  ∥ (#vr.7 = #t2.2) )
+              case case_1
+              solve( (#vr.45 < #t2.3)  ∥ (#vr.45 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.3, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.3, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.44 < #t2.3)  ∥ (#vr.44 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.3, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.3, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            qed
+          next
+            case case_2
+            solve( (#vr.7 < #t2.2)  ∥ (#vr.7 = #t2.2) )
+              case case_1
+              solve( (#vr.45 < #t2.3)  ∥ (#vr.45 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.3, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.3, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.44 < #t2.3)  ∥ (#vr.44 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.3, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.3, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            qed
+          qed
+        next
+          case event_Voutput_o_ip_ipo__12111111111_case_2
+          solve( ((#vr.4 < #vr.34) ∧
+                  (∃ #t2.
+                    (Unlock( ~lock9, ~n.1 ) @ #t2)
+                   ∧
+                    (#vr.4 < #t2) ∧
+                    (#t2 < #vr.34) ∧
+                    (∀ #t0. (Unlock( ~lock9, ~n.1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ lp #t0.
+                      (Lock( lp, ~n.1 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t0 = #vr.4) ∨ (#t2 < #t0))) ∧
+                    (∀ lp #t0.
+                      (Unlock( lp, ~n.1 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.34 < #vr.4)  ∥ (#vr.4 = #vr.34) )
+            case case_1
+            solve( (#vr.7 < #t2.2)  ∥ (#vr.7 = #t2.2) )
+              case case_1
+              solve( (#vr.48 < #t2.3)  ∥ (#vr.48 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.2, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.2, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.47 < #t2.3)  ∥ (#vr.47 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.2, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.2, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            qed
+          next
+            case case_2
+            solve( (#vr.7 < #t2.2)  ∥ (#vr.7 = #t2.2) )
+              case case_1
+              solve( (#vr.48 < #t2.3)  ∥ (#vr.48 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.2, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.2, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.47 < #t2.3)  ∥ (#vr.47 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.2, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.2, ipo.1 ) @ #t2 )
+                  case insert_state_init_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case insert_state_progr_ip_ipo_listip_ipo__111111111111
+        by solve( State_111111111111( ~lock9.1, init, ip.1, ipo, r, ~n.1
+                  ) ▶₀ #t2.1 )
+      qed
+    qed
+  next
+    case case_2
+    solve( (#vr.25 < #t2.1)  ∥ (#vr.25 = #t2.1) )
+      case case_1
+      solve( Insert( ~n.1, ipo ) @ #t2 )
+        case insert_state_init_1211
+        solve( Insert( ~n.3, ipo ) @ #t2.1 )
+          case insert_state_init_1111
+          solve( State_1111( ipo, ~n.3 ) ▶₀ #t2.1 )
+            case new_state_111
+            by contradiction /* cyclic */
+          qed
+        next
+          case insert_state_init_1211
+          by solve( State_1211( ipo, ~n.3 ) ▶₀ #t2.1 )
+        next
+          case insert_state_o_listip_ipo__121111111111
+          solve( (#vr.17, 0) ~~> (#vk, 0) )
+            case dfst
+            by solve( State_121111111111( ~lock9.1, init, ip.2, ipo, o.1, signedios,
+                                          ~n.3
+                      ) ▶₀ #t2.1 )
+          next
+            case dsnd
+            by solve( (#vr.29, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case insert_state_progr_ip_ipo_listip_ipo__111111111111
+          solve( (#vr.17, 0) ~~> (#vk, 0) )
+            case dfst
+            by solve( (#vr.29, 0) ~~> (#vk, 0) )
+          next
+            case dsnd
+            by solve( (#vr.29, 0) ~~> (#vk, 0) )
+          qed
+        qed
+      qed
+    next
+      case case_2
+      solve( Insert( ~n.1, ipo ) @ #t2 )
+        case insert_state_init_1211
+        solve( Insert( ~n.3, ipo ) @ #t2.1 )
+          case insert_state_init_1111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    qed
+  qed
+qed
+
+/*
+WARNING: the following wellformedness checks failed!
+
+unbound:
+  rule `lookup_state_as_ipo_0_1111111' has unbound variables: 
+    ipo
+  
+  rule `lookup_state_as_ipo_0_1211111' has unbound variables: 
+    ipo
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ...failed with exit code 1
+
+SAPIC not found.
+SAPIC files will not be supported.
+
+Detailed results from testing 'which'
+ command: which sapic
+ stdin:   
+ stdout:
+
+ stderr:
+
+
+
+analyzing: case-studies-sapic-regression/locations/AC.spthy
+
+------------------------------------------------------------------------------
+analyzed: case-studies-sapic-regression/locations/AC.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 8.558773s
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  attested_comput (all-traces): verified (252 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: case-studies-sapic-regression/locations/AC.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 8.558773s
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  attested_comput (all-traces): verified (252 steps)
+
+==============================================================================
+*/
