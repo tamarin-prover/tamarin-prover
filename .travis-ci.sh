@@ -17,7 +17,7 @@ sudo apt-get update -qq
 sudo apt-get install -qq ocaml ocaml-native-compilers camlp4-extra opam
 export OPAMYES=1
 opam init 
-opam install ${OPAM_DEPENDS}
+# opam install ${OPAM_DEPENDS}
 eval `opam config env`
 cd plugins/sapic
 make
