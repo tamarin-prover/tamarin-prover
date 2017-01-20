@@ -1,4 +1,4 @@
-theory Test begin
+theory AKE begin
 
 // Function signature and definition of the equational theory E
 
@@ -267,18 +267,7 @@ maude tool: 'maude'
  checking version: 2.7. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
-Checking availablity ...failed with exit code 1
-
-SAPIC not found.
-SAPIC files will not be supported.
-
-Detailed results from testing 'which'
- command: which sapic
- stdin:   
- stdout:
-
- stderr:
-
+Checking availablity ... OK.
 
 
 analyzing: case-studies-sapic-regression/locations/AKE.spthy
@@ -287,7 +276,7 @@ analyzing: case-studies-sapic-regression/locations/AKE.spthy
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.653436s
+  processing time: 1.088032s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 
@@ -299,7 +288,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.653436s
+  processing time: 1.088032s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 

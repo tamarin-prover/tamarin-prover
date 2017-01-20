@@ -1,4 +1,4 @@
-theory Test
+theory SOC
 begin
 
 functions: rep/2 [private], check_rep/2, get_rep/1

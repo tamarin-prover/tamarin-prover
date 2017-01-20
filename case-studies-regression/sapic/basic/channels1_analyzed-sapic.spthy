@@ -126,18 +126,7 @@ maude tool: 'maude'
  checking version: 2.7. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
-Checking availablity ...failed with exit code 1
-
-SAPIC not found.
-SAPIC files will not be supported.
-
-Detailed results from testing 'which'
- command: which sapic
- stdin:   
- stdout:
-
- stderr:
-
+Checking availablity ... OK.
 
 
 analyzing: case-studies-sapic-regression/basic/channels1.spthy
@@ -146,7 +135,7 @@ analyzing: case-studies-sapic-regression/basic/channels1.spthy
 analyzed: case-studies-sapic-regression/basic/channels1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.26817s
+  processing time: 0.247589s
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
 
@@ -158,7 +147,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/channels1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.26817s
+  processing time: 0.247589s
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
 

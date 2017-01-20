@@ -449,18 +449,7 @@ maude tool: 'maude'
  checking version: 2.7. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
-Checking availablity ...failed with exit code 1
-
-SAPIC not found.
-SAPIC files will not be supported.
-
-Detailed results from testing 'which'
- command: which sapic
- stdin:   
- stdout:
-
- stderr:
-
+Checking availablity ... OK.
 
 
 analyzing: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
@@ -469,7 +458,7 @@ analyzing: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 analyzed: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.931256s
+  processing time: 2.112948s
   types (all-traces): verified (34 steps)
   secrecy (all-traces): verified (21 steps)
 
@@ -481,7 +470,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.931256s
+  processing time: 2.112948s
   types (all-traces): verified (34 steps)
   secrecy (all-traces): verified (21 steps)
 

@@ -3382,18 +3382,7 @@ maude tool: 'maude'
  checking version: 2.7. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
-Checking availablity ...failed with exit code 1
-
-SAPIC not found.
-SAPIC files will not be supported.
-
-Detailed results from testing 'which'
- command: which sapic
- stdin:   
- stdout:
-
- stderr:
-
+Checking availablity ... OK.
 
 
 analyzing: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
@@ -3402,7 +3391,7 @@ analyzing: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 analyzed: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 22.296825s
+  processing time: 22.979033s
   Executable (exists-trace): verified (52 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (156 steps)
@@ -3418,7 +3407,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 22.296825s
+  processing time: 22.979033s
   Executable (exists-trace): verified (52 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (156 steps)

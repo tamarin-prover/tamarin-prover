@@ -729,18 +729,7 @@ maude tool: 'maude'
  checking version: 2.7. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
-Checking availablity ...failed with exit code 1
-
-SAPIC not found.
-SAPIC files will not be supported.
-
-Detailed results from testing 'which'
- command: which sapic
- stdin:   
- stdout:
-
- stderr:
-
+Checking availablity ... OK.
 
 
 analyzing: case-studies-sapic-regression/basic/running-example.spthy
@@ -749,7 +738,7 @@ analyzing: case-studies-sapic-regression/basic/running-example.spthy
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.53391s
+  processing time: 2.688048s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -767,7 +756,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.53391s
+  processing time: 2.688048s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   

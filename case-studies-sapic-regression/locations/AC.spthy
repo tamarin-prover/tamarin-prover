@@ -1,4 +1,4 @@
-theory Test
+theory AttestedComputation
 begin
 
 functions: rep/2 [private], check_rep/2, get_rep/1
@@ -35,32 +35,32 @@ rule Rep_1_11111: //Rep, 1
 rule lock_state_111111: //lock state 
  [ State_111111(init, state), Fr(~lock9)] --[Lock(~lock9, state)]-> [State_1111111(~lock9, init, state)]
 
-rule lookup_state_as_ipo_0_1111111: //lookup state as ipo, 0 
- [ State_1111111(~lock9, init, state)] --[IsIn(state, ipo)]-> [State_11111111(~lock9, init, ipo, state)]
+rule lookup_state_as_lio_0_1111111: //lookup state as lio, 0 
+ [ State_1111111(~lock9, init, state)] --[IsIn(state, lio)]-> [State_11111111(~lock9, init, lio, state)]
 
-rule lookup_state_as_ipo_1_1111111: //lookup state as ipo, 1 
+rule lookup_state_as_lio_1_1111111: //lookup state as lio, 1 
  [ State_1111111(~lock9, init, state)] --[IsNotSet(state)]-> [State_11111112(~lock9, init, state)]
 
-rule in_ip_11111111: //in ip 
- [ State_11111111(~lock9, init, ipo, state), In(ip)] --[]-> [State_111111111(~lock9, init, ip, ipo, state)]
+rule in_i_11111111: //in i 
+ [ State_11111111(~lock9, init, lio, state), In(i)] --[]-> [State_111111111(~lock9, i, init, lio, state)]
 
 rule new_r_111111111: //new r 
- [ State_111111111(~lock9, init, ip, ipo, state), Fr(r)] --[]-> [State_1111111111(~lock9, init, ip, ipo, r, state)]
+ [ State_111111111(~lock9, i, init, lio, state), Fr(r)] --[]-> [State_1111111111(~lock9, i, init, lio, r, state)]
 
-rule event_Poutput_progr_ip_ipo_ip_ipo__1111111111: //event Poutput(<prog(r, ip, ipo), ip, ipo>) 
- [ State_1111111111(~lock9, init, ip, ipo, r, state)] --[Event(), Poutput(<prog(r, ip, ipo), ip, ipo>)]-> [State_11111111111(~lock9, init, ip, ipo, r, state)]
+rule event_Remote_progr_i_lio_i_lio_l__1111111111: //event Remote(<prog(r, i, lio), i, lio>, 'l') 
+ [ State_1111111111(~lock9, i, init, lio, r, state)] --[Event(), Remote(<prog(r, i, lio), i, lio>, 'l')]-> [State_11111111111(~lock9, i, init, lio, r, state)]
 
-rule out_progr_ip_ipo_rep_progr_ip_ipo_ip_ipo_l___11111111111: //out <prog(r, ip, ipo), rep(<prog(r, ip, ipo), ip, ipo>, 'l')> 
- [ State_11111111111(~lock9, init, ip, ipo, r, state)] --[]-> [State_111111111111(~lock9, init, ip, ipo, r, state), Out(<prog(r, ip, ipo), rep(<prog(r, ip, ipo), ip, ipo>, 'l')>)]
+rule out_progr_i_lio_rep_progr_i_lio_i_lio_l___11111111111: //out <prog(r, i, lio), rep(<prog(r, i, lio), i, lio>, 'l')> 
+ [ State_11111111111(~lock9, i, init, lio, r, state)] --[]-> [State_111111111111(~lock9, i, init, lio, r, state), Out(<prog(r, i, lio), rep(<prog(r, i, lio), i, lio>, 'l')>)]
 
-rule insert_state_progr_ip_ipo_listip_ipo__111111111111: //insert state,<prog(r, ip, ipo), list(ip, ipo)> 
- [ State_111111111111(~lock9, init, ip, ipo, r, state)] --[Insert(state, <prog(r, ip, ipo), list(ip, ipo)>)]-> [State_1111111111111(~lock9, init, ip, ipo, r, state)]
+rule insert_state_listprogr_i_lio_listi_lio_111111111111: //insert state,list(prog(r, i, lio), list(i, lio)) 
+ [ State_111111111111(~lock9, i, init, lio, r, state)] --[Insert(state, list(prog(r, i, lio), list(i, lio)))]-> [State_1111111111111(~lock9, i, init, lio, r, state)]
 
 rule unlock_state_1111111111111: //unlock state 
- [ State_1111111111111(~lock9, init, ip, ipo, r, state)] --[Unlock(~lock9, state)]-> [State_11111111111111(~lock9, init, ip, ipo, r, state)]
+ [ State_1111111111111(~lock9, i, init, lio, r, state)] --[Unlock(~lock9, state)]-> [State_11111111111111(~lock9, i, init, lio, r, state)]
 
 rule Zero_11111111111111: //Zero 
- [ State_11111111111111(~lock9, init, ip, ipo, r, state)] --[]-> []
+ [ State_11111111111111(~lock9, i, init, lio, r, state)] --[]-> []
 
 rule Zero_11111112: //Zero 
  [ State_11111112(~lock9, init, state)] --[]-> []
@@ -83,47 +83,44 @@ rule Rep_0_12111: //Rep, 0
 rule Rep_1_12111: //Rep, 1 
  [ !Semistate_121111(init, state)] --[]-> [State_121111(init, state)]
 
-rule lock_state_121111: //lock state 
- [ State_121111(init, state), Fr(~lock9)] --[Lock(~lock9, state)]-> [State_1211111(~lock9, init, state)]
+rule in_i_o_r__121111: //in <i, o, r> 
+ [ State_121111(init, state), In(<i, o, r>)] --[]-> [State_1211111(i, init, o, r, state)]
 
-rule lookup_state_as_ipo_0_1211111: //lookup state as ipo, 0 
- [ State_1211111(~lock9, init, state)] --[IsIn(state, ipo)]-> [State_12111111(~lock9, init, ipo, state)]
+rule lock_state_1211111: //lock state 
+ [ State_1211111(i, init, o, r, state), Fr(~lock7)] --[Lock(~lock7, state)]-> [State_12111111(~lock7, i, init, o, r, state)]
 
-rule lookup_state_as_ipo_1_1211111: //lookup state as ipo, 1 
- [ State_1211111(~lock9, init, state)] --[IsNotSet(state)]-> [State_12111112(~lock9, init, state)]
+rule lookup_state_as_lio_0_12111111: //lookup state as lio, 0 
+ [ State_12111111(~lock7, i, init, o, r, state)] --[IsIn(state, lio)]-> [State_121111111(~lock7, i, init, lio, o, r, state)]
 
-rule in_ip_12111111: //in ip 
- [ State_12111111(~lock9, init, ipo, state), In(ip)] --[]-> [State_121111111(~lock9, init, ip, ipo, state)]
+rule lookup_state_as_lio_1_12111111: //lookup state as lio, 1 
+ [ State_12111111(~lock7, i, init, o, r, state)] --[IsNotSet(state)]-> [State_121111112(~lock7, i, init, o, r, state)]
 
-rule in_o_signedios__121111111: //in <o, signedios> 
- [ State_121111111(~lock9, init, ip, ipo, state), In(<o, signedios>)] --[]-> [State_1211111111(~lock9, init, ip, ipo, o, signedios, state)]
+rule if_eq_o_i_lio_check_repr_l__0_121111111: //if eq(<o, i, lio>, check_rep(r, 'l')), 0 
+ [ State_121111111(~lock7, i, init, lio, o, r, state)] --[Pred_eq(<o, i, lio>, check_rep(r, 'l'))]-> [State_1211111111(~lock7, i, init, lio, o, r, state)]
 
-rule if_eq_o_ip_ipo_check_repsignedios_l__0_1211111111: //if eq(<o, ip, ipo>, check_rep(signedios, 'l')), 0 
- [ State_1211111111(~lock9, init, ip, ipo, o, signedios, state)] --[Pred_eq(<o, ip, ipo>, check_rep(signedios, 'l'))]-> [State_12111111111(~lock9, init, ip, ipo, o, signedios, state)]
+rule if_eq_o_i_lio_check_repr_l__1_121111111: //if eq(<o, i, lio>, check_rep(r, 'l')), 1 
+ [ State_121111111(~lock7, i, init, lio, o, r, state)] --[Pred_not_eq(<o, i, lio>, check_rep(r, 'l'))]-> [State_1211111112(~lock7, i, init, lio, o, r, state)]
 
-rule if_eq_o_ip_ipo_check_repsignedios_l__1_1211111111: //if eq(<o, ip, ipo>, check_rep(signedios, 'l')), 1 
- [ State_1211111111(~lock9, init, ip, ipo, o, signedios, state)] --[Pred_not_eq(<o, ip, ipo>, check_rep(signedios, 'l'))]-> [State_12111111112(~lock9, init, ip, ipo, o, signedios, state)]
+rule event_Local_o_i_lio_l__1211111111: //event Local(<o, i, lio>, 'l') 
+ [ State_1211111111(~lock7, i, init, lio, o, r, state)] --[Event(), Local(<o, i, lio>, 'l')]-> [State_12111111111(~lock7, i, init, lio, o, r, state)]
 
-rule event_Voutput_o_ip_ipo__12111111111: //event Voutput(<o, ip, ipo>) 
- [ State_12111111111(~lock9, init, ip, ipo, o, signedios, state)] --[Event(), Voutput(<o, ip, ipo>)]-> [State_121111111111(~lock9, init, ip, ipo, o, signedios, state)]
+rule insert_state_listo_listi_lio_12111111111: //insert state,list(o, list(i, lio)) 
+ [ State_12111111111(~lock7, i, init, lio, o, r, state)] --[Insert(state, list(o, list(i, lio)))]-> [State_121111111111(~lock7, i, init, lio, o, r, state)]
 
-rule insert_state_o_listip_ipo__121111111111: //insert state,<o, list(ip, ipo)> 
- [ State_121111111111(~lock9, init, ip, ipo, o, signedios, state)] --[Insert(state, <o, list(ip, ipo)>)]-> [State_1211111111111(~lock9, init, ip, ipo, o, signedios, state)]
+rule unlock_state_121111111111: //unlock state 
+ [ State_121111111111(~lock7, i, init, lio, o, r, state)] --[Unlock(~lock7, state)]-> [State_1211111111111(~lock7, i, init, lio, o, r, state)]
 
-rule unlock_state_1211111111111: //unlock state 
- [ State_1211111111111(~lock9, init, ip, ipo, o, signedios, state)] --[Unlock(~lock9, state)]-> [State_12111111111111(~lock9, init, ip, ipo, o, signedios, state)]
+rule Zero_1211111111111: //Zero 
+ [ State_1211111111111(~lock7, i, init, lio, o, r, state)] --[]-> []
 
-rule Zero_12111111111111: //Zero 
- [ State_12111111111111(~lock9, init, ip, ipo, o, signedios, state)] --[]-> []
+rule unlock_state_1211111112: //unlock state 
+ [ State_1211111112(~lock7, i, init, lio, o, r, state)] --[Unlock(~lock7, state)]-> [State_12111111121(~lock7, i, init, lio, o, r, state)]
 
-rule event_Fail_12111111112: //event Fail() 
- [ State_12111111112(~lock9, init, ip, ipo, o, signedios, state)] --[Event(), Fail()]-> [State_121111111121(~lock9, init, ip, ipo, o, signedios, state)]
+rule Zero_12111111121: //Zero 
+ [ State_12111111121(~lock7, i, init, lio, o, r, state)] --[]-> []
 
-rule Zero_121111111121: //Zero 
- [ State_121111111121(~lock9, init, ip, ipo, o, signedios, state)] --[]-> []
-
-rule Zero_12111112: //Zero 
- [ State_12111112(~lock9, init, state)] --[]-> []
+rule Zero_121111112: //Zero 
+ [ State_121111112(~lock7, i, init, o, r, state)] --[]-> []
 
  axiom set_in:
 "All x y #t3 . IsIn(x,y)@t3 ==>
@@ -169,6 +166,6 @@ axiom predicate0:
 	"All #i x y. Pred_pred_rep(x,y)@i ==> not(y = 'l')"
 
 lemma attested_comput :
-"	All #t1 h. Voutput(h) @ t1 ==> ( Ex #t2. Poutput(h) @ t2 & t2 < t1 )"
+"	All #i m. Local(m, 'l') @ i ==> ( Ex #j. Remote(m, 'l') @ j & j < i )"
 
 end

@@ -1,4 +1,4 @@
-theory computation begin
+theory licensing begin
 
 // Function signature and definition of the equational theory E
 
@@ -792,18 +792,7 @@ maude tool: 'maude'
  checking version: 2.7. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
-Checking availablity ...failed with exit code 1
-
-SAPIC not found.
-SAPIC files will not be supported.
-
-Detailed results from testing 'which'
- command: which sapic
- stdin:   
- stdout:
-
- stderr:
-
+Checking availablity ... OK.
 
 
 analyzing: case-studies-sapic-regression/locations/licensing.spthy
@@ -812,7 +801,7 @@ analyzing: case-studies-sapic-regression/locations/licensing.spthy
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.464665s
+  processing time: 6.244952s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)
@@ -825,7 +814,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.464665s
+  processing time: 6.244952s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)
