@@ -99,6 +99,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/related_work/StatVerif_ARR_CSF11
 	mkdir -p case-studies/related_work/YubiSecure_KS_STM12
 	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
+	mkdir -p case-studies/post17
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
@@ -116,6 +117,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/ccs15
 	mkdir -p case-studies/features/equivalence
+	mkdir -p case-studies/post17
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
@@ -164,6 +166,21 @@ obseq-test-case-studies:	$(TESTOBSEQ_TARGETS)
 #Observational equivalence case studies with CCS15
 obseq-case-studies:	$(OBSEQ_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy case-studies/features/equivalence/*.spthy
+
+
+## non-subterm convergent equational theories
+#############################################
+POST17_TRACE_CASE_STUDIES= chaum_unforgeability.spthy foo_eligibility.spthy okamoto_eligibility.spthy  needham_schroeder_symmetric_cbc.spthy denning_sacco_symmetric_cbc.spthy
+POST17_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/post17/,$(POST17_TRACE_CASE_STUDIES)))
+
+POST17_DIFF_CASE_STUDIES= chaum_anonymity.spthy chaum_untraceability.spthy foo_vote_privacy.spthy okamoto_receipt_freeness.spthy okamoto_vote_privacy.spthy
+POST17_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/post17/,$(POST17_DIFF_CASE_STUDIES)))
+
+POST17_TARGETS= $(POST17_TRACE_TARGETS)  $(POST17_DIFF_TARGETS)
+
+# POST17 case studies
+post17-case-studies:	$(POST17_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/post17/*.spthy
 
 ## Inductive Strengthening
 ##########################
