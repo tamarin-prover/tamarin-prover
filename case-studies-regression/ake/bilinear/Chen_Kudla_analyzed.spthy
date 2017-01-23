@@ -2577,8 +2577,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/Chen_Kudla.spthy
@@ -2587,7 +2589,7 @@ analyzing: examples/ake/bilinear/Chen_Kudla.spthy
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 74.919787s
+  processing time: 75.92374s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 
@@ -2599,7 +2601,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 74.919787s
+  processing time: 75.92374s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 

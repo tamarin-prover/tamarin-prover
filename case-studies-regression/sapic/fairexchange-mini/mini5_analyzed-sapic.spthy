@@ -266,7 +266,7 @@ unbound:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
 Checking availablity ... OK.
@@ -278,7 +278,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.42552s
+  processing time: 0.463198s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -294,7 +294,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.42552s
+  processing time: 0.463198s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   

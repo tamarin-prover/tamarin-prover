@@ -101,7 +101,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
 Checking availablity ... OK.
@@ -113,7 +113,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini8.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini8.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.070524s
+  processing time: 0.082667s
   A_enforced (all-traces): verified (2 steps)
   B_not_enforced (exists-trace): verified (5 steps)
 
@@ -125,7 +125,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini8.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.070524s
+  processing time: 0.082667s
   A_enforced (all-traces): verified (2 steps)
   B_not_enforced (exists-trace): verified (5 steps)
 

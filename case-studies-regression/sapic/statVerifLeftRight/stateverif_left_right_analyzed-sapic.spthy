@@ -2159,7 +2159,7 @@ unbound:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
 Checking availablity ... OK.
@@ -2171,7 +2171,7 @@ analyzing: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_righ
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 19.913899s
+  processing time: 16.079298s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -2188,7 +2188,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 19.913899s
+  processing time: 16.079298s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

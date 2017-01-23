@@ -72,7 +72,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
 Checking availablity ... OK.
@@ -84,7 +84,7 @@ analyzing: case-studies-sapic-regression/basic/channels2.spthy
 analyzed: case-studies-sapic-regression/basic/channels2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.068969s
+  processing time: 0.08837s
   received (all-traces): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/channels2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.068969s
+  processing time: 0.08837s
   received (all-traces): verified (3 steps)
 
 ==============================================================================

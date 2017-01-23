@@ -789,7 +789,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
 Checking availablity ... OK.
@@ -801,7 +801,7 @@ analyzing: case-studies-sapic-regression/locations/licensing.spthy
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.244952s
+  processing time: 6.787338s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)
@@ -814,7 +814,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.244952s
+  processing time: 6.787338s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)

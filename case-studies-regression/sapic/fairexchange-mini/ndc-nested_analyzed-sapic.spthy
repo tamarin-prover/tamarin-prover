@@ -351,7 +351,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
 Checking availablity ... OK.
@@ -363,7 +363,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.214603s
+  processing time: 0.247365s
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)
@@ -381,7 +381,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.214603s
+  processing time: 0.247365s
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)

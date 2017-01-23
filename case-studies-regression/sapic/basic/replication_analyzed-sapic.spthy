@@ -69,7 +69,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
 Checking availablity ... OK.
@@ -81,7 +81,7 @@ analyzing: case-studies-sapic-regression/basic/replication.spthy
 analyzed: case-studies-sapic-regression/basic/replication.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.059047s
+  processing time: 0.089396s
   onlyOneSecret (all-traces): falsified - found trace (4 steps)
 
 ------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/replication.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.059047s
+  processing time: 0.089396s
   onlyOneSecret (all-traces): falsified - found trace (4 steps)
 
 ==============================================================================
