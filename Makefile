@@ -4,20 +4,24 @@
 TAMARIN=~/.local/bin/tamarin-prover
 SAPIC=~/.local/bin/sapic
 
-.sapic:
-	cd plugins/sapic && $(MAKE)
+# Try to install Tamarin and SAPIC
+default: tamarin sapic
 
 # Default installation via stack
-.tamarin:
+.PHONY: tamarin
+tamarin:
 	stack setup
 	stack install
 
-# Try to install Tamarin and SAPIC
-default: .tamarin .sapic
+.PHONY: sapic
+sapic:
+	cd plugins/sapic && $(MAKE)
 
+.PHONY: sapic-clean
 sapic-clean:
 	cd plugins/sapic && $(MAKE) clean
 
+.PHONY: clean
 clean:
 	stack clean
 	$(MAKE) sapic-clean
@@ -279,10 +283,10 @@ sapic-case-studies:	$(SAPIC_CS_TARGETS)
 # individual case studies
 case-studies/%_analyzed-sapic.spthy:	case-studies-sapic-regression/%.spthy $(TAMARIN)
 	mkdir -p case-studies/sapic/basic
-	mkdir -p case-studies/sapic/encWrapDecUnwrap
+#	mkdir -p case-studies/sapic/encWrapDecUnwrap
 	mkdir -p case-studies/sapic/statVerifLeftRight
 	mkdir -p case-studies/sapic/GJM-contract
-	mkdir -p case-studies/sapic/MoedersheimWebService
+#	mkdir -p case-studies/sapic/MoedersheimWebService
 	mkdir -p case-studies/sapic/NSL
 	mkdir -p case-studies/sapic/predicates
 	mkdir -p case-studies/sapic/locations
