@@ -40,8 +40,7 @@ http://tamarin-prover.github.io
 Manual
 ------
 
-The manual is [`/doc/MANUAL.md`](/doc/MANUAL.md). It is part of every installation of the
-Tamarin prover.
+The manual is available as PDF or HTML at https://tamarin-prover.github.io/manual/index.html 
 
 Experimental improved graph output
 ----------------------------------
