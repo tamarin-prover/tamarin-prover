@@ -711,8 +711,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/classic/NSLPK3.spthy
@@ -721,7 +723,7 @@ analyzing: examples/classic/NSLPK3.spthy
 analyzed: examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.841158s
+  processing time: 1.743825s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   injective_agree (all-traces): verified (92 steps)
@@ -735,7 +737,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.841158s
+  processing time: 1.743825s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   injective_agree (all-traces): verified (92 steps)

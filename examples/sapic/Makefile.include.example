@@ -1,0 +1,22 @@
+PROVER=tamarin-prover
+REMOTEPROVER=~/.cabal/bin/tamarin-prover
+# ALTPROVER=/Users/robert/Library/Haskell/ghc-7.0.4/lib/tamarin-prover-0.4.1.0/bin/tamarin-prover
+HEURISTIC=--heuristic=p
+#BOUND=--bound=31
+INTERACTIVEBOUND=--bound=2
+MAUDE=--with-maude=/Users/robert/bin/maudelib/maude.darwin64
+FLAGS=$(MAUDE) $(HEURISTIC) $(BOUND) #+RTS -N -RTS
+INTERACTIVEFLAGS=$(MAUDE) $(HEURISTIC) $(INTERACTIVEBOUND) #+RTS -N -RTS
+REMOTEFLAGS=$(HEURISTIC) $(BOUND) #+RTS -N -RTS
+REMOTEINTERACTIVEFLAGS=$(HEURISTIC) $(INTERACTIVEBOUND) #+RTS -N -RTS
+ULIMITS       = ulimit -Sv 40000000
+ULIMITSRECHEN = ulimit -Sv 30000000
+# SAPIC=../../sapic #-t first
+SAPIC=../sapic #-t first
+
+FILES= $(wildcard *.spthy)
+BENCHMARKMACHINE = smarthomerob
+BENCHMARKULIMITS = ulimit -Sv 6000000
+BENCHMARKPROVER=$(REMOTEPROVER)
+BENCHMARKFLAGS=$(HEURISTIC)
+BENCHMARKFLAGSNOH=

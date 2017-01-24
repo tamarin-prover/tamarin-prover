@@ -231,8 +231,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/csf12/KAS2_eCK.spthy
@@ -241,7 +243,7 @@ analyzing: examples/csf12/KAS2_eCK.spthy
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.850845s
+  processing time: 2.731947s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ------------------------------------------------------------------------------
@@ -252,7 +254,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.850845s
+  processing time: 2.731947s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

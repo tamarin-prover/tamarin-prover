@@ -1,0 +1,17 @@
+theory mini2
+begin
+
+section{* small example for progression function *}
+builtins: signing, hashing
+options: progress
+
+new k; ( (in('r',sign(m,k)); event A())+(in('r',m); out('c',m);event B()))
+
+lemma A_impossible: 
+        "not(Ex #t. A()@t)"
+
+lemma B_possible: 
+	exists-trace 
+        "Ex #t. B()@t"
+
+end

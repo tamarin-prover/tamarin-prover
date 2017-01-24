@@ -389,8 +389,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ccs15/Attack_TPM_Envelope.spthy
@@ -399,7 +401,7 @@ analyzing: examples/ccs15/Attack_TPM_Envelope.spthy
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.356539s
+  processing time: 0.373742s
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
@@ -418,7 +420,7 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.356539s
+  processing time: 0.373742s
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)

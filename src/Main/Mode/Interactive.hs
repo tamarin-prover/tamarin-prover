@@ -85,6 +85,7 @@ run thisMode as = case findArg "workDir" as of
               "json" -> ensureGraphCommand as
               _      -> return True
           _ <- ensureMaude as
+          sapic <- ensureSapic as
           putStrLn ""
           port <- readPort
           let webUrl = serverUrl port
@@ -113,6 +114,7 @@ run thisMode as = case findArg "workDir" as of
                 (argExists "debug" as) (graphPath as) readImageFormat
                 (constructAutoProver as)
                 (runWarp port)
+                sapic
         else
           helpAndExit thisMode
             (Just $ "directory '" ++ workDir ++ "' does not exist.")

@@ -1,0 +1,290 @@
+theory GJMLocks
+begin
+
+section{* Garay-Jakobsson-MacKenzie contract signing protocol *}
+
+/*
+ * Protocol:    GJM contract signing 
+ * Modeler:     Robert Kunnemann 
+ * Date:        Jul 2016
+ *
+ * Status:  wip 
+ *
+ * Juan A. Garay, Markus Jakobsson, and Philip D. MacKenzie. Abuse-free
+ * optimistic contract signing. In Advances in Cryptology—Crypto’99, volume
+ * 1666 of LNCS, pages 449–466. Springer, 1999.
+ *
+ * Modifiation: B's resolve-message to TTP is now encrypted. Original paper
+ * assumed channel to be secret instead.
+ *
+ * This version uses locks for the modelling of the TPM.
+ */
+
+functions: 
+    pk/1,sk/1[private],
+    sign/2, verify/2,
+    /* extrmsg/1, */
+    true/0,
+    pcs/3, checkpcs/5, convertpcs/2, verify/2, fakepcs/4
+
+equations:
+    verify(sign(m, sk(i)), pk(i)) = m,
+    /* extrmsg(sign(m,x))=m, */
+    checkpcs(c, pk(s), pk(v), pk(ttp), pcs(sign(c, sk(s)), pk(v), pk(ttp))) = true,
+    convertpcs(sk(ttp), pcs(sign(c, sk(s)), pk(v), pk(ttp))) = sign(c, sk(s)),
+    /* fakepcs () */
+    checkpcs(c, pk(s), pk(v), pk(ttp), fakepcs(pk(s), sk(v), pk(ttp), c)) = true
+
+options: progress
+
+  /* Equational theory similiar to tamarin examples, with the following modification:
+        - renamed x->s (signer) y->v (verifier) z-> ttp
+
+     Notes:
+        - Original paper defines S-Convert as well as TP-Convert, but S-Convert
+          would correspond to the following formula, which is redundant with
+          the sign-constructor.
+          convertpcs(sk(s), pcs(sign(c, sk(s)), pk(v), pk(ttp))) = sign(c, sk(s)),
+  */
+
+  /* New convention for communication on reliable channel:
+   * <to,sid>
+   */
+
+let A = in('c',$TEXT);
+        new sida; event StartA($A,$B,$TEXT,sida);
+        let m1 = pcs(sign(<$TEXT,'1'>,sk($A)),pk($B),pk(TTPID)) in
+        let m2 = pcs(sign(<$TEXT,'2'>,sk($B)),pk($A),pk(TTPID)) in
+        let m3 = sign(<$TEXT,'1'>,sk($A)) in
+        let m4 = sign(<$TEXT,'2'>,sk($B)) in
+        let a1 = sign(<$TEXT,$A,$B,'abort'>,sk('A')) in
+        let a2 = sign(a1,sk(TTPID)) in
+        let r1 = <m3,m2> in
+        out('c',m1);
+        (
+          in('c',m2);
+          out('c',m3);
+          (
+           in('c',m4);
+           event ContractA($A,$B,$TEXT,sida);
+           event EndA4($A,$B,$TEXT,sida)
+          )
+          +
+          ( /* Resolve */
+            out('r',<TTPID,sida,r1>);
+            /* if A is honest, she would not forget that she requested an
+             * abort before, thus we leave this step out
+             * (despite it being part of the protocol description)
+             */
+            /*
+            (
+             in('r',<'originator',TTPID,$A,a2>);
+             event AbortA($TEXT,sida)
+            ) + ( */
+             in('r',<$A,sida,m4>);
+             event ContractA($A,$B,$TEXT,sida);
+             event EndA3($A,$B,$TEXT,sida)
+            /* ) */
+          )
+        )
+        +
+        ( /* Abort */
+          out('r',<TTPID,sida,a1>);
+          (
+            in('r',<$A,sida,a2>);
+            event AbortA($A,$B,$TEXT,sida);
+            event EndA1($A,$B,$TEXT,sida)
+          )
+          + (
+            in('r',<$A,sida,m4>);
+            event ContractA($A,$B,$TEXT,sida);
+            event EndA2($A,$B,$TEXT,sida) 
+          )
+          /* SIMPLIFICATION: Protocol description forsees a third alternative:
+           * TTP might send m3(!) to A -- but A can generate this herself.
+           * Furthermore, this only happens if Resolve1 was called
+           * before, which can never happen if we excute the abort protocol.
+           */
+        )
+
+let B = 
+        let m1 = pcs(sign(<$TEXT,'1'>,sk($A)),pk($B),pk(TTPID)) in
+        let m2 = pcs(sign(<$TEXT,'2'>,sk($B)),pk($A),pk(TTPID)) in
+        let m3 = sign(<$TEXT,'1'>,sk($A)) in
+        let m4 = sign(<$TEXT,'2'>,sk($B)) in
+        let a1 = sign(<$TEXT,$A,$B,'abort'>,sk('A')) in
+        let a2 = sign(a1,sk(TTPID)) in
+        let r2 = <m1,m4> in
+        in('c',m1);
+        new sidb; event StartB($A,$B,$TEXT,sidb);
+        out('c',m2);
+        (
+          in('c',m3);
+          event ContractB($A,$B,$TEXT,sidb);
+          event EndB3($A,$B,$TEXT,sidb);
+          out('c',m4)
+        )
+        +
+        ( /* Resolve */
+          out('r',<TTPID,sidb,r2>);
+          (
+          in('r',<$B,sidb,a2>);
+          event AbortB($A,$B,$TEXT,sidb);
+          event EndB1($A,$B,$TEXT,sidb)
+          ) + (
+          in('r',<$B,sidb,m3>);
+          event ContractB($A,$B,$TEXT,sidb);
+          event EndB2($A,$B,$TEXT,sidb)
+          )
+        )
+
+
+/* TODO justify pattern matching by explaining each
+ * step in the comments, using the equations */
+let TTP = 
+let m1 = pcs(sign(<$TEXT,'1'>,sk($A)),pk($B),pk(TTPID)) in
+let m2 = pcs(sign(<$TEXT,'2'>,sk($B)),pk($A),pk(TTPID)) in
+let m3 = sign(<$TEXT,'1'>,sk($A)) in
+let m4 = sign(<$TEXT,'2'>,sk($B)) in
+let a1 = sign(<$TEXT,$A,$B,'abort'>,sk($A)) in
+let a2 = sign(a1,sk(TTPID)) in
+let r1 = <m3,m2> in
+let r2 = <m1,m4> in
+( /* Abort */
+  in('r',<TTPID,sida,a1>);
+  lock $TEXT; /* only possible if neither aborted nor resolved */
+  out('r',<$A,sida,a2>);
+  event AbortCert($A,$B,$TEXT);
+  /* from now on only executed if B tries to resolve */
+  in('r',<TTPID,sidb,r2>);
+  out('r',<$B,sidb,a2>)
+  /* no unlock! */
+)
++
+( /* Resolve1 */
+  in('r',<TTPID,sida,r1>);
+  lock $TEXT;
+  out('r',<$A,sida,convertpcs(sk(TTPID),m2)>);
+  event ResolveCert($A,$B,$TEXT)
+  /* note that if A calls for resolve, B must have received m3 and thus has
+   * a contract.
+  /* no unlock! */
+)
++
+( /* Resolve2 */
+  in('r',<TTPID,sidb,r2>);
+  lock $TEXT;
+  out('r',<$B,sidb,m3>);
+  event ResolveCert($A,$B,$TEXT);
+  ( /* A wants to abort */
+  in('r',<TTPID,sida,a1>);
+  out('r',<$A,sida,m4>)
+  ) + ( /* A wants to resolve */
+  in('r',<TTPID,sida,r1>);
+  out('r',<$A,sida,m4>)
+  )
+)
+
+let Judge = 
+  let m1 = pcs(sign(<$TEXT,'1'>,sk($A)),pk($B),pk(TTPID)) in
+  let m2 = pcs(sign(<$TEXT,'2'>,sk($B)),pk($A),pk(TTPID)) in
+  let m3 = sign(<$TEXT,'1'>,sk($A)) in
+  let m4 = sign(<$TEXT,'2'>,sk($B)) in
+  let a1 = sign(<$TEXT,$A,$B,'abort'>,sk($A)) in
+  let a2 = sign(a1,sk(TTPID)) in
+  let wittness_resolved = sign(<sign($TEXT,sk1), sign($TEXT,sk2)>,sk(TTPID)) in
+             (in('c',<m3,m4>); event ContractJudge($A,$B,$TEXT))
+         ||  (in('c',a2); event AbortJudge($A,$B,$TEXT))
+
+let TTPID=<'TTP',$TTP> in
+!(
+in('c',<$A,$B,<'TTP',$TTP>>);
+event TTP(TTPID);
+ ( A || B || TTP || Judge)
+)
+|| !(   in('c',<'corrupt',$x>); 
+        event Corrupt($x);
+        out('c',sk($x));
+        (  !(in('r',<'responder',$x,TTPID,m>);0) 
+        || !(in('r',<'originator',$x,TTPID,m>);0)
+        || !(in('r',<'responder',TTPID,$x,m>);0)
+        || !(in('r',<'originator',TTPID,$x,m>);0)
+        )
+   )
+
+/* auto */
+lemma sanity_a4b3: /* optimistic execution */
+exists-trace
+ "Ex #i #j  a b t sida sidb. 
+    EndA4(a,b,t,sida)@i 
+  & EndB3(a,b,t,sidb)@j
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+
+/* automatic (ca. 1hour) */
+/* lemma cleanup [reuse]: */
+/* all-traces */
+/*     " All x1 x2 r x ttp m #i #j #t. */
+/*     Receive(x1,<r,x,ttp,m>)@i  & */ 
+/*     Receive(x2,<r,x,ttp,m>)@j  & */
+/*     TTP(ttp)@t */
+/*     ==> #i=#j | Ex #k. Corrupt(x)@k" */
+
+/* manual */
+lemma sanity_a1b1:
+exists-trace
+ "Ex #i #j  a b t sida sidb. 
+    EndA1(a,b,t,sida)@i 
+  & EndB1(a,b,t,sidb)@j
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+
+lemma sanity_a2b2:
+exists-trace
+ "Ex #i #j  a b t sida sidb. 
+    EndA2(a,b,t,sida)@i 
+  & EndB2(a,b,t,sidb)@j
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+
+lemma sanity_a3b3:
+exists-trace
+ "Ex #i #j  a b t sida sidb. 
+    EndA2(a,b,t,sida)@i 
+  & EndB2(a,b,t,sidb)@j
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+
+/* automatic */
+/* lemma aborted_and_resolved_exclusive: */
+/*   "not (Ex a b t #i #j. AbortCert(a,b,t) @ i & ResolveCert(a,b,t) @ j)" */
+
+/* auto */
+lemma timelinessA [reuse]:
+    "All #i a b t sida. StartA(a, b, t, sida)@i
+    	    ==>  ( Ex #j .  ContractA(a, b, t, sida)@j)
+             | ( Ex #j .  AbortA(a, b, t, sida)@j )
+             | ( Ex #j. Corrupt(a)@j)"
+
+/* auto */
+lemma timelinessB [reuse]:
+    "All #i a b t nb. StartB(a, b, t, nb)@i
+    	    ==>  ( Ex #j .  ContractB(a, b, t, nb)@j)
+             | ( Ex #j .  AbortB(a, b, t, nb)@j )
+             | ( Ex #j. Corrupt(b)@j)
+             "
+
+/* finds attack 
+ * A signs contract with corrupt X
+ * B gets signature and presents to judge to show it has contract with A
+ * */
+lemma fullfairnessA:
+    "All #i a b t . ContractJudge(a,b,t)@i
+        ==> (Ex #j sida . ContractA(a,b,t, sida)@j) 
+            | (Ex #k. Corrupt(a)@k)"
+
+end    

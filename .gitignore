@@ -16,6 +16,11 @@ cabal.sandbox.config
 *.prof
 *.un~
 
+*.cmi
+*.cmo
+plugins/sapic/lexer.ml
+plugins/sapic/sapic
+
 *.hpc
 unit.tix
 

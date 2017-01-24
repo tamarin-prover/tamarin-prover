@@ -1,0 +1,211 @@
+theory DecWrapDestr
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+
+builtins: symmetric-encryption
+
+functions: encSucc/2, true/0
+
+equations: encSucc(senc(x, y), y)=true
+rule Init_: //Init 
+ [ ] --[Init()]-> [State_()]
+
+rule Rep_0_: //Rep, 0 
+ [ State_()] --[]-> [!Semistate_1()]
+
+rule Rep_1_: //Rep, 1 
+ [ !Semistate_1()] --[]-> [State_1()]
+
+rule Par_1: //Par 
+ [ State_1()] --[]-> [State_11(), State_12()]
+
+rule Par_11: //Par 
+ [ State_11()] --[]-> [State_111(), State_112()]
+
+rule Par_111: //Par 
+ [ State_111()] --[]-> [State_1111(), State_1112()]
+
+rule new_h_1111: //new h 
+ [ State_1111(), Fr(h)] --[]-> [State_11111(h)]
+
+rule new_k_11111: //new k 
+ [ State_11111(h), Fr(k)] --[]-> [State_111111(h, k)]
+
+rule event_NewKeyh_k_111111: //event NewKey(h, k) 
+ [ State_111111(h, k)] --[Event(), NewKey(h, k)]-> [State_1111111(h, k)]
+
+rule insert_key_h_k_1111111: //insert <'key', h>,k 
+ [ State_1111111(h, k)] --[Insert(<'key', h>, k)]-> [State_11111111(h, k)]
+
+rule insert_att_h_dec__11111111: //insert <'att', h>,'dec' 
+ [ State_11111111(h, k)] --[Insert(<'att', h>, 'dec')]-> [State_111111111(h, k)]
+
+rule out_h_111111111: //out h 
+ [ State_111111111(h, k)] --[]-> [State_1111111111(h, k), Out(h)]
+
+rule Zero_1111111111: //Zero 
+ [ State_1111111111(h, k)] --[]-> []
+
+rule in_h_1112: //in h 
+ [ State_1112(), In(h)] --[]-> [State_11121(h)]
+
+rule lock_h_11121: //lock h 
+ [ State_11121(h), Fr(~lock4)] --[Lock(~lock4, h)]-> [State_111211(~lock4, h)]
+
+rule insert_att_h_wrap__111211: //insert <'att', h>,'wrap' 
+ [ State_111211(~lock4, h)] --[Insert(<'att', h>, 'wrap')]-> [State_1112111(~lock4, h)]
+
+rule unlock_h_1112111: //unlock h 
+ [ State_1112111(~lock4, h)] --[Unlock(~lock4, h)]-> [State_11121111(~lock4, h)]
+
+rule Zero_11121111: //Zero 
+ [ State_11121111(~lock4, h)] --[]-> []
+
+rule in_h_c__112: //in <h, c> 
+ [ State_112(), In(<h, c>)] --[]-> [State_1121(c, h)]
+
+rule lookup_att_h_as_a_0_1121: //lookup <'att', h> as a, 0 
+ [ State_1121(c, h)] --[IsIn(<'att', h>, a)]-> [State_11211(a, c, h)]
+
+rule lookup_att_h_as_a_1_1121: //lookup <'att', h> as a, 1 
+ [ State_1121(c, h)] --[IsNotSet(<'att', h>)]-> [State_11212(c, h)]
+
+rule if_eqa_dec__0_11211: //if eq(a, 'dec'), 0 
+ [ State_11211(a, c, h)] --[Pred_eq(a, 'dec')]-> [State_112111(a, c, h)]
+
+rule if_eqa_dec__1_11211: //if eq(a, 'dec'), 1 
+ [ State_11211(a, c, h)] --[Pred_not_eq(a, 'dec')]-> [State_112112(a, c, h)]
+
+rule lookup_key_h_as_k_0_112111: //lookup <'key', h> as k, 0 
+ [ State_112111(a, c, h)] --[IsIn(<'key', h>, k)]-> [State_1121111(a, c, h, k)]
+
+rule lookup_key_h_as_k_1_112111: //lookup <'key', h> as k, 1 
+ [ State_112111(a, c, h)] --[IsNotSet(<'key', h>)]-> [State_1121112(a, c, h)]
+
+rule event_IsTrueencSuccc_k_1121111: //event IsTrue(encSucc(c, k)) 
+ [ State_1121111(a, c, h, k)] --[Event(), IsTrue(encSucc(c, k))]-> [State_11211111(a, c, h, k)]
+
+rule event_DecUsingk_sdecc_k_11211111: //event DecUsing(k, sdec(c, k)) 
+ [ State_11211111(a, c, h, k)] --[Event(), DecUsing(k, sdec(c, k))]-> [State_112111111(a, c, h, k)]
+
+rule out_sdecc_k_112111111: //out sdec(c, k) 
+ [ State_112111111(a, c, h, k)] --[]-> [State_1121111111(a, c, h, k), Out(sdec(c, k))]
+
+rule Zero_1121111111: //Zero 
+ [ State_1121111111(a, c, h, k)] --[]-> []
+
+rule Zero_1121112: //Zero 
+ [ State_1121112(a, c, h)] --[]-> []
+
+rule Zero_112112: //Zero 
+ [ State_112112(a, c, h)] --[]-> []
+
+rule Zero_11212: //Zero 
+ [ State_11212(c, h)] --[]-> []
+
+rule in_h1_h2__12: //in <h1, h2> 
+ [ State_12(), In(<h1, h2>)] --[]-> [State_121(h1, h2)]
+
+rule lookup_att_h1_as_a1_0_121: //lookup <'att', h1> as a1, 0 
+ [ State_121(h1, h2)] --[IsIn(<'att', h1>, a1)]-> [State_1211(a1, h1, h2)]
+
+rule lookup_att_h1_as_a1_1_121: //lookup <'att', h1> as a1, 1 
+ [ State_121(h1, h2)] --[IsNotSet(<'att', h1>)]-> [State_1212(h1, h2)]
+
+rule if_eqa1_wrap__0_1211: //if eq(a1, 'wrap'), 0 
+ [ State_1211(a1, h1, h2)] --[Pred_eq(a1, 'wrap')]-> [State_12111(a1, h1, h2)]
+
+rule if_eqa1_wrap__1_1211: //if eq(a1, 'wrap'), 1 
+ [ State_1211(a1, h1, h2)] --[Pred_not_eq(a1, 'wrap')]-> [State_12112(a1, h1, h2)]
+
+rule lookup_key_h1_as_k1_0_12111: //lookup <'key', h1> as k1, 0 
+ [ State_12111(a1, h1, h2)] --[IsIn(<'key', h1>, k1)]-> [State_121111(a1, h1, h2, k1)]
+
+rule lookup_key_h1_as_k1_1_12111: //lookup <'key', h1> as k1, 1 
+ [ State_12111(a1, h1, h2)] --[IsNotSet(<'key', h1>)]-> [State_121112(a1, h1, h2)]
+
+rule lookup_key_h2_as_k2_0_121111: //lookup <'key', h2> as k2, 0 
+ [ State_121111(a1, h1, h2, k1)] --[IsIn(<'key', h2>, k2)]-> [State_1211111(a1, h1, h2, k1, k2)]
+
+rule lookup_key_h2_as_k2_1_121111: //lookup <'key', h2> as k2, 1 
+ [ State_121111(a1, h1, h2, k1)] --[IsNotSet(<'key', h2>)]-> [State_1211112(a1, h1, h2, k1)]
+
+rule event_Wrapk1_k2_1211111: //event Wrap(k1, k2) 
+ [ State_1211111(a1, h1, h2, k1, k2)] --[Event(), Wrap(k1, k2)]-> [State_12111111(a1, h1, h2, k1, k2)]
+
+rule out_senck2_k1_12111111: //out senc(k2, k1) 
+ [ State_12111111(a1, h1, h2, k1, k2)] --[]-> [State_121111111(a1, h1, h2, k1, k2), Out(senc(k2, k1))]
+
+rule Zero_121111111: //Zero 
+ [ State_121111111(a1, h1, h2, k1, k2)] --[]-> []
+
+rule Zero_1211112: //Zero 
+ [ State_1211112(a1, h1, h2, k1)] --[]-> []
+
+rule Zero_121112: //Zero 
+ [ State_121112(a1, h1, h2)] --[]-> []
+
+rule Zero_12112: //Zero 
+ [ State_12112(a1, h1, h2)] --[]-> []
+
+rule Zero_1212: //Zero 
+ [ State_1212(h1, h2)] --[]-> []
+
+axiom True_is_true :
+"	All x #i. IsTrue(x) @ i ==> x = true()"
+
+ axiom set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+        (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
+                & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
+                & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
+)"
+
+axiom set_notin:
+"All x #t3 . IsNotSet(x)@t3 ==> 
+        (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
+  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 
+                &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
+
+
+axiom locking:
+"All l x lp #t1 #t3 . Lock(l,x)@t1 & Lock(lp,x)@t3 
+        ==> 
+        ( #t1<#t3 
+                & (Ex #t2. Unlock(l,x)@t2 & #t1<#t2 & #t2<#t3 
+                 & (All  #t0 . Unlock(l,x)@t0 ==> #t0=#t2) 
+                 & (All lp #t0 . Lock(lp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+                 & (All lp #t0 . Unlock(lp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 )
+                ))
+        | #t3<#t1 | #t1=#t3 "
+
+
+axiom predicate_eq:
+"All #i a b. Pred_eq(a,b)@i ==> a = b"
+
+
+axiom predicate_not_eq:
+"All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)"
+
+
+axiom single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+lemma can_create_key : exists-trace
+"	Ex #t h k. NewKey(h, k) @ t"
+
+lemma can_obtain_wrapping : exists-trace
+"	Ex #t k1 k2. Wrap(k1, k2) @ t"
+
+lemma dec_limits [reuse, typing]:
+"	All k m #t1. DecUsing(k, m) @ t1 ==> ( Ex h k2 #t2 #t3. NewKey(h, k2) @ t2 & KU(k2) @ t3 & t2 < t1 & t3 < t1 )"
+
+lemma cannot_obtain_key_ind [reuse, use_induction]:
+"	not( Ex #i #j h k. NewKey(h, k) @ i & KU(k) @ j )"
+
+lemma cannot_obtain_key :
+"	not( Ex #i #j h k. NewKey(h, k) @ i & K(k) @ j )"
+
+end

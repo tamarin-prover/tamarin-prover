@@ -1,0 +1,73 @@
+theory AKE
+
+// Use Tamarin command line options '--heuristic=p' for all-trace properties
+// (default heuristic for exists-trace properties)
+
+begin
+
+builtins: symmetric-encryption,asymmetric-encryption
+
+predicates: pred_rep(x,y) <=> not(Ex z. y = <'loc',z>)
+
+	
+let r=                            // IEE sides
+        in(pk(skV));
+        !(                        // For everay pk received, an instance is launched at the corresponding trusted location
+        new k; 
+		event SessionP(pk(skV),k);
+        let signed = report(aenc(k,pk(skV))) in 
+        event Poutput(<aenc(k,pk(skV)),signed>);
+	    out(<aenc(k,pk(skV)),signed>)
+        )@<'loc',pk(skV)>
+
+
+
+let v =                                   // Initiator of the Key Exchange
+    new skV; 
+    event HonestP(pk(skV));
+    out(pk(skV));                         // publishs its public keys
+    in(<aenc(k,pk(skV)),signed>);  // receives the shared key and checks the report
+    if  aenc(k,pk(skV)) = check_rep(signed,<'loc',pk(skV)>) then 
+       (event Voutput(<aenc(k,pk(skV)),signed>);
+	   event SessionV(pk(skV),k)
+      
+        )
+
+
+ 
+
+new init; ( (!r) || (!v))
+
+/* First some auxilliary lemmas, for sanity or to help in other proofs */
+
+/*
+lemma can_run_v: //for sanity 
+ 	exists-trace 
+	"Ex #t h .Voutput(h)@t"
+
+ lemma sanity1: //make sure that a valid protocol run exists 
+ exists-trace 
+     "Ex pka  k #t1 . SessionP(pka,k)@t1" 
+
+ lemma sanity2: 
+ exists-trace 
+      "Ex pka  k #t1 . SessionV(pka,k)@t1" 
+*/
+
+ lemma sanity3[reuse]: 
+      "All pka k #t1 . SessionV(pka,k)@t1 ==> Ex #t2. SessionP(pka,k)@t2 & t2<t1" 
+
+
+
+lemma secrecy[reuse]:
+        "not (
+                Ex pka k #t1 #t2 .
+                 SessionV(pka,k)@t1 
+                & K(k)@t2
+
+        )"
+
+
+
+end
+

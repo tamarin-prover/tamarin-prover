@@ -1,0 +1,30 @@
+theory NDCTwoReplications
+begin
+
+section{* small example for progression function *}
+builtins: signing, hashing
+options: progress
+
+(! event A() ) + (! event B())
+
+lemma A_possible:
+    exists-trace
+      "Ex #t. A()@t"
+
+lemma B_possible:
+    exists-trace
+      "Ex #t. B()@t"
+
+lemma no_progress_possible:
+    exists-trace
+      " not(Ex #t. A()@t) & not(Ex #t. B()@t)
+      "
+
+lemma A_exclusive:
+    "(Ex #t. A()@t) ==> not (Ex #t2. B()@t2)"
+
+lemma B_exclusive:
+    "(Ex #t. B()@t) ==> not (Ex #t2. A()@t2)"
+
+
+end

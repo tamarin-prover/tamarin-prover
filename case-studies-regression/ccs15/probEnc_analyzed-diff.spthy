@@ -196,11 +196,17 @@ next
   backward-search
     case LHS
     step( simplify )
-    MIRRORED
+    step( solve( !Key( k ) ▶₀ #i ) )
+      case gen
+      MIRRORED
+    qed
   next
     case RHS
     step( simplify )
-    MIRRORED
+    step( solve( !Key( k ) ▶₀ #i ) )
+      case gen
+      MIRRORED
+    qed
   qed
 next
   case Rule_gen
@@ -218,8 +224,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ccs15/probEnc.spthy
@@ -228,8 +236,8 @@ analyzing: examples/ccs15/probEnc.spthy
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.193026s
-  DiffLemma:  Observational_equivalence : verified (75 steps)
+  processing time: 0.192813s
+  DiffLemma:  Observational_equivalence : verified (77 steps)
 
 ------------------------------------------------------------------------------
 
@@ -239,8 +247,8 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.193026s
-  DiffLemma:  Observational_equivalence : verified (75 steps)
+  processing time: 0.192813s
+  DiffLemma:  Observational_equivalence : verified (77 steps)
 
 ==============================================================================
 */

@@ -52,6 +52,7 @@ import           Data.Time.LocalTime
 
 import           System.Directory
 import           System.FilePath
+import           System.Process
 
 -- | Create YesodDispatch instance for the interface.
 -- mkYesodDispatch "WebUIDiff" resourcesWebUI
@@ -90,9 +91,10 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> ImageFormat                     -- ^ The preferred image format
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
+          -> Bool
           -> IO b
 withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
-          graphCmd' imgFormat' defaultAutoProver' f
+          graphCmd' imgFormat' defaultAutoProver' f sapic
   = do
     thy    <- getTheos
     thrVar <- newMVar M.empty
@@ -134,7 +136,7 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
                      _            -> return Nothing
          return $ M.fromList $ catMaybes thys
 
-       else loadTheories readyMsg thDir thLoader defaultAutoProver'
+       else loadTheories readyMsg thDir thLoader defaultAutoProver' sapic
 
     shutdownThreads thrVar = do
       m <- modifyMVar thrVar $ \m -> return (M.empty, m)
@@ -216,13 +218,31 @@ loadTheories :: String
              -> FilePath
              -> (FilePath -> IO ClosedTheory)
              -> AutoProver
+             -> Bool
              -> IO TheoryMap
-loadTheories readyMsg thDir thLoader autoProver = do
+loadTheories readyMsg thDir thLoader autoProver sapic = do
+    sapicPaths <- filter (".sapic" `isSuffixOf`) <$> getDirectoryContents thDir
+    when sapic $ mapM_ runSapic (map (thDir </>) sapicPaths)
     thPaths <- filter (".spthy" `isSuffixOf`) <$> getDirectoryContents thDir
     theories <- catMaybes <$> mapM loadThy (zip [1..] (map (thDir </>) thPaths))
     putStrLn readyMsg
     return $ M.fromList theories
   where
+    -- run Sapic
+    runSapic :: String -> IO ()
+    runSapic path = 
+        E.handle catchEx $ callCommand $ "sapic " ++ path ++ " > " ++ spthyfile
+      where
+        -- Exception handler (if loading theory fails)
+        catchEx :: E.SomeException -> IO ()
+        catchEx e = do
+          putStrLn ""
+          putStrLn $ replicate 78 '-'
+          putStrLn $ "Unable to run SAPIC on theory file `" ++ path ++ "'"
+          putStrLn $ replicate 78 '-'
+          print e
+        spthyfile = (take ((length path) - 6) path) ++ ".spthy" 
+      
     -- Load theories
     loadThy (idx, path) = E.handle catchEx $ do
         thy <- thLoader path

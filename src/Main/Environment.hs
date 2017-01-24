@@ -153,6 +153,20 @@ ensureGraphCommand as = do
       | otherwise  = Left  $ errMsg
     errMsg = unlines
       [ "Command not found" ]
+      
+-- | Check whether Sapic is installed
+ensureSapic :: Arguments -> IO Bool
+ensureSapic _ = do
+    putStrLn $ "SAPIC tool: '" ++ cmd ++ "'"
+    testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False
+  where
+    cmd = "sapic"
+    check _ err
+      | err == ""  = Right $ " OK."
+      | otherwise  = Left  $ errMsg
+    errMsg = unlines
+      [ "SAPIC not found."
+      , "SAPIC files will not be supported." ]
 
 -- | Ensure a suitable version of Maude is installed.
 ensureMaude :: Arguments -> IO Bool

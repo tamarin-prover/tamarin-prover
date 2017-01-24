@@ -1491,8 +1491,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ccs15/rfid-feldhofer.spthy
@@ -1501,7 +1503,7 @@ analyzing: examples/ccs15/rfid-feldhofer.spthy
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.788358s
+  processing time: 3.660862s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)
@@ -1520,7 +1522,7 @@ summary of summaries:
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.788358s
+  processing time: 3.660862s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)
