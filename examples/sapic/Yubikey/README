@@ -1,0 +1,5 @@
+This directory contains the verified Proof for the APIP representation of the Yubikey protocol. It contains:
+
+Yubikey.apip - The apip file translated, for reference
+proof_manual_part.spthy - The manual part of the proof
+proof_complete.spthy - The complete proof

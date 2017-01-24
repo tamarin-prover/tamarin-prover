@@ -16,4 +16,16 @@ cabal.sandbox.config
 *.prof
 *.un~
 *~
-*.aes
+
+*.cmi
+*.cmo
+plugins/sapic/lexer.ml
+plugins/sapic/sapic
+
+*.hpc
+unit.tix
+
+narrow
+unit
+
+client_session_key.aes

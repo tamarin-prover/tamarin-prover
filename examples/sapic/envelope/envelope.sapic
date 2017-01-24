@@ -1,0 +1,87 @@
+theory EnvelopeSimple
+begin
+
+section{* Envelope protocol *}
+
+/*
+ * Protocol:    Envelope Protocol [1]
+ * Modeler:     Robert Kunnemann 
+ * Date:    	October 2013
+ *
+ * Status:		 
+ * [1] REF
+ */
+
+builtins: signing, asymmetric-encryption
+
+functions: h/2
+
+let read_pcr = !(lookup 'pcr' as value in out(value))
+
+let quote = !(in (msg);
+                lookup 'pcr' as value in 
+                    out(sign(<value,msg>,aik))
+        )
+
+let extend = 
+    !( in(m); lookup 'pcr' as prev in insert 'pcr', h(prev,m))
+
+let reboot =  
+    !( insert 'pcr','zero')
+
+let unseal =
+/* simplified: instead of modelling loadkey2, which loads a wrapped key, we
+ * let unseal take a wrapping and the blob to be unsealed.
+ * Furthermore, seals cannot be bounded to a pcr value, since the
+ * envelope protocol does not require that.  However, keys can be
+ * bounded to pcr values
+ */
+    !( in(aenc(<'wrap',key, pcrvalue>, tpmkey));
+       in(aenc(msg,pk(key))); //sealed blob
+       /* incomplete, simplified model of a sealed blob */
+        lookup 'pcr' as actualvalue in
+            if pcrvalue=actualvalue then
+                out(msg)
+     )
+                
+let envelope =
+    !( lookup 'pcr' as value in
+            if value = 'zero' then
+                new n;
+                insert 'pcr', h('zero',n);
+                new bindkey;
+                out(aenc( <'wrap', bindkey, h(h('zero',n),'obtain')>, tpmkey));
+                new secret;
+                event Secret(secret);
+                event AttestValue(h(h('zero',n),'deny'));
+                out(aenc(secret,pk(bindkey)))
+    )
+
+let attest_not_reading = 
+/* Next step: give certificate */
+        lookup 'pcr' as value in
+            event Attest(value)
+
+
+insert 'pcr', 'zero';
+new aik;
+out (pk(aik));
+new tpmkey;
+out (pk(tpmkey));
+( extend || reboot || read_pcr || envelope || quote || unseal || attest_not_reading )
+
+lemma sanity1:
+// Adv. can learn the secret, if he wants to
+exists-trace
+    "Ex s #i #j . Secret(s)@i & K(s)@j"
+
+lemma nameorproperty:
+    "not (Ex s attestation #i #j #k #l.
+              Secret(s)@i 
+            & K(s)@j 
+            & AttestValue(attestation)@k 
+            & Attest(attestation)@l
+        )
+    "
+
+end

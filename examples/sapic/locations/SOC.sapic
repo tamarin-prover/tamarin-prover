@@ -1,0 +1,99 @@
+theory SOC
+// Use Tamarin command line options '--heuristic=p' for all-trace properties
+// (default heuristic for exists-trace properties)
+
+begin
+
+builtins: symmetric-encryption,asymmetric-encryption
+
+functions: prog/2,list/2
+
+predicates: pred_rep(x,y) <=> not(Ex z. y = <'loc',z>)
+
+let r= 
+        in(pk(skV));                   // we begin by a Key Exchange
+        !(
+
+        new shared_k; 
+	event SessionP(pk(skV),shared_k);
+        let signed = report(aenc(shared_k,pk(skV))) in 
+        event Poutput(<aenc(shared_k,pk(skV)),signed>);
+        out(<aenc(shared_k,pk(skV)),signed>);       // The secure channel is established
+    
+         new storeP;
+         insert storeP,init;
+            !(lock storeP; lookup storeP as old_i in   // And we start the program sequential execution
+            in( senc(<ip,'input'>,shared_k) );
+            event Poutput(senc(<prog(ip,old_i),'output'>, shared_k));
+            out(senc(<prog(ip,old_i),'output'>, shared_k));
+            insert storeP, list(ip,old_i); unlock storeP
+            )
+
+
+        )@<'loc',pk(skV)>
+
+
+// Run part of the NSL on the verifier side.
+let v = 
+    new skV; 
+    event HonestP(pk(skV));
+    out(pk(skV));
+
+    in(<aenc(shared_k,pk(skV)),signed>);
+    if  aenc(shared_k,pk(skV)) = check_rep(signed,<'loc',pk(skV)>) then 
+       (event Voutput(<aenc(shared_k,pk(skV)),signed>);
+        event SessionV(pk(skV),shared_k);                  // Secure channel established
+        new storeV; insert storeV,init;
+        !(
+            lock storeV; lookup storeV as old_i in
+            new ip;
+            event Input(senc(ip,shared_k));
+            out(senc(<ip,'input'>,shared_k));
+            in(senc(<prog(ip,old_i),'output'>, shared_k));
+            event Voutput(senc(<prog(ip,old_i),'output'>, shared_k));
+            insert storeV,list(ip,old_i); unlock storeV
+        )
+        )
+
+
+ 
+
+new init; ( (!r) || (!v))
+
+/* First some auxilliary lemmas, for sanity or to help in other proofs */
+
+
+lemma secrecy[reuse]:
+        "not (
+                Ex pka k #t1 #t2 .
+                 SessionV(pka,k)@t1 
+                & KU(k)@t2
+
+        )"
+
+lemma Input[use_induction,reuse]:  
+	"All #t1 ip shared_key . Input(senc(ip, shared_key))@t1 ==> (Ex #t2 pk . SessionV(pk,shared_key)@t2 & t2<t1)" 
+
+lemma secrecy_computes2[reuse]:
+        "not (
+                Ex ip k   #t2 #t3 .
+                 Input(senc(ip,k))@t2
+                & KU(ip)@t3
+
+        )"
+
+
+
+lemma secrecy_computes3[reuse]:
+        "not (
+                Ex ip k old_i  #t2 #t3 .
+                 Input(senc(ip,k))@t2
+                & KU(prog(ip,old_i))@t3
+
+        )"
+
+lemma attested_computation:  
+	"All #t1 h . Voutput(h)@t1 ==> (Ex #t2 . Poutput(h)@t2 & t2<t1)" 
+
+end
+

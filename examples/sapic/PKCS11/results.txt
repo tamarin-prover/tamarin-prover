@@ -1,0 +1,41 @@
+
+analyzed: pkcs12-templates.spthy
+
+  WARNING: 9 wellformedness check failed!
+           The analysis results might be wrong!
+
+  dec_limits (all-traces): verified (2237 steps)
+  trusted_as_ut_impossible (all-traces): verified (6 steps)
+  untrusted_as_ut_impossible (all-traces): verified (6 steps)
+  untrusted_as_wt_impossible (all-traces): verified (6 steps)
+  trusted_as_wt_impossible (all-traces): verified (6 steps)
+  bad_keys (all-traces): verified (685 steps)
+  no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): analysis incomplete (2122 steps)
+  no_key_is_enc_and_unwrap (all-traces): verified (354 steps)
+  cannot_obtain_key_ind (all-traces): verified (14600 steps)
+  cannot_obtain_key (all-traces): verified (2 steps)
+
+
+analyzed: pkcs11-templates.spthy
+
+  WARNING: 9 wellformedness check failed!
+           The analysis results might be wrong!
+
+  dec_limits (all-traces): verified (2237 steps)
+  trusted_as_ut_impossible (all-traces): verified (6 steps)
+  untrusted_as_ut_impossible (all-traces): verified (6 steps)
+  untrusted_as_wt_impossible (all-traces): verified (6 steps)
+  trusted_as_wt_impossible (all-traces): verified (6 steps)
+  bad_keys (all-traces): verified (685 steps)
+  no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): verified (2398 steps)
+  no_key_is_enc_and_unwrap (all-traces): verified (354 steps)
+  cannot_obtain_key_ind (all-traces): verified (14600 steps)
+  cannot_obtain_key (all-traces): verified (2 steps)
+
+  real    29m51.647s
+  user    287m59.168s
+  sys     191m45.823s
+
+  real    28m16.322s
+  user    257m30.618s
+  sys     195m3.823s

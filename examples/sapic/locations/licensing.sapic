@@ -1,0 +1,95 @@
+theory licensing
+
+begin
+
+builtins:  symmetric-encryption,asymmetric-encryption
+functions: pk/1,run/2,prg/1,tkn/1,ok/2,ask/2, dec/1,dec1/1,dec2/1
+
+
+predicates:
+pred_rep(x,y) <=> not(Ex z. y = <'loc',z>)
+
+
+let p=                            // The enclave which will run the licensed program
+        in(pk(skV));              // we start with a Key exchange with the vendor
+
+        (new shared_key; 
+		event SessionP(pk(skV),shared_key);
+        let z = report(aenc(shared_key,pk(skV))) in
+	    out(<aenc(shared_key,pk(skV)),z>);
+
+
+	        in(senc(prg(prog2),shared_key));                // we receive the program through the secure channel
+	        !(
+	        in(input);in(senc(tkn(token),shared_key));      // a requested input along with a token
+	        new x;
+	        out(senc(ask(x,tkn(token)),shared_key));        // we ask the vendor if the token is valid
+	        in(senc(ok(x,tkn(token)),shared_key ));
+	         event Poutput(input, token);
+	        out(run( prog2 ,input))                        // and only this publish the output
+	        ))@<'loc',pk(skV)>
+   
+
+// The verifier, that check the encoding and the signing.
+let vendor = 
+    new skV; 
+    event HonestP(pk(skV));
+    out(pk(skV));
+
+    in(<aenc(shared_key,pk(skV)),signed>);
+    if  aenc(shared_key,pk(skV)) = check_rep(signed,<'loc',pk(skV)>) then 
+       (
+
+	   event SessionV(pk(skV),shared_key);       // completion of the Key exchange
+
+	out(senc(prg(prog),shared_key));
+	!(
+	new token; 
+	event Token(token);
+	 out(senc(tkn(token),shared_key));           // publication of a token
+
+	in(senc(ask(x,tkn(token2)),shared_key));     // consumption of the token and confirmation
+	if tkn(token)=tkn(token2) then (		
+		out(senc(ok(x,tkn(token)),shared_key)) 
+			             )
+	
+	)
+	)
+
+
+ 
+new prog; event Auth(prog);   // initialisiation of the licensed program
+ (  (!p) || (!vendor) )
+
+
+/*
+lemma can_run:
+    exists-trace
+    "Ex #t1 #t2  inp prog . K ( run(prog,inp) )@t1 & Auth(prog)@t2 "
+
+*/
+
+
+lemma attested_comput[reuse]:  
+	"All #t1 inp pk. Poutput(inp,pk)@t1  ==> (Ex #t2 . Token(pk)@t2 & t2 <t1 )" 
+
+lemma unique[reuse]:  
+	"not (Ex #t1 #t2 pk inp inp2 . 
+		 Poutput(inp,pk)@t1
+		& Poutput(inp2,pk)@t2 
+		& not(inp=inp2)
+		)
+
+	" 
+
+lemma final:
+	"All #t1 #t2  prog  inp. K ( run(prog,inp) )@t1 & Auth(prog)@t2 ==> 
+	(Ex #t3 #t4 pk . Token(pk)@t4 & t4 <t1 & Poutput(inp,pk)@t3 & t3<t1
+	& not(Ex #t5 inp2.Poutput(inp2,pk)@t5 
+		& not(inp=inp2) )
+)
+
+" 
+
+
+end

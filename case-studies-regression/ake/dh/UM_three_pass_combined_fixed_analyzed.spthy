@@ -5122,8 +5122,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/dh/UM_three_pass_combined_fixed.spthy
@@ -5132,7 +5134,7 @@ analyzing: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 47.830649s
+  processing time: 45.690708s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)
@@ -5145,7 +5147,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 47.830649s
+  processing time: 45.690708s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)

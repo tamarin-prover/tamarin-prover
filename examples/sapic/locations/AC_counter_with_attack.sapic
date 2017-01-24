@@ -1,0 +1,52 @@
+theory AC_counter
+// Use Tamarin command line options '--heuristic=S --bound=32' */
+
+begin
+functions: prog/3,null/0,succ/1,list/2
+
+predicates:
+pred_rep(x,y) <=> not  (y= 'l')
+
+let r =                                        // The remote server who runs the code
+	(lock state; lookup state as st in
+     let ipo = fst(st) in
+    let counter = snd(st) in
+	in(ip); new r; let o = prog(r,ip,ipo) in   // computation of the new output
+	let x = report (<o,ip,counter>) in             // report call of the IEE
+		event Poutput(<o,ip,ipo>);
+		out(<o,x>);
+		insert state,<<o,list(ip,ipo)>,succ(counter)>;
+		unlock state)@'l'
+
+
+let v =                                        // The verifier
+    lock state; lookup state as st in
+     let ipo = fst(st) in
+    let counter = snd(st) in
+	in(ip); in(<o,signedios>);
+	if <o,ip,counter>= check_rep(signedios,'l') then // verification of the validity of the report 
+		(event Voutput(<o,ip,ipo>);
+        insert state,<<o,list(ip,ipo)>,succ(counter)>;
+		unlock state)
+	else  
+		event Fail()
+
+
+new init; event Initial(init);
+ ( !(new state; insert state,<init,null()>;!r) ||
+ !(new state; insert state,<init,null()>; !v)  )
+
+/*
+lemma can_run_v: //for sanity 
+ 	exists-trace 
+	"Ex #t h .Voutput(h)@t" 
+*/
+
+lemma attested_comput_second_step[reuse]:  
+	"All #t1 #t0 o2 i2 o i init.  (Initial(init)@t0 & Voutput(<o2,i2,<o,list(i,init)>>)@t1) ==> (Ex #t2 . Poutput(<o2,i2,<o,list(i,init)>>)@t2 & t2<t1)" 
+
+// Attested computation theorem
+lemma attested_comput:  
+	"All #t1 h .  Voutput(h)@t1 ==> (Ex #t2 . Poutput(h)@t2 & t2<t1)" 
+
+end

@@ -1,0 +1,46 @@
+theory AttestedComputation
+
+begin
+functions: prog/3,list/2
+
+predicates:
+pred_rep(x,y) <=> not  (y= 'l')
+
+let r =                                        // The remote server who runs the code
+	(lock state; lookup state as lio in
+	in(i); new r;
+
+	       // A
+		let o = prog(r,i,lio) in	// computation of the new output
+		let x = report (<o,i,lio>) in  // report call of the IEE
+		event Remote(<o,i,lio>,'l');
+		out(<o,x>);
+
+	insert state,list(o,list(i,lio));
+	unlock state
+	)@'l'
+
+
+let v =                                        // The verifier
+        in(<i,o,r>);
+	lock state; lookup state as lio in
+	if <o,i,lio>= check_rep(r,'l') then // verification of the validity of the report 
+		(event Local(<o,i,lio>,'l');
+		insert state,list(o,list(i,lio));
+		unlock state)
+	else unlock state
+
+new init;
+ ( !(new state;  insert state,init; !r) || !(new state;  insert state,init; !v)  )
+
+/*
+lemma can_run_v: //for sanity 
+ 	exists-trace 
+	"Ex #i m . Local(m,'l')@i" 
+*/
+
+// Attested computation theorem
+lemma attested_comput:  
+	"All #i m . Local(m,'l')@i ==> (Ex #j . Remote(m,'l')@j & j<i)" 
+
+end

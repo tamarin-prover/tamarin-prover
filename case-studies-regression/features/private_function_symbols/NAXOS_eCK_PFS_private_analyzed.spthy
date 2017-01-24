@@ -339,8 +339,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
@@ -349,7 +351,7 @@ analyzing: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spt
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.322303s
+  processing time: 3.023036s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
 ------------------------------------------------------------------------------
@@ -360,7 +362,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.322303s
+  processing time: 3.023036s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
 ==============================================================================

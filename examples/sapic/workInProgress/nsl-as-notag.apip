@@ -1,0 +1,103 @@
+theory NeedhamSchroederAS
+
+begin
+
+builtins: asymmetric-encryption, signing
+
+//The Authentication Server's public key is known to everyone
+new ask;
+//! ( //registering names
+//	in(<X,pkX>);
+//	//TODO: Insert lookup, avoid identity theft
+//	insert X,pkX;
+//	out(sign(<'added',X,pkX>,ask))
+//)
+//||
+!( //A asking for B's public key
+	in(<A,B>);
+	lookup B as pkB in
+		out(sign(<pkB,B>,ask))
+)
+||
+! ( new A;
+	new skA; 
+	insert A,pk(skA);
+	event HonestA(A);
+	out(A);
+	!( 
+		in(xB); 
+		out(<A,xB>);
+		in(sign(<pkxB,xB>,ask));
+
+		new Na; 
+		event OUT_I_1(aenc(<Na,A>,pkxB),A);
+		out(aenc(<Na,A>,pkxB));
+	
+		in(aenc(<Na,xNb,xB>,pk(skA))); 
+		event IN_I_2_nr(xNb,aenc(<Na,xNb,xB>,pk(skA)));
+
+		new k; out(aenc(<xNb,k>,pkxB));
+		event SessionA(A,xB,k)
+	) 
+) 
+||
+! ( new B; //the identity of an honest B
+	new skB; 
+	insert B,pk(skB);
+	event HonestB(B);
+	out(B); 
+	!( 
+		
+		in(aenc(<xNa,xA>,pk(skB))); 
+	    event IN_R_1_ni(xNa,aenc(<xNa,xA>,pk(skB)),xA);
+		out(<B,xA>);
+		
+		in(sign(<pkxA,xA>,ask));
+
+	    new Nb; 
+	    event OUT_R_1(aenc(<xNa,Nb,B>,pkxA));
+	    out(aenc(<xNa,Nb,B>,pkxA));
+
+	    in(aenc(<Nb,xk>,pk(skB))); 
+	    event SessionB(xA,B,xk)
+	)
+) 
+
+lemma sanity1: //make sure that a valid protocol run exists
+exists-trace
+	"Ex a b k #t1 . SessionA(a,b,k)@t1"
+
+lemma sanity2: 
+exists-trace
+	"Ex a b k #t1 . SessionB(a,b,k)@t1"
+
+lemma types [typing, reuse]:
+  " (All ni m1 #i A.
+       IN_R_1_ni( ni, m1,A) @ i
+       ==>
+       ( (Ex #j #k . KU(ni) @ j & j < i & KU(A)@k & k < i
+
+		)
+       | (Ex #j. OUT_I_1( m1,A ) @ j)
+       )
+    )
+  & (All nr m2 #i.
+       IN_I_2_nr( nr, m2) @ i
+       ==>
+       ( (Ex #j. KU(nr) @ j & j < i)
+       | (Ex #j. OUT_R_1( m2 ) @ j)
+       )
+    )
+"
+
+lemma secrecy:
+	"not (
+		Ex a b k #t1 #t2 .
+		 SessionA(a,b,k)@t1 
+		& K(k)@t2
+		& ( Ex #i . HonestA(a)@i)
+		& ( Ex #i . HonestB(b)@i)
+	)"
+
+end
+
