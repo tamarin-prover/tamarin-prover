@@ -56,9 +56,11 @@ rRuleToCtxtStRule (lhs `RRule` rhs)
       where 
         terms = (zip [i..] ts) ++ (zip [0..] done)
     
-    constantPositions (viewTerm -> FApp _ args) = case subterms args [] 1 of
-                                                       []  -> positions lhs
-                                                       pos -> pos
+    constantPositions (viewTerm -> FApp _ args) 
+        | containsPrivate lhs = positions lhs
+        | otherwise           = case subterms args [] 1 of
+                                     []  -> positions lhs
+                                     pos -> pos
     
     findSubterm :: LNTerm -> LNTerm -> Position -> [Position]
     findSubterm lst r rpos | lst == r            = [reverse rpos]
