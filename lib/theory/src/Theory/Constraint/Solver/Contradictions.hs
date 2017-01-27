@@ -52,7 +52,7 @@ import           Theory.Text.Pretty
 
 import           Term.Rewriting.Norm            (maybeNotNfSubterms, nf')
 
-
+import           Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Contradictions
@@ -121,7 +121,7 @@ contradictions ctxt sys = F.asum
 
 -- | New normal form condition:
 -- We do not allow @KD(t)@ facts if @t@ does not contain
--- any fresh names or private function.
+-- any fresh names or private functions.
 hasForbiddenKD :: System -> Bool
 hasForbiddenKD sys = (not $ isDiffSystem sys) &&
     (any isForbiddenKD $ M.elems $ L.get sNodes sys)
@@ -135,7 +135,7 @@ hasForbiddenKD sys = (not $ isDiffSystem sys) &&
 -- | True iff there are terms in the node constraints that are not in normal form wrt.
 -- to 'Term.Rewriting.Norm.norm' (DH/AC).
 hasNonNormalTerms :: SignatureWithMaude -> System -> Bool
-hasNonNormalTerms sig se =
+hasNonNormalTerms sig se = -- trace ("non-normal terms" ++ show (maybeNonNormalTerms hnd se) ++ " -- " ++ show (map ((`runReader` hnd) . nf') (maybeNonNormalTerms hnd se)) ) $
     any (not . (`runReader` hnd) . nf') (maybeNonNormalTerms hnd se)
   where hnd = L.get sigmMaudeHandle sig
 
@@ -220,23 +220,35 @@ hasImpossibleChain sys =
         (DnK, t_start) <- kFactView $ nodeConcFact c sys
         (DnK, t_end)   <- kFactView $ nodePremFact p sys
         -- the root symbol of the chain-end if it can be determined
-        req_end_sym    <- rootSym t_end
+        req_end_sym    <- possibleEndSyms t_end
         -- the possible root symbols after applying deconstruction
         -- rules to the chain-start if they can be determined
-        poss_end_syms <- possibleRootSyms t_start
+        poss_end_syms  <- possibleRootSyms t_start
         -- the chain is impossible if both the required root-symbol
-        -- and the possible root0symbols for the chain-end can be
+        -- and the possible root-symbols for the chain-end can be
         -- determined and the required symbol in not possible.
-        return $ not (req_end_sym `elem` poss_end_syms)
+        return $ null (req_end_sym `intersect` poss_end_syms)
 
     rootSym :: LNTerm -> Maybe (Either LSort FunSym)
     rootSym t =
       case viewTerm t of
-        FApp sym _                           -> return $ Right sym
+        FApp sym _ 
+                   | otherwise               -> return $ Right sym
         Lit _ | sortOfLNTerm t == LSortMsg   -> Nothing
                   -- we cannot determine the root symbols of a message-variable
               | otherwise                    -> return $ Left (sortOfLNTerm t)
                   -- a public or fresh name or variable
+
+    possibleEndSyms :: LNTerm -> Maybe [Either LSort FunSym]
+    possibleEndSyms t = case viewTerm2 t of
+        FExp   a _b -> -- cannot obtain a subterm of the exponents @_b@
+            ((Right (NoEq expSym)):) <$> possibleEndSyms a
+        FPMult _b a -> -- cannot obtain a subterm of the scalars @_b@
+            ((Right <$> [NoEq expSym, NoEq pmultSym, C EMap])++) <$> possibleEndSyms a
+        FEMap _ _   -> return [Right (C EMap)]
+        _ -> case viewTerm t of
+                 Lit _       -> (:[]) <$> rootSym t
+                 FApp o args -> ((Right o):) . concat <$> mapM possibleEndSyms args
 
     possibleRootSyms :: LNTerm -> Maybe [Either LSort FunSym]
     possibleRootSyms t | neverContainsFreshPriv t = return []

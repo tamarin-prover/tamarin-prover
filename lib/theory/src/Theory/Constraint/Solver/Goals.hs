@@ -300,7 +300,7 @@ solveChain rules (c, p) = do
              do -- If the chain does not start at a union message,
                 -- the usual *DG2_chain* extension is perfomed.
                 -- But we ignore open chains, as we only resolve 
-                -- open chains with a direct chains
+                -- open chains with a direct chain
                 contradictoryIf (isMsgVar m)
                 cRule <- gets $ nodeRule (nodeConcNode c)
                 (i, ru) <- insertFreshNode rules (Just cRule)

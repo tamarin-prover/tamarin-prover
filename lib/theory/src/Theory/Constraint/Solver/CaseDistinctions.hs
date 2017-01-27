@@ -48,7 +48,7 @@ import           Text.PrettyPrint.Highlight
 import           Extension.Data.Label
 import           Extension.Prelude
 
-import           Theory.Constraint.Solver.Contradictions (contradictorySystem)
+import           Theory.Constraint.Solver.Contradictions (contradictions, contradictorySystem)
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
@@ -154,7 +154,9 @@ solveAllSafeGoals ths' =
     solve ths caseNames chainsLeft = do
         simplifySystem
         ctxt <- ask
-        contradictoryIf =<< gets (contradictorySystem ctxt)
+        contradictory <- gets (contradictorySystem ctxt)
+        ctdcts <- gets (contradictions ctxt)
+        contradictoryIf =<< {-trace ("contradictory: " ++ show contradictory ++ " -- " ++ show ctdcts)-} (gets (contradictorySystem ctxt))
         goals  <- gets openGoals
         chains <- gets unsolvedChains
         -- try to either solve a safe goal or use one of the precomputed case
@@ -166,7 +168,7 @@ solveAllSafeGoals ths' =
             splitAllowed    = noChainGoals && not (null chains)
             safeGoals       = fst <$> filter (safeGoal splitAllowed chainsLeft) goals
             remainingChains ((ChainG _ _):_) = chainsLeft-1
-            remainingChains _                   = chainsLeft
+            remainingChains _                = chainsLeft
             kdPremGoals     = fst <$> filter (\g -> isKDPrem g || isChainPrem1 g) goals
             usefulGoals     = fst <$> filter usefulGoal goals
             nextStep :: Maybe (Reduction [String], Maybe CaseDistinction)
@@ -339,14 +341,13 @@ precomputeCaseDistinctions
     -> [LNGuarded]       -- ^ Axioms.
     -> [CaseDistinction]
 precomputeCaseDistinctions ctxt axioms =
-    map cleanupCaseNames {-$ trace ("saturate: " ++ show (saturateCaseDistinctions ctxt rawCaseDists))-} (saturateCaseDistinctions ctxt rawCaseDists)
+    map cleanupCaseNames (saturateCaseDistinctions ctxt rawCaseDists)
   where
     cleanupCaseNames = modify cdCases $ fmap $ first $
         filter (not . null)
       . map (filter (`elem` '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']))
 
-    rawCaseDists = {-trace ("raw: " ++ show
-        (initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals)))-}
+    rawCaseDists =
         (initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals))
 
     -- construct case distinction starting from facts from non-special rules

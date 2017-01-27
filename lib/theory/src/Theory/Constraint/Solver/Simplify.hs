@@ -59,11 +59,12 @@ simplifySystem = do
     isdiff <- getM sDiffSystem
     -- Start simplification, indicating that some change happened
     go (0 :: Int) [Changed]
-    -- Add all ordering constraint implied by CR-rule *N6*.
     if isdiff
        then do
+        -- Remove equation split goals that do not exist anymore
         removeSolvedSplitGoals
        else do
+        -- Add all ordering constraint implied by CR-rule *N6*.
         exploitUniqueMsgOrder
         -- Remove equation split goals that do not exist anymore
         removeSolvedSplitGoals    
@@ -83,7 +84,7 @@ simplifySystem = do
           -- In the diff case, we cannot enfore N4-N6.
           if isdiff
             then do
-              (c1,c3) <- enforceFreshNodeUniqueness
+              (c1,c3) <- enforceFreshAndKuNodeUniqueness
               c4 <- enforceEdgeUniqueness
               c5 <- solveUniqueActions
               c6 <- reduceFormulas
@@ -195,8 +196,8 @@ enforceNodeUniqueness =
 -- instances.
 --
 -- Returns 'Changed' if a change was done.
-enforceFreshNodeUniqueness :: Reduction (ChangeIndicator, ChangeIndicator)
-enforceFreshNodeUniqueness =
+enforceFreshAndKuNodeUniqueness :: Reduction (ChangeIndicator, ChangeIndicator)
+enforceFreshAndKuNodeUniqueness =
     (,)
       <$> (merge (const $ return Unchanged) freshRuleInsts)
       <*> (merge (solveFactEqs SplitNow)    kuActions)
@@ -220,7 +221,7 @@ enforceFreshNodeUniqueness =
         changes <- gets (map mergers . groupSortOn fst . candidates)
         mconcat <$> sequence changes
       where
-        mergers []                          = unreachable "enforceFreshUniqueness"
+        mergers []                          = unreachable "enforceFreshAndKuUniqueness"
         mergers ((_,(xKeep, iKeep)):remove) =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
