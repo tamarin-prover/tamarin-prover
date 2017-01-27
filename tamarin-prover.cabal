@@ -93,9 +93,9 @@ flag test-coverage
     description: Build with test coverage support
 
 flag build-tests
-  default: False
-  manual: True
-  description: Build unit test driver
+    default: False
+    manual: True
+    description: Build unit test driver
 
 
 ----------------------
