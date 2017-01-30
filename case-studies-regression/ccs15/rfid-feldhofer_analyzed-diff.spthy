@@ -98,7 +98,7 @@ next
                   by contradiction /* impossible chain */
                 qed
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               qed
             qed
@@ -111,13 +111,13 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by contradiction /* impossible chain */
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
           qed
         next
           case Tag_Start
           by contradiction /* from formulas */
         next
-          case csenc
+          case c_senc
           by contradiction /* from formulas */
         qed
       qed
@@ -192,7 +192,7 @@ next
                   by contradiction /* impossible chain */
                 qed
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               qed
             qed
@@ -205,13 +205,13 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by contradiction /* impossible chain */
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
           qed
         next
           case Tag_Start
           by contradiction /* from formulas */
         next
-          case csenc
+          case c_senc
           by contradiction /* from formulas */
         qed
       qed
@@ -381,16 +381,16 @@ qed
 
 diffLemma Observational_equivalence:
 rule-equivalence
-  case Rule_Destrdfst
+  case Rule_Destrd_0_fst
   backward-search
     case LHS
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case Reader_Finish
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
             case Reader_Start
             step( solve( !Reader( <~k, ~k2> ) ▶₁ #vr ) )
@@ -399,8 +399,8 @@ rule-equivalence
             qed
           qed
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case pair
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -414,17 +414,17 @@ rule-equivalence
       qed
     next
       case Reader_Start
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
-          by step( contradiction /* impossible chain */ )
+          case d_0_fst
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case pair
           step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -455,9 +455,9 @@ rule-equivalence
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case Reader_Finish
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
             case Reader_Start
             step( solve( !Reader( <~k2, ~k> ) ▶₁ #vr ) )
@@ -466,8 +466,8 @@ rule-equivalence
             qed
           qed
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case pair
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -481,17 +481,17 @@ rule-equivalence
       qed
     next
       case Reader_Start
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
-          by step( contradiction /* impossible chain */ )
+          case d_0_fst
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case pair
           step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -518,16 +518,16 @@ rule-equivalence
     qed
   qed
 next
-  case Rule_Destrdsdec
+  case Rule_Destrd_0_sdec
   backward-search
     case LHS
     step( simplify )
     step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
       case Reader_Finish
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
             case Reader_Start
             step( solve( !Reader( <~k, ~k2> ) ▶₁ #vr ) )
@@ -536,8 +536,8 @@ next
             qed
           qed
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         qed
       next
         case senc
@@ -551,12 +551,18 @@ next
       qed
     next
       case Reader_Start
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
-        by step( contradiction /* impossible chain */ )
+        case d_0_sdec
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        next
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
       next
         case senc
         step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -586,9 +592,9 @@ next
     step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
       case Reader_Finish
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
             case Reader_Start
             step( solve( !Reader( <~k2, ~k> ) ▶₁ #vr ) )
@@ -597,8 +603,8 @@ next
             qed
           qed
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         qed
       next
         case senc
@@ -612,12 +618,18 @@ next
       qed
     next
       case Reader_Start
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
-        by step( contradiction /* impossible chain */ )
+        case d_0_sdec
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        next
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
       next
         case senc
         step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -643,16 +655,16 @@ next
     qed
   qed
 next
-  case Rule_Destrdsnd
+  case Rule_Destrd_0_snd
   backward-search
     case LHS
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case Reader_Finish
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
             case Reader_Start
             step( solve( !Reader( <~k, ~k2> ) ▶₁ #vr ) )
@@ -661,8 +673,8 @@ next
             qed
           qed
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case pair
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -676,17 +688,17 @@ next
       qed
     next
       case Reader_Start
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
-          by step( contradiction /* impossible chain */ )
+          case d_0_fst
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case pair
           step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -717,9 +729,9 @@ next
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case Reader_Finish
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
             case Reader_Start
             step( solve( !Reader( <~k2, ~k> ) ▶₁ #vr ) )
@@ -728,8 +740,8 @@ next
             qed
           qed
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case pair
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -743,17 +755,17 @@ next
       qed
     next
       case Reader_Start
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
-          by step( contradiction /* impossible chain */ )
+          case d_0_fst
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
+          case d_0_snd
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case pair
           step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -787,9 +799,9 @@ next
     step( solve( !KD( x ) ▶₁ #i ) )
       case Reader_Finish
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
-          case dfst
+          case d_0_fst
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
             case Reader_Start
             step( solve( !Reader( <~k, ~k2> ) ▶₁ #vr ) )
@@ -798,7 +810,7 @@ next
             qed
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case Var_fresh_nr
             step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -831,7 +843,7 @@ next
                 case Reader_Finish
                 MIRRORED
               next
-                case csenc
+                case c_senc
                 by step( solve( !KU( ~k ) @ #vk.3 ) )
               qed
             next
@@ -845,12 +857,12 @@ next
                   case Reader_Finish
                   MIRRORED
                 next
-                  case csenc
+                  case c_senc
                   by step( solve( !KU( ~k ) @ #vk.4 ) )
                 qed
               qed
             next
-              case csenc
+              case c_senc
               by step( solve( !KU( ~k ) @ #vk.3 ) )
             qed
           qed
@@ -871,9 +883,9 @@ next
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case Var_fresh_nr
             step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -897,7 +909,7 @@ next
             qed
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case Var_fresh_nt
             step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -958,7 +970,7 @@ next
               case Tag_Start
               MIRRORED
             next
-              case csenc
+              case c_senc
               by step( solve( !KU( ~k1 ) @ #vk.3 ) )
             qed
           next
@@ -985,7 +997,7 @@ next
               case Tag_Start
               MIRRORED
             next
-              case csenc
+              case c_senc
               by step( solve( !KU( ~k1 ) @ #vk.3 ) )
             qed
           qed
@@ -998,9 +1010,9 @@ next
     step( solve( !KD( x ) ▶₁ #i ) )
       case Reader_Finish
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
-          case dfst
+          case d_0_fst
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
             case Reader_Start
             step( solve( !Reader( <~k2, ~k> ) ▶₁ #vr ) )
@@ -1009,7 +1021,7 @@ next
             qed
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case Var_fresh_nr
             step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -1042,7 +1054,7 @@ next
                 case Reader_Finish
                 MIRRORED
               next
-                case csenc
+                case c_senc
                 by step( solve( !KU( ~k ) @ #vk.3 ) )
               qed
             next
@@ -1056,12 +1068,12 @@ next
                   case Reader_Finish
                   MIRRORED
                 next
-                  case csenc
+                  case c_senc
                   by step( solve( !KU( ~k ) @ #vk.4 ) )
                 qed
               qed
             next
-              case csenc
+              case c_senc
               by step( solve( !KU( ~k ) @ #vk.3 ) )
             qed
           qed
@@ -1082,9 +1094,9 @@ next
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
-        case dsdec
+        case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case Var_fresh_nr
             step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -1108,7 +1120,7 @@ next
             qed
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case Var_fresh_nt
             step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -1169,7 +1181,7 @@ next
               case Tag_Start
               MIRRORED
             next
-              case csenc
+              case c_senc
               by step( solve( !KU( ~k2 ) @ #vk.3 ) )
             qed
           next
@@ -1196,7 +1208,7 @@ next
               case Tag_Start
               MIRRORED
             next
-              case csenc
+              case c_senc
               by step( solve( !KU( ~k2 ) @ #vk.3 ) )
             qed
           qed
@@ -1219,7 +1231,7 @@ next
             case Reader_Finish
             MIRRORED
           next
-            case csenc
+            case c_senc
             by step( solve( !KU( ~k ) @ #vk.3 ) )
           qed
         next
@@ -1232,7 +1244,7 @@ next
             MIRRORED
           qed
         next
-          case csenc
+          case c_senc
           by step( solve( !KU( ~k ) @ #vk.2 ) )
         qed
       qed
@@ -1250,7 +1262,7 @@ next
             case Reader_Finish
             MIRRORED
           next
-            case csenc
+            case c_senc
             by step( solve( !KU( ~k ) @ #vk.3 ) )
           qed
         next
@@ -1263,7 +1275,7 @@ next
             MIRRORED
           qed
         next
-          case csenc
+          case c_senc
           by step( solve( !KU( ~k ) @ #vk.2 ) )
         qed
       qed
@@ -1323,11 +1335,11 @@ next
             case Tag_Start
             MIRRORED
           next
-            case csenc
+            case c_senc
             by step( solve( !KU( ~k ) @ #vk.4 ) )
           qed
         next
-          case csenc
+          case c_senc
           by step( solve( !KU( ~k ) @ #vk.3 ) )
         qed
       next
@@ -1351,7 +1363,7 @@ next
       next
         case fresh
         step( solve( !KU( senc(<~nt, ~nr>, ~k) ) @ #vk.1 ) )
-          case csenc
+          case c_senc
           by step( solve( !KU( ~k ) @ #vk.3 ) )
         qed
       qed
@@ -1375,11 +1387,11 @@ next
             case Tag_Start
             MIRRORED
           next
-            case csenc
+            case c_senc
             by step( solve( !KU( ~k ) @ #vk.4 ) )
           qed
         next
-          case csenc
+          case c_senc
           by step( solve( !KU( ~k ) @ #vk.3 ) )
         qed
       next
@@ -1403,7 +1415,7 @@ next
       next
         case fresh
         step( solve( !KU( senc(<~nt, ~nr>, ~k) ) @ #vk.1 ) )
-          case csenc
+          case c_senc
           by step( solve( !KU( ~k ) @ #vk.3 ) )
         qed
       qed
@@ -1503,7 +1515,7 @@ analyzing: examples/ccs15/rfid-feldhofer.spthy
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.660862s
+  processing time: 3.627703s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)
@@ -1512,7 +1524,7 @@ analyzed: examples/ccs15/rfid-feldhofer.spthy
   RHS :  executable_right (exists-trace): verified (6 steps)
   RHS :  secret_value (all-traces): verified (10 steps)
   LHS :  secret_value (all-traces): verified (10 steps)
-  DiffLemma:  Observational_equivalence : verified (383 steps)
+  DiffLemma:  Observational_equivalence : verified (387 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1522,7 +1534,7 @@ summary of summaries:
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.660862s
+  processing time: 3.627703s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)
@@ -1531,7 +1543,7 @@ analyzed: examples/ccs15/rfid-feldhofer.spthy
   RHS :  executable_right (exists-trace): verified (6 steps)
   RHS :  secret_value (all-traces): verified (10 steps)
   LHS :  secret_value (all-traces): verified (10 steps)
-  DiffLemma:  Observational_equivalence : verified (383 steps)
+  DiffLemma:  Observational_equivalence : verified (387 steps)
 
 ==============================================================================
 */

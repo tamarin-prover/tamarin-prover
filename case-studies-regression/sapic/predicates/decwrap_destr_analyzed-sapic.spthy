@@ -561,7 +561,7 @@ next
                 solve( !KU( ~n.1 ) @ #vk.1 )
                   case out_h_111111111
                   solve( !KU( senc(m, ~n) ) @ #vk.2 )
-                    case csenc
+                    case c_senc
                     by contradiction /* from formulas */
                   next
                     case out_sdecc_k_112111111
@@ -593,7 +593,7 @@ next
                       case insert_key_h_k_1111111
                       solve( State_1111111( h2, k2 ) ▶₀ #t2.2 )
                         case event_NewKeyh_k_111111
-                        by contradiction /* impossible chain */
+                        by solve( (#vr.19, 0) ~~> (#vk.1, 0) )
                       qed
                     qed
                   qed
@@ -1088,7 +1088,7 @@ analyzing: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 analyzed: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.076325s
+  processing time: 2.86228s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -1106,7 +1106,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.076325s
+  processing time: 2.86228s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   

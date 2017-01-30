@@ -382,7 +382,7 @@ solve( (∃ matching #i3 role2.
                   case Reveal_session_key_case_2
                   by contradiction /* from formulas */
                 next
-                  case ckdf
+                  case c_kdf
                   solve( !KU( 'g'^(~ex*~ey) ) @ #vk.5 )
                     case Init_1
                     by solve( !KU( ~ey ) @ #vk.12 )
@@ -420,7 +420,7 @@ solve( (∃ matching #i3 role2.
                   case Reveal_session_key_case_2
                   by contradiction /* from formulas */
                 next
-                  case ckdf
+                  case c_kdf
                   solve( !KU( 'g'^(~ex*~ey) ) @ #vk.5 )
                     case Init_1
                     by solve( !KU( ~ey ) @ #vk.12 )
@@ -459,7 +459,7 @@ next
             case Reveal_session_key_case_2
             by contradiction /* from formulas */
           next
-            case ckdf
+            case c_kdf
             solve( !KU( em(hp($A), hp($B))^~n ) @ #vk.6 )
               case Reveal_ltk_case_1
               by contradiction /* from formulas */
@@ -490,7 +490,7 @@ next
           case Reveal_session_key_case_2
           by contradiction /* from formulas */
         next
-          case ckdf
+          case c_kdf
           solve( !KU( em(hp($A), hp($B))^~n ) @ #vk.6 )
             case Reveal_ltk_case_1
             by contradiction /* from formulas */
@@ -527,7 +527,7 @@ analyzing: examples/ake/bilinear/RYY.spthy
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.207319s
+  processing time: 127.262061s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 
@@ -539,7 +539,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.207319s
+  processing time: 127.262061s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 

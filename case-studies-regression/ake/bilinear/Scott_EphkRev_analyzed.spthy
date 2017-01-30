@@ -264,7 +264,7 @@ solve( (∃ matching #i3 #i4 sid.
               solve( !KU( kdf(<em(hp($A), hp($B))^(~ex*~ey*~s), $A, $B, 
                                em(hp($A), hp($B))^(~ex*~s), em(hp($A), hp($B))^(~ey*~s)>)
                      ) @ #vk )
-                case ckdf
+                case c_kdf
                 solve( !KU( em(hp($A), hp($B))^(~ex*~ey*~s) ) @ #vk.5 )
                   case Init_1_case_1
                   solve( !KU( ~ey ) @ #vk.10 )
@@ -307,7 +307,7 @@ analyzing: examples/ake/bilinear/Scott_EphkRev.spthy
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 24.876462s
+  processing time: 139.193589s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 
@@ -319,7 +319,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 24.876462s
+  processing time: 139.193589s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 

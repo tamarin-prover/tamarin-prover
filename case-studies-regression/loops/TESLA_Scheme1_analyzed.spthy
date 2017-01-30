@@ -184,12 +184,12 @@ next
               by solve( Sender( S.2, ~kOld, ~k1 ) ▶₀ #vr.14 )
             qed
           next
-            case cMAC
+            case c_MAC
             by contradiction /* cyclic */
           qed
         qed
       next
-        case csign
+        case c_sign
         solve( !KU( ~ltk ) @ #vk.20 )
           case Reveal_Ltk
           by contradiction /* from formulas */
@@ -249,16 +249,16 @@ next
                           qed
                         qed
                       next
-                        case cMAC
+                        case c_MAC
                         by contradiction /* cyclic */
                       qed
                     next
-                      case cMAC
+                      case c_MAC
                       by contradiction /* cyclic */
                     qed
                   qed
                 next
-                  case csign
+                  case c_sign
                   solve( !KU( ~ltk ) @ #vk.27 )
                     case Reveal_Ltk
                     by contradiction /* from formulas */
@@ -281,18 +281,18 @@ next
                             qed
                           qed
                         next
-                          case cf
+                          case c_f
                           solve( !KU( ~k1 ) @ #vk.21 )
                             case SendN
                             by contradiction /* from formulas */
                           qed
                         qed
                       next
-                        case cMAC
+                        case c_MAC
                         solve( !KU( ~kOld ) @ #vk.19 )
                           case Receiver0a
                           solve( !KU( f(~kOld) ) @ #vk.26 )
-                            case cf
+                            case c_f
                             solve( Sender( S.2, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
                               solve( Sender( S.3, ~ltk, ~k.1 ) ▶₀ #vr.11 )
@@ -304,7 +304,7 @@ next
                         next
                           case Reveal_Ltk
                           solve( !KU( f(~kOld) ) @ #vk.26 )
-                            case cf
+                            case c_f
                             solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
                               solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.11 )
@@ -316,7 +316,7 @@ next
                         next
                           case Send1
                           solve( !KU( f(~kOld) ) @ #vk.26 )
-                            case cf
+                            case c_f
                             solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
                               solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.11 )
@@ -328,7 +328,7 @@ next
                         next
                           case SendN_case_1
                           solve( !KU( f(~kOld) ) @ #vk.26 )
-                            case cf
+                            case c_f
                             solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
                               solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.11 )
@@ -343,7 +343,7 @@ next
                         next
                           case fresh
                           solve( !KU( f(~kOld) ) @ #vk.26 )
-                            case cf
+                            case c_f
                             solve( Sender( S.1, ~k2, ~k ) ▶₀ #vr.7 )
                               case SendN
                               solve( Sender( S.2, ~ltk, ~k.1 ) ▶₀ #vr.11 )
@@ -355,7 +355,7 @@ next
                         qed
                       qed
                     next
-                      case cMAC
+                      case c_MAC
                       by contradiction /* cyclic */
                     qed
                   qed
@@ -407,7 +407,7 @@ next
                                 qed
                               qed
                             next
-                              case csign
+                              case c_sign
                               solve( !KU( ~ltk ) @ #vk.34 )
                                 case Reveal_Ltk
                                 by contradiction /* from formulas */
@@ -423,7 +423,7 @@ next
                                     qed
                                   qed
                                 next
-                                  case cf
+                                  case c_f
                                   solve( !KU( ~k1 ) @ #vk.25 )
                                     case SendN
                                     by contradiction /* from formulas */
@@ -439,7 +439,7 @@ next
                                     ) ▶₁ #vr.1 )
                         qed
                       next
-                        case cMAC
+                        case c_MAC
                         solve( !KU( ~kOld ) @ #vk.14 )
                           case Receiver0a
                           solve( Sender( $S, ~kOld.1, ~k ) ▶₀ #j )
@@ -511,7 +511,7 @@ next
                         qed
                       qed
                     next
-                      case cMAC
+                      case c_MAC
                       by contradiction /* cyclic */
                     qed
                   qed
@@ -603,7 +603,7 @@ next
                         qed
                       qed
                     next
-                      case cMAC
+                      case c_MAC
                       solve( !KU( ~kOld ) @ #vk.14 )
                         case Receiver0a
                         solve( Sender( S, ~kOld.1, ~k ) ▶₀ #j )
@@ -675,7 +675,7 @@ next
                       qed
                     qed
                   next
-                    case cMAC
+                    case c_MAC
                     by contradiction /* cyclic */
                   qed
                 qed
@@ -783,7 +783,7 @@ analyzing: examples/loops/TESLA_Scheme1.spthy
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.949572s
+  processing time: 4.086621s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
@@ -795,7 +795,7 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.949572s
+  processing time: 4.086621s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 

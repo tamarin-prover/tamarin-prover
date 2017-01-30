@@ -271,7 +271,7 @@ next
       solve( State_2111111( skB, xA, ni ) ▶₀ #i )
         case in_aenc_xNa_pkxA_pkskB_211111
         solve( !KU( aenc(<ni, pk(xA)>, pk(~n)) ) @ #vk )
-          case caenc
+          case c_aenc
           by contradiction /* from formulas */
         next
           case out_aenc_Na_pkskA_pkxB_111111111
@@ -286,7 +286,7 @@ next
             case case_2
             solve( State_11111111( xNa, xA.1, ~n.2 ) ▶₀ #j )
               case new_Na_1111111
-              by contradiction /* impossible chain */
+              by solve( (#vr.12, 0) ~~> (#vk, 0) )
             qed
           qed
         next
@@ -300,7 +300,7 @@ next
             case case_2
             solve( State_211111111( xNb, xB, ~n.3, ~n.2 ) ▶₀ #j )
               case new_Nb_21111111
-              by contradiction /* impossible chain */
+              by solve( (#vr.12, 0) ~~> (#vk, 0) )
             qed
           qed
         qed
@@ -321,7 +321,7 @@ next
       solve( State_11111111111( Na, skA, xB, nr ) ▶₀ #i )
         case in_aenc_Na_xNb_pkxB_pkskA_1111111111
         solve( !KU( aenc(<~n, nr, pk(xB)>, pk(~n.1)) ) @ #vk )
-          case caenc
+          case c_aenc
           by contradiction /* from formulas */
         next
           case out_aenc_xNa_Nb_pkskB_pkxA_2111111111_case_1
@@ -336,7 +336,7 @@ next
             case case_2
             solve( State_11111111( xNa, xA, ~n.3 ) ▶₀ #j )
               case new_Na_1111111
-              by contradiction /* impossible chain */
+              by solve( (#vr.16, 0) ~~> (#vk, 0) )
             qed
           qed
         next
@@ -350,7 +350,7 @@ next
             case case_2
             solve( State_211111111( xNb, xB.1, ~n.4, ~n.3 ) ▶₀ #j )
               case new_Nb_21111111
-              by contradiction /* impossible chain */
+              by solve( (#vr.16, 0) ~~> (#vk, 0) )
             qed
           qed
         qed
@@ -458,7 +458,7 @@ analyzing: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 analyzed: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.87396s
+  processing time: 2.422242s
   types (all-traces): verified (34 steps)
   secrecy (all-traces): verified (21 steps)
 
@@ -470,7 +470,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.87396s
+  processing time: 2.422242s
   types (all-traces): verified (34 steps)
   secrecy (all-traces): verified (21 steps)
 

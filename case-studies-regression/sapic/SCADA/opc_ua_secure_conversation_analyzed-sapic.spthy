@@ -725,7 +725,7 @@ solve( State_1111121111( ~lock6, ~prog_1, ~prog_1111121, ~prog_111112111,
                         case new_kEnc_1111
                         solve( !KU( senc(<seq, m, pad, mac(<MH, SH, seq, m, pad>, ~n.3)>, ~n.2)
                                ) @ #vk.4 )
-                          case csenc
+                          case c_senc
                           by solve( !KU( ~n.2 ) @ #vk.6 )
                         next
                           case out_r_MH_SH_senc_seq_m_pad_mac_MH_SH_seq_m_pad_kSign_kEnc__111111111111
@@ -794,7 +794,7 @@ solve( State_1111121111( ~lock6, ~prog_1, ~prog_1111121, ~prog_111112111,
                         case new_kEnc_1111
                         solve( !KU( senc(<seq, m, pad, mac(<MH, SH, seq, m, pad>, ~n.3)>, ~n.2)
                                ) @ #vk.4 )
-                          case csenc
+                          case c_senc
                           by solve( !KU( ~n.2 ) @ #vk.6 )
                         next
                           case out_r_MH_SH_senc_seq_m_pad_mac_MH_SH_seq_m_pad_kSign_kEnc__111111111111
@@ -1188,7 +1188,7 @@ solve( State_1111121111( ~lock6, ~prog_1, ~prog_1111121, ~prog_111112111,
                                                                                                                                                >,
                                                                                                                                                ~n.7)
                                                                                                                                      ) @ #vk.12 )
-                                                                                                                                case csenc
+                                                                                                                                case c_senc
                                                                                                                                 by solve( !KU( ~n.7
                                                                                                                                           ) @ #vk.14 )
                                                                                                                               next
@@ -1637,7 +1637,7 @@ solve( State_1111121111( ~lock6, ~prog_1, ~prog_1111121, ~prog_111112111,
                                                                                                                                                >,
                                                                                                                                                ~n.7)
                                                                                                                                      ) @ #vk.12 )
-                                                                                                                                case csenc
+                                                                                                                                case c_senc
                                                                                                                                 by solve( !KU( ~n.7
                                                                                                                                           ) @ #vk.14 )
                                                                                                                               next
@@ -1928,7 +1928,7 @@ solve( State_1111121111( ~lock6, ~prog_1, ~prog_1111121, ~prog_111112111,
                                                                           mac(<MH, SH, seq, m, pad>, ~n.3)>,
                                                                          ~n.2)
                                                                ) @ #vk.4 )
-                                                          case csenc
+                                                          case c_senc
                                                           by solve( !KU( ~n.2 ) @ #vk.11 )
                                                         next
                                                           case out_r_MH_SH_senc_seq_m_pad_mac_MH_SH_seq_m_pad_kSign_kEnc__111111111111
@@ -2492,7 +2492,7 @@ solve( State_1111121111( ~lock6, ~prog_1, ~prog_1111121, ~prog_111112111,
                                                                                                                                                      >,
                                                                                                                                                      ~n.2)
                                                                                                                                            ) @ #vk.9 )
-                                                                                                                                      case csenc
+                                                                                                                                      case c_senc
                                                                                                                                       by solve( !KU( ~n.2
                                                                                                                                                 ) @ #vk.15 )
                                                                                                                                     next
@@ -3391,7 +3391,7 @@ analyzing: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 analyzed: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 26.431074s
+  processing time: 24.573984s
   Executable (exists-trace): verified (52 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (156 steps)
@@ -3407,7 +3407,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 26.431074s
+  processing time: 24.573984s
   Executable (exists-trace): verified (52 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (156 steps)

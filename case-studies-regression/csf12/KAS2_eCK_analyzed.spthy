@@ -197,11 +197,11 @@ solve( (∃ ss #i4 #i5 C D ms.
                                      aenc(~m2, pk(~ltkA))>),
                                 <'Init', $I, $R, aenc(~m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>)
                        ) @ #vk.1 )
-                  case cMAC
+                  case c_MAC
                   solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
                                    aenc(~m2, pk(~ltkA))>)
                          ) @ #vk.1 )
-                    case cKDF
+                    case c_KDF
                     solve( !KU( ~m1 ) @ #vk.13 )
                       case Ephk_reveal
                       solve( !KU( ~m2 ) @ #vk.14 )
@@ -243,7 +243,7 @@ analyzing: examples/csf12/KAS2_eCK.spthy
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.731947s
+  processing time: 2.832821s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ------------------------------------------------------------------------------
@@ -254,7 +254,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.731947s
+  processing time: 2.832821s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

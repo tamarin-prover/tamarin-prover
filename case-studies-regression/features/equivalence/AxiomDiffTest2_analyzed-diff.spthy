@@ -49,7 +49,7 @@ analyzing: examples/features/equivalence/AxiomDiffTest2.spthy
 analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.092433s
+  processing time: 0.084522s
   DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
 
 ------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.092433s
+  processing time: 0.084522s
   DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
 
 ==============================================================================

@@ -224,7 +224,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
                            ~ltkR.1)
                  ) @ #vk.20 )
-            case csign
+            case c_sign
             by solve( !KU( ~ltkR.1 ) @ #vk.26 )
           qed
         qed
@@ -235,7 +235,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
                            ~ltkR.1)
                  ) @ #vk.20 )
-            case csign
+            case c_sign
             by solve( !KU( ~ltkR.1 ) @ #vk.26 )
           qed
         qed
@@ -249,7 +249,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
                            ~ltkI.1)
                  ) @ #vk.20 )
-            case csign
+            case c_sign
             by solve( !KU( ~ltkI.1 ) @ #vk.27 )
           qed
         qed
@@ -263,12 +263,12 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
                            ~ltkI.1)
                  ) @ #vk.20 )
-            case csign
+            case c_sign
             by solve( !KU( ~ltkI.1 ) @ #vk.27 )
           qed
         qed
       next
-        case cKDF
+        case c_KDF
         solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.13 )
           case Init_1
           by solve( !KU( ~ekR ) @ #vk.14 )
@@ -281,7 +281,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
         qed
       qed
     next
-      case csign
+      case c_sign
       by solve( !KU( ~ltkR ) @ #vk.14 )
     qed
   next
@@ -334,7 +334,7 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
             solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
                              ~ltkR.1)
                    ) @ #vk.25 )
-              case csign
+              case c_sign
               by solve( !KU( ~ltkR.1 ) @ #vk.31 )
             qed
           qed
@@ -345,7 +345,7 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
             solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
                              ~ltkR.1)
                    ) @ #vk.25 )
-              case csign
+              case c_sign
               by solve( !KU( ~ltkR.1 ) @ #vk.31 )
             qed
           qed
@@ -359,7 +359,7 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
             solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
                              ~ltkI.1)
                    ) @ #vk.25 )
-              case csign
+              case c_sign
               by solve( !KU( ~ltkI.1 ) @ #vk.32 )
             qed
           qed
@@ -370,12 +370,12 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
             solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
                              ~ltkI.1)
                    ) @ #vk.25 )
-              case csign
+              case c_sign
               by solve( !KU( ~ltkI.1 ) @ #vk.32 )
             qed
           qed
         next
-          case cKDF
+          case c_KDF
           solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.18 )
             case Init_1
             by solve( !KU( ~ekR ) @ #vk.19 )
@@ -388,14 +388,14 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
           qed
         qed
       next
-        case csign
+        case c_sign
         by solve( !KU( ~ltkR.1 ) @ #vk.22 )
       qed
     next
       case Init_2_case_2
       by contradiction /* from formulas */
     next
-      case csign
+      case c_sign
       by solve( !KU( ~ltkI ) @ #vk.15 )
     qed
   qed
@@ -421,7 +421,7 @@ analyzing: examples/csf12/STS_MAC_fix2.spthy
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.457263s
+  processing time: 1.572275s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
 
@@ -433,7 +433,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.457263s
+  processing time: 1.572275s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
 

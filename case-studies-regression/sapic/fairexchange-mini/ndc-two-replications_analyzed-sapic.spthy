@@ -170,7 +170,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-two-replications.
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-two-replications.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.104241s
+  processing time: 0.107217s
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)
   no_progress_possible (exists-trace): verified (2 steps)
@@ -185,7 +185,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-two-replications.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.104241s
+  processing time: 0.107217s
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)
   no_progress_possible (exists-trace): verified (2 steps)

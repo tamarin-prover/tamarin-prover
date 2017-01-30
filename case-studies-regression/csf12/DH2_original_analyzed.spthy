@@ -270,7 +270,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                       case Sessk_reveal_case_2
                       by contradiction /* from formulas */
                     next
-                      case cKDF
+                      case c_KDF
                       solve( !KU( 'g'^~m1 ) @ #vk.7 )
                         case Init_1
                         solve( !KU( ~ltkR ) @ #vk.15 )
@@ -354,14 +354,14 @@ solve( (∃ ss #i4 #i5 C D ms.
                                          'g'^(~ltkI*~m2)>),
                                     <'Resp', $R, $I, 'g'^(~ltkI*~m2), 'g'^(~ltkR*~m1)>)
                            ) @ #vk.3 )
-                      case cMAC
+                      case c_MAC
                       solve( !KU( KDF(<'g'^~m1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 
                                        'g'^(~ltkI*~m2)>)
                              ) @ #vk.1 )
                         case Sessk_reveal
                         by contradiction /* cyclic */
                       next
-                        case cKDF
+                        case c_KDF
                         solve( !KU( 'g'^~m1 ) @ #vk.16 )
                           case Init_1
                           solve( !KU( ~ltkR ) @ #vk.20 )
@@ -413,14 +413,14 @@ solve( (∃ ss #i4 #i5 C D ms.
                                          'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                     <'Resp', $R, $I, 'g'^(~m2*~x), 'g'^(~ltkR*~m1)>)
                            ) @ #vk.3 )
-                      case cMAC
+                      case c_MAC
                       solve( !KU( KDF(<'g'^~m1, 'g'^(~m2*~x*inv(~ltkI)), $I, $R, 
                                        'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                              ) @ #vk.1 )
                         case Sessk_reveal
                         by contradiction /* cyclic */
                       next
-                        case cKDF
+                        case c_KDF
                         solve( !KU( 'g'^(~m2*~x*inv(~ltkI)) ) @ #vk.18 )
                           case Init_1_case_1
                           solve( !KU( ~m1.1 ) @ #vk.22 )
@@ -712,14 +712,14 @@ solve( (∃ ss #i4 #i5 C D ms.
                                          'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                     <'Resp', $R, $I, 'g'^(~m2*~x), 'g'^(~ltkR*~m1)>)
                            ) @ #vk.3 )
-                      case cMAC
+                      case c_MAC
                       solve( !KU( KDF(<'g'^~m1, 'g'^(~m2*~x*inv(~ltkI)), $I, $R, 
                                        'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                              ) @ #vk.1 )
                         case Sessk_reveal
                         by contradiction /* cyclic */
                       next
-                        case cKDF
+                        case c_KDF
                         solve( !KU( 'g'^(~m2*~x*inv(~ltkI)) ) @ #vk.18 )
                           case Init_1_case_1
                           solve( !KU( ~m1.1 ) @ #vk.22 )
@@ -1036,7 +1036,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                   case Sessk_reveal_case_2
                   by contradiction /* from formulas */
                 next
-                  case cKDF
+                  case c_KDF
                   solve( !KU( MAC(KDF(<'g'^~m1, 'g'^~m2, $I, $R, 'g'^(~ltkR*~m1), 
                                        'g'^(~m2*~x)>),
                                   <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
@@ -1119,7 +1119,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                       qed
                     qed
                   next
-                    case cMAC
+                    case c_MAC
                     solve( !KU( 'g'^~m1 ) @ #vk.9 )
                       case Init_1
                       solve( !KU( ~ltkR ) @ #vk.18 )
@@ -1185,7 +1185,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                   case Sessk_reveal
                   by contradiction /* from formulas */
                 next
-                  case cKDF
+                  case c_KDF
                   solve( !KU( 'g'^(~ltkR*~m1*inv(~ltkR.1)) ) @ #vk.8 )
                     case Init_1_case_1
                     solve( !KU( ~ltkR.1 ) @ #vk.16 )
@@ -1194,7 +1194,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                            'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                       <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                              ) @ #vk.11 )
-                        case cMAC
+                        case c_MAC
                         solve( !KU( 'g'^~m2 ) @ #vk.15 )
                           case Resp_1
                           solve( !KU( ~x ) @ #vk.20 )
@@ -1220,7 +1220,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                              'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                         <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                ) @ #vk.16 )
-                          case cMAC
+                          case c_MAC
                           solve( !KU( 'g'^~m2 ) @ #vk.19 )
                             case Resp_1
                             solve( !KU( ~x ) @ #vk.24 )
@@ -1249,7 +1249,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                                'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                           <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                  ) @ #vk.17 )
-                            case cMAC
+                            case c_MAC
                             solve( !KU( 'g'^~m2 ) @ #vk.20 )
                               case Resp_1
                               solve( !KU( ~x ) @ #vk.25 )
@@ -1277,7 +1277,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                              'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                         <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                ) @ #vk.15 )
-                          case cMAC
+                          case c_MAC
                           solve( !KU( 'g'^~m2 ) @ #vk.18 )
                             case Resp_1
                             solve( !KU( ~x ) @ #vk.23 )
@@ -1306,7 +1306,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                                'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                           <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                  ) @ #vk.16 )
-                            case cMAC
+                            case c_MAC
                             solve( !KU( 'g'^~m2 ) @ #vk.19 )
                               case Resp_1
                               solve( !KU( ~x ) @ #vk.24 )
@@ -1332,7 +1332,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                            'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                       <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                              ) @ #vk.11 )
-                        case cMAC
+                        case c_MAC
                         solve( !KU( 'g'^~m2 ) @ #vk.15 )
                           case Resp_1
                           solve( !KU( ~x ) @ #vk.23 )
@@ -1360,7 +1360,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                                'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                           <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                  ) @ #vk.17 )
-                            case cMAC
+                            case c_MAC
                             solve( !KU( 'g'^~m2 ) @ #vk.20 )
                               case Resp_1
                               solve( !KU( ~x ) @ #vk.28 )
@@ -1388,7 +1388,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                              'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                         <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                ) @ #vk.16 )
-                          case cMAC
+                          case c_MAC
                           solve( !KU( 'g'^~m2 ) @ #vk.19 )
                             case Resp_1
                             solve( !KU( ~x ) @ #vk.27 )
@@ -1417,7 +1417,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                                'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                           <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                  ) @ #vk.16 )
-                            case cMAC
+                            case c_MAC
                             solve( !KU( 'g'^~m2 ) @ #vk.19 )
                               case Resp_1
                               solve( !KU( ~x ) @ #vk.27 )
@@ -1445,7 +1445,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                              'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                         <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                ) @ #vk.15 )
-                          case cMAC
+                          case c_MAC
                           solve( !KU( 'g'^~m2 ) @ #vk.18 )
                             case Resp_1
                             solve( !KU( ~x ) @ #vk.26 )
@@ -1472,7 +1472,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                              'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                         <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                ) @ #vk.14 )
-                          case cMAC
+                          case c_MAC
                           solve( !KU( 'g'^~m2 ) @ #vk.17 )
                             case Resp_1
                             solve( !KU( ~x ) @ #vk.22 )
@@ -1501,7 +1501,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                                'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                           <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                  ) @ #vk.17 )
-                            case cMAC
+                            case c_MAC
                             solve( !KU( 'g'^~m2 ) @ #vk.20 )
                               case Resp_1
                               solve( !KU( ~x ) @ #vk.26 )
@@ -1531,7 +1531,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                                'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                           <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                  ) @ #vk.16 )
-                            case cMAC
+                            case c_MAC
                             solve( !KU( 'g'^~m2 ) @ #vk.19 )
                               case Resp_1
                               solve( !KU( ~x ) @ #vk.25 )
@@ -1561,7 +1561,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                                'g'^(~ltkR*~m1), 'g'^(~m2*~x)>),
                                           <'Init', $I, $R, 'g'^(~ltkR*~m1), 'g'^(~m2*~x)>)
                                  ) @ #vk.15 )
-                            case cMAC
+                            case c_MAC
                             solve( !KU( 'g'^~m2 ) @ #vk.18 )
                               case Resp_1
                               solve( !KU( ~x ) @ #vk.24 )
@@ -1597,12 +1597,12 @@ solve( (∃ ss #i4 #i5 C D ms.
               case Sessk_reveal
               by contradiction /* from formulas */
             next
-              case cKDF
+              case c_KDF
               solve( !KU( MAC(KDF(<<'g'^(~ltkR*~m1), YA>^inv(~ltkR.1), 'g'^~m2, $I, 
                                    $R, <'g'^(~ltkR*~m1), YA>, 'g'^(~m2*~x)>),
                               <'Init', $I, $R, <'g'^(~ltkR*~m1), YA>, 'g'^(~m2*~x)>)
                      ) @ #vk.6 )
-                case cMAC
+                case c_MAC
                 solve( !KU( MAC(KDF(<'g'^~m1, z, $I, $R, 'g'^(~ltkR*~m1), YA>),
                                 <'Resp', $R, $I, YA, 'g'^(~ltkR*~m1)>)
                        ) @ #vk.10 )
@@ -1628,7 +1628,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                     qed
                   qed
                 next
-                  case cMAC
+                  case c_MAC
                   solve( !KU( <'g'^(~ltkR*~m1), YA>^inv(~ltkR.1) ) @ #vk.15 )
                     case cexp
                     solve( !KU( ~ltkR.1 ) @ #vk.28 )
@@ -1687,7 +1687,7 @@ next
           case Sessk_reveal_case_2
           by contradiction /* from formulas */
         next
-          case cKDF
+          case c_KDF
           solve( !KU( 'g'^~m1 ) @ #vk.7 )
             case Init_1
             solve( !KU( ~ltkR ) @ #vk.15 )
@@ -1718,7 +1718,7 @@ next
           qed
         qed
       next
-        case cMAC
+        case c_MAC
         solve( !KU( KDF(<'g'^~m1, z, $I, $R, 'g'^(~ltkR*~m1), YA>) ) @ #vk.1 )
           case Sessk_reveal_case_1
           by contradiction /* cyclic */
@@ -1726,7 +1726,7 @@ next
           case Sessk_reveal_case_2
           by contradiction /* from formulas */
         next
-          case cKDF
+          case c_KDF
           solve( !KU( 'g'^~m1 ) @ #vk.16 )
             case Init_1
             solve( !KU( ~ltkR ) @ #vk.20 )
@@ -1757,7 +1757,7 @@ next
         case Sessk_reveal_case_2
         by contradiction /* from formulas */
       next
-        case cKDF
+        case c_KDF
         solve( !KU( MAC(KDF(<z, 'g'^~m2, $I, $R, XB, 'g'^(~m2*~x)>),
                         <'Init', $I, $R, XB, 'g'^(~m2*~x)>)
                ) @ #vk.6 )
@@ -1791,7 +1791,7 @@ next
             qed
           qed
         next
-          case cMAC
+          case c_MAC
           solve( !KU( 'g'^~m2 ) @ #vk.11 )
             case Resp_1
             solve( !KU( ~x ) @ #vk.18 )
@@ -1828,7 +1828,7 @@ analyzing: examples/csf12/DH2_original.spthy
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 26.853697s
+  processing time: 27.950524s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ------------------------------------------------------------------------------
@@ -1839,7 +1839,7 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 26.853697s
+  processing time: 27.950524s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ==============================================================================

@@ -343,7 +343,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                       case Sessk_reveal_case_2
                       by contradiction /* from formulas */
                     next
-                      case ch2
+                      case c_h2
                       solve( !KU( 'g'^(~ea*h1(<~ey, ~eb>)) ) @ #vk.4 )
                         case Resp_1
                         solve( !KU( ~ea ) @ #vk.12 )
@@ -355,7 +355,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                               solve( !KU( 'g'^(h1(<~ex, ~ea>)*h1(<~ey, ~eb>)) ) @ #vk.10 )
                                 case Init_1
                                 solve( !KU( h1(<~ey, ~eb>) ) @ #vk.14 )
-                                  case ch1
+                                  case c_h1
                                   solve( !KU( ~ey ) @ #vk.16 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -364,7 +364,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                               next
                                 case Resp_1
                                 solve( !KU( h1(<~ex, ~ea>) ) @ #vk.14 )
-                                  case ch1
+                                  case c_h1
                                   solve( !KU( ~ex ) @ #vk.16 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -373,7 +373,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                               next
                                 case cexp
                                 solve( !KU( h1(<~ex, ~ea>) ) @ #vk.16 )
-                                  case ch1
+                                  case c_h1
                                   solve( !KU( ~ex ) @ #vk.19 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -386,7 +386,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                             solve( !KU( ~x ) @ #vk.15 )
                               case Ltk_reveal
                               solve( !KU( h1(<~ex, ~ea>) ) @ #vk.16 )
-                                case ch1
+                                case c_h1
                                 solve( !KU( ~ex ) @ #vk.18 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -396,7 +396,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                           next
                             case generate_ltk
                             solve( !KU( h1(<~ex, ~ea>) ) @ #vk.13 )
-                              case ch1
+                              case c_h1
                               solve( !KU( ~ex ) @ #vk.15 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -409,7 +409,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                         solve( !KU( ~ea ) @ #vk.14 )
                           case Ltk_reveal
                           solve( !KU( h1(<~ey, ~eb>) ) @ #vk.15 )
-                            case ch1
+                            case c_h1
                             solve( !KU( ~ey ) @ #vk.17 )
                               case Ephk_reveal
                               solve( !KU( ~eb ) @ #vk.18 )
@@ -422,7 +422,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                       next
                         case generate_ltk
                         solve( !KU( h1(<~ey, ~eb>) ) @ #vk.12 )
-                          case ch1
+                          case c_h1
                           solve( !KU( ~ey ) @ #vk.14 )
                             case Ephk_reveal
                             solve( !KU( ~eb ) @ #vk.15 )
@@ -468,7 +468,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                     case Sessk_reveal_case_2
                     by contradiction /* from formulas */
                   next
-                    case ch2
+                    case c_h2
                     solve( !KU( 'g'^(~x*h1(<~ey, ~eb>)) ) @ #vk.4 )
                       case Resp_1
                       solve( !KU( ~x ) @ #vk.12 )
@@ -480,7 +480,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                             solve( !KU( 'g'^(h1(<~ex, ~ea>)*h1(<~ey, ~eb>)) ) @ #vk.10 )
                               case Init_1
                               solve( !KU( h1(<~ey, ~eb>) ) @ #vk.14 )
-                                case ch1
+                                case c_h1
                                 solve( !KU( ~ey ) @ #vk.16 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -489,7 +489,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                             next
                               case Resp_1
                               solve( !KU( h1(<~ex, ~ea>) ) @ #vk.14 )
-                                case ch1
+                                case c_h1
                                 solve( !KU( ~ex ) @ #vk.16 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -498,7 +498,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                             next
                               case cexp
                               solve( !KU( h1(<~ex, ~ea>) ) @ #vk.16 )
-                                case ch1
+                                case c_h1
                                 solve( !KU( ~ex ) @ #vk.19 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -511,7 +511,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                           solve( !KU( ~eb ) @ #vk.15 )
                             case Ltk_reveal
                             solve( !KU( h1(<~ex, ~ea>) ) @ #vk.16 )
-                              case ch1
+                              case c_h1
                               solve( !KU( ~ex ) @ #vk.18 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -521,7 +521,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                         next
                           case generate_ltk
                           solve( !KU( h1(<~ex, ~ea>) ) @ #vk.13 )
-                            case ch1
+                            case c_h1
                             solve( !KU( ~ex ) @ #vk.15 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -534,7 +534,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                       solve( !KU( ~x ) @ #vk.14 )
                         case Ltk_reveal
                         solve( !KU( h1(<~ey, ~eb>) ) @ #vk.15 )
-                          case ch1
+                          case c_h1
                           solve( !KU( ~ey ) @ #vk.17 )
                             case Ephk_reveal
                             solve( !KU( ~eb ) @ #vk.18 )
@@ -547,7 +547,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                     next
                       case generate_ltk
                       solve( !KU( h1(<~ey, ~eb>) ) @ #vk.12 )
-                        case ch1
+                        case c_h1
                         solve( !KU( ~ey ) @ #vk.14 )
                           case Ephk_reveal
                           solve( !KU( ~eb ) @ #vk.15 )
@@ -612,7 +612,7 @@ next
                 qed
               qed
             next
-              case ch2
+              case c_h2
               solve( !KU( 'g'^(~x*h1(<~ex, ~ea>)) ) @ #vk.5 )
                 case Init_1
                 solve( !KU( ~x ) @ #vk.11 )
@@ -628,7 +628,7 @@ next
               next
                 case generate_ltk
                 solve( !KU( h1(<~ex, ~ea>) ) @ #vk.11 )
-                  case ch1
+                  case c_h1
                   solve( !KU( ~ex ) @ #vk.13 )
                     case Ephk_reveal
                     solve( !KU( ~ea ) @ #vk.14 )
@@ -685,7 +685,7 @@ next
             case Sessk_reveal_case_2
             by contradiction /* from formulas */
           next
-            case ch2
+            case c_h2
             solve( !KU( 'g'^(~x*h1(<~ey, ~eb>)) ) @ #vk.3 )
               case Resp_1
               solve( !KU( ~x ) @ #vk.11 )
@@ -701,7 +701,7 @@ next
             next
               case generate_ltk
               solve( !KU( h1(<~ey, ~eb>) ) @ #vk.11 )
-                case ch1
+                case c_h1
                 solve( !KU( ~ey ) @ #vk.13 )
                   case Ephk_reveal
                   solve( !KU( ~eb ) @ #vk.14 )
@@ -735,7 +735,7 @@ analyzing: examples/ake/dh/NAXOS_eCK.spthy
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.049574s
+  processing time: 5.093137s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ------------------------------------------------------------------------------
@@ -746,7 +746,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.049574s
+  processing time: 5.093137s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ==============================================================================

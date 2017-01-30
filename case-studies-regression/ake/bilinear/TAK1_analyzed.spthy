@@ -900,13 +900,13 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
               case Reveal_sessk_case_144
               by contradiction /* from formulas */
             next
-              case ckdf
+              case c_kdf
               solve( !KU( tag(pmult(~ex, 'P')) ) @ #vk.13 )
-                case ctag
+                case c_tag
                 solve( !KU( tag(pmult(~ex.1, 'P')) ) @ #vk.14 )
-                  case ctag
+                  case c_tag
                   solve( !KU( tag(pmult(~ex.2, 'P')) ) @ #vk.15 )
-                    case ctag
+                    case c_tag
                     solve( !KU( em('P', 'P')^(~ex*~ex.1*~ex.2) ) @ #vk.9 )
                       case Proto1_case_1
                       solve( !KU( ~ex ) @ #vk.19 )
@@ -2039,13 +2039,13 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
               case Reveal_sessk_case_144
               by contradiction /* from formulas */
             next
-              case ckdf
+              case c_kdf
               solve( !KU( tag(pmult(~ex, 'P')) ) @ #vk.13 )
-                case ctag
+                case c_tag
                 solve( !KU( tag(pmult(~ex.1, 'P')) ) @ #vk.14 )
-                  case ctag
+                  case c_tag
                   solve( !KU( tag(pmult(~ex.2, 'P')) ) @ #vk.15 )
-                    case ctag
+                    case c_tag
                     solve( !KU( em('P', 'P')^(~ex*~ex.1*~ex.2) ) @ #vk.9 )
                       case Proto1_case_1
                       solve( !KU( ~ex ) @ #vk.19 )
@@ -2561,9 +2561,9 @@ next
             case Reveal_sessk_case_144
             by contradiction /* from formulas */
           next
-            case ckdf
+            case c_kdf
             solve( !KU( tag(pmult(~ex, 'P')) ) @ #vk.15 )
-              case ctag
+              case c_tag
               solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.7 )
                 case Register_pk_case_1
                 solve( !KU( ~ea ) @ #vk.19 )
@@ -2650,7 +2650,7 @@ analyzing: examples/ake/bilinear/TAK1.spthy
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 72.937131s
+  processing time: 147.58987s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 
@@ -2662,7 +2662,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 72.937131s
+  processing time: 147.58987s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 

@@ -129,7 +129,7 @@ next
               by contradiction /* cyclic */
             next
               case case_2
-              by contradiction /* impossible chain */
+              by solve( (#vr.3, 0) ~~> (#vk, 0) )
             qed
           next
             case R_1
@@ -139,10 +139,10 @@ next
               by contradiction /* cyclic */
             next
               case case_2
-              by contradiction /* impossible chain */
+              by solve( (#vr.4, 0) ~~> (#vk, 0) )
             qed
           next
-            case caenc
+            case c_aenc
             by contradiction /* from formulas */
           qed
         qed
@@ -186,7 +186,7 @@ next
                 by contradiction /* cyclic */
               next
                 case case_2
-                by contradiction /* impossible chain */
+                by solve( (#vr.5, 0) ~~> (#vk, 0) )
               qed
             next
               case R_1_case_1
@@ -199,10 +199,10 @@ next
                 by contradiction /* cyclic */
               next
                 case case_2
-                by contradiction /* impossible chain */
+                by solve( (#vr.6, 0) ~~> (#vk, 0) )
               qed
             next
-              case caenc
+              case c_aenc
               by contradiction /* from formulas */
             qed
           qed
@@ -310,7 +310,7 @@ solve( Secret( A, B, s ) ▶₀ #i )
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( !KU( ~ni ) @ #vk.5 )
         case I_1
         solve( !KU( ~ltkA.2 ) @ #vk.7 )
@@ -602,7 +602,7 @@ next
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( !KU( ~nr ) @ #vk.3 )
         case I_2
         solve( (∃ #j. (!KU( ~nr ) @ #j) ∧ #j < #vr.5)  ∥
@@ -707,7 +707,7 @@ analyzing: examples/classic/NSLPK3_untagged.spthy
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.138556s
+  processing time: 3.132181s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -720,7 +720,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.138556s
+  processing time: 3.132181s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

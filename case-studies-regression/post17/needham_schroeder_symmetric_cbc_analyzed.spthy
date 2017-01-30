@@ -72,49 +72,6 @@ axiom singlesharedkeyperuser:
   "∀ A #i #j. ((KeyGen( A ) @ #i) ∧ (KeyGen( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-lemma executable:
-  exists-trace
-  "∃ A B k n #i #j.
-    (KeySharedInitConfirmed( A, B, k, n ) @ #i) ∧
-    (KeySharedRespConfirmed( B, A, k, n ) @ #j)"
-/*
-guarded formula characterizing all satisfying traces:
-"∃ A B k n #i #j.
-  (KeySharedInitConfirmed( A, B, k, n ) @ #i) ∧
-  (KeySharedRespConfirmed( B, A, k, n ) @ #j)"
-*/
-simplify
-solve( InitiatorWaitConfirm( $A, $B, ~na, ~k ) ▶₀ #i )
-  case Initiator2KeyAndForward
-  solve( ResponderWaitConfirm( $B, $A, ~k, ~nb ) ▶₀ #j )
-    case ResponderKeyConfirm
-    solve( !KU( enc(<<<~na, $B>, ~k>, enc(<~k, $A>, ~k.2)>, ~k.1) ) @ #vk.2 )
-      case Server
-      solve( !KU( ~na ) @ #vk.8 )
-        case Initiator1Request
-        solve( !KU( enc(~nb, ~k) ) @ #vk.2 )
-          case ResponderKeyConfirm
-          solve( !KU( enc(succ(~nb), ~k) ) @ #vk.5 )
-            case Initiator3Confirm
-            solve( !KU( enc(<<<~na.1, $B.1>, ~k>, enc(<~k, $A.1>, ~k.4)>, ~k.3)
-                   ) @ #vk.9 )
-              case Server
-              solve( !KU( enc(<~k, $A>, ~k.1) ) @ #vk.6 )
-                case Initiator2KeyAndForward
-                solve( !KU( enc(<<<~na.1, $B>, ~k>, enc(<~k, $A>, ~k.1)>, ~k.2)
-                       ) @ #vk.9 )
-                  case Server
-                  SOLVED // trace found
-                qed
-              qed
-            qed
-          qed
-        qed
-      qed
-    qed
-  qed
-qed
-
 lemma secrecy:
   all-traces
   "∀ A B k n #i.
@@ -138,7 +95,7 @@ solve( ResponderWaitConfirm( $B, $A, ~k, ~nb ) ▶₀ #i )
     solve( !KU( enc(succ(~nb), ~k) ) @ #vk.1 )
       case c_enc
       solve( !KU( enc(<~k, $A>, ~k.1) ) @ #vk.2 )
-        case Server_case_2
+        case Server_case_5
         solve( !KU( succ(~nb) ) @ #vk.4 )
           case c_succ
           solve( !KU( ~nb ) @ #vk.8 )
@@ -158,6 +115,8 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/post17/needham_schroeder_symmetric_cbc.spthy
@@ -166,8 +125,7 @@ analyzing: examples/post17/needham_schroeder_symmetric_cbc.spthy
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 19.153476s
-  executable (exists-trace): verified (11 steps)
+  processing time: 10.059577s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
@@ -178,8 +136,7 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 19.153476s
-  executable (exists-trace): verified (11 steps)
+  processing time: 10.059577s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================

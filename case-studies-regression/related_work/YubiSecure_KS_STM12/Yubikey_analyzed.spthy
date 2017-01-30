@@ -128,9 +128,9 @@ solve( !SharedKey( pid, k ) ▶₂ #i )
               solve( !KU( ~pid ) @ #vk.3 )
                 case BuyANewYubikey
                 solve( !KU( S(zero) ) @ #vk.6 )
-                  case cS
+                  case c_S
                   solve( !KU( S(S(zero)) ) @ #vk.7 )
-                    case cS
+                    case c_S
                     SOLVED // trace found
                   qed
                 qed
@@ -184,7 +184,7 @@ next
             case Yubikey_PressButton
             by contradiction /* from formulas */
           next
-            case csenc
+            case c_senc
             by solve( !KU( ~k ) @ #vk.9 )
           qed
         next
@@ -193,7 +193,7 @@ next
             case Yubikey_PressButton
             by contradiction /* from formulas */
           next
-            case csenc
+            case c_senc
             by solve( !KU( ~k ) @ #vk.9 )
           qed
         next
@@ -202,7 +202,7 @@ next
             case Yubikey_PressButton
             by contradiction /* from formulas */
           next
-            case csenc
+            case c_senc
             by solve( !KU( ~k ) @ #vk.9 )
           qed
         next
@@ -211,7 +211,7 @@ next
             case Yubikey_PressButton
             by contradiction /* from formulas */
           next
-            case csenc
+            case c_senc
             by solve( !KU( ~k ) @ #vk.9 )
           qed
         qed
@@ -4676,7 +4676,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 19.971145s
+  processing time: 20.688239s
   Login_reachable (exists-trace): verified (12 steps)
   one_count_foreach_login (all-traces): verified (210 steps)
   slightly_weaker_invariant (all-traces): verified (1241 steps)
@@ -4692,7 +4692,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 19.971145s
+  processing time: 20.688239s
   Login_reachable (exists-trace): verified (12 steps)
   one_count_foreach_login (all-traces): verified (210 steps)
   slightly_weaker_invariant (all-traces): verified (1241 steps)

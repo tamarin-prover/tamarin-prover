@@ -208,14 +208,60 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
     solve( St_C_2( S, C, sid, nc, pc, ns, ps, pms ) ▶₀ #k )
       case C_2
       solve( !KU( h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>) ) @ #vk )
-        case ch
-        solve( !KU( PRF(<~pms, ~nc, ns>) ) @ #vk.14 )
-          case cPRF
-          solve( !KU( ~pms ) @ #vk.17 )
+        case c_h
+        solve( !KU( senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, 
+                          $A>,
+                         h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>))
+               ) @ #vk.1 )
+          case S_2
+          solve( !KU( sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.3) ) @ #vk.20 )
             case C_2
-            solve( !KU( ~ltkA ) @ #vk.18 )
+            solve( !KU( PRF(<~pms, ~nc, ~ns>) ) @ #vk.18 )
+              case C_2
+              solve( !KU( h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
+                     ) @ #vk.25 )
+                case c_h
+                by contradiction /* cyclic */
+              qed
+            next
+              case S_2
+              by contradiction /* cyclic */
+            next
+              case c_PRF
+              solve( !KU( ~pms ) @ #vk.27 )
+                case C_2
+                solve( !KU( ~ltkA ) @ #vk.28 )
+                  case Reveal_ltk
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          next
+            case c_sign
+            solve( !KU( ~ltkA.3 ) @ #vk.26 )
               case Reveal_ltk
               by contradiction /* from formulas */
+            qed
+          qed
+        next
+          case c_senc
+          solve( !KU( PRF(<~pms, ~nc, ns>) ) @ #vk.18 )
+            case C_2
+            solve( !KU( h(<'clientKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>) ) @ #vk.26 )
+              case c_h
+              by contradiction /* cyclic */
+            qed
+          next
+            case S_2
+            by contradiction /* cyclic */
+          next
+            case c_PRF
+            solve( !KU( ~pms ) @ #vk.28 )
+              case C_2
+              solve( !KU( ~ltkA ) @ #vk.29 )
+                case Reveal_ltk
+                by contradiction /* from formulas */
+              qed
             qed
           qed
         qed
@@ -230,24 +276,73 @@ solve( (∃ #i. (K( keyS ) @ #i))  ∥ (∃ #i. (K( keyC ) @ #i)) )
         solve( !Ltk( $S, ltkS ) ▶₃ #k )
           case Register_pk
           solve( !KU( h(<'serverKey', nc, ~ns, PRF(<pms, nc, ~ns>)>) ) @ #vk )
-            case ch
-            solve( !KU( PRF(<pms, nc, ~ns>) ) @ #vk.18 )
-              case cPRF
-              solve( !KU( sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1) ) @ #vk.5 )
+            case c_h
+            solve( !KU( sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1) ) @ #vk.4 )
+              case C_2
+              solve( !KU( aenc(<'31', ~pms>, pk(~ltkA)) ) @ #vk.3 )
                 case C_2
-                solve( !KU( ~pms ) @ #vk.22 )
+                solve( !KU( senc(<'33', sid, PRF(<~pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, 
+                                  $S>,
+                                 h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>))
+                       ) @ #vk.5 )
                   case C_2
-                  solve( !KU( ~ltkA.2 ) @ #vk.28 )
+                  solve( !KU( PRF(<~pms, ~nc, ~ns>) ) @ #vk.21 )
+                    case C_2
+                    solve( !KU( h(<'clientKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
+                           ) @ #vk.24 )
+                      case c_h
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case S_2
+                    by contradiction /* cyclic */
+                  next
+                    case c_PRF
+                    solve( !KU( ~pms ) @ #vk.26 )
+                      case C_2
+                      solve( !KU( ~ltkA ) @ #vk.27 )
+                        case Reveal_ltk
+                        by contradiction /* from formulas */
+                      qed
+                    qed
+                  qed
+                next
+                  case c_senc
+                  solve( !KU( h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>) ) @ #vk.33 )
+                    case c_h
+                    solve( !KU( PRF(<~pms, nc, ~ns>) ) @ #vk.29 )
+                      case C_2
+                      by contradiction /* cyclic */
+                    next
+                      case S_2
+                      by contradiction /* cyclic */
+                    next
+                      case c_PRF
+                      solve( !KU( ~pms ) @ #vk.40 )
+                        case C_2
+                        solve( !KU( ~ltkA ) @ #vk.41 )
+                          case Reveal_ltk
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case c_aenc
+                solve( !KU( ~pms ) @ #vk.28 )
+                  case C_2
+                  solve( !KU( ~ltkA.2 ) @ #vk.29 )
                     case Reveal_ltk
                     by contradiction /* from formulas */
                   qed
                 qed
-              next
-                case csign
-                solve( !KU( ~ltkA.1 ) @ #vk.23 )
-                  case Reveal_ltk
-                  by contradiction /* from formulas */
-                qed
+              qed
+            next
+              case c_sign
+              solve( !KU( ~ltkA.1 ) @ #vk.20 )
+                case Reveal_ltk
+                by contradiction /* from formulas */
               qed
             qed
           qed
@@ -262,14 +357,60 @@ next
     solve( St_C_2( S, C, sid, nc, pc, ns, ps, pms ) ▶₀ #k )
       case C_2
       solve( !KU( h(<'clientKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>) ) @ #vk )
-        case ch
-        solve( !KU( PRF(<~pms, ~nc, ns>) ) @ #vk.14 )
-          case cPRF
-          solve( !KU( ~pms ) @ #vk.17 )
+        case c_h
+        solve( !KU( senc(<'4', ~sid, PRF(<~pms, ~nc, ns>), ~nc, $pc, $C, ns, ps, 
+                          $A>,
+                         h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>))
+               ) @ #vk.1 )
+          case S_2
+          solve( !KU( sign(<'32', h(<'32', ~ns, $A, ~pms>)>, ~ltkA.3) ) @ #vk.20 )
             case C_2
-            solve( !KU( ~ltkA ) @ #vk.18 )
+            solve( !KU( PRF(<~pms, ~nc, ~ns>) ) @ #vk.18 )
+              case C_2
+              by contradiction /* cyclic */
+            next
+              case S_2
+              solve( !KU( h(<'serverKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
+                     ) @ #vk.25 )
+                case c_h
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_PRF
+              solve( !KU( ~pms ) @ #vk.27 )
+                case C_2
+                solve( !KU( ~ltkA ) @ #vk.28 )
+                  case Reveal_ltk
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          next
+            case c_sign
+            solve( !KU( ~ltkA.3 ) @ #vk.26 )
               case Reveal_ltk
               by contradiction /* from formulas */
+            qed
+          qed
+        next
+          case c_senc
+          solve( !KU( h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>) ) @ #vk.21 )
+            case c_h
+            solve( !KU( PRF(<~pms, ~nc, ns>) ) @ #vk.23 )
+              case C_2
+              by contradiction /* cyclic */
+            next
+              case S_2
+              by contradiction /* cyclic */
+            next
+              case c_PRF
+              solve( !KU( ~pms ) @ #vk.31 )
+                case C_2
+                solve( !KU( ~ltkA ) @ #vk.32 )
+                  case Reveal_ltk
+                  by contradiction /* from formulas */
+                qed
+              qed
             qed
           qed
         qed
@@ -284,24 +425,70 @@ next
         solve( !Ltk( $S, ltkS ) ▶₃ #k )
           case Register_pk
           solve( !KU( h(<'clientKey', nc, ~ns, PRF(<pms, nc, ~ns>)>) ) @ #vk )
-            case ch
-            solve( !KU( PRF(<pms, nc, ~ns>) ) @ #vk.18 )
-              case cPRF
-              solve( !KU( sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1) ) @ #vk.5 )
+            case c_h
+            solve( !KU( sign(<'32', h(<'32', ~ns, $S, pms>)>, ~ltkA.1) ) @ #vk.4 )
+              case C_2
+              solve( !KU( aenc(<'31', ~pms>, pk(~ltkA)) ) @ #vk.3 )
                 case C_2
-                solve( !KU( ~pms ) @ #vk.22 )
+                solve( !KU( senc(<'33', sid, PRF(<~pms, nc, ~ns>), nc, pc, $C, ~ns, $ps, 
+                                  $S>,
+                                 h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>))
+                       ) @ #vk.5 )
                   case C_2
-                  solve( !KU( ~ltkA.2 ) @ #vk.28 )
+                  solve( !KU( PRF(<~pms, ~nc, ~ns>) ) @ #vk.21 )
+                    case C_2
+                    by contradiction /* cyclic */
+                  next
+                    case S_2
+                    solve( !KU( h(<'serverKey', ~nc, ~ns, PRF(<~pms, ~nc, ~ns>)>)
+                           ) @ #vk.24 )
+                      case c_h
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case c_PRF
+                    solve( !KU( ~pms ) @ #vk.26 )
+                      case C_2
+                      solve( !KU( ~ltkA ) @ #vk.27 )
+                        case Reveal_ltk
+                        by contradiction /* from formulas */
+                      qed
+                    qed
+                  qed
+                next
+                  case c_senc
+                  solve( !KU( PRF(<~pms, nc, ~ns>) ) @ #vk.25 )
+                    case C_2
+                    by contradiction /* cyclic */
+                  next
+                    case S_2
+                    by contradiction /* cyclic */
+                  next
+                    case c_PRF
+                    solve( !KU( ~pms ) @ #vk.37 )
+                      case C_2
+                      solve( !KU( ~ltkA ) @ #vk.38 )
+                        case Reveal_ltk
+                        by contradiction /* from formulas */
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case c_aenc
+                solve( !KU( ~pms ) @ #vk.28 )
+                  case C_2
+                  solve( !KU( ~ltkA.2 ) @ #vk.29 )
                     case Reveal_ltk
                     by contradiction /* from formulas */
                   qed
                 qed
-              next
-                case csign
-                solve( !KU( ~ltkA.1 ) @ #vk.23 )
-                  case Reveal_ltk
-                  by contradiction /* from formulas */
-                qed
+              qed
+            next
+              case c_sign
+              solve( !KU( ~ltkA.1 ) @ #vk.20 )
+                case Reveal_ltk
+                by contradiction /* from formulas */
               qed
             qed
           qed
@@ -375,11 +562,20 @@ solve( Commit( actor, peer, params ) @ #i )
         qed
       qed
     next
-      case csenc
+      case c_senc
       solve( !KU( h(<'serverKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>) ) @ #vk.12 )
-        case ch
+        case c_h
         solve( !KU( PRF(<~pms, ~nc, ns>) ) @ #vk.17 )
-          case cPRF
+          case C_2
+          solve( !KU( h(<'clientKey', ~nc, ns, PRF(<~pms, ~nc, ns>)>) ) @ #vk.26 )
+            case c_h
+            by contradiction /* cyclic */
+          qed
+        next
+          case S_2
+          by contradiction /* cyclic */
+        next
+          case c_PRF
           solve( !KU( ~pms ) @ #vk.28 )
             case C_2
             solve( !KU( ~ltkA ) @ #vk.29 )
@@ -436,11 +632,17 @@ next
                 qed
               qed
             next
-              case csenc
+              case c_senc
               solve( !KU( h(<'clientKey', nc, ~ns, PRF(<~pms, nc, ~ns>)>) ) @ #vk.26 )
-                case ch
+                case c_h
                 solve( !KU( PRF(<~pms, nc, ~ns>) ) @ #vk.31 )
-                  case cPRF
+                  case C_2
+                  by contradiction /* cyclic */
+                next
+                  case S_2
+                  by contradiction /* cyclic */
+                next
+                  case c_PRF
                   solve( !KU( ~pms ) @ #vk.37 )
                     case C_2
                     solve( !KU( ~ltkA ) @ #vk.38 )
@@ -452,7 +654,7 @@ next
               qed
             qed
           next
-            case caenc
+            case c_aenc
             solve( !KU( ~pms ) @ #vk.22 )
               case C_2
               solve( !KU( ~ltkA.2 ) @ #vk.23 )
@@ -462,7 +664,7 @@ next
             qed
           qed
         next
-          case csign
+          case c_sign
           solve( !KU( ~ltkA.1 ) @ #vk.13 )
             case Reveal_ltk
             by contradiction /* from formulas */
@@ -540,9 +742,9 @@ analyzing: examples/classic/TLS_Handshake.spthy
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.776007s
-  session_key_secrecy (all-traces): verified (38 steps)
-  injective_agree (all-traces): verified (39 steps)
+  processing time: 3.91885s
+  session_key_secrecy (all-traces): verified (95 steps)
+  injective_agree (all-traces): verified (44 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 
 ------------------------------------------------------------------------------
@@ -553,9 +755,9 @@ summary of summaries:
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.776007s
-  session_key_secrecy (all-traces): verified (38 steps)
-  injective_agree (all-traces): verified (39 steps)
+  processing time: 3.91885s
+  session_key_secrecy (all-traces): verified (95 steps)
+  injective_agree (all-traces): verified (44 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
 
 ==============================================================================

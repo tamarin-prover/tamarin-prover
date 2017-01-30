@@ -20,16 +20,16 @@ rule (modulo E) enc:
 
 diffLemma Observational_equivalence:
 rule-equivalence
-  case Rule_Destrdfst
+  case Rule_Destrd_0_fst
   backward-search
     case LHS
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case enc
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case gen
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
@@ -37,28 +37,25 @@ rule-equivalence
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case enc
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dpdec
-        step( solve( !Key( k ) ▶₀ #vr ) )
-          case gen
-          by step( solve( !KU( ~k ) @ #vk.1 ) )
-        qed
+        case d_0_pdec
+        by step( contradiction /* forbidden chain */ )
       qed
     next
       case gen
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
-  case Rule_Destrdpdec
+  case Rule_Destrd_0_pdec
   backward-search
     case LHS
     step( simplify )
     step( solve( !KD( penc(m, pk(k), r) ) ▶₀ #i ) )
       case enc
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case gen
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
@@ -66,11 +63,8 @@ next
     step( solve( !KD( penc(m, pk(k), r) ) ▶₀ #i ) )
       case enc
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dpdec
-        step( solve( !Key( k.1 ) ▶₀ #vr ) )
-          case gen
-          by step( solve( !KU( ~k.1 ) @ #vk.2 ) )
-        qed
+        case d_0_pdec
+        by step( contradiction /* forbidden chain */ )
       next
         case penc
         step( solve( !Key( k ) ▶₀ #vr ) )
@@ -80,20 +74,20 @@ next
       qed
     next
       case gen
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
-  case Rule_Destrdsnd
+  case Rule_Destrd_0_snd
   backward-search
     case LHS
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case enc
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case gen
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
@@ -101,15 +95,12 @@ next
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case enc
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dpdec
-        step( solve( !Key( k ) ▶₀ #vr ) )
-          case gen
-          by step( solve( !KU( ~k ) @ #vk.1 ) )
-        qed
+        case d_0_pdec
+        by step( contradiction /* forbidden chain */ )
       qed
     next
       case gen
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -134,7 +125,7 @@ next
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case pk
         step( solve( !KU( pk(~k) ) @ #vk ) )
-          case cpk
+          case c_pk
           by step( solve( !KU( ~k ) @ #vk.1 ) )
         next
           case gen
@@ -148,17 +139,20 @@ next
     step( solve( !KD( x ) ▶₁ #i ) )
       case enc
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
-        case dpdec
-        step( solve( !Key( k ) ▶₀ #vr ) )
-          case gen
-          by step( solve( !KU( ~k ) @ #vk.2 ) )
+        case d_0_pdec
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_msg_1_x
+          step( solve( !Key( k ) ▶₀ #vr ) )
+            case gen
+            by step( solve( !KU( ~k ) @ #vk.1 ) )
+          qed
         qed
       next
         case penc
         step( solve( !Key( k ) ▶₀ #vr ) )
           case gen
           step( solve( !KU( penc(x, pk(~k), ~r2) ) @ #vk ) )
-            case cpenc
+            case c_penc
             by step( solve( !KU( ~r2 ) @ #vk.3 ) )
           next
             case enc
@@ -171,7 +165,7 @@ next
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case pk
         step( solve( !KU( pk(~k) ) @ #vk ) )
-          case cpk
+          case c_pk
           by step( solve( !KU( ~k ) @ #vk.1 ) )
         next
           case gen
@@ -236,8 +230,8 @@ analyzing: examples/ccs15/probEnc.spthy
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.192813s
-  DiffLemma:  Observational_equivalence : verified (77 steps)
+  processing time: 0.217899s
+  DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ------------------------------------------------------------------------------
 
@@ -247,8 +241,8 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.192813s
-  DiffLemma:  Observational_equivalence : verified (77 steps)
+  processing time: 0.217899s
+  DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================
 */

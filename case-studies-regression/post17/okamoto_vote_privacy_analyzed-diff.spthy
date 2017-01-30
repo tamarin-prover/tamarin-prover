@@ -201,13 +201,13 @@ rule-equivalence
     step( simplify )
     step( solve( !KD( blind(m, b) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
@@ -231,11 +231,17 @@ rule-equivalence
           case d_0_0_unblind_sign
           step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
           qed
         next
           case d_0_unblind
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
         qed
       next
         case d_0_snd
@@ -260,36 +266,63 @@ rule-equivalence
             case d_0_0_unblind_sign
             step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
               case d_0_checksign
-              by step( contradiction /* impossible chain */ )
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
             qed
           next
             case d_0_unblind
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
           qed
         next
           case d_0_unblind
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
         qed
       qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( blind(m, b) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
@@ -313,11 +346,17 @@ rule-equivalence
           case d_0_0_unblind_sign
           step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
           qed
         next
           case d_0_unblind
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
         qed
       next
         case d_0_snd
@@ -342,23 +381,50 @@ rule-equivalence
             case d_0_0_unblind_sign
             step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
               case d_0_checksign
-              by step( contradiction /* impossible chain */ )
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
             qed
           next
             case d_0_unblind
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
           qed
         next
           case d_0_unblind
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
         qed
       qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -368,28 +434,91 @@ next
     step( simplify )
     step( solve( !KD( sign(m, sk) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case sign
+            step( solve( Vote( V, $vote ) ▶₃ #vr ) )
+              case setup_case_1
+              step( solve( !Ltk( 'v1', ~ltkV ) ▶₄ #vr ) )
+                case Register_Voter_pk1
+                by step( solve( !KU( ~b ) @ #vk.1 ) )
+              qed
+            next
+              case setup_case_2
+              step( solve( !Ltk( 'v2', ~ltkV ) ▶₄ #vr ) )
+                case Register_Voter_pk2
+                by step( solve( !KU( ~b ) @ #vk.1 ) )
+              qed
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_checksign
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case sign
+              step( solve( Vote( V, $vote ) ▶₃ #vr ) )
+                case setup_case_1
+                step( solve( !Ltk( 'v1', ~ltkV ) ▶₄ #vr ) )
+                  case Register_Voter_pk1
+                  by step( solve( !KU( ~b ) @ #vk.2 ) )
+                qed
+              next
+                case setup_case_2
+                step( solve( !Ltk( 'v2', ~ltkV ) ▶₄ #vr ) )
+                  case Register_Voter_pk2
+                  by step( solve( !KU( ~b ) @ #vk.2 ) )
+                qed
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
         next
           case d_0_unblind
           step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
           next
             case sign
             step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -439,12 +568,18 @@ next
       case V_3
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
       next
         case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_checksign
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
         next
           case sign
           step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -594,35 +729,98 @@ next
       qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( sign(m, sk) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case sign
+            step( solve( Vote( V, $vote ) ▶₃ #vr ) )
+              case setup_case_1
+              step( solve( !Ltk( 'v1', ~ltkV ) ▶₄ #vr ) )
+                case Register_Voter_pk1
+                by step( solve( !KU( ~b ) @ #vk.1 ) )
+              qed
+            next
+              case setup_case_2
+              step( solve( !Ltk( 'v2', ~ltkV ) ▶₄ #vr ) )
+                case Register_Voter_pk2
+                by step( solve( !KU( ~b ) @ #vk.1 ) )
+              qed
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_checksign
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case sign
+              step( solve( Vote( V, $vote ) ▶₃ #vr ) )
+                case setup_case_1
+                step( solve( !Ltk( 'v1', ~ltkV ) ▶₄ #vr ) )
+                  case Register_Voter_pk1
+                  by step( solve( !KU( ~b ) @ #vk.2 ) )
+                qed
+              next
+                case setup_case_2
+                step( solve( !Ltk( 'v2', ~ltkV ) ▶₄ #vr ) )
+                  case Register_Voter_pk2
+                  by step( solve( !KU( ~b ) @ #vk.2 ) )
+                qed
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
         next
           case d_0_unblind
           step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
           next
             case sign
             step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -672,12 +870,18 @@ next
       case V_3
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
       next
         case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_checksign
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
         next
           case sign
           step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -827,7 +1031,7 @@ next
       qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -837,21 +1041,63 @@ next
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case d_0_snd
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
       next
         case pair
         step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -872,10 +1118,19 @@ next
       case V_3
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
       next
         case d_0_snd
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case pair
         step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -1018,28 +1273,70 @@ next
       qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case d_0_snd
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
       next
         case pair
         step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1060,10 +1357,19 @@ next
       case V_3
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
       next
         case d_0_snd
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case pair
         step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -1206,7 +1512,7 @@ next
       qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -1216,13 +1522,13 @@ next
     step( simplify )
     step( solve( !KD( tdcommit(m, r, td) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
@@ -1233,7 +1539,7 @@ next
             case d_0_checksign
             step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
               case d_0_open
-              by step( contradiction /* impossible chain */ )
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
             next
               case tdcommit
               step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1255,7 +1561,7 @@ next
           case d_0_unblind
           step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
             case d_0_open
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
           next
             case tdcommit
             step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1283,7 +1589,7 @@ next
               case d_0_checksign
               step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
                 case d_0_open
-                by step( contradiction /* impossible chain */ )
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
               next
                 case tdcommit
                 step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1305,7 +1611,7 @@ next
             case d_0_unblind
             step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
               case d_0_open
-              by step( contradiction /* impossible chain */ )
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
             next
               case tdcommit
               step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1329,7 +1635,7 @@ next
             case d_0_checksign
             step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
               case d_0_open
-              by step( contradiction /* impossible chain */ )
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
             next
               case tdcommit
               step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1355,7 +1661,7 @@ next
         case d_0_fst
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_open
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case tdcommit
           step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -1378,7 +1684,7 @@ next
           case d_0_checksign
           step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
             case d_0_open
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
           next
             case tdcommit
             step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -1399,20 +1705,20 @@ next
       qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( tdcommit(m, r, td) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
@@ -1423,7 +1729,7 @@ next
             case d_0_checksign
             step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
               case d_0_open
-              by step( contradiction /* impossible chain */ )
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
             next
               case tdcommit
               step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1445,7 +1751,7 @@ next
           case d_0_unblind
           step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
             case d_0_open
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
           next
             case tdcommit
             step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1473,7 +1779,7 @@ next
               case d_0_checksign
               step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
                 case d_0_open
-                by step( contradiction /* impossible chain */ )
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
               next
                 case tdcommit
                 step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1495,7 +1801,7 @@ next
             case d_0_unblind
             step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
               case d_0_open
-              by step( contradiction /* impossible chain */ )
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
             next
               case tdcommit
               step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1519,7 +1825,7 @@ next
             case d_0_checksign
             step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
               case d_0_open
-              by step( contradiction /* impossible chain */ )
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
             next
               case tdcommit
               step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1545,7 +1851,7 @@ next
         case d_0_fst
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_open
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         next
           case tdcommit
           step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -1568,7 +1874,7 @@ next
           case d_0_checksign
           step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
             case d_0_open
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
           next
             case tdcommit
             step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -1589,7 +1895,7 @@ next
       qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -1599,21 +1905,63 @@ next
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case d_0_snd
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
       next
         case pair
         step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1634,10 +1982,19 @@ next
       case V_3
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
       next
         case d_0_snd
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case pair
         step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -1780,28 +2137,70 @@ next
       qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case d_0_snd
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
       next
         case pair
         step( solve( Vote( V, $vote ) ▶₃ #vr ) )
@@ -1822,10 +2221,19 @@ next
       case V_3
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
       next
         case d_0_snd
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
       next
         case pair
         step( solve( St_V_3( V, pk(~ltkA), $vote, ~r, ~td ) ▶₀ #vr ) )
@@ -1968,7 +2376,7 @@ next
       qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -1980,13 +2388,13 @@ next
       case d_0_unblind_case_1
       step( solve( !KD( blind(m, b) ) ▶₀ #i ) )
         case Register_Admin_pk
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case Register_Voter_pk1
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case Register_Voter_pk2
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case V_1
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
@@ -2010,11 +2418,17 @@ next
             case d_0_0_unblind_sign
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case d_0_checksign
-              by step( contradiction /* impossible chain */ )
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
             qed
           next
             case d_0_unblind
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+            qed
           qed
         next
           case d_0_snd
@@ -2039,50 +2453,110 @@ next
               case d_0_0_unblind_sign
               step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
                 case d_0_checksign
-                by step( contradiction /* impossible chain */ )
+                step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                  case d_0_open
+                  by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+                qed
               qed
             next
               case d_0_unblind
-              by step( contradiction /* impossible chain */ )
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
             qed
           next
             case d_0_unblind
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
+            qed
           qed
         qed
       next
         case V_3
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vl, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_0_snd
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
       next
         case select_vote
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       qed
     next
       case d_0_unblind_case_2
       step( solve( !KD( sign(blind(m, b), sk) ) ▶₀ #i ) )
         case Register_Admin_pk
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case Register_Voter_pk1
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case Register_Voter_pk2
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case V_1
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+            qed
+          qed
         next
           case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_0_unblind_sign
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_checksign
+                step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                  case d_0_open
+                  by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+                qed
+              qed
+            next
+              case d_0_unblind
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
+            qed
           next
             case d_0_unblind
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case d_0_checksign
-              by step( contradiction /* impossible chain */ )
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
             qed
           next
             case sign
@@ -2105,17 +2579,23 @@ next
         case V_3
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          qed
         next
           case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+            qed
           qed
         qed
       next
         case select_vote
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       qed
     qed
   next
@@ -2125,13 +2605,13 @@ next
       case d_0_unblind_case_1
       step( solve( !KD( blind(m, b) ) ▶₀ #i ) )
         case Register_Admin_pk
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case Register_Voter_pk1
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case Register_Voter_pk2
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case V_1
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
@@ -2155,11 +2635,17 @@ next
             case d_0_0_unblind_sign
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case d_0_checksign
-              by step( contradiction /* impossible chain */ )
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
             qed
           next
             case d_0_unblind
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+            qed
           qed
         next
           case d_0_snd
@@ -2184,50 +2670,110 @@ next
               case d_0_0_unblind_sign
               step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
                 case d_0_checksign
-                by step( contradiction /* impossible chain */ )
+                step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                  case d_0_open
+                  by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+                qed
               qed
             next
               case d_0_unblind
-              by step( contradiction /* impossible chain */ )
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
             qed
           next
             case d_0_unblind
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
+            qed
           qed
         qed
       next
         case V_3
-        by step( contradiction /* impossible chain */ )
+        step( solve( (#vl, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_0_snd
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
       next
         case select_vote
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       qed
     next
       case d_0_unblind_case_2
       step( solve( !KD( sign(blind(m, b), sk) ) ▶₀ #i ) )
         case Register_Admin_pk
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case Register_Voter_pk1
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case Register_Voter_pk2
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
         case V_1
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+            qed
+          qed
         next
           case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_0_unblind_sign
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_checksign
+                step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                  case d_0_open
+                  by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+                qed
+              qed
+            next
+              case d_0_unblind
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
+            qed
           next
             case d_0_unblind
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case d_0_checksign
-              by step( contradiction /* impossible chain */ )
+              step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+              qed
             qed
           next
             case sign
@@ -2250,17 +2796,23 @@ next
         case V_3
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          qed
         next
           case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+            qed
           qed
         qed
       next
         case select_vote
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       qed
     qed
   qed
@@ -2271,44 +2823,170 @@ next
     step( simplify )
     step( solve( !KD( f(m, r, td, m1) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( f(m, r, td, m1) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -2318,44 +2996,170 @@ next
     step( simplify )
     step( solve( !KD( f(m1, r, td, m2) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( f(m1, r, td, m2) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -2365,44 +3169,170 @@ next
     step( simplify )
     step( solve( !KD( f(m1, r, td, m2) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( f(m1, r, td, m2) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -2412,44 +3342,170 @@ next
     step( simplify )
     step( solve( !KD( (x+y) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( (x+y) ) ▶₀ #i ) )
       case Register_Admin_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk1
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case Register_Voter_pk2
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
       case V_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
     next
       case V_3
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
     next
       case select_vote
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -3565,6 +4621,12 @@ next
                   step( solve( !KU( ~ltkA ) @ #vk.7 ) )
                     case Register_Admin_pk
                     step( solve( !KU( sign(tdcommit($vote, ~r, ~td), ~ltkA) ) @ #vk.5 ) )
+                      case V_1_case_1
+                      by step( solve( !KU( ~b ) @ #vk.8 ) )
+                    next
+                      case V_1_case_2
+                      by step( solve( !KU( ~b ) @ #vk.9 ) )
+                    next
                       case V_3
                       step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.6 ) )
                         case V_1_case_1
@@ -3822,6 +4884,12 @@ next
                   step( solve( !KU( ~ltkA ) @ #vk.7 ) )
                     case Register_Admin_pk
                     step( solve( !KU( sign(tdcommit($vote, ~r, ~td), ~ltkA) ) @ #vk.5 ) )
+                      case V_1_case_1
+                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+                    next
+                      case V_1_case_2
+                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                    next
                       case V_3
                       step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.6 ) )
                         case V_1_case_1
@@ -4083,6 +5151,12 @@ next
                 step( solve( !KU( ~ltkA ) @ #vk.9 ) )
                   case Register_Admin_pk
                   step( solve( !KU( sign(tdcommit($vote, ~r, ~td), ~ltkA) ) @ #vk.7 ) )
+                    case V_1_case_1
+                    by step( solve( !KU( ~b ) @ #vk.10 ) )
+                  next
+                    case V_1_case_2
+                    by step( solve( !KU( ~b ) @ #vk.11 ) )
+                  next
                     case V_3
                     step( solve( !KU( tdcommit($vote, ~r, ~td) ) @ #vk.7 ) )
                       case V_1_case_1
@@ -4364,6 +5438,12 @@ next
                 step( solve( !KU( ~ltkA ) @ #vk.9 ) )
                   case Register_Admin_pk
                   step( solve( !KU( sign(tdcommit($vote, ~r, ~td), ~ltkA) ) @ #vk.7 ) )
+                    case V_1_case_1
+                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                  next
+                    case V_1_case_2
+                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                  next
                     case V_3
                     step( solve( !KU( tdcommit($vote, ~r, ~td) ) @ #vk.7 ) )
                       case V_1_case_1
@@ -6470,6 +7550,12 @@ next
                   step( solve( !KU( ~ltkA ) @ #vk.7 ) )
                     case Register_Admin_pk
                     step( solve( !KU( sign(tdcommit($vote, ~r, ~td), ~ltkA) ) @ #vk.5 ) )
+                      case V_1_case_1
+                      by step( solve( !KU( ~b ) @ #vk.8 ) )
+                    next
+                      case V_1_case_2
+                      by step( solve( !KU( ~b ) @ #vk.9 ) )
+                    next
                       case V_3
                       step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.6 ) )
                         case V_1_case_1
@@ -6727,6 +7813,12 @@ next
                   step( solve( !KU( ~ltkA ) @ #vk.7 ) )
                     case Register_Admin_pk
                     step( solve( !KU( sign(tdcommit($vote, ~r, ~td), ~ltkA) ) @ #vk.5 ) )
+                      case V_1_case_1
+                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+                    next
+                      case V_1_case_2
+                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                    next
                       case V_3
                       step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.6 ) )
                         case V_1_case_1
@@ -6988,6 +8080,12 @@ next
                 step( solve( !KU( ~ltkA ) @ #vk.9 ) )
                   case Register_Admin_pk
                   step( solve( !KU( sign(tdcommit($vote, ~r, ~td), ~ltkA) ) @ #vk.7 ) )
+                    case V_1_case_1
+                    by step( solve( !KU( ~b ) @ #vk.10 ) )
+                  next
+                    case V_1_case_2
+                    by step( solve( !KU( ~b ) @ #vk.11 ) )
+                  next
                     case V_3
                     step( solve( !KU( tdcommit($vote, ~r, ~td) ) @ #vk.7 ) )
                       case V_1_case_1
@@ -7269,6 +8367,12 @@ next
                 step( solve( !KU( ~ltkA ) @ #vk.9 ) )
                   case Register_Admin_pk
                   step( solve( !KU( sign(tdcommit($vote, ~r, ~td), ~ltkA) ) @ #vk.7 ) )
+                    case V_1_case_1
+                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                  next
+                    case V_1_case_2
+                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                  next
                     case V_3
                     step( solve( !KU( tdcommit($vote, ~r, ~td) ) @ #vk.7 ) )
                       case V_1_case_1
@@ -10261,6 +11365,8 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/post17/okamoto_vote_privacy.spthy
@@ -10269,10 +11375,10 @@ analyzing: examples/post17/okamoto_vote_privacy.spthy
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 92.119004s
+  processing time: 102.201263s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
-  DiffLemma:  Observational_equivalence : verified (3333 steps)
+  DiffLemma:  Observational_equivalence : verified (3701 steps)
 
 ------------------------------------------------------------------------------
 
@@ -10282,10 +11388,10 @@ summary of summaries:
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 92.119004s
+  processing time: 102.201263s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
-  DiffLemma:  Observational_equivalence : verified (3333 steps)
+  DiffLemma:  Observational_equivalence : verified (3701 steps)
 
 ==============================================================================
 */

@@ -317,7 +317,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
       solve( !Pk( $R, 'g'^~x ) ▶₁ #i1 )
         case generate_ltk
         solve( !KU( h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>) ) @ #vk )
-          case ch2
+          case c_h2
           solve( !KU( 'g'^(~x*h1(<~eskI, ~lkI>)) ) @ #vk.5 )
             case Init_1
             solve( !KU( ~x ) @ #vk.11 )
@@ -360,7 +360,7 @@ analyzing: examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.02096s
+  processing time: 4.043308s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -371,7 +371,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.02096s
+  processing time: 4.043308s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================

@@ -424,15 +424,15 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
        ) ▶₀ #t1 )
   case in_sencokx_tkntoken_shared_key_11111111111111
   solve( !KU( senc(ok(~n.2, tkn(pk)), ~n.1) ) @ #vk )
-    case csenc
+    case c_senc
     solve( !KU( ~n.1 ) @ #vk.6 )
       case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_1
       solve( !KU( senc(tkn(pk), ~n.1) ) @ #vk.2 )
-        case csenc
+        case c_senc
         solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.4 )
-          case csenc
+          case c_senc
           solve( !KU( ok(~n.2, tkn(pk)) ) @ #vk.6 )
-            case cok
+            case c_ok
             by solve( !KU( ~n.2 ) @ #vk.10 )
           next
             case out_sencokx_tkntoken_shared_key_11211111111111111
@@ -449,11 +449,11 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
     next
       case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_2
       solve( !KU( senc(tkn(pk), ~n.1) ) @ #vk.2 )
-        case csenc
+        case c_senc
         solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.4 )
-          case csenc
+          case c_senc
           solve( !KU( ok(~n.2, tkn(pk)) ) @ #vk.6 )
-            case cok
+            case c_ok
             by solve( !KU( ~n.2 ) @ #vk.10 )
           next
             case out_sencokx_tkntoken_shared_key_11211111111111111
@@ -505,23 +505,23 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
                  ) ▶₀ #t2.2 )
             case new_token_112111111111
             solve( !KU( senc(ok(~n.3, tkn(~n.2)), ~n.1) ) @ #vk.2 )
-              case csenc
+              case c_senc
               solve( !KU( ~n.1 ) @ #vk.15 )
                 case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_1
                 solve( !KU( senc(tkn(~n.2), ~n.1) ) @ #vk.4 )
-                  case csenc
+                  case c_senc
                   solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.6 )
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(ok(~n.5, tkn(~n.2)), ~n.4) ) @ #vk.8 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~n.4 ) @ #vk.20 )
                         case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_1
                         solve( !KU( senc(tkn(~n.2), ~n.4) ) @ #vk.10 )
-                          case csenc
+                          case c_senc
                           solve( !KU( senc(prg(prog2.1), ~n.4) ) @ #vk.12 )
-                            case csenc
+                            case c_senc
                             solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.16 )
-                              case cok
+                              case c_ok
                               by solve( !KU( ~n.3 ) @ #vk.23 )
                             next
                               case out_sencokx_tkntoken_shared_key_11211111111111111
@@ -544,11 +544,11 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
                       next
                         case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_2
                         solve( !KU( senc(tkn(~n.2), ~n.4) ) @ #vk.10 )
-                          case csenc
+                          case c_senc
                           solve( !KU( senc(prg(prog2.1), ~n.4) ) @ #vk.12 )
-                            case csenc
+                            case c_senc
                             solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.16 )
-                              case cok
+                              case c_ok
                               by solve( !KU( ~n.3 ) @ #vk.23 )
                             next
                               case out_sencokx_tkntoken_shared_key_11211111111111111
@@ -572,7 +572,7 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
                     next
                       case out_sencokx_tkntoken_shared_key_11211111111111111
                       solve( !KU( senc(prg(prog2.1), ~n.4) ) @ #vk.11 )
-                        case csenc
+                        case c_senc
                         solve( !KU( ~n.4 ) @ #vk.20 )
                           case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_1
                           by solve( !KU( ~n.5 ) @ #vk.21 )
@@ -583,7 +583,7 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
                       next
                         case out_sencprgprog_shared_key_1121111111
                         solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.14 )
-                          case cok
+                          case c_ok
                           by solve( !KU( ~n.3 ) @ #vk.19 )
                         qed
                       qed
@@ -599,19 +599,19 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
               next
                 case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_2
                 solve( !KU( senc(tkn(~n.2), ~n.1) ) @ #vk.4 )
-                  case csenc
+                  case c_senc
                   solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.6 )
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(ok(~n.5, tkn(~n.2)), ~n.4) ) @ #vk.8 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~n.4 ) @ #vk.20 )
                         case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_1
                         solve( !KU( senc(tkn(~n.2), ~n.4) ) @ #vk.10 )
-                          case csenc
+                          case c_senc
                           solve( !KU( senc(prg(prog2.1), ~n.4) ) @ #vk.12 )
-                            case csenc
+                            case c_senc
                             solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.16 )
-                              case cok
+                              case c_ok
                               by solve( !KU( ~n.3 ) @ #vk.23 )
                             next
                               case out_sencokx_tkntoken_shared_key_11211111111111111
@@ -634,11 +634,11 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
                       next
                         case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_2
                         solve( !KU( senc(tkn(~n.2), ~n.4) ) @ #vk.10 )
-                          case csenc
+                          case c_senc
                           solve( !KU( senc(prg(prog2.1), ~n.4) ) @ #vk.12 )
-                            case csenc
+                            case c_senc
                             solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.16 )
-                              case cok
+                              case c_ok
                               by solve( !KU( ~n.3 ) @ #vk.23 )
                             next
                               case out_sencokx_tkntoken_shared_key_11211111111111111
@@ -662,7 +662,7 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
                     next
                       case out_sencokx_tkntoken_shared_key_11211111111111111
                       solve( !KU( senc(prg(prog2.1), ~n.4) ) @ #vk.11 )
-                        case csenc
+                        case c_senc
                         solve( !KU( ~n.4 ) @ #vk.20 )
                           case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_1
                           by solve( !KU( ~n.5 ) @ #vk.21 )
@@ -673,7 +673,7 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
                       next
                         case out_sencprgprog_shared_key_1121111111
                         solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.14 )
-                          case cok
+                          case c_ok
                           by solve( !KU( ~n.3 ) @ #vk.19 )
                         qed
                       qed
@@ -690,7 +690,7 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
             next
               case out_sencokx_tkntoken_shared_key_11211111111111111
               solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.5 )
-                case csenc
+                case c_senc
                 solve( !KU( ~n.1 ) @ #vk.15 )
                   case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_1
                   by solve( !KU( ~n.2 ) @ #vk.16 )
@@ -701,15 +701,15 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
               next
                 case out_sencprgprog_shared_key_1121111111
                 solve( !KU( senc(ok(~n.6, tkn(~n.3)), ~n.5) ) @ #vk.7 )
-                  case csenc
+                  case c_senc
                   solve( !KU( ~n.5 ) @ #vk.15 )
                     case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_1
                     solve( !KU( senc(tkn(~n.3), ~n.5) ) @ #vk.9 )
-                      case csenc
+                      case c_senc
                       solve( !KU( senc(prg(prog2), ~n.5) ) @ #vk.11 )
-                        case csenc
+                        case c_senc
                         solve( !KU( ok(~n.6, tkn(~n.3)) ) @ #vk.15 )
-                          case cok
+                          case c_ok
                           by solve( !KU( ~n.6 ) @ #vk.19 )
                         qed
                       next
@@ -723,11 +723,11 @@ solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
                   next
                     case out_aencshared_key_pkskV_repaencshared_key_pkskV_loc_pkskV___1111111_case_2
                     solve( !KU( senc(tkn(~n.3), ~n.5) ) @ #vk.9 )
-                      case csenc
+                      case c_senc
                       solve( !KU( senc(prg(prog2), ~n.5) ) @ #vk.11 )
-                        case csenc
+                        case c_senc
                         solve( !KU( ok(~n.6, tkn(~n.3)) ) @ #vk.15 )
-                          case cok
+                          case c_ok
                           by solve( !KU( ~n.6 ) @ #vk.19 )
                         qed
                       next
@@ -776,7 +776,7 @@ simplify
 solve( State_1( prog ) ▶₀ #t2 )
   case new_prog_
   solve( !KU( run(~n, inp) ) @ #vk )
-    case crun
+    case c_run
     by solve( !KU( ~n ) @ #vk.1 )
   next
     case out_runprog2_input_1111111111111111
@@ -801,7 +801,7 @@ analyzing: case-studies-sapic-regression/locations/licensing.spthy
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.787338s
+  processing time: 6.322408s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)
@@ -814,7 +814,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.787338s
+  processing time: 6.322408s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)

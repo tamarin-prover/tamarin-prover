@@ -136,10 +136,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by contradiction /* impossible chain */
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
           qed
         next
-          case caenc
+          case c_aenc
           by contradiction /* from formulas */
         qed
       qed
@@ -241,7 +241,7 @@ solve( Client_1( C, S, k ) ▶₀ #i )
         case Client_1
         by contradiction /* from formulas */
       next
-        case caenc
+        case c_aenc
         solve( (∃ #r. (LtkReveal( $S ) @ #r) ∧ #r < #vk.7)  ∥
                (∃ #r. (LtkReveal( $C ) @ #r) ∧ #r < #vk.7) )
           case case_1
@@ -252,7 +252,7 @@ solve( Client_1( C, S, k ) ▶₀ #i )
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( (∃ #r. (LtkReveal( $S ) @ #r) ∧ #r < #vk.4)  ∥
              (∃ #r. (LtkReveal( $C ) @ #r) ∧ #r < #vk.4) )
         case case_1
@@ -282,7 +282,7 @@ analyzing: examples/loops/JCS12_Typing_Example.spthy
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.240066s
+  processing time: 0.267114s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
@@ -296,7 +296,7 @@ summary of summaries:
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.240066s
+  processing time: 0.267114s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)

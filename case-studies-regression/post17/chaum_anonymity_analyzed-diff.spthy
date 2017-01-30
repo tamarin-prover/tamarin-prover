@@ -366,11 +366,11 @@ next
         case d_0_0_unblind_sign
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_checksign
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         qed
       next
         case d_0_unblind
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
       qed
     next
       case C_1_2
@@ -381,11 +381,11 @@ next
         case d_0_0_unblind_sign
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_checksign
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         qed
       next
         case d_0_unblind
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
       qed
     next
       case C_2sync
@@ -393,18 +393,21 @@ next
         case d_0_fst
         step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
           case C_2
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
         qed
       next
         case d_0_snd
         step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
           case C_2
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+          qed
         qed
       qed
     next
       case Register_Corrupted_Bank_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
@@ -418,11 +421,11 @@ next
         case d_0_0_unblind_sign
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_checksign
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         qed
       next
         case d_0_unblind
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
       qed
     next
       case C_1_2
@@ -433,11 +436,11 @@ next
         case d_0_0_unblind_sign
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_checksign
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
         qed
       next
         case d_0_unblind
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
       qed
     next
       case C_2sync
@@ -447,7 +450,7 @@ next
           case C_2
           step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
             case C_2
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           qed
         qed
       next
@@ -456,13 +459,16 @@ next
           case C_2
           step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
             case C_2
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            qed
           qed
         qed
       qed
     next
       case Register_Corrupted_Bank_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -472,17 +478,41 @@ next
     step( simplify )
     step( solve( !KD( sign(m, k) ) ▶₀ #i ) )
       case C_1_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        next
+          case sign
+          by step( solve( !KU( ~r ) @ #vk.1 ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_1_2
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        next
+          case sign
+          by step( solve( !KU( ~r ) @ #vk.1 ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_2sync
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
         step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
           case C_2
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
         qed
       next
         case d_0_snd
@@ -490,7 +520,7 @@ next
           case C_2
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
           next
             case sign
             step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
@@ -544,17 +574,41 @@ next
       qed
     next
       case Register_Corrupted_Bank_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( sign(m, k) ) ▶₀ #i ) )
       case C_1_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        next
+          case sign
+          by step( solve( !KU( ~r ) @ #vk.1 ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_1_2
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        next
+          case sign
+          by step( solve( !KU( ~r ) @ #vk.1 ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_2sync
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
@@ -563,7 +617,7 @@ next
           case C_2
           step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
             case C_2
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           qed
         qed
       next
@@ -574,7 +628,7 @@ next
             case C_2
             step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
               case d_0_checksign
-              by step( contradiction /* impossible chain */ )
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
             next
               case sign
               step( solve( !KU( pk(~skB) ) @ #vk ) )
@@ -626,7 +680,7 @@ next
       qed
     next
       case Register_Corrupted_Bank_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -636,23 +690,44 @@ next
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case C_1_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_1_2
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_2sync
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
         step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
           case C_2
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
         qed
       next
         case d_0_snd
         step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
           case C_2
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+          qed
         qed
       next
         case pair
@@ -705,17 +780,35 @@ next
       qed
     next
       case Register_Corrupted_Bank_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case C_1_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_1_2
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_2sync
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
@@ -724,7 +817,7 @@ next
           case C_2
           step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
             case C_2
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           qed
         qed
       next
@@ -733,7 +826,10 @@ next
           case C_2
           step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
             case C_2
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            qed
           qed
         qed
       next
@@ -787,7 +883,7 @@ next
       qed
     next
       case Register_Corrupted_Bank_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -797,23 +893,44 @@ next
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case C_1_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_1_2
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_2sync
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
         step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
           case C_2
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
         qed
       next
         case d_0_snd
         step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
           case C_2
-          by step( contradiction /* impossible chain */ )
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+          qed
         qed
       next
         case pair
@@ -866,17 +983,35 @@ next
       qed
     next
       case Register_Corrupted_Bank_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case C_1_1
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_1_2
-      by step( contradiction /* impossible chain */ )
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_0_unblind_sign
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_unblind
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
     next
       case C_2sync
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
@@ -885,7 +1020,7 @@ next
           case C_2
           step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
             case C_2
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           qed
         qed
       next
@@ -894,7 +1029,10 @@ next
           case C_2
           step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
             case C_2
-            by step( contradiction /* impossible chain */ )
+            step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            qed
           qed
         qed
       next
@@ -948,7 +1086,7 @@ next
       qed
     next
       case Register_Corrupted_Bank_pk
-      by step( contradiction /* impossible chain */ )
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     qed
   qed
 next
@@ -967,11 +1105,11 @@ next
           case d_0_0_unblind_sign
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           qed
         next
           case d_0_unblind
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
         qed
       next
         case C_1_2
@@ -982,11 +1120,11 @@ next
           case d_0_0_unblind_sign
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           qed
         next
           case d_0_unblind
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
         qed
       next
         case C_2sync
@@ -994,34 +1132,7 @@ next
           case d_0_fst
           step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
             case C_2
-            by step( contradiction /* impossible chain */ )
-          qed
-        next
-          case d_0_snd
-          step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
-            case C_2
-            by step( contradiction /* impossible chain */ )
-          qed
-        qed
-      next
-        case Register_Corrupted_Bank_pk
-        by step( contradiction /* impossible chain */ )
-      qed
-    next
-      case d_0_unblind_case_2
-      step( solve( !KD( sign(blind(m, r), k) ) ▶₀ #i ) )
-        case C_1_1
-        by step( contradiction /* impossible chain */ )
-      next
-        case C_1_2
-        by step( contradiction /* impossible chain */ )
-      next
-        case C_2sync
-        step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case d_0_fst
-          step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
-            case C_2
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           qed
         next
           case d_0_snd
@@ -1029,13 +1140,61 @@ next
             case C_2
             step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
               case d_0_checksign
-              by step( contradiction /* impossible chain */ )
+              by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
             qed
           qed
         qed
       next
         case Register_Corrupted_Bank_pk
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case d_0_unblind_case_2
+      step( solve( !KD( sign(blind(m, r), k) ) ▶₀ #i ) )
+        case C_1_1
+        step( solve( (#vl, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_0_unblind
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case C_1_2
+        step( solve( (#vl, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_0_unblind
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case C_2sync
+        step( solve( (#vl, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
+            case C_2
+            by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_0_snd
+          step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
+            case C_2
+            step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      next
+        case Register_Corrupted_Bank_pk
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       qed
     qed
   next
@@ -1052,11 +1211,11 @@ next
           case d_0_0_unblind_sign
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           qed
         next
           case d_0_unblind
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
         qed
       next
         case C_1_2
@@ -1067,11 +1226,11 @@ next
           case d_0_0_unblind_sign
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case d_0_checksign
-            by step( contradiction /* impossible chain */ )
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           qed
         next
           case d_0_unblind
-          by step( contradiction /* impossible chain */ )
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
         qed
       next
         case C_2sync
@@ -1081,40 +1240,7 @@ next
             case C_2
             step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
               case C_2
-              by step( contradiction /* impossible chain */ )
-            qed
-          qed
-        next
-          case d_0_snd
-          step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
-            case C_2
-            step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
-              case C_2
-              by step( contradiction /* impossible chain */ )
-            qed
-          qed
-        qed
-      next
-        case Register_Corrupted_Bank_pk
-        by step( contradiction /* impossible chain */ )
-      qed
-    next
-      case d_0_unblind_case_2
-      step( solve( !KD( sign(blind(m, r), k) ) ▶₀ #i ) )
-        case C_1_1
-        by step( contradiction /* impossible chain */ )
-      next
-        case C_1_2
-        by step( contradiction /* impossible chain */ )
-      next
-        case C_2sync
-        step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case d_0_fst
-          step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
-            case C_2
-            step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
-              case C_2
-              by step( contradiction /* impossible chain */ )
+              by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             qed
           qed
         next
@@ -1125,14 +1251,68 @@ next
               case C_2
               step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
                 case d_0_checksign
-                by step( contradiction /* impossible chain */ )
+                by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
               qed
             qed
           qed
         qed
       next
         case Register_Corrupted_Bank_pk
-        by step( contradiction /* impossible chain */ )
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case d_0_unblind_case_2
+      step( solve( !KD( sign(blind(m, r), k) ) ▶₀ #i ) )
+        case C_1_1
+        step( solve( (#vl, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_0_unblind
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case C_1_2
+        step( solve( (#vl, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_0_unblind
+          by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case C_2sync
+        step( solve( (#vl, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
+            case C_2
+            step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
+              case C_2
+              by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_snd
+          step( solve( St_C_2( 'c1', x1, s1 ) ▶₀ #vr ) )
+            case C_2
+            step( solve( St_C_2( 'c2', x2, s2 ) ▶₁ #vr ) )
+              case C_2
+              step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+                case d_0_checksign
+                by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          qed
+        qed
+      next
+        case Register_Corrupted_Bank_pk
+        by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       qed
     qed
   qed
@@ -1380,6 +1560,9 @@ next
                   step( solve( !KU( ~skB ) @ #vk.4 ) )
                     case Register_Corrupted_Bank_pk
                     step( solve( !KU( sign(~x, ~skB) ) @ #vk.3 ) )
+                      case C_1_1
+                      by step( solve( !KU( ~r ) @ #vk.6 ) )
+                    next
                       case C_2sync
                       step( solve( !KU( blind(~x, ~r) ) @ #vk.4 ) )
                         case C_1_1
@@ -1491,6 +1674,9 @@ next
                   step( solve( !KU( ~skB ) @ #vk.6 ) )
                     case Register_Corrupted_Bank_pk
                     step( solve( !KU( sign(~x, ~skB) ) @ #vk.5 ) )
+                      case C_1_1
+                      by step( solve( !KU( ~r ) @ #vk.8 ) )
+                    next
                       case C_2sync
                       step( solve( !KU( blind(~x, ~r) ) @ #vk.6 ) )
                         case C_1_1
@@ -1539,6 +1725,9 @@ next
                   step( solve( !KU( ~skB ) @ #vk.7 ) )
                     case Register_Corrupted_Bank_pk
                     step( solve( !KU( sign(~x, ~skB) ) @ #vk.6 ) )
+                      case C_1_1
+                      by step( solve( !KU( ~r ) @ #vk.9 ) )
+                    next
                       case C_2sync
                       step( solve( !KU( blind(~x, ~r) ) @ #vk.7 ) )
                         case C_1_1
@@ -1837,6 +2026,9 @@ next
                   step( solve( !KU( ~skB ) @ #vk.4 ) )
                     case Register_Corrupted_Bank_pk
                     step( solve( !KU( sign(~x, ~skB) ) @ #vk.3 ) )
+                      case C_1_2
+                      by step( solve( !KU( ~r.1 ) @ #vk.6 ) )
+                    next
                       case C_2sync
                       step( solve( !KU( blind(~x.1, ~r) ) @ #vk.4 ) )
                         case C_1_1
@@ -1948,6 +2140,9 @@ next
                   step( solve( !KU( ~skB ) @ #vk.6 ) )
                     case Register_Corrupted_Bank_pk
                     step( solve( !KU( sign(~x, ~skB) ) @ #vk.5 ) )
+                      case C_1_2
+                      by step( solve( !KU( ~r.1 ) @ #vk.8 ) )
+                    next
                       case C_2sync
                       step( solve( !KU( blind(~x.1, ~r) ) @ #vk.6 ) )
                         case C_1_1
@@ -1996,6 +2191,9 @@ next
                   step( solve( !KU( ~skB ) @ #vk.7 ) )
                     case Register_Corrupted_Bank_pk
                     step( solve( !KU( sign(~x, ~skB) ) @ #vk.6 ) )
+                      case C_1_2
+                      by step( solve( !KU( ~r.1 ) @ #vk.9 ) )
+                    next
                       case C_2sync
                       step( solve( !KU( blind(~x.1, ~r) ) @ #vk.7 ) )
                         case C_1_1
@@ -2085,6 +2283,8 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/post17/chaum_anonymity.spthy
@@ -2093,10 +2293,10 @@ analyzing: examples/post17/chaum_anonymity.spthy
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.90902s
+  processing time: 7.568797s
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)
-  DiffLemma:  Observational_equivalence : verified (673 steps)
+  DiffLemma:  Observational_equivalence : verified (739 steps)
 
 ------------------------------------------------------------------------------
 
@@ -2106,10 +2306,10 @@ summary of summaries:
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.90902s
+  processing time: 7.568797s
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)
-  DiffLemma:  Observational_equivalence : verified (673 steps)
+  DiffLemma:  Observational_equivalence : verified (739 steps)
 
 ==============================================================================
 */

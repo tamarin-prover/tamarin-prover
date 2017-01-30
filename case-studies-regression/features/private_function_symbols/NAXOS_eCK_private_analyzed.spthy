@@ -330,7 +330,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                 case Sessk_reveal_case_2
                 by contradiction /* from formulas */
               next
-                case ch2
+                case c_h2
                 solve( !KU( 'g'^(h1(<~ey, sk($B)>)*sk($A)) ) @ #vk.4 )
                   case Resp_1
                   solve( !KU( sk($A) ) @ #vk.12 )
@@ -342,7 +342,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                         solve( !KU( 'g'^(h1(<~ex, sk($A)>)*h1(<~ey, sk($B)>)) ) @ #vk.10 )
                           case Init_1
                           solve( !KU( h1(<~ey, sk($B)>) ) @ #vk.14 )
-                            case ch1
+                            case c_h1
                             solve( !KU( ~ey ) @ #vk.16 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -351,7 +351,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                         next
                           case Resp_1
                           solve( !KU( h1(<~ex, sk($A)>) ) @ #vk.14 )
-                            case ch1
+                            case c_h1
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -360,7 +360,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                         next
                           case cexp
                           solve( !KU( h1(<~ex, sk($A)>) ) @ #vk.16 )
-                            case ch1
+                            case c_h1
                             solve( !KU( ~ex ) @ #vk.19 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -373,7 +373,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                       solve( !KU( sk($B) ) @ #vk.16 )
                         case Ltk_reveal
                         solve( !KU( h1(<~ex, sk($A)>) ) @ #vk.16 )
-                          case ch1
+                          case c_h1
                           solve( !KU( ~ex ) @ #vk.18 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -387,7 +387,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                   solve( !KU( sk($A) ) @ #vk.15 )
                     case Ltk_reveal
                     solve( !KU( h1(<~ey, sk($B)>) ) @ #vk.15 )
-                      case ch1
+                      case c_h1
                       solve( !KU( sk($B) ) @ #vk.18 )
                         case Ltk_reveal
                         solve( !KU( ~ey ) @ #vk.18 )
@@ -426,7 +426,7 @@ solve( (∃ matchingSession #i3 matchingRole.
               case Sessk_reveal_case_2
               by contradiction /* from formulas */
             next
-              case ch2
+              case c_h2
               solve( !KU( 'g'^(h1(<~ey, sk($B)>)*sk($A)) ) @ #vk.4 )
                 case Resp_1
                 solve( !KU( sk($A) ) @ #vk.12 )
@@ -438,7 +438,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                       solve( !KU( 'g'^(h1(<~ex, sk($A)>)*h1(<~ey, sk($B)>)) ) @ #vk.10 )
                         case Init_1
                         solve( !KU( h1(<~ey, sk($B)>) ) @ #vk.14 )
-                          case ch1
+                          case c_h1
                           solve( !KU( ~ey ) @ #vk.16 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -447,7 +447,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                       next
                         case Resp_1
                         solve( !KU( h1(<~ex, sk($A)>) ) @ #vk.14 )
-                          case ch1
+                          case c_h1
                           solve( !KU( ~ex ) @ #vk.16 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -456,7 +456,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                       next
                         case cexp
                         solve( !KU( h1(<~ex, sk($A)>) ) @ #vk.16 )
-                          case ch1
+                          case c_h1
                           solve( !KU( ~ex ) @ #vk.19 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -469,7 +469,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                     solve( !KU( sk($B) ) @ #vk.16 )
                       case Ltk_reveal
                       solve( !KU( h1(<~ex, sk($A)>) ) @ #vk.16 )
-                        case ch1
+                        case c_h1
                         solve( !KU( ~ex ) @ #vk.18 )
                           case Ephk_reveal
                           by contradiction /* from formulas */
@@ -483,7 +483,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                 solve( !KU( sk($A) ) @ #vk.15 )
                   case Ltk_reveal
                   solve( !KU( h1(<~ey, sk($B)>) ) @ #vk.15 )
-                    case ch1
+                    case c_h1
                     solve( !KU( sk($B) ) @ #vk.18 )
                       case Ltk_reveal
                       solve( !KU( ~ey ) @ #vk.18 )
@@ -521,7 +521,7 @@ next
             case Sessk_reveal_case_2
             by contradiction /* from formulas */
           next
-            case ch2
+            case c_h2
             solve( !KU( 'g'^(h1(<~ex, sk($A)>)*sk($B)) ) @ #vk.5 )
               case Init_1
               solve( !KU( sk($B) ) @ #vk.11 )
@@ -554,7 +554,7 @@ next
         case Sessk_reveal_case_2
         by contradiction /* from formulas */
       next
-        case ch2
+        case c_h2
         solve( !KU( 'g'^(h1(<~ey, sk($B)>)*sk($A)) ) @ #vk.3 )
           case Resp_1
           solve( !KU( sk($A) ) @ #vk.11 )
@@ -590,7 +590,7 @@ analyzing: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.759841s
+  processing time: 2.91648s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ------------------------------------------------------------------------------
@@ -601,7 +601,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.759841s
+  processing time: 2.91648s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ==============================================================================

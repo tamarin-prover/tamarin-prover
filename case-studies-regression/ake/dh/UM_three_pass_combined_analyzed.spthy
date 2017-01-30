@@ -800,11 +800,11 @@ solve( (∃ #l matchingComm.
           solve( !KU( MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                           <'I', $A, $B, 'g'^~ex, Y>)
                  ) @ #vk.3 )
-            case cMAC
+            case c_MAC
             solve( !KU( first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)) ) @ #vk.5 )
-              case cfirst
+              case c_first
               solve( !KU( second(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)) ) @ #vk.3 )
-                case csecond
+                case c_second
                 solve( !KU( h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>) ) @ #vk.13 )
                   case Reveal_SessionKey_case_2
                   solve( !KU( 'g'^~ex ) @ #vk.13 )
@@ -841,7 +841,7 @@ analyzing: examples/ake/dh/UM_three_pass_combined.spthy
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 32.037237s
+  processing time: 36.694627s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
 
@@ -853,7 +853,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 32.037237s
+  processing time: 36.694627s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
 

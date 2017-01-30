@@ -119,7 +119,7 @@ solve( Client_1( S, k ) ▶₀ #i )
       case Client_1
       by contradiction /* from formulas */
     next
-      case caenc
+      case c_aenc
       solve( !KU( ~k ) @ #vk.5 )
         case Client_1
         solve( !KU( ~ltk ) @ #vk.6 )
@@ -129,7 +129,7 @@ solve( Client_1( S, k ) ▶₀ #i )
       qed
     qed
   next
-    case ch
+    case c_h
     solve( !KU( ~k ) @ #vk.1 )
       case Client_1
       solve( !KU( ~ltk ) @ #vk.2 )
@@ -180,7 +180,7 @@ solve( Client_1( S, k ) ▶₀ #i )
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( !KU( ~k ) @ #vk.5 )
         case Client_1
         solve( !KU( ~ltk ) @ #vk.6 )
@@ -190,7 +190,7 @@ solve( Client_1( S, k ) ▶₀ #i )
       qed
     qed
   next
-    case ch
+    case c_h
     solve( !KU( ~k ) @ #vk.1 )
       case Client_1
       solve( !KU( ~ltk ) @ #vk.2 )
@@ -237,7 +237,7 @@ analyzing: examples/Tutorial.spthy
 analyzed: examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.18972s
+  processing time: 0.181053s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)
@@ -251,7 +251,7 @@ summary of summaries:
 analyzed: examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.18972s
+  processing time: 0.181053s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)

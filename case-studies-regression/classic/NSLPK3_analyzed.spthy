@@ -128,7 +128,7 @@ next
               by contradiction /* cyclic */
             next
               case case_2
-              by contradiction /* impossible chain */
+              by solve( (#vr.4, 0) ~~> (#vk, 0) )
             qed
           next
             case R_1
@@ -139,10 +139,10 @@ next
               by contradiction /* cyclic */
             next
               case case_2
-              by contradiction /* impossible chain */
+              by solve( (#vr.5, 0) ~~> (#vk, 0) )
             qed
           next
-            case caenc
+            case c_aenc
             by contradiction /* from formulas */
           qed
         qed
@@ -178,7 +178,7 @@ next
                 by contradiction /* cyclic */
               next
                 case case_2
-                by contradiction /* impossible chain */
+                by solve( (#vr.6, 0) ~~> (#vk, 0) )
               qed
             next
               case R_1_case_1
@@ -192,10 +192,10 @@ next
                 by contradiction /* cyclic */
               next
                 case case_2
-                by contradiction /* impossible chain */
+                by solve( (#vr.7, 0) ~~> (#vk, 0) )
               qed
             next
-              case caenc
+              case c_aenc
               by contradiction /* from formulas */
             qed
           qed
@@ -245,7 +245,7 @@ solve( Secret( A, B, s ) ▶₀ #i )
       qed
     qed
   next
-    case caenc
+    case c_aenc
     solve( !KU( ~ni ) @ #vk.7 )
       case I_1
       solve( !KU( ~ltkA.2 ) @ #vk.9 )
@@ -310,7 +310,7 @@ next
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( !KU( aenc(<'2', ~ni, ~nr, $R>, pk(~ltkA.3)) ) @ #vk.4 )
         case R_1
         solve( !KU( ~ni ) @ #vk.3 )
@@ -327,7 +327,7 @@ next
           qed
         qed
       next
-        case caenc
+        case c_aenc
         solve( !KU( ~ni ) @ #vk.13 )
           case I_1
           solve( !KU( ~nr ) @ #vk.15 )
@@ -368,7 +368,7 @@ next
       qed
     qed
   next
-    case caenc
+    case c_aenc
     solve( !KU( ~nr ) @ #vk.6 )
       case I_2
       solve( !KU( ~ltkA.3 ) @ #vk.8 )
@@ -440,7 +440,7 @@ solve( Commit( actor, peer, params ) @ #i )
             qed
           qed
         next
-          case caenc
+          case c_aenc
           solve( !KU( ~ni ) @ #vk.5 )
             case I_1
             solve( !KU( ~ltkA.2 ) @ #vk.9 )
@@ -490,7 +490,7 @@ next
               qed
             qed
           next
-            case caenc
+            case c_aenc
             solve( !KU( ~ni.1 ) @ #vk.7 )
               case I_1
               solve( !KU( ~nr ) @ #vk.9 )
@@ -557,7 +557,7 @@ next
             qed
           qed
         next
-          case caenc
+          case c_aenc
           solve( !KU( aenc(<'2', ~ni.1, ~nr, $R>, pk(~ltkA.3)) ) @ #vk.2 )
             case R_1
             solve( (#i < #i2)  ∥ (#i2 < #i) )
@@ -580,7 +580,7 @@ next
               qed
             qed
           next
-            case caenc
+            case c_aenc
             solve( !KU( ~ni.1 ) @ #vk.13 )
               case I_1
               solve( !KU( ~nr ) @ #vk.15 )
@@ -648,7 +648,7 @@ next
           qed
         qed
       next
-        case caenc
+        case c_aenc
         solve( !KU( ~nr ) @ #vk.5 )
           case I_2
           solve( (#i < #i2)  ∥ (#i2 < #i) )
@@ -723,7 +723,7 @@ analyzing: examples/classic/NSLPK3.spthy
 analyzed: examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.743825s
+  processing time: 1.90354s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   injective_agree (all-traces): verified (92 steps)
@@ -737,7 +737,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.743825s
+  processing time: 1.90354s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   injective_agree (all-traces): verified (92 steps)

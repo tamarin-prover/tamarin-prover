@@ -467,13 +467,13 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                                em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
                                (tag(pmult(~ex, 'P'))+tag(pmult(~ex.1, 'P'))+tag(pmult(~ex.2, 'P')))>)
                      ) @ #vk )
-                case ckdf
+                case c_kdf
                 solve( !KU( tag(pmult(~ex, 'P')) ) @ #vk.13 )
-                  case ctag
+                  case c_tag
                   solve( !KU( tag(pmult(~ex.1, 'P')) ) @ #vk.14 )
-                    case ctag
+                    case c_tag
                     solve( !KU( tag(pmult(~ex.2, 'P')) ) @ #vk.15 )
-                      case ctag
+                      case c_tag
                       solve( !KU( em('P', 'P')^(~ex*~ex.1*~ex.2) ) @ #vk.9 )
                         case Proto1_case_3
                         solve( !KU( ~ex.1 ) @ #vk.19 )
@@ -528,7 +528,7 @@ analyzing: examples/ake/bilinear/TAK1_eCK_like.spthy
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 102.548518s
+  processing time: 177.099635s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 
@@ -540,7 +540,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 102.548518s
+  processing time: 177.099635s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 

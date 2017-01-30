@@ -119,6 +119,8 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/post17/denning_sacco_symmetric_cbc.spthy
@@ -127,7 +129,7 @@ analyzing: examples/post17/denning_sacco_symmetric_cbc.spthy
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.23452s
+  processing time: 0.291157s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 
@@ -139,7 +141,7 @@ summary of summaries:
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.23452s
+  processing time: 0.291157s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 
