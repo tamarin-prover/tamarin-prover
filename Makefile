@@ -117,7 +117,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mv $(TMPRES) $@
 	\rm -f $(TMPOUT)
 
-	
+
 ## Observational Equivalence
 ############################
 
@@ -178,7 +178,7 @@ obseq-case-studies:	$(OBSEQ_TARGETS)
 
 ## non-subterm convergent equational theories
 #############################################
-POST17_TRACE_CASE_STUDIES= chaum_unforgeability.spthy foo_eligibility.spthy okamoto_eligibility.spthy  needham_schroeder_symmetric_cbc.spthy denning_sacco_symmetric_cbc.spthy
+POST17_TRACE_CASE_STUDIES= chaum_unforgeability.spthy foo_eligibility.spthy okamoto_eligibility.spthy needham_schroeder_symmetric_cbc.spthy denning_sacco_symmetric_cbc.spthy
 POST17_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/post17/,$(POST17_TRACE_CASE_STUDIES)))
 
 POST17_DIFF_CASE_STUDIES= chaum_anonymity.spthy chaum_untraceability.spthy foo_vote_privacy.spthy okamoto_receipt_freeness.spthy okamoto_vote_privacy.spthy

@@ -70,10 +70,48 @@ rule Server:
 axiom singlesharedkeyperuser:
   "All A #i #j. KeyGen(A) @ i & KeyGen(A) @ j ==> #i = #j"
 
-
+// This executability test is manually solved below to limit excessive memory
+// consumption by automated heuristic.
+// To verify it, uncomment the lemma within /* */ below, and open the file in
+// interactive mode or alternatively run
+// "tamarin-prover needham_schroeder_symmetric_cbc.spthy"
+// from the command-line, without the --prove flag
+/*
 lemma executable:
   exists-trace "Ex A B k n #i #j. KeySharedInitConfirmed(A,B,k,n)@i & KeySharedRespConfirmed(B,A,k,n)@j"
-
+simplify
+solve( InitiatorWaitConfirm( $A, $B, ~na, ~k ) ▶₀ #i )
+  case Initiator2KeyAndForward
+  solve( ResponderWaitConfirm( $B, $A, ~k, ~nb ) ▶₀ #j )
+    case ResponderKeyConfirm
+    solve( !KU( enc(<<<~na, $B>, ~k>, enc(<~k, $A>, ~k.2)>, ~k.1)
+           ) @ #vk.2 )
+      case Server
+      solve( !KU( ~na ) @ #vk.8 )
+        case Initiator1Request
+        solve( !KU( enc(~nb, ~k) ) @ #vk.2 )
+          case ResponderKeyConfirm
+          solve( !KU( enc(succ(~nb), ~k) ) @ #vk.5 )
+            case Initiator3Confirm
+            solve( !KU( enc(<<<~na.1, $B.1>, ~k>, enc(<~k, $A.1>, ~k.4)>, ~k.3)
+                   ) @ #vk.9 )
+              case Server
+              solve( !KU( enc(<~k, $A>, ~k.1) ) @ #vk.6 )
+                case Initiator2KeyAndForward
+                solve( !KU( enc(<<<~na.1, $B>, ~k>, enc(<~k, $A>, ~k.1)>, ~k.2)
+                       ) @ #vk.9 )
+                  case Server
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+*/
 
 // an attack for this is found as expected
 lemma secrecy:
