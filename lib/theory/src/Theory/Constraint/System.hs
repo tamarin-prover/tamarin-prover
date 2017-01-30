@@ -39,6 +39,8 @@ module Theory.Constraint.System (
   , pcHiddenLemmas
   , pcMaudeHandle
   , pcDiffContext
+  , pcTrueSubterm
+  , pcConstantRHS
   , dpcPCLeft
   , dpcPCRight
   , dpcProtoRules
@@ -362,7 +364,9 @@ data ProofContext = ProofContext
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
        , _pcHiddenLemmas       :: [String]
-       , _pcDiffContext        :: Bool
+       , _pcDiffContext        :: Bool -- true if diff proof
+       , _pcTrueSubterm        :: Bool -- true if in all rules the RHS is a subterm of the LHS
+       , _pcConstantRHS        :: Bool -- true if there are rules with a constant RHS
        }
        deriving( Eq, Ord, Show )
 
@@ -569,9 +573,9 @@ protocolRuleWithName rules name = filter (\(Rule x _ _ _) -> case x of
 --   This ignores the number of remaining consecutive rule applications.
 intruderRuleWithName :: [RuleAC] -> IntrRuleACInfo -> [RuleAC]
 intruderRuleWithName rules name = filter (\(Rule x _ _ _) -> case x of
-                                             IntrInfo  (DestrRule i _) -> case name of
-                                                                               (DestrRule j _) -> i == j
-                                                                               _               -> False
+                                             IntrInfo  (DestrRule i _ _ _) -> case name of
+                                                                                 (DestrRule j _ _ _) -> i == j
+                                                                                 _                   -> False
                                              IntrInfo  i -> i == name
                                              ProtoInfo _ -> False) rules
     

@@ -39,6 +39,7 @@ import           Term.Narrowing.Variants.Compute
 import           Term.Rewriting.Norm
 import           Term.SubtermRule
 import           Term.Subsumption
+import           Term.Positions
 
 import           Theory.Model
 
@@ -116,8 +117,8 @@ destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
         funs = append (append n (pack "_")) f
         posname = "_" ++ show i ++ pd
         name    = append (pack posname) funs
-        irule = if (t' /= rhs && rhs `notElem` uprems')
-                then [ Rule (DestrRule name (-1))
+        irule = if {-trace (show lhs ++ " " ++ show pos ++ " " ++ show posname ++ " " ++ show rhs ++ " " ++ show (lhs `atPos` pos) ++ " " ++ show (frees rhs == []))-} (t' /= rhs && rhs `notElem` uprems')
+                then [ Rule (DestrRule name (-1) (rhs == lhs `atPos` pos) (frees rhs == []))
                             ((kdFact  t'):(map kuFact uprems'))
                             [kdFact rhs] [] ]
                 else []
@@ -209,8 +210,8 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     , invRule (ConstrRule (append (pack "_") expSymString)) kuFact return
     ] ++
     concatMap (variantsIntruder hnd id)
-      [ expRule (DestrRule (append (pack "_") expSymString) 0) kdFact (const [])
-      , invRule (DestrRule (append (pack "_") expSymString) 0) kdFact (const [])
+      [ expRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
+      , invRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
       ]
   where
     x_var_0 = varTerm (LVar "x" LSortMsg 0)
@@ -271,7 +272,7 @@ multisetIntruderRules = [mkDUnionRule [x_var, y_var] x_var]
 
 mkDUnionRule :: [LNTerm] -> LNTerm -> IntrRuleAC
 mkDUnionRule t_prems t_conc =
-    Rule (DestrRule (append (pack "_") unionSymString) 0)
+    Rule (DestrRule (append (pack "_") unionSymString) 0 True False)
          [kdFact $ fAppAC Union t_prems]
          [kdFact t_conc] []
 
@@ -285,9 +286,9 @@ bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     , emapRule  (ConstrRule (append (pack "_") emapSymString))  kuFact return
     ]
     ++ -- pmult is similar to exp
-    (variantsIntruder hnd id $ pmultRule (DestrRule (append (pack "_") pmultSymString) 0) kdFact (const []))
+    (variantsIntruder hnd id $ pmultRule (DestrRule (append (pack "_") pmultSymString) 0 True False) kdFact (const []))
     ++ -- emap is different
-    (bpVariantsIntruder hnd $ emapRule (DestrRule (append (pack "_") emapSymString) 0) kdFact (const []))
+    (bpVariantsIntruder hnd $ emapRule (DestrRule (append (pack "_") emapSymString) 0 True False) kdFact (const []))
 
   where
 
@@ -340,8 +341,8 @@ bpVariantsIntruder hnd ru = do
 
 isDRule :: ByteString -> Rule (RuleInfo t IntrRuleACInfo) -> Bool
 isDRule ruString ru = case get rInfo ru of
-    IntrInfo (DestrRule n _) | n == ruString -> True
-    _                                        -> False
+    IntrInfo (DestrRule n _ _ _) | n == ruString -> True
+    _                                            -> False
 
 isDExpRule, isDPMultRule, isDEMapRule
     :: Rule (RuleInfo t IntrRuleACInfo) -> Bool

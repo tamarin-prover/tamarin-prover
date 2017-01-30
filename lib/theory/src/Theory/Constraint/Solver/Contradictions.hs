@@ -94,7 +94,7 @@ contradictions ctxt sys = F.asum
     -- FIXME: add CR-rule
     , guard (hasForbiddenKD sys)                    *> pure ForbiddenKD
     -- FIXME: add CR-rule
-    , guard (hasImpossibleChain sys)                *> pure ImpossibleChain
+    , guard (hasImpossibleChain ctxt sys)           *> pure ImpossibleChain
     -- CR-rule *N7*
     , guard (enableDH msig && hasForbiddenExp sys)  *> pure ForbiddenExp
     -- FIXME: add CR-rule
@@ -212,22 +212,26 @@ nodesAfterLast sys = case L.get sLastAtom sys of
 -- it is possible to deduce the chain-end from the
 -- chain-start by extending the chain or replacing
 -- it with an edge.
-hasImpossibleChain :: System -> Bool
-hasImpossibleChain sys =
+hasImpossibleChain :: ProofContext -> System -> Bool
+hasImpossibleChain ctxt sys = {-trace (show (L.get pcTrueSubterm ctxt)) $-}
     any impossibleChain [ (c,p) | ChainG c p <- M.keys $ L.get sGoals sys ]
   where
     impossibleChain (c,p) = fromMaybe False $ do
         (DnK, t_start) <- kFactView $ nodeConcFact c sys
         (DnK, t_end)   <- kFactView $ nodePremFact p sys
         -- the root symbol of the chain-end if it can be determined
-        req_end_sym    <- possibleEndSyms t_end
+        req_end_sym_gen     <- possibleEndSyms t_end
+        req_end_sym_subterm <- rootSym t_end
         -- the possible root symbols after applying deconstruction
         -- rules to the chain-start if they can be determined
         poss_end_syms  <- possibleRootSyms t_start
         -- the chain is impossible if both the required root-symbol
         -- and the possible root-symbols for the chain-end can be
         -- determined and the required symbol in not possible.
-        return $ null (req_end_sym `intersect` poss_end_syms)
+        return $
+           if (L.get pcTrueSubterm ctxt)
+              then not  (req_end_sym_subterm `elem` poss_end_syms)
+              else null (req_end_sym_gen `intersect` poss_end_syms)
 
     rootSym :: LNTerm -> Maybe (Either LSort FunSym)
     rootSym t =
