@@ -48,7 +48,7 @@ import           Text.PrettyPrint.Highlight
 import           Extension.Data.Label
 import           Extension.Prelude
 
-import           Theory.Constraint.Solver.Contradictions (contradictions, contradictorySystem)
+import           Theory.Constraint.Solver.Contradictions (contradictorySystem)
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
@@ -154,9 +154,7 @@ solveAllSafeGoals ths' =
     solve ths caseNames chainsLeft = do
         simplifySystem
         ctxt <- ask
-        contradictory <- gets (contradictorySystem ctxt)
-        ctdcts <- gets (contradictions ctxt)
-        contradictoryIf =<< {-trace ("contradictory: " ++ show contradictory ++ " -- " ++ show ctdcts)-} (gets (contradictorySystem ctxt))
+        contradictoryIf =<< (gets (contradictorySystem ctxt))
         goals  <- gets openGoals
         chains <- gets unsolvedChains
         -- try to either solve a safe goal or use one of the precomputed case

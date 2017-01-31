@@ -52,7 +52,7 @@ import           Theory.Text.Pretty
 
 import           Term.Rewriting.Norm            (maybeNotNfSubterms, nf')
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Contradictions
@@ -219,25 +219,26 @@ hasImpossibleChain ctxt sys = {-trace (show (L.get pcTrueSubterm ctxt)) $-}
     impossibleChain (c,p) = fromMaybe False $ do
         (DnK, t_start) <- kFactView $ nodeConcFact c sys
         (DnK, t_end)   <- kFactView $ nodePremFact p sys
-        -- the root symbol of the chain-end if it can be determined
-        req_end_sym_gen     <- possibleEndSyms t_end
-        req_end_sym_subterm <- rootSym t_end
         -- the possible root symbols after applying deconstruction
         -- rules to the chain-start if they can be determined
         poss_end_syms  <- possibleRootSyms t_start
         -- the chain is impossible if both the required root-symbol
         -- and the possible root-symbols for the chain-end can be
-        -- determined and the required symbol in not possible.
-        return $
-           if (L.get pcTrueSubterm ctxt)
-              then not  (req_end_sym_subterm `elem` poss_end_syms)
-              else null (req_end_sym_gen `intersect` poss_end_syms)
+        -- determined and the required symbol is not possible.
+        if (L.get pcTrueSubterm ctxt)
+           then do
+              -- the root symbol of the chain-end if it can be determined
+              req_end_sym_subterm <- rootSym t_end
+              return $ not  (req_end_sym_subterm `elem` poss_end_syms)
+           else do
+              -- the root symbols of the chain-end if they can be determined
+              req_end_sym_gen     <- possibleEndSyms t_end
+              return $ null (req_end_sym_gen `intersect` poss_end_syms)
 
     rootSym :: LNTerm -> Maybe (Either LSort FunSym)
     rootSym t =
       case viewTerm t of
-        FApp sym _ 
-                   | otherwise               -> return $ Right sym
+        FApp sym _                           -> return $ Right sym
         Lit _ | sortOfLNTerm t == LSortMsg   -> Nothing
                   -- we cannot determine the root symbols of a message-variable
               | otherwise                    -> return $ Left (sortOfLNTerm t)
