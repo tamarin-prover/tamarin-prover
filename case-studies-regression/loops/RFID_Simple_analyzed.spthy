@@ -99,10 +99,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Left_case_2
@@ -113,10 +113,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Right_case_1
@@ -127,10 +127,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Right_case_2
@@ -141,10 +141,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case c_aenc
@@ -164,10 +164,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Left_case_2
@@ -178,10 +178,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Right_case_1
@@ -192,10 +192,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Right_case_2
@@ -206,10 +206,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case c_aenc
@@ -232,10 +232,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Left_case_2
@@ -246,10 +246,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Right_case_1
@@ -260,10 +260,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Right_case_2
@@ -274,10 +274,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case c_aenc
@@ -297,10 +297,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Left_case_2
@@ -311,10 +311,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Right_case_1
@@ -325,10 +325,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Decrypt_Right_case_2
@@ -339,10 +339,10 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           next
             case case_3
-            by solve( (#vl, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case c_aenc
@@ -519,7 +519,7 @@ analyzing: examples/loops/RFID_Simple.spthy
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.787123s
+  processing time: 0.669819s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)
@@ -533,7 +533,7 @@ summary of summaries:
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.787123s
+  processing time: 0.669819s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)

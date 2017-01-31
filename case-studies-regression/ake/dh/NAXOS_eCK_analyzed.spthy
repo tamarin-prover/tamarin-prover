@@ -735,7 +735,7 @@ analyzing: examples/ake/dh/NAXOS_eCK.spthy
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.093137s
+  processing time: 3.803519s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ------------------------------------------------------------------------------
@@ -746,7 +746,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.093137s
+  processing time: 3.803519s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ==============================================================================

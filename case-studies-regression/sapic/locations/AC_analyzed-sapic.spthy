@@ -758,13 +758,13 @@ next
                 case case_1
                 solve( Insert( ~n.3, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.17, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               next
                 case case_2
                 solve( Insert( ~n.3, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.17, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               qed
             next
@@ -773,13 +773,13 @@ next
                 case case_1
                 solve( Insert( ~n.3, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.16, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               next
                 case case_2
                 solve( Insert( ~n.3, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.16, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               qed
             qed
@@ -791,13 +791,13 @@ next
                 case case_1
                 solve( Insert( ~n.3, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.17, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               next
                 case case_2
                 solve( Insert( ~n.3, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.17, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               qed
             next
@@ -806,13 +806,13 @@ next
                 case case_1
                 solve( Insert( ~n.3, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.16, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               next
                 case case_2
                 solve( Insert( ~n.3, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.16, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               qed
             qed
@@ -842,13 +842,13 @@ next
                 case case_1
                 solve( Insert( ~n.2, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.17, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               next
                 case case_2
                 solve( Insert( ~n.2, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.17, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               qed
             next
@@ -857,13 +857,13 @@ next
                 case case_1
                 solve( Insert( ~n.2, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.16, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               next
                 case case_2
                 solve( Insert( ~n.2, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.16, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               qed
             qed
@@ -875,13 +875,13 @@ next
                 case case_1
                 solve( Insert( ~n.2, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.17, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               next
                 case case_2
                 solve( Insert( ~n.2, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.17, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               qed
             next
@@ -890,13 +890,13 @@ next
                 case case_1
                 solve( Insert( ~n.2, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.16, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               next
                 case case_2
                 solve( Insert( ~n.2, lio.1 ) @ #t2 )
                   case insert_state_init_1111
-                  by solve( (#vr.16, 0) ~~> (#vk, 0) )
+                  by contradiction /* impossible chain */
                 qed
               qed
             qed
@@ -937,7 +937,7 @@ next
         case insert_state_init_1211
         solve( Insert( ~n.3, lio ) @ #t2.1 )
           case insert_state_init_1111
-          by solve( (#vr.16, 0) ~~> (#vk, 0) )
+          by contradiction /* impossible chain */
         qed
       qed
     qed
@@ -970,7 +970,7 @@ analyzing: case-studies-sapic-regression/locations/AC.spthy
 analyzed: case-studies-sapic-regression/locations/AC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.931754s
+  processing time: 5.317884s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -984,7 +984,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/AC.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 6.931754s
+  processing time: 5.317884s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

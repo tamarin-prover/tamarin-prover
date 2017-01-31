@@ -669,13 +669,13 @@ next
                                   case case_1
                                   solve( State_11112111( x, t, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
                                   case case_2
                                   solve( State_11112111( x, t, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 qed
                               next
@@ -684,13 +684,13 @@ next
                                   case case_1
                                   solve( State_11112111( t, y.1, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
                                   case case_2
                                   solve( State_11112111( t, y.1, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 qed
                               qed
@@ -707,13 +707,13 @@ next
                                   case case_1
                                   solve( State_11112111( x, t, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
                                   case case_2
                                   solve( State_11112111( x, t, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 qed
                               next
@@ -722,13 +722,13 @@ next
                                   case case_1
                                   solve( State_11112111( t, y.1, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
                                   case case_2
                                   solve( State_11112111( t, y.1, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 qed
                               qed
@@ -894,13 +894,13 @@ next
                                   case case_1
                                   solve( State_11112111( x.1, t, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
                                   case case_2
                                   solve( State_11112111( x.1, t, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 qed
                               next
@@ -909,13 +909,13 @@ next
                                   case case_1
                                   solve( State_11112111( t, y, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
                                   case case_2
                                   solve( State_11112111( t, y, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 qed
                               qed
@@ -932,13 +932,13 @@ next
                                   case case_1
                                   solve( State_11112111( x.1, t, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
                                   case case_2
                                   solve( State_11112111( x.1, t, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 qed
                               next
@@ -947,13 +947,13 @@ next
                                   case case_1
                                   solve( State_11112111( t, y, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
                                   case case_2
                                   solve( State_11112111( t, y, s, sk ) ▶₀ #j )
                                     case new_rm_1111211
-                                    by solve( (#vl, 0) ~~> (#vk, 0) )
+                                    by contradiction /* impossible chain */
                                   qed
                                 qed
                               qed
@@ -2171,7 +2171,7 @@ analyzing: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_righ
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 15.726072s
+  processing time: 14.461524s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -2188,7 +2188,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 15.726072s
+  processing time: 14.461524s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

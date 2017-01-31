@@ -34,60 +34,15 @@ next
       case DDH
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dexp_case_1
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        next
-          case dexp_case_2
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_3
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_4
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_5
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        qed
+        by step( contradiction /* impossible chain */ )
       next
         case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_1
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_3
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_4
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_5
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          qed
+          by step( contradiction /* impossible chain */ )
         next
           case d_0_snd
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_1
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_3
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_4
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_5
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          qed
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           MIRRORED
@@ -104,84 +59,15 @@ next
       case DDH
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dexp_case_1
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        next
-          case dexp_case_2
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_3
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_4
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_5
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        qed
+        by step( contradiction /* impossible chain */ )
       next
         case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_1
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_3
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_4
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_5
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          qed
+          by step( contradiction /* impossible chain */ )
         next
           case d_0_snd
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_01
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_02
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_03
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_04
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_05
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_06
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_07
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_08
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_09
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_10
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_11
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_12
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_13
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          qed
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           MIRRORED
@@ -201,60 +87,15 @@ next
       case DDH
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dexp_case_1
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        next
-          case dexp_case_2
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_3
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_4
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_5
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        qed
+        by step( contradiction /* impossible chain */ )
       next
         case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_1
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_3
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_4
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_5
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          qed
+          by step( contradiction /* impossible chain */ )
         next
           case d_0_snd
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_1
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_3
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_4
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_5
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          qed
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           MIRRORED
@@ -271,84 +112,15 @@ next
       case DDH
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dexp_case_1
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        next
-          case dexp_case_2
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_3
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_4
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_5
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        qed
+        by step( contradiction /* impossible chain */ )
       next
         case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_1
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_3
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_4
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_5
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          qed
+          by step( contradiction /* impossible chain */ )
         next
           case d_0_snd
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_01
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_02
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_03
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_04
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_05
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_06
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_07
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_08
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_09
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_10
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_11
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_12
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_13
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          qed
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           MIRRORED
@@ -375,7 +147,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -398,7 +170,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -419,7 +191,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -447,7 +219,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -470,7 +242,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -491,7 +263,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -519,7 +291,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -539,7 +311,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -557,7 +329,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -582,7 +354,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -602,7 +374,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -620,7 +392,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -645,7 +417,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -668,7 +440,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -689,7 +461,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -717,7 +489,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -740,7 +512,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -761,7 +533,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -789,7 +561,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -809,7 +581,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -827,7 +599,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -852,7 +624,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -872,7 +644,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -890,7 +662,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -915,7 +687,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -935,7 +707,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -953,7 +725,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -978,7 +750,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -998,7 +770,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1016,7 +788,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1041,7 +813,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1061,7 +833,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1079,7 +851,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1104,7 +876,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1124,7 +896,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1142,7 +914,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1167,7 +939,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1190,7 +962,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1211,7 +983,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1239,7 +1011,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1259,7 +1031,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1277,7 +1049,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1302,7 +1074,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1322,7 +1094,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1340,7 +1112,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1365,7 +1137,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1385,7 +1157,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1403,7 +1175,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1428,7 +1200,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1448,7 +1220,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1466,7 +1238,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1491,7 +1263,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1511,7 +1283,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1529,7 +1301,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1554,7 +1326,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1574,7 +1346,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1592,7 +1364,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1617,7 +1389,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1637,7 +1409,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1655,7 +1427,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1680,7 +1452,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1700,7 +1472,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1718,7 +1490,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1743,7 +1515,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1763,7 +1535,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1781,7 +1553,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1806,7 +1578,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1826,7 +1598,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1844,7 +1616,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1869,7 +1641,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1889,7 +1661,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1907,7 +1679,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1932,7 +1704,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1952,7 +1724,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1970,7 +1742,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -1995,7 +1767,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2015,7 +1787,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2033,7 +1805,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2058,7 +1830,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2078,7 +1850,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2096,7 +1868,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2121,7 +1893,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2141,7 +1913,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2159,7 +1931,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2184,7 +1956,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2204,7 +1976,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2222,7 +1994,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2247,7 +2019,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2267,7 +2039,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2285,7 +2057,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2310,7 +2082,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2330,7 +2102,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2348,7 +2120,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2373,7 +2145,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2393,7 +2165,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2411,7 +2183,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2436,7 +2208,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2456,7 +2228,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2474,7 +2246,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2499,7 +2271,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2519,7 +2291,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2537,7 +2309,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2562,7 +2334,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2582,7 +2354,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2600,7 +2372,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2625,7 +2397,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2645,7 +2417,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2663,7 +2435,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2688,7 +2460,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2708,7 +2480,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2726,7 +2498,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2751,7 +2523,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2771,7 +2543,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2789,7 +2561,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2814,7 +2586,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2834,7 +2606,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2852,7 +2624,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2877,7 +2649,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2897,7 +2669,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2915,7 +2687,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2940,7 +2712,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2960,7 +2732,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -2978,7 +2750,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3003,7 +2775,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3023,7 +2795,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3041,7 +2813,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3066,7 +2838,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3086,7 +2858,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3104,7 +2876,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3129,7 +2901,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3149,7 +2921,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3167,7 +2939,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3192,7 +2964,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3212,7 +2984,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3230,7 +3002,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3259,7 +3031,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3282,7 +3054,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3303,7 +3075,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3355,7 +3127,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3378,7 +3150,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3399,7 +3171,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3451,7 +3223,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3471,7 +3243,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3489,7 +3261,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3538,7 +3310,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3558,7 +3330,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3576,7 +3348,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3625,7 +3397,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3648,7 +3420,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3669,7 +3441,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3721,7 +3493,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3744,7 +3516,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3765,7 +3537,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3817,7 +3589,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3837,7 +3609,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3855,7 +3627,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3904,7 +3676,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3924,7 +3696,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3942,7 +3714,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -3991,7 +3763,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4011,7 +3783,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4029,7 +3801,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4084,7 +3856,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4104,7 +3876,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4122,7 +3894,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4171,7 +3943,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4191,7 +3963,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4209,7 +3981,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4258,7 +4030,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4278,7 +4050,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4296,7 +4068,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4345,7 +4117,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4368,7 +4140,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4389,7 +4161,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4441,7 +4213,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4461,7 +4233,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4479,7 +4251,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4528,7 +4300,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4548,7 +4320,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4566,7 +4338,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4621,7 +4393,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4641,7 +4413,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4659,7 +4431,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4714,7 +4486,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4734,7 +4506,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4752,7 +4524,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4801,7 +4573,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4821,7 +4593,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4839,7 +4611,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4888,7 +4660,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4908,7 +4680,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4926,7 +4698,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4975,7 +4747,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -4995,7 +4767,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5013,7 +4785,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5062,7 +4834,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5082,7 +4854,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5100,7 +4872,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5149,7 +4921,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5169,7 +4941,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5187,7 +4959,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5236,7 +5008,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5256,7 +5028,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5274,7 +5046,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5329,7 +5101,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5349,7 +5121,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5367,7 +5139,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5416,7 +5188,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5436,7 +5208,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5454,7 +5226,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5503,7 +5275,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5523,7 +5295,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5541,7 +5313,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5590,7 +5362,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5610,7 +5382,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5628,7 +5400,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5677,7 +5449,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5697,7 +5469,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5715,7 +5487,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5764,7 +5536,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5784,7 +5556,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5802,7 +5574,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5851,7 +5623,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5871,7 +5643,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5889,7 +5661,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5938,7 +5710,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5958,7 +5730,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -5976,7 +5748,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6025,7 +5797,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6045,7 +5817,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6063,7 +5835,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6112,7 +5884,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6132,7 +5904,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6150,7 +5922,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6199,7 +5971,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6219,7 +5991,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6237,7 +6009,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6286,7 +6058,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6306,7 +6078,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6324,7 +6096,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6373,7 +6145,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6393,7 +6165,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6411,7 +6183,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6460,7 +6232,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6480,7 +6252,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6498,7 +6270,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6547,7 +6319,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6567,7 +6339,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6585,7 +6357,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6634,7 +6406,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6654,7 +6426,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6672,7 +6444,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6721,7 +6493,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6741,7 +6513,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6759,7 +6531,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6808,7 +6580,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6828,7 +6600,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6846,7 +6618,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6895,7 +6667,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6915,7 +6687,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6933,7 +6705,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -6982,7 +6754,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -7002,7 +6774,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -7020,7 +6792,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -7069,7 +6841,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -7089,7 +6861,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -7107,7 +6879,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -7156,7 +6928,7 @@ next
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
           next
             case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
+            by step( contradiction /* impossible chain */ )
           next
             case dexp_case_3
             by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -7176,7 +6948,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_2
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_3
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -7194,7 +6966,7 @@ next
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
             next
               case dexp_case_02
-              by step( contradiction /* non-normal exponentiation rule instance */ )
+              by step( contradiction /* impossible chain */ )
             next
               case dexp_case_03
               by step( contradiction /* non-normal exponentiation rule instance */ )
@@ -7241,152 +7013,14 @@ next
     step( simplify )
     step( solve( !KD( inv(x) ) ▶₀ #i ) )
       case DDH
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dexp_case_1
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        next
-          case dexp_case_2
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_3
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_4
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_5
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        qed
-      next
-        case d_0_snd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_fst
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_1
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_3
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_4
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_5
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          qed
-        next
-          case d_0_snd
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_1
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_3
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_4
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_5
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          qed
-        qed
-      qed
+      by step( contradiction /* impossible chain */ )
     qed
   next
     case RHS
     step( simplify )
     step( solve( !KD( inv(x) ) ▶₀ #i ) )
       case DDH
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dexp_case_1
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        next
-          case dexp_case_2
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_3
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_4
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        next
-          case dexp_case_5
-          by step( contradiction /* non-normal exponentiation rule instance */ )
-        qed
-      next
-        case d_0_snd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_fst
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_1
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_2
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_3
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_4
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_5
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          qed
-        next
-          case d_0_snd
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case dexp_case_01
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_02
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_03
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_04
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_05
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_06
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_07
-            by step( contradiction /* non-normal exponentiation rule instance */ )
-          next
-            case dexp_case_08
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_09
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_10
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_11
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_12
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          next
-            case dexp_case_13
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          qed
-        qed
-      qed
+      by step( contradiction /* impossible chain */ )
     qed
   qed
 next
@@ -7932,8 +7566,8 @@ analyzing: examples/ccs15/DDH.spthy
 analyzed: examples/ccs15/DDH.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 13.519362s
-  DiffLemma:  Observational_equivalence : verified (2644 steps)
+  processing time: 12.645728s
+  DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ------------------------------------------------------------------------------
 
@@ -7943,8 +7577,8 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 13.519362s
-  DiffLemma:  Observational_equivalence : verified (2644 steps)
+  processing time: 12.645728s
+  DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ==============================================================================
 */

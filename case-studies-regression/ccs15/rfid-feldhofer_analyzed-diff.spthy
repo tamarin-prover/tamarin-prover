@@ -111,7 +111,7 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vr.4, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Tag_Start
@@ -205,7 +205,7 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vr.4, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case Tag_Start
@@ -400,7 +400,7 @@ rule-equivalence
           qed
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -414,17 +414,17 @@ rule-equivalence
       qed
     next
       case Reader_Start
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -467,7 +467,7 @@ rule-equivalence
           qed
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -481,17 +481,17 @@ rule-equivalence
       qed
     next
       case Reader_Start
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -537,7 +537,7 @@ next
           qed
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         qed
       next
         case senc
@@ -551,18 +551,12 @@ next
       qed
     next
       case Reader_Start
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_sdec
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_fst
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        next
-          case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        qed
+        by step( contradiction /* impossible chain */ )
       next
         case senc
         step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -604,7 +598,7 @@ next
           qed
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         qed
       next
         case senc
@@ -618,18 +612,12 @@ next
       qed
     next
       case Reader_Start
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_sdec
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_fst
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        next
-          case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        qed
+        by step( contradiction /* impossible chain */ )
       next
         case senc
         step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -674,7 +662,7 @@ next
           qed
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -688,17 +676,17 @@ next
       qed
     next
       case Reader_Start
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -741,7 +729,7 @@ next
           qed
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           step( solve( Reader_Sent( ~nr ) ▶₀ #vr ) )
@@ -755,17 +743,17 @@ next
       qed
     next
       case Reader_Start
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     next
       case Tag_Start
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_sdec
         step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
           case d_0_fst
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case d_0_snd
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+          by step( contradiction /* impossible chain */ )
         next
           case pair
           step( solve( !Tag( <~k1, ~k2> ) ▶₀ #vr ) )
@@ -1515,7 +1503,7 @@ analyzing: examples/ccs15/rfid-feldhofer.spthy
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.627703s
+  processing time: 3.545379s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)
@@ -1524,7 +1512,7 @@ analyzed: examples/ccs15/rfid-feldhofer.spthy
   RHS :  executable_right (exists-trace): verified (6 steps)
   RHS :  secret_value (all-traces): verified (10 steps)
   LHS :  secret_value (all-traces): verified (10 steps)
-  DiffLemma:  Observational_equivalence : verified (387 steps)
+  DiffLemma:  Observational_equivalence : verified (383 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1534,7 +1522,7 @@ summary of summaries:
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.627703s
+  processing time: 3.545379s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)
@@ -1543,7 +1531,7 @@ analyzed: examples/ccs15/rfid-feldhofer.spthy
   RHS :  executable_right (exists-trace): verified (6 steps)
   RHS :  secret_value (all-traces): verified (10 steps)
   LHS :  secret_value (all-traces): verified (10 steps)
-  DiffLemma:  Observational_equivalence : verified (387 steps)
+  DiffLemma:  Observational_equivalence : verified (383 steps)
 
 ==============================================================================
 */

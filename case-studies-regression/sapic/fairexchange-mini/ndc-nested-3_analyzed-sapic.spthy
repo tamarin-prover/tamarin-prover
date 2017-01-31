@@ -198,7 +198,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-nested-3.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.129459s
+  processing time: 0.09842s
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)
@@ -212,7 +212,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.129459s
+  processing time: 0.09842s
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)

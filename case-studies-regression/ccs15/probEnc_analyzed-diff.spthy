@@ -26,10 +26,10 @@ rule-equivalence
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case enc
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     next
       case gen
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     qed
   next
     case RHS
@@ -42,7 +42,7 @@ rule-equivalence
       qed
     next
       case gen
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     qed
   qed
 next
@@ -52,10 +52,10 @@ next
     step( simplify )
     step( solve( !KD( penc(m, pk(k), r) ) ▶₀ #i ) )
       case enc
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     next
       case gen
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     qed
   next
     case RHS
@@ -74,7 +74,7 @@ next
       qed
     next
       case gen
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     qed
   qed
 next
@@ -84,10 +84,10 @@ next
     step( simplify )
     step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
       case enc
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     next
       case gen
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     qed
   next
     case RHS
@@ -100,7 +100,7 @@ next
       qed
     next
       case gen
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+      by step( contradiction /* impossible chain */ )
     qed
   qed
 next
@@ -230,7 +230,7 @@ analyzing: examples/ccs15/probEnc.spthy
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.217899s
+  processing time: 0.187571s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ------------------------------------------------------------------------------
@@ -241,7 +241,7 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.217899s
+  processing time: 0.187571s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================

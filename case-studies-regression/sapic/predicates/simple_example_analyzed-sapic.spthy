@@ -85,7 +85,7 @@ analyzing: case-studies-sapic-regression/predicates/simple_example.spthy
 analyzed: case-studies-sapic-regression/predicates/simple_example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.107956s
+  processing time: 0.048877s
   bogus_exists (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/predicates/simple_example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.107956s
+  processing time: 0.048877s
   bogus_exists (exists-trace): verified (3 steps)
 
 ==============================================================================

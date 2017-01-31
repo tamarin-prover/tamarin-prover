@@ -21,8 +21,11 @@ rule-equivalence
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case h
         step( solve( !KU( h($A) ) @ #vk ) )
-          case Test
-          by ATTACK // trace found
+          case c_h
+          step( solve( !KU( $A ) @ #vk.1 ) )
+            case pub
+            by ATTACK // trace found
+          qed
         qed
       qed
     qed
@@ -44,8 +47,8 @@ analyzing: examples/features/equivalence/N5N6DiffTest.spthy
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.092634s
-  DiffLemma:  Observational_equivalence : falsified - found trace (7 steps)
+  processing time: 0.078237s
+  DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
 
@@ -55,8 +58,8 @@ summary of summaries:
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.092634s
-  DiffLemma:  Observational_equivalence : falsified - found trace (7 steps)
+  processing time: 0.078237s
+  DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ==============================================================================
 */

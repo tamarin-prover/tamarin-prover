@@ -136,7 +136,7 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            by solve( (#vr.4, 0) ~~> (#vk, 0) )
+            by contradiction /* impossible chain */
           qed
         next
           case c_aenc
@@ -282,7 +282,7 @@ analyzing: examples/loops/JCS12_Typing_Example.spthy
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.267114s
+  processing time: 0.267492s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
@@ -296,7 +296,7 @@ summary of summaries:
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.267114s
+  processing time: 0.267492s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
