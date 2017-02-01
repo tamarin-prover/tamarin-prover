@@ -125,7 +125,7 @@ next
             by solve( (#vl, 0) ~~> (#vk, 0) )
           qed
         next
-          case csenc
+          case c_senc
           by contradiction /* from formulas */
         qed
       next
@@ -159,7 +159,7 @@ next
             by solve( (#vl, 0) ~~> (#vk, 0) )
           qed
         next
-          case csenc
+          case c_senc
           by contradiction /* from formulas */
         qed
       qed
@@ -196,9 +196,9 @@ solve( !Key( key ) ▶₀ #i )
   solve( splitEqs(0) )
     case split_case_1
     solve( !KU( fst(sdec(msg, ~k)) ) @ #vk.1 )
-      case cfst
+      case c_fst
       solve( !KU( sdec(msg, ~k) ) @ #vk.2 )
-        case csdec
+        case c_sdec
         solve( !KU( ~k ) @ #vk.3 )
           case Reveal_Key
           by contradiction /* from formulas */
@@ -217,7 +217,7 @@ solve( !Key( key ) ▶₀ #i )
         qed
       qed
     next
-      case csenc
+      case c_senc
       solve( !KU( ~k ) @ #vk.3 )
         case Reveal_Key
         by contradiction /* from formulas */
@@ -229,7 +229,7 @@ solve( !Key( key ) ▶₀ #i )
       case Initiator
       by contradiction /* non-normal terms */
     next
-      case csenc
+      case c_senc
       solve( !KU( ~k ) @ #vk.3 )
         case Reveal_Key
         by contradiction /* from formulas */
@@ -269,7 +269,8 @@ formula terms:
   The only allowed terms are public names and bound node and message
   variables. If you encounter free message variables, then you might
   have forgotten a #-prefix. Sort prefixes can only be dropped where
-  this is unambiguous.
+  this is unambiguous. Moreover, reducible function symbols are
+  disallowed.
 */
 
 end
@@ -287,7 +288,7 @@ analyzing: examples/loops/Typing_and_Destructors.spthy
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.232517s
+  processing time: 0.261567s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -303,7 +304,7 @@ summary of summaries:
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.232517s
+  processing time: 0.261567s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   

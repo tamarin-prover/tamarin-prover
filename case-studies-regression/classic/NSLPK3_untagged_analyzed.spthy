@@ -142,7 +142,7 @@ next
               by contradiction /* impossible chain */
             qed
           next
-            case caenc
+            case c_aenc
             by contradiction /* from formulas */
           qed
         qed
@@ -202,7 +202,7 @@ next
                 by contradiction /* impossible chain */
               qed
             next
-              case caenc
+              case c_aenc
               by contradiction /* from formulas */
             qed
           qed
@@ -310,7 +310,7 @@ solve( Secret( A, B, s ) ▶₀ #i )
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( !KU( ~ni ) @ #vk.5 )
         case I_1
         solve( !KU( ~ltkA.2 ) @ #vk.7 )
@@ -602,7 +602,7 @@ next
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( !KU( ~nr ) @ #vk.3 )
         case I_2
         solve( (∃ #j. (!KU( ~nr ) @ #j) ∧ #j < #vr.5)  ∥
@@ -707,7 +707,7 @@ analyzing: examples/classic/NSLPK3_untagged.spthy
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.138556s
+  processing time: 3.629645s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -720,7 +720,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.138556s
+  processing time: 3.629645s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

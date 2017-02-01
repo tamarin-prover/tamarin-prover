@@ -260,7 +260,7 @@ solve( (∃ matching #i3 #i4 sid.
                 case Reveal_session_key_case_2
                 by contradiction /* from formulas */
               next
-                case ckdf
+                case c_kdf
                 solve( !KU( em(hp($A), hp($B))^(~ex*~ey*~s) ) @ #vk.5 )
                   case Init_1_case_1
                   by solve( !KU( ~ey ) @ #vk.10 )
@@ -346,7 +346,7 @@ solve( (∃ matching #i3 #i4 sid.
               case Reveal_session_key_case_2
               by contradiction /* from formulas */
             next
-              case ckdf
+              case c_kdf
               solve( !KU( em(hp($A), hp($B))^(~ex*~ey*~x) ) @ #vk.5 )
                 case Init_1_case_1
                 by solve( !KU( ~ey ) @ #vk.10 )
@@ -435,7 +435,7 @@ next
         case Reveal_session_key_case_2
         by contradiction /* from formulas */
       next
-        case ckdf
+        case c_kdf
         solve( splitEqs(0) )
           case split_case_1
           solve( !KU( Y^~ex ) @ #vk.5 )
@@ -1116,7 +1116,7 @@ next
         case Reveal_session_key_case_2
         by contradiction /* from formulas */
       next
-        case ckdf
+        case c_kdf
         solve( splitEqs(0) )
           case split_case_1
           solve( !KU( X^~ey ) @ #vk.5 )
@@ -1806,7 +1806,7 @@ analyzing: examples/ake/bilinear/Scott.spthy
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 21.603382s
+  processing time: 16.61189s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 
@@ -1818,7 +1818,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 21.603382s
+  processing time: 16.61189s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 

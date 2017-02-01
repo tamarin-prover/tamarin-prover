@@ -23,12 +23,12 @@ module Theory.Tools.IntruderRules (
   , isDPMultRule
   ) where
 
-import           Control.Basics
+import           Control.Basics hiding (empty)
 import           Control.Monad.Reader
 
 import           Data.List
-import qualified Data.Set                        as S
-import           Data.ByteString (ByteString)
+import qualified Data.Set                          as S
+import           Data.ByteString.Char8 (ByteString, append, pack, empty)
 
 import           Extension.Data.Label
 
@@ -38,8 +38,8 @@ import           Term.Maude.Signature
 import           Term.Narrowing.Variants.Compute
 import           Term.Rewriting.Norm
 import           Term.SubtermRule
-import           Term.Positions
 import           Term.Subsumption
+import           Term.Positions
 
 import           Theory.Model
 
@@ -100,51 +100,47 @@ specialIntruderRules diff =
 -- Subterm Intruder theory
 ------------------------------------------------------------------------------
 
--- | @destuctionRules st@ returns the destruction rules for the given
--- subterm rule @st@
-destructionRules :: Bool -> StRule -> [IntrRuleAC]
-destructionRules _    (StRule lhs@(viewTerm -> FApp (NoEq (f,_)) _) (RhsPosition pos)) =
-    go [] lhs pos
+-- | @destuctionRules diff st@ returns the destruction rules for the given
+-- context subterm rule @st@
+destructionRules :: Bool -> CtxtStRule -> [IntrRuleAC]
+destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs)) | (bool || (frees rhs /= []) || (containsPrivate rhs)) =
+    go [] lhs pos empty []
   where
-    rhs = lhs `atPos` pos
-    go _      _                       []     = []
-    -- term already in premises
-    go _      (viewTerm -> FApp _ _)  (_:[]) = []
-    go uprems (viewTerm -> FApp _ as) (i:p)  =
-        irule ++ go uprems' t' p
+    go _      _                       []     _ _                     = []
+    -- term already in premises, but necessary for constant conclusions
+    go _      (viewTerm -> FApp _ _)  (_:[]) _ _ | (frees rhs /= []) = []
+    go uprems (viewTerm -> FApp (NoEq (f,(_,Public))) as) (i:p) n pd =
+        irule ++ go uprems' t' p funs posname
       where
         uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
         t'      = as!!i
-        irule = if (t' /= rhs && rhs `notElem` uprems')
-                then [ Rule (DestrRule f)
+        funs = append (append n (pack "_")) f
+        posname = "_" ++ show i ++ pd
+        name    = append (pack posname) funs
+        irule = if {-trace (show lhs ++ " " ++ show pos ++ " " ++ show posname ++ " " ++ show rhs ++ " " ++ show (lhs `atPos` pos) ++ " " ++ show (frees rhs == []))-} (t' /= rhs && rhs `notElem` uprems')
+                then [ Rule (DestrRule name (-1) (rhs == lhs `atPos` pos) (frees rhs == []))
                             ((kdFact  t'):(map kuFact uprems'))
                             [kdFact rhs] [] ]
                 else []
-    go _      (viewTerm -> Lit _)     (_:_)  =
-        error "IntruderRules.destructionRules: impossible, position invalid"
-        
-destructionRules _    (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (RhsGround rhs@(viewTerm -> FApp (NoEq (_,(0,Private))) []))) = destrRulesForConstant subterms f rhs
-destructionRules True (StRule (viewTerm -> FApp (NoEq (f,_)) subterms) (RhsGround rhs@(viewTerm -> FApp (NoEq (_,(0,Public)))  []))) = destrRulesForConstant subterms f rhs
-destructionRules _    _                                                                                                              = []
-
--- returns destructor rules for equations with ground RHS
-destrRulesForConstant :: [LNTerm] -> ByteString -> LNTerm -> [IntrRuleAC]
-destrRulesForConstant subterms f rhs =
--- FIXME (JD): avoid unnecessary combinations of KU and KD facts
-    go [] subterms
-  where
-    go _    []     = []
-    go done (x:xs) = (Rule (DestrRule f) ((kdFact  x):(map kuFact (done ++ xs))) [kdFact rhs] []):(go (x:done) xs)
+    go _      (viewTerm -> FApp (NoEq (_,(_,Private))) _) _     _ _  = []
+    go _      (viewTerm -> Lit _)                         (_:_) _ _  =
+        error "IntruderRules.destructionRules: impossible, position invalid"   
+     
+destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) 
+    | (bool || (frees rhs /= []) || (containsPrivate rhs)) = 
+       destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) 
+           ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
+destructionRules _ _ = []
 
 -- returns all equations with private constructors on the RHS
-privateConstructorEquations :: [StRule] -> [(LNTerm, ByteString)]
+privateConstructorEquations :: [CtxtStRule] -> [(LNTerm, ByteString)]
 privateConstructorEquations rs = case rs of
     []    -> []
-    (StRule lhs (RhsGround (viewTerm -> FApp (NoEq (vname,(0,Private))) []))):xs
+    (CtxtStRule lhs (StRhs _ (viewTerm -> FApp (NoEq (vname,(0,Private))) _))):xs
           -> (lhs, vname):(privateConstructorEquations xs)
     _:xs  -> privateConstructorEquations xs
     
--- given equations with priavte constructors on the RHS and a list of private function names x,
+-- given equations with private constructors on the RHS and a list of private function names x,
 -- returns the list of all such constructors such that the LHS only contains public functions or functions in x
 derivablePrivateConstants :: [(LNTerm, ByteString)] -> [ByteString] -> [ByteString]
 derivablePrivateConstants eqs x =
@@ -155,18 +151,19 @@ derivablePrivateConstants eqs x =
             x
 
 -- | @privateConstructorRules st@ returns the constructor rules for private constants that are consequences of rewrite rules in @st@
-privateConstructorRules :: [StRule] -> [IntrRuleAC]
+privateConstructorRules :: [CtxtStRule] -> [IntrRuleAC]
 privateConstructorRules rules = map createRule $ derivablePrivateConstants (privateConstructorEquations rules) []
   where
     -- creates a constructor rule for constant s
-    createRule s = Rule (ConstrRule s) [] [concfact] [concfact]
+    createRule s = Rule (ConstrRule (append (pack "_") s)) [] [concfact] [concfact]
       where m        = fAppNoEq (s,(0,Private)) []
             concfact = kuFact m
 
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
 minimizeIntruderRules :: Bool -> [IntrRuleAC] -> [IntrRuleAC]
-minimizeIntruderRules diff rules = if diff then rules else
-    go [] rules
+minimizeIntruderRules diff rules = 
+    filter (\x -> not $ isDoublePremiseRule x) 
+      $ if diff then rules else go [] rules
   where
     go checked [] = reverse checked
     go checked (r@(Rule _ prems concs _):unchecked) = go checked' unchecked
@@ -176,6 +173,13 @@ minimizeIntruderRules diff rules = if diff then rules else
                           (checked++unchecked)
                    then checked
                    else r:checked
+    
+    -- We assume that the KD-Fact is the first fact, which is the case in destructionRules above
+    isDoublePremiseRule (Rule _ (prem@(Fact KDFact [t]):prems) concs _) = 
+        frees concs == []
+         && not (any containsPrivate (t:(concat $ map getFactTerms prems)))
+         && isMsgVar t && any (==(Fact KUFact [t])) prems
+    isDoublePremiseRule _                                               = False
 
 -- | @subtermIntruderRules diff maudeSig@ returns the set of intruder rules for
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
@@ -190,11 +194,10 @@ constructionRules :: NoEqFunSig -> [IntrRuleAC]
 constructionRules fSig =
     [ createRule s k | (s,(k,Public)) <- S.toList fSig ]
   where
-    createRule s k = Rule (ConstrRule s) (map kuFact vars) [concfact] [concfact]
+    createRule s k = Rule (ConstrRule (append (pack "_") s)) (map kuFact vars) [concfact] [concfact]
       where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
             m        = fAppNoEq (s,(k,Public)) vars
             concfact = kuFact m
-
 
 ------------------------------------------------------------------------------
 -- Diffie-Hellman Intruder Rules
@@ -203,19 +206,19 @@ constructionRules fSig =
 -- | @dhIntruderRules@ computes the intruder rules for DH
 dhIntruderRules :: Bool -> WithMaude [IntrRuleAC]
 dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
-    [ expRule ConstrRule kuFact return
-    , invRule ConstrRule kuFact return
+    [ expRule (ConstrRule (append (pack "_") expSymString)) kuFact return
+    , invRule (ConstrRule (append (pack "_") expSymString)) kuFact return
     ] ++
     concatMap (variantsIntruder hnd id)
-      [ expRule DestrRule kdFact (const [])
-      , invRule DestrRule kdFact (const [])
+      [ expRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
+      , invRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
       ]
   where
     x_var_0 = varTerm (LVar "x" LSortMsg 0)
     x_var_1 = varTerm (LVar "x" LSortMsg 1)
 
     expRule mkInfo kudFact mkAction =
-        Rule (mkInfo expSymString) [bfact, efact] [concfact] (mkAction concfact)
+        Rule mkInfo [bfact, efact] [concfact] (mkAction concfact)
       where
         bfact = kudFact x_var_0
         efact = kuFact  x_var_1
@@ -223,7 +226,7 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
         concfact = kudFact conc
 
     invRule mkInfo kudFact mkAction =
-        Rule (mkInfo invSymString) [bfact] [concfact] (mkAction concfact)
+        Rule mkInfo [bfact] [concfact] (mkAction concfact)
       where
         bfact    = kudFact x_var_0
         conc     = fAppInv x_var_0
@@ -269,7 +272,7 @@ multisetIntruderRules = [mkDUnionRule [x_var, y_var] x_var]
 
 mkDUnionRule :: [LNTerm] -> LNTerm -> IntrRuleAC
 mkDUnionRule t_prems t_conc =
-    Rule (DestrRule unionSymString)
+    Rule (DestrRule (append (pack "_") unionSymString) 0 True False)
          [kdFact $ fAppAC Union t_prems]
          [kdFact t_conc] []
 
@@ -279,13 +282,13 @@ mkDUnionRule t_prems t_conc =
 
 bpIntruderRules :: Bool -> WithMaude [IntrRuleAC]
 bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
-    [ pmultRule ConstrRule kuFact return
-    , emapRule  ConstrRule kuFact return
+    [ pmultRule (ConstrRule (append (pack "_") pmultSymString)) kuFact return
+    , emapRule  (ConstrRule (append (pack "_") emapSymString))  kuFact return
     ]
     ++ -- pmult is similar to exp
-    (variantsIntruder hnd id $ pmultRule DestrRule kdFact (const []))
+    (variantsIntruder hnd id $ pmultRule (DestrRule (append (pack "_") pmultSymString) 0 True False) kdFact (const []))
     ++ -- emap is different
-    (bpVariantsIntruder hnd $ emapRule DestrRule kdFact (const []) )
+    (bpVariantsIntruder hnd $ emapRule (DestrRule (append (pack "_") emapSymString) 0 True False) kdFact (const []))
 
   where
 
@@ -293,7 +296,7 @@ bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     x_var_1 = varTerm (LVar "x" LSortMsg 1)
 
     pmultRule mkInfo kudFact mkAction =
-        Rule (mkInfo pmultSymString) [bfact, efact] [concfact] (mkAction concfact)
+        Rule mkInfo [bfact, efact] [concfact] (mkAction concfact)
       where
         bfact = kudFact x_var_0
         efact = kuFact  x_var_1
@@ -301,7 +304,7 @@ bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
         concfact = kudFact conc
 
     emapRule mkInfo kudFact mkAction =
-        Rule (mkInfo emapSymString) [bfact, efact] [concfact] (mkAction concfact)
+        Rule mkInfo [bfact, efact] [concfact] (mkAction concfact)
       where
         bfact = kudFact x_var_0
         efact = kudFact  x_var_1
@@ -338,8 +341,8 @@ bpVariantsIntruder hnd ru = do
 
 isDRule :: ByteString -> Rule (RuleInfo t IntrRuleACInfo) -> Bool
 isDRule ruString ru = case get rInfo ru of
-    IntrInfo (DestrRule n) | n == ruString -> True
-    _                                      -> False
+    IntrInfo (DestrRule n _ _ _) | n == ruString -> True
+    _                                            -> False
 
 isDExpRule, isDPMultRule, isDEMapRule
     :: Rule (RuleInfo t IntrRuleACInfo) -> Bool

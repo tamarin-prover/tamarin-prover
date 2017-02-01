@@ -283,7 +283,7 @@ solve( (¬(role = 'I'))  ∥
                 solve( !Pk( $B, 'g'^~x.1 ) ▶₂ #k )
                   case Register_key_honest
                   solve( !KU( h(<z, 'g'^(~eb*~x), $A, $B>) ) @ #vk )
-                    case ch
+                    case c_h
                     solve( !KU( 'g'^(~eb*~x) ) @ #vk.5 )
                       case Register_key_honest_case_2
                       solve( !KU( ~x ) @ #vk.9 )
@@ -334,7 +334,7 @@ analyzing: examples/ake/dh/UM_one_pass_attack.spthy
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.049473s
+  processing time: 3.235604s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 
@@ -346,7 +346,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.049473s
+  processing time: 3.235604s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 

@@ -1,0 +1,134 @@
+theory Okamoto_Eligibilty
+begin
+
+
+/*
+ * Protocol: Protocol by Okamoto 
+ * Modeler: Charles Duménil
+ * Date: July 2016	
+ * Source: Formal verification of voting and auction protocols by Jannik Dreier
+ * Status: Working
+ */
+
+
+/*
+  Protocol Okamoto {
+    Phase 1:
+     V -> A: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skV)>
+     A -> V: <blind(tdcommit(vote,r,td),b), sign(blind(tdcommit(vote,r,td),b),skA)>    "Registered" + "Check signature Voter"
+    Phase 2:
+     V -> C: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                      "Check signature Admin" + "Check commit"
+     V -> T: <vote, r, x>
+    Phase 3
+     C -> Pub: <tdcommit(vote,r,td), sign(tdcommit(vote,r,td),skA)>                    "Check signature Admin"
+     T -> Pub: vote                                                                    "VotePublished"
+  }
+*/
+
+
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, tdcommit/3, open/2, f/4
+equations: checksign( sign(m,sk), pk(sk) ) = m,
+           unblind( blind(m,b), b ) = m,
+           unblind( sign( blind(m,b), sk), b ) = sign(m,sk),
+           open( tdcommit(m,r,td), r ) = m,
+           tdcommit( m2,f(m1,r,td,m2), td ) = tdcommit(m1,r,td),
+           open( tdcommit(m1,r,td), f(m1,r,td,m2) ) = m2,
+           f(m1, f (m, r, td, m1), td, m2) = f(m, r, td, m2)    // The two last rules are needed for convergence
+
+
+// Public key infrastructure
+
+rule Register_Voter_pk:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk($V, ~ltkV), !Pk($V, pk(~ltkV)), Out(pk(~ltkV)) ]
+
+rule Register_Admin_pk:
+  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+
+
+//Rules
+
+rule V_1:
+  let x = tdcommit( $vote , ~r, ~td )
+      e = blind( x, ~b )
+      s = sign ( e , ~ltkV )
+  in
+    [ Fr( ~r ), Fr( ~b ), Fr(~td), !Ltk( V, ~ltkV ) ]
+  --[ Voted($vote), Create_V_1(e)]->
+    [ Out( < e , s > ), St_V_1( V, $vote, ~r, ~b, ~td ) ]
+
+rule A_1:
+  let s = sign( e, ~ltkV )
+      d = sign( e, ~ltkA )
+  in
+    [ In( < e , s >), !AdminLtk( A, ~ltkA ), !Pk( V, pk(~ltkV) ) ]
+  --[ Registered(e), In_A_1(e) ]->
+    [ Out( < e , d > ) ]
+
+rule V_2:
+  let e = blind(tdcommit($vote,~r,~td),~b)
+      d = sign(blind(tdcommit($vote,~r,~td),~b),~ltkA)
+      y = sign(tdcommit($vote,~r,~td),~ltkA)
+      x = tdcommit($vote,~r,~td)
+  in
+    [ In(< e, d>), St_V_1( V, $vote, ~r, ~b, ~td),  !AdminPk(A, pk(~ltkA)) ]
+  --[  ]->     
+    [ Out( <x,y> ) , P_Ch_Timeliness( $vote, ~r, x ) ]
+
+rule C_1:
+  let y = sign( x, ~ltkA )
+  in
+    [ In( <x,y> ), !AdminPk(A, pk(~ltkA))]
+  --[  ]->
+    [ Out( <x,y> ) ]
+
+rule T_1:
+    [ P_Ch_Timeliness( $vote, ~r, x ) ]
+  --[ VotePublished( x ) ]->
+    [ Out( $vote ) ]
+
+
+// Typing lemma
+
+lemma types [typing]:
+  " All e #i. In_A_1(e) @ i
+  ==>
+  Ex #j . Create_V_1( e )@j & j<i "
+
+
+// Executability
+
+lemma exec:
+  exists-trace
+  " Ex x #i. VotePublished( x )@i "
+
+
+// Property
+
+lemma eligibility:
+  " 
+  All x #j.
+  VotePublished(x)@j
+  ==> 
+  ( Ex b #i.  Registered( blind(x,b) )@i & #i < #j )"
+
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equational_theories/okamoto_eligibility.spthy
+
+  types (all-traces): verified (16 steps)
+  exec (exists-trace): verified (6 steps)
+  eligibility (all-traces): verified (5 steps)
+
+==============================================================================
+
+real	0m8.367s
+user	0m19.356s
+sys	0m7.120s
+
+*/
+
+end
+

@@ -276,7 +276,7 @@ analyzing: case-studies-sapic-regression/locations/AKE.spthy
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.744096s
+  processing time: 0.594169s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 
@@ -288,7 +288,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.744096s
+  processing time: 0.594169s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 

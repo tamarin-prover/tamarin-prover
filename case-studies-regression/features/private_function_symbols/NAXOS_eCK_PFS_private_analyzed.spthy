@@ -307,7 +307,7 @@ solve( (∃ matchingSession #i3 matchingRole.
           case Init_1
           solve( !KU( h2(<z, 'g'^(h1(<~ex, sk($A)>)*sk($B)), z.1, $A, $B>)
                  ) @ #vk )
-            case ch2
+            case c_h2
             solve( !KU( 'g'^(h1(<~ex, sk($A)>)*sk($B)) ) @ #vk.5 )
               case Init_1
               solve( !KU( sk($B) ) @ #vk.11 )
@@ -351,7 +351,7 @@ analyzing: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spt
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.023036s
+  processing time: 2.294646s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
 ------------------------------------------------------------------------------
@@ -362,7 +362,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.023036s
+  processing time: 2.294646s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
 ==============================================================================

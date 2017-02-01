@@ -651,7 +651,7 @@ next
                           next
                             case case_2
                             solve( !KU( aenc(<m, y>, pk(~n.1)) ) @ #vk )
-                              case caenc
+                              case c_aenc
                               by contradiction /* from formulas */
                             next
                               case out_aenc_lm_rm_pksk_111121111
@@ -876,7 +876,7 @@ next
                           next
                             case case_2
                             solve( !KU( aenc(<x, m>, pk(~n.1)) ) @ #vk )
-                              case caenc
+                              case c_aenc
                               by contradiction /* from formulas */
                             next
                               case out_aenc_lm_rm_pksk_111121111
@@ -1493,12 +1493,12 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                                         next
                                           case case_2
                                           solve( !KU( aenc(<~n, y>, pk(~n.5)) ) @ #vk.2 )
-                                            case caenc
+                                            case c_aenc
                                             by contradiction /* cyclic */
                                           next
                                             case out_aenc_lm_rm_pksk_111121111
                                             solve( !KU( aenc(<~n.1, y>, pk(~n.5)) ) @ #vk.4 )
-                                              case caenc
+                                              case c_aenc
                                               by contradiction /* cyclic */
                                             qed
                                           qed
@@ -1649,12 +1649,12 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                                         next
                                           case case_2
                                           solve( !KU( aenc(<~n, y>, pk(~n.5)) ) @ #vk.2 )
-                                            case caenc
+                                            case c_aenc
                                             by contradiction /* cyclic */
                                           next
                                             case out_aenc_lm_rm_pksk_111121111
                                             solve( !KU( aenc(<x, ~n.1>, pk(~n.5)) ) @ #vk.4 )
-                                              case caenc
+                                              case c_aenc
                                               by contradiction /* cyclic */
                                             next
                                               case out_aenc_lm_rm_pksk_111121111
@@ -1940,7 +1940,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                                         next
                                           case case_2
                                           solve( !KU( aenc(<x, ~n>, pk(~n.5)) ) @ #vk.2 )
-                                            case caenc
+                                            case c_aenc
                                             by contradiction /* cyclic */
                                           qed
                                         qed
@@ -2090,7 +2090,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                                         next
                                           case case_2
                                           solve( !KU( aenc(<x, ~n>, pk(~n.5)) ) @ #vk.2 )
-                                            case caenc
+                                            case c_aenc
                                             by contradiction /* cyclic */
                                           qed
                                         qed
@@ -2171,7 +2171,7 @@ analyzing: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_righ
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 16.079298s
+  processing time: 14.461524s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -2188,7 +2188,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 16.079298s
+  processing time: 14.461524s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

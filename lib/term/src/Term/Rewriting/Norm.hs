@@ -94,13 +94,13 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FAppNoEq _ ts    -> all go ts
             FAppC _    ts    -> all go ts
 
-        struleApplicable t (StRule lhs rhs) =
+        struleApplicable t (CtxtStRule lhs rhs) =
             case solveMatchLNTerm (t `matchWith` lhs) `runReader` hnd of
               []  -> False
               _:_ -> case rhs of
-                       RhsPosition _ -> True
-                       RhsGround   s -> not (t == s)
+                       StRhs [] s -> not (t == s)
                            -- reducible, but RHS might be already equal to t
+                       StRhs _  _ -> True
 
         invalidMult ts = case partition isInverse ts of
             ([],_)     -> False

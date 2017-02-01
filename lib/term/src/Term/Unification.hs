@@ -54,7 +54,7 @@ module Term.Unification (
   , irreducibleFunSyms
   , noEqFunSyms
   , addFunSym
-  , addStRule
+  , addCtxtStRule
 
   -- * Convenience exports
   , module Term.Substitution

@@ -69,9 +69,13 @@ module Theory.Model.Rule (
   , isISendRule
   , isCoerceRule
   , isProtocolRule
+  , isConstantRule
+  , isSubtermRule
   , containsNewVars
   , getRuleName
   , getRuleNameDiff
+  , getRemainingRuleApplications
+  , setRemainingRuleApplications
   , nfRule
   , isTrivialProtoVariantAC
   , getNewVariables
@@ -336,7 +340,10 @@ instance HasFrees ProtoRuleACInstInfo where
 -- | An intruder rule modulo AC is described by its name.
 data IntrRuleACInfo =
     ConstrRule BC.ByteString
-  | DestrRule BC.ByteString
+  | DestrRule BC.ByteString Int Bool Bool
+  -- the number of remaining consecutive applications of this destruction rule, 0 means unbounded, -1 means not yet determined
+  -- true if the RHS is a true subterm of the LHS
+  -- true if the RHS is a constant
   | CoerceRule
   | IRecvRule
   | ISendRule
@@ -422,9 +429,9 @@ instance HasRuleName RuleACInst where
 -- | True iff the rule is a destruction rule.
 isDestrRule :: HasRuleName r => r -> Bool
 isDestrRule ru = case ruleName ru of
-  IntrInfo (DestrRule _) -> True
-  IntrInfo IEqualityRule -> True
-  _                      -> False
+  IntrInfo (DestrRule _ _ _ _) -> True
+  IntrInfo IEqualityRule   -> True
+  _                        -> False
 
 -- | True iff the rule is an iequality rule.
 isIEqualityRule :: HasRuleName r => r -> Bool
@@ -463,6 +470,20 @@ isISendRule = (IntrInfo ISendRule ==) . ruleName
 isCoerceRule :: HasRuleName r => r -> Bool
 isCoerceRule = (IntrInfo CoerceRule ==) . ruleName
 
+-- | True iff the rule is a destruction rule with constant RHS.
+isConstantRule :: HasRuleName r => r -> Bool
+isConstantRule ru = case ruleName ru of
+  IntrInfo (DestrRule _ _ _ constant) -> constant
+  _                                   -> False
+
+-- | True iff the rule is a destruction rule where the RHS is a true subterm of the LHS.
+isSubtermRule :: HasRuleName r => r -> Bool
+isSubtermRule ru = case ruleName ru of
+  IntrInfo (DestrRule _ _ subterm _) -> subterm
+  IntrInfo IEqualityRule             -> True
+  -- the equality rule is considered a subterm rule, as it has no RHS.
+  _                                  -> False
+
 -- | True if the messages in premises and conclusions are in normal form
 nfRule :: Rule i -> WithMaude Bool
 nfRule (Rule _ ps cs as) = reader $ \hnd ->
@@ -491,14 +512,14 @@ isTrivialProtoVariantAC (Rule info ps as cs) (Rule _ ps' as' cs') =
 getRuleName :: HasRuleName (Rule i) => Rule i -> String
 getRuleName ru = case ruleName ru of
                       IntrInfo i  -> case i of
-                                      ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
-                                      DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
-                                      CoerceRule      -> "Coerce"
-                                      IRecvRule       -> "Recv"
-                                      ISendRule       -> "Send"
-                                      PubConstrRule   -> "PubConstr"
-                                      FreshConstrRule -> "FreshConstr"
-                                      IEqualityRule   -> "Equality"
+                                      ConstrRule x      -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
+                                      DestrRule x _ _ _ -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
+                                      CoerceRule        -> "Coerce"
+                                      IRecvRule         -> "Recv"
+                                      ISendRule         -> "Send"
+                                      PubConstrRule     -> "PubConstr"
+                                      FreshConstrRule   -> "FreshConstr"
+                                      IEqualityRule     -> "Equality"
                       ProtoInfo p -> case p of
                                       FreshRule   -> "FreshRule"
                                       StandRule s -> s
@@ -507,18 +528,31 @@ getRuleName ru = case ruleName ru of
 getRuleNameDiff :: HasRuleName (Rule i) => Rule i -> String
 getRuleNameDiff ru = case ruleName ru of
                       IntrInfo i  -> "Intr" ++ case i of
-                                      ConstrRule x    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
-                                      DestrRule x     -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
-                                      CoerceRule      -> "Coerce"
-                                      IRecvRule       -> "Recv"
-                                      ISendRule       -> "Send"
-                                      PubConstrRule   -> "PubConstr"
-                                      FreshConstrRule -> "FreshConstr"
-                                      IEqualityRule   -> "Equality"
+                                      ConstrRule x      -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
+                                      DestrRule x _ _ _ -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
+                                      CoerceRule        -> "Coerce"
+                                      IRecvRule         -> "Recv"
+                                      ISendRule         -> "Send"
+                                      PubConstrRule     -> "PubConstr"
+                                      FreshConstrRule   -> "FreshConstr"
+                                      IEqualityRule     -> "Equality"
                       ProtoInfo p -> "Proto" ++ case p of
                                       FreshRule   -> "FreshRule"
                                       StandRule s -> s
-       
+
+-- | Returns the remaining rule applications within the deconstruction chain if possible, 0 otherwise
+getRemainingRuleApplications :: RuleACInst -> Int
+getRemainingRuleApplications ru = case ruleName ru of
+  IntrInfo (DestrRule _ i _ _) -> i
+  _                            -> 0
+
+-- | Sets the remaining rule applications within the deconstruction chain if possible
+setRemainingRuleApplications :: RuleACInst -> Int -> RuleACInst
+setRemainingRuleApplications (Rule (IntrInfo (DestrRule name _ subterm constant)) prems concs acts) i
+    = Rule (IntrInfo (DestrRule name i subterm constant)) prems concs acts
+setRemainingRuleApplications rule _
+    = rule
+
 -- | Converts a protocol rule to its "left" variant
 getLeftRule :: ProtoRuleE ->  ProtoRuleE
 getLeftRule (Rule ri ps cs as) =
@@ -797,14 +831,15 @@ showRuleCaseName =
 
 prettyIntrRuleACInfo :: Document d => IntrRuleACInfo -> d
 prettyIntrRuleACInfo rn = text $ case rn of
-    IRecvRule       -> "irecv"
-    ISendRule       -> "isend"
-    CoerceRule      -> "coerce"
-    FreshConstrRule -> "fresh"
-    PubConstrRule   -> "pub"
-    IEqualityRule   -> "iequality"
-    ConstrRule name -> prefixIfReserved ('c' : BC.unpack name)
-    DestrRule name  -> prefixIfReserved ('d' : BC.unpack name)
+    IRecvRule            -> "irecv"
+    ISendRule            -> "isend"
+    CoerceRule           -> "coerce"
+    FreshConstrRule      -> "fresh"
+    PubConstrRule        -> "pub"
+    IEqualityRule        -> "iequality"
+    ConstrRule name      -> prefixIfReserved ('c' : BC.unpack name)
+    DestrRule name _ _ _ -> prefixIfReserved ('d' : BC.unpack name)
+--     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
 prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
                 => d           -- ^ Prefix.

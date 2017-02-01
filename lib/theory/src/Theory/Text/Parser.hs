@@ -308,10 +308,12 @@ intrRule = do
     return $ Rule info ps cs as
   where
     intrInfo = do
-        name <- identifier
+        name     <- identifier
+        limit    <- option 0 natural
+-- FIXME: Parse whether we have a subterm rule or a constant rule
         case name of
           'c':cname -> return $ ConstrRule (BC.pack cname)
-          'd':dname -> return $ DestrRule (BC.pack dname)
+          'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit) True False
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
 genericRule :: Parser ([LNFact], [LNFact], [LNFact])
@@ -693,14 +695,14 @@ functions =
           _ -> setState (addFunSym (f,(k,priv)) sig)
 
 equations :: Parser ()
-equations = do
+equations =
       symbol "equations" *> colon *> commaSep1 equation *> pure ()
     where
       equation = do
         rrule <- RRule <$> term llit True <*> (equalSign *> term llit True)
-        case rRuleToStRule rrule of
+        case rRuleToCtxtStRule rrule of
           Just str ->
-              modifyState (addStRule str)
+              modifyState (addCtxtStRule str)
           Nothing  ->
               fail $ "Not a subterm rule: " ++ show rrule
 

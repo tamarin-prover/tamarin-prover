@@ -1,4 +1,4 @@
-theory Attack_TPM_Envelope begin
+theory TPM_Envelope begin
 
 // Function signature and definition of the equational theory E
 
@@ -48,6 +48,19 @@ rule (modulo E) Alice2:
   --[ Secret( ~s ) ]->
    [ Out( aenc(~s, pk) ), Alice2( n, ~s ), Alice2reveal( ~s ) ]
 
+rule (modulo E) Alice3:
+   [
+   Alice2( n, s ), !AIK( aik ),
+   In( sign(<'certpcr', h(<h(<'pcr0', n>), 'deny'>)>, aik) )
+   ]
+  --[ Denied( s ) ]->
+   [ ]
+
+rule (modulo E) CreateLockedKey:
+   [ PCR( x ), Fr( ~sk ), In( lock ) ]
+  --[ PCR_Read( x ) ]->
+   [ PCR( x ), !KeyTable( h(<x, lock>), ~sk ), Out( pk(~sk) ) ]
+
 rule (modulo E) Challenge:
    [ Alice2reveal( ~s ), Fr( ~f ) ]
   --[ Challenge( ~s ) ]->
@@ -62,19 +75,6 @@ axiom challenge_restriction [left]:
   "∀ s #i.
     (Challenge( s ) @ #i) ⇒
     (∃ #j #k. (Secret( s ) @ #j) ∧ (Denied( s ) @ #k))"
-
-rule (modulo E) Alice3:
-   [
-   Alice2( n, s ), !AIK( aik ),
-   In( sign(<'certpcr', h(<h(<'pcr0', n>), 'deny'>)>, aik) )
-   ]
-  --[ Denied( s ) ]->
-   [ ]
-
-rule (modulo E) CreateLockedKey:
-   [ PCR( x ), Fr( ~sk ), In( lock ) ]
-  --[ PCR_Read( x ) ]->
-   [ PCR( x ), !KeyTable( h(<x, lock>), ~sk ), Out( pk(~sk) ) ]
 
 axiom PCR_Init_unique [right]:
   "∀ #i #j. ((PCR_Init( ) @ #i) ∧ (PCR_Init( ) @ #j)) ⇒ (#i = #j)"
@@ -181,17 +181,20 @@ next
   case Rule_CreateLockedKey
   by sorry
 next
-  case Rule_Destrdadec
+  case Rule_Destrd_0_adec
   by sorry
 next
-  case Rule_Destrdfst
+  case Rule_Destrd_0_fst
   by sorry
 next
-  case Rule_Destrdsnd
+  case Rule_Destrd_0_snd
   by sorry
 next
-  case Rule_Destrdverify
+  case Rule_Destrd_0_verify
   by sorry
+next
+  case Rule_Destrd_verify
+  by sorry /* unannotated */
 next
   case Rule_Equality
   backward-search
@@ -222,7 +225,7 @@ next
                       case Alice2
                       by sorry
                     next
-                      case caenc
+                      case c_aenc
                       step( solve( !KU( ~s ) @ #vk.3 ) )
                         case Alice2
                         by sorry
@@ -295,12 +298,12 @@ next
                                     by sorry
                                   qed
                                 next
-                                  case csign
+                                  case c_sign
                                   by sorry
                                 qed
                               qed
                             next
-                              case cpk
+                              case c_pk
                               by sorry
                             qed
                           qed
@@ -329,17 +332,17 @@ next
                 by sorry
               qed
             next
-              case csign
+              case c_sign
               by sorry
             qed
           qed
         qed
       next
-        case dadec
+        case d_0_adec
         by sorry
       next
-        case dverify
-        by sorry
+        case d_verify
+        by sorry /* unannotated */
       qed
     next
       case Challenge
@@ -362,6 +365,7 @@ next
     qed
   next
     case RHS
+    step( simplify )
     by sorry
   qed
 next
@@ -401,7 +405,7 @@ analyzing: examples/ccs15/Attack_TPM_Envelope.spthy
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.373742s
+  processing time: 0.305393s
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
@@ -410,7 +414,7 @@ analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
   LHS :  executable (exists-trace): analysis incomplete (1 steps)
   RHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
   LHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (73 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (75 steps)
 
 ------------------------------------------------------------------------------
 
@@ -420,7 +424,7 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.373742s
+  processing time: 0.305393s
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
@@ -429,7 +433,7 @@ analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
   LHS :  executable (exists-trace): analysis incomplete (1 steps)
   RHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
   LHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (73 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (75 steps)
 
 ==============================================================================
 */

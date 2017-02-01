@@ -561,7 +561,7 @@ next
                 solve( !KU( ~n.1 ) @ #vk.1 )
                   case out_h_111111111
                   solve( !KU( senc(m, ~n) ) @ #vk.2 )
-                    case csenc
+                    case c_senc
                     by contradiction /* from formulas */
                   next
                     case out_sdecc_k_112111111
@@ -1088,7 +1088,7 @@ analyzing: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 analyzed: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.076325s
+  processing time: 2.757112s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -1106,7 +1106,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.076325s
+  processing time: 2.757112s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   

@@ -78,7 +78,7 @@ next
           qed
         qed
       next
-        case csenc
+        case c_senc
         by contradiction /* node #i after last node #j */
       qed
     next
@@ -102,7 +102,7 @@ next
         case Send
         by solve( !KU( ~k ) @ #i )
       next
-        case csenc
+        case c_senc
         solve( Receiver( k0 ) ▶₀ #i )
           case Receive
           by contradiction /* from formulas */
@@ -138,7 +138,7 @@ analyzing: examples/loops/Minimal_KeyRenegotiation.spthy
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.101129s
+  processing time: 0.099235s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 
@@ -150,7 +150,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.101129s
+  processing time: 0.099235s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 

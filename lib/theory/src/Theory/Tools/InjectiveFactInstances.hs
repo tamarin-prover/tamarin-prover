@@ -35,7 +35,7 @@ import           Theory.Model
 -- (1) the fact-tag is linear,
 -- (2) every introduction of such a fact-tag is protected by a Fr-fact of the
 --     first term, and
--- (3) every rule has at most one copy of this fact-tag in the conlcusion and
+-- (3) every rule has at most one copy of this fact-tag in the conclusion and
 --     the first term arguments agree.
 --
 -- We exclude facts that are not copied in a rule, as they are already handled

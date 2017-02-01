@@ -15,6 +15,7 @@ cabal.sandbox.config
 *.o
 *.prof
 *.un~
+*~
 
 *.cmi
 *.cmo

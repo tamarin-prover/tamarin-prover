@@ -4,8 +4,7 @@ packages:
 - lib/theory/
 - lib/term/
 - lib/utils/
-extra-deps: 
-- yesod-json-1.2.0
-resolver: lts-7.8
+extra-deps: []
+resolver: lts-7.18
 # for GHC 7.10 use:
-# lts-6.19
+# lts-6.27

@@ -207,6 +207,8 @@ import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
 -- import           Theory.Constraint.Solver.Types
 
+import           Term.Positions
+
 ------------------------------------------------------------------------------
 -- Specific proof types
 ------------------------------------------------------------------------------
@@ -292,6 +294,20 @@ openProtoRule = L.get cprRuleE
 closeProtoRule :: MaudeHandle -> OpenProtoRule -> ClosedProtoRule
 closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 
+-- | Close an intruder rule; i.e., compute maximum number of consecutive applications
+closeIntrRule :: MaudeHandle -> IntrRuleAC -> IntrRuleAC
+closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts)  =
+    (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
+                              then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
+                              -- We do not need to count t itself, hence - 1.
+                              -- If t is a private function symbol we need to permit one more rule 
+                              -- application as there is no associated constructor.
+                              else 0) subterm constant) prems concs acts)
+        where
+           runMaude = (`runReader` hnd)
+closeIntrRule hnd ir                                            = ir
+
+
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.
 closeRuleCache :: [LNGuarded]        -- ^ Axioms to use.
@@ -301,7 +317,7 @@ closeRuleCache :: [LNGuarded]        -- ^ Axioms to use.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> Bool               -- ^ Diff or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache axioms typAsms sig protoRules intrRulesAC isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache axioms typAsms sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules untypedCaseDists typedCaseDists injFactInstances
   where
@@ -309,6 +325,7 @@ closeRuleCache axioms typAsms sig protoRules intrRulesAC isdiff = -- trace ("clo
         sig classifiedRules injFactInstances UntypedCaseDist [] AvoidInduction
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] isdiff
+        (all isSubtermRule {-$ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
 
     -- inj fact instances
     injFactInstances =
@@ -321,6 +338,12 @@ closeRuleCache axioms typAsms sig protoRules intrRulesAC isdiff = -- trace ("clo
     untypedCaseDists = precomputeCaseDistinctions ctxt0 safetyAxioms
     typedCaseDists   = refineWithTypingAsms typAsms ctxt0 untypedCaseDists
 
+    -- Maude handle
+    hnd = L.get sigmMaudeHandle sig
+    
+    -- close intruder rules
+    intrRulesAC = map (closeIntrRule hnd) intrRules
+    
     -- classifying the rules
     rulesAC = (fmap IntrInfo                      <$> intrRulesAC) <|>
               ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
@@ -990,16 +1013,18 @@ getProtoRuleEsDiff s = map openProtoRule . (diffTheorySideRules s)
 -- | Get the proof context for a lemma of the closed theory.
 getProofContext :: Lemma a -> ClosedTheory -> ProofContext
 getProofContext l thy = ProofContext
-    ( L.get thySignature                    thy)
-    ( L.get (crcRules . thyCache)           thy)
+    ( L.get thySignature                       thy)
+    ( L.get (crcRules . thyCache)              thy)
     ( L.get (crcInjectiveFactInsts . thyCache) thy)
     kind
-    ( L.get (cases . thyCache)              thy)
+    ( L.get (cases . thyCache)                 thy)
     inductionHint
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
     (L.get lName l)
     ([ h | HideLemma h <- L.get lAttributes l])
     False
+    (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
+    (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
   where
     kind    = lemmaCaseDistKind l
     cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
@@ -1012,16 +1037,18 @@ getProofContext l thy = ProofContext
 getProofContextDiff :: Side -> Lemma a -> ClosedDiffTheory -> ProofContext
 getProofContextDiff s l thy = case s of
   LHS -> ProofContext
-            ( L.get diffThySignature                    thy)
-            ( L.get (crcRules . diffThyCacheLeft)           thy)
+            ( L.get diffThySignature                           thy)
+            ( L.get (crcRules . diffThyCacheLeft)              thy)
             ( L.get (crcInjectiveFactInsts . diffThyCacheLeft) thy)
             kind
-            ( L.get (cases . diffThyCacheLeft)              thy)
+            ( L.get (cases . diffThyCacheLeft)                 thy)
             inductionHint
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
             False
+            (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
+            (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
   RHS -> ProofContext
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyCacheRight)           thy)
@@ -1033,6 +1060,8 @@ getProofContextDiff s l thy = case s of
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
             False
+            (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
+            (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
   where
     kind    = lemmaCaseDistKind l
     cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
@@ -1062,6 +1091,8 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
             True
+            (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
+            (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
         RHS -> ProofContext
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyDiffCacheRight)           thy)
@@ -1073,6 +1104,8 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
             True
+            (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
+            (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
 
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag

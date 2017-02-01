@@ -1030,7 +1030,7 @@ solve( State_111111211( ct, sk1, skT, ysk ) ▶₀ #i )
   solve( State_11111211( ct, sk1.1, sk2, skT ) ▶₀ #j )
     case in_sign_signct_sk1_signct_sk2_skT_1111121
     solve( !KU( sign(pcs(sign(ct, sk1), pk(ysk), pk(~n)), ~n) ) @ #vk )
-      case csign
+      case c_sign
       by solve( !KU( ~n ) @ #vk.3 )
     qed
   qed
@@ -1064,15 +1064,15 @@ solve( State_11111211( ct, sk1, sk2, skT ) ▶₀ #i )
              (∀ #t2 y. (Insert( ct, y ) @ #t2) ⇒ ((¬(#t2 < #vr.15)) ∨ (#t2 < #t1)))) )
       case case_1
       solve( !KU( pcs(sign(ct, sk2), pk(sk1), pk(~n)) ) @ #vk.11 )
-        case cpcs
+        case c_pcs
         solve( !KU( sign(ct, sk1) ) @ #vk.11 )
-          case csign
+          case c_sign
           solve( !KU( sign(ct, sk2) ) @ #vk.12 )
-            case csign
+            case c_sign
             solve( !KU( pk(sk1) ) @ #vk.11 )
-              case cpk
+              case c_pk
               solve( !KU( pk(sk2) ) @ #vk.12 )
-                case cpk
+                case c_pk
                 solve( !KU( pk(~n) ) @ #vk.13 )
                   case out_pkskT_111
                   SOLVED // trace found
@@ -1114,15 +1114,15 @@ solve( State_11111211( ct, sk1, sk2, skT ) ▶₀ #i )
              (∀ #t2 y. (Insert( ct, y ) @ #t2) ⇒ ((¬(#t2 < #vr.15)) ∨ (#t2 < #t1)))) )
       case case_1
       solve( !KU( pcs(sign(ct, sk1), pk(sk2), pk(~n)) ) @ #vk.10 )
-        case cpcs
+        case c_pcs
         solve( !KU( sign(ct, sk2) ) @ #vk.11 )
-          case csign
+          case c_sign
           solve( !KU( sign(ct, sk1) ) @ #vk.12 )
-            case csign
+            case c_sign
             solve( !KU( pk(sk1) ) @ #vk.11 )
-              case cpk
+              case c_pk
               solve( !KU( pk(sk2) ) @ #vk.12 )
-                case cpk
+                case c_pk
                 solve( !KU( pk(~n) ) @ #vk.13 )
                   case out_pkskT_111
                   SOLVED // trace found
@@ -1165,7 +1165,7 @@ analyzing: case-studies-sapic-regression/GJM-contract/contract.spthy
 analyzed: case-studies-sapic-regression/GJM-contract/contract.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 42.986317s
+  processing time: 34.28791s
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -1181,7 +1181,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/GJM-contract/contract.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 42.986317s
+  processing time: 34.28791s
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   

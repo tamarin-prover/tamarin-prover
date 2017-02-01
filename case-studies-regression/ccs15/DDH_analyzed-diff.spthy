@@ -26,6 +26,112 @@ rule-equivalence
     MIRRORED
   qed
 next
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case DDH
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by step( contradiction /* impossible chain */ )
+        next
+          case d_0_snd
+          by step( contradiction /* impossible chain */ )
+        next
+          case pair
+          MIRRORED
+        qed
+      next
+        case pair
+        MIRRORED
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case DDH
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by step( contradiction /* impossible chain */ )
+        next
+          case d_0_snd
+          by step( contradiction /* impossible chain */ )
+        next
+          case pair
+          MIRRORED
+        qed
+      next
+        case pair
+        MIRRORED
+      qed
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case DDH
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by step( contradiction /* impossible chain */ )
+        next
+          case d_0_snd
+          by step( contradiction /* impossible chain */ )
+        next
+          case pair
+          MIRRORED
+        qed
+      next
+        case pair
+        MIRRORED
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case DDH
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by step( contradiction /* impossible chain */ )
+        next
+          case d_0_snd
+          by step( contradiction /* impossible chain */ )
+        next
+          case pair
+          MIRRORED
+        qed
+      next
+        case pair
+        MIRRORED
+      qed
+    qed
+  qed
+next
   case Rule_Destrdexp
   backward-search
     case LHS
@@ -35,7 +141,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -56,9 +162,9 @@ next
             MIRRORED
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -79,7 +185,7 @@ next
               MIRRORED
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -107,7 +213,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -128,9 +234,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -151,7 +257,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -179,7 +285,7 @@ next
       step( solve( !KD( x^inv(x.1) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -197,9 +303,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -217,7 +323,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -242,7 +348,7 @@ next
       step( solve( !KD( x^inv(x.1) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -260,9 +366,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -280,7 +386,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -305,7 +411,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -326,9 +432,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -349,7 +455,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -377,7 +483,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -398,9 +504,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -421,7 +527,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -449,7 +555,7 @@ next
       step( solve( !KD( x^inv(x.1) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -467,9 +573,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -487,7 +593,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -512,7 +618,7 @@ next
       step( solve( !KD( x^inv((x.1*x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -530,9 +636,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -550,7 +656,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -575,7 +681,7 @@ next
       step( solve( !KD( x^(x.1*x.2) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -593,9 +699,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -613,7 +719,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -638,7 +744,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -656,9 +762,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -676,7 +782,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -701,7 +807,7 @@ next
       step( solve( !KD( x^inv(x.1) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -719,9 +825,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -739,7 +845,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -764,7 +870,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -782,9 +888,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -802,7 +908,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -827,7 +933,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -848,9 +954,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -871,7 +977,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -899,7 +1005,7 @@ next
       step( solve( !KD( x^inv((x.1*x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -917,9 +1023,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -937,7 +1043,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -962,7 +1068,7 @@ next
       step( solve( !KD( x^(x.1*x.2) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -980,9 +1086,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1000,7 +1106,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1025,7 +1131,7 @@ next
       step( solve( !KD( x^(x.1*x.2) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1043,9 +1149,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1063,7 +1169,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1088,7 +1194,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1106,9 +1212,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1126,7 +1232,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1151,7 +1257,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1169,9 +1275,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1189,7 +1295,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1214,7 +1320,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1232,9 +1338,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1252,7 +1358,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1277,7 +1383,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1295,9 +1401,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1315,7 +1421,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1340,7 +1446,7 @@ next
       step( solve( !KD( x^inv((x.1*x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1358,9 +1464,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1378,7 +1484,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1403,7 +1509,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1421,9 +1527,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1441,7 +1547,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1466,7 +1572,7 @@ next
       step( solve( !KD( x^(x.1*x.2) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1484,9 +1590,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1504,7 +1610,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1529,7 +1635,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1547,9 +1653,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1567,7 +1673,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1592,7 +1698,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1610,9 +1716,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1630,7 +1736,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1655,7 +1761,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1673,9 +1779,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1693,7 +1799,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1718,7 +1824,7 @@ next
       step( solve( !KD( x^inv((x.1*x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1736,9 +1842,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1756,7 +1862,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1781,7 +1887,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1799,9 +1905,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1819,7 +1925,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1844,7 +1950,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1862,9 +1968,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1882,7 +1988,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1907,7 +2013,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1925,9 +2031,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1945,7 +2051,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -1970,7 +2076,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -1988,9 +2094,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2008,7 +2114,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2033,7 +2139,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2051,9 +2157,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2071,7 +2177,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2096,7 +2202,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2114,9 +2220,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2134,7 +2240,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2159,7 +2265,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2177,9 +2283,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2197,7 +2303,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2222,7 +2328,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2240,9 +2346,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2260,7 +2366,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2285,7 +2391,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2303,9 +2409,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2323,7 +2429,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2348,7 +2454,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv((x.3*x.4))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2366,9 +2472,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2386,7 +2492,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2411,7 +2517,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2429,9 +2535,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2449,7 +2555,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2474,7 +2580,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2492,9 +2598,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2512,7 +2618,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2537,7 +2643,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2555,9 +2661,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2575,7 +2681,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2600,7 +2706,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv((x.3*x.4))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2618,9 +2724,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2638,7 +2744,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2663,7 +2769,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2681,9 +2787,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2701,7 +2807,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2726,7 +2832,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2744,9 +2850,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2764,7 +2870,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2789,7 +2895,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv((x.3*x.4))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2807,9 +2913,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2827,7 +2933,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2852,7 +2958,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv((x.3*x.4))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2870,9 +2976,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2890,7 +2996,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2919,7 +3025,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -2940,9 +3046,9 @@ next
             MIRRORED
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -2963,7 +3069,7 @@ next
               MIRRORED
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3015,7 +3121,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3036,9 +3142,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3059,7 +3165,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3111,7 +3217,7 @@ next
       step( solve( !KD( x^inv(x.1) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3129,9 +3235,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3149,7 +3255,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3198,7 +3304,7 @@ next
       step( solve( !KD( x^inv(x.1) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3216,9 +3322,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3236,7 +3342,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3285,7 +3391,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3306,9 +3412,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3329,7 +3435,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3381,7 +3487,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3402,9 +3508,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3425,7 +3531,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3477,7 +3583,7 @@ next
       step( solve( !KD( x^inv(x.1) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3495,9 +3601,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3515,7 +3621,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3564,7 +3670,7 @@ next
       step( solve( !KD( x^inv((x.1*x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3582,9 +3688,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3602,7 +3708,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3651,7 +3757,7 @@ next
       step( solve( !KD( x^(x.1*x.2) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3669,9 +3775,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3689,7 +3795,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3744,7 +3850,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3762,9 +3868,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3782,7 +3888,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3831,7 +3937,7 @@ next
       step( solve( !KD( x^inv(x.1) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3849,9 +3955,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3869,7 +3975,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3918,7 +4024,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -3936,9 +4042,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -3956,7 +4062,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4005,7 +4111,7 @@ next
       step( solve( !KD( x^x.1 ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4026,9 +4132,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4049,7 +4155,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4101,7 +4207,7 @@ next
       step( solve( !KD( x^inv((x.1*x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4119,9 +4225,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4139,7 +4245,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4188,7 +4294,7 @@ next
       step( solve( !KD( x^(x.1*x.2) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4206,9 +4312,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4226,7 +4332,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4281,7 +4387,7 @@ next
       step( solve( !KD( x^(x.1*x.2) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4299,9 +4405,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4319,7 +4425,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4374,7 +4480,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4392,9 +4498,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4412,7 +4518,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4461,7 +4567,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4479,9 +4585,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4499,7 +4605,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4548,7 +4654,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4566,9 +4672,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4586,7 +4692,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4635,7 +4741,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4653,9 +4759,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4673,7 +4779,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4722,7 +4828,7 @@ next
       step( solve( !KD( x^inv((x.1*x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4740,9 +4846,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4760,7 +4866,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4809,7 +4915,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4827,9 +4933,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4847,7 +4953,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4896,7 +5002,7 @@ next
       step( solve( !KD( x^(x.1*x.2) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -4914,9 +5020,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4934,7 +5040,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -4989,7 +5095,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5007,9 +5113,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5027,7 +5133,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5076,7 +5182,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5094,9 +5200,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5114,7 +5220,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5163,7 +5269,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5181,9 +5287,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5201,7 +5307,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5250,7 +5356,7 @@ next
       step( solve( !KD( x^inv((x.1*x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5268,9 +5374,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5288,7 +5394,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5337,7 +5443,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5355,9 +5461,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5375,7 +5481,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5424,7 +5530,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5442,9 +5548,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5462,7 +5568,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5511,7 +5617,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5529,9 +5635,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5549,7 +5655,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5598,7 +5704,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5616,9 +5722,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5636,7 +5742,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5685,7 +5791,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5703,9 +5809,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5723,7 +5829,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5772,7 +5878,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5790,9 +5896,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5810,7 +5916,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5859,7 +5965,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5877,9 +5983,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5897,7 +6003,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5946,7 +6052,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -5964,9 +6070,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -5984,7 +6090,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6033,7 +6139,7 @@ next
       step( solve( !KD( x^(x.1*inv(x.2)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6051,9 +6157,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6071,7 +6177,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6120,7 +6226,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv((x.3*x.4))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6138,9 +6244,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6158,7 +6264,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6207,7 +6313,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6225,9 +6331,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6245,7 +6351,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6294,7 +6400,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6312,9 +6418,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6332,7 +6438,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6381,7 +6487,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6399,9 +6505,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6419,7 +6525,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6468,7 +6574,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv((x.3*x.4))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6486,9 +6592,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6506,7 +6612,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6555,7 +6661,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv(x.3)) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6573,9 +6679,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6593,7 +6699,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6642,7 +6748,7 @@ next
       step( solve( !KD( x^(x.1*inv((x.2*x.3))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6660,9 +6766,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6680,7 +6786,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6729,7 +6835,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv((x.3*x.4))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6747,9 +6853,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6767,7 +6873,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6816,7 +6922,7 @@ next
       step( solve( !KD( x^(x.1*x.2*inv((x.3*x.4))) ) ▶₀ #i ) )
         case DDH
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
             case dexp_case_1
             by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
@@ -6834,9 +6940,9 @@ next
             by step( contradiction /* non-normal exponentiation rule instance */ )
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-            case dfst
+            case d_0_fst
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_1
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6854,7 +6960,7 @@ next
               by step( contradiction /* non-normal exponentiation rule instance */ )
             qed
           next
-            case dsnd
+            case d_0_snd
             step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
               case dexp_case_01
               by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
@@ -6901,59 +7007,6 @@ next
     qed
   qed
 next
-  case Rule_Destrdfst
-  backward-search
-    case LHS
-    step( simplify )
-    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
-      case DDH
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dfst
-        by step( contradiction /* impossible chain */ )
-      next
-        case dsnd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
-          by step( contradiction /* impossible chain */ )
-        next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
-        next
-          case pair
-          MIRRORED
-        qed
-      next
-        case pair
-        MIRRORED
-      qed
-    qed
-  next
-    case RHS
-    step( simplify )
-    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
-      case DDH
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dfst
-        by step( contradiction /* impossible chain */ )
-      next
-        case dsnd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
-          by step( contradiction /* impossible chain */ )
-        next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
-        next
-          case pair
-          MIRRORED
-        qed
-      next
-        case pair
-        MIRRORED
-      qed
-    qed
-  qed
-next
   case Rule_Destrdinv
   backward-search
     case LHS
@@ -6971,59 +7024,6 @@ next
     qed
   qed
 next
-  case Rule_Destrdsnd
-  backward-search
-    case LHS
-    step( simplify )
-    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
-      case DDH
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dfst
-        by step( contradiction /* impossible chain */ )
-      next
-        case dsnd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
-          by step( contradiction /* impossible chain */ )
-        next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
-        next
-          case pair
-          MIRRORED
-        qed
-      next
-        case pair
-        MIRRORED
-      qed
-    qed
-  next
-    case RHS
-    step( simplify )
-    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
-      case DDH
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case dfst
-        by step( contradiction /* impossible chain */ )
-      next
-        case dsnd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case dfst
-          by step( contradiction /* impossible chain */ )
-        next
-          case dsnd
-          by step( contradiction /* impossible chain */ )
-        next
-          case pair
-          MIRRORED
-        qed
-      next
-        case pair
-        MIRRORED
-      qed
-    qed
-  qed
-next
   case Rule_Equality
   backward-search
     case LHS
@@ -7031,7 +7031,7 @@ next
     step( solve( !KD( x ) ▶₁ #i ) )
       case DDH
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
-        case dfst
+        case d_0_fst
         step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
           case dexp_case_1
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
@@ -7085,9 +7085,9 @@ next
           qed
         qed
       next
-        case dsnd
+        case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case dexp_case_1
             step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
@@ -7141,7 +7141,7 @@ next
             qed
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case dexp_case_1
             step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
@@ -7239,7 +7239,7 @@ next
     step( solve( !KD( x ) ▶₁ #i ) )
       case DDH
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
-        case dfst
+        case d_0_fst
         step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
           case dexp_case_1
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
@@ -7299,9 +7299,9 @@ next
           qed
         qed
       next
-        case dsnd
+        case d_0_snd
         step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
-          case dfst
+          case d_0_fst
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case dexp_case_1
             step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
@@ -7361,7 +7361,7 @@ next
             qed
           qed
         next
-          case dsnd
+          case d_0_snd
           step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
             case dexp_case_01
             step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
@@ -7566,7 +7566,7 @@ analyzing: examples/ccs15/DDH.spthy
 analyzed: examples/ccs15/DDH.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 15.985296s
+  processing time: 12.645728s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ------------------------------------------------------------------------------
@@ -7577,7 +7577,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 15.985296s
+  processing time: 12.645728s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ==============================================================================

@@ -149,7 +149,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                 case Sessk_reveal_case_2
                 by contradiction /* from formulas */
               next
-                case cKDF
+                case c_KDF
                 solve( !KU( ~m1 ) @ #vk.7 )
                   case Ephk_reveal
                   by contradiction /* from formulas */
@@ -166,12 +166,12 @@ solve( (∃ ss #i4 #i5 C D ms.
               solve( !KU( MAC(KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>),
                               <'KC_1_V', $R, $I, ~m2, aenc(~m1, pk(~ltkA))>)
                      ) @ #vk.2 )
-                case cMAC
+                case c_MAC
                 solve( !KU( KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>) ) @ #vk.4 )
                   case Sessk_reveal
                   by contradiction /* cyclic */
                 next
-                  case cKDF
+                  case c_KDF
                   solve( !KU( ~m1 ) @ #vk.15 )
                     case Ephk_reveal
                     by contradiction /* from formulas */
@@ -205,7 +205,7 @@ next
         case Sessk_reveal_case_2
         by contradiction /* from formulas */
       next
-        case cKDF
+        case c_KDF
         solve( !KU( ~m1 ) @ #vk.7 )
           case Ephk_reveal
           by contradiction /* from formulas */
@@ -218,7 +218,7 @@ next
         qed
       qed
     next
-      case cMAC
+      case c_MAC
       solve( !KU( KDF(<~m1, $I, $R, nonceB, aenc(~m1, pk(~ltkA))>) ) @ #vk.4 )
         case Sessk_reveal_case_1
         by contradiction /* from formulas */
@@ -226,7 +226,7 @@ next
         case Sessk_reveal_case_2
         by contradiction /* cyclic */
       next
-        case cKDF
+        case c_KDF
         solve( !KU( ~m1 ) @ #vk.15 )
           case Ephk_reveal
           by contradiction /* from formulas */
@@ -259,7 +259,7 @@ analyzing: examples/csf12/KAS1.spthy
 analyzed: examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.620004s
+  processing time: 0.715798s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ------------------------------------------------------------------------------
@@ -270,7 +270,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.620004s
+  processing time: 0.715798s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ==============================================================================

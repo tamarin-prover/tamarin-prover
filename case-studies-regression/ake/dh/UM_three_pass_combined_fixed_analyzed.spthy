@@ -912,11 +912,11 @@ solve( (∃ #l matchingComm.
                       case Reveal_SessionKey_case_4
                       by contradiction /* from formulas */
                     next
-                      case csecond
+                      case c_second
                       solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
                                      'UM3'>)
                              ) @ #vk.5 )
-                        case ch
+                        case c_h
                         solve( !KU( 'g'^(~ex*~ey) ) @ #vk.9 )
                           case I_Activate
                           by solve( !KU( ~ey ) @ #vk.17 )
@@ -1359,11 +1359,11 @@ solve( (∃ #l matchingComm.
                               case Reveal_SessionKey_case_4
                               by contradiction /* from formulas */
                             next
-                              case csecond
+                              case c_second
                               solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
                                              'UM3'>)
                                      ) @ #vk.6 )
-                                case ch
+                                case c_h
                                 solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
                                   case I_Activate
                                   by solve( !KU( ~ey ) @ #vk.18 )
@@ -1413,11 +1413,11 @@ solve( (∃ #l matchingComm.
                           case Reveal_SessionKey_case_4
                           by contradiction /* from formulas */
                         next
-                          case csecond
+                          case c_second
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
                                          'UM3'>)
                                  ) @ #vk.6 )
-                            case ch
+                            case c_h
                             solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
                               case I_Activate
                               by solve( !KU( ~ey ) @ #vk.18 )
@@ -1569,11 +1569,11 @@ solve( (∃ #l matchingComm.
                           case Reveal_SessionKey_case_4
                           by contradiction /* from formulas */
                         next
-                          case csecond
+                          case c_second
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
                                          'UM3'>)
                                  ) @ #vk.6 )
-                            case ch
+                            case c_h
                             solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
                               case I_Activate
                               by solve( !KU( ~ey ) @ #vk.18 )
@@ -1630,11 +1630,11 @@ solve( (∃ #l matchingComm.
                           case Reveal_SessionKey_case_4
                           by contradiction /* from formulas */
                         next
-                          case csecond
+                          case c_second
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
                                          'UM3'>)
                                  ) @ #vk.6 )
-                            case ch
+                            case c_h
                             solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
                               case I_Activate
                               by solve( !KU( ~ey ) @ #vk.18 )
@@ -1994,11 +1994,11 @@ next
                           case Reveal_SessionKey_case_4
                           by contradiction /* from formulas */
                         next
-                          case csecond
+                          case c_second
                           solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
                                          'UM3'>)
                                  ) @ #vk.6 )
-                            case ch
+                            case c_h
                             solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
                               case I_Activate
                               by solve( !KU( ~ey ) @ #vk.18 )
@@ -2305,11 +2305,11 @@ next
                   by contradiction /* from formulas */
                 qed
               next
-                case csecond
+                case c_second
                 solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
                                'UM3'>)
                        ) @ #vk.5 )
-                  case ch
+                  case c_h
                   solve( !KU( 'g'^(~ex*~ey) ) @ #vk.9 )
                     case I_Activate
                     by solve( !KU( ~ey ) @ #vk.17 )
@@ -2324,10 +2324,10 @@ next
               qed
             qed
           next
-            case cMAC
+            case c_MAC
             solve( !KU( first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y, 'UM3'>))
                    ) @ #vk.5 )
-              case cfirst
+              case c_first
               solve( !KU( second(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y, 'UM3'>))
                      ) @ #vk.3 )
                 case Corrupt_SessionKey_case_1
@@ -3063,9 +3063,9 @@ next
                   qed
                 qed
               next
-                case csecond
+                case c_second
                 solve( !KU( h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y, 'UM3'>) ) @ #vk.13 )
-                  case ch
+                  case c_h
                   solve( !KU( 'g'^(~ea*~x) ) @ #vk.21 )
                     case Register_key_honest_case_1
                     solve( !KU( ~ea ) @ #vk.23 )
@@ -3405,11 +3405,11 @@ next
                   case Reveal_SessionKey_case_4
                   by contradiction /* from formulas */
                 next
-                  case csecond
+                  case c_second
                   solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
                                  'UM3'>)
                          ) @ #vk.6 )
-                    case ch
+                    case c_h
                     solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
                       case I_Activate
                       by solve( !KU( ~ey ) @ #vk.18 )
@@ -3624,11 +3624,11 @@ next
                   case Reveal_SessionKey_case_4
                   by contradiction /* from formulas */
                 next
-                  case csecond
+                  case c_second
                   solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
                                  'UM3'>)
                          ) @ #vk.6 )
-                    case ch
+                    case c_h
                     solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
                       case I_Activate
                       by solve( !KU( ~ey ) @ #vk.18 )
@@ -3644,10 +3644,10 @@ next
               qed
             qed
           next
-            case cMAC
+            case c_MAC
             solve( !KU( first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>))
                    ) @ #vk.4 )
-              case cfirst
+              case c_first
               solve( !KU( second(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>))
                      ) @ #vk.2 )
                 case Corrupt_SessionKey_case_1
@@ -4429,9 +4429,9 @@ next
                 case Reveal_SessionKey_case_4
                 by contradiction /* from formulas */
               next
-                case csecond
+                case c_second
                 solve( !KU( h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>) ) @ #vk.12 )
-                  case ch
+                  case c_h
                   solve( !KU( 'g'^(~eb*~x) ) @ #vk.20 )
                     case Register_key_honest_case_1
                     solve( !KU( ~eb ) @ #vk.22 )
@@ -4740,7 +4740,7 @@ solve( (¬(role = 'I'))  ∥
                       case Reveal_SessionKey_case_2
                       by contradiction /* from formulas */
                     next
-                      case ch
+                      case c_h
                       solve( !KU( 'g'^(~eb*~ex) ) @ #vk.4 )
                         case Register_key_honest
                         by solve( !KU( ~ex ) @ #vk.14 )
@@ -4789,7 +4789,7 @@ solve( (¬(role = 'I'))  ∥
               case Reveal_SessionKey_case_2
               by contradiction /* from formulas */
             next
-              case ch
+              case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.6 )
                 case Register_key_honest_case_1
                 solve( !KU( ~eb ) @ #vk.14 )
@@ -4843,7 +4843,7 @@ next
                     case Reveal_SessionKey
                     by contradiction /* from formulas */
                   next
-                    case ch
+                    case c_h
                     solve( !KU( 'g'^(~ea*~ex) ) @ #vk.2 )
                       case Register_key_honest
                       by solve( !KU( ~ex ) @ #vk.13 )
@@ -4895,7 +4895,7 @@ next
                 case Reveal_SessionKey_case_2
                 by contradiction /* from formulas */
               next
-                case ch
+                case c_h
                 solve( !KU( 'g'^(~eb*~ex) ) @ #vk.2 )
                   case Register_key_honest
                   by solve( !KU( ~ex ) @ #vk.14 )
@@ -4947,7 +4947,7 @@ next
                     case Reveal_SessionKey
                     by contradiction /* from formulas */
                   next
-                    case ch
+                    case c_h
                     solve( !KU( 'g'^(~ea*~ex) ) @ #vk.2 )
                       case Register_key_honest
                       by solve( !KU( ~ex ) @ #vk.13 )
@@ -4999,7 +4999,7 @@ next
                       case Reveal_SessionKey_case_2
                       by contradiction /* from formulas */
                     next
-                      case ch
+                      case c_h
                       solve( !KU( 'g'^(~eb*~ex) ) @ #vk.4 )
                         case Register_key_honest
                         by solve( !KU( ~ex ) @ #vk.14 )
@@ -5049,7 +5049,7 @@ next
                 case Reveal_SessionKey_case_2
                 by contradiction /* from formulas */
               next
-                case ch
+                case c_h
                 solve( !KU( 'g'^(~eb*~ex) ) @ #vk.2 )
                   case Register_key_honest
                   by solve( !KU( ~ex ) @ #vk.14 )
@@ -5089,7 +5089,7 @@ next
               case Reveal_SessionKey_case_2
               by contradiction /* from formulas */
             next
-              case ch
+              case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.6 )
                 case Register_key_honest_case_1
                 solve( !KU( ~eb ) @ #vk.14 )
@@ -5134,7 +5134,7 @@ analyzing: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 45.690708s
+  processing time: 38.064787s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)
@@ -5147,7 +5147,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 45.690708s
+  processing time: 38.064787s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)

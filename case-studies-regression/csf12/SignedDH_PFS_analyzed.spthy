@@ -156,14 +156,14 @@ solve( SessionKey( I, R, sessKey ) @ #i )
             by solve( !KU( ~ekI ) @ #vk.15 )
           qed
         next
-          case csign
+          case c_sign
           solve( !KU( ~ltk.2 ) @ #vk.16 )
             case Reveal_ltk
             by contradiction /* from formulas */
           qed
         qed
       next
-        case csign
+        case c_sign
         solve( !KU( ~ltk ) @ #vk.11 )
           case Reveal_ltk
           by contradiction /* from formulas */
@@ -190,7 +190,7 @@ next
           by solve( !KU( ~ekI ) @ #vk.10 )
         qed
       next
-        case csign
+        case c_sign
         solve( !KU( ~ltk ) @ #vk.11 )
           case Reveal_ltk
           by contradiction /* from formulas */
@@ -217,7 +217,7 @@ analyzing: examples/csf12/SignedDH_PFS.spthy
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.509134s
+  processing time: 0.589386s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.509134s
+  processing time: 0.589386s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ==============================================================================

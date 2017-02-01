@@ -139,7 +139,7 @@ next
               by contradiction /* impossible chain */
             qed
           next
-            case caenc
+            case c_aenc
             by contradiction /* from formulas */
           qed
         qed
@@ -189,7 +189,7 @@ next
                 by contradiction /* impossible chain */
               qed
             next
-              case caenc
+              case c_aenc
               by contradiction /* from formulas */
             qed
           qed
@@ -230,13 +230,13 @@ solve( Secret( A, B, s ) ▶₀ #i )
       solve( !KU( aenc(<'3', ~nr>, pk(~ltkA)) ) @ #vk.2 )
         case I_2
         solve( !KU( aenc(<'1', ~ni, $A>, pk(~ltkA.2)) ) @ #vk.3 )
-          case caenc
+          case c_aenc
           solve( !KU( ~ni ) @ #vk.10 )
             case I_1
             solve( !KU( ~ltkA.4 ) @ #vk.12 )
               case Reveal_ltk
               solve( !KU( aenc(<'2', ~ni.1, ~nr>, pk(~ltkA.5)) ) @ #vk.8 )
-                case caenc
+                case c_aenc
                 solve( !KU( ~ni.1 ) @ #vk.17 )
                   case R_1
                   solve( !KU( ~ltkA.7 ) @ #vk.19 )
@@ -297,13 +297,13 @@ solve( Commit( actor, peer, params ) @ #i )
     solve( !Ltk( $R, ltkR ) ▶₁ #i )
       case Register_pk
       solve( !KU( aenc(<'3', ~nr>, pk(~ltkA)) ) @ #vk )
-        case caenc
+        case c_aenc
         solve( !KU( ~nr ) @ #vk.5 )
           case I_2
           solve( !KU( ~ltkA.3 ) @ #vk.7 )
             case Reveal_ltk
             solve( !KU( aenc(<'1', ~ni, $A>, pk(~ltkA.2)) ) @ #vk.4 )
-              case caenc
+              case c_aenc
               solve( !KU( ~ni ) @ #vk.12 )
                 case I_1
                 solve( !KU( ~ltkA.4 ) @ #vk.14 )
@@ -369,7 +369,7 @@ analyzing: examples/classic/NSPK3.spthy
 analyzed: examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.25972s
+  processing time: 2.739399s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)
@@ -383,7 +383,7 @@ summary of summaries:
 analyzed: examples/classic/NSPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.25972s
+  processing time: 2.739399s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)
