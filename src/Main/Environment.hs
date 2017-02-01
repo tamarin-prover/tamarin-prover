@@ -153,6 +153,20 @@ ensureGraphCommand as = do
       | otherwise  = Left  $ errMsg
     errMsg = unlines
       [ "Command not found" ]
+      
+-- | Check whether Sapic is installed
+ensureSapic :: Arguments -> IO Bool
+ensureSapic _ = do
+    putStrLn $ "SAPIC tool: '" ++ cmd ++ "'"
+    testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False
+  where
+    cmd = "sapic"
+    check _ err
+      | err == ""  = Right $ " OK."
+      | otherwise  = Left  $ errMsg
+    errMsg = unlines
+      [ "SAPIC not found."
+      , "SAPIC files will not be supported." ]
 
 -- | Ensure a suitable version of Maude is installed.
 ensureMaude :: Arguments -> IO Bool
@@ -164,8 +178,9 @@ ensureMaude as = do
   where
     maude = maudePath as
     checkVersion out _
-      | filter (not . isSpace) out == "2.6" = Right "2.6. OK."
-      | filter (not . isSpace) out == "2.7" = Right "2.7. OK."
+      | filter (not . isSpace) out == "2.6"   = Right "2.6. OK."
+      | filter (not . isSpace) out == "2.7"   = Right "2.7. OK."
+      | filter (not . isSpace) out == "2.7.1" = Right "2.7.1. OK."
       | otherwise                           = Left  $ errMsg $
           " 'maude --version' returned wrong version '" ++ out ++ "'"
 
@@ -178,7 +193,7 @@ ensureMaude as = do
           , ""
           , reason
           , " " ++ programName ++ " will likely not work."
-          , " Please download 'Core Maude 2.7' (or 2.6) from:"
+          , " Please download 'Core Maude 2.7.1' (or 2.6) from:"
           , "    http://maude.cs.uiuc.edu/download/"
           , " Note that 'prelude.maude' must be in the same directory as the 'maude' executable."
           ]

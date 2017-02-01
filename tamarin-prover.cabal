@@ -83,7 +83,7 @@ source-repository head
 --------------
 
 flag threaded
-    default: True
+    default: False
     manual: True
     description: Build with support for multithreaded execution
 
@@ -93,9 +93,9 @@ flag test-coverage
     description: Build with test coverage support
 
 flag build-tests
-  default: False
-  manual: True
-  description: Build unit test driver
+    default: False
+    manual: True
+    description: Build unit test driver
 
 
 ----------------------
@@ -109,12 +109,8 @@ executable tamarin-prover
         ghc-options:   -threaded -eventlog 
     
     -- -XFlexibleInstances
-    -- Note that eager blackholing lead to segfaults: See GHC Ticket #6146
-    -- Morevoer, it seems that the bug is not fully fixed on GHC 7.4.2, as we
-    -- still get segfaults: see GHC Ticket #7076.
-    -- Therefore, we do not use -feager-blackholing (yet).
 
-    ghc-options:       -Wall -fwarn-tabs -rtsopts
+    ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing
     ghc-prof-options:  -auto-all
 
     -- Parallelize by default. Only activated for GHC 7.4, as this flag was
@@ -167,7 +163,6 @@ executable tamarin-prover
       , wai
       , warp
       , yesod-core
-      , yesod-json
       , yesod-static
 
       , tamarin-prover-utils  == 1.1.0

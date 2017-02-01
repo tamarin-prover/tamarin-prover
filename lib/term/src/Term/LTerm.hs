@@ -314,12 +314,12 @@ containsPrivate t = case viewTerm t of
     FApp (NoEq (_,(_,Private))) _  -> True
     FApp _                      as -> any containsPrivate as
 
--- | @containsPrivate t@ returns @True@ if @t@ contains private function symbols.
+-- | containsNoPrivateExcept t t2@ returns @True@ if @t2@ contains private function symbols other than @t@.
 containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool
 containsNoPrivateExcept funs t = case viewTerm t of
     Lit _                          -> True
-    FApp (NoEq (f,(_,Private))) _  -> elem f funs
-    FApp _                      as -> any (containsNoPrivateExcept funs) as
+    FApp (NoEq (f,(_,Private))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
+    FApp _                      as -> all (containsNoPrivateExcept funs) as
 
     
 -- | A term is *simple* iff there is an instance of this term that can be
@@ -767,7 +767,7 @@ showLitName (Var (LVar v s i))       = "Var_" ++ sortSuffix s ++ "_" ++ body
       where
         body | null v           = show i
              | i == 0           = v
-             | otherwise        = v ++ "." ++ show i
+             | otherwise        = show i ++ "_" ++ v
 
 -- derived instances
 --------------------

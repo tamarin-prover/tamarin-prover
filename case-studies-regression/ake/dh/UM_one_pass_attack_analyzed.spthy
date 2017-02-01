@@ -233,14 +233,14 @@ guarded formula characterizing all counter-examples:
  ∧
   (∀ #k.1. (SessionKeyReveal( s ) @ #k.1) ⇒ ⊥) ∧
   (∀ #i1. (SessionKeyReveal( sp ) @ #i1) ⇒ ⊥) ∧
-  ((¬(role = 'I')) ∨
-   ((∀ #k.1.
-      (Corrupt( A ) @ #k.1)
-     ⇒
-      (∀ #l. (Expire( s ) @ #l) ⇒ ¬(#k.1 < #l)) ∧ (∃ #l. (Expire( s ) @ #l))) ∧
-    (∀ #k.1 #l. (SessionStateReveal( s ) @ #k.1) ∧ (Corrupt( A ) @ #l) ⇒ ⊥) ∧
-    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥))) ∧
-  ((¬(role = 'R')) ∨ (∀ #k.1. (Corrupt( A ) @ #k.1) ⇒ ⊥)) ∧
+  (((¬(role = 'I')) ∨
+    ((∀ #k.1.
+       (Corrupt( A ) @ #k.1)
+      ⇒
+       (∀ #l. (Expire( s ) @ #l) ⇒ ¬(#k.1 < #l)) ∧ (∃ #l. (Expire( s ) @ #l))) ∧
+     (∀ #k.1 #l. (SessionStateReveal( s ) @ #k.1) ∧ (Corrupt( A ) @ #l) ⇒ ⊥) ∧
+     (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥)))) ∧
+  (((¬(role = 'R')) ∨ (∀ #k.1. (Corrupt( A ) @ #k.1) ⇒ ⊥))) ∧
   (∀ #k.1 k_ role_.
     (Complete( sp, role_, k_ ) @ #k.1)
    ⇒
@@ -251,8 +251,8 @@ guarded formula characterizing all counter-examples:
       (∃ #l. (Expire( sp ) @ #l))) ∧
     (∀ #k.2 #l.
       (SessionStateReveal( sp ) @ #k.2) ∧ (Corrupt( B ) @ #l) ⇒ ⊥)) ∧
-  ((∃ #k.1 k_ role_. (Complete( sp, role_, k_ ) @ #k.1)) ∨
-   (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥))"
+  (((∃ #k.1 k_ role_. (Complete( sp, role_, k_ ) @ #k.1)) ∨
+    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥)))"
 */
 simplify
 solve( (¬(role = 'I'))  ∥
@@ -283,7 +283,7 @@ solve( (¬(role = 'I'))  ∥
                 solve( !Pk( $B, 'g'^~x.1 ) ▶₂ #k )
                   case Register_key_honest
                   solve( !KU( h(<z, 'g'^(~eb*~x), $A, $B>) ) @ #vk )
-                    case ch
+                    case c_h
                     solve( !KU( 'g'^(~eb*~x) ) @ #vk.5 )
                       case Register_key_honest_case_2
                       solve( !KU( ~x ) @ #vk.9 )
@@ -322,8 +322,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/dh/UM_one_pass_attack.spthy
@@ -332,7 +334,7 @@ analyzing: examples/ake/dh/UM_one_pass_attack.spthy
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.386809s
+  processing time: 3.235604s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 
@@ -344,7 +346,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.386809s
+  processing time: 3.235604s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 

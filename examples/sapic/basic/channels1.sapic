@@ -1,0 +1,26 @@
+/*
+example illustrating private channels
+*/
+
+theory ChannelsTestOne
+begin
+
+/* Check for communication on private channels */
+/*  - communication is private */
+/*  - communication is possible */
+
+
+let P = new a; event Secret(a); out (c, a);  out(c)
+let Q = in(c, x); event Received(x)
+
+new c; (P || Q)
+
+lemma secret : 
+      "All x #i. ( Secret(x) @ i ==> not (Ex #j. K(x) @ j) )"
+
+lemma received : exists-trace
+      "Ex x #i. Received(x) @ i"
+
+end
+
+/* vim: set filetype=apip */

@@ -20,7 +20,6 @@ module Theory.Constraint.Solver.Goals (
   , AnnotatedGoal
   , openGoals
   , solveGoal
---   , allOpenGoalsAreSimpleFacts
   ) where
 
 -- import           Debug.Trace
@@ -100,11 +99,13 @@ openGoals sys = do
         DisjG (Disj [])                           -> False
         DisjG _                                   -> not solved
 
-        ChainG c _     ->
+        ChainG c p     ->
           case kFactView (nodeConcFact c sys) of
               Just (DnK, viewTerm2 -> FUnion args) ->
                   not solved && allMsgVarsKnownEarlier c args
-              Just (DnK,  m) | isMsgVar m          -> False
+              -- open chains for msg vars are only solved if N5'' is applicable
+              Just (DnK,  m) | isMsgVar m          -> (not solved) && 
+                                                      (chainToEquality m c p)
                              | otherwise           -> not solved
               fa -> error $ "openChainGoals: impossible fact: " ++ show fa
 
@@ -172,19 +173,22 @@ openGoals sys = do
       where earlierMsgVars = do (j, _, t) <- allKUActions sys
                                 guard $ isMsgVar t && alwaysBefore sys j i
                                 return t
-
-
--- -- | Returns true if all open goals in the system are "trivial" fact goals. -- FIXME: Remove
--- allOpenGoalsAreSimpleFacts :: System -> Bool
--- allOpenGoalsAreSimpleFacts sys = all goalIsSimpleFact (openGoals sys)
---   where
---     goalIsSimpleFact :: AnnotatedGoal -> Bool
---     goalIsSimpleFact ((ActionG _ fact),  _) = (isTrivialFact fact /= Nothing) && (isKUFact fact)
---     goalIsSimpleFact ((ChainG _ _),      _) = False
---     goalIsSimpleFact ((PremiseG _ fact), _) = (isTrivialFact fact /= Nothing)
---     goalIsSimpleFact ((SplitG _),        _) = False
---     goalIsSimpleFact ((DisjG _),         _) = False
-
+                                
+    -- check whether we have a chain that fits N5'' (an open chain between an 
+    -- equality rule and a simple msg var conclusion that exists as a K up 
+    -- previously) which needs to be resolved even if it is an open chain
+    chainToEquality :: LNTerm -> NodeConc -> NodePrem -> Bool
+    chainToEquality t_start conc p = is_msg_var && is_equality && ku_before
+        where
+            -- check whether it is a msg var
+            is_msg_var  = isMsgVar t_start
+            -- and whether we do have an equality rule instance at the end
+            is_equality = isIEqualityRule $ nodeRule (fst p) sys
+            -- get all KU-facts with the same msg var
+            ku_start    = filter (\x -> (fst x) == t_start) $ 
+                              map (\(i, _, m) -> (m, i)) $ allKUActions sys
+            -- and check whether any of them happens before the KD-conclusion
+            ku_before   = any (\(_, x) -> alwaysBefore sys x (fst conc)) ku_start 
                                 
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
@@ -216,7 +220,7 @@ solveAction :: [RuleAC]          -- ^ All rules labelled with an action
 solveAction rules (i, fa) = do
     mayRu <- M.lookup i <$> getM sNodes
     showRuleCaseName <$> case mayRu of
-        Nothing -> do ru  <- labelNodeId i rules
+        Nothing -> do ru  <- labelNodeId i rules Nothing
                       act <- disjunctionOfList $ get rActs ru
                       void (solveFactEqs SplitNow [Equal fa act])
                       return ru
@@ -292,16 +296,20 @@ solveChain rules (c, p) = do
                 let v = PremIdx 0
                 faPrem <- gets $ nodePremFact (i,v)
                 extendAndMark i ru v faPrem faConc
-         _ ->
+         Just (DnK, m) ->
              do -- If the chain does not start at a union message,
                 -- the usual *DG2_chain* extension is perfomed.
+                -- But we ignore open chains, as we only resolve 
+                -- open chains with a direct chain
+                contradictoryIf (isMsgVar m)
                 cRule <- gets $ nodeRule (nodeConcNode c)
-                (i, ru) <- insertFreshNode rules
+                (i, ru) <- insertFreshNode rules (Just cRule)
                 contradictoryIf (forbiddenEdge cRule ru)
                 -- This requires a modified chain constraint def:
                 -- path via first destruction premise of rule ...
                 (v, faPrem) <- disjunctionOfList $ take 1 $ enumPrems ru
                 extendAndMark i ru v faPrem faConc
+         _ -> error "solveChain: not a down fact"
      )
   where
     extendAndMark :: NodeId -> RuleACInst -> PremIdx -> LNFact -> LNFact 
@@ -318,9 +326,13 @@ solveChain rules (c, p) = do
     -- no edge from dexp to dexp KD premise, no edge from dpmult
     -- to dpmult KD premise, and no edge from dpmult to demap KD premise
     -- (this condition replaces the exp/noexp tags)
+    -- no more than the allowed consecutive rule applications
+    forbiddenEdge :: RuleACInst -> RuleACInst -> Bool
     forbiddenEdge cRule pRule = isDExpRule   cRule && isDExpRule  pRule  ||
                                 isDPMultRule cRule && isDPMultRule pRule ||
-                                isDPMultRule cRule && isDEMapRule  pRule
+                                isDPMultRule cRule && isDEMapRule  pRule ||
+                                (getRuleName cRule == getRuleName pRule)
+                                    && (getRemainingRuleApplications cRule == 1)
 
     -- Contradicts normal form condition N2:
     -- No coerce of a pair of inverse.
@@ -328,7 +340,7 @@ solveChain rules (c, p) = do
                                 isCoerceRule pRule && isInverse mPrem ||
     -- Also: Coercing of products is unnecessary, since the protocol is *-restricted.
                                 isCoerceRule pRule && isProduct mPrem 
-
+    
 
 -- | Solve an equation split. There is no corresponding CR-rule in the rule
 -- system on paper because there we eagerly split over all variants of a rule.

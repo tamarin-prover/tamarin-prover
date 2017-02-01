@@ -280,15 +280,15 @@ guarded formula characterizing all counter-examples:
   (∀ matchingSession #i3.1 matchingRole.
     (Sid( matchingSession, <B, A, recvd, sent, matchingRole> ) @ #i3.1)
    ⇒
-    (matchingRole = role) ∨
-    ((∀ #i5. (RevealSessk( matchingSession ) @ #i5) ⇒ ⊥) ∧
-     (∀ #i5 #i6.
-       (RevealLtk( B ) @ #i5) ∧ (RevealEphk( matchingSession ) @ #i6) ⇒ ⊥))) ∧
-  ((∃ matchingSession #i3.1 matchingRole.
-     (Sid( matchingSession, <B, A, recvd, sent, matchingRole> ) @ #i3.1)
-    ∧
-     ¬(matchingRole = role)) ∨
-   (∀ #i5. (RevealLtk( B ) @ #i5) ⇒ ¬(#i5 < #i1)))"
+    ((matchingRole = role) ∨
+     ((∀ #i5. (RevealSessk( matchingSession ) @ #i5) ⇒ ⊥) ∧
+      (∀ #i5 #i6.
+        (RevealLtk( B ) @ #i5) ∧ (RevealEphk( matchingSession ) @ #i6) ⇒ ⊥)))) ∧
+  (((∃ matchingSession #i3.1 matchingRole.
+      (Sid( matchingSession, <B, A, recvd, sent, matchingRole> ) @ #i3.1)
+     ∧
+      ¬(matchingRole = role)) ∨
+    (∀ #i5. (RevealLtk( B ) @ #i5) ⇒ ¬(#i5 < #i1))))"
 */
 simplify
 solve( (∃ matchingSession #i3 matchingRole.
@@ -307,7 +307,7 @@ solve( (∃ matchingSession #i3 matchingRole.
           case Init_1
           solve( !KU( h2(<z, 'g'^(h1(<~ex, sk($A)>)*sk($B)), z.1, $A, $B>)
                  ) @ #vk )
-            case ch2
+            case c_h2
             solve( !KU( 'g'^(h1(<~ex, sk($A)>)*sk($B)) ) @ #vk.5 )
               case Init_1
               solve( !KU( sk($B) ) @ #vk.11 )
@@ -339,8 +339,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
@@ -349,7 +351,7 @@ analyzing: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spt
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.206743s
+  processing time: 2.294646s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
 ------------------------------------------------------------------------------
@@ -360,7 +362,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.206743s
+  processing time: 2.294646s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
 ==============================================================================

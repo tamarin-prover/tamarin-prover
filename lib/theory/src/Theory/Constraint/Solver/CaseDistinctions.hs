@@ -125,14 +125,16 @@ refineCaseDistinction ctxt proofStep th =
 -- Returns the names of the steps applied.
 solveAllSafeGoals :: [CaseDistinction] -> Reduction [String]
 solveAllSafeGoals ths' =
-    solve ths' []
+    solve ths' [] 10
   where
     extensiveSplitting = unsafePerformIO $
       (getEnv "TAMARIN_EXTENSIVE_SPLIT" >> return True) `catchIOError` \_ -> return False
-    safeGoal _       (_,   (_, LoopBreaker)) = False
-    safeGoal doSplit (goal, _              ) =
+    safeGoal _       _          (_,   (_, LoopBreaker)) = False
+    safeGoal doSplit chainsLeft (goal, _              ) =
       case goal of
-        ChainG _ _    -> True
+        ChainG _ _    -> if (chainsLeft > 0) 
+                            then True 
+                            else (trace "Stopping precomputation, too many chain goals." False)
         ActionG _ fa  -> not (isKUFact fa)
         PremiseG _ fa -> not (isKUFact fa)
         DisjG _       -> doSplit
@@ -148,11 +150,11 @@ solveAllSafeGoals ths' =
     isChainPrem1 (ChainG _ (_,PremIdx 1),_) = True
     isChainPrem1 _                          = False
 
-    solve :: [CaseDistinction] -> [String] -> Reduction [String]
-    solve ths caseNames = do
+    solve :: [CaseDistinction] -> [String] -> Integer -> Reduction [String]
+    solve ths caseNames chainsLeft = do
         simplifySystem
         ctxt <- ask
-        contradictoryIf =<< gets (contradictorySystem ctxt)
+        contradictoryIf =<< (gets (contradictorySystem ctxt))
         goals  <- gets openGoals
         chains <- gets unsolvedChains
         -- try to either solve a safe goal or use one of the precomputed case
@@ -161,22 +163,25 @@ solveAllSafeGoals ths' =
             -- we perform equation splits, if there is a chain goal starting
             -- from a message variable; i.e., a chain constraint that is no
             -- open goal.
-            splitAllowed = noChainGoals && not (null chains)
-            safeGoals    = fst <$> filter (safeGoal splitAllowed) goals
-            kdPremGoals  = fst <$> filter (\g -> isKDPrem g || isChainPrem1 g) goals
-            usefulGoals  = fst <$> filter usefulGoal goals
+            splitAllowed    = noChainGoals && not (null chains)
+            safeGoals       = fst <$> filter (safeGoal splitAllowed chainsLeft) goals
+            remainingChains ((ChainG _ _):_) = chainsLeft-1
+            remainingChains _                = chainsLeft
+            kdPremGoals     = fst <$> filter (\g -> isKDPrem g || isChainPrem1 g) goals
+            usefulGoals     = fst <$> filter usefulGoal goals
             nextStep :: Maybe (Reduction [String], Maybe CaseDistinction)
             nextStep     =
-                ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay kdPremGoals) <|>
-                ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay safeGoals) <|>
+                ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay (kdPremGoals)) <|>
+                ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay (safeGoals)) <|>
                 (asum $ map (solveWithCaseDistinctionAndReturn ctxt ths) usefulGoals)
         case nextStep of
           Nothing   -> return caseNames
-          Just (step, Nothing) -> (\x -> solve ths (caseNames ++ x)) =<< step
-          Just (step, Just usedCase) -> (\x -> solve (filterCases usedCase ths) (caseNames ++ x)) =<< step
+          Just (step, Nothing) -> (\x -> solve ths (caseNames ++ x) (remainingChains safeGoals)) =<< step
+          Just (step, Just usedCase) -> (\x -> solve (filterCases usedCase ths) (caseNames ++ x) (remainingChains safeGoals)) =<< step
 
     filterCases :: CaseDistinction -> [CaseDistinction] -> [CaseDistinction]
     filterCases usedCase cds = filter (\x -> usedCase /= x) cds
+
 
 ------------------------------------------------------------------------------
 -- Redundant Case Distinctions                                              --
@@ -334,14 +339,14 @@ precomputeCaseDistinctions
     -> [LNGuarded]       -- ^ Axioms.
     -> [CaseDistinction]
 precomputeCaseDistinctions ctxt axioms =
-    map cleanupCaseNames $ saturateCaseDistinctions ctxt rawCaseDists
+    map cleanupCaseNames (saturateCaseDistinctions ctxt rawCaseDists)
   where
     cleanupCaseNames = modify cdCases $ fmap $ first $
         filter (not . null)
       . map (filter (`elem` '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']))
 
     rawCaseDists =
-        initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals)
+        (initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals))
 
     -- construct case distinction starting from facts from non-special rules
     protoGoals = someProtoGoal <$> absProtoFacts

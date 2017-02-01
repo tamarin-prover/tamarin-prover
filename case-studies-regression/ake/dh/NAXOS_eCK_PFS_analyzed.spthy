@@ -288,15 +288,15 @@ guarded formula characterizing all counter-examples:
   (∀ matchingSession #i3.1 matchingRole.
     (Sid( matchingSession, <B, A, recvd, sent, matchingRole> ) @ #i3.1)
    ⇒
-    (matchingRole = role) ∨
-    ((∀ #i5. (RevealSessk( matchingSession ) @ #i5) ⇒ ⊥) ∧
-     (∀ #i5 #i6.
-       (RevealLtk( B ) @ #i5) ∧ (RevealEphk( matchingSession ) @ #i6) ⇒ ⊥))) ∧
-  ((∃ matchingSession #i3.1 matchingRole.
-     (Sid( matchingSession, <B, A, recvd, sent, matchingRole> ) @ #i3.1)
-    ∧
-     ¬(matchingRole = role)) ∨
-   (∀ #i5. (RevealLtk( B ) @ #i5) ⇒ ¬(#i5 < #i1)))"
+    ((matchingRole = role) ∨
+     ((∀ #i5. (RevealSessk( matchingSession ) @ #i5) ⇒ ⊥) ∧
+      (∀ #i5 #i6.
+        (RevealLtk( B ) @ #i5) ∧ (RevealEphk( matchingSession ) @ #i6) ⇒ ⊥)))) ∧
+  (((∃ matchingSession #i3.1 matchingRole.
+      (Sid( matchingSession, <B, A, recvd, sent, matchingRole> ) @ #i3.1)
+     ∧
+      ¬(matchingRole = role)) ∨
+    (∀ #i5. (RevealLtk( B ) @ #i5) ⇒ ¬(#i5 < #i1))))"
 */
 simplify
 solve( (∃ matchingSession #i3 matchingRole.
@@ -316,7 +316,7 @@ solve( (∃ matchingSession #i3 matchingRole.
           solve( Init_1( ~ex, $A.1, $B.1, ~ea.1 ) ▶₀ #i3 )
             case Init_1
             solve( !KU( h2(<z, 'g'^(~x*h1(<~ex, ~ea>)), z.1, $A, $B>) ) @ #vk )
-              case ch2
+              case c_h2
               solve( !KU( 'g'^(~x*h1(<~ex, ~ea>)) ) @ #vk.5 )
                 case Init_1
                 solve( !KU( ~x ) @ #vk.11 )
@@ -349,8 +349,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/dh/NAXOS_eCK_PFS.spthy
@@ -359,7 +361,7 @@ analyzing: examples/ake/dh/NAXOS_eCK_PFS.spthy
 analyzed: examples/ake/dh/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.346475s
+  processing time: 3.247295s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (15 steps)
 
 ------------------------------------------------------------------------------
@@ -370,7 +372,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK_PFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.346475s
+  processing time: 3.247295s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (15 steps)
 
 ==============================================================================

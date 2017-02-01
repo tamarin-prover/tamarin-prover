@@ -1,0 +1,134 @@
+theory FOO_Vote_Privacy
+begin
+
+
+/*
+ * Protocol: Protocol by Fujioka, Okamoto and Ohta (FOO) (Vote-Privacy)
+ * Modeler: Charles Duménil
+ * Date: July 2016	
+ * Source: Formal verification of voting and auction protocols by Jannik Dreier
+ * Status: Working 
+ */
+
+
+/*
+  Protocol FOO {                                 ( Administration and collector are considered corrupted )
+    Phase 1:
+     V -> A: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skV) >                                                   " v1( diff(A,B) ) & v2( diff(B,A) ) "
+     A -> V: < blind(commit(v,r),b), sign(blind(commit(v,r),b),skA) >      "Registered" + "Check signature Voter"
+    Phase 2:
+     V -> C: < commit(vote,r), sign(commit(vote,r),ltkA) >                 "Check signature Admin" + "Check commitment"
+    Phase 3:
+     C -> Pub: < commit(vote,r), sign(commit(vote,r),ltkA) >               "Check signature Admin"
+     V -> C:  r                                                            "Check commitment"
+     C -> Pub: v                                                           "VotePublished" + "Check r"
+  }
+*/
+
+
+builtins: multiset
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, commit/2
+equations: open(commit(m,r),r)=m,
+           checksign( sign(m,sk),pk(sk) ) = m,
+           unblind(blind(m,r),r) = m,
+           unblind(sign(blind(m,r),sk),r) = sign(m,sk)
+
+
+// Public key infrastructure
+
+rule Register_Voter_pk:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v1', ~ltkV), !Pk('v1', pk(~ltkV)), Out(pk(~ltkV)) ]
+
+rule Register_Voter_pk2:
+  [ Fr(~ltkV) ] --[ ]-> [ !Ltk('v2', ~ltkV), !Pk('v2', pk(~ltkV)), Out(pk(~ltkV)) ]
+
+rule Register_Admin_pk:
+  [ Fr(~ltkA) ] --[ ]-> [ !AdminLtk($A, ~ltkA), !AdminPk($A, pk(~ltkA)), Out(~ltkA) ]
+
+
+// Generates votes
+
+rule setup:
+  [  ]
+  --[ OnlyOnce() ]->
+  [ Vote('v1', diff($yes, $no) ), Vote('v2', diff($no, $yes) ) ]
+
+
+// Rules
+
+rule V_1:
+  let e = blind( commit( $vote , ~r ), ~b )
+      s = sign ( blind( commit( $vote , ~r ), ~b ) , ~ltkV1 )
+in
+    [ Fr( ~r ), Fr( ~b ), Vote( V, $vote ), !Ltk( V, ~ltkV1 )]
+  --[ V_1( V ) ]->
+    [ Out( < e , s > ), St_V_1( V, $vote, ~r, ~b )]
+
+rule V_2:
+  let e = blind(commit($vote,~r),~b)
+      d = sign(blind(commit($vote,~r),~b),~ltkA)
+  in
+    [ In( <e,d> ), St_V_1( V, $vote, ~r, ~b),  !AdminPk(A, pk(~ltkA)) ]
+  --[ V_2( ) ]->     
+    [ St_V_sync( V, pk(~ltkA), $vote, ~r)]
+
+rule V_2_sync:    
+    [ St_V_sync( 'v1', pkA, $vote1, ~r1), St_V_sync( 'v2', pkA, $vote2, ~r2) ]
+  --[ V_2_sync( ) ]->     
+    [ Shuffle( <'v1', pkA, $vote1, ~r1> + <'v2', pkA, $vote2, ~r2>) ]
+
+rule shuffle_Vote:
+  [ Shuffle( x + y) ]
+  --[  ]->
+  [ St_V_2(x), St_V_2(y) ]
+
+rule V_3:    
+  let y = sign(commit($vote,~r),~ltkA)
+      x = commit($vote,~r)
+  in
+    [ St_V_2( <V, pk(~ltkA), $vote, ~r>), !AdminPk(A, pk(~ltkA)) ]
+  --[ V_3( ) ]->     
+    [ Out( <x,y> ) , St_V_3( V, $vote, ~r) ]
+
+rule V_4:
+  let x = commit($vote,~r)
+  in
+    [ In(x), St_V_3(V, $vote, ~r) ]
+  --[ V_4( ) ]->
+    [ Out(~r) ]
+
+
+// Axioms
+
+axiom onlyOnce:
+  " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j "
+
+
+
+// Executability
+
+lemma exec:
+  exists-trace
+  " Ex #i #j. V_4( )@i & V_4( )@j & not( #i=#j) "
+
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equational_theories/foo_vote_privacy.spthy
+
+  RHS :  exec (exists-trace): verified (12 steps)
+  LHS :  exec (exists-trace): verified (12 steps)
+  DiffLemma:  Observational_equivalence : verified (6946 steps)
+
+==============================================================================
+
+real	4m11.126s
+user	9m58.208s
+sys	3m33.752s
+
+*/
+
+end
+

@@ -112,7 +112,7 @@ groupSortOn proj = groupOn proj . sortOn proj
 
 -- | partition the given set into equality classes with respect
 -- to the representative given by the projection function
-eqClasses :: (Eq b, Ord b) => (a -> b) -> [a] -> [[a]]
+eqClasses :: Ord b => (a -> b) -> [a] -> [[a]]
 eqClasses = eqClassesBy ord
   where ord x y | x == y = EQ | x < y = LT | otherwise = GT
 

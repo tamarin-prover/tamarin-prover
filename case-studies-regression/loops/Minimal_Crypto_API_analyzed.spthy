@@ -68,8 +68,10 @@ by contradiction /* from formulas */
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/loops/Minimal_Crypto_API.spthy
@@ -78,7 +80,7 @@ analyzing: examples/loops/Minimal_Crypto_API.spthy
 analyzed: examples/loops/Minimal_Crypto_API.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.146865s
+  processing time: 0.072307s
   NewKey_invariant (all-traces): verified (8 steps)
   NewKey_secrecy (all-traces): verified (2 steps)
 
@@ -90,7 +92,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Crypto_API.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.146865s
+  processing time: 0.072307s
   NewKey_invariant (all-traces): verified (8 steps)
   NewKey_secrecy (all-traces): verified (2 steps)
 

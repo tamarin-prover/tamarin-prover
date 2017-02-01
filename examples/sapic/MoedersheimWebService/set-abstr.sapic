@@ -1,0 +1,62 @@
+theory SetAbst
+begin
+
+section{* The PKI-example *}
+
+/*
+ * Protocol:    Variant on the running example from Abstraction by set
+ * membership by S. Mödersheim.. more difficult than the original,
+ * actually 
+ * Modeler:     Robert Kunnemann 
+ * Date:    Farbuary 2013
+ *
+ * Status:  working
+ */
+
+builtins: asymmetric-encryption, signing
+
+let Client=
+	(
+	/* Revoke key */
+	new ~nsk;
+    [ ClientKey(user, ~sk) ] --[ HonestKey(~nsk) ]-> [ ClientKey(user,~nsk) ];
+	out(<'renew',user,pk(~nsk)>);
+	out(sign(<'renew',user,pk(~nsk)>,~sk));
+	in(sign(<'confirm',sign(<'renew',user,pk(~nsk)>,~sk)>,pki));
+	event Revoked(~sk);
+	out(~sk)
+	)
+
+let Server=
+(( in(<'new',user>); //Create Honest Keys
+	new ~sk;
+	[ ] --[ HonestKey(~sk) ]-> [ ServerDB(pki,user,pk(~sk)),
+ClientKey(user,~sk)];
+	out(pk(~sk))
+) 
+|| //Allow creating Dishonest Keys
+( in(<user,sk>);
+  [] --> [ServerDB(pki,user,pk(sk))]
+)
+|| //Revoke Key
+(
+	in(<'renew',user,pk(nsk)>);
+	in(sign(<'renew',user,pk(nsk)>,sk));
+	[ServerDB(pki,user,pk(sk))]-->[ServerDB(pki,user,pk(nsk))];
+	out(sign(<'confirm',sign(<'renew',user,pk(nsk)>,sk)>,pki))
+))
+
+!(new pki; ! Server || (new user; ! Client) ) 
+
+rule SetupDishonestKey:
+    [ In(sk) ] --> [ ServerDB($A, pk(sk)) ]
+
+
+lemma Knows_Honest_Key_imp_Revoked:
+  "All sk #i #d. HonestKey(sk) @ i & K(sk) @ d ==>
+      (Ex #r. Revoked(sk) @ r)
+  "
+
+end
+
+/* vim: set filetype=sapic */

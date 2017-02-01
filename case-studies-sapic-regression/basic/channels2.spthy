@@ -1,0 +1,37 @@
+theory ChannelTestTwo
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+rule Init_: //Init 
+ [ ] --[Init()]-> [State_()]
+
+rule new_c_: //new c 
+ [ State_(), Fr(c)] --[]-> [State_1(c)]
+
+rule new_a_1: //new a 
+ [ State_1(c), Fr(a)] --[]-> [State_11(a, c)]
+
+rule out_c_a_0_11: //out c,a, 0 
+ [ State_11(a, c), In(c)] --[ChannelInEvent(c)]-> [Out(a), State_111(a, c)]
+
+rule out_c_a_1_11: //out c,a, 1 
+ [ State_11(a, c)] --[]-> [Semistate_11(a, c), Message(c,a)]
+
+rule out_c_a_2_11: //out c,a, 2 
+ [ Semistate_11(a, c), Ack(c,a)] --[]-> [State_111(a, c)]
+
+rule event_Reached_111: //event Reached() 
+ [ State_111(a, c)] --[Event(), Reached()]-> [State_1111(a, c)]
+
+rule Zero_1111: //Zero 
+ [ State_1111(a, c)] --[]-> []
+
+
+axiom single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+lemma received :
+"	not( Ex #i. Reached() @ i )"
+
+end

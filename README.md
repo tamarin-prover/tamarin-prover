@@ -5,8 +5,8 @@ The Tamarin prover repository
 This README describes the organization of the repository of the Tamarin prover
 for security protocol verification. Its intended audience are interested
 users and future developers of the Tamarin prover. For installation
-and usage instructions of the Tamarin prover see:
-[installation instructions](INSTALL.md).
+and usage instructions of the Tamarin prover see chapter 2 of the manual:
+https://tamarin-prover.github.io/manual/book/002_installation.html
 
 
 Developing and contributing
@@ -40,8 +40,7 @@ http://tamarin-prover.github.io
 Manual
 ------
 
-The manual is [`/doc/MANUAL.md`](/doc/MANUAL.md). It is part of every installation of the
-Tamarin prover.
+The manual is available as PDF or HTML at https://tamarin-prover.github.io/manual/index.html 
 
 Experimental improved graph output
 ----------------------------------

@@ -167,10 +167,10 @@ guarded formula characterizing all counter-examples:
     (∀ #i6. (SesskRev( ss ) @ #i6) ⇒ ⊥) ∧
     (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7) ⇒ ⊥) ∧
     (∀ #i6 #i7. (LtkRev( B ) @ #i6) ∧ (EphkRev( ss ) @ #i7) ⇒ ⊥)) ∧
-  ((∃ ss #i4 #i5 C D ms.
-     (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
-   ((∀ #i6. (LtkRev( B ) @ #i6) ⇒ ⊥) ∧
-    (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7) ⇒ ⊥)))"
+  (((∃ ss #i4 #i5 C D ms.
+      (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
+    ((∀ #i6. (LtkRev( B ) @ #i6) ⇒ ⊥) ∧
+     (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7) ⇒ ⊥))))"
 */
 simplify
 solve( (∃ ss #i4 #i5 C D ms.
@@ -197,11 +197,11 @@ solve( (∃ ss #i4 #i5 C D ms.
                                      aenc(~m2, pk(~ltkA))>),
                                 <'Init', $I, $R, aenc(~m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>)
                        ) @ #vk.1 )
-                  case cMAC
+                  case c_MAC
                   solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
                                    aenc(~m2, pk(~ltkA))>)
                          ) @ #vk.1 )
-                    case cKDF
+                    case c_KDF
                     solve( !KU( ~m1 ) @ #vk.13 )
                       case Ephk_reveal
                       solve( !KU( ~m2 ) @ #vk.14 )
@@ -231,8 +231,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/csf12/KAS2_eCK.spthy
@@ -241,7 +243,7 @@ analyzing: examples/csf12/KAS2_eCK.spthy
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.448466s
+  processing time: 3.267704s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ------------------------------------------------------------------------------
@@ -252,7 +254,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.448466s
+  processing time: 3.267704s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

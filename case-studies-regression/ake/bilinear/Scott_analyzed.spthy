@@ -216,11 +216,11 @@ guarded formula characterizing all counter-examples:
     (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)
    ⇒
     ∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
-  ((∃ matching #i3 #i4 sid.
-     (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
-   ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
-    (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
-    (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥)))"
+  (((∃ matching #i3 #i4 sid.
+      (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
+    ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+     (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
+     (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥))))"
 */
 simplify
 solve( (∃ matching #i3 #i4 sid.
@@ -260,7 +260,7 @@ solve( (∃ matching #i3 #i4 sid.
                 case Reveal_session_key_case_2
                 by contradiction /* from formulas */
               next
-                case ckdf
+                case c_kdf
                 solve( !KU( em(hp($A), hp($B))^(~ex*~ey*~s) ) @ #vk.5 )
                   case Init_1_case_1
                   by solve( !KU( ~ey ) @ #vk.10 )
@@ -346,7 +346,7 @@ solve( (∃ matching #i3 #i4 sid.
               case Reveal_session_key_case_2
               by contradiction /* from formulas */
             next
-              case ckdf
+              case c_kdf
               solve( !KU( em(hp($A), hp($B))^(~ex*~ey*~x) ) @ #vk.5 )
                 case Init_1_case_1
                 by solve( !KU( ~ey ) @ #vk.10 )
@@ -435,7 +435,7 @@ next
         case Reveal_session_key_case_2
         by contradiction /* from formulas */
       next
-        case ckdf
+        case c_kdf
         solve( splitEqs(0) )
           case split_case_1
           solve( !KU( Y^~ex ) @ #vk.5 )
@@ -1116,7 +1116,7 @@ next
         case Reveal_session_key_case_2
         by contradiction /* from formulas */
       next
-        case ckdf
+        case c_kdf
         solve( splitEqs(0) )
           case split_case_1
           solve( !KU( X^~ey ) @ #vk.5 )
@@ -1794,8 +1794,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/Scott.spthy
@@ -1804,7 +1806,7 @@ analyzing: examples/ake/bilinear/Scott.spthy
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 23.509533s
+  processing time: 16.61189s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 
@@ -1816,7 +1818,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 23.509533s
+  processing time: 16.61189s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 

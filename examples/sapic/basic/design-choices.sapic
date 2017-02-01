@@ -1,0 +1,13 @@
+theory DesignChoices
+begin
+
+!(lock 's'; 
+  lookup 'visited' as v 
+  in unlock 's'
+  else event Visit(); insert 'visited','s';
+  unlock 's')
+    
+lemma visit_once:
+      "All #t1 #t2 . (Visit()@t1 & Visit()@t2) ==> #t1=#t2"
+
+end

@@ -1,0 +1,111 @@
+theory NeedhamSchroederASTagged
+
+begin
+
+builtins: asymmetric-encryption, signing
+
+//This cannot be proven automatically at the moment, the secrecy lemma is problematic.
+//But it can be show manually.
+//UPDATE: NO, it can't. The typing lemma can be contradicted. TODO
+
+//The Authentication Server's public key is known to everyone
+let AS =
+! ( //registering names
+	in(<X,pkX>);
+	lookup X as nothing in 0
+	else
+		insert X,pkX;
+		out(sign(<'added',X,pkX>,ask))
+)
+||
+!( //A asking for B's public key
+	in(<A,B>);
+	lookup B as pkB in
+		out(sign(<pkB,B>,ask))
+)
+
+let Initiator=
+	in(xB); 
+	out(<P,xB>);
+	in(sign(<pkxB,xB>,ask));
+
+	new Na; 
+	event OUT_I_1(aenc(<Na,P>,pkxB),P);
+	out(aenc(<'1',Na,P>,pkxB));
+
+	in(aenc(<'2',Na,xNb,xB>,pk(skP))); 
+	event IN_I_2_nr(xNb,aenc(<Na,xNb,xB>,pk(skP)));
+
+	new k; out(aenc(<'3',xNb,k>,pkxB));
+	event SessionA(P,xB,k)
+
+let Responder=
+	in(aenc(<'1',xNa,xA>,pk(skP))); 
+	event IN_R_1_ni(xNa,aenc(<xNa,xA>,pk(skP)),xA);
+	out(<P,xA>);
+	
+	in(sign(<pkxA,xA>,ask));
+
+	new Nb; 
+	event OUT_R_1(aenc(<xNa,Nb,P>,pkxA));
+	out(aenc(<'2',xNa,Nb,P>,pkxA));
+
+	in(aenc(<'3',Nb,xk>,pk(skP))); 
+	event SessionB(xA,P,xk)
+
+
+!( 
+new ask; AS ||
+! ( new P;
+	new skP; 
+	insert P,pk(skP);
+	event Honest(P);
+	out(P);
+	!(Initiator || Responder )
+) 
+)
+
+/* lemma sanity1: //make sure that a valid protocol run exists */
+/* exists-trace */
+/* 	"Ex a b k #t1 . SessionA(a,b,k)@t1" */
+
+/* lemma sanity2: */ 
+/* exists-trace */
+/* 	"Ex a b k #t1 . SessionB(a,b,k)@t1" */
+
+	
+
+lemma types [typing, reuse]:
+  " (All ni m1 #i A.
+       IN_R_1_ni( ni, m1,A) @ i
+       ==>
+       ( (Ex #j #k . KU(ni) @ j & j < i & KU(A)@k & k < i
+
+		)
+       | (Ex #j. OUT_I_1( m1,A ) @ j)
+       )
+    )
+  & (All nr m2 #i.
+       IN_I_2_nr( nr, m2) @ i
+       ==>
+       ( (Ex #j. KU(nr) @ j & j < i)
+       | (Ex #j. OUT_R_1( m2 ) @ j)
+       )
+    )
+"
+
+lemma authenticity:
+	"All a b k #i. SessionA(a,b,k)@i
+	==> Ex #j. SessionB(a,b,k)@j"
+
+//lemma secrecy:
+//	"not (
+//		Ex a b k #t1 #t2 .
+//		 SessionA(a,b,k)@t1 
+//		& K(k)@t2
+//		& ( Ex #i . Honest(a)@i)
+//		& ( Ex #i . Honest(b)@i)
+//	)"
+
+end
+

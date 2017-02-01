@@ -2,9 +2,9 @@ Developing and contributing to tamarin-prover
 ---------------------------------------------
 
 We use Linux during the development of Tamarin. Mac OS X can be used
-just as well. Windows can be used for development also, but the
-directory layout simplification introduced via symbolic links will not
-work.
+just as well. Windows is not recommended as no testing is possible
+(due to GraphViz and Maude) and additionally the directory layout
+simplification introduced via symbolic links will not work.
 
 As of October 1st, 2012, we started organizing our branches according to
 http://nvie.com/posts/a-successful-git-branching-model/.

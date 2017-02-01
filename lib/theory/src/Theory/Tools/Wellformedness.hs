@@ -615,7 +615,8 @@ formulaReports thy = do
             "The only allowed terms are public names and bound node and message\
             \ variables. If you encounter free message variables, then you might\
             \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
-            \ this is unambiguous."
+            \ this is unambiguous. Moreover, reducible function symbols are\
+            \ disallowed."
       where
         irreducible = irreducibleFunSyms $ get (sigpMaudeSig . thySignature) thy
 
@@ -624,7 +625,7 @@ formulaReports thy = do
         allowed (viewTerm -> Lit (Con (Name PubName _))) = True
         -- we allow multiset union
         allowed (viewTerm2 -> FUnion args)                = all allowed args
-        -- we allow reducible function symbols
+        -- we allow irreducible function symbols
         allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
         allowed _                                                    = False
 
@@ -680,7 +681,8 @@ formulaReportsDiff thy = do
             "The only allowed terms are public names and bound node and message\
             \ variables. If you encounter free message variables, then you might\
             \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
-            \ this is unambiguous."
+            \ this is unambiguous. Moreover, reducible function symbols are\
+            \ disallowed."
       where
         irreducible = irreducibleFunSyms $ get (sigpMaudeSig . diffThySignature) thy
 
@@ -689,7 +691,7 @@ formulaReportsDiff thy = do
         allowed (viewTerm -> Lit (Con (Name PubName _))) = True
         -- we allow multiset union
         allowed (viewTerm2 -> FUnion args)                = all allowed args
-        -- we allow reducible function symbols
+        -- we allow irreducible function symbols
         allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
         allowed _                                                    = False
 

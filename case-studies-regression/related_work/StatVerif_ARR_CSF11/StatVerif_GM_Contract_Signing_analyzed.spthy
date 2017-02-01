@@ -250,11 +250,11 @@ solve( !TTP( skT ) ▶₁ #i )
     solve( !KU( sign(~n, pcs(sign(sk1, ct), pk(ysk), pk(~n))) ) @ #vk )
       case Abort1
       solve( !KU( sign(~n.1, <sign(sk1.1, ct), sign(sk2, ct)>) ) @ #vk.2 )
-        case csign
+        case c_sign
         by solve( !KU( ~n.1 ) @ #vk.13 )
       qed
     next
-      case csign
+      case c_sign
       by solve( !KU( ~n ) @ #vk.2 )
     qed
   qed
@@ -281,9 +281,9 @@ solve( !TTP( skT ) ▶₁ #i )
   solve( !KU( sign(~n, pcs(sign(sk1, ct), pk(ysk), pk(~n))) ) @ #vk )
     case Abort1
     solve( !KU( sign(sk1, ct) ) @ #vk.10 )
-      case csign
+      case c_sign
       solve( !KU( pk(sk1) ) @ #vk.9 )
-        case cpk
+        case c_pk
         solve( !KU( pk(ysk) ) @ #vk.10 )
           case Setup_TTP
           solve( !KU( pk(~n) ) @ #vk.11 )
@@ -317,13 +317,13 @@ solve( !TTP( skT ) ▶₁ #i )
   solve( !KU( sign(~n, <sign(sk1, ct), sign(sk2, ct)>) ) @ #vk )
     case Resolve1
     solve( !KU( sign(sk1, ct) ) @ #vk.11 )
-      case csign
+      case c_sign
       solve( !KU( sign(sk2, ct) ) @ #vk.12 )
-        case csign
+        case c_sign
         solve( !KU( pk(sk1) ) @ #vk.11 )
-          case cpk
+          case c_pk
           solve( !KU( pk(sk2) ) @ #vk.12 )
-            case cpk
+            case c_pk
             solve( !KU( pk(~n) ) @ #vk.13 )
               case Setup_TTP
               SOLVED // trace found
@@ -356,13 +356,13 @@ solve( !TTP( skT ) ▶₁ #i )
   solve( !KU( sign(~n, <sign(sk1, ct), sign(sk2, ct)>) ) @ #vk )
     case Resolve2
     solve( !KU( sign(sk2, ct) ) @ #vk.11 )
-      case csign
+      case c_sign
       solve( !KU( sign(sk1, ct) ) @ #vk.12 )
-        case csign
+        case c_sign
         solve( !KU( pk(sk1) ) @ #vk.11 )
-          case cpk
+          case c_pk
           solve( !KU( pk(sk2) ) @ #vk.12 )
-            case cpk
+            case c_pk
             solve( !KU( pk(~n) ) @ #vk.13 )
               case Setup_TTP
               SOLVED // trace found
@@ -379,8 +379,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
@@ -389,7 +391,7 @@ analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signi
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.632468s
+  processing time: 0.583451s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)
@@ -403,7 +405,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.632468s
+  processing time: 0.583451s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

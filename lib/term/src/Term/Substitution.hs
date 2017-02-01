@@ -39,7 +39,7 @@ import Control.Monad.Bind
 
 -- | @composeVFresh s1 s2@ composes the fresh substitution s1 and the free substitution s2.
 --   The result is the fresh substitution s = s1.s2.
-composeVFresh :: (IsConst c, Show (Lit c LVar))
+composeVFresh :: (IsConst c)
               => LSubstVFresh c -> LSubst c -> LSubstVFresh c
 composeVFresh s1_0 s2 =
     -- all variables in vrange(s1.s2) originate from s1 and can be considered fresh.

@@ -1,0 +1,75 @@
+theory SetAbst
+begin
+
+section{* The PKI-example *}
+
+/*
+ * Protocol:    Running example from Abstraction by set
+ *              membership by S. Mödersheim
+ * Modeler:     Robert Kunnemann 
+ * Date:        Januar 2013
+ *
+ * Status:  working
+ */
+
+builtins: asymmetric-encryption, signing
+
+let Client=
+ /* Revoke key */
+        new ~nsk;
+        lock <'USER',user>;
+        lookup <'USER',user> as ~sk in
+                event HonestKey(~nsk);
+                delete <'USER',user>;
+                insert <'USER',user>,~nsk;
+        unlock <'USER',user>;
+        out(<'renew',user,pk(~nsk)>);
+        out(sign(<'renew',user,pk(~nsk)>,~sk));
+        in(sign(<'confirm',sign(<'renew',user,pk(~nsk)>,~sk)>,pki));
+        event Revoked(~sk);
+        out(~sk)
+                
+let Server=
+(
+( /* Create Honest Keys */
+ in(<'new',user>);
+        new ~sk;
+        lock <'SERVER',user>;
+                event HonestKey(~sk);
+                insert <'SERVER',pki,user>, pk(~sk);
+                insert <'USER',user>, ~sk;
+                event HonestKey(~sk);
+        unlock <'SERVER',user>;
+        out(pk(~sk))
+) 
+|| 
+( /* Revoke key */
+        in(<'renew',user,pk(nsk)>);
+        in(sign(<'renew',user,pk(nsk)>,sk));
+        lock <'SERVER',user>;
+        lookup <'SERVER',pki,user> as pksk in
+                if pksk = pk(sk) then
+                        delete <'SERVER',pki,user>;
+                        insert <'SERVER',pki,user>, pk(nsk);
+                        unlock <'SERVER',user>;
+                        out(sign(<'confirm',sign(<'renew',user,pk(nsk)>,sk)>,pki))
+)
+)
+
+!(new pki; ! Server || (new user; out(user); ! Client) ) 
+
+lemma Knows_Honest_Key_imp_Revoked:
+  "All sk #i #d. HonestKey(sk) @ i & K(sk) @ d ==>
+      (Ex #r. Revoked(sk) @ r)
+  "
+
+/* /1* Sanity check. Commented out for runtime comparison to [1]. *1/ */
+/* lemma Honest_Revoked_Known_Reachable: */
+/*   exists-trace */
+/*   "(Ex sk #i #j #r. HonestKey(sk) @ i */
+/*                   & K(sk) @ j */
+/*                   & Revoked(sk) @ r */
+/*    )" */
+
+end
+/* vim: set filetype=sapic */

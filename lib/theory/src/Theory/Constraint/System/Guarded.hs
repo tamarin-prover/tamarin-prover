@@ -804,7 +804,7 @@ prettyGuarded fm =
 
     pp (GDisj (Disj xs)) = do
         ps <- mapM (\x -> opParens <$> pp x) xs
-        return $ sep $ punctuate (operator_ " ∨") ps
+        return $ parens $ sep $ punctuate (operator_ " ∨") ps
         -- return $ sep $ punctuate (operator_ " |") ps
 
     pp (GConj (Conj [])) = return $ operator_ "⊤"  -- "T"

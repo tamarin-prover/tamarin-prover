@@ -121,9 +121,9 @@ guarded formula characterizing all counter-examples:
     (∀ #i6. (SesskRev( ss ) @ #i6) ⇒ ⊥) ∧
     (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ⊥) ∧
     (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (LtkRev( B ) @ #i7) ⇒ ⊥)) ∧
-  ((∃ ss #i4 #i5 C D ms.
-     (SidR( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
-   (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1)))"
+  (((∃ ss #i4 #i5 C D ms.
+      (SidR( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
+    (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1))))"
 */
 simplify
 solve( (∃ ss #i4 #i5 C D ms.
@@ -149,7 +149,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                 case Sessk_reveal_case_2
                 by contradiction /* from formulas */
               next
-                case cKDF
+                case c_KDF
                 solve( !KU( ~m1 ) @ #vk.7 )
                   case Ephk_reveal
                   by contradiction /* from formulas */
@@ -166,12 +166,12 @@ solve( (∃ ss #i4 #i5 C D ms.
               solve( !KU( MAC(KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>),
                               <'KC_1_V', $R, $I, ~m2, aenc(~m1, pk(~ltkA))>)
                      ) @ #vk.2 )
-                case cMAC
+                case c_MAC
                 solve( !KU( KDF(<~m1, $I, $R, ~m2, aenc(~m1, pk(~ltkA))>) ) @ #vk.4 )
                   case Sessk_reveal
                   by contradiction /* cyclic */
                 next
-                  case cKDF
+                  case c_KDF
                   solve( !KU( ~m1 ) @ #vk.15 )
                     case Ephk_reveal
                     by contradiction /* from formulas */
@@ -205,7 +205,7 @@ next
         case Sessk_reveal_case_2
         by contradiction /* from formulas */
       next
-        case cKDF
+        case c_KDF
         solve( !KU( ~m1 ) @ #vk.7 )
           case Ephk_reveal
           by contradiction /* from formulas */
@@ -218,7 +218,7 @@ next
         qed
       qed
     next
-      case cMAC
+      case c_MAC
       solve( !KU( KDF(<~m1, $I, $R, nonceB, aenc(~m1, pk(~ltkA))>) ) @ #vk.4 )
         case Sessk_reveal_case_1
         by contradiction /* from formulas */
@@ -226,7 +226,7 @@ next
         case Sessk_reveal_case_2
         by contradiction /* cyclic */
       next
-        case cKDF
+        case c_KDF
         solve( !KU( ~m1 ) @ #vk.15 )
           case Ephk_reveal
           by contradiction /* from formulas */
@@ -247,8 +247,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/csf12/KAS1.spthy
@@ -257,7 +259,7 @@ analyzing: examples/csf12/KAS1.spthy
 analyzed: examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.860742s
+  processing time: 0.715798s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ------------------------------------------------------------------------------
@@ -268,7 +270,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.860742s
+  processing time: 0.715798s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ==============================================================================

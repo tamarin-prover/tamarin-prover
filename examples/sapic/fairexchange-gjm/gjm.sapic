@@ -1,0 +1,282 @@
+theory GJM
+begin
+
+section{* Garay-Jakobsson-MacKenzie contract signing protocol *}
+
+/*
+ * Protocol:    GJM contract signing 
+ * Modeler:     Robert Kunnemann 
+ * Date:        Jul 2016
+ *
+ * Status:  wip 
+ *
+ * Juan A. Garay, Markus Jakobsson, and Philip D. MacKenzie. Abuse-free
+ * optimistic contract signing. In Advances in Cryptology—Crypto’99, volume
+ * 1666 of LNCS, pages 449–466. Springer, 1999.
+ */
+
+functions: 
+    pk/1,sk/1[private],
+    sign/2, verify/2,
+    /* extrmsg/1, */
+    true/0,
+    pcs/3, checkpcs/5, convertpcs/2, verify/2, fakepcs/4
+
+equations:
+    verify(sign(m, sk(i)), pk(i)) = m,
+    /* extrmsg(sign(m,x))=m, */
+    checkpcs(c, pk(s), pk(v), pk(ttp), pcs(sign(c, sk(s)), pk(v), pk(ttp))) = true,
+    convertpcs(sk(ttp), pcs(sign(c, sk(s)), pk(v), pk(ttp))) = sign(c, sk(s)),
+    /* fakepcs () */
+    checkpcs(c, pk(s), pk(v), pk(ttp), fakepcs(pk(s), sk(v), pk(ttp), c)) = true
+
+options: progress
+
+
+  /* Taken from tamarin examples, quote:
+
+    The above two equations are inspired by the following design decisions.
+    We model a private signature of a contract 'xc' that is
+      - meant for 'y' identified by his public key 'ypk'
+      - privately signed by 'x' using his private key 'xsk'
+      - to be converted by the trusted party 'z' identified by its public key
+        'zpk'
+     using the term 'pcs(sign(xsk, xc), ypk, zpk)'.
+
+     This term chan be checked against 'xc', 'pk(xsk)', ypk, and zpk using
+     the 'checkpcs' algorithm.
+
+     It can be converted to a standard signature using the 'convertpcs'
+     algorithm provided one has access to the private key of the trusted
+     party.
+
+     Note that we embedd the proper standard signature immediately into the
+     'pcs' term, as the resulting equational theory is not subterm-convergent
+     otherwise.
+
+     Adapted:
+        - renamed x->s (signer) y->v (verifier) z-> ttp
+
+     Notes:
+        - paper defines S-Convert as well as TP-Convert, but S-Convert would
+          correspond to the following formula, which is redundant with the
+          sign-constructor.
+          convertpcs(sk(s), pcs(sign(c, sk(s)), pk(v), pk(ttp))) = sign(c, sk(s)),
+
+     TODO:
+        - Use checkpcs instead of pattern matching to catch attacks using fakepcs
+        
+  */
+
+let A = in('c',$TEXT);
+        new sida; event StartA($TEXT,sida);
+        let m1 = pcs(sign(<$TEXT,'1'>,sk($A)),pk($B),pk(TTPID)) in
+        let m2 = pcs(sign(<$TEXT,'2'>,sk($B)),pk($A),pk(TTPID)) in
+        let m3 = sign(<$TEXT,'1'>,sk($A)) in
+        let m4 = sign(<$TEXT,'2'>,sk($B)) in
+        let a1 = sign(<$TEXT,$A,$B,'abort'>,sk('A')) in
+        let a2 = sign(a1,sk(TTPID)) in
+        let r1 = <m3,m2> in
+        out('c',m1);
+        ( /* Abort */
+          out('r',<'originator',$A,TTPID,a1>);
+          (
+            in('r',<'originator',$A,TTPID,a2>);
+            event AbortA($TEXT,sida)
+          ) + (
+            in('r',<'originator',$A,TTPID,m4>);
+            event ResolveA($TEXT,sida)
+          )
+          /* TODO Protocol description forsees a third alternative:
+           * TTP might send m3(!) to A -- but A can generate this herself. Why
+           * does this happen? Note that m3 is send if Resolve1 was called
+           * before, which should not take place anyway, if we excute the abort protocol.
+           */
+        )
+        +
+        (
+          in('c',m2);
+          out('c',m3);
+          ( /* Resolve */
+            out('r',<'originator',$A,TTPID,r1>);
+            (
+             in('r',<'originator',$A,TTPID,a2>);
+             event AbortA($TEXT,sida)
+            ) + (
+             in('r',<'originator',$A,TTPID,m4>);
+             event ResolveA($TEXT,sida)
+            )
+          )
+          +
+          (
+           in('c',m4);
+           event ContractA($A,$B,$TEXT,sida)
+          )
+        )
+
+let B = 
+        let m1 = pcs(sign(<$TEXT,'1'>,sk($A)),pk($B),pk(TTPID)) in
+        let m2 = pcs(sign(<$TEXT,'2'>,sk($B)),pk($A),pk(TTPID)) in
+        let m3 = sign(<$TEXT,'1'>,sk($A)) in
+        let m4 = sign(<$TEXT,'2'>,sk($B)) in
+        let a1 = sign(<$TEXT,$A,$B,'abort'>,sk('A')) in
+        let a2 = sign(a1,sk(TTPID)) in
+        let r2 = <m1,m4> in
+        in('c',m1);
+        new sidb; event StartB($TEXT,sidb);
+        out('c',m2);
+        ( /* Resolve */
+          out('r',<'responder',$B,TTPID,r2>);
+          (
+          in('r',<'responder',$B,TTPID,a2>);
+          event AbortB($TEXT,sidb)
+          ) + (
+          in('r',<'responder',$B,TTPID,m3>);
+          event ResolveB($TEXT,sidb)
+          )
+        )
+        +
+        (
+          in('c',m3);
+          event ContractB($A,$B,$TEXT,sidb);
+          out('c',m4)
+        )
+
+
+/* TODO justify pattern matching by explaining each
+ * step in the comments, using the equations */
+
+let TTP = 
+let m1 = pcs(sign(<$TEXT,'1'>,sk($A)),pk($B),pk(TTPID)) in
+let m2 = pcs(sign(<$TEXT,'2'>,sk($B)),pk($A),pk(TTPID)) in
+let m3 = sign(<$TEXT,'1'>,sk($A)) in
+let m4 = sign(<$TEXT,'2'>,sk($B)) in
+let a1 = sign(<$TEXT,$A,$B,'abort'>,sk($A)) in
+let a2 = sign(a1,sk(TTPID)) in
+let r1 = <m3,m2> in
+let r2 = <m1,m4> in
+( /* Abort */
+  in('r',<'originator',$A,TTPID,a1>);
+  lock $TEXT;
+  lookup <'Resolved1',TTPID,$TEXT> as siga in
+    out('r',<'originator',$A,TTPID,siga>);
+    unlock $TEXT
+  else (
+    lookup <'Resolved2',TTPID,$TEXT> as sigb in
+      out('r',<'originator',$A,TTPID,sigb>);
+      unlock $TEXT
+    else /* neither $A nor $B have resolved */
+      insert <'Aborted',TTPID,$TEXT>, a2;
+      out('r',<'originator',$A,TTPID,a2>);
+      unlock $TEXT
+  )
+)
+||
+( /* Resolve1 */
+  in('r',<'originator',$A,TTPID,r1>);
+  lock $TEXT;
+  lookup <'Aborted',TTPID,$TEXT> as abortcert in
+    out('r',<'originator',$A,TTPID,abortcert>);
+    unlock $TEXT
+  else (
+    lookup <'Resolved2',TTPID,$TEXT> as resolvesig in
+    out('r',<'originator',$A,TTPID,resolvesig>);
+    unlock $TEXT
+    else
+      out('r',<'originator',$A,TTPID,convertpcs(sk(TTPID),m2)>);
+      insert <'Resolved1',TTPID,$TEXT>, m3; /* convertpcs(sk(TTPID),m2); */
+      unlock $TEXT
+    )
+)
+||
+( /* Resolve2 */
+  in('r',<'responder',$B,TTPID,r2>);
+  lock $TEXT;
+  lookup <'Aborted',TTPID,$TEXT> as abortcert in
+    out('r',<'responder',$B,TTPID,abortcert>);
+    unlock $TEXT
+  else (
+    lookup <'Resolved1',TTPID,$TEXT> as resolvesig in
+    out('r',<'responder',$B,TTPID,resolvesig>);
+    unlock $TEXT
+    else
+      out('r',<'responder',$B,TTPID,convertpcs(sk(TTPID),m1)>);
+      insert <'Resolved2',TTPID,$TEXT>, m4; /* convertpcs(sk(TTPID),m1); */
+      unlock $TEXT
+    )
+)
+
+let Judge = 
+  let m1 = pcs(sign(<$TEXT,'1'>,sk($A)),pk($B),pk(TTPID)) in
+  let m2 = pcs(sign(<$TEXT,'2'>,sk($B)),pk($A),pk(TTPID)) in
+  let m3 = sign(<$TEXT,'1'>,sk($A)) in
+  let m4 = sign(<$TEXT,'2'>,sk($B)) in
+  let witness_abort = sign(pcs(sign(ct,sk1), pk(ysk), pk(skT)),skT) in 
+  let wittness_resolved = sign(<sign(ct,sk1), sign(ct,sk2)>,skT) in
+             (in('c',<m1,m2,m3,m4>); event ContractJudge($A,$B,$TEXT))
+         ||  (in('c',wittness_resolved); event ContractJudge($A,$B,$TEXT))
+         ||  (in('c',wittness_abort); event AbortJudge($A,$B,$TEXT))
+
+let TTPID=<'TTP',$TTP> in
+!(
+in('c',<$A,$B,<'TTP',$TTP>>);
+ (A || B || TTP || Judge)
+)
+|| !( in('c',<'corrupt',$x>); 
+        event Corrupt($x);
+        out('c',sk($x));
+        (!(in('r',<'responder',$x,m>);0) || !(in('r',<'originator',$x,m>);0))
+   )
+
+lemma sanity_optimistic_AB:
+exists-trace
+ "Ex #i #j  a b t sida sidb. 
+    ContractA(a,b,t,sida)@i 
+  & ContractB(a,b,t,sidb)@j
+  & not (Ex #k. Corrupt(a)@k)
+  & not (Ex #k. Corrupt(b)@k)
+  "
+
+/* lemma sanity_abort_a: */
+/*  exists-trace */
+/*  "Ex #i xt t xna. AbortA(xt, t, xna)@i" */
+
+/* lemma sanity_abort_b: */
+/*  exists-trace */
+/*  "Ex #i xt t xnb. AbortB(xt, t, xnb)@i" */
+
+/* lemma sanity_resolve_a: */
+/*  exists-trace */
+/*  "Ex #i xt xna xnb. ResolveA(xt, xna, xnb)@i" */
+
+/* lemma sanity_resolve_b: */
+/*  exists-trace */
+/*  "Ex #i xt xna xnb. ResolveB(xt, xna, xnb)@i" */
+
+
+/* /1* Lemmas taken from tamarin files *1/ */
+/* lemma aborted_and_resolved_exclusive: */
+/*   "not (Ex ct #i #j. AbortCert(ct) @ i & ResolveCert(ct) @ j)" */
+
+/* /1* Sanity checks *1/ */
+/* lemma resolved1_contract_reachable: */
+/*   exists-trace */
+/*   " (Ex ct #i. ResolveCert(ct) @ i) */
+/*     // Ensure that this is possible with at most one Resolve1 step. */
+/*   & (All ct #i. Abort1(ct) @ i ==> F) */
+/*   & (All ct1 ct2 #i1 #i2 . */
+/*        Resolve1(ct1) @ i1 & Resolve1(ct2) @ i2 ==> #i1 = #i2) */
+/*   & (All ct #i. Resolve2(ct) @ i ==> F) */
+/*   " */
+
+/* lemma resolved2_contract_reachable: */
+/*   exists-trace */
+/*   "(Ex ct #i. ResolveCert(ct) @ i) */
+/*     // Ensure that this is possible with at most one Resolve1 step. */
+/*   & (All ct #i. Abort1(ct) @ i ==> F) */
+/*   & (All ct #i. Resolve1(ct) @ i ==> F) */
+/*   & (All ct1 ct2 #i1 #i2 . */
+/*        Resolve2(ct1) @ i1 & Resolve2(ct2) @ i2 ==> #i1 = #i2) */
+/*   " */
+
+end    

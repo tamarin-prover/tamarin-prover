@@ -147,7 +147,7 @@ next
             by contradiction /* impossible chain */
           qed
         next
-          case caenc
+          case c_aenc
           by contradiction /* from formulas */
         qed
       next
@@ -212,7 +212,7 @@ next
             by contradiction /* impossible chain */
           qed
         next
-          case caenc
+          case c_aenc
           by contradiction /* from formulas */
         qed
       qed
@@ -280,7 +280,7 @@ next
             by contradiction /* impossible chain */
           qed
         next
-          case caenc
+          case c_aenc
           by contradiction /* from formulas */
         qed
       next
@@ -345,7 +345,7 @@ next
             by contradiction /* impossible chain */
           qed
         next
-          case caenc
+          case c_aenc
           by contradiction /* from formulas */
         qed
       qed
@@ -378,7 +378,7 @@ next
   case non_empty_trace
   simplify
   solve( (last(#i))  ∥
-         (∀ #j. (ToBob( sk ) @ #j) ⇒ (last(#j)) ∨ (#i < #j)) )
+         (∀ #j. (ToBob( sk ) @ #j) ⇒ ((last(#j)) ∨ (#i < #j))) )
     case case_1
     solve( Device_Init( sk ) ▶₀ #j )
       case GenKey
@@ -416,8 +416,8 @@ guarded formula characterizing all counter-examples:
 "∃ sk #i.
   (Device_Use( sk ) @ #i)
  ∧
-  (∃ #j. (ToBob( sk ) @ #j) ∧ ¬(#i < #j)) ∨
-  (∀ #j. (Device_Key( sk ) @ #j) ⇒ ¬(#j < #i))"
+  ((∃ #j. (ToBob( sk ) @ #j) ∧ ¬(#i < #j)) ∨
+   (∀ #j. (Device_Key( sk ) @ #j) ⇒ ¬(#j < #i)))"
 */
 induction
   case empty_trace
@@ -429,7 +429,7 @@ next
          (∀ #j. (Device_Key( sk ) @ #j) ⇒ ¬(#j < #i)) )
     case case_1
     solve( (last(#i))  ∥
-           ((∀ #j. (ToBob( sk ) @ #j) ⇒ (last(#j)) ∨ (#i < #j)) ∧
+           ((∀ #j. (ToBob( sk ) @ #j) ⇒ ((last(#j)) ∨ (#i < #j))) ∧
             (∃ #j. (Device_Key( sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
       case case_1
       solve( Device_Init( sk ) ▶₀ #j )
@@ -458,7 +458,7 @@ next
   next
     case case_2
     solve( (last(#i))  ∥
-           ((∀ #j. (ToBob( sk ) @ #j) ⇒ (last(#j)) ∨ (#i < #j)) ∧
+           ((∀ #j. (ToBob( sk ) @ #j) ⇒ ((last(#j)) ∨ (#i < #j))) ∧
             (∃ #j. (Device_Key( sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
       case case_1
       solve( Device_Alice( sk ) ▶₀ #i )
@@ -507,8 +507,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/loops/RFID_Simple.spthy
@@ -517,7 +519,7 @@ analyzing: examples/loops/RFID_Simple.spthy
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.845057s
+  processing time: 0.669819s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)
@@ -531,7 +533,7 @@ summary of summaries:
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.845057s
+  processing time: 0.669819s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)

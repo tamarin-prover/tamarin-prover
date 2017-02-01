@@ -272,8 +272,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
@@ -282,7 +284,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.070507s
+  processing time: 1.350496s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -294,7 +296,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.070507s
+  processing time: 1.350496s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

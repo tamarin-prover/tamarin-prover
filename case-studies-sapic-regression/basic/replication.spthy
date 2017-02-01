@@ -1,0 +1,34 @@
+theory Replication
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+rule Init_: //Init 
+ [ ] --[Init()]-> [State_()]
+
+rule Rep_0_: //Rep, 0 
+ [ State_()] --[]-> [!Semistate_1()]
+
+rule Rep_1_: //Rep, 1 
+ [ !Semistate_1()] --[]-> [State_1()]
+
+rule new_s_1: //new s 
+ [ State_1(), Fr(s)] --[]-> [State_11(s)]
+
+rule event_Secrets_11: //event Secret(s) 
+ [ State_11(s)] --[Event(), Secret(s)]-> [State_111(s)]
+
+rule out_s_111: //out s 
+ [ State_111(s)] --[]-> [State_1111(s), Out(s)]
+
+rule Zero_1111: //Zero 
+ [ State_1111(s)] --[]-> []
+
+
+axiom single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+lemma onlyOneSecret :
+"	All #i #j x y. Secret(x) @ i & Secret(y) @ j ==> x = y"
+
+end

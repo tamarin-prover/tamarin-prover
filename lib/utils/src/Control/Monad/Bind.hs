@@ -127,7 +127,7 @@ insertBinding k = modify . M.insert k
 -- for the value @d@ and if not it generates a fresh identifier using the name
 -- @n@ as a hint and converting name and identifier to a value using $mkR$.
 {-# INLINE importBinding #-}
-importBinding :: (MonadBind k v m, MonadFresh m, Show v, Show k, Ord k) 
+importBinding :: (MonadBind k v m, MonadFresh m, Ord k) 
                => (String -> Integer -> v) 
                -> k 
                -> String -> m v

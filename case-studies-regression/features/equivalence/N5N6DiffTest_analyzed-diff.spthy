@@ -21,7 +21,7 @@ rule-equivalence
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case h
         step( solve( !KU( h($A) ) @ #vk ) )
-          case ch
+          case c_h
           step( solve( !KU( $A ) @ #vk.1 ) )
             case pub
             by ATTACK // trace found
@@ -35,8 +35,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/features/equivalence/N5N6DiffTest.spthy
@@ -45,7 +47,7 @@ analyzing: examples/features/equivalence/N5N6DiffTest.spthy
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.084384s
+  processing time: 0.078237s
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
@@ -56,7 +58,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.084384s
+  processing time: 0.078237s
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ==============================================================================

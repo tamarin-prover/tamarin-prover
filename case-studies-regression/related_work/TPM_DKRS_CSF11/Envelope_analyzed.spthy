@@ -126,7 +126,7 @@ next
           by contradiction /* impossible chain */
         qed
       next
-        case caenc
+        case c_aenc
         by contradiction /* from formulas */
       qed
     qed
@@ -230,11 +230,11 @@ next
                 by solve( !KU( ~n ) @ #vk.3 )
               qed
             next
-              case csign
+              case c_sign
               by solve( !KU( ~aik ) @ #vk.4 )
             qed
           next
-            case caenc
+            case c_aenc
             solve( PCR( h(<h(<x, ~n>), lock>) ) ▶₀ #i )
               case Alice1
               by contradiction /* from formulas */
@@ -268,11 +268,11 @@ next
                 by solve( !KU( ~n ) @ #vk.3 )
               qed
             next
-              case csign
+              case c_sign
               by solve( !KU( ~aik ) @ #vk.5 )
             qed
           next
-            case caenc
+            case c_aenc
             solve( PCR( h(<h(<x, y>), lock>) ) ▶₀ #i )
               case Alice1
               by contradiction /* from formulas */
@@ -297,11 +297,11 @@ next
             solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n>), 'obtain'>), pk(~sk)>,
                              ~aik)
                    ) @ #vk.2 )
-              case csign
+              case c_sign
               by solve( !KU( ~aik ) @ #vk.4 )
             qed
           next
-            case caenc
+            case c_aenc
             solve( PCR( h(<'pcr0', lock>) ) ▶₀ #i )
               case Alice1
               by contradiction /* from formulas */
@@ -359,7 +359,7 @@ solve( Alice1( n ) ▶₀ #i )
               by solve( !KU( ~sk ) @ #vk.3 )
             qed
           next
-            case csign
+            case c_sign
             by solve( !KU( ~aik ) @ #vk.5 )
           qed
         next
@@ -432,11 +432,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.4)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -474,11 +474,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -525,11 +525,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.4)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -564,11 +564,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.5)>,
                                                            ~aik)
                                                  ) @ #vk.11 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.13 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.13 )
@@ -606,11 +606,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.4)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -660,11 +660,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -699,11 +699,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -741,11 +741,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -798,11 +798,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -840,11 +840,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -891,11 +891,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -930,11 +930,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -972,11 +972,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -1026,11 +1026,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -1065,11 +1065,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -1107,11 +1107,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -1164,11 +1164,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -1206,11 +1206,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -1257,11 +1257,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -1296,11 +1296,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -1338,11 +1338,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -1392,11 +1392,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -1431,11 +1431,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -1473,11 +1473,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -1540,11 +1540,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.9 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.11 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.11 )
@@ -1583,11 +1583,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.8 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.10 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.10 )
@@ -1635,11 +1635,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.9 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.11 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.11 )
@@ -1675,11 +1675,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.10 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.12 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.12 )
@@ -1718,11 +1718,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.9 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.11 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.11 )
@@ -1773,11 +1773,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.8 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.10 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.10 )
@@ -1813,11 +1813,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.9 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.11 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.11 )
@@ -1856,11 +1856,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.8 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.10 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.10 )
@@ -1884,11 +1884,11 @@ solve( Alice1( n ) ▶₀ #i )
                                       by solve( !KU( ~n ) @ #vk.7 )
                                     qed
                                   next
-                                    case csign
+                                    case c_sign
                                     by solve( !KU( ~aik ) @ #vk.10 )
                                   qed
                                 next
-                                  case caenc
+                                  case c_aenc
                                   solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.3 )
                                     case Alice1
                                     solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
@@ -1921,11 +1921,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.4)>,
                                                              ~aik)
                                                    ) @ #vk.12 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.14 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.14 )
@@ -1963,11 +1963,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.3)>,
                                                              ~aik)
                                                    ) @ #vk.11 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.13 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.13 )
@@ -2014,11 +2014,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.4)>,
                                                              ~aik)
                                                    ) @ #vk.12 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.14 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.14 )
@@ -2053,11 +2053,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.5)>,
                                                              ~aik)
                                                    ) @ #vk.13 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.15 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.15 )
@@ -2095,11 +2095,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.4)>,
                                                              ~aik)
                                                    ) @ #vk.12 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.14 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.14 )
@@ -2149,11 +2149,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.3)>,
                                                              ~aik)
                                                    ) @ #vk.11 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.13 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.13 )
@@ -2188,11 +2188,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.4)>,
                                                              ~aik)
                                                    ) @ #vk.12 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.14 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.14 )
@@ -2230,11 +2230,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.3)>,
                                                              ~aik)
                                                    ) @ #vk.11 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.13 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.13 )
@@ -2295,11 +2295,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.3)>,
                                                          ~aik)
                                                ) @ #vk.9 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.11 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.11 )
@@ -2337,11 +2337,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.2)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -2391,11 +2391,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.3)>,
                                                          ~aik)
                                                ) @ #vk.9 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.11 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.11 )
@@ -2430,11 +2430,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.4)>,
                                                          ~aik)
                                                ) @ #vk.10 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.12 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.12 )
@@ -2472,11 +2472,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.3)>,
                                                          ~aik)
                                                ) @ #vk.9 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.11 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.11 )
@@ -2529,11 +2529,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.2)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -2568,11 +2568,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.2)>,
                                                          ~aik)
                                                ) @ #vk.9 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.11 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.11 )
@@ -2610,11 +2610,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.2)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -2673,11 +2673,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -2715,11 +2715,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.7 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.9 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.9 )
@@ -2769,11 +2769,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -2808,11 +2808,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.2)>,
                                                          ~aik)
                                                ) @ #vk.9 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.11 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.11 )
@@ -2850,11 +2850,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -2907,11 +2907,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.7 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.9 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.9 )
@@ -2946,11 +2946,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -2988,11 +2988,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.7 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.9 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.9 )
@@ -3051,11 +3051,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -3093,11 +3093,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.7 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.9 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.9 )
@@ -3147,11 +3147,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -3186,11 +3186,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.2)>,
                                                          ~aik)
                                                ) @ #vk.9 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.11 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.11 )
@@ -3228,11 +3228,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -3285,11 +3285,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.7 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.9 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.9 )
@@ -3324,11 +3324,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.8 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.10 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.10 )
@@ -3366,11 +3366,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                           pk(~sk.1)>,
                                                          ~aik)
                                                ) @ #vk.7 )
-                                          case csign
+                                          case c_sign
                                           by solve( !KU( ~aik ) @ #vk.9 )
                                         qed
                                       next
-                                        case caenc
+                                        case c_aenc
                                         solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.9 )
@@ -3438,11 +3438,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                 pk(~sk.1)>,
                                                                ~aik)
                                                      ) @ #vk.8 )
-                                                case csign
+                                                case c_sign
                                                 by solve( !KU( ~aik ) @ #vk.10 )
                                               qed
                                             next
-                                              case caenc
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.10 )
@@ -3480,11 +3480,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                 pk(~sk.1)>,
                                                                ~aik)
                                                      ) @ #vk.7 )
-                                                case csign
+                                                case c_sign
                                                 by solve( !KU( ~aik ) @ #vk.9 )
                                               qed
                                             next
-                                              case caenc
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.9 )
@@ -3534,11 +3534,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                 pk(~sk.1)>,
                                                                ~aik)
                                                      ) @ #vk.8 )
-                                                case csign
+                                                case c_sign
                                                 by solve( !KU( ~aik ) @ #vk.10 )
                                               qed
                                             next
-                                              case caenc
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.10 )
@@ -3573,11 +3573,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                 pk(~sk.2)>,
                                                                ~aik)
                                                      ) @ #vk.9 )
-                                                case csign
+                                                case c_sign
                                                 by solve( !KU( ~aik ) @ #vk.11 )
                                               qed
                                             next
-                                              case caenc
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.11 )
@@ -3615,11 +3615,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                 pk(~sk.1)>,
                                                                ~aik)
                                                      ) @ #vk.8 )
-                                                case csign
+                                                case c_sign
                                                 by solve( !KU( ~aik ) @ #vk.10 )
                                               qed
                                             next
-                                              case caenc
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.10 )
@@ -3672,11 +3672,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                 pk(~sk.1)>,
                                                                ~aik)
                                                      ) @ #vk.7 )
-                                                case csign
+                                                case c_sign
                                                 by solve( !KU( ~aik ) @ #vk.9 )
                                               qed
                                             next
-                                              case caenc
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.9 )
@@ -3711,11 +3711,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                 pk(~sk.1)>,
                                                                ~aik)
                                                      ) @ #vk.8 )
-                                                case csign
+                                                case c_sign
                                                 by solve( !KU( ~aik ) @ #vk.10 )
                                               qed
                                             next
-                                              case caenc
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.10 )
@@ -3753,11 +3753,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                 pk(~sk.1)>,
                                                                ~aik)
                                                      ) @ #vk.7 )
-                                                case csign
+                                                case c_sign
                                                 by solve( !KU( ~aik ) @ #vk.9 )
                                               qed
                                             next
-                                              case caenc
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.9 )
@@ -3787,11 +3787,11 @@ solve( Alice1( n ) ▶₀ #i )
                                     by solve( !KU( ~n ) @ #vk.6 )
                                   qed
                                 next
-                                  case csign
+                                  case c_sign
                                   by solve( !KU( ~aik ) @ #vk.9 )
                                 qed
                               next
-                                case caenc
+                                case c_aenc
                                 solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.3 )
                                   case Alice1
                                   solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
@@ -3824,11 +3824,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.11 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.13 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.13 )
@@ -3866,11 +3866,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -3920,11 +3920,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.11 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.13 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.13 )
@@ -3959,11 +3959,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.4)>,
                                                            ~aik)
                                                  ) @ #vk.12 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.14 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.14 )
@@ -4001,11 +4001,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.11 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.13 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.13 )
@@ -4058,11 +4058,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -4097,11 +4097,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.11 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.13 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.13 )
@@ -4139,11 +4139,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -4211,11 +4211,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -4253,11 +4253,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -4304,11 +4304,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -4343,11 +4343,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.3)>,
                                                            ~aik)
                                                  ) @ #vk.10 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.12 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.12 )
@@ -4385,11 +4385,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -4439,11 +4439,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -4478,11 +4478,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.2)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -4520,11 +4520,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -4577,11 +4577,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -4619,11 +4619,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.7 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.9 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.9 )
@@ -4670,11 +4670,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -4709,11 +4709,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -4751,11 +4751,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -4805,11 +4805,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.7 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.9 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.9 )
@@ -4844,11 +4844,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -4886,11 +4886,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.7 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.9 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.9 )
@@ -4943,11 +4943,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -4985,11 +4985,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.7 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.9 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.9 )
@@ -5036,11 +5036,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -5075,11 +5075,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.9 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.11 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.11 )
@@ -5117,11 +5117,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -5171,11 +5171,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.7 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.9 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.9 )
@@ -5210,11 +5210,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.8 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.10 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.10 )
@@ -5252,11 +5252,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                             pk(~sk.1)>,
                                                            ~aik)
                                                  ) @ #vk.7 )
-                                            case csign
+                                            case c_sign
                                             by solve( !KU( ~aik ) @ #vk.9 )
                                           qed
                                         next
-                                          case caenc
+                                          case c_aenc
                                           solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.9 )
@@ -5319,11 +5319,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.8 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.10 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.10 )
@@ -5362,11 +5362,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.7 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.9 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.9 )
@@ -5414,11 +5414,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.8 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.10 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.10 )
@@ -5454,11 +5454,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.9 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.11 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.11 )
@@ -5497,11 +5497,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.8 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.10 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.10 )
@@ -5552,11 +5552,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.7 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.9 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.9 )
@@ -5592,11 +5592,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.8 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.10 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.10 )
@@ -5635,11 +5635,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                                  >,
                                                                  ~aik)
                                                        ) @ #vk.7 )
-                                                  case csign
+                                                  case c_sign
                                                   by solve( !KU( ~aik ) @ #vk.9 )
                                                 qed
                                               next
-                                                case caenc
+                                                case c_aenc
                                                 solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                   case PCR_Extend
                                                   by solve( !KU( ~n ) @ #vk.9 )
@@ -5663,11 +5663,11 @@ solve( Alice1( n ) ▶₀ #i )
                                       by solve( !KU( ~n ) @ #vk.6 )
                                     qed
                                   next
-                                    case csign
+                                    case c_sign
                                     by solve( !KU( ~aik ) @ #vk.9 )
                                   qed
                                 next
-                                  case caenc
+                                  case c_aenc
                                   solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.3 )
                                     case Alice1
                                     solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
@@ -5700,11 +5700,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.3)>,
                                                              ~aik)
                                                    ) @ #vk.11 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.13 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.13 )
@@ -5742,11 +5742,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.2)>,
                                                              ~aik)
                                                    ) @ #vk.10 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.12 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.12 )
@@ -5793,11 +5793,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.3)>,
                                                              ~aik)
                                                    ) @ #vk.11 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.13 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.13 )
@@ -5832,11 +5832,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.4)>,
                                                              ~aik)
                                                    ) @ #vk.12 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.14 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.14 )
@@ -5874,11 +5874,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.3)>,
                                                              ~aik)
                                                    ) @ #vk.11 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.13 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.13 )
@@ -5928,11 +5928,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.2)>,
                                                              ~aik)
                                                    ) @ #vk.10 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.12 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.12 )
@@ -5967,11 +5967,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.2)>,
                                                              ~aik)
                                                    ) @ #vk.11 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.13 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.13 )
@@ -6009,11 +6009,11 @@ solve( Alice1( n ) ▶₀ #i )
                                                               pk(~sk.2)>,
                                                              ~aik)
                                                    ) @ #vk.10 )
-                                              case csign
+                                              case c_sign
                                               by solve( !KU( ~aik ) @ #vk.12 )
                                             qed
                                           next
-                                            case caenc
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.12 )
@@ -6038,12 +6038,12 @@ solve( Alice1( n ) ▶₀ #i )
                           qed
                         qed
                       next
-                        case caenc
+                        case c_aenc
                         by contradiction /* cyclic */
                       qed
                     qed
                   next
-                    case csign
+                    case c_sign
                     by solve( !KU( ~aik ) @ #vk.7 )
                   qed
                 next
@@ -6051,7 +6051,7 @@ solve( Alice1( n ) ▶₀ #i )
                   by solve( !KU( ~n ) @ #vk.6 )
                 qed
               next
-                case csign
+                case c_sign
                 by solve( !KU( ~aik ) @ #vk.6 )
               qed
             next
@@ -6070,12 +6070,12 @@ solve( Alice1( n ) ▶₀ #i )
                         case Alice2
                         by solve( !KU( ~n ) @ #vk.5 )
                       next
-                        case caenc
+                        case c_aenc
                         by contradiction /* cyclic */
                       qed
                     qed
                   next
-                    case csign
+                    case c_sign
                     by solve( !KU( ~aik ) @ #vk.8 )
                   qed
                 next
@@ -6083,7 +6083,7 @@ solve( Alice1( n ) ▶₀ #i )
                   by solve( !KU( ~n ) @ #vk.7 )
                 qed
               next
-                case csign
+                case c_sign
                 by solve( !KU( ~aik ) @ #vk.7 )
               qed
             next
@@ -6099,12 +6099,12 @@ solve( Alice1( n ) ▶₀ #i )
                     solve( PCR_Write( h(<h(<'pcr0', ~n>), 'deny'>) ) @ #j.2 )
                       case PCR_Extend
                       solve( !KU( aenc(~s, pk(~sk.1)) ) @ #vk.3 )
-                        case caenc
+                        case c_aenc
                         by contradiction /* cyclic */
                       qed
                     qed
                   next
-                    case csign
+                    case c_sign
                     by solve( !KU( ~aik ) @ #vk.7 )
                   qed
                 next
@@ -6112,7 +6112,7 @@ solve( Alice1( n ) ▶₀ #i )
                   by solve( !KU( ~n ) @ #vk.6 )
                 qed
               next
-                case csign
+                case c_sign
                 by solve( !KU( ~aik ) @ #vk.6 )
               qed
             qed
@@ -6128,8 +6128,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
@@ -6138,7 +6140,7 @@ analyzing: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 38.96195s
+  processing time: 33.940842s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
@@ -6151,7 +6153,7 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 38.96195s
+  processing time: 33.940842s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)

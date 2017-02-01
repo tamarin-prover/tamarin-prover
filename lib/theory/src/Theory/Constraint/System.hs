@@ -39,6 +39,8 @@ module Theory.Constraint.System (
   , pcHiddenLemmas
   , pcMaudeHandle
   , pcDiffContext
+  , pcTrueSubterm
+  , pcConstantRHS
   , dpcPCLeft
   , dpcPCRight
   , dpcProtoRules
@@ -362,7 +364,9 @@ data ProofContext = ProofContext
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
        , _pcHiddenLemmas       :: [String]
-       , _pcDiffContext        :: Bool
+       , _pcDiffContext        :: Bool -- true if diff proof
+       , _pcTrueSubterm        :: Bool -- true if in all rules the RHS is a subterm of the LHS
+       , _pcConstantRHS        :: Bool -- true if there are rules with a constant RHS
        }
        deriving( Eq, Ord, Show )
 
@@ -566,8 +570,12 @@ protocolRuleWithName rules name = filter (\(Rule x _ _ _) -> case x of
                                              IntrInfo  _ -> False) rules
 
 -- | 'intruderRuleWithName' @rules@ @name@ returns all rules with intruder rule name @name@ in rules @rules@.
+--   This ignores the number of remaining consecutive rule applications.
 intruderRuleWithName :: [RuleAC] -> IntrRuleACInfo -> [RuleAC]
 intruderRuleWithName rules name = filter (\(Rule x _ _ _) -> case x of
+                                             IntrInfo  (DestrRule i _ _ _) -> case name of
+                                                                                 (DestrRule j _ _ _) -> i == j
+                                                                                 _                   -> False
                                              IntrInfo  i -> i == name
                                              ProtoInfo _ -> False) rules
     
@@ -578,8 +586,8 @@ getOppositeRules ctxt side (Rule rule prem _ _) = case rule of
                                    [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnOtherSide ctxt side)
                                    x  -> x
                IntrInfo  i -> case i of
-                                   (ConstrRule x) | x == BC.pack "mult"  -> [(multRuleInstance (length prem))]
-                                   (ConstrRule x) | x == BC.pack "union" -> [(unionRuleInstance (length prem))]
+                                   (ConstrRule x) | x == BC.pack "_mult"  -> [(multRuleInstance (length prem))]
+                                   (ConstrRule x) | x == BC.pack "_union" -> [(unionRuleInstance (length prem))]
                                    _                                     -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
                                                                                  [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
                                                                                  x  -> x
@@ -675,12 +683,12 @@ safePartialAtomValuation ctxt sys =
 impliedFormulas :: MaudeHandle -> System -> LNGuarded -> [LNGuarded]
 impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++ show res)-} res
   where
-    res = case openGuarded gf `evalFresh` avoid gf of
+    res = case {-trace ("open: " ++ show (openGuarded gf `evalFresh` avoid gf))-} (openGuarded gf `evalFresh` avoid gf) of
       Just (All, _vs, antecedent, succedent) -> do
         let (actionsEqs, otherAtoms) = first sortGAtoms . partitionEithers $
                                         map prepare antecedent
             succedent'               = gall [] otherAtoms succedent
-        subst <- candidateSubsts emptySubst actionsEqs
+        subst <- candidateSubsts emptySubst ({-trace ("equations " ++ show actionsEqs ++ " -- " ++ show otherAtoms ++ " -- " ++ show succedent' ++ " -- " ++ show (candidateSubsts emptySubst actionsEqs) ++ " -- " ++ show (unskolemizeLNGuarded $ applySkGuarded (head $ candidateSubsts emptySubst actionsEqs) succedent'))-} actionsEqs)
         return $ unskolemizeLNGuarded $ applySkGuarded subst succedent'
       _ -> []
     gf = skolemizeGuarded gf0
@@ -692,9 +700,9 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
     sysActions = do (i, fa) <- allActions sys
                     return (skolemizeTerm (varTerm i), skolemizeFact fa)
 
-    candidateSubsts subst []               = return subst
+    candidateSubsts subst []               = return $ subst
     candidateSubsts subst ((GAction a fa):as) = do
-        sysAct <- sysActions
+        sysAct <- {-trace ("sysActions " ++ show sysActions)-} sysActions
         subst' <- (`runReader` hnd) $ matchAction sysAct (applySkAction subst (a, fa))
         candidateSubsts (compose subst' subst) as
     candidateSubsts subst ((GEqE s' t'):as)   = do
@@ -740,20 +748,20 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
 doAxiomsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
-doAxiomsHold ctxt sys formulas isSolved = Just True -- FIXME Jannik: This is a temporary simulation of diff-safe axioms!
-{-  if (all (== gtrue) (simplify formulas isSolved))
-    then Just {-$ trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} True
+doAxiomsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: This is a temporary simulation of diff-safe axioms!
+  if (all (== gtrue) (simplify formulas isSolved))
+    then Just $ {-trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} True
     else if (any (== gfalse) (simplify formulas isSolved))
-          then Just {-$ trace ("doAxiomsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} False
+          then Just $ {-trace ("doAxiomsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} False
           else {-trace ("doAxiomsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} Nothing
   where
     simplify :: [LNGuarded] -> Bool -> [LNGuarded]
-    simplify forms solved = if (step forms solved) == forms
+    simplify forms solved = if ({-trace ("step: " ++ show forms ++ " " ++ show (step forms solved))-} (step forms solved)) == forms
                         then (step forms solved)
                         else simplify (step forms solved) solved
 
     step :: [LNGuarded] -> Bool -> [LNGuarded]
-    step forms solved = map simpGuard $ concat $ map (impliedOrInitial solved) forms
+    step forms solved = map simpGuard $ concat $ {-trace (show (map (impliedOrInitial solved) forms)) $-} map (impliedOrInitial solved) forms
 
     valuation = (safePartialAtomValuation ctxt sys)
     simpGuard = simplifyGuardedOrReturn valuation
@@ -784,7 +792,7 @@ getMirrorDG ctxt side sys = unifyInstances sys $ evalFreshAvoiding newNodes fres
             mapGetVariants []     = return []
             mapGetVariants (x:xs) = do
               instances <- if isProtocolRule r 
-                              then someRuleACInstFixing x (getSubstitutionsFixingNewVars r (getOriginalRule ctxt side r))
+                              then someRuleACInstFixing x $ getSubstitutionsFixingNewVars r $ getOriginalRule ctxt side r
                               else someRuleACInst x
               variants <- getVariants instances
               rest <- mapGetVariants xs
@@ -804,19 +812,19 @@ getMirrorDG ctxt side sys = unifyInstances sys $ evalFreshAvoiding newNodes fres
                                               
     unifyInstances :: System -> [M.Map NodeId RuleACInst] -> Maybe System
     unifyInstances sys' newrules = 
---       trace ("unifyInstances:" ++  (show $ head $ map (unifiers . equalities sys') newrules) ++ " |\n " ++ (show $ head $ map (equalities sys') newrules) ++ " |\n " {-++ show (map avoid newrules) ++ " - " ++ show (avoid sys') ++ " |\n "-} ++ (show $ head newrules) ++ " |\n " ++ (show sys')) $
-      foldl (\ret x -> if (ret /= Nothing) || (null $ unifiers $ equalities sys' x) then ret else Just $ L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys') Nothing newrules
+--      trace ("unifyInstances:" ++  (show $ head $ map (unifiers . equalities sys' True) newrules) ++ " |\n " ++ (show $ head $ map (equalities sys' True) newrules) ++ " |\n " {-++ show (map avoid newrules) ++ " - " ++ show (avoid sys') ++ " |\n "-} ++ (show $ head newrules) ++ " |\n " ++ (show sys')) $
+      foldl (\ret x -> if (ret /= Nothing) || (null $ unifiers $ equalities sys' True x) then ret else Just $ L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys') Nothing newrules
       -- We can stop if a corresponding system is found for one variant. Otherwise we continue until we find a system which we can unify, or return Nothing if no such system exists.
         where
           freeUnifiers :: M.Map NodeId RuleACInst -> [LNSubst]
-          freeUnifiers newnodes = map (\y -> freshToFreeAvoiding y newnodes) (unifiers $ equalities sys' newnodes)
+          freeUnifiers newnodes = map (\y -> freshToFreeAvoiding y newnodes) (unifiers $ equalities sys' False newnodes)
         
     unifiers :: Maybe [Equal LNFact] -> [SubstVFresh Name LVar]
     unifiers (Nothing)         = []
     unifiers (Just equalfacts) = runReader (unifyLNFactEqs equalfacts) (getMaudeHandle ctxt side)
     
-    equalities :: System -> M.Map NodeId RuleACInst -> Maybe [Equal LNFact]
-    equalities sys' newrules' = (++) <$> (Just ((getGraphEqualities newrules' sys') ++ (getKUEqualities newrules' sys'))) <*> (getNewVarEqualities newrules' sys')
+    equalities :: System -> Bool -> M.Map NodeId RuleACInst -> Maybe [Equal LNFact]
+    equalities sys' fixNewVars newrules' = (++) <$> (Just ((getGraphEqualities newrules' sys') ++ (getKUEqualities newrules' sys'))) <*> (if fixNewVars then (getNewVarEqualities newrules' sys') else Just [])
         
     getGraphEqualities :: M.Map NodeId RuleACInst -> System -> [Equal LNFact]
     getGraphEqualities nodes sys' = map (\(Edge x y) -> Equal (nodePremFactMap y nodes) (nodeConcFactMap x nodes)) $ S.toList (L.get sEdges sys')
@@ -974,15 +982,17 @@ allOpenFactGoalsAreIndependent sys = (noCommonVarsInGoals unsolvedGoals) && (all
     unsolvedGoals = unsolvedTrivialGoals sys
 
 -- | Returns true if all open goals in the system are "trivial" fact goals.
-allOpenGoalsAreSimpleFacts :: System -> Bool
-allOpenGoalsAreSimpleFacts sys = M.foldlWithKey goalIsSimpleFact True (L.get sGoals sys)
+allOpenGoalsAreSimpleFacts :: DiffProofContext -> System -> Bool
+allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True (L.get sGoals sys)
   where
     goalIsSimpleFact :: Bool -> Goal -> GoalStatus -> Bool
-    goalIsSimpleFact ret (ActionG _ fact)  (GoalStatus solved _ _) = ret && (solved || ((isTrivialFact fact /= Nothing) && (isKUFact fact)))
-    goalIsSimpleFact ret (ChainG _ _)      (GoalStatus solved _ _) = ret && solved
-    goalIsSimpleFact ret (PremiseG _ fact) (GoalStatus solved _ _) = ret && (solved || (isTrivialFact fact /= Nothing))
-    goalIsSimpleFact ret (SplitG _)        (GoalStatus solved _ _) = ret && solved
-    goalIsSimpleFact ret (DisjG _)         (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (ActionG _ fact)         (GoalStatus solved _ _) = ret && (solved || ((isTrivialFact fact /= Nothing) && (isKUFact fact)))
+    goalIsSimpleFact ret (ChainG _ _)             (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (PremiseG (nid, _) fact) (GoalStatus solved _ _) = ret && (solved || (isTrivialFact fact /= Nothing) && (not (isProtocolRule r) || (getOriginalRule ctxt LHS r == getOriginalRule ctxt RHS r)))
+      where
+        r = nodeRule nid sys
+    goalIsSimpleFact ret (SplitG _)               (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (DisjG _)                (GoalStatus solved _ _) = ret && solved
 
 -- | Returns true if the current system is a diff system
 isDiffSystem :: System -> Bool
@@ -1120,8 +1130,8 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
   , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
   , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
-                                 (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
-                                 _                                                                                                                   -> text "none")
+                                 (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts ctxt sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
+                                 _                                                                                                                        -> text "none")
 --   , ("DEBUG",               maybe (text "none") (\x -> vsep $ map prettyGuarded x) help)
 --   , ("DEBUG2",              maybe (text "none") (\x -> vsep $ map prettyGuarded x) help2)
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
@@ -1218,12 +1228,6 @@ prettyGoals solved sys = vsep $ do
     toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
     toplevelTerms t = [t]
 
-
-    allMsgVarsKnownEarlier (i,_) args =
-        all (`elem` earlierMsgVars) (filter isMsgVar args)
-      where earlierMsgVars = do (j, _, t) <- allKUActions sys
-                                guard $ isMsgVar t && alwaysBefore sys j i
-                                return t
 -- | Pretty print a case distinction
 prettyCaseDistinction :: HighlightDocument d => CaseDistinction -> d
 prettyCaseDistinction th = vcat $

@@ -186,7 +186,8 @@ next
   solve( (∀ pid sc #t2.
            (YubiPress( pid, sc ) @ #t2)
           ⇒
-           (last(#t2)) ∨ (∃ #t1. (K( sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+           ((last(#t2)) ∨
+            (∃ #t1. (K( sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
          (∃ #i a b.
            (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
     case case_1
@@ -240,9 +241,9 @@ next
   solve( (∀ #t3 k2 k m sc enc mac.
            (OtpDecode( k2, k, m, sc, enc, mac ) @ #t3)
           ⇒
-           (last(#t3)) ∨
-           (∃ #t1 pid.
-             (YubiPress( pid, sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t3)))  ∥
+           ((last(#t3)) ∨
+            (∃ #t1 pid.
+              (YubiPress( pid, sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t3))))  ∥
          (∃ #i a b.
            (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
     case case_1
@@ -260,9 +261,9 @@ next
           solve( !YSM_AEAD_YUBIKEY_OTP_DECODE( ~kh ) ▶₂ #t3 )
             case HSMInit
             solve( !KU( xorc(senc(keystream(~kh, N), ~k), <k2, did>) ) @ #vk.6 )
-              case cxorc
+              case c_xorc
               solve( !KU( mac(<k2, did>, ~k) ) @ #vk.8 )
-                case cmac
+                case c_mac
                 solve( !KU( ~k ) @ #vk.12 )
                   case irecvHSM
                   by contradiction /* cyclic */
@@ -283,9 +284,9 @@ next
                       case Yubikey_PressButton
                       by contradiction /* from formulas */
                     next
-                      case csenc
+                      case c_senc
                       solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
-                        case csenc
+                        case c_senc
                         solve( !KU( ~k ) @ #vk.21 )
                           case irecvHSM
                           by contradiction /* cyclic */
@@ -329,9 +330,9 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.11 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~k ) @ #vk.19 )
                         case irecvHSM
                         by contradiction /* cyclic */
@@ -383,9 +384,9 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.14 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~k ) @ #vk.19 )
                         case irecvHSM
                         by contradiction /* cyclic */
@@ -417,9 +418,9 @@ next
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.11 )
-                    case csenc
+                    case c_senc
                     solve( !KU( ~k ) @ #vk.17 )
                       case irecvHSM
                       by contradiction /* cyclic */
@@ -477,12 +478,12 @@ next
   solve( (∀ #t1 #t2 pid k2.
            (Init( pid, k2 ) @ #t1) ∧ (K( k2 ) @ #t2)
           ⇒
-           (last(#t2)) ∨
-           (last(#t1)) ∨
-           (∃ #t3 #t4 k.
-             (K( k ) @ #t3) ∧ (MasterKey( k ) @ #t4)
-            ∧
-             (¬(last(#t4))) ∧ (¬(last(#t3))) ∧ (#t3 < #t2)))  ∥
+           ((last(#t2)) ∨
+            (last(#t1)) ∨
+            (∃ #t3 #t4 k.
+              (K( k ) @ #t3) ∧ (MasterKey( k ) @ #t4)
+             ∧
+              (¬(last(#t4))) ∧ (¬(last(#t3))) ∧ (#t3 < #t2))))  ∥
          (∃ #i a b.
            (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
     case case_1
@@ -500,7 +501,7 @@ next
         next
           case read_AEAD_case_1
           solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.2 )
-            case csenc
+            case c_senc
             solve( !KU( ~k ) @ #vk.4 )
               case irecvHSM
               by contradiction /* cyclic */
@@ -551,8 +552,8 @@ lemma neither_k_nor_k2_are_ever_leaked_inv [use_induction, reuse]:
    (¬(∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)))"
 /*
 guarded formula characterizing all counter-examples:
-"(∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)) ∨
- (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6))"
+"((∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)) ∨
+  (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)))"
 */
 induction
   case empty_trace
@@ -564,11 +565,13 @@ next
          (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)) )
     case case_1
     solve( ((∀ #t1 #t2 k.
-              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2) ⇒ (last(#t2)) ∨ (last(#t1))) ∧
+              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)
+             ⇒
+              ((last(#t2)) ∨ (last(#t1)))) ∧
             (∀ #t5 #t6 k6 pid.
               (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)
              ⇒
-              (last(#t6)) ∨ (last(#t5))))  ∥
+              ((last(#t6)) ∨ (last(#t5)))))  ∥
            (∃ #i a b.
              (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
       case case_1
@@ -592,11 +595,13 @@ next
   next
     case case_2
     solve( ((∀ #t1 #t2 k.
-              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2) ⇒ (last(#t2)) ∨ (last(#t1))) ∧
+              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)
+             ⇒
+              ((last(#t2)) ∨ (last(#t1)))) ∧
             (∀ #t5 #t6 k6 pid.
               (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)
              ⇒
-              (last(#t6)) ∨ (last(#t5))))  ∥
+              ((last(#t6)) ∨ (last(#t5)))))  ∥
            (∃ #i a b.
              (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
       case case_1
@@ -610,7 +615,7 @@ next
           next
             case read_AEAD_case_1
             solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.1 )
-              case csenc
+              case c_senc
               by contradiction /* from formulas */
             next
               case irecvHSM
@@ -668,8 +673,8 @@ next
   solve( (∀ pid sid x otp #t2.
            (Login( pid, sid, x, otp ) @ #t2)
           ⇒
-           (last(#t2)) ∨
-           (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+           ((last(#t2)) ∨
+            (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
          (∃ #i a b.
            (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
     case case_1
@@ -689,7 +694,7 @@ next
               case Yubikey_PressButton
               by contradiction /* from formulas */
             next
-              case csenc
+              case c_senc
               by contradiction /* from formulas */
             next
               case irecvHSM
@@ -704,7 +709,7 @@ next
               case Yubikey_PressButton
               by contradiction /* from formulas */
             next
-              case csenc
+              case c_senc
               solve( !KU( ~sid ) @ #vk.11 )
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
@@ -716,9 +721,9 @@ next
                 solve( !KU( ~pr ) @ #vk.16 )
                   case BuyANewYubikey
                   solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
-                    case cxorc
+                    case c_xorc
                     solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
-                      case cmac
+                      case c_mac
                       by contradiction /* from formulas */
                     next
                       case irecvHSM
@@ -737,9 +742,9 @@ next
                 next
                   case HSMInit
                   solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
-                    case cxorc
+                    case c_xorc
                     solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
-                      case cmac
+                      case c_mac
                       by contradiction /* from formulas */
                     next
                       case irecvHSM
@@ -758,9 +763,9 @@ next
                 next
                   case Yubikey_PressButton_case_1
                   solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
-                    case cxorc
+                    case c_xorc
                     solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
-                      case cmac
+                      case c_mac
                       by contradiction /* from formulas */
                     next
                       case irecvHSM
@@ -779,9 +784,9 @@ next
                 next
                   case Yubikey_PressButton_case_2
                   solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
-                    case cxorc
+                    case c_xorc
                     solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
-                      case cmac
+                      case c_mac
                       by contradiction /* from formulas */
                     next
                       case irecvHSM
@@ -806,9 +811,9 @@ next
                 next
                   case fresh
                   solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
-                    case cxorc
+                    case c_xorc
                     solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
-                      case cmac
+                      case c_mac
                       by contradiction /* from formulas */
                     next
                       case irecvHSM
@@ -833,9 +838,9 @@ next
                 next
                   case read_AEAD_case_2
                   solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
-                    case cxorc
+                    case c_xorc
                     solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
-                      case cmac
+                      case c_mac
                       by contradiction /* from formulas */
                     next
                       case irecvHSM
@@ -894,7 +899,7 @@ guarded formula characterizing all counter-examples:
   (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
   (LoginCounter( pid, otc2, tc2 ) @ #t2)
  ∧
-  ((¬(#t1 < #t2)) ∨ (∀ z. (tc2 = (tc1+z)) ⇒ ⊥)) ∧
+  (((¬(#t1 < #t2)) ∨ (∀ z. (tc2 = (tc1+z)) ⇒ ⊥))) ∧
   (¬(#t2 < #t1)) ∧
   (¬(#t1 = #t2))"
 */
@@ -926,11 +931,11 @@ next
                  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
                  (LoginCounter( pid, otc2, tc2 ) @ #t2)
                 ⇒
-                 (last(#t2)) ∨
-                 (last(#t1)) ∨
-                 ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
-                 (#t2 < #t1) ∨
-                 (#t1 = #t2))  ∥
+                 ((last(#t2)) ∨
+                  (last(#t1)) ∨
+                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
+                  (#t2 < #t1) ∨
+                  (#t1 = #t2)))  ∥
                (∃ #i a b.
                  (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
           case case_1
@@ -980,11 +985,11 @@ next
                  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
                  (LoginCounter( pid, otc2, tc2 ) @ #t2)
                 ⇒
-                 (last(#t2)) ∨
-                 (last(#t1)) ∨
-                 ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
-                 (#t2 < #t1) ∨
-                 (#t1 = #t2))  ∥
+                 ((last(#t2)) ∨
+                  (last(#t1)) ∨
+                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
+                  (#t2 < #t1) ∨
+                  (#t1 = #t2)))  ∥
                (∃ #i a b.
                  (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
           case case_1
@@ -1153,11 +1158,11 @@ next
                  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
                  (LoginCounter( pid, otc2, tc2 ) @ #t2)
                 ⇒
-                 (last(#t2)) ∨
-                 (last(#t1)) ∨
-                 ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
-                 (#t2 < #t1) ∨
-                 (#t1 = #t2))  ∥
+                 ((last(#t2)) ∨
+                  (last(#t1)) ∨
+                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
+                  (#t2 < #t1) ∨
+                  (#t1 = #t2)))  ∥
                (∃ #i a b.
                  (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
           case case_1
@@ -1375,8 +1380,8 @@ guarded formula characterizing all counter-examples:
   ∀ #t1.
    (YubiPress( pid, x ) @ #t1)
   ⇒
-   (¬(#t1 < #t2)) ∨
-   (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2))"
+   ((¬(#t1 < #t2)) ∨
+    (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2)))"
 */
 simplify
 solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
@@ -1684,8 +1689,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
@@ -1694,7 +1701,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multise
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 8.746385s
+  processing time: 6.867823s
   transitivity (all-traces): verified (2 steps)
   adv_can_guess_counter (all-traces): verified (13 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
@@ -1714,7 +1721,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 8.746385s
+  processing time: 6.867823s
   transitivity (all-traces): verified (2 steps)
   adv_can_guess_counter (all-traces): verified (13 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)

@@ -190,24 +190,30 @@ getMaudeHandle = askM pcMaudeHandle
 -- rules and return one of the conclusions.
 insertFreshNodeConc :: [RuleAC] -> Reduction (RuleACInst, NodeConc, LNFact)
 insertFreshNodeConc rules = do
-    (i, ru) <- insertFreshNode rules
+    (i, ru) <- insertFreshNode rules Nothing
     (v, fa) <- disjunctionOfList $ enumConcs ru
     return (ru, (i, v), fa)
 
 -- | Insert a fresh rule node labelled with a fresh instance of one of the rules
 -- and solve it's 'Fr', 'In', and 'KU' premises immediatly.
-insertFreshNode :: [RuleAC] -> Reduction (NodeId, RuleACInst)
-insertFreshNode rules = do
+-- If a parent node is given, updates the remaining rule applications.
+insertFreshNode :: [RuleAC] -> Maybe RuleACInst -> Reduction (NodeId, RuleACInst)
+insertFreshNode rules parent = do
     i <- freshLVar "vr" LSortNode
-    (,) i <$> labelNodeId i rules
+    (,) i <$> labelNodeId i rules parent
 
 -- | Label a node-id with a fresh instance of one of the rules and
 -- solve it's 'Fr', 'In', and 'KU' premises immediatly.
+-- If a parent node is given, updates the remaining rule applications.
 --
 -- PRE: Node must not yet be labelled with a rule.
-labelNodeId :: NodeId -> [RuleAC] -> Reduction RuleACInst
-labelNodeId = \i rules -> do
-    (ru, mrconstrs) <- importRule =<< disjunctionOfList rules
+labelNodeId :: NodeId -> [RuleAC] -> Maybe RuleACInst -> Reduction RuleACInst
+labelNodeId = \i rules parent -> do
+    (ru1, mrconstrs) <- importRule =<< disjunctionOfList rules
+    let ru = case parent of
+                Just pa | (getRuleName pa == getRuleName ru1) && (getRemainingRuleApplications pa > 1)
+                    -> setRemainingRuleApplications ru1 ((getRemainingRuleApplications pa) - 1)
+                _   -> ru1
     solveRuleConstraints mrconstrs
     modM sNodes (M.insert i ru)
     exploitPrems i ru
@@ -289,7 +295,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "pair")) ([(Fact KUFact [m1]),(Fact KUFact [m2])]) ([fa]) ([fa])))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_pair")) ([(Fact KUFact [m1]),(Fact KUFact [m2])]) ([fa]) ([fa])))
                                insertGoal goal False
                                markGoalAsSolved "pair" goal
                                requiresKU m1 *> requiresKU m2 *> return Changed
@@ -308,7 +314,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "inv")) ([(Fact KUFact [m])]) ([fa]) ([fa])))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_inv")) ([(Fact KUFact [m])]) ([fa]) ([fa])))
                                insertGoal goal False
                                markGoalAsSolved "inv" goal
                                requiresKU m *> return Changed
@@ -327,7 +333,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "mult")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
                                insertGoal goal False
                                markGoalAsSolved "mult" goal
                                mapM_ requiresKU ms *> return Changed
@@ -347,7 +353,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
                                insertGoal goal False
                                markGoalAsSolved "union" goal
                                mapM_ requiresKU ms *> return Changed

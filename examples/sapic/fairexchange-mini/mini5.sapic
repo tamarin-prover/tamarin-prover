@@ -1,0 +1,32 @@
+theory mini5
+begin
+
+section{* small example for progression function *}
+builtins: signing, hashing
+options: progress
+
+new s;
+(insert s,'HELLO'
+||
+lookup s as x in
+    (if x='HELLO' then
+        event A()
+     else
+        event B()
+    )   
+else
+    event C()
+    )
+
+lemma A_possible: 
+	exists-trace 
+        "Ex #t. A()@t"
+
+lemma B_impossible: 
+        "not(Ex #t. B()@t)"
+
+lemma C_possible: 
+        exists-trace
+        "Ex #t. C()@t"
+
+end

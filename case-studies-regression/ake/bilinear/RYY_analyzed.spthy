@@ -331,16 +331,16 @@ guarded formula characterizing all counter-examples:
   (∀ matching #i3 role2.
     (Sid( matching, <B, A, Y, X, role2> ) @ #i3)
    ⇒
-    (role1 = role2) ∨
-    ((∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
-     (∀ #i5. (LtkRev( B ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
-     (∀ #i5. (LtkRev( A ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
-     (∀ #i5. (MskRev( ) @ #i5) ⇒ ¬(#i5 < #i1)))) ∧
-  ((∃ matching #i3 role2.
-     (Sid( matching, <B, A, Y, X, role2> ) @ #i3) ∧ ¬(role1 = role2)) ∨
-   ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
-    (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
-    (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥)))"
+    ((role1 = role2) ∨
+     ((∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
+      (∀ #i5. (LtkRev( B ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
+      (∀ #i5. (LtkRev( A ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
+      (∀ #i5. (MskRev( ) @ #i5) ⇒ ¬(#i5 < #i1))))) ∧
+  (((∃ matching #i3 role2.
+      (Sid( matching, <B, A, Y, X, role2> ) @ #i3) ∧ ¬(role1 = role2)) ∨
+    ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+     (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
+     (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥))))"
 */
 simplify
 solve( (∃ matching #i3 role2.
@@ -382,7 +382,7 @@ solve( (∃ matching #i3 role2.
                   case Reveal_session_key_case_2
                   by contradiction /* from formulas */
                 next
-                  case ckdf
+                  case c_kdf
                   solve( !KU( 'g'^(~ex*~ey) ) @ #vk.5 )
                     case Init_1
                     by solve( !KU( ~ey ) @ #vk.12 )
@@ -420,7 +420,7 @@ solve( (∃ matching #i3 role2.
                   case Reveal_session_key_case_2
                   by contradiction /* from formulas */
                 next
-                  case ckdf
+                  case c_kdf
                   solve( !KU( 'g'^(~ex*~ey) ) @ #vk.5 )
                     case Init_1
                     by solve( !KU( ~ey ) @ #vk.12 )
@@ -459,7 +459,7 @@ next
             case Reveal_session_key_case_2
             by contradiction /* from formulas */
           next
-            case ckdf
+            case c_kdf
             solve( !KU( em(hp($A), hp($B))^~n ) @ #vk.6 )
               case Reveal_ltk_case_1
               by contradiction /* from formulas */
@@ -490,7 +490,7 @@ next
           case Reveal_session_key_case_2
           by contradiction /* from formulas */
         next
-          case ckdf
+          case c_kdf
           solve( !KU( em(hp($A), hp($B))^~n ) @ #vk.6 )
             case Reveal_ltk_case_1
             by contradiction /* from formulas */
@@ -515,8 +515,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/RYY.spthy
@@ -525,7 +527,7 @@ analyzing: examples/ake/bilinear/RYY.spthy
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.703068s
+  processing time: 7.421143s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 
@@ -537,7 +539,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 11.703068s
+  processing time: 7.421143s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 

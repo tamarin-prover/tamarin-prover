@@ -185,7 +185,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
       case Sessk_reveal_case_4
       by contradiction /* from formulas */
     next
-      case ch
+      case c_h
       solve( !KU( 'g'^(~lkI*~x) ) @ #vk.11 )
         case cexp
         solve( !KU( ~lkI ) @ #vk.14 )
@@ -339,7 +339,7 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
       case Sessk_reveal_case_4
       by contradiction /* from formulas */
     next
-      case ch
+      case c_h
       solve( !KU( 'g'^(~lkR*~x) ) @ #vk.11 )
         case cexp
         solve( !KU( ~lkR ) @ #vk.14 )
@@ -434,8 +434,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
@@ -444,7 +446,7 @@ analyzing: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 analyzed: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.092559s
+  processing time: 1.418594s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 
@@ -456,7 +458,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 1.092559s
+  processing time: 1.418594s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 

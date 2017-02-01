@@ -1,0 +1,97 @@
+theory OTP
+// Use Tamarin command line options '--heuristic=S'
+
+begin
+
+
+builtins: asymmetric-encryption, symmetric-encryption
+
+functions: prog/2, list/2, hash/2,h/1,cde/1,dcde/1,shared/1,dshared/1,scode/1,dscode/1,sko/1,dsko/1,
+chall/1,dchall/1,chall2/1,dchall2/1
+
+equations:
+dcde(cde(m))=m,dshared(shared(m))=m,dscode(scode(m))=m,dsko(sko(m))=m
+
+predicates: pred_rep(x,y) <=> not( y = 'loc')
+
+let user =
+    in(pc,code);                        // Side channel verification (sms,phone call)
+    event ProvU(code);
+    out(cde(code));
+    !( new fr; event AskU(pw,fr);   // Password requests
+    out(cu,<pw,fr>))
+
+
+let enclave =
+
+    (new shared_k; event SessionP(pk(skV),shared_k);let signed=report( aenc(shared_k, pk(skV))) in 
+    out(shared(<aenc(shared_k, pk(skV)),signed>));     // Key exchange with the server
+    in(cde(code)); event ProvE(code);                   // reception of an attested code of the user
+    out(dscode(senc(code,shared_k)));
+    in(sko(senc(kOTP,shared_k)));
+    !(in(cu,<pw,fr>);in(senc(challenge, shared_k)); event Ask(pw,challenge,fr,shared_k); out(<h(pw),hash(kOTP,challenge)>) // transformation of password request into OTP
+    )
+    )@'loc'
+ 
+let server =
+    in(shared(<aenc(shared_k, pk(skV)), signed>));
+    if aenc(shared_k, pk(skV))=check_rep(signed,'loc') then
+    (    	   event SessionV(pk(skV),shared_k);new code; out(pc,code);  // Establish a secure channel
+        in(scode(senc(code,shared_k)));
+        event ProvS(code);                                               // secure channel validated by side channel
+        new kOTP; out(sko(senc(kOTP,shared_k)));
+     !(new challenge; event Chall(challenge,shared_k);out(senc(challenge, shared_k));  // challenge emission
+
+    in(<h(pw),hash(kOTP,challenge)>);event Accept(pw, challenge)         // Validation of OTP
+    )
+    )
+     else (0)
+ 
+new skV; new pc; new cu; new pw; event Chan(cu); event Chan(pc); out(pw); event Key(skV);out(pk(skV));(!server||!user || !enclave)
+
+lemma secrecy_key[reuse]:
+        "not (
+                Ex k #t1 #t2 .
+                 Key(k)@t1 
+                & KU(k)@t2
+
+        )"
+
+lemma key_ex[reuse]: 
+      "All pka k #t1 . SessionV(pka,k)@t1 ==> Ex #t2. SessionP(pka,k)@t2 & t2<t1" 
+
+lemma secrecy_ex[reuse]:
+        "not (
+                Ex pka k #t1 #t2 .
+                 SessionV(pka,k)@t1 
+                & KU(k)@t2
+
+        )"
+
+
+lemma unic[reuse]:
+" not (Ex #t1 #t2 pw fr. AskU(pw,fr)@t1 & AskU(pw,fr)@t2  &not(#t1=#t2))"
+
+
+lemma secrecy_chall[reuse]:
+        "not (
+                Ex pw chal fr k #t1 #t2 .
+                 Ask(pw,chal,fr,k)@t1 
+                & KU(chal)@t2
+
+        )"
+
+
+lemma valid[reuse]:
+ "All #t1 pw ch . Accept(pw, ch) @ t1 ==> Ex  #t2 fr k. Ask(pw,ch,fr,k)@t2 & #t2<#t1  "
+
+
+lemma unic_2[reuse]:
+" not (Ex #t1 #t2 pw ch fr k. Ask(pw,ch,fr,k)@t1 & Ask(pw,ch,fr,k)@t2  &not(#t1=#t2))"
+
+
+
+lemma valid_final:
+ "All #t1 pw ch. Accept(pw, ch) @ t1 ==> Ex #t2 #t3 fr k. Ask(pw,ch,fr,k) @ t2 & AskU(pw,fr)@t3 & #t2< #t1 & #t3<#t2 & not (Ex #t5  . Ask(pw,ch,fr,k)@t5 & not(#t2=#t5) ) & not (Ex #t6. AskU(pw,fr)@t6  & not(#t3=#t6))"
+
+end

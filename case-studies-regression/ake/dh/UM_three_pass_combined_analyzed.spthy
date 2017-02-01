@@ -760,28 +760,29 @@ guarded formula characterizing all counter-examples:
     (Sid( <'UM3', B, A, matchingComm> ) @ #l) ∧
     (ms = <'UM3', B, A, matchingComm>)
    ⇒
-    ((∀ rest. ((matchingComm+rest) = comm) ⇒ ⊥) ∧ (¬(matchingComm = comm))) ∨
-    (∃ #v. (SidUpdated( ms ) @ #v)) ∨
-    ((∀ #k.1. (SessionKeyReveal( ms ) @ #k.1) ⇒ ⊥) ∧
-     (∀ #k.1.
-       (Corrupt( B ) @ #k.1) ⇒ ∃ #l.1. (Expire( ms ) @ #l.1) ∧ #l.1 < #k.1) ∧
-     (∀ #k.1.
-       (SessionStateReveal( ms ) @ #k.1)
-      ⇒
-       (∀ #l.1. (Corrupt( A ) @ #l.1) ⇒ ⊥) ∧
-       (∀ #l.1. (Corrupt( B ) @ #l.1) ⇒ ⊥)))) ∧
-  ((∃ #l matchingComm.
-     (Sid( <'UM3', B, A, matchingComm> ) @ #l)
-    ∧
-     ((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm)) ∧
-     (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥)) ∨
-   (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ∃ #l. (Expire( s ) @ #l) ∧ #l < #k.1))"
+    (((∀ rest. ((matchingComm+rest) = comm) ⇒ ⊥) ∧
+      (¬(matchingComm = comm))) ∨
+     (∃ #v. (SidUpdated( ms ) @ #v)) ∨
+     ((∀ #k.1. (SessionKeyReveal( ms ) @ #k.1) ⇒ ⊥) ∧
+      (∀ #k.1.
+        (Corrupt( B ) @ #k.1) ⇒ ∃ #l.1. (Expire( ms ) @ #l.1) ∧ #l.1 < #k.1) ∧
+      (∀ #k.1.
+        (SessionStateReveal( ms ) @ #k.1)
+       ⇒
+        (∀ #l.1. (Corrupt( A ) @ #l.1) ⇒ ⊥) ∧
+        (∀ #l.1. (Corrupt( B ) @ #l.1) ⇒ ⊥))))) ∧
+  (((∃ #l matchingComm.
+      (Sid( <'UM3', B, A, matchingComm> ) @ #l)
+     ∧
+      (((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm))) ∧
+      (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥)) ∨
+    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ∃ #l. (Expire( s ) @ #l) ∧ #l < #k.1)))"
 */
 simplify
 solve( (∃ #l matchingComm.
          (Sid( <'UM3', B, A, matchingComm> ) @ #l)
         ∧
-         ((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm)) ∧
+         (((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm))) ∧
          (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥))  ∥
        (∀ #k.
          (Corrupt( B ) @ #k)
@@ -799,11 +800,11 @@ solve( (∃ #l matchingComm.
           solve( !KU( MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                           <'I', $A, $B, 'g'^~ex, Y>)
                  ) @ #vk.3 )
-            case cMAC
+            case c_MAC
             solve( !KU( first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)) ) @ #vk.5 )
-              case cfirst
+              case c_first
               solve( !KU( second(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)) ) @ #vk.3 )
-                case csecond
+                case c_second
                 solve( !KU( h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>) ) @ #vk.13 )
                   case Reveal_SessionKey_case_2
                   solve( !KU( 'g'^~ex ) @ #vk.13 )
@@ -828,8 +829,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/dh/UM_three_pass_combined.spthy
@@ -838,7 +841,7 @@ analyzing: examples/ake/dh/UM_three_pass_combined.spthy
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 43.256246s
+  processing time: 25.627963s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
 
@@ -850,7 +853,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 43.256246s
+  processing time: 25.627963s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
 

@@ -54,7 +54,7 @@ module Term.Unification (
   , irreducibleFunSyms
   , noEqFunSyms
   , addFunSym
-  , addStRule
+  , addCtxtStRule
 
   -- * Convenience exports
   , module Term.Substitution
@@ -83,7 +83,7 @@ import           Debug.Trace.Ignore
 ----------------------------------------------------------------------
 
 -- | @unifyLTerm sortOf eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
-unifyLTermFactored :: (IsConst c , Show (Lit c LVar), Ord c)
+unifyLTermFactored :: (IsConst c , Show (Lit c LVar))
                    => (c -> LSort)
                    -> [Equal (LTerm c)]
                    -> WithMaude (LSubst c, [SubstVFresh c LVar])
@@ -105,7 +105,7 @@ unifyLNTermFactored :: [Equal LNTerm]
 unifyLNTermFactored = unifyLTermFactored sortOfName
 
 -- | @unifyLNTerm eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
-unifyLTerm :: (IsConst c , Show (Lit c LVar), Ord c)
+unifyLTerm :: (IsConst c , Show (Lit c LVar))
            => (c -> LSort)
            -> [Equal (LTerm c)]
            -> WithMaude [SubstVFresh c LVar]
@@ -134,7 +134,7 @@ matchLVar t p = varTerm t `matchWith` varTerm p
 
 -- | @solveMatchLNTerm sortOf eqs@ returns a complete set of matchers for
 -- @eqs@ modulo AC.
-solveMatchLTerm :: (IsConst c , Show (Lit c LVar), Ord c)
+solveMatchLTerm :: (IsConst c)
            => (c -> LSort)
            -> Match (LTerm c)
            -> WithMaude [Subst c LVar]

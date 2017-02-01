@@ -82,7 +82,7 @@ solve( Step1( tid, A, B, ~x ) ▶₀ #i )
       by solve( !KU( ~x ) @ #vk.6 )
     qed
   next
-    case cmac
+    case c_mac
     solve( !KU( shk ) @ #vk.5 )
       case RevealKey
       by contradiction /* from formulas */
@@ -101,7 +101,7 @@ simplify
 solve( Step1( tid, A, B, ~x ) ▶₀ #i )
   case Step1
   solve( !KU( mac(shk, <Y, $B, $A>) ) @ #vk.2 )
-    case cmac
+    case c_mac
     solve( !KU( shk ) @ #vk.5 )
       case RevealKey
       solve( splitEqs(0) )
@@ -120,8 +120,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/cav13/DH_example.spthy
@@ -130,7 +132,7 @@ analyzing: examples/cav13/DH_example.spthy
 analyzed: examples/cav13/DH_example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.245847s
+  processing time: 0.15741s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 
@@ -142,7 +144,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.245847s
+  processing time: 0.15741s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 

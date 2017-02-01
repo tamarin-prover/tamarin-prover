@@ -28,6 +28,7 @@ import qualified Data.Map                   as M
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
+import qualified Data.List                  as L
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -35,6 +36,8 @@ import           Control.Monad
 
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
+
+import           System.Process
 
 -- import qualified Extension.Data.Label       as L
 
@@ -84,7 +87,15 @@ toAxiom ax = Axiom (pAxName ax) (pAxFormula ax)
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags = parseFile (theory flags)
+parseOpenTheory flags file = if ".sapic" `L.isSuffixOf` file 
+    then 
+       do
+          callCommand $ "sapic " ++ file ++ " > " ++ spthyfile
+          parseFile (theory flags) spthyfile
+    else
+          parseFile (theory flags) spthyfile       
+    where
+       spthyfile = (take ((length file) - 6) file) ++ ".spthy"
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags
@@ -152,17 +163,19 @@ binaryAlgApp plit = do
     op <- identifier
     (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm plit)
-    arg2 <- term plit
+    arg2 <- term plit False
     when (k /= 2) $ fail $
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
-diffOp :: Ord l => Parser (Term l) -> Parser (Term l)
-diffOp plit = do
+diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+diffOp eqn plit = do
   ts <- symbol "diff" *> parens (commaSep (multterm plit))
   when (2 /= length ts) $ fail $
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState
+  when eqn $ fail $
+    "diff operator not allowed in equations"
   when (not diff) $ fail $
     "diff operator found, but flag diff not set"
   let arg1 = head ts
@@ -170,8 +183,8 @@ diffOp plit = do
   return $ fAppDiff (arg1, arg2)
 
 -- | Parse a term.
-term :: Ord l => Parser (Term l) -> Parser (Term l)
-term plit = asum
+term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
+term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (multterm plit)
     , symbol "1" *> pure fAppOne
@@ -181,7 +194,7 @@ term plit = asum
     ]
     <?> "term"
   where
-    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp]
+    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp eqn]
     pairing = angled (tupleterm plit)
     nullaryApp = do
       maudeSig <- getState
@@ -206,8 +219,8 @@ msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
 msetterm plit = do
     mset <- enableMSet <$> getState
     if mset -- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (term plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
-        else term plit
+        then chainl1 (term plit False) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        else term plit False
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -295,10 +308,12 @@ intrRule = do
     return $ Rule info ps cs as
   where
     intrInfo = do
-        name <- identifier
+        name     <- identifier
+        limit    <- option 0 natural
+-- FIXME: Parse whether we have a subterm rule or a constant rule
         case name of
           'c':cname -> return $ ConstrRule (BC.pack cname)
-          'd':dname -> return $ DestrRule (BC.pack dname)
+          'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit) True False
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
 genericRule :: Parser ([LNFact], [LNFact], [LNFact])
@@ -619,13 +634,10 @@ diffProofMethod = asum
 -- | Parse a diff proof skeleton.
 diffProofSkeleton :: Parser DiffProofSkeleton
 diffProofSkeleton =
-    solvedProof {-<|> attackProof-} <|> finalProof <|> interProof
+    solvedProof <|> finalProof <|> interProof
   where
     solvedProof =
         symbol "MIRRORED" *> pure (LNode (DiffProofStep DiffMirrored ()) M.empty)
-
---     attackProof =
---         symbol "ATTACK" *> pure (LNode (DiffProofStep DiffAttack ()) M.empty)
         
     finalProof = do
         method <- symbol "by" *> diffProofMethod
@@ -684,13 +696,13 @@ functions =
 
 equations :: Parser ()
 equations =
-    symbol "equations" *> colon *> commaSep1 equation *> pure ()
-  where
-    equation = do
-        rrule <- RRule <$> term llit <*> (equalSign *> term llit)
-        case rRuleToStRule rrule of
+      symbol "equations" *> colon *> commaSep1 equation *> pure ()
+    where
+      equation = do
+        rrule <- RRule <$> term llit True <*> (equalSign *> term llit True)
+        case rRuleToCtxtStRule rrule of
           Just str ->
-              modifyState (addStRule str)
+              modifyState (addCtxtStRule str)
           Nothing  ->
               fail $ "Not a subterm rule: " ++ show rrule
 
@@ -708,12 +720,7 @@ theory flags0 = do
     symbol_ "theory"
     thyId <- identifier
     symbol_ "begin"
---        *> addItems (S.fromList flags0) (set thyName thyId defaultOpenTheory)
         *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
---        *> addItems (S.fromList flags0) (set (sigpMaudeSig . thySignature) (TEMPORARY.MaudeSig False False False True pairFunSig TEMP2.pairRules S.empty S.empty)  (set thyName thyId (defaultOpenTheory True)))  -- instead of "True" use: ("diff" `S.member` (S.fromList flags0))
---           set (enableDiff . sigpMaudeSig . thySignature) msig thy
--- debugging:    fail $ "hallo" ++ show msig
---set (enableDiff . sigpMaudeSig . thySignature) (True)    
         <* symbol "end"
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory

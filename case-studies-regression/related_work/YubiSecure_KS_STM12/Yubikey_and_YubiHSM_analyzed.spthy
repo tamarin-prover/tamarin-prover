@@ -210,7 +210,8 @@ next
   solve( (∀ pid sc #t2.
            (YubiPress( pid, sc ) @ #t2)
           ⇒
-           (last(#t2)) ∨ (∃ #t1. (K( sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+           ((last(#t2)) ∨
+            (∃ #t1. (K( sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
          (∃ #t1 #t2 a b c.
            (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
           ∧
@@ -301,9 +302,9 @@ next
   solve( (∀ #t3 k2 k m sc enc mac.
            (OtpDecode( k2, k, m, sc, enc, mac ) @ #t3)
           ⇒
-           (last(#t3)) ∨
-           (∃ #t1 pid.
-             (YubiPress( pid, sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t3)))  ∥
+           ((last(#t3)) ∨
+            (∃ #t1 pid.
+              (YubiPress( pid, sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t3))))  ∥
          (∃ #t1 #t2 a b c.
            (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
           ∧
@@ -325,9 +326,9 @@ next
           solve( !YSM_AEAD_YUBIKEY_OTP_DECODE( ~kh ) ▶₂ #t3 )
             case HSMInit
             solve( !KU( xorc(senc(keystream(~kh, N), ~k), <k2, did>) ) @ #vk.6 )
-              case cxorc
+              case c_xorc
               solve( !KU( mac(<k2, did>, ~k) ) @ #vk.8 )
-                case cmac
+                case c_mac
                 solve( !KU( ~k ) @ #vk.12 )
                   case irecvHSM
                   by contradiction /* cyclic */
@@ -351,9 +352,9 @@ next
                       case Yubikey_PressButton_case_2
                       by contradiction /* from formulas */
                     next
-                      case csenc
+                      case c_senc
                       solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
-                        case csenc
+                        case c_senc
                         solve( !KU( ~k ) @ #vk.20 )
                           case irecvHSM
                           by contradiction /* cyclic */
@@ -417,9 +418,9 @@ next
                       case Yubikey_PressButton_case_2
                       by contradiction /* from formulas */
                     next
-                      case csenc
+                      case c_senc
                       solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
-                        case csenc
+                        case c_senc
                         solve( !KU( ~k ) @ #vk.22 )
                           case irecvHSM
                           by contradiction /* cyclic */
@@ -481,9 +482,9 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.11 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~k ) @ #vk.20 )
                         case irecvHSM
                         by contradiction /* cyclic */
@@ -549,9 +550,9 @@ next
                       case Yubikey_PressButton_case_2
                       by contradiction /* from formulas */
                     next
-                      case csenc
+                      case c_senc
                       solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
-                        case csenc
+                        case c_senc
                         solve( !KU( ~k ) @ #vk.20 )
                           case irecvHSM
                           by contradiction /* cyclic */
@@ -615,9 +616,9 @@ next
                       case Yubikey_PressButton_case_2
                       by contradiction /* from formulas */
                     next
-                      case csenc
+                      case c_senc
                       solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
-                        case csenc
+                        case c_senc
                         solve( !KU( ~k ) @ #vk.22 )
                           case irecvHSM
                           by contradiction /* cyclic */
@@ -679,9 +680,9 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.11 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~k ) @ #vk.20 )
                         case irecvHSM
                         by contradiction /* cyclic */
@@ -751,9 +752,9 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.13 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~k ) @ #vk.18 )
                         case irecvHSM
                         by contradiction /* cyclic */
@@ -790,9 +791,9 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.15 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~k ) @ #vk.20 )
                         case irecvHSM
                         by contradiction /* cyclic */
@@ -827,9 +828,9 @@ next
                   case Yubikey_PressButton_case_2
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.12 )
-                    case csenc
+                    case c_senc
                     solve( !KU( ~k ) @ #vk.18 )
                       case irecvHSM
                       by contradiction /* cyclic */
@@ -868,9 +869,9 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.13 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~k ) @ #vk.18 )
                         case irecvHSM
                         by contradiction /* cyclic */
@@ -907,9 +908,9 @@ next
                     case Yubikey_PressButton_case_2
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.15 )
-                      case csenc
+                      case c_senc
                       solve( !KU( ~k ) @ #vk.20 )
                         case irecvHSM
                         by contradiction /* cyclic */
@@ -944,9 +945,9 @@ next
                   case Yubikey_PressButton_case_2
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.12 )
-                    case csenc
+                    case c_senc
                     solve( !KU( ~k ) @ #vk.18 )
                       case irecvHSM
                       by contradiction /* cyclic */
@@ -1154,12 +1155,12 @@ next
   solve( (∀ #t1 #t2 pid k2.
            (Init( pid, k2 ) @ #t1) ∧ (K( k2 ) @ #t2)
           ⇒
-           (last(#t2)) ∨
-           (last(#t1)) ∨
-           (∃ #t3 #t4 k.
-             (K( k ) @ #t3) ∧ (MasterKey( k ) @ #t4)
-            ∧
-             (¬(last(#t4))) ∧ (¬(last(#t3))) ∧ (#t3 < #t2)))  ∥
+           ((last(#t2)) ∨
+            (last(#t1)) ∨
+            (∃ #t3 #t4 k.
+              (K( k ) @ #t3) ∧ (MasterKey( k ) @ #t4)
+             ∧
+              (¬(last(#t4))) ∧ (¬(last(#t3))) ∧ (#t3 < #t2))))  ∥
          (∃ #t1 #t2 a b c.
            (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
           ∧
@@ -1183,7 +1184,7 @@ next
           next
             case read_AEAD_case_1
             solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.3 )
-              case csenc
+              case c_senc
               solve( !KU( ~k ) @ #vk.5 )
                 case irecvHSM
                 by contradiction /* cyclic */
@@ -1210,7 +1211,7 @@ next
           next
             case read_AEAD_case_1
             solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.3 )
-              case csenc
+              case c_senc
               solve( !KU( ~k ) @ #vk.5 )
                 case irecvHSM
                 by contradiction /* cyclic */
@@ -1562,8 +1563,8 @@ lemma neither_k_nor_k2_are_ever_leaked_inv [use_induction, reuse]:
    (¬(∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)))"
 /*
 guarded formula characterizing all counter-examples:
-"(∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)) ∨
- (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6))"
+"((∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)) ∨
+  (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)))"
 */
 induction
   case empty_trace
@@ -1575,11 +1576,13 @@ next
          (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)) )
     case case_1
     solve( ((∀ #t1 #t2 k.
-              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2) ⇒ (last(#t2)) ∨ (last(#t1))) ∧
+              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)
+             ⇒
+              ((last(#t2)) ∨ (last(#t1)))) ∧
             (∀ #t5 #t6 k6 pid.
               (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)
              ⇒
-              (last(#t6)) ∨ (last(#t5))))  ∥
+              ((last(#t6)) ∨ (last(#t5)))))  ∥
            (∃ #t1 #t2 a b c.
              (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
             ∧
@@ -1745,11 +1748,13 @@ next
   next
     case case_2
     solve( ((∀ #t1 #t2 k.
-              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2) ⇒ (last(#t2)) ∨ (last(#t1))) ∧
+              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)
+             ⇒
+              ((last(#t2)) ∨ (last(#t1)))) ∧
             (∀ #t5 #t6 k6 pid.
               (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)
              ⇒
-              (last(#t6)) ∨ (last(#t5))))  ∥
+              ((last(#t6)) ∨ (last(#t5)))))  ∥
            (∃ #t1 #t2 a b c.
              (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
             ∧
@@ -1769,9 +1774,9 @@ next
             next
               case read_AEAD_case_1
               solve( !KU( S(zero) ) @ #vk.1 )
-                case cS
+                case c_S
                 solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.2 )
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -1796,9 +1801,9 @@ next
             next
               case read_AEAD_case_1
               solve( !KU( S(zero) ) @ #vk.1 )
-                case cS
+                case c_S
                 solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.2 )
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -2165,8 +2170,8 @@ next
     solve( (∀ pid sid x otp #t2.
              (Login( pid, sid, x, otp ) @ #t2)
             ⇒
-             (last(#t2)) ∨
-             (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+             ((last(#t2)) ∨
+              (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
            (∃ #t1 #t2 a b c.
              (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
             ∧
@@ -2187,7 +2192,7 @@ next
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               next
                 case irecvHSM
@@ -2199,7 +2204,7 @@ next
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               next
                 case irecvHSM
@@ -2211,7 +2216,7 @@ next
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               next
                 case irecvHSM
@@ -2223,7 +2228,7 @@ next
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               next
                 case irecvHSM
@@ -2815,8 +2820,8 @@ next
     solve( (∀ pid sid x otp #t2.
              (Login( pid, sid, x, otp ) @ #t2)
             ⇒
-             (last(#t2)) ∨
-             (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+             ((last(#t2)) ∨
+              (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
            (∃ #t1 #t2 a b c.
              (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
             ∧
@@ -2837,7 +2842,7 @@ next
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               next
                 case irecvHSM
@@ -2849,7 +2854,7 @@ next
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               next
                 case irecvHSM
@@ -2861,7 +2866,7 @@ next
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               next
                 case irecvHSM
@@ -2873,7 +2878,7 @@ next
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
-                case csenc
+                case c_senc
                 by contradiction /* from formulas */
               next
                 case irecvHSM
@@ -3463,12 +3468,12 @@ next
   next
     case write_AEAD
     solve( !KU( xorc(senc(keystream(kh, pid), k), <k2, sid>) ) @ #vk.6 )
-      case cxorc
+      case c_xorc
       solve( (∀ pid sid x otp #t2.
                (Login( pid, sid, x, otp ) @ #t2)
               ⇒
-               (last(#t2)) ∨
-               (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+               ((last(#t2)) ∨
+                (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
              (∃ #t1 #t2 a b c.
                (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
               ∧
@@ -3500,11 +3505,11 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( ~pr ) @ #vk.16 )
                       case BuyANewYubikey_case_1
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3516,7 +3521,7 @@ next
                     next
                       case BuyANewYubikey_case_2
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3528,7 +3533,7 @@ next
                     next
                       case HSMInit
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3540,7 +3545,7 @@ next
                     next
                       case Yubikey_PressButton_case_01
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3552,7 +3557,7 @@ next
                     next
                       case Yubikey_PressButton_case_02
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3564,7 +3569,7 @@ next
                     next
                       case Yubikey_PressButton_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3576,7 +3581,7 @@ next
                     next
                       case Yubikey_PressButton_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3588,7 +3593,7 @@ next
                     next
                       case Yubikey_PressButton_case_05
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3600,7 +3605,7 @@ next
                     next
                       case Yubikey_PressButton_case_06
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3612,7 +3617,7 @@ next
                     next
                       case Yubikey_PressButton_case_07
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3624,7 +3629,7 @@ next
                     next
                       case Yubikey_PressButton_case_08
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3660,7 +3665,7 @@ next
                     next
                       case fresh
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3681,7 +3686,7 @@ next
                     next
                       case read_AEAD_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3693,7 +3698,7 @@ next
                     next
                       case read_AEAD_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3746,11 +3751,11 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( ~pr ) @ #vk.18 )
                       case BuyANewYubikey_case_1
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3762,7 +3767,7 @@ next
                     next
                       case BuyANewYubikey_case_2
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3774,7 +3779,7 @@ next
                     next
                       case HSMInit
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3786,7 +3791,7 @@ next
                     next
                       case Yubikey_PressButton_case_01
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3798,7 +3803,7 @@ next
                     next
                       case Yubikey_PressButton_case_02
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3810,7 +3815,7 @@ next
                     next
                       case Yubikey_PressButton_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3822,7 +3827,7 @@ next
                     next
                       case Yubikey_PressButton_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3834,7 +3839,7 @@ next
                     next
                       case Yubikey_PressButton_case_05
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3846,7 +3851,7 @@ next
                     next
                       case Yubikey_PressButton_case_06
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3858,7 +3863,7 @@ next
                     next
                       case Yubikey_PressButton_case_07
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3870,7 +3875,7 @@ next
                     next
                       case Yubikey_PressButton_case_08
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3906,7 +3911,7 @@ next
                     next
                       case fresh
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3927,7 +3932,7 @@ next
                     next
                       case read_AEAD_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3939,7 +3944,7 @@ next
                     next
                       case read_AEAD_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -3992,11 +3997,11 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( ~pr ) @ #vk.16 )
                       case BuyANewYubikey_case_1
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4008,7 +4013,7 @@ next
                     next
                       case BuyANewYubikey_case_2
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4020,7 +4025,7 @@ next
                     next
                       case HSMInit
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4032,7 +4037,7 @@ next
                     next
                       case Yubikey_PressButton_case_01
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4044,7 +4049,7 @@ next
                     next
                       case Yubikey_PressButton_case_02
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4056,7 +4061,7 @@ next
                     next
                       case Yubikey_PressButton_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4068,7 +4073,7 @@ next
                     next
                       case Yubikey_PressButton_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4080,7 +4085,7 @@ next
                     next
                       case Yubikey_PressButton_case_05
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4092,7 +4097,7 @@ next
                     next
                       case Yubikey_PressButton_case_06
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4104,7 +4109,7 @@ next
                     next
                       case Yubikey_PressButton_case_07
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4116,7 +4121,7 @@ next
                     next
                       case Yubikey_PressButton_case_08
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4152,7 +4157,7 @@ next
                     next
                       case fresh
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4173,7 +4178,7 @@ next
                     next
                       case read_AEAD_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4185,7 +4190,7 @@ next
                     next
                       case read_AEAD_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4238,11 +4243,11 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( ~pr ) @ #vk.18 )
                       case BuyANewYubikey_case_1
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4254,7 +4259,7 @@ next
                     next
                       case BuyANewYubikey_case_2
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4266,7 +4271,7 @@ next
                     next
                       case HSMInit
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4278,7 +4283,7 @@ next
                     next
                       case Yubikey_PressButton_case_01
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4290,7 +4295,7 @@ next
                     next
                       case Yubikey_PressButton_case_02
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4302,7 +4307,7 @@ next
                     next
                       case Yubikey_PressButton_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4314,7 +4319,7 @@ next
                     next
                       case Yubikey_PressButton_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4326,7 +4331,7 @@ next
                     next
                       case Yubikey_PressButton_case_05
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4338,7 +4343,7 @@ next
                     next
                       case Yubikey_PressButton_case_06
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4350,7 +4355,7 @@ next
                     next
                       case Yubikey_PressButton_case_07
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4362,7 +4367,7 @@ next
                     next
                       case Yubikey_PressButton_case_08
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4398,7 +4403,7 @@ next
                     next
                       case fresh
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4419,7 +4424,7 @@ next
                     next
                       case read_AEAD_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4431,7 +4436,7 @@ next
                     next
                       case read_AEAD_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4487,11 +4492,11 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( ~pr ) @ #vk.16 )
                       case BuyANewYubikey_case_1
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4503,7 +4508,7 @@ next
                     next
                       case BuyANewYubikey_case_2
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4515,7 +4520,7 @@ next
                     next
                       case HSMInit
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4527,7 +4532,7 @@ next
                     next
                       case Yubikey_PressButton_case_01
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4539,7 +4544,7 @@ next
                     next
                       case Yubikey_PressButton_case_02
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4551,7 +4556,7 @@ next
                     next
                       case Yubikey_PressButton_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4563,7 +4568,7 @@ next
                     next
                       case Yubikey_PressButton_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4575,7 +4580,7 @@ next
                     next
                       case Yubikey_PressButton_case_05
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4587,7 +4592,7 @@ next
                     next
                       case Yubikey_PressButton_case_06
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4599,7 +4604,7 @@ next
                     next
                       case Yubikey_PressButton_case_07
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4611,7 +4616,7 @@ next
                     next
                       case Yubikey_PressButton_case_08
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4647,7 +4652,7 @@ next
                     next
                       case fresh
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4668,7 +4673,7 @@ next
                     next
                       case read_AEAD_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4680,7 +4685,7 @@ next
                     next
                       case read_AEAD_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4733,11 +4738,11 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( ~pr ) @ #vk.18 )
                       case BuyANewYubikey_case_1
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4749,7 +4754,7 @@ next
                     next
                       case BuyANewYubikey_case_2
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4761,7 +4766,7 @@ next
                     next
                       case HSMInit
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4773,7 +4778,7 @@ next
                     next
                       case Yubikey_PressButton_case_01
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4785,7 +4790,7 @@ next
                     next
                       case Yubikey_PressButton_case_02
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4797,7 +4802,7 @@ next
                     next
                       case Yubikey_PressButton_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4809,7 +4814,7 @@ next
                     next
                       case Yubikey_PressButton_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4821,7 +4826,7 @@ next
                     next
                       case Yubikey_PressButton_case_05
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4833,7 +4838,7 @@ next
                     next
                       case Yubikey_PressButton_case_06
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4845,7 +4850,7 @@ next
                     next
                       case Yubikey_PressButton_case_07
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4857,7 +4862,7 @@ next
                     next
                       case Yubikey_PressButton_case_08
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4893,7 +4898,7 @@ next
                     next
                       case fresh
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4914,7 +4919,7 @@ next
                     next
                       case read_AEAD_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4926,7 +4931,7 @@ next
                     next
                       case read_AEAD_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4979,11 +4984,11 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( ~pr ) @ #vk.16 )
                       case BuyANewYubikey_case_1
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -4995,7 +5000,7 @@ next
                     next
                       case BuyANewYubikey_case_2
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5007,7 +5012,7 @@ next
                     next
                       case HSMInit
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5019,7 +5024,7 @@ next
                     next
                       case Yubikey_PressButton_case_01
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5031,7 +5036,7 @@ next
                     next
                       case Yubikey_PressButton_case_02
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5043,7 +5048,7 @@ next
                     next
                       case Yubikey_PressButton_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5055,7 +5060,7 @@ next
                     next
                       case Yubikey_PressButton_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5067,7 +5072,7 @@ next
                     next
                       case Yubikey_PressButton_case_05
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5079,7 +5084,7 @@ next
                     next
                       case Yubikey_PressButton_case_06
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5091,7 +5096,7 @@ next
                     next
                       case Yubikey_PressButton_case_07
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5103,7 +5108,7 @@ next
                     next
                       case Yubikey_PressButton_case_08
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5139,7 +5144,7 @@ next
                     next
                       case fresh
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5160,7 +5165,7 @@ next
                     next
                       case read_AEAD_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5172,7 +5177,7 @@ next
                     next
                       case read_AEAD_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5225,11 +5230,11 @@ next
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
-                    case csenc
+                    case c_senc
                     solve( !KU( ~pr ) @ #vk.18 )
                       case BuyANewYubikey_case_1
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5241,7 +5246,7 @@ next
                     next
                       case BuyANewYubikey_case_2
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5253,7 +5258,7 @@ next
                     next
                       case HSMInit
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5265,7 +5270,7 @@ next
                     next
                       case Yubikey_PressButton_case_01
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5277,7 +5282,7 @@ next
                     next
                       case Yubikey_PressButton_case_02
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5289,7 +5294,7 @@ next
                     next
                       case Yubikey_PressButton_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5301,7 +5306,7 @@ next
                     next
                       case Yubikey_PressButton_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5313,7 +5318,7 @@ next
                     next
                       case Yubikey_PressButton_case_05
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5325,7 +5330,7 @@ next
                     next
                       case Yubikey_PressButton_case_06
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5337,7 +5342,7 @@ next
                     next
                       case Yubikey_PressButton_case_07
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5349,7 +5354,7 @@ next
                     next
                       case Yubikey_PressButton_case_08
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5385,7 +5390,7 @@ next
                     next
                       case fresh
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5406,7 +5411,7 @@ next
                     next
                       case read_AEAD_case_03
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -5418,7 +5423,7 @@ next
                     next
                       case read_AEAD_case_04
                       solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.11 )
-                        case cmac
+                        case c_mac
                         by contradiction /* from formulas */
                       next
                         case irecvHSM
@@ -6603,6 +6608,9 @@ next
         qed
       qed
     next
+      case cxorc
+      by sorry /* unannotated */
+    next
       case irecv
       by contradiction /* unannotated */
     next
@@ -6613,8 +6621,8 @@ next
       solve( (∀ pid sid x otp #t2.
                (Login( pid, sid, x, otp ) @ #t2)
               ⇒
-               (last(#t2)) ∨
-               (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+               ((last(#t2)) ∨
+                (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
              (∃ #t1 #t2 a b c.
                (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
               ∧
@@ -6635,7 +6643,7 @@ next
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -6647,7 +6655,7 @@ next
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -6659,7 +6667,7 @@ next
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -6671,7 +6679,7 @@ next
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -7263,8 +7271,8 @@ next
       solve( (∀ pid sid x otp #t2.
                (Login( pid, sid, x, otp ) @ #t2)
               ⇒
-               (last(#t2)) ∨
-               (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+               ((last(#t2)) ∨
+                (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
              (∃ #t1 #t2 a b c.
                (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
               ∧
@@ -7285,7 +7293,7 @@ next
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -7297,7 +7305,7 @@ next
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -7309,7 +7317,7 @@ next
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -7321,7 +7329,7 @@ next
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
-                  case csenc
+                  case c_senc
                   by contradiction /* from formulas */
                 next
                   case irecvHSM
@@ -7917,8 +7925,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
@@ -7927,12 +7937,12 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 40.412482s
+  processing time: 37.627858s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   k2_is_secret_use_induction (all-traces): verified (132 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (185 steps)
-  one_count_foreach_login (all-traces): verified (1902 steps)
+  one_count_foreach_login (all-traces): verified (1903 steps)
 
 ------------------------------------------------------------------------------
 
@@ -7942,12 +7952,12 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 40.412482s
+  processing time: 37.627858s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   k2_is_secret_use_induction (all-traces): verified (132 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (185 steps)
-  one_count_foreach_login (all-traces): verified (1902 steps)
+  one_count_foreach_login (all-traces): verified (1903 steps)
 
 ==============================================================================
 */

@@ -1,0 +1,76 @@
+theory nestedNDC3
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+section{* small example for progression function *}
+
+builtins: signing, hashing
+rule Init_: //Init 
+ [ Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
+
+rule MessageID_rule_: //MessageID-rule 
+ [ Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
+
+rule event_A_1: //event A() 
+ [ State_(~prog_)] --[ProgressTo_11(~prog_), Event(), A()]-> [State_11(~prog_)]
+
+rule Zero_11: //Zero 
+ [ State_11(~prog_)] --[]-> []
+
+rule Rep_0_21: //Rep, 0 
+ [ State_(~prog_)] --[]-> [!Semistate_211(~prog_)]
+
+rule Rep_1_21: //Rep, 1 
+ [ !Semistate_211(~prog_)] --[]-> [State_211(~prog_)]
+
+rule event_B_211: //event B() 
+ [ State_211(~prog_)] --[ProgressTo_2111(~prog_), Event(), B()]-> [State_2111(~prog_)]
+
+rule Zero_2111: //Zero 
+ [ State_2111(~prog_)] --[]-> []
+
+rule Rep_0_22: //Rep, 0 
+ [ State_(~prog_)] --[]-> [!Semistate_221(~prog_)]
+
+rule Rep_1_22: //Rep, 1 
+ [ !Semistate_221(~prog_)] --[]-> [State_221(~prog_)]
+
+rule event_C_221: //event C() 
+ [ State_221(~prog_)] --[ProgressTo_2211(~prog_), Event(), C()]-> [State_2211(~prog_)]
+
+rule Zero_2211: //Zero 
+ [ State_2211(~prog_)] --[]-> []
+
+
+axiom single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+
+axiom progress__to_11_or_2111_or_2211:
+    "All p #t1. ProgressFrom_(p )@t1 ==> 
+       (Ex #t2. ProgressTo_11(p )@t2)
+	 | (Ex #t2. ProgressTo_2111(p )@t2)
+	 | (Ex #t2. ProgressTo_2211(p )@t2)
+    "
+
+
+axiom progress_init:
+    " Ex #t. Init()@t "
+
+axiom resilient: 
+    "All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
+
+lemma A_possible : exists-trace
+"	Ex #t. A() @ t"
+
+lemma B_possible : exists-trace
+"	Ex #t. B() @ t"
+
+lemma C_possible : exists-trace
+"	Ex #t. C() @ t"
+
+lemma oneEventAlways :
+"	( Ex #t. A() @ t ) | ( Ex #t. B() @ t ) | ( Ex #t. C() @ t )"
+
+end

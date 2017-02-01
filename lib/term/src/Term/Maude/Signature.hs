@@ -36,7 +36,7 @@ module Term.Maude.Signature (
 
   -- * extend maude signatures
   , addFunSym
-  , addStRule
+  , addCtxtStRule
 
   -- * pretty printing
   , prettyMaudeSig
@@ -73,7 +73,7 @@ data MaudeSig = MaudeSig
     , enableMSet         :: Bool
     , enableDiff         :: Bool
     , stFunSyms          :: S.Set NoEqSym -- ^ function signature for subterm theory
-    , stRules            :: S.Set StRule  -- ^ rewriting rules for subterm theory
+    , stRules            :: S.Set CtxtStRule  -- ^ rewriting rules for subterm theory
 
     , funSyms            :: FunSig        -- ^ function signature including the
                                           -- function symbols for DH, BP, and Multiset
@@ -93,7 +93,7 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,enableDiff=_,stFunSyms,stR
                 `S.union` (if enableMSet           then msetFunSig else S.empty)
     irreduciblefuns = allfuns `S.difference` reducible
     reducible =
-        S.fromList [ o | StRule (viewTerm -> FApp o _) _ <- S.toList stRules ]
+        S.fromList [ o | CtxtStRule (viewTerm -> FApp o _) _ <- S.toList stRules ]
           `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig
 
 -- | A monoid instance to combine maude signatures.
@@ -118,15 +118,15 @@ addFunSym funsym msig =
     msig `mappend` mempty {stFunSyms=S.fromList [funsym]}
 
 -- | Add subterm rule to given maude signature.
-addStRule :: StRule -> MaudeSig -> MaudeSig
-addStRule str msig =
+addCtxtStRule :: CtxtStRule -> MaudeSig -> MaudeSig
+addCtxtStRule str msig =
     msig `mappend` mempty {stRules=S.fromList [str]}
 
 -- | Returns all rewriting rules including the rules
 --   for DH, BP, and multiset.
 rrulesForMaudeSig :: MaudeSig -> Set (RRule LNTerm)
 rrulesForMaudeSig (MaudeSig {enableDH, enableBP, enableMSet, stRules}) =
-    (S.map stRuleToRRule stRules)
+    (S.map ctxtStRuleToRRule stRules)
     `S.union` (if enableDH   then dhRules   else S.empty)
     `S.union` (if enableBP   then bpRules   else S.empty)
     `S.union` (if enableMSet then msetRules else S.empty)
@@ -171,7 +171,7 @@ prettyMaudeSig sig = P.vcat
     , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig)
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
-        prettyStRule $ S.toList (stRules sig)
+        prettyCtxtStRule $ S.toList (stRules sig)
     ]
   where
     ppNonEmptyList' name     = ppNonEmptyList ((P.keyword_ name P.<->) . P.fsep)

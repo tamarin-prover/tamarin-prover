@@ -1,0 +1,28 @@
+theory NoReplication
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+rule Init_: //Init 
+ [ ] --[Init()]-> [State_()]
+
+rule new_s_: //new s 
+ [ State_(), Fr(s)] --[]-> [State_1(s)]
+
+rule event_Secrets_1: //event Secret(s) 
+ [ State_1(s)] --[Event(), Secret(s)]-> [State_11(s)]
+
+rule out_s_11: //out s 
+ [ State_11(s)] --[]-> [State_111(s), Out(s)]
+
+rule Zero_111: //Zero 
+ [ State_111(s)] --[]-> []
+
+
+axiom single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+lemma onlyOneSecret :
+"	All #i #j x y. Secret(x) @ i & Secret(y) @ j ==> x = y"
+
+end

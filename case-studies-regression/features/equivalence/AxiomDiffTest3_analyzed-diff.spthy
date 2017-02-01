@@ -27,8 +27,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/features/equivalence/AxiomDiffTest3.spthy
@@ -37,7 +39,7 @@ analyzing: examples/features/equivalence/AxiomDiffTest3.spthy
 analyzed: examples/features/equivalence/AxiomDiffTest3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.085284s
+  processing time: 0.067589s
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
 ------------------------------------------------------------------------------
@@ -48,7 +50,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.085284s
+  processing time: 0.067589s
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
 ==============================================================================

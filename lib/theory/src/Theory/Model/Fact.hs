@@ -34,6 +34,7 @@ module Theory.Model.Fact (
   , getLeftFact
   , getRightFact
   , getFactVariables
+  , getFactTerms
   , isTrivialFact
 
   , DirTag(..)
@@ -263,6 +264,9 @@ factArity (Fact tag ts)
 factMultiplicity :: Fact t -> Multiplicity
 factMultiplicity = factTagMultiplicity . factTag
 
+-- | The terms of a 'Fact'.
+getFactTerms :: Fact t -> [t]
+getFactTerms (Fact _ ts) = ts 
 
 ------------------------------------------------------------------------------
 -- NFact

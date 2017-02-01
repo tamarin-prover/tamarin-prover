@@ -1,0 +1,168 @@
+theory KMNonRepudiation
+begin
+
+section{* The  Kremer-Markowitch non-repudiation protocol *}
+
+/*
+ * Protocol:    Non-repudation protocol from [1]
+ * Date:        Jan 2016
+ * Status:      wip
+ * 
+ * [1] Steve Kremer, Olivier Markowitch, and Jianying Zhou. An Intensive Survey
+ * of Fair Non-repudiation Protocols. Section 6.1. Computer Communications,
+ * 25(17):1606–1621, Elsevier Science Publishers, November 2002.
+ *
+ * Should be able to show fairness, but disprove timeliness.
+ */
+
+builtins:  hashing
+
+functions:
+    pk/1,sk/1[private],
+    sign/2, verify/2,extrmsg/1,
+    true/0,
+    aenc/2,adec/2,
+    senc/2,sdec/2
+
+equations:
+    verify(sign(m, sk(i)), pk(i)) = true,
+    extrmsg(sign(m,x))=m,
+    adec(aenc(m,pk(i)),sk(i))=m,
+    sdec(senc(m,k),k)=m
+
+options: progress
+
+/* Role of Alice */
+let A =(in ('c',t);
+      	new k;
+        let l = h(<t,k>) in
+        let c = senc{t}k in
+        let eoo  = sign {<'EOO', $B, TTPID, l, h(c)>}sk($A) in
+        let sub  = sign {<'SUB', $B, l, aenc{k}pk(TTPID)>}sk($A) in
+        let nrr  = sign {<'EOR', $A, TTPID, l, h(c), aenc{k}pk(TTPID)>}sk($B) in
+        let eook = sign {<'EOOk', $B, l, k>}sk($A) in
+	let m1 = <c,aenc{k}pk(TTPID),eoo,sub> in
+	let m2 = nrr in
+        let m3 = eook in
+        let r2 = <'CONk',$A,$B,l,k,nrr> in
+	event StartA($A, k);
+      	out('c', m1);
+	(
+	in('c', m2);
+	out('c', m3);
+        event ContractA($A,$B,t,k)
+	)
+	+
+	(
+	in('r',<'originator',$A,TTPID,r2>);  
+        event ContractA($A,$B,t,k)
+	)
+       )
+
+/* Role of Bob */
+let B = (
+        let l = h(<t,~k>) in
+        let c = senc{t}~k in
+        /* TODO this is unsound -- how can B check that ~k within the encryption
+         * in sub is the same used to generate l
+         */
+        let eoo  = sign {<'EOO', $B, TTPID, l, h(c)>}sk($A) in
+        let sub  = sign {<'SUB', $B, l, aenc{~k}pk(TTPID)>}sk($A) in
+        let nrr  = sign {<'EOR', $A, TTPID, l, h(c), aenc{~k}pk(TTPID)>}sk($B) in
+        let eook = sign {<'EOOk',$B, l, ~k>}sk($A) in
+        let rec  = sign {<'REC',$A,l>}sk($B) in
+        let conk = sign {<'CONk',$A,$B,l,~k>}sk(TTPID) in
+	let m1 = <c,aenc{~k}pk(TTPID),eoo,sub> in
+	let m2 = nrr in
+        let m3 = eook in
+	let r1 = <rec,sub,nrr,eoo> in
+        let r3 = conk in
+
+	in ('c', m1);
+      	new session;
+        event StartB($B,session);
+        out ('c', m2);
+        (
+        in ('c', m3);
+        event ContractB($A,$B,t,session)
+	)
+        +
+        (/* Resolve */
+	 out('r',<'responder',$B,TTPID,r1>);
+         in ('r',<'responder',$B,TTPID,r3>);
+         event ContractB($A,$B,t,session);
+         event ResolveContractB($A,$B,t,session)
+	)
+)
+
+let TTP = (
+            let l = h(<t,~k>) in
+            let c = senc{t}~k in
+            let eoo  = sign {<'EOO', $B, TTPID, l, h(c)>}sk($A) in
+            let sub  = sign {<'SUB', $B, l, aenc{~k}pk(TTPID)>}sk($A) in
+            let nrr  = sign {<'EOR', $A, TTPID, l, h(c), aenc{~k}pk(TTPID)>}sk($B) in
+            let rec  = sign {<'REC',$A,l>}sk($B) in
+            let conk = sign {<'CONk',$A,$B,l,~k>}sk(TTPID) in
+            let r1 = <l,rec,sub,nrr,eoo> in
+   	    let r2 = <'CONk',$A,$B,l,~k,nrr> in
+	    let r3 = conk in
+            /* Resolve B */
+            in ('r',<'responder',$B,TTPID,r1>);  
+            out('r',<'originator',$A,TTPID,r2>);  
+            out('r',<'responder',$B,TTPID,r3>)
+        )
+
+
+let Judge = 
+    let l = h(<t,k>) in
+    let c = senc{t}k in
+    let eoo  = sign {<'EOO', $B, TTPID, l, h(c)>}sk($A) in
+    let eook = sign {<'EOOk', $B, l, k>}sk($A) in
+    let conk = sign {<'CONk',$A,$B,l,k>}sk(TTPID) in
+    let nrr  = sign {<'EOR', $A, TTPID, l, h(c), aenc{k}pk(TTPID)>}sk($B) in
+            (in ('c', <k,t,nrr>); event ReceiptJudge($A,$B,t))
+         || (in ('c', <k,t,eoo,eook> ); event OriginJudge($A,$B,t))
+         || (in ('c', <k,t,conk> ); event OriginJudge($A,$B,t))
+
+let TTPID=<'TTP',$TTP> in
+!(
+in('c',<$A,$B,TTPID>);
+ (A || B || TTP || Judge)
+)
+|| !( in('c',<'corrupt',$x>); 
+        event Corrupt($x);
+        out('c',sk($x));
+        (!(in('r',<p,$x,m>);0))
+    )
+
+
+/* auto */
+lemma untimelinessA:
+    exists-trace
+    "not (All #i a k. StartA(a, k)@i
+    	    ==>  ( Ex #j b t .  ContractA(a, b, t, k)@j)
+             | ( Ex #j. Corrupt(a)@j))
+             "
+
+/* response from ttp does not neccesarily go to same responder session .. */
+/* Ideas: - don't do it (as initiator is not timely anway
+ *        - modify B to lock each k (never unlock)
+ *        - show that for each time exactly one B goes into recovery, exactly
+ *        one matching ttp is called, and for each time excactly one ttp
+ *        called, one recovery is finished .. does this suffice?
+ */
+/* lemma timelinessB: */
+/*     "All #i b session. StartB(b, session)@i */
+/*     	    ==>  ( Ex #j a t .  ContractB(a, b, t, session)@j) */
+/*              |   ( Ex #j. Corrupt(b)@j) */
+/*              " */
+
+/* auto, but slow! */
+lemma strongfairnessA:
+    " All #i a b  t . 
+        OriginJudge(a,b,t)@i ==>
+            (Ex #j k . ContractA(a,b,t,k)@j)
+          | (Ex #j . Corrupt(a)@j)
+    "
+
+end

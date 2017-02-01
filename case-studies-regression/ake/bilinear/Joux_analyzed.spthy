@@ -1021,14 +1021,14 @@ solve( SessionKey( A, (B+C), sessKey ) @ #i )
               by solve( !KU( ~ekA ) @ #vk.9 )
             qed
           next
-            case csign
+            case c_sign
             solve( !KU( ~ltk.1 ) @ #vk.9 )
               case Reveal_ltk
               by contradiction /* from formulas */
             qed
           qed
         next
-          case csign
+          case c_sign
           solve( !KU( ~ltk ) @ #vk.9 )
             case Reveal_ltk
             by contradiction /* from formulas */
@@ -1044,8 +1044,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/Joux.spthy
@@ -1054,7 +1056,7 @@ analyzing: examples/ake/bilinear/Joux.spthy
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 134.764234s
+  processing time: 81.17918s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
 
@@ -1066,7 +1068,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 134.764234s
+  processing time: 81.17918s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
 

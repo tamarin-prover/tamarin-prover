@@ -233,14 +233,14 @@ guarded formula characterizing all counter-examples:
  ∧
   (∀ #k.1. (SessionKeyReveal( s ) @ #k.1) ⇒ ⊥) ∧
   (∀ #i1. (SessionKeyReveal( sp ) @ #i1) ⇒ ⊥) ∧
-  ((¬(role = 'I')) ∨
-   ((∀ #k.1.
-      (Corrupt( A ) @ #k.1)
-     ⇒
-      (∀ #l. (Expire( s ) @ #l) ⇒ ¬(#k.1 < #l)) ∧ (∃ #l. (Expire( s ) @ #l))) ∧
-    (∀ #k.1 #l. (SessionStateReveal( s ) @ #k.1) ∧ (Corrupt( A ) @ #l) ⇒ ⊥) ∧
-    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥))) ∧
-  ((¬(role = 'R')) ∨ (∀ #k.1. (Corrupt( A ) @ #k.1) ⇒ ⊥)) ∧
+  (((¬(role = 'I')) ∨
+    ((∀ #k.1.
+       (Corrupt( A ) @ #k.1)
+      ⇒
+       (∀ #l. (Expire( s ) @ #l) ⇒ ¬(#k.1 < #l)) ∧ (∃ #l. (Expire( s ) @ #l))) ∧
+     (∀ #k.1 #l. (SessionStateReveal( s ) @ #k.1) ∧ (Corrupt( A ) @ #l) ⇒ ⊥) ∧
+     (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥)))) ∧
+  (((¬(role = 'R')) ∨ (∀ #k.1. (Corrupt( A ) @ #k.1) ⇒ ⊥))) ∧
   (∀ #k.1 k_.
     (Complete( sp, 'I', k_ ) @ #k.1)
    ⇒
@@ -251,8 +251,8 @@ guarded formula characterizing all counter-examples:
       (∃ #l. (Expire( sp ) @ #l))) ∧
     (∀ #k.2 #l.
       (SessionStateReveal( sp ) @ #k.2) ∧ (Corrupt( B ) @ #l) ⇒ ⊥)) ∧
-  ((∃ #k.1 k_. (Complete( sp, 'I', k_ ) @ #k.1)) ∨
-   (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥))"
+  (((∃ #k.1 k_. (Complete( sp, 'I', k_ ) @ #k.1)) ∨
+    (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ⊥)))"
 */
 simplify
 solve( (¬(role = 'I'))  ∥
@@ -322,7 +322,7 @@ solve( (¬(role = 'I'))  ∥
                       case Reveal_SessionKey_case_2
                       by contradiction /* from formulas */
                     next
-                      case ch
+                      case c_h
                       solve( !KU( 'g'^(~eb*~ex) ) @ #vk.3 )
                         case I_Complete
                         solve( !KU( ~eb ) @ #vk.9 )
@@ -413,7 +413,7 @@ solve( (¬(role = 'I'))  ∥
                 by contradiction /* from formulas */
               qed
             next
-              case ch
+              case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.5 )
                 case Register_key_honest_case_1
                 solve( !KU( ~eb ) @ #vk.9 )
@@ -465,7 +465,7 @@ next
                     case Reveal_SessionKey
                     by contradiction /* from formulas */
                   next
-                    case ch
+                    case c_h
                     solve( !KU( 'g'^(~ea*~ex) ) @ #vk.2 )
                       case I_Complete
                       solve( !KU( ~ea ) @ #vk.7 )
@@ -515,7 +515,7 @@ next
                 case Reveal_SessionKey_case_2
                 by contradiction /* from formulas */
               next
-                case ch
+                case c_h
                 solve( !KU( 'g'^(~eb*~ex) ) @ #vk.2 )
                   case I_Complete
                   solve( !KU( ~eb ) @ #vk.8 )
@@ -565,7 +565,7 @@ next
                     case Reveal_SessionKey
                     by contradiction /* from formulas */
                   next
-                    case ch
+                    case c_h
                     solve( !KU( 'g'^(~ea*~ex) ) @ #vk.2 )
                       case I_Complete
                       solve( !KU( ~ea ) @ #vk.7 )
@@ -615,7 +615,7 @@ next
                       case Reveal_SessionKey_case_2
                       by contradiction /* from formulas */
                     next
-                      case ch
+                      case c_h
                       solve( !KU( 'g'^(~eb*~ex) ) @ #vk.3 )
                         case I_Complete
                         solve( !KU( ~eb ) @ #vk.9 )
@@ -663,7 +663,7 @@ next
                 case Reveal_SessionKey_case_2
                 by contradiction /* from formulas */
               next
-                case ch
+                case c_h
                 solve( !KU( 'g'^(~eb*~ex) ) @ #vk.2 )
                   case I_Complete
                   solve( !KU( ~eb ) @ #vk.8 )
@@ -745,7 +745,7 @@ next
                 by contradiction /* from formulas */
               qed
             next
-              case ch
+              case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.5 )
                 case Register_key_honest_case_1
                 solve( !KU( ~eb ) @ #vk.9 )
@@ -778,8 +778,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/dh/UM_one_pass_fix.spthy
@@ -788,7 +790,7 @@ analyzing: examples/ake/dh/UM_one_pass_fix.spthy
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.730234s
+  processing time: 1.993918s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 
@@ -800,7 +802,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.730234s
+  processing time: 1.993918s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 

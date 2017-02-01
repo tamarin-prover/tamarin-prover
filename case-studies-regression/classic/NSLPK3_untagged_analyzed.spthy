@@ -71,16 +71,16 @@ lemma types [typing, reuse]:
      ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_R_1( m2 ) @ #j)))"
 /*
 guarded formula characterizing all counter-examples:
-"(∃ ni m1 #i.
-   (IN_R_1_ni( ni, m1 ) @ #i)
-  ∧
-   (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
-   (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
- (∃ nr m2 #i.
-   (IN_I_2_nr( nr, m2 ) @ #i)
-  ∧
-   (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
-   (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥))"
+"((∃ ni m1 #i.
+    (IN_R_1_ni( ni, m1 ) @ #i)
+   ∧
+    (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
+  (∃ nr m2 #i.
+    (IN_I_2_nr( nr, m2 ) @ #i)
+   ∧
+    (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)))"
 */
 induction
   case empty_trace
@@ -142,7 +142,7 @@ next
               by contradiction /* impossible chain */
             qed
           next
-            case caenc
+            case c_aenc
             by contradiction /* from formulas */
           qed
         qed
@@ -202,7 +202,7 @@ next
                 by contradiction /* impossible chain */
               qed
             next
-              case caenc
+              case c_aenc
               by contradiction /* from formulas */
             qed
           qed
@@ -310,7 +310,7 @@ solve( Secret( A, B, s ) ▶₀ #i )
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( !KU( ~ni ) @ #vk.5 )
         case I_1
         solve( !KU( ~ltkA.2 ) @ #vk.7 )
@@ -602,7 +602,7 @@ next
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( !KU( ~nr ) @ #vk.3 )
         case I_2
         solve( (∃ #j. (!KU( ~nr ) @ #j) ∧ #j < #vr.5)  ∥
@@ -695,8 +695,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/classic/NSLPK3_untagged.spthy
@@ -705,7 +707,7 @@ analyzing: examples/classic/NSLPK3_untagged.spthy
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.269138s
+  processing time: 3.629645s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -718,7 +720,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.269138s
+  processing time: 3.629645s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

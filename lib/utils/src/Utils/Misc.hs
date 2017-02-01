@@ -62,7 +62,7 @@ subsetOf :: Ord a => [a] -> [a] -> Bool
 subsetOf xs ys = (S.fromList xs) `S.isSubsetOf` (S.fromList ys)
 
 -- | Inverts a bijective Map.
-invertMap :: (Ord k, Ord v) => Map k v -> Map v k
+invertMap :: Ord v => Map k v -> Map v k
 invertMap = M.fromList . map (uncurry (flip (,))) . M.toList
 
 -- | @whileTrue m@ iterates m until it returns @False@.

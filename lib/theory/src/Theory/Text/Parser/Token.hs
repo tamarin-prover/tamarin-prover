@@ -209,6 +209,7 @@ naturalSubscript = T.lexeme spthy $ do
   where
     subscriptDigitToInteger d = toInteger $ fromEnum d - fromEnum '₀'
 
+    
 -- | A comma separated list of elements.
 commaSep :: Parser a -> Parser [a]
 commaSep = T.commaSep spthy

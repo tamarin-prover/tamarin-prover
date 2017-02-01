@@ -52,7 +52,7 @@ import           Theory.Text.Pretty
 
 import           Term.Rewriting.Norm            (maybeNotNfSubterms, nf')
 
-
+-- import           Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Contradictions
@@ -67,7 +67,7 @@ data Contradiction =
   | ForbiddenBP                    -- ^ Forbidden bilinear pairing rule instance
   | ForbiddenKD                    -- ^ has forbidden KD-fact
   | ImpossibleChain                -- ^ has impossible chain
-  | ForbiddenCoerce                -- ^ has forbidden coerce
+  | ForbiddenChain                 -- ^ has forbidden chain
   | NonInjectiveFactInstance (NodeId, NodeId, NodeId)
     -- ^ Contradicts that certain facts have unique instances.
   | IncompatibleEqs                -- ^ Incompatible equalities.
@@ -94,13 +94,13 @@ contradictions ctxt sys = F.asum
     -- FIXME: add CR-rule
     , guard (hasForbiddenKD sys)                    *> pure ForbiddenKD
     -- FIXME: add CR-rule
-    , guard (hasImpossibleChain sys)                *> pure ImpossibleChain
+    , guard (hasImpossibleChain ctxt sys)           *> pure ImpossibleChain
     -- CR-rule *N7*
     , guard (enableDH msig && hasForbiddenExp sys)  *> pure ForbiddenExp
     -- FIXME: add CR-rule
     , guard (enableBP msig && hasForbiddenBP sys)   *> pure ForbiddenBP
     -- New CR-Rule *N6'*
-    , guard (hasForbiddenCoerce sys)                *> pure ForbiddenCoerce
+    , guard (hasForbiddenChain sys)                 *> pure ForbiddenChain
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
     , guard (eqsIsFalse $ L.get sEqStore sys)       *> pure IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
@@ -121,7 +121,7 @@ contradictions ctxt sys = F.asum
 
 -- | New normal form condition:
 -- We do not allow @KD(t)@ facts if @t@ does not contain
--- any fresh names or private function.
+-- any fresh names or private functions.
 hasForbiddenKD :: System -> Bool
 hasForbiddenKD sys = (not $ isDiffSystem sys) &&
     (any isForbiddenKD $ M.elems $ L.get sNodes sys)
@@ -135,7 +135,7 @@ hasForbiddenKD sys = (not $ isDiffSystem sys) &&
 -- | True iff there are terms in the node constraints that are not in normal form wrt.
 -- to 'Term.Rewriting.Norm.norm' (DH/AC).
 hasNonNormalTerms :: SignatureWithMaude -> System -> Bool
-hasNonNormalTerms sig se =
+hasNonNormalTerms sig se = -- trace ("non-normal terms" ++ show (maybeNonNormalTerms hnd se) ++ " -- " ++ show (map ((`runReader` hnd) . nf') (maybeNonNormalTerms hnd se)) ) $
     any (not . (`runReader` hnd) . nf') (maybeNonNormalTerms hnd se)
   where hnd = L.get sigmMaudeHandle sig
 
@@ -212,22 +212,28 @@ nodesAfterLast sys = case L.get sLastAtom sys of
 -- it is possible to deduce the chain-end from the
 -- chain-start by extending the chain or replacing
 -- it with an edge.
-hasImpossibleChain :: System -> Bool
-hasImpossibleChain sys =
+hasImpossibleChain :: ProofContext -> System -> Bool
+hasImpossibleChain ctxt sys = {-trace (show (L.get pcTrueSubterm ctxt)) $-}
     any impossibleChain [ (c,p) | ChainG c p <- M.keys $ L.get sGoals sys ]
   where
     impossibleChain (c,p) = fromMaybe False $ do
         (DnK, t_start) <- kFactView $ nodeConcFact c sys
         (DnK, t_end)   <- kFactView $ nodePremFact p sys
-        -- the root symbol of the chain-end if it can be determined
-        req_end_sym    <- rootSym t_end
         -- the possible root symbols after applying deconstruction
         -- rules to the chain-start if they can be determined
-        poss_end_syms <- possibleRootSyms t_start
+        poss_end_syms  <- possibleRootSyms t_start
         -- the chain is impossible if both the required root-symbol
-        -- and the possible root0symbols for the chain-end can be
-        -- determined and the required symbol in not possible.
-        return $ not (req_end_sym `elem` poss_end_syms)
+        -- and the possible root-symbols for the chain-end can be
+        -- determined and the required symbol is not possible.
+        if (L.get pcTrueSubterm ctxt)
+           then do
+              -- the root symbol of the chain-end if it can be determined
+              req_end_sym_subterm <- rootSym t_end
+              return $ not  (req_end_sym_subterm `elem` poss_end_syms)
+           else do
+              -- the root symbols of the chain-end if they can be determined
+              req_end_sym_gen     <- possibleEndSyms t_end
+              return $ null (req_end_sym_gen `intersect` poss_end_syms)
 
     rootSym :: LNTerm -> Maybe (Either LSort FunSym)
     rootSym t =
@@ -237,6 +243,17 @@ hasImpossibleChain sys =
                   -- we cannot determine the root symbols of a message-variable
               | otherwise                    -> return $ Left (sortOfLNTerm t)
                   -- a public or fresh name or variable
+
+    possibleEndSyms :: LNTerm -> Maybe [Either LSort FunSym]
+    possibleEndSyms t = case viewTerm2 t of
+        FExp   a _b -> -- cannot obtain a subterm of the exponents @_b@
+            ((Right (NoEq expSym)):) <$> possibleEndSyms a
+        FPMult _b a -> -- cannot obtain a subterm of the scalars @_b@
+            ((Right <$> [NoEq expSym, NoEq pmultSym, C EMap])++) <$> possibleEndSyms a
+        FEMap _ _   -> return [Right (C EMap)]
+        _ -> case viewTerm t of
+                 Lit _       -> (:[]) <$> rootSym t
+                 FApp o args -> ((Right o):) . concat <$> mapM possibleEndSyms args
 
     possibleRootSyms :: LNTerm -> Maybe [Either LSort FunSym]
     possibleRootSyms t | neverContainsFreshPriv t = return []
@@ -252,26 +269,26 @@ hasImpossibleChain sys =
                  FApp o args -> ((Right o):) . concat <$> mapM possibleRootSyms args
 
 
--- | Detect non-normal chains ending in coerce rules
+-- | Detect non-normal chains ending in rules other than IEquality
 -- and starting from a KD(x) that follows from a KU(x).
-hasForbiddenCoerce :: System -> Bool
-hasForbiddenCoerce sys =
-    any chainToCoerce [ (c,p) | ChainG c p <- M.keys $ L.get sGoals sys ]
+hasForbiddenChain :: System -> Bool
+hasForbiddenChain sys =
+    any illegalChain [ (c,p) | ChainG c p <- M.keys $ L.get sGoals sys ]
   where
-    chainToCoerce :: (NodeConc, NodePrem) -> Bool
-    chainToCoerce (c,p) = fromMaybe False $ do
+    illegalChain :: (NodeConc, NodePrem) -> Bool
+    illegalChain (c,p) = fromMaybe False $ do
         -- start and end terms of the chain
-        (DnK, t_start) <- kFactView $ nodeConcFact c sys
-        (DnK, _)       <- kFactView $ nodePremFact p sys
+        (DnK, t_start)  <- kFactView $ nodeConcFact c sys
+        (DnK, _)        <- kFactView $ nodePremFact p sys
         -- check whether the chain starts with a msg var
-        is_msg_var     <- pure $ isMsgVar t_start
-        -- and whether we have a coerce rule instance at the end
-        is_coerce      <- pure $ isCoerceRule $ nodeRule (fst p) sys
+        is_msg_var      <- pure $ isMsgVar t_start
+        -- and whether we do not have an equality rule instance at the end
+        is_not_equality <- pure $ not $ isIEqualityRule $ nodeRule (fst p) sys
         -- get all KU-facts with the same msg var
-        ku_start       <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys 
+        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys 
         -- and check whether any of them happens before the KD-conclusion
-        ku_before      <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start 
-        return (is_msg_var && is_coerce && ku_before)
+        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start 
+        return (is_msg_var && is_not_equality && ku_before)
 
 -- Diffie-Hellman and Bilinear Pairing
 --------------------------------------
@@ -415,7 +432,7 @@ prettyContradiction contra = case contra of
     ForbiddenExp                 -> text "non-normal exponentiation rule instance"
     ForbiddenBP                  -> text "non-normal bilinear pairing rule instance"
     ForbiddenKD                  -> text "forbidden KD-fact"
-    ForbiddenCoerce              -> text "forbidden coerce rule instance"
+    ForbiddenChain               -> text "forbidden chain"
     ImpossibleChain              -> text "impossible chain"
     NonInjectiveFactInstance cex -> text $ "non-injective facts " ++ show cex
     FormulasFalse                -> text "from formulas"

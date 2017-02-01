@@ -78,16 +78,16 @@ lemma types [typing]:
      ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_R_1( m2 ) @ #j)))"
 /*
 guarded formula characterizing all counter-examples:
-"(∃ ni m1 #i.
-   (IN_R_1_ni( ni, m1 ) @ #i)
-  ∧
-   (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
-   (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
- (∃ nr m2 #i.
-   (IN_I_2_nr( nr, m2 ) @ #i)
-  ∧
-   (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
-   (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥))"
+"((∃ ni m1 #i.
+    (IN_R_1_ni( ni, m1 ) @ #i)
+   ∧
+    (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
+  (∃ nr m2 #i.
+    (IN_I_2_nr( nr, m2 ) @ #i)
+   ∧
+    (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)))"
 */
 induction
   case empty_trace
@@ -142,7 +142,7 @@ next
               by contradiction /* impossible chain */
             qed
           next
-            case caenc
+            case c_aenc
             by contradiction /* from formulas */
           qed
         qed
@@ -195,7 +195,7 @@ next
                 by contradiction /* impossible chain */
               qed
             next
-              case caenc
+              case c_aenc
               by contradiction /* from formulas */
             qed
           qed
@@ -245,7 +245,7 @@ solve( Secret( A, B, s ) ▶₀ #i )
       qed
     qed
   next
-    case caenc
+    case c_aenc
     solve( !KU( ~ni ) @ #vk.7 )
       case I_1
       solve( !KU( ~ltkA.2 ) @ #vk.9 )
@@ -310,7 +310,7 @@ next
         qed
       qed
     next
-      case caenc
+      case c_aenc
       solve( !KU( aenc(<'2', ~ni, ~nr, $R>, pk(~ltkA.3)) ) @ #vk.4 )
         case R_1
         solve( !KU( ~ni ) @ #vk.3 )
@@ -327,7 +327,7 @@ next
           qed
         qed
       next
-        case caenc
+        case c_aenc
         solve( !KU( ~ni ) @ #vk.13 )
           case I_1
           solve( !KU( ~nr ) @ #vk.15 )
@@ -368,7 +368,7 @@ next
       qed
     qed
   next
-    case caenc
+    case c_aenc
     solve( !KU( ~nr ) @ #vk.6 )
       case I_2
       solve( !KU( ~ltkA.3 ) @ #vk.8 )
@@ -403,9 +403,9 @@ guarded formula characterizing all counter-examples:
   (∀ #j.
     (Running( actor, peer, params ) @ #j)
    ⇒
-    (¬(#j < #i)) ∨
-    (∃ actor2 peer2 #i2.
-      (Commit( actor2, peer2, params ) @ #i2) ∧ ¬(#i = #i2))) ∧
+    ((¬(#j < #i)) ∨
+     (∃ actor2 peer2 #i2.
+       (Commit( actor2, peer2, params ) @ #i2) ∧ ¬(#i = #i2)))) ∧
   (∀ #r. (RevLtk( actor ) @ #r) ⇒ ⊥) ∧
   (∀ #r. (RevLtk( peer ) @ #r) ⇒ ⊥)"
 */
@@ -440,7 +440,7 @@ solve( Commit( actor, peer, params ) @ #i )
             qed
           qed
         next
-          case caenc
+          case c_aenc
           solve( !KU( ~ni ) @ #vk.5 )
             case I_1
             solve( !KU( ~ltkA.2 ) @ #vk.9 )
@@ -490,7 +490,7 @@ next
               qed
             qed
           next
-            case caenc
+            case c_aenc
             solve( !KU( ~ni.1 ) @ #vk.7 )
               case I_1
               solve( !KU( ~nr ) @ #vk.9 )
@@ -557,7 +557,7 @@ next
             qed
           qed
         next
-          case caenc
+          case c_aenc
           solve( !KU( aenc(<'2', ~ni.1, ~nr, $R>, pk(~ltkA.3)) ) @ #vk.2 )
             case R_1
             solve( (#i < #i2)  ∥ (#i2 < #i) )
@@ -580,7 +580,7 @@ next
               qed
             qed
           next
-            case caenc
+            case c_aenc
             solve( !KU( ~ni.1 ) @ #vk.13 )
               case I_1
               solve( !KU( ~nr ) @ #vk.15 )
@@ -648,7 +648,7 @@ next
           qed
         qed
       next
-        case caenc
+        case c_aenc
         solve( !KU( ~nr ) @ #vk.5 )
           case I_2
           solve( (#i < #i2)  ∥ (#i2 < #i) )
@@ -711,8 +711,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/classic/NSLPK3.spthy
@@ -721,7 +723,7 @@ analyzing: examples/classic/NSLPK3.spthy
 analyzed: examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.065904s
+  processing time: 2.141658s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   injective_agree (all-traces): verified (92 steps)
@@ -735,7 +737,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.065904s
+  processing time: 2.141658s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   injective_agree (all-traces): verified (92 steps)

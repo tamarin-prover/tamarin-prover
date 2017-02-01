@@ -168,7 +168,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
       case Sessk_reveal_case_2
       by contradiction /* from formulas */
     next
-      case ch
+      case c_h
       solve( !KU( 'g'^(~ekI*~x) ) @ #vk.5 )
         case Init_1
         solve( !KU( ~x ) @ #vk.9 )
@@ -247,7 +247,7 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
       case Sessk_reveal_case_2
       by contradiction /* from formulas */
     next
-      case ch
+      case c_h
       solve( !KU( 'g'^(~ekR*~x) ) @ #vk.3 )
         case Resp_1
         solve( !KU( ~x ) @ #vk.9 )
@@ -276,8 +276,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/csf12/KEA_plus_KI_KCI.spthy
@@ -286,7 +288,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.581217s
+  processing time: 0.679233s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 
@@ -298,7 +300,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.581217s
+  processing time: 0.679233s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 

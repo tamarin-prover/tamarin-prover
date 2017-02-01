@@ -1,0 +1,27 @@
+theory mini9
+begin
+
+section{* small example for progression function *}
+builtins: signing, hashing
+options: progress
+
+event Start();
+(
+( out('r','Help') + (in('c',m); event B()))
+||
+( in('r','Help'); event A())
+)
+lemma A_possible: 
+        exists-trace
+        "Ex #t. A()@t"
+
+lemma B_possible: 
+        exists-trace
+        "Ex #t. B()@t"
+
+lemma A_or_B:
+    "All #t1. Start()@t1 ==>
+        (Ex #t2. A()@t2)
+        |(Ex #t2. B()@t2) "
+
+end

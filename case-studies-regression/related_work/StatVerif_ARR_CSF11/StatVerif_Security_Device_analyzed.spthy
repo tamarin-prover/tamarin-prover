@@ -107,7 +107,7 @@ next
             by contradiction /* impossible chain */
           qed
         next
-          case caenc
+          case c_aenc
           by contradiction /* from formulas */
         qed
       qed
@@ -147,7 +147,7 @@ next
             by contradiction /* impossible chain */
           qed
         next
-          case caenc
+          case c_aenc
           by contradiction /* from formulas */
         qed
       qed
@@ -225,11 +225,11 @@ solve( !DevicePublicKey( key ) ▶₂ #i )
       solve( !KU( aenc(<~x, y.1>, pk(~sk.1)) ) @ #vk.2 )
         case Alice
         solve( !KU( aenc(<~y, y.1>, pk(~sk.1)) ) @ #vk.4 )
-          case caenc
+          case c_aenc
           by contradiction /* cyclic */
         qed
       next
-        case caenc
+        case c_aenc
         by contradiction /* cyclic */
       qed
     next
@@ -237,11 +237,11 @@ solve( !DevicePublicKey( key ) ▶₂ #i )
       solve( !KU( aenc(<~x, y.1>, pk(~sk.1)) ) @ #vk.2 )
         case Alice
         solve( !KU( aenc(<x.1, ~y>, pk(~sk.1)) ) @ #vk.4 )
-          case caenc
+          case c_aenc
           by contradiction /* cyclic */
         qed
       next
-        case caenc
+        case c_aenc
         by contradiction /* cyclic */
       qed
     qed
@@ -253,13 +253,13 @@ solve( !DevicePublicKey( key ) ▶₂ #i )
     next
       case UseLeftDevice
       solve( !KU( aenc(<x.1, ~x>, pk(~sk.1)) ) @ #vk.2 )
-        case caenc
+        case c_aenc
         by contradiction /* cyclic */
       qed
     next
       case UseRightDevice
       solve( !KU( aenc(<x.1, ~x>, pk(~sk.1)) ) @ #vk.2 )
-        case caenc
+        case c_aenc
         by contradiction /* cyclic */
       qed
     qed
@@ -271,8 +271,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
@@ -281,7 +283,7 @@ analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.s
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.43983s
+  processing time: 0.381623s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -295,7 +297,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.43983s
+  processing time: 0.381623s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)

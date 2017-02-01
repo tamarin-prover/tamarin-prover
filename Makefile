@@ -2,14 +2,48 @@
 # https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 TAMARIN=~/.local/bin/tamarin-prover
+SAPIC=~/.local/bin/sapic
 
-# Default installation via stack
-default: 
+# Default installation via stack, multi-threaded
+# Try to install Tamarin and SAPIC
+default: tamarin sapic
+
+# Default Tamarin installation via stack, multi-threaded
+.PHONY: tamarin
+tamarin:
+	stack setup
+	stack install --flag tamarin-prover:threaded
+
+# Single-threaded Tamarin
+.PHONY: single
+single: 
 	stack setup
 	stack install
 
-clean:
+# Tamarin with profiling options, single-threaded
+.PHONY: profiling
+profiling:
+	stack setup
+	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts"
+
+# SAPIC
+.PHONY: sapic
+sapic:
+	cd plugins/sapic && $(MAKE)
+
+# Clean target for SAPIC
+.PHONY: sapic-clean
+sapic-clean:
+	cd plugins/sapic && $(MAKE) clean
+
+# Clean target for Tamarin
+.PHONY: tamarin-clean
+tamarin-clean:
 	stack clean
+
+# Clean Tamarin and SAPIC
+.PHONY: clean
+clean:	tamarin-clean sapic-clean
 
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.
@@ -17,22 +51,6 @@ clean:
 # ###########################################################################
 
 VERSION=1.1.0
-
-#source-dists:
-#	cd lib/utils; cabal sdist
-#	cd lib/term; cabal sdist
-#	cd lib/theory; cabal sdist
-#	cabal sdist
-
-#source-dists-tests: source-dists
-#	mkdir -p /tmp/dist-test-$(VERSION)/
-#	cp lib/utils/dist/tamarin-prover-utils-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-#	cp lib/term/dist/tamarin-prover-term-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-#	cp lib/theory/dist/tamarin-prover-theory-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-#	cp dist/tamarin-prover-$(VERSION).tar.gz /tmp/dist-test-$(VERSION)/
-#	cd /tmp/dist-test-$(VERSION)/; cabal install *.tar.gz --force-reinstalls
-
-
 
 ###############################################################################
 ## Case Studies
@@ -88,6 +106,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/related_work/StatVerif_ARR_CSF11
 	mkdir -p case-studies/related_work/YubiSecure_KS_STM12
 	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
+	mkdir -p case-studies/post17
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
@@ -98,6 +117,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mv $(TMPRES) $@
 	\rm -f $(TMPOUT)
 
+
 ## Observational Equivalence
 ############################
 
@@ -105,6 +125,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/ccs15
 	mkdir -p case-studies/features/equivalence
+	mkdir -p case-studies/post17
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
@@ -153,6 +174,21 @@ obseq-test-case-studies:	$(TESTOBSEQ_TARGETS)
 #Observational equivalence case studies with CCS15
 obseq-case-studies:	$(OBSEQ_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy case-studies/features/equivalence/*.spthy
+
+
+## non-subterm convergent equational theories
+#############################################
+POST17_TRACE_CASE_STUDIES= chaum_unforgeability.spthy foo_eligibility.spthy okamoto_eligibility.spthy needham_schroeder_symmetric_cbc.spthy denning_sacco_symmetric_cbc.spthy
+POST17_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/post17/,$(POST17_TRACE_CASE_STUDIES)))
+
+POST17_DIFF_CASE_STUDIES= chaum_anonymity.spthy chaum_untraceability.spthy foo_vote_privacy.spthy okamoto_receipt_freeness.spthy okamoto_vote_privacy.spthy
+POST17_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/post17/,$(POST17_DIFF_CASE_STUDIES)))
+
+POST17_TARGETS= $(POST17_TRACE_TARGETS)  $(POST17_DIFF_TARGETS)
+
+# POST17 case studies
+post17-case-studies:	$(POST17_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/post17/*.spthy
 
 ## Inductive Strengthening
 ##########################
@@ -225,12 +261,109 @@ features-case-studies:	$(FEATURES_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy
 
 
+## SAPIC
+########
+
+TMPRESSAPIC=case-studies-sapic/temp-analysis.sapic
+TMPOUTSAPIC=case-studies-sapic/temp-output.spthy
+
+# sapic case studies
+case-studies-sapic/%.spthy:	examples/sapic/%.sapic $(SAPIC)
+	mkdir -p case-studies-sapic/basic
+	mkdir -p case-studies-sapic/encWrapDecUnwrap
+	mkdir -p case-studies-sapic/envelope
+	mkdir -p case-studies-sapic/fairexchange-asw
+	mkdir -p case-studies-sapic/fairexchange-gjm
+	mkdir -p case-studies-sapic/fairexchange-km
+	mkdir -p case-studies-sapic/fairexchange-mini
+	mkdir -p case-studies-sapic/GJM-contract
+	mkdir -p case-studies-sapic/locations
+	mkdir -p case-studies-sapic/MoedersheimWebService
+	mkdir -p case-studies-sapic/NSL
+	mkdir -p case-studies-sapic/PKCS11
+	mkdir -p case-studies-sapic/predicates
+	mkdir -p case-studies-sapic/SCADA
+	mkdir -p case-studies-sapic/statVerifLeftRight
+	mkdir -p case-studies-sapic/Yubikey
+	$(SAPIC) $< $(TMPRESSAPIC) > $(TMPOUTSAPIC)
+	cat $(TMPOUTSAPIC) >>$(TMPRESSAPIC)
+	mv $(TMPRESSAPIC) $@
+	\rm -f $(TMPOUTSAPIC)
+
+SAPIC_CASE_STUDIES=basic/channels1.sapic basic/channels2.sapic basic/channels3.sapic basic/design-choices.sapic basic/exclusive-secrets.sapic basic/no-replication.sapic basic/replication.sapic  basic/running-example.sapic \
+encWrapDecUnwrap/encwrapdecunwrap-nolocks.sapic encWrapDecUnwrap/encwrapdecunwrap.sapic \
+envelope/envelope_allowsattack.sapic envelope/envelope.sapic envelope/envelope_simpler.sapic \
+fairexchange-asw/aswAB-mod.sapic fairexchange-asw/aswAB-mod-weak-A.sapic fairexchange-asw/aswAB-mod-weak-B.sapic fairexchange-asw/aswAB.sapic fairexchange-asw/asw-mod-weak-locks.sapic \
+fairexchange-gjm/gjm-locks-fakepcsbranch-B.sapic fairexchange-gjm/gjm-locks-fakepcsbranch.sapic fairexchange-gjm/gjm-locks-magic.sapic fairexchange-gjm/gjm-locks.sapic fairexchange-gjm/gjm-locks-unfairness-A.sapic fairexchange-gjm/gjm.sapic \
+fairexchange-km/km.sapic fairexchange-km/km-with-comments.sapic \
+fairexchange-mini/mini10.sapic fairexchange-mini/mini2.sapic fairexchange-mini/mini4.sapic fairexchange-mini/mini6.sapic fairexchange-mini/mini8.sapic fairexchange-mini/ndc-nested-2.sapic fairexchange-mini/ndc-nested-4.sapic fairexchange-mini/ndc-nested.sapic fairexchange-mini/mini1.sapic fairexchange-mini/mini3.sapic fairexchange-mini/mini5.sapic fairexchange-mini/mini7.sapic fairexchange-mini/mini9.sapic fairexchange-mini/ndc-nested-3.sapic fairexchange-mini/ndc-nested-5.sapic fairexchange-mini/ndc-two-replications.sapic \
+GJM-contract/contract.sapic \
+locations/AC.sapic locations/AKE.sapic locations/licensing.sapic locations/OTP.sapic locations/SOC.sapic \
+MoedersheimWebService/set-abstr-lookup.sapic MoedersheimWebService/set-abstr.sapic \
+NSL/nsl-no_as-untagged.sapic \
+PKCS11/pkcs11-templates.sapic PKCS11/pkcs11-dynamic-policy.sapic \
+predicates/decwrap_destr.sapic predicates/simple_example.sapic \
+SCADA/opc_ua_secure_conversation.sapic \
+statVerifLeftRight/stateverif_left_right.sapic \
+Yubikey/Yubikey.sapic
+
+SAPIC_CS_TARGETS=$(subst .sapic,.spthy,$(addprefix case-studies-sapic/,$(SAPIC_CASE_STUDIES)))
+
+# case studies
+sapic-case-studies:	$(SAPIC_CS_TARGETS)
+
+
+## SAPIC output in Tamarin
+##########################
+
+# individual case studies
+case-studies/%_analyzed-sapic.spthy:	case-studies-sapic-regression/%.spthy $(TAMARIN)
+	mkdir -p case-studies/sapic/basic
+#	mkdir -p case-studies/sapic/encWrapDecUnwrap
+	mkdir -p case-studies/sapic/statVerifLeftRight
+	mkdir -p case-studies/sapic/GJM-contract
+#	mkdir -p case-studies/sapic/MoedersheimWebService
+	mkdir -p case-studies/sapic/NSL
+	mkdir -p case-studies/sapic/predicates
+	mkdir -p case-studies/sapic/locations
+	mkdir -p case-studies/sapic/SCADA
+	mkdir -p case-studies/sapic/fairexchange-mini
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	echo "\n/* Output" >>$(TMPRES)
+	cat $(TMPOUT) >>$(TMPRES)
+	echo "*/" >>$(TMPRES)
+	mv $(TMPRES) $(subst case-studies,case-studies/sapic,$@)
+	\rm -f $(TMPOUT)
+
+SAPIC_TAMARIN_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy basic/design-choices.spthy basic/exclusive-secrets.spthy basic/running-example.spthy \
+statVerifLeftRight/stateverif_left_right.spthy \
+GJM-contract/contract.spthy \
+NSL/nsl-no_as-untagged.spthy \
+predicates/decwrap_destr.spthy predicates/simple_example.spthy \
+locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
+SCADA/opc_ua_secure_conversation.spthy \
+fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy
+
+# currently not working because of wrong heuristic:
+# encWrapDecUnwrap/encwrapdecunwrap.spthy
+# MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy
+# locations/SOC.spthy 
+
+SAPIC_TAMARIN_CS_TARGETS=$(subst .spthy,_analyzed-sapic.spthy,$(addprefix case-studies/,$(SAPIC_TAMARIN_CASE_STUDIES)))
+
+# case studies
+sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/sapic/basic/*.spthy case-studies/sapic/statVerifLeftRight/*.spthy case-studies/sapic/GJM-contract/*.spthy case-studies/sapic/NSL/*.spthy case-studies/sapic/predicates/*.spthy case-studies/sapic/locations/*.spthy case-studies/sapic/SCADA/*.spthy case-studies/sapic/fairexchange-mini/*.spthy
+
 
 ## All case studies
 ###################
 
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS)
 
 case-studies: 	$(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/

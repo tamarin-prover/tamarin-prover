@@ -128,9 +128,9 @@ solve( !SharedKey( pid, k ) ▶₂ #i )
               solve( !KU( ~pid ) @ #vk.3 )
                 case BuyANewYubikey
                 solve( !KU( S(zero) ) @ #vk.6 )
-                  case cS
+                  case c_S
                   solve( !KU( S(S(zero)) ) @ #vk.7 )
-                    case cS
+                    case c_S
                     SOLVED // trace found
                   qed
                 qed
@@ -164,8 +164,8 @@ next
   solve( (∀ pid sid x otp #t2.
            (Login( pid, sid, x, otp ) @ #t2)
           ⇒
-           (last(#t2)) ∨
-           (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)))  ∥
+           ((last(#t2)) ∨
+            (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
          (∃ #t1 #t2 a b c.
            (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
           ∧
@@ -184,7 +184,7 @@ next
             case Yubikey_PressButton
             by contradiction /* from formulas */
           next
-            case csenc
+            case c_senc
             by solve( !KU( ~k ) @ #vk.9 )
           qed
         next
@@ -193,7 +193,7 @@ next
             case Yubikey_PressButton
             by contradiction /* from formulas */
           next
-            case csenc
+            case c_senc
             by solve( !KU( ~k ) @ #vk.9 )
           qed
         next
@@ -202,7 +202,7 @@ next
             case Yubikey_PressButton
             by contradiction /* from formulas */
           next
-            case csenc
+            case c_senc
             by solve( !KU( ~k ) @ #vk.9 )
           qed
         next
@@ -211,7 +211,7 @@ next
             case Yubikey_PressButton
             by contradiction /* from formulas */
           next
-            case csenc
+            case c_senc
             by solve( !KU( ~k ) @ #vk.9 )
           qed
         qed
@@ -806,7 +806,7 @@ guarded formula characterizing all counter-examples:
   (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
   (LoginCounter( pid, otc2, tc2 ) @ #t2)
  ∧
-  ((¬(#t1 < #t2)) ∨ (∀ #t3. (IsSmaller( tc1, tc2 ) @ #t3) ⇒ ⊥)) ∧
+  (((¬(#t1 < #t2)) ∨ (∀ #t3. (IsSmaller( tc1, tc2 ) @ #t3) ⇒ ⊥))) ∧
   (¬(#t2 < #t1)) ∧
   (¬(#t1 = #t2))"
 */
@@ -820,11 +820,11 @@ next
            (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
            (LoginCounter( pid, otc2, tc2 ) @ #t2)
           ⇒
-           (last(#t2)) ∨
-           (last(#t1)) ∨
-           ((#t1 < #t2) ∧ (∃ #t3. (IsSmaller( tc1, tc2 ) @ #t3) ∧ ¬(last(#t3)))) ∨
-           (#t2 < #t1) ∨
-           (#t1 = #t2))  ∥
+           ((last(#t2)) ∨
+            (last(#t1)) ∨
+            ((#t1 < #t2) ∧ (∃ #t3. (IsSmaller( tc1, tc2 ) @ #t3) ∧ ¬(last(#t3)))) ∨
+            (#t2 < #t1) ∨
+            (#t1 = #t2)))  ∥
          (∃ #t1 #t2 a b c.
            (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
           ∧
@@ -4622,8 +4622,8 @@ guarded formula characterizing all counter-examples:
   ∀ #t1.
    (YubiPress( pid, x ) @ #t1)
   ⇒
-   (¬(#t1 < #t2)) ∨
-   (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2))"
+   ((¬(#t1 < #t2)) ∨
+    (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2)))"
 */
 simplify
 solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
@@ -4664,8 +4664,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
@@ -4674,7 +4676,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 24.374791s
+  processing time: 21.277752s
   Login_reachable (exists-trace): verified (12 steps)
   one_count_foreach_login (all-traces): verified (210 steps)
   slightly_weaker_invariant (all-traces): verified (1241 steps)
@@ -4690,7 +4692,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 24.374791s
+  processing time: 21.277752s
   Login_reachable (exists-trace): verified (12 steps)
   one_count_foreach_login (all-traces): verified (210 steps)
   slightly_weaker_invariant (all-traces): verified (1241 steps)

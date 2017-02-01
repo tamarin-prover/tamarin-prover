@@ -97,11 +97,12 @@ fAppOne :: Term a
 fAppOne = fAppNoEq oneSym []
 
 -- | Smart constructors for diff, pair, exp, pmult, and emap.
-fAppDiff, fAppPair, fAppExp,fAppPMult, fAppEMap :: Ord a => (Term a, Term a) -> Term a
+fAppDiff, fAppPair, fAppExp,fAppPMult :: (Term a, Term a) -> Term a
 fAppDiff (x,y)  = fAppNoEq diffSym  [x, y]
 fAppPair (x,y)  = fAppNoEq pairSym  [x, y]
 fAppExp  (b,e)  = fAppNoEq expSym   [b, e]
 fAppPMult (s,p) = fAppNoEq pmultSym [s, p]
+fAppEMap :: Ord a => (Term a, Term a) -> Term a
 fAppEMap  (x,y) = fAppC    EMap     [x, y]
 
 -- | Smart constructors for inv, fst, and snd.
@@ -111,7 +112,7 @@ fAppFst a = fAppNoEq fstSym [a]
 fAppSnd a = fAppNoEq sndSym [a]
 
 -- | @lits t@ returns all literals that occur in term @t@. List can contain duplicates.
-lits :: Ord a => Term a -> [a]
+lits :: Term a -> [a]
 lits = foldMap return
 
 ----------------------------------------------------------------------

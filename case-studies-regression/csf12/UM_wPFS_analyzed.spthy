@@ -165,7 +165,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
       case Sessk_reveal_case_4
       by contradiction /* from formulas */
     next
-      case ch
+      case c_h
       solve( !KU( 'g'^(~lkI*~x) ) @ #vk.4 )
         case cexp
         solve( !KU( ~lkI ) @ #vk.7 )
@@ -310,7 +310,7 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
       case Sessk_reveal_case_4
       by contradiction /* from formulas */
     next
-      case ch
+      case c_h
       solve( !KU( 'g'^(~lkR*~x) ) @ #vk.4 )
         case cexp
         solve( !KU( ~lkR ) @ #vk.7 )
@@ -405,8 +405,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/csf12/UM_wPFS.spthy
@@ -415,7 +417,7 @@ analyzing: examples/csf12/UM_wPFS.spthy
 analyzed: examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.93984s
+  processing time: 1.088601s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 
@@ -427,7 +429,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_wPFS.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.93984s
+  processing time: 1.088601s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 

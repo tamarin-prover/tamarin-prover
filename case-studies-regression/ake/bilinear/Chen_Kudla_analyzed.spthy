@@ -466,17 +466,17 @@ guarded formula characterizing all counter-examples:
     (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)
    ⇒
     (∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
-    (((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧ (∀ #i5. (MskRev( ) @ #i5) ⇒ ⊥)) ∨
-     (∀ #i5. (EphkRev( matching ) @ #i5) ⇒ ⊥)) ∧
-    ((∀ #i5. (EphkRev( matching ) @ #i5) ⇒ ⊥) ∨
-     (∀ #i5. (EphkRev( test ) @ #i5) ⇒ ⊥)) ∧
-    (((∀ #i5. (LtkRev( A ) @ #i5) ⇒ ⊥) ∧ (∀ #i5. (MskRev( ) @ #i5) ⇒ ⊥)) ∨
-     (∀ #i5. (EphkRev( test ) @ #i5) ⇒ ⊥))) ∧
-  ((∃ matching #i3 #i4 sid.
-     (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
-   ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
-    (∀ #i3. (EphkRev( test ) @ #i3) ⇒ ⊥) ∧
-    (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥)))"
+    ((((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧ (∀ #i5. (MskRev( ) @ #i5) ⇒ ⊥)) ∨
+      (∀ #i5. (EphkRev( matching ) @ #i5) ⇒ ⊥))) ∧
+    (((∀ #i5. (EphkRev( matching ) @ #i5) ⇒ ⊥) ∨
+      (∀ #i5. (EphkRev( test ) @ #i5) ⇒ ⊥))) ∧
+    ((((∀ #i5. (LtkRev( A ) @ #i5) ⇒ ⊥) ∧ (∀ #i5. (MskRev( ) @ #i5) ⇒ ⊥)) ∨
+      (∀ #i5. (EphkRev( test ) @ #i5) ⇒ ⊥)))) ∧
+  (((∃ matching #i3 #i4 sid.
+      (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
+    ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+     (∀ #i3. (EphkRev( test ) @ #i3) ⇒ ⊥) ∧
+     (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥))))"
 */
 simplify
 solve( (∃ matching #i3 #i4 sid.
@@ -536,7 +536,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_session_key_case_2
                             by contradiction /* from formulas */
                           next
-                            case ckdf
+                            case c_kdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
@@ -623,7 +623,7 @@ solve( (∃ matching #i3 #i4 sid.
                           case Reveal_session_key_case_2
                           by contradiction /* from formulas */
                         next
-                          case ckdf
+                          case c_kdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
@@ -712,7 +712,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_session_key_case_2
                             by contradiction /* from formulas */
                           next
-                            case ckdf
+                            case c_kdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
@@ -772,7 +772,7 @@ solve( (∃ matching #i3 #i4 sid.
                           case Reveal_session_key_case_2
                           by contradiction /* from formulas */
                         next
-                          case ckdf
+                          case c_kdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
@@ -893,7 +893,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_session_key_case_2
                             by contradiction /* from formulas */
                           next
-                            case ckdf
+                            case c_kdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
@@ -953,7 +953,7 @@ solve( (∃ matching #i3 #i4 sid.
                           case Reveal_session_key_case_2
                           by contradiction /* from formulas */
                         next
-                          case ckdf
+                          case c_kdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
@@ -1069,7 +1069,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_session_key_case_2
                             by contradiction /* from formulas */
                           next
-                            case ckdf
+                            case c_kdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
@@ -1129,7 +1129,7 @@ solve( (∃ matching #i3 #i4 sid.
                           case Reveal_session_key_case_2
                           by contradiction /* from formulas */
                         next
-                          case ckdf
+                          case c_kdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
@@ -1305,7 +1305,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_session_key_case_2
                             by contradiction /* from formulas */
                           next
-                            case ckdf
+                            case c_kdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
@@ -1443,7 +1443,7 @@ solve( (∃ matching #i3 #i4 sid.
                           case Reveal_session_key_case_2
                           by contradiction /* from formulas */
                         next
-                          case ckdf
+                          case c_kdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
@@ -1532,7 +1532,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_session_key_case_2
                             by contradiction /* from formulas */
                           next
-                            case ckdf
+                            case c_kdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
@@ -1718,7 +1718,7 @@ solve( (∃ matching #i3 #i4 sid.
                           case Reveal_session_key_case_2
                           by contradiction /* from formulas */
                         next
-                          case ckdf
+                          case c_kdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
@@ -1938,7 +1938,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_session_key_case_2
                             by contradiction /* from formulas */
                           next
-                            case ckdf
+                            case c_kdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
@@ -2025,7 +2025,7 @@ solve( (∃ matching #i3 #i4 sid.
                           case Reveal_session_key_case_2
                           by contradiction /* from formulas */
                         next
-                          case ckdf
+                          case c_kdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
@@ -2114,7 +2114,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_session_key_case_2
                             by contradiction /* from formulas */
                           next
-                            case ckdf
+                            case c_kdf
                             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                               case Init_1
                               solve( !KU( ~x ) @ #vk.15 )
@@ -2300,7 +2300,7 @@ solve( (∃ matching #i3 #i4 sid.
                           case Reveal_session_key_case_2
                           by contradiction /* from formulas */
                         next
-                          case ckdf
+                          case c_kdf
                           solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.5 )
                             case Init_1
                             solve( !KU( ~x ) @ #vk.15 )
@@ -2495,7 +2495,7 @@ next
             case Reveal_session_key_case_2
             by contradiction /* from formulas */
           next
-            case ckdf
+            case c_kdf
             solve( !KU( em('P', hp($B))^(~ex*~x) ) @ #vk.4 )
               case Init_1
               solve( !KU( ~x ) @ #vk.15 )
@@ -2540,7 +2540,7 @@ next
           case Reveal_session_key_case_2
           by contradiction /* from formulas */
         next
-          case ckdf
+          case c_kdf
           solve( !KU( em('P', hp($A))^(~ey*~x) ) @ #vk.6 )
             case KGC_Setup
             solve( !KU( ~ey ) @ #vk.15 )
@@ -2577,8 +2577,10 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/Chen_Kudla.spthy
@@ -2587,7 +2589,7 @@ analyzing: examples/ake/bilinear/Chen_Kudla.spthy
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 75.059783s
+  processing time: 71.271911s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 
@@ -2599,7 +2601,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 75.059783s
+  processing time: 71.271911s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 

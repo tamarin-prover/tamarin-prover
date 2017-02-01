@@ -167,8 +167,7 @@ callMaude hnd updateStatistics cmd = do
 
 -- | Compute a result via Maude.
 computeViaMaude ::
-       (Show a, Show b, Ord c)
-    => MaudeHandle
+       MaudeHandle
     -> (MaudeProcess -> MaudeProcess)                                 -- ^ Update statistics
     -> (a -> BindT (Lit c LVar) MaudeLit Fresh ByteString)            -- ^ Conversion to Maude command
     -> (M.Map MaudeLit (Lit c LVar) -> ByteString -> Either String b) -- ^ Conversion from Maude reply
@@ -201,7 +200,7 @@ unifyCmd eqs =
 -- | @unifyViaMaude hnd eqs@ computes all AC unifiers of @eqs@ using the
 --   Maude process @hnd@.
 unifyViaMaude
-    :: (IsConst c , Show (Lit c LVar), Ord c)
+    :: (IsConst c)
     => MaudeHandle
     -> (c -> LSort) -> [Equal (VTerm c LVar)] -> IO [SubstVFresh c LVar]
 unifyViaMaude _   _      []  = return [emptySubstVFresh]
@@ -229,7 +228,7 @@ matchCmd eqs =
 
 -- | @matchViaMaude (t, p)@ computes a complete set of AC matchers of the term
 -- @t@ to the pattern @p@ via Maude.
-matchViaMaude :: (IsConst c , Show (Lit c LVar), Ord c)
+matchViaMaude :: (IsConst c)
               => MaudeHandle
               -> (c -> LSort)
               -> Match (VTerm c LVar)
@@ -258,7 +257,7 @@ normCmd :: MTerm -> ByteString
 normCmd tm = "reduce " <> ppMaude tm <> " .\n"
 
 -- | @normViaMaude t@ normalizes the term t via Maude.
-normViaMaude :: (IsConst c , Show (Lit c LVar), Ord c)
+normViaMaude :: (IsConst c)
              => MaudeHandle
              -> (c -> LSort)
              -> VTerm c LVar
