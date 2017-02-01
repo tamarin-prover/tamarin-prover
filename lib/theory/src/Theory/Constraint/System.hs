@@ -21,7 +21,7 @@ module Theory.Constraint.System (
   -- in which we are using the constraint solver. These are things like the
   -- signature of the message theory, the multiset rewriting rules of the
   -- protocol, the available precomputed case distinctions, whether induction
-  -- should be applied or not, whether typed or untyped case distinctions are
+  -- should be applied or not, whether raw or refined sources (typed or untyped case distinctions) are
   -- used, and whether we are looking for the existence of a trace or proving
   -- the absence of any trace satisfying the constraint system.
   , ProofContext(..)

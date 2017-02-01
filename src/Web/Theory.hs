@@ -361,9 +361,9 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     , text ""
     , ruleLink
     , text ""
-    , reqCasesLink "Untyped case distinctions" UntypedCaseDist
+    , reqCasesLink "Raw sources" UntypedCaseDist
     , text ""
-    , reqCasesLink "Typed case distinctions "  TypedCaseDist
+    , reqCasesLink "Refined sources "  TypedCaseDist
     , text ""
     , vcat $ intersperse (text "") lemmas
     , text ""
@@ -381,8 +381,8 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
         cases   = getCaseDistinction kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
-        chainInfo | nChains == 0 = "all chains solved"
-                  | otherwise    = show nChains ++ " chains left"
+        chainInfo | nChains == 0 = "all deconstructions solved"
+                  | otherwise    = show nChains ++ " partial deconstructions left"
 
     bold                = withTag "strong" [] . text
     overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
@@ -418,21 +418,21 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     , text ""
     , ruleLink RHS True
     , text ""
-    , reqCasesLink LHS "LHS: Untyped case distinctions "      UntypedCaseDist False
+    , reqCasesLink LHS "LHS: Raw sources "      UntypedCaseDist False
     , text ""
-    , reqCasesLink RHS "RHS: Untyped case distinctions "      UntypedCaseDist False
+    , reqCasesLink RHS "RHS: Raw sources "      UntypedCaseDist False
     , text ""
-    , reqCasesLink LHS "LHS: Untyped case distinctions [Diff] " UntypedCaseDist True
+    , reqCasesLink LHS "LHS: Raw sources [Diff] " UntypedCaseDist True
     , text ""
-    , reqCasesLink RHS "RHS: Untyped case distinctions [Diff] " UntypedCaseDist True
+    , reqCasesLink RHS "RHS: Raw sources [Diff] " UntypedCaseDist True
     , text ""
-    , reqCasesLink LHS "LHS: Typed case distinctions "        TypedCaseDist   False
+    , reqCasesLink LHS "LHS: Refined sources "        TypedCaseDist   False
     , text ""
-    , reqCasesLink RHS "RHS: Typed case distinctions "        TypedCaseDist   False
+    , reqCasesLink RHS "RHS: Refined sources "        TypedCaseDist   False
     , text ""
-    , reqCasesLink LHS "LHS: Typed case distinctions [Diff] "   TypedCaseDist   True
+    , reqCasesLink LHS "LHS: Refined sources [Diff] "   TypedCaseDist   True
     , text ""
-    , reqCasesLink RHS "RHS: Typed case distinctions [Diff] "   TypedCaseDist   True
+    , reqCasesLink RHS "RHS: Refined sources [Diff] "   TypedCaseDist   True
     , text ""
     , bold "LHS: Lemmas"
     , text ""
@@ -462,8 +462,8 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
         cases   = getDiffCaseDistinction s isdiff kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
-        chainInfo | nChains == 0 = "all chains solved"
-                  | otherwise    = show nChains ++ " chains left"
+        chainInfo | nChains == 0 = "all deconstructions solved"
+                  | otherwise    = show nChains ++ " partial deconstructions left"
 
     bold                 = withTag "strong" [] . text
     overview n info p    = linkToPath renderUrl (TheoryPathDiffMR tidx p) [] (bold n <-> info)
@@ -1351,8 +1351,8 @@ titleThyPath thy path = go path
     go TheoryHelp                           = "Theory: " ++ get thyName thy
     go TheoryRules                          = "Multiset rewriting rules and axioms"
     go TheoryMessage                        = "Message theory"
-    go (TheoryCaseDist UntypedCaseDist _ _) = "Untyped case distinctions"
-    go (TheoryCaseDist TypedCaseDist _ _)   = "Typed case distinctions"
+    go (TheoryCaseDist UntypedCaseDist _ _) = "Raw sources"
+    go (TheoryCaseDist TypedCaseDist _ _)   = "Refined sources"
     go (TheoryLemma l)                      = "Lemma: " ++ l
     go (TheoryProof l [])                   = "Lemma: " ++ l
     go (TheoryProof l p)
@@ -1373,8 +1373,8 @@ titleDiffThyPath thy path = go path
     go (DiffTheoryRules s d)                        = "Multiset rewriting rules and axioms [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
     go DiffTheoryDiffRules                          = "Multiset rewriting rules and axioms - unprocessed"
     go (DiffTheoryMessage s d)                      = "Message theory [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
-    go (DiffTheoryCaseDist s UntypedCaseDist d _ _) = "Untyped case distinctions [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
-    go (DiffTheoryCaseDist s TypedCaseDist d _ _)   = "Typed case distinctions [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
+    go (DiffTheoryCaseDist s UntypedCaseDist d _ _) = "Raw sources [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
+    go (DiffTheoryCaseDist s TypedCaseDist d _ _)   = "Refined sources [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
     go (DiffTheoryLemma s l)                        = "Lemma: " ++ l ++ "[" ++ show s ++ "]"
     go (DiffTheoryDiffLemma l)                      = "DiffLemma: " ++ l
     go (DiffTheoryProof s l [])                     = "Lemma: " ++ l ++ "[" ++ show s ++ "]"

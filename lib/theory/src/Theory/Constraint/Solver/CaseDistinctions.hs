@@ -394,8 +394,8 @@ precomputeCaseDistinctions ctxt axioms =
 refineWithTypingAsms
     :: [LNGuarded]        -- ^ Typing assumptions to use.
     -> ProofContext       -- ^ Proof context to use.
-    -> [CaseDistinction]  -- ^ Original, untyped case distinctions.
-    -> [CaseDistinction]  -- ^ Refined, typed case distinctions.
+    -> [CaseDistinction]  -- ^ Original, raw sources.
+    -> [CaseDistinction]  -- ^ Manipulated, refined sources.
 refineWithTypingAsms [] _ cases0 =
     fmap ((modify cdCases . fmap . second) (set sCaseDistKind TypedCaseDist)) $ cases0
 refineWithTypingAsms assumptions ctxt cases0 =
