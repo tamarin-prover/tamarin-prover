@@ -768,6 +768,7 @@ doAxiomsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: This is 
     impliedOrInitial solved x = if isAllGuarded x && (solved || not (null (impliedForms x))) then (impliedForms x) else [x]
     impliedForms = impliedFormulas (L.get pcMaudeHandle ctxt) sys
 
+
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
 getMirrorDG ctxt side sys = unifyInstances sys $ evalFreshAvoiding newNodes freshAndPubConstrRules
