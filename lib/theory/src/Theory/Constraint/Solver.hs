@@ -39,11 +39,11 @@ module Theory.Constraint.Solver (
   , Contradiction
   , contradictions
 
---   , CaseDistinction
+--   , Source
 --   , cdGoal
 --   , cdCases
 
-  , precomputeCaseDistinctions
+  , precomputeSources
   , refineWithTypingAsms
   , unsolvedChainConstraints
 

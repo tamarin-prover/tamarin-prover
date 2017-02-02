@@ -134,8 +134,8 @@ module Theory (
   , getInjectiveFactInsts
   , getDiffInjectiveFactInsts
 
-  , getCaseDistinction
-  , getDiffCaseDistinction
+  , getSource
+  , getDiffSource
 
   -- ** Proving
   , ProofSkeleton
@@ -259,8 +259,8 @@ type OpenRuleCache = [IntrRuleAC]
 
 data ClosedRuleCache = ClosedRuleCache
        { _crcRules            :: ClassifiedRules
-       , _crcUntypedCaseDists :: [CaseDistinction]
-       , _crcTypedCaseDists   :: [CaseDistinction]
+       , _crcUntypedCaseDists :: [Source]
+       , _crcTypedCaseDists   :: [Source]
        , _crcInjectiveFactInsts  :: S.Set FactTag
        }
        deriving( Eq, Ord, Show )
@@ -335,7 +335,7 @@ closeRuleCache axioms typAsms sig protoRules intrRules isdiff = -- trace ("close
     -- axioms. Otherwise, it wouldn't be sound to use the precomputed case
     -- distinctions for properties proven using induction.
     safetyAxioms     = filter isSafetyFormula axioms
-    untypedCaseDists = precomputeCaseDistinctions ctxt0 safetyAxioms
+    untypedCaseDists = precomputeSources ctxt0 safetyAxioms
     typedCaseDists   = refineWithTypingAsms typAsms ctxt0 untypedCaseDists
 
     -- Maude handle
@@ -1132,20 +1132,20 @@ getDiffClassifiedRules s isdiff = case (s, isdiff) of
            (RHS, True)  -> L.get (crcRules . diffThyDiffCacheRight)
 
 -- | The precomputed case distinctions.
-getCaseDistinction :: CaseDistKind -> ClosedTheory -> [CaseDistinction]
-getCaseDistinction UntypedCaseDist = L.get (crcUntypedCaseDists . thyCache)
-getCaseDistinction TypedCaseDist   = L.get (crcTypedCaseDists .   thyCache)
+getSource :: CaseDistKind -> ClosedTheory -> [Source]
+getSource UntypedCaseDist = L.get (crcUntypedCaseDists . thyCache)
+getSource TypedCaseDist   = L.get (crcTypedCaseDists .   thyCache)
 
 -- | The precomputed case distinctions.
-getDiffCaseDistinction :: Side -> Bool -> CaseDistKind -> ClosedDiffTheory -> [CaseDistinction]
-getDiffCaseDistinction LHS False UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheLeft)
-getDiffCaseDistinction RHS False UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheRight)
-getDiffCaseDistinction LHS False TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheLeft)
-getDiffCaseDistinction RHS False TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheRight)
-getDiffCaseDistinction LHS True  UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyDiffCacheLeft)
-getDiffCaseDistinction RHS True  UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyDiffCacheRight)
-getDiffCaseDistinction LHS True  TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyDiffCacheLeft)
-getDiffCaseDistinction RHS True  TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyDiffCacheRight)
+getDiffSource :: Side -> Bool -> CaseDistKind -> ClosedDiffTheory -> [Source]
+getDiffSource LHS False UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheLeft)
+getDiffSource RHS False UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheRight)
+getDiffSource LHS False TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheLeft)
+getDiffSource RHS False TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheRight)
+getDiffSource LHS True  UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyDiffCacheLeft)
+getDiffSource RHS True  UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyDiffCacheRight)
+getDiffSource LHS True  TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyDiffCacheLeft)
+getDiffSource RHS True  TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyDiffCacheRight)
 
 -- construction
 ---------------

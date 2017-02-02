@@ -13,11 +13,11 @@ module Theory.Constraint.Solver.Sources (
     unsolvedChainConstraints
 
   -- ** Construction
-  , precomputeCaseDistinctions
+  , precomputeSources
   , refineWithTypingAsms
 
   -- ** Application
-  , solveWithCaseDistinction
+  , solveWithSource
 
   -- ** Redundant cases
   , removeRedundantCases
@@ -65,7 +65,7 @@ import           Debug.Trace
 ------------------------------------------------------------------------------
 
 -- | The number of remaining chain constraints of each case.
-unsolvedChainConstraints :: CaseDistinction -> [Int]
+unsolvedChainConstraints :: Source -> [Int]
 unsolvedChainConstraints =
     map (length . unsolvedChains . snd) . getDisj . get cdCases
 
@@ -73,15 +73,15 @@ unsolvedChainConstraints =
 -- Construction
 ---------------
 
--- | The initial case distinction if the given goal is required and the
+-- | The initial source if the given goal is required and the
 -- given typing assumptions are justified.
-initialCaseDistinction
+initialSource
     :: ProofContext
     -> [LNGuarded] -- ^ Axioms.
     -> Goal
-    -> CaseDistinction
-initialCaseDistinction ctxt axioms goal =
-    CaseDistinction goal cases
+    -> Source
+initialSource ctxt axioms goal =
+    Source goal cases
   where
     polish ((name, se), _) = ([name], se)
     se0   = insertLemmas axioms $ emptySystem UntypedCaseDist $ get pcDiffContext ctxt
@@ -91,13 +91,13 @@ initialCaseDistinction ctxt axioms goal =
         insertGoal goal False
         solveGoal goal
 
--- | Refine a source case distinction by applying the additional proof step.
-refineCaseDistinction
+-- | Refine a source by applying the additional proof step.
+refineSource
     :: ProofContext
     -> Reduction (a, [String])  -- proof step with result and path extension
-    -> CaseDistinction
-    -> ([a], CaseDistinction)
-refineCaseDistinction ctxt proofStep th =
+    -> Source
+    -> ([a], Source)
+refineSource ctxt proofStep th =
     ( map fst $ getDisj refinement
     , set cdCases newCases th )
   where
@@ -119,11 +119,11 @@ refineCaseDistinction ctxt proofStep th =
     combine (n       :_)  _   = [n]
 
 -- | Solves all chain and splitting goals as well as all premise goals solvable
--- with one of the given precomputed requires case distinction theorems, while
+-- with one of the given precomputed requires source theorems, while
 -- repeatedly simplifying the proof state.
 --
 -- Returns the names of the steps applied.
-solveAllSafeGoals :: [CaseDistinction] -> Reduction [String]
+solveAllSafeGoals :: [Source] -> Reduction [String]
 solveAllSafeGoals ths' =
     solve ths' [] 10
   where
@@ -150,7 +150,7 @@ solveAllSafeGoals ths' =
     isChainPrem1 (ChainG _ (_,PremIdx 1),_) = True
     isChainPrem1 _                          = False
 
-    solve :: [CaseDistinction] -> [String] -> Integer -> Reduction [String]
+    solve :: [Source] -> [String] -> Integer -> Reduction [String]
     solve ths caseNames chainsLeft = do
         simplifySystem
         ctxt <- ask
@@ -169,17 +169,17 @@ solveAllSafeGoals ths' =
             remainingChains _                = chainsLeft
             kdPremGoals     = fst <$> filter (\g -> isKDPrem g || isChainPrem1 g) goals
             usefulGoals     = fst <$> filter usefulGoal goals
-            nextStep :: Maybe (Reduction [String], Maybe CaseDistinction)
+            nextStep :: Maybe (Reduction [String], Maybe Source)
             nextStep     =
                 ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay (kdPremGoals)) <|>
                 ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay (safeGoals)) <|>
-                (asum $ map (solveWithCaseDistinctionAndReturn ctxt ths) usefulGoals)
+                (asum $ map (solveWithSourceAndReturn ctxt ths) usefulGoals)
         case nextStep of
           Nothing   -> return caseNames
           Just (step, Nothing) -> (\x -> solve ths (caseNames ++ x) (remainingChains safeGoals)) =<< step
           Just (step, Just usedCase) -> (\x -> solve (filterCases usedCase ths) (caseNames ++ x) (remainingChains safeGoals)) =<< step
 
-    filterCases :: CaseDistinction -> [CaseDistinction] -> [CaseDistinction]
+    filterCases :: Source -> [Source] -> [Source]
     filterCases usedCase cds = filter (\x -> usedCase /= x) cds
 
 
@@ -221,14 +221,14 @@ removeRedundantCases ctxt stableVars getSys cases0 =
 -- Applying precomputed case distinctions
 ------------------------------------------------------------------------------
 
--- | Match a precomputed 'CaseDistinction' to a goal. Returns the instantiated
--- 'CaseDistinction' with the given goal if possible
+-- | Match a precomputed 'Source' to a goal. Returns the instantiated
+-- 'Source' with the given goal if possible
 matchToGoal
-    :: ProofContext     -- ^ Proof context used for refining the case distinction.
-    -> CaseDistinction  -- ^ Case distinction to use.
+    :: ProofContext     -- ^ Proof context used for refining the source.
+    -> Source           -- ^ Source to use.
     -> Goal             -- ^ Goal to match
-    -> Maybe CaseDistinction
-    -- ^ An adapted version of the case distinction with the given goal
+    -> Maybe Source
+    -- ^ An adapted version of the source with the given goal
 matchToGoal ctxt th0 goalTerm =
   if not $ maybeMatcher (goalTerm, get cdGoal th0) then Nothing else
   case (goalTerm, get cdGoal th) of
@@ -240,19 +240,19 @@ matchToGoal ctxt th0 goalTerm =
                 let refine = do
                         modM sEdges (substNodePrem pPat (iPat, premIdxTerm))
                         refineSubst subst
-                in Just $ snd $ refineCaseDistinction ctxt refine (set cdGoal goalTerm th)
+                in Just $ snd $ refineSource ctxt refine (set cdGoal goalTerm th)
 
     (ActionG iTerm faTerm, ActionG iPat faPat) ->
         case doMatch (faTerm `matchFact` faPat <> iTerm `matchLVar` iPat) of
             []      -> Nothing
-            subst:_ -> Just $ snd $ refineCaseDistinction ctxt
+            subst:_ -> Just $ snd $ refineSource ctxt
                                         (refineSubst subst) (set cdGoal goalTerm th)
 
     -- No other matches possible, as we only precompute case distinctions for
     -- premises and KU-actions.
     _ -> Nothing
   where
-    -- this code reflects the precomputed cases in 'precomputeCaseDistinctions'
+    -- this code reflects the precomputed cases in 'precomputeSources'
     maybeMatcher (PremiseG _ faTerm, PremiseG _ faPat)  = factTag faTerm == factTag faPat
     maybeMatcher ( ActionG _ (Fact KUFact [tTerm])
                  , ActionG _ (Fact KUFact [tPat]))      =
@@ -276,32 +276,32 @@ matchToGoal ctxt th0 goalTerm =
 
 -- | Try to solve a premise goal or 'KU' action using the first precomputed
 -- case distinction with a matching premise. Also returns the used case distinction.
-solveWithCaseDistinctionAndReturn :: ProofContext
-                         -> [CaseDistinction]
+solveWithSourceAndReturn :: ProofContext
+                         -> [Source]
                          -> Goal
-                         -> Maybe (Reduction [String], Maybe CaseDistinction)
-solveWithCaseDistinctionAndReturn hnd ths goal = do
+                         -> Maybe (Reduction [String], Maybe Source)
+solveWithSourceAndReturn hnd ths goal = do
     -- goal <- toBigStepGoal goal0
-    asum [ applyCaseDistinction hnd th goal | th <- ths ]
+    asum [ applySource hnd th goal | th <- ths ]
 
 -- | Try to solve a premise goal or 'KU' action using the first precomputed
--- case distinction with a matching premise.
-solveWithCaseDistinction :: ProofContext
-                         -> [CaseDistinction]
-                         -> Goal
-                         -> Maybe (Reduction [String])
-solveWithCaseDistinction hnd ths goal =
-    case (solveWithCaseDistinctionAndReturn hnd ths goal) of
+-- source with a matching premise.
+solveWithSource :: ProofContext
+                -> [Source]
+                -> Goal
+                -> Maybe (Reduction [String])
+solveWithSource hnd ths goal =
+    case (solveWithSourceAndReturn hnd ths goal) of
          Nothing     -> Nothing
          Just (x, _) -> Just x
 
 
--- | Apply a precomputed case distinction theorem to a required fact.
-applyCaseDistinction :: ProofContext
-                     -> CaseDistinction    -- ^ Case distinction theorem.
-                     -> Goal               -- ^ Required goal
-                     -> Maybe (Reduction [String], Maybe CaseDistinction)
-applyCaseDistinction ctxt th0 goal = case matchToGoal ctxt th0 goal of
+-- | Apply a precomputed source theorem to a required fact.
+applySource :: ProofContext
+               -> Source     -- ^ Source theorem.
+               -> Goal       -- ^ Required goal
+               -> Maybe (Reduction [String], Maybe Source)
+applySource ctxt th0 goal = case matchToGoal ctxt th0 goal of
     Just th -> Just ((do
         markGoalAsSolved "precomputed" goal
         (names, sysTh0) <- disjunctionOfList $ getDisj $ get cdCases th
@@ -312,43 +312,43 @@ applyCaseDistinction ctxt th0 goal = case matchToGoal ctxt th0 goal of
   where
     keepVarBindings = M.fromList (map (\v -> (v, v)) (frees goal))
 
--- | Saturate the case distinctions with respect to each other such that no
+-- | Saturate the sources with respect to each other such that no
 -- additional splitting is introduced; i.e., only rules with a single or no
 -- conclusion are used for the saturation.
-saturateCaseDistinctions
-    :: ProofContext -> [CaseDistinction] -> [CaseDistinction]
-saturateCaseDistinctions ctxt thsInit =
+saturateSources
+    :: ProofContext -> [Source] -> [Source]
+saturateSources ctxt thsInit =
     (go thsInit 1)
   where
-    go :: [CaseDistinction] -> Integer -> [CaseDistinction]
+    go :: [Source] -> Integer -> [Source]
     go ths n =
         if (any or (changes `using` parList rdeepseq)) && (n <= 3)
           then go ths' (n + 1)
           else if (n > 3) 
-            then trace "saturateCaseDistinctions: Saturation aborted, more than 3 iterations." ths'
+            then trace "saturateSources: Saturation aborted, more than 3 iterations." ths'
             else ths'
       where
-        (changes, ths') = unzip $ map (refineCaseDistinction ctxt solver) ths
+        (changes, ths') = unzip $ map (refineSource ctxt solver) ths
         goodTh th  = length (getDisj (get cdCases th)) <= 1
         solver     = do names <- solveAllSafeGoals (filter goodTh ths)
                         return (not $ null names, names)
 
 -- | Precompute a saturated set of case distinctions.
-precomputeCaseDistinctions
+precomputeSources
     :: ProofContext
     -> [LNGuarded]       -- ^ Axioms.
-    -> [CaseDistinction]
-precomputeCaseDistinctions ctxt axioms =
-    map cleanupCaseNames (saturateCaseDistinctions ctxt rawCaseDists)
+    -> [Source]
+precomputeSources ctxt axioms =
+    map cleanupCaseNames (saturateSources ctxt rawCaseDists)
   where
     cleanupCaseNames = modify cdCases $ fmap $ first $
         filter (not . null)
       . map (filter (`elem` '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']))
 
     rawCaseDists =
-        (initialCaseDistinction ctxt axioms <$> (protoGoals ++ msgGoals))
+        (initialSource ctxt axioms <$> (protoGoals ++ msgGoals))
 
-    -- construct case distinction starting from facts from non-special rules
+    -- construct source starting from facts from non-special rules
     protoGoals = someProtoGoal <$> absProtoFacts
     msgGoals   = someKUGoal <$> absMsgFacts
 
@@ -389,18 +389,18 @@ precomputeCaseDistinctions ctxt axioms =
 
     msig = mhMaudeSig . get pcMaudeHandle $ ctxt
 
--- | Refine a set of case distinction by exploiting additional typing
+-- | Refine a set of sources by exploiting additional typing
 -- assumptions.
 refineWithTypingAsms
-    :: [LNGuarded]        -- ^ Typing assumptions to use.
-    -> ProofContext       -- ^ Proof context to use.
-    -> [CaseDistinction]  -- ^ Original, raw sources.
-    -> [CaseDistinction]  -- ^ Manipulated, refined sources.
+    :: [LNGuarded]    -- ^ Typing assumptions to use.
+    -> ProofContext   -- ^ Proof context to use.
+    -> [Source]       -- ^ Original, raw sources.
+    -> [Source]       -- ^ Manipulated, refined sources.
 refineWithTypingAsms [] _ cases0 =
     fmap ((modify cdCases . fmap . second) (set sCaseDistKind TypedCaseDist)) $ cases0
 refineWithTypingAsms assumptions ctxt cases0 =
     fmap (modifySystems removeFormulas) $
-    saturateCaseDistinctions ctxt $
+    saturateSources ctxt $
     modifySystems updateSystem <$> cases0
   where
     modifySystems   = modify cdCases . fmap . second

@@ -378,7 +378,7 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     casesInfo kind =
         parens $ nCases <> comma <-> text chainInfo
       where
-        cases   = getCaseDistinction kind thy
+        cases   = getSource kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
         chainInfo | nChains == 0 = "deconstructions complete"
@@ -459,7 +459,7 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     casesInfo s kind isdiff =
         parens $ nCases <> comma <-> text chainInfo
       where
-        cases   = getDiffCaseDistinction s isdiff kind thy
+        cases   = getDiffSource s isdiff kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
         chainInfo | nChains == 0 = "deconstructions complete"
@@ -713,9 +713,9 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         ]
 
 -- | A Html document representing the requires case splitting theorem.
-htmlCaseDistinction :: HtmlDocument d
-                    => RenderUrl -> TheoryIdx -> CaseDistKind -> (Int, CaseDistinction) -> d
-htmlCaseDistinction renderUrl tidx kind (j, th) =
+htmlSource :: HtmlDocument d
+                    => RenderUrl -> TheoryIdx -> CaseDistKind -> (Int, Source) -> d
+htmlSource renderUrl tidx kind (j, th) =
     if null cases
       then withTag "h2" [] ppHeader $-$ withTag "h3" [] (text "No cases.")
       else vcat $ withTag "h2" [] ppHeader : cases
@@ -739,9 +739,9 @@ htmlCaseDistinction renderUrl tidx kind (j, th) =
         name = intercalate "_" names
 
 -- | A Html document representing the requires case splitting theorem.
-htmlCaseDistinctionDiff :: HtmlDocument d
-                    => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> Bool -> (Int, CaseDistinction) -> d
-htmlCaseDistinctionDiff renderUrl tidx s kind d (j, th) =
+htmlSourceDiff :: HtmlDocument d
+                    => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> Bool -> (Int, Source) -> d
+htmlSourceDiff renderUrl tidx s kind d (j, th) =
     if null cases
       then withTag "h2" [] ppHeader $-$ withTag "h3" [] (text "No cases.")
       else vcat $ withTag "h2" [] ppHeader : cases
@@ -765,15 +765,15 @@ htmlCaseDistinctionDiff renderUrl tidx s kind d (j, th) =
         name = intercalate "_" names
 
         
--- | Build the Html document showing the source cases distinctions.
+-- | Build the Html document showing the source cases.
 reqCasesSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> CaseDistKind -> ClosedTheory -> d
 reqCasesSnippet renderUrl tidx kind thy = vcat $
-    htmlCaseDistinction renderUrl tidx kind <$> zip [1..] (getCaseDistinction kind thy)
+    htmlSource renderUrl tidx kind <$> zip [1..] (getSource kind thy)
 
--- | Build the Html document showing the source cases distinctions.
+-- | Build the Html document showing the source cases.
 reqCasesDiffSnippet :: HtmlDocument d => RenderUrl -> TheoryIdx -> Side -> CaseDistKind -> Bool -> ClosedDiffTheory -> d
 reqCasesDiffSnippet renderUrl tidx s kind isdiff thy = vcat $
-    htmlCaseDistinctionDiff renderUrl tidx s kind isdiff <$> zip [1..] (getDiffCaseDistinction s isdiff kind thy)
+    htmlSourceDiff renderUrl tidx s kind isdiff <$> zip [1..] (getDiffSource s isdiff kind thy)
 
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
@@ -1149,14 +1149,14 @@ imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraph
     casesDotCode k i j = prefixedShowDot $
         compact $ snd $ cases !! (i-1) !! (j-1)
       where
-        cases = map (getDisj . get cdCases) (getCaseDistinction k thy)
+        cases = map (getDisj . get cdCases) (getSource k thy)
 
    -- Get JSON code for required cases
     casesJsonCode k i j = 
         showJsonGraphFunct ("Theory: " ++ (get thyName thy) ++ " Case: " ++ show i ++ ":" ++ show j) 
         $ snd $ cases !! (i-1) !! (j-1)
       where
-        cases = map (getDisj . get cdCases) (getCaseDistinction k thy)
+        cases = map (getDisj . get cdCases) (getSource k thy)
 
     -- Get dot code for proof path in lemma
     proofPathDotCode lemma proofPath =
@@ -1275,7 +1275,7 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
     casesDotCode s k i j isdiff = prefixedShowDot $
         compact $ snd $ cases !! (i-1) !! (j-1)
       where
-        cases = map (getDisj . get cdCases) (getDiffCaseDistinction s isdiff k thy)
+        cases = map (getDisj . get cdCases) (getDiffSource s isdiff k thy)
 
     -- Get dot code for proof path in lemma
     proofPathDotCode s lemma proofPath =

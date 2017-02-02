@@ -205,7 +205,7 @@ execProofMethod ctxt method sys =
         ths    = L.get pcCaseDists ctxt
         solver = do name <- maybe (solveGoal goal)
                                   (fmap $ concat . intersperse "_")
-                                  (solveWithCaseDistinction ctxt ths goal)
+                                  (solveWithSource ctxt ths goal)
                     simplifySystem
                     return name
 

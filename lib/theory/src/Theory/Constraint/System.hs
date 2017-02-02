@@ -20,10 +20,10 @@ module Theory.Constraint.System (
   -- | The proof context captures all relevant information about the context
   -- in which we are using the constraint solver. These are things like the
   -- signature of the message theory, the multiset rewriting rules of the
-  -- protocol, the available precomputed case distinctions, whether induction
-  -- should be applied or not, whether raw or refined sources (typed or untyped case distinctions) are
-  -- used, and whether we are looking for the existence of a trace or proving
-  -- the absence of any trace satisfying the constraint system.
+  -- protocol, the available precomputed sources, whether induction should be
+  -- applied or not, whether raw or refined sources are used, and whether we
+  -- are looking for the existence of a trace or proving the absence of any
+  -- trace satisfying the constraint system.
   , ProofContext(..)
   , DiffProofContext(..)
   , InductionHint(..)
@@ -62,7 +62,7 @@ module Theory.Constraint.System (
   -- | For better speed, we precompute case distinctions. This is especially
   -- important for getting rid of all chain constraints before actually
   -- starting to verify security properties.
-  , CaseDistinction(..)
+  , Source(..)
 
   , cdGoal
   , cdCases
@@ -181,7 +181,7 @@ module Theory.Constraint.System (
   , prettySystem
   , prettyNonGraphSystem
   , prettyNonGraphSystemDiff
-  , prettyCaseDistinction
+  , prettySource
 
   ) where
 
@@ -340,9 +340,9 @@ sConjDisjEqs = eqsConj . sEqStore
 -- Proof Context
 ------------------------------------------------------------------------------
 
--- | A big-step case distinction.
-data CaseDistinction = CaseDistinction
-     { _cdGoal     :: Goal   -- start goal of case distinction
+-- | A big-step source. (Formerly known as case distinction.)
+data Source = Source
+     { _cdGoal     :: Goal   -- start goal of source
        -- disjunction of named sequents with premise being solved; each name
        -- being the path of proof steps required to arrive at these cases
      , _cdCases    :: Disj ([String], System)
@@ -353,13 +353,13 @@ data InductionHint = UseInduction | AvoidInduction
        deriving( Eq, Ord, Show )
 
 -- | A proof context contains the globally fresh facts, classified rewrite
--- rules and the corresponding precomputed premise case distinction theorems.
+-- rules and the corresponding precomputed premise source theorems.
 data ProofContext = ProofContext
        { _pcSignature          :: SignatureWithMaude
        , _pcRules              :: ClassifiedRules
        , _pcInjectiveFactInsts :: S.Set FactTag
        , _pcCaseDistKind       :: CaseDistKind
-       , _pcCaseDists          :: [CaseDistinction]
+       , _pcCaseDists          :: [Source]
        , _pcUseInduction       :: InductionHint
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
@@ -384,7 +384,7 @@ data DiffProofContext = DiffProofContext
        deriving( Eq, Ord, Show )
 
        
-$(mkLabels [''ProofContext, ''DiffProofContext, ''CaseDistinction])
+$(mkLabels [''ProofContext, ''DiffProofContext, ''Source])
 
 
 -- | The 'MaudeHandle' of a proof-context.
@@ -398,14 +398,14 @@ eitherProofContext ctxt s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPC
 -- Instances
 ------------
 
-instance HasFrees CaseDistinction where
+instance HasFrees Source where
     foldFrees f th =
         foldFrees f (L.get cdGoal th)   `mappend`
         foldFrees f (L.get cdCases th)
 
     foldFreesOcc  _ _ = const mempty
 
-    mapFrees f th = CaseDistinction <$> mapFrees f (L.get cdGoal th)
+    mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
                                     <*> mapFrees f (L.get cdCases th)
 
 data DiffProofType = RuleEquivalence | None
@@ -1229,8 +1229,8 @@ prettyGoals solved sys = vsep $ do
     toplevelTerms t = [t]
 
 -- | Pretty print a case distinction
-prettyCaseDistinction :: HighlightDocument d => CaseDistinction -> d
-prettyCaseDistinction th = vcat $
+prettySource :: HighlightDocument d => Source -> d
+prettySource th = vcat $
    [ prettyGoal $ L.get cdGoal th ]
    ++ map combine (zip [(1::Int)..] $ map snd . getDisj $ (L.get cdCases th))
   where
@@ -1301,7 +1301,7 @@ instance HasFrees System where
 -- NFData
 ---------
 
-$( derive makeBinary ''CaseDistinction)
+$( derive makeBinary ''Source)
 $( derive makeBinary ''ClassifiedRules)
 $( derive makeBinary ''InductionHint)
 $( derive makeBinary ''ProofContext)
@@ -1314,7 +1314,7 @@ $( derive makeBinary ''System)
 $( derive makeBinary ''DiffSystem)
 $( derive makeBinary ''SystemTraceQuantifier)
 
-$( derive makeNFData ''CaseDistinction)
+$( derive makeNFData ''Source)
 $( derive makeNFData ''ClassifiedRules)
 $( derive makeNFData ''InductionHint)
 $( derive makeNFData ''ProofContext)
