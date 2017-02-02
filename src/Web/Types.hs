@@ -320,7 +320,7 @@ instance Ord (EitherTheoryInfo) where
 data TheoryPath
   = TheoryHelp                          -- ^ The help view (help and info about theory)
   | TheoryLemma String                  -- ^ Theory lemma with given name
-  | TheoryCaseDist CaseDistKind Int Int -- ^ Required cases (i'th source, j'th case)
+  | TheorySource SourceKind Int Int     -- ^ Required cases (i'th source, j'th case)
   | TheoryProof String ProofPath        -- ^ Proof path within proof for given lemma
   | TheoryMethod String ProofPath Int   -- ^ Apply the proof method to proof path
   | TheoryRules                         -- ^ Theory rules
@@ -333,7 +333,7 @@ data DiffTheoryPath
   = DiffTheoryHelp                                    -- ^ The help view (help and info about theory)
   | DiffTheoryLemma Side String                       -- ^ Theory lemma with given name and side
   | DiffTheoryDiffLemma String                        -- ^ Theory DiffLemma with given name 
-  | DiffTheoryCaseDist Side CaseDistKind Bool Int Int -- ^ Required cases (i'th source, j'th case)
+  | DiffTheorySource Side SourceKind Bool Int Int     -- ^ Required cases (i'th source, j'th case)
   | DiffTheoryProof Side String ProofPath             -- ^ Proof path within proof for given lemma
   | DiffTheoryDiffProof String ProofPath              -- ^ Proof path within proof for given lemma
   | DiffTheoryMethod Side String ProofPath Int        -- ^ Apply the proof method to proof path
@@ -355,7 +355,7 @@ renderTheoryPath =
     go TheoryRules = ["rules"]
     go TheoryMessage = ["message"]
     go (TheoryLemma name) = ["lemma", name]
-    go (TheoryCaseDist k i j) = ["cases", show k, show i, show j]
+    go (TheorySource k i j) = ["cases", show k, show i, show j]
     go (TheoryProof lemma path) = "proof" : lemma : path
     go (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
 
@@ -370,7 +370,7 @@ renderDiffTheoryPath =
     go DiffTheoryHelp = ["help"]
     go (DiffTheoryLemma s name) = ["lemma", show s, name]
     go (DiffTheoryDiffLemma name) = ["difflemma", name]
-    go (DiffTheoryCaseDist s k i j d) = ["cases", show s, show k, show i, show j, show d]
+    go (DiffTheorySource s k i j d) = ["cases", show s, show k, show i, show j, show d]
     go (DiffTheoryProof s lemma path) = "proof" : show s : lemma : path
     go (DiffTheoryDiffProof lemma path) = "diffProof" : lemma : path
     go (DiffTheoryMethod s lemma path idx) = "method" : show s : lemma : show idx : path
@@ -424,12 +424,12 @@ parseTheoryPath =
     parseMethod _        = Nothing
 
     parseCases (kind:y:z:_) = do
-      k <- case kind of "typed"   -> return TypedCaseDist
-                        "untyped" -> return UntypedCaseDist
+      k <- case kind of "typed"   -> return RefinedSource
+                        "untyped" -> return RawSource
                         _         -> Nothing
       m <- safeRead y
       n <- safeRead z
-      return (TheoryCaseDist k m n)
+      return (TheorySource k m n)
     parseCases _       = Nothing
 
 -- | Parse a list of strings into a theory path.
@@ -521,15 +521,15 @@ parseDiffTheoryPath =
       s <- case x of "LHS" -> return LHS
                      "RHS" -> return RHS
                      _     -> Nothing
-      k <- case kind of "typed"   -> return TypedCaseDist
-                        "untyped" -> return UntypedCaseDist
+      k <- case kind of "refined" -> return RefinedSource
+                        "raw"     -> return RawSource
                         _         -> Nothing
       d <- case pd of "True"  -> return True
                       "False" -> return False
                       _       -> Nothing
       m <- safeRead y
       n <- safeRead z
-      return (DiffTheoryCaseDist s k d m n)
+      return (DiffTheorySource s k d m n)
     parseCases _       = Nothing
 
 type RenderUrl = Route (WebUI) -> T.Text

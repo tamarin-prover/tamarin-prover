@@ -258,9 +258,9 @@ data ClosedProtoRule = ClosedProtoRule
 type OpenRuleCache = [IntrRuleAC]
 
 data ClosedRuleCache = ClosedRuleCache
-       { _crcRules            :: ClassifiedRules
-       , _crcUntypedCaseDists :: [Source]
-       , _crcTypedCaseDists   :: [Source]
+       { _crcRules               :: ClassifiedRules
+       , _crcRawSources          :: [Source]
+       , _crcRefinedSources      :: [Source]
        , _crcInjectiveFactInsts  :: S.Set FactTag
        }
        deriving( Eq, Ord, Show )
@@ -319,10 +319,10 @@ closeRuleCache :: [LNGuarded]        -- ^ Axioms to use.
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
 closeRuleCache axioms typAsms sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
-        classifiedRules untypedCaseDists typedCaseDists injFactInstances
+        classifiedRules rawSources refinedSources injFactInstances
   where
     ctxt0 = ProofContext
-        sig classifiedRules injFactInstances UntypedCaseDist [] AvoidInduction
+        sig classifiedRules injFactInstances RawSource [] AvoidInduction
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] isdiff
         (all isSubtermRule {-$ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
@@ -334,9 +334,9 @@ closeRuleCache axioms typAsms sig protoRules intrRules isdiff = -- trace ("close
     -- precomputing the case distinctions: we make sure to only add safety
     -- axioms. Otherwise, it wouldn't be sound to use the precomputed case
     -- distinctions for properties proven using induction.
-    safetyAxioms     = filter isSafetyFormula axioms
-    untypedCaseDists = precomputeSources ctxt0 safetyAxioms
-    typedCaseDists   = refineWithTypingAsms typAsms ctxt0 untypedCaseDists
+    safetyAxioms    = filter isSafetyFormula axioms
+    rawSources      = precomputeSources ctxt0 safetyAxioms
+    refinedSources  = refineWithTypingAsms typAsms ctxt0 rawSources
 
     -- Maude handle
     hnd = L.get sigmMaudeHandle sig
@@ -499,11 +499,11 @@ skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemm
 skeletonDiffLemma name atts = DiffLemma name atts
 
 
--- | The case-distinction kind allowed for a lemma
-lemmaCaseDistKind :: Lemma p -> CaseDistKind
-lemmaCaseDistKind lem
-  | TypingLemma `elem` L.get lAttributes lem = UntypedCaseDist
-  | otherwise                                = TypedCaseDist
+-- | The source kind allowed for a lemma
+lemmaSourceKind :: Lemma p -> SourceKind
+lemmaSourceKind lem
+  | TypingLemma `elem` L.get lAttributes lem = RawSource
+  | otherwise                                = RefinedSource
 
 -- | Adds the LHS lemma attribute.
 addLeftLemma :: Lemma p -> Lemma p
@@ -1026,9 +1026,9 @@ getProofContext l thy = ProofContext
     (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
     (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
   where
-    kind    = lemmaCaseDistKind l
-    cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
-                           TypedCaseDist   -> crcTypedCaseDists
+    kind    = lemmaSourceKind l
+    cases   = case kind of RawSource     -> crcRawSources
+                           RefinedSource -> crcRefinedSources
     inductionHint
       | any (`elem` [TypingLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
       | otherwise                                                        = AvoidInduction
@@ -1063,9 +1063,9 @@ getProofContextDiff s l thy = case s of
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
   where
-    kind    = lemmaCaseDistKind l
-    cases   = case kind of UntypedCaseDist -> crcUntypedCaseDists
-                           TypedCaseDist   -> crcTypedCaseDists
+    kind    = lemmaSourceKind l
+    cases   = case kind of RawSource     -> crcRawSources
+                           RefinedSource -> crcRefinedSources
     inductionHint
       | any (`elem` [TypingLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
       | otherwise                                                        = AvoidInduction
@@ -1084,8 +1084,8 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyDiffCacheLeft)           thy)
             ( L.get (crcInjectiveFactInsts . diffThyDiffCacheLeft) thy)
-            TypedCaseDist
-            ( L.get (crcTypedCaseDists . diffThyDiffCacheLeft)              thy)
+            RefinedSource
+            ( L.get (crcRefinedSources . diffThyDiffCacheLeft)              thy)
             AvoidInduction
             ExistsNoTrace
             ( L.get lDiffName l )
@@ -1097,8 +1097,8 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyDiffCacheRight)           thy)
             ( L.get (crcInjectiveFactInsts . diffThyDiffCacheRight) thy)
-            TypedCaseDist
-            ( L.get (crcTypedCaseDists . diffThyDiffCacheRight)              thy)
+            RefinedSource
+            ( L.get (crcRefinedSources . diffThyDiffCacheRight)              thy)
             AvoidInduction
             ExistsNoTrace
             ( L.get lDiffName l )
@@ -1132,20 +1132,20 @@ getDiffClassifiedRules s isdiff = case (s, isdiff) of
            (RHS, True)  -> L.get (crcRules . diffThyDiffCacheRight)
 
 -- | The precomputed case distinctions.
-getSource :: CaseDistKind -> ClosedTheory -> [Source]
-getSource UntypedCaseDist = L.get (crcUntypedCaseDists . thyCache)
-getSource TypedCaseDist   = L.get (crcTypedCaseDists .   thyCache)
+getSource :: SourceKind -> ClosedTheory -> [Source]
+getSource RawSource     = L.get (crcRawSources . thyCache)
+getSource RefinedSource = L.get (crcRefinedSources .   thyCache)
 
 -- | The precomputed case distinctions.
-getDiffSource :: Side -> Bool -> CaseDistKind -> ClosedDiffTheory -> [Source]
-getDiffSource LHS False UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheLeft)
-getDiffSource RHS False UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyCacheRight)
-getDiffSource LHS False TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheLeft)
-getDiffSource RHS False TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyCacheRight)
-getDiffSource LHS True  UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyDiffCacheLeft)
-getDiffSource RHS True  UntypedCaseDist = L.get (crcUntypedCaseDists . diffThyDiffCacheRight)
-getDiffSource LHS True  TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyDiffCacheLeft)
-getDiffSource RHS True  TypedCaseDist   = L.get (crcTypedCaseDists .   diffThyDiffCacheRight)
+getDiffSource :: Side -> Bool -> SourceKind -> ClosedDiffTheory -> [Source]
+getDiffSource LHS False RawSource     = L.get (crcRawSources .     diffThyCacheLeft)
+getDiffSource RHS False RawSource     = L.get (crcRawSources .     diffThyCacheRight)
+getDiffSource LHS False RefinedSource = L.get (crcRefinedSources . diffThyCacheLeft)
+getDiffSource RHS False RefinedSource = L.get (crcRefinedSources . diffThyCacheRight)
+getDiffSource LHS True  RawSource     = L.get (crcRawSources .     diffThyDiffCacheLeft)
+getDiffSource RHS True  RawSource     = L.get (crcRawSources .     diffThyDiffCacheRight)
+getDiffSource LHS True  RefinedSource = L.get (crcRefinedSources . diffThyDiffCacheLeft)
+getDiffSource RHS True  RefinedSource = L.get (crcRefinedSources . diffThyDiffCacheRight)
 
 -- construction
 ---------------
@@ -1451,15 +1451,15 @@ mkSystem ctxt axioms previousItems =
     -- difference between lemmas and axioms.
     addLemmas
   . formulaToSystem (map (formulaToGuarded_ . L.get axFormula) axioms)
-                    (L.get pcCaseDistKind ctxt)
+                    (L.get pcSourceKind ctxt)
                     (L.get pcTraceQuantifier ctxt) False
   where
     addLemmas sys =
-        insertLemmas (gatherReusableLemmas $ L.get sCaseDistKind sys) sys
+        insertLemmas (gatherReusableLemmas $ L.get sSourceKind sys) sys
 
     gatherReusableLemmas kind = do
         LemmaItem lem <- previousItems
-        guard $    lemmaCaseDistKind lem <= kind
+        guard $    lemmaSourceKind lem <= kind
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
                 && (L.get lName lem) `notElem` (L.get pcHiddenLemmas ctxt)
@@ -1475,16 +1475,16 @@ mkSystemDiff s ctxt axioms previousItems =
     -- difference between lemmas and axioms.
     addLemmas
   . formulaToSystem (map (formulaToGuarded_ . L.get axFormula) axioms')
-                    (L.get pcCaseDistKind ctxt)
+                    (L.get pcSourceKind ctxt)
                     (L.get pcTraceQuantifier ctxt) False
   where
     axioms' = foldr (\(s', a) l -> if s == s' then l ++ [a] else l) [] axioms
     addLemmas sys =
-        insertLemmas (gatherReusableLemmas $ L.get sCaseDistKind sys) sys
+        insertLemmas (gatherReusableLemmas $ L.get sSourceKind sys) sys
 
     gatherReusableLemmas kind = do
         EitherLemmaItem (s'', lem) <- previousItems
-        guard $    lemmaCaseDistKind lem <= kind && s==s''
+        guard $    lemmaSourceKind lem <= kind && s==s''
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
         return $ formulaToGuarded_ $ L.get lFormula lem

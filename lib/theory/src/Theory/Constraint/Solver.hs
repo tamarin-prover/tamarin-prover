@@ -16,9 +16,9 @@ module Theory.Constraint.Solver (
 --   , DiffProofContext(..)
 --   , pcSignature
 --   , pcRules
---   , pcCaseDists
+--   , pcSources
 --   , pcUseInduction
---   , pcCaseDistKind
+--   , pcSourceKind
 --   , pcTraceQuantifier
 --   , pcInjectiveFactInsts
 -- 

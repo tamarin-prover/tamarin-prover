@@ -84,7 +84,7 @@ initialSource ctxt axioms goal =
     Source goal cases
   where
     polish ((name, se), _) = ([name], se)
-    se0   = insertLemmas axioms $ emptySystem UntypedCaseDist $ get pcDiffContext ctxt
+    se0   = insertLemmas axioms $ emptySystem RawSource $ get pcDiffContext ctxt
     cases = fmap polish $
         runReduction instantiate ctxt se0 (avoid (goal, se0))
     instantiate = do
@@ -339,13 +339,13 @@ precomputeSources
     -> [LNGuarded]       -- ^ Axioms.
     -> [Source]
 precomputeSources ctxt axioms =
-    map cleanupCaseNames (saturateSources ctxt rawCaseDists)
+    map cleanupCaseNames (saturateSources ctxt rawSources)
   where
     cleanupCaseNames = modify cdCases $ fmap $ first $
         filter (not . null)
       . map (filter (`elem` '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']))
 
-    rawCaseDists =
+    rawSources =
         (initialSource ctxt axioms <$> (protoGoals ++ msgGoals))
 
     -- construct source starting from facts from non-special rules
@@ -397,7 +397,7 @@ refineWithTypingAsms
     -> [Source]       -- ^ Original, raw sources.
     -> [Source]       -- ^ Manipulated, refined sources.
 refineWithTypingAsms [] _ cases0 =
-    fmap ((modify cdCases . fmap . second) (set sCaseDistKind TypedCaseDist)) $ cases0
+    fmap ((modify cdCases . fmap . second) (set sSourceKind RefinedSource)) $ cases0
 refineWithTypingAsms assumptions ctxt cases0 =
     fmap (modifySystems removeFormulas) $
     saturateSources ctxt $
@@ -406,7 +406,7 @@ refineWithTypingAsms assumptions ctxt cases0 =
     modifySystems   = modify cdCases . fmap . second
     updateSystem se =
         modify sFormulas (S.union (S.fromList assumptions)) $
-        set sCaseDistKind TypedCaseDist                     $ se
+        set sSourceKind RefinedSource                       $ se
     removeFormulas =
         modify sGoals (M.filterWithKey isNoDisjGoal)
       . set sFormulas S.empty

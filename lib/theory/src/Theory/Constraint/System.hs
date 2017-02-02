@@ -31,8 +31,8 @@ module Theory.Constraint.System (
   , pcSignature
   , pcRules
   , pcInjectiveFactInsts
-  , pcCaseDists
-  , pcCaseDistKind
+  , pcSources
+  , pcSourceKind
   , pcUseInduction
   , pcTraceQuantifier
   , pcLemmaName
@@ -159,8 +159,8 @@ module Theory.Constraint.System (
   , insertLemmas
 
   -- ** Keeping track of typing assumptions
-  , CaseDistKind(..)
-  , sCaseDistKind
+  , SourceKind(..)
+  , sSourceKind
 
   -- ** Goals
   , GoalStatus(..)
@@ -259,32 +259,32 @@ opposite RHS = LHS
 data SystemTraceQuantifier = ExistsSomeTrace | ExistsNoTrace
        deriving( Eq, Ord, Show )
 
--- | Case dinstinction kind that are allowed. The order of the kinds
--- corresponds to the subkinding relation: untyped < typed.
-data CaseDistKind = UntypedCaseDist | TypedCaseDist
+-- | Source kind that are allowed. The order of the kinds
+-- corresponds to the subkinding relation: raw < refined.
+data SourceKind = RawSource | RefinedSource
        deriving( Eq )
 
-instance Show CaseDistKind where
-    show UntypedCaseDist = "untyped"
-    show TypedCaseDist   = "typed"
+instance Show SourceKind where
+    show RawSource     = "raw"
+    show RefinedSource = "refined"
 
 -- Adapted from the output of 'derive'.
-instance Read CaseDistKind where
+instance Read SourceKind where
         readsPrec p0 r
           = readParen (p0 > 10)
               (\ r0 ->
-                 [(UntypedCaseDist, r1) | ("untyped", r1) <- lex r0])
+                 [(RawSource, r1) | ("untyped", r1) <- lex r0])
               r
               ++
               readParen (p0 > 10)
-                (\ r0 -> [(TypedCaseDist, r1) | ("typed", r1) <- lex r0])
+                (\ r0 -> [(RefinedSource, r1) | ("typed", r1) <- lex r0])
                 r
 
-instance Ord CaseDistKind where
-    compare UntypedCaseDist UntypedCaseDist = EQ
-    compare UntypedCaseDist TypedCaseDist   = LT
-    compare TypedCaseDist   UntypedCaseDist = GT
-    compare TypedCaseDist   TypedCaseDist   = EQ
+instance Ord SourceKind where
+    compare RawSource     RawSource     = EQ
+    compare RawSource     RefinedSource = LT
+    compare RefinedSource RawSource     = GT
+    compare RefinedSource RefinedSource = EQ
 
 -- | The status of a 'Goal'. Use its 'Semigroup' instance to combine the
 -- status info of goals that collapse.
@@ -312,7 +312,7 @@ data System = System
     , _sLemmas         :: S.Set LNGuarded
     , _sGoals          :: M.Map Goal GoalStatus
     , _sNextGoalNr     :: Integer
-    , _sCaseDistKind   :: CaseDistKind
+    , _sSourceKind     :: SourceKind
     , _sDiffSystem     :: Bool
     }
     -- NOTE: Don't forget to update 'substSystem' in
@@ -358,8 +358,8 @@ data ProofContext = ProofContext
        { _pcSignature          :: SignatureWithMaude
        , _pcRules              :: ClassifiedRules
        , _pcInjectiveFactInsts :: S.Set FactTag
-       , _pcCaseDistKind       :: CaseDistKind
-       , _pcCaseDists          :: [Source]
+       , _pcSourceKind         :: SourceKind
+       , _pcSources            :: [Source]
        , _pcUseInduction       :: InductionHint
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
@@ -432,7 +432,7 @@ $(mkLabels [''DiffSystem])
 ------------------------------------------------------------------------------
 
 -- | The empty constraint system, which is logically equivalent to true.
-emptySystem :: CaseDistKind -> Bool -> System
+emptySystem :: SourceKind -> Bool -> System
 emptySystem d isdiff = System
     M.empty S.empty S.empty Nothing emptyEqStore
     S.empty S.empty S.empty
@@ -446,7 +446,7 @@ emptyDiffSystem = DiffSystem
 -- | Returns the constraint system that has to be proven to show that given
 -- formula holds in the context of the given theory.
 formulaToSystem :: [LNGuarded]           -- ^ Axioms to add
-                -> CaseDistKind          -- ^ Case distinction kind
+                -> SourceKind            -- ^ Source kind
                 -> SystemTraceQuantifier -- ^ Trace quantifier
                 -> Bool                  -- ^ In diff proofs, all action goals have to be resolved
                 -> LNFormula
@@ -1110,7 +1110,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
   , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
   , ("equations",       prettyEqStore $ L.get sEqStore se)
   , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
-  , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
+  , ("allowed cases",   text $ show $ L.get sSourceKind se)
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("unsolved goals",  prettyGoals False se)
   , ("solved goals",    prettyGoals True se)
@@ -1242,10 +1242,10 @@ prettySource th = vcat $
 
 deriving instance Show DiffSystem
 
-instance Apply CaseDistKind where
+instance Apply SourceKind where
     apply = const id
 
-instance HasFrees CaseDistKind where
+instance HasFrees SourceKind where
     foldFrees = const mempty
     foldFreesOcc  _ _ = const mempty
     mapFrees  = const pure
@@ -1307,7 +1307,7 @@ $( derive makeBinary ''InductionHint)
 $( derive makeBinary ''ProofContext)
 
 $( derive makeBinary ''Side)
-$( derive makeBinary ''CaseDistKind)
+$( derive makeBinary ''SourceKind)
 $( derive makeBinary ''GoalStatus)
 $( derive makeBinary ''DiffProofType)
 $( derive makeBinary ''System)
@@ -1320,7 +1320,7 @@ $( derive makeNFData ''InductionHint)
 $( derive makeNFData ''ProofContext)
 
 $( derive makeNFData ''Side)
-$( derive makeNFData ''CaseDistKind)
+$( derive makeNFData ''SourceKind)
 $( derive makeNFData ''GoalStatus)
 $( derive makeNFData ''DiffProofType)
 $( derive makeNFData ''System)

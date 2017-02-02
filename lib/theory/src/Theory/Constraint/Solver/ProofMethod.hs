@@ -202,7 +202,7 @@ execProofMethod ctxt method sys =
                . map (second cleanupSystem) . map fst . getDisj
                $ runReduction solver ctxt sys (avoid sys)
       where
-        ths    = L.get pcCaseDists ctxt
+        ths    = L.get pcSources ctxt
         solver = do name <- maybe (solveGoal goal)
                                   (fmap $ concat . intersperse "_")
                                   (solveWithSource ctxt ths goal)
@@ -236,7 +236,7 @@ execProofMethod ctxt method sys =
       where
         sys0 = set sFormulas (L.get sFormulas sys)
              $ set sLemmas (L.get sLemmas sys)
-             $ emptySystem (L.get sCaseDistKind sys) (L.get sDiffSystem sys)
+             $ emptySystem (L.get sSourceKind sys) (L.get sDiffSystem sys)
 
         insCase name gf = M.insert name (set sFormulas (S.singleton gf) sys)
 
@@ -317,7 +317,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     backwardSearchSystem :: Side -> DiffSystem -> String -> DiffSystem
     backwardSearchSystem s sys' rulename = L.set dsSide (Just s)
-      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) TypedCaseDist ExistsSomeTrace True (formula rulename))) sys'
+      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) RefinedSource ExistsSomeTrace True (formula rulename))) sys'
 
     startBackwardSearch :: String -> M.Map CaseName DiffSystem
     startBackwardSearch rulename = M.insert ("LHS") (backwardSearchSystem LHS sys rulename) $ M.insert ("RHS") (backwardSearchSystem RHS sys rulename) $ M.empty
@@ -533,7 +533,7 @@ sapicRanking :: ProofContext
 sapicRanking ctxt sys =
     sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
   where
-    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
+    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
     getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
       Just (viewTerm -> FApp o _)
@@ -687,7 +687,7 @@ sapicLivenessRanking :: ProofContext
 sapicLivenessRanking ctxt sys =
     sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
   where
-    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
+    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
     getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
       Just (viewTerm -> FApp o _)
@@ -866,7 +866,7 @@ sapicPKCS11Ranking :: ProofContext
 sapicPKCS11Ranking ctxt sys =
     sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
   where
-    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
+    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
     getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
       Just (viewTerm -> FApp o _)
@@ -1005,7 +1005,7 @@ injRanking :: ProofContext
 injRanking ctxt sys =
     (sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking)
   where
-    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
+    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
     getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
       Just (viewTerm -> FApp o _)
@@ -1138,7 +1138,7 @@ smartRanking :: ProofContext
 smartRanking ctxt allowPremiseGLoopBreakers sys =
     sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
   where
-    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcCaseDists $ ctxt
+    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
     getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
       Just (viewTerm -> FApp o _)
