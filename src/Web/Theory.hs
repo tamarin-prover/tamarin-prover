@@ -381,7 +381,7 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
         cases   = getCaseDistinction kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
-        chainInfo | nChains == 0 = "all deconstructions solved"
+        chainInfo | nChains == 0 = "deconstructions complete"
                   | otherwise    = show nChains ++ " partial deconstructions left"
 
     bold                = withTag "strong" [] . text
@@ -462,7 +462,7 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
         cases   = getDiffCaseDistinction s isdiff kind thy
         nChains = sum $ map (sum . unsolvedChainConstraints) cases
         nCases  = int (length cases) <-> text "cases"
-        chainInfo | nChains == 0 = "all deconstructions solved"
+        chainInfo | nChains == 0 = "deconstructions complete"
                   | otherwise    = show nChains ++ " partial deconstructions left"
 
     bold                 = withTag "strong" [] . text
