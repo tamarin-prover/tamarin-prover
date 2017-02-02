@@ -5,8 +5,8 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
--- Big-step proofs using case distinctions on the possible sources of a fact.
-module Theory.Constraint.Solver.CaseDistinctions (
+-- Big-step proofs computing possible sources of a fact.
+module Theory.Constraint.Solver.Sources (
   -- * Precomputed case distinctions
 
   -- ** Queries

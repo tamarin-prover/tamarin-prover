@@ -59,7 +59,7 @@ module Theory.Constraint.Solver (
   ) where
 
 import           Logic.Connectives
-import           Theory.Constraint.Solver.CaseDistinctions
+import           Theory.Constraint.Solver.Sources
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.ProofMethod
 -- import           Theory.Constraint.Solver.Types

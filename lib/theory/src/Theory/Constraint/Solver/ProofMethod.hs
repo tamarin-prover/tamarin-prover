@@ -57,7 +57,7 @@ import           Safe
 import           System.IO.Unsafe
 import           System.Process
 
-import           Theory.Constraint.Solver.CaseDistinctions
+import           Theory.Constraint.Solver.Sources
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
