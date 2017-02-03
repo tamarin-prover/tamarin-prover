@@ -33,7 +33,7 @@ module Theory.Text.Pretty (
   , kwQED
   , kwLemma
   , kwDiffLemma
-  , kwAxiom
+  , kwRestriction
 
   -- ** Composed forms
   , kwRuleModulo
@@ -107,15 +107,15 @@ closedComment_ ls = comment $ fsep [text "/*", text ls, text "*/"]
 kwTheoryHeader :: HighlightDocument d => d -> d
 kwTheoryHeader name = keyword_ "theory" <-> name <-> keyword_ "begin"
 
-kwEnd, kwBy, kwCase, kwNext, kwQED, kwAxiom, kwLemma, kwDiffLemma :: HighlightDocument d => d
-kwEnd       = keyword_ "end"
-kwBy        = keyword_ "by"
-kwCase      = keyword_ "case"
-kwNext      = keyword_ "next"
-kwQED       = keyword_ "qed"
-kwAxiom     = keyword_ "axiom"
-kwLemma     = keyword_ "lemma"
-kwDiffLemma = keyword_ "diffLemma"
+kwEnd, kwBy, kwCase, kwNext, kwQED, kwRestriction, kwLemma, kwDiffLemma :: HighlightDocument d => d
+kwEnd         = keyword_ "end"
+kwBy          = keyword_ "by"
+kwCase        = keyword_ "case"
+kwNext        = keyword_ "next"
+kwQED         = keyword_ "qed"
+kwRestriction = keyword_ "restriction"
+kwLemma       = keyword_ "lemma"
+kwDiffLemma   = keyword_ "diffLemma"
 
 kwModulo :: HighlightDocument d
          => String  -- ^ What

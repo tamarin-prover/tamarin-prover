@@ -587,9 +587,9 @@ formulaReports thy = do
                      let header = "lemma " ++ quote (get lName l)
                          fm     = get lFormula l
                      return (header, fm)
-              <|> do AxiomItem ax <- get thyItems thy
-                     let header = "axiom " ++ quote (get axName ax)
-                         fm     = get axFormula ax
+              <|> do RestrictionItem rstr <- get thyItems thy
+                     let header = "restriction " ++ quote (get rstrName rstr)
+                         fm     = get rstrFormula rstr
                      return (header, fm)
 
     -- check that only message and node variables are used
@@ -653,9 +653,9 @@ formulaReportsDiff thy = do
                      let header = show s ++ " lemma " ++ quote (get lName l)
                          fm     = get lFormula l
                      return (header, fm)
-              <|> do EitherAxiomItem (s, ax) <- get diffThyItems thy
-                     let header = show s ++ " axiom " ++ quote (get axName ax)
-                         fm     = get axFormula ax
+              <|> do EitherRestrictionItem (s, rstr) <- get diffThyItems thy
+                     let header = show s ++ " restriction " ++ quote (get rstrName rstr)
+                         fm     = get rstrFormula rstr
                      return (header, fm)
 
     -- check that only message and node variables are used

@@ -46,7 +46,7 @@ module Theory.Constraint.System (
   , dpcProtoRules
   , dpcDestrRules
   , dpcConstrRules
-  , dpcAxioms
+  , dpcRestrictions
   , eitherProofContext
 
   -- ** Classified rules
@@ -119,8 +119,8 @@ module Theory.Constraint.System (
 
   , isCorrectDG
   , getMirrorDG
-  , doAxiomsHold
-  , filterAxioms
+  , doRestrictionsHold
+  , filterRestrictions
   
   , checkIndependence
   
@@ -379,7 +379,7 @@ data DiffProofContext = DiffProofContext
        , _dpcProtoRules           :: [ProtoRuleE]
        , _dpcConstrRules          :: [RuleAC]
        , _dpcDestrRules           :: [RuleAC]
-       , _dpcAxioms               :: [(Side, [LNGuarded])]
+       , _dpcRestrictions               :: [(Side, [LNGuarded])]
        }
        deriving( Eq, Ord, Show )
 
@@ -445,25 +445,25 @@ emptyDiffSystem = DiffSystem
 
 -- | Returns the constraint system that has to be proven to show that given
 -- formula holds in the context of the given theory.
-formulaToSystem :: [LNGuarded]           -- ^ Axioms to add
+formulaToSystem :: [LNGuarded]           -- ^ Restrictions to add
                 -> SourceKind            -- ^ Source kind
                 -> SystemTraceQuantifier -- ^ Trace quantifier
                 -> Bool                  -- ^ In diff proofs, all action goals have to be resolved
                 -> LNFormula
                 -> System
-formulaToSystem axioms kind traceQuantifier isdiff fm = 
-      insertLemmas safetyAxioms
+formulaToSystem restrictions kind traceQuantifier isdiff fm = 
+      insertLemmas safetyRestrictions
     $ L.set sFormulas (S.singleton gf2)
     $ (emptySystem kind isdiff)
   where
-    (safetyAxioms, otherAxioms) = partition isSafetyFormula axioms
+    (safetyRestrictions, otherRestrictions) = partition isSafetyFormula restrictions
     gf0 = formulaToGuarded_ fm
     gf1 = case traceQuantifier of
       ExistsSomeTrace -> gf0
       ExistsNoTrace   -> gnot gf0
-    -- Non-safety axioms must be added to the formula, as they render the set
+    -- Non-safety restrictions must be added to the formula, as they render the set
     -- of traces non-prefix-closed, which makes the use of induction unsound.
-    gf2 = gconj $ gf1 : otherAxioms
+    gf2 = gconj $ gf1 : otherRestrictions
 
 -- | Add a lemma / additional assumption to a constraint system.
 insertLemma :: LNGuarded -> System -> System
@@ -602,7 +602,7 @@ getOriginalRule ctxt side (Rule rule _ _ _) = case rule of
 
 
 -- | Returns true if the graph is correct, i.e. complete and conclusions and premises match
--- | Note that this does not check if all goals are solved, nor if any axioms are violated!
+-- | Note that this does not check if all goals are solved, nor if any restrictions are violated!
 -- FIXME: consider implicit deduction
 isCorrectDG :: System -> Bool
 isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) True (L.get sNodes sys)
@@ -717,9 +717,9 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
         candidateSubsts (compose subst' subst) as
 
 
--- | Removes all axioms that are not relevant for the system, i.e. that only contain atoms not present in the system.
-filterAxioms :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
-filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
+-- | Removes all restrictions that are not relevant for the system, i.e. that only contain atoms not present in the system.
+filterRestrictions :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
+filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
   where
     runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
 
@@ -731,7 +731,7 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
          gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
-                                          Nothing               -> error "Bug in filterAxioms, please report."
+                                          Nothing               -> error "Bug in filterRestrictions, please report."
                                           Just (_, _, atos, gf) -> (unifiableNodes gf) || (unifiableAtoms atos)
 
     unifiableAtoms :: [Atom (VTerm Name (LVar))] -> Bool
@@ -747,13 +747,13 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
 
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
-doAxiomsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
-doAxiomsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: This is a temporary simulation of diff-safe axioms!
+doRestrictionsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
+doRestrictionsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: This is a temporary simulation of diff-safe restrictions!
   if (all (== gtrue) (simplify formulas isSolved))
-    then Just $ {-trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} True
+    then Just $ {-trace ("doRestrictionsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} True
     else if (any (== gfalse) (simplify formulas isSolved))
-          then Just $ {-trace ("doAxiomsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} False
-          else {-trace ("doAxiomsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} Nothing
+          then Just $ {-trace ("doRestrictionsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} False
+          else {-trace ("doRestrictionsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} Nothing
   where
     simplify :: [LNGuarded] -> Bool -> [LNGuarded]
     simplify forms solved = if ({-trace ("step: " ++ show forms ++ " " ++ show (step forms solved))-} (step forms solved)) == forms
@@ -1144,24 +1144,24 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
 --     help = do 
 --       side <- L.get dsSide se
 -- --       system <- L.get dsSystem se
---       axioms <- Just $ L.get dpcAxioms ctxt
---       sideaxioms <- Just $ filter (\x -> fst x == side) axioms
--- --       formulas <- Just $ concat $ map snd sideaxioms
--- --       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
+--       restrictions <- Just $ L.get dpcRestrictions ctxt
+--       siderestrictions <- Just $ filter (\x -> fst x == side) restrictions
+-- --       formulas <- Just $ concat $ map snd siderestrictions
+-- --       evalFms <- Just $ doRestrictionsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
 -- --       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
---       return $ concat $ map snd sideaxioms
+--       return $ concat $ map snd siderestrictions
 -- 
 --     help2 :: Maybe [LNGuarded]
 --     help2 = do 
 --       side2 <- L.get dsSide se
 --       side <- Just $ if side2 == LHS then RHS else LHS
 -- --       system <- L.get dsSystem se
---       axioms <- Just $ L.get dpcAxioms ctxt
---       sideaxioms <- Just $ filter (\x -> fst x == side) axioms
--- --       formulas <- Just $ concat $ map snd sideaxioms
--- --       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
+--       restrictions <- Just $ L.get dpcRestrictions ctxt
+--       siderestrictions <- Just $ filter (\x -> fst x == side) restrictions
+-- --       formulas <- Just $ concat $ map snd siderestrictions
+-- --       evalFms <- Just $ doRestrictionsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
 -- --       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
---       return $ concat $ map snd sideaxioms
+--       return $ concat $ map snd siderestrictions
 
 -- | Pretty print the proof type.
 prettyProofType :: HighlightDocument d => Maybe DiffProofType -> d

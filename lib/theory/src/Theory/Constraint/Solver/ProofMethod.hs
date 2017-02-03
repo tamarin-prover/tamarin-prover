@@ -307,7 +307,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 --     protoRuleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
     
     -- Not checking construction rules is sound, as they are 'trivial' !
-    -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in axioms.
+    -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in restrictions.
     -- LHS or RHS is not important in this case as we only need the names of the rules.
     ruleEquivalence :: M.Map CaseName DiffSystem
     ruleEquivalence = foldl ruleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) (protoRulesAC LHS)
@@ -317,7 +317,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     backwardSearchSystem :: Side -> DiffSystem -> String -> DiffSystem
     backwardSearchSystem s sys' rulename = L.set dsSide (Just s)
-      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcAxioms ctxt) RefinedSource ExistsSomeTrace True (formula rulename))) sys'
+      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcRestrictions ctxt) RefinedSource ExistsSomeTrace True (formula rulename))) sys'
 
     startBackwardSearch :: String -> M.Map CaseName DiffSystem
     startBackwardSearch rulename = M.insert ("LHS") (backwardSearchSystem LHS sys rulename) $ M.insert ("RHS") (backwardSearchSystem RHS sys rulename) $ M.empty
@@ -337,14 +337,14 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     checkOtherSide :: Side -> System -> Maybe Bool
     checkOtherSide s sys'= case getMirrorDG ctxt s sys' of
-                             Just sys'' -> {-trace ("RE: axioms: " ++ (show (axioms (opposite s) sys'')) ++ " " ++ (show s) ++ " " ++ show (isSolved s sys'))-} (doAxiomsHold (oppositeCtxt s) sys'' (axioms (opposite s) sys'') (isSolved s sys'))
+                             Just sys'' -> {-trace ("RE: restrictions: " ++ (show (restrictions (opposite s) sys'')) ++ " " ++ (show s) ++ " " ++ show (isSolved s sys'))-} (doRestrictionsHold (oppositeCtxt s) sys'' (restrictions (opposite s) sys'') (isSolved s sys'))
                              Nothing    -> Just False
             where
               oppositeCtxt s' = eitherProofContext ctxt (opposite s')
-              axioms s' sys'' = filterAxioms (oppositeCtxt s') sys'' $ axioms' s' $ L.get dpcAxioms ctxt
+              restrictions s' sys'' = filterRestrictions (oppositeCtxt s') sys'' $ restrictions' s' $ L.get dpcRestrictions ctxt
 
-              axioms' _ []              = []
-              axioms' s' ((s'', form):xs) = if s' == s'' then form ++ (axioms' s' xs) else (axioms' s' xs)
+              restrictions' _ []              = []
+              restrictions' s' ((s'', form):xs) = if s' == s'' then form ++ (restrictions' s' xs) else (restrictions' s' xs)
     
     
     

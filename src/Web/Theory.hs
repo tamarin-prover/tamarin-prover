@@ -389,7 +389,7 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     messageLink         = overview "Message theory" (text "") TheoryMessage
     ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
     ruleLinkMsg         = "Multiset rewriting rules" ++
-                          if null(theoryAxioms thy) then "" else " and axioms"
+                          if null(theoryRestrictions thy) then "" else " and restrictions"
 
     reqCasesLink name k = overview name (casesInfo k) (TheorySource k 0 0)
 
@@ -471,7 +471,7 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     messageLink s isdiff = overview (show s ++ ": Message theory" ++ if isdiff then " [Diff]" else "") (text "") (DiffTheoryMessage s isdiff)
     ruleLink s isdiff    = overview (ruleLinkMsg s isdiff) (rulesInfo s isdiff) (DiffTheoryRules s isdiff)
     ruleLinkMsg s isdiff = show s ++ ": Multiset rewriting rules " ++
-                           (if null(diffTheorySideAxioms s thy) then "" else " and axioms") ++ (if isdiff then " [Diff]" else "")
+                           (if null(diffTheorySideRestrictions s thy) then "" else " and restrictions") ++ (if isdiff then " [Diff]" else "")
 
     reqCasesLink s name k isdiff = overview name (casesInfo s k isdiff) (DiffTheorySource s k isdiff 0 0)
 
@@ -782,8 +782,8 @@ rulesSnippet thy = vcat
         fsepList (text . showFactTagArity) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
         vsep $ map prettyRuleAC msrRules
-    , ppWithHeader "Axioms Restricting the Set of Traces" $
-        vsep $ map prettyAxiom $ theoryAxioms thy
+    , ppWithHeader "Restrictions of the Set of Traces" $
+        vsep $ map prettyRestriction $ theoryRestrictions thy
     ]
   where
     msrRules   = get crProtocol $ getClassifiedRules thy
@@ -831,8 +831,8 @@ rulesDiffSnippetSide s isdiff thy = vcat
         fsepList (text . showFactTagArity) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
         vsep $ map prettyRuleAC msrRules
-    , ppWithHeader "Axioms Restricting the Set of Traces" $
-        vsep $ map prettyAxiom $ diffTheorySideAxioms s thy
+    , ppWithHeader "Restrictions of the Set of Traces" $
+        vsep $ map prettyRestriction $ diffTheorySideRestrictions s thy
     ]
   where
     msrRules = get crProtocol $ getDiffClassifiedRules s isdiff thy
@@ -1349,7 +1349,7 @@ titleThyPath :: ClosedTheory -> TheoryPath -> String
 titleThyPath thy path = go path
   where
     go TheoryHelp                       = "Theory: " ++ get thyName thy
-    go TheoryRules                      = "Multiset rewriting rules and axioms"
+    go TheoryRules                      = "Multiset rewriting rules and restrictions"
     go TheoryMessage                    = "Message theory"
     go (TheorySource RawSource _ _)     = "Raw sources"
     go (TheorySource RefinedSource _ _) = "Refined sources"
@@ -1370,8 +1370,8 @@ titleDiffThyPath :: ClosedDiffTheory -> DiffTheoryPath -> String
 titleDiffThyPath thy path = go path
   where
     go DiffTheoryHelp                           = "Theory: " ++ get diffThyName thy
-    go (DiffTheoryRules s d)                    = "Multiset rewriting rules and axioms [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
-    go DiffTheoryDiffRules                      = "Multiset rewriting rules and axioms - unprocessed"
+    go (DiffTheoryRules s d)                    = "Multiset rewriting rules and restrictions [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
+    go DiffTheoryDiffRules                      = "Multiset rewriting rules and restrictions - unprocessed"
     go (DiffTheoryMessage s d)                  = "Message theory [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
     go (DiffTheorySource s RawSource d _ _)     = "Raw sources [" ++ show s ++ "]" ++ if d then " [Diff]" else ""
     go (DiffTheorySource s RefinedSource d _ _) = "Refined sources [" ++ show s ++ "]" ++ if d then " [Diff]" else ""

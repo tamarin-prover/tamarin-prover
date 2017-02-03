@@ -77,14 +77,14 @@ unsolvedChainConstraints =
 -- given typing assumptions are justified.
 initialSource
     :: ProofContext
-    -> [LNGuarded] -- ^ Axioms.
+    -> [LNGuarded] -- ^ Restrictions.
     -> Goal
     -> Source
-initialSource ctxt axioms goal =
+initialSource ctxt restrictions goal =
     Source goal cases
   where
     polish ((name, se), _) = ([name], se)
-    se0   = insertLemmas axioms $ emptySystem RawSource $ get pcDiffContext ctxt
+    se0   = insertLemmas restrictions $ emptySystem RawSource $ get pcDiffContext ctxt
     cases = fmap polish $
         runReduction instantiate ctxt se0 (avoid (goal, se0))
     instantiate = do
@@ -336,9 +336,9 @@ saturateSources ctxt thsInit =
 -- | Precompute a saturated set of case distinctions.
 precomputeSources
     :: ProofContext
-    -> [LNGuarded]       -- ^ Axioms.
+    -> [LNGuarded]       -- ^ Restrictions.
     -> [Source]
-precomputeSources ctxt axioms =
+precomputeSources ctxt restrictions =
     map cleanupCaseNames (saturateSources ctxt rawSources)
   where
     cleanupCaseNames = modify cdCases $ fmap $ first $
@@ -346,7 +346,7 @@ precomputeSources ctxt axioms =
       . map (filter (`elem` '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']))
 
     rawSources =
-        (initialSource ctxt axioms <$> (protoGoals ++ msgGoals))
+        (initialSource ctxt restrictions <$> (protoGoals ++ msgGoals))
 
     -- construct source starting from facts from non-special rules
     protoGoals = someProtoGoal <$> absProtoFacts
