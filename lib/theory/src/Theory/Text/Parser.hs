@@ -265,7 +265,7 @@ moduloE, moduloAC :: Parser ()
 moduloE  = modulo "E"
 moduloAC = modulo "AC"
 
-{-
+{- -- This has not been renamed from typing to source, as it is unclear.
 -- | Parse a typing assertion modulo E.
 typeAssertions :: Parser TypingE
 typeAssertions = fmap TypingE $
@@ -528,8 +528,8 @@ legacyDiffAxiom = ParseRestriction <$> (symbol "axiom" *> identifier)
 -- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Parser LemmaAttribute
 lemmaAttribute = asum
-  [ symbol "typing"        *> pure TypingLemma
---  , symbol "sources"       *> pure TypingLemma
+  [ symbol "typing"        *> pure SourceLemma -- legacy support, need to emit deprecation warning
+  , symbol "sources"       *> pure SourceLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)

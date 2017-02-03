@@ -632,7 +632,7 @@ conjoinSystem :: System -> Reduction ()
 conjoinSystem sys = do
     kind <- getM sSourceKind
     unless (kind == get sSourceKind sys) $
-        error "conjoinSystem: typing-kind mismatch"
+        error "conjoinSystem: source-kind mismatch"
     joinSets sSolvedFormulas
     joinSets sLemmas
     joinSets sEdges

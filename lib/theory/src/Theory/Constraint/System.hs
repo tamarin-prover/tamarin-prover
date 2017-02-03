@@ -158,7 +158,7 @@ module Theory.Constraint.System (
   , sLemmas
   , insertLemmas
 
-  -- ** Keeping track of typing assumptions
+  -- ** Keeping track of source assumptions
   , SourceKind(..)
   , sSourceKind
 

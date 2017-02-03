@@ -289,7 +289,7 @@ openRuleCache = intruderRules . L.get crcRules
 openProtoRule :: ClosedProtoRule -> OpenProtoRule
 openProtoRule = L.get cprRuleE
 
--- | Close a protocol rule; i.e., compute AC variant and typing assertion
+-- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
 closeProtoRule :: MaudeHandle -> OpenProtoRule -> ClosedProtoRule
 closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
@@ -311,7 +311,7 @@ closeIntrRule hnd ir                                            = ir
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.
 closeRuleCache :: [LNGuarded]        -- ^ Restrictions to use.
-               -> [LNGuarded]        -- ^ Typing lemmas to use.
+               -> [LNGuarded]        -- ^ Source lemmas to use.
                -> SignatureWithMaude -- ^ Signature of theory.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
@@ -336,7 +336,7 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
     -- distinctions for properties proven using induction.
     safetyRestrictions = filter isSafetyFormula restrictions
     rawSources         = precomputeSources ctxt0 safetyRestrictions
-    refinedSources     = refineWithTypingAsms typAsms ctxt0 rawSources
+    refinedSources     = refineWithSourceAsms typAsms ctxt0 rawSources
 
     -- Maude handle
     hnd = L.get sigmMaudeHandle sig
@@ -389,7 +389,7 @@ $(mkLabels [''Restriction])
 
 -- | An attribute for a 'Lemma'.
 data LemmaAttribute =
-         TypingLemma
+         SourceLemma
        | ReuseLemma
        | InvariantLemma
        | HideLemma String
@@ -457,11 +457,11 @@ toSystemTraceQuantifier :: TraceQuantifier -> SystemTraceQuantifier
 toSystemTraceQuantifier AllTraces   = ExistsNoTrace
 toSystemTraceQuantifier ExistsTrace = ExistsSomeTrace
 
--- | True iff the lemma can be used as a typing lemma.
-isTypingLemma :: Lemma p -> Bool
-isTypingLemma lem =
+-- | True iff the lemma can be used as a source lemma.
+isSourceLemma :: Lemma p -> Bool
+isSourceLemma lem =
      (AllTraces == L.get lTraceQuantifier lem)
-  && (TypingLemma `elem` L.get lAttributes lem)
+  && (SourceLemma `elem` L.get lAttributes lem)
 
 -- | True iff the lemma is a LHS lemma.
 isLeftLemma :: Lemma p -> Bool
@@ -499,10 +499,10 @@ skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemm
 skeletonDiffLemma name atts = DiffLemma name atts
 
 
--- | The source kind allowed for a lemma
+-- | The source kind allowed for a lemma.
 lemmaSourceKind :: Lemma p -> SourceKind
 lemmaSourceKind lem
-  | TypingLemma `elem` L.get lAttributes lem = RawSource
+  | SourceLemma `elem` L.get lAttributes lem = RawSource
   | otherwise                                = RefinedSource
 
 -- | Adds the LHS lemma attribute.
@@ -1030,7 +1030,7 @@ getProofContext l thy = ProofContext
     cases   = case kind of RawSource     -> crcRawSources
                            RefinedSource -> crcRefinedSources
     inductionHint
-      | any (`elem` [TypingLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
+      | any (`elem` [SourceLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
       | otherwise                                                        = AvoidInduction
 
 -- | Get the proof context for a lemma of the closed theory.
@@ -1067,7 +1067,7 @@ getProofContextDiff s l thy = case s of
     cases   = case kind of RawSource     -> crcRawSources
                            RefinedSource -> crcRefinedSources
     inductionHint
-      | any (`elem` [TypingLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
+      | any (`elem` [SourceLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
       | otherwise                                                        = AvoidInduction
 
 -- | Get the proof context for a diff lemma of the closed theory.
@@ -1150,7 +1150,7 @@ getDiffSource RHS True  RefinedSource = L.get (crcRefinedSources . diffThyDiffCa
 -- construction
 ---------------
 
--- | Close a protocol rule; i.e., compute AC variant and typing assertion
+-- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
 closeEitherProtoRule :: MaudeHandle -> (Side, OpenProtoRule) -> (Side, ClosedProtoRule)
 closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd ruE)
@@ -1220,13 +1220,13 @@ closeDiffTheoryWithMaude sig thy0 = do
               EitherRestrictionItem
               DiffTextItem
             
-    -- extract typing restrictions and lemmas
+    -- extract source restrictions and lemmas
     restrictionsLeft  = do EitherRestrictionItem (LHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
     restrictionsRight = do EitherRestrictionItem (RHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
     typAsms = do EitherLemmaItem (_, lem) <- items
-                 guard (isTypingLemma lem)
+                 guard (isSourceLemma lem)
                  return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
@@ -1276,11 +1276,11 @@ closeTheoryWithMaude sig thy0 = do
        (LemmaItem . fmap skeletonToIncrementalProof)
        TextItem
 
-    -- extract typing restrictions and lemmas
+    -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
                       return $ formulaToGuarded_ $ L.get rstrFormula rstr
     typAsms      = do LemmaItem lem <- items
-                      guard (isTypingLemma lem)
+                      guard (isSourceLemma lem)
                       return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
@@ -1647,7 +1647,7 @@ prettyLemmaName l = case L.get lAttributes l of
       as -> text (L.get lName l) <->
             (brackets $ fsep $ punctuate comma $ map prettyLemmaAttribute as)
   where
-    prettyLemmaAttribute TypingLemma    = text "typing"
+    prettyLemmaAttribute SourceLemma    = text "sources"
     prettyLemmaAttribute ReuseLemma     = text "reuse"
     prettyLemmaAttribute InvariantLemma = text "use_induction"
     prettyLemmaAttribute (HideLemma s)  = text ("hide_lemma=" ++ s)

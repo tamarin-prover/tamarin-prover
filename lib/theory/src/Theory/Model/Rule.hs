@@ -265,7 +265,7 @@ data ProtoRuleName =
 
 
 -- | Information for protocol rules modulo AC. The variants list the possible
--- instantiations of the free variables of the rule. The typing is interpreted
+-- instantiations of the free variables of the rule. The source is interpreted
 -- modulo AC; i.e., its variants were also built.
 data ProtoRuleACInfo = ProtoRuleACInfo
        { _pracName         :: ProtoRuleName
@@ -643,7 +643,7 @@ unionRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "union")) (map xifac
 type RuleACConstrs = Disj LNSubstVFresh
 
 -- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
--- protocol rule, then the given typing and variants also need to be handled.
+-- protocol rule, then the given source and variants also need to be handled.
 someRuleACInst :: MonadFresh m
                => RuleAC
                -> m (RuleACInst, Maybe RuleACConstrs)
@@ -660,7 +660,7 @@ someRuleACInst =
       ( Rule (IntrInfo i) ps cs as, Nothing )
 
 -- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
--- protocol rule, then the given typing and variants also need to be handled.
+-- protocol rule, then the given source and variants also need to be handled.
 someRuleACInstAvoiding :: HasFrees t 
                => RuleAC
                -> t
@@ -678,7 +678,7 @@ someRuleACInstAvoiding r s =
       ( Rule (IntrInfo i) ps cs as, Nothing )
 
 -- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
--- protocol rule, then the given typing and variants also need to be handled.
+-- protocol rule, then the given source and variants also need to be handled.
 someRuleACInstFixing :: MonadFresh m
                => RuleAC
                -> LNSubst
@@ -697,7 +697,7 @@ someRuleACInstFixing r subst =
 
       
 -- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
--- protocol rule, then the given typing and variants also need to be handled.
+-- protocol rule, then the given source and variants also need to be handled.
 someRuleACInstAvoidingFixing :: HasFrees t 
                => RuleAC
                -> t

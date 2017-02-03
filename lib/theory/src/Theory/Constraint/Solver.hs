@@ -44,7 +44,7 @@ module Theory.Constraint.Solver (
 --   , cdCases
 
   , precomputeSources
-  , refineWithTypingAsms
+  , refineWithSourceAsms
   , unsolvedChainConstraints
 
   -- * Proof methods

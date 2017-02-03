@@ -14,7 +14,7 @@ module Theory.Constraint.Solver.Sources (
 
   -- ** Construction
   , precomputeSources
-  , refineWithTypingAsms
+  , refineWithSourceAsms
 
   -- ** Application
   , solveWithSource
@@ -74,7 +74,7 @@ unsolvedChainConstraints =
 ---------------
 
 -- | The initial source if the given goal is required and the
--- given typing assumptions are justified.
+-- given source assumptions are justified.
 initialSource
     :: ProofContext
     -> [LNGuarded] -- ^ Restrictions.
@@ -389,16 +389,16 @@ precomputeSources ctxt restrictions =
 
     msig = mhMaudeSig . get pcMaudeHandle $ ctxt
 
--- | Refine a set of sources by exploiting additional typing
+-- | Refine a set of sources by exploiting additional source
 -- assumptions.
-refineWithTypingAsms
-    :: [LNGuarded]    -- ^ Typing assumptions to use.
+refineWithSourceAsms
+    :: [LNGuarded]    -- ^ Source assumptions to use.
     -> ProofContext   -- ^ Proof context to use.
     -> [Source]       -- ^ Original, raw sources.
     -> [Source]       -- ^ Manipulated, refined sources.
-refineWithTypingAsms [] _ cases0 =
+refineWithSourceAsms [] _ cases0 =
     fmap ((modify cdCases . fmap . second) (set sSourceKind RefinedSource)) $ cases0
-refineWithTypingAsms assumptions ctxt cases0 =
+refineWithSourceAsms assumptions ctxt cases0 =
     fmap (modifySystems removeFormulas) $
     saturateSources ctxt $
     modifySystems updateSystem <$> cases0
