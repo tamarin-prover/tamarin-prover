@@ -108,16 +108,16 @@ Note that we are using an untyped protocol model. The contents of the 'ni'
 variable in rule R_1 may therefore in general be any message. This leads to
 unsolved chain constraints when checking what message can be extracted from
 the message sent by rule R_1. In order to get rid of these constraints, we
-require the following typing invariant that relates the point of instantiation
+require the following sources invariant that relates the point of instantiation
 to the point of sending by either the adversary or the initiator.
 
-In order to understand the use of this typing invariant you might try the
-follwing experiment. Comment out this typing invariant and then check the
+In order to understand the use of this sources invariant you might try the
+follwing experiment. Comment out this sources invariant and then check the
 precomputed case distinctions in the GUI. Try to complete the proof of the
 'nonce_secrecy' lemma. We need to [reuse] this lemma, as we must exploit the
-typing invariant further during the 'nonce_secrecy' proof.
+sources invariant further during the 'nonce_secrecy' proof.
 */
-lemma types [typing, reuse]:
+lemma types [sources, reuse]:
   " (All ni m1 #i.
        IN_R_1_ni( ni, m1) @ i
        ==>

@@ -83,7 +83,7 @@ rule ChallengeResponder:
 /*
 // do not represent any element as "inv(x)", rather use the y=inv(x)
 // for this lemma to hold, we need to exclude reveal of the LTK that is used to authenticate the incoming message
-lemma No_Inv_exp[use_induction,reuse,typing]:
+lemma No_Inv_exp[use_induction,reuse,sources]:
   all-traces
   "not ((Ex #i x. ExpR( inv(x) ) @ i) | (Ex #i x y. ExpR( x * inv(y) ) @ i))"
 */

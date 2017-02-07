@@ -172,7 +172,7 @@ restriction PCR_Init_unique:
 //////////////////////
 
 // Characterizing the values extractible via unbinding.
-lemma types [typing]:
+lemma types [sources]:
     // Values created by the PCR_Unbind rule
   " (All m d1 d2 #i. PCR_Unbind(d1, d2, m) @ i ==>
         (Ex #j. KU(m) @ j & j < i)

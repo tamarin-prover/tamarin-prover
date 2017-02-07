@@ -6556,7 +6556,7 @@ solve( State_12111111( ~lock10, L_h, h, k, k.1, v ) ▶₀ #t )
   qed
 qed
 
-lemma dec_limits [typing]:
+lemma dec_limits [sources]:
   all-traces
   "∀ k m #t1.
     (DecUsing( k, m ) @ #t1) ⇒

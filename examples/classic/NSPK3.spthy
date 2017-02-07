@@ -17,7 +17,7 @@ builtins: asymmetric-encryption
    Status:      working
 
    Note that we are using explicit global constants for discerning the
-   different encryption instead of the implicit typing.
+   different encryption instead of the implicit sources.
  */
 
 
@@ -113,7 +113,7 @@ a lot.
 See 'NSLPK3.spthy' for a detailed explanation of the construction of this
 invariant.
 */
-lemma types [typing]:
+lemma types [sources]:
   " (All ni m1 #i.
        IN_R_1_ni( ni, m1) @ i
        ==>

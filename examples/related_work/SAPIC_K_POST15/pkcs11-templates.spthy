@@ -390,7 +390,7 @@ restriction predicate1:
 restriction predicate0:
 	"All #i t_wrap t_unwrap t_enc t_dec t_sens t_extr t_trus t_wwt t_wt t_ut wrap unwrap enc dec sens extr trus wwt wt ut. Pred_permits(t_wrap,t_unwrap,t_enc,t_dec,t_sens,t_extr,t_trus,t_wwt,t_wt,t_ut,wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> (t_wrap = wrap & (t_unwrap = unwrap & (t_enc = enc & (t_dec = dec & (t_sens = sens & (t_extr = extr & (t_trus = trus & (t_wwt = wwt & (t_wt = wt & t_ut = ut)))))))))"
 
-lemma dec_limits [typing]:
+lemma dec_limits [sources]:
 "	( All k m #t1. DecUsing(k, m) @ t1 ==> ( Ex h2 k2 #t2 #t3. NewKey(h2, k2, 'on') @ t2 & KU(k2) @ t3 & t2 < t1 & t3 < t1 ) | ( Ex h2 #t2 #t3 #t4. NewKey(h2, k, 'off') @ t2 & KU(k) @ t3 & KU(m) @ t4 & t2 < t1 & t3 < t1 & t4 < t1 ) | ( Ex #t2. EncUsing(k, m) @ t2 & t2 < t1 ) | ( Ex h2 k2 #t2 #t3 a. Unwrapped(h2, k2, a) @ t2 & KU(k2) @ t3 & t2 < t1 & t3 < t1 ) | ( Ex #t2 #t3 h1 h2 k2. WrapKey(h2, k2, 'on') @ t2 & DecKey(h1, k2, 'on') @ t3 & t2 < t1 & t3 < t1 ) ) & ( All k #t2. GetKeyValue(k) @ t2 ==> Ex h #t1. NewKey(h, k, 'off') @ t1 ) & ( not( Ex h k wrap unwrap enc dec sens extr trus wwt wt #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'trusted'>) @ t ) ) & ( not( Ex h k wrap unwrap enc dec sens extr trus wwt wt #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'untrusted'>) @ t ) ) & ( not( Ex h k wrap unwrap enc dec sens extr trus wwt ut #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'trusted', ut>) @ t ) ) & ( not( Ex h k wrap unwrap enc dec sens extr trus wwt ut #t. Insert(<'obj', h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'untrusted', ut>) @ t ) )"
 
 lemma trusted_as_ut_impossible [reuse]:

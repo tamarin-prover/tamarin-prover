@@ -66,7 +66,7 @@ restriction True_is_true:
 // This type assertion does not hold, as 'pub' could be an failure term. See the
 // case marked below for the missing piece of the puzzle.
 // Note that we interpret its formula modulo AC.
-lemma type_assertion [typing]:
+lemma type_assertion [sources]:
   /* For all messages received by the responder */
   "(All m pub #i. In_Responder(m, pub) @ i ==>
         /* they either came from the adversary and he therefore knows the

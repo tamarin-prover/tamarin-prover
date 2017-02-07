@@ -2,7 +2,7 @@ theory Typing_and_Destructors
 begin
 
 /*
-   Protocol:    Demonstration of the interaction between typing and
+   Protocol:    Demonstration of the interaction between sources and
                 destructors
    Modeler:     Simon Meier
    Date:        July 2012
@@ -72,7 +72,7 @@ rule Responder:
 // This type assertion does not hold, as 'pub' could be an failure term. See the
 // case marked below for the missing piece of the puzzle.
 // Note that we interpret its formula modulo AC.
-lemma type_assertion [typing]:
+lemma type_assertion [sources]:
   /* For all messages received by the responder */
   "(All m pub #i. In_Responder(m, pub) @ i ==>
         /* they either came from the adversary and he therefore knows the

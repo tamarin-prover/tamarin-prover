@@ -994,7 +994,7 @@ guarded formula characterizing all satisfying traces:
 */
 by sorry
 
-lemma dec_limits [typing]:
+lemma dec_limits [sources]:
   all-traces
   "∀ k m #t1.
     (DecUsing( k, m ) @ #t1) ⇒

@@ -147,7 +147,7 @@ rule Accept:
 
 /* This lemma is interpreted module AC, we can therefore safely ignore
    the Tamarin warning */
-lemma No_Inv_exp[use_induction,reuse,typing]:
+lemma No_Inv_exp[use_induction,reuse,sources]:
   all-traces
   "not ((Ex #i x. AExp(inv(x) ) @ i) | (Ex #i x y. AExp(x * inv(y) ) @ i))"
 

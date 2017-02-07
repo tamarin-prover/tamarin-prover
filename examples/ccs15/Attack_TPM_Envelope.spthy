@@ -85,7 +85,7 @@ restriction PCR_Init_unique [left]:
   "∀ #i #j. ((PCR_Init( ) @ #i) ∧ (PCR_Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-lemma types [right, typing]:
+lemma types [right, sources]:
   all-traces
   "∀ m d1 d2 #i.
     (PCR_Unbind( d1, d2, m ) @ #i) ⇒
@@ -100,7 +100,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma types [left, typing]:
+lemma types [left, sources]:
   all-traces
   "∀ m d1 d2 #i.
     (PCR_Unbind( d1, d2, m ) @ #i) ⇒

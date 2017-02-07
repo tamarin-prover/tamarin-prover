@@ -93,9 +93,9 @@ rule C_2:
 
 
 
-// typing lemma
+// sources lemma
 
-lemma types [typing]:
+lemma types [sources]:
   " ( All e #i. In_A_1(e) @ i
   ==>
   (Ex #j . Created_commit_V_1(e) @ j& j<i ) )

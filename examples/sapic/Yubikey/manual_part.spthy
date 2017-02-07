@@ -670,7 +670,7 @@ restriction predicate1:
 restriction predicate0:
   "∀ #i a b. (Pred_smaller( a, b ) @ #i) ⇒ (∃ z. (a+z) = b)"
 
-lemma init_server [typing]:
+lemma init_server [sources]:
   all-traces
   "∀ pid sid k tuple otc tc #i.
     (InitStuff( pid, sid, k, tuple, otc, tc ) @ #i) ⇒
@@ -700,7 +700,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma init_yubikey [typing]:
+lemma init_yubikey [sources]:
   all-traces
   "∀ pid sid k tc #i.
     (YubiPress( pid, sid, k, tc ) @ #i) ⇒

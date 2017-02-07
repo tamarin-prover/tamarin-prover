@@ -2856,7 +2856,7 @@ restriction predicate0:
            ((t_wwt = wwt) ∧ ((t_wt = wt) ∧ (t_ut = ut))))))))))"
   // safety formula
 
-lemma dec_limits [typing]:
+lemma dec_limits [sources]:
   all-traces
   "(((((∀ k m #t1.
          (DecUsing( k, m ) @ #t1) ⇒

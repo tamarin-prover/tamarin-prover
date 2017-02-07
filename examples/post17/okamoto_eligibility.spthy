@@ -89,7 +89,7 @@ rule T_1:
 
 // Typing lemma
 
-lemma types [typing]:
+lemma types [sources]:
   " All e #i. In_A_1(e) @ i
   ==>
   Ex #j . Create_V_1( e )@j & j<i "

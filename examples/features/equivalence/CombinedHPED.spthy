@@ -54,8 +54,8 @@ lemma Ltk_secret:
   All #j #i ltk. ((K(ltk) @ j & LTK(ltk) @ i) ==> F)
   "
 
-//The typing lemma is needed to remove open chains.
-lemma types [typing]:
+//The sources lemma is needed to resolve remaining partial deconstructions.
+lemma types [sources]:
   " (All ni m1 #i.
        IN_R_1_ni( ni, m1) @ i
        ==>

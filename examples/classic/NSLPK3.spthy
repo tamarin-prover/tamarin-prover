@@ -14,7 +14,7 @@ builtins: asymmetric-encryption
    Status:      working
 
    Note that we are using explicit global constants for discerning the
-   different encryption instead of the implicit typing.
+   different encryption instead of the implicit sources.
  */
 
 
@@ -106,16 +106,16 @@ rule Secrecy_claim:
 The contents of the 'ni' variable in rule R_1 may therefore in general be any
 message. This leads to unsolved chain constraints when checking what message
 can be extracted from the message sent by rule R_1. In order to get rid of
-these constraints, we require the following typing invariant that relates the
+these constraints, we require the following sources invariant that relates the
 point of instantiation to the point of sending by either the adversary or the
 initiator.
 
-In order to understand the use of this typing invariant you might try the
-follwing experiment. Comment out this typing invariant and then check the
+In order to understand the use of this sources invariant you might try the
+follwing experiment. Comment out this sources invariant and then check the
 precomputed case distinctions in the GUI. Try to complete the proof of the
 'nonce_secrecy' lemma.
 */
-lemma types [typing]:
+lemma types [sources]:
   " (All ni m1 #i.
        IN_R_1_ni( ni, m1) @ i
        ==>
