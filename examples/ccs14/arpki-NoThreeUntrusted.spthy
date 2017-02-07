@@ -94,7 +94,7 @@ functions: sig/2, pk/1
 /*
  * For the initial modeling, we want to limit the state space. We
  * enforce this by having only limited instances of some rules. This is
- * enforced by axioms and the OnlyOne(x) actions. The meaning of
+ * enforced by restrictions and the OnlyOne(x) actions. The meaning of
  * these is that for each unique x, there should only be one 'OnlyOne'
  * action. For x we typically take the rule name (string form).
  */
@@ -559,8 +559,8 @@ rule Connection_B2a:
 //=========================================================================
 // Axioms for correct modeling
 //=========================================================================
-// Inequalities should be maintained as an axiom
-axiom InEq:
+// Inequalities should be maintained as an restriction
+restriction InEq:
   "(not Ex x #i. NotEq(x,x)@i)"
 //=========================================================================
 // Axioms that restrict the state space
@@ -568,27 +568,27 @@ axiom InEq:
 /********************
 // Each CA x will only consider a cert request y one single time 
 // this gets rid of the unnecessary duplication of this rule
-axiom SingleCASigAcqCA1PerCert:
+restriction SingleCASigAcqCA1PerCert:
   //"(All x y #i #j. CA_Sig_Acq_CA1_exec(x,y) @i & CA_Sig_Acq_CA1_exec(x,y)@j ==> (#i = #j))"
   // For now: perform only one cert request per agent.
   "(All x y z #i #j. CA_Sig_Acq_CA1_exec(x,y) @i & CA_Sig_Acq_CA1_exec(x,z)@j ==> (#i = #j))"
 ********************/
-axiom OnlyOne:
+restriction OnlyOne:
   "(All x #i #j. (OnlyOne(x)@i & OnlyOne(x)@j) ==> (#i = #j))"
-axiom TypesDistinct:
+restriction TypesDistinct:
   "(All t1 t2 x #i #j. (IsType(t1,x)@i & IsType(t2,x)@j) ==> (t1 = t2))"
 //RS: only one key allowed per name for now - this is mostly for exists traces so it doesn't get silly
-axiom SingleKeyPerName:
+restriction SingleKeyPerName:
   "(All a ltk1 ltk2 tr1 tr2 #i #j. (GEN_LTK(a,ltk1,tr1)@i & GEN_LTK(a,ltk2, tr2)@j ==> (#i = #j)))"
 /*
 // Disallow any compromised party
-axiom NoneCompromised:
+restriction NoneCompromised:
   "(not (Ex x #i a.
       ( GEN_LTK(a,x, 'untrusted')@#i )
      ))"
 
 // Experimentally only allow a single compromised party
-axiom MaxOneCompromised:
+restriction MaxOneCompromised:
   "(All x y #i #j a b.
      ( ( GEN_LTK(a,x, 'untrusted')@#i &
          GEN_LTK(b,y, 'untrusted')@#j )
@@ -597,7 +597,7 @@ axiom MaxOneCompromised:
      ))"
 */
 // We don't want more than two compromised parties
-axiom MaxTwoCompromised:
+restriction MaxTwoCompromised:
   "(All x y z #i #j #k a b c.
      ( ( GEN_LTK(a,x, 'untrusted')@#i &
          GEN_LTK(b,y, 'untrusted')@#j &

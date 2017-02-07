@@ -57,13 +57,13 @@ rule (modulo E) ChallengeResponder:
   --[ Challenge( I, R, diff(k, ~z) ), SafeChallenge( ) ]->
    [ Out( diff(k, 'g'^~z) ) ]
 
-axiom safeSingleChallenge [right]:
+restriction safeSingleChallenge [right]:
   "∀ #i1 #i2.
     ((SafeChallenge( ) @ #i1) ∧ (SafeChallenge( ) @ #i2)) ⇒
     (#i1 = #i2)"
   // safety formula
 
-axiom safeSingleChallenge [left]:
+restriction safeSingleChallenge [left]:
   "∀ #i1 #i2.
     ((SafeChallenge( ) @ #i1) ∧ (SafeChallenge( ) @ #i2)) ⇒
     (#i1 = #i2)"

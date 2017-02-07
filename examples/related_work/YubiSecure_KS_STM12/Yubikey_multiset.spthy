@@ -86,10 +86,10 @@ rule Server_ReceiveOTP_NewSession:
         [Server(pid,sid,tc)] //..and the counter value updated.
 
 //we model the larger relation using the smaller action and excluding all traces where it is not correct
-axiom smaller:
+restriction smaller:
 	"All #i a b. Smaller(a,b)@i ==> Ex z. a+z=b"
 
-//axiom transitivity: //axiomatic
+//restriction transitivity: //axiomatic
 //        "All #t1 #t2 a b c. Smaller(a,b)@t1 & Smaller(b,c)@t2
 //        ==> Ex z . Smaller(a,c)@t3 "
 

@@ -203,14 +203,14 @@ rule Corrupt_Ltk:
   [ Out( ~ea ) ]
 
 // Corrupt and obtain session state. Must occur before complete which
-// we ensure with BeforeComplete action and axiom.
+// we ensure with BeforeComplete action and restriction.
 rule Corrupt_SessionState:
   [ !SessionState( sid, ~x, $A ) ]
   --[ Corrupt( $A ), BeforeComplete( sid ) ]->
   [ Out( ~x ) ]
 
 // Corrupt and obtain session key. Must occur before expire which
-// we ensure with BeforeExpire action and axiom.
+// we ensure with BeforeExpire action and restriction.
 rule Corrupt_SessionKey:
   [ !SessionKey( sid, $A, k ) ]
   --[ Corrupt( $A ), BeforeExpire( sid ) ]->
@@ -228,25 +228,25 @@ rule Reveal_SessionKey:
   --[ SessionKeyReveal( sid ), BeforeExpire( sid ) ]->
   [ Out( k ) ]
 
-/* We only consider traces which satisfy these axioms */
+/* We only consider traces which satisfy these restrictions */
 
 // we enforce unique sids since the paper states that "At any point in time a session is
 // in exactly one of the following states: active, completed, aborted, expired."
-axiom sid_unique:
+restriction sid_unique:
    "All #i #j sid. UM1_Activate(sid) @ i & UM1_Activate(sid) @ j ==> #i = #j"
 
 // every agent has at most one registered key
-axiom keyreg_unique:
+restriction keyreg_unique:
    "All #i #j A. KeyReg(A) @ i & KeyReg(A) @ j ==> #i = #j"
 
 // this assumption is used in the proof. Without this restriction, a completed
 // session with actor and peer A is its own matching session.
-axiom actor_ineq_peer:
+restriction actor_ineq_peer:
    "not (Ex #i A. Agents(A,A) @ i)"
 
 // The reveals and the corrupt rules that reveal session state and session key are not performed
 // too late.
-axiom corrupt_and_reveal_not_too_early:
+restriction corrupt_and_reveal_not_too_early:
    "  (All #i #j s role_ k_. BeforeComplete( s ) @ i & Complete(s, role_, k_ ) @ j ==> #i < #j)
     & (All #i #j s.          BeforeExpire( s )   @ i & Expire( s ) @ j ==> #i < #j)"
 

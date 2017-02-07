@@ -24,7 +24,7 @@ rule AllowReveals:
 --[ ]->
   [ RevealsAllowedToken() ]
 
-axiom SingleToken:
+restriction SingleToken:
   " All #i1 #i2. CreateTokenOnce() @i1 & CreateTokenOnce() @i2 ==> #i1 = #i2"
 
 // Public key infrastructure
@@ -107,21 +107,21 @@ lemma Perfect_Forward_Secrecy:
   "
 */
 
-//axiom singleChallenge:
+//restriction singleChallenge:
 //  "All I R k I2 R2 k2 #j #j2. Challenge(I, R, k)@j & Challenge(I2, R2, k2)@ j2 ==> #j = #j2"
 
-axiom safeSingleChallenge:
+restriction safeSingleChallenge:
   " All #i1 #i2. SafeChallenge() @i1 & SafeChallenge() @i2 ==> #i1 = #i2"
 
-// Note that these axioms are only for observational equivalence, comment them out for trace properties!
-//axiom NoChallengeAndRevealInitiatorBefore:
+// Note that these restrictions are only for observational equivalence, comment them out for trace properties!
+//restriction NoChallengeAndRevealInitiatorBefore:
 //  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(I)@k & k < i)"
 
-//axiom NoChallengeAndRevealResponder:
+//restriction NoChallengeAndRevealResponder:
 //  "not (Ex I R key #i #k. Challenge(I, R, key)@i & LtkReveal(R)@k & k < i)"
 
 /*
-axiom CombinedStuff:
+restriction CombinedStuff:
   "All I R sessKey #i. 
      Challenge(I,R,sessKey) @ i 
      ==>

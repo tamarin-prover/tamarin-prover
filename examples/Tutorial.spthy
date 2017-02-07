@@ -292,15 +292,15 @@ specified. We therefore recommend to use parentheses, when in doubt.
 */
 
 /*
-Note that you can specify additional axioms that restrict the set of
+Note that you can specify additional restrictions that restrict the set of
 considered traces. In this example, we restrict our attention to traces where
 all equality checks succeed. */
 
-axiom Equality_Checks_Succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
+restriction Equality_Checks_Succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
 
 /*
 The following two properties should be self-explanatory.
-Note that the order between axioms and lemmas does not matter. All axioms are
+Note that the order between restrictions and lemmas does not matter. All restrictions are
 always available/assumed in the proofs of all security properties.
 */
 
@@ -365,7 +365,7 @@ lemma Client_auth_injective:
   Tutorial security protocol theory with the lemmas and their attached
   (dis)proofs.
 
-  Note that when adding inconsistent axioms, you can prove any property. To
+  Note that when adding inconsistent restrictions, you can prove any property. To
   check that there still exist traces, you can state an 'exists-trace' lemma.
   When modeling protocols such existence proofs are very useful sanity checks.
 

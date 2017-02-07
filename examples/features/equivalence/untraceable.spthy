@@ -48,12 +48,12 @@ rule reader2:
   --[ Finished() ]->
   [ ]
 
-// These axioms state that there cannot be more than two keys in the set of keys
+// These restrictions state that there cannot be more than two keys in the set of keys
 // to prevent loops in the backwards search.
-axiom tag_limited_keys:
+restriction tag_limited_keys:
   "All a b c d #i. Tag(a+b+c+d)@i ==> F"
 
-axiom reader_limited_keys:
+restriction reader_limited_keys:
   "All a b c d #i. Reader(a+b+c+d)@i ==> F"
 
 lemma executable:

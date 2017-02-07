@@ -925,11 +925,11 @@ rule (modulo E) Zero0121112:
 
   /* has exactly the trivial AC variant */
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom set_in:
+restriction set_in:
   "∀ x y #t3.
     (IsIn( x, y ) @ #t3) ⇒
     (∃ #t2.
@@ -939,7 +939,7 @@ axiom set_in:
         (Insert( x, yp ) @ #t1) ⇒
         (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
-axiom set_notin:
+restriction set_notin:
   "∀ x #t3.
     (IsNotSet( x ) @ #t3) ⇒
     ((∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1)) ∨
@@ -947,15 +947,15 @@ axiom set_notin:
        ((Delete( x ) @ #t1) ∧ (#t1 < #t3)) ∧
        (∀ #t2 y. ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ⇒ (#t2 < #t1))))"
 
-axiom predicate_not_eq:
+restriction predicate_not_eq:
   "∀ #i a b. (Pred_not_eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
-axiom predicate_eq:
+restriction predicate_eq:
   "∀ #i a b. (Pred_eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
-axiom immeadiate_in:
+restriction immeadiate_in:
   "∀ t #i.
     (ChannelInEvent( t ) @ #i) ⇒
     (∃ #j.
@@ -963,7 +963,7 @@ axiom immeadiate_in:
        (∀ #k. (Event( ) @ #k) ⇒ ((#k < #j) ∨ (#i < #k)))) ∧
       (∀ #k t2. (K( t2 ) @ #k) ⇒ (((#k < #j) ∨ (#i < #k)) ∨ (#k = #j))))"
 
-axiom locking:
+restriction locking:
   "∀ n x np #i #j.
     ((Lock( n, x ) @ #i) ∧ (Lock( np, x ) @ #j)) ⇒
     ((((#i < #j) ∧

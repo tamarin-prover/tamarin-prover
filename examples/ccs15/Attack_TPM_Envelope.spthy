@@ -67,21 +67,21 @@ rule (modulo E) Challenge:
   --[ Challenge( ~s ) ]->
    [ Out( diff(~s, ~f) ) ]
 
-axiom challenge_restriction [right]:
+restriction challenge_restriction [right]:
   "∀ s #i.
     (Challenge( s ) @ #i) ⇒
     (∃ #j #k. (Secret( s ) @ #j) ∧ (Denied( s ) @ #k))"
 
-axiom challenge_restriction [left]:
+restriction challenge_restriction [left]:
   "∀ s #i.
     (Challenge( s ) @ #i) ⇒
     (∃ #j #k. (Secret( s ) @ #j) ∧ (Denied( s ) @ #k))"
 
-axiom PCR_Init_unique [right]:
+restriction PCR_Init_unique [right]:
   "∀ #i #j. ((PCR_Init( ) @ #i) ∧ (PCR_Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom PCR_Init_unique [left]:
+restriction PCR_Init_unique [left]:
   "∀ #i #j. ((PCR_Init( ) @ #i) ∧ (PCR_Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 

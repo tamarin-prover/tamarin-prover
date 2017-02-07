@@ -160,7 +160,7 @@ rule Server_RenewKey:
     ]
 
 // We assume that rule's are only executed if their equality checks succeed.
-axiom Eq_checks_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
+restriction Eq_checks_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
 
 /* The following property proven in Moedersheim's paper is rather easy to
    prove, as it depends only on the fact that secret keys are not leaked by

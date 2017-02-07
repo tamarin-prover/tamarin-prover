@@ -1855,7 +1855,7 @@ rule (modulo E) Zero21111211:
 
   /* has exactly the trivial AC variant */
 
-axiom locking:
+restriction locking:
   "∀ l x lp #t1 #t3.
     ((Lock( l, x ) @ #t1) ∧ (Lock( lp, x ) @ #t3)) ⇒
     ((((#t1 < #t3) ∧
@@ -1871,155 +1871,155 @@ axiom locking:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom progress_1111221_to_1111221111:
+restriction progress_1111221_to_1111221111:
   "∀ p #t1.
     (ProgressFrom_1111221( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1111221111( p ) @ #t2)"
 
-axiom progress_111221_to_1112211:
+restriction progress_111221_to_1112211:
   "∀ p #t1.
     (ProgressFrom_111221( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1112211( p ) @ #t2)"
 
-axiom progress_11111211112121_to_1111121111212111:
+restriction progress_11111211112121_to_1111121111212111:
   "∀ p #t1.
     (ProgressFrom_11111211112121( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1111121111212111( p ) @ #t2)"
 
-axiom progress_111111111112121_to_11111111111212111:
+restriction progress_111111111112121_to_11111111111212111:
   "∀ p #t1.
     (ProgressFrom_111111111112121( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_11111111111212111( p ) @ #t2)"
 
-axiom progress_11112121_to_11112121111:
+restriction progress_11112121_to_11112121111:
   "∀ p #t1.
     (ProgressFrom_11112121( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_11112121111( p ) @ #t2)"
 
-axiom progress_1111121_to_111112111111111_or_111112111121:
+restriction progress_1111121_to_111112111111111_or_111112111121:
   "∀ p #t1.
     (ProgressFrom_1111121( p ) @ #t1) ⇒
     ((∃ #t2. ProgressTo_111112111111111( p ) @ #t2) ∨
      (∃ #t2. ProgressTo_111112111121( p ) @ #t2))"
 
-axiom progress_11111111111111211_to_1111111111111121111:
+restriction progress_11111111111111211_to_1111111111111121111:
   "∀ p #t1.
     (ProgressFrom_11111111111111211( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1111111111111121111( p ) @ #t2)"
 
-axiom progress_111211_to_1112111:
+restriction progress_111211_to_1112111:
   "∀ p #t1.
     (ProgressFrom_111211( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1112111( p ) @ #t2)"
 
-axiom progress_211_to_211112:
+restriction progress_211_to_211112:
   "∀ p #t1.
     (ProgressFrom_211( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_211112( p ) @ #t2)"
 
-axiom progress_211_to_2111112:
+restriction progress_211_to_2111112:
   "∀ p #t1.
     (ProgressFrom_211( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_2111112( p ) @ #t2)"
 
-axiom progress_211_to_21111112:
+restriction progress_211_to_21111112:
   "∀ p #t1.
     (ProgressFrom_211( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_21111112( p ) @ #t2)"
 
-axiom progress_211_to_21111111:
+restriction progress_211_to_21111111:
   "∀ p #t1.
     (ProgressFrom_211( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_21111111( p ) @ #t2)"
 
-axiom progress_11111211112111_to_1111121111211111:
+restriction progress_11111211112111_to_1111121111211111:
   "∀ p #t1.
     (ProgressFrom_11111211112111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1111121111211111( p ) @ #t2)"
 
-axiom progress_111111111112111_to_11111111111211111:
+restriction progress_111111111112111_to_11111111111211111:
   "∀ p #t1.
     (ProgressFrom_111111111112111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_11111111111211111( p ) @ #t2)"
 
-axiom progress_11112111_to_11112111111:
+restriction progress_11112111_to_11112111111:
   "∀ p #t1.
     (ProgressFrom_11112111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_11112111111( p ) @ #t2)"
 
-axiom progress_11112211111_to_111122111111:
+restriction progress_11112211111_to_111122111111:
   "∀ p #t1.
     (ProgressFrom_11112211111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_111122111111( p ) @ #t2)"
 
-axiom progress_111121211111_to_1111212111111:
+restriction progress_111121211111_to_1111212111111:
   "∀ p #t1.
     (ProgressFrom_111121211111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1111212111111( p ) @ #t2)"
 
-axiom progress_111121111111_to_1111211111111:
+restriction progress_111121111111_to_1111211111111:
   "∀ p #t1.
     (ProgressFrom_111121111111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1111211111111( p ) @ #t2)"
 
-axiom progress_1111111_to_111111111111111111_or_1111111111121_or_1111111111111121:
+restriction progress_1111111_to_111111111111111111_or_1111111111121_or_1111111111111121:
   "∀ p #t1.
     (ProgressFrom_1111111( p ) @ #t1) ⇒
     (((∃ #t2. ProgressTo_111111111111111111( p ) @ #t2) ∨
       (∃ #t2. ProgressTo_1111111111121( p ) @ #t2)) ∨
      (∃ #t2. ProgressTo_1111111111111121( p ) @ #t2))"
 
-axiom progress_111_to_111122:
+restriction progress_111_to_111122:
   "∀ p #t1.
     (ProgressFrom_111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_111122( p ) @ #t2)"
 
-axiom progress_111_to_11122:
+restriction progress_111_to_11122:
   "∀ p #t1.
     (ProgressFrom_111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_11122( p ) @ #t2)"
 
-axiom progress_111_to_1111212:
+restriction progress_111_to_1111212:
   "∀ p #t1.
     (ProgressFrom_111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1111212( p ) @ #t2)"
 
-axiom progress_111_to_111112:
+restriction progress_111_to_111112:
   "∀ p #t1.
     (ProgressFrom_111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_111112( p ) @ #t2)"
 
-axiom progress_111_to_11121:
+restriction progress_111_to_11121:
   "∀ p #t1.
     (ProgressFrom_111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_11121( p ) @ #t2)"
 
-axiom progress_111_to_1111211:
+restriction progress_111_to_1111211:
   "∀ p #t1.
     (ProgressFrom_111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_1111211( p ) @ #t2)"
 
-axiom progress_111_to_111111:
+restriction progress_111_to_111111:
   "∀ p #t1.
     (ProgressFrom_111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_111111( p ) @ #t2)"
 
-axiom progress__to_2:
+restriction progress__to_2:
   "∀ p #t1.
     (ProgressFrom_( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_2( p ) @ #t2)"
 
-axiom progress__to_1:
+restriction progress__to_1:
   "∀ p #t1.
     (ProgressFrom_( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_1( p ) @ #t2)"
 
-axiom progress_init:
+restriction progress_init:
   "∃ #t. Init( ) @ #t"
 
-axiom resilient:
+restriction resilient:
   "∀ #i x y.
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
 

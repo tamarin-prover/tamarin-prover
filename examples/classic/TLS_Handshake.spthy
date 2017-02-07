@@ -152,7 +152,7 @@ rule C_3:
 
 /* TODO: Also model session-key reveals and adapt security properties. */
 
-axiom Eq_check_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
+restriction Eq_check_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
 
 
 /* Session key secrecy from the perspective of both the server and the client

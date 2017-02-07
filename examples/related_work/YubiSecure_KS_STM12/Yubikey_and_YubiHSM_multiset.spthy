@@ -178,7 +178,7 @@ LoginCounter(pid,otc,tc), Smaller(otc,tc)
     [ S_Counter(pid,tc) ]
 
 //we model the larger relation using the smaller action and excluding all traces where it is not correct
-axiom smaller:
+restriction smaller:
 	"All #i a b. Smaller(a,b)@i ==> Ex z. a+z=b"
 
 lemma transitivity: 
@@ -186,7 +186,7 @@ lemma transitivity:
         ==> Ex z . a + z = c"
 
 
-axiom onetime:
+restriction onetime:
     "All #t3 #t4 . OneTime()@#t3 & OneTime()@t4 ==> #t3=#t4"
 
 //LEMMAS:

@@ -100,7 +100,7 @@ rule V_4:
 
 // Axioms
 
-axiom onlyOnce:
+restriction onlyOnce:
   " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j "
 
 

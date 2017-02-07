@@ -67,7 +67,7 @@ rule Server:
 --[ CreatedKey($A,$B,~k) ]->
   [ Out(enc(<<<~n, $B>, ~k>,enc(<~k,$A>,kbs)>, kas)) ]
 
-axiom singlesharedkeyperuser:
+restriction singlesharedkeyperuser:
   "All A #i #j. KeyGen(A) @ i & KeyGen(A) @ j ==> #i = #j"
 
 // This executability test is manually solved below to limit excessive memory

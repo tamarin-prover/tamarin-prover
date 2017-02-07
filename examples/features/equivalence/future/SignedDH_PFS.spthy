@@ -112,17 +112,17 @@ lemma Perfect_Forward_Secrecy:
      )
   "
 
-axiom singleChallenge:
+restriction singleChallenge:
   "All I R I2 R2 #j #j2. Challenge(I, R)@j & Challenge(I2, R2)@ j2 ==> #j = #j2"
 
-// Note that these axioms are only for observational equivalence, comment them out for trace properties!
-//axiom NoChallengeAndRevealInitiatorBefore:
+// Note that these restrictions are only for observational equivalence, comment them out for trace properties!
+//restriction NoChallengeAndRevealInitiatorBefore:
 //  "not (Ex I R #i #k. Challenge(I, R)@i & LtkReveal(I)@k & k < i)"
 
-//axiom NoChallengeAndRevealResponder:
+//restriction NoChallengeAndRevealResponder:
 //  "not (Ex I R #i #k. Challenge(I, R)@i & LtkReveal(R)@k & k < i)"
 
-axiom CombinedStuff:
+restriction CombinedStuff:
   "All I R #i. 
      Challenge(I,R) @ i 
      ==>
@@ -132,7 +132,7 @@ axiom CombinedStuff:
   "
 
 // seems not helpful, ignore
-//axiom OneLongTermKeyPerAgent:
+//restriction OneLongTermKeyPerAgent:
 //  "All A #i #j. Register(A) @ i & Register(A) @ j ==> #i = #j"
 
 /**** OLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLDOLD
@@ -161,7 +161,7 @@ IEqualityRule
      cpair -> init1_case_1: same
 
    LOOPING behavior (and ever-larger trees) are possible, based on repeated Responder instances with unrelated public keys 
-   this is likely due to our axiom only prohibiting LTK-reveals for the challenge not for whenever keys are already available
+   this is likely due to our restriction only prohibiting LTK-reveals for the challenge not for whenever keys are already available
 
 ****/
 

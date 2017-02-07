@@ -165,7 +165,7 @@ rule CreateLockedKey:
 // Axioms; i.e., restrictions on the traces of interest
 ///////////////////////////////////////////////////////
 
-axiom PCR_Init_unique:
+restriction PCR_Init_unique:
   " All #i #j. PCR_Init() @ i & PCR_Init() @ j ==> #i = #j "
 
 // Security Properties

@@ -5,7 +5,7 @@ theory Axioms_and_Induction begin
   Date:   2012 08 06
   Status: Working (exhibits soundness bug in tamarin-0.8.0.0)
 
-  An example demonstrating that axioms must be transformed as well when using
+  An example demonstrating that restrictions must be transformed as well when using
   induction.
 
 */
@@ -17,15 +17,15 @@ rule Step:  [ A(x) ]  --[ Step(x)  ]-> [ B(x) ]
 rule Stop:  [ B(x) ]  --[ Stop(x)  ]-> [ ]
 
 // Note that the set of traces satisfying this trace is *not* prefix-closed.
-axiom Start_implies_Stop:
+restriction Start_implies_Stop:
   "All x #i. Start(x) @ i ==> Ex #j. Stop(x) @ j"
 
 lemma Exists_test [reuse]:
   exists-trace
   "All x #i. Step(x) @ i ==> F"
 
-// Thus we cannot just add the axiom to the proof obligation resulting after
-// the application of induction. We have to add the axiom before the
+// Thus we cannot just add the restriction to the proof obligation resulting after
+// the application of induction. We have to add the restriction before the
 // transformation. This results in a wrong proof of the lemma.
 lemma NoStep_with_induction [use_induction]:
   "All x #i. Step(x) @ i ==> F"
@@ -36,9 +36,9 @@ lemma NoStep_without_induction :
   "All x #i. Step(x) @ i ==> F"
 
 /*
-// When inlining the above axiom, induction would work again.
-// Comment out the above axiom before proving the following lemma.
-lemma NoStep_local_axiom_with_induction [use_induction]:
+// When inlining the above restriction, induction would work again.
+// Comment out the above restriction before proving the following lemma.
+lemma NoStep_local_restriction_with_induction [use_induction]:
   "(All x #i. Start(x) @ i ==> Ex #j. Stop(x) @ j)
   ==>
    (All x #i. Step(x) @ i ==> F)"
