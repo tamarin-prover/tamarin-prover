@@ -504,10 +504,14 @@ restriction :: Parser Restriction
 restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
                           <*> doubleQuoted standardFormula
 
--- | Parse a legacy axiom, now called restriction.
+-- | Fail on parsing an old "axiom" keyword.
 legacyAxiom :: Parser Restriction
-legacyAxiom = Restriction <$> (symbol "axiom" *> identifier <* colon)
-                          <*> doubleQuoted standardFormula
+legacyAxiom = symbol "axiom" *> fail "Using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'."
+
+-- | Parse a legacy axiom, now called restriction.
+--legacyAxiom :: Parser Restriction
+--legacyAxiom = Restriction <$> (symbol "axiom" *> identifier <* colon)
+--                          <*> doubleQuoted standardFormula
 
 -- | Parse a diff restriction.
 diffRestriction :: Parser ParseRestriction
@@ -515,11 +519,15 @@ diffRestriction = ParseRestriction <$> (symbol "restriction" *> identifier)
                     <*> (option [] $ list restrictionAttribute)
                     <*> (colon *> doubleQuoted standardFormula)
 
--- | Parse a legacy diff axiom, now called restriction.
+-- | Fail on parsing an old "axiom" keyword.
 legacyDiffAxiom :: Parser ParseRestriction
-legacyDiffAxiom = ParseRestriction <$> (symbol "axiom" *> identifier)
-              <*> (option [] $ list restrictionAttribute)
-              <*> (colon *> doubleQuoted standardFormula)
+legacyDiffAxiom = symbol "axiom" *> fail "Using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'."
+
+-- | Parse a legacy diff axiom, now called restriction.
+--legacyDiffAxiom :: Parser ParseRestriction
+--legacyDiffAxiom = ParseRestriction <$> (symbol "axiom" *> identifier)
+--              <*> (option [] $ list restrictionAttribute)
+--              <*> (colon *> doubleQuoted standardFormula)
 
 ------------------------------------------------------------------------------
 -- Parsing Lemmas
@@ -528,7 +536,8 @@ legacyDiffAxiom = ParseRestriction <$> (symbol "axiom" *> identifier)
 -- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Parser LemmaAttribute
 lemmaAttribute = asum
-  [ symbol "typing"        *> pure SourceLemma -- legacy support, need to emit deprecation warning
+  [ symbol "typing"        *> fail "Using 'typing' is retired notation, replace all uses of 'typing' by 'sources'."
+--  , symbol "typing"        *> pure SourceLemma -- legacy support, need to emit deprecation warning
   , symbol "sources"       *> pure SourceLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
