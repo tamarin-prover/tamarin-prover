@@ -71,7 +71,7 @@ lemma sanity2:
 exists-trace
 	"Ex a b k #t1 . SessionB(a,b,k)@t1"
 
-lemma types [typing, reuse]:
+lemma sources [sources, reuse]:
   " (All ni m1 #i A.
        IN_R_1_ni( ni, m1,A) @ i
        ==>

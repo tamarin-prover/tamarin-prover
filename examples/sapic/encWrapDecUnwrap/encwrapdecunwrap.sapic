@@ -127,7 +127,7 @@ lemma can_unwrap: //for sanity
 	exists-trace
 	"Ex #t h k.Unwrapped(h,k )@t"
 
-lemma dec_limits[typing]: 
+lemma dec_limits[sources]: 
 // a message that can be decrypted was either encrypted on the device, or some key leaked.
 // Also, every key that is unwrapped at some point was created earlier.
 	"( 

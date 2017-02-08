@@ -262,7 +262,7 @@ lemma sanity1 : exists-trace
 lemma sanity2 : exists-trace
 "	Ex s #i #j. Secret(s) @ i & Denied(s) @ j"
 
-lemma types [sources]:
+lemma source [sources]:
 "	( All m d1 d2 #i. PCR_Unbind(d1, d2, m) @ i ==> ( Ex #j. KU(m) @ j & j < i ) | ( Ex #j. Secret(m) @ j ) )"
 
 lemma PCR_Write_chain [reuse, use_induction]:

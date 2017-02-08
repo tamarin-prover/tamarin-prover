@@ -390,23 +390,23 @@ rule (modulo E) Zero_112111112:
 
   /* has exactly the trivial AC variant */
 
-axiom predicate_eq:
+restriction predicate_eq:
   "∀ #i a b. (Pred_eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
-axiom predicate_not_eq:
+restriction predicate_not_eq:
   "∀ #i a b. (Pred_not_eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom predicate1:
+restriction predicate1:
   "∀ #i x y.
     (Pred_not_pred_rep( x, y ) @ #i) ⇒ (¬(¬(∃ z. y = <'loc', z>)))"
 
-axiom predicate0:
+restriction predicate0:
   "∀ #i x y. (Pred_pred_rep( x, y ) @ #i) ⇒ (¬(∃ z. y = <'loc', z>))"
   // safety formula
 
@@ -801,7 +801,7 @@ analyzing: case-studies-sapic-regression/locations/licensing.spthy
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.523396s
+  processing time: 6.799443s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)
@@ -814,7 +814,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 5.523396s
+  processing time: 6.799443s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)

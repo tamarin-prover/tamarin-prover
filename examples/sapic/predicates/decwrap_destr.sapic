@@ -29,7 +29,7 @@ equations: encSucc(senc(x,y),y) = true
 	)
 )
 
-axiom True_is_true:
+restriction True_is_true:
       "All x #i. IsTrue(x) @ i ==> x = true()"
 
 lemma can_create_key: //for sanity
@@ -40,7 +40,7 @@ lemma can_obtain_wrapping: //for sanity
 	exists-trace
 	"Ex #t k1 k2. Wrap(k1,k2)@t"
 
-lemma dec_limits[reuse,typing]: 
+lemma dec_limits[reuse,sources]: 
 	//a message that can be decrypted was
 	//either encrypted on the device, or some key leaked, or 
 	// not a valid enc

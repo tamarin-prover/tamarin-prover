@@ -228,7 +228,7 @@ restriction predicate_not_eq:
 restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
-lemma types [sources]:
+lemma source [sources]:
 "	All m #i. Access(m) @ i ==> ( Ex #j. KU(m) @ j & j < i ) | ( Ex x #j. Exclusive(x, m) @ j ) | ( Ex y #j. Exclusive(m, y) @ j )"
 
 lemma reachability_left : exists-trace
