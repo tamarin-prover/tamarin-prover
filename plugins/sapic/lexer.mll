@@ -31,9 +31,11 @@ rule token = parse
      | "options" { OPTIONS }
      | "progress" { PROGRESS }
      | "lemma"     { LEMMA }
-     | "axiom"     { AXIOM }
+     | "axiom"       { Printf.eprintf "\"axiom\" is deprecated, replace with \"restriction\".\n"; RESTRICTION }
+     | "restriction" { RESTRICTION }
      | "private" as attr     { FUNCTION_ATTR(attr) }
-     | "typing"	as attr			{ LEMMA_ATTR (attr) } 
+     | "typing" 			{ Printf.eprintf "Option \"typing\" is deprecated, replace with \"sources\".\n";  LEMMA_ATTR ("sources") } 
+     | "sources"    as attr		{ LEMMA_ATTR (attr) } 
      | "reuse"	as attr			{ LEMMA_ATTR (attr) } 
      | "inductive" as attr		{ LEMMA_ATTR (attr) } 
      | "invariant" as attr		{ LEMMA_ATTR (attr) } 

@@ -54,49 +54,49 @@ rule event_C_122: //event C()
 rule Zero_1221: //Zero 
  [ State_1221(~prog_, s)] --[]-> []
 
- axiom set_in:
+ restriction set_in:
 "All x y #t3 . IsIn(x,y)@t3 ==>
         (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
                 & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
                 & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
 )"
 
-axiom set_notin:
+restriction set_notin:
 "All x #t3 . IsNotSet(x)@t3 ==> 
         (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
   | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 
                 &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
 
 
-axiom predicate_eq:
+restriction predicate_eq:
 "All #i a b. Pred_eq(a,b)@i ==> a = b"
 
 
-axiom predicate_not_eq:
+restriction predicate_not_eq:
 "All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)"
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 
-axiom progress__to_12111_or_12121_or_1221:
+restriction progress__to_12111_or_12121_or_1221:
     "All p #t1. ProgressFrom_(p )@t1 ==> 
        (Ex #t2. ProgressTo_12111(p )@t2)
 	 | (Ex #t2. ProgressTo_12121(p )@t2)
 	 | (Ex #t2. ProgressTo_1221(p )@t2)
     "
 
-axiom progress__to_111:
+restriction progress__to_111:
     "All p #t1. ProgressFrom_(p )@t1 ==> 
        (Ex #t2. ProgressTo_111(p )@t2)
     "
 
 
-axiom progress_init:
+restriction progress_init:
     " Ex #t. Init()@t "
 
-axiom resilient: 
+restriction resilient: 
     "All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
 
 lemma A_possible : exists-trace

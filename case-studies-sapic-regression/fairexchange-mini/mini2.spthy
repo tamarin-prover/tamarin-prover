@@ -37,30 +37,30 @@ rule Zero_12111: //Zero
  [ State_12111(~prog_, ~prog_121, k, m)] --[]-> []
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 
-axiom progress_121_to_12111:
+restriction progress_121_to_12111:
     "All p #t1. ProgressFrom_121(p )@t1 ==> 
        (Ex #t2. ProgressTo_12111(p )@t2)
     "
 
-axiom progress_111_to_1111:
+restriction progress_111_to_1111:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
        (Ex #t2. ProgressTo_1111(p )@t2)
     "
 
-axiom progress__to_1:
+restriction progress__to_1:
     "All p #t1. ProgressFrom_(p )@t1 ==> 
        (Ex #t2. ProgressTo_1(p )@t2)
     "
 
 
-axiom progress_init:
+restriction progress_init:
     " Ex #t. Init()@t "
 
-axiom resilient: 
+restriction resilient: 
     "All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
 
 lemma A_impossible :

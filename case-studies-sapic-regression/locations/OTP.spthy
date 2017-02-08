@@ -208,21 +208,21 @@ rule Zero_11111111121111111111111: //Zero
  [ State_11111111121111111111111(challenge, code, cu, fr, kOTP, pc, pw, shared_k, skV)] --[]-> []
 
 
-axiom predicate_eq:
+restriction predicate_eq:
 "All #i a b. Pred_eq(a,b)@i ==> a = b"
 
 
-axiom predicate_not_eq:
+restriction predicate_not_eq:
 "All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)"
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
-axiom predicate1:
+restriction predicate1:
 	"All #i x y. Pred_not_pred_rep(x,y)@i ==> not(not(y = 'loc'))"
 
-axiom predicate0:
+restriction predicate0:
 	"All #i x y. Pred_pred_rep(x,y)@i ==> not(y = 'loc')"
 
 lemma secrecy_key [reuse]:

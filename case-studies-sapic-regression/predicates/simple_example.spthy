@@ -25,13 +25,13 @@ rule Zero_12: //Zero
  [ State_12(h)] --[]-> []
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
-axiom predicate1:
+restriction predicate1:
 	"All #i h1 h2. Pred_not_equal(h1,h2)@i ==> not(h1 = h2)"
 
-axiom predicate0:
+restriction predicate0:
 	"All #i h1 h2. Pred_equal(h1,h2)@i ==> h1 = h2"
 
 lemma bogus_exists : exists-trace

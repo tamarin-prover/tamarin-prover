@@ -25,25 +25,25 @@ rule Zero_111: //Zero
  [ State_111(~prog_, ~prog_11, m)] --[]-> []
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 
-axiom progress_11_to_111:
+restriction progress_11_to_111:
     "All p #t1. ProgressFrom_11(p )@t1 ==> 
        (Ex #t2. ProgressTo_111(p )@t2)
     "
 
-axiom progress__to_1:
+restriction progress__to_1:
     "All p #t1. ProgressFrom_(p )@t1 ==> 
        (Ex #t2. ProgressTo_1(p )@t2)
     "
 
 
-axiom progress_init:
+restriction progress_init:
     " Ex #t. Init()@t "
 
-axiom resilient: 
+restriction resilient: 
     "All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
 
 lemma A_enforced :
