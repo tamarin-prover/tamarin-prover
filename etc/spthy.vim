@@ -39,7 +39,7 @@ syn match spthyLAtom	        "@"
 syn match spthyLAtom	        "<"
 syn match spthyLAtom	        ">"
 
-syn keyword spthyConstr         aenc sdec senc sdec sign verify hashing signing
+syn keyword spthyConstr         aenc sdec senc sdec sign verify hashing signing multiset
 syn match spthyConstr           "\<h("he=e-1
 syn match spthyConstr           "\<sk("he=e-1
 syn match spthyConstr           "\<pk("he=e-1
