@@ -39,11 +39,11 @@ rule (modulo E) C_2sync:
   --[ Finish( ) ]->
    [ Out( diff(<x1, s1>, <x2, s2>) ) ]
 
-axiom OnlyOnce [right]:
+restriction OnlyOnce [right]:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom OnlyOnce [left]:
+restriction OnlyOnce [left]:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
@@ -2293,7 +2293,7 @@ analyzing: examples/post17/chaum_anonymity.spthy
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.175199s
+  processing time: 8.841516s
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)
   DiffLemma:  Observational_equivalence : verified (739 steps)
@@ -2306,7 +2306,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 7.175199s
+  processing time: 8.841516s
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)
   DiffLemma:  Observational_equivalence : verified (739 steps)

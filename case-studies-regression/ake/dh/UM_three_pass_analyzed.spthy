@@ -532,16 +532,16 @@ rule (modulo E) Reveal_SessionKey:
 
   /* has exactly the trivial AC variant */
 
-axiom sid_unique:
+restriction sid_unique:
   "∀ #i #j sid.
     ((Activate( sid ) @ #i) ∧ (Activate( sid ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom keyreg_unique:
+restriction keyreg_unique:
   "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom corrupt_and_reveal_not_too_early:
+restriction corrupt_and_reveal_not_too_early:
   "(∀ #i #j s role_ k_.
      ((BeforeComplete( s ) @ #i) ∧ (Complete( s, role_, k_ ) @ #j)) ⇒
      (#i < #j)) ∧
@@ -13337,7 +13337,7 @@ analyzing: examples/ake/dh/UM_three_pass.spthy
 analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 114.13148s
+  processing time: 144.31453s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 
@@ -13349,7 +13349,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 114.13148s
+  processing time: 144.31453s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 

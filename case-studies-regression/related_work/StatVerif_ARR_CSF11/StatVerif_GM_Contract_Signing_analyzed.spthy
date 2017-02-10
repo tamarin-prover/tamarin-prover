@@ -227,11 +227,11 @@ rule (modulo E) Witness_Resolved:
 
   /* has exactly the trivial AC variant */
 
-axiom Answered_unique:
+restriction Answered_unique:
   "∀ x #i #j. ((Answered( x ) @ #i) ∧ (Answered( x ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom Eq_checks_succeed:
+restriction Eq_checks_succeed:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
 
@@ -391,7 +391,7 @@ analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signi
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.583451s
+  processing time: 0.581899s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)
@@ -405,7 +405,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.583451s
+  processing time: 0.581899s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

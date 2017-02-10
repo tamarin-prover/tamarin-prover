@@ -18,7 +18,7 @@ text{*
   differences are:
 
     1. We use explicit global constants to differentiate between different
-       encryptions instead of implicit typing.
+       encryptions instead of implicit sources.
 
     2. We model session keys directly as hashes of the relevant information.
        Due to our support for composed keys, we do not need any custom
@@ -180,7 +180,7 @@ rule (modulo E) C_3:
 
   /* has exactly the trivial AC variant */
 
-axiom Eq_check_succeed:
+restriction Eq_check_succeed:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
 
@@ -742,7 +742,7 @@ analyzing: examples/classic/TLS_Handshake.spthy
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.3137s
+  processing time: 3.795252s
   session_key_secrecy (all-traces): verified (95 steps)
   injective_agree (all-traces): verified (44 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
@@ -755,7 +755,7 @@ summary of summaries:
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 4.3137s
+  processing time: 3.795252s
   session_key_secrecy (all-traces): verified (95 steps)
   injective_agree (all-traces): verified (44 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)

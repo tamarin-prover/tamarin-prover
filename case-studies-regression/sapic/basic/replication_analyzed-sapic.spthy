@@ -44,7 +44,7 @@ rule (modulo E) Zero_1111:
 
   /* has exactly the trivial AC variant */
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
@@ -81,7 +81,7 @@ analyzing: case-studies-sapic-regression/basic/replication.spthy
 analyzed: case-studies-sapic-regression/basic/replication.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.065799s
+  processing time: 0.085368s
   onlyOneSecret (all-traces): falsified - found trace (4 steps)
 
 ------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/replication.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.065799s
+  processing time: 0.085368s
   onlyOneSecret (all-traces): falsified - found trace (4 steps)
 
 ==============================================================================

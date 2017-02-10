@@ -104,29 +104,29 @@ rule (modulo E) Zero_12211:
 
   /* has exactly the trivial AC variant */
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom progress_1221_to_12211:
+restriction progress_1221_to_12211:
   "∀ p #t1.
     (ProgressFrom_1221( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_12211( p ) @ #t2)"
 
-axiom progress_1211_to_12111:
+restriction progress_1211_to_12111:
   "∀ p #t1.
     (ProgressFrom_1211( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_12111( p ) @ #t2)"
 
-axiom progress_111_to_1111:
+restriction progress_111_to_1111:
   "∀ p #t1.
     (ProgressFrom_111( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_1111( p ) @ #t2)"
 
-axiom progress__to_1:
+restriction progress__to_1:
   "∀ p #t1. (ProgressFrom_( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_1( p ) @ #t2)"
 
-axiom progress_init:
+restriction progress_init:
   "∃ #t. Init( ) @ #t"
 
-axiom resilient:
+restriction resilient:
   "∀ #i x y.
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
 
@@ -234,7 +234,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-nested-2.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.12373s
+  processing time: 0.142436s
   A_possible (exists-trace): verified (7 steps)
   B_possible (exists-trace): verified (7 steps)
   C_possible (exists-trace): verified (7 steps)
@@ -248,7 +248,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.12373s
+  processing time: 0.142436s
   A_possible (exists-trace): verified (7 steps)
   B_possible (exists-trace): verified (7 steps)
   C_possible (exists-trace): verified (7 steps)

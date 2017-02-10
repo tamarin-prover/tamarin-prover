@@ -42,11 +42,11 @@ rule (modulo E) C_2sync:
   --[ Finish( ) ]->
    [ Out( <x1, s1> ), Out( <x2, s2> ), Out( diff(<x3, s3>, <x4, s4>) ) ]
 
-axiom OnlyOnce [right]:
+restriction OnlyOnce [right]:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom OnlyOnce [left]:
+restriction OnlyOnce [left]:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
@@ -8704,7 +8704,7 @@ analyzing: examples/post17/chaum_untraceability.spthy
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 72.603133s
+  processing time: 89.246139s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)
@@ -8717,7 +8717,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 72.603133s
+  processing time: 89.246139s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)

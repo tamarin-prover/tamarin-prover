@@ -37,7 +37,7 @@ rule (modulo E) Tag_Finish:
   --[ Secret( ~nt, ~k ) ]->
    [ Tdone( ~k, ~nr, ~nt ) ]
 
-lemma types [right, typing]:
+lemma types [right, sources]:
   all-traces
   "∀ n m1 #i.
     (IN_R_1( n, m1 ) @ #i) ⇒
@@ -131,7 +131,7 @@ next
   qed
 qed
 
-lemma types [left, typing]:
+lemma types [left, sources]:
   all-traces
   "∀ n m1 #i.
     (IN_R_1( n, m1 ) @ #i) ⇒
@@ -1503,7 +1503,7 @@ analyzing: examples/ccs15/rfid-feldhofer.spthy
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.545379s
+  processing time: 3.965048s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)
@@ -1522,7 +1522,7 @@ summary of summaries:
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.545379s
+  processing time: 3.965048s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)

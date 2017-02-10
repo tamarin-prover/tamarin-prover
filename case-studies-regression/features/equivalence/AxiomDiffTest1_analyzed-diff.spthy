@@ -8,7 +8,7 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 rule (modulo E) Test:
    [ Fr( ~f ) ] --[ Never( ) ]-> [ Out( ~f ) ]
 
-axiom blockLeft [left]:
+restriction blockLeft [left]:
   "∀ #i. (Never( ) @ #i) ⇒ (⊥)"
   // safety formula
 
@@ -39,7 +39,7 @@ analyzing: examples/features/equivalence/AxiomDiffTest1.spthy
 analyzed: examples/features/equivalence/AxiomDiffTest1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.056483s
+  processing time: 0.088387s
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
 ------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest1.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.056483s
+  processing time: 0.088387s
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
 ==============================================================================

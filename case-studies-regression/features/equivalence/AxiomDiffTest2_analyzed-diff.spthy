@@ -11,11 +11,11 @@ rule (modulo E) Test:
 rule (modulo E) Test2:
    [ Fact( f ) ] --[ Never2( f ) ]-> [ Fact2( f ) ]
 
-axiom blockLeft [left]:
+restriction blockLeft [left]:
   "∀ #i #j f. ((Never1( f ) @ #i) ∧ (Never2( f ) @ #j)) ⇒ (⊥)"
   // safety formula
 
-axiom blockLeft2 [left]:
+restriction blockLeft2 [left]:
   "∀ #i f. (Never2( f ) @ #i) ⇒ (∀ #j. (Never1( f ) @ #j) ⇒ (⊥))"
   // safety formula
 
@@ -49,7 +49,7 @@ analyzing: examples/features/equivalence/AxiomDiffTest2.spthy
 analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.072971s
+  processing time: 0.087076s
   DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
 
 ------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.072971s
+  processing time: 0.087076s
   DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
 
 ==============================================================================

@@ -68,7 +68,7 @@ rule (modulo E) Zero_211:
 
   /* has exactly the trivial AC variant */
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
@@ -114,7 +114,7 @@ analyzing: case-studies-sapic-regression/basic/channels3.spthy
 analyzed: case-studies-sapic-regression/basic/channels3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.091778s
+  processing time: 0.116402s
   not_secret (exists-trace): verified (3 steps)
   internal_comm (exists-trace): verified (3 steps)
 
@@ -126,7 +126,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/channels3.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.091778s
+  processing time: 0.116402s
   not_secret (exists-trace): verified (3 steps)
   internal_comm (exists-trace): verified (3 steps)
 

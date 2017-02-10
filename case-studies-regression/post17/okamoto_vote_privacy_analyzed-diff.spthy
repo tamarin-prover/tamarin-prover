@@ -89,19 +89,19 @@ rule (modulo E) select_vote:
   --[ Select_vote( ($v+z) ) ]->
    [ Out( $v ), Select_vote( z ) ]
 
-axiom onlyOnce [right]:
+restriction onlyOnce [right]:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom onlyOnce [left]:
+restriction onlyOnce [left]:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom select_limited_votes [right]:
+restriction select_limited_votes [right]:
   "∀ a b c d #i. (Select_vote( (a+b+c+d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
-axiom select_limited_votes [left]:
+restriction select_limited_votes [left]:
   "∀ a b c d #i. (Select_vote( (a+b+c+d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
@@ -11375,7 +11375,7 @@ analyzing: examples/post17/okamoto_vote_privacy.spthy
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 74.177609s
+  processing time: 97.630701s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (3701 steps)
@@ -11388,7 +11388,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 74.177609s
+  processing time: 97.630701s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (3701 steps)
