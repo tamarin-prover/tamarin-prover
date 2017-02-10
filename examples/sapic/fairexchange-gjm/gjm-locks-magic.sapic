@@ -251,7 +251,7 @@ event TTP(TTPID);
         )
    )
 
-axiom assert:
+restriction assert:
     "All x y #j. AssertEqual(x,y)@j ==> x=y"
 
 /* auto */
@@ -273,8 +273,8 @@ exists-trace
 
 /* automatic? (ca. 1hour) 
  * not auto was by simplify, not by induction
- * need to see if we want to have this as a typing lemma
- * or axiom
+ * need to see if we want to have this as a source lemma
+ * or restriction
  * */
 /* lemma cleanup [reuse]: */
 /* all-traces */

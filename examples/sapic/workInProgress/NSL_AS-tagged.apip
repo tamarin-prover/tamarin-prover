@@ -6,7 +6,7 @@ builtins: asymmetric-encryption, signing
 
 //This cannot be proven automatically at the moment, the secrecy lemma is problematic.
 //But it can be show manually.
-//UPDATE: NO, it can't. The typing lemma can be contradicted. TODO
+//UPDATE: NO, it can't. The source lemma can be contradicted. TODO
 
 //The Authentication Server's public key is known to everyone
 let AS =
@@ -75,7 +75,7 @@ new ask; AS ||
 
 	
 
-lemma types [typing, reuse]:
+lemma source [sources, reuse]:
   " (All ni m1 #i A.
        IN_R_1_ni( ni, m1,A) @ i
        ==>

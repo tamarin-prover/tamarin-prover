@@ -226,7 +226,7 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-lemma types [sources, reuse]:
+lemma source [sources, reuse]:
   all-traces
   "(∀ ni m1 #i.
      (IN_R_1_ni( ni, m1 ) @ #i) ⇒
@@ -458,8 +458,8 @@ analyzing: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 analyzed: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.455873s
-  types (all-traces): verified (34 steps)
+  processing time: 2.630201s
+  source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (21 steps)
 
 ------------------------------------------------------------------------------
@@ -470,8 +470,8 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.455873s
-  types (all-traces): verified (34 steps)
+  processing time: 2.630201s
+  source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (21 steps)
 
 ==============================================================================

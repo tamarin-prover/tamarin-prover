@@ -441,7 +441,7 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-lemma types [sources]:
+lemma source [sources]:
   all-traces
   "∀ m #i.
     (Access( m ) @ #i) ⇒
@@ -2171,11 +2171,11 @@ analyzing: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_righ
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 16.442674s
+  processing time: 15.906526s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
-  types (all-traces): verified (164 steps)
+  source (all-traces): verified (164 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (231 steps)
@@ -2188,11 +2188,11 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 16.442674s
+  processing time: 15.906526s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
-  types (all-traces): verified (164 steps)
+  source (all-traces): verified (164 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (231 steps)

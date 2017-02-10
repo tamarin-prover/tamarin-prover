@@ -106,7 +106,7 @@ rule Zero_12111111111: //Zero
  [ State_12111111111(~nsk, ~sk, pki, user)] --[]-> []
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 lemma Knows_Honest_Key_imp_Revoked :

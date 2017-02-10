@@ -91,20 +91,20 @@ rule unlock_b_a__11111211111: //unlock <b, a>
 rule Zero_111112111111: //Zero 
  [ State_111112111111(~lock6, ~prog_1, ~prog_1111121, ~prog_111112111, MH, SH, a, b, kEnc, kSign, m, pad, seq)] --[]-> []
 
-axiom A_Counter_Increases :
+restriction A_Counter_Increases :
 "	All A B seq1 seq2 #i #j. ( Seq_Sent(A, B, seq1) @ #i & Seq_Sent(A, B, seq2) @ #j & #i < #j ==> Ex dif. seq2 = (seq1) + (dif) )"
 
-axiom A_Counter_No_Reuse :
+restriction A_Counter_No_Reuse :
 "	All A B seq #i #j. ( Seq_Sent(A, B, seq) @ #i & Seq_Sent(A, B, seq) @ #j ==> #i = #j )"
 
-axiom B_Counter_Counter_Increases :
+restriction B_Counter_Counter_Increases :
 "	All A B seq1 seq2 #i #j. ( Seq_Recv(A, B, seq1) @ #i & Seq_Recv(A, B, seq2) @ #j & #i < #j ==> Ex dif. seq2 = (seq1) + (dif) )"
 
-axiom B_Counter_No_Reuse :
+restriction B_Counter_No_Reuse :
 "	All A B seq #i #j. ( Seq_Recv(A, B, seq) @ #i & Seq_Recv(A, B, seq) @ #j ==> #i = #j )"
 
 
-axiom locking:
+restriction locking:
 "All l x lp #t1 #t3 . Lock(l,x)@t1 & Lock(lp,x)@t3 
         ==> 
         ( #t1<#t3 
@@ -116,45 +116,45 @@ axiom locking:
         | #t3<#t1 | #t1=#t3 "
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 
-axiom progress_1111121_to_11111211:
+restriction progress_1111121_to_11111211:
     "All p #t1. ProgressFrom_1111121(p )@t1 ==> 
        (Ex #t2. ProgressTo_11111211(p )@t2)
     "
 
-axiom progress_111112111_to_111112111111:
+restriction progress_111112111_to_111112111111:
     "All p #t1. ProgressFrom_111112111(p )@t1 ==> 
        (Ex #t2. ProgressTo_111112111111(p )@t2)
     "
 
-axiom progress_111111111_to_11111111111111:
+restriction progress_111111111_to_11111111111111:
     "All p #t1. ProgressFrom_111111111(p )@t1 ==> 
        (Ex #t2. ProgressTo_11111111111111(p )@t2)
     "
 
-axiom progress_1111111_to_11111111:
+restriction progress_1111111_to_11111111:
     "All p #t1. ProgressFrom_1111111(p )@t1 ==> 
        (Ex #t2. ProgressTo_11111111(p )@t2)
     "
 
-axiom progress_1_to_111112:
+restriction progress_1_to_111112:
     "All p #t1. ProgressFrom_1(p )@t1 ==> 
        (Ex #t2. ProgressTo_111112(p )@t2)
     "
 
-axiom progress_1_to_111111:
+restriction progress_1_to_111111:
     "All p #t1. ProgressFrom_1(p )@t1 ==> 
        (Ex #t2. ProgressTo_111111(p )@t2)
     "
 
 
-axiom progress_init:
+restriction progress_init:
     " Ex #t. Init()@t "
 
-axiom resilient: 
+restriction resilient: 
     "All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
 
 lemma Executable : exists-trace

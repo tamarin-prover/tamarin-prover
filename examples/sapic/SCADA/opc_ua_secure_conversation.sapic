@@ -54,24 +54,24 @@ new kSign; new kEnc;
 )
 
 
-// AXIOMS
+// RESTRICTIONS
 
-// Sequence number axioms:
+// Sequence number restrictions:
 
 // A's counter increases
-axiom A_Counter_Increases:
+restriction A_Counter_Increases:
     "All A B seq1 seq2 #i #j.(Seq_Sent(A, B, seq1) @ #i & Seq_Sent(A, B, seq2) @ #j & #i < #j ==> Ex dif. seq2 = seq1 + dif )"
 
 // A's counter cannot be reused
-axiom A_Counter_No_Reuse:
+restriction A_Counter_No_Reuse:
     "All A B seq #i #j.(Seq_Sent(A, B, seq) @ #i & Seq_Sent(A, B, seq) @ #j ==> #i=#j)"
 
 // B's counter counter increases
-axiom B_Counter_Counter_Increases:
+restriction B_Counter_Counter_Increases:
     "All A B seq1 seq2 #i #j.(Seq_Recv(A, B, seq1) @ #i & Seq_Recv(A, B, seq2) @ #j & #i < #j ==> Ex dif. seq2 = seq1 + dif )"
 
 // B's counter cannot be reused
-axiom B_Counter_No_Reuse:
+restriction B_Counter_No_Reuse:
     "All A B seq #i #j.(Seq_Recv(A, B, seq) @ #i & Seq_Recv(A, B, seq) @ #j ==> #i=#j)"
 
 

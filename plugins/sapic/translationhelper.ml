@@ -14,10 +14,10 @@ let rec print_lemmas lem_list =
     h.formula  ^
     print_lemmas t
 
-let rec print_axioms axiom_list =
-    match axiom_list with
+let rec print_restrictions res_list =
+    match res_list with
     | [] -> ""
-    | h::t -> sprintf "%s\n\"\t%s\"\n\n" (h.aheader) h.aformula  ^ print_axioms t
+    | h::t -> sprintf "%s\n\"\t%s\"\n\n" (h.aheader) h.aformula  ^ print_restrictions t
 
 let rec contains_lookup t = 
     match t with

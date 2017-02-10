@@ -28,7 +28,7 @@ rule Zero_1111: //Zero
  [ State_1111(a, c)] --[]-> []
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 lemma received :

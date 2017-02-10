@@ -62,10 +62,10 @@ let Server=
 /*   exists-trace */
 /*   "Ex #i pid k x . Login(pid,k,x)@i" */
 
-// typing lemmas:
+// source lemmas:
 // There exists a Initialisation for every Login on the Server
-/* lemma init_server[typing]: */
-lemma init_server[typing]:
+/* lemma init_server[sources]: */
+lemma init_server[sources]:
 		"All pid sid k tuple otc tc #i . InitStuff(pid,sid,k,tuple,otc,tc)@i 
 		==> 
 		 tuple=<sid,k,otc>
@@ -78,7 +78,7 @@ lemma init_server_secrecy[use_induction, reuse]:
 		==> 
                  (not Ex #j . KU(k)@j) "
 
-lemma init_yubikey[typing]:
+lemma init_yubikey[sources]:
 		"All pid sid k tc #i . YubiPress(pid,sid,k,tc)@i ==> Ex #j.
 		YubiInit(pid, sid, k)@j & #j<#i"
 

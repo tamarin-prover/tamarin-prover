@@ -89,7 +89,7 @@ let C=( insert <'userpw',username>, pw; //registering using a secure channel...
 
 // TODO:
 
-lemma types [typing, reuse]:
+lemma source [sources, reuse]:
   " (All m1 username n1 #i .
 		C_IN_1(m1,username, n1) @ i
        ==>

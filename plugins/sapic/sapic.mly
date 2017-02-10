@@ -34,18 +34,18 @@ module VarSet = Set.Make( Var );;
 let (@@) (a:VarSet.t) (b:VarSet.t) = VarSet.union a b
 
 type lemma = {header:string; quantif:char; formula: string}
-type axiom = {aheader:string; aformula: string}
+type restriction = {aheader:string; aformula: string}
 type options = { progress: bool}
 let defaultop= {progress=false}
 let mergeopt a b = {progress=(a.progress || b.progress)}
 
 type inp = {sign : string;
             pred : string list;
-            op: options;
+            op   : options;
             rules: rule list;
             proc : sapic_action btree;
             lem  : lemma list;
-            ax   : axiom list
+            ax   : restriction list
 }
 
 type fct_attr =
@@ -105,7 +105,7 @@ let location_rule=
 
 %token <char> ALL_TRACES EXISTS_TRACE
 %token <string> IDENTIFIER NUM BUILTIN_THEORY FUNCTION_ATTR LEMMA_ATTR FORMALCOMMENT QUOTED_IDENTIFIER 
-%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS AXIOM LEMMA TYPING REUSE INDUCTIVE INVARIANT  ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA
+%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION LEMMA REUSE INDUCTIVE INVARIANT  ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA
 
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
 %token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS
@@ -139,8 +139,8 @@ let location_rule=
 %type <term> expterm
 %type <term> term
 %type <var> literal
-%type <axiom> axiom
-%type <string> axiom_header
+%type <restriction> restriction
+%type <string> restriction_header
 %type <lemma> lemma
 %type <string> lemma_header
 %type <string> lemma_attr
@@ -176,7 +176,7 @@ body:
     | options body   {{sign=$2.sign; pred=$2.pred; op=(mergeopt $1 $2.op); rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
     | process body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$1; lem=$2.lem; ax=$2.ax}}
     | lemma body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=($1::$2.lem); ax=$2.ax}}
-    | axiom body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=($1::$2.ax)}}
+    | restriction body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=($1::$2.ax)}}
     | rule body 	          {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=($1::$2.rules); proc=$2.proc; lem=$2.lem; ax=$2.ax}}
     | formal_comment body  {{sign=($1^$2.sign); pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
 ;
@@ -399,16 +399,16 @@ lemma:
 	|     lemma_header trace_quantifier DQUOTE formula DQUOTE	{{header=$1; quantif=$2; formula=$4}}
 ;
 
-axiom:
-    |     axiom_header DQUOTE formula DQUOTE	{{aheader=$1; aformula=$3}}
+restriction:
+    |     restriction_header DQUOTE formula DQUOTE	{{aheader=$1; aformula=$3}}
 ;
 
 lemma_header:
 	|     LEMMA IDENTIFIER lemma_attr_col COLON  {"lemma "^$2^" "^$3^":"}
 ;
 
-axiom_header:
-	|     AXIOM IDENTIFIER COLON  {"axiom "^$2^" :"}
+restriction_header:
+	|     RESTRICTION IDENTIFIER COLON  {"restriction "^$2^" :"}
 ;
 
 

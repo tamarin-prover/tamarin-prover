@@ -37,7 +37,7 @@ rule Zero_211: //Zero
  [ State_211(x)] --[]-> []
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 lemma not_secret : exists-trace

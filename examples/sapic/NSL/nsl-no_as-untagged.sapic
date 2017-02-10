@@ -47,7 +47,7 @@ builtins: asymmetric-encryption
 /* exists-trace */
 /*      "Ex pka pkb k #t1 . SessionB(pka,pkb,k)@t1" */
 
-lemma types [typing, reuse]:
+lemma source [sources, reuse]:
   " (All ni m1 #i.
        IN_R_1_ni( ni, m1) @ i
        ==>

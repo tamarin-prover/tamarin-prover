@@ -46,7 +46,7 @@ rule Zero_1211: //Zero
  [ State_1211(c, x)] --[]-> []
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 lemma secret :
