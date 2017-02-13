@@ -11,7 +11,7 @@ to terminate.
 In contrast to the trace mode, which is sound and complete, the observational 
 equivalence mode currently only (soundly) approximates observational equivalence 
 by requiring a strict one-to-one mapping between rules, which is too strict for 
-some applications. Moreover, the support of axioms in this mode is rather 
+some applications. Moreover, the support of restrictions in this mode is rather 
 limited.
 
 <!--

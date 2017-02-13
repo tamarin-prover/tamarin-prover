@@ -23,7 +23,7 @@ From Kevin Milner and Dennis Jackson:
 
       * Maybe some recommended implementations of common patterns of rules,
 	for things like agent key registration, conditional rules (using
-	axioms, like we have in the detection stuff), maybe how we pass both
+	restrictions, like we have in the detection stuff), maybe how we pass both
 	agents long term keys around to make writing signature verification
         easier (and why that’s sound as long as you don’t do anything silly)
 
