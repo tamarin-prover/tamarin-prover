@@ -103,10 +103,10 @@ rule B_chosen:
    , Out(g^h1(< r,l,~sb >))
    ]
 
-axiom no_self_communication_initialization:
+restriction no_self_communication_initialization:
   "not (Ex A #i. Init(A,A)@i)"
 
-axiom only_one_initialization:
+restriction only_one_initialization:
   "All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j"
 
 lemma executable:

@@ -112,10 +112,10 @@ rule select_vote:
 
 // Axioms
 
-axiom onlyOnce:
+restriction onlyOnce:
   " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i=#j "
 
-axiom select_limited_votes:
+restriction select_limited_votes:
   " All a b c d #i. Select_vote(a+b+c+d)@i ==> F "
 
 

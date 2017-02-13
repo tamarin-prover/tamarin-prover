@@ -56,7 +56,7 @@ rule Server:
 --[ CreatedKey($A,$B,~k) ]->
   [ Out(enc(<<$B,~k>,enc(<$A,~k>,kbs)>, kas)) ]
 
-axiom singlesharedkeyperuser:
+restriction singlesharedkeyperuser:
   "All A #i #j. KeyGen(A) @ i & KeyGen(A) @ j ==> #i = #j"
 
 lemma executable:

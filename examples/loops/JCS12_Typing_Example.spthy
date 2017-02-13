@@ -11,7 +11,7 @@ begin
    Notable differences: We do not require a fixed type system. Instead we
    introduce actions marking sent cryptographic components and actions marking
    that a participant instantiated a variable, which it received as part of a
-   cryptographic component. The typing assertion is then the trace formula
+   cryptographic component. The sources assertion is then the trace formula
    stating that this variable was either known to the adversary before it was
    instantiated or the cryptographic component stems from the expected origin.
 
@@ -79,11 +79,11 @@ rule Serv_1:
     ]->
     [ Out( aenc{'2',k}pkC ) ]
 
-/* This is our typing assertion. It follows the construction outline above and
+/* This is our sources assertion. It follows the construction outline above and
  * uses the same trick as [1] to account for the interaction of the adversary,
  * who doesn't have to follow a typing discipline.
  */
-lemma typing_assertion [typing]:
+lemma typing_assertion [sources]:
   "(All m v #i. In_Serv_1(m, v) @ i ==>
       ( (Ex #j. KU(v) @ j & j < i)
       | (Ex #j. Out_Client_1(m) @ j)

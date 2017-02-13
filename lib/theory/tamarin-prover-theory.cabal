@@ -74,7 +74,7 @@ library
       Theory.Proof
 
       Theory.Constraint.Solver
-      Theory.Constraint.Solver.CaseDistinctions
+      Theory.Constraint.Solver.Sources
       Theory.Constraint.Solver.Contradictions
       Theory.Constraint.Solver.Goals
       Theory.Constraint.Solver.ProofMethod

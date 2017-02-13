@@ -19,7 +19,7 @@ rule Zero_111: //Zero
  [ State_111(s)] --[]-> []
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 lemma onlyOneSecret :

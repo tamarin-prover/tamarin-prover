@@ -43,31 +43,31 @@ rule Zero_1211: //Zero
  [ State_1211(~prog_, ~prog_121)] --[]-> []
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 
-axiom progress_121_to_1211:
+restriction progress_121_to_1211:
     "All p #t1. ProgressFrom_121(p )@t1 ==> 
        (Ex #t2. ProgressTo_1211(p )@t2)
     "
 
-axiom progress__to_12:
+restriction progress__to_12:
     "All p #t1. ProgressFrom_(p )@t1 ==> 
        (Ex #t2. ProgressTo_12(p )@t2)
     "
 
-axiom progress__to_1111_or_11211:
+restriction progress__to_1111_or_11211:
     "All p #t1. ProgressFrom_(p )@t1 ==> 
        (Ex #t2. ProgressTo_1111(p )@t2)
 	 | (Ex #t2. ProgressTo_11211(p )@t2)
     "
 
 
-axiom progress_init:
+restriction progress_init:
     " Ex #t. Init()@t "
 
-axiom resilient: 
+restriction resilient: 
     "All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
 
 lemma A_possible : exists-trace

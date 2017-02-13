@@ -635,20 +635,20 @@ rule (modulo E) Reveal_SessionKey:
 
   /* has exactly the trivial AC variant */
 
-axiom sid_unique:
+restriction sid_unique:
   "∀ #i #j sid.
     ((UM1_Activate( sid ) @ #i) ∧ (UM1_Activate( sid ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom keyreg_unique:
+restriction keyreg_unique:
   "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom actor_ineq_peer:
+restriction actor_ineq_peer:
   "¬(∃ #i A. Agents( A, A ) @ #i)"
   // safety formula
 
-axiom corrupt_and_reveal_not_too_early:
+restriction corrupt_and_reveal_not_too_early:
   "(∀ #i #j s role_ k_.
      ((BeforeComplete( s ) @ #i) ∧ (Complete( s, role_, k_ ) @ #j)) ⇒
      (#i < #j)) ∧
@@ -5134,7 +5134,7 @@ analyzing: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 38.064787s
+  processing time: 45.729119s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)
@@ -5147,7 +5147,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 38.064787s
+  processing time: 45.729119s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)

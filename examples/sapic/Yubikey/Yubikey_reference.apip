@@ -71,7 +71,7 @@ simplifies the proof.
 (Server || !Yubikey)
 
 //we model the larger relation using the smaller action and excluding all traces where it is not correct
-axiom smaller:
+restriction smaller:
 	"All #i a b. Smaller(a,b)@i ==> Ex z. a+z=b"
 
 // For sanity: Ensure that a successful login is reachable.
@@ -79,9 +79,9 @@ lemma Login_reachable:
   exists-trace
   "Ex #i pid k x . Login(pid,k,x)@i"
 
-// typing lemmas:
+// source lemmas:
 // There exists a Initialisation for every Login on the Server
-lemma init_server[typing]:
+lemma init_server[sources]:
 		"All pid sid k tuple otc tc #i . InitStuff(pid,sid,k,tuple,otc,tc)@i 
 		==> 
 		 tuple=<sid,k,otc>
@@ -89,7 +89,7 @@ lemma init_server[typing]:
 		 Ex #j.  ExtendedInit(pid, sid, k)@j & #j<#i
 "
 
-lemma init_yubikey[typing]:
+lemma init_yubikey[sources]:
 		"All pid sid k tc #i . YubiPress(pid,sid,k,tc)@i ==> Ex #j.
 		ExtendedInit(pid, sid, k)@j & #j<#i"
 

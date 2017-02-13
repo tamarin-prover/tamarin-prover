@@ -325,7 +325,7 @@ rule (modulo E) Zero_1212:
 
   /* has exactly the trivial AC variant */
 
-axiom set_in:
+restriction set_in:
   "∀ x y #t3.
     (IsIn( x, y ) @ #t3) ⇒
     (∃ #t2.
@@ -334,7 +334,7 @@ axiom set_in:
       (∀ #t1 yp.
         (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
-axiom set_notin:
+restriction set_notin:
   "∀ x #t3.
     (IsNotSet( x ) @ #t3) ⇒
     ((∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1)) ∨
@@ -342,23 +342,23 @@ axiom set_notin:
        ((Delete( x ) @ #t1) ∧ (#t1 < #t3)) ∧
        (∀ #t2 y. ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ⇒ (#t2 < #t1))))"
 
-axiom predicate_eq:
+restriction predicate_eq:
   "∀ #i a b. (Pred_eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
-axiom predicate_not_eq:
+restriction predicate_not_eq:
   "∀ #i a b. (Pred_not_eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom predicate1:
+restriction predicate1:
   "∀ #i c k. (Pred_not_sencSucc( c, k ) @ #i) ⇒ (¬(∃ m. senc(m, k) = c))"
   // safety formula
 
-axiom predicate0:
+restriction predicate0:
   "∀ #i c k. (Pred_sencSucc( c, k ) @ #i) ⇒ (∃ m. senc(m, k) = c)"
 
 lemma can_create_key:
@@ -409,7 +409,7 @@ solve( State_1211111( a1, h1, h2, k1, k2 ) ▶₀ #t )
   qed
 qed
 
-lemma dec_limits [reuse, typing]:
+lemma dec_limits [reuse, sources]:
   all-traces
   "∀ k m #t1.
     (DecUsing( k, m ) @ #t1) ⇒
@@ -738,7 +738,7 @@ analyzing: case-studies-sapic-regression/basic/running-example.spthy
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.257353s
+  processing time: 2.654889s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -756,7 +756,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.257353s
+  processing time: 2.654889s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   

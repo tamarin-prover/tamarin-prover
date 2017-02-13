@@ -1824,7 +1824,7 @@ rule (modulo E) Ephk_reveal:
 
   /* has exactly the trivial AC variant */
 
-axiom RegKeyUnique:
+restriction RegKeyUnique:
   "∀ #i #j A. ((RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
@@ -4863,7 +4863,7 @@ analyzing: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 75.068045s
+  processing time: 90.209764s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)
 
@@ -4875,7 +4875,7 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 75.068045s
+  processing time: 90.209764s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)
 

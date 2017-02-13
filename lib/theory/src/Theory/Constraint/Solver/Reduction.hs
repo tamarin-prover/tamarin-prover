@@ -630,9 +630,9 @@ substGoals = do
 -- with the free variables in the proof state.
 conjoinSystem :: System -> Reduction ()
 conjoinSystem sys = do
-    kind <- getM sCaseDistKind
-    unless (kind == get sCaseDistKind sys) $
-        error "conjoinSystem: typing-kind mismatch"
+    kind <- getM sSourceKind
+    unless (kind == get sSourceKind sys) $
+        error "conjoinSystem: source-kind mismatch"
     joinSets sSolvedFormulas
     joinSets sLemmas
     joinSets sEdges

@@ -68,7 +68,7 @@ rule (modulo E) Serv_1:
        z.1   = z.12
   */
 
-axiom Equality_Checks_Succeed:
+restriction Equality_Checks_Succeed:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
 
@@ -237,7 +237,7 @@ analyzing: examples/Tutorial.spthy
 analyzed: examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.237097s
+  processing time: 0.187935s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)
@@ -251,7 +251,7 @@ summary of summaries:
 analyzed: examples/Tutorial.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.237097s
+  processing time: 0.187935s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)

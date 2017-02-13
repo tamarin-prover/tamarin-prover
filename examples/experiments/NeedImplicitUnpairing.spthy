@@ -84,7 +84,7 @@ rule Recv:
 
 /* 
 properties (of P)
-  auto: msc-typing
+  auto: msc-sources
 
   I_sec_ni: secret(I, -, ni, {I,R})
 

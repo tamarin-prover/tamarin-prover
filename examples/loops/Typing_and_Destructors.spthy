@@ -2,7 +2,7 @@ theory Typing_and_Destructors
 begin
 
 /*
-   Protocol:    Demonstration of the interaction between typing and
+   Protocol:    Demonstration of the interaction between sources and
                 destructors
    Modeler:     Simon Meier
    Date:        July 2012
@@ -16,7 +16,7 @@ begin
 
    NOTE that it seems that the best option is to explicitly state in a rule
    that it does not continue in case the application of a deconstructor was
-   not successful using an axiom like 'No_failure_terms'. This considerably
+   not successful using an restriction like 'No_failure_terms'. This considerably
    simplifies the verification.
 */
 
@@ -63,16 +63,16 @@ rule Responder:
 
 // Commented out to test the type assertion.
 //
-// // This axiom then filters all traces with disallowed failure terms.
+// // This restriction then filters all traces with disallowed failure terms.
 // // Note that we interpret its formula modulo AC.
-// axiom No_failure_terms:
+// restriction No_failure_terms:
 //     "(All x #i. NoFailureTerm(snd(x)) @ i ==> F)"
 //     // Here we should also exclude all other possible shapes of failure terms.
 
 // This type assertion does not hold, as 'pub' could be an failure term. See the
 // case marked below for the missing piece of the puzzle.
 // Note that we interpret its formula modulo AC.
-lemma type_assertion [typing]:
+lemma type_assertion [sources]:
   /* For all messages received by the responder */
   "(All m pub #i. In_Responder(m, pub) @ i ==>
         /* they either came from the adversary and he therefore knows the

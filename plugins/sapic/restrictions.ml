@@ -5,7 +5,7 @@ open Annotatedsapictree
 open Position
 open Printf
 
-let ass_set_in = " axiom set_in:
+let res_set_in = " restriction set_in:
 \"All x y #t3 . IsIn(x,y)@t3 ==>
         (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
                 & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
@@ -14,8 +14,8 @@ let ass_set_in = " axiom set_in:
 
 "
 
-let ass_set_notin = 
-"axiom set_notin:
+let res_set_notin = 
+"restriction set_notin:
 \"All x #t3 . IsNotSet(x)@t3 ==> 
         (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
   | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 
@@ -23,20 +23,20 @@ let ass_set_notin =
 
 "
 
-let ass_predicate_not_eq = "
-axiom predicate_not_eq:
+let res_predicate_not_eq = "
+restriction predicate_not_eq:
 \"All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)\"
 
 "
 
-let ass_predicate_eq = "
-axiom predicate_eq:
+let res_predicate_eq = "
+restriction predicate_eq:
 \"All #i a b. Pred_eq(a,b)@i ==> a = b\"
 
 "
 
-let ass_immeadiate_in = "
-axiom immeadiate_in:
+let res_immeadiate_in = "
+restriction immeadiate_in:
 \"All x #t3 . ChannelInEvent(x)@t3
         ==> Ex #t2. K(x)@t2 & #t2<#t3
                 & (All #t0. Event()@t0  ==> #t0<#t2 | #t3<#t0)
@@ -45,8 +45,8 @@ axiom immeadiate_in:
         
 "
 
-let ass_locking = "
-axiom locking:
+let res_locking = "
+restriction locking:
 \"All l x lp #t1 #t3 . Lock(l,x)@t1 & Lock(lp,x)@t3 
         ==> 
         ( #t1<#t3 
@@ -59,14 +59,14 @@ axiom locking:
 
 "
 
-let ass_single_session = "
-axiom single_session: // for a single session
+let res_single_session = "
+restriction single_session: // for a single session
     \"All #i #j. Init()@i & Init()@j ==> #i=#j\"
 
 "
 
-let ass_resilient = "
-axiom resilient: 
+let res_resilient = "
+restriction resilient: 
     \"All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j \"
 
 "
@@ -74,7 +74,7 @@ axiom resilient:
 let print_predicates pred_list =
         match 
     fold_left (fun (s,n) t ->
-            ("axiom predicate"^(string_of_int n)^":\n\t\""^t^"\"\n\n"
+            ("restriction predicate"^(string_of_int n)^":\n\t\""^t^"\"\n\n"
             ^s
                     ,n+1))
             ("",0) pred_list
@@ -83,7 +83,7 @@ let print_predicates pred_list =
 
 module PositionSet = Set.Make( Position );;
 
-let generate_progress_axioms anP =
+let generate_progress_restrictions anP =
   let pf = Progressfunction.generate anP in
   let print_toset a bset = 
     let a'= Position.pos2string a 
@@ -98,7 +98,7 @@ let generate_progress_axioms anP =
       List.map (fun p -> (sprintf "(Ex #t2. ProgressTo_%s(%s)@t2)" (pos2string p) pvar)) blist
     in
     sprintf   "
-axiom progress_%s_to_%s:
+restriction progress_%s_to_%s:
     \"All %s#t1. ProgressFrom_%s(%s)@t1 ==> 
        %s
     \"
@@ -111,6 +111,6 @@ axiom progress_%s_to_%s:
   ^
   "
 
-axiom progress_init:
+restriction progress_init:
     \" Ex #t. Init()@t \"
 "

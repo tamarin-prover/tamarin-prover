@@ -19,7 +19,7 @@ text{*
   differences are:
 
     1. We use explicit global constants to differentiate between different
-       encryptions instead of implicit typing.
+       encryptions instead of implicit sources.
 
     2. We model session keys directly as hashes of the relevant information.
        Due to our support for composed keys, we do not need any custom
@@ -152,7 +152,7 @@ rule C_3:
 
 /* TODO: Also model session-key reveals and adapt security properties. */
 
-axiom Eq_check_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
+restriction Eq_check_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
 
 
 /* Session key secrecy from the perspective of both the server and the client

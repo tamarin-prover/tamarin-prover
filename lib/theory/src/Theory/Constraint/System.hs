@@ -20,10 +20,10 @@ module Theory.Constraint.System (
   -- | The proof context captures all relevant information about the context
   -- in which we are using the constraint solver. These are things like the
   -- signature of the message theory, the multiset rewriting rules of the
-  -- protocol, the available precomputed case distinctions, whether induction
-  -- should be applied or not, whether typed or untyped case distinctions are
-  -- used, and whether we are looking for the existence of a trace or proving
-  -- the absence of any trace satisfying the constraint system.
+  -- protocol, the available precomputed sources, whether induction should be
+  -- applied or not, whether raw or refined sources are used, and whether we
+  -- are looking for the existence of a trace or proving the absence of any
+  -- trace satisfying the constraint system.
   , ProofContext(..)
   , DiffProofContext(..)
   , InductionHint(..)
@@ -31,8 +31,8 @@ module Theory.Constraint.System (
   , pcSignature
   , pcRules
   , pcInjectiveFactInsts
-  , pcCaseDists
-  , pcCaseDistKind
+  , pcSources
+  , pcSourceKind
   , pcUseInduction
   , pcTraceQuantifier
   , pcLemmaName
@@ -46,7 +46,7 @@ module Theory.Constraint.System (
   , dpcProtoRules
   , dpcDestrRules
   , dpcConstrRules
-  , dpcAxioms
+  , dpcRestrictions
   , eitherProofContext
 
   -- ** Classified rules
@@ -62,7 +62,7 @@ module Theory.Constraint.System (
   -- | For better speed, we precompute case distinctions. This is especially
   -- important for getting rid of all chain constraints before actually
   -- starting to verify security properties.
-  , CaseDistinction(..)
+  , Source(..)
 
   , cdGoal
   , cdCases
@@ -119,8 +119,8 @@ module Theory.Constraint.System (
 
   , isCorrectDG
   , getMirrorDG
-  , doAxiomsHold
-  , filterAxioms
+  , doRestrictionsHold
+  , filterRestrictions
   
   , checkIndependence
   
@@ -158,9 +158,9 @@ module Theory.Constraint.System (
   , sLemmas
   , insertLemmas
 
-  -- ** Keeping track of typing assumptions
-  , CaseDistKind(..)
-  , sCaseDistKind
+  -- ** Keeping track of source assumptions
+  , SourceKind(..)
+  , sSourceKind
 
   -- ** Goals
   , GoalStatus(..)
@@ -181,7 +181,7 @@ module Theory.Constraint.System (
   , prettySystem
   , prettyNonGraphSystem
   , prettyNonGraphSystemDiff
-  , prettyCaseDistinction
+  , prettySource
 
   ) where
 
@@ -259,32 +259,32 @@ opposite RHS = LHS
 data SystemTraceQuantifier = ExistsSomeTrace | ExistsNoTrace
        deriving( Eq, Ord, Show )
 
--- | Case dinstinction kind that are allowed. The order of the kinds
--- corresponds to the subkinding relation: untyped < typed.
-data CaseDistKind = UntypedCaseDist | TypedCaseDist
+-- | Source kind that are allowed. The order of the kinds
+-- corresponds to the subkinding relation: raw < refined.
+data SourceKind = RawSource | RefinedSource
        deriving( Eq )
 
-instance Show CaseDistKind where
-    show UntypedCaseDist = "untyped"
-    show TypedCaseDist   = "typed"
+instance Show SourceKind where
+    show RawSource     = "raw"
+    show RefinedSource = "refined"
 
 -- Adapted from the output of 'derive'.
-instance Read CaseDistKind where
+instance Read SourceKind where
         readsPrec p0 r
           = readParen (p0 > 10)
               (\ r0 ->
-                 [(UntypedCaseDist, r1) | ("untyped", r1) <- lex r0])
+                 [(RawSource, r1) | ("untyped", r1) <- lex r0])
               r
               ++
               readParen (p0 > 10)
-                (\ r0 -> [(TypedCaseDist, r1) | ("typed", r1) <- lex r0])
+                (\ r0 -> [(RefinedSource, r1) | ("typed", r1) <- lex r0])
                 r
 
-instance Ord CaseDistKind where
-    compare UntypedCaseDist UntypedCaseDist = EQ
-    compare UntypedCaseDist TypedCaseDist   = LT
-    compare TypedCaseDist   UntypedCaseDist = GT
-    compare TypedCaseDist   TypedCaseDist   = EQ
+instance Ord SourceKind where
+    compare RawSource     RawSource     = EQ
+    compare RawSource     RefinedSource = LT
+    compare RefinedSource RawSource     = GT
+    compare RefinedSource RefinedSource = EQ
 
 -- | The status of a 'Goal'. Use its 'Semigroup' instance to combine the
 -- status info of goals that collapse.
@@ -312,7 +312,7 @@ data System = System
     , _sLemmas         :: S.Set LNGuarded
     , _sGoals          :: M.Map Goal GoalStatus
     , _sNextGoalNr     :: Integer
-    , _sCaseDistKind   :: CaseDistKind
+    , _sSourceKind     :: SourceKind
     , _sDiffSystem     :: Bool
     }
     -- NOTE: Don't forget to update 'substSystem' in
@@ -340,9 +340,9 @@ sConjDisjEqs = eqsConj . sEqStore
 -- Proof Context
 ------------------------------------------------------------------------------
 
--- | A big-step case distinction.
-data CaseDistinction = CaseDistinction
-     { _cdGoal     :: Goal   -- start goal of case distinction
+-- | A big-step source. (Formerly known as case distinction.)
+data Source = Source
+     { _cdGoal     :: Goal   -- start goal of source
        -- disjunction of named sequents with premise being solved; each name
        -- being the path of proof steps required to arrive at these cases
      , _cdCases    :: Disj ([String], System)
@@ -353,13 +353,13 @@ data InductionHint = UseInduction | AvoidInduction
        deriving( Eq, Ord, Show )
 
 -- | A proof context contains the globally fresh facts, classified rewrite
--- rules and the corresponding precomputed premise case distinction theorems.
+-- rules and the corresponding precomputed premise source theorems.
 data ProofContext = ProofContext
        { _pcSignature          :: SignatureWithMaude
        , _pcRules              :: ClassifiedRules
        , _pcInjectiveFactInsts :: S.Set FactTag
-       , _pcCaseDistKind       :: CaseDistKind
-       , _pcCaseDists          :: [CaseDistinction]
+       , _pcSourceKind         :: SourceKind
+       , _pcSources            :: [Source]
        , _pcUseInduction       :: InductionHint
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
@@ -379,12 +379,12 @@ data DiffProofContext = DiffProofContext
        , _dpcProtoRules           :: [ProtoRuleE]
        , _dpcConstrRules          :: [RuleAC]
        , _dpcDestrRules           :: [RuleAC]
-       , _dpcAxioms               :: [(Side, [LNGuarded])]
+       , _dpcRestrictions               :: [(Side, [LNGuarded])]
        }
        deriving( Eq, Ord, Show )
 
        
-$(mkLabels [''ProofContext, ''DiffProofContext, ''CaseDistinction])
+$(mkLabels [''ProofContext, ''DiffProofContext, ''Source])
 
 
 -- | The 'MaudeHandle' of a proof-context.
@@ -398,14 +398,14 @@ eitherProofContext ctxt s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPC
 -- Instances
 ------------
 
-instance HasFrees CaseDistinction where
+instance HasFrees Source where
     foldFrees f th =
         foldFrees f (L.get cdGoal th)   `mappend`
         foldFrees f (L.get cdCases th)
 
     foldFreesOcc  _ _ = const mempty
 
-    mapFrees f th = CaseDistinction <$> mapFrees f (L.get cdGoal th)
+    mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
                                     <*> mapFrees f (L.get cdCases th)
 
 data DiffProofType = RuleEquivalence | None
@@ -432,7 +432,7 @@ $(mkLabels [''DiffSystem])
 ------------------------------------------------------------------------------
 
 -- | The empty constraint system, which is logically equivalent to true.
-emptySystem :: CaseDistKind -> Bool -> System
+emptySystem :: SourceKind -> Bool -> System
 emptySystem d isdiff = System
     M.empty S.empty S.empty Nothing emptyEqStore
     S.empty S.empty S.empty
@@ -445,25 +445,25 @@ emptyDiffSystem = DiffSystem
 
 -- | Returns the constraint system that has to be proven to show that given
 -- formula holds in the context of the given theory.
-formulaToSystem :: [LNGuarded]           -- ^ Axioms to add
-                -> CaseDistKind          -- ^ Case distinction kind
+formulaToSystem :: [LNGuarded]           -- ^ Restrictions to add
+                -> SourceKind            -- ^ Source kind
                 -> SystemTraceQuantifier -- ^ Trace quantifier
                 -> Bool                  -- ^ In diff proofs, all action goals have to be resolved
                 -> LNFormula
                 -> System
-formulaToSystem axioms kind traceQuantifier isdiff fm = 
-      insertLemmas safetyAxioms
+formulaToSystem restrictions kind traceQuantifier isdiff fm = 
+      insertLemmas safetyRestrictions
     $ L.set sFormulas (S.singleton gf2)
     $ (emptySystem kind isdiff)
   where
-    (safetyAxioms, otherAxioms) = partition isSafetyFormula axioms
+    (safetyRestrictions, otherRestrictions) = partition isSafetyFormula restrictions
     gf0 = formulaToGuarded_ fm
     gf1 = case traceQuantifier of
       ExistsSomeTrace -> gf0
       ExistsNoTrace   -> gnot gf0
-    -- Non-safety axioms must be added to the formula, as they render the set
+    -- Non-safety restrictions must be added to the formula, as they render the set
     -- of traces non-prefix-closed, which makes the use of induction unsound.
-    gf2 = gconj $ gf1 : otherAxioms
+    gf2 = gconj $ gf1 : otherRestrictions
 
 -- | Add a lemma / additional assumption to a constraint system.
 insertLemma :: LNGuarded -> System -> System
@@ -602,7 +602,7 @@ getOriginalRule ctxt side (Rule rule _ _ _) = case rule of
 
 
 -- | Returns true if the graph is correct, i.e. complete and conclusions and premises match
--- | Note that this does not check if all goals are solved, nor if any axioms are violated!
+-- | Note that this does not check if all goals are solved, nor if any restrictions are violated!
 -- FIXME: consider implicit deduction
 isCorrectDG :: System -> Bool
 isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) True (L.get sNodes sys)
@@ -717,9 +717,9 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
         candidateSubsts (compose subst' subst) as
 
 
--- | Removes all axioms that are not relevant for the system, i.e. that only contain atoms not present in the system.
-filterAxioms :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
-filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
+-- | Removes all restrictions that are not relevant for the system, i.e. that only contain atoms not present in the system.
+filterRestrictions :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
+filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
   where
     runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
 
@@ -731,7 +731,7 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
          gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
-                                          Nothing               -> error "Bug in filterAxioms, please report."
+                                          Nothing               -> error "Bug in filterRestrictions, please report."
                                           Just (_, _, atos, gf) -> (unifiableNodes gf) || (unifiableAtoms atos)
 
     unifiableAtoms :: [Atom (VTerm Name (LVar))] -> Bool
@@ -747,13 +747,13 @@ filterAxioms ctxt sys formulas = filter (unifiableNodes) formulas
 
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
-doAxiomsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
-doAxiomsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: This is a temporary simulation of diff-safe axioms!
+doRestrictionsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
+doRestrictionsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: This is a temporary simulation of diff-safe restrictions!
   if (all (== gtrue) (simplify formulas isSolved))
-    then Just $ {-trace ("doAxiomsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} True
+    then Just $ {-trace ("doRestrictionsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} True
     else if (any (== gfalse) (simplify formulas isSolved))
-          then Just $ {-trace ("doAxiomsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} False
-          else {-trace ("doAxiomsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} Nothing
+          then Just $ {-trace ("doRestrictionsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} False
+          else {-trace ("doRestrictionsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} Nothing
   where
     simplify :: [LNGuarded] -> Bool -> [LNGuarded]
     simplify forms solved = if ({-trace ("step: " ++ show forms ++ " " ++ show (step forms solved))-} (step forms solved)) == forms
@@ -1110,7 +1110,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
   , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
   , ("equations",       prettyEqStore $ L.get sEqStore se)
   , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
-  , ("allowed cases",   text $ show $ L.get sCaseDistKind se)
+  , ("allowed cases",   text $ show $ L.get sSourceKind se)
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("unsolved goals",  prettyGoals False se)
   , ("solved goals",    prettyGoals True se)
@@ -1144,24 +1144,24 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
 --     help = do 
 --       side <- L.get dsSide se
 -- --       system <- L.get dsSystem se
---       axioms <- Just $ L.get dpcAxioms ctxt
---       sideaxioms <- Just $ filter (\x -> fst x == side) axioms
--- --       formulas <- Just $ concat $ map snd sideaxioms
--- --       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
+--       restrictions <- Just $ L.get dpcRestrictions ctxt
+--       siderestrictions <- Just $ filter (\x -> fst x == side) restrictions
+-- --       formulas <- Just $ concat $ map snd siderestrictions
+-- --       evalFms <- Just $ doRestrictionsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
 -- --       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
---       return $ concat $ map snd sideaxioms
+--       return $ concat $ map snd siderestrictions
 -- 
 --     help2 :: Maybe [LNGuarded]
 --     help2 = do 
 --       side2 <- L.get dsSide se
 --       side <- Just $ if side2 == LHS then RHS else LHS
 -- --       system <- L.get dsSystem se
---       axioms <- Just $ L.get dpcAxioms ctxt
---       sideaxioms <- Just $ filter (\x -> fst x == side) axioms
--- --       formulas <- Just $ concat $ map snd sideaxioms
--- --       evalFms <- Just $ doAxiomsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
+--       restrictions <- Just $ L.get dpcRestrictions ctxt
+--       siderestrictions <- Just $ filter (\x -> fst x == side) restrictions
+-- --       formulas <- Just $ concat $ map snd siderestrictions
+-- --       evalFms <- Just $ doRestrictionsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
 -- --       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
---       return $ concat $ map snd sideaxioms
+--       return $ concat $ map snd siderestrictions
 
 -- | Pretty print the proof type.
 prettyProofType :: HighlightDocument d => Maybe DiffProofType -> d
@@ -1229,8 +1229,8 @@ prettyGoals solved sys = vsep $ do
     toplevelTerms t = [t]
 
 -- | Pretty print a case distinction
-prettyCaseDistinction :: HighlightDocument d => CaseDistinction -> d
-prettyCaseDistinction th = vcat $
+prettySource :: HighlightDocument d => Source -> d
+prettySource th = vcat $
    [ prettyGoal $ L.get cdGoal th ]
    ++ map combine (zip [(1::Int)..] $ map snd . getDisj $ (L.get cdCases th))
   where
@@ -1242,10 +1242,10 @@ prettyCaseDistinction th = vcat $
 
 deriving instance Show DiffSystem
 
-instance Apply CaseDistKind where
+instance Apply SourceKind where
     apply = const id
 
-instance HasFrees CaseDistKind where
+instance HasFrees SourceKind where
     foldFrees = const mempty
     foldFreesOcc  _ _ = const mempty
     mapFrees  = const pure
@@ -1301,26 +1301,26 @@ instance HasFrees System where
 -- NFData
 ---------
 
-$( derive makeBinary ''CaseDistinction)
+$( derive makeBinary ''Source)
 $( derive makeBinary ''ClassifiedRules)
 $( derive makeBinary ''InductionHint)
 $( derive makeBinary ''ProofContext)
 
 $( derive makeBinary ''Side)
-$( derive makeBinary ''CaseDistKind)
+$( derive makeBinary ''SourceKind)
 $( derive makeBinary ''GoalStatus)
 $( derive makeBinary ''DiffProofType)
 $( derive makeBinary ''System)
 $( derive makeBinary ''DiffSystem)
 $( derive makeBinary ''SystemTraceQuantifier)
 
-$( derive makeNFData ''CaseDistinction)
+$( derive makeNFData ''Source)
 $( derive makeNFData ''ClassifiedRules)
 $( derive makeNFData ''InductionHint)
 $( derive makeNFData ''ProofContext)
 
 $( derive makeNFData ''Side)
-$( derive makeNFData ''CaseDistKind)
+$( derive makeNFData ''SourceKind)
 $( derive makeNFData ''GoalStatus)
 $( derive makeNFData ''DiffProofType)
 $( derive makeNFData ''System)

@@ -76,11 +76,11 @@ rule (modulo E) V_4:
   --[ V_4( ) ]->
    [ Out( ~r ) ]
 
-axiom onlyOnce [right]:
+restriction onlyOnce [right]:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom onlyOnce [left]:
+restriction onlyOnce [left]:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
@@ -21899,7 +21899,7 @@ analyzing: examples/post17/foo_vote_privacy.spthy
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 252.92287s
+  processing time: 311.165358s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)
@@ -21912,7 +21912,7 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 252.92287s
+  processing time: 311.165358s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)

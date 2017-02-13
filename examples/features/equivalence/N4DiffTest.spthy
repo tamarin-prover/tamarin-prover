@@ -20,7 +20,7 @@ rule Test:
   --[ Prod(x) ]->
   [ Out(diff(x,~f)) ]
 
-axiom Product:
+restriction Product:
   "
   All x #i. Prod(x) @ i ==> (Ex a b. x = (a*b))
   "

@@ -44,7 +44,7 @@ rule (modulo E) S_2:
 
   /* has exactly the trivial AC variant */
 
-axiom BankOnlyAcceptsOnce:
+restriction BankOnlyAcceptsOnce:
   "∀ x #j #k. ((Deposited( x ) @ #j) ∧ (Deposited( x ) @ #k)) ⇒ (#j = #k)"
   // safety formula
 
@@ -130,7 +130,7 @@ analyzing: examples/post17/chaum_unforgeability.spthy
 analyzed: examples/post17/chaum_unforgeability.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.11235s
+  processing time: 0.131091s
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)
 
@@ -142,7 +142,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_unforgeability.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.11235s
+  processing time: 0.131091s
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)
 

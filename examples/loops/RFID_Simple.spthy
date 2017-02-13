@@ -64,7 +64,7 @@ rule Decrypt_Right:
   --[ Access(y) ]->
     [ Out(y) ]
 
-lemma types [typing]:
+lemma types [sources]:
   "All m #i. Access(m) @ i ==>
       (Ex   #j. KU(m) @ j & j < i)
     | (Ex x #j. Exclusive(x,m) @ j)

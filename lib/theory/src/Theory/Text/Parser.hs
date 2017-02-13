@@ -46,38 +46,39 @@ import           Term.SubtermRule
 import           Theory
 import           Theory.Text.Parser.Token
 
+import           Debug.Trace
 
 ------------------------------------------------------------------------------
--- ParseAxiom datatype and functions to parse diff axioms
+-- ParseRestriction datatype and functions to parse diff restrictions
 ------------------------------------------------------------------------------
 
--- | An axiom describes a property that must hold for all traces. Axioms are
+-- | A restriction describes a property that must hold for all traces. Restrictions are
 -- always used as lemmas in proofs.
-data ParseAxiom = ParseAxiom
-       { pAxName       :: String
-       , pAxAttributes :: [AxiomAttribute]
-       , pAxFormula    :: LNFormula
+data ParseRestriction = ParseRestriction
+       { pRstrName       :: String
+       , pRstrAttributes :: [RestrictionAttribute]
+       , pRstrFormula    :: LNFormula
        }
        deriving( Eq, Ord, Show )
 
--- | True iff the axiom is a LHS axiom.
-isLeftAxiom :: ParseAxiom -> Bool
-isLeftAxiom ax =
-     (LHSAxiom `elem` pAxAttributes ax)
+-- | True iff the restriction is a LHS restriction.
+isLeftRestriction :: ParseRestriction -> Bool
+isLeftRestriction rstr =
+     (LHSRestriction `elem` pRstrAttributes rstr)
 
--- | True iff the axiom is a RHS axiom.
-isRightAxiom :: ParseAxiom -> Bool
-isRightAxiom ax =
-     (RHSAxiom `elem` pAxAttributes ax)
+-- | True iff the restriction is a RHS restriction.
+isRightRestriction :: ParseRestriction -> Bool
+isRightRestriction rstr =
+     (RHSRestriction `elem` pRstrAttributes rstr)
 
--- -- | True iff the axiom is a Both axiom.
--- isBothAxiom :: ParseAxiom -> Bool
--- isBothAxiom ax =
---      (BothAxiom `elem` pAxAttributes ax)
+-- -- | True iff the restriction is a Both restriction.
+-- isBothRestriction :: ParseRestriction -> Bool
+-- isBothRestriction rstr =
+--      (BothRestriction `elem` pRstrAttributes rstr)
 
--- | Converts ParseAxioms to Axioms
-toAxiom :: ParseAxiom -> Axiom
-toAxiom ax = Axiom (pAxName ax) (pAxFormula ax)
+-- | Converts ParseRestrictions to Restrictions
+toRestriction :: ParseRestriction -> Restriction
+toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
@@ -265,7 +266,7 @@ moduloE, moduloAC :: Parser ()
 moduloE  = modulo "E"
 moduloAC = modulo "AC"
 
-{-
+{- -- This has not been renamed from typing to source, as it is unclear.
 -- | Parse a typing assertion modulo E.
 typeAssertions :: Parser TypingE
 typeAssertions = fmap TypingE $
@@ -488,26 +489,45 @@ guardedFormula = try $ do
 
 
 ------------------------------------------------------------------------------
--- Parsing Axioms
+-- Parsing Restrictions
 ------------------------------------------------------------------------------
 
--- | Parse a 'AxiomAttribute'.
-axiomAttribute :: Parser AxiomAttribute
-axiomAttribute = asum
-  [ symbol "left"          *> pure LHSAxiom
-  , symbol "right"         *> pure RHSAxiom
-  , symbol "both"          *> pure BothAxiom
+-- | Parse a 'RestrictionAttribute'.
+restrictionAttribute :: Parser RestrictionAttribute
+restrictionAttribute = asum
+  [ symbol "left"          *> pure LHSRestriction
+  , symbol "right"         *> pure RHSRestriction
+  , symbol "both"          *> pure BothRestriction
   ]
 
--- | Parse an axiom.
-axiom :: Parser Axiom
-axiom = Axiom <$> (symbol "axiom" *> identifier <* colon)
-              <*> doubleQuoted standardFormula
+-- | Parse a restriction.
+restriction :: Parser Restriction
+restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
+                          <*> doubleQuoted standardFormula
 
--- | Parse a diff axiom.
-diffAxiom :: Parser ParseAxiom
-diffAxiom = ParseAxiom <$> (symbol "axiom" *> identifier)
-              <*> (option [] $ list axiomAttribute)
+-- | Fail on parsing an old "axiom" keyword.
+--legacyAxiom :: Parser Restriction
+--legacyAxiom = symbol "axiom" *> fail "Using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'."
+
+-- | Parse a legacy axiom, now called restriction.
+legacyAxiom :: Parser Restriction
+legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") Restriction <$> (symbol "axiom" *> identifier <* colon)
+                          <*> doubleQuoted standardFormula
+
+-- | Parse a diff restriction.
+diffRestriction :: Parser ParseRestriction
+diffRestriction = ParseRestriction <$> (symbol "restriction" *> identifier)
+                    <*> (option [] $ list restrictionAttribute)
+                    <*> (colon *> doubleQuoted standardFormula)
+
+-- | Fail on parsing an old "axiom" keyword.
+--legacyDiffAxiom :: Parser ParseRestriction
+--legacyDiffAxiom = symbol "axiom" *> fail "Using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'."
+
+-- | Parse a legacy diff axiom, now called restriction. Emits warning.
+legacyDiffAxiom :: Parser ParseRestriction
+legacyDiffAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") ParseRestriction <$> (symbol "axiom" *> identifier)
+              <*> (option [] $ list restrictionAttribute)
               <*> (colon *> doubleQuoted standardFormula)
 
 ------------------------------------------------------------------------------
@@ -517,7 +537,9 @@ diffAxiom = ParseAxiom <$> (symbol "axiom" *> identifier)
 -- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Parser LemmaAttribute
 lemmaAttribute = asum
-  [ symbol "typing"        *> pure TypingLemma
+  [ symbol "typing"        *> trace ("Deprecation Warning: using 'typing' is retired notation, replace all uses of 'typing' by 'sources'.\n") pure SourceLemma -- legacy support, emits deprecation warning
+--  , symbol "typing"        *> fail "Using 'typing' is retired notation, replace all uses of 'typing' by 'sources'."
+  , symbol "sources"       *> pure SourceLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
@@ -736,8 +758,11 @@ theory flags0 = do
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
-      , do thy' <- liftedAddAxiom thy =<< axiom
+      , do thy' <- liftedAddRestriction thy =<< restriction
            addItems flags thy'
+      , do thy' <- liftedAddRestriction thy =<< legacyAxiom
+           addItems flags thy'
+           -- add legacy deprecation warning output
       , do thy' <- liftedAddLemma thy =<< lemma
            addItems flags thy'
       , do ru <- protoRule
@@ -774,9 +799,9 @@ theory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
 
-    liftedAddAxiom thy ax = case addAxiom ax thy of
+    liftedAddRestriction thy rstr = case addRestriction rstr thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate axiom: " ++ get axName ax
+        Nothing   -> fail $ "duplicate restriction: " ++ get rstrName rstr
 
         
 -- | Parse a diff theory.
@@ -804,8 +829,11 @@ diffTheory flags0 = do
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
-      , do thy' <- liftedAddAxiom thy =<< diffAxiom
+      , do thy' <- liftedAddRestriction thy =<< diffRestriction
            addItems flags thy'
+      , do thy' <- liftedAddRestriction thy =<< legacyDiffAxiom
+           addItems flags thy'
+           -- add legacy deprecation warning output
       , do thy' <- liftedAddLemma thy =<< lemma
            addItems flags thy'
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma
@@ -858,16 +886,16 @@ diffTheory flags0 = do
                                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
 
-    liftedAddAxiom thy ax = if isLeftAxiom ax
-                               then case addAxiomDiff LHS (toAxiom ax) thy of
-                                       Just thy' -> return thy'
-                                       Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
-                               else if isRightAxiom ax
-                                       then case addAxiomDiff RHS (toAxiom ax) thy of
-                                          Just thy' -> return thy'
-                                          Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
-                                       else case addAxiomDiff RHS (toAxiom ax) thy of
-                                          Just thy' -> case addAxiomDiff LHS (toAxiom ax) thy' of
-                                             Just thy'' -> return thy''
-                                             Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
-                                          Nothing   -> fail $ "duplicate axiom: " ++ get axName (toAxiom ax)
+    liftedAddRestriction thy rstr = if isLeftRestriction rstr
+                                       then case addRestrictionDiff LHS (toRestriction rstr) thy of
+                                               Just thy' -> return thy'
+                                               Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
+                                       else if isRightRestriction rstr
+                                               then case addRestrictionDiff RHS (toRestriction rstr) thy of
+                                                  Just thy' -> return thy'
+                                                  Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
+                                               else case addRestrictionDiff RHS (toRestriction rstr) thy of
+                                                  Just thy' -> case addRestrictionDiff LHS (toRestriction rstr) thy' of
+                                                     Just thy'' -> return thy''
+                                                     Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
+                                                  Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)

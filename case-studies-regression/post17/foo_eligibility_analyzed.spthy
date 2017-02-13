@@ -87,7 +87,7 @@ rule (modulo E) C_2:
      [ Out( z ) ]
   */
 
-lemma types [typing]:
+lemma types [sources]:
   all-traces
   "(∀ e #i.
      (In_A_1( e ) @ #i) ⇒
@@ -327,7 +327,7 @@ analyzing: examples/post17/foo_eligibility.spthy
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.131225s
+  processing time: 12.772496s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)
@@ -340,7 +340,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 10.131225s
+  processing time: 12.772496s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)

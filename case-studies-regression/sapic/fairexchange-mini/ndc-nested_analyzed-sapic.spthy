@@ -61,21 +61,21 @@ rule (modulo E) Zero_221:
 
   /* has exactly the trivial AC variant */
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom progress__to_11_or_211_or_221:
+restriction progress__to_11_or_211_or_221:
   "∀ p #t1.
     (ProgressFrom_( p ) @ #t1) ⇒
     (((∃ #t2. ProgressTo_11( p ) @ #t2) ∨
       (∃ #t2. ProgressTo_211( p ) @ #t2)) ∨
      (∃ #t2. ProgressTo_221( p ) @ #t2))"
 
-axiom progress_init:
+restriction progress_init:
   "∃ #t. Init( ) @ #t"
 
-axiom resilient:
+restriction resilient:
   "∀ #i x y.
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
 
@@ -363,7 +363,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.180286s
+  processing time: 0.188794s
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)
@@ -381,7 +381,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.180286s
+  processing time: 0.188794s
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)

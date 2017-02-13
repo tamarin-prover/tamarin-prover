@@ -46,7 +46,7 @@ rule Tag_Start:
   let t_msg = senc(<~nr,~nt>, diff(~k1,~k2))
   in
   [ !Tag(<~k1,~k2>) 
-  , In(~nr) // we assume by typing we can see if the nr is actually a nonce type!
+  , In(~nr) // we assume by type we can see if the nr is actually a nonce type!
   , Fr(~nt) ] 
 --[ OUT_T_1(~nt, t_msg) , InEq(~k1,~k2) ]->
   [ Trun(diff(~k1, ~k2), ~nr, ~nt), Out(t_msg) ]
@@ -58,8 +58,8 @@ rule Tag_Finish:
   [ Tdone(~k, ~nr, ~nt) ]
 
 
-//The typing lemma is needed to remove open chains.
-lemma types [typing]:
+//The sources lemma is needed to resolve remaining partial deconstructions.
+lemma types [sources]:
   " (All n m1 #i.
        IN_R_1( n, m1) @ i
        ==>

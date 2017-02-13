@@ -32,7 +32,7 @@ rule (modulo E) Responder:
 
   /* has exactly the trivial AC variant */
 
-lemma typing_assertion [typing]:
+lemma sources_assertion [sources]:
   all-traces
   "∀ m k #i.
     (In_Responder( m, k ) @ #i) ⇒
@@ -154,8 +154,8 @@ analyzing: examples/loops/Minimal_Typing_Example.spthy
 analyzed: examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.132112s
-  typing_assertion (all-traces): verified (13 steps)
+  processing time: 0.13527s
+  sources_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)
 
@@ -167,8 +167,8 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Typing_Example.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.132112s
-  typing_assertion (all-traces): verified (13 steps)
+  processing time: 0.13527s
+  sources_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)
 

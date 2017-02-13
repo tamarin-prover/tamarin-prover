@@ -61,7 +61,7 @@ rule (modulo E) Secrecy_claim:
 
   /* has exactly the trivial AC variant */
 
-lemma types [typing, reuse]:
+lemma types [sources, reuse]:
   all-traces
   "(∀ ni m1 #i.
      (IN_R_1_ni( ni, m1 ) @ #i) ⇒
@@ -707,7 +707,7 @@ analyzing: examples/classic/NSLPK3_untagged.spthy
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.629645s
+  processing time: 4.438568s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -720,7 +720,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 3.629645s
+  processing time: 4.438568s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

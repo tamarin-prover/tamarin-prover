@@ -5,10 +5,10 @@ builtins: diffie-hellman, multiset
 functions: te/1, te_inv/1    // convert group element to exponent
 equations: te_inv(te(x)) = x // te is not hiding
 
-axiom Unique: "All x #i #j. Uniq(x) @ i & Uniq(x) @ j ==> #i = #j"
-axiom Less:   "All x y #i. Less(x,y) @ i ==> Ex z. x + z = y"
-axiom Leq:   "All x y #i. Leq(x,y) @ i ==> ((Ex z. x + z = y) | x = y)"
-axiom InEq:   "not (Ex x #i. InEq(x,x) @ i)"
+restriction Unique: "All x #i #j. Uniq(x) @ i & Uniq(x) @ j ==> #i = #j"
+restriction Less:   "All x y #i. Less(x,y) @ i ==> Ex z. x + z = y"
+restriction Leq:   "All x y #i. Leq(x,y) @ i ==> ((Ex z. x + z = y) | x = y)"
+restriction InEq:   "not (Ex x #i. InEq(x,x) @ i)"
 
 /* ********************************************************************* */
 /* Setup and reveal rules                                                */

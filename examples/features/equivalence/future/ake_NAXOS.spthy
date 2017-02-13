@@ -83,7 +83,7 @@ rule Resp_1:
        !Ephk(~eskR, ~eskR),
        !Sessk( ~eskR, kR) ]
 
-axiom one_key_per_name:
+restriction one_key_per_name:
   "All A #i #j. RegKey(A) @i & RegKey(A) @j ==> #i = #j"
 
 

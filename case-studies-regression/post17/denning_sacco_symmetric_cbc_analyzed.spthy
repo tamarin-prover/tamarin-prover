@@ -54,7 +54,7 @@ rule (modulo E) Server:
 
   /* has exactly the trivial AC variant */
 
-axiom singlesharedkeyperuser:
+restriction singlesharedkeyperuser:
   "∀ A #i #j. ((KeyGen( A ) @ #i) ∧ (KeyGen( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
@@ -129,7 +129,7 @@ analyzing: examples/post17/denning_sacco_symmetric_cbc.spthy
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.254503s
+  processing time: 0.27455s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 
@@ -141,7 +141,7 @@ summary of summaries:
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.254503s
+  processing time: 0.27455s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 

@@ -360,21 +360,21 @@ rule Zero_111121112: //Zero
 rule Zero_11112112: //Zero 
  [ State_11112112(~lock7, L_h)] --[]-> []
 
- axiom set_in:
+ restriction set_in:
 "All x y #t3 . IsIn(x,y)@t3 ==>
         (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
                 & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
                 & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
 )"
 
-axiom set_notin:
+restriction set_notin:
 "All x #t3 . IsNotSet(x)@t3 ==> 
         (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
   | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 
                 &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
 
 
-axiom locking:
+restriction locking:
 "All l x lp #t1 #t3 . Lock(l,x)@t1 & Lock(lp,x)@t3 
         ==> 
         ( #t1<#t3 
@@ -386,54 +386,54 @@ axiom locking:
         | #t3<#t1 | #t1=#t3 "
 
 
-axiom predicate_eq:
+restriction predicate_eq:
 "All #i a b. Pred_eq(a,b)@i ==> a = b"
 
 
-axiom predicate_not_eq:
+restriction predicate_not_eq:
 "All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)"
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
-axiom predicate11:
+restriction predicate11:
 	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_can_encrypt(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not(enc = 'on')"
 
-axiom predicate10:
+restriction predicate10:
 	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_can_encrypt(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> enc = 'on'"
 
-axiom predicate9:
+restriction predicate9:
 	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_can_decrypt(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not(dec = 'on')"
 
-axiom predicate8:
+restriction predicate8:
 	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_can_decrypt(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> dec = 'on'"
 
-axiom predicate7:
+restriction predicate7:
 	"All #i wrap1 unwrap1 enc1 dec1 sens1 extr1 trus1 wwt1 wt1 ut1 wrap2 unwrap2 enc2 dec2 sens2 extr2 trus2 wwt2 wt2 ut2. Pred_not_can_wrap(wrap1,unwrap1,enc1,dec1,sens1,extr1,trus1,wwt1,wt1,ut1,wrap2,unwrap2,enc2,dec2,sens2,extr2,trus2,wwt2,wt2,ut2)@i ==> not(((wrap1 = 'on' & extr2 = 'on') & (wwt2 = 'off' | (wwt2 = 'on' & trus1 = 'on'))))"
 
-axiom predicate6:
+restriction predicate6:
 	"All #i wrap1 unwrap1 enc1 dec1 sens1 extr1 trus1 wwt1 wt1 ut1 wrap2 unwrap2 enc2 dec2 sens2 extr2 trus2 wwt2 wt2 ut2. Pred_can_wrap(wrap1,unwrap1,enc1,dec1,sens1,extr1,trus1,wwt1,wt1,ut1,wrap2,unwrap2,enc2,dec2,sens2,extr2,trus2,wwt2,wt2,ut2)@i ==> ((wrap1 = 'on' & extr2 = 'on') & (wwt2 = 'off' | (wwt2 = 'on' & trus1 = 'on')))"
 
-axiom predicate5:
+restriction predicate5:
 	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_can_unwrap(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not(unwrap = 'on')"
 
-axiom predicate4:
+restriction predicate4:
 	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_can_unwrap(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> unwrap = 'on'"
 
-axiom predicate3:
+restriction predicate3:
 	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_can_get_keyvalue(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not(sens = 'off')"
 
-axiom predicate2:
+restriction predicate2:
 	"All #i wrap unwrap enc dec sens extr trus wwt wt ut. Pred_can_get_keyvalue(wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> sens = 'off'"
 
-axiom predicate1:
+restriction predicate1:
 	"All #i t_wrap t_unwrap t_enc t_dec t_sens t_extr t_trus t_wwt t_wt t_ut wrap unwrap enc dec sens extr trus wwt wt ut. Pred_not_permits(t_wrap,t_unwrap,t_enc,t_dec,t_sens,t_extr,t_trus,t_wwt,t_wt,t_ut,wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> not((t_wrap = wrap & (t_unwrap = unwrap & (t_enc = enc & (t_dec = dec & (t_sens = sens & (t_extr = extr & (t_trus = trus & (t_wwt = wwt & (t_wt = wt & t_ut = ut))))))))))"
 
-axiom predicate0:
+restriction predicate0:
 	"All #i t_wrap t_unwrap t_enc t_dec t_sens t_extr t_trus t_wwt t_wt t_ut wrap unwrap enc dec sens extr trus wwt wt ut. Pred_permits(t_wrap,t_unwrap,t_enc,t_dec,t_sens,t_extr,t_trus,t_wwt,t_wt,t_ut,wrap,unwrap,enc,dec,sens,extr,trus,wwt,wt,ut)@i ==> (t_wrap = wrap & (t_unwrap = unwrap & (t_enc = enc & (t_dec = dec & (t_sens = sens & (t_extr = extr & (t_trus = trus & (t_wwt = wwt & (t_wt = wt & t_ut = ut)))))))))"
 
-lemma dec_limits [typing]:
+lemma dec_limits [sources]:
 "	( All k m #t1. DecUsing(k, m) @ t1 ==> ( Ex h2 k2 #t2 #t3. NewKey(h2, k2, 'on') @ t2 & KU(k2) @ t3 & t2 < t1 & t3 < t1 ) | ( Ex h2 #t2 #t3 #t4. NewKey(h2, k, 'off') @ t2 & KU(k) @ t3 & KU(m) @ t4 & t2 < t1 & t3 < t1 & t4 < t1 ) | ( Ex #t2. EncUsing(k, m) @ t2 & t2 < t1 ) | ( Ex h2 k2 #t2 #t3 a. Unwrapped(h2, k2, a) @ t2 & KU(k2) @ t3 & t2 < t1 & t3 < t1 ) | ( Ex #t2 #t3 h1 h2 k2. WrapKey(h2, k2, 'on') @ t2 & DecKey(h1, k2, 'on') @ t3 & t2 < t1 & t3 < t1 ) ) & ( All k #t2. GetKeyValue(k) @ t2 ==> Ex L_h #t1. NewKey(L_h, k, 'off') @ t1 ) & ( not( Ex L_h k wrap unwrap enc dec sens extr trus wwt wt #t. Insert(<'obj', L_h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'trusted'>) @ t ) ) & ( not( Ex L_h k wrap unwrap enc dec sens extr trus wwt wt #t. Insert(<'obj', L_h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'untrusted'>) @ t ) ) & ( not( Ex L_h k wrap unwrap enc dec sens extr trus wwt ut #t. Insert(<'obj', L_h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'trusted', ut>) @ t ) ) & ( not( Ex L_h k wrap unwrap enc dec sens extr trus wwt ut #t. Insert(<'obj', L_h>, <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'untrusted', ut>) @ t ) )"
 
 lemma trusted_as_ut_impossible [reuse]:

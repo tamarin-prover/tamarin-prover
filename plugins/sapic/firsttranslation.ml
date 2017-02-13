@@ -13,7 +13,7 @@ open Atomformulaaction
 open Annotatedsapicaction
 open Annotatedsapictree
 open Annotatedrule
-open Axioms
+open Restrictions
 open Translationhelper
 open Basetranslation
 open Progressfunction
@@ -187,14 +187,14 @@ let progresstrans anP = (* translation for processes with progress *)
   initrule::messsageidrule::(gen trans anP [] varset )
     
     
-let generate_sapic_axioms annotated_process =
+let generate_sapic_restrictions annotated_process =
   if (annotated_process = Empty) then ""
   else 
-      (if contains_lookup annotated_process then ass_set_in ^ ass_set_notin else "")
-    ^ (if contains_locking annotated_process then  ass_locking else "")
-    ^ (if contains_eq annotated_process then ass_predicate_eq ^ ass_predicate_not_eq else "")
+      (if contains_lookup annotated_process then res_set_in ^ res_set_notin else "")
+    ^ (if contains_locking annotated_process then  res_locking else "")
+    ^ (if contains_eq annotated_process then res_predicate_eq ^ res_predicate_not_eq else "")
     ^ (* Stuff that's always there *)
-    ass_single_session (*  ^ass_immeadiate_in TODO disabled ass_immeadiate, need to change semantics in the paper *)
+    res_single_session (*  ^ass_immeadiate_in TODO disabled ass_immeadiate, need to change semantics in the paper *)
 
 let translation input =
   let annotated_process = annotate_locks ( sapic_tree2annotatedtree input.proc) in
@@ -203,16 +203,16 @@ let translation input =
       then progresstrans annotated_process
       else noprogresstrans annotated_process 
   and lemmas_tamarin = print_lemmas input.lem
-  and users_axioms= print_axioms input.ax
-  and predicate_axioms = print_predicates input.pred
-  and sapic_axioms = 
+  and users_restrictions = print_restrictions input.ax
+  and predicate_restrictions = print_predicates input.pred
+  and sapic_restrictions = 
     if input.op.progress then 
-      generate_sapic_axioms annotated_process
-      ^ (generate_progress_axioms annotated_process)
-      ^ ass_resilient 
+      generate_sapic_restrictions annotated_process
+      ^ (generate_progress_restrictions annotated_process)
+      ^ res_resilient 
     else 
-      generate_sapic_axioms annotated_process
+      generate_sapic_restrictions annotated_process
   in
-  input.sign ^ ( print_msr msr ) ^ users_axioms ^ sapic_axioms ^
-  predicate_axioms ^ lemmas_tamarin 
+  input.sign ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^
+  predicate_restrictions ^ lemmas_tamarin 
   ^ "end"

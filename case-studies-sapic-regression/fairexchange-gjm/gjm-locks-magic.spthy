@@ -287,11 +287,11 @@ rule in_r_x_sid_m__211111: //in 'r',<$x, sid, m>
 rule Zero_2111111: //Zero 
  [ State_2111111($x, ~prog_, ~prog_211, m, sid)] --[]-> []
 
-axiom assert :
+restriction assert :
 "	All x y #j. AssertEqual(x, y) @ j ==> x = y"
 
 
-axiom locking:
+restriction locking:
 "All l x lp #t1 #t3 . Lock(l,x)@t1 & Lock(lp,x)@t3 
         ==> 
         ( #t1<#t3 
@@ -303,133 +303,133 @@ axiom locking:
         | #t3<#t1 | #t1=#t3 "
 
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 
-axiom progress_111112221_to_111112221111:
+restriction progress_111112221_to_111112221111:
     "All p #t1. ProgressFrom_111112221(p )@t1 ==> 
        (Ex #t2. ProgressTo_111112221111(p )@t2)
     "
 
-axiom progress_1111221_to_11112211:
+restriction progress_1111221_to_11112211:
     "All p #t1. ProgressFrom_1111221(p )@t1 ==> 
        (Ex #t2. ProgressTo_11112211(p )@t2)
     "
 
-axiom progress_1111112111112121_to_111111211111212111:
+restriction progress_1111112111112121_to_111111211111212111:
     "All p #t1. ProgressFrom_1111112111112121(p )@t1 ==> 
        (Ex #t2. ProgressTo_111111211111212111(p )@t2)
     "
 
-axiom progress_11111111112121_to_1111111111212111:
+restriction progress_11111111112121_to_1111111111212111:
     "All p #t1. ProgressFrom_11111111112121(p )@t1 ==> 
        (Ex #t2. ProgressTo_1111111111212111(p )@t2)
     "
 
-axiom progress_11111222111121_to_111112221111211:
+restriction progress_11111222111121_to_111112221111211:
     "All p #t1. ProgressFrom_11111222111121(p )@t1 ==> 
        (Ex #t2. ProgressTo_111112221111211(p )@t2)
     "
 
-axiom progress_11111121_to_11111121111111111_or_11111121111121:
+restriction progress_11111121_to_11111121111111111_or_11111121111121:
     "All p #t1. ProgressFrom_11111121(p )@t1 ==> 
        (Ex #t2. ProgressTo_11111121111111111(p )@t2)
 	 | (Ex #t2. ProgressTo_11111121111121(p )@t2)
     "
 
-axiom progress_111112211_to_11111221111:
+restriction progress_111112211_to_11111221111:
     "All p #t1. ProgressFrom_111112211(p )@t1 ==> 
        (Ex #t2. ProgressTo_11111221111(p )@t2)
     "
 
-axiom progress_11111111111111211_to_1111111111111121111:
+restriction progress_11111111111111211_to_1111111111111121111:
     "All p #t1. ProgressFrom_11111111111111211(p )@t1 ==> 
        (Ex #t2. ProgressTo_1111111111111121111(p )@t2)
     "
 
-axiom progress_11111211_to_11111211111:
+restriction progress_11111211_to_11111211111:
     "All p #t1. ProgressFrom_11111211(p )@t1 ==> 
        (Ex #t2. ProgressTo_11111211111(p )@t2)
     "
 
-axiom progress_1111211_to_11112111:
+restriction progress_1111211_to_11112111:
     "All p #t1. ProgressFrom_1111211(p )@t1 ==> 
        (Ex #t2. ProgressTo_11112111(p )@t2)
     "
 
-axiom progress_211_to_21111:
+restriction progress_211_to_21111:
     "All p #t1. ProgressFrom_211(p )@t1 ==> 
        (Ex #t2. ProgressTo_21111(p )@t2)
     "
 
-axiom progress_1111112111112111_to_111111211111211111:
+restriction progress_1111112111112111_to_111111211111211111:
     "All p #t1. ProgressFrom_1111112111112111(p )@t1 ==> 
        (Ex #t2. ProgressTo_111111211111211111(p )@t2)
     "
 
-axiom progress_11111111112111_to_1111111111211111:
+restriction progress_11111111112111_to_1111111111211111:
     "All p #t1. ProgressFrom_11111111112111(p )@t1 ==> 
        (Ex #t2. ProgressTo_1111111111211111(p )@t2)
     "
 
-axiom progress_111112211111_to_11111221111111:
+restriction progress_111112211111_to_11111221111111:
     "All p #t1. ProgressFrom_111112211111(p )@t1 ==> 
        (Ex #t2. ProgressTo_11111221111111(p )@t2)
     "
 
-axiom progress_11111222111111_to_111112221111111:
+restriction progress_11111222111111_to_111112221111111:
     "All p #t1. ProgressFrom_11111222111111(p )@t1 ==> 
        (Ex #t2. ProgressTo_111112221111111(p )@t2)
     "
 
-axiom progress_111112111111_to_1111121111111:
+restriction progress_111112111111_to_1111121111111:
     "All p #t1. ProgressFrom_111112111111(p )@t1 ==> 
        (Ex #t2. ProgressTo_1111121111111(p )@t2)
     "
 
-axiom progress_111_to_111122:
+restriction progress_111_to_111122:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
        (Ex #t2. ProgressTo_111122(p )@t2)
     "
 
-axiom progress_111_to_1111112:
+restriction progress_111_to_1111112:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
        (Ex #t2. ProgressTo_1111112(p )@t2)
     "
 
-axiom progress_111_to_111112:
+restriction progress_111_to_111112:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
        (Ex #t2. ProgressTo_111112(p )@t2)
     "
 
-axiom progress_111_to_111121:
+restriction progress_111_to_111121:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
        (Ex #t2. ProgressTo_111121(p )@t2)
     "
 
-axiom progress_111_to_111111111111111111_or_111111111121_or_1111111111111121:
+restriction progress_111_to_111111111111111111_or_111111111121_or_1111111111111121:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
        (Ex #t2. ProgressTo_111111111111111111(p )@t2)
 	 | (Ex #t2. ProgressTo_111111111121(p )@t2)
 	 | (Ex #t2. ProgressTo_1111111111111121(p )@t2)
     "
 
-axiom progress__to_2:
+restriction progress__to_2:
     "All p #t1. ProgressFrom_(p )@t1 ==> 
        (Ex #t2. ProgressTo_2(p )@t2)
     "
 
-axiom progress__to_1:
+restriction progress__to_1:
     "All p #t1. ProgressFrom_(p )@t1 ==> 
        (Ex #t2. ProgressTo_1(p )@t2)
     "
 
 
-axiom progress_init:
+restriction progress_init:
     " Ex #t. Init()@t "
 
-axiom resilient: 
+restriction resilient: 
     "All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
 
 lemma sanity_a4b3 : exists-trace

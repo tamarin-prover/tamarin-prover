@@ -81,25 +81,25 @@ rule (modulo E) Zero_12111:
 
   /* has exactly the trivial AC variant */
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom progress_121_to_12111:
+restriction progress_121_to_12111:
   "∀ p #t1.
     (ProgressFrom_121( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_12111( p ) @ #t2)"
 
-axiom progress_111_to_1111:
+restriction progress_111_to_1111:
   "∀ p #t1.
     (ProgressFrom_111( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_1111( p ) @ #t2)"
 
-axiom progress__to_1:
+restriction progress__to_1:
   "∀ p #t1. (ProgressFrom_( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_1( p ) @ #t2)"
 
-axiom progress_init:
+restriction progress_init:
   "∃ #t. Init( ) @ #t"
 
-axiom resilient:
+restriction resilient:
   "∀ #i x y.
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
 
@@ -153,7 +153,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini2.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.12506s
+  processing time: 0.122297s
   A_impossible (all-traces): verified (2 steps)
   B_possible (exists-trace): verified (7 steps)
 
@@ -165,7 +165,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.12506s
+  processing time: 0.122297s
   A_impossible (all-traces): verified (2 steps)
   B_possible (exists-trace): verified (7 steps)
 

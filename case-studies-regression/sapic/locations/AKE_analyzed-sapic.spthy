@@ -196,23 +196,23 @@ rule (modulo E) Zero_12111112:
 
   /* has exactly the trivial AC variant */
 
-axiom predicate_eq:
+restriction predicate_eq:
   "∀ #i a b. (Pred_eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
-axiom predicate_not_eq:
+restriction predicate_not_eq:
   "∀ #i a b. (Pred_not_eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom predicate1:
+restriction predicate1:
   "∀ #i x y.
     (Pred_not_pred_rep( x, y ) @ #i) ⇒ (¬(¬(∃ z. y = <'loc', z>)))"
 
-axiom predicate0:
+restriction predicate0:
   "∀ #i x y. (Pred_pred_rep( x, y ) @ #i) ⇒ (¬(∃ z. y = <'loc', z>))"
   // safety formula
 
@@ -276,7 +276,7 @@ analyzing: case-studies-sapic-regression/locations/AKE.spthy
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.594169s
+  processing time: 0.645196s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 
@@ -288,7 +288,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.594169s
+  processing time: 0.645196s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 

@@ -226,7 +226,7 @@ insert <'F_template','untrusted'>,
 /* 	"Ex #t L_h k .Unwrapped(L_h,k)@t" */
 
 //can be shown, but goals with insert <k,> need to be chosen early.
-lemma dec_limits[typing]: 
+lemma dec_limits[sources]: 
 // a message that can be decrypted was either encrypted on the device, or some key leaked.
 // Also, every key that is unwrapped at some point was created earlier.
 	"( 
@@ -276,7 +276,7 @@ lemma dec_limits[typing]:
         "
 
 //automatic ATM
-//lemma get_keyvalue[typing]: 
+//lemma get_keyvalue[sources]: 
 //    "All k #t2 . GetKeyValue(k)@t2 ==> Ex L_h #t1 . NewKey(L_h,k,'off')@t1"
 
 //automatic ATM

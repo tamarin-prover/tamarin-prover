@@ -2,13 +2,13 @@ theory Minimal_Typing_Example
 begin
 
 /*
-   Protocol:    A minimal example to demonstrate the use of typing assertions
+   Protocol:    A minimal example to demonstrate the use of sources assertions
    Modeler:     Simon Meier
    Date:        July 2012
 
    Status:      working
 
-   Note that this is an artificial example to demonstrate the use of typing
+   Note that this is an artificial example to demonstrate the use of sources
    assertions. It is explained in detail in my Ph.D. thesis.
 */
 
@@ -49,20 +49,20 @@ rule Responder:
     ]->
     [ Out( pub ) ]
 
-/* This is our typing assertion: it ensures that we have enough constraints on
+/* This is our sources assertion: it ensures that we have enough constraints on
  * the 'pub' variable in the 'Responder' rule to determine all possible
  * messages that can be extracted from it using the deconstruction rules.
  * You can see the effect of having too few constraint in the GUI under the
  * 'untyped precomupted case distinctions' link. Several cases have
  * superfluous decryption chains. Getting rid of them is the goal of the
- * typing assertion.
+ * sources assertion.
  *
- * Note that typing assertions are invariants over the traces of the normal
- * form dependency graphs of a protocol. We mark lemmas with the 'typing'
+ * Note that sources assertions are invariants over the traces of the normal
+ * form dependency graphs of a protocol. We mark lemmas with the 'sources'
  * attribute to ensure that they are proving using induction and that they are
- * reused when precomputing case distinctions and proving non-typing lemmas.
+ * reused when precomputing case distinctions and proving non-sources lemmas.
  */
-lemma typing_assertion [typing]:
+lemma sources_assertion [sources]:
   /* For all messages received by the responder */
   "(All m k #i. In_Responder(m, k) @ i ==>
         /* they either came from the adversary and he therefore knows the
@@ -73,7 +73,7 @@ lemma typing_assertion [typing]:
       )
    )
   "
-/* Note that in general typing assertions do not directly relate received
+/* Note that in general sources assertions do not directly relate received
  * messsages to sent messages, but received cryptographic components to sent
  * cryptographic components. For this simple protocol, the two notions
  * however coincide.

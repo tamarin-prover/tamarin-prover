@@ -93,10 +93,10 @@ lemma Perfect_Forward_Secrecy:
      )
   "
 
-axiom safeSingleChallenge:
+restriction safeSingleChallenge:
   " All #i1 #i2. SafeChallenge() @i1 & SafeChallenge() @i2 ==> #i1 = #i2"
 
-axiom ChallengeBeforeReveal:
+restriction ChallengeBeforeReveal:
   "All #i. 
      SafeChallenge() @ i 
      ==>
@@ -104,7 +104,7 @@ axiom ChallengeBeforeReveal:
   "
 
 /* // alternative formulation that does not help
-axiom ChallengeBeforeReveal:
+restriction ChallengeBeforeReveal:
   "All #i #r. 
      SafeChallenge() @ i & SafeLtkReveal() @ r
      ==>
@@ -113,7 +113,7 @@ axiom ChallengeBeforeReveal:
 */
 
 /*
-axiom CombinedStuff:
+restriction CombinedStuff:
   "All I R sessKey #i. 
      Challenge(I,R,sessKey) @ i 
      ==>

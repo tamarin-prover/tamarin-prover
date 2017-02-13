@@ -397,7 +397,7 @@ rule (modulo E) Zero_1111211111:
 
   /* has exactly the trivial AC variant */
 
-axiom set_in:
+restriction set_in:
   "∀ x y #t3.
     (IsIn( x, y ) @ #t3) ⇒
     (∃ #t2.
@@ -406,7 +406,7 @@ axiom set_in:
       (∀ #t1 yp.
         (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
-axiom set_notin:
+restriction set_notin:
   "∀ x #t3.
     (IsNotSet( x ) @ #t3) ⇒
     ((∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1)) ∨
@@ -414,7 +414,7 @@ axiom set_notin:
        ((Delete( x ) @ #t1) ∧ (#t1 < #t3)) ∧
        (∀ #t2 y. ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ⇒ (#t2 < #t1))))"
 
-axiom locking:
+restriction locking:
   "∀ l x lp #t1 #t3.
     ((Lock( l, x ) @ #t1) ∧ (Lock( lp, x ) @ #t3)) ⇒
     ((((#t1 < #t3) ∧
@@ -429,19 +429,19 @@ axiom locking:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-axiom predicate_eq:
+restriction predicate_eq:
   "∀ #i a b. (Pred_eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
-axiom predicate_not_eq:
+restriction predicate_not_eq:
   "∀ #i a b. (Pred_not_eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-lemma types [typing]:
+lemma source [sources]:
   all-traces
   "∀ m #i.
     (Access( m ) @ #i) ⇒
@@ -2171,11 +2171,11 @@ analyzing: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_righ
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 14.461524s
+  processing time: 15.906526s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
-  types (all-traces): verified (164 steps)
+  source (all-traces): verified (164 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (231 steps)
@@ -2188,11 +2188,11 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 14.461524s
+  processing time: 15.906526s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
-  types (all-traces): verified (164 steps)
+  source (all-traces): verified (164 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (231 steps)

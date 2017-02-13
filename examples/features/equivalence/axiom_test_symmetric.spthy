@@ -1,4 +1,4 @@
-theory axiom_test_symmetric begin
+theory restriction_test_symmetric begin
 
 /*
  * Protocol:	 Symmetric Encryption and Decryption operators
@@ -29,7 +29,7 @@ rule Out_enc_twice:
   [ Out(diff(enc(~k,~k),~k2)) 
   , Out(enc(~k,~k)) ]
 
-axiom crazy [left]:
+restriction crazy [left]:
   "
   not( Ex #i. RuleApplied() @ i)
   "
@@ -37,7 +37,7 @@ axiom crazy [left]:
 /*
 The Equality Rule should find these two systems NOT equivalent, due to
 the fact that on the right-hand side the rule is applicable, while on
-the left the rule cannot be used at all. Without the axiom it does
+the left the rule cannot be used at all. Without the restriction it does
 find a different attack, as on the left the two outputs can be
 compared and are equal, which does not hold on the right.
 */

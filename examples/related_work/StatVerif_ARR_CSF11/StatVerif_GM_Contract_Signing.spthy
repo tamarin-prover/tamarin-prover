@@ -138,11 +138,11 @@ rule Witness_Resolved:
 
 
 // Axiom: the TTP does not answer any request twice
-axiom Answered_unique:
+restriction Answered_unique:
     "All x #i #j. Answered(x) @ i & Answered(x) @ j ==> #i = #j"
 
 // Axiom: the TTP stops if an equality check fails
-axiom Eq_checks_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
+restriction Eq_checks_succeed: "All x y #i. Eq(x,y) @ i ==> x = y"
 
 
 /*

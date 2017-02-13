@@ -112,11 +112,11 @@ rule Smaller_Extend:
   --[ IsSmaller(x, z) ]->
     [ !Smaller(x, z) ]
 
-axiom force_succ_smaller:
+restriction force_succ_smaller:
     "All #t1 2 a b c. IsSucc(a,b)@t1
        ==> Ex #t2 . IsSmaller(a,b)@t2 "
 
-axiom transitivity:
+restriction transitivity:
     "All #t1 #t2 a b c. IsSmaller(a,b)@t1 & IsSmaller(b,c)@t2
        ==> Ex #t3 . IsSmaller(a,c)@t3 "
 */

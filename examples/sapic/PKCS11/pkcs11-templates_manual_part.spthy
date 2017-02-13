@@ -2683,11 +2683,11 @@ rule (modulo E) Zero0111121112:
 
   /* has exactly the trivial AC variant */
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom set_in:
+restriction set_in:
   "∀ x y #t3.
     (IsIn( x, y ) @ #t3) ⇒
     (∃ #t2.
@@ -2697,7 +2697,7 @@ axiom set_in:
         (Insert( x, yp ) @ #t1) ⇒
         (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
-axiom set_notin:
+restriction set_notin:
   "∀ x #t3.
     (IsNotSet( x ) @ #t3) ⇒
     ((∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1)) ∨
@@ -2705,15 +2705,15 @@ axiom set_notin:
        ((Delete( x ) @ #t1) ∧ (#t1 < #t3)) ∧
        (∀ #t2 y. ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ⇒ (#t2 < #t1))))"
 
-axiom predicate_not_eq:
+restriction predicate_not_eq:
   "∀ #i a b. (Pred_not_eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
-axiom predicate_eq:
+restriction predicate_eq:
   "∀ #i a b. (Pred_eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
-axiom immeadiate_in:
+restriction immeadiate_in:
   "∀ t #i.
     (ChannelInEvent( t ) @ #i) ⇒
     (∃ #j.
@@ -2721,7 +2721,7 @@ axiom immeadiate_in:
        (∀ #k. (Event( ) @ #k) ⇒ ((#k < #j) ∨ (#i < #k)))) ∧
       (∀ #k t2. (K( t2 ) @ #k) ⇒ (((#k < #j) ∨ (#i < #k)) ∨ (#k = #j))))"
 
-axiom locking:
+restriction locking:
   "∀ n x np #i #j.
     ((Lock( n, x ) @ #i) ∧ (Lock( np, x ) @ #j)) ⇒
     ((((#i < #j) ∧
@@ -2736,7 +2736,7 @@ axiom locking:
       (#j < #i)) ∨
      (#i = #j))"
 
-axiom predicate11:
+restriction predicate11:
   "∀ #i wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_not_can_encrypt( wrap, unwrap, enc, dec, sens, extr, trus,
                            wwt, wt, ut
@@ -2744,7 +2744,7 @@ axiom predicate11:
     (¬(enc = 'on'))"
   // safety formula
 
-axiom predicate10:
+restriction predicate10:
   "∀ #i wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_can_encrypt( wrap, unwrap, enc, dec, sens, extr, trus, wwt,
                        wt, ut
@@ -2752,7 +2752,7 @@ axiom predicate10:
     (enc = 'on')"
   // safety formula
 
-axiom predicate9:
+restriction predicate9:
   "∀ #i wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_not_can_decrypt( wrap, unwrap, enc, dec, sens, extr, trus,
                            wwt, wt, ut
@@ -2760,7 +2760,7 @@ axiom predicate9:
     (¬(dec = 'on'))"
   // safety formula
 
-axiom predicate8:
+restriction predicate8:
   "∀ #i wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_can_decrypt( wrap, unwrap, enc, dec, sens, extr, trus, wwt,
                        wt, ut
@@ -2768,7 +2768,7 @@ axiom predicate8:
     (dec = 'on')"
   // safety formula
 
-axiom predicate7:
+restriction predicate7:
   "∀ #i wrap1 unwrap1 enc1 dec1 sens1 extr1 trus1 wwt1 wt1 ut1 wrap2
      unwrap2 enc2 dec2 sens2 extr2 trus2 wwt2 wt2 ut2.
     (Pred_not_can_wrap( wrap1, unwrap1, enc1, dec1, sens1, extr1,
@@ -2779,7 +2779,7 @@ axiom predicate7:
        ((wwt2 = 'off') ∨ ((wwt2 = 'on') ∧ (trus1 = 'on')))))"
   // safety formula
 
-axiom predicate6:
+restriction predicate6:
   "∀ #i wrap1 unwrap1 enc1 dec1 sens1 extr1 trus1 wwt1 wt1 ut1 wrap2
      unwrap2 enc2 dec2 sens2 extr2 trus2 wwt2 wt2 ut2.
     (Pred_can_wrap( wrap1, unwrap1, enc1, dec1, sens1, extr1, trus1,
@@ -2790,7 +2790,7 @@ axiom predicate6:
      ((wwt2 = 'off') ∨ ((wwt2 = 'on') ∧ (trus1 = 'on'))))"
   // safety formula
 
-axiom predicate5:
+restriction predicate5:
   "∀ #i wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_not_can_unwrap( wrap, unwrap, enc, dec, sens, extr, trus,
                           wwt, wt, ut
@@ -2798,7 +2798,7 @@ axiom predicate5:
     (¬(unwrap = 'on'))"
   // safety formula
 
-axiom predicate4:
+restriction predicate4:
   "∀ #i wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_can_unwrap( wrap, unwrap, enc, dec, sens, extr, trus, wwt,
                       wt, ut
@@ -2806,7 +2806,7 @@ axiom predicate4:
     (unwrap = 'on')"
   // safety formula
 
-axiom predicate3:
+restriction predicate3:
   "∀ #i wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_not_can_get_keyvalue( wrap, unwrap, enc, dec, sens, extr,
                                 trus, wwt, wt, ut
@@ -2814,7 +2814,7 @@ axiom predicate3:
     (¬(sens = 'off'))"
   // safety formula
 
-axiom predicate2:
+restriction predicate2:
   "∀ #i wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_can_get_keyvalue( wrap, unwrap, enc, dec, sens, extr, trus,
                             wwt, wt, ut
@@ -2822,7 +2822,7 @@ axiom predicate2:
     (sens = 'off')"
   // safety formula
 
-axiom predicate1:
+restriction predicate1:
   "∀ #i t_wrap t_unwrap t_enc t_dec t_sens t_extr t_trus t_wwt t_wt
      t_ut wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_not_permits( t_wrap, t_unwrap, t_enc, t_dec, t_sens, t_extr,
@@ -2839,7 +2839,7 @@ axiom predicate1:
              ((t_wwt = wwt) ∧ ((t_wt = wt) ∧ (t_ut = ut)))))))))))"
   // safety formula
 
-axiom predicate0:
+restriction predicate0:
   "∀ #i t_wrap t_unwrap t_enc t_dec t_sens t_extr t_trus t_wwt t_wt
      t_ut wrap unwrap enc dec sens extr trus wwt wt ut.
     (Pred_permits( t_wrap, t_unwrap, t_enc, t_dec, t_sens, t_extr,
@@ -2856,7 +2856,7 @@ axiom predicate0:
            ((t_wwt = wwt) ∧ ((t_wt = wt) ∧ (t_ut = ut))))))))))"
   // safety formula
 
-lemma dec_limits [typing]:
+lemma dec_limits [sources]:
   all-traces
   "(((((∀ k m #t1.
          (DecUsing( k, m ) @ #t1) ⇒

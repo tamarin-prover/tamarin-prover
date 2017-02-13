@@ -312,31 +312,31 @@ rule (modulo E) Zero_111112111111:
 
   /* has exactly the trivial AC variant */
 
-axiom A_Counter_Increases:
+restriction A_Counter_Increases:
   "∀ A B seq1 seq2 #i #j.
     (((Seq_Sent( A, B, seq1 ) @ #i) ∧ (Seq_Sent( A, B, seq2 ) @ #j)) ∧
      (#i < #j)) ⇒
     (∃ dif. seq2 = (dif+seq1))"
 
-axiom A_Counter_No_Reuse:
+restriction A_Counter_No_Reuse:
   "∀ A B seq #i #j.
     ((Seq_Sent( A, B, seq ) @ #i) ∧ (Seq_Sent( A, B, seq ) @ #j)) ⇒
     (#i = #j)"
   // safety formula
 
-axiom B_Counter_Counter_Increases:
+restriction B_Counter_Counter_Increases:
   "∀ A B seq1 seq2 #i #j.
     (((Seq_Recv( A, B, seq1 ) @ #i) ∧ (Seq_Recv( A, B, seq2 ) @ #j)) ∧
      (#i < #j)) ⇒
     (∃ dif. seq2 = (dif+seq1))"
 
-axiom B_Counter_No_Reuse:
+restriction B_Counter_No_Reuse:
   "∀ A B seq #i #j.
     ((Seq_Recv( A, B, seq ) @ #i) ∧ (Seq_Recv( A, B, seq ) @ #j)) ⇒
     (#i = #j)"
   // safety formula
 
-axiom locking:
+restriction locking:
   "∀ l x lp #t1 #t3.
     ((Lock( l, x ) @ #t1) ∧ (Lock( lp, x ) @ #t3)) ⇒
     ((((#t1 < #t3) ∧
@@ -351,42 +351,42 @@ axiom locking:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-axiom single_session:
+restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-axiom progress_1111121_to_11111211:
+restriction progress_1111121_to_11111211:
   "∀ p #t1.
     (ProgressFrom_1111121( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_11111211( p ) @ #t2)"
 
-axiom progress_111112111_to_111112111111:
+restriction progress_111112111_to_111112111111:
   "∀ p #t1.
     (ProgressFrom_111112111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_111112111111( p ) @ #t2)"
 
-axiom progress_111111111_to_11111111111111:
+restriction progress_111111111_to_11111111111111:
   "∀ p #t1.
     (ProgressFrom_111111111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_11111111111111( p ) @ #t2)"
 
-axiom progress_1111111_to_11111111:
+restriction progress_1111111_to_11111111:
   "∀ p #t1.
     (ProgressFrom_1111111( p ) @ #t1) ⇒
     (∃ #t2. ProgressTo_11111111( p ) @ #t2)"
 
-axiom progress_1_to_111112:
+restriction progress_1_to_111112:
   "∀ p #t1.
     (ProgressFrom_1( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_111112( p ) @ #t2)"
 
-axiom progress_1_to_111111:
+restriction progress_1_to_111111:
   "∀ p #t1.
     (ProgressFrom_1( p ) @ #t1) ⇒ (∃ #t2. ProgressTo_111111( p ) @ #t2)"
 
-axiom progress_init:
+restriction progress_init:
   "∃ #t. Init( ) @ #t"
 
-axiom resilient:
+restriction resilient:
   "∀ #i x y.
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
 
@@ -3391,7 +3391,7 @@ analyzing: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 analyzed: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 20.027608s
+  processing time: 22.130164s
   Executable (exists-trace): verified (52 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (156 steps)
@@ -3407,7 +3407,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 20.027608s
+  processing time: 22.130164s
   Executable (exists-trace): verified (52 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (156 steps)

@@ -16,9 +16,9 @@ module Theory.Constraint.Solver (
 --   , DiffProofContext(..)
 --   , pcSignature
 --   , pcRules
---   , pcCaseDists
+--   , pcSources
 --   , pcUseInduction
---   , pcCaseDistKind
+--   , pcSourceKind
 --   , pcTraceQuantifier
 --   , pcInjectiveFactInsts
 -- 
@@ -39,12 +39,12 @@ module Theory.Constraint.Solver (
   , Contradiction
   , contradictions
 
---   , CaseDistinction
+--   , Source
 --   , cdGoal
 --   , cdCases
 
-  , precomputeCaseDistinctions
-  , refineWithTypingAsms
+  , precomputeSources
+  , refineWithSourceAsms
   , unsolvedChainConstraints
 
   -- * Proof methods
@@ -59,7 +59,7 @@ module Theory.Constraint.Solver (
   ) where
 
 import           Logic.Connectives
-import           Theory.Constraint.Solver.CaseDistinctions
+import           Theory.Constraint.Solver.Sources
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.ProofMethod
 -- import           Theory.Constraint.Solver.Types

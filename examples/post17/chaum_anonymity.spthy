@@ -69,7 +69,7 @@ rule C_2sync:
 
 // Axioms
 
-axiom OnlyOnce:
+restriction OnlyOnce:
   " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j " 
 
 

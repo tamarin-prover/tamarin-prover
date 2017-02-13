@@ -112,21 +112,21 @@ rule Server_ReceiveOTP_NewSession:
           ]->
         [Server(pid,sid,tc)] //..and the counter value updated.
 
-/* The following three axioms are conditions on the traces that make sure
+/* The following three restrictions are conditions on the traces that make sure
  * that : */
 
 //a) the !Smaller relation is transitive
-axiom transitivity: //axiomatic
+restriction transitivity: //axiomatic
         "All #t1 #t2 a b c. IsSmaller(a,b)@t1 & IsSmaller(b,c)@t2
         ==> Ex #t3 . IsSmaller(a,c)@t3 "
 
 //b) !Smaller implies unequality
-axiom smaller_implies_unequal: //axiomatic
+restriction smaller_implies_unequal: //axiomatic
         "not (Ex a #t . IsSmaller(a,a)@t)"
 
 //c) The protocol runs only after the IsSmaller and IsSuccessor relation is
 //   build up
-axiom theory_before_protocol: 
+restriction theory_before_protocol: 
     "All #i #j. Theory() @ i & Protocol() @ j ==> i < j"
 
 // For sanity: Ensure that a successful login is reachable.

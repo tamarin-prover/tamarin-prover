@@ -157,7 +157,7 @@ rule Ephk_reveal:
 
 
 
-axiom RegKeyUnique:
+restriction RegKeyUnique:
       "All #i #j A. RegKey(A) @ i & RegKey(A) @ j ==> #i = #j"
 
 
