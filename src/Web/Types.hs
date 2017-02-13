@@ -424,8 +424,8 @@ parseTheoryPath =
     parseMethod _        = Nothing
 
     parseCases (kind:y:z:_) = do
-      k <- case kind of "typed"   -> return RefinedSource
-                        "untyped" -> return RawSource
+      k <- case kind of "refined" -> return RefinedSource
+                        "raw"     -> return RawSource
                         _         -> Nothing
       m <- safeRead y
       n <- safeRead z
