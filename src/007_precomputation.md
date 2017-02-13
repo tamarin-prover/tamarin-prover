@@ -1,11 +1,12 @@
 
-Precomputation {#sec:precomputation}
+Precomputation: refining sources {#sec:precomputation}
 ============== 
 
 In this section, we will explain some of the aspects of the
 precomputation performed by Tamarin.  This is relevant for users that
 model complex protocols since they may at some point run into so-called
-[open chains](#sec:openchains), which can be problematic for verification.
+remaining [partial deconstructions](#sec:openchains), which can be
+problematic for verification.
 
 To illustrate the concepts, consider the example of the Needham-Schroeder-Lowe
 Public Key Protocol, given here in Alice&Bob notation:
@@ -23,8 +24,9 @@ We now want to prove the following lemma:
 ~~~~ {.tamarin slice="code/NSLPK3.spthy" lower=105 upper=118}
 ~~~~
 
-This proof attempt will not terminate due to there being `12 chains
-left` when looking at this example in the GUI as described in detail below.
+This proof attempt will not terminate due to there being `12 partial
+deconstructions left` when looking at this example in the GUI as
+described in detail below.
 
 Partial deconstructions left {#sec:openchains}
 -----------
@@ -88,7 +90,7 @@ Using Sources Lemmas to Mitigate Partial Deconstructions
 -------------------------------------
 
 Once we identified the rules and cases in which partial deconstructions occur, we
-can try to avoid them. A good mechanism to get rid of open chains is the use of
+can try to avoid them. A good mechanism to get rid of partial deconstructions is the use of
 so-called *sources lemmas*.
 
 Sources lemmas are a special case of lemmas, and are applied
