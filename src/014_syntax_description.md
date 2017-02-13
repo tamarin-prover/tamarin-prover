@@ -13,7 +13,7 @@ All security protocol theory are named and delimited by 'begin' and 'end'.
 We explain the non-terminals of the body in the following paragraphs.
 
     security_protocol_theory := 'theory' ident 'begin' body 'end'
-    body := (signature_spec | rule | axiom | lemma | formal_comment)+
+    body := (signature_spec | rule | restriction | lemma | formal_comment)+
 
 Here, we use the term signature more liberally to denote both the defined
 function symbols and the equalities describing their interaction.  Note that
@@ -58,17 +58,17 @@ in a bottom-up fashion. For example,
 This becomes a lot less confusing if you keep the set of variables on the
 left-hand side separate from the free variables on the right-hand side.
 
-Axioms specify restrictions on the set of traces considered, i.e., they filter
-the set of traces of a protocol. The formula of an axiom is available as an
+Restrictions specify restrictions on the set of traces considered, i.e., they filter
+the set of traces of a protocol. The formula of a restriction is available as an
 assumption in the proofs of *all* security properties specified in this
 security protocol theory.
 
-    axiom := 'axiom' ident ':' '"' formula '"'
+    restriction := 'restriction' ident ':' '"' formula '"'
 
-In observational equivalence mode, axioms can be associated to one side.
+In observational equivalence mode, restrictions can be associated to one side.
 
-    axiom := 'axiom' ident [axiom_attrs] ':' '"' formula '"'
-    axiom_attrs      := '[' ('left' | 'right') ']'
+    restriction := 'restriction' ident [restriction_attrs] ':' '"' formula '"'
+    restriction_attrs      := '[' ('left' | 'right') ']'
 
 Lemmas specify security properties. By default, the given formula is
 interpreted as a property that must hold for all traces of the protocol of the
@@ -79,14 +79,14 @@ quantifier.
              [trace_quantifier]
              '"' formula '"'
              proof
-    lemma_attrs      := '[' ('typing' | 'reuse' | 'use_induction' | 
+    lemma_attrs      := '[' ('sources' | 'reuse' | 'use_induction' | 
                              'hide_lemma=' ident) ']'
     trace_quantifier := 'all-traces' | 'exists-trace'
     proof            := ... a proof as output by the Tamarin prover ..
 
 In observational equivalence mode, lemmas can be associated to one side.
 
-    lemma_attrs      := '[' ('typing' | 'reuse' | 'use_induction' | 
+    lemma_attrs      := '[' ('sources' | 'reuse' | 'use_induction' | 
                              'hide_lemma=' ident | 'left' | 'right') ']'
 
 Formal comments are used to make the input more readable. In contrast

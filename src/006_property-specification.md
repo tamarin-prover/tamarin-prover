@@ -184,7 +184,7 @@ lemma message_authentication:
 A simple message authentication example is the following one-message
 protocol. Agent `A` sends a signed message to agent `B`. We model the
 signature using asymmetric encryption. A better model is shown in the
-section on Axioms.
+section on Restrictions.
 
 ~~~~ {.tamarin include="code/auth-signing-simple.spthy"}
 ~~~~
@@ -254,17 +254,17 @@ First, there is a new option `Diff Rules`, which will simply present the
 rewrite rules from the `.spthy` file. (See image below.)
 
 Second, all the other points (Message Theory, Multiset Rewrite Rules, 
-Untyped/Typed Case Distinctions) have been quadruplicated. The reason for this 
+Raw/Refined Sources) have been quadruplicated. The reason for this 
 is that any input file with the `diff` operator actually specifies two models: 
 one model where each instance of `diff(x,y)` is replaced with `x` (the *left 
 hand side*, or LHS for short), and one model where each instance of `diff(x,y)` 
 is replaced with `y` (the *right hand side*, or RHS for short). Moreover, as 
 the observational equivalence mode requires different precomputations, each of 
 the two models is treated twice. 
-For examle, the point `RHS: Untyped case distinctions [Diff]` gives the untyped 
-case distinctions for the RHS interpretation of the model in observational 
-equivalence mode, whereas `LHS: Untyped case distinctions` gives the untyped 
-case distinctions for the LHS interpretation of the model in the 'trace' mode.
+For examle, the point `RHS: Raw sources [Diff]` gives the raw 
+sources for the RHS interpretation of the model in observational 
+equivalence mode, whereas `LHS: Raw sources` gives the raw sources
+for the LHS interpretation of the model in the 'trace' mode.
 
 Third, all lemmas have been duplicated: the lemma `B_is_secret` exists 
 once on the left hand side (marked using `[left]`) and once on the right hand 
@@ -349,10 +349,10 @@ tries not to resolve parts of the execution that are irrelevant, but this is
 not always sufficient.
 
 
-Axioms
+Restrictions
 ------
 
-Axioms restrict the set of traces to be considered in the protocol
+Restrictions restrict the set of traces to be considered in the protocol
 analysis.  They can be used for purposes ranging from modeling
 branching behavior of protocols to the verification of signatures.  We
 give a brief example of the latter. Consider the simple message
@@ -367,7 +367,7 @@ In the above protocol, agent `B` verifies the signature `sig` on the
 received message `m`. We model this by considering only those traces
 of the protocol in which the application of the `verify` function to
 the received message equals the constant `true`.
-To this end, we specify the equality axiom
+To this end, we specify the equality restriction
 
 ~~~~ {.tamarin slice="code/auth-signing.spthy" lower=53 upper=55}
 ~~~~
@@ -377,26 +377,26 @@ The full protocol theory is given below.
 ~~~~ {.tamarin include="code/auth-signing.spthy"}
 ~~~~
 
-Note that axioms can also be used to verify observational equivalence
+Note that restrictions can also be used to verify observational equivalence
 properties. As there are no user-specifiable lemmas for observational
-equivalence, axioms can be used to remove state space, which
+equivalence, restrictions can be used to remove state space, which
 essentially removes degenerate cases.  
 
-<!-- Finally, one can use also use axioms to simplify the writing of lemmas. -->
+<!-- Finally, one can use also use restrictions to simplify the writing of lemmas. -->
 
-## Common axioms ##
+## Common restrictions ##
 
-Here is a list of common axioms. Do note that you need to add the
-appropriate action facts to your rules for these axioms to have
+Here is a list of common restrictions. Do note that you need to add the
+appropriate action facts to your rules for these restrictions to have
 impact. 
 
 ### Unique ###
 
-First, let us show an axiom forcing an action (with a
+First, let us show a restriction forcing an action (with a
 particular value) to be unique:
 
 ```
-axiom unique:
+restriction unique:
   "All x #i #j. UniqueFact(x) @#i & UniqueFact(x) @#j ==> #i = #j"
 ```
 
@@ -406,12 +406,12 @@ points are identified.
 
 ### Equality ###
 
-Next, let us consider an equality axiom. This is useful if you do not
+Next, let us consider an equality restriction. This is useful if you do not
 want to use pattern-matching explicitly, but maybe want to ensure that
-the decryption of an encrypted value is the original value, assuming correct keys. The axiom looks like this:
+the decryption of an encrypted value is the original value, assuming correct keys. The restriction looks like this:
 
 ```
-axiom Equality:
+restriction Equality:
   "All x y #i. Eq(x,y) @#i ==> x = y"
 ```
 
@@ -421,10 +421,10 @@ the same value as both its arguments.
 
 ### Inequality ###
 
-Now, let us consider an inequality axiom, which ensures that the two arguments of `Neq` are different:
+Now, let us consider an inequality restriction, which ensures that the two arguments of `Neq` are different:
 
 ```
-axiom Inequality:
+restriction Inequality:
   "All x #i. Neq(x,x) @ #i ==> F"
 ```
 
@@ -433,10 +433,10 @@ This is very useful to ensure that certain arguments are different.
 ### OnlyOnce ###
 
 If you have a rule that should only be executed once, put `OnlyOnce()`
-as an action fact for that rule and add this axiom:
+as an action fact for that rule and add this restriction:
 
 ```
-axiom OnlyOnce:
+restriction OnlyOnce:
   "All #i #j. OnlyOnce()@#i & OnlyOnce()@#j ==> #i = #j"
 ```
 
@@ -448,22 +448,22 @@ A similar construction can be used to limit multiple occurrences of an action fo
 specific instantiations of variables, by adding these as arguments to the
 action. For example, one could put `OnlyOnceV('Initiator')` in a rule creating
 an initiator process, and `OnlyOnceV('Responder')` in the rule for the
-responder. If used with the following axiom, this would then yield the expected
+responder. If used with the following restriction, this would then yield the expected
 result of at most one initiator and at most one responder:
 
 ```
-axiom OnlyOnceV:
+restriction OnlyOnceV:
   "All #i #j x. OnlyOnceV(x)@#i & OnlyOnceV(x)@#j ==> #i = #j"
 ```
 
 ### Less than ###
 
 If we use the `multiset` built-in we can construct numbers as
-"1+1+...+1", and have an axiom enforcing that one number is less than
+"1+1+...+1", and have a restriction enforcing that one number is less than
 another, say `LessThan`:
 
 ```
-axiom LessThan:
+restriction LessThan:
   "All x y #i. LessThan(x,y)@#i ==> Ex z. x + z = y"
 ```
 
@@ -473,7 +473,7 @@ to enforce that a counter has strictly increased.
 Similarly you can use a `GreaterThan` where we want `x` to be strictly larger than `y`:
 
 ```
-axiom GreaterThan:
+restriction GreaterThan:
   "All x y #i. GreaterThan(x,y)@#i ==> Ex z. x = y + z"
 ```
 
@@ -491,26 +491,26 @@ added annotations "Annotation1" and "Annotation2", this looks like so:
 lemma Name [Annotation1,Annotation2]:
 ```
 
-### `typing`
+### `sources`
 
-To declare a lemma as a typing lemma, we use the annotation `typing`:
+To declare a lemma as a source lemma, we use the annotation `sources`:
 
 ```
-lemma example [typing]:
+lemma example [sources]:
   "..."
 ```
 
 This means a number of things: 
 
 * The lemma's verification will use induction.
-* The lemma will be verified using the `Untyped case distinctions`.
-* The lemma will be used to generate the `Typed case distinctions`, which are used for verification of all non-`typing` lemmas.
+* The lemma will be verified using the `Raw sources`.
+* The lemma will be used to generate the `Refined sources`, which are used for verification of all non-`sources` lemmas.
 
-Typing lemmas are necessary whenever the analysis reports `open
-chains` in the `Untyped case distinctions`. See section on [Open
+Source lemmas are necessary whenever the analysis reports `partial
+deconstructions left` in the `Raw sources`. See section on [Open
 chains](007_precomputation.html#sec:openchains) for details on this.
 
-All `typing` lemmas are used only for the case distinctions and do not
+All `sources` lemmas are used only for the case distinctions and do not
 benefit from other lemmas being marked as `reuse`.
 
 
@@ -525,7 +525,7 @@ lemma will require induction, you just annotate it with
 ### `reuse`
 
 A lemma marked `reuse` will be used in the proofs of all lemmas
-syntactically following it (except `typing` lemmas as above). This
+syntactically following it (except `sources` lemmas as above). This
 includes other `reuse` lemmas that can transitively depend on each
 other.
 

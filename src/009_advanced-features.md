@@ -298,7 +298,7 @@ your file within an `#ifdef` block with a keyword `KEYWORD`
 
 and then running Tamarin with the option `-DKEYWORD` to have this part included.
 
-If you use this feature to exclude typing lemmas, your case
+If you use this feature to exclude source lemmas, your case
 distinctions will change, and you may no longer be able to construct
 some proofs automatically.  Similarly, if you have `reuse` marked
 lemmas that are removed, then other following lemmas may no longer be provable.
@@ -324,7 +324,7 @@ a particular lemma you can use the previously described preprocessor to mark
 each lemma, and only include the one you wish to time. This can be
 done, for example, by  wrapping
 the relevant lemma within `#ifdef timethis`. Also make sure to include
-`reuse` and `typing` lemmas in this.  All other lemmas should be
+`reuse` and `sources` lemmas in this.  All other lemmas should be
 covered under a different keyword; in the example here we use `nottimed`.
 
 By running

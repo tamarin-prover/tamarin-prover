@@ -51,7 +51,7 @@ rule B_1_receive:
   [ St_B_1(B, ltkB, pkA, A, m)
   ]
 
-axiom Equality:
+restriction Equality:
   "All x y #i. Eq(x,y) @i ==> x = y"
 
 lemma executable:
