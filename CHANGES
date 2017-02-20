@@ -1,3 +1,20 @@
+* 1.2.0
+  - Extension for non-subterm convergent equational theories with FVP,
+    as documented in the POST 2017 publication: 
+    https://hal.inria.fr/hal-01430490
+  
+  - Included SAPIC, which is automatically built if OCAML is available. If
+    Tamarin is called on a .sapic file, it first automatically translates
+    to .spthy and then runs the Tamarin prover.
+
+  - Upgraded to GHC 8 and stack resolver lts-7.18.
+
+  - Multiple bug fixes.
+
+  - Changed terminology: axioms are now called restrictions, and [typing]
+    lemmas are now [sources] lemmas, also associated GUI changes. 
+    Solves issue #177.
+
 * 1.0.0
   - Change build system to use stack, see https://stackage.org,
     builds with lts-2.22 (GHC 7.8)

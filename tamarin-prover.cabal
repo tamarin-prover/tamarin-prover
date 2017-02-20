@@ -1,7 +1,7 @@
-cabal-version:      >= 1.18
+cabal-version:      >= 1.2
 build-type:         Simple
 name:               tamarin-prover
-version:            1.1.0
+version:            1.2.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -12,7 +12,7 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
 maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
-copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2015
+copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2017
 synopsis:           The Tamarin prover for security protocol analysis.
 description:
 
@@ -165,9 +165,9 @@ executable tamarin-prover
       , yesod-core
       , yesod-static
 
-      , tamarin-prover-utils  == 1.1.0
-      , tamarin-prover-term   == 1.1.0
-      , tamarin-prover-theory == 1.1.0
+      , tamarin-prover-utils  == 1.2.0
+      , tamarin-prover-term   == 1.2.0
+      , tamarin-prover-theory == 1.2.0
 
     other-modules:
       Paths_tamarin_prover
