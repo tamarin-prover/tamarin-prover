@@ -278,7 +278,7 @@ back to the welcome page, `Download` allows you to download the
 current theory (including partial proofs if they exist), `Actions` and
 the sub-bullet `Show source` shows the theory's source code,
 and `Options` allows you to configure the level of details in the
-graph visualisation (see below for examples).
+graph visualization (see below for examples).
 
 If you click on `Message theory` on the left, you should see the following:
 
