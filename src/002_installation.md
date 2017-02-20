@@ -16,18 +16,17 @@ GraphViz using your standard package manager or directly from
 <http://www.graphviz.org/>. You can also
 install Maude using your
 package manager.  However, if your package manager installs Maude 2.6,
-then you must install version 2.7, [Core Maude
-2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation#Core_Maude_2.7),
+then you must install version 2.7.1, [Core Maude
+2.7.1](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation#Core_Maude_2.7.1),
 directly from <http://maude.cs.illinois.edu/>.
 In this case, you should ensure 
 that your `PATH` includes the install path, so that
-calling `maude` starts version 2.7. Note that even though the Maude
+calling `maude` starts version 2.7.1. Note that even though the Maude
 executable is movable, the `prelude.maude` file must be in the same
 folder that you start Maude from.
 
-Once these dependencies have been installed, you can then either compile
-Tamarin from source, or download the binaries of the latest master
-version. Development versions require compilation from source.
+Once these dependencies have been installed, you can then compile
+Tamarin from source, using either the stable master or current development version.
 
 ### Compiling from source ###
 
@@ -51,28 +50,6 @@ the tool itself needs to be recompiled, which takes a few minutes, at most.
 
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
-### Using binaries ###
-
-You can download the  appropriate binaries for your system from
-<https://github.com/tamarin-prover/bin-dists>.
-
-Similar to installing from source, starting
-Tamarin without arguments will output its help
-message. We recommend opening the
-`Tutorial.spthy` example file in a text editor and to start exploring from
-there, or alternatively to continue reading this document.
-
-**Notes:** 
-
-  * Only the current master is available as binary, while the sources
-contain both the master and the current development state.
-
-  * The Tamarin source archive 
-<https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
-contains numerous protocol examples including the `Tutorial.spthy` file, all of which you can find in the `examples/` directory. 
-
-
-Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
 
 Mac OS X {#sec:macosx}
@@ -88,8 +65,8 @@ If you already have this installed, it is as simple as running the following in 
 
 You can now run Tamarin from the command line by typing `tamarin-prover`. 
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
-run Tamarin for the first time. (Warning: the current stable version of Tamarin
-v1.0.0 does not realise that Maude v2.7.1 is more than sufficient; it will
+run Tamarin for the first time. (Warning: the previous stable version of Tamarin
+(v1.0.0) does not realise that Maude v2.7.1 is more than sufficient; it will
 currently give you a warning when you run `tamarin-prover test` but it is safe
 to ignore this.)
 
@@ -120,41 +97,6 @@ To uninstall, just `brew cask remove tamarin-prover`, and if you want, also
 remove `maude` and `graphviz`, two dependencies which are automatically
 installed with Tamarin.
 
-
-### Manual installation of the Tamarin binary
-
-Alternatively, it is possible to install Tamarin, Maude and GraphViz manually:
-
-1.  Download and install Core Maude 2.7 from
-  <http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation>.
-
-    Make sure that the Maude binary is called `maude` (as opposed to, e.g.,
-    `maude.darwin64`) and that `prelude.maude` is in your executables path,
-    for instance by placing it in the same folder as the maude binary.
-
-2.  Download and install GraphViz from 
-<http://www.graphviz.org/Download.php>.
-
-3.  Download the latest Tamarin binary `tamarin-prover-1.x.y-macosx` from 
-<https://github.com/tamarin-prover/bin-dists/blob/master/tamarin-prover-1.0.0/tamarin-prover-1.0.0-macosx?raw=true>.
-
-4.  Install Tamarin by renaming `tamarin-prover-1.x.y-macosx` to`tamarin-prover`
-and moving it to a folder in your executables path.
-Make the binary executable with the following command.
-```
-  chmod u+x tamarin-prover
-```
- 
-Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
-
-**Notes:** 
-
-  * Only the current master is available as binary, while the sources
-contain both the master and the current development state.
-
-  * The Tamarin source archive 
-<https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>
-contains numerous protocol examples including the `Tutorial.spthy` file you can start with, or continue reading this document. 
 
 ### Installing Tamarin from sources ###
 
@@ -232,7 +174,7 @@ Self-testing the tamarin-prover installation.
 
 *** Testing the availability of the required tools ***
 maude tool: 'maude'
- checking version: 2.7. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 GraphViz tool: 'dot'
