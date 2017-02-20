@@ -166,7 +166,7 @@ continue reading this document.  Note that the `Tutorial.spthy` file
 can be found in the `examples` directory of the Tamarin source.
 
 Running ```tamarin-prover test``` will check the Maude and GraphViz
-versions and run some tests Its output should be:
+versions and run some tests. Its output should be:
 
 ```
 $ tamarin-prover test

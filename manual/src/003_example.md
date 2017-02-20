@@ -41,7 +41,7 @@ Cryptographic primitives
 ------------------------
 
 We are working in a symbolic model of security protocols.  This means
-that we model messages as terms, built from functions, that satisfy
+that we model messages as terms, built from functions that satisfy
 an underlying equational theory describing their properties. This will be 
 explained in detail in the part on [Cryptographic 
 Messages](004_cryptographic-messages.html#sec:cryptographic-messages).
