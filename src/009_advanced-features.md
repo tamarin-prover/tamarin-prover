@@ -279,7 +279,7 @@ constraint solving phase and thereby allows more properties to be proven.
 This is particularly useful when reasoning about action facts that must always
 be preceded in traces by some other action facts. For example, induction can
 help to prove that some later protocol step is always preceded by the
-initialisation step of the corresponding protocol role, with similar parameters.
+initialization step of the corresponding protocol role, with similar parameters.
 
 
 Integrated Preprocessor {#sec:integrated-preprocessor}
