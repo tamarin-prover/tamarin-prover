@@ -1,4 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -119,11 +121,11 @@ module Theory.Model.Rule (
 
 import           Prelude              hiding (id, (.))
 
+import           GHC.Generics (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8 as BC
-import           Data.DeriveTH
 -- import           Data.Foldable        (foldMap)
-import           Data.Generics
+import           Data.Data
 import           Data.List
 import qualified Data.Set              as S
 import qualified Data.Map              as M
@@ -161,7 +163,7 @@ data Rule i = Rule {
        , _rConcs :: [LNFact]
        , _rActs  :: [LNFact]
        }
-       deriving( Eq, Ord, Show, Data, Typeable )
+       deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary )
 
 $(mkLabels [''Rule])
 
@@ -230,7 +232,7 @@ instance Sized (Rule i) where
 data RuleInfo p i =
          ProtoInfo p
        | IntrInfo i
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | @ruleInfo proto intr@ maps the protocol information with @proto@ and the
 -- intruder information with @intr@.
@@ -261,7 +263,7 @@ instance (Apply p, Apply i) => Apply (RuleInfo p i) where
 data ProtoRuleName =
          FreshRule
        | StandRule String -- ^ Some standard protocol rule
-       deriving( Eq, Ord, Show, Data, Typeable )
+       deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary )
 
 
 -- | Information for protocol rules modulo AC. The variants list the possible
@@ -272,14 +274,14 @@ data ProtoRuleACInfo = ProtoRuleACInfo
        , _pracVariants     :: Disj (LNSubstVFresh)
        , _pracLoopBreakers :: [PremIdx]
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | Information for instances of protocol rules modulo AC.
 data ProtoRuleACInstInfo = ProtoRuleACInstInfo
        { _praciName         :: ProtoRuleName
        , _praciLoopBreakers :: [PremIdx]
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 
 $(mkLabels [''ProtoRuleACInfo, ''ProtoRuleACInstInfo])
@@ -350,7 +352,7 @@ data IntrRuleACInfo =
   | PubConstrRule
   | FreshConstrRule
   | IEqualityRule -- Necessary for diff
-  deriving( Ord, Eq, Show, Data, Typeable )
+  deriving( Ord, Eq, Show, Data, Typeable, Generic, NFData, Binary )
 
 -- | An intruder rule modulo AC.
 type IntrRuleAC = Rule IntrRuleACInfo
@@ -893,20 +895,3 @@ prettyProtoRuleAC = prettyNamedRule (kwRuleModulo "AC") prettyProtoRuleACInfo
 
 prettyRuleACInst :: HighlightDocument d => RuleACInst -> d
 prettyRuleACInst = prettyNamedRule (kwInstanceModulo "AC") (const emptyDoc)
-
--- derived instances
---------------------
-
-$( derive makeBinary ''Rule)
-$( derive makeBinary ''ProtoRuleName)
-$( derive makeBinary ''ProtoRuleACInfo)
-$( derive makeBinary ''ProtoRuleACInstInfo)
-$( derive makeBinary ''RuleInfo)
-$( derive makeBinary ''IntrRuleACInfo)
-
-$( derive makeNFData ''Rule)
-$( derive makeNFData ''ProtoRuleName)
-$( derive makeNFData ''ProtoRuleACInfo)
-$( derive makeNFData ''ProtoRuleACInstInfo)
-$( derive makeNFData ''RuleInfo)
-$( derive makeNFData ''IntrRuleACInfo)

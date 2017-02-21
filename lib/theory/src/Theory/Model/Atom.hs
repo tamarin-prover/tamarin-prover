@@ -6,6 +6,8 @@
 -- {-# LANGUAGE TupleSections        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE ViewPatterns         #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE DeriveAnyClass       #-}
 -- {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
@@ -40,10 +42,10 @@ where
 -- import           Control.Basics
 import           Control.DeepSeq
 
+import           GHC.Generics (Generic)
 import           Data.Binary
-import           Data.DeriveTH
 -- import           Data.Foldable      (Foldable, foldMap)
-import           Data.Generics
+import           Data.Data
 -- import           Data.Monoid        (mappend, mempty)
 -- import           Data.Traversable
 
@@ -63,7 +65,7 @@ data Atom t = Action   t (Fact t)
             | EqE  t t
             | Less t t
             | Last t
-            deriving( Eq, Ord, Show, Data, Typeable )
+            deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary )
 
 -- | @LAtom@ are the atoms we actually use in graph formulas input by the user.
 type NAtom v = Atom (VTerm Name v)
@@ -148,10 +150,3 @@ prettyNAtom (EqE l r) =
     -- sep [prettyNTerm l <-> text "≈", prettyNTerm r]
 prettyNAtom (Less u v) = text (show u) <-> opLess <-> text (show v)
 prettyNAtom (Last i)   = operator_ "last" <> parens (text (show i))
-
-
--- derived instances
---------------------
-
-$( derive makeNFData ''Atom)
-$( derive makeBinary ''Atom)
