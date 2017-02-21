@@ -41,7 +41,7 @@ Cryptographic primitives
 ------------------------
 
 We are working in a symbolic model of security protocols.  This means
-that we model messages as terms, built from functions, that satisfy
+that we model messages as terms, built from functions that satisfy
 an underlying equational theory describing their properties. This will be 
 explained in detail in the part on [Cryptographic 
 Messages](004_cryptographic-messages.html#sec:cryptographic-messages).
@@ -278,7 +278,7 @@ back to the welcome page, `Download` allows you to download the
 current theory (including partial proofs if they exist), `Actions` and
 the sub-bullet `Show source` shows the theory's source code,
 and `Options` allows you to configure the level of details in the
-graph visualisation (see below for examples).
+graph visualization (see below for examples).
 
 If you click on `Message theory` on the left, you should see the following:
 

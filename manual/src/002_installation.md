@@ -66,7 +66,7 @@ If you already have this installed, it is as simple as running the following in 
 You can now run Tamarin from the command line by typing `tamarin-prover`. 
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
 run Tamarin for the first time. (Warning: the previous stable version of Tamarin
-(v1.0.0) does not realise that Maude v2.7.1 is more than sufficient; it will
+(v1.0.0) does not realize that Maude v2.7.1 is more than sufficient; it will
 currently give you a warning when you run `tamarin-prover test` but it is safe
 to ignore this.)
 
@@ -166,7 +166,7 @@ continue reading this document.  Note that the `Tutorial.spthy` file
 can be found in the `examples` directory of the Tamarin source.
 
 Running ```tamarin-prover test``` will check the Maude and GraphViz
-versions and run some tests Its output should be:
+versions and run some tests. Its output should be:
 
 ```
 $ tamarin-prover test
