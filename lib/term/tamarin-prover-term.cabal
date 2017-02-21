@@ -47,7 +47,6 @@ library
       , bytestring
       , containers
       , deepseq
-      , derive
       , directory
       , dlist
       , mtl
@@ -56,6 +55,7 @@ library
       , safe
       , split
       , syb
+      , template-haskell
 
       , tamarin-prover-utils
 

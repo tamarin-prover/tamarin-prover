@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
   -- for ByteString
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
@@ -50,10 +52,11 @@ module Term.Term.FunctionSymbols (
     , implicitFunSig
     ) where
 
+import           GHC.Generics (Generic)
 import           Data.Typeable
-import           Data.Generics
-import           Data.DeriveTH
 import           Data.Binary
+import           Data.Data
+
 
 import           Control.DeepSeq
 
@@ -70,25 +73,25 @@ import qualified Data.Set as S
 
 -- | AC function symbols.
 data ACSym = Union | Mult
-  deriving (Eq, Ord, Typeable, Data, Show)
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | A function symbol can be either Private (unknown to adversary) or Public.
 data Privacy = Private | Public
-  deriving (Eq, Ord, Typeable, Data, Show)
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | NoEq function symbols (with respect to the background theory).
 type NoEqSym = (ByteString, (Int, Privacy)) -- ^ operator name, arity, private
 
 -- | C(ommutative) function symbols
 data CSym = EMap
-  deriving (Eq, Ord, Typeable, Data, Show)
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | Function symbols
 data FunSym = NoEq  NoEqSym   -- ^ a free function function symbol of a given arity
             | AC    ACSym     -- ^ an AC function symbol, can be used n-ary
             | C     CSym      -- ^ a C function symbol of a given arity
             | List            -- ^ a free n-ary function symbol of TOP sort
-  deriving (Eq, Ord, Typeable, Data, Show)
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | Function signatures.
 type FunSig = Set FunSym
@@ -166,17 +169,3 @@ bpReducibleFunSig = S.fromList [ NoEq pmultSym, C EMap ]
 implicitFunSig :: FunSig
 implicitFunSig = S.fromList [ NoEq invSym, NoEq pairSym
                             , AC Mult, AC Union ]
-
-----------------------------------------------------------------------
--- Derived instances
-----------------------------------------------------------------------
-
-$( derive makeNFData ''Privacy)
-$( derive makeNFData ''CSym)
-$( derive makeNFData ''FunSym)
-$( derive makeNFData ''ACSym)
-
-$( derive makeBinary ''Privacy)
-$( derive makeBinary ''CSym)
-$( derive makeBinary ''FunSym)
-$( derive makeBinary ''ACSym)
