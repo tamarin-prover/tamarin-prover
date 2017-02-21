@@ -131,7 +131,7 @@ Generally, in a protocol with partial deconstructions left it is advisable to tr
 can be solved by a sources lemma that considers where a term could be coming
 from.
 As in the above example, one idea to do so is by stating that a used term must
-either have occured in one of a list of rules before, or it must have come
+either have occurred in one of a list of rules before, or it must have come
 from the adversary.
 
 The above sources lemma can be automatically proven by Tamarin. With the sources

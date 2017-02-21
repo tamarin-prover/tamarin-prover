@@ -276,7 +276,7 @@ Thus, an initial formalization of this rule might be as follows:
                 [
                   In(X),
                   Fr(~eskR),
-                  !Ltk($R, lkr)
+                  !Ltk($R, lkR)
                 ]
                 -->
                 [
@@ -293,7 +293,7 @@ property. We therefore add the computed key to the actions:
                 [ 
                   In(X), 
                   Fr(~eskR),
-                  !Ltk($R, lkr)
+                  !Ltk($R, lkR)
                 ] 
                 --[ SessionKey($R, kR ) ]->
                 [ 

@@ -16,7 +16,7 @@ initial system state is the empty multiset.  The rules define how the
 system can make a transition to a new state. The types of facts and
 their use are described in Section
 [Rules](005_protocol-specification.html#sec:rules). Here we focus on
-the *action facts* which are used to reason about a protocol's
+the *action facts*, which are used to reason about a protocol's
 behaviour.
 
 A rule can be applied to a state if it can be instantiated such that
@@ -218,17 +218,13 @@ creates a public key, two fresh values `~a` and `~b`, and publishes `~a`. Then
 one encrypts either `~a` or `~b` (modeled using the `diff` operator) and sends out
 the ciphertext:
 
-~~~~ {.tamarin slice="code_ObsEquiv/ObservationalEquivalenceExample.spthy" 
-lower=16 
-upper=27}
+~~~~ {.tamarin slice="code_ObsEquiv/ObservationalEquivalenceExample.spthy" lower=16 upper=27}
 ~~~~
 
 In this example, the intruder cannot compute `~b` as formalized by the 
 following lemma:
 
-~~~~ {.tamarin slice="code_ObsEquiv/ObservationalEquivalenceExample.spthy" 
-lower=29 
-upper=36}
+~~~~ {.tamarin slice="code_ObsEquiv/ObservationalEquivalenceExample.spthy" lower=29 upper=36}
 ~~~~
 
 However, he can know whether in the last message `~a` or `~b` was encrypted by 
@@ -248,7 +244,7 @@ Now point you browser to <http://localhost:3001>. After clicking on the theory
 Overview](../images/tamarin-obseq-overview.jpg "Observational Equivalence 
 Overview"){width=100%}\
 
-There are mutiple differences to the 'normal' trace mode.
+There are multiple differences to the 'normal' trace mode.
 
 First, there is a new option `Diff Rules`, which will simply present the 
 rewrite rules from the `.spthy` file. (See image below.)
@@ -261,7 +257,7 @@ hand side*, or LHS for short), and one model where each instance of `diff(x,y)`
 is replaced with `y` (the *right hand side*, or RHS for short). Moreover, as 
 the observational equivalence mode requires different precomputations, each of 
 the two models is treated twice. 
-For examle, the point `RHS: Raw sources [Diff]` gives the raw 
+For example, the point `RHS: Raw sources [Diff]` gives the raw 
 sources for the RHS interpretation of the model in observational 
 equivalence mode, whereas `LHS: Raw sources` gives the raw sources
 for the LHS interpretation of the model in the 'trace' mode.

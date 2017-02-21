@@ -16,7 +16,7 @@ limited.
 
 <!--
 TODO:
-  * Warning - Virtualised Tamarin has significant overhead due to Haskell
-    virtualisation 'bad stuff' (seems to make a lot of system calls) [Ask Cas/Dennis/Kevin for more on this]
+  * Warning - Virtualized Tamarin has significant overhead due to Haskell
+    virtualization 'bad stuff' (seems to make a lot of system calls) [Ask Cas/Dennis/Kevin for more on this]
 
 -->

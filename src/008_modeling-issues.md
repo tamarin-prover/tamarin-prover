@@ -65,7 +65,7 @@ First we change the setup rule as follows:
 ~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error2.spthy" lower=16 upper=20}
 ~~~~
 
-Note that the the first `AgSt(...)` in the conclusion has arity three, with
+Note that the first `AgSt(...)` in the conclusion has arity three, with
 variables `$I,~k,~m`, rather than the original arity two, with variables
 `$I,<~k,~m>` where the second argument is paired.
 
@@ -127,7 +127,7 @@ The warning `unbound variables` indicates that there is a term, here the fresh
 `~n`, in the action or conclusion that never appeared in the premise.
 Here this is the case because we mistyped `~n` instead of `~m`. Generally,
 when such a warning appears, you should check that all the fresh variables 
-variables already occur in the premise. If it is a fresh variable that appears
+already occur in the premise. If it is a fresh variable that appears
 for the first time in this rule, a `Fr(~n)` fact should be added to the 
 premise.
 
@@ -156,7 +156,7 @@ The warning indicates that in this lemma the term `m` is occurs free. This
 means that it is not bound to any quantifier. Often such an error occurs
 when 
 one forgets to list all the variables that are used in the formula after the
-`Ex` or `All` quantifier. In our example, the problem occured because we deleted the `m` in `Ex I R m #i #j.` 
+`Ex` or `All` quantifier. In our example, the problem occurred because we deleted the `m` in `Ex I R m #i #j.` 
 
 ### Undefined Action Fact in Lemma ###
 
