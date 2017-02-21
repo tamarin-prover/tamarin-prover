@@ -4,6 +4,8 @@
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE ViewPatterns      #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE DeriveAnyClass    #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -62,15 +64,25 @@ import           Data.Maybe          (listToMaybe)
 import           Data.Ord            (comparing)
 import qualified Data.Text           as T
 import           Data.Time.LocalTime
--- import qualified Data.Binary         as Bin
+import qualified Data.Binary         as Bin
+import           Data.Binary.Orphans()
+
+import           Control.DeepSeq
+import           Control.Monad
 -- import           Control.Monad
--- import           GHC.Generics (Generic)
+import           GHC.Generics (Generic)
 
 import           Text.Hamlet
 import           Yesod.Core
 import           Yesod.Static
 
 import           Theory
+
+
+-- | Derived Instances to fix things
+instance Bin.Binary ZonedTime where
+  get = liftM2 ZonedTime Bin.get Bin.get
+  put (ZonedTime d tod) = Bin.put d >> Bin.put tod
 
 ------------------------------------------------------------------------------
 -- Types
@@ -149,7 +161,7 @@ data JsonResponse
 -- Command line with file path, upload with filename (not path),
 -- or created by interactive mode (e.g. through editing).
 data TheoryOrigin = Local FilePath | Upload String | Interactive
-     deriving (Show, Eq, Ord)
+     deriving (Show, Eq, Ord, Generic, Bin.Binary, NFData)
      
 -- | Data type containg both the theory and it's index, making it easier to
 -- pass the two around (since they are always tied to each other). We also
@@ -162,7 +174,7 @@ data TheoryInfo = TheoryInfo
   , tiPrimary    :: Bool            -- ^ This is the orginally loaded theory.
   , tiOrigin     :: TheoryOrigin    -- ^ Origin of theory.
   , tiAutoProver :: AutoProver      -- ^ The automatic prover to use.
-  } -- deriving (Generic)
+  } deriving (Generic, Bin.Binary)
 
 -- | Data type containg both the theory and it's index, making it easier to
 -- pass the two around (since they are always tied to each other). We also
@@ -175,7 +187,7 @@ data DiffTheoryInfo = DiffTheoryInfo
   , dtiPrimary    :: Bool            -- ^ This is the orginally loaded theory.
   , dtiOrigin     :: TheoryOrigin    -- ^ Origin of theory.
   , dtiAutoProver :: AutoProver      -- ^ The automatic prover to use.
-  } -- deriving (Generic)
+  } deriving (Generic, Bin.Binary)
 
 
 -- | We use the ordering in order to display loaded theories to the user.
@@ -206,7 +218,7 @@ compareDTI (DiffTheoryInfo _ i1 t1 p1 a1 o1 _) (DiffTheoryInfo _ i2 t2 p2 a2 o2 
     , compare o1 o2
     ]
 
-data EitherTheoryInfo = Trace TheoryInfo | Diff DiffTheoryInfo -- deriving (Generic)
+data EitherTheoryInfo = Trace TheoryInfo | Diff DiffTheoryInfo deriving (Generic, Bin.Binary)
 
 -- instance Bin.Binary TheoryInfo
 -- instance Bin.Binary DiffTheoryInfo
@@ -671,3 +683,4 @@ defaultLayout' w = do
   |]
           -- <li.delstep>
             -- <a href="#del/path">Remove step</a>
+
