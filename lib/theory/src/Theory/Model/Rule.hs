@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -163,7 +162,10 @@ data Rule i = Rule {
        , _rConcs :: [LNFact]
        , _rActs  :: [LNFact]
        }
-       deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary )
+       deriving( Eq, Ord, Show, Data, Typeable, Generic)
+
+instance NFData i => NFData (Rule i)
+instance Binary i => Binary (Rule i)
 
 $(mkLabels [''Rule])
 
@@ -232,7 +234,10 @@ instance Sized (Rule i) where
 data RuleInfo p i =
          ProtoInfo p
        | IntrInfo i
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+       deriving( Eq, Ord, Show, Generic)
+
+instance (NFData i, NFData p) => NFData (RuleInfo p i)
+instance (Binary i, Binary p) => Binary (RuleInfo p i)
 
 -- | @ruleInfo proto intr@ maps the protocol information with @proto@ and the
 -- intruder information with @intr@.
@@ -263,7 +268,10 @@ instance (Apply p, Apply i) => Apply (RuleInfo p i) where
 data ProtoRuleName =
          FreshRule
        | StandRule String -- ^ Some standard protocol rule
-       deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary )
+       deriving( Eq, Ord, Show, Data, Typeable, Generic)
+
+instance NFData ProtoRuleName
+instance Binary ProtoRuleName
 
 
 -- | Information for protocol rules modulo AC. The variants list the possible
@@ -274,14 +282,18 @@ data ProtoRuleACInfo = ProtoRuleACInfo
        , _pracVariants     :: Disj (LNSubstVFresh)
        , _pracLoopBreakers :: [PremIdx]
        }
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+       deriving( Eq, Ord, Show, Generic)
+instance NFData ProtoRuleACInfo
+instance Binary ProtoRuleACInfo
 
 -- | Information for instances of protocol rules modulo AC.
 data ProtoRuleACInstInfo = ProtoRuleACInstInfo
        { _praciName         :: ProtoRuleName
        , _praciLoopBreakers :: [PremIdx]
        }
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+       deriving( Eq, Ord, Show, Generic)
+instance NFData ProtoRuleACInstInfo
+instance Binary ProtoRuleACInstInfo
 
 
 $(mkLabels [''ProtoRuleACInfo, ''ProtoRuleACInstInfo])
@@ -352,7 +364,9 @@ data IntrRuleACInfo =
   | PubConstrRule
   | FreshConstrRule
   | IEqualityRule -- Necessary for diff
-  deriving( Ord, Eq, Show, Data, Typeable, Generic, NFData, Binary )
+  deriving( Ord, Eq, Show, Data, Typeable, Generic)
+instance NFData IntrRuleACInfo
+instance Binary IntrRuleACInfo
 
 -- | An intruder rule modulo AC.
 type IntrRuleAC = Rule IntrRuleACInfo

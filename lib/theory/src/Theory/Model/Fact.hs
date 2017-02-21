@@ -380,14 +380,3 @@ prettyNFact = prettyFact prettyNTerm
 -- | Pretty print a 'LFact'.
 prettyLNFact :: Document d => LNFact -> d
 prettyLNFact fa = prettyFact prettyNTerm fa
-
--- derived instances
---------------------
-
-$( derive makeBinary ''Multiplicity)
-$( derive makeBinary ''FactTag)
-$( derive makeBinary ''Fact)
-
-$( derive makeNFData ''Multiplicity)
-$( derive makeNFData ''FactTag)
-$( derive makeNFData ''Fact)

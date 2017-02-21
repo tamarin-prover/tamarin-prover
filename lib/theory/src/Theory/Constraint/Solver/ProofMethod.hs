@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections   #-}
 {-# LANGUAGE ViewPatterns    #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE DeriveAnyClass  #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -33,9 +35,8 @@ module Theory.Constraint.Solver.ProofMethod (
   , prettyDiffProofMethod
 
 ) where
-
+import           GHC.Generics                              (Generic)
 import           Data.Binary
-import           Data.DeriveTH
 import           Data.Function                             (on)
 import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
@@ -111,7 +112,7 @@ data ProofMethod =
   | Induction                            -- ^ Use inductive strengthening on
                                          -- the single formula constraint in
                                          -- the system.
-  deriving( Eq, Ord, Show )
+  deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | Sound transformations of diff sequents.
 -- FIXME
@@ -123,7 +124,7 @@ data DiffProofMethod =
 --   | DiffTrivial                              -- ^ The rule is trivially sound - REMOVED and merged with solved!
   | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
   | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
-  deriving( Eq, Ord, Show )
+  deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
   
 instance HasFrees ProofMethod where
@@ -365,7 +366,7 @@ data GoalRanking =
   | SmartRanking Bool
   | SmartDiffRanking
   | InjRanking
-  deriving( Eq, Ord, Show )
+  deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | The name/explanation of a 'GoalRanking'.
 goalRankingName :: GoalRanking -> String
@@ -447,7 +448,7 @@ rankDiffProofMethods ranking ctxt sys = do
       Nothing    -> []
 
 newtype Heuristic = Heuristic [GoalRanking]
-    deriving( Eq, Ord, Show )
+    deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | Smart constructor for heuristics. Schedules the goal rankings in a
 -- round-robin fashion dependent on the proof depth.
@@ -1312,17 +1313,4 @@ prettyDiffProofMethod method = case method of
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
     DiffBackwardSearch       -> keyword_ "backward-search"  
     DiffBackwardSearchStep s -> keyword_ "step(" <-> prettyProofMethod s <-> keyword_ ")"
-    
-    
--- Derived instances
---------------------
 
-$( derive makeBinary ''ProofMethod)
-$( derive makeBinary ''DiffProofMethod)
-$( derive makeBinary ''GoalRanking)
-$( derive makeBinary ''Heuristic)
-
-$( derive makeNFData ''ProofMethod)
-$( derive makeNFData ''DiffProofMethod)
-$( derive makeNFData ''GoalRanking)
-$( derive makeNFData ''Heuristic)

@@ -196,7 +196,6 @@ import           GHC.Generics                         (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
-import           Data.Data
 import           Data.List                            (foldl', partition, intersect)
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe)

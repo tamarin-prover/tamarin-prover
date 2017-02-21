@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns    #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE DeriveAnyClass  #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -25,9 +27,9 @@ module Theory.Constraint.Solver.Contradictions (
 
 import           Prelude                        hiding (id, (.))
 
+import           GHC.Generics                   (Generic)
 import           Data.Binary
 import qualified Data.DAG.Simple                as D (cyclic, reachableSet)
-import           Data.DeriveTH
 import qualified Data.Foldable                  as F
 import           Data.List
 import qualified Data.Map                       as M
@@ -74,7 +76,7 @@ data Contradiction =
   | FormulasFalse                  -- ^ False in formulas
   | SuperfluousLearn LNTerm NodeId -- ^ A term is derived both before and after a learn
   | NodeAfterLast (NodeId, NodeId) -- ^ There is a node after the last node.
-  deriving( Eq, Ord, Show )
+  deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 
 -- | 'True' if the constraint system is contradictory.
@@ -459,6 +461,3 @@ instance HasFrees Contradiction where
   mapFrees f (NonInjectiveFactInstance x) = NonInjectiveFactInstance <$> mapFrees f x
   mapFrees f (NodeAfterLast x)            = NodeAfterLast <$> mapFrees f x
   mapFrees _ c                            = pure c
-
-$( derive makeBinary ''Contradiction)
-$( derive makeNFData ''Contradiction)
