@@ -55,7 +55,6 @@ library
       , safe
       , split
       , syb
-      , template-haskell
 
       , tamarin-prover-utils
 
