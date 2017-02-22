@@ -5,7 +5,7 @@ builtins: asymmetric-encryption
 
 /* We formalize the following protocol:
 
-    1. A -> B: {B,na}sk(A)
+    1. A -> B: {A,na}sk(A)
 
 */
 
