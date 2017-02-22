@@ -723,3 +723,6 @@ lemma injectiveagreement:
 ```
 
 
+The idea behind injective agreement is to prevent replay
+attacks. Therefore, new freshness will have to be involved in each
+run, meaning the term `t` must contain such a fresh value. 
