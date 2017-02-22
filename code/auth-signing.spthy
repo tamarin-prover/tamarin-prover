@@ -7,7 +7,7 @@ builtins: signing
 
     1. A -> B: {A,na}sk(A)
 
-using Tamarin's builtin signin and verification functions.
+using Tamarin's builtin signing and verification functions.
 
 */
 
