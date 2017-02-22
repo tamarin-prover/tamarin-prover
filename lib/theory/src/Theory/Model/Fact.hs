@@ -2,6 +2,8 @@
 {-# LANGUAGE FlexibleContexts   #-}
 {-# LANGUAGE TemplateHaskell    #-}
 {-# LANGUAGE ViewPatterns       #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE DeriveAnyClass       #-}
 -- |
 -- Copyright   : (c) 2011, 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -75,10 +77,10 @@ module Theory.Model.Fact (
 -- import           Control.Basics
 import           Control.DeepSeq
 
+import           GHC.Generics (Generic)
 import           Data.Binary
-import           Data.DeriveTH
 -- import           Data.Foldable          (Foldable(..))
-import           Data.Generics
+import           Data.Data
 import           Data.Maybe             (isJust)
 import           Data.Monoid
 -- import           Data.Traversable       (Traversable(..))
@@ -94,7 +96,7 @@ import           Text.PrettyPrint.Class
 ------------------------------------------------------------------------------
 
 data Multiplicity = Persistent | Linear
-                  deriving( Eq, Ord, Show, Typeable, Data )
+                  deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Fact tags/symbols
 data FactTag = ProtoFact Multiplicity String Int
@@ -106,14 +108,14 @@ data FactTag = ProtoFact Multiplicity String Int
              | KDFact     -- ^ Down-knowledge fact in message deduction.
              | DedFact    -- ^ Log-fact denoting that the intruder deduced
                           -- a message using a construction rule.
-    deriving( Eq, Ord, Show, Typeable, Data )
+    deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Facts.
 data Fact t = Fact
     { factTag   :: FactTag
     , factTerms :: [t]
     }
-    deriving( Eq, Ord, Show, Typeable, Data )
+    deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 
 -- Instances
@@ -378,14 +380,3 @@ prettyNFact = prettyFact prettyNTerm
 -- | Pretty print a 'LFact'.
 prettyLNFact :: Document d => LNFact -> d
 prettyLNFact fa = prettyFact prettyNTerm fa
-
--- derived instances
---------------------
-
-$( derive makeBinary ''Multiplicity)
-$( derive makeBinary ''FactTag)
-$( derive makeBinary ''Fact)
-
-$( derive makeNFData ''Multiplicity)
-$( derive makeNFData ''FactTag)
-$( derive makeNFData ''Fact)

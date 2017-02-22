@@ -6,6 +6,8 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 -- FIXME: for functions prove
 {-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE DeriveAnyClass       #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -179,8 +181,10 @@ module Theory (
 
 import           Prelude                             hiding (id, (.))
 
+import           GHC.Generics                        (Generic)
+
 import           Data.Binary
-import           Data.DeriveTH
+import           Data.Data
 -- import           Data.Foldable                       (Foldable, foldMap)
 import           Data.List
 import           Data.Maybe
@@ -253,7 +257,7 @@ data ClosedProtoRule = ClosedProtoRule
        { _cprRuleE  :: ProtoRuleE             -- original rule modulo E
        , _cprRuleAC :: ProtoRuleAC            -- variant modulo AC
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 type OpenRuleCache = [IntrRuleAC]
 
@@ -263,7 +267,7 @@ data ClosedRuleCache = ClosedRuleCache
        , _crcRefinedSources      :: [Source]
        , _crcInjectiveFactInsts  :: S.Set FactTag
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 
 $(mkLabels [''ClosedProtoRule, ''ClosedRuleCache])
@@ -378,7 +382,7 @@ data Restriction = Restriction
        { _rstrName    :: String
        , _rstrFormula :: LNFormula
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''Restriction])
 
@@ -396,11 +400,11 @@ data LemmaAttribute =
        | LHSLemma
        | RHSLemma
 --        | BothLemma
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | A 'TraceQuantifier' stating whether we check satisfiability of validity.
 data TraceQuantifier = ExistsTrace | AllTraces
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | A lemma describes a property that holds in the context of a theory
 -- together with a proof of its correctness.
@@ -411,7 +415,7 @@ data Lemma p = Lemma
        , _lAttributes      :: [LemmaAttribute]
        , _lProof           :: p
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''Lemma])
 
@@ -424,7 +428,7 @@ data DiffLemma p = DiffLemma
        , _lDiffAttributes      :: [LemmaAttribute]
        , _lDiffProof           :: p
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''DiffLemma])
 
@@ -528,7 +532,7 @@ data TheoryItem r p =
      | LemmaItem (Lemma p)
      | RestrictionItem Restriction
      | TextItem FormalComment
-     deriving( Show, Eq, Ord, Functor )
+     deriving( Show, Eq, Ord, Functor, Generic, NFData, Binary )
 
 -- | A diff theory item built over the given rule type.
 --   This includes
@@ -543,7 +547,7 @@ data DiffTheoryItem r r2 p p2 =
      | EitherLemmaItem (Side, Lemma p2)
      | EitherRestrictionItem (Side, Restriction)
      | DiffTextItem FormalComment
-     deriving( Show, Eq, Ord, Functor )
+     deriving( Show, Eq, Ord, Functor, Generic, NFData, Binary )
 
 -- | A theory contains a single set of rewriting rules modeling a protocol
 -- and the lemmas that
@@ -553,7 +557,7 @@ data Theory sig c r p = Theory {
        , _thyCache     :: c
        , _thyItems     :: [TheoryItem r p]
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''Theory])
 
@@ -568,7 +572,7 @@ data DiffTheory sig c r r2 p p2 = DiffTheory {
        , _diffThyDiffCacheRight :: c
        , _diffThyItems          :: [DiffTheoryItem r r2 p p2]
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
        
 $(mkLabels [''DiffTheory])
@@ -1941,31 +1945,4 @@ prettyTraceQuantifier :: Document d => TraceQuantifier -> d
 prettyTraceQuantifier ExistsTrace = text "exists-trace"
 prettyTraceQuantifier AllTraces   = text "all-traces"
 
-
--- Instances: FIXME: Sort them into the right files
---------------------------------------------------
-
-$( derive makeBinary ''TheoryItem)
-$( derive makeBinary ''DiffTheoryItem)
-$( derive makeBinary ''LemmaAttribute)
-$( derive makeBinary ''TraceQuantifier)
-$( derive makeBinary ''Restriction)
-$( derive makeBinary ''Lemma)
-$( derive makeBinary ''DiffLemma)
-$( derive makeBinary ''ClosedProtoRule)
-$( derive makeBinary ''ClosedRuleCache)
-$( derive makeBinary ''Theory)
-$( derive makeBinary ''DiffTheory)
-
-$( derive makeNFData ''TheoryItem)
-$( derive makeNFData ''DiffTheoryItem)
-$( derive makeNFData ''LemmaAttribute)
-$( derive makeNFData ''TraceQuantifier)
-$( derive makeNFData ''Restriction)
-$( derive makeNFData ''Lemma)
-$( derive makeNFData ''DiffLemma)
-$( derive makeNFData ''ClosedProtoRule)
-$( derive makeNFData ''ClosedRuleCache)
-$( derive makeNFData ''Theory)
-$( derive makeNFData ''DiffTheory)
-
+-- FIXME: Sort instances into the right files

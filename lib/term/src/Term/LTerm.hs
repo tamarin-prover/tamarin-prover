@@ -2,12 +2,13 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DeriveAnyClass             #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |
@@ -113,11 +114,11 @@ import           Control.Monad.Bind
 import           Control.Monad.Identity
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
+import           GHC.Generics                     (Generic)
 import           Data.Binary
 import qualified Data.DList                       as D
-import           Data.DeriveTH
 import           Data.Foldable                    hiding (concatMap, elem, notElem, any)
-import           Data.Generics                    hiding (GT)
+import           Data.Data
 import qualified Data.Map                         as M
 import           Data.Monoid
 import qualified Data.Set                         as S
@@ -148,7 +149,7 @@ data LSort = LSortPub   -- ^ Arbitrary public names.
            | LSortFresh -- ^ Arbitrary fresh names.
            | LSortMsg   -- ^ Arbitrary messages.
            | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
-           deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data )
+           deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data, Generic, NFData, Binary )
 
 -- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
 --   Partial order: Node      Msg
@@ -187,15 +188,15 @@ sortSuffix LSortNode  = "node"
 
 -- | Type safety for names.
 newtype NameId = NameId { getNameId :: String }
-    deriving( Eq, Ord, Typeable, Data, NFData, Binary )
+    deriving( Eq, Ord, Typeable, Data, Generic, NFData, Binary )
 
 -- | Tags for names.
 data NameTag = FreshName | PubName
-    deriving( Eq, Ord, Show, Typeable, Data )
+    deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Names.
 data Name = Name {nTag :: NameTag, nId :: NameId}
-    deriving( Eq, Ord, Typeable, Data )
+    deriving( Eq, Ord, Typeable, Data, Generic, NFData, Binary)
 
 -- | Terms with literals containing names and arbitrary variables.
 type NTerm v = VTerm Name v
@@ -242,7 +243,7 @@ data LVar = LVar
                               -- with the other 'sortOf' functions.
      , lvarIdx  :: !Integer
      }
-     deriving( Typeable, Data )
+     deriving( Typeable, Data, Generic, NFData, Binary )
 
 -- | An alternative name for logical variables, which are intented to be
 -- variables of sort 'LSortNode'.
@@ -367,7 +368,7 @@ ltermNodeId' = ltermVar' LSortNode
 -- | Bound and free variables.
 data BVar v = Bound Integer  -- ^ A bound variable in De-Brujin notation.
             | Free  v        -- ^ A free variable.
-            deriving( Eq, Ord, Show, Data, Typeable )
+            deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary )
 
 -- | 'LVar's combined with quantified variables. They occur only in 'LFormula's.
 type BLVar = BVar LVar
@@ -769,17 +770,3 @@ showLitName (Var (LVar v s i))       = "Var_" ++ sortSuffix s ++ "_" ++ body
              | i == 0           = v
              | otherwise        = show i ++ "_" ++ v
 
--- derived instances
---------------------
-
-$( derive makeBinary ''NameTag)
-$( derive makeBinary ''Name)
-$( derive makeBinary ''LSort)
-$( derive makeBinary ''LVar)
-$( derive makeBinary ''BVar)
-
-$( derive makeNFData ''NameTag)
-$( derive makeNFData ''Name)
-$( derive makeNFData ''LSort)
-$( derive makeNFData ''LVar)
-$( derive makeNFData ''BVar)

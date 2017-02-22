@@ -3,6 +3,8 @@
 {-# LANGUAGE TupleSections    #-}
 -- FIXME: better types in checkLevel
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveGeneric    #-}
+{-# LANGUAGE DeriveAnyClass   #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -94,8 +96,10 @@ module Theory.Proof (
 
 ) where
 
+import           GHC.Generics                     (Generic)
+
 import           Data.Binary
-import           Data.DeriveTH
+import           Data.Data
 -- import           Data.Foldable                    (Foldable, foldMap)
 import           Data.List
 import qualified Data.Label                       as L
@@ -179,7 +183,7 @@ data ProofStep a = ProofStep
      { psMethod :: ProofMethod
      , psInfo   :: a
      }
-     deriving( Eq, Ord, Show )
+     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 instance Functor ProofStep where
     fmap f (ProofStep m i) = ProofStep m (f i)
@@ -201,7 +205,7 @@ data DiffProofStep a = DiffProofStep
      { dpsMethod :: DiffProofMethod
      , dpsInfo   :: a
      }
-     deriving( Eq, Ord, Show )
+     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 instance Functor DiffProofStep where
     fmap f (DiffProofStep m i) = DiffProofStep m (f i)
@@ -385,7 +389,7 @@ data ProofStatus =
        | IncompleteProof    -- ^ There is a annotated sorry,
                             --   but no annotatd solved step.
        | TraceFound         -- ^ There is an annotated solved step
-    deriving (Show)
+    deriving ( Show, Generic, NFData, Binary )
 
 instance Monoid ProofStatus where
     mempty = CompleteProof
@@ -728,13 +732,14 @@ contradictionDiffProver = DiffProver $ \ctxt d sys prf ->
 ------------------------------------------------------------------------------
 
 data SolutionExtractor = CutDFS | CutBFS | CutNothing
-    deriving( Eq, Ord, Show, Read )
+    deriving( Eq, Ord, Show, Read, Generic, NFData, Binary )
 
 data AutoProver = AutoProver
     { apHeuristic :: Heuristic
     , apBound     :: Maybe Int
     , apCut       :: SolutionExtractor
     }
+    deriving ( Generic, NFData, Binary )
 
 runAutoProver :: AutoProver -> Prover
 runAutoProver (AutoProver heuristic bound cut) =
@@ -1022,7 +1027,7 @@ prettyDiffProofWith prettyStep prettyCase =
       (prettyCase (root prf) $ kwCase <-> text name) $-$
       ppPrf prf
 
--- | Convert a proof status to a redable string.
+-- | Convert a proof status to a readable string.
 showProofStatus :: SystemTraceQuantifier -> ProofStatus -> String
 showProofStatus ExistsNoTrace   TraceFound        = "falsified - found trace"
 showProofStatus ExistsNoTrace   CompleteProof     = "verified"
@@ -1031,28 +1036,15 @@ showProofStatus ExistsSomeTrace TraceFound        = "verified"
 showProofStatus _               IncompleteProof   = "analysis incomplete"
 showProofStatus _               UndeterminedProof = "analysis undetermined"
 
--- | Convert a proof status to a redable string.
+-- | Convert a proof status to a readable string.
 showDiffProofStatus :: ProofStatus -> String
 showDiffProofStatus TraceFound        = "falsified - found trace"
 showDiffProofStatus CompleteProof     = "verified"
 showDiffProofStatus IncompleteProof   = "analysis incomplete"
 showDiffProofStatus UndeterminedProof = "analysis undetermined"
 
--- Derived instances
+-- Instances
 --------------------
-
-$( derive makeBinary ''ProofStep)
-$( derive makeBinary ''DiffProofStep)
-$( derive makeBinary ''ProofStatus)
-$( derive makeBinary ''SolutionExtractor)
-$( derive makeBinary ''AutoProver)
-
-$( derive makeNFData ''ProofStep)
-$( derive makeNFData ''DiffProofStep)
-$( derive makeNFData ''ProofStatus)
-$( derive makeNFData ''SolutionExtractor)
-$( derive makeNFData ''AutoProver)
-
 instance (Ord l, NFData l, NFData a) => NFData (LTree l a) where
   rnf (LNode r m) = rnf r `seq` rnf  m
 

@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -51,7 +53,8 @@ import Control.Monad.Fresh
 -- import Control.Applicative
 import Control.DeepSeq
 
-import Data.DeriveTH
+import GHC.Generics (Generic)
+import Data.Data
 import Data.Binary
 import Data.Foldable (asum)
 -- import Data.Monoid
@@ -80,7 +83,7 @@ data MaudeSig = MaudeSig
                                           -- can be computed from enableX and stFunSyms
     , irreducibleFunSyms :: FunSig        -- ^ irreducible function symbols (can be computed)
     }
-    deriving (Ord, Show, Eq)
+    deriving (Ord, Show, Eq, Generic, NFData, Binary)
 
 -- | Smart constructor for maude signatures. Computes funSyms and irreducibleFunSyms.
 maudeSig :: MaudeSig -> MaudeSig
@@ -188,9 +191,3 @@ prettyMaudeSig sig = P.vcat
       where showPriv Private = " [private]"
             showPriv Public  = ""
 
-
--- derived instances
---------------------
-
-$(derive makeBinary ''MaudeSig)
-$(derive makeNFData ''MaudeSig)

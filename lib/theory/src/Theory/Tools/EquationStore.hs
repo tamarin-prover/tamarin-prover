@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TemplateHaskell            #-}
@@ -50,6 +51,7 @@ module Theory.Tools.EquationStore (
   , prettyEqStore
 ) where
 
+import           GHC.Generics          (Generic)
 import           Logic.Connectives
 import           Term.Unification
 import           Theory.Text.Pretty
@@ -68,7 +70,7 @@ import           Control.Monad.State   hiding (get, modify, put)
 import qualified Control.Monad.State   as MS
 
 import           Data.Binary
-import           Data.DeriveTH
+import           Data.Data
 import qualified Data.Foldable         as F
 import           Data.List          (delete,find,intersect,intersperse,nub,(\\))
 import           Data.Maybe
@@ -115,7 +117,10 @@ data EqStore = EqStore {
     , _eqsConj        :: Conj (SplitId, S.Set LNSubstVFresh)
     , _eqsNextSplitId :: SplitId
     }
-  deriving( Eq, Ord )
+  deriving( Eq, Ord, Generic )
+
+instance NFData EqStore
+instance Binary EqStore
 
 $(mkLabels [''EqStore])
 
@@ -582,6 +587,3 @@ prettyEqStore eqs@(EqStore substFree (Conj disjs) _nextSplitId) = vcat $
 
 instance Show EqStore where
     show = render . prettyEqStore
-
-$( derive makeBinary ''EqStore)
-$( derive makeNFData ''EqStore)

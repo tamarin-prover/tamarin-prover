@@ -4,7 +4,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -89,9 +90,9 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise (Fresh, evalFresh, 
 
 import           Debug.Trace
 
+import           GHC.Generics                     (Generic)
 import           Data.Data
 import           Data.Binary
-import           Data.DeriveTH
 import           Data.Either                      (partitionEithers)
 -- import           Data.Foldable                    (Foldable(..), foldMap)
 import           Data.List
@@ -118,7 +119,11 @@ data Guarded s c v = GAto  (Atom (VTerm c (BVar v)))
                     -- depending on the 'Quantifier'.
                     -- We assume that all bound variables xs occur in
                     -- f@i atoms in as.
-                   deriving (Eq, Ord, Show)
+                   deriving (Eq, Ord, Show, Generic)
+
+instance (NFData s, NFData c, NFData v) => NFData (Guarded s c v)
+instance (Binary s, Binary c, Binary v) => Binary (Guarded s c v)
+
 
 isConjunction :: Guarded s c v -> Bool
 isConjunction (GConj _)  = True
@@ -834,10 +839,3 @@ prettyGuarded fm =
         ppVars      = fsep . map (text . show)
         ppQuant All = "∀"  -- "All "
         ppQuant Ex  = "∃"  -- "Ex "
-
-
--- Derived instances
---------------------
-
-$( derive makeBinary ''Guarded)
-$( derive makeNFData ''Guarded)

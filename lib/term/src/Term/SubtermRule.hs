@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, DeriveDataTypeable, ViewPatterns #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, DeriveDataTypeable, ViewPatterns, DeriveGeneric, DeriveAnyClass #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
 -- |
@@ -21,7 +21,8 @@ module Term.SubtermRule (
 
 import Control.DeepSeq
 
-import Data.DeriveTH
+import GHC.Generics (Generic)
+import Data.Data
 import Data.Binary
 
 import Term.LTerm
@@ -32,12 +33,12 @@ import Text.PrettyPrint.Highlight
 -- | The righthand-side of a context subterm rewrite rule.
 --   Does not enforce that the term for RhsGround must be ground.
 data StRhs = StRhs [Position] LNTerm
-    deriving (Show,Ord,Eq)
+    deriving (Show,Ord,Eq, Generic, NFData, Binary)
 
 -- | A context subterm rewrite rule.
 --   The left hand side as a LNTerm, and a StRHS.
 data CtxtStRule = CtxtStRule LNTerm StRhs
-    deriving (Show,Ord,Eq)
+    deriving (Show,Ord,Eq, Generic, NFData, Binary)
 
 -- | Convert a rewrite rule to a context subterm rewrite rule if possible.
 rRuleToCtxtStRule :: RRule LNTerm -> Maybe CtxtStRule
@@ -88,11 +89,3 @@ prettyCtxtStRule r = case ctxtStRuleToRRule r of
   (lhs `RRule` rhs) -> sep [ nest 2 $ prettyLNTerm lhs
                            , operator_ "=" <-> prettyLNTerm rhs ]
 
--- derived instances
---------------------
-
-$(derive makeBinary ''StRhs)
-$(derive makeBinary ''CtxtStRule)
-
-$(derive makeNFData ''StRhs)
-$(derive makeNFData ''CtxtStRule)

@@ -5,6 +5,8 @@
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE ViewPatterns         #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE DeriveAnyClass       #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -48,10 +50,10 @@ module Theory.Model.Formula (
 
 import           Prelude                          hiding (negate)
 
+import           GHC.Generics (Generic)
 import           Data.Binary
-import           Data.DeriveTH
 -- import           Data.Foldable                    (Foldable, foldMap)
-import           Data.Generics
+import           Data.Data
 import           Data.Monoid                      hiding (All)
 -- import           Data.Traversable
 
@@ -74,11 +76,11 @@ import           Term.Substitution
 
 -- | Logical connectives.
 data Connective = And | Or | Imp | Iff
-                deriving( Eq, Ord, Show, Enum, Bounded, Data, Typeable )
+                deriving( Eq, Ord, Show, Enum, Bounded, Data, Typeable, Generic, NFData, Binary )
 
 -- | Quantifiers.
 data Quantifier = All | Ex
-                deriving( Eq, Ord, Show, Enum, Bounded, Data, Typeable )
+                deriving( Eq, Ord, Show, Enum, Bounded, Data, Typeable, Generic, NFData, Binary )
 
 
 -- | First-order formulas in locally nameless representation with hints for the
@@ -88,6 +90,7 @@ data Formula s c v = Ato (Atom (VTerm c (BVar v)))
                    | Not (Formula s c v)
                    | Conn !Connective (Formula s c v) (Formula s c v)
                    | Qua !Quantifier s (Formula s c v)
+                   deriving ( Generic, NFData, Binary )
 
 -- Folding
 ----------
@@ -312,15 +315,3 @@ prettyLFormula ppAtom =
 prettyLNFormula :: HighlightDocument d => LNFormula -> d
 prettyLNFormula fm =
     Precise.evalFresh (prettyLFormula prettyNAtom fm) (avoidPrecise fm)
-
-
--- Derived instances
---------------------
-
-$( derive makeBinary ''Connective)
-$( derive makeBinary ''Quantifier)
-$( derive makeBinary ''Formula)
-
-$( derive makeNFData ''Connective)
-$( derive makeNFData ''Quantifier)
-$( derive makeNFData ''Formula)

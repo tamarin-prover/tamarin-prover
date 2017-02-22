@@ -2,6 +2,8 @@
 {-# LANGUAGE TemplateHaskell    #-}
 {-# LANGUAGE TypeOperators      #-}
 {-# LANGUAGE ViewPatterns       #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE DeriveAnyClass     #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -189,10 +191,11 @@ module Theory.Constraint.System (
 
 import           Prelude                              hiding (id, (.))
 
+import           GHC.Generics                         (Generic)
+
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
-import           Data.DeriveTH
 import           Data.List                            (foldl', partition, intersect)
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe)
@@ -225,7 +228,7 @@ data ClassifiedRules = ClassifiedRules
      , _crDestruct      :: [RuleAC] -- destruction rules
      , _crConstruct     :: [RuleAC] -- construction rules
      }
-     deriving( Eq, Ord, Show )
+     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''ClassifiedRules])
 
@@ -247,7 +250,7 @@ nonSilentRules = filter (not . null . L.get rActs) . joinAllRules
 ------------------------------------------------------------------------------
 
 -- | In the diff type, we have either the Left Hand Side or the Right Hand Side
-data Side = LHS | RHS deriving(Show, Eq, Ord, Read)
+data Side = LHS | RHS deriving ( Show, Eq, Ord, Read, Generic, NFData, Binary )
 
 opposite :: Side -> Side
 opposite LHS = RHS
@@ -257,12 +260,12 @@ opposite RHS = LHS
 -- current constraint system or whether we're checking that no traces
 -- satisfies the current constraint system.
 data SystemTraceQuantifier = ExistsSomeTrace | ExistsNoTrace
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | Source kind that are allowed. The order of the kinds
 -- corresponds to the subkinding relation: raw < refined.
 data SourceKind = RawSource | RefinedSource
-       deriving( Eq )
+       deriving( Eq, Generic, NFData, Binary )
 
 instance Show SourceKind where
     show RawSource     = "raw"
@@ -298,7 +301,7 @@ data GoalStatus = GoalStatus
        -- True if this goal should be solved with care because it may lead to
        -- non-termination.
     }
-    deriving( Eq, Ord, Show )
+    deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | A constraint system.
 data System = System
@@ -318,7 +321,7 @@ data System = System
     -- NOTE: Don't forget to update 'substSystem' in
     -- "Constraint.Solver.Reduction" when adding further fields to the
     -- constraint system.
-    deriving( Eq, Ord )
+    deriving( Eq, Ord, Generic, NFData, Binary )
 
 $(mkLabels [''System, ''GoalStatus])
 
@@ -347,10 +350,10 @@ data Source = Source
        -- being the path of proof steps required to arrive at these cases
      , _cdCases    :: Disj ([String], System)
      }
-     deriving( Eq, Ord, Show )
+     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 data InductionHint = UseInduction | AvoidInduction
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | A proof context contains the globally fresh facts, classified rewrite
 -- rules and the corresponding precomputed premise source theorems.
@@ -368,7 +371,7 @@ data ProofContext = ProofContext
        , _pcTrueSubterm        :: Bool -- true if in all rules the RHS is a subterm of the LHS
        , _pcConstantRHS        :: Bool -- true if there are rules with a constant RHS
        }
-       deriving( Eq, Ord, Show )
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | A diff proof context contains the two proof contexts for either side
 -- and all rules.
@@ -409,7 +412,7 @@ instance HasFrees Source where
                                     <*> mapFrees f (L.get cdCases th)
 
 data DiffProofType = RuleEquivalence | None
-    deriving( Eq, Ord, Show )
+    deriving( Eq, Ord, Show, Generic, NFData, Binary )
     
 -- | A system used in diff proofs. 
 data DiffSystem = DiffSystem
@@ -423,7 +426,7 @@ data DiffSystem = DiffSystem
     , _dsDestrRules     :: S.Set RuleAC                     -- the descruction rules of the theory
     , _dsCurrentRule    :: Maybe String                     -- the name of the rule under consideration
     }
-    deriving( Eq, Ord )
+    deriving( Eq, Ord, Generic, NFData, Binary )
 
 $(mkLabels [''DiffSystem])
 
@@ -1297,32 +1300,3 @@ instance HasFrees System where
                <*> mapFrees fun j
                <*> mapFrees fun k
                <*> mapFrees fun l
-
--- NFData
----------
-
-$( derive makeBinary ''Source)
-$( derive makeBinary ''ClassifiedRules)
-$( derive makeBinary ''InductionHint)
-$( derive makeBinary ''ProofContext)
-
-$( derive makeBinary ''Side)
-$( derive makeBinary ''SourceKind)
-$( derive makeBinary ''GoalStatus)
-$( derive makeBinary ''DiffProofType)
-$( derive makeBinary ''System)
-$( derive makeBinary ''DiffSystem)
-$( derive makeBinary ''SystemTraceQuantifier)
-
-$( derive makeNFData ''Source)
-$( derive makeNFData ''ClassifiedRules)
-$( derive makeNFData ''InductionHint)
-$( derive makeNFData ''ProofContext)
-
-$( derive makeNFData ''Side)
-$( derive makeNFData ''SourceKind)
-$( derive makeNFData ''GoalStatus)
-$( derive makeNFData ''DiffProofType)
-$( derive makeNFData ''System)
-$( derive makeNFData ''DiffSystem)
-$( derive makeNFData ''SystemTraceQuantifier)

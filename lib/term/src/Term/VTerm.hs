@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -32,10 +34,10 @@ module Term.VTerm (
 
 -- import Data.Foldable
 -- import Data.Traversable
+import GHC.Generics (Generic)
 import qualified Data.DList as D
 import Data.Typeable
-import Data.Generics
-import Data.DeriveTH
+import Data.Data
 import Data.Binary
 import Data.Monoid
 import Control.DeepSeq
@@ -53,7 +55,7 @@ import Term.Term
 
 -- | A Lit is either a constant or a variable. (@Const@ is taken by Control.Applicative)
 data Lit c v = Con c | Var v
-  deriving (Eq, Ord, Data, Typeable)
+  deriving (Eq, Ord, Data, Typeable, Generic, NFData, Binary)
 
 -- | A VTerm is a term with constants and variables
 type VTerm c v = Term (Lit c v)
@@ -140,9 +142,3 @@ termVar' :: (Show c, Show v) => VTerm c v -> v
 termVar' t =
     fromJustNote ("termVar': non-variable term " ++ show t) (termVar t)
 
-
--- Derived instances
---------------------
-
-$( derive makeNFData ''Lit)
-$( derive makeBinary ''Lit)

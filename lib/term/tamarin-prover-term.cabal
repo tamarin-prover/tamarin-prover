@@ -47,7 +47,6 @@ library
       , bytestring
       , containers
       , deepseq
-      , derive
       , directory
       , dlist
       , mtl

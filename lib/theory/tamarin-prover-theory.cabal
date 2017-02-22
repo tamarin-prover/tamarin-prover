@@ -47,7 +47,6 @@ library
       , cmdargs
       , containers
       , deepseq
-      , derive
       , directory
       , dlist
       , fclabels

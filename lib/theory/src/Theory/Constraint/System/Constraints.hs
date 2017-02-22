@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE DeriveAnyClass     #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -35,10 +37,9 @@ module Theory.Constraint.System.Constraints (
   , prettyLess
   , prettyGoal
   ) where
-
+import           GHC.Generics (Generic)
 import           Data.Binary
-import           Data.DeriveTH
-import           Data.Generics
+import           Data.Data
 -- import           Extension.Data.Monoid            (Monoid(..))
 
 -- import           Control.Basics
@@ -68,7 +69,7 @@ data Edge = Edge {
       eSrc :: NodeConc
     , eTgt :: NodePrem
     }
-  deriving (Show, Ord, Eq, Data, Typeable)
+  deriving (Show, Ord, Eq, Data, Typeable, Generic, NFData, Binary)
 
 -- | A *⋖* constraint between 'NodeId's.
 type Less = (NodeId, NodeId)
@@ -103,7 +104,7 @@ data Goal =
        -- ^ A case split over equalities.
      | DisjG (Disj LNGuarded)
        -- ^ A case split over a disjunction.
-     deriving( Eq, Ord, Show )
+     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- Indicators
 -------------
@@ -207,11 +208,3 @@ prettyGoal (DisjG (Disj gfs)) = fsep $
 prettyGoal (SplitG x) =
     text "splitEqs" <> parens (text $ show (unSplitId x))
 
--- Derived instances
---------------------
-
-$( derive makeBinary ''Edge)
-$( derive makeBinary ''Goal)
-
-$( derive makeNFData ''Edge)
-$( derive makeNFData ''Goal)

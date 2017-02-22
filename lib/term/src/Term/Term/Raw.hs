@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -38,14 +40,14 @@ module Term.Term.Raw (
 
     ) where
 
+import           GHC.Generics (Generic)
 import           Data.List
 -- import           Data.Monoid
 -- import           Data.Foldable (Foldable, foldMap)
 -- import           Data.Traversable
 import           Data.Typeable
-import           Data.Generics
-import           Data.DeriveTH
 import           Data.Binary
+import           Data.Data
 
 import           Control.DeepSeq
 -- import           Control.Basics
@@ -64,7 +66,7 @@ import           Term.Term.FunctionSymbols
 -- or 'viewTerm2' to inspect it.
 data Term a = LIT a                 -- ^ atomic terms (constants, variables, ..)
             | FAPP FunSym [Term a]  -- ^ function applications
-  deriving (Eq, Ord, Typeable, Data )
+  deriving (Eq, Ord, Typeable, Data, Generic, NFData, Binary )
 
 ----------------------------------------------------------------------
 -- Diff Type - whether left/right interpretation of diff is desired,
@@ -236,10 +238,3 @@ foldTerm fLIT fFAPP t = go t
 instance Sized a => Sized (Term a) where
     size = foldTerm size (const $ \xs -> sum xs + 1)
 
-----------------------------------------------------------------------
--- Derived Instances
-----------------------------------------------------------------------
-
-$( derive makeNFData ''Term )
-
-$( derive makeBinary ''Term )
