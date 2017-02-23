@@ -19,6 +19,8 @@ import Term.Builtin.Signature
 b *: e = fAppAC Mult [b,e]
 (#) :: Ord a => Term a -> Term a -> Term a
 b # e  = fAppAC Union [b,e]
+(+:) :: Ord a => Term a -> Term a -> Term a
+b +: e = fAppAC Xor [b,e]
 
 adec, aenc, sdec, senc, sign :: (Term a,Term a) -> Term a
 adec (a,b)   = fAppNoEq adecSym [a,b]

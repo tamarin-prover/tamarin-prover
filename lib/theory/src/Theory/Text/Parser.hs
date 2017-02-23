@@ -213,6 +213,14 @@ multterm plit = do
     dh <- enableDH <$> getState
     if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
+        else xorterm plit
+
+-- | A left-associative sequence of xors.
+xorterm :: Ord l => Parser (Term l) -> Parser (Term l)
+xorterm plit = do
+    xor <- enableXor <$> getState
+    if xor -- if xor is not enabled, do not accept 'xorterms's
+        then chainl1 (term plit False) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
         else msetterm plit
 
 -- | A left-associative sequence of multiset unions.
@@ -690,6 +698,8 @@ builtins =
           *> extendSig bpMaudeSig
       , try (symbol "multiset")
           *> extendSig msetMaudeSig
+      , try (symbol "xor")
+          *> extendSig xorMaudeSig
       , try (symbol "symmetric-encryption")
           *> extendSig symEncMaudeSig
       , try (symbol "asymmetric-encryption")

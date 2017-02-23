@@ -429,8 +429,8 @@ rankProofMethods ranking ctxt sys = do
       )
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
--- 'ProofMethod's and their corresponding results in this 'ProofContext' and
--- for this 'System'. If the resulting list is empty, then the constraint
+-- 'ProofMethod's and their corresponding results in this 'DiffProofContext' and
+-- for this 'DiffSystem'. If the resulting list is empty, then the constraint
 -- system is solved.
 rankDiffProofMethods :: GoalRanking -> DiffProofContext -> DiffSystem
                  -> [(DiffProofMethod, (M.Map CaseName DiffSystem, String))]

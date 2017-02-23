@@ -70,7 +70,7 @@ import           Control.Monad.State   hiding (get, modify, put)
 import qualified Control.Monad.State   as MS
 
 import           Data.Binary
-import           Data.Data
+-- import           Data.Data
 import qualified Data.Foldable         as F
 import           Data.List          (delete,find,intersect,intersperse,nub,(\\))
 import           Data.Maybe

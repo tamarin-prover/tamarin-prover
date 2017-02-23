@@ -12,14 +12,14 @@ Portability :  non-portable
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Web.Instances where
 
-import           GHC.Generics (Generic)
-import           Data.Binary
-import           Data.Binary.Orphans
-import           Data.Data
+-- import           GHC.Generics (Generic)
+-- import           Data.Binary
+-- import           Data.Binary.Orphans
+-- import           Data.Data
 
-import           Data.Time.Calendar
-import           Data.Time.LocalTime
-import           Web.Types
+-- import           Data.Time.Calendar
+-- import           Data.Time.LocalTime
+-- import           Web.Types
 
 -- | Needed for GHC < 8.0
 #if __GLASGOW_HASKELL__ < 800

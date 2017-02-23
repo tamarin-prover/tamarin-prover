@@ -39,6 +39,8 @@ module Theory.Text.Parser.Token (
   , opExp
   , opMult
 
+  , opXor
+
   , opEqual
   , opLess
   , opAt
@@ -121,8 +123,8 @@ spthy =
       , T.identStart     = alphaNum
       , T.identLetter    = alphaNum <|> oneOf "_"
       , T.reservedNames  = ["in","let","rule","diff"]
-      , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-"
-      , T.opLetter       = oneOf ":!$%&*+./<=>?@\\^|-"
+      , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-#"
+      , T.opLetter       = oneOf ":!$%&*+./<=>?@\\^|-#"
       , T.reservedOpNames= []
       , T.caseSensitive  = True
       }
@@ -313,6 +315,10 @@ opMult = symbol_ "*"
 -- | The addition operator @*@.
 opPlus :: Parser ()
 opPlus = symbol_ "+"
+
+-- | The xor operator @#@ or @⊕@.
+opXor :: Parser ()
+opXor = symbol_ "#" <|> symbol_ "⊕"
 
 -- | The timepoint comparison operator @<@.
 opLess :: Parser ()

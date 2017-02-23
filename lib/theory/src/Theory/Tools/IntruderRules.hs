@@ -13,6 +13,7 @@ module Theory.Tools.IntruderRules (
     subtermIntruderRules
   , dhIntruderRules
   , bpIntruderRules
+  , xorIntruderRules
   , multisetIntruderRules
   , mkDUnionRule
   , specialIntruderRules
@@ -175,7 +176,7 @@ minimizeIntruderRules diff rules =
                    else r:checked
     
     -- We assume that the KD-Fact is the first fact, which is the case in destructionRules above
-    isDoublePremiseRule (Rule _ (prem@(Fact KDFact [t]):prems) concs _) = 
+    isDoublePremiseRule (Rule _ ((Fact KDFact [t]):prems) concs _) = 
         frees concs == []
          && not (any containsPrivate (t:(concat $ map getFactTerms prems)))
          && isMsgVar t && any (==(Fact KUFact [t])) prems
@@ -274,6 +275,23 @@ mkDUnionRule :: [LNTerm] -> LNTerm -> IntrRuleAC
 mkDUnionRule t_prems t_conc =
     Rule (DestrRule (append (pack "_") unionSymString) 0 True False)
          [kdFact $ fAppAC Union t_prems]
+         [kdFact t_conc] []
+
+------------------------------------------------------------------------------
+-- Xor intruder rules
+------------------------------------------------------------------------------
+
+xorIntruderRules ::  [IntrRuleAC]
+xorIntruderRules = [mkDXorRule [x_var, y_var] [y_var, z_var] x_xor_z, mkDXorRule [x_var, y_var] [y_var] x_var]
+    where x_var   = varTerm (LVar "x"  LSortMsg   0)
+          y_var   = varTerm (LVar "y"  LSortMsg   0)
+          z_var   = varTerm (LVar "z"  LSortMsg   0)
+          x_xor_z = fAppAC Xor [x_var, z_var]
+
+mkDXorRule :: [LNTerm] -> [LNTerm] -> LNTerm -> IntrRuleAC
+mkDXorRule t_prems t_prems2 t_conc =
+    Rule (DestrRule (append (pack "_") xorSymString) 2 True False)
+         [kdFact $ fAppAC Xor t_prems, kuFact $ fAppAC Xor t_prems2]
          [kdFact t_conc] []
 
 ------------------------------------------------------------------------------
