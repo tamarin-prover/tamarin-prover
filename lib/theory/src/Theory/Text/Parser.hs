@@ -220,7 +220,7 @@ xorterm :: Ord l => Parser (Term l) -> Parser (Term l)
 xorterm plit = do
     xor <- enableXor <$> getState
     if xor -- if xor is not enabled, do not accept 'xorterms's
-        then chainl1 (term plit False) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
+        then chainl1 (msetterm plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
         else msetterm plit
 
 -- | A left-associative sequence of multiset unions.
