@@ -316,9 +316,9 @@ opMult = symbol_ "*"
 opPlus :: Parser ()
 opPlus = symbol_ "+"
 
--- | The xor operator @#@ or @⊕@.
+-- | The xor operator @XOR@ or @⊕@.
 opXor :: Parser ()
-opXor = symbol_ "#" <|> symbol_ "⊕"
+opXor = symbol_ "XOR" <|> symbol_ "⊕"
 
 -- | The timepoint comparison operator @<@.
 opLess :: Parser ()
