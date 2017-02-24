@@ -290,7 +290,7 @@ xorIntruderRules = [mkDXorRule [x_var, y_var] [y_var, z_var] x_xor_z, mkDXorRule
 
 mkDXorRule :: [LNTerm] -> [LNTerm] -> LNTerm -> IntrRuleAC
 mkDXorRule t_prems t_prems2 t_conc =
-    Rule (DestrRule (append (pack "_") xorSymString) 2 True False)
+    Rule (DestrRule (append (pack "_") xorSymString) 1 True False)
          [kdFact $ fAppAC Xor t_prems, kuFact $ fAppAC Xor t_prems2]
          [kdFact t_conc] []
 
