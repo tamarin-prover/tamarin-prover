@@ -181,7 +181,7 @@ action fact in any rule.
 The cause of this is either that the fact is spelled differently (here
 `Secr` instead of `Secret`) or that one forgot to add the action fact to the
 protocol rules. 
-Generally, it is a good advice to double check that the facts that are used in
+Generally, it is good practice to double check that the facts that are used in
 the lemmas appear in the relevant protocol rules as actions.
 
 ### Undeclared function symbols ###
