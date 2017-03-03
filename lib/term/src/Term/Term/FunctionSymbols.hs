@@ -49,7 +49,6 @@ module Term.Term.FunctionSymbols (
     , bpFunSig
     , msetFunSig
     , pairFunSig
-    , diffFunSig
     , dhReducibleFunSig
     , bpReducibleFunSig
     , xorReducibleFunSig
