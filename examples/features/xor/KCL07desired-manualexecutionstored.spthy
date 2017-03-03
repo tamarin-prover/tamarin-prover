@@ -1,0 +1,250 @@
+theory KCL07desired begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Setup:
+   [ Fr( ~k ), Fr( ~id ) ]
+  --[ OnlyOnce( ) ]->
+   [ !Reader( ~k, ~id ), !Tag( ~k, ~id ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) reader1:
+   [ Fr( ~r1 ) ]
+  --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 ), Initiated( ~r1 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) tag1:
+   [ In( r1 ), Fr( ~r2 ), !Tag( ~k, ~id ) ]
+  --[ Response( ~k, 'Tag' ) ]->
+   [ Out( <(~id⊕~r2), (~r2⊕h(<r1, ~k>))> ) ]
+
+  /*
+  rule (modulo AC) tag1:
+     [ In( r1 ), Fr( ~r2 ), !Tag( ~k, ~id ) ]
+    --[ Response( ~k, 'Tag' ) ]->
+     [ Out( <z, (~r2⊕h(<r1, ~k>))> ) ]
+    variants (modulo AC)
+    1. ~id   = ~id.17
+       ~r2   = ~id.17
+       z     = zero
+    
+    2. ~id   = ~id.17
+       ~r2   = ~r2.19
+       z     = (~id.17⊕~r2.19)
+  */
+
+rule (modulo E) reader2:
+   [ Initiated( ~r1 ), !Reader( ~k, ~id ), In( <idr2, hashr2> ) ]
+  --[ Alive( ~k, 'Tag' ), Eq( (hashr2⊕idr2), (~id⊕h(<~r1, ~k>)) ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) reader2:
+     [ Initiated( ~r1 ), !Reader( ~k, ~id ), In( <idr2, hashr2> ) ]
+    --[ Alive( ~k, 'Tag' ), Eq( z, (~id⊕h(<~r1, ~k>)) ) ]->
+     [ ]
+    variants (modulo AC)
+    1. hashr2
+             = hashr2.19
+       idr2  = hashr2.19
+       z     = zero
+    
+    2. hashr2
+             = hashr2.19
+       idr2  = zero
+       z     = hashr2.19
+    
+    3. hashr2
+             = hashr2.20
+       idr2  = idr2.21
+       z     = (hashr2.20⊕idr2.21)
+    
+    4. hashr2
+             = hashr2.22
+       idr2  = (hashr2.22⊕z.25)
+       z     = z.25
+    
+    5. hashr2
+             = zero
+       idr2  = idr2.21
+       z     = idr2.21
+    
+    6. hashr2
+             = (idr2.23⊕z.25)
+       idr2  = idr2.23
+       z     = z.25
+    
+    7. hashr2
+             = (x.218⊕x.219)
+       idr2  = (x.219⊕x.220)
+       z     = (x.218⊕x.220)
+  */
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma recentalive_tag:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry /* removed */
+
+lemma executable:
+  exists-trace
+  "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+*/
+simplify
+solve( Initiated( ~r1 ) ▶₀ #i )
+  case reader1
+  solve( !Reader( ~k, ~id ) ▶₁ #i )
+    case Setup
+    solve( !Tag( ~k, ~id.1 ) ▶₂ #j )
+      case Setup
+      solve( splitEqs(1) )
+        case split
+        solve( splitEqs(0) )
+          case split_case_1
+          by sorry
+        next
+          case split_case_2
+          by sorry /* removed */
+        next
+          case split_case_3
+          by sorry /* removed */
+        next
+          case split_case_4
+          solve( !KU( (~id⊕h(<~r1, ~k>)) ) @ #vk.1 )
+            case c_xor_case_1
+            by sorry /* removed */
+          next
+            case c_xor_case_2
+            by sorry /* removed */
+          next
+            case coerce
+            solve( !KD( (~id⊕h(<~r1, ~k>)) ) ▶₀ #vk )
+              case reader1
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl, 0) ~~> (#vk, 0) )
+                case d_0_fst
+                by sorry /* removed */
+              next
+                case d_0_snd
+                solve( (#vr.3, 0) ~~> (#vk, 0) )
+                  case d_xor_case_1
+                  by solve( (#vr.4, 0) ~~> (#vk, 0) )
+                next
+                  case d_xor_case_2
+                  solve( (#vr.4, 0) ~~> (#vk, 0) )
+                    case Xor
+                    solve( !Tag( ~k, ~id.1 ) ▶₂ #vr.2 )
+                      case Setup
+                      solve( !KU( ~r1 ) @ #vk.4 )
+                        case reader1
+                        solve( !KU( (~id⊕~r2.1) ) @ #vk.5 )
+                          case c_xor_case_1
+                          by sorry /* removed */
+                        next
+                          case c_xor_case_2
+                          by sorry /* removed */
+                        next
+                          case coerce
+                          solve( !KD( (~id⊕~r2.1) ) ▶₀ #vk.2 )
+                            case reader1
+                            by contradiction /* impossible chain */
+                          next
+                            case tag1
+                            solve( (#vl.2, 0) ~~> (#vk.2, 0) )
+                              case d_0_fst
+                              solve( !Tag( ~k.1, ~id.1 ) ▶₂ #vr.5 )
+                                case Setup
+                                solve( splitEqs(9) )
+                                  case split
+                                  solve( (#vr.6, 0) ~~> (#vk.2, 0) )
+                                    case Xor
+                                    SOLVED // trace found
+                                  next
+                                    case d_xor_case_1
+                                    by sorry
+                                  next
+                                    case d_xor_case_2
+                                    by sorry
+                                  next
+                                    case d_xor_case_3
+                                    by contradiction /* impossible chain */
+                                  next
+                                    case d_xor_case_4
+                                    by contradiction /* impossible chain */
+                                  qed
+                                qed
+                              qed
+                            next
+                              case d_0_snd
+                              by sorry
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case d_xor_case_3
+                  by contradiction /* impossible chain */
+                next
+                  case d_xor_case_4
+                  by sorry
+                qed
+              qed
+            qed
+          qed
+        next
+          case split_case_5
+          by sorry
+        next
+          case split_case_6
+          by sorry
+        next
+          case split_case_7
+          by sorry
+        next
+          case split_case_8
+          by sorry
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
