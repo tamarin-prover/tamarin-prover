@@ -66,7 +66,8 @@ rule R_1:
     ]
 
 rule I_2:
-  let m2 = aenc{'2', ni, nr ⊕ R}pk(ltkI)
+  let m2 = aenc{'2', ni, x}pk(ltkI)
+      nr = x ⊕ R // compute the partner's nonce by xor-ing with the name
       m3 = aenc{'3', nr}pkR
   in
     [ St_I_1(I, R, ni)
@@ -74,7 +75,7 @@ rule I_2:
     , In( m2 )
     , !Pk(R, pkR)
     ]
-  --[ IN_I_2_nr( nr ⊕ R , m2) // ⊕ R?
+  --[ IN_I_2_nr( nr , m2) // alternatively use "x" here?
     , Commit (I, R, <'init',ni,nr>)  // need to log identities explicitely to
     , Running(R, I, <'resp',ni,nr>)  // specify that they must not be
                                      // compromised in the property.
