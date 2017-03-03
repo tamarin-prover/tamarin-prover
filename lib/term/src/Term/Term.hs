@@ -73,6 +73,7 @@ module Term.Term (
     , pairFunSig
     , dhReducibleFunSig
     , bpReducibleFunSig
+    , xorReducibleFunSig
     , implicitFunSig
 
     , module Term.Term.Classes

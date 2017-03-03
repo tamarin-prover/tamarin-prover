@@ -52,6 +52,7 @@ module Term.Term.FunctionSymbols (
     , diffFunSig
     , dhReducibleFunSig
     , bpReducibleFunSig
+    , xorReducibleFunSig
     , implicitFunSig
     ) where
 
@@ -163,10 +164,6 @@ msetFunSig = S.fromList [AC Union]
 pairFunSig :: NoEqFunSig
 pairFunSig = S.fromList [ pairSym, fstSym, sndSym ]
 
--- | The signature for diff terms.
-diffFunSig :: NoEqFunSig
-diffFunSig = S.fromList [ diffSym ]
-
 -- | Reducible function symbols for DH.
 dhReducibleFunSig :: FunSig
 dhReducibleFunSig = S.fromList [ NoEq expSym, NoEq invSym ]
@@ -174,6 +171,10 @@ dhReducibleFunSig = S.fromList [ NoEq expSym, NoEq invSym ]
 -- | Reducible function symbols for BP.
 bpReducibleFunSig :: FunSig
 bpReducibleFunSig = S.fromList [ NoEq pmultSym, C EMap ]
+
+-- | Reducible function symbols for BP.
+xorReducibleFunSig :: FunSig
+xorReducibleFunSig = S.fromList [ AC Xor ]
 
 -- | Implicit function symbols.
 implicitFunSig :: FunSig
