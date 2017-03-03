@@ -172,7 +172,7 @@ dhReducibleFunSig = S.fromList [ NoEq expSym, NoEq invSym ]
 bpReducibleFunSig :: FunSig
 bpReducibleFunSig = S.fromList [ NoEq pmultSym, C EMap ]
 
--- | Reducible function symbols for BP.
+-- | Reducible function symbols for XOR.
 xorReducibleFunSig :: FunSig
 xorReducibleFunSig = S.fromList [ AC Xor ]
 
