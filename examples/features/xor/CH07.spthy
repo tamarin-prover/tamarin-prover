@@ -1,0 +1,69 @@
+theory CH07 begin
+
+builtins: xor, hashing
+functions: rot/2, left/1, right/1
+
+rule Setup:
+   [ Fr( ~k )
+   , Fr(~id) 
+   ]
+ --[ OnlyOnce( ) ]-> 
+   [ !Reader( ~k, ~id )
+   , !Tag( ~k, ~id ) 
+   ]
+
+rule reader1:
+   [ Fr( ~r1 ) ]
+ --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 )
+   , Initiated( ~r1 ) 
+   ]
+
+rule tag1:
+   let hash = h((r1⊕~r2⊕~k)) in 
+   [ In( r1 )
+   , Fr( ~r2 )
+   , !Tag( ~k, ~id ) ]
+ --[ Response( ~k, 'Tag' )
+   , Challenge(~r2, 'Tag') 
+   ]->
+   [ Out( <~r2,left(rot(~id,hash))>)
+   , TagState(~k, r1, ~r2, hash)
+   ]
+
+rule reader2:
+   [ Initiated( ~r1 )
+   , !Reader( ~k, ~id )
+   , In( <r2, left(rot(~id,hash))> ) 
+   ]
+ --[ Alive( ~k, 'Tag' )
+   , Response(~k, 'Reader') 
+   , Eq( h((~r1⊕r2⊕~k)), hash )
+   ]->
+   [ Out( right(rot(~id,hash)) ) ]
+
+rule tag2:
+   [ In( right(rot(~id,hash)) )
+   , !Tag( ~k, ~id) 
+   , TagState(~k, r1, ~r2, hash)
+   ]
+ --[ Alive( ~k, 'Reader' ) ]->
+   [ ]
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+
+// There should be an attack on this
+lemma recentalive_tag:
+  all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
+
+lemma recentalive_reader:
+  all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
+
+lemma executable:
+  exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+
+end
