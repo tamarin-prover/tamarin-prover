@@ -20,7 +20,7 @@ builtins: asymmetric-encryption, xor
 // Public key infrastructure
 rule Register_pk:
   [ Fr(~ltkA) ]
-  -->
+  --[ Register($A) ]->
   [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
 
 rule Reveal_ltk:
@@ -131,6 +131,14 @@ lemma types [sources]:
        )
     )
   "
+
+restriction onekeypername:
+  " /* It cannot be that */
+    not(
+        Ex A #i #j.
+          /* one name registers two public keys */
+          Register(A) @i & Register(A) @j & (not ( #i = #j))
+        )"
 
 // Nonce secrecy from the perspective of both the initiator and the responder.
 lemma nonce_secrecy:
