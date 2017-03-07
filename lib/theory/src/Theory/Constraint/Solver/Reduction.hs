@@ -346,6 +346,25 @@ insertAction i fa = do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
 
+                Just (UpK, viewTerm2 -> FXor ms) -> do
+                -- In the diff case, add xor rule instead of goal
+                    if isdiff
+                       then do
+                          -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
+                          if not nodePresent
+                             then do
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
+                               insertGoal goal False
+                               markGoalAsSolved "xor" goal
+                               mapM_ requiresKU ms *> return Changed
+                             else do
+                               insertGoal goal False
+                               markGoalAsSolved "exists" goal
+                               return Changed
+                       else do
+                          insertGoal goal False
+                          mapM_ requiresKU ms *> return Changed
+
                 Just (UpK, viewTerm2 -> FUnion ms) -> do
                 -- In the diff case, add union (?) rule instead of goal
                     if isdiff
