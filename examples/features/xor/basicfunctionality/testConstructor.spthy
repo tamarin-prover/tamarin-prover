@@ -1,0 +1,19 @@
+theory testConstructor
+begin
+
+builtins: xor
+
+rule Test1:
+  [ Fr(~k1), Fr(~k2), Fr(~k3), Fr(~k4) ]
+--[ Challenge(~k1 XOR ~k2 XOR ~k3 XOR ~k4) ]->
+  [ Out(~k1 XOR ~k2), Out(~k3), Out(~k4) ]
+
+rule Test2:
+  [ Fr(~k1), Fr(~k2), Fr(~k3), Fr(~k4) ]
+--[ Challenge(~k1 XOR ~k2 XOR ~k3 XOR ~k4) ]->
+  [ Out(~k1, Out(~k2), Out(~k3), Out(~k4) ]
+
+lemma recentalive:
+  "All x #i. Challenge(x) @i ==> not(Ex #j. K(x)@j)"
+
+end
