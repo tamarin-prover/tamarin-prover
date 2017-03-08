@@ -105,10 +105,10 @@ partitions :: [a] -> [[[a]]]
 partitions  []    = [[]]
 partitions (x:xs) = [ys | yss <- partitions xs, ys <- bloat x yss]
 
--- | Generate all possible partitions of a list, excluding the trivial partition
-nonTrivialPartitions :: Eq a => [a] -> [[[a]]]
-nonTrivialPartitions l = delete [l] $ partitions l
-
 bloat :: a -> [[a]] -> [[[a]]]
 bloat x  []      = [[[x]]]
 bloat x (xs:xss) = ((x:xs):xss) : map (xs:) (bloat x xss)
+
+-- | Generate all possible partitions of a list, excluding the trivial partition
+nonTrivialPartitions :: Eq a => [a] -> [[[a]]]
+nonTrivialPartitions l = delete [l] $ partitions l
