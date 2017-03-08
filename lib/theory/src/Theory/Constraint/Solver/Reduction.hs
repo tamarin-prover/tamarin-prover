@@ -101,6 +101,7 @@ import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.System
 import           Theory.Model
 
+import           Utils.Misc
 
 ------------------------------------------------------------------------------
 -- The constraint reduction monad
@@ -255,7 +256,7 @@ labelNodeId = \i rules parent -> do
         _ | isKUFact fa -> do
               j <- freshLVar "vk" LSortNode
               insertLess j i
-              void (insertAction j fa)
+              void (insertAction j fa False)
 
           -- Store premise goal for later processing using CR-rule *DG2_2*
           | otherwise -> insertGoal (PremiseG (i,v) fa) (v `elem` breakers)
@@ -280,8 +281,8 @@ insertEdges edges = do
 --
 -- FIXME: Ensure that intermediate products are also solved before stating
 -- that no rule is applicable.
-insertAction :: NodeId -> LNFact -> Reduction ChangeIndicator
-insertAction i fa = do
+insertAction :: NodeId -> LNFact -> Bool -> Reduction ChangeIndicator
+insertAction i fa parentXor = do
     present <- (goal `M.member`) <$> getM sGoals
     isdiff <- getM sDiffSystem
     nodePresent <- (i `M.member`) <$> getM sNodes
@@ -346,29 +347,38 @@ insertAction i fa = do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
 
-                Just (UpK, viewTerm2 -> FXor ms) -> do
+                Just (UpK, viewTerm2 -> FXor ms) | not parentXor -> do
                 -- In the diff case, add xor rule instead of goal
+                    partList <- disjunctionOfList $ nonTrivialPartitions ms
+                    let part = map toXor partList
                     if isdiff
                        then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map (\x -> Fact KUFact [x]) part) ([fa]) ([fa])))
                                insertGoal goal False
                                markGoalAsSolved "xor" goal
-                               mapM_ requiresKU ms *> return Changed
+                               mapM_ requiresKUXor part *> return Changed
                              else do
                                insertGoal goal False
                                markGoalAsSolved "exists" goal
                                return Changed
                        else do
-                          insertGoal goal False
-                          mapM_ requiresKU ms *> return Changed
+                          if not nodePresent
+                             then do
+                               insertGoal goal False
+                               markGoalAsSolved "xor" goal
+                               mapM_ requiresKUXor part *> return Changed
+                             else do
+                               insertGoal goal False
+                               markGoalAsSolved "exists" goal
+                               mapM_ requiresKUXor part *> return Changed
 
                 Just (UpK, viewTerm2 -> FUnion ms) -> do
                 -- In the diff case, add union (?) rule instead of goal
                     if isdiff
-                       then do                          
+                       then do                        
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -389,6 +399,11 @@ insertAction i fa = do
                     insertGoal goal False
                     return Unchanged
   where
+    -- apply xor if more than one term
+    toXor []                 = error "Reduction: no empty partitions permitted."
+    toXor (x:xs) | xs == []  = x
+                 | otherwise = fAppAC Xor (x:xs)
+    
     goal = ActionG i fa
     -- Here we rely on the fact that the action is new. Otherwise, we might
     -- loop due to generating new KU-nodes that are merged immediately.
@@ -396,7 +411,12 @@ insertAction i fa = do
       j <- freshLVar "vk" LSortNode
       let faKU = kuFact t
       insertLess j i
-      void (insertAction j faKU)
+      void (insertAction j faKU False)
+    requiresKUXor t = do
+      j <- freshLVar "vk" LSortNode
+      let faKU = kuFact t
+      insertLess j i
+      void (insertAction j faKU True)
 
 -- | Insert a 'Less' atom. @insertLess i j@ means that *i < j* is added.
 insertLess :: NodeId -> NodeId -> Reduction ()
@@ -415,7 +435,7 @@ insertLast i = do
 insertAtom :: LNAtom -> Reduction ChangeIndicator
 insertAtom ato = case ato of
     EqE x y       -> solveTermEqs SplitNow [Equal x y]
-    Action i fa   -> insertAction (ltermNodeId' i) fa
+    Action i fa   -> insertAction (ltermNodeId' i) fa False
     Less i j      -> do insertLess (ltermNodeId' i) (ltermNodeId' j)
                         return Unchanged
     Last i        -> insertLast (ltermNodeId' i)
@@ -632,8 +652,8 @@ substGoals = do
     changes <- forM goals $ \(goal, status) -> case goal of
         -- Look out for KU-actions that might need to be solved again.
         ActionG i fa@(kFactView -> Just (UpK, m))
-          | (isMsgVar m || isProduct m || isUnion m) && (apply subst m /= m) ->
-              insertAction i (apply subst fa)
+          | (isMsgVar m || isProduct m || isUnion m {-|| isXor m-}) && (apply subst m /= m) ->
+              insertAction i (apply subst fa) False
         _ -> do modM sGoals $
                   M.insertWith' combineGoalStatus (apply subst goal) status
                 return Unchanged

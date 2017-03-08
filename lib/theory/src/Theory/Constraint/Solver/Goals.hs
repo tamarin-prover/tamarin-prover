@@ -91,7 +91,7 @@ openGoals sys = do
                     || isMsgVar m || sortOfLNTerm m == LSortPub
                     -- handled by 'insertAction'
                     || isPair m || isInverse m || isProduct m
-                    || isXor m
+                 --   || isXor m
                     || isUnion m || isNullaryPublicFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved

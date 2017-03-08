@@ -7,7 +7,9 @@ module Utils.Misc (
   -- * List operations
   , subsetOf
   , noDuplicates
-  , equivClasses  
+  , equivClasses
+  , partitions
+  , nonTrivialPartitions
  
   -- * Control
   , whileTrue
@@ -97,3 +99,13 @@ setAny f = S.foldr (\x b -> f x || b) False
 unsafeEq :: a -> a -> Bool
 unsafeEq a b =
   (I# (reallyUnsafePtrEquality# a b)) == 1
+
+-- | Generate all possible partitions of a list
+partitions :: [a] -> [[[a]]]
+partitions [] = [[]]
+partitions (x:xs) = [[x]:p | p <- partitions xs]
+                 ++ [(x:ys):yss | (ys:yss) <- partitions xs]
+
+-- | Generate all possible partitions of a list
+nonTrivialPartitions :: Eq a => [a] -> [[[a]]]
+nonTrivialPartitions l = delete [l] $ partitions l
