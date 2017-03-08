@@ -354,7 +354,7 @@ insertAction i fa parentXor = do
                     if partList == [ms]
                        then do
                             insertGoal goal False
-                            return Unchanged
+                            return Changed
                        else if isdiff
                             then do
                                 -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
