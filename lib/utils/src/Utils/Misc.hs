@@ -102,10 +102,13 @@ unsafeEq a b =
 
 -- | Generate all possible partitions of a list
 partitions :: [a] -> [[[a]]]
-partitions [] = [[]]
-partitions (x:xs) = [[x]:p | p <- partitions xs]
-                 ++ [(x:ys):yss | (ys:yss) <- partitions xs]
+partitions  []    = [[]]
+partitions (x:xs) = [ys | yss <- partitions xs, ys <- bloat x yss]
 
--- | Generate all possible partitions of a list
+-- | Generate all possible partitions of a list, excluding the trivial partition
 nonTrivialPartitions :: Eq a => [a] -> [[[a]]]
 nonTrivialPartitions l = delete [l] $ partitions l
+
+bloat :: a -> [[a]] -> [[[a]]]
+bloat x  []      = [[[x]]]
+bloat x (xs:xss) = ((x:xs):xss) : map (xs:) (bloat x xss)
