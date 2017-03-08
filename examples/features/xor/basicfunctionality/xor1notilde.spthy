@@ -1,4 +1,4 @@
-theory xor1
+theory xor1notilde
 begin
 
 builtins: xor
@@ -7,10 +7,10 @@ builtins: xor
 
 
 rule testsend:
-  [ Fr(~x), Fr(~y)]
+  [ Fr(x), Fr(y)]
 --[ OnlyOnce()
-  , Secret(~x) ]->
-  [ Out(<~x XOR ~y, ~y>)]
+  , Secret(x) ]->
+  [ Out(<x XOR y, y>)]
 
 restriction unique:
   "All #i #j. OnlyOnce() @i & OnlyOnce() @j ==> #i = #j"
