@@ -113,7 +113,7 @@ guarded formula characterizing all counter-examples:
   ⇒
    ((¬(#k < #j)) ∨ (¬(#j < #i)))"
 */
-by sorry /* removed */
+by sorry
 
 lemma executable:
   exists-trace
@@ -121,6 +121,38 @@ lemma executable:
 /*
 guarded formula characterizing all satisfying traces:
 "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+*/
+by sorry
+
+lemma executablesimplifiedsearch:
+  exists-trace
+  "∃ x #i #j.
+    ((((Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+      (∀ y z #k #l.
+        ((Alive( y, 'Tag' ) @ #k) ∧ (Alive( z, 'Tag' ) @ #l)) ⇒
+        (#k = #l))) ∧
+     (∀ y z #k #l.
+       ((Challenge( y, 'Reader' ) @ #k) ∧
+        (Challenge( z, 'Reader' ) @ #l)) ⇒
+       (#k = #l))) ∧
+    (∀ y z #k #l.
+      ((Response( y, 'Tag' ) @ #k) ∧ (Response( z, 'Tag' ) @ #l)) ⇒
+      (#k = #l))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+ ∧
+  (∀ y z #k #l.
+    (Alive( y, 'Tag' ) @ #k) ∧ (Alive( z, 'Tag' ) @ #l) ⇒ #k = #l) ∧
+  (∀ y z #k #l.
+    (Challenge( y, 'Reader' ) @ #k) ∧ (Challenge( z, 'Reader' ) @ #l)
+   ⇒
+    #k = #l) ∧
+  (∀ y z #k #l.
+    (Response( y, 'Tag' ) @ #k) ∧ (Response( z, 'Tag' ) @ #l)
+   ⇒
+    #k = #l)"
 */
 simplify
 solve( Initiated( ~r1 ) ▶₀ #i )
@@ -132,112 +164,103 @@ solve( Initiated( ~r1 ) ▶₀ #i )
       solve( splitEqs(1) )
         case split
         solve( splitEqs(0) )
-          case split_case_1
+          case split_case_01
           by sorry
         next
-          case split_case_2
-          by sorry /* removed */
+          case split_case_02
+          by sorry
         next
-          case split_case_3
-          by sorry /* removed */
+          case split_case_03
+          by sorry
         next
-          case split_case_4
-          solve( !KU( (~id⊕h(<~r1, ~k>)) ) @ #vk.1 )
-            case c_xor_case_1
-            by sorry /* removed */
-          next
-            case c_xor_case_2
-            by sorry /* removed */
-          next
+          case split_case_04
+          by sorry
+        next
+          case split_case_05
+          by sorry
+        next
+          case split_case_06
+          by sorry
+        next
+          case split_case_07
+          by sorry
+        next
+          case split_case_08
+          by sorry
+        next
+          case split_case_09
+          by sorry
+        next
+          case split_case_10
+          by sorry
+        next
+          case split_case_11
+          by sorry
+        next
+          case split_case_12
+          by sorry
+        next
+          case split_case_13
+          by sorry
+        next
+          case split_case_14
+          by sorry
+        next
+          case split_case_15
+          by sorry
+        next
+          case split_case_16
+          by sorry
+        next
+          case split_case_17
+          by sorry
+        next
+          case split_case_18
+          by sorry
+        next
+          case split_case_19
+          by sorry
+        next
+          case split_case_20
+          by sorry
+        next
+          case split_case_21
+          solve( !KU( (~id⊕x) ) @ #vk.1 )
             case coerce
-            solve( !KD( (~id⊕h(<~r1, ~k>)) ) ▶₀ #vk )
-              case reader1
-              by contradiction /* impossible chain */
-            next
+            solve( !KD( (~id⊕x) ) ▶₀ #vk )
               case tag1
               solve( (#vl, 0) ~~> (#vk, 0) )
                 case d_0_fst
-                by sorry /* removed */
-              next
-                case d_0_snd
-                solve( (#vr.3, 0) ~~> (#vk, 0) )
-                  case d_xor_case_1
-                  by solve( (#vr.4, 0) ~~> (#vk, 0) )
-                next
-                  case d_xor_case_2
-                  solve( (#vr.4, 0) ~~> (#vk, 0) )
-                    case Xor
-                    solve( !Tag( ~k, ~id.1 ) ▶₂ #vr.2 )
-                      case Setup
-                      solve( !KU( ~r1 ) @ #vk.4 )
-                        case reader1
-                        solve( !KU( (~id⊕~r2.1) ) @ #vk.5 )
-                          case c_xor_case_1
-                          by sorry /* removed */
-                        next
-                          case c_xor_case_2
-                          by sorry /* removed */
-                        next
-                          case coerce
-                          solve( !KD( (~id⊕~r2.1) ) ▶₀ #vk.2 )
+                solve( (#vr.2, 0) ~~> (#vk, 0) )
+                  case Xor
+                  solve( !KU( (~r2⊕h(<~r1, ~k>)) ) @ #vk.2 )
+                    case coerce
+                    solve( !KD( (~r2⊕h(<~r1, ~k>)) ) ▶₀ #vk.1 )
+                      case tag1
+                      solve( (#vl, 0) ~~> (#vk.1, 0) )
+                        case d_0_snd
+                        solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+                          case Xor
+                          solve( !KU( ~r1 ) @ #vk.3 )
                             case reader1
-                            by contradiction /* impossible chain */
-                          next
-                            case tag1
-                            solve( (#vl.2, 0) ~~> (#vk.2, 0) )
-                              case d_0_fst
-                              solve( !Tag( ~k.1, ~id.1 ) ▶₂ #vr.5 )
-                                case Setup
-                                solve( splitEqs(9) )
-                                  case split
-                                  solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                                    case Xor
-                                    SOLVED // trace found
-                                  next
-                                    case d_xor_case_1
-                                    by sorry
-                                  next
-                                    case d_xor_case_2
-                                    by sorry
-                                  next
-                                    case d_xor_case_3
-                                    by contradiction /* impossible chain */
-                                  next
-                                    case d_xor_case_4
-                                    by contradiction /* impossible chain */
-                                  qed
-                                qed
-                              qed
-                            next
-                              case d_0_snd
-                              by sorry
-                            qed
+                            SOLVED // trace found
                           qed
                         qed
                       qed
                     qed
                   qed
-                next
-                  case d_xor_case_3
-                  by contradiction /* impossible chain */
-                next
-                  case d_xor_case_4
-                  by sorry
                 qed
               qed
             qed
           qed
         next
-          case split_case_5
+          case split_case_22
           by sorry
         next
-          case split_case_6
+          case split_case_23
           by sorry
         next
-          case split_case_7
-          by sorry
-        next
-          case split_case_8
+          case split_case_24
           by sorry
         qed
       qed
