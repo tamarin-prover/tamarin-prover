@@ -70,4 +70,11 @@ lemma recentalive_tag:
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 
+lemma executablesimplifiedsearch:
+  exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+               ∧ (All y z #k #l. Alive(y, 'Tag') @k & Alive(z, 'Tag') @l ==> #k = l)
+               ∧ (All y z #k #l. Challenge(y, 'Reader') @k & Challenge(z, 'Reader') @l ==> #k = l)
+               ∧ (All y z #k #l. Response(y, 'Tag') @k & Response(z, 'Tag') @l ==> #k = l)
+        "
+
 end
