@@ -99,7 +99,6 @@ module Theory.Proof (
 import           GHC.Generics                     (Generic)
 
 import           Data.Binary
-import           Data.Data
 -- import           Data.Foldable                    (Foldable, foldMap)
 import           Data.List
 import qualified Data.Label                       as L
