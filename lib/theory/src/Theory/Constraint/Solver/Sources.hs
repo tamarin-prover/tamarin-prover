@@ -38,10 +38,10 @@ import           Control.Monad.Reader
 import           Control.Monad.State                     (gets)
 import           Control.Parallel.Strategies
 
-import           System.IO.Error
-
-import           System.Environment
-import           System.IO.Unsafe
+-- uncomment for use of "EXTENSIVE_SPLIT" only
+-- import           System.IO.Error
+-- import           System.Environment
+-- import           System.IO.Unsafe
 
 import           Text.PrettyPrint.Highlight
 
@@ -127,8 +127,8 @@ solveAllSafeGoals :: [Source] -> Reduction [String]
 solveAllSafeGoals ths' =
     solve ths' [] 10
   where
-    extensiveSplitting = unsafePerformIO $
-      (getEnv "TAMARIN_EXTENSIVE_SPLIT" >> return True) `catchIOError` \_ -> return False
+--    extensiveSplitting = unsafePerformIO $
+--      (getEnv "TAMARIN_EXTENSIVE_SPLIT" >> return True) `catchIOError` \_ -> return False
     safeGoal _       _          (_,   (_, LoopBreaker)) = False
     safeGoal doSplit chainsLeft (goal, _              ) =
       case goal of
