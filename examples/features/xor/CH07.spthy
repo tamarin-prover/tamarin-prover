@@ -7,7 +7,7 @@ rule Setup:
    [ Fr( ~k )
    , Fr(~id) 
    ]
- --[ OnlyOnce( ) ]-> 
+ --[ ]-> 
    [ !Reader( ~k, ~id )
    , !Tag( ~k, ~id ) 
    ]
@@ -52,9 +52,6 @@ rule tag2:
 
 restriction equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
-
-restriction unique:
-  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
 
 // There should be an attack on this
 lemma recentalive_tag:
