@@ -84,10 +84,12 @@ data TermView a = Lit a
   deriving (Show, Eq, Ord)
 
 viewTerm :: Term a -> TermView a
-viewTerm = viewTerm' DiffBoth -- should be DiffNone, but for test purposes do this!
+viewTerm (LIT l) = Lit l
+viewTerm (FAPP sym ts) = FApp sym ts
 
 {-# INLINE viewTerm #-}
 -- | Return the 'TermView' of the given term.
+-- | In the DiffBoth case, this collapses to viewTerm above
 viewTerm' :: DiffType -> Term a -> TermView a
 viewTerm' _  (LIT l) = Lit l
 viewTerm' dt (FAPP (NoEq o) [t1,t2]) =   case dt of
