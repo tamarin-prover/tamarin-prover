@@ -44,7 +44,11 @@ rule reader2:
   --[ Finished() ]->
   [ ]
 
+// FINDS PROOF AUTOMATICALLY (2017-03-22)
 lemma executable:
   exists-trace "Ex #i. Finished() @i"
+
+// FINDS ATTACK AUTOMATICALLY (2017-03-22)
+// Observational_equivalence lemma
 
 end

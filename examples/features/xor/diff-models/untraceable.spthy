@@ -47,7 +47,7 @@ lemma max_number_of_tags_tag [use_induction,reuse]:
   "All a b c d #i. Tag(a+b+c+d)@i ==> F"
 */
 
-axiom max_number_of_tags_tag:
+restriction max_number_of_tags_tag:
   "All a b c d #i. Tag(a+b+c+d)@i ==> F"
 
 /*
@@ -55,10 +55,14 @@ lemma max_number_of_tags_reader [use_induction,reuse]:
   "All a b c d #i. Reader(a+b+c+d)@i ==> F"
 */
 
-axiom max_number_of_tags_tag_reader:
+restriction max_number_of_tags_tag_reader:
   "All a b c d #i. Reader(a+b+c+d)@i ==> F"
 
+// FINDS PROOF AUTOMATICALLY (2017-03-22)
 lemma executable:
   exists-trace "Ex #i. Finished() @i"
+
+// FINDS PROOF AUTOMATICALLY (2017-03-22) [with restrictions "max_number_of_tags_tag" and "max_number_of_tags_tag_reader"
+// Observational_equivalence lemma
 
 end
