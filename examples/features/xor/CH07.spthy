@@ -54,13 +54,18 @@ restriction equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
 
 // There should be an attack on this
+// FINDS ATTACK AUTOMATICALLY (2017-03-22)
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
+// FINDS PROOF AUTOMATICALLY (2017-03-22)
 lemma recentalive_reader:
   all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
 
+// SHOWS CORRECT EXECUTION (2017-03-22)
 lemma executable:
-  exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+  exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j) 
+           // further restriction to automatically get the desired execution
+           ∧ (not Ex #k. Response( x, 'Tag' ) @ #k & (not (#j=#k)))"
 
 end
