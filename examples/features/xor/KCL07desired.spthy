@@ -64,14 +64,19 @@ restriction equality:
 restriction unique:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
 
+// (2017-03-22)
+// AUTOMATIC: no result, OOM
+// Manual observation: In d_xor_case_1 (out of 24) there is a loop in which more and more Tags are instantiated, this requires further study.
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-lemma executable:
-  exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+//lemma executable:
+//  exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 
+// SHOWS CORRECT EXECUTION (2017-03-22)
 lemma executablesimplifiedsearch:
   exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+           // further restrictions to automatically get the desired execution
                ∧ (All y z #k #l. Alive(y, 'Tag') @k & Alive(z, 'Tag') @l ==> #k = l)
                ∧ (All y z #k #l. Challenge(y, 'Reader') @k & Challenge(z, 'Reader') @l ==> #k = l)
                ∧ (All y z #k #l. Response(y, 'Tag') @k & Response(z, 'Tag') @l ==> #k = l)
