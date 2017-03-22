@@ -45,14 +45,19 @@ restriction equality:
 restriction unique:
   "All #i #j. OnlyOnce() @i & OnlyOnce() @j ==> #i = #j"
 
-//attack found manually
+// FINDS ATTACK AUTOMATICALLY (2017-03-22)
 lemma recentalive:
   "All x #i. Alive(x) @i ==> Ex #j. Response(x)@j"
 
 //lemma properrecentalive:
 //  "All x #i #j. Alive(x) @i & Challenge(x)@j ==> Ex #k. Response(x)@k" // plus ordering constraint
   
+
+// SHOWS CORRECT EXECUTION (2017-03-22)
 lemma executable:
   exists-trace
-  "Ex x #i #j. Alive(x)@i & Response(x)@j"
+  "Ex x #i #j. Alive(x)@i & Response(x)@j
+       // further restriction to automatically get the desired execution
+       ∧ (not Ex #k. Response(x) @ k & (not (#j=#k)))"
+
 end
