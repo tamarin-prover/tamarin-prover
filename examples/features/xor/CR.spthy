@@ -43,10 +43,13 @@ restriction equality:
 restriction unique:
   "All #i #j. OnlyOnce() @i & OnlyOnce() @j ==> #i = #j"
 
+// FINDS PROOF AUTOMATICALLY (2017-03-22)
 lemma recentalive:
   "All x #i. Alive(x) @i ==> Ex #j. Response(x)@j"
   
+// SHOWS CORRECT EXECUTION (2017-03-22)
 lemma executable:
   exists-trace
   "Ex x #i #j. Alive(x)@i & Response(x)@j"
+
 end
