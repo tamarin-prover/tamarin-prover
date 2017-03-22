@@ -98,6 +98,7 @@ module Theory.Model.Rule (
   , removeDiffLabel
   , multRuleInstance
   , unionRuleInstance
+  , xorRuleInstance
 
   -- ** Unification
   , unifyRuleACInstEqs
@@ -634,7 +635,7 @@ getSubstitutionsFixingNewVars rule orig = Subst $ M.fromList $ concat $ map getS
 
 -- | Returns a multiplication rule instance of the given size.
 multRuleInstance :: Int -> RuleAC
-multRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "mult")) (map xifact [1..n]) [prod] [prod])
+multRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map xifact [1..n]) [prod] [prod])
   where
     prod = Fact KUFact [(FAPP (AC Mult) (map xi [1..n]))]
     
@@ -646,9 +647,21 @@ multRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "mult")) (map xifact 
 
 -- | Returns a union rule instance of the given size.
 unionRuleInstance :: Int -> RuleAC
-unionRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "union")) (map xifact [1..n]) [prod] [prod])
+unionRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map xifact [1..n]) [prod] [prod])
   where
     prod = Fact KUFact [(FAPP (AC Union) (map xi [1..n]))]
+    
+    xi :: Int -> LNTerm
+    xi k = (LIT $ Var $ LVar "x" LSortMsg (toInteger k))
+    
+    xifact :: Int -> LNFact
+    xifact k = Fact KUFact [(xi k)]
+
+-- | Returns a xor rule instance of the given size.
+xorRuleInstance :: Int -> RuleAC
+xorRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map xifact [1..n]) [prod] [prod])
+  where
+    prod = Fact KUFact [(FAPP (AC Xor) (map xi [1..n]))]
     
     xi :: Int -> LNTerm
     xi k = (LIT $ Var $ LVar "x" LSortMsg (toInteger k))

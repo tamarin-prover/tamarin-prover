@@ -591,6 +591,7 @@ getOppositeRules ctxt side (Rule rule prem _ _) = case rule of
                IntrInfo  i -> case i of
                                    (ConstrRule x) | x == BC.pack "_mult"  -> [(multRuleInstance (length prem))]
                                    (ConstrRule x) | x == BC.pack "_union" -> [(unionRuleInstance (length prem))]
+                                   (ConstrRule x) | x == BC.pack "_xor"   -> [(xorRuleInstance (length prem))]
                                    _                                     -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
                                                                                  [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
                                                                                  x  -> x
