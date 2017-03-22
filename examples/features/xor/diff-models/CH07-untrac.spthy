@@ -84,12 +84,15 @@ restriction unique:
 */
 
 // There should be an attack on this
+// FINDS ATTACK AUTOMATICALLY (2017-03-22) [left+right, using a 'zero', but with some clicking can get a "more realistic" attack easily]
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
+// FINDS PROOF AUTOMATICALLY (2017-03-22) [left+right]
 lemma recentalive_reader:
   all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
 
+// FINDS PROOF AUTOMATICALLY (2017-03-22) [left+right]
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 
