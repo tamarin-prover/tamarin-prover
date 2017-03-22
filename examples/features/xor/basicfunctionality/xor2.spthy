@@ -1,4 +1,4 @@
-theory xor2
+theory xor
 begin
 
 builtins: xor
@@ -7,15 +7,16 @@ builtins: xor
 
 
 rule testsend:
-  [ Fr(x), Fr(y), Fr(z)]
+  [ Fr(~x), Fr(~y), Fr(~z)]
 --[ OnlyOnce()
-  , Secret(x) ]->
-  [ Out(<x XOR y, y XOR z, z>)]
+  , Secret(~x) ]->
+  [ Out(<~x XOR ~y, ~y XOR ~z, ~z>)]
 
 restriction unique:
   "All #i #j. OnlyOnce() @i & OnlyOnce() @j ==> #i = #j"
 
 // this secrecy lemma should be broken!
+// FINDS ATTACK AUTOMATICALLY (2017-03-22)
 lemma secrecybroken:
   "All x #i. Secret(x) @i ==> not (Ex #j. K(x) @j)"
 
