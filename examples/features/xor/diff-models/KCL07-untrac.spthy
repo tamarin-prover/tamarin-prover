@@ -91,12 +91,20 @@ restriction max_number_of_tags_tag:
 restriction max_number_of_tags_tag_reader:
   "All a b c d #i. Reader(a+b+c+d)@i ==> F"
 
-// AUTOMATIC PROOF NOT WORKING ON LEFT - CHECK AGAIN...
+// AUTOMATIC PROOF NOT WORKING ON LEFT
+// MANUAL EXPLORATION [LEFT] (2017-03-23) indicates that there is non-termination (looping), so no proof possible (could there be an attack?)
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// AUTOMATIC PROOF NOT WORKING ON LEFT - CHECK AGAIN...
+// AUTOMATIC PROOF NOT WORKING ON BOTH
+// MANUAL SEARCH FINDS TRACE (2017-03-23) ON BOTH, see KCL07-untrac-manualexecution.spthy
 lemma executable:
-  exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+  exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+                   // only one of each wanted for executability
+                   ∧ (All #k. Alive(x,'Tag')@k ==> #i=#k)
+                   ∧ (All #k. Response(x,'Tag')@k ==> #j=#k)"
+
+// MANUAL EXPLORATION (2017-03-23) shows loop (increasing DG) on Rule_Equality
+// Observational_equivalence lemma
 
 end
