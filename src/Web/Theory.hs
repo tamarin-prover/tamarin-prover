@@ -730,13 +730,15 @@ htmlSource renderUrl tidx kind (j, th) =
       ]
     ppCase (i, (names, se)) =
       [ withTag "h3" [] $ fsep [ text "Source", int i, text "of", nCases
-                               , text " / named ", doubleQuotes (text name) ]
+                               , text " / named ", doubleQuotes (text name),
+                                 if isPartial then text "(partial deconstructions)" else text "" ]
       , refDotPath renderUrl tidx (TheorySource kind j i)
       , withTag "p" [] $ ppPrem
       , wrapP $ prettyNonGraphSystem se
       ]
       where
         name = intercalate "_" names
+        isPartial = not $ null $ unsolvedChains se
 
 -- | A Html document representing the requires case splitting theorem.
 htmlSourceDiff :: HtmlDocument d
