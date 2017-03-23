@@ -53,8 +53,9 @@ by Tamarin.
 
 ![Tamarin GUI](../images/FindOpenChains1.png "Raw sources"){ width=80% }\
 
-The partial deconstructions can be identified by the light green arrows as in the
-following example:
+Cases with partial deconstructions will be listed with the text `(partial deconstructions)`
+after the case name. The partial deconstructions can be identified by light green arrows in the
+graph, as in the following example:
 
 ![Partial deconstruction visible in green](../images/FindOpenChains2.png "Partial deconstructions visible"){ width=100% }\
 
