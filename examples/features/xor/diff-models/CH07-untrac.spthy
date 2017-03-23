@@ -96,4 +96,7 @@ lemma recentalive_reader:
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 
+// ???
+// Observational_equivalence lemma
+
 end
