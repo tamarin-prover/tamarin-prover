@@ -96,7 +96,8 @@ lemma recentalive_reader:
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 
-// ???
+// VERY QUICK HIGH MEMORY USE
+// MANUAL EXPLORATION ENDS UP IN A SITUATION WHERE "KU(x)" is solved - see the file CH07-untrac-manual-badstate.spthy
 // Observational_equivalence lemma
 
 end
