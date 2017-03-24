@@ -222,7 +222,7 @@ Under the [etc](https://github.com/tamarin-prover/tamarin-prover/tree/develop/et
 
 1. Create `.vim` directory in your home directory if not already existing
 2. Change directory to `.vim`
-3. Place the [filetype.vim]() file
+3. Place the [filetype.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/filetype.vim) file
 4. Create another directory named `syntaxes` in the `.vim` directory and change to it
 5. Place the [spthy.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/spthy.vim) and [sapic.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/sapic.vim) files in syntaxes
 
