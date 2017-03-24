@@ -3,7 +3,7 @@ theory CH07_untrac begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
-functions: fst/1, h/1, left/1, pair/2, right/1, rot/2, snd/1
+functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 rule (modulo E) Setup:
@@ -37,23 +37,23 @@ rule (modulo E) tag1:
    [ In( r1 ), Fr( ~r2 ), TagRun( ~k, ~id ) ]
   --[ Response( ~k, 'Tag' ), Challenge( ~r2, 'Tag' ) ]->
    [
-   Out( <~r2, left(rot(~id, h((~k⊕~r2⊕r1))))> ),
+   Out( <~r2, lh(rot(~id, h((~k⊕~r2⊕r1))))> ),
    TagState( ~k, ~id, r1, ~r2, h((~k⊕~r2⊕r1)) )
    ]
 
 rule (modulo E) reader2:
    [
    Initiated( ~r1 ), ReaderRun( ~k, ~id ),
-   In( <r2, left(rot(~id, hash))> )
+   In( <r2, lh(rot(~id, hash))> )
    ]
   --[
   Alive( ~k, 'Tag' ), Response( ~k, 'Reader' ),
   Eq( h((~k⊕~r1⊕r2)), hash )
   ]->
-   [ Out( right(rot(~id, hash)) ) ]
+   [ Out( rh(rot(~id, hash)) ) ]
 
 rule (modulo E) tag2:
-   [ In( right(rot(~id, hash)) ), TagState( ~k, ~id, r1, ~r2, hash ) ]
+   [ In( rh(rot(~id, hash)) ), TagState( ~k, ~id, r1, ~r2, hash ) ]
   --[ Alive( ~k, 'Reader' ) ]->
    [ ]
 
@@ -215,13 +215,13 @@ next
     next
       case reader2
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
-        case right
+        case rh
         step( solve( Initiated( ~r1 ) ▶₀ #vr ) )
           case reader1
           step( solve( ReaderRun( ~k, ~id ) ▶₁ #vr ) )
             case select_reader
-            step( solve( !KU( left(rot(~id, h(z))) ) @ #vk.3 ) )
-              case c_left
+            step( solve( !KU( lh(rot(~id, h(z))) ) @ #vk.3 ) )
+              case c_lh
               step( solve( !KU( rot(~id, h(z)) ) @ #vk.4 ) )
                 case c_rot
                 step( solve( !KU( ~id ) @ #vk.5 ) )
@@ -274,8 +274,8 @@ next
                 case Setup_case_1
                 step( solve( Tag( (z.1+<~k.1, ~id>) ) ▶₀ #vr.5 ) )
                   case Setup
-                  step( solve( !KU( right(rot(~id, h(z))) ) @ #vk.2 ) )
-                    case c_right
+                  step( solve( !KU( rh(rot(~id, h(z))) ) @ #vk.2 ) )
+                    case c_rh
                     step( solve( !KU( rot(~id, h(z)) ) @ #vk.5 ) )
                       case c_rot
                       by step( solve( !KU( ~id ) @ #vk.6 ) )

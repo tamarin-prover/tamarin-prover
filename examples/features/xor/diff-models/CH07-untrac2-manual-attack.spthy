@@ -1,0 +1,1614 @@
+theory CH07_untrac2 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset, xor
+functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Setup:
+   [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
+  --[ OnlyOnce( ) ]->
+   [
+   Reader( ('1'+
+            diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>)))
+   ),
+   Tag( ('1'+
+         diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>)))
+   )
+   ]
+
+rule (modulo E) select_tag:
+   [ Tag( (z+<~k, ~id>) ) ]
+  --[ Tag( (z+<~k, ~id>) ) ]->
+   [ !TagRun( ~k, ~id ), Tag( z ) ]
+
+rule (modulo E) select_reader:
+   [ Reader( (z+<~k, ~id>) ) ]
+  --[ Reader( (z+<~k, ~id>) ) ]->
+   [ !ReaderRun( ~k, ~id ), Reader( z ) ]
+
+rule (modulo E) reader1:
+   [ Fr( ~r1 ) ]
+  --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 ), Initiated( ~r1 ) ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Fr( ~r2 ), !TagRun( ~k, ~id ) ]
+  --[ Response( ~k, 'Tag' ), Challenge( ~r2, 'Tag' ) ]->
+   [
+   Out( <~r2, lh(rot(~id, h((~k⊕~r2⊕r1))))> ),
+   TagState( ~k, ~id, r1, ~r2, h((~k⊕~r2⊕r1)) )
+   ]
+
+rule (modulo E) reader2:
+   [
+   Initiated( ~r1 ), !ReaderRun( ~k, ~id ),
+   In( <r2, lh(rot(~id, hash))> )
+   ]
+  --[
+  Alive( ~k, 'Tag' ), Response( ~k, 'Reader' ),
+  Eq( h((~k⊕~r1⊕r2)), hash )
+  ]->
+   [ Out( rh(rot(~id, hash)) ) ]
+
+rule (modulo E) tag2:
+   [ In( rh(rot(~id, hash)) ), TagState( ~k, ~id, r1, ~r2, hash ) ]
+  --[ Alive( ~k, 'Reader' ) ]->
+   [ ]
+
+restriction equality [right]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction equality [left]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction max_number_of_tags_tag [right]:
+  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag [left]:
+  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [right]:
+  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [left]:
+  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction unique [right]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma recentalive_tag [right]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma recentalive_tag [left]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma recentalive_reader [right]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Reader' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Reader' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma recentalive_reader [left]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Reader' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Reader' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma executable [right]:
+  exists-trace
+  "∃ x #i #j.
+    (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+*/
+by sorry
+
+lemma executable [left]:
+  exists-trace
+  "∃ x #i #j.
+    (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+*/
+by sorry
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  by sorry
+next
+  case Rule_Destrd_0_snd
+  by sorry
+next
+  case Rule_Destrd_union
+  by sorry
+next
+  case Rule_Destrd_xor
+  by sorry
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case reader1
+      by sorry
+    next
+      case reader2
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case rh
+        step( solve( Initiated( ~r1 ) ▶₀ #vr ) )
+          case reader1
+          step( solve( !ReaderRun( ~k, ~id ) ▶₁ #vr ) )
+            case select_reader
+            step( solve( Reader( (z.1+<~k, ~id>) ) ▶₀ #vr.2 ) )
+              case Setup_case_1
+              step( solve( !KU( lh(rot(~id, h(z))) ) @ #vk.3 ) )
+                case c_lh
+                by sorry
+              next
+                case tag1
+                step( solve( !KU( rh(rot(~id, h(z))) ) @ #vk.2 ) )
+                  case c_rh
+                  by sorry
+                next
+                  case reader2
+                  step( solve( splitEqs(0) ) )
+                    case split_case_01
+                    by sorry
+                  next
+                    case split_case_02
+                    by sorry
+                  next
+                    case split_case_03
+                    step( solve( splitEqs(1) ) )
+                      case split_case_001
+                      step( solve( !KU( ~r2 ) @ #vk.4 ) )
+                        case tag1
+                        step( solve( !KU( ~r1 ) @ #vk.5 ) )
+                          case reader1
+                          step( solve( splitEqs(2) ) )
+                            case split_case_01
+                            by sorry
+                          next
+                            case split_case_02
+                            by sorry
+                          next
+                            case split_case_03
+                            by sorry
+                          next
+                            case split_case_04
+                            by sorry
+                          next
+                            case split_case_05
+                            by sorry
+                          next
+                            case split_case_06
+                            step( solve( !KU( ~r1.1 ) @ #vk.7 ) )
+                              case reader1
+                              step( solve( Reader( (z.1+<~k, ~id>) ) ▶₀ #vr.9 ) )
+                                case Setup
+                                step( solve( Tag( (z+<~k, ~id>) ) ▶₀ #vr.6 ) )
+                                  case Setup
+                                  by ATTACK // trace found
+                                next
+                                  case select_tag
+                                  by sorry
+                                qed
+                              next
+                                case select_reader
+                                by sorry
+                              qed
+                            qed
+                          next
+                            case split_case_07
+                            by sorry
+                          next
+                            case split_case_08
+                            by sorry
+                          next
+                            case split_case_09
+                            by sorry
+                          next
+                            case split_case_10
+                            by sorry
+                          next
+                            case split_case_11
+                            by sorry
+                          next
+                            case split_case_12
+                            by sorry
+                          next
+                            case split_case_13
+                            by sorry
+                          next
+                            case split_case_14
+                            by sorry
+                          next
+                            case split_case_15
+                            by sorry
+                          next
+                            case split_case_16
+                            by sorry
+                          next
+                            case split_case_17
+                            by sorry
+                          next
+                            case split_case_18
+                            by sorry
+                          next
+                            case split_case_19
+                            by sorry
+                          next
+                            case split_case_20
+                            by sorry
+                          next
+                            case split_case_21
+                            by sorry
+                          next
+                            case split_case_22
+                            by sorry
+                          next
+                            case split_case_23
+                            by sorry
+                          next
+                            case split_case_24
+                            by sorry
+                          next
+                            case split_case_25
+                            by sorry
+                          next
+                            case split_case_26
+                            by sorry
+                          next
+                            case split_case_27
+                            by sorry
+                          next
+                            case split_case_28
+                            by sorry
+                          next
+                            case split_case_29
+                            by sorry
+                          next
+                            case split_case_30
+                            by sorry
+                          next
+                            case split_case_31
+                            by sorry
+                          next
+                            case split_case_32
+                            by sorry
+                          next
+                            case split_case_33
+                            by sorry
+                          next
+                            case split_case_34
+                            by sorry
+                          next
+                            case split_case_35
+                            by sorry
+                          next
+                            case split_case_36
+                            by sorry
+                          next
+                            case split_case_37
+                            by sorry
+                          next
+                            case split_case_38
+                            by sorry
+                          next
+                            case split_case_39
+                            by sorry
+                          next
+                            case split_case_40
+                            by sorry
+                          next
+                            case split_case_41
+                            by sorry
+                          next
+                            case split_case_42
+                            by sorry
+                          next
+                            case split_case_43
+                            by sorry
+                          next
+                            case split_case_44
+                            by sorry
+                          next
+                            case split_case_45
+                            by sorry
+                          next
+                            case split_case_46
+                            by sorry
+                          next
+                            case split_case_47
+                            by sorry
+                          next
+                            case split_case_48
+                            by sorry
+                          next
+                            case split_case_49
+                            by sorry
+                          next
+                            case split_case_50
+                            by sorry
+                          next
+                            case split_case_51
+                            by sorry
+                          next
+                            case split_case_52
+                            by sorry
+                          next
+                            case split_case_53
+                            by sorry
+                          next
+                            case split_case_54
+                            by sorry
+                          next
+                            case split_case_55
+                            by sorry
+                          next
+                            case split_case_56
+                            by sorry
+                          next
+                            case split_case_57
+                            by sorry
+                          next
+                            case split_case_58
+                            by sorry
+                          next
+                            case split_case_59
+                            by sorry
+                          next
+                            case split_case_60
+                            by sorry
+                          next
+                            case split_case_61
+                            by sorry
+                          next
+                            case split_case_62
+                            by sorry
+                          next
+                            case split_case_63
+                            by sorry
+                          next
+                            case split_case_64
+                            by sorry
+                          next
+                            case split_case_65
+                            by sorry
+                          next
+                            case split_case_66
+                            by sorry
+                          next
+                            case split_case_67
+                            by sorry
+                          next
+                            case split_case_68
+                            by sorry
+                          next
+                            case split_case_69
+                            by sorry
+                          next
+                            case split_case_70
+                            by sorry
+                          next
+                            case split_case_71
+                            by sorry
+                          next
+                            case split_case_72
+                            by sorry
+                          next
+                            case split_case_73
+                            by sorry
+                          qed
+                        qed
+                      qed
+                    next
+                      case split_case_002
+                      by sorry
+                    next
+                      case split_case_003
+                      by sorry
+                    next
+                      case split_case_004
+                      by sorry
+                    next
+                      case split_case_005
+                      by sorry
+                    next
+                      case split_case_006
+                      by sorry
+                    next
+                      case split_case_007
+                      by sorry
+                    next
+                      case split_case_008
+                      by sorry
+                    next
+                      case split_case_009
+                      by sorry
+                    next
+                      case split_case_010
+                      by sorry
+                    next
+                      case split_case_011
+                      by sorry
+                    next
+                      case split_case_012
+                      by sorry
+                    next
+                      case split_case_013
+                      by sorry
+                    next
+                      case split_case_014
+                      by sorry
+                    next
+                      case split_case_015
+                      by sorry
+                    next
+                      case split_case_016
+                      by sorry
+                    next
+                      case split_case_017
+                      by sorry
+                    next
+                      case split_case_018
+                      by sorry
+                    next
+                      case split_case_019
+                      by sorry
+                    next
+                      case split_case_020
+                      by sorry
+                    next
+                      case split_case_021
+                      by sorry
+                    next
+                      case split_case_022
+                      by sorry
+                    next
+                      case split_case_023
+                      by sorry
+                    next
+                      case split_case_024
+                      by sorry
+                    next
+                      case split_case_025
+                      by sorry
+                    next
+                      case split_case_026
+                      by sorry
+                    next
+                      case split_case_027
+                      by sorry
+                    next
+                      case split_case_028
+                      by sorry
+                    next
+                      case split_case_029
+                      by sorry
+                    next
+                      case split_case_030
+                      by sorry
+                    next
+                      case split_case_031
+                      by sorry
+                    next
+                      case split_case_032
+                      by sorry
+                    next
+                      case split_case_033
+                      by sorry
+                    next
+                      case split_case_034
+                      by sorry
+                    next
+                      case split_case_035
+                      by sorry
+                    next
+                      case split_case_036
+                      by sorry
+                    next
+                      case split_case_037
+                      by sorry
+                    next
+                      case split_case_038
+                      by sorry
+                    next
+                      case split_case_039
+                      by sorry
+                    next
+                      case split_case_040
+                      by sorry
+                    next
+                      case split_case_041
+                      by sorry
+                    next
+                      case split_case_042
+                      by sorry
+                    next
+                      case split_case_043
+                      by sorry
+                    next
+                      case split_case_044
+                      by sorry
+                    next
+                      case split_case_045
+                      by sorry
+                    next
+                      case split_case_046
+                      by sorry
+                    next
+                      case split_case_047
+                      by sorry
+                    next
+                      case split_case_048
+                      by sorry
+                    next
+                      case split_case_049
+                      by sorry
+                    next
+                      case split_case_050
+                      by sorry
+                    next
+                      case split_case_051
+                      by sorry
+                    next
+                      case split_case_052
+                      by sorry
+                    next
+                      case split_case_053
+                      by sorry
+                    next
+                      case split_case_054
+                      by sorry
+                    next
+                      case split_case_055
+                      by sorry
+                    next
+                      case split_case_056
+                      by sorry
+                    next
+                      case split_case_057
+                      by sorry
+                    next
+                      case split_case_058
+                      by sorry
+                    next
+                      case split_case_059
+                      by sorry
+                    next
+                      case split_case_060
+                      by sorry
+                    next
+                      case split_case_061
+                      by sorry
+                    next
+                      case split_case_062
+                      by sorry
+                    next
+                      case split_case_063
+                      by sorry
+                    next
+                      case split_case_064
+                      by sorry
+                    next
+                      case split_case_065
+                      by sorry
+                    next
+                      case split_case_066
+                      by sorry
+                    next
+                      case split_case_067
+                      by sorry
+                    next
+                      case split_case_068
+                      by sorry
+                    next
+                      case split_case_069
+                      by sorry
+                    next
+                      case split_case_070
+                      by sorry
+                    next
+                      case split_case_071
+                      by sorry
+                    next
+                      case split_case_072
+                      by sorry
+                    next
+                      case split_case_073
+                      by sorry
+                    next
+                      case split_case_074
+                      by sorry
+                    next
+                      case split_case_075
+                      by sorry
+                    next
+                      case split_case_076
+                      by sorry
+                    next
+                      case split_case_077
+                      by sorry
+                    next
+                      case split_case_078
+                      by sorry
+                    next
+                      case split_case_079
+                      by sorry
+                    next
+                      case split_case_080
+                      by sorry
+                    next
+                      case split_case_081
+                      by sorry
+                    next
+                      case split_case_082
+                      by sorry
+                    next
+                      case split_case_083
+                      by sorry
+                    next
+                      case split_case_084
+                      by sorry
+                    next
+                      case split_case_085
+                      by sorry
+                    next
+                      case split_case_086
+                      by sorry
+                    next
+                      case split_case_087
+                      by sorry
+                    next
+                      case split_case_088
+                      by sorry
+                    next
+                      case split_case_089
+                      by sorry
+                    next
+                      case split_case_090
+                      by sorry
+                    next
+                      case split_case_091
+                      by sorry
+                    next
+                      case split_case_092
+                      by sorry
+                    next
+                      case split_case_093
+                      by sorry
+                    next
+                      case split_case_094
+                      by sorry
+                    next
+                      case split_case_095
+                      by sorry
+                    next
+                      case split_case_096
+                      by sorry
+                    next
+                      case split_case_097
+                      by sorry
+                    next
+                      case split_case_098
+                      by sorry
+                    next
+                      case split_case_099
+                      by sorry
+                    next
+                      case split_case_100
+                      by sorry
+                    next
+                      case split_case_101
+                      by sorry
+                    next
+                      case split_case_102
+                      by sorry
+                    next
+                      case split_case_103
+                      by sorry
+                    next
+                      case split_case_104
+                      by sorry
+                    next
+                      case split_case_105
+                      by sorry
+                    next
+                      case split_case_106
+                      by sorry
+                    next
+                      case split_case_107
+                      by sorry
+                    next
+                      case split_case_108
+                      by sorry
+                    next
+                      case split_case_109
+                      by sorry
+                    next
+                      case split_case_110
+                      by sorry
+                    next
+                      case split_case_111
+                      by sorry
+                    next
+                      case split_case_112
+                      by sorry
+                    next
+                      case split_case_113
+                      by sorry
+                    next
+                      case split_case_114
+                      by sorry
+                    next
+                      case split_case_115
+                      by sorry
+                    next
+                      case split_case_116
+                      by sorry
+                    next
+                      case split_case_117
+                      by sorry
+                    next
+                      case split_case_118
+                      by sorry
+                    next
+                      case split_case_119
+                      by sorry
+                    next
+                      case split_case_120
+                      by sorry
+                    next
+                      case split_case_121
+                      by sorry
+                    next
+                      case split_case_122
+                      by sorry
+                    next
+                      case split_case_123
+                      by sorry
+                    next
+                      case split_case_124
+                      by sorry
+                    next
+                      case split_case_125
+                      by sorry
+                    next
+                      case split_case_126
+                      by sorry
+                    next
+                      case split_case_127
+                      by sorry
+                    next
+                      case split_case_128
+                      by sorry
+                    next
+                      case split_case_129
+                      by sorry
+                    next
+                      case split_case_130
+                      by sorry
+                    next
+                      case split_case_131
+                      by sorry
+                    next
+                      case split_case_132
+                      by sorry
+                    next
+                      case split_case_133
+                      by sorry
+                    next
+                      case split_case_134
+                      by sorry
+                    next
+                      case split_case_135
+                      by sorry
+                    next
+                      case split_case_136
+                      by sorry
+                    next
+                      case split_case_137
+                      by sorry
+                    next
+                      case split_case_138
+                      by sorry
+                    next
+                      case split_case_139
+                      by sorry
+                    next
+                      case split_case_140
+                      by sorry
+                    next
+                      case split_case_141
+                      by sorry
+                    next
+                      case split_case_142
+                      by sorry
+                    next
+                      case split_case_143
+                      by sorry
+                    next
+                      case split_case_144
+                      by sorry
+                    next
+                      case split_case_145
+                      by sorry
+                    next
+                      case split_case_146
+                      by sorry
+                    next
+                      case split_case_147
+                      by sorry
+                    next
+                      case split_case_148
+                      by sorry
+                    next
+                      case split_case_149
+                      by sorry
+                    next
+                      case split_case_150
+                      by sorry
+                    next
+                      case split_case_151
+                      by sorry
+                    next
+                      case split_case_152
+                      by sorry
+                    next
+                      case split_case_153
+                      by sorry
+                    next
+                      case split_case_154
+                      by sorry
+                    next
+                      case split_case_155
+                      by sorry
+                    next
+                      case split_case_156
+                      by sorry
+                    next
+                      case split_case_157
+                      by sorry
+                    next
+                      case split_case_158
+                      by sorry
+                    next
+                      case split_case_159
+                      by sorry
+                    next
+                      case split_case_160
+                      by sorry
+                    next
+                      case split_case_161
+                      by sorry
+                    next
+                      case split_case_162
+                      by sorry
+                    next
+                      case split_case_163
+                      by sorry
+                    next
+                      case split_case_164
+                      by sorry
+                    next
+                      case split_case_165
+                      by sorry
+                    next
+                      case split_case_166
+                      by sorry
+                    next
+                      case split_case_167
+                      by sorry
+                    next
+                      case split_case_168
+                      by sorry
+                    next
+                      case split_case_169
+                      by sorry
+                    next
+                      case split_case_170
+                      by sorry
+                    next
+                      case split_case_171
+                      by sorry
+                    next
+                      case split_case_172
+                      by sorry
+                    next
+                      case split_case_173
+                      by sorry
+                    next
+                      case split_case_174
+                      by sorry
+                    next
+                      case split_case_175
+                      by sorry
+                    next
+                      case split_case_176
+                      by sorry
+                    next
+                      case split_case_177
+                      by sorry
+                    next
+                      case split_case_178
+                      by sorry
+                    next
+                      case split_case_179
+                      by sorry
+                    next
+                      case split_case_180
+                      by sorry
+                    next
+                      case split_case_181
+                      by sorry
+                    next
+                      case split_case_182
+                      by sorry
+                    next
+                      case split_case_183
+                      by sorry
+                    next
+                      case split_case_184
+                      by sorry
+                    next
+                      case split_case_185
+                      by sorry
+                    next
+                      case split_case_186
+                      by sorry
+                    next
+                      case split_case_187
+                      by sorry
+                    next
+                      case split_case_188
+                      by sorry
+                    next
+                      case split_case_189
+                      by sorry
+                    next
+                      case split_case_190
+                      by sorry
+                    next
+                      case split_case_191
+                      by sorry
+                    next
+                      case split_case_192
+                      by sorry
+                    next
+                      case split_case_193
+                      by sorry
+                    next
+                      case split_case_194
+                      by sorry
+                    next
+                      case split_case_195
+                      by sorry
+                    next
+                      case split_case_196
+                      by sorry
+                    next
+                      case split_case_197
+                      by sorry
+                    next
+                      case split_case_198
+                      by sorry
+                    next
+                      case split_case_199
+                      by sorry
+                    next
+                      case split_case_200
+                      by sorry
+                    next
+                      case split_case_201
+                      by sorry
+                    next
+                      case split_case_202
+                      by sorry
+                    next
+                      case split_case_203
+                      by sorry
+                    next
+                      case split_case_204
+                      by sorry
+                    next
+                      case split_case_205
+                      by sorry
+                    next
+                      case split_case_206
+                      by sorry
+                    next
+                      case split_case_207
+                      by sorry
+                    next
+                      case split_case_208
+                      by sorry
+                    next
+                      case split_case_209
+                      by sorry
+                    next
+                      case split_case_210
+                      by sorry
+                    next
+                      case split_case_211
+                      by sorry
+                    next
+                      case split_case_212
+                      by sorry
+                    next
+                      case split_case_213
+                      by sorry
+                    next
+                      case split_case_214
+                      by sorry
+                    next
+                      case split_case_215
+                      by sorry
+                    next
+                      case split_case_216
+                      by sorry
+                    next
+                      case split_case_217
+                      by sorry
+                    next
+                      case split_case_218
+                      by sorry
+                    next
+                      case split_case_219
+                      by sorry
+                    next
+                      case split_case_220
+                      by sorry
+                    next
+                      case split_case_221
+                      by sorry
+                    next
+                      case split_case_222
+                      by sorry
+                    next
+                      case split_case_223
+                      by sorry
+                    next
+                      case split_case_224
+                      by sorry
+                    next
+                      case split_case_225
+                      by sorry
+                    next
+                      case split_case_226
+                      by sorry
+                    next
+                      case split_case_227
+                      by sorry
+                    next
+                      case split_case_228
+                      by sorry
+                    next
+                      case split_case_229
+                      by sorry
+                    next
+                      case split_case_230
+                      by sorry
+                    next
+                      case split_case_231
+                      by sorry
+                    next
+                      case split_case_232
+                      by sorry
+                    next
+                      case split_case_233
+                      by sorry
+                    next
+                      case split_case_234
+                      by sorry
+                    next
+                      case split_case_235
+                      by sorry
+                    next
+                      case split_case_236
+                      by sorry
+                    next
+                      case split_case_237
+                      by sorry
+                    next
+                      case split_case_238
+                      by sorry
+                    next
+                      case split_case_239
+                      by sorry
+                    next
+                      case split_case_240
+                      by sorry
+                    next
+                      case split_case_241
+                      by sorry
+                    next
+                      case split_case_242
+                      by sorry
+                    next
+                      case split_case_243
+                      by sorry
+                    next
+                      case split_case_244
+                      by sorry
+                    next
+                      case split_case_245
+                      by sorry
+                    next
+                      case split_case_246
+                      by sorry
+                    next
+                      case split_case_247
+                      by sorry
+                    next
+                      case split_case_248
+                      by sorry
+                    next
+                      case split_case_249
+                      by sorry
+                    next
+                      case split_case_250
+                      by sorry
+                    next
+                      case split_case_251
+                      by sorry
+                    next
+                      case split_case_252
+                      by sorry
+                    next
+                      case split_case_253
+                      by sorry
+                    next
+                      case split_case_254
+                      by sorry
+                    next
+                      case split_case_255
+                      by sorry
+                    next
+                      case split_case_256
+                      by sorry
+                    next
+                      case split_case_257
+                      by sorry
+                    next
+                      case split_case_258
+                      by sorry
+                    next
+                      case split_case_259
+                      by sorry
+                    next
+                      case split_case_260
+                      by sorry
+                    next
+                      case split_case_261
+                      by sorry
+                    next
+                      case split_case_262
+                      by sorry
+                    next
+                      case split_case_263
+                      by sorry
+                    next
+                      case split_case_264
+                      by sorry
+                    next
+                      case split_case_265
+                      by sorry
+                    next
+                      case split_case_266
+                      by sorry
+                    next
+                      case split_case_267
+                      by sorry
+                    next
+                      case split_case_268
+                      by sorry
+                    next
+                      case split_case_269
+                      by sorry
+                    next
+                      case split_case_270
+                      by sorry
+                    next
+                      case split_case_271
+                      by sorry
+                    next
+                      case split_case_272
+                      by sorry
+                    next
+                      case split_case_273
+                      by sorry
+                    next
+                      case split_case_274
+                      by sorry
+                    next
+                      case split_case_275
+                      by sorry
+                    next
+                      case split_case_276
+                      by sorry
+                    next
+                      case split_case_277
+                      by sorry
+                    next
+                      case split_case_278
+                      by sorry
+                    next
+                      case split_case_279
+                      by sorry
+                    next
+                      case split_case_280
+                      by sorry
+                    next
+                      case split_case_281
+                      by sorry
+                    next
+                      case split_case_282
+                      by sorry
+                    next
+                      case split_case_283
+                      by sorry
+                    next
+                      case split_case_284
+                      by sorry
+                    next
+                      case split_case_285
+                      by sorry
+                    next
+                      case split_case_286
+                      by sorry
+                    next
+                      case split_case_287
+                      by sorry
+                    next
+                      case split_case_288
+                      by sorry
+                    next
+                      case split_case_289
+                      by sorry
+                    next
+                      case split_case_290
+                      by sorry
+                    next
+                      case split_case_291
+                      by sorry
+                    next
+                      case split_case_292
+                      by sorry
+                    next
+                      case split_case_293
+                      by sorry
+                    next
+                      case split_case_294
+                      by sorry
+                    next
+                      case split_case_295
+                      by sorry
+                    next
+                      case split_case_296
+                      by sorry
+                    next
+                      case split_case_297
+                      by sorry
+                    next
+                      case split_case_298
+                      by sorry
+                    next
+                      case split_case_299
+                      by sorry
+                    next
+                      case split_case_300
+                      by sorry
+                    next
+                      case split_case_301
+                      by sorry
+                    next
+                      case split_case_302
+                      by sorry
+                    next
+                      case split_case_303
+                      by sorry
+                    next
+                      case split_case_304
+                      by sorry
+                    next
+                      case split_case_305
+                      by sorry
+                    next
+                      case split_case_306
+                      by sorry
+                    next
+                      case split_case_307
+                      by sorry
+                    next
+                      case split_case_308
+                      by sorry
+                    next
+                      case split_case_309
+                      by sorry
+                    next
+                      case split_case_310
+                      by sorry
+                    next
+                      case split_case_311
+                      by sorry
+                    next
+                      case split_case_312
+                      by sorry
+                    next
+                      case split_case_313
+                      by sorry
+                    next
+                      case split_case_314
+                      by sorry
+                    next
+                      case split_case_315
+                      by sorry
+                    next
+                      case split_case_316
+                      by sorry
+                    next
+                      case split_case_317
+                      by sorry
+                    next
+                      case split_case_318
+                      by sorry
+                    next
+                      case split_case_319
+                      by sorry
+                    next
+                      case split_case_320
+                      by sorry
+                    next
+                      case split_case_321
+                      by sorry
+                    next
+                      case split_case_322
+                      by sorry
+                    next
+                      case split_case_323
+                      by sorry
+                    next
+                      case split_case_324
+                      by sorry
+                    next
+                      case split_case_325
+                      by sorry
+                    next
+                      case split_case_326
+                      by sorry
+                    next
+                      case split_case_327
+                      by sorry
+                    next
+                      case split_case_328
+                      by sorry
+                    next
+                      case split_case_329
+                      by sorry
+                    next
+                      case split_case_330
+                      by sorry
+                    next
+                      case split_case_331
+                      by sorry
+                    next
+                      case split_case_332
+                      by sorry
+                    next
+                      case split_case_333
+                      by sorry
+                    next
+                      case split_case_334
+                      by sorry
+                    next
+                      case split_case_335
+                      by sorry
+                    next
+                      case split_case_336
+                      by sorry
+                    next
+                      case split_case_337
+                      by sorry
+                    next
+                      case split_case_338
+                      by sorry
+                    next
+                      case split_case_339
+                      by sorry
+                    next
+                      case split_case_340
+                      by sorry
+                    next
+                      case split_case_341
+                      by sorry
+                    next
+                      case split_case_342
+                      by sorry
+                    next
+                      case split_case_343
+                      by sorry
+                    next
+                      case split_case_344
+                      by sorry
+                    next
+                      case split_case_345
+                      by sorry
+                    next
+                      case split_case_346
+                      by sorry
+                    next
+                      case split_case_347
+                      by sorry
+                    next
+                      case split_case_348
+                      by sorry
+                    qed
+                  next
+                    case split_case_04
+                    by sorry
+                  next
+                    case split_case_05
+                    by sorry
+                  next
+                    case split_case_06
+                    by sorry
+                  next
+                    case split_case_07
+                    by sorry
+                  next
+                    case split_case_08
+                    by sorry
+                  next
+                    case split_case_09
+                    by sorry
+                  next
+                    case split_case_10
+                    by sorry
+                  next
+                    case split_case_11
+                    by sorry
+                  next
+                    case split_case_12
+                    by sorry
+                  next
+                    case split_case_13
+                    by sorry
+                  next
+                    case split_case_14
+                    by sorry
+                  next
+                    case split_case_15
+                    by sorry
+                  qed
+                qed
+              qed
+            next
+              case Setup_case_2
+              by sorry
+            next
+              case select_reader
+              by sorry
+            qed
+          qed
+        qed
+      qed
+    next
+      case tag1
+      by sorry
+    qed
+  next
+    case RHS
+    step( simplify )
+    by sorry
+  qed
+next
+  case Rule_Send
+  by sorry
+next
+  case Rule_Setup
+  by sorry
+next
+  case Rule_reader1
+  by sorry
+next
+  case Rule_reader2
+  by sorry
+next
+  case Rule_select_reader
+  by sorry
+next
+  case Rule_select_tag
+  by sorry
+next
+  case Rule_tag1
+  by sorry
+next
+  case Rule_tag2
+  by sorry
+qed
+
+end

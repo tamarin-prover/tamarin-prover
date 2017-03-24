@@ -1,4 +1,4 @@
-theory CH07_untrac begin
+theory CH07_untrac2 begin
 
 builtins: xor, hashing, multiset
 functions: rot/2, lh/1, rh/1
@@ -20,14 +20,14 @@ rule Setup:
 rule select_tag:
   [ Tag( < ~k, ~id > + z ) ]
   --[ Tag( < ~k, ~id > + z ) ]->
-  [ TagRun( ~k, ~id )
+  [ !TagRun( ~k, ~id )
   , Tag(z) 
   ]
 
 rule select_reader:
   [ Reader( < ~k, ~id > + z ) ]
   --[ Reader( < ~k, ~id > + z ) ]->
-  [ ReaderRun( ~k, ~id )
+  [ !ReaderRun( ~k, ~id )
   , Reader(z) 
   ]
 
@@ -42,7 +42,7 @@ rule tag1:
    let hash = h((r1⊕~r2⊕~k)) in 
    [ In( r1 )
    , Fr( ~r2 )
-   , TagRun( ~k, ~id )
+   , !TagRun( ~k, ~id )
    ]
  --[ Response( ~k, 'Tag' )
    , Challenge(~r2, 'Tag') 
@@ -53,7 +53,7 @@ rule tag1:
 
 rule reader2:
    [ Initiated( ~r1 )
-   , ReaderRun( ~k, ~id )
+   , !ReaderRun( ~k, ~id )
    , In( <r2, lh(rot(~id,hash))> ) 
    ]
  --[ Alive( ~k, 'Tag' )
@@ -93,9 +93,5 @@ lemma recentalive_reader:
 // FINDS PROOF AUTOMATICALLY (2017-03-22) [left+right]
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
-
-// VERY QUICK HIGH MEMORY USE ON AUTOMATIC (2017-03-23)
-// MANUAL EXPLORATION ENDS UP IN A SITUATION WHERE "KU(x)" is solved - see the file CH07-untrac-manual-badstate.spthy
-// Observational_equivalence lemma
 
 end
