@@ -1,7 +1,7 @@
 theory CH07 begin
 
 builtins: xor, hashing
-functions: rot/2, left/1, right/1
+functions: rot/2, lh/1, rh/1
 
 rule Setup:
    [ Fr( ~k )
@@ -27,23 +27,23 @@ rule tag1:
  --[ Response( ~k, 'Tag' )
    , Challenge(~r2, 'Tag') 
    ]->
-   [ Out( <~r2,left(rot(~id,hash))>)
+   [ Out( <~r2,lh(rot(~id,hash))>)
    , TagState(~k, r1, ~r2, hash)
    ]
 
 rule reader2:
    [ Initiated( ~r1 )
    , !Reader( ~k, ~id )
-   , In( <r2, left(rot(~id,hash))> ) 
+   , In( <r2, lh(rot(~id,hash))> ) 
    ]
  --[ Alive( ~k, 'Tag' )
    , Response(~k, 'Reader') 
    , Eq( h((~r1⊕r2⊕~k)), hash )
    ]->
-   [ Out( right(rot(~id,hash)) ) ]
+   [ Out( rh(rot(~id,hash)) ) ]
 
 rule tag2:
-   [ In( right(rot(~id,hash)) )
+   [ In( rh(rot(~id,hash)) )
    , !Tag( ~k, ~id) 
    , TagState(~k, r1, ~r2, hash)
    ]
