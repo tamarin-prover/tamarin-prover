@@ -220,11 +220,11 @@ Under the [etc](https://github.com/tamarin-prover/tamarin-prover/tree/develop/et
 
 ### VIM ###
 
-1. Create `~/.vim` directory if not already existing, which is the typical location for `$VIMRUNTIME`
-2. Change directory to `$VIMRUNTIME`
+1. Create `~/.vim/` directory if not already existing, which is the typical location for `$VIMRUNTIME`
+2. Change directory to `~/.vim/`
 3. Place the [filetype.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/filetype.vim) file
-4. Create another directory `syntax` in the `$VIMRUNTIME` directory and change directory to it.
-5. Place the [spthy.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/spthy.vim) and [sapic.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/sapic.vim) files in `$VIMRUNTIME/syntax`
+4. Create another directory `syntax` within `~/.vim/` directory and change directory to it.
+5. Place the [spthy.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/spthy.vim) and [sapic.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/sapic.vim) files in `~/.vim/syntax`
 
 ### Sublime Text 3 ###
 
