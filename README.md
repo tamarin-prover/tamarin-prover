@@ -40,7 +40,7 @@ http://tamarin-prover.github.io
 Manual
 ------
 
-The manual is available as PDF or HTML at https://tamarin-prover.github.io/manual/index.html 
+The manual is available as PDF or HTML at https://tamarin-prover.github.io/manual/index.html
 
 Experimental improved graph output
 ----------------------------------
@@ -49,6 +49,12 @@ You can use our experimental improved graph output which may be
 helpful for very large graphs that can be created for complicated
 protocols. To enable this feature read the instructions about
 [improved graphs](/misc/cleandot/README.md).
+
+Spthy code editors
+------------------
+
+The project contains support for spthy syntax highlighting and support
+in the [etc](/etc/) directory. This includes support for [Sublime Text](/etc/SUBLIME_TEXT.md), [VIM](/etc/spthy.vim) and [Notepad++](/etc/notepad_plus_plus_spthy.xml).
 
 
 Example Protocol Models
