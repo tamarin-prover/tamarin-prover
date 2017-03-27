@@ -99,14 +99,11 @@ module Theory.Proof (
 import           GHC.Generics                     (Generic)
 
 import           Data.Binary
--- import           Data.Data
--- import           Data.Foldable                    (Foldable, foldMap)
 import           Data.List
 import qualified Data.Label                       as L
 import qualified Data.Map                         as M
 import           Data.Maybe
 import           Data.Monoid
--- import           Data.Traversable
 
 import           Debug.Trace
 

@@ -430,10 +430,7 @@ instance Eq LVar where
 -- An ord instance that prefers the 'lvarIdx' over the 'lvarName'.
 instance Ord LVar where
     compare (LVar x1 x2 x3) (LVar y1 y2 y3) =
-        compare x3 y3 & compare x2 y2 & compare x1 y1 & EQ
-      where
-        EQ & x = x
-        x  & _ = x
+        compare x3 y3 <> compare x2 y2 <> compare x1 y1
 
 instance Show LVar where
     show (LVar v s i) =

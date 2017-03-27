@@ -184,13 +184,10 @@ import           Prelude                             hiding (id, (.))
 import           GHC.Generics                        (Generic)
 
 import           Data.Binary
--- import           Data.Data
--- import           Data.Foldable                       (Foldable, foldMap)
 import           Data.List
 import           Data.Maybe
 import           Data.Monoid                         (Sum(..))
 import qualified Data.Set                            as S
--- import           Data.Traversable                    (Traversable, traverse)
 
 import           Control.Basics
 import           Control.Category
@@ -309,7 +306,7 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
                               else 0) subterm constant) prems concs acts)
         where
            runMaude = (`runReader` hnd)
-closeIntrRule _   ir                                            = ir
+closeIntrRule _ ir  = ir
 
 
 -- | Close a rule cache. Hower, note that the

@@ -44,7 +44,6 @@ library
       , dlist
       , fclabels
       , mtl
-      , parsec
       , pretty
       , syb
       , time

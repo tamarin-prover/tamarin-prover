@@ -1225,7 +1225,7 @@ prettyGoals solved sys = vsep $ do
         -- if it is a derived message of 'ru' and the dependency does
         -- not make the graph cyclic.
         return $ m `elem` derivedMsgs &&
-                 not (D.cyclic ((j, i) : existingDeps))
+                 not (j `S.member` D.reachableSet [i] existingDeps)
 
     toplevelTerms t@(viewTerm2 -> FPair t1 t2) =
         t : toplevelTerms t1 ++ toplevelTerms t2
