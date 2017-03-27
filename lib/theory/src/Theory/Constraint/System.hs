@@ -423,7 +423,7 @@ data DiffSystem = DiffSystem
 --    , _dsMirrorSystem   :: Maybe System                     -- The mirrored constraint system
     , _dsProtoRules     :: S.Set ProtoRuleE                 -- the rules of the protocol
     , _dsConstrRules    :: S.Set RuleAC                     -- the construction rules of the theory
-    , _dsDestrRules     :: S.Set RuleAC                     -- the descruction rules of the theory
+    , _dsDestrRules     :: S.Set RuleAC                     -- the deconstruction rules of the theory
     , _dsCurrentRule    :: Maybe String                     -- the name of the rule under consideration
     }
     deriving( Eq, Ord, Generic, NFData, Binary )

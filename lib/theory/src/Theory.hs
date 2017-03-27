@@ -1417,10 +1417,8 @@ proveDiffTheory :: (Lemma IncrementalProof -> Bool)       -- ^ Lemma selector.
             -> ClosedDiffTheory
             -> ClosedDiffTheory
 proveDiffTheory selector diffselector prover diffprover thy =
-  -- FIXME!
     modify diffThyItems ((`MS.evalState` []) . mapM prove) thy
   where
- -- Not clear wether this is correct or useful   prove :: DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof
     prove item = case item of
       EitherLemmaItem (s, l0) -> do l <- MS.gets (\x -> EitherLemmaItem (s, (proveLemma s l0 x)))
                                     MS.modify (l :)
@@ -1550,7 +1548,7 @@ modifyLemmaProofDiff s prover name thy =
     modA diffThyItems (changeItems s) thy
   where
     findLemma s'' (EitherLemmaItem (s''', lem)) = (name == L.get lName lem) && (s''' == s'')
-    findLemma _ _                            = False
+    findLemma _ _                               = False
 
     change s'' preItems (EitherLemmaItem (s''', lem)) = if s''==s'''
         then
