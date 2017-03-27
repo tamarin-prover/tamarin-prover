@@ -54,7 +54,6 @@ import Control.Monad.Fresh
 import Control.DeepSeq
 
 import GHC.Generics (Generic)
-import Data.Data
 import Data.Binary
 import Data.Foldable (asum)
 -- import Data.Monoid

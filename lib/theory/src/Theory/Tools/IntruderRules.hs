@@ -175,7 +175,7 @@ minimizeIntruderRules diff rules =
                    else r:checked
     
     -- We assume that the KD-Fact is the first fact, which is the case in destructionRules above
-    isDoublePremiseRule (Rule _ (prem@(Fact KDFact [t]):prems) concs _) = 
+    isDoublePremiseRule (Rule _ ((Fact KDFact [t]):prems) concs _) = 
         frees concs == []
          && not (any containsPrivate (t:(concat $ map getFactTerms prems)))
          && isMsgVar t && any (==(Fact KUFact [t])) prems

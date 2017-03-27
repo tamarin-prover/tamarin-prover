@@ -22,7 +22,6 @@ module Term.SubtermRule (
 import Control.DeepSeq
 
 import GHC.Generics (Generic)
-import Data.Data
 import Data.Binary
 
 import Term.LTerm
