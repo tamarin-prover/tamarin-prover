@@ -139,6 +139,7 @@ executable tamarin-prover
       , fclabels
       , file-embed
       , filepath
+      , gitrev
       , http-types
       , lifted-base
       , mtl
@@ -146,6 +147,7 @@ executable tamarin-prover
       , resourcet
       , safe
       , shakespeare
+      , template-haskell
       , text
       , threads
       , time
