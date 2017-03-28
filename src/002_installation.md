@@ -5,7 +5,7 @@ Installation {#sec:installation}
 
 We explain below how to install Tamarin on different operating systems:
 [Linux](#sec:linux),  [Mac
-OS X](#sec:macosx), and [Microsoft Windows](#sec:windows). 
+OS X](#sec:macosx), and [Microsoft Windows](#sec:windows).
 
 Linux {#sec:linux}
 -----
@@ -19,7 +19,7 @@ package manager.  However, if your package manager installs Maude 2.6,
 then you must install version 2.7.1, [Core Maude
 2.7.1](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation#Core_Maude_2.7.1),
 directly from <http://maude.cs.illinois.edu/>.
-In this case, you should ensure 
+In this case, you should ensure
 that your `PATH` includes the install path, so that
 calling `maude` starts version 2.7.1. Note that even though the Maude
 executable is movable, the `prelude.maude` file must be in the same
@@ -59,11 +59,12 @@ Mac OS X {#sec:macosx}
 
 The fastest way to install Tamarin on Mac OS X is to use [Homebrew](http://brew.sh/) [Cask](https://caskroom.github.io/).
 
-If you already have this installed, it is as simple as running the following in your terminal:
+If you already have this installed, it is as simple as running the following two commands in your terminal:
 
+  * `brew update`
   * `brew cask install tamarin-prover`
 
-You can now run Tamarin from the command line by typing `tamarin-prover`. 
+You can now run Tamarin from the command line by typing `tamarin-prover`.
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
 run Tamarin for the first time. (Warning: the previous stable version of Tamarin
 (v1.0.0) does not realize that Maude v2.7.1 is more than sufficient; it will
@@ -78,10 +79,9 @@ website (this is a one-line copy paste install). Update everything with: `brew u
 Any issues, run `brew doctor` for more information.
 
 2. Install Tamarin: `brew cask install tamarin-prover`
-  
-    * If for any reason this doesn't work, you might have to 'tap' (add) Homebrew 
+    * If for any reason this doesn't work, you might have to 'tap' (add) Homebrew
     [Cask](https://caskroom.github.io/) manually. This is currently achieved by
-    `brew tap caskroom/cask`, but might change. Check 
+    `brew tap caskroom/cask`, but might change. Check
     [the website](https://caskroom.github.io/) for the latest instructions.
     * Tamarin's dependencies Maude and GraphViz are automatically installed
     and added to your path.
@@ -89,10 +89,10 @@ Any issues, run `brew doctor` for more information.
 3. You can now run Tamarin from the terminal by typing `tamarin-prover`
 
 That's it! Homebrew will automatically update Tamarin when new versions are
-released, if you `brew update` on a semi-regular basis. 
+released, if you `brew update` on a semi-regular basis.
 
-For reference, Homebrew will place a symlink to the binary in 
-`/usr/local/bin/tamarin-prover`, but you should never need to touch this. 
+For reference, Homebrew will place a symlink to the binary in
+`/usr/local/bin/tamarin-prover`, but you should never need to touch this.
 To uninstall, just `brew cask remove tamarin-prover`, and if you want, also
 remove `maude` and `graphviz`, two dependencies which are automatically
 installed with Tamarin.
@@ -101,19 +101,19 @@ installed with Tamarin.
 ### Installing Tamarin from sources ###
 
 1. To compile Tamarin, you need the Haskell tool [stack](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md#manual-download-1).
-To run Tamarin you need [Maude 2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation) and [GraphViz](http://www.graphviz.org/Download.php). 
+To run Tamarin you need [Maude 2.7](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation) and [GraphViz](http://www.graphviz.org/Download.php).
 You can download these tools from their respective sites.
 Alternatively, you can use either the
 [MacPorts](https://www.macports.org) or
 [Homebrew](http://brew.sh)
-package managers. 
+package managers.
 
   *  For MacPorts:
 ```
   sudo port install maude graphviz
 ```
 
-The Haskell tool `stack` is not in the MacPorts repository and must be installed by following the instructions at 
+The Haskell tool `stack` is not in the MacPorts repository and must be installed by following the instructions at
   <https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md>.
 
   *   For Homebrew:
@@ -126,11 +126,11 @@ The Haskell tool `stack` is not in the MacPorts repository and must be installed
 ```
   git clone https://github.com/tamarin-prover/tamarin-prover.git
 ```
-or download the source files from 
+or download the source files from
   <https://github.com/tamarin-prover/tamarin-prover/archive/develop.zip>.
 
 
-3. Build Tamarin by changing into the `tamarin-prover` directory and 
+3. Build Tamarin by changing into the `tamarin-prover` directory and
    typing
 ```
   make default
@@ -149,7 +149,7 @@ Windows {#sec:windows}
 
 Windows is not currently supported.
 To the best of our knowledge, there is not a current GraphViz version
-available for Windows and there is no Maude binary for Windows 10. 
+available for Windows and there is no Maude binary for Windows 10.
 Therefore only the command-line parts of the tool are
 functional for Windows systems prior to Windows 10.
 
@@ -178,7 +178,7 @@ maude tool: 'maude'
  checking installation: OK.
 
 GraphViz tool: 'dot'
- checking version: dot - graphviz version 2.39.20150613.2112 
+ checking version: dot - graphviz version 2.39.20150613.2112
                    (20150613.2112). OK.
 
 *** Testing the unification infrastructure ***
