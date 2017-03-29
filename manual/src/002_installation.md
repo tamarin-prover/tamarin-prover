@@ -55,47 +55,48 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run 
 Mac OS X {#sec:macosx}
 --------
 
-### Automatic Installation of the Tamarin binary {#sec:MacOSBinInstall}
+### Automatic Installation of Tamarin {#sec:MacOSBinInstall}
 
-The fastest way to install Tamarin on Mac OS X is to use [Homebrew](http://brew.sh/) [Cask](https://caskroom.github.io/).
+The fastest way to install Tamarin on Mac OS X is to use [Homebrew](http://brew.sh/).
 
 If you already have this installed, it is as simple as running the following two commands in your terminal:
 
   * `brew update`
-  * `brew cask install tamarin-prover`
+  * `brew install homebrew/science/tamarin-prover`
 
 You can now run Tamarin from the command line by typing `tamarin-prover`.
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
-run Tamarin for the first time. (Warning: the previous stable version of Tamarin
-(v1.0.0) does not realize that Maude v2.7.1 is more than sufficient; it will
-currently give you a warning when you run `tamarin-prover test` but it is safe
-to ignore this.)
+run Tamarin for the first time.
 
-#### Installing Homebrew & Cask
-If you don't have Homebrew and/or Cask installed:
+#### Installing Homebrew
+If you don't have Homebrew installed:
 
 1. Install [Homebrew](http://brew.sh/), by following the instructions on their
 website (this is a one-line copy paste install). Update everything with: `brew update`.
 Any issues, run `brew doctor` for more information.
 
-2. Install Tamarin: `brew cask install tamarin-prover`
-    * If for any reason this doesn't work, you might have to 'tap' (add) Homebrew
-    [Cask](https://caskroom.github.io/) manually. This is currently achieved by
-    `brew tap caskroom/cask`, but might change. Check
-    [the website](https://caskroom.github.io/) for the latest instructions.
+2. Install Tamarin: `brew install homebrew/science/tamarin-prover`
+    * This should just work. If for any reason this doesn't work, you might have to 'tap' (add) Homebrew
+    [Science](https://github.com/Homebrew/homebrew-science/blob/master/README.md) manually. 
+    This is currently achieved by `brew tap homebrew/science`, but could change. 
+    Check [the website](https://github.com/Homebrew/homebrew-science/blob/master/README.md) 
+    for the latest instructions.
     * Tamarin's dependencies Maude and GraphViz are automatically installed
     and added to your path.
 
 3. You can now run Tamarin from the terminal by typing `tamarin-prover`
 
 That's it! Homebrew will automatically update Tamarin when new versions are
-released, if you `brew update` on a semi-regular basis.
+released, if you `brew update && brew upgrade` on a semi-regular basis.
 
 For reference, Homebrew will place a symlink to the binary in
 `/usr/local/bin/tamarin-prover`, but you should never need to touch this.
-To uninstall, just `brew cask remove tamarin-prover`, and if you want, also
+To uninstall, just `brew remove tamarin-prover`, and if you want, also
 remove `maude` and `graphviz`, two dependencies which are automatically
 installed with Tamarin.
+
+If you want to install Tamarin from source (through Homebrew), simply use: 
+`brew install --build-from-source homebrew/science/tamarin-prover`.
 
 
 ### Installing Tamarin from sources ###
