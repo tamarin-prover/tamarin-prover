@@ -82,9 +82,11 @@ restriction equality:
 restriction unique:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
 
+//PROOF FOUND MANUALLY (not using "splitEqs", but solving for Reader) (2017-03-29)
 lemma reader_start [reuse,use_induction]:
 "All x y #k. Reader(x, y) @k ==> Ex #i. Setup(x) @ #i & i<k"
 
+//PROOF FOUND MANUALLY (not using "splitEqs", but solving for Tag) (2017-03-29)
 lemma tag_start [reuse,use_induction]:
 "All x y #k. Tag(x, y) @k ==> Ex #i. Setup(x) @ #i & i<k"
 
@@ -96,6 +98,7 @@ lemma reader_tag_synch [reuse,use_induction]:
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
+// ATTACK FOUND MANUALLY (see OTYT06-attacks-manual) (2017-03-28)
 lemma recentalive_reader:
   all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
 
