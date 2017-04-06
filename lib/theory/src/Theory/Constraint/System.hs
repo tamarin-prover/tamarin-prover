@@ -771,10 +771,15 @@ doRestrictionsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: Th
     impliedOrInitial solved x = if isAllGuarded x && (solved || not (null (impliedForms x))) then (impliedForms x) else [x]
     impliedForms = impliedFormulas (L.get pcMaudeHandle ctxt) sys
 
+-- | Normalizes all terms in the dependency graph.
+normDG :: ProofContext -> System -> System
+normDG ctxt sys = L.set sNodes normalizedNodes sys
+  where
+    normalizedNodes = M.map (\r -> runReader (normRule r) (L.get pcMaudeHandle ctxt)) (L.get sNodes sys)
 
 -- | Returns the mirrored DG, if it exists.
 getMirrorDG :: DiffProofContext -> Side -> System -> Maybe System
-getMirrorDG ctxt side sys = unifyInstances sys $ evalFreshAvoiding newNodes freshAndPubConstrRules
+getMirrorDG ctxt side sys = fmap (normDG $ eitherProofContext ctxt side) $ unifyInstances sys $ evalFreshAvoiding newNodes freshAndPubConstrRules
   where
     (freshAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
     (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)

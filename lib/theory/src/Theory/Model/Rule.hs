@@ -78,6 +78,7 @@ module Theory.Model.Rule (
   , getRemainingRuleApplications
   , setRemainingRuleApplications
   , nfRule
+  , normRule
   , isTrivialProtoVariantAC
   , getNewVariables
   , getSubstitutionsFixingNewVars
@@ -507,6 +508,12 @@ nfRule (Rule _ ps cs as) = reader $ \hnd ->
   where
     nfFactList hnd xs =
         getAll $ foldMap (foldMap (All . (\t -> nf' t `runReader` hnd))) xs
+
+-- | Normalize all terms in premises, actions and conclusions
+normRule :: Rule i -> WithMaude (Rule i)
+normRule (Rule rn ps cs as) = reader $ \hnd -> (Rule rn (normFacts ps hnd) (normFacts cs hnd) (normFacts as hnd))
+  where
+    normFacts fs hnd' = map (\f -> runReader (normFact f) hnd') fs
 
 -- | True iff the rule is an intruder rule
 isIntruderRule :: HasRuleName r => r -> Bool

@@ -20,6 +20,7 @@ module Theory.Model.Fact (
   , FactTag(..)
 
   , matchFact
+  , normFact
 
   -- ** Queries
   , isLinearFact
@@ -76,6 +77,7 @@ module Theory.Model.Fact (
 
 -- import           Control.Basics
 import           Control.DeepSeq
+import           Control.Monad.Reader
 
 import           GHC.Generics (Generic)
 import           Data.Binary
@@ -87,6 +89,7 @@ import           Data.Monoid
 import qualified Data.Set               as S
 
 import           Term.Unification
+import           Term.Rewriting.Norm
 
 import           Text.PrettyPrint.Class
 
@@ -299,6 +302,10 @@ unifyLNFactEqs eqs
 -- | 'True' iff the two facts are unifiable.
 unifiableLNFacts :: LNFact -> LNFact -> WithMaude Bool
 unifiableLNFacts fa1 fa2 = (not . null) <$> unifyLNFactEqs [Equal fa1 fa2]
+
+-- | Normalize all terms in the fact
+normFact :: LNFact -> WithMaude LNFact
+normFact (Fact h ts) = reader $ \hnd -> (Fact h (map (\term -> runReader (norm' term) hnd) ts))
 
 -- | @matchLFact t p@ is a complete set of AC matchers for the term fact @t@
 -- and the pattern fact @p@.
