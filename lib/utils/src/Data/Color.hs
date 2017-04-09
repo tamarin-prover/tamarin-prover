@@ -13,6 +13,7 @@ module Data.Color (
     RGB(..)
   , HSV(..)
   , rgbToHex
+  , hexToRGB
   , hsvToHex
 
   -- ** Predefined colors
@@ -36,7 +37,8 @@ module Data.Color (
  -       palettes for reporting various data
  -}
 
-import Numeric (showHex)
+import Numeric (showHex, readHex)
+import Safe    (headMay)
 
 -- import Text.XHtml.Strict
 -- import Text.XHtml.Table
@@ -137,6 +139,15 @@ rgbToHex (RGB r g b) = ('#':) . showHex' r . showHex' g . showHex' b $ ""
           where
           i :: Int
           i = max 0 (min 255 (floor (256 * f)))
+
+hexToRGB :: RealFrac t => String -> Maybe (RGB t)
+hexToRGB rgb = do
+    let (rs,gb) = splitAt 2 rgb
+        (gs, bs) = splitAt 2 gb
+    (r,_) <- headMay $ readHex rs
+    (g,_) <- headMay $ readHex gs
+    (b,_) <- headMay $ readHex bs
+    return (RGB (r / 255) (g / 255) (b / 255))
 
 -- | Hexadecimal representation of an HSV value; i.e., of its corresponding RGB
 -- value.

@@ -877,7 +877,7 @@ prettyNamedRule prefix ppInfo ru =
                 , nest 1 $ ppFactsList rConcs]) $-$
     nest 2 (ppInfo $ L.get rInfo ru)
   where
-    acts             = filter isNotDiffAnnotation (L.get rActs ru)
+    acts             = filter isNotDiffAnnotation $ filter (not . isHiddenFact) (L.get rActs ru)
     ppList pp        = fsep . punctuate comma . map pp
     ppFacts' list    = ppList prettyLNFact list
     ppFacts proj     = ppList prettyLNFact $ L.get proj ru

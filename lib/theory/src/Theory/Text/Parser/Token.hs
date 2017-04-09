@@ -118,7 +118,7 @@ spthy =
       , T.commentEnd     = "*/"
       , T.commentLine    = "//"
       , T.nestedComments = True
-      , T.identStart     = alphaNum
+      , T.identStart     = alphaNum <|> oneOf "_"
       , T.identLetter    = alphaNum <|> oneOf "_"
       , T.reservedNames  = ["in","let","rule","diff"]
       , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-"

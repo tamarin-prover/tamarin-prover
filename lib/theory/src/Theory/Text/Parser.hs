@@ -235,6 +235,7 @@ fact plit = try (
        case i of
          []                -> fail "empty identifier"
          (c:_) | isUpper c -> return ()
+               | c == '_'  -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
        ts    <- parens (commaSep (multterm plit))
        mkProtoFact multi i ts
