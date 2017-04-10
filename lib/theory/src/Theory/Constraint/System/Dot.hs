@@ -26,6 +26,7 @@ import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Monoid              (Any(..))
 import qualified Data.Set                 as S
+import           Data.Ratio
 import           Safe
 
 import           Extension.Data.Label
@@ -58,7 +59,7 @@ nonEmptyGraphDiff diffSys = not $
                         null (unsolvedChains sys) &&
                         S.null (get sEdges sys) && S.null (get sLessAtoms sys)
 
-type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (HSV Double)
+type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (RGB Rational)
 type SeDot = ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
 
 -- | State to avoid multiple drawing of the same entity.
@@ -85,10 +86,6 @@ singleEdges es =
     single []  = error "impossible"
     single [x] = return x
     single _   = mzero
-
--- | Get a lighter color.
-lighter :: HSV Double -> RGB Double
-lighter = hsvToRGB -- fmap (\c -> 1 - 0.3*(1-c)) . hsvToRGB
 
 -- | Ensure that a 'SeDot' action is only executed once by querying and
 -- updating the 'DotState' accordingly.
@@ -125,7 +122,7 @@ dotNode v = dotOnce dsNodes v $ do
       Just ru -> do
           let
               color     = M.lookup (get rInfo ru) colorMap
-              nodeColor = maybe "white" (rgbToHex . lighter) color
+              nodeColor = maybe "white" rgbToHex color
           dot (label ru) [("fillcolor", nodeColor),("style","filled")] $ \vId -> do
               premIds <- mapM dotPrem
                            [ (v,i) | (i,_) <- enumPrems ru ]
@@ -277,8 +274,8 @@ nodeColorMap :: [RuleACInst] -> NodeColorMap
 nodeColorMap rules =
     M.fromList $
       [ (get rInfo ru, case getColorAction ru of
-            Just ruColor -> rgbToHSV ruColor
-            Nothing      -> getColor (gIdx, mIdx))
+            Just ruColor -> ruColor
+            Nothing      -> hsvToRGB $ getColor (gIdx, mIdx))
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
     groupIdx ru | isDestrRule ru                   = 0
@@ -307,8 +304,8 @@ nodeColorMap rules =
             _          -> False
 
     -- The hue of the intruder rules
-    intruderHue :: Double
-    intruderHue = 18 / 360
+    intruderHue :: Rational
+    intruderHue = 18 % 360
 
 ------------------------------------------------------------------------------
 -- Record based dotting
@@ -335,7 +332,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
               in mkSimpleNode (render lbl) attrs
       Just ru -> do
           let color     = M.lookup (get rInfo ru) colorMap
-              nodeColor = maybe "white" (rgbToHex . lighter) color
+              nodeColor = maybe "white" rgbToHex color
               attrs     = [("fillcolor", nodeColor),("style","filled")]
           ids <- mkNode ru attrs hasOutgoingEdge
           let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]

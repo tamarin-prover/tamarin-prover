@@ -207,7 +207,7 @@ genColorGroups (ColorParams {
 
 -- | A good default style for the 'genColorGroups' color palette function. The
 -- parameter shifts the hue for the first group.
-colorGroupStyle :: Double -> ColorParams Double
+colorGroupStyle :: RealFrac t => t -> ColorParams t
 colorGroupStyle zeroHue = ColorParams {
     cpScale   = 0.6
   , cpZeroHue = zeroHue
@@ -217,13 +217,13 @@ colorGroupStyle zeroHue = ColorParams {
 
 -- | Build color groups according to the list of group sizes using the default
 -- 'colorGroupStyle' for the function 'genColorGroups'.
-colorGroups :: Double -> [Int] -> [((Int, Int), HSV Double)]
+colorGroups :: RealFrac t => t -> [Int] -> [((Int, Int), HSV t)]
 colorGroups zeroHue = genColorGroups (colorGroupStyle zeroHue)
 
 
 -- | A good light color style for the @genColorGroups@ color palette
 -- function. The parameter shifts the hue for the first group.
-lightColorGroupStyle :: Double -> ColorParams Double
+lightColorGroupStyle :: RealFrac t => t -> ColorParams t
 lightColorGroupStyle zeroHue = ColorParams {
     cpScale   = 0.6
   , cpZeroHue = zeroHue
@@ -234,7 +234,7 @@ lightColorGroupStyle zeroHue = ColorParams {
 -- | Build color groups according to the list of group sizes using the
 -- default light 'lightColorGroupStyle' for the function
 -- 'genColorGroups'.
-lightColorGroups :: Double -> [Int] -> [((Int, Int), HSV Double)]
+lightColorGroups :: RealFrac t => t -> [Int] -> [((Int, Int), HSV t)]
 lightColorGroups zeroHue = genColorGroups (lightColorGroupStyle zeroHue)
 
 
