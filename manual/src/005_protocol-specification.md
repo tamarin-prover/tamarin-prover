@@ -24,7 +24,7 @@ protocol, displayed below.
 In this protocol, each party `x` has a long-term private key `lkx` and a
 corresponding public key `pkx = 'g'^lkx`, where `'g'` is a generator of the
 Diffie-Hellman group. Because `'g'` can be public, we model it as a public
-constant.
+constant. Two different hash functions `h1` and `h2` are used.
 
 To start a session, the initiator `I` first creates a fresh nonce `eskI`, also
 known as `I`’s ephemeral (private) key. He then concatenates `eskI` with `I`’s
