@@ -70,16 +70,19 @@ restriction unique:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
 
 // There should be an attack on this
-// FINDS ATTACK AUTOMATICALLY (2017-03-22) [left+right, using a 'zero', but with some clicking can get a "more realistic" attack easily]
+// FINDS ATTACK AUTOMATICALLY (2017-03-22) [left+right, using a 'zero', but with some clicking can get a "more realistic" attack easily] (2017-04-18 same)
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-03-22) [left+right]
+// FINDS PROOF AUTOMATICALLY (2017-03-22) [left+right] (2017-04-18 same)
 lemma recentalive_reader:
   all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-03-22) [left+right]
+// FINDS PROOF AUTOMATICALLY (2017-03-22) [left+right] (2017-04-18 same)
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+
+// killed process at 15 GB memory usage (2017-04-18)
+// observational equivalence
 
 end

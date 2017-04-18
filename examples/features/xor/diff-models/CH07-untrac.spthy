@@ -97,5 +97,6 @@ lemma executable:
 // VERY QUICK HIGH MEMORY USE ON AUTOMATIC (2017-03-23)
 // MANUAL EXPLORATION ENDS UP IN A SITUATION WHERE "KU(x)" is solved - see the file CH07-untrac-manual-badstate.spthy
 // Observational_equivalence lemma
+// (2017-04-18 - solving KU(x) problem still there)
 
 end

@@ -54,15 +54,15 @@ restriction equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
 
 // There should be an attack on this
-// FINDS ATTACK AUTOMATICALLY (2017-03-22)
+// FINDS ATTACK AUTOMATICALLY (2017-03-22) - (2017-04-18: attack automatically, but with 'zero', short manual exploration on "splitEqs" in attack fixes this, pick split_case_3)
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-03-22)
+// FINDS PROOF AUTOMATICALLY (2017-03-22) (2017-04-18 - same)
 lemma recentalive_reader:
   all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
 
-// SHOWS CORRECT EXECUTION (2017-03-22)
+// SHOWS CORRECT EXECUTION (2017-03-22) (2017-04-18 - same)
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j) 
            // further restriction to automatically get the desired execution
