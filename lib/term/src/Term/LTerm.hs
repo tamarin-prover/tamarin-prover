@@ -191,7 +191,7 @@ newtype NameId = NameId { getNameId :: String }
     deriving( Eq, Ord, Typeable, Data, Generic, NFData, Binary )
 
 -- | Tags for names.
-data NameTag = FreshName | PubName
+data NameTag = FreshName | PubName | NodeName
     deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Names.
@@ -208,8 +208,9 @@ type NTerm v = VTerm Name v
 instance IsConst Name where
 
 instance Show Name where
-  show (Name FreshName n) = "~'" ++ show n ++ "'"
-  show (Name PubName   n) = "'"  ++ show n ++ "'"
+  show (Name FreshName  n) = "~'" ++ show n ++ "'"
+  show (Name PubName    n) = "'"  ++ show n ++ "'"
+  show (Name NodeName   n) = "#'" ++ show n ++ "'"
 
 instance Show NameId where
   show = getNameId
@@ -229,6 +230,7 @@ pubTerm = lit . Con . Name PubName . NameId
 sortOfName :: Name -> LSort
 sortOfName (Name FreshName _) = LSortFresh
 sortOfName (Name PubName   _) = LSortPub
+sortOfName (Name NodeName  _) = LSortNode
 
 ------------------------------------------------------------------------------
 -- LVar: logical variables

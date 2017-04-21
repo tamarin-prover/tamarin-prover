@@ -29,6 +29,7 @@ module Web.Handler
   -- , getTheoryPathDR
   , getTheoryGraphR
   , getTheoryGraphDiffR
+  , getTheoryMirrorDiffR
   , getAutoProverR
   , getAutoDiffProverR
   , getAutoProverDiffR
@@ -823,7 +824,11 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
-getTheoryGraphDiffR idx path = withDiffTheory idx ( \ti -> do
+getTheoryGraphDiffR idx path = getTheoryGraphDiffR' idx path False
+
+-- | Get rendered graph for theory and given path.
+getTheoryGraphDiffR' :: TheoryIdx -> DiffTheoryPath -> Bool -> Handler ()
+getTheoryGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
       yesod <- getYesod
       compact <- isNothing <$> lookupGetParam "uncompact"
       compress <- isNothing <$> lookupGetParam "uncompress"
@@ -838,6 +843,7 @@ getTheoryGraphDiffR idx path = withDiffTheory idx ( \ti -> do
           (show simplificationLevel)
           (abbreviate)
           (dtiTheory ti) path
+          (mirror)
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
     graphStyle d c = dotStyle d . compression c
@@ -846,6 +852,9 @@ getTheoryGraphDiffR idx path = withDiffTheory idx ( \ti -> do
     compression True = compressSystem
     compression False = id
 
+-- | Get rendered mirror graph for theory and given path.
+getTheoryMirrorDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
+getTheoryMirrorDiffR idx path =  getTheoryGraphDiffR' idx path True
 
 -- | Kill a thread (aka 'cancel request').
 getKillThreadR :: Handler RepPlain

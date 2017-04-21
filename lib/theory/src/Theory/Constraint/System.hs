@@ -420,7 +420,6 @@ data DiffSystem = DiffSystem
     , _dsSide           :: Maybe Side                       -- The side for backward search, when doing rule equivalence
     , _dsProofContext   :: Maybe ProofContext               -- The proof context used
     , _dsSystem         :: Maybe System                     -- The constraint system used
---    , _dsMirrorSystem   :: Maybe System                     -- The mirrored constraint system
     , _dsProtoRules     :: S.Set ProtoRuleE                 -- the rules of the protocol
     , _dsConstrRules    :: S.Set RuleAC                     -- the construction rules of the theory
     , _dsDestrRules     :: S.Set RuleAC                     -- the deconstruction rules of the theory
@@ -592,7 +591,7 @@ getOppositeRules ctxt side (Rule rule prem _ _) = case rule of
                                    (ConstrRule x) | x == BC.pack "_mult"  -> [(multRuleInstance (length prem))]
                                    (ConstrRule x) | x == BC.pack "_union" -> [(unionRuleInstance (length prem))]
                                    (ConstrRule x) | x == BC.pack "_xor"   -> [(xorRuleInstance (length prem))]
-                                   _                                     -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
+                                    _                                     -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
                                                                                  [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
                                                                                  x  -> x
                                                                                  
@@ -685,14 +684,14 @@ safePartialAtomValuation ctxt sys =
 -- | @impliedFormulas se imp@ returns the list of guarded formulas that are
 -- implied by @se@.
 impliedFormulas :: MaudeHandle -> System -> LNGuarded -> [LNGuarded]
-impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++ show res)-} res
+impliedFormulas hnd sys gf0 = res
   where
-    res = case {-trace ("open: " ++ show (openGuarded gf `evalFresh` avoid gf))-} (openGuarded gf `evalFresh` avoid gf) of
+    res = case (openGuarded gf `evalFresh` avoid gf) of
       Just (All, _vs, antecedent, succedent) -> do
         let (actionsEqs, otherAtoms) = first sortGAtoms . partitionEithers $
                                         map prepare antecedent
             succedent'               = gall [] otherAtoms succedent
-        subst <- candidateSubsts emptySubst ({-trace ("equations " ++ show actionsEqs ++ " -- " ++ show otherAtoms ++ " -- " ++ show succedent' ++ " -- " ++ show (candidateSubsts emptySubst actionsEqs) ++ " -- " ++ show (unskolemizeLNGuarded $ applySkGuarded (head $ candidateSubsts emptySubst actionsEqs) succedent'))-} actionsEqs)
+        subst <- candidateSubsts emptySubst actionsEqs
         return $ unskolemizeLNGuarded $ applySkGuarded subst succedent'
       _ -> []
     gf = skolemizeGuarded gf0
@@ -706,7 +705,7 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
 
     candidateSubsts subst []               = return $ subst
     candidateSubsts subst ((GAction a fa):as) = do
-        sysAct <- {-trace ("sysActions " ++ show sysActions)-} sysActions
+        sysAct <- sysActions
         subst' <- (`runReader` hnd) $ matchAction sysAct (applySkAction subst (a, fa))
         candidateSubsts (compose subst' subst) as
     candidateSubsts subst ((GEqE s' t'):as)   = do
@@ -720,6 +719,44 @@ impliedFormulas hnd sys gf0 = {-trace ("ImpliedFormulas: " ++ show gf0 ++ " " ++
         subst' <- (`runReader` hnd) $ matchTerm term pat
         candidateSubsts (compose subst' subst) as
 
+-- | @impliedFormulasAndSystems se imp@ returns the list of guarded formulas that are
+-- *potentially* implied by @se@, together with the updated system.
+impliedFormulasAndSystems :: MaudeHandle -> System -> LNGuarded -> [(LNGuarded, System)]
+impliedFormulasAndSystems hnd sys gf = res
+  where
+    res = case (openGuarded gf `evalFresh` avoid gf) of
+      Just (All, _vs, antecedent, succedent) -> map (\x -> apply x (succedent', sys)) subst
+        where
+          (actionsEqs, otherAtoms) = first sortGAtoms . partitionEithers $ map prepare antecedent
+          succedent'               = gall [] otherAtoms succedent
+          subst' = concat $ map (\(x, y) ->
+            if null ((`runReader` hnd) (unifyLNTerm x))
+               then []
+               else (`runReader` hnd) (unifyLNTerm y)) $ equalities actionsEqs
+          subst  = map (\x -> freshToFreeAvoiding x gf) subst'
+      _ -> []
+
+    prepare (Action i fa) = Left  (GAction i fa)
+    prepare (EqE s t)     = Left  (GEqE s t)
+    prepare ato           = Right (fmap (fmapTerm (fmap Free)) ato)
+
+    sysActions = allActions sys
+
+    equalities :: [GAtom (Term (Lit Name LVar))] -> [([Equal LNTerm], [Equal LNTerm])]
+    equalities []                  = [([], [])]
+    equalities ((GAction a fa):as) = go sysActions
+      where
+        go :: [(NodeId, LNFact)] -> [([Equal LNTerm], [Equal LNTerm])]
+        go []                                                  = []
+        go ((nid, sysAct):acts) | factTag sysAct == factTag fa =
+            (map (\(x, y) -> ((((Equal (toConst nid) a):(zipWith Equal (factTerms sysAct) (factTerms fa))) ++ x),
+                              (((Equal (varTerm nid) a):(zipWith Equal (factTerms sysAct) (factTerms fa))) ++ y))) $ equalities as)
+                                  ++ (go acts)
+        go ((_  , _     ):acts) | otherwise                    = go acts
+    equalities ((GEqE s t):as)     = map (\(x, y) -> ((Equal s t):x, (Equal s t):y)) $ equalities as
+
+    toConst cvar = constTerm (Name NodeName (NameId ("constVar_" ++ toConstName cvar)))
+    toConstName (LVar name vsort idx) = (show vsort) ++ "_" ++ (show idx) ++ "_" ++ name
 
 -- | Removes all restrictions that are not relevant for the system, i.e. that only contain atoms not present in the system.
 filterRestrictions :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
@@ -753,24 +790,34 @@ filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
 doRestrictionsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
 doRestrictionsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: This is a temporary simulation of diff-safe restrictions!
-  if (all (== gtrue) (simplify formulas isSolved))
-    then Just $ {-trace ("doRestrictionsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} True
-    else if (any (== gfalse) (simplify formulas isSolved))
-          then Just $ {-trace ("doRestrictionsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} False
-          else {-trace ("doRestrictionsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (prettyGuarded) (simplify formulas isSolved)))-} Nothing
+  if (all (\(x, _) -> x == gtrue) simplifiedForms)
+    then Just {-$ trace ("doRestrictionsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} True
+    else if (any (\(x, _) -> x == gfalse) simplifiedForms)
+          then Just {-$ trace ("doRestrictionsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} False
+          else {-trace ("doRestrictionsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} Nothing
   where
-    simplify :: [LNGuarded] -> Bool -> [LNGuarded]
-    simplify forms solved = if ({-trace ("step: " ++ show forms ++ " " ++ show (step forms solved))-} (step forms solved)) == forms
-                        then (step forms solved)
-                        else simplify (step forms solved) solved
+    simplifiedForms = simplify (map (\x -> (x, sys)) formulas) isSolved
 
-    step :: [LNGuarded] -> Bool -> [LNGuarded]
-    step forms solved = map simpGuard $ concat $ {-trace (show (map (impliedOrInitial solved) forms)) $-} map (impliedOrInitial solved) forms
+    simplify :: [(LNGuarded, System)] -> Bool -> [(LNGuarded, System)]
+    simplify forms solved =
+        if ({-trace ("step: " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) forms) ++ " " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) res))-} res) == forms
+            then res
+            else simplify res solved
+      where
+        res = step forms solved
 
-    valuation = (safePartialAtomValuation ctxt sys)
-    simpGuard = simplifyGuardedOrReturn valuation
-    impliedOrInitial solved x = if isAllGuarded x && (solved || not (null (impliedForms x))) then (impliedForms x) else [x]
-    impliedForms = impliedFormulas (L.get pcMaudeHandle ctxt) sys
+    step :: [(LNGuarded, System)] -> Bool -> [(LNGuarded, System)]
+    step forms solved = map simpGuard $ concat {-$ trace (show (map (impliedOrInitial solved) forms))-} $ map (impliedOrInitial solved) forms
+
+    valuation s' = safePartialAtomValuation ctxt s'
+
+    simpGuard :: (LNGuarded, System) -> (LNGuarded, System)
+    simpGuard (f, sys') = (simplifyGuardedOrReturn (valuation sys') f, sys')
+
+    impliedOrInitial :: Bool -> (LNGuarded, System) -> [(LNGuarded, System)]
+    impliedOrInitial solved (f, sys') = if isAllGuarded f && (solved || not (null imps)) then imps else [(f, sys')]
+      where
+        imps = map (fmap (normDG ctxt)) $ impliedFormulasAndSystems (L.get pcMaudeHandle ctxt) sys' f
 
 -- | Normalizes all terms in the dependency graph.
 normDG :: ProofContext -> System -> System
@@ -853,13 +900,12 @@ getMirrorDG ctxt side sys = fmap (normDG $ eitherProofContext ctxt side) $ unify
         replaceNewVarWithConstant :: LNFact -> LVar -> LVar -> LNFact
         replaceNewVarWithConstant fact v cvar = apply subst fact
           where
-            subst = Subst (M.fromList [(v, constTerm (Name (pubOrFresh v) (NameId ("constVar" ++ toConstName cvar))))])
+            subst = Subst (M.fromList [(v, constTerm (Name (pubOrFresh v) (NameId ("constVar_" ++ toConstName cvar))))])
             
-            toConstName (LVar name vsort idx) = (show vsort) ++ name ++ (show idx)
-            
+            toConstName (LVar name vsort idx) = (show vsort) ++ "_" ++ (show idx) ++ "_" ++ name
+
             pubOrFresh (LVar _ LSortFresh _) = FreshName
             pubOrFresh (LVar _ _          _) = PubName
-            
 
 -- | Returns the set of edges of a system saturated with all edges deducible from the nodes and the less relation                                                 
 saturateEdgesWithLessRelation :: System -> S.Set Edge 
@@ -1134,7 +1180,6 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
 -- clauses.
 prettyNonGraphSystemDiff :: HighlightDocument d => DiffProofContext -> DiffSystem -> d
 prettyNonGraphSystemDiff ctxt se = vsep $ map combine
--- FIXME: graphical output of mirror system
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
   , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
@@ -1253,6 +1298,12 @@ deriving instance Show DiffSystem
 
 instance Apply SourceKind where
     apply = const id
+
+instance Apply System where
+    apply subst (System a b c d e f g h i j k l) =
+        System (apply subst a) (apply subst b) (apply subst c) (apply subst d)
+        (apply subst e) (apply subst f) (apply subst g) (apply subst h)
+        i j (apply subst k) (apply subst l)
 
 instance HasFrees SourceKind where
     foldFrees = const mempty

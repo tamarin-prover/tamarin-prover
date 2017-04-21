@@ -160,6 +160,9 @@ instance HasFrees EqStore where
                 <*> mapFrees f nextSplitId
 
 
+instance Apply EqStore where
+    apply subst (EqStore a b c) = EqStore (compose subst a) (fmap (fmap $ S.map $ flip composeVFresh subst) b) (apply subst c) 
+
 
 -- Equation Store
 ----------------------------------------------------------------------
