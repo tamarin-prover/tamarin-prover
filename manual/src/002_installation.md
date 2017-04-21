@@ -33,7 +33,7 @@ Tamarin from source, using either the stable master or current development versi
 To help compile Tamarin from source, we manage Haskell dependencies
 automatically using the tool `stack`. You must first install
 `stack`, following the instructions given at
-[Stack's install page](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md).
+[Stack's install page](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md). In case you are installing `stack` with your package manager (particularly on Ubuntu), you must run `stack upgrade` afterwards, as that version of stack is usually out-of-date.
 
 After running `git clone` on the Tamarin
 repository, you have the current development version ready for
