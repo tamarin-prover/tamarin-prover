@@ -10,7 +10,7 @@
  * and the right hand side will only output if the message is not equal to 'B'. Consequently 
  * it fails to satisfy O.E.
  */
-theory Example
+theory AxiomDiffTest4
 begin
 
 rule not_match:
