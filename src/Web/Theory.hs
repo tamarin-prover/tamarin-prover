@@ -686,7 +686,8 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
                 [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ]
            else if dpsMethod (root prf) == DiffAttack
                 then [ text "", withTag "h3" [] (text "attack:") ] ++
-                        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ]
+                        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                        [ text "(If no attack graph is shown, the current graph has no mirrors. If one of the mirros violates a restriction, this graph is shown.)" ]
                 else []
 
 
