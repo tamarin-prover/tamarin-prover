@@ -121,6 +121,7 @@ module Theory.Constraint.System (
 
   , isCorrectDG
   , getMirrorDG
+  , getMirrorDGandEvaluateRestrictions
   , doRestrictionsHold
   , filterRestrictions
   
@@ -723,7 +724,7 @@ impliedFormulas hnd sys gf0 = res
 impliedFormulasAndSystems :: MaudeHandle -> System -> LNGuarded -> [(LNGuarded, System)]
 impliedFormulasAndSystems hnd sys gf = res
   where
-    res = case (openGuarded gf `evalFresh` avoid gf) of
+    res = case (openGuarded gf `evalFresh` avoid (gf, sys)) of
       Just (All, _vs, antecedent, succedent) -> map (\x -> apply x (succedent', sys)) subst
         where
           (actionsEqs, otherAtoms) = first sortGAtoms . partitionEithers $ map prepare antecedent
@@ -731,8 +732,8 @@ impliedFormulasAndSystems hnd sys gf = res
           subst' = concat $ map (\(x, y) ->
             if null ((`runReader` hnd) (unifyLNTerm x))
                then []
-               else (`runReader` hnd) (unifyLNTerm y)) $ equalities actionsEqs
-          subst  = map (\x -> freshToFreeAvoiding x gf) subst'
+               else (`runReader` hnd) (unifyLNTerm y)) (equalities actionsEqs)
+          subst  = map (\x -> freshToFreeAvoiding x ((gf, x), sys)) subst'
       _ -> []
 
     prepare (Action i fa) = Left  (GAction i fa)
@@ -784,15 +785,34 @@ filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
 
     mapper fact = any (runMaude . unifiableLNFacts fact) $ concat $ map (L.get rActs . snd) $ M.toList (L.get sNodes sys)
 
+-- | Computes the mirror dependency graph and evaluates whether the restrictions hold.
+-- Returns Just True and a list of mirrors if all hold, Just False and a list of attacks (if found) if at least one does not hold and Nothing otherwise.
+getMirrorDGandEvaluateRestrictions :: DiffProofContext -> DiffSystem -> Bool -> Maybe (Bool, [System])
+getMirrorDGandEvaluateRestrictions dctxt dsys isSolved = do
+    side <- L.get dsSide dsys
+    sys  <- L.get dsSystem dsys
+    case getMirrorDG dctxt side sys of
+        Just sys' -> {-trace ("RE: restrictions: " ++ (show (restrictions (opposite s) sys'')) ++ " " ++ (show s) ++ " " ++ show (isSolved s sys'))-} (doRestrictionsHold oppositeCtxt sys' restrictions isSolved)
+            where
+                oppositeCtxt = eitherProofContext dctxt (opposite side)
+
+                restrictions = filterRestrictions oppositeCtxt sys' $ restrictions' (opposite side) $ L.get dpcRestrictions dctxt
+
+                restrictions' _  []               = []
+                restrictions' s' ((s'', form):xs) = if s' == s'' then form ++ (restrictions' s' xs) else (restrictions' s' xs)
+
+        Nothing  -> {-trace ("No mirror DG") $-} Just (False, [])
+
 
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
-doRestrictionsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe Bool
-doRestrictionsHold ctxt sys formulas isSolved = -- Just True -- FIXME Jannik: This is a temporary simulation of diff-safe restrictions!
+doRestrictionsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> Maybe (Bool, [System])
+doRestrictionsHold _    sys []       _        = Just (True, [sys])
+doRestrictionsHold ctxt sys formulas isSolved = -- Just (True, [sys]) -- FIXME Jannik: This is a temporary simulation of diff-safe restrictions!
   if (all (\(x, _) -> x == gtrue) simplifiedForms)
-    then Just {-$ trace ("doRestrictionsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} True
+    then Just {-$ trace ("doRestrictionsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} (True, map snd simplifiedForms)
     else if (any (\(x, _) -> x == gfalse) simplifiedForms)
-          then Just {-$ trace ("doRestrictionsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} False
+          then Just {-$ trace ("doRestrictionsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} (False, map snd $ filter (\(x, _) -> x == gfalse) simplifiedForms)
           else {-trace ("doRestrictionsHold: Nothing " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} Nothing
   where
     simplifiedForms = simplify (map (\x -> (x, sys)) formulas) isSolved
@@ -1178,13 +1198,13 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
 prettyNonGraphSystemDiff :: HighlightDocument d => DiffProofContext -> DiffSystem -> d
-prettyNonGraphSystemDiff ctxt se = vsep $ map combine
+prettyNonGraphSystemDiff _ se = vsep $ map combine
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
   , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
-  , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
-                                 (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts ctxt sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
-                                 _                                                                                                                        -> text "none")
+--   , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
+--                                  (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts ctxt sys) && (allOpenFactGoalsAreIndependent sys) -> maybe (text "none") prettySystem $ getMirrorDG ctxt s sys
+--                                  _                                                                                                                        -> text "none")
 --   , ("DEBUG",               maybe (text "none") (\x -> vsep $ map prettyGuarded x) help)
 --   , ("DEBUG2",              maybe (text "none") (\x -> vsep $ map prettyGuarded x) help2)
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
@@ -1300,7 +1320,10 @@ instance Apply SourceKind where
 
 instance Apply System where
     apply subst (System a b c d e f g h i j k l) =
-        System (apply subst a) (apply subst b) (apply subst c) (apply subst d)
+        System (apply subst a)
+        -- we do not apply substitutions to node variables, so we do not apply them to the edges either
+        b
+        (apply subst c) (apply subst d)
         (apply subst e) (apply subst f) (apply subst g) (apply subst h)
         i j (apply subst k) (apply subst l)
 
