@@ -683,7 +683,8 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     mirrorSystem =
         if dpsMethod (root prf) == DiffMirrored
            then [ text "", withTag "h3" [] (text "mirror:") ] ++
-                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ]
+                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                [ text "" ]
            else if dpsMethod (root prf) == DiffAttack
                 then [ text "", withTag "h3" [] (text "attack:") ] ++
                         [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
