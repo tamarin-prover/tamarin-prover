@@ -1,0 +1,26 @@
+/*
+ * Protocol:     AxiomDiffTest4
+ * Modeler:      Dennis Jackson, Cas Cremers
+ * Described in: NA
+ * Date:         May 2016
+ *
+ * Status:       Regression test - working
+ *
+ * This is an example in which the left hand side has no restrictions
+ * and the right hand side will only output if the message is not equal to 'B'. Consequently 
+ * it fails to satisfy O.E.
+ */
+theory AxiomDiffTest4
+begin
+
+rule not_match:
+   [ In(x) ]
+   --[ RNeq(x, 'B')]->
+   [ Out('a')]
+
+axiom BlockSometimes [right]:
+  " All t #e. RNeq(t,t) @ e ==> F "
+
+end
+
+

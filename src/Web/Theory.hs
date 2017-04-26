@@ -683,8 +683,15 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     mirrorSystem =
         if dpsMethod (root prf) == DiffMirrored
            then [ text "", withTag "h3" [] (text "mirror:") ] ++
-                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ]
-           else []
+                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                [ text "" ]
+           else if dpsMethod (root prf) == DiffAttack
+                then [ text "", withTag "h3" [] (text "attack:") ] ++
+                        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                        [ text "(If no attack graph is shown, the current graph has no mirrors. If one of the mirror graphs violates a restriction, this graph is shown.)" ] ++
+                        [ text "" ]
+                else []
+
 
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
@@ -807,9 +814,9 @@ rulesSnippet thy = vcat
 -- | Build the Html document showing the message theory.
 messageSnippet :: HtmlDocument d => ClosedTheory -> d
 messageSnippet thy = vcat
-    [ ppSection "Signature"           [prettySignatureWithMaude (get thySignature thy)]
-    , ppSection "Construction Rules"  (ppRules crConstruct)
-    , ppSection "Destruction Rules"   (ppRules crDestruct)
+    [ ppSection "Signature"            [prettySignatureWithMaude (get thySignature thy)]
+    , ppSection "Construction Rules"   (ppRules crConstruct)
+    , ppSection "Deconstruction Rules" (ppRules crDestruct)
     ]
   where
     ppRules l = map prettyRuleAC $ get l $ getClassifiedRules thy
@@ -857,9 +864,9 @@ rulesDiffSnippetSide s isdiff thy = vcat
 -- | Build the Html document showing the message theory.
 messageDiffSnippet :: HtmlDocument d => Side -> Bool -> ClosedDiffTheory -> d
 messageDiffSnippet s isdiff thy = vcat
-    [ ppSection "Signature"           [prettySignatureWithMaude (get diffThySignature thy)]
-    , ppSection "Construction Rules"  (ppRules crConstruct)
-    , ppSection "Destruction Rules"   (ppRules crDestruct)
+    [ ppSection "Signature"            [prettySignatureWithMaude (get diffThySignature thy)]
+    , ppSection "Construction Rules"   (ppRules crConstruct)
+    , ppSection "Deconstruction Rules" (ppRules crDestruct)
     ]
   where
     ppRules l = map prettyRuleAC $ get l $ getDiffClassifiedRules s isdiff thy
@@ -1304,9 +1311,11 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
             lem <- lookupDiffLemma lemma thy
             let ctxt = getDiffProofContext lem thy
             side <- get dsSide diffSequent
+            let isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
             nsequent <- get dsSystem diffSequent
-            sequent <- getMirrorDG ctxt side nsequent
-            return $ compact sequent
+            -- Here we can potentially get Nothing if there is no mirror DG
+            sequentList <- snd <$> getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
+            if null sequentList then Nothing else return $ compact $ head sequentList  
           else do
             sequent <- get dsSystem diffSequent
             return $ compact sequent

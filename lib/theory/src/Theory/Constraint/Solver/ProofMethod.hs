@@ -261,15 +261,14 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | otherwise                                         -> Nothing
         DiffMirrored
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && (checkOtherSide s sys' == Just True)) ||
-                                                                                                        ((isSolved s sys') && (checkOtherSide s sys' == Nothing))
+                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && (fmap fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == Just True))
                                                                                                         then return M.empty 
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing                                                       
           | otherwise                                         -> Nothing
         DiffAttack
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (checkOtherSide s sys' == Just False)
+                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (fmap fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == Just False)
                                                                                                         then return M.empty
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing
@@ -320,25 +319,10 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     applyStep m s sys' = case (execProofMethod (eitherProofContext ctxt s) m sys') of
                            Nothing    -> Nothing
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
-                           
+
     isSolved :: Side -> System -> Bool
     isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
-    
-    checkOtherSide :: Side -> System -> Maybe Bool
-    checkOtherSide s sys'= case getMirrorDG ctxt s sys' of
-                             Just sys'' -> {-trace ("RE: restrictions: " ++ (show (restrictions (opposite s) sys'')) ++ " " ++ (show s) ++ " " ++ show (isSolved s sys'))-} (doRestrictionsHold (oppositeCtxt s) sys'' (restrictions (opposite s) sys'') (isSolved s sys'))
-                             Nothing    -> {-trace ("No mirror DG") $-} Just False
-            where
-              oppositeCtxt s' = eitherProofContext ctxt (opposite s')
 
-              restrictions s' sys'' = filterRestrictions (oppositeCtxt s') sys'' $ restrictions' s' $ L.get dpcRestrictions ctxt
-
-              restrictions' _  []               = []
-              restrictions' s' ((s'', form):xs) = if s' == s'' then form ++ (restrictions' s' xs) else (restrictions' s' xs)
-    
-    
-    
-    
 ------------------------------------------------------------------------------
 -- Heuristics
 ------------------------------------------------------------------------------
