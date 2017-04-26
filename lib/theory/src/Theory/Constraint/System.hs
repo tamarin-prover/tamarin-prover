@@ -1032,7 +1032,7 @@ unsolvedTrivialGoals sys = foldl f [] $ M.toList (L.get sGoals sys)
     f l (SplitG _, _)                 = l 
     f l (DisjG _, _)                  = l 
 
--- | All trivial goals that still need to be solved.
+-- | Tests whether there are common Variables in the Facts
 noCommonVarsInGoals :: [(Either NodePrem LVar, LNFact)] -> Bool
 noCommonVarsInGoals goals = noCommonVars $ map (getFactVariables . snd) goals
   where
