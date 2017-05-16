@@ -10,6 +10,8 @@ OS X](#sec:macosx), and [Microsoft Windows](#sec:windows).
 Linux {#sec:linux}
 -----
 
+### Compiling from source {#sec:LinuxSrcInstall}
+
 To run Tamarin on Linux\index{Linux}, a number of dependencies
 must be installed, namely GraphViz and Maude 2.7. You can install
 GraphViz using your standard package manager or directly from
@@ -27,8 +29,6 @@ folder that you start Maude from.
 
 Once these dependencies have been installed, you can then compile
 Tamarin from source, using either the stable master or current development version.
-
-### Compiling from source ###
 
 To help compile Tamarin from source, we manage Haskell dependencies
 automatically using the tool `stack`. You must first install
@@ -50,6 +50,22 @@ the tool itself needs to be recompiled, which takes a few minutes, at most.
 
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run Tamarin for the first time.
 
+
+### Automatic Installation of Tamarin {#sec:LinuxBinInstall}
+
+The fastest way to install Tamarin on Linux is to use [Linuxbrew](http://linuxbrew.sh/). Linuxbrew is a fork of Homebrew, the Mac OS package manager,
+for Linux.
+
+To install Linuxbrew follow the [Installation Instructions](https://github.com/Linuxbrew/brew#install-linuxbrew-tldr).
+
+If you already have this installed, it is as simple as running the following two commands in your terminal:
+
+  * `brew update`
+  * `brew install homebrew/science/tamarin-prover`
+
+You can now run Tamarin from the command line by typing `tamarin-prover`.
+Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
+run Tamarin for the first time.
 
 
 Mac OS X {#sec:macosx}
