@@ -22,9 +22,9 @@ rule Register_pk:
     [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
 
 rule Get_pk:
-    [ !Pk(A, pk) ]
+    [ !Pk(A, pubkey) ]
   -->
-    [ Out(pk) ]
+    [ Out(pubkey) ]
 
 rule Reveal_ltk:
     [ !Ltk(A, ltk) ]
