@@ -169,11 +169,11 @@ In contrast, some facts in our models will never be removed from the state once
 they are introduced. Modeling this using linear facts would
 require that every rule that has such a fact in
 the left-hand-side, also has an exact copy of this fact in the right-hand
-side.  While there is no fundamental problem with this modeling, it is
+side.  While there is no fundamental problem with this modeling in theory, it is
 inconvenient for the user and it also might lead Tamarin to explore rule
-instantiations that are irrelevant for tracing such facts. 
+instantiations that are irrelevant for tracing such facts in practice.  Note that such irrelevant exploration may even lead to non-termination! Thus, the use of permanent facts, which we call 'persistent facts', is preferred.
 
-For the above two reasons, we introduce 'persistent facts', which
+For the above two reasons, we now introduce 'persistent facts', which
 are never removed from the state. We denote these facts by prefixing
 them with a bang (`!`).
 
