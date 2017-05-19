@@ -205,7 +205,7 @@ term plit eqn = asum
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Parser (Term l) -> Parser (Term l)
-expterm plit = chainl1 (msetterm plit) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm plit = chainl1 (xorterm plit) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Parser (Term l) -> Parser (Term l)
