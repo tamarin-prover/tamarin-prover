@@ -169,11 +169,10 @@ In contrast, some facts in our models will never be removed from the state once
 they are introduced. Modeling this using linear facts would
 require that every rule that has such a fact in
 the left-hand-side, also has an exact copy of this fact in the right-hand
-side.  While there is no fundamental problem with this modeling in theory, it is
+side. While there is no fundamental problem with this modeling in theory, it is
 inconvenient for the user and it also might lead Tamarin to explore rule
-instantiations that are irrelevant for tracing such facts in practice.
-Such irrelevant exploration complexify the prover's task and may even lead to
-non-termination.
+instantiations that are irrelevant for tracing such facts in practice, which
+may even lead to non-termination.
 
 For the above two reasons, we now introduce 'persistent facts', which
 are never removed from the state. We denote these facts by prefixing
@@ -192,9 +191,9 @@ produce this persistent fact in their conclusion as the source. Usually though,
 there are few such rules (most often just a single one), which simplifies the
 reasoning. For linear facts, particularly those that are used in many rules
 (and kept static), obviously there are many rules with the fact in their
-conclusion (all of them!), and thus when looking for a source in any premise,
+conclusion (all of them!). Thus, when looking for a source in any premise,
 all such rules need to be considered, which is clearly less efficient and
-non-termination-prone as mentioned above. Thus, when trying to model facts that
+non-termination-prone as mentioned above. Hence, when trying to model facts that
 are never consumed, the use of persistent facts is preferred.
 
 
