@@ -1,4 +1,4 @@
-theory xor
+theory xor2
 begin
 
 builtins: xor
