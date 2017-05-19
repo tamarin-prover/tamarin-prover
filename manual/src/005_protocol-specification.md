@@ -171,12 +171,13 @@ require that every rule that has such a fact in
 the left-hand-side, also has an exact copy of this fact in the right-hand
 side.  While there is no fundamental problem with this modeling in theory, it is
 inconvenient for the user and it also might lead Tamarin to explore rule
-instantiations that are irrelevant for tracing such facts in practice.  Note that such irrelevant exploration may even lead to non-termination! Thus, the use of so-called 'persistent facts' is preferred.
+instantiations that are irrelevant for tracing such facts in practice.
+Such irrelevant exploration complexify the prover's task and may even lead to
+non-termination.
 
 For the above two reasons, we now introduce 'persistent facts', which
 are never removed from the state. We denote these facts by prefixing
 them with a bang (`!`).
-
 
 Facts always start with an upper-case letter and need not  be
 declared explicitly. If their name is prefixed with an exclamation mark `!`,
@@ -185,8 +186,16 @@ fact name must be used consistently; i.e., it must always be used with
 the same arity, case, persistence, and multiplicity. Otherwise, Tamarin complains
 that the theory is not well-formed.
 
-Comparing linear and persistent fact behaviour we note that if there is a persistent fact in some rule's premise, then Tamarin will consider all rules that produce this persistent fact in their conclusion as the source. Usually though, there are few such rules (most often just a single one).
-For linear facts, particularly those that are used in many rules (and kept static), obviously there are many rules with the fact in their conclusion (all of them!), and thus when looking for a source in any premise, all such rules need to be considered, which is clearly less efficient and non-termination-prone as mentioned above.
+Comparing linear and persistent fact behaviour we note that if there is a
+persistent fact in some rule's premise, then Tamarin will consider all rules that
+produce this persistent fact in their conclusion as the source. Usually though,
+there are few such rules (most often just a single one), which simplifies the
+reasoning. For linear facts, particularly those that are used in many rules
+(and kept static), obviously there are many rules with the fact in their
+conclusion (all of them!), and thus when looking for a source in any premise,
+all such rules need to be considered, which is clearly less efficient and
+non-termination-prone as mentioned above. Thus, when trying to model facts that
+are never consumed, the use of persistent facts is preferred.
 
 
 Modeling protocols
