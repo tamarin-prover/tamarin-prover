@@ -88,13 +88,21 @@ the same key. The syntax for adding equations to the context is:
 
     equations: lhs1 = rhs1, ..., lhsn = rhsn
 
-Both `lhs` and `rhs` can contain variables.  The symbolic proof search
-used by Tamarin only supports a restricted class of user-defined
-equations.  Concretely, the right-hand-side must be either a ground term
-(i.e., it does not contain any variables) or a proper subterm of the
-left-hand-side.  Note that the equations modeled by the built-in message
-theories `diffie-hellman`, `bilinear-pairing`, and `multiset` do not
-belong to this restricted class since they include for example
+Both `lhs` and `rhs` can contain variables, but all variables on the right hand
+side must also appear on the left hand side. The symbolic proof search
+used by Tamarin supports a certain class of user-defined equations, namely 
+*convergent* equational theories that have the *finite variant property*
+[@Comon-LundhD05]. Note that Tamarin does *not* check whether the given equations 
+belong to this class, so writing equations outside this class can cause 
+non-termination or incorrect results *without any warning*.
+
+Also note that Tamarin's reasoning is particularly efficient when considering only
+subterm-convergent equations, i.e., if the right-hand-side is either a ground
+term (i.e., it does not contain any variables) or a proper subterm of the
+left-hand-side. These equations are thus preferred if they are sufficient to model
+the required properties. However, for example the equations modeled by the 
+built-in message theories `diffie-hellman`, `bilinear-pairing`, and `multiset` 
+do not belong to this restricted class since they include for example
 associativity and commutativity. All other built-in message theories can
 be equivalently defined by using `functions: ...` and `equations: ...`
 and we will see some examples of allowed equations in the next
