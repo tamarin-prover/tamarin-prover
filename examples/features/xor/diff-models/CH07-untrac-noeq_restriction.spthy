@@ -1,4 +1,4 @@
-theory CH07_untrac begin
+theory CH07_untrac_noeq_restriction begin
 
 builtins: xor, hashing, multiset
 functions: rot/2, lh/1, rh/1
