@@ -89,7 +89,9 @@ rule Server_1:
    , Fr(~rand)
    , SQN_S(~id,sqn)
    ]
- --[ Sr() ]->
+ --[ Sr()
+   , RunningS(~id,$A,~k,~rand) 
+   ]->
    [ Out(<~rand,autn>) 
    , SQN_S(~id,sqn1)
    , Server_1(~id,sqn1,~rand)
@@ -109,6 +111,8 @@ rule Client_1:
    ]
  --[ Eq(mac,xmac)
    , Eq(next(sqn),sqn2) 
+   , RunningC(~id,$A,~k,rand)
+   , CommitC(~id,$A,~k,rand)
    ]->
    [ SQN_C(~id,sqn2)
    , Out(res)
@@ -120,6 +124,7 @@ rule Server_2:
    , In(res) 
    ]
  --[ Eq(res,f2(~k,~rand))
+   , CommitS(~id,$A,~k,~rand)
    , Success() ]->
    [   ]
 
@@ -134,5 +139,10 @@ lemma executable:
 lemma executable2:
   exists-trace "Ex #i. Success()@i & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)"
 
+lemma agreeS:
+  "All id A k rand #i. CommitS(id,A,k,rand)@i ==> Ex #j. RunningC(id,A,k,rand) @j"
+
+lemma agreeC:
+  "All id A k rand #i. CommitC(id,A,k,rand)@i ==> Ex #j. RunningS(id,A,k,rand) @j"
 
 end
