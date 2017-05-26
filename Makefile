@@ -101,6 +101,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/ake/dh
 	mkdir -p case-studies/features/private_function_symbols
 	mkdir -p case-studies/features/multiset
+	mkdir -p case-studies/features/injectivity
 	mkdir -p case-studies/cav13
 	mkdir -p case-studies/related_work/AIF_Moedersheim_CCS10
 	mkdir -p case-studies/related_work/StatVerif_ARR_CSF11
