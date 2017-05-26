@@ -101,6 +101,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/ake/dh
 	mkdir -p case-studies/features/private_function_symbols
 	mkdir -p case-studies/features/multiset
+	mkdir -p case-studies/features/injectivity
 	mkdir -p case-studies/cav13
 	mkdir -p case-studies/related_work/AIF_Moedersheim_CCS10
 	mkdir -p case-studies/related_work/StatVerif_ARR_CSF11
@@ -252,13 +253,13 @@ ake-bp-case-studies:	$(AKE_BP_CS_TARGETS)
 ## Features
 ###########
 
-FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy
+FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy features//injectivity/injectivity.spthy
 
 FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(FEATURES_CASE_STUDIES)))
 
 # case studies
 features-case-studies:	$(FEATURES_CS_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy
+	grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy case-studies/features/injectivity/*.spthy
 
 
 ## SAPIC
