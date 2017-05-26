@@ -63,7 +63,8 @@ qed
 
 /* All well-formedness checks were successful. */
 
-end\n/* Output
+end
+/* Output
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
