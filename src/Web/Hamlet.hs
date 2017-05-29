@@ -368,7 +368,7 @@ introTpl = [whamlet|
           Warning: JavaScript must be enabled for the <span class="tamarin">Tamarin</span> prover GUI to function properly.
     <div class="intropage">
       <p>
-        Originators:
+        Core team:
         \ <a href="https://www.inf.ethz.ch/personal/basin/">David Basin</a>,
         \ <a href="https://www.cs.ox.ac.uk/people/cas.cremers/">Cas Cremers</a>,
         \ <a href="http://www.jannikdreier.net">Jannik Dreier</a>,
