@@ -115,13 +115,11 @@ data ProofMethod =
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | Sound transformations of diff sequents.
--- FIXME
 data DiffProofMethod =
     DiffSorry (Maybe String)                 -- ^ Proof was not completed
   | DiffMirrored                             -- ^ No attack was found
   | DiffAttack                               -- ^ A potential attack was found
   | DiffRuleEquivalence                      -- ^ Consider all rules
---   | DiffTrivial                              -- ^ The rule is trivially sound - REMOVED and merged with solved!
   | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
   | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
@@ -139,15 +137,13 @@ instance HasFrees ProofMethod where
     mapFrees _ method            = pure method
 
 instance HasFrees DiffProofMethod where
---     foldFrees f (SolveGoal g)     = foldFrees f g
---     foldFrees f (Contradiction c) = foldFrees f c
-    foldFrees _ _                 = mempty
+    foldFrees f (DiffBackwardSearchStep c) = foldFrees f c
+    foldFrees _ _                          = mempty
 
     foldFreesOcc  _ _ = const mempty
 
---     mapFrees f (SolveGoal g)     = SolveGoal <$> mapFrees f g
---     mapFrees f (Contradiction c) = Contradiction <$> mapFrees f c
-    mapFrees _ method            = pure method
+    mapFrees f (DiffBackwardSearchStep c) = DiffBackwardSearchStep <$> mapFrees f c
+    mapFrees _ method                     = pure method
 
 -- Proof method execution
 -------------------------
@@ -265,15 +261,14 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | otherwise                                         -> Nothing
         DiffMirrored
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && (checkOtherSide s sys' == Just True)) ||
-                                                                                                        ((isSolved s sys') && (checkOtherSide s sys' == Nothing))
+                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && (fmap fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == Just True))
                                                                                                         then return M.empty 
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing                                                       
           | otherwise                                         -> Nothing
         DiffAttack
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (checkOtherSide s sys' == Just False)
+                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (fmap fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == Just False)
                                                                                                         then return M.empty
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing
@@ -304,9 +299,6 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
     ruleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
     
---     protoRuleEquivalenceCase :: M.Map CaseName DiffSystem -> ProtoRuleE -> M.Map CaseName DiffSystem
---     protoRuleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
-    
     -- Not checking construction rules is sound, as they are 'trivial' !
     -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in restrictions.
     -- LHS or RHS is not important in this case as we only need the names of the rules.
@@ -327,29 +319,10 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     applyStep m s sys' = case (execProofMethod (eitherProofContext ctxt s) m sys') of
                            Nothing    -> Nothing
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
-                           
-    isSolved :: Side -> System -> Bool
-    isSolved s sys' = {-filter isNotForbiddenKD-} (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
-    
-    -- Not necessary any more, now diff-systems do not generate ForbiddeKD-contradictions any more.
---     isNotForbiddenKD :: (ProofMethod, (M.Map CaseName System, String)) -> Bool
---     isNotForbiddenKD (Contradiction (Just ForbiddenKD), _) = False
---     isNotForbiddenKD (_                               , _) = True
-    
-    checkOtherSide :: Side -> System -> Maybe Bool
-    checkOtherSide s sys'= case getMirrorDG ctxt s sys' of
-                             Just sys'' -> {-trace ("RE: restrictions: " ++ (show (restrictions (opposite s) sys'')) ++ " " ++ (show s) ++ " " ++ show (isSolved s sys'))-} (doRestrictionsHold (oppositeCtxt s) sys'' (restrictions (opposite s) sys'') (isSolved s sys'))
-                             Nothing    -> Just False
-            where
-              oppositeCtxt s' = eitherProofContext ctxt (opposite s')
-              restrictions s' sys'' = filterRestrictions (oppositeCtxt s') sys'' $ restrictions' s' $ L.get dpcRestrictions ctxt
 
-              restrictions' _ []              = []
-              restrictions' s' ((s'', form):xs) = if s' == s'' then form ++ (restrictions' s' xs) else (restrictions' s' xs)
-    
-    
-    
-    
+    isSolved :: Side -> System -> Bool
+    isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
+
 ------------------------------------------------------------------------------
 -- Heuristics
 ------------------------------------------------------------------------------
@@ -442,7 +415,7 @@ rankDiffProofMethods ranking ctxt sys = do
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
                   (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking (eitherProofContext ctxt s) sys')
-                  (_         , _        ) -> [])
+                  (_     , _        ) -> [])
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
       Nothing    -> []

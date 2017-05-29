@@ -6,6 +6,9 @@
 -- Portability : GHC only
 --
 -- Support for interaction with the console: argument parsing.
+
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main.Console (
 
     defaultMain
@@ -44,6 +47,7 @@ module Main.Console (
 
 import           Data.Maybe
 import           Data.Version                    (showVersion)
+import           Data.Time
 import           Safe
 
 import           Control.Monad
@@ -55,6 +59,9 @@ import           System.Exit
 import qualified Text.PrettyPrint.Class          as PP
 
 import           Paths_tamarin_prover (version)
+
+import           Language.Haskell.TH
+import           Development.GitRev
 
 ------------------------------------------------------------------------------
 -- Static constants for the tamarin-prover
@@ -71,7 +78,20 @@ versionStr = unlines
     [ programName
     , " "
     , showVersion version
-    , ", (C) Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich 2010-2015"
+    , ", (C) Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich 2010-2017"
+    ]
+  , concat
+    [ "Git revision: "
+    , $(gitHash)
+    , case $(gitDirty) of
+          True  -> " (with uncommited changes)"
+          False -> ""
+    , ", branch: "
+    , $(gitBranch)
+    ]
+  , concat
+    [ "Compiled at: "
+    , $(stringE =<< runIO (show `fmap` Data.Time.getCurrentTime))
     ]
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"

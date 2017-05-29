@@ -1,0 +1,35 @@
+/*
+   Protocol:    Injectivity test
+   Modeler:     Nick Moore
+   Date:        May 2017
+
+   Status:      working
+
+   A simple toy example that requires the injectivity constraint-reduction rule
+   to terminate.
+
+*/
+
+theory injectivity begin
+
+rule Init:
+  [ Fr(~i) ]
+--[ Initiated(~i) ]->
+  [ Inj(~i) ]
+
+rule Copy:
+  [ Inj(i) ]
+--[ Copied(i) ]->
+  [ Inj(i) ]
+
+rule Remove:
+  [ Inj(i) ]
+--[ Removed(i) ]->
+  []
+
+lemma injectivity_check[use_induction]: all-traces
+  "¬(Ex id #i #j #k.
+        Initiated(id) @ i & Removed(id) @ j & Copied(id) @ k
+        & #i < #j & #j < #k)"
+
+end

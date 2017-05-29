@@ -124,8 +124,6 @@ executable tamarin-prover
 
     build-depends:
         HUnit
-      , aeson
-      , array
       , base
       , binary
       , binary-orphans
@@ -138,28 +136,21 @@ executable tamarin-prover
       , containers
       , deepseq
       , directory
-      , dlist
       , fclabels
       , file-embed
       , filepath
-      , hamlet
+      , gitrev
       , http-types
       , lifted-base
-      , monad-control
       , mtl
-      , old-locale
-      , parallel
-      , parsec
       , process
       , resourcet
       , safe
       , shakespeare
-      , syb
+      , template-haskell
       , text
       , threads
       , time
-      , transformers
-      , uniplate
       , wai
       , warp
       , yesod-core

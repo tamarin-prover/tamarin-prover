@@ -80,7 +80,7 @@ run thisMode as = case findArg "workDir" as of
           let loginName = fromMaybe "" (winLoginName <|> unixLoginName)
               cacheDir = tempDir </> ("tamarin-prover-cache-" ++ loginName)
           -- process theories
-          case (fst $ graphPath as) of
+          _ <- case (fst $ graphPath as) of
               "dot"  -> ensureGraphVizDot as
               "json" -> ensureGraphCommand as
               _      -> return True

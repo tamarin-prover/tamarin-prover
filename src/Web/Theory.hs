@@ -170,9 +170,11 @@ refDotPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", im
   where imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
 
 -- | Reference a dot graph for the given diff path.
-refDotDiffPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> DiffTheoryPath -> d
-refDotDiffPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath)]
-  where imgPath = T.unpack $ renderUrl (TheoryGraphDiffR tidx path)
+refDotDiffPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> DiffTheoryPath -> Bool -> d
+refDotDiffPath renderUrl tidx path mirror = closedTag "img" [("class", "graph"), ("src", imgPath)]
+    where imgPath = if mirror 
+          then T.unpack $ renderUrl (TheoryMirrorDiffR tidx path)
+          else T.unpack $ renderUrl (TheoryGraphDiffR tidx path)
 
 getDotPath :: String -> FilePath
 getDotPath code = imageDir </> addExtension (stringSHA256 code) "dot"
@@ -581,7 +583,7 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
         [ text ""
         , withTag "h3" [] (text "Constraint system")
         ] ++
-        [ refDotDiffPath renderUrl tidx (DiffTheoryProof s lemma proofPath)
+        [ refDotDiffPath renderUrl tidx (DiffTheoryProof s lemma proofPath) False
         | nonEmptyGraph se ]
         ++ 
         [ preformatted (Just "sequent") (prettyNonGraphSystem se)
@@ -631,7 +633,7 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
         , maybe (text "no proof state available")
-                (const $ refDotDiffPath renderUrl tidx $ DiffTheoryProof s lemma (proofPath ++ [name]))
+                (const $ refDotDiffPath renderUrl tidx (DiffTheoryProof s lemma (proofPath ++ [name])) False)
                 (psInfo $ root prf')
         ]
 
@@ -655,11 +657,10 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         [ text ""
         , withTag "h3" [] (text "Constraint system")
         ] ++
-        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath)
+        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) False
         | nonEmptyGraphDiff se ]
---         ++ -- FIXME getMirrorDG ctxt s sys'
---         [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath)
---         | nonEmptyGraphDiff se ]
+        ++
+        mirrorSystem
         ++
         [ preformatted (Just "sequent") (prettyNonGraphSystemDiff ctxt se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
@@ -678,6 +679,19 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
+
+    mirrorSystem =
+        if dpsMethod (root prf) == DiffMirrored
+           then [ text "", withTag "h3" [] (text "mirror:") ] ++
+                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                [ text "" ]
+           else if dpsMethod (root prf) == DiffAttack
+                then [ text "", withTag "h3" [] (text "attack:") ] ++
+                        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                        [ text "(If no attack graph is shown, the current graph has no mirrors. If one of the mirror graphs violates a restriction, this graph is shown.)" ] ++
+                        [ text "" ]
+                else []
+
 
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
@@ -708,7 +722,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
         , maybe (text "no proof state available")
-                (const $ refDotDiffPath renderUrl tidx $ DiffTheoryDiffProof lemma (proofPath ++ [name]))
+                (const $ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma (proofPath ++ [name])) False)
                 (dpsInfo $ root prf')
         ]
 
@@ -730,13 +744,15 @@ htmlSource renderUrl tidx kind (j, th) =
       ]
     ppCase (i, (names, se)) =
       [ withTag "h3" [] $ fsep [ text "Source", int i, text "of", nCases
-                               , text " / named ", doubleQuotes (text name) ]
+                               , text " / named ", doubleQuotes (text name),
+                                 if isPartial then text "(partial deconstructions)" else text "" ]
       , refDotPath renderUrl tidx (TheorySource kind j i)
       , withTag "p" [] $ ppPrem
       , wrapP $ prettyNonGraphSystem se
       ]
       where
         name = intercalate "_" names
+        isPartial = not $ null $ unsolvedChains se
 
 -- | A Html document representing the requires case splitting theorem.
 htmlSourceDiff :: HtmlDocument d
@@ -757,7 +773,7 @@ htmlSourceDiff renderUrl tidx s kind d (j, th) =
     ppCase (i, (names, se)) =
       [ withTag "h3" [] $ fsep [ text "Source", int i, text "of", nCases
                                , text " / named ", doubleQuotes (text name) ]
-      , refDotDiffPath renderUrl tidx (DiffTheorySource s kind d j i)
+      , refDotDiffPath renderUrl tidx (DiffTheorySource s kind d j i) False
       , withTag "p" [] $ ppPrem
       , wrapP $ prettyNonGraphSystem se
       ]
@@ -798,9 +814,9 @@ rulesSnippet thy = vcat
 -- | Build the Html document showing the message theory.
 messageSnippet :: HtmlDocument d => ClosedTheory -> d
 messageSnippet thy = vcat
-    [ ppSection "Signature"           [prettySignatureWithMaude (get thySignature thy)]
-    , ppSection "Construction Rules"  (ppRules crConstruct)
-    , ppSection "Destruction Rules"   (ppRules crDestruct)
+    [ ppSection "Signature"            [prettySignatureWithMaude (get thySignature thy)]
+    , ppSection "Construction Rules"   (ppRules crConstruct)
+    , ppSection "Deconstruction Rules" (ppRules crDestruct)
     ]
   where
     ppRules l = map prettyRuleAC $ get l $ getClassifiedRules thy
@@ -848,9 +864,9 @@ rulesDiffSnippetSide s isdiff thy = vcat
 -- | Build the Html document showing the message theory.
 messageDiffSnippet :: HtmlDocument d => Side -> Bool -> ClosedDiffTheory -> d
 messageDiffSnippet s isdiff thy = vcat
-    [ ppSection "Signature"           [prettySignatureWithMaude (get diffThySignature thy)]
-    , ppSection "Construction Rules"  (ppRules crConstruct)
-    , ppSection "Destruction Rules"   (ppRules crDestruct)
+    [ ppSection "Signature"            [prettySignatureWithMaude (get diffThySignature thy)]
+    , ppSection "Construction Rules"   (ppRules crConstruct)
+    , ppSection "Deconstruction Rules" (ppRules crDestruct)
     ]
   where
     ppRules l = map prettyRuleAC $ get l $ getDiffClassifiedRules s isdiff thy
@@ -1249,12 +1265,13 @@ imgDiffThyPath :: ImageFormat
            -> Bool                   -- ^ True iff we want abbreviations
            -> ClosedDiffTheory
            -> DiffTheoryPath
-           -> IO FilePath
-imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate thy path = go path
+           -> Bool
+           -> IO FilePath            -- ^ True if we want the mirror graph
+imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate thy path mirror = go path
   where
     go (DiffTheorySource s k d i j) = renderDotCode (casesDotCode s k i j d)
     go (DiffTheoryProof s l p)      = renderDotCode (proofPathDotCode s l p)
-    go (DiffTheoryDiffProof l p)    = renderDotCode (proofPathDotCodeDiff l p)
+    go (DiffTheoryDiffProof l p)    = renderDotCode (proofPathDotCodeDiff l p mirror)
     go _                            = error "Unhandled theory path. This is a bug."
 
     -- Prefix dot code with comment mentioning all protocol rule names
@@ -1285,12 +1302,23 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
         return $ compact sequent
 
     -- Get dot code for proof path in lemma
-    proofPathDotCodeDiff lemma proofPath =
+    proofPathDotCodeDiff lemma proofPath mir =
       D.showDot $ fromMaybe (return ()) $ do
         subProof <- resolveProofPathDiffLemma thy lemma proofPath
         diffSequent <- dpsInfo $ root subProof
-        sequent <- get dsSystem diffSequent
-        return $ compact sequent
+        if mir
+          then do
+            lem <- lookupDiffLemma lemma thy
+            let ctxt = getDiffProofContext lem thy
+            side <- get dsSide diffSequent
+            let isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
+            nsequent <- get dsSystem diffSequent
+            -- Here we can potentially get Nothing if there is no mirror DG
+            sequentList <- snd <$> getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
+            if null sequentList then Nothing else return $ compact $ head sequentList  
+          else do
+            sequent <- get dsSystem diffSequent
+            return $ compact sequent
 
     -- Render a piece of dot code
     renderDotCode code = do

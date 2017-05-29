@@ -1,0 +1,63 @@
+theory AxiomDiffTest4 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) not_match:
+   [ In( x ) ] --[ RNeq( x, 'B' ) ]-> [ Out( 'a' ) ]
+
+restriction BlockSometimes [right]:
+  "∀ t #e. (RNeq( t, t ) @ #e) ⇒ (⊥)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_not_match
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KU( x ) @ #vk ) )
+      case pub
+      step( solve( !KU( $x ) @ #vk ) )
+        case pub
+        by ATTACK // trace found
+      qed
+    qed
+  qed
+qed
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
+
+
+analyzing: examples/features/equivalence/AxiomDiffTest4.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/features/equivalence/AxiomDiffTest4.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.091158s
+  DiffLemma:  Observational_equivalence : falsified - found trace (6 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equivalence/AxiomDiffTest4.spthy
+
+  output:          case-studies/temp-analysis.spthy
+  processing time: 0.091158s
+  DiffLemma:  Observational_equivalence : falsified - found trace (6 steps)
+
+==============================================================================
+*/

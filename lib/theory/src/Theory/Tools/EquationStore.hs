@@ -70,7 +70,6 @@ import           Control.Monad.State   hiding (get, modify, put)
 import qualified Control.Monad.State   as MS
 
 import           Data.Binary
-import           Data.Data
 import qualified Data.Foldable         as F
 import           Data.List          (delete,find,intersect,intersperse,nub,(\\))
 import           Data.Maybe
@@ -160,6 +159,9 @@ instance HasFrees EqStore where
                 <*> mapFrees f substs
                 <*> mapFrees f nextSplitId
 
+
+instance Apply EqStore where
+    apply subst (EqStore a b c) = EqStore (compose subst a) (fmap (fmap $ S.map $ flip composeVFresh subst) b) (apply subst c) 
 
 
 -- Equation Store

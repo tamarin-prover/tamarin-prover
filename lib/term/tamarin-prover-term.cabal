@@ -47,14 +47,10 @@ library
       , bytestring
       , containers
       , deepseq
-      , directory
       , dlist
       , mtl
-      , parsec
       , process
       , safe
-      , split
-      , syb
 
       , tamarin-prover-utils
 

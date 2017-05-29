@@ -99,7 +99,6 @@ module Theory.Proof (
 import           GHC.Generics                     (Generic)
 
 import           Data.Binary
-import           Data.Data
 -- import           Data.Foldable                    (Foldable, foldMap)
 import           Data.List
 import qualified Data.Label                       as L
@@ -546,7 +545,6 @@ type IncrementalProof = Proof (Maybe System)
 
 -- | Incremental diff proofs are used to represent intermediate results of proof
 -- checking/construction.
--- FIXME: not clear if/how we need the system
 type IncrementalDiffProof = DiffProof (Maybe DiffSystem)
 
 
@@ -628,7 +626,6 @@ oneStepProver method = Prover $ \ctxt _ se _ -> do
 oneStepDiffProver :: DiffProofMethod -> DiffProver
 oneStepDiffProver method = DiffProver $ \ctxt _ se _ -> do
     cases <- execDiffProofMethod ctxt method se
---     error $ show $ LNode (DiffProofStep method (Just se)) (M.map (diffUnproven . Just) cases) -- (show cases ++ " " ++ show se)
     return $ LNode (DiffProofStep method (Just se)) (M.map (diffUnproven . Just) cases)
 
 -- | Replace the current proof with a sorry step and the given reason.
