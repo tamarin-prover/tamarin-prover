@@ -13,7 +13,7 @@ Description :  Hamlet templates.
 Copyright   :  (c) 2011 Cedric Staub
 License     :  GPL-3
 
-Maintainer  :  Cedric Staub <cstaub@ethz.ch>
+Maintainer  :  Ralf Sasse <ralf.sasse@gmail.com>
 Stability   :  experimental
 Portability :  non-portable
 -}
@@ -368,15 +368,14 @@ introTpl = [whamlet|
           Warning: JavaScript must be enabled for the <span class="tamarin">Tamarin</span> prover GUI to function properly.
     <div class="intropage">
       <p>
-        Authors:
-        \ <a href="http://people.inf.ethz.ch/meiersi">Simon Meier</a>,
-        \ <a href="https://www1.ethz.ch/infsec/people/benschmi">Benedikt Schmidt</a><br>
-        Contributors:
-        \ <a href="http://www.cs.ox.ac.uk/people/cas.cremers/">Cas Cremers</a>,
-        \ <a href="http://cssx.ch">Cedric Staub</a><br>
-        Observational Equivalence Authors:
+        Core team:
+        \ <a href="https://www.inf.ethz.ch/personal/basin/">David Basin</a>,
+        \ <a href="https://www.cs.ox.ac.uk/people/cas.cremers/">Cas Cremers</a>,
         \ <a href="http://www.jannikdreier.net">Jannik Dreier</a>,
-        \ <a href="http://people.inf.ethz.ch/rsasse/">Ralf Sasse</a>
+        \ <a href="mailto:iridcode@gmail.com">Simon Meier</a>,
+        \ <a href="https://people.inf.ethz.ch/rsasse/">Ralf Sasse</a>,
+        \ <a href="http://beschmi.net">Benedikt Schmidt</a><br>
+        Tamarin is a collaborative effort: see the <a href="http://tamarin-prover.github.io/manual/index.html">manual</a> for a more extensive overview of its development and additional contributors.
       <p>
         <span class="tamarin">Tamarin</span> was developed at the
         \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
