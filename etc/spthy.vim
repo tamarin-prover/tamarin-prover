@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     DH-proto-proof Security Protocol Theory Files
 " Maintainer:
-" Last Change:  2010 12 17
+" Last Change:  2017 06 07
 " based on Claudio Fleiner's <claudio@fleiner.com> spthy syntax highlighting
 " file.
 
@@ -52,7 +52,7 @@ syn match spthyConstr           "\<diffie-hellman"
 syn match spthyConstr           "\<symmetric-encryption"
 syn match spthyConstr           "\<asymmetric-encryption"
 
-syn keyword spthyDecl           axiom lemma equations functions builtins protocol property in let theory begin end subsection section text
+syn keyword spthyDecl           axiom restriction lemma equations functions builtins protocol property in let theory begin end subsection section text
 syn match spthyDecl             "\<exists-trace"
 syn match spthyDecl             "\<all-traces"
 syn match spthyDecl             "\<enable"
