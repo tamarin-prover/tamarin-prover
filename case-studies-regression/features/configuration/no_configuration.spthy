@@ -1,0 +1,7 @@
+theory TestNoConfiguration
+begin
+
+rule Testing:
+  [ Fr(x) ]-->[ F1(x) ]
+
+end

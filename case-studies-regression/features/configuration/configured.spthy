@@ -1,0 +1,8 @@
+theory TestConfiguration
+configuration: "--heuristic=i --another-arg=y"
+begin
+
+rule Testing:
+  [ Fr(x) ]-->[ F1(x) ]
+
+end

@@ -74,6 +74,7 @@ module Theory.Text.Parser.Token (
   , brackets
   , singleQuoted
   , doubleQuoted
+  , stringLiteral
 
   -- * List parsing
   , commaSep
@@ -221,6 +222,10 @@ commaSep1 = T.commaSep1 spthy
 -- | Parse a list of items '[' item ',' ... ',' item ']'
 list :: Parser a -> Parser [a]
 list = brackets . commaSep
+
+-- | Parse an arbitrary string literal
+stringLiteral :: Parser String
+stringLiteral = T.stringLiteral spthy
 
 -- | A formal comment; i.e., (header, body)
 formalComment :: Parser (String, String)

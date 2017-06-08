@@ -741,10 +741,19 @@ theory flags0 = do
     when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
-    symbol_ "begin"
-        *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
-        <* symbol "end"
+    let theory = defaultOpenTheory ("diff" `S.member` (S.fromList flags0))
+    block <- try (symbol "configuration" <* colon) <|> symbol "begin" <?> "configuration or begin"
+    if (block == "configuration")
+        then trace "Found configuration block" (parseConfig (S.fromList flags0) theory) <* symbol_ "begin"
+        else return theory
+    addItems (S.fromList flags0) (set thyName thyId theory) <* symbol_ "end"
   where
+    parseConfig :: S.Set String -> OpenTheory -> Parser OpenTheory
+    parseConfig flags thy = do
+        args <- stringLiteral
+        traceM args
+        return thy
+
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
     addItems flags thy = asum
       [ do builtins
