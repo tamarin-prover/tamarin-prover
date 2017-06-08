@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     DH-proto-proof Security Protocol Theory Files
-" Maintainer:
-" Last Change:  2010 12 17
+" Maintainer:   Nick Moore <nicholas.moore@cs.ox.ac.uk>
+" Last Change:  2017 06 07
 " based on Claudio Fleiner's <claudio@fleiner.com> spthy syntax highlighting
 " file.
 
@@ -52,7 +52,8 @@ syn match spthyConstr           "\<diffie-hellman"
 syn match spthyConstr           "\<symmetric-encryption"
 syn match spthyConstr           "\<asymmetric-encryption"
 
-syn keyword spthyDecl           axiom lemma equations functions builtins protocol property in let theory begin end subsection section text
+syn keyword spthyDecl           axiom restriction equations functions builtins protocol property in let theory begin end subsection section text
+syn match spthyDecl             "\<lemma\>"
 syn match spthyDecl             "\<exists-trace"
 syn match spthyDecl             "\<all-traces"
 syn match spthyDecl             "\<enable"
@@ -74,6 +75,9 @@ syn match spthyDecl             "--\["
 syn match spthyDecl             "\]->"
 
 syn region spthyLiteral          start="'" end="'"
+
+syn keyword spthyAnnot          contained use_induction sources reuse hide_lemma left right
+syn region spthyAnnotLemma      matchgroup=spthyDecl start="\<lemma\>" skip="(\s\+\w\+\s*\[|\])" end=":" matchgroup=NONE contains=spthyAnnot
 
 syn match spthyLogicOp          "==>"
 syn match spthyLogicOp          "<=>"
@@ -144,6 +148,7 @@ if version >= 508 || !exists("did_spthy_syn_inits")
   SpthyHiLink spthyDecl		        Typedef
   SpthyHiLink spthyTransfer             Typedef
   SpthyHiLink spthyConstr               Function
+  SpthyHiLink spthyAnnot                Label
   SpthyHiLink spthyLiteral              String
   SpthyHiLink spthyTODO                 Todo
   SpthyHiLink spthyLogicOp              Boolean
