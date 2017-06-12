@@ -74,10 +74,9 @@ import           Debug.Trace
 -- Theory loading: shared between interactive and batch mode
 ------------------------------------------------------------------------------
 
-
--- | Flags for loading a theory.
-theoryLoadFlags :: [Flag Arguments]
-theoryLoadFlags =
+-- | Flags for loading a theory (either command line or from a configuration).
+theoryConfFlags :: [Flag Arguments]
+theoryConfFlags =
   [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX"
       "Attempt to prove a lemma "
 
@@ -93,8 +92,13 @@ theoryLoadFlags =
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
       "SUMMARY|VERBOSE"
       "Partially evaluate multiset rewriting system"
+  ]
 
-  , flagOpt "" ["defines","D"] (updateArg "defines") "STRING"
+
+-- | Flags for loading a theory.
+theoryLoadFlags :: [Flag Arguments]
+theoryLoadFlags = theoryConfFlags ++
+  [ flagOpt "" ["defines","D"] (updateArg "defines") "STRING"
       "Define flags for pseudo-preprocessor."
 
   , flagNone ["diff"] (addEmptyArg "diff")
@@ -126,7 +130,7 @@ loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarn
 -- | Update command line arguments with arguments taken from the file
 updateArguments :: Arguments -> String -> Arguments
 updateArguments as argString =
-    trace ("Got args from theory: " ++ argString) (foldr updateUnsetArg as $ processValue (mode "theory arguments" [] "" (flagArg (updateArg "na") "N/A") theoryLoadFlags) (splitArgs argString))
+    trace ("Got args from theory: " ++ argString) (foldr updateUnsetArg as $ processValue (mode "theory arguments" [] "" (flagArg (updateArg "na") "N/A") theoryConfFlags) (splitArgs argString))
   where
     updateUnsetArg :: (ArgKey, ArgVal) -> Arguments -> Arguments
     updateUnsetArg (a, v) args = case argExists a args of
