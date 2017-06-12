@@ -1,8 +1,14 @@
 theory TestConfiguration
-configuration: "--heuristic=i --another-arg=y"
+configuration: "--heuristic=i --prove"
 begin
 
 rule Testing:
-  [ Fr(x) ]-->[ F1(x) ]
+  [ Fr(x) ]
+--[ Test(x) ]->
+  [ F1(x) ]
+
+lemma test_lemma:
+  exists-trace
+  "Ex x #i. Test(x) @ i"
 
 end

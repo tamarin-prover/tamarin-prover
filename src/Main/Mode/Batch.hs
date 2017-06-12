@@ -117,13 +117,13 @@ run thisMode as
       -- | argExists "html" as =
       --     generateHtml inFile =<< loadClosedThy as inFile
       | (argExists "parseOnly" as) && (argExists "diff" as) =
-          out (const Pretty.emptyDoc) prettyOpenDiffTheory   (loadOpenDiffThy   as inFile)
+          out (const Pretty.emptyDoc) prettyOpenDiffTheory   (loadOpenDiffThy        as inFile)
       | argExists "parseOnly" as =
-          out (const Pretty.emptyDoc) prettyOpenTheory       (loadOpenThy       as inFile)
+          out (const Pretty.emptyDoc) prettyOpenTheory       (liftM fst (loadOpenThy as inFile))
       | argExists "diff" as =
-          out ppWfAndSummaryDiff      prettyClosedDiffTheory (loadClosedDiffThy as inFile)
+          out ppWfAndSummaryDiff      prettyClosedDiffTheory (loadClosedDiffThy      as inFile)
       | otherwise        =
-          out ppWfAndSummary          prettyClosedTheory     (loadClosedThy     as inFile)
+          out ppWfAndSummary          prettyClosedTheory     (loadClosedThy          as inFile)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
 

@@ -58,7 +58,7 @@ import           System.Console.CmdArgs.Explicit
 
 import           Theory
 import           Theory.Text.Parser                  (parseIntruderRules, parseOpenTheory, parseOpenTheoryString, parseOpenDiffTheory, parseOpenDiffTheoryString)
-import           Theory.Text.Pretty
+import           Theory.Text.Pretty                  hiding (mode)
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
                                                      , multisetIntruderRules)
@@ -66,6 +66,8 @@ import           Theory.Tools.Wellformedness
 
 import           Main.Console
 import           Main.Environment
+
+import           Debug.Trace
 
 
 ------------------------------------------------------------------------------
@@ -121,9 +123,21 @@ quitOnWarning as = if (argExists "quit-on-warning" as) then ["quit-on-warning"] 
 loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
 loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning as) fp
 
+-- | Update command line arguments with arguments taken from the file
+updateArguments :: Arguments -> String -> Arguments
+updateArguments as argString =
+    trace ("Got args from theory: " ++ argString) (foldr updateUnsetArg as $ processValue (mode "theory arguments" [] "" (flagArg (updateArg "na") "N/A") theoryLoadFlags) (splitArgs argString))
+  where
+    updateUnsetArg :: (ArgKey, ArgVal) -> Arguments -> Arguments
+    updateUnsetArg (a, v) args = case argExists a args of
+        True  -> trace ("Arg " ++ a ++ " was already set") args
+        False -> trace ("Setting arg " ++ a ++ " to " ++ v) (a,v):args
+
 -- | Load an open theory from a file.
-loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
-loadOpenThy as = parseOpenTheory (diff as ++ defines as ++ quitOnWarning as)
+loadOpenThy :: Arguments -> FilePath -> IO (OpenTheory, Arguments)
+loadOpenThy as inFile = do
+    (thy, argString) <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
+    return (thy, (updateArguments as argString))
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -134,12 +148,14 @@ loadClosedDiffThy as inFile = do
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThy as inFile = loadOpenThy as inFile >>= closeThy as
+loadClosedThy as inFile = do -- liftM fst (loadOpenThy as inFile) >>= closeThy as
+    (thy, as') <- loadOpenThy as inFile
+    closeThy as' thy
 
 -- | Load a close theory and report on well-formedness errors.
 loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThyWfReport as inFile = do
-    thy <- loadOpenThy as inFile
+    (thy, as') <- loadOpenThy as inFile
     -- report
     case checkWellformedness thy of
       []     -> return ()
@@ -153,9 +169,9 @@ loadClosedThyWfReport as inFile = do
           putStrLn ""
           putStrLn $ renderDoc $ prettyWfErrorReport report
           putStrLn $ replicate 78 '-'
-          if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+          if elem "quit-on-warning" (quitOnWarning as') then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
     -- return closed theory
-    closeThy as thy
+    closeThy as' thy
 
 -- | Load a closed diff theory and report on well-formedness errors.
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -182,8 +198,8 @@ loadClosedDiffThyWfReport as inFile = do
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
 loadClosedThyString as input =
     case parseOpenTheoryString (defines as) input of
-        Left err  -> return $ Left $ "parse error: " ++ show err
-        Right thy -> fmap Right $ closeThy as thy
+        Left err               -> return $ Left $ "parse error: " ++ show err
+        Right (thy, argString) -> fmap Right $ closeThy (updateArguments as argString) thy
 
 loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTheory)
 loadClosedDiffThyString as input =

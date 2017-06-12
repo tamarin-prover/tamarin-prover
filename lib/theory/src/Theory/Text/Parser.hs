@@ -87,7 +87,7 @@ toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 -- | Parse a security protocol theory file.
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
-                -> IO OpenTheory
+                -> IO (OpenTheory, String)
 parseOpenTheory flags file = if ".sapic" `L.isSuffixOf` file 
     then 
        do
@@ -114,7 +114,7 @@ parseIntruderRules msig ctxtDesc =
 
 -- | Parse a security protocol theory from a string.
 parseOpenTheoryString :: [String]  -- ^ Defined flags.
-                      -> String -> Either ParseError OpenTheory
+                      -> String -> Either ParseError (OpenTheory, String)
 parseOpenTheoryString flags = parseString "<unknown source>" (theory flags)
 
 -- | Parse a security protocol theory from a string.
@@ -735,70 +735,67 @@ equations =
 
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
-       -> Parser OpenTheory
+       -> Parser (OpenTheory, String)
 theory flags0 = do 
     msig <- getState
     when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
-    let theory = defaultOpenTheory ("diff" `S.member` (S.fromList flags0))
+    let defThy = defaultOpenTheory ("diff" `S.member` (S.fromList flags0))
     block <- try (symbol "configuration" <* colon) <|> symbol "begin" <?> "configuration or begin"
     if (block == "configuration")
-        then trace "Found configuration block" (parseConfig (S.fromList flags0) theory) <* symbol_ "begin"
-        else return theory
-    addItems (S.fromList flags0) (set thyName thyId theory) <* symbol_ "end"
+        then do
+            fileArgs <- stringLiteral <* symbol_ "begin"
+            traceM ("Found configuration block: " ++ fileArgs)
+            addItems (S.fromList flags0) fileArgs (set thyName thyId defThy) <* symbol_ "end"
+        else do
+            addItems (S.fromList flags0) "" (set thyName thyId defThy) <* symbol_ "end"
   where
-    parseConfig :: S.Set String -> OpenTheory -> Parser OpenTheory
-    parseConfig flags thy = do
-        args <- stringLiteral
-        traceM args
-        return thy
-
-    addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
-    addItems flags thy = asum
+    addItems :: S.Set String -> String -> OpenTheory -> Parser (OpenTheory, String)
+    addItems flags fileArgs thy = asum
       [ do builtins
            msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           addItems flags fileArgs $ set (sigpMaudeSig . thySignature) msig thy
       , do functions
            msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           addItems flags fileArgs $ set (sigpMaudeSig . thySignature) msig thy
       , do equations
            msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           addItems flags fileArgs $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
       , do thy' <- liftedAddRestriction thy =<< restriction
-           addItems flags thy'
+           addItems flags fileArgs thy'
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
-           addItems flags thy'
+           addItems flags fileArgs thy'
            -- add legacy deprecation warning output
       , do thy' <- liftedAddLemma thy =<< lemma
-           addItems flags thy'
+           addItems flags fileArgs thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
-           addItems flags thy'
+           addItems flags fileArgs thy'
       , do r <- intrRule
-           addItems flags (addIntrRuleACs [r] thy)
+           addItems flags fileArgs (addIntrRuleACs [r] thy)
       , do c <- formalComment
-           addItems flags (addFormalComment c thy)
-      , do ifdef flags thy
-      , do define flags thy
-      , do return thy
+           addItems flags fileArgs (addFormalComment c thy)
+      , do ifdef flags fileArgs thy
+      , do define flags fileArgs thy
+      , do return (thy, fileArgs)
       ]
 
-    define :: S.Set String -> OpenTheory -> Parser OpenTheory
-    define flags thy = do
+    define :: S.Set String -> String -> OpenTheory -> Parser (OpenTheory, String)
+    define flags args thy = do
        flag <- try (symbol "#define") *> identifier
-       addItems (S.insert flag flags) thy
+       addItems (S.insert flag flags) args thy
 
-    ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
-    ifdef flags thy = do
+    ifdef :: S.Set String -> String -> OpenTheory -> Parser (OpenTheory, String)
+    ifdef flags args thy = do
        flag <- symbol_ "#ifdef" *> identifier
-       thy' <- addItems flags thy
+       (thy', _) <- addItems flags args thy
        symbol_ "#endif"
        if flag `S.member` flags
-         then addItems flags thy'
-         else addItems flags thy
+         then addItems flags args thy'
+         else addItems flags args thy
 
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
         Just thy' -> return thy'
