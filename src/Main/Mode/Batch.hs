@@ -119,7 +119,7 @@ run thisMode as
       | (argExists "parseOnly" as) && (argExists "diff" as) =
           out (const Pretty.emptyDoc) prettyOpenDiffTheory   (loadOpenDiffThy        as inFile)
       | argExists "parseOnly" as =
-          out (const Pretty.emptyDoc) prettyOpenTheory       (liftM fst (loadOpenThy as inFile))
+          out (const Pretty.emptyDoc) prettyOpenTheory       (liftM fst (loadOpenThy as inFile)) -- ignores arguments from file, since they won't affect pretty-printing
       | argExists "diff" as =
           out ppWfAndSummaryDiff      prettyClosedDiffTheory (loadClosedDiffThy      as inFile)
       | otherwise        =

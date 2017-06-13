@@ -1,2 +1,0 @@
-theory TestNoBegin
-configuration: "--heuristic=i"

@@ -746,7 +746,6 @@ theory flags0 = do
     if (block == "configuration")
         then do
             fileArgs <- stringLiteral <* symbol_ "begin"
-            traceM ("Found configuration block: " ++ fileArgs)
             addItems (S.fromList flags0) fileArgs (set thyName thyId defThy) <* symbol_ "end"
         else do
             addItems (S.fromList flags0) "" (set thyName thyId defThy) <* symbol_ "end"

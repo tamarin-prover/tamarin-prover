@@ -130,12 +130,12 @@ loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarn
 -- | Update command line arguments with arguments taken from the file
 updateArguments :: Arguments -> String -> Arguments
 updateArguments as argString =
-    trace ("Got args from theory: " ++ argString) (foldr updateUnsetArg as $ processValue (mode "theory arguments" [] "" (flagArg (updateArg "na") "N/A") theoryConfFlags) (splitArgs argString))
+    foldr updateUnsetArg as $ processValue (mode "theory arguments" [] "" (flagArg (updateArg "na") "N/A") theoryConfFlags) (splitArgs argString)
   where
     updateUnsetArg :: (ArgKey, ArgVal) -> Arguments -> Arguments
     updateUnsetArg (a, v) args = case argExists a args of
-        True  -> trace ("Arg " ++ a ++ " was already set") args
-        False -> trace ("Setting arg " ++ a ++ " to " ++ v) (a,v):args
+        True  -> args
+        False -> (a,v):args
 
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO (OpenTheory, Arguments)
