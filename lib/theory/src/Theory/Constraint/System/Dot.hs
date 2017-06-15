@@ -331,7 +331,8 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
       Just ru -> do
           let color     = M.lookup (get rInfo ru) colorMap
               nodeColor = maybe "white" rgbToHex color
-              attrs     = [("fillcolor", nodeColor),("style","filled")]
+              attrs     = [("fillcolor", nodeColor),("style","filled")
+                            , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")]
           ids <- mkNode ru attrs hasOutgoingEdge
           let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
               concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
@@ -339,6 +340,10 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
           modM dsConcs $ M.union $ M.fromList concs
           return $ fromJust $ lookup Nothing ids
   where
+    --True if there's a colour, and it's 'darker' than 0.5 in apparent luminosity
+    --This assumes a linear colourspace, which is what graphviz seems to use
+    colorUsesWhiteFont (Just (RGB r g b)) = (0.2126*r + 0.7152*g + 0.0722*b) < 0.5
+    colorUsesWhiteFont _                  = False
 
     mkSimpleNode lbl attrs =
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
