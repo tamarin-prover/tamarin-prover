@@ -50,8 +50,6 @@ module Theory.Model.Fact (
   , isKUFact
   , isKDFact
 
-  , isHiddenFact
-
   -- ** Construction
   , freshFact
   , outFact
@@ -188,14 +186,6 @@ isKUFact _               = False
 isKDFact :: LNFact -> Bool
 isKDFact (Fact KDFact _) = True
 isKDFact _               = False
-
--- | True if the the fact name should be hidden in the UI
--- (e.g. for color annotations)
-isHiddenFact :: Fact t -> Bool
-isHiddenFact (Fact (ProtoFact _ name _) _) = case name of
-    '_':'_':_ -> True
-    _         -> False
-isHiddenFact _ = False
 
 -- | Mark a fact as malformed.
 errMalformed :: String -> LNFact -> a

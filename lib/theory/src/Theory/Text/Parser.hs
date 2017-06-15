@@ -235,7 +235,6 @@ fact plit = try (
        case i of
          []                -> fail "empty identifier"
          (c:_) | isUpper c -> return ()
-               | c == '_'  -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
        ts    <- parens (commaSep (multterm plit))
        mkProtoFact multi i ts
@@ -291,9 +290,9 @@ ruleAttribute = asum
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
-protoRuleInfo = ProtoRuleEInfo <$> (StandRule <$> 
+protoRuleInfo = (ProtoRuleEInfo <$> (StandRule <$>
                                         (symbol "rule" *> optional moduloE *> identifier))
-                               <*> (option [] $ list ruleAttribute) <*  colon
+                               <*> (option [] $ list ruleAttribute)) <*  colon
 
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already

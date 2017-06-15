@@ -21,7 +21,7 @@ import           Data.Char                (isSpace)
 import           Data.Color
 import qualified Data.DAG.Simple          as D
 import qualified Data.Foldable            as F
-import           Data.List                (find,foldl',intersect,uncons,(\\))
+import           Data.List                (find,foldl',intersect)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Monoid              (Any(..))
@@ -273,7 +273,7 @@ setDefaultAttributes = do
 nodeColorMap :: [RuleACInst] -> NodeColorMap
 nodeColorMap rules =
     M.fromList $
-      [ (get rInfo ru, case getColorAction ru of
+      [ (get rInfo ru, case getColorAttr ru of
             Just ruColor -> ruColor
             Nothing      -> hsvToRGB $ getColor (gIdx, mIdx))
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
@@ -292,16 +292,14 @@ nodeColorMap rules =
     colors = M.fromList $ lightColorGroups intruderHue (map (length . snd) groups)
     getColor idx = fromMaybe (HSV 0 1 1) $ M.lookup idx colors
 
-    -- Setting colour based on the first __color fact in the rule actions
-    getColorAction ru = do
-        fa    <- find (isColorTag . factTag) $ get rActs ru
-        (x,_) <- uncons $ getFactTerms fa
-        hexToRGB (show x \\ "''")
+    -- Setting colour based on the first colour attribute in the rule attributes
+    getColorAttr ru = do
+        c  <- firstColorAttr $ ruleAttributes ru
+        hexToRGB c
       where
-        isColorTag tag = case showFactTag tag of
-            "__color"  -> True
-            "__colour" -> True
-            _          -> False
+        firstColorAttr []                   = Nothing
+        firstColorAttr ((RuleColor c) : _)  = Just c
+        firstColorAttr (_ : xs)             = firstColorAttr xs
 
     -- The hue of the intruder rules
     intruderHue :: Rational
@@ -369,7 +367,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
         ruleLabel =
             prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
             (brackets $ vcat $ punctuate comma $
-                map prettyLNFact $ filter (not . isHiddenFact) $ get rActs ru)
+                map prettyLNFact $ get rActs ru)
 
         renderRow annDocs =
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $

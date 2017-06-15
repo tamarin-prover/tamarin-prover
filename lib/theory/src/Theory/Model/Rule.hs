@@ -66,6 +66,7 @@ module Theory.Model.Rule (
 
   -- ** Queries
   , HasRuleName(..)
+  , HasRuleAttributes(..)
   , isIntruderRule
   , isDestrRule
   , isIEqualityRule
@@ -115,6 +116,7 @@ module Theory.Model.Rule (
   , showRuleCaseName
   , prettyProtoRuleName
   , prettyRuleName
+  , prettyRuleAttribute
   , prettyProtoRuleE
   , prettyProtoRuleAC
   , prettyIntrRuleAC
@@ -283,7 +285,6 @@ data ProtoRuleName =
          FreshRule
        | StandRule String -- ^ Some standard protocol rule
        deriving( Eq, Ord, Show, Data, Typeable, Generic)
-
 instance NFData ProtoRuleName
 instance Binary ProtoRuleName
 
@@ -466,16 +467,16 @@ type RuleACInst  = Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo)
 
 -- | Types that have an associated name.
 class HasRuleName t where
-  ruleName :: t -> RuleInfo ProtoRuleName IntrRuleACInfo
+  ruleName       :: t -> RuleInfo ProtoRuleName IntrRuleACInfo
 
 instance HasRuleName ProtoRuleE where
-  ruleName = ProtoInfo . L.get (preName . rInfo)
+  ruleName       = ProtoInfo . L.get (preName . rInfo)
 
 instance HasRuleName RuleAC where
   ruleName = ruleInfo (ProtoInfo . L.get pracName) IntrInfo . L.get rInfo
 
 instance HasRuleName ProtoRuleAC where
-  ruleName = ProtoInfo . L.get (pracName . rInfo)
+  ruleName  = ProtoInfo . L.get (pracName . rInfo)
 
 instance HasRuleName IntrRuleAC where
   ruleName = IntrInfo . L.get rInfo
@@ -483,6 +484,25 @@ instance HasRuleName IntrRuleAC where
 instance HasRuleName RuleACInst where
   ruleName = ruleInfo (ProtoInfo . L.get praciName) IntrInfo . L.get rInfo
 
+class HasRuleAttributes t where
+  ruleAttributes :: t -> [RuleAttribute]
+
+instance HasRuleAttributes ProtoRuleE where
+  ruleAttributes = L.get (preAttributes . rInfo)
+
+instance HasRuleAttributes RuleAC where
+  ruleAttributes (Rule (ProtoInfo ri) _ _ _) = L.get pracAttributes ri
+  ruleAttributes _                           = []
+
+instance HasRuleAttributes ProtoRuleAC where
+  ruleAttributes = L.get (pracAttributes . rInfo)
+
+instance HasRuleAttributes IntrRuleAC where
+  ruleAttributes _ = []
+
+instance HasRuleAttributes RuleACInst where
+  ruleAttributes (Rule (ProtoInfo ri) _ _ _) = L.get praciAttributes ri
+  ruleAttributes _                           = []
 
 -- Queries
 ----------
@@ -899,6 +919,10 @@ prettyProtoRuleName rn = text $ case rn of
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
+prettyRuleAttribute :: (HighlightDocument d) => RuleAttribute -> d
+prettyRuleAttribute attr = case attr of
+    RuleColor c -> text "color=" <> text c
+
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
 showRuleCaseName =
@@ -916,12 +940,12 @@ prettyIntrRuleACInfo rn = text $ case rn of
     DestrRule name _ _ _ -> prefixIfReserved ('d' : BC.unpack name)
 --     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
-prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
+prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i), HasRuleAttributes (Rule i))
                 => d           -- ^ Prefix.
                 -> (i -> d)    -- ^ Rule info pretty printing.
                 -> Rule i -> d
 prettyNamedRule prefix ppInfo ru =
-    prefix <-> prettyRuleName ru <> colon $-$
+    prefix <-> prettyRuleName ru <> ppAttributes <> colon $-$
     nest 2 (sep [ nest 1 $ ppFactsList rPrems
                 , if null acts
                     then operator_ "-->"
@@ -929,12 +953,15 @@ prettyNamedRule prefix ppInfo ru =
                 , nest 1 $ ppFactsList rConcs]) $-$
     nest 2 (ppInfo $ L.get rInfo ru)
   where
-    acts             = filter isNotDiffAnnotation $ filter (not . isHiddenFact) (L.get rActs ru)
+    acts             = filter isNotDiffAnnotation (L.get rActs ru)
     ppList pp        = fsep . punctuate comma . map pp
     ppFacts' list    = ppList prettyLNFact list
     ppFacts proj     = ppList prettyLNFact $ L.get proj ru
     ppFactsList proj = fsep [operator_ "[", ppFacts proj, operator_ "]"]
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factTerms = []})
+    ppAttributes = case ruleAttributes ru of
+        []    -> text ""
+        attrs -> hcat $ [text "[", hsep $ map prettyRuleAttribute attrs, text "]"]
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
 prettyProtoRuleACInfo i =
