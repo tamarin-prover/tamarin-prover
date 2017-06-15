@@ -282,17 +282,30 @@ typeAssertions = fmap TypingE $
     <|> pure []
 -}
 
+-- | Parse a 'RuleAttribute'.
+ruleAttribute :: Parser RuleAttribute
+ruleAttribute = asum
+  [ symbol "colour=" *> (RuleColor <$> identifier)
+  , symbol "color="  *> (RuleColor <$> identifier)
+  ]
+
+-- | Parse RuleInfo
+protoRuleInfo :: Parser ProtoRuleEInfo
+protoRuleInfo = ProtoRuleEInfo <$> (StandRule <$> 
+                                        (symbol "rule" *> optional moduloE *> identifier))
+                               <*> (option [] $ list ruleAttribute) <*  colon
+
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
 protoRule :: Parser (ProtoRuleE)
 protoRule = do
-    name  <- try (symbol "rule" *> optional moduloE *> identifier <* colon)
+    ri@(ProtoRuleEInfo (StandRule name) _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
     (ps,as,cs) <- genericRule
-    return $ apply subst $ Rule (StandRule name) ps cs as
+    return $ apply subst $ Rule ri ps cs as
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst

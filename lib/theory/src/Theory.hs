@@ -884,7 +884,7 @@ openDiffTheory  (DiffTheory n sig c1 c2 c3 c4 items) =
 -- | Find the open protocol rule with the given name.
 lookupOpenProtoRule :: ProtoRuleName -> OpenTheory -> Maybe OpenProtoRule
 lookupOpenProtoRule name =
-    find ((name ==) . L.get rInfo) . theoryRules
+    find ((name ==) . L.get (preName . rInfo)) . theoryRules
 
 -- | Find the open protocol rule with the given name.
 -- REMOVE
@@ -895,7 +895,7 @@ lookupOpenProtoRule name =
 -- | Find the open protocol rule with the given name.
 lookupOpenDiffProtoDiffRule :: ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
 lookupOpenDiffProtoDiffRule name =
-    find ((name ==) . L.get rInfo) . diffTheoryDiffRules
+    find ((name ==) . L.get (preName . rInfo)) . diffTheoryDiffRules
 
 -- | Add a new protocol rules. Fails, if a protocol rule with the same name
 -- exists.
@@ -905,7 +905,7 @@ addProtoRule ruE thy = do
     return $ modify thyItems (++ [RuleItem ruE]) thy
   where
     nameNotUsedForDifferentRule =
-        maybe True ((ruE ==)) $ lookupOpenProtoRule (L.get rInfo ruE) thy
+        maybe True ((ruE ==)) $ lookupOpenProtoRule (L.get (preName . rInfo) ruE) thy
 
 -- | Add a new protocol rules. Fails, if a protocol rule with the same name
 -- exists.
@@ -915,7 +915,7 @@ addProtoDiffRule ruE thy = do
     return $ modify diffThyItems (++ [DiffRuleItem ruE]) thy
   where
     nameNotUsedForDifferentRule =
-        maybe True ((ruE ==)) $ lookupOpenDiffProtoDiffRule (L.get rInfo ruE) thy
+        maybe True ((ruE ==)) $ lookupOpenDiffProtoDiffRule (L.get (preName . rInfo) ruE) thy
 
 -- | Add intruder proof rules.
 addIntrRuleACs :: [IntrRuleAC] -> OpenTheory -> OpenTheory

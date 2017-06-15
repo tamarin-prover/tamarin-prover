@@ -38,13 +38,19 @@ module Theory.Model.Rule (
   , ruleInfo
 
   -- * Protocol Rule Information
+  , RuleAttribute(..)
   , ProtoRuleName(..)
+  , ProtoRuleEInfo(..)
+  , preName
+  , preAttributes
   , ProtoRuleACInfo(..)
   , pracName
+  , pracAttributes
   , pracVariants
   , pracLoopBreakers
   , ProtoRuleACInstInfo(..)
   , praciName
+  , praciAttributes
   , praciLoopBreakers
   , RuleACConstrs
 
@@ -264,6 +270,13 @@ instance (Apply p, Apply i) => Apply (RuleInfo p i) where
 -- Protocol Rule Information
 ------------------------------------------------------------------------------
 
+-- | An attribute for a 'Lemma'.
+data RuleAttribute =
+         RuleColor String
+       deriving( Eq, Ord, Show, Data, Generic )
+instance NFData RuleAttribute
+instance Binary RuleAttribute
+
 -- | A name of a protocol rule is either one of the special reserved rules or
 -- some standard rule.
 data ProtoRuleName =
@@ -274,12 +287,21 @@ data ProtoRuleName =
 instance NFData ProtoRuleName
 instance Binary ProtoRuleName
 
+-- | Information for protocol rules modulo E.
+data ProtoRuleEInfo = ProtoRuleEInfo
+       { _preName       :: ProtoRuleName
+       , _preAttributes :: [RuleAttribute]
+       }
+       deriving( Eq, Ord, Show, Data, Generic)
+instance NFData ProtoRuleEInfo
+instance Binary ProtoRuleEInfo
 
 -- | Information for protocol rules modulo AC. The variants list the possible
 -- instantiations of the free variables of the rule. The source is interpreted
 -- modulo AC; i.e., its variants were also built.
 data ProtoRuleACInfo = ProtoRuleACInfo
        { _pracName         :: ProtoRuleName
+       , _pracAttributes   :: [RuleAttribute]
        , _pracVariants     :: Disj (LNSubstVFresh)
        , _pracLoopBreakers :: [PremIdx]
        }
@@ -290,6 +312,7 @@ instance Binary ProtoRuleACInfo
 -- | Information for instances of protocol rules modulo AC.
 data ProtoRuleACInstInfo = ProtoRuleACInstInfo
        { _praciName         :: ProtoRuleName
+       , _praciAttributes   :: [RuleAttribute]
        , _praciLoopBreakers :: [PremIdx]
        }
        deriving( Eq, Ord, Show, Generic)
@@ -297,11 +320,18 @@ instance NFData ProtoRuleACInstInfo
 instance Binary ProtoRuleACInstInfo
 
 
-$(mkLabels [''ProtoRuleACInfo, ''ProtoRuleACInstInfo])
+$(mkLabels [''ProtoRuleEInfo, ''ProtoRuleACInfo, ''ProtoRuleACInstInfo])
 
 
 -- Instances
 ------------
+instance Apply RuleAttribute where
+    apply _ = id
+
+instance HasFrees RuleAttribute where
+    foldFrees _ = const mempty
+    foldFreesOcc _ _ = const mempty
+    mapFrees  _ = pure
 
 instance Apply ProtoRuleName where
     apply _ = id
@@ -327,25 +357,39 @@ instance HasFrees ConcIdx where
     foldFreesOcc  _ _ = const mempty
     mapFrees   _ = pure
 
+instance HasFrees ProtoRuleEInfo where
+    foldFrees f (ProtoRuleEInfo na attr) =
+        foldFrees f na `mappend` foldFrees f attr
+    foldFreesOcc  _ _ = const mempty
+    mapFrees f (ProtoRuleEInfo na attr) =
+        ProtoRuleEInfo na <$> mapFrees f attr
+
+instance Apply ProtoRuleEInfo where
+    apply _ = id
+
 instance HasFrees ProtoRuleACInfo where
-    foldFrees f (ProtoRuleACInfo na vari breakers) =
-        foldFrees f na `mappend` foldFrees f vari
+    foldFrees f (ProtoRuleACInfo na attr vari breakers) =
+        foldFrees f na `mappend` foldFrees f attr
+                       `mappend` foldFrees f vari
                        `mappend` foldFrees f breakers
     foldFreesOcc  _ _ = const mempty
-    mapFrees f (ProtoRuleACInfo na vari breakers) =
-        ProtoRuleACInfo na <$> mapFrees f vari <*> mapFrees f breakers
+    mapFrees f (ProtoRuleACInfo na attr vari breakers) =
+        ProtoRuleACInfo na <$> mapFrees f attr
+                           <*> mapFrees f vari
+                           <*> mapFrees f breakers
 
 instance Apply ProtoRuleACInstInfo where
     apply _ = id
 
 instance HasFrees ProtoRuleACInstInfo where
-    foldFrees f (ProtoRuleACInstInfo na breakers) =
-        foldFrees f na `mappend` foldFrees f breakers
+    foldFrees f (ProtoRuleACInstInfo na attr breakers) =
+        foldFrees f na `mappend` foldFrees f attr
+                       `mappend` foldFrees f breakers
 
     foldFreesOcc  _ _ = const mempty
 
-    mapFrees f (ProtoRuleACInstInfo na breakers) =
-        ProtoRuleACInstInfo na <$> mapFrees f breakers
+    mapFrees f (ProtoRuleACInstInfo na attr breakers) =
+        ProtoRuleACInstInfo na <$> mapFrees f attr <*> mapFrees f breakers
 
 
 ------------------------------------------------------------------------------
@@ -404,7 +448,7 @@ instance HasFrees IntrRuleACInfo where
 -- | A rule modulo E is always a protocol rule. Intruder rules are specified
 -- abstractly by their operations generating them and are only available once
 -- their variants are built.
-type ProtoRuleE  = Rule ProtoRuleName
+type ProtoRuleE  = Rule ProtoRuleEInfo
 
 -- | A protocol rule modulo AC.
 type ProtoRuleAC = Rule ProtoRuleACInfo
@@ -425,7 +469,7 @@ class HasRuleName t where
   ruleName :: t -> RuleInfo ProtoRuleName IntrRuleACInfo
 
 instance HasRuleName ProtoRuleE where
-  ruleName = ProtoInfo . L.get rInfo
+  ruleName = ProtoInfo . L.get (preName . rInfo)
 
 instance HasRuleName RuleAC where
   ruleName = ruleInfo (ProtoInfo . L.get pracName) IntrInfo . L.get rInfo
@@ -678,7 +722,9 @@ someRuleACInst =
       , Just (L.get pracVariants i)
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo (L.get pracName i) 
+                                 (L.get pracAttributes i)
+                                 (L.get pracLoopBreakers i) 
     extractInsts (Rule (IntrInfo i) ps cs as) =
       ( Rule (IntrInfo i) ps cs as, Nothing )
 
@@ -696,7 +742,9 @@ someRuleACInstAvoiding r s =
       , Just (L.get pracVariants i)
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo (L.get pracName i) 
+                                 (L.get pracAttributes i)
+                                 (L.get pracLoopBreakers i)
     extractInsts (Rule (IntrInfo i) ps cs as) =
       ( Rule (IntrInfo i) ps cs as, Nothing )
 
@@ -714,7 +762,9 @@ someRuleACInstFixing r subst =
       , Just (L.get pracVariants i)
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo (L.get pracName i) 
+                                 (L.get pracAttributes i)
+                                 (L.get pracLoopBreakers i)
     extractInsts (Rule (IntrInfo i) ps cs as) =
       ( apply subst (Rule (IntrInfo i) ps cs as), Nothing )
 
@@ -734,7 +784,9 @@ someRuleACInstAvoidingFixing r s subst =
       , Just (L.get pracVariants i)
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo (L.get pracName i) 
+                                 (L.get pracAttributes i)
+                                 (L.get pracLoopBreakers i)
     extractInsts (Rule (IntrInfo i) ps cs as) =
       ( apply subst (Rule (IntrInfo i) ps cs as), Nothing )
 
