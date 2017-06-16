@@ -63,7 +63,7 @@ To remove partial deconstructions, the adversary is the one providing the delta 
 */
 
 builtins: xor,multiset
-functions: f1/2, f2/2, f5/2//, next/1
+functions: f1/2, f2/2, f5/2
 
 rule Setup:
    [ Fr( ~k )
@@ -106,7 +106,7 @@ rule Server_1:
    , In(~id)
    , Fr(~rand)
    , SQN_S(~id,sqn)
-   , In(x)
+   , In(x) // try and replace this by sources lemma as in EAP-AKA-sqn.spthy
    ]
  --[ Sr()
    , RunningS(~id,$A,~k,~rand) 
@@ -181,7 +181,7 @@ rule Client_1_syncfailure:
    , Client_0(~id,$A)
    , SQN_C(~id,sqn)
    , In(<rand,autn>)
-   , In(x)
+   , In(x) // can we remove this by sources lemma, similar to above and EAP-AKA-sqn.spthy?
    ]
  --[ Eq(mac,xmac)
    , InEq(sqn + '1',sqn2) // we check exact match of sequence number, mismatch handled in this rule
