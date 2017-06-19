@@ -22,7 +22,7 @@ AK  = f5(K,RAND)   Anonymity key, could be zero
 AV = <RAND, XRES, CK, IK, AUTN>  Authentication vector
 
 f1, f2 are message auth functions (HMAC keyed with K)
-f3, f4, f5 are key generating functions, f5 could be zero
+f3, f4, f5 are key generating functions, f5 could be zero (but is not in practice)
 
 The following is one possible flow:
 
@@ -52,7 +52,7 @@ The following is one possible flow:
  */
 
 /*
-This version uses multisets to represent numbers, starting from a fresh value as initial sequence number. Otherwise the adversary trivially violates the weak secrecy property for the sequence number, because it will be 0,1,2,etc. which are of course known.
+This version uses multisets to represent numbers, starting from a fresh value as initial sequence number. Otherwise the adversary trivially violates the weak secrecy property for the sequence number, because it will be 0,1,2,etc. which are of course known. Moroever, this modeling is in line with a threat model where the attacker is not MiM *all* sessions of peers since their first use. Therefore, the attacker cannot keep track of SQN.
 
 We use a sources lemma based on the secrecy of the anonymity key to get rid of partial deconstructions created from the sequence numbers.
 */
@@ -70,9 +70,9 @@ rule Setup:
    , Fr(~id)
    , Fr(~sqn)
    ]
- --[ InitialSqn(~id, ~sqn) ]-> 
-   [ !Client( ~id, $A, ~k, ~sqn), SQN_C(~id,~sqn+'1')
-   , !Server( ~id, $A, ~k, ~sqn), SQN_S(~id,~sqn+'1') // the +1 are needed as otherwise a pattern-match on ~sqn+x will fail initially! 
+ --[ InitialSqn(~id, ~sqn), Sub() ]-> 
+   [ !Client( ~id, $A, ~k, ~sqn), SQN_C(~id,~sqn+'1')        // the +1 are needed as otherwise a pattern-match on ~sqn+x will fail initially! 
+   , !Server( ~id, $A, ~k, ~sqn), SQN_S(~id,~sqn+'1' + '1')  // Server is in advance compared to client
    ]
 
 /* Skipping the following rule for simplicity 
@@ -97,9 +97,9 @@ rule Server_1:
    let amf  = '0'
        sqn  = ~initsqn + x
        sqn1 = sqn + '1'
-       mac  = f1(~k,<sqn1,~rand,amf>)
+       mac  = f1(~k,<sqn,~rand,amf>)
        ak   = f5(~k,~rand)
-       autn = <sqn1 XOR ak, <amf, mac>>
+       autn = <sqn XOR ak, <amf, mac>>
    in
    [ !Server( ~id, $A, ~k, ~initsqn)
 //   , Server_0(~id,$A)
@@ -118,8 +118,9 @@ rule Server_1:
 
 rule Client_1_success:
    let amf  = fst(snd(autn))
-       sqn2 = fst(autn) XOR f5(~k,rand)
-       xmac = f1(~k, <sqn2,rand,amf>)
+       sqnS = fst(autn) XOR f5(~k,rand)
+       sqn2 = sqnS + '1'
+       xmac = f1(~k, <sqnS,rand,amf>)
        res  = f2(~k,rand)
        mac  = snd(snd(autn))
    in
@@ -129,7 +130,7 @@ rule Client_1_success:
    , In(<rand,autn>)
    ]
  --[ Eq(mac,xmac)
-   , Eq(sqn + '1',sqn2) 
+   , Eq(sqn + '1',sqnS) 
    , RunningC(~id,$A,~k,rand)
    , CommitC(~id,$A,~k,rand)
    , SecretC(sqn2)
@@ -140,8 +141,8 @@ rule Client_1_success:
 
 rule Client_1_macfailure:
    let amf  = fst(snd(autn))
-       sqn2 = fst(autn) XOR f5(~k,rand)
-       xmac = f1(~k, <sqn2,rand,amf>)
+       sqnS = fst(autn) XOR f5(~k,rand)
+       xmac = f1(~k, <sqnS,rand,amf>)
        mac  = snd(snd(autn))
    in
    [ !Client(~id, $A, ~k, ~initsqn)
@@ -159,12 +160,12 @@ rule Client_1_macfailure:
 rule Client_1_syncfailure:
    let sqn  = ~initsqn + x
        amf  = fst(snd(autn))
-       sqn2 = fst(autn) XOR f5(~k,rand)
-       xmac = f1(~k, <sqn2,rand,amf>)
+       sqnS = fst(autn) XOR f5(~k,rand)
+       xmac = f1(~k, <sqnS,rand,amf>)
        mac  = snd(snd(autn))
-       macstar  = f1(~k, <sqn +'1',rand,amf>)
+       macstar  = f1(~k, <sqn,rand,amf>)
        akstar   = f5star(~k, rand)  // this is the version using f5star =/= f5
-       concstar = (sqn+'1') XOR akstar
+       concstar = sqn XOR akstar
        auts     = <'syncfailure',concstar, macstar>
    in
    [ !Client(~id, $A, ~k, ~initsqn)
@@ -173,10 +174,11 @@ rule Client_1_syncfailure:
    , In(<rand,autn>)
    ]
  --[ Eq(mac,xmac)
-   , InEq(sqn + '1',sqn2) // we check exact match of sequence number, mismatch handled in this rule
+   , InEq(sqn + '1',sqnS) // we check exact match of sequence number, mismatch handled in this rule
    , SyncFailure()
    , SecretC(sqn)
-   , SecretDiff(sqn +'1' XOR sqn2)
+   , SecretDiff(sqn XOR sqnS)   // this value should not be knwon by the attacker (induce critial privacy attacks)
+   , SecretDiff2(sqn XOR (sqn+'1'))   // this value should not be knwon by the attacker (induce critial privacy attacks)
    , SecretAK(akstar)
    ]->
    [ SQN_C(~id,sqn) // sequence number does NOT change in this case
