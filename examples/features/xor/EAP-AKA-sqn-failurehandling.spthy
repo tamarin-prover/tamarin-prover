@@ -106,11 +106,12 @@ rule Server_1:
    , In(~id)
    , Fr(~rand)
    , SQN_S(~id,sqn)
-   , In(x) // try and replace this by sources lemma as in EAP-AKA-sqn.spthy
+//   , In(x) // try and replace this by sources lemma as in EAP-AKA-sqn.spthy
    ]
  --[ Sr()
    , RunningS(~id,$A,~k,~rand) 
    , SqnRelationS(~id, sqn, ~initsqn)
+   , SecretAK(ak)
    ]->
    [ Out(<~rand,autn>) 
    , SQN_S(~id,sqn1)
@@ -181,7 +182,7 @@ rule Client_1_syncfailure:
    , Client_0(~id,$A)
    , SQN_C(~id,sqn)
    , In(<rand,autn>)
-   , In(x) // can we remove this by sources lemma, similar to above and EAP-AKA-sqn.spthy?
+//   , In(x) // can we remove this by sources lemma, similar to above and EAP-AKA-sqn.spthy?
    ]
  --[ Eq(mac,xmac)
    , InEq(sqn + '1',sqn2) // we check exact match of sequence number, mismatch handled in this rule
@@ -191,6 +192,7 @@ rule Client_1_syncfailure:
    , SecretC(sqn)
    , SecretDiff(sqn +'1' XOR sqn2)
    , SqnRelationC(~id, sqn, ~initsqn)
+   , SecretAK(akstar)
    ]->
    [ //SQN_C(~id,sqn2)
      SQN_C(~id,sqn) // sequence number does NOT change in this case
@@ -214,27 +216,39 @@ restriction equality:
 restriction inequality:
   "All x #i. (InEq( x, x ) @ #i) ==> F"
 
+// Sources lemma to ensure no anonymity key is known to the adversary, therefore removing all partial deconstructions
+//Auto-proof -- 2017-06-19
+lemma aksecret [sources]:
+  "All ak #i. SecretAK(ak)@i ==> not (Ex #k. KU(ak) @k)"
+
 // SHOWS CORRECT EXECUTION 
+// Auto-proof - about 2-3 minutes 2017-06-19
 lemma executable:
   exists-trace "Ex #i. Success()@i"
 
-// SHOWS CORRECT EXECUTION, slightly smaller trace 
+// SHOWS CORRECT EXECUTION, slightly smaller trace
+// Auto-proof - quick 2017-06-19
 lemma executable2:
   exists-trace "Ex #i. Success()@i & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)"
 
+// SHOWS CORRECT EXECUTION 
+// Auto-proof - quick 2017-06-19
 lemma executable_macfailure:
   exists-trace "Ex #i. MacFailure()@i & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)"
 
 //lemma executable_syncfailure:
 //  exists-trace "Ex #i. SyncFailure()@i"// & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)"
 
-// HOLDS, AUTOMATICALLY finds solution (2017-06-17), takes a few minutes though
+// HOLDS, AUTOMATICALLY finds solution (2017-06-19), takes a few minutes though
 lemma executable_syncfailure2:
   exists-trace "Ex #i. SyncFailure()@i & (All #j #k #l. Cl()@j & Cl()@k & Cl()@l ==> (#j=#k | #j = #l | #k = #l)) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)"
 
+// HOLDS, quick auto-proof 2017-06-19
 lemma agreeS:
   "All id A k rand #i. CommitS(id,A,k,rand)@i ==> Ex #j. RunningC(id,A,k,rand) @j"
 
+// no quick auto-proof - not sure what happens
+//??????
 lemma agreeC:
   "All id A k rand #i. CommitC(id,A,k,rand)@i ==> Ex #j. RunningS(id,A,k,rand) @j"
 
@@ -244,13 +258,24 @@ lemma agreeC:
 //lemma sqnrelationC [sources]:
 //  "All id sqn initsqn #i . SqnRelationC(id, sqn, initsqn) @i ==> (Ex #j. InitialSqn(id, initsqn) @j) & (Ex x. sqn = initsqn + x)"
 
+// HOLDS, quick proof 2017-06-19
 lemma secretsqnC:
   "All sqn #i. SecretC(sqn) @i ==> not (Ex #j. K(sqn)@j)"
 
+// HOLDS, quick proof 2017-06-19
 lemma secretsqnS:
   "All sqn #i. SecretS(sqn) @i ==> not (Ex #j. K(sqn)@j)"
 
 lemma secretsqndiff:
   "All sqn #i. SecretDiff(sqn) @i ==> not (Ex #j. K(sqn)@j)"
+
+// Find attack under added restrictions of only one server and two client steps
+// Automatically finds the attack (a few minutes) 2017-06-19
+lemma secretsqndifflimited:
+" (
+   (All #j #k #l. Cl()@j & Cl()@k & Cl()@l ==> (#j=#k | #j = #l | #k = #l))
+ & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)
+  )
+==> (All sqn #i. SecretDiff(sqn) @i ==> not (Ex #j. K(sqn)@j))"
 
 end
