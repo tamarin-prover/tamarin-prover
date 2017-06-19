@@ -196,12 +196,27 @@ rule Server_2:
    , SecretS(sqn1) ]->
    [   ]
 
+/************************************/
+/*        RESTRICTIONS              */
+/************************************/
+#ifdef smallTraces  // carefull, if this block is enabled then Tamarin will not explore a large class of executions. Use it ONLY for proving existential lemmas.
+restriction smallTraces:
+  " (All #j #k. Sub()@j & Sub()@k ==> (#j=#k)) &  // max 1 subscriber
+    (All #j #k #l #m. Cl()@j & Cl()@k & Cl()@l & Cl()@m==> (#j = #k | #j = #l | #j = #m | #k = #l | #k = #m | #m = #l)) &  // max 4 clients sessions
+    (All #j #k #l. Sr()@j & Sr()@k & Sr()@l ==> (#j = #k | #j = #l | #k = #l ))   // max 2 server sessions
+  "
+#endif
+
 restriction equality:
   "All x y #i. (Eq( x, y ) @ #i) ==> (x = y)"
 
 restriction inequality:
   "All x #i. (InEq( x, x ) @ #i) ==> F"
 
+
+/************************************/
+/*        LEMMAS                    */
+/************************************/
 // Sources lemma to ensure no anonymity key is known to the adversary, therefore removing all partial deconstructions
 //Auto-proof -- 2017-06-19
 lemma aksecret [sources]:
@@ -215,28 +230,28 @@ lemma executable:
 // SHOWS CORRECT EXECUTION, slightly smaller trace
 // Auto-proof - quick 2017-06-19
 lemma executable2:
-  exists-trace "Ex #i. Success()@i & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)"
+  exists-trace "Ex #i. Success()@i & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k) & (All #j #k. Sub()@j & Sub()@k ==> (#j=#k)) "
 
 // SHOWS CORRECT EXECUTION 
 // Auto-proof - quick 2017-06-19
 lemma executable_macfailure:
-  exists-trace "Ex #i. MacFailure()@i & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)"
+  exists-trace "Ex #i. MacFailure()@i & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k) & (All #j #k. Sub()@j & Sub()@k ==> (#j=#k)) "
 
 //lemma executable_syncfailure:
-//  exists-trace "Ex #i. SyncFailure()@i"// & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)"
+//  exists-trace "Ex #i. SyncFailure()@i"// & (All #j #k. Cl()@j & Cl()@k ==> #j=#k) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k) & (All #j #k. Sub()@j & Sub()@k ==> (#j=#k)) "
 
 // HOLDS, AUTOMATICALLY finds solution (2017-06-19), takes a few minutes though
 lemma executable_syncfailure2:
-  exists-trace "Ex #i. SyncFailure()@i & (All #j #k #l. Cl()@j & Cl()@k & Cl()@l ==> (#j=#k | #j = #l | #k = #l)) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)"
+  exists-trace "Ex #i. SyncFailure()@i & (All #j #k #l. Cl()@j & Cl()@k & Cl()@l ==> (#j=#k | #j = #l | #k = #l)) & (All #j #k. Sr()@j & Sr()@k ==> #j=#k) & (All #j #k. Sub()@j & Sub()@k ==> (#j=#k)) "
 
 // HOLDS, quick auto-proof 2017-06-19
 lemma agreeS:
   "All id A k rand #i. CommitS(id,A,k,rand)@i ==> Ex #j. RunningC(id,A,k,rand) @j"
 
 // no quick auto-proof - not sure what happens
-//??????
-lemma agreeC:
-  "All id A k rand #i. CommitC(id,A,k,rand)@i ==> Ex #j. RunningS(id,A,k,rand) @j"
+// XXXX ?
+// lemma agreeC:
+//  "All id A k rand #i. CommitC(id,A,k,rand)@i ==> Ex #j. RunningS(id,A,k,rand) @j"
 
 // HOLDS, quick proof 2017-06-19
 lemma secretsqnC:
@@ -259,5 +274,10 @@ lemma secretsqndifflimited:
  & (All #j #k. Sr()@j & Sr()@k ==> #j=#k)
   )
 ==> (All sqn #i. SecretDiff(sqn) @i ==> not (Ex #j. K(sqn)@j))"
+
+// This one captures our AUTS-based attacks that work even if f5 =/= f5star
+// ???
+lemma secretsqndiff2:
+  "All sqn #i. SecretDiff2(sqn) @i ==> not (Ex #j. K(sqn)@j)"
 
 end
