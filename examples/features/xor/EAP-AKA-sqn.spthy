@@ -48,18 +48,18 @@ The following is one possible flow:
 /*
 This version uses multisets to represent numbers, starting from a fresh value as initial sequence number. Otherwise the adversary trivially violates the weak secrecy property for the sequence number, because it will be 0,1,2,etc. which are of course known.
 
-/// NOT ANYMORE!!! NOW THERE IS A SOURCES LEMMA: To remove partial deconstructions, the adversary is the one providing the delta of '1'+'1'+'1'+... to the starting value, which is not ideal, but works for now.
+We use a sources lemma based on the secrecy of the anonymity key to get rid of partial deconstructions created from the sequence numbers.
 */
 
 builtins: xor,multiset
-functions: f1/2, f2/2, f5/2//, next/1
+functions: f1/2, f2/2, f5/2
 
 rule Setup:
    [ Fr( ~k )
    , Fr(~id)
    , Fr(~sqn)
    ]
- --[ InitialSqn(~id, ~sqn) ]-> 
+ --[ ]-> 
    [ !Client( ~id, $A, ~k, ~sqn), SQN_C(~id,~sqn+'1')
    , !Server( ~id, $A, ~k, ~sqn), SQN_S(~id,~sqn+'1') // the +1 are needed as otherwise a pattern-match on ~sqn+x will fail initially! 
    ]
@@ -98,7 +98,6 @@ rule Server_1:
    ]
  --[ Sr()
    , RunningS(~id,$A,~k,~rand) 
-   , SqnRelationS(~id, sqn, ~initsqn)
    , SecretAK(ak)
    ]->
    [ Out(<~rand,autn>) 
@@ -123,7 +122,6 @@ rule Client_1:
    , RunningC(~id,$A,~k,rand)
    , CommitC(~id,$A,~k,rand)
    , SecretC(sqn2)
-   , SqnRelationC(~id, sqn2, ~initsqn)
    ]->
    [ SQN_C(~id,sqn2)
    , Out(res)
@@ -143,6 +141,7 @@ rule Server_2:
 restriction equality:
   "All x y #i. (Eq( x, y ) @ #i) ==> (x = y)"
 
+// automatically proved 2017-06-19
 lemma aksecret [sources]:
   "All ak #i. SecretAK(ak)@i ==> not (Ex #k. KU(ak) @k)"
 
@@ -159,12 +158,6 @@ lemma agreeS:
 
 lemma agreeC:
   "All id A k rand #i. CommitC(id,A,k,rand)@i ==> Ex #j. RunningS(id,A,k,rand) @j"
-
-//lemma sqnrelationS [sources]:
-//  "All id sqn initsqn #i . SqnRelationS(id, sqn, initsqn) @i ==> (Ex #j. InitialSqn(id, initsqn) @j) & (Ex x. sqn = initsqn + x)"
-
-//lemma sqnrelationC [sources]:
-//  "All id sqn initsqn #i . SqnRelationC(id, sqn, initsqn) @i ==> (Ex #j. InitialSqn(id, initsqn) @j) & (Ex x. sqn = initsqn + x)"
 
 lemma secretsqnC:
   "All sqn #i. SecretC(sqn) @i ==> not (Ex #j. K(sqn)@j)"

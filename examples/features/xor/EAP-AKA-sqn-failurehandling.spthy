@@ -54,12 +54,12 @@ The following is one possible flow:
 /*
 This version uses multisets to represent numbers, starting from a fresh value as initial sequence number. Otherwise the adversary trivially violates the weak secrecy property for the sequence number, because it will be 0,1,2,etc. which are of course known.
 
-To remove partial deconstructions, the adversary is the one providing the delta of '1'+'1'+'1'+... to the starting value, which is not ideal, but works for now.
+We use a sources lemma based on the secrecy of the anonymity key to get rid of partial deconstructions created from the sequence numbers.
 */
 
 /* Extended with:
 - the mac_failure message in case the mac received by client is not correct.
-- the sync_failure message in case the mac received by client is correct, but the sequence number is wrong; this includes the re-synchronization term AUTS
+- the sync_failure message in case the mac received by client is correct while the sequence number is wrong; this includes the re-synchronization term AUTS (and an additional annotation about the secrecy of the anonymity key to remove partial deconstructions)
 */
 
 builtins: xor,multiset
@@ -106,11 +106,9 @@ rule Server_1:
    , In(~id)
    , Fr(~rand)
    , SQN_S(~id,sqn)
-//   , In(x) // try and replace this by sources lemma as in EAP-AKA-sqn.spthy
    ]
  --[ Sr()
    , RunningS(~id,$A,~k,~rand) 
-   , SqnRelationS(~id, sqn, ~initsqn)
    , SecretAK(ak)
    ]->
    [ Out(<~rand,autn>) 
@@ -135,7 +133,6 @@ rule Client_1_success:
    , RunningC(~id,$A,~k,rand)
    , CommitC(~id,$A,~k,rand)
    , SecretC(sqn2)
-   , SqnRelationC(~id, sqn2, ~initsqn)
    ]->
    [ SQN_C(~id,sqn2)
    , Out(res)
@@ -145,7 +142,6 @@ rule Client_1_macfailure:
    let amf  = fst(snd(autn))
        sqn2 = fst(autn) XOR f5(~k,rand)
        xmac = f1(~k, <sqn2,rand,amf>)
-//       res  = f2(~k,rand)
        mac  = snd(snd(autn))
    in
    [ !Client(~id, $A, ~k, ~initsqn)
@@ -155,14 +151,8 @@ rule Client_1_macfailure:
    ]
  --[ InEq(mac,xmac)
    , MacFailure()
-//   , Eq(sqn + '1',sqn2) 
-//   , RunningC(~id,$A,~k,rand)
-//   , CommitC(~id,$A,~k,rand)
-//   , SecretC(sqn2)
-//   , SqnRelationC(~id, sqn2, ~initsqn)
    ]->
-   [ // SQN_C(~id,sqn2)
-     SQN_C(~id,sqn) // sqn does NOT change in this case
+   [ SQN_C(~id,sqn) // sqn does NOT change in this case
    , Out('macfailure')
    ]
 
@@ -171,7 +161,6 @@ rule Client_1_syncfailure:
        amf  = fst(snd(autn))
        sqn2 = fst(autn) XOR f5(~k,rand)
        xmac = f1(~k, <sqn2,rand,amf>)
-//       res  = f2(~k,rand)
        mac  = snd(snd(autn))
        macstar  = f1(~k, <sqn +'1',rand,amf>)
        akstar   = f5(~k, rand)  // this is the naive version, need to change to "f5*" function!
@@ -182,20 +171,15 @@ rule Client_1_syncfailure:
    , Client_0(~id,$A)
    , SQN_C(~id,sqn)
    , In(<rand,autn>)
-//   , In(x) // can we remove this by sources lemma, similar to above and EAP-AKA-sqn.spthy?
    ]
  --[ Eq(mac,xmac)
    , InEq(sqn + '1',sqn2) // we check exact match of sequence number, mismatch handled in this rule
    , SyncFailure()
-//   , RunningC(~id,$A,~k,rand)
-//   , CommitC(~id,$A,~k,rand)
    , SecretC(sqn)
    , SecretDiff(sqn +'1' XOR sqn2)
-   , SqnRelationC(~id, sqn, ~initsqn)
    , SecretAK(akstar)
    ]->
-   [ //SQN_C(~id,sqn2)
-     SQN_C(~id,sqn) // sequence number does NOT change in this case
+   [ SQN_C(~id,sqn) // sequence number does NOT change in this case
    , Out(auts)
    ]
 
@@ -251,12 +235,6 @@ lemma agreeS:
 //??????
 lemma agreeC:
   "All id A k rand #i. CommitC(id,A,k,rand)@i ==> Ex #j. RunningS(id,A,k,rand) @j"
-
-//lemma sqnrelationS [sources]:
-//  "All id sqn initsqn #i . SqnRelationS(id, sqn, initsqn) @i ==> (Ex #j. InitialSqn(id, initsqn) @j) & (Ex x. sqn = initsqn + x)"
-
-//lemma sqnrelationC [sources]:
-//  "All id sqn initsqn #i . SqnRelationC(id, sqn, initsqn) @i ==> (Ex #j. InitialSqn(id, initsqn) @j) & (Ex x. sqn = initsqn + x)"
 
 // HOLDS, quick proof 2017-06-19
 lemma secretsqnC:
