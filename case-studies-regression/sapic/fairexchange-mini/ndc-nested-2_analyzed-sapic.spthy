@@ -217,7 +217,18 @@ solve( State_( ~prog_ ) ▶₀ #t2 )
   SOLVED // trace found
 qed
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+restriction actions:
+  restriction `resilient' references action 
+    (ProtoFact Linear "Receive" 2,2,Linear)
+  but no rule has such an action.
+  
+  restriction `resilient' references action 
+    (ProtoFact Linear "Send" 2,2,Linear)
+  but no rule has such an action.
+*/
 
 end
 /* Output
@@ -234,7 +245,10 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-nested-2.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.136267s
+  processing time: 0.099311s
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
   A_possible (exists-trace): verified (7 steps)
   B_possible (exists-trace): verified (7 steps)
   C_possible (exists-trace): verified (7 steps)
@@ -248,7 +262,10 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-2.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.136267s
+  processing time: 0.099311s
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
   A_possible (exists-trace): verified (7 steps)
   B_possible (exists-trace): verified (7 steps)
   C_possible (exists-trace): verified (7 steps)

@@ -1071,6 +1071,15 @@ unbound:
   
   rule `lookup_key_h2_as_k2_0_121111' has unbound variables: 
     k2
+
+restriction actions:
+  restriction `set_in' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
+  
+  restriction `set_notin' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
 */
 
 end
@@ -1088,8 +1097,8 @@ analyzing: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 analyzed: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.928087s
-  WARNING: 5 wellformedness check failed!
+  processing time: 1.865814s
+  WARNING: 7 wellformedness check failed!
            The analysis results might be wrong!
   
   can_create_key (exists-trace): verified (3 steps)
@@ -1106,8 +1115,8 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.928087s
-  WARNING: 5 wellformedness check failed!
+  processing time: 1.865814s
+  WARNING: 7 wellformedness check failed!
            The analysis results might be wrong!
   
   can_create_key (exists-trace): verified (3 steps)
