@@ -447,6 +447,15 @@ WARNING: the following wellformedness checks failed!
 unbound:
   rule `lookup_visited_as_v_0_11' has unbound variables: 
     v
+
+restriction actions:
+  restriction `set_in' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
+  
+  restriction `set_notin' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
 */
 
 end
@@ -464,8 +473,8 @@ analyzing: case-studies-sapic-regression/basic/design-choices.spthy
 analyzed: case-studies-sapic-regression/basic/design-choices.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.722579s
-  WARNING: 1 wellformedness check failed!
+  processing time: 0.54655s
+  WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   
   visit_once (all-traces): verified (66 steps)
@@ -478,8 +487,8 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/design-choices.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 0.722579s
-  WARNING: 1 wellformedness check failed!
+  processing time: 0.54655s
+  WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   
   visit_once (all-traces): verified (66 steps)

@@ -291,7 +291,7 @@ unboundReportDiff thy = do
 factReports :: OpenTheory -> WfErrorReport
 factReports thy = concat
     [ reservedReport, freshFactArguments, specialFactsUsage
-    , factUsage, inexistentActions
+    , factUsage, inexistentActions, inexistentActionsRestrictions
     ]
   where
     ruleFacts ru =
@@ -393,11 +393,24 @@ factReports thy = concat
                  nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
 
+    inexistentActionsRestrictions = do
+        RestrictionItem l <- get thyItems thy
+        fa <- sortednub $ formulaFacts (get rstrFormula l)
+        let info = factInfo fa
+            name = get rstrName l
+        if info `S.member` ruleActions
+          then []
+          else return $ (,) "restriction actions" $
+                 text ("restriction " ++ quote name ++ " references action ") $-$
+                 nest 2 (text $ show info) $-$
+                 text "but no rule has such an action."
+
+
 -- | Report on facts usage.
 factReportsDiff :: OpenDiffTheory -> WfErrorReport
 factReportsDiff thy = concat
     [ reservedReport, reservedPrefixReport, freshFactArguments, specialFactsUsage
-    , factUsage, inexistentActions
+    , factUsage, inexistentActions, inexistentActionsRestrictions
     ]
   where
     ruleFacts ru =
@@ -521,6 +534,18 @@ factReportsDiff thy = concat
           then []
           else return $ (,) "lemma actions" $
                  text (show s ++ " lemma " ++ quote name ++ " references action ") $-$
+                 nest 2 (text $ show info) $-$
+                 text "but no rule has such an action."
+
+    inexistentActionsRestrictions = do
+        EitherRestrictionItem (s, l) <- get diffThyItems thy
+        fa <- sortednub $ formulaFacts (get rstrFormula l)
+        let info = factInfo fa
+            name = get rstrName l
+        if info `S.member` ruleActions
+          then []
+          else return $ (,) "restriction actions" $
+                 text (show s ++ "restriction " ++ quote name ++ " references action ") $-$
                  nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
 

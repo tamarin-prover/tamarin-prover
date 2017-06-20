@@ -458,7 +458,7 @@ analyzing: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 analyzed: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.630201s
+  processing time: 1.545357s
   source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (21 steps)
 
@@ -470,7 +470,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/NSL/nsl-no_as-untagged.spthy
 
   output:          case-studies/temp-analysis.spthy
-  processing time: 2.630201s
+  processing time: 1.545357s
   source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (21 steps)
 
