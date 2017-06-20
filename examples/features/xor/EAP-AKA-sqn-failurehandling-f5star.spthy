@@ -134,6 +134,7 @@ rule Client_1_success:
    , RunningC(~id,$A,~k,rand)
    , CommitC(~id,$A,~k,rand)
    , SecretC(sqn2)
+   , Csuc()
    ]->
    [ SQN_C(~id,sqn2)
    , Out(res)
@@ -149,6 +150,7 @@ rule Client_1_macfailure:
    , Client_0(~id,$A)
    , SQN_C(~id,sqn)
    , In(<rand,autn>)
+   , Cmac()
    ]
  --[ InEq(mac,xmac)
    , MacFailure()
@@ -180,6 +182,7 @@ rule Client_1_syncfailure:
    , SecretDiff(sqn XOR sqnS)   // this value should not be knwon by the attacker (induce critial privacy attacks)
    , SecretDiff2(sqn XOR (sqn+'1'))   // this value should not be knwon by the attacker (induce critial privacy attacks)
    , SecretAK(akstar)
+   , CSync()
    ]->
    [ SQN_C(~id,sqn) // sequence number does NOT change in this case
    , Out(auts)
@@ -193,7 +196,9 @@ rule Server_2:
  --[ Eq(res,f2(~k,~rand))
    , CommitS(~id,$A,~k,~rand)
    , Success()
-   , SecretS(sqn1) ]->
+   , SecretS(sqn1)
+   , Ssuc()
+   ]->
    [   ]
 
 /************************************/
@@ -202,9 +207,15 @@ rule Server_2:
 #ifdef smallTraces  // carefull, if this block is enabled then Tamarin will not explore a large class of executions. Use it ONLY for proving existential lemmas.
 restriction smallTraces:
   " (All #j #k. Sub()@j & Sub()@k ==> (#j=#k)) &  // max 1 subscriber
-    (All #j #k #l #m. Cl()@j & Cl()@k & Cl()@l & Cl()@m==> (#j = #k | #j = #l | #j = #m | #k = #l | #k = #m | #m = #l)) &  // max 4 clients sessions
-    (All #j #k #l. Sr()@j & Sr()@k & Sr()@l ==> (#j = #k | #j = #l | #k = #l ))   // max 2 server sessions
+    (All #j #k #l. Sr()@j & Sr()@k & Sr()@l ==> (#j = #k | #j = #l | #k = #l )) &  // max 2 server sessions
+    (All #j #k #l. Csuc()@j & Csuc()@k & Csuc()@l ==> (#j = #k | #j = #l | #k = #l )) &  // max 2 client sessions accepting AUTN
+    (All #j #k #l. Csync()@j & Csync()@k & Csync()@l ==> (#j = #k | #j = #l | #k = #l )) &  // max 2 client sessions doing a resync
+    (All #j. Cmac()@j  ==> F) // no client session doing a mac failure 
   "
+restriction smallTraces2:
+"    (All #j #k #l. Csync()@j & Csync()@k & Csync()@l ==> (#j = #k | #j = #l | #k = #l ))"  // max 2 client sessions doing a resync
+ // This does not help so I preffer limits the number of rules invokations
+//   (All #j #k #l #m. Cl()@j & Cl()@k & Cl()@l & Cl()@m==> (#j = #k | #j = #l | #j = #m | #k = #l | #k = #m | #m = #l)) &  // max 4 clients sessions
 #endif
 
 restriction equality:
