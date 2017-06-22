@@ -52,7 +52,7 @@ The following is one possible flow:
  */
 
 /*
-This version uses multisets to represent numbers, starting from a fresh value as initial sequence number. Otherwise the adversary trivially violates the weak secrecy property for the sequence number, because it will be 0,1,2,etc. which are of course known. Moroever, this modeling is in line with a threat model where the attacker is not MiM *all* sessions of peers since their first use. Therefore, the attacker cannot keep track of SQN.
+This version uses multisets to represent numbers, starting from a fresh value as initial sequence number. Otherwise the adversary trivially violates the weak secrecy property for the sequence number, because it will be 0,1,2,etc. which are of course known. Moroever, this modeling is in line with a threat model where the attacker is not MiM *all* sessions of peers since their first use. Therefore, the attacker cannot, a priori, keep track of SQN.
 
 We use a sources lemma based on the secrecy of the anonymity key to get rid of partial deconstructions created from the sequence numbers.
 */
@@ -150,10 +150,10 @@ rule Client_1_macfailure:
    , Client_0(~id,$A)
    , SQN_C(~id,sqn)
    , In(<rand,autn>)
-   , CMac()
    ]
  --[ InEq(mac,xmac)
    , MacFailure()
+   , CMac()
    ]->
    [ SQN_C(~id,sqn) // sqn does NOT change in this case
    , Out('macfailure')
