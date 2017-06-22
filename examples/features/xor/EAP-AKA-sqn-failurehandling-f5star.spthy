@@ -150,7 +150,7 @@ rule Client_1_macfailure:
    , Client_0(~id,$A)
    , SQN_C(~id,sqn)
    , In(<rand,autn>)
-   , Cmac()
+   , CMac()
    ]
  --[ InEq(mac,xmac)
    , MacFailure()
@@ -209,13 +209,9 @@ restriction smallTraces:
   " (All #j #k. Sub()@j & Sub()@k ==> (#j=#k)) &  // max 1 subscriber
     (All #j #k #l. Sr()@j & Sr()@k & Sr()@l ==> (#j = #k | #j = #l | #k = #l )) &  // max 2 server sessions
     (All #j #k #l. Csuc()@j & Csuc()@k & Csuc()@l ==> (#j = #k | #j = #l | #k = #l )) &  // max 2 client sessions accepting AUTN
-    (All #j #k #l. Csync()@j & Csync()@k & Csync()@l ==> (#j = #k | #j = #l | #k = #l )) &  // max 2 client sessions doing a resync
-    (All #j. Cmac()@j  ==> F) // no client session doing a mac failure 
+    (All #j #k #l. CSync()@j & CSync()@k & CSync()@l ==> (#j = #k | #j = #l | #k = #l )) &  // max 2 client sessions doing a resync
+    (All #j. CMac()@j  ==> F) // no client session doing a mac failure 
   "
-restriction smallTraces2:
-"    (All #j #k #l. Csync()@j & Csync()@k & Csync()@l ==> (#j = #k | #j = #l | #k = #l ))"  // max 2 client sessions doing a resync
- // This does not help so I preffer limits the number of rules invokations
-//   (All #j #k #l #m. Cl()@j & Cl()@k & Cl()@l & Cl()@m==> (#j = #k | #j = #l | #j = #m | #k = #l | #k = #m | #m = #l)) &  // max 4 clients sessions
 #endif
 
 restriction equality:
