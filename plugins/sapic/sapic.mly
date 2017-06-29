@@ -6,6 +6,7 @@ open Tamarin
 open Formula
 open Fact
 open Action
+open Var
 open Atomformulaaction
 open Sapicaction
 open Sapicvar
@@ -33,8 +34,8 @@ let reserved symbol =
 module VarSet = Set.Make( Var );;
 let (@@) (a:VarSet.t) (b:VarSet.t) = VarSet.union a b
 
-type lemma = {header:string; quantif:char; formula: string}
-type restriction = {aheader:string; aformula: string}
+type lemma = {header:string; quantif:char; formula: formula}
+type restriction = {aheader:string; aformula: formula}
 type options = { progress: bool}
 let defaultop= {progress=false}
 let mergeopt a b = {progress=(a.progress || b.progress)}
@@ -127,7 +128,7 @@ let location_rule=
 %type <string * rule list> signature_spec 
 %type <string> builtins 
 %type <string> builtin_theory_seq
-%type <string> tvarseq
+%type <VarSet.t> tvarseq
 %type <string * rule list> fctseq
 %type <string * int * fct_attr> fct
 %type <options> optionseq
@@ -146,10 +147,9 @@ let location_rule=
 %type <string> lemma_attr
 %type <string> lemma_attr_seq
 %type <char> trace_quantifier
-%type <string> formula
-%type <string> quantifier
-%type <string> atom
-%type <string> tvar
+%type <formula> formula
+%type <atom> atom
+%type <var> tvar
 %type <fact list> factseq
 %type <fact> fact
 %type <rule> rule
@@ -442,38 +442,34 @@ trace_quantifier:
 
 
 formula:
-	|     atom				{$1}
-	|     NOT formula			{"not"^$2}
-	|     formula OR formula		{$1^" | "^$3}
-	|     formula AND formula		{$1^" & "^$3}
-	|     formula IMP formula		{$1^" ==> "^$3}
-	|     formula IFF formula		{$1^" <=> "^$3}
-	|     quantifier tvarseq POINT formula 	{$1^" "^$2^". "^$4}
-	|     LP formula RP    	     		{"( "^$2^" )"}
-;
-
-quantifier:
-	|    ALL     {"All"}
-	|    EXISTS  {"Ex"}
+	|     atom				{Atom($1)}
+	|     NOT formula			{Not($2)}
+	|     formula OR formula		{Or($1,$3)}
+	|     formula AND formula		{And($1,$3)}
+	|     formula IMP formula		{Imp($1,$3)}
+	|     formula IFF formula		{Iff($1,$3)}
+	|     ALL tvarseq POINT formula 	{All($2,$4)}
+	|     EXISTS tvarseq POINT formula 	{Ex($2,$4)}
+	|     LP formula RP    	     		{$2}
 ;
 
 atom:
-	|    tvar LEQ tvar		{$1^" < "^$3}
-	|    SHARP IDENTIFIER EQ SHARP IDENTIFIER 	{"#"^$2^" = #"^$5}
-	|    multterm EQ multterm       {(Term.term2string $1)^" = "^(Term.term2string $3)}
-	|    fact AT tvar 		{fact2string($1)^" @ "^$3}
-	|    TRUE    			{"T"}
-	|    FALSE    			{"F"}
+	|    tvar LEQ tvar		{TLeq($1,$3)}
+	|    SHARP IDENTIFIER EQ SHARP IDENTIFIER 	{TEq(Temp($2),Temp($5))}
+	|    multterm EQ multterm       {Eq($1,$3)}
+	|    action AT tvar 		{At($1,$3)}
+	|    TRUE    			{True}
+	|    FALSE    			{False}
 ;
 
 tvar:
-	|    SHARP IDENTIFIER	{"#"^$2}
-	|    IDENTIFIER		{$1}
+	|    SHARP IDENTIFIER	{Temp($2)}
+	|    IDENTIFIER		{Temp($1)}
 ;
 
 tvarseq :  
- 	 |    tvar		{$1}
-	 |    tvarseq tvar	{$1^" "^$2}
+ 	 |    tvar		{VarSet.singleton $1}
+	 |    tvarseq tvar	{VarSet.add $2 $1}
 ;
 
 
