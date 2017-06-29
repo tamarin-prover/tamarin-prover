@@ -8,17 +8,14 @@ open Annotatedsapictree
 open Atomformulaaction
 open Btree
 
-let rec print_lemmas lem_list =
-    match lem_list with
-    | [] -> ""
-    | h::t -> sprintf "%s\n\"\t%s\"\n\n" (h.header^(if (h.quantif='A') then " all-traces" else (if (h.quantif='E') then " exists-trace" else "")))
-    (formula2string h.formula)  ^
-    print_lemmas t
+let lemma2string = function
+    ForallLemma(header,formula) -> header^"\n all-traces\n\""^(formula2string formula)^"\"\n"
+    |ExistsLemma(header,formula) -> header^"\n exists-trace\n\""^(formula2string formula)^"\"\n"
+    |ForallRestriction(header,formula) -> header^"\n all-traces\n\""^(formula2string formula)^"\"\n"
+    |ExistsRestriction(header,formula) -> header^"\n exists-trace\n\""^(formula2string formula)^"\"\n"
 
-let rec print_restrictions res_list =
-    match res_list with
-    | [] -> ""
-    | h::t -> sprintf "%s\n\"\t%s\"\n\n" (h.aheader) (formula2string h.aformula)  ^ print_restrictions t
+let rec print_lemmas lemlist =
+    (String.concat "\n") (List.map lemma2string lemlist)
 
 let rec contains_lookup t = 
     match t with

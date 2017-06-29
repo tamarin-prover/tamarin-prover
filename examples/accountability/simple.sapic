@@ -49,4 +49,11 @@ lemma timelinessA [reuse]:
              | ( Ex #j .  AbortA(a, b, t, sida)@j )
              | ( Ex #j. Corrupt(a)@j)"
 
+verdictfunction v1:
+    "Ex #i. Bla()@i" -> <$A,$B> | <$B,$C> | <$C,$D>,
+    otherwise -> <> 
+
+/* lemma acc_v1 [reuse]: */
+/*     v1 accounts for "Exists #i. Bla()@i" */
+
 end

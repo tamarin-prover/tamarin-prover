@@ -203,7 +203,6 @@ let translation input =
       then progresstrans annotated_process
       else noprogresstrans annotated_process 
   and lemmas_tamarin = print_lemmas input.lem
-  and users_restrictions = print_restrictions input.ax
   and predicate_restrictions = print_predicates input.pred
   and sapic_restrictions = 
     if input.op.progress then 
@@ -213,6 +212,6 @@ let translation input =
     else 
       generate_sapic_restrictions annotated_process
   in
-  input.sign ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^
+  input.sign ^ ( print_msr msr ) ^ sapic_restrictions ^
   predicate_restrictions ^ lemmas_tamarin 
   ^ "end"

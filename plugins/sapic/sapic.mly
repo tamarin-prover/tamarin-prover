@@ -7,6 +7,7 @@ open Formula
 open Fact
 open Action
 open Var
+open Verdict
 open Atomformulaaction
 open Sapicaction
 open Sapicvar
@@ -34,8 +35,15 @@ let reserved symbol =
 module VarSet = Set.Make( Var );;
 let (@@) (a:VarSet.t) (b:VarSet.t) = VarSet.union a b
 
-type lemma = {header:string; quantif:char; formula: formula}
-type restriction = {aheader:string; aformula: formula}
+type verdictf = { vheader: string; spec: verdictf}
+
+type lemma = ForallLemma of string * formula (* string is used for header *)
+           | ExistsLemma of string * formula
+           | AccLemma of verdictf * formula 
+           | ForallRestriction of string * formula 
+           | ExistsRestriction of string * formula 
+
+
 type options = { progress: bool}
 let defaultop= {progress=false}
 let mergeopt a b = {progress=(a.progress || b.progress)}
@@ -46,7 +54,6 @@ type inp = {sign : string;
             rules: rule list;
             proc : sapic_action btree;
             lem  : lemma list;
-            ax   : restriction list
 }
 
 type fct_attr =
@@ -55,6 +62,7 @@ type fct_attr =
 | Pred of string
 
 let proc_table = Hashtbl.create 10;;
+let verdictf_table = Hashtbl.create 10;;
 
 let varlist n =
   let rec work i =
@@ -106,7 +114,7 @@ let location_rule=
 
 %token <char> ALL_TRACES EXISTS_TRACE
 %token <string> IDENTIFIER NUM BUILTIN_THEORY FUNCTION_ATTR LEMMA_ATTR FORMALCOMMENT QUOTED_IDENTIFIER 
-%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION LEMMA REUSE INDUCTIVE INVARIANT  ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA
+%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION VERDICTFUNCTION LEMMA REUSE INDUCTIVE INVARIANT  ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE ACCOUNTS FOR
 
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
 %token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS
@@ -140,13 +148,11 @@ let location_rule=
 %type <term> expterm
 %type <term> term
 %type <var> literal
-%type <restriction> restriction
 %type <string> restriction_header
 %type <lemma> lemma
 %type <string> lemma_header
 %type <string> lemma_attr
 %type <string> lemma_attr_seq
-%type <char> trace_quantifier
 %type <formula> formula
 %type <atom> atom
 %type <var> tvar
@@ -164,21 +170,21 @@ let location_rule=
 %% /* Grammar rules and actions follow */
 
 input: 	       
-    |   THEORY IDENTIFIER BEGIN body END {{sign="theory "^$2^"\nbegin\n\n"^location_sign^$4.sign; pred=$4.pred; op=$4.op; rules=location_rule::$4.rules; proc=$4.proc; lem=$4.lem; ax=$4.ax}}
+    |   THEORY IDENTIFIER BEGIN body END {{sign="theory "^$2^"\nbegin\n\n"^location_sign^$4.sign; pred=$4.pred; op=$4.op; rules=location_rule::$4.rules; proc=$4.proc; lem=$4.lem}}
 
 ;
 
 body: 
-    | /* empty*/           {{sign=""; pred=[]; op=defaultop; rules=[]; proc=Empty; lem=[]; ax=[]}}
-    | signature_spec body  {let (s,rl)=$1 in {sign=(s^$2.sign); pred=$2.pred; op=$2.op; rules=rl@$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
-    | let_process body     {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}} 
-    | predicates body   {{sign=$2.sign; pred=($2.pred @ $1); op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
-    | options body   {{sign=$2.sign; pred=$2.pred; op=(mergeopt $1 $2.op); rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
-    | process body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$1; lem=$2.lem; ax=$2.ax}}
-    | lemma body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=($1::$2.lem); ax=$2.ax}}
-    | restriction body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=($1::$2.ax)}}
-    | rule body 	          {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=($1::$2.rules); proc=$2.proc; lem=$2.lem; ax=$2.ax}}
-    | formal_comment body  {{sign=($1^$2.sign); pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
+    | /* empty*/           {{sign=""; pred=[]; op=defaultop; rules=[]; proc=Empty; lem=[]}}
+    | signature_spec body  {let (s,rl)=$1 in {sign=(s^$2.sign); pred=$2.pred; op=$2.op; rules=rl@$2.rules; proc=$2.proc; lem=$2.lem}}
+    | let_process body     {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}} 
+    | verdictf body     {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}} 
+    | predicates body   {{sign=$2.sign; pred=($2.pred @ $1); op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}}
+    | options body   {{sign=$2.sign; pred=$2.pred; op=(mergeopt $1 $2.op); rules=$2.rules; proc=$2.proc; lem=$2.lem}}
+    | process body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$1; lem=$2.lem}}
+    | lemma body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=($1::$2.lem)}}
+    | rule body 	          {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=($1::$2.rules); proc=$2.proc; lem=$2.lem}}
+    | formal_comment body  {{sign=($1^$2.sign); pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}}
 ;
 
 signature_spec: 
@@ -282,6 +288,34 @@ id_not_res :
 let_process:
 	 |    LET id_not_res EQ process			 {Hashtbl.add proc_table $2 $4; ()} 
 
+verdictf:
+	|     VERDICTFUNCTION IDENTIFIER COLON caseseq {Hashtbl.add verdictf_table $2 $4; ()} 
+;
+
+caseseq:
+    |	/* empty */		{[]}
+    |     case			{[$1]}
+    |     case COMMA caseseq	{$1::$3}
+    |     case COMMA OTHERWISE RIGHTARROW verdict	{[$1;Otherwise($5)]} /*otherwise needs to be at the very end*/
+;
+
+case:
+  | DQUOTE formula DQUOTE RIGHTARROW verdict {Case($2,$5)}
+;
+
+verdict:
+  | LEQ pvarseq GEQ  {[$2]}
+  | LEQ pvarseq GEQ OR verdict {$2::$5}
+  ;
+
+pvarseq:
+    |	/* empty */		{[]}
+    |     pvar			{[$1]}
+    |     pvar COMMA pvarseq	{$1::$3}
+;
+
+
+
 process:
     | LP process RP                                  { $2 }
     | LP process RP AT multterm                      { substitute "_loc_" $5 $2 }
@@ -378,6 +412,14 @@ term:
 ;
 
 literal:
+        | pvar                                  {$1}
+	|     TILDE QUOTE IDENTIFIER QUOTE	{Var.FreshFixed($3)}
+    |     TILDE IDENTIFIER	     		{Var.Fresh($2)}
+	|     SHARP IDENTIFIER			{Var.Temp($2)}
+	|     IDENTIFIER			{Var.Msg($1)}
+;
+
+pvar:
 	/*|     QUOTE IDENTIFIER QUOTE		{Var.PubFixed($2)}  */
     /* tamarin does actually not respect its grammar and accepts e.g. '1'*/
         |     QUOTED_IDENTIFIER
@@ -389,18 +431,19 @@ literal:
                         Var.PubFixed(unquoted_id)
         } 
 	|     DOLLAR IDENTIFIER			{Var.Pub($2)}
-	|     TILDE QUOTE IDENTIFIER QUOTE	{Var.FreshFixed($3)}
-    |     TILDE IDENTIFIER	     		{Var.Fresh($2)}
-	|     SHARP IDENTIFIER			{Var.Temp($2)}
-	|     IDENTIFIER			{Var.Msg($1)}
 ;
 
 lemma:
-	|     lemma_header trace_quantifier DQUOTE formula DQUOTE	{{header=$1; quantif=$2; formula=$4}}
-;
+	|     lemma_header ALL_TRACES DQUOTE formula DQUOTE	{ ForallLemma($1, $4) }
+	|     lemma_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsLemma($1, $4) }
+	|     lemma_header DQUOTE formula DQUOTE	{ ForallLemma($1, $3) }
+	|     restriction_header ALL_TRACES DQUOTE formula DQUOTE	{ ForallRestriction($1, $4) }
+	|     restriction_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsRestriction($1, $4) }
+	|     restriction_header DQUOTE formula DQUOTE	{ ForallRestriction($1, $3) }
+	|     lemma IDENTIFIER COLON IDENTIFIER ACCOUNTS FOR formula  	{  try 
+            AccLemma( Hashtbl.find verdictf_table $2, $7) 
+            with Not_found -> Printf.eprintf "The verdict: %s is undefined. \n " $2; raise Parsing.Parse_error }
 
-restriction:
-    |     restriction_header DQUOTE formula DQUOTE	{{aheader=$1; aformula=$3}}
 ;
 
 lemma_header:
@@ -433,12 +476,6 @@ lemma_attr:
 	|     LEMMA_ATTR			{$1}
 	|     HIDE_LEMMA EQ IDENTIFIER	{"hide_lemma="^$3}
 ;
-
-trace_quantifier:
-	|     /* empty */ {' '}
-	|     ALL_TRACES	{'A'}
-	|     EXISTS_TRACE	{'E'}
-;	
 
 
 formula:
