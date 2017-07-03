@@ -1,0 +1,43 @@
+theory DelegationBroken
+begin
+
+builtins: signing
+
+functions: NormalAct/0, SpecialAct/0, UnusualAct/0, isAct/1
+
+equations: isAct(NormalAct) = true,
+           isAct(SpecialAct) = true,
+           isAct(UnusualAct) = true
+
+let A = 
+  ( in(a);
+     if a = NormalAct()
+       then out(<a, sign(skA, a)>)
+       else if a = SpecialAct()
+              then new na; out(<na, sign(skA, <a, na>)>);
+                   in(r); if verify(pk(skB), r, na) = true()
+                           then out(<a, na, sign(skA, <a, na>), r>)
+  ) 
+
+let B = 
+  ( in(m);
+     if verify(pk(skA), snd(m), <fst(m), SpecialAct()>) = true()
+       then out(sign(skB, fst(m)))
+  )
+
+let C = 
+  ( in(m); 
+     if verify(pk(skA), snd(m), fst(m)) = true()
+       then event Log($A, fst(m)); event Execute(fst(m))
+       else if verify(pk(skA), fst(snd(snd(m))), <fst(m), fst(snd(m))>) = true()
+              then if verify(pk(skB), snd(snd(snd(m))), fst(snd(m))) = true()
+                     then event Log(<$A, $B>, fst(m)); event Execute(fst(m))
+  )
+
+let I = 
+  ( out(SpecialAct()); out(<pk(skA), pk(skB)>)
+  )
+
+! (new skA; new skB; (A || B || I || C))
+
+end
