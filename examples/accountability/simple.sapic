@@ -47,10 +47,10 @@ lemma timelinessA [reuse]:
              | ( Ex #j. Corrupt(a)@j)"
 
 verdictfunction v1:
-    "Ex #i. FallA()@i" -> <$A,$B> | <$B,$C> | <$C,$D>,
+    "Ex #i. FallA()@i" -> <'A','B'> | <'B','C'> | <'C','A'>,
     otherwise -> <> 
 
 lemma acc:
-    v1 accounts for "Ex #i. BadThing()@i" for parties <$A,$B,$C>
+    v1 accounts for "Ex #i. BadThing()@i" for parties <'A','B','C'>
 
 end

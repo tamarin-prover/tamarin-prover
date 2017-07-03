@@ -43,6 +43,12 @@ let dishonest_disj parties v =
     let disj = List.fold_left (fun a b -> Or(dishonest parties b,a)) (Atom False) v in
     Ex (free_vars VarSet.empty disj,disj)
 
+let corrupted_conj b = 
+    let corrupted_a i p = Atom ( At ( (Action ("Corrupted",[Var p])), (Temp ("c"^string_of_int(i))))) in
+    let atoms = mapi corrupted_a b in
+    let conj = List.fold_left (fun a b -> And(b,a)) (Atom True) atoms in
+        Ex (free_vars VarSet.empty conj,conj)
+
 let sufficiency id parties vf phi = 
 (* for the each mapping φ_i → V_i *) 
 (* where V_i = B_i^1 | .. | B_i^n *)
@@ -82,6 +88,18 @@ let minimality id parties vf phi =
             v)
         vf))
 
+let uniqueness id vf = 
+(* (uni-i) Uniqueness of V_i *)
+(* for the each mapping φ_i → V_i *) 
+(* where V_i = B_i^1 | .. | B_i^n *)
+(*     For all traces: φ_i ⇒ Corrupt(union over  B_i^j for all j) *)
+    let unique i (f,v) = 
+        let label = Printf.sprintf "lemma %s_uniq_%n" id i in
+        let union = List.fold_left (VarSet.union) VarSet.empty v in
+        ForallLemma (label, Imp(f,corrupted_conj (VarSet.elements union)))
+    in
+    mapi unique vf
+
 let sufficient_conditions id parties vf phi =
     (exclusiveness id vf )
     @
@@ -90,4 +108,6 @@ let sufficient_conditions id parties vf phi =
     (sufficiency id parties vf phi)
     @
     (minimality id parties vf phi)
+    @
+    (uniqueness id vf)
 
