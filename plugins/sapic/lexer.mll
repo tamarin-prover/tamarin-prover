@@ -57,6 +57,7 @@ rule token = parse
      | "otherwise"	   { OTHERWISE }
      | "accounts" { ACCOUNTS }
      | "for" { FOR }
+     | "parties" { PARTIES }
      | "->"	   { RIGHTARROW }
      | "-->"	   { TRANSIT }
      | "--["	   { OPENTRANS }

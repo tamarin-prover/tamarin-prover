@@ -12,6 +12,7 @@ open Atomformulaaction
 open Sapicaction
 open Sapicvar
 open Sapicterm
+open Lemma
 
 module TermSet = Set.Make( Term );;
 
@@ -34,15 +35,6 @@ let reserved symbol =
   
 module VarSet = Set.Make( Var );;
 let (@@) (a:VarSet.t) (b:VarSet.t) = VarSet.union a b
-
-type verdictf = { vheader: string; spec: verdictf}
-
-type lemma = ForallLemma of string * formula (* string is used for header *)
-           | ExistsLemma of string * formula
-           | AccLemma of verdictf * formula 
-           | ForallRestriction of string * formula 
-           | ExistsRestriction of string * formula 
-
 
 type options = { progress: bool}
 let defaultop= {progress=false}
@@ -114,7 +106,7 @@ let location_rule=
 
 %token <char> ALL_TRACES EXISTS_TRACE
 %token <string> IDENTIFIER NUM BUILTIN_THEORY FUNCTION_ATTR LEMMA_ATTR FORMALCOMMENT QUOTED_IDENTIFIER 
-%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION VERDICTFUNCTION LEMMA REUSE INDUCTIVE INVARIANT  ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE ACCOUNTS FOR
+%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION VERDICTFUNCTION LEMMA REUSE INDUCTIVE INVARIANT  ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE ACCOUNTS FOR PARTIES
 
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
 %token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS
@@ -289,7 +281,7 @@ let_process:
 	 |    LET id_not_res EQ process			 {Hashtbl.add proc_table $2 $4; ()} 
 
 verdictf:
-	|     VERDICTFUNCTION IDENTIFIER COLON caseseq {Hashtbl.add verdictf_table $2 $4; ()} 
+	|     VERDICTFUNCTION IDENTIFIER COLON caseseq {Hashtbl.add verdictf_table $2 (wellformed $4); ()} 
 ;
 
 caseseq:
@@ -304,8 +296,9 @@ case:
 ;
 
 verdict:
-  | LEQ pvarseq GEQ  {[$2]}
-  | LEQ pvarseq GEQ OR verdict {$2::$5}
+  | LCB RCB  {[]} 
+  | LEQ pvarseq GEQ  {[VarSet.of_list $2]}
+  | LEQ pvarseq GEQ OR verdict {(VarSet.of_list $2)::$5}
   ;
 
 pvarseq:
@@ -313,8 +306,6 @@ pvarseq:
     |     pvar			{[$1]}
     |     pvar COMMA pvarseq	{$1::$3}
 ;
-
-
 
 process:
     | LP process RP                                  { $2 }
@@ -440,8 +431,8 @@ lemma:
 	|     restriction_header ALL_TRACES DQUOTE formula DQUOTE	{ ForallRestriction($1, $4) }
 	|     restriction_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsRestriction($1, $4) }
 	|     restriction_header DQUOTE formula DQUOTE	{ ForallRestriction($1, $3) }
-	|     lemma IDENTIFIER COLON IDENTIFIER ACCOUNTS FOR formula  	{  try 
-            AccLemma( Hashtbl.find verdictf_table $2, $7) 
+	|     LEMMA IDENTIFIER COLON IDENTIFIER ACCOUNTS FOR DQUOTE formula DQUOTE FOR PARTIES LEQ pvarseq GEQ {  try 
+            AccLemma( $2, Hashtbl.find verdictf_table $4, $8,( VarSet.of_list $13))
             with Not_found -> Printf.eprintf "The verdict: %s is undefined. \n " $2; raise Parsing.Parse_error }
 
 ;

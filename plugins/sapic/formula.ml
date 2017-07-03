@@ -8,7 +8,7 @@ open Atom
 type formula=Atomformulaaction.formula
 
 let rec vars_f = function
-     Atom(a)    -> vars_a(a)
+     Atom(a)    -> vars_atom(a)
     |Not(f)     -> vars_f(f)
     |Or(f1,f2)  
     |And(f1,f2) 
@@ -16,6 +16,12 @@ let rec vars_f = function
     |Iff(f1,f2) -> VarSet.union (vars_f f1) (vars_f f2)
     |All(vs,_)    
     |Ex(vs,_)   -> vs
+
+let rec free_vars bound = function
+    Atom(a) -> VarSet.diff (vars_atom a) bound
+  | Not(f) -> free_vars bound f
+  | Or(f1,f2) | And(f1,f2)|Imp(f1,f2)|Iff(f1,f2) -> VarSet.union (free_vars bound f1) (free_vars bound f2)
+  | All(q,f) | Ex(q,f) -> free_vars (VarSet.union bound q) f
 
 let rec formula2string = function
      Atom(a)    -> atom2string(a)

@@ -104,7 +104,7 @@ let next_tildex p msrs =
   in
   match state_list  with 
     State(p,v)::_ | PState(p,v)::_ -> v
-   | _::_ -> raise ProgrammingError (* Should not happen by List.filter *)
+   | _::_ -> raise (ImplementationError "Should not happen by List.filter")
    |  [] -> raise NoNextState (* If state_list is empty *)
     (* TODO might try to detect inconsistencies *)
      

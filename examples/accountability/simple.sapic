@@ -3,19 +3,16 @@ begin
 
 section{* Simple Accountability Mechanism *}
 
-/*
- * Protocol:    ??
+/* Protocol:    ??
  * Modeler:     Robert Kunnemann 
  * Date:        Jul 2017
  *
- * Status:  wip 
- */
+ * Status:  wip */
 
 functions: 
     pk/1,sk/1[private],
     aenc/2, adec/2,
     sign/2, verify/2,
-    /* extrmsg/1, */
     true/0
 
 equations: 
@@ -50,10 +47,10 @@ lemma timelinessA [reuse]:
              | ( Ex #j. Corrupt(a)@j)"
 
 verdictfunction v1:
-    "Ex #i. Bla()@i" -> <$A,$B> | <$B,$C> | <$C,$D>,
+    "Ex #i. Foo()@i" -> <$A,$B> | <$B,$C> | <$C,$D>,
     otherwise -> <> 
 
-/* lemma acc_v1 [reuse]: */
-/*     v1 accounts for "Exists #i. Bla()@i" */
+lemma acc:
+    v1 accounts for "Ex #i. Bar()@i" for parties <$A,$B,$C>
 
 end

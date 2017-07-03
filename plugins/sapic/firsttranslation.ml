@@ -39,7 +39,7 @@ let rec gen trans tree p tildex  = match (process_at tree p) with
         NoNextState -> match y with
           Null ->  VarSet.empty 
         | NDC -> tildex
-        | _ -> raise ProgrammingError)
+        | _ -> raise (ImplementationError "ImplementationError"))
     and tildex'2 = try next_tildex (2::p) msrs with
         NoNextState -> 
             (* If we don't get a new tildex because there is no next state, y should be one of the following *)

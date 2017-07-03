@@ -4,12 +4,36 @@ open Fact
 open Exceptions
 open Atomformulaaction
 open Atom
+open List
 
-type causes = var list
+module VarSet = Set.Make( Var );;
+
+type causes = VarSet.t
 type verdict = causes list
 
-type verdictf_case = Case of formula * verdict | Otherwise of verdict
-type verdictf = verdictf_case list
+type proto_verdictf_case = Case of formula * verdict | Otherwise of verdict
+type proto_verdictf = proto_verdictf_case list
+
+type verdictf = (formula * verdict) list
+
+let is_wellformed vf = (* contains otherwise at most once *)
+    length (filter (function Case(_,_) -> false | Otherwise(_) -> true) vf) < 2
+
+let rec big_or = function 
+                | [f] -> f
+                | f::fl -> Or(f,big_or fl)
+                | [] -> raise (VerdictNotWellFormed "Verdict should contain at least one case which is not \"otherwise\"")
+
+let wellformed vf = 
+        if is_wellformed vf then map 
+            (function Case(f,v) -> (f,v) 
+                    | Otherwise(v) -> 
+                            let f' = Not( big_or( fold_left (fun l -> function Case(f,_) -> f::l
+                                                                    | Otherwise(_) -> l) [] vf))
+                            in
+                                (f',v) ) vf
+        else raise (ImplementationError "Otherwise has been used more than once. Parser should have caught that.")
+
 
 (* let rec vars_f = function *)
 (*      Atom(a)    -> vars_a(a) *)

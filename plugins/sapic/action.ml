@@ -1,3 +1,4 @@
+open Exceptions
 open Var
 open Term
 open Position
@@ -33,6 +34,14 @@ let rec subs_a id t (a:action) =
             | Receive(_)
             | Send(_)
             -> raise Parsing.Parse_error 
+
+let rec vars_action  = function
+    Init -> VarSet.empty 
+  | Action(name,tl) -> List.fold_left 
+   (fun a x -> VarSet.union (vars_t x) a)
+   VarSet.empty tl
+   | _  -> raise ( NotImplementedError "Not implemented.")
+
 
 type t = action
 let compare (s1:action) (s2:action) = String.compare (action2string s1) (action2string s2)
