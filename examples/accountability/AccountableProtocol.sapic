@@ -1,0 +1,63 @@
+theory AccountableProtocol
+begin
+
+builtins: signing
+
+functions: ZK/7, verZK/1, Pub/1, f/2,
+           commit/2, open/2,
+           channel/2, retrieve/2, check/2,
+           Initialize/1, Log/1, Final/0, readLog/1, isLog/1, readInit/1
+
+equations: 
+           Pub(ZK(<commit(x,rx), commit(y,ry), commit(f(x,y),rz)>, x, y, f(x,y), rx, ry, rz)) = <commit(x,rx), commit(y,ry), commit(f(x,y),rz)>,
+           verZK(ZK(<commit(x,rx), commit(y,ry), commit(f(x,y),rz)>, x, y, f(x,y), rx, ry, rz)) = true,
+           open(commit(m, r), r) = m,
+           retrieve(x, channel(x, z)) = z,
+           check(x, channel(x, z)) = true,
+           readLog(Log(l)) = l,
+           readInit(Initialize(l)) = l,
+           isLog(Log(l))= true
+
+// Adversary
+let E = (out (<pk(skA), pk(skS), pk(skL)>))
+
+let PA =
+  (
+    // Only with one `S` party
+    let x = fst(retrieve(cSA, m)) in
+    let sig = snd(retrieve(cSA, m)) in
+    let z = f(x, y) in
+    let Cx = commit(x, rx) in
+    let Cy = commit(y, ry) in
+    let Cz = commit(z, rz) in
+    let l = <Cx, Cy, ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)> in
+    in (m); new rx; new rz; 
+    if verify(pk(skS), sig, x) = true()
+       then event Log(<sig, l>);
+            out (channel(cAS, sign(skA, <z,rz,rx>)));
+            out (Log(l));
+            event Final()
+  )
+
+// Authority
+let A = 
+  (
+    new y; new ry; 
+    // It turns out `Init` is reserved
+    event Initialize(commit(y,ry)); out (commit(y,ry)); PA
+  )
+
+// Party `S`
+let S =
+  (
+    // some unbounded vars in the papers, still a bit confused about this one
+    new x; out (channel(cSA, sign(skS, x)))
+  )
+
+
+// Protocol itself
+// cAS: secure channel from A to S
+// cSA: secure channel from S to A
+new skA; new skS; new cAS; new cSA; new skL; (E || A || S)
+
+end
