@@ -150,7 +150,7 @@ naryOpApp plit = do
     (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm plit
-                     else commaSep (multterm plit)
+                     else commaSep (msetterm plit)
     let k' = length ts
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
@@ -171,7 +171,7 @@ binaryAlgApp plit = do
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do
-  ts <- symbol "diff" *> parens (commaSep (multterm plit))
+  ts <- symbol "diff" *> parens (commaSep (msetterm plit))
   when (2 /= length ts) $ fail $
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState
@@ -187,7 +187,7 @@ diffOp eqn plit = do
 term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
 term plit eqn = asum
     [ pairing       <?> "pairs"
-    , parens (multterm plit)
+    , parens (msetterm plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
     , nullaryApp
@@ -205,7 +205,7 @@ term plit eqn = asum
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Parser (Term l) -> Parser (Term l)
-expterm plit = chainl1 (msetterm plit) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm plit = chainl1 (term plit False) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -213,19 +213,19 @@ multterm plit = do
     dh <- enableDH <$> getState
     if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
-        else msetterm plit
+        else term plit False
 
 -- | A left-associative sequence of multiset unions.
 msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
 msetterm plit = do
     mset <- enableMSet <$> getState
     if mset -- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (term plit False) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
-        else term plit False
+        then chainl1 (multterm plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        else multterm plit
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
-tupleterm plit = chainr1 (multterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
+tupleterm plit = chainr1 (msetterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
@@ -236,7 +236,7 @@ fact plit = try (
          []                -> fail "empty identifier"
          (c:_) | isUpper c -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
-       ts    <- parens (commaSep (multterm plit))
+       ts    <- parens (commaSep (msetterm plit))
        mkProtoFact multi i ts
     <?> "fact" )
   where
@@ -299,7 +299,7 @@ letBlock = do
     toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
-    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> multterm llit
+    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm llit
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
@@ -420,7 +420,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (multterm llit <* opEqual) <*> multterm llit <?> "term equality"
+  , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
