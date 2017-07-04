@@ -30,8 +30,8 @@ let rec formula2string = function
     |And(f1,f2) -> "("^formula2string(f1)^" & "^formula2string(f2)^")"
     |Imp(f1,f2) -> "("^formula2string(f1)^" ==> "^formula2string(f2)^")"
     |Iff(f1,f2) -> "("^formula2string(f1)^" <=> "^formula2string(f2)^")"
-    |All(vs,f)  -> "All "^flatten_varlist(VarSet.elements vs)^" . ("
+    |All(vs,f)  -> "All "^flatten_varlist_space(VarSet.elements vs)^" . ("
                    ^formula2string(f)^")"
-    |Ex(vs,f)   -> "Ex "^flatten_varlist(VarSet.elements vs)^" . ("
+    |Ex(vs,f)   -> "Ex "^flatten_varlist_space(VarSet.elements vs)^" . ("
                    ^formula2string(f)^")"
 

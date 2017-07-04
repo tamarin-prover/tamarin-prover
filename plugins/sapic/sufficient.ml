@@ -11,7 +11,7 @@ let exclusiveness id vf =
 (*   (XV) Exclusiveness of φ_1,..: not (φ_i && φ_j) for all i≠j *) 
     let vf' = map (function (f,v) -> f) vf in
     let exclusive i j phi_i phi_j = 
-        let label = Printf.sprintf "lemma %s_excl_%n_%n" id i j
+        let label = Printf.sprintf "%s_excl_%n_%n" id i j
         in
             ( ForallLemma (label,Not(And(phi_i,phi_j))))
     in
@@ -26,7 +26,7 @@ let exhaustiveness id vf =
 (* (EV) Exhaustiveness: φ_1 && .. && φ_n *)
     let vf' = map (function (f,v) -> f) vf in
     let disj = Verdict.big_or vf' in
-    let label = Printf.sprintf "lemma %s_exh" id
+    let label = Printf.sprintf "%s_exh" id
     in
         ForallLemma  (label,disj)
 
@@ -55,7 +55,7 @@ let sufficiency id parties vf phi =
 (* (suf-i) sufficiency of φ_i: exists-trace *) 
 (* ( φ_i && ( dishonest(B_i^1) | .. | dishonest(B_i^n)) && not (φ) ) *)
     let sufficient i (f,v) = 
-        let label = Printf.sprintf "lemma %s_suf_%n" id i in
+        let label = Printf.sprintf "%s_suf_%n" id i in
         ExistsLemma (label, And(f,And(dishonest_disj parties v,Not(phi))))
     in
         mapi sufficient vf 
@@ -76,7 +76,7 @@ let minimality id parties vf phi =
         List.map (fun e -> VarSet.remove e b) (VarSet.elements b)
     in
     let minimal f i j k b' = 
-        let label = Printf.sprintf "lemma %s_min_%n_%n_%n" id i j k in
+        let label = Printf.sprintf "%s_min_%n_%n_%n" id i j k in
         ForallLemma (label, Not(And(f,dishonest parties b')))
     in
         List.flatten
@@ -94,7 +94,7 @@ let uniqueness id vf =
 (* where V_i = B_i^1 | .. | B_i^n *)
 (*     For all traces: φ_i ⇒ Corrupt(union over  B_i^j for all j) *)
     let unique i (f,v) = 
-        let label = Printf.sprintf "lemma %s_uniq_%n" id i in
+        let label = Printf.sprintf "%s_uniq_%n" id i in
         let union = List.fold_left (VarSet.union) VarSet.empty v in
         ForallLemma (label, Imp(f,corrupted_conj (VarSet.elements union)))
     in

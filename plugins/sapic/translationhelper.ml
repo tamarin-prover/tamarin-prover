@@ -10,10 +10,10 @@ open Btree
 open Lemma
 
 let rec lemma2string = function
-    ForallLemma(header,formula) -> header^"\n all-traces\n\""^(formula2string formula)^"\"\n"
-    | ExistsLemma(header,formula) -> header^"\n exists-trace\n\""^(formula2string formula)^"\"\n"
-    | ForallRestriction(header,formula) -> header^"\n all-traces\n\""^(formula2string formula)^"\"\n"
-    | ExistsRestriction(header,formula) -> header^"\n exists-trace\n\""^(formula2string formula)^"\"\n"
+    ForallLemma(header,formula) -> "lemma "^header^":\n all-traces\n\""^(formula2string formula)^"\"\n"
+    | ExistsLemma(header,formula) -> "lemma "^header^":\n exists-trace\n\""^(formula2string formula)^"\"\n"
+    | ForallRestriction(header,formula) -> "restriction "^header^":\n all-traces\n\""^(formula2string formula)^"\"\n"
+    | ExistsRestriction(header,formula) -> "restriction "^header^":\n exists-trace\n\""^(formula2string formula)^"\"\n"
     | AccLemma(id, verdictf,formula,parties) -> print_lemmas (Sufficient.sufficient_conditions id parties verdictf formula )
 and print_lemmas lemlist =
     (String.concat "\n") (List.map lemma2string lemlist)

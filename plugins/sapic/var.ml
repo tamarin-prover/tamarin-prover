@@ -44,4 +44,5 @@ let var2string = function
                 (string_of_int (String.length name)) *)
 
 
-let flatten_varlist varlist = (String.concat ", ") (List.map var2string varlist)
+let flatten_varlist_comma varlist = (String.concat ", ") (List.map var2string varlist)
+let flatten_varlist_space varlist = (String.concat " ") (List.map var2string varlist)

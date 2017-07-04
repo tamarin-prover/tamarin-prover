@@ -438,11 +438,11 @@ lemma:
 ;
 
 lemma_header:
-	|     LEMMA IDENTIFIER lemma_attr_col COLON  {"lemma "^$2^" "^$3^":"}
+	|     LEMMA IDENTIFIER lemma_attr_col COLON  {$2^" "^$3}
 ;
 
 restriction_header:
-	|     RESTRICTION IDENTIFIER COLON  {"restriction "^$2^" :"}
+	|     RESTRICTION IDENTIFIER COLON  {$2}
 ;
 
 
