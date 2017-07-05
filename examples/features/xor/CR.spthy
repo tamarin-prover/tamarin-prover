@@ -6,13 +6,6 @@ A&B:
 A->B: na
 B->A: <h(na, k,nb), nb>
 achieves recent aliveness
-
-A->B: na
-B->A: <h(na ⊕ k ⊕ nb), nb>
-should find attack:
-- after watching one run and storing data
-- uses nb'=na+nb+na'
- ((( na'+k+nb'= na'+k + na +nb+na' = k + na + nb )))
 */
 
 builtins: hashing
@@ -40,12 +33,18 @@ rule initiator2:
 restriction equality:
   "All x y #i. Eq(x,y)@i ==> x=y"
 
+/*
 restriction unique:
   "All #i #j. OnlyOnce() @i & OnlyOnce() @j ==> #i = #j"
+*/
 
-// FINDS PROOF AUTOMATICALLY (2017-03-22)
-lemma recentalive:
+// FINDS PROOF AUTOMATICALLY (2017-06-29)
+lemma alive:
   "All x #i. Alive(x) @i ==> Ex #j. Response(x)@j"
+
+// FINDS PROOF AUTOMATICALLY (2017-06-29)
+lemma recentalive:
+  "All x #i #k. Challenge(x)@i & Alive(x)@k ==> Ex #j. Response(x)@j & i < j & j < k"
   
 // SHOWS CORRECT EXECUTION (2017-03-22)
 lemma executable:
