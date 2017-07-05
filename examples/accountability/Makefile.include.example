@@ -1,0 +1,55 @@
+PROVER=tamarin-prover
+# ALTPROVER=/Users/robert/Library/Haskell/ghc-7.0.4/lib/tamarin-prover-0.4.1.0/bin/tamarin-prover
+HEURISTIC=--heuristic=p
+#BOUND=--bound=31
+INTERACTIVEBOUND=--bound=12
+MAUDE=--with-maude=/Users/robert/bin/maudelib/maude.darwin64
+FLAGS=$(MAUDE) $(HEURISTIC) $(BOUND) #+RTS -N -RTS
+INTERACTIVEFLAGS=$(MAUDE) $(HEURISTIC) $(INTERACTIVEBOUND) #+RTS -N -RTS
+
+REMOTEPROVER=~/.local/bin/tamarin-prover
+REMOTEMAUDE=--with-maude=/usr/local/maude27-linux/maude.linux64
+REMOTEFLAGS=$(REMOTEMAUDE) $(HEURISTIC) $(BOUND) #+RTS -N -RTS
+REMOTEINTERACTIVEFLAGS=$(REMOTEMAUDE) $(HEURISTIC) $(INTERACTIVEBOUND) #+RTS -N -RTS
+ULIMITS       = ulimit -Sv 154800016 # 80% of the available memory on cassis in idle.
+
+
+RECHENPROVER=~/.local/bin/tamarin-prover
+RECHENMAUDE=#--with-maude=/usr/local/maude27-linux/maude.linux64
+RECHENFLAGS=$(RECHENMAUDE) $(HEURISTIC) $(BOUND) #+RTS -N -RTS
+RECHENINTERACTIVEFLAGS=$(HEURISTIC) $(INTERACTIVEBOUND) #+RTS -N -RTS
+ULIMITSRECHEN = ulimit -Sv 30000000
+
+colossusPROVER=~/.local/bin/tamarin-prover
+colossusMAUDE=#--with-maude=/usr/local/maude27-linux/maude.linux64
+colossusFLAGS=$(colossusMAUDE) $(HEURISTIC) $(BOUND) +RTS -N16 -RTS
+colossusINTERACTIVEFLAGS=$(HEURISTIC) $(INTERACTIVEBOUND) +RTS -N16 -RTS
+ULIMITScolossus = ulimit -Sv 1253873580
+			    # 80% of available ram on idle
+                              #30000000
+
+colossus04PROVER=~/.local/bin/tamarin-prover
+colossus04MAUDE=#--with-maude=/usr/local/maude27-linux/maude.linux64
+colossus04FLAGS=$(colossus04MAUDE) $(HEURISTIC) $(BOUND) +RTS -N16 -RTS
+colossus04INTERACTIVEFLAGS=$(HEURISTIC) $(INTERACTIVEBOUND) +RTS -N16 -RTS
+ULIMITScolossus04 = ulimit -Sv 1253873580
+			    # 80% of available ram on idle
+                              #30000000
+
+colossus08PROVER=~/.local/bin/tamarin-prover
+colossus08MAUDE=#--with-maude=/usr/local/maude27-linux/maude.linux64
+colossus08FLAGS=$(colossus08MAUDE) $(HEURISTIC) $(BOUND) +RTS -N16 -RTS
+colossus08INTERACTIVEFLAGS=$(HEURISTIC) $(INTERACTIVEBOUND) +RTS -N16 -RTS
+ULIMITScolossus08 = ulimit -Sv 1253873580
+			    # 80% of available ram on idle
+                              #30000000
+
+SAPIC=sapic 
+
+FILES= $(wildcard *.spthy)
+
+BENCHMARKMACHINE = smarthomerob
+BENCHMARKULIMITS = ulimit -Sv 6000000
+BENCHMARKPROVER=$(REMOTEPROVER)
+BENCHMARKFLAGS=$(HEURISTIC)
+BENCHMARKFLAGSNOH=
