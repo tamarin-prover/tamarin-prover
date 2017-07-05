@@ -40,12 +40,6 @@ event TTP(TTPID);
         )
    )
 
-lemma timelinessA [reuse]:
-    "All #i a b t sida. StartA(a, b, t, sida)@i
-    	    ==>  ( Ex #j .  ContractA(a, b, t, sida)@j)
-             | ( Ex #j .  AbortA(a, b, t, sida)@j )
-             | ( Ex #j. Corrupt(a)@j)"
-
 verdictfunction v1:
     "Ex #i. FallA()@i" -> <'A','B'> | <'B','C'> | <'C','A'>,
     otherwise -> <> 

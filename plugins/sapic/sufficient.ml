@@ -31,17 +31,20 @@ let exhaustiveness id vf =
         ForallLemma  (label,disj)
 
 let dishonest parties b = 
-    let corrupted_a p i = Atom ( At ( (Action ("Corrupted",[Var p])), (Temp ("c"^string_of_int(i))))) in
+    let c i = (Temp ("c"^string_of_int(i))) in
+    let corrupted_a p i = Atom ( At ( (Action ("Corrupted",[Var p])), c i )) in
     match 
             VarSet.fold (fun p (a,i) -> 
-        And ((if (VarSet.mem p b) then (corrupted_a p i) else Not (corrupted_a p i)),a),i+1)
+        And (
+            (if (VarSet.mem p b) then Ex (VarSet.singleton (c i),corrupted_a p i)
+             else All (VarSet.singleton (c i), Not (corrupted_a p i)))
+            ,a),i+1)
             parties
             (Atom True, 0) 
     with (r,_)->r
 
 let dishonest_disj parties v = 
-    let disj = List.fold_left (fun a b -> Or(dishonest parties b,a)) (Atom False) v in
-    Ex (free_vars VarSet.empty disj,disj)
+        List.fold_left (fun a b -> Or(dishonest parties b,a)) (Atom False) v 
 
 let corrupted_conj = function [] -> Atom True
 | b ->
@@ -99,6 +102,7 @@ let uniqueness id vf =
         let union = List.fold_left (VarSet.union) VarSet.empty v in
         ForallLemma (label, Imp(f,corrupted_conj (VarSet.elements union)))
     in
+    (* TODO I think this filter does not work *)
     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf)
 
 let sufficient_conditions id parties vf phi =
