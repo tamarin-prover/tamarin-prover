@@ -37,7 +37,7 @@ let dishonest parties b =
             VarSet.fold (fun p (a,i) -> 
         And (
             (if (VarSet.mem p b) then Ex (VarSet.singleton (c i),corrupted_a p i)
-             else All (VarSet.singleton (c i), Not (corrupted_a p i)))
+             else All (VarSet.singleton (c i), Imp ((corrupted_a p i),(Atom False))))
             ,a),i+1)
             parties
             (Atom True, 0) 

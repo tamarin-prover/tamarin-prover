@@ -30,11 +30,13 @@ let TTPID=<'TTP',$TTP> in
 let text=<$A,$B,$TEXT,TTPID> in
 !(
 in('c',<$A,$B,<'TTP',$TTP>,$TEXT>);
+event FallA();
+event BadThing();
 event TTP(TTPID);
  ( A || B || TTP || Judge)
 )
 || !(   in('c',<'corrupt',$x>); 
-        event Corrupt($x);
+        event Corrupted($x);
         out('c',sk($x));
         (  !(in('r',<$x,sid,m>);0) 
         )
