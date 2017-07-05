@@ -294,7 +294,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
       $ L.set dsProofType (Just RuleEquivalence) sys
       
     formula :: String -> LNFormula
-    formula rulename = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact {factTag = ProtoFact Linear ("Diff" ++ rulename) 0, factTerms = []})))
+    formula rulename = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact (ProtoFact Linear ("Diff" ++ rulename) 0) S.empty [])))
     
     ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
     ruleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
@@ -576,39 +576,39 @@ sapicRanking ctxt sys =
        not (isKFact fa) && not (isAuthOutFact fa)
     isNonLoopBreakerProtoFactGoal _                            = False
 
-    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _) = True
+    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
     isAuthOutFact  _                                 = False
 
-    isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _)) = isPrefixOf "State_" n
+    isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "State_" n
     isStateFact  _                                 = False
 
-    isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _)) = True
+    isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _ _)) = True
     isUnlockAction  _                                 = False
 
-    isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
+    isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) =
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "F_" (show a)
             _ -> False
     isFirstInsertAction _ = False
 
-    isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
+    isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> not( isPrefixOf "L_" (show a))
             _ -> False
     isLastInsertAction _ = False
 
-    isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _)) = False
+    isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ _)) = False
     isNotInsertAction  _                                 = True
 
     isStandardActionGoalButNotInsert g = 
        (isStandardActionGoal g) &&  (isNotInsertAction g)
 
 
-    isLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = True
-    isLastProtoFact _                                                 = False
+    isLastProtoFact (PremiseG _ fa) = isSolveLastFact fa
+    isLastProtoFact _               = False
 
-    isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
-    isFirstProtoFact _                                                 = False
+    isFirstProtoFact (PremiseG _ fa) = isSolveFirstFact fa
+    isFirstProtoFact _               = False
 
     isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
     isNotAuthOut _               = False
@@ -740,48 +740,48 @@ sapicLivenessRanking ctxt sys =
        not (isKFact fa) && not (isAuthOutFact fa)
     isNonLoopBreakerProtoFactGoal _                            = False
 
-    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _) = True
+    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
     isAuthOutFact  _                                 = False
 
-    isMID_Receiver (PremiseG _ (Fact (ProtoFact _ "MID_Receiver" _) _)) = True
+    isMID_Receiver (PremiseG _ (Fact (ProtoFact _ "MID_Receiver" _) _ _)) = True
     isMID_Receiver  _                                 = False
 
-    isMID_Sender (PremiseG _ (Fact (ProtoFact _ "MID_Sender" _) _)) = True
+    isMID_Sender (PremiseG _ (Fact (ProtoFact _ "MID_Sender" _) _ _)) = True
     isMID_Sender  _                                 = False
 
-    isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _)) = isPrefixOf "State_" n
+    isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "State_" n
     isStateFact  _                                 = False
 
-    isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _)) = True
+    isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _ _)) = True
     isUnlockAction  _                                 = False
 
-    isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
+    isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "F_" (show a)
             _ -> False
     isFirstInsertAction _ = False
 
-    isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
+    isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> not( isPrefixOf "L_" (show a))
             _ -> False
     isLastInsertAction _ = False
 
-    isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _)) = False
+    isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ _)) = False
     isNotInsertAction  _                                 = True
 
-    isNotReceiveAction (ActionG _ (Fact (ProtoFact _ "Receive" _) _)) = False
+    isNotReceiveAction (ActionG _ (Fact (ProtoFact _ "Receive" _) _ _)) = False
     isNotReceiveAction  _                                 = True
 
     isStandardActionGoalButNotInsertOrReceive g = 
        (isStandardActionGoal g) && (isNotInsertAction g) && (isNotReceiveAction g)
 
 
-    isLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = True
-    isLastProtoFact _                                                 = False
+    isLastProtoFact (PremiseG _ fa) = isSolveLastFact fa
+    isLastProtoFact _               = False
 
-    isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
-    isFirstProtoFact _                                                 = False
+    isFirstProtoFact (PremiseG _ fa) = isSolveFirstFact fa
+    isFirstProtoFact _               = False
 
     isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
     isNotAuthOut _               = False
@@ -919,33 +919,33 @@ sapicPKCS11Ranking ctxt sys =
        not (isKFact fa) && not (isAuthOutFact fa)
     isNonLoopBreakerProtoFactGoal _                            = False
 
-    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _) = True
+    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
     isAuthOutFact  _                                 = False
 
-    isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _)) = isPrefixOf "State_" n
+    isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "State_" n
     isStateFact  _                                 = False
 
-    isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _)) = True
+    isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _ _)) = True
     isUnlockAction  _                                 = False
 
-    isInsertTemplateAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
+    isInsertTemplateAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "template" (show a)
             _ -> False
     isInsertTemplateAction _ = False
 
-    isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _)) = False
+    isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ _)) = False
     isNotInsertAction  _                                 = True
 
     isStandardActionGoalButNotInsert g = 
        (isStandardActionGoal g) &&  (isNotInsertAction g)
 
 
-    isLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = True
-    isLastProtoFact _                                                 = False
+    isLastProtoFact (PremiseG _ fa) = isSolveLastFact fa
+    isLastProtoFact _               = False
 
-    isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
-    isFirstProtoFact _                                                 = False
+    isFirstProtoFact (PremiseG _ fa) = isSolveFirstFact fa
+    isFirstProtoFact _               = False
 
     isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
     isNotAuthOut _               = False
@@ -1031,7 +1031,7 @@ injRanking ctxt allowLoopBreakers sys =
     -- move the Last proto facts (L_) and large splits to the end by
     -- putting all goals that shouldn't be solved last in front
     notSolveLast goaltuple = (isNoLargeSplitGoal $ fst goaltuple)
-                            && (isNonLastProtoFact $ fst goaltuple)
+                            && (isNonSolveLastGoal $ fst goaltuple)
                             && (isNotKnowsLastNameGoal $ fst goaltuple)
 
     solveFirst =
@@ -1051,7 +1051,7 @@ injRanking ctxt allowLoopBreakers sys =
     -- within the same priority class, so one type of goal doesn't always win
     -- (assuming the same usefulness)
     isHighPriorityGoal goal = (isKnowsFirstNameGoal goal)
-                                || (isFirstProtoFact goal)
+                                || (isSolveFirstGoal goal)
                                 || (isChainGoal goal)
                                 || (isFreshKnowsGoal goal)
 
@@ -1073,19 +1073,17 @@ injRanking ctxt allowLoopBreakers sys =
     isProtoFactGoal _                       = False
 
     -- Detect 'I_' (immediate) fact and term prefix for heuristics
-    isImmediateGoal (PremiseG _ (Fact (ProtoFact _ ('I':'_':_) _) _)) = True
-    isImmediateGoal (ActionG  _ (Fact (ProtoFact _ ('I':'_':_) _) _)) = True
+    isImmediateGoal (PremiseG _ (Fact (ProtoFact _ ('I':'_':_) _) _ _)) = True
+    isImmediateGoal (ActionG  _ (Fact (ProtoFact _ ('I':'_':_) _) _ _)) = True
     isImmediateGoal goal = isKnowsImmediateNameGoal goal
 
-    -- Detect 'F_' (first) fact prefix for heuristics
-    isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
-    isFirstProtoFact (ActionG  _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
-    isFirstProtoFact _                                                 = False
+    isNonSolveLastGoal (PremiseG _ fa) = not $ isSolveLastFact fa
+    isNonSolveLastGoal (ActionG  _ fa) = not $ isSolveLastFact fa
+    isNonSolveLastGoal _               = True
 
-    -- Detect 'L_' (last) fact prefix for heuristics
-    isNonLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
-    isNonLastProtoFact (ActionG  _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
-    isNonLastProtoFact _                                                 = True
+    isSolveFirstGoal (PremiseG _ fa) = isSolveFirstFact fa
+    isSolveFirstGoal (ActionG  _ fa) = isSolveFirstFact fa
+    isSolveFirstGoal _               = False
 
     isLastName lv = isPrefixOf "L_" (lvarName lv)
     isFirstName lv = isPrefixOf "F_" (lvarName lv)
@@ -1132,7 +1130,7 @@ injRanking ctxt allowLoopBreakers sys =
     -- | @sortDecisionTree xs ps@ returns a reordering of @xs@
     -- such that the sublist satisfying @ps!!0@ occurs first,
     -- then the sublist satisfying @ps!!1@, and so on.
-    sortDecisionTree :: [a -> Bool] -> [a] -> [a]
+    sortDecisionTree :: (Show a) => [a -> Bool] -> [a] -> [a]
     sortDecisionTree []     xs = xs
     sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
       where (sat, nonsat) = partition p xs
@@ -1169,13 +1167,13 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     unmarkPremiseG annGoal                        = annGoal
 
     notSolveLast =
-       [ isNonLastProtoFact . fst ]
+       [ isNonSolveLastGoal . fst ]
        -- move the Last proto facts (L_) to the end by sorting all other goals in front
 
     solveFirst =
         [ isChainGoal . fst
         , isDisjGoal . fst
-        , isFirstProtoFact . fst
+        , isSolveFirstGoal . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoal . fst
         , isNotAuthOut . fst
@@ -1199,7 +1197,7 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
       not (isKFact fa) && not (isAuthOutFact fa)
     isNonLoopBreakerProtoFactGoal _                            = False
 
-    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _) = True
+    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
     isAuthOutFact  _                                 = False
 
     isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
@@ -1208,13 +1206,13 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
     msgPremise _              = Nothing
 
-    -- Detect 'F_' (first) fact prefix for heuristics
-    isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
-    isFirstProtoFact _                                                 = False
+    isNonSolveLastGoal (PremiseG _ fa) = not $ isSolveLastFact fa
+    isNonSolveLastGoal (ActionG  _ fa) = not $ isSolveLastFact fa
+    isNonSolveLastGoal _               = True
 
-    -- Detect 'L_' (last) fact prefix for heuristics
-    isNonLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
-    isNonLastProtoFact _                                                 = True
+    isSolveFirstGoal (PremiseG _ fa) = isSolveFirstFact fa
+    isSolveFirstGoal (ActionG _ fa)  = isSolveFirstFact fa
+    isSolveFirstGoal _               = False
 
     isFreshKnowsGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
@@ -1279,7 +1277,7 @@ smartDiffRanking ctxt sys =
 
     -- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing. Currently identical to "isTrivialFact" from Model/Fact, but could eventually be relaxed there, but not here. 
     isTrivialMsgFact :: LNFact -> Maybe [LVar]
-    isTrivialMsgFact (Fact _ ts) = case ts of
+    isTrivialMsgFact (Fact _ _ ts) = case ts of
       []   -> Just []
       x:xs -> Prelude.foldl combine (getMsgVar x) (map getMsgVar xs)
       where
