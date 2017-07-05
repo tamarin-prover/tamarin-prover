@@ -1,48 +1,60 @@
 theory DelegationBroken
 begin
 
-builtins: signing
+/* builtins: signing */
+functions: 
+    pk/1,sk/1[private],
+    /* aenc/2, adec/2, */
+    sign/2, verify/3,
+    true/0,
+    NormalAct/0, SpecialAct/0, UnusualAct/0, isAct/1
 
-functions: NormalAct/0, SpecialAct/0, UnusualAct/0, isAct/1
-
-equations: isAct(NormalAct) = true,
-           isAct(SpecialAct) = true,
-           isAct(UnusualAct) = true
+equations: 
+    /* adec(aenc(m,pk(i)),sk(i))=m, */
+    verify(sign(m, sk(i)),m, pk(i)) = true,
+    isAct(NormalAct) = true,
+    isAct(SpecialAct) = true,
+    isAct(UnusualAct) = true
 
 let A = 
   ( in(a);
      if a = NormalAct()
-       then out(<a, sign(skA, a)>)
+       then out(<a, sign( sk('A'), a)>)
        else if a = SpecialAct()
-              then new na; out(<na, sign(skA, <a, na>)>);
-                   in(r); if verify(pk(skB), r, na) = true()
-                           then out(<a, na, sign(skA, <a, na>), r>)
+              then new na; out(<na, sign(<a,na>, sk('A'))>);
+                   in(r); if verify( r, na, pk(sk('B'))) = true()
+                           then out(<a, na, sign( <a, na>, sk('A')), r>)
   ) 
 
 let B = 
   ( in(m);
-     if verify(pk(skA), snd(m), <fst(m), SpecialAct()>) = true()
-       then out(sign(skB, fst(m)))
+     if verify( snd(m), <fst(m), SpecialAct()>, pk(sk('A'))) = true()
+       then out(sign( fst(m), sk('B')))
   )
 
 let C = 
   ( in(m); 
-     if verify(pk(skA), snd(m), fst(m)) = true()
-       then event Log('A', fst(m)); event Execute(fst(m))
-       else if verify(pk(skA), fst(snd(snd(m))), <fst(m), fst(snd(m))>) = true()
-              then if verify(pk(skB), snd(snd(snd(m))), fst(snd(m))) = true()
-                     then event Log(<'A', 'B'>, fst(m)); event Execute(fst(m))
+     if verify( snd(m), fst(m), pk(sk('A'))) = true()
+       then event LogA(fst(m)); event Execute(fst(m))
+       else if verify( fst(snd(snd(m))), <fst(m), fst(snd(m))>, pk(sk('A'))) = true()
+              then if verify( snd(snd(snd(m))), fst(snd(m)), pk(sk('B'))) = true()
+                     then event LogAB(fst(m)); event Execute(fst(m))
   )
 
 let I = 
-  ( out(SpecialAct()); out(<pk(skA), pk(skB)>)
+  ( out(SpecialAct()); out(<pk(sk('A')), pk(sk('B'))>)
   )
 
-! (new skA; new skB; (A || B || I || C))
+! (A || B || I || C)
+|| !(   in('c',<'corrupt',$x>); 
+        event Corrupted($x);
+        out('c',sk($x))
+        /* (  !(in('r',<$x,sid,m>);0) ) */
+   )
 
 verdictfunction v1:
-    "Ex a #i #j. Execute(a)@i & Log('A','B',a)@j & not(a=SpecialAct())" -> <'A','B'>,
-    "Ex a #i #j. Execute(a)@i & Log('A',a)@j & not(a=NormalAct())" -> <'A'>,
+    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> <'A','B'>,
+    "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct())" -> <'A'>,
     otherwise -> <> 
 
 lemma acc:
