@@ -106,8 +106,8 @@ let location_rule=
 
 %token <char> ALL_TRACES EXISTS_TRACE
 %token <string> IDENTIFIER NUM BUILTIN_THEORY FUNCTION_ATTR LEMMA_ATTR FORMALCOMMENT QUOTED_IDENTIFIER 
-%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION VERDICTFUNCTION LEMMA REUSE INDUCTIVE INVARIANT  ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE ACCOUNTS FOR PARTIES
-
+%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION VERDICTFUNCTION LEMMA REUSE INDUCTIVE INVARIANT 
+%token ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE ACCOUNTS FOR PARTIES
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
 %token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS
 
@@ -115,6 +115,11 @@ let location_rule=
 %left PARALLEL
 %left REP
 %left SEMICOLON
+
+%right ALL EXISTS IFF IMP 
+%right OR
+%right AND
+
 
 /* entry point */
 %start input
@@ -128,7 +133,7 @@ let location_rule=
 %type <string * rule list> signature_spec 
 %type <string> builtins 
 %type <string> builtin_theory_seq
-%type <VarSet.t> tvarseq
+%type <VarSet.t> varseq
 %type <string * rule list> fctseq
 %type <string * int * fct_attr> fct
 %type <options> optionseq
@@ -255,15 +260,15 @@ eq :
 ;
 
 predicate :
-         |    IDENTIFIER LP varseq RP IFF cond_predicate
+         |    IDENTIFIER LP varseqstring RP IFF cond_predicate
                 { ["All #i "^(String.concat " " $3)^". Pred_"^$1^"("^(String.concat "," $3)^")@i ==> "^(formula2string $6);
                   "All #i "^(String.concat " " $3)^". Pred_not_"^$1^"("^(String.concat "," $3)^")@i ==> "^(formula2string ((Not($6):Formula.formula))) ]
                 }
 ;
 
-varseq :  
+varseqstring :  
     |    messagevar		{ [$1] }
-    |    varseq COMMA messagevar	{$1 @ [$3]}
+    |    varseqstring COMMA messagevar	{$1 @ [$3]}
 ;
 
 messagevar :
@@ -476,8 +481,8 @@ formula:
 	|     formula AND formula		{And($1,$3)}
 	|     formula IMP formula		{Imp($1,$3)}
 	|     formula IFF formula		{Iff($1,$3)}
-	|     ALL tvarseq POINT formula 	{All($2,$4)}
-	|     EXISTS tvarseq POINT formula 	{Ex($2,$4)}
+	|     ALL varseq POINT formula 	{All($2,$4)}
+	|     EXISTS varseq POINT formula 	{Ex($2,$4)}
 	|     LP formula RP    	     		{$2}
 ;
 
@@ -495,9 +500,9 @@ tvar:
 	|    IDENTIFIER		{Temp($1)}
 ;
 
-tvarseq :  
- 	 |    tvar		{VarSet.singleton $1}
-	 |    tvarseq tvar	{VarSet.add $2 $1}
+varseq :  
+ 	 |    literal		{VarSet.singleton $1}
+	 |    varseq literal	{VarSet.add $2 $1}
 ;
 
 

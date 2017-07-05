@@ -28,10 +28,10 @@ let B =
 let C = 
   ( in(m); 
      if verify(pk(skA), snd(m), fst(m)) = true()
-       then event Log($A, fst(m)); event Execute(fst(m))
+       then event Log('A', fst(m)); event Execute(fst(m))
        else if verify(pk(skA), fst(snd(snd(m))), <fst(m), fst(snd(m))>) = true()
               then if verify(pk(skB), snd(snd(snd(m))), fst(snd(m))) = true()
-                     then event Log(<$A, $B>, fst(m)); event Execute(fst(m))
+                     then event Log(<'A', 'B'>, fst(m)); event Execute(fst(m))
   )
 
 let I = 
@@ -39,5 +39,15 @@ let I =
   )
 
 ! (new skA; new skB; (A || B || I || C))
+
+verdictfunction v1:
+    "Ex a #i #j. Execute(a)@i & Log('A','B',a)@j & not(a=SpecialAct())" -> <'A','B'>,
+    "Ex a #i #j. Execute(a)@i & Log('A',a)@j & not(a=NormalAct())" -> <'A'>,
+    otherwise -> <> 
+
+lemma acc:
+    v1 accounts 
+    for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" 
+    for parties <'A','B'>
 
 end
