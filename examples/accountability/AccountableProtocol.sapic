@@ -1,12 +1,12 @@
 theory AccountableProtocol
 begin
 
-builtins: signing
-
 functions: ZK/7, verZK/1, Pub/1, f/2,
            commit/2, open/2,
            channel/2, retrieve/2, check/2,
-           Initialize/1, Log/1, Final/0, readLog/1, isLog/1, readInit/1
+           Initialize/1, Log/1, Final/0, readLog/1, isLog/1, readInit/1,
+           // follows the signature of the draft paper, not the builtins
+           true/0, pk/1, sign/2, verify/3, extract/1
 
 equations: 
            Pub(ZK(<commit(x,rx), commit(y,ry), commit(f(x,y),rz)>, x, y, f(x,y), rx, ry, rz)) = <commit(x,rx), commit(y,ry), commit(f(x,y),rz)>,
@@ -16,7 +16,9 @@ equations:
            check(x, channel(x, z)) = true,
            readLog(Log(l)) = l,
            readInit(Initialize(l)) = l,
-           isLog(Log(l))= true
+           isLog(Log(l)) = true,
+           extract(sign(x, y)) = y,
+           verify(pk(x), sign(x,y), y) = true
 
 // Adversary
 let E = (out (<pk(skA), pk(skS), pk(skL)>))
@@ -51,7 +53,25 @@ let A =
 let S =
   (
     // some unbounded vars in the papers, still a bit confused about this one
-    new x; out (channel(cSA, sign(skS, x)))
+    let r = retrieve(cAS, m1) in
+    let p = extract(r) in
+    let z = fst(p) in
+    let rz = fst(snd(p)) in
+    let rx = snd(snd(p)) in
+    let pc = readLog(m2) in
+    let Cx = fst(pc) in
+    let Cz = fst(snd(pc)) in
+    let Z = snd(snd(pc)) in
+    let Cy = readInit(init) in
+    in (init); new x; out (channel(cSA, sign(skS, x)));
+    in (m1); 
+    if check(cAS, m1) = true()
+       then if verify(pk(skA), r, p) = true()
+               then in (m2);
+                    if Cx = commit(x, rx)
+                       then if Cz = commit(z, rz)
+                            then if <Cx, Cy, Cz> = Pub(Z) 
+                                    then event pair(x, pair(z,r))
   )
 
 
