@@ -190,7 +190,12 @@ let progresstrans anP = (* translation for processes with progress *)
 let generate_sapic_restrictions annotated_process =
   if (annotated_process = Empty) then ""
   else 
-      (if contains_lookup annotated_process then res_set_in ^ res_set_notin else "")
+      (if contains_lookup annotated_process then 
+          (if  (contains_delete annotated_process) then 
+              res_set_in ^ res_set_notin 
+          else 
+              res_set_in_no_delete ^ res_set_notin_no_delete )
+            else "")
     ^ (if contains_locking annotated_process then  res_locking else "")
     ^ (if contains_eq annotated_process then res_predicate_eq ^ res_predicate_not_eq else "")
     ^ (* Stuff that's always there *)
@@ -208,7 +213,7 @@ let translation input =
     if input.op.progress then 
       generate_sapic_restrictions annotated_process
       ^ (generate_progress_restrictions annotated_process)
-      ^ res_resilient 
+      ^ (if contains_resilient_io annotated_process then  res_resilient else "")
     else 
       generate_sapic_restrictions annotated_process
   in

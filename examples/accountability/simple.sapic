@@ -30,6 +30,8 @@ let TTPID=<'TTP',$TTP> in
 let text=<$A,$B,$TEXT,TTPID> in
 !(
 in('c',<$A,$B,<'TTP',$TTP>,$TEXT>);
+insert $A,$B;
+lookup $A as v in
 event FallA();
 event BadThing();
 event TTP(TTPID);

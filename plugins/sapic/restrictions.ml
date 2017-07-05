@@ -5,7 +5,7 @@ open Annotatedsapictree
 open Position
 open Printf
 
-let res_set_in = " restriction set_in:
+let res_set_in = "restriction set_in:
 \"All x y #t3 . IsIn(x,y)@t3 ==>
         (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
                 & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
@@ -20,6 +20,21 @@ let res_set_notin =
         (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
   | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 
                 &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))\"
+
+"
+
+let res_set_in_no_delete = "restriction set_in:
+\"All x y #t3 . IsIn(x,y)@t3 ==>
+        (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
+                & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
+)\"
+
+"
+
+let res_set_notin_no_delete = 
+"restriction set_notin:
+\"All x #t3 . IsNotSet(x)@t3 ==> 
+        (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )\"
 
 "
 
