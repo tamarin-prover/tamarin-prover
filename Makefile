@@ -108,6 +108,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/related_work/YubiSecure_KS_STM12
 	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
 	mkdir -p case-studies/post17
+	mkdir -p case-studies/regression/trace
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
@@ -127,6 +128,7 @@ case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/ccs15
 	mkdir -p case-studies/features/equivalence
 	mkdir -p case-studies/post17
+	mkdir -p case-studies/regression/diff
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
@@ -141,6 +143,7 @@ case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 case-studies/%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/ccs15
 	mkdir -p case-studies/features/equivalence
+	mkdir -p case-studies/regression/diff
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
 	# We only produce the target after the run, otherwise aborted
@@ -163,14 +166,18 @@ CCS15_TARGETS= $(CCS15_CS_TARGETS) $(CCS15_PCS_TARGETS)
 ccs15-case-studies:	$(CCS15_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy
 
+
+REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy
+REGRESSION_OBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/regression/diff/,$(REGRESSION_OBSEQ_CASE_STUDIES)))
+
 TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy AxiomDiffTest4.spthy N5N6DiffTest.spthy
-TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/equivalence/,$(TESTOBSEQ_CASE_STUDIES)))
+TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/equivalence/,$(TESTOBSEQ_CASE_STUDIES))) $(REGRESSION_OBSEQ_TARGETS)
 
 OBSEQ_TARGETS= $(CCS15_TARGETS) $(TESTOBSEQ_TARGETS)
 
 #Observational equivalence test case studies:
 obseq-test-case-studies:	$(TESTOBSEQ_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/features/equivalence/*.spthy
+	grep "verified\|falsified\|processing time" case-studies/features/equivalence/*.spthy case-studies/regression/diff/*.spthy
 
 #Observational equivalence case studies with CCS15
 obseq-case-studies:	$(OBSEQ_TARGETS)
@@ -261,6 +268,16 @@ FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(F
 features-case-studies:	$(FEATURES_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy case-studies/features/injectivity/*.spthy
 
+## Regression (old issues)
+##########################
+
+REGRESSION_CASE_STUDIES=
+
+REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/regression/trace,$(REGRESSION_CASE_STUDIES)))
+
+# case studies
+regression-case-studies:	$(REGRESSION_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/regression/trace/*.spthy
 
 ## SAPIC
 ########
@@ -364,7 +381,8 @@ sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
 ###################
 
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) 
+### $(REGRESSION_TARGETS) 
 
 case-studies: 	$(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/
