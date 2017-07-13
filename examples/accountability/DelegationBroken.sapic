@@ -11,7 +11,8 @@ functions:
 
 equations: 
     /* adec(aenc(m,pk(i)),sk(i))=m, */
-    verify(sign(m, sk(i)),m, pk(i)) = true,
+    // only accept signatures from corresponding public keys
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
     isAct(NormalAct) = true,
     isAct(SpecialAct) = true,
     isAct(UnusualAct) = true
@@ -45,12 +46,18 @@ let I =
   ( out(SpecialAct()); out(<pk(sk('A')), pk(sk('B'))>)
   )
 
-! (A || B || I || C)
+// The trusted party can only run once during each run of the protocol
+(! (A || B || I)) || C
 || !(   in('c',<'corrupt',$x>); 
         event Corrupted($x);
         out('c',sk($x))
         /* (  !(in('r',<$x,sid,m>);0) ) */
    )
+
+/*
+lemma sanity:
+    exists-trace
+    "Ex a #i #j. LogA(a)@i & Execute(a)@j" */
 
 verdictfunction v1:
     "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> <'A','B'>,
