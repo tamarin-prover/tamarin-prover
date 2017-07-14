@@ -60,8 +60,10 @@ let sufficiency id op parties vf phi =
 (* ( φ_i && ( dishonest(B_i^1) | .. | dishonest(B_i^n)) && not (φ) ) *)
     let sufficient i (f,v) = 
         let label = Printf.sprintf "%s_suf_%n" id i in
-        ExistsLemma ((label,op), And(f,And(dishonest_disj parties v,Not(phi))))
-    in
+        match v with
+        [] -> ExistsLemma ((label,op), And(f,And(dishonest_disj parties v,phi)))
+|v -> ExistsLemma ((label,op), And(f,And(dishonest_disj parties v,Not(phi))))
+        in
         mapi sufficient vf 
 
 let minimality id op parties vf phi = 
