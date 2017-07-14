@@ -54,10 +54,21 @@ let I =
         /* (  !(in('r',<$x,sid,m>);0) ) */
    )
 
+lemma sanity_logA_not_misbehaving:
+    exists-trace
+    "Ex a #i #j. (a = NormalAct()) & LogA(a)@i & Execute(a)@j"
 
-lemma sanity [reuse]:
-exists-trace
+lemma sanity_logAB_not_misbehaving:
+    exists-trace
+    "Ex a #i #j. (a = SpecialAct()) & LogAB(a)@i & Execute(a)@j"
+
+lemma sanity_logA:
+    exists-trace
     "Ex a #i #j. LogA(a)@i & Execute(a)@j" 
+
+lemma sanity_logAB:
+    exists-trace
+    "Ex a #i #j. LogAB(a)@i & Execute(a)@j" 
 
 verdictfunction v1:
     "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> <'A','B'>,
