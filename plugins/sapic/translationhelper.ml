@@ -12,11 +12,11 @@ open Term
 open Var
 
 let rec lemma2string = function
-    ForallLemma(header,formula) -> "lemma "^header^":\n all-traces\n\""^(formula2string formula)^"\"\n"
-    | ExistsLemma(header,formula) -> "lemma "^header^":\n exists-trace\n\""^(formula2string formula)^"\"\n"
-    | ForallRestriction(header,formula) -> "restriction "^header^":\n all-traces\n\""^(formula2string formula)^"\"\n"
-    | ExistsRestriction(header,formula) -> "restriction "^header^":\n exists-trace\n\""^(formula2string formula)^"\"\n"
-    | AccLemma(id, verdictf,formula,parties) -> print_lemmas (Sufficient.sufficient_conditions id parties verdictf formula )
+    ForallLemma((id,op),formula) -> "lemma "^id^" "^op^":\n all-traces\n\""^(formula2string formula)^"\"\n"
+    | ExistsLemma((id,op),formula) -> "lemma "^id^" "^op^":\n exists-trace\n\""^(formula2string formula)^"\"\n"
+    | ForallRestriction(id,formula) -> "restriction "^id^":\n all-traces\n\""^(formula2string formula)^"\"\n"
+    | ExistsRestriction(id,formula) -> "restriction "^id^":\n exists-trace\n\""^(formula2string formula)^"\"\n"
+    | AccLemma(header, verdictf,formula,parties) -> print_lemmas (Sufficient.sufficient_conditions header parties verdictf formula )
 and print_lemmas lemlist =
     (String.concat "\n") (List.map lemma2string lemlist)
 

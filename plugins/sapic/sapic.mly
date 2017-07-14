@@ -147,7 +147,7 @@ let location_rule=
 %type <var> literal
 %type <string> restriction_header
 %type <lemma> lemma
-%type <string> lemma_header
+%type <string*string> lemma_header
 %type <string> lemma_attr
 %type <string> lemma_attr_seq
 %type <formula> formula
@@ -436,14 +436,14 @@ lemma:
 	|     restriction_header ALL_TRACES DQUOTE formula DQUOTE	{ ForallRestriction($1, $4) }
 	|     restriction_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsRestriction($1, $4) }
 	|     restriction_header DQUOTE formula DQUOTE	{ ForallRestriction($1, $3) }
-	|     LEMMA IDENTIFIER COLON IDENTIFIER ACCOUNTS FOR DQUOTE formula DQUOTE FOR PARTIES LEQ pvarseq GEQ {  try 
-            AccLemma( $2, Hashtbl.find verdictf_table $4, $8,( VarSet.of_list $13))
+	|     lemma_header IDENTIFIER ACCOUNTS FOR DQUOTE formula DQUOTE FOR PARTIES LEQ pvarseq GEQ {  try 
+            AccLemma( $1, Hashtbl.find verdictf_table $2, $6,( VarSet.of_list $11))
             with Not_found -> Printf.eprintf "The verdict: %s is undefined. \n " $2; raise Parsing.Parse_error }
 
 ;
 
 lemma_header:
-	|     LEMMA IDENTIFIER lemma_attr_col COLON  {$2^" "^$3}
+	|     LEMMA IDENTIFIER lemma_attr_col COLON  {($2,$3)}
 ;
 
 restriction_header:

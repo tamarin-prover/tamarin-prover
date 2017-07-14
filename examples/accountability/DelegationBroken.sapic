@@ -54,10 +54,10 @@ let I =
         /* (  !(in('r',<$x,sid,m>);0) ) */
    )
 
-/*
-lemma sanity:
-    exists-trace
-    "Ex a #i #j. LogA(a)@i & Execute(a)@j" */
+
+lemma sanity [reuse]:
+exists-trace
+    "Ex a #i #j. LogA(a)@i & Execute(a)@j" 
 
 verdictfunction v1:
     "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> <'A','B'>,

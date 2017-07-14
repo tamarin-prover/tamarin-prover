@@ -7,13 +7,13 @@ open Term
 
 module VarSet = Set.Make( Var );;
 
-let exclusiveness id vf =
+let exclusiveness id op vf =
 (*   (XV) Exclusiveness of φ_1,..: not (φ_i && φ_j) for all i≠j *) 
     let vf' = map (function (f,v) -> f) vf in
     let exclusive i j phi_i phi_j = 
         let label = Printf.sprintf "%s_excl_%n_%n" id i j
         in
-            ( ForallLemma (label,Not(And(phi_i,phi_j))))
+            ( ForallLemma ((label,op),Not(And(phi_i,phi_j))))
     in
     let option_list =
         mapi (fun i phi_i ->  
@@ -22,13 +22,13 @@ let exclusiveness id vf =
     in
         Deoptionalize.deoptionalize (List.flatten option_list)
 
-let exhaustiveness id vf =
+let exhaustiveness id op vf =
 (* (EV) Exhaustiveness: φ_1 && .. && φ_n *)
     let vf' = map (function (f,v) -> f) vf in
     let disj = Verdict.big_or vf' in
     let label = Printf.sprintf "%s_exh" id
     in
-        ForallLemma  (label,disj)
+        ForallLemma  ((label,op),disj)
 
 let dishonest parties b = 
     let c i = (Temp ("c"^string_of_int(i))) in
@@ -53,18 +53,18 @@ let corrupted_conj = function [] -> Atom True
         let conj = List.fold_left (fun a b -> And(b,a)) (Atom True) atoms in
         Ex (free_vars VarSet.empty conj,conj)
 
-let sufficiency id parties vf phi = 
+let sufficiency id op parties vf phi = 
 (* for the each mapping φ_i → V_i *) 
 (* where V_i = B_i^1 | .. | B_i^n *)
 (* (suf-i) sufficiency of φ_i: exists-trace *) 
 (* ( φ_i && ( dishonest(B_i^1) | .. | dishonest(B_i^n)) && not (φ) ) *)
     let sufficient i (f,v) = 
         let label = Printf.sprintf "%s_suf_%n" id i in
-        ExistsLemma (label, And(f,And(dishonest_disj parties v,Not(phi))))
+        ExistsLemma ((label,op), And(f,And(dishonest_disj parties v,Not(phi))))
     in
         mapi sufficient vf 
 
-let minimality id parties vf phi = 
+let minimality id op parties vf phi = 
 (* for the each mapping φ_i → V_i *) 
 (* where V_i = B_i^1 | .. | B_i^n *)
 (* and for all strict subsets B' of some B_i^j: *)
@@ -81,7 +81,7 @@ let minimality id parties vf phi =
     in
     let minimal f i j k b' = 
         let label = Printf.sprintf "%s_min_%n_%n_%n" id i j k in
-        ForallLemma (label, Not(And(f,dishonest parties b')))
+        ForallLemma ((label,op), Not(And(f,dishonest parties b')))
     in
         List.flatten
         ( List.flatten
@@ -92,7 +92,7 @@ let minimality id parties vf phi =
             v)
         vf))
 
-let uniqueness id vf = 
+let uniqueness id op vf = 
 (* (uni-i) Uniqueness of V_i *)
 (* for the each mapping φ_i → V_i *) 
 (* where V_i = B_i^1 | .. | B_i^n  and non-empty *)
@@ -100,19 +100,21 @@ let uniqueness id vf =
     let unique i (f,v) = 
         let label = Printf.sprintf "%s_uniq_%n" id i in
         let union = List.fold_left (VarSet.union) VarSet.empty v in
-        ForallLemma (label, Imp(f,corrupted_conj (VarSet.elements union)))
+        ForallLemma ((label,op), Imp(f,corrupted_conj (VarSet.elements union)))
     in
     (* TODO I think this filter does not work *)
     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf)
 
-let sufficient_conditions id parties vf phi =
-    (exclusiveness id vf )
+let sufficient_conditions header parties vf phi =
+    match header with
+    (id,op) -> (* ignore options for now *)
+    (exclusiveness id op vf )
     @
-    [exhaustiveness id vf]
+    [exhaustiveness id op vf]
     @
-    (sufficiency id parties vf phi)
+    (sufficiency id op parties vf phi)
     @
-    (minimality id parties vf phi)
+    (minimality id op parties vf phi)
     @
-    (uniqueness id vf)
+    (uniqueness id op vf)
 
