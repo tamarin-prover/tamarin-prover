@@ -1,0 +1,12 @@
+theory why
+begin
+
+builtins: xor
+
+rule one:
+  [ Fr(~x) ]
+  --[ ]->
+  [ Out(diff(~x XOR 'c1',~x XOR 'c2')) ] 
+
+end
+
