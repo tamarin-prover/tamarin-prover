@@ -1,4 +1,4 @@
-theory Chaum_Anonymity
+theory Chaum_Online_Anonymity
 begin
 
 
@@ -6,8 +6,8 @@ begin
  * Protocol: Chaum's On-line Protocol
  * Based on: Charles Duménil's July 2016 model 
 
- * Modified to allow multiple spending by making the St_C_1 fact persistent.
- * Status: not working
+ * Modified to allow multiple spending, changed def of anonymity
+ * Status: in progress
  */
 
 
@@ -41,15 +41,15 @@ rule Register_Corrupted_Bank_pk:
 
 // Withdrawal Phase
 
-rule C_1_1:
-    [ Fr(~x), Fr(~r) ]
+rule C_1_1: // Everyone
+    [ Fr(~x), Fr(~r), Fr(~customer) ]
   --[  ]->
-    [ Out( blind(~x,~r) ), !St_C_1('c1', ~x, ~r )]
+    [ Out( blind(~x,~r) ), !St_C_1(~customer, ~x, ~r )]
 
-rule C_1_2:
-    [ Fr(~x), Fr(~r) ]
+rule C_1_2: // Test subjects
+    [ Fr(~x), Fr(~r), Fr(~customer) ]
   --[ ]->
-    [ Out( blind(~x,~r) ), !St_C_1('c2', ~x, ~r )]
+    [ Out( blind(~x,~r) ), !St_C_1(diff(~customer,'customer'), ~x, ~r )]
 
 
 // Payment and deposit phase
@@ -62,9 +62,9 @@ rule C_2:
     [ St_C_2(C, ~x, s ) ]
 
 rule C_2sync:
-    [ St_C_2('c1', x1,  s1 ), St_C_2('c2', x2, s2 ) ]
+    [ St_C_2(C, ~x,  s ) ]
   --[ Finish() ]->
-    [ Out(diff(< x1, s1 >,< x2, s2 >)) ]
+    [ Out(< ~x, s >) ]
 
 
 // Axioms
