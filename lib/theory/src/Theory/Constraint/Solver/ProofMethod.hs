@@ -977,7 +977,7 @@ injRanking :: ProofContext
             -> System
             -> [AnnotatedGoal] -> [AnnotatedGoal]
 injRanking ctxt allowLoopBreakers sys =
-    (sortOnUsefulness . unmark . sortDecisionTree [solveLast] . sortDecisionTree solveFirst . goalNrRanking)
+    (sortOnUsefulness . unmark . sortDecisionTree [notSolveLast] . sortDecisionTree solveFirst . goalNrRanking)
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
@@ -999,8 +999,9 @@ injRanking ctxt allowLoopBreakers sys =
     unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
     unmarkPremiseG annGoal                        = annGoal
 
-    -- move the Last proto facts (L_) and large splits to the end.
-    solveLast goaltuple = (isNoLargeSplitGoal $ fst goaltuple)
+    -- move the Last proto facts (L_) and large splits to the end by
+    -- putting all goals that shouldn't be solved last in front
+    notSolveLast goaltuple = (isNoLargeSplitGoal $ fst goaltuple)
                             && (isNonLastProtoFact $ fst goaltuple)
                             && (isNotKnowsLastNameGoal $ fst goaltuple)
 
@@ -1116,7 +1117,7 @@ smartRanking :: ProofContext
              -> System
              -> [AnnotatedGoal] -> [AnnotatedGoal]
 smartRanking ctxt allowPremiseGLoopBreakers sys =
-    sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
+    sortOnUsefulness . unmark . sortDecisionTree notSolveLast . sortDecisionTree solveFirst . goalNrRanking
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
@@ -1138,9 +1139,9 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
     unmarkPremiseG annGoal                        = annGoal
 
-    solveLast = 
+    notSolveLast =
        [ isNonLastProtoFact . fst ]
-       -- move the Last proto facts (L_) to the end.
+       -- move the Last proto facts (L_) to the end by sorting all other goals in front
 
     solveFirst =
         [ isChainGoal . fst
