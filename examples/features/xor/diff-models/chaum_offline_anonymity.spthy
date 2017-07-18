@@ -5,7 +5,7 @@ begin
 /*
  * Protocol: Chaum's Offline Protocol
  * Based on: Charles Duménil's model of Chaum's Online Protocol
- * Status: 
+ * Status: in limbo
  * 
  */
 
@@ -41,15 +41,15 @@ rule Register_Corrupted_Bank_pk:
 
 // Withdrawal Phase
 
-rule C_1_1:
-    [ Fr(~x), Fr(~r) ]
-  --[  ]->
-    [ Out( <blind(~x XOR 'c1',~r), blind(~x,~r)> ), St_C_1('c1', ~x, ~r )]
+rule C_1_1: // Everyone
+    [ Fr(~x), Fr(~r), Fr(~customer) ]
+  --[ Customer( ~customer ), Mint(~x XOR ~customer,~x,~r), Mint(~x,~x,~r) ]->
+    [ Out( <blind(~x XOR ~customer,~r), blind(~x,~r)> ), !St_C_1(~customer, ~x, ~r )]
 
-rule C_1_2:
-    [ Fr(~x), Fr(~r) ]
-  --[ ]->
-    [ Out( <blind(~x XOR 'c2',~r), blind(~x,~r)> ), St_C_1('c2', ~x, ~r )]
+rule C_1_2: // Test subjects
+    [ Fr(~x), Fr(~r), Fr(~customer) ]
+  --[ Customer( diff(~customer,'customer') ), Mint(~x XOR diff(~customer,'customer'),~x,~r), Mint(~x,~x,~r) ]->
+    [ Out( <blind(~x XOR diff(~customer,'customer'),~r), blind(~x,~r)> ), !St_C_1(diff(~customer,'customer'), ~x, ~r ) ]
 
 
 // Payment and deposit phase
@@ -57,14 +57,9 @@ rule C_1_2:
 rule C_2:
   let s = unblind(sign(blind(x,~r), ~skB),~r)
   in
-    [ St_C_1(C, x, ~r ), In( sign(blind(x,~r), ~skB) ), !Bank_Pk($B, pk(~skB)) ]
-  --[  ]->
-    [ St_C_2(C, x, s ) ]
-
-rule C_2sync:
-    [ St_C_2('c1', x1,  s1 ), St_C_2('c2', x2, s2 ) ]
-  --[ Finish() ]->
-    [ Out(diff(< x1, s1 >,< x2, s2 >)) ]
+    [ !St_C_1(C, ~y, ~r ), In( sign(blind(x,~r), ~skB) ), !Bank_Pk($B, pk(~skB)) ]
+  --[ Spend(x,~y,~r) ]->
+    [ Out(< x, s >) ]
 
 
 // Axioms
@@ -72,12 +67,18 @@ rule C_2sync:
 restriction OnlyOnce:
   " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j " 
 
+// Sources 
+
+lemma coins [sources]:
+  " All x y r #i. Spend(x,y,r)@i ==> Ex #j. Mint(x,y,r)@j "
 
 // Executability
 
 lemma exec:
   exists-trace
-  " Ex #i. Finish()@i "
+  " Ex x y r #i. Spend(x,y,r)@i"
 
+lemma secrecy:
+  " All x #i. Customer(x)@i ==> not (Ex #j. KU(x)@j) "
 end
 

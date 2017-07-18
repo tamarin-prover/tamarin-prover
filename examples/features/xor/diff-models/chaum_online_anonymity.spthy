@@ -61,7 +61,7 @@ rule C_2:
   --[  ]->
     [ St_C_2(C, ~x, s ) ]
 
-rule C_2sync:
+rule C_2fin:
     [ St_C_2(C, ~x,  s ) ]
   --[ Finish() ]->
     [ Out(< ~x, s >) ]
