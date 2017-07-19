@@ -82,9 +82,6 @@ JKL3=JKL_TS3_2004_KI_wPFS.spthy JKL_TS3_2008_KI_wPFS.spthy
 UM=UM_wPFS.spthy UM_PFS.spthy
 
 
-TMPRES=case-studies/temp-analysis.spthy
-TMPOUT=case-studies/temp-output.spthy
-
 CSF12_CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(STS) $(SDH) $(KAS) $(DH2)
 CSF12_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/csf12/,$(CSF12_CASE_STUDIES)))
 
@@ -110,14 +107,14 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/post17
 	mkdir -p case-studies/regression/trace
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
-	echo "\n/* Output" >>$(TMPRES)
-	cat $(TMPOUT) >>$(TMPRES)
-	echo "*/" >>$(TMPRES)
-	mv $(TMPRES) $@
-	\rm -f $(TMPOUT)
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
 
 
 ## Observational Equivalence
@@ -130,14 +127,14 @@ case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/post17
 	mkdir -p case-studies/regression/diff
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
-	echo "\n/* Output" >>$(TMPRES)
-	cat $(TMPOUT) >>$(TMPRES)
-	echo "*/" >>$(TMPRES)
-	mv $(TMPRES) $@
-	\rm -f $(TMPOUT)
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
 
 # individual diff-based precomputed (no --prove) case studies
 case-studies/%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
@@ -145,14 +142,14 @@ case-studies/%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/features/equivalence
 	mkdir -p case-studies/regression/diff
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
-	echo "\n/* Output" >>$(TMPRES)
-	cat $(TMPOUT) >>$(TMPRES)
-	echo "*/" >>$(TMPRES)
-	mv $(TMPRES) $@
-	\rm -f $(TMPOUT)
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
 
 CCS15_CASE_STUDIES=DDH.spthy  probEnc.spthy  rfid-feldhofer.spthy
 CCS15_CS_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/ccs15/,$(CCS15_CASE_STUDIES)))
@@ -282,9 +279,6 @@ regression-case-studies:	$(REGRESSION_TARGETS)
 ## SAPIC
 ########
 
-TMPRESSAPIC=case-studies-sapic/temp-analysis.sapic
-TMPOUTSAPIC=case-studies-sapic/temp-output.spthy
-
 # sapic case studies
 case-studies-sapic/%.spthy:	examples/sapic/%.sapic $(SAPIC)
 	mkdir -p case-studies-sapic/basic
@@ -303,10 +297,10 @@ case-studies-sapic/%.spthy:	examples/sapic/%.sapic $(SAPIC)
 	mkdir -p case-studies-sapic/SCADA
 	mkdir -p case-studies-sapic/statVerifLeftRight
 	mkdir -p case-studies-sapic/Yubikey
-	$(SAPIC) $< $(TMPRESSAPIC) > $(TMPOUTSAPIC)
-	cat $(TMPOUTSAPIC) >>$(TMPRESSAPIC)
-	mv $(TMPRESSAPIC) $@
-	\rm -f $(TMPOUTSAPIC)
+	$(SAPIC) $< $<.tmp > $<.out
+	cat $<.out >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
 
 SAPIC_CASE_STUDIES=basic/channels1.sapic basic/channels2.sapic basic/channels3.sapic basic/design-choices.sapic basic/exclusive-secrets.sapic basic/no-replication.sapic basic/replication.sapic  basic/running-example.sapic \
 encWrapDecUnwrap/encwrapdecunwrap-nolocks.sapic encWrapDecUnwrap/encwrapdecunwrap.sapic \
@@ -347,14 +341,14 @@ case-studies/%_analyzed-sapic.spthy:	case-studies-sapic-regression/%.spthy $(TAM
 	mkdir -p case-studies/sapic/SCADA
 	mkdir -p case-studies/sapic/fairexchange-mini
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
-	echo "\n/* Output" >>$(TMPRES)
-	cat $(TMPOUT) >>$(TMPRES)
-	echo "*/" >>$(TMPRES)
-	mv $(TMPRES) $(subst case-studies,case-studies/sapic,$@)
-	\rm -f $(TMPOUT)
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $(subst case-studies,case-studies/sapic,$@)
+	\rm -f $<.out
 
 SAPIC_TAMARIN_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy basic/design-choices.spthy basic/exclusive-secrets.spthy basic/running-example.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
