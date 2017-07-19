@@ -29,6 +29,7 @@ import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.List                  as L
+import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -284,9 +285,15 @@ typeAssertions = fmap TypingE $
 -- | Parse a 'RuleAttribute'.
 ruleAttribute :: Parser RuleAttribute
 ruleAttribute = asum
-  [ symbol "colour=" *> (RuleColor <$> identifier)
-  , symbol "color="  *> (RuleColor <$> identifier)
-  ]
+    [ symbol "colour=" *> (RuleColor <$> parseColor)
+    , symbol "color="  *> (RuleColor <$> parseColor)
+    ]
+  where
+    parseColor = do
+        hc <- hexColor
+        case hexToRGB hc of
+            Just rgb  -> return rgb
+            Nothing -> fail $ "Color could not be parsed to RGB"
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo

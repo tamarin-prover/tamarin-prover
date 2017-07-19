@@ -1,4 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
 -- remove the two benign defaults
 
 -- |
@@ -37,8 +40,12 @@ module Data.Color (
  -       palettes for reporting various data
  -}
 
-import Numeric (showHex, readHex)
-import Safe    (headMay)
+import GHC.Generics     (Generic)
+import Control.DeepSeq  (NFData)
+import Data.Binary      (Binary)
+import Data.Data        (Data)
+import Numeric          (showHex, readHex)
+import Safe             (headMay)
 
 -- import Text.XHtml.Strict
 -- import Text.XHtml.Table
@@ -48,7 +55,7 @@ data RGB a = RGB {
   , rgbG :: !a
   , rgbB :: !a
   }
-  deriving( Eq, Ord )
+  deriving( Eq, Ord, Generic, Data, NFData, Binary )
 
 instance Show a => Show (RGB a) where
   show (RGB r g b) = "RGB("++show r++", "++show g++", "++show b++")"
@@ -141,13 +148,12 @@ rgbToHex (RGB r g b) = ('#':) . showHex' r . showHex' g . showHex' b $ ""
           i = max 0 (min 255 (floor (256 * f)))
 
 hexToRGB :: RealFrac t => String -> Maybe (RGB t)
-hexToRGB rgb = do
-    let (rs,gb) = splitAt 2 rgb
-        (gs, bs) = splitAt 2 gb
-    (r,_) <- headMay $ readHex rs
-    (g,_) <- headMay $ readHex gs
-    (b,_) <- headMay $ readHex bs
+hexToRGB [r1,r2,g1,g2,b1,b2] = do
+    (r,_) <- headMay $ readHex [r1,r2]
+    (g,_) <- headMay $ readHex [g1,g2]
+    (b,_) <- headMay $ readHex [b1,b2]
     return (RGB (r / 255) (g / 255) (b / 255))
+hexToRGB _ = Nothing
 
 -- | Hexadecimal representation of an HSV value; i.e., of its corresponding RGB
 -- value.

@@ -273,9 +273,9 @@ setDefaultAttributes = do
 nodeColorMap :: [RuleACInst] -> NodeColorMap
 nodeColorMap rules =
     M.fromList $
-      [ (get rInfo ru, case getColorAttr ru of
-            Just ruColor -> ruColor
-            Nothing      -> hsvToRGB $ getColor (gIdx, mIdx))
+      [ (get rInfo ru, case find colorAttr $ ruleAttributes ru of
+            Just (RuleColor c)  -> c
+            Nothing             -> hsvToRGB $ getColor (gIdx, mIdx))
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
     groupIdx ru | isDestrRule ru                   = 0
@@ -292,14 +292,11 @@ nodeColorMap rules =
     colors = M.fromList $ lightColorGroups intruderHue (map (length . snd) groups)
     getColor idx = fromMaybe (HSV 0 1 1) $ M.lookup idx colors
 
-    -- Setting colour based on the first colour attribute in the rule attributes
-    getColorAttr ru = do
-        c  <- firstColorAttr $ ruleAttributes ru
-        hexToRGB c
-      where
-        firstColorAttr []                   = Nothing
-        firstColorAttr ((RuleColor c) : _)  = Just c
-        firstColorAttr (_ : xs)             = firstColorAttr xs
+-- Note: Currently RuleColors are the only Rule Attributes, so the second line is
+-- commented out to remove the redundant pattern compiler warning. If more are added,
+-- the second line can be uncommented.
+    colorAttr (RuleColor _) = True
+--    colorAttr _             = False
 
     -- The hue of the intruder rules
     intruderHue :: Rational

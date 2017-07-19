@@ -139,6 +139,7 @@ import qualified Data.Set              as S
 import qualified Data.Map              as M
 import           Data.Monoid
 import           Data.Maybe            (fromMaybe)
+import           Data.Color
 import           Safe
 
 -- import           Control.Basics
@@ -272,10 +273,9 @@ instance (Apply p, Apply i) => Apply (RuleInfo p i) where
 -- Protocol Rule Information
 ------------------------------------------------------------------------------
 
--- | An attribute for a 'Lemma'.
-data RuleAttribute =
-         RuleColor String
-       deriving( Eq, Ord, Show, Data, Generic )
+-- | An attribute for a Rule, which does not affect the semantics.
+data RuleAttribute = RuleColor (RGB Rational)
+       deriving( Eq, Ord, Show, Data, Generic)
 instance NFData RuleAttribute
 instance Binary RuleAttribute
 
@@ -921,7 +921,7 @@ prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
 prettyRuleAttribute :: (HighlightDocument d) => RuleAttribute -> d
 prettyRuleAttribute attr = case attr of
-    RuleColor c -> text "color=" <> text c
+    RuleColor c -> text "color=" <> text (rgbToHex c)
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
