@@ -13,6 +13,8 @@ default: tamarin sapic
 tamarin:
 	stack setup
 	stack install --flag tamarin-prover:threaded
+	# Uncomment the following if you use docker
+	#cp $(PWD)/.stack-work/docker/_home/.local/bin/tamarin-prover $(HOME)/.local/bin
 
 # Single-threaded Tamarin
 .PHONY: single
