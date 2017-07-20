@@ -52,7 +52,6 @@ let A =
 // Party `S`
 let S =
   (
-    // some unbounded vars in the papers, still a bit confused about this one
     let r = retrieve(cAS, m1) in
     let p = extract(r) in
     let z = fst(p) in
@@ -71,7 +70,7 @@ let S =
                     if Cx = commit(x, rx)
                        then if Cz = commit(z, rz)
                             then if <Cx, Cy, Cz> = Pub(Z) 
-                                    then event pair(x, pair(z,r))
+                                    then event Pair(x, z, r)
   )
 
 
@@ -80,4 +79,29 @@ let S =
 // cSA: secure channel from S to A
 new skA; new skS; new cAS; new cSA; new skL; (E || A || S)
 
+
+lemma sanity_0:
+  exists-trace
+    "Ex a b x z r #i #j #k #l. 
+    Initialize(a)@i & Log(b)@j & Pair(x,z,r)@k & Final()@l"
+
+lemma sanity_1:
+  exists-trace
+    "Ex x z r #i #j. Pair(x,z,r)@i & Final()@j & i < j"
+
+lemma sanity_2:
+  all-traces
+    "All x z r #i #j. Pair(x,z,r)@i & Final()@j ==> i < j"
+
+lemma sanity_3:
+  all-traces
+    "All #j. Final()@j ==> Ex m #i. Log(m)@i"
+
+lemma sanity_4:
+  all-traces
+    "All m #i #j. Log(m)@i & Final()@j ==> i < j"
+
+lemma sanity_5:
+  all-traces
+    "All #j. Final()@j ==> Ex x z r #i. Pair(x, z, r)@i"
 end
