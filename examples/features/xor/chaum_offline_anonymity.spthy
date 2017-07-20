@@ -5,18 +5,19 @@ begin
 /*
  * Protocol: Chaum's Offline Protocol
  * Based on: Charles Duménil's model of Chaum's Online Protocol
- * Status: in limbo
- * 
+ *   equational theory has been simplified
+ *   anonymity is defined as secrecy of customer's name
+ * Status: works automatically
  */
 
 
 /*
   Protocol Chaum {                          ( Seller and bank are considered corrupted )
     Withdrawal phase
-     C -> B: blind(x XOR C,r), blind(x,r)    " c1(x1) & c2(x2) "
+     C -> B: blind(x XOR C,r), blind(x,r)
      B -> C: sign(blind(x XOR C,r),skB), sign(blind(x,r),skB)    "Withdraw"
     Payment and deposit phase
-     C -> S: <x, sign(x,skB)>        "Check signature"            " Out( diff( x1, x2 ) ) "
+     C -> S: <x, sign(x,skB)>        "Check signature" 
      S -> B: <x, sign(x,skB)>        "Check signature" 
      B -> S: Private(x)              "Check signature" + "Deposit"
      S     :                         "Spend"
@@ -27,8 +28,9 @@ begin
 builtins: xor
 functions: pk/1, sign/2, checksign/2, blind/2, unblind/2
 equations: checksign( sign(m,k),pk(k) ) = m,
-           unblind( blind(m,r),r ) = m,
-           unblind( sign(blind(m,r),k),r ) = sign(m,k)
+           unblind( blind(m,r),r ) = m
+//,
+//           unblind( sign(blind(m,r),k),r ) = sign(m,k)
 
 
 // Public key infrastructure
@@ -38,27 +40,41 @@ rule Register_Corrupted_Bank_pk:
   --[ OnlyOnce() ]->
   [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(~ltkB) ]
 
+// Identities
+
+// Generate a customer identity and give it to the adversary
+rule regular_agent:
+  [ Fr(~C) ]
+  --[ ]->
+  [ !Customer(~C), Out(~C) ]
+
+// Generate a test subject identity, don't give it to the adversary
+rule test_subject:
+  [ Fr(~C) ]
+  --[ TestSubject(~C) ]->
+  [ !Customer(~C) ]
+
 
 // Withdrawal Phase
 
-rule C_1_1: // Everyone
-    [ Fr(~x), Fr(~r), Fr(~customer) ]
-  --[ Customer( ~customer ), Mint(~x XOR ~customer,~x,~r), Mint(~x,~x,~r) ]->
-    [ Out( <blind(~x XOR ~customer,~r), blind(~x,~r)> ), !St_C_1(~customer, ~x, ~r )]
-
-rule C_1_2: // Test subjects
-    [ Fr(~x), Fr(~r), Fr(~customer) ]
-  --[ Customer( diff(~customer,'customer') ), Mint(~x XOR diff(~customer,'customer'),~x,~r), Mint(~x,~x,~r) ]->
-    [ Out( <blind(~x XOR diff(~customer,'customer'),~r), blind(~x,~r)> ), !St_C_1(diff(~customer,'customer'), ~x, ~r ) ]
-
+rule C_1:
+    [ Fr(~x)
+    , Fr(~r)
+    , !Customer(~C) ]
+  --[ Mint(~x XOR ~C,~x,~r)
+    , Mint(~x,~x,~r) 
+    ]->
+    [ Out( <blind(~x XOR ~C,~r), blind(~x,~r)> )
+    , !St_C_1(~C, ~x, ~r )
+    ]
 
 // Payment and deposit phase
 
 rule C_2:
-  let s = unblind(sign(blind(x,~r), ~skB),~r)
+  let s = sign(x,~skB) // unblind(sign(blind(x,~r), ~skB),~r)
   in
     [ !St_C_1(C, ~y, ~r ), In( sign(blind(x,~r), ~skB) ), !Bank_Pk($B, pk(~skB)) ]
-  --[ Spend(x,~y,~r) ]->
+  --[ Coin(x,~y,~r), Spend(C,~y,~r) ]->
     [ Out(< x, s >) ]
 
 
@@ -70,7 +86,8 @@ restriction OnlyOnce:
 // Sources 
 
 lemma coins [sources]:
-  " All x y r #i. Spend(x,y,r)@i ==> Ex #j. Mint(x,y,r)@j "
+  " All x y r #i. Coin(x,y,r)@i ==> Ex #j. Mint(x,y,r)@j"
+
 
 // Executability
 
@@ -78,7 +95,10 @@ lemma exec:
   exists-trace
   " Ex x y r #i. Spend(x,y,r)@i"
 
-lemma secrecy:
-  " All x #i. Customer(x)@i ==> not (Ex #j. KU(x)@j) "
+// TestSubject is anonymous (subject's name is secret) as long as 
+// the subject does not double spend
+lemma anonymity:
+  "All C #i. TestSubject(C)@i ==> ((not Ex #j. !KU(C)@j) | (Ex x r #i #j. Spend(C,x,r)@i & Spend(C,x,r)@j & not #i = #j))"
+
 end
 
