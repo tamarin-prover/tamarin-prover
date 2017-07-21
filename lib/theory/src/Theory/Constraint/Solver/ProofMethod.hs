@@ -1144,7 +1144,8 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
        -- move the Last proto facts (L_) to the end by sorting all other goals in front
 
     solveFirst =
-        [ isChainGoal . fst
+        [ isExistingKUGoal . fst
+        , isChainGoal . fst
         , isDisjGoal . fst
         , isFirstProtoFact . fst
         , isNonLoopBreakerProtoFactGoal
@@ -1194,6 +1195,12 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     isMsgOneCaseGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
         _                                                  -> False
+
+    isExistingKUGoal goal = case goal of
+        (ActionG i (kFactView -> Just (UpK, m)))
+            | (isMsgVar m) &&
+                 not (Nothing == M.lookup i (L.get sNodes sys)) -> True
+        _                                                       -> False
 
     isPrivateKnowsGoal goal = case msgPremise goal of
         Just t -> isPrivateFunction t
@@ -1245,7 +1252,7 @@ smartDiffRanking ctxt sys =
       where
         parts = partition (not . trivialKUGoal) agl
     
-    trivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialMsgFact fa /= Nothing)
+    trivialKUGoal ((ActionG i fa), _) = isKUFact fa && (isTrivialMsgFact fa /= Nothing) && (Nothing == M.lookup i (L.get sNodes sys))
     trivialKUGoal _                   = False
 
     -- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing. Currently identical to "isTrivialFact" from Model/Fact, but could eventually be relaxed there, but not here. 
