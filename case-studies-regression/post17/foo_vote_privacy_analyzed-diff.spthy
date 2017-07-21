@@ -21898,8 +21898,8 @@ analyzing: examples/post17/foo_vote_privacy.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/post17/foo_vote_privacy.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 311.165358s
+  output:          examples/post17/foo_vote_privacy.spthy.tmp
+  processing time: 250.063279s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)
@@ -21911,8 +21911,8 @@ summary of summaries:
 
 analyzed: examples/post17/foo_vote_privacy.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 311.165358s
+  output:          examples/post17/foo_vote_privacy.spthy.tmp
+  processing time: 250.063279s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)

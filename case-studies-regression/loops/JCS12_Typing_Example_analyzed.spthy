@@ -281,8 +281,8 @@ analyzing: examples/loops/JCS12_Typing_Example.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.244078s
+  output:          examples/loops/JCS12_Typing_Example.spthy.tmp
+  processing time: 0.212699s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
@@ -295,8 +295,8 @@ summary of summaries:
 
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.244078s
+  output:          examples/loops/JCS12_Typing_Example.spthy.tmp
+  processing time: 0.212699s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)

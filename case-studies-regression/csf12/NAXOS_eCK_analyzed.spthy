@@ -733,8 +733,8 @@ analyzing: examples/csf12/NAXOS_eCK.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.285299s
+  output:          examples/csf12/NAXOS_eCK.spthy.tmp
+  processing time: 4.397394s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ------------------------------------------------------------------------------
@@ -744,8 +744,8 @@ summary of summaries:
 
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.285299s
+  output:          examples/csf12/NAXOS_eCK.spthy.tmp
+  processing time: 4.397394s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ==============================================================================

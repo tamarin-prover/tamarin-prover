@@ -283,8 +283,8 @@ analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.305033s
+  output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
+  processing time: 1.04381s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -295,8 +295,8 @@ summary of summaries:
 
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.305033s
+  output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
+  processing time: 1.04381s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
