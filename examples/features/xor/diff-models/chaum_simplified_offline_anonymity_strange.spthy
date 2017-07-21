@@ -24,7 +24,7 @@ rule (modulo E) C_1_2:
    [ Fr( ~x ), Fr( ~r ), !Customer( ~c1 ), !TestSubject( ~c2 ) ]
   --[
   Mint( (~x⊕diff(~c1, ~c2)), ~x, ~r ), Mint( ~x, ~x, ~r ),
-  !TestSubject( diff(~c1, ~c2) )
+  TestSubjectAction( diff(~c1, ~c2) )
   ]->
    [
    Out( <blind((~x⊕diff(~c1, ~c2)), ~r), blind(~x, ~r)> ),
@@ -47,14 +47,14 @@ restriction OnlyOnce [left]:
 restriction TestSubjectsAreHonest [right]:
   "∀ C x r #i #j #k.
     (((Spend( C, x, r ) @ #i) ∧ (Spend( C, x, r ) @ #j)) ∧
-     (!TestSubject( C ) @ #k)) ⇒
+     (TestSubjectAction( C ) @ #k)) ⇒
     (#i = #j)"
   // safety formula
 
 restriction TestSubjectsAreHonest [left]:
   "∀ C x r #i #j #k.
     (((Spend( C, x, r ) @ #i) ∧ (Spend( C, x, r ) @ #j)) ∧
-     (!TestSubject( C ) @ #k)) ⇒
+     (TestSubjectAction( C ) @ #k)) ⇒
     (#i = #j)"
   // safety formula
 
@@ -240,10 +240,10 @@ qed
 
 lemma anonymity [right]:
   all-traces
-  "∀ x #i. (!TestSubject( x ) @ #i) ⇒ (¬(∃ #j. !KU( x ) @ #j))"
+  "∀ x #i. (TestSubjectAction( x ) @ #i) ⇒ (¬(∃ #j. !KU( x ) @ #j))"
 /*
 guarded formula characterizing all counter-examples:
-"∃ x #i. (!TestSubject( x ) @ #i) ∧ ∃ #j. (!KU( x ) @ #j)"
+"∃ x #i. (TestSubjectAction( x ) @ #i) ∧ ∃ #j. (!KU( x ) @ #j)"
 */
 simplify
 solve( !Customer( ~c1 ) ▶₂ #i )
@@ -262,10 +262,10 @@ qed
 
 lemma anonymity [left]:
   all-traces
-  "∀ x #i. (!TestSubject( x ) @ #i) ⇒ (¬(∃ #j. !KU( x ) @ #j))"
+  "∀ x #i. (TestSubjectAction( x ) @ #i) ⇒ (¬(∃ #j. !KU( x ) @ #j))"
 /*
 guarded formula characterizing all counter-examples:
-"∃ x #i. (!TestSubject( x ) @ #i) ∧ ∃ #j. (!KU( x ) @ #j)"
+"∃ x #i. (TestSubjectAction( x ) @ #i) ∧ ∃ #j. (!KU( x ) @ #j)"
 */
 simplify
 solve( !Customer( ~c1 ) ▶₂ #i )
