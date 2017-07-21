@@ -706,8 +706,8 @@ analyzing: examples/classic/NSLPK3_untagged.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.438568s
+  output:          examples/classic/NSLPK3_untagged.spthy.tmp
+  processing time: 2.77605s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -719,8 +719,8 @@ summary of summaries:
 
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.438568s
+  output:          examples/classic/NSLPK3_untagged.spthy.tmp
+  processing time: 2.77605s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

@@ -589,8 +589,8 @@ analyzing: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 3.129169s
+  output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
+  processing time: 2.424008s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ------------------------------------------------------------------------------
@@ -600,8 +600,8 @@ summary of summaries:
 
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 3.129169s
+  output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
+  processing time: 2.424008s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ==============================================================================

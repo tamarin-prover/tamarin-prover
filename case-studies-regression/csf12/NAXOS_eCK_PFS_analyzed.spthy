@@ -359,8 +359,8 @@ analyzing: examples/csf12/NAXOS_eCK_PFS.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.001276s
+  output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
+  processing time: 4.050978s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -370,8 +370,8 @@ summary of summaries:
 
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.001276s
+  output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
+  processing time: 4.050978s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================

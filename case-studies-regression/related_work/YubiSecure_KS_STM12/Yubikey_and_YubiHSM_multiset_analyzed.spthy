@@ -1700,8 +1700,8 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multise
 ------------------------------------------------------------------------------
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 8.044546s
+  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
+  processing time: 6.322358s
   transitivity (all-traces): verified (2 steps)
   adv_can_guess_counter (all-traces): verified (13 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
@@ -1720,8 +1720,8 @@ summary of summaries:
 
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 8.044546s
+  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
+  processing time: 6.322358s
   transitivity (all-traces): verified (2 steps)
   adv_can_guess_counter (all-traces): verified (13 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)

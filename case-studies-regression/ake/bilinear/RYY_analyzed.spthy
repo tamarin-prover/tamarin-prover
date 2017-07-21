@@ -526,8 +526,8 @@ analyzing: examples/ake/bilinear/RYY.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ake/bilinear/RYY.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 8.974794s
+  output:          examples/ake/bilinear/RYY.spthy.tmp
+  processing time: 8.689988s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 
@@ -538,8 +538,8 @@ summary of summaries:
 
 analyzed: examples/ake/bilinear/RYY.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 8.974794s
+  output:          examples/ake/bilinear/RYY.spthy.tmp
+  processing time: 8.689988s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 
