@@ -217,8 +217,8 @@ analyzing: examples/csf12/UM_PFS.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/UM_PFS.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.114374s
+  output:          examples/csf12/UM_PFS.spthy.tmp
+  processing time: 0.920552s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
@@ -229,8 +229,8 @@ summary of summaries:
 
 analyzed: examples/csf12/UM_PFS.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.114374s
+  output:          examples/csf12/UM_PFS.spthy.tmp
+  processing time: 0.920552s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 

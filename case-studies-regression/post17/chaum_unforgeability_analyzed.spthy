@@ -129,8 +129,8 @@ analyzing: examples/post17/chaum_unforgeability.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/post17/chaum_unforgeability.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.131091s
+  output:          examples/post17/chaum_unforgeability.spthy.tmp
+  processing time: 0.123252s
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)
 
@@ -141,8 +141,8 @@ summary of summaries:
 
 analyzed: examples/post17/chaum_unforgeability.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.131091s
+  output:          examples/post17/chaum_unforgeability.spthy.tmp
+  processing time: 0.123252s
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)
 
