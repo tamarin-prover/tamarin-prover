@@ -229,8 +229,8 @@ analyzing: examples/ccs15/probEnc.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ccs15/probEnc.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.288819s
+  output:          examples/ccs15/probEnc.spthy.tmp
+  processing time: 0.158516s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ------------------------------------------------------------------------------
@@ -240,8 +240,8 @@ summary of summaries:
 
 analyzed: examples/ccs15/probEnc.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.288819s
+  output:          examples/ccs15/probEnc.spthy.tmp
+  processing time: 0.158516s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================

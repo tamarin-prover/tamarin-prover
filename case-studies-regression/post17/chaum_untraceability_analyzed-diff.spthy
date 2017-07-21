@@ -8703,8 +8703,8 @@ analyzing: examples/post17/chaum_untraceability.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/post17/chaum_untraceability.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 89.246139s
+  output:          examples/post17/chaum_untraceability.spthy.tmp
+  processing time: 66.280516s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)
@@ -8716,8 +8716,8 @@ summary of summaries:
 
 analyzed: examples/post17/chaum_untraceability.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 89.246139s
+  output:          examples/post17/chaum_untraceability.spthy.tmp
+  processing time: 66.280516s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)

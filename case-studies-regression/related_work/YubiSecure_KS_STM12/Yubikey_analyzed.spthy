@@ -4675,8 +4675,8 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 20.513897s
+  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
+  processing time: 19.326991s
   Login_reachable (exists-trace): verified (12 steps)
   one_count_foreach_login (all-traces): verified (210 steps)
   slightly_weaker_invariant (all-traces): verified (1241 steps)
@@ -4691,8 +4691,8 @@ summary of summaries:
 
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 20.513897s
+  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
+  processing time: 19.326991s
   Login_reachable (exists-trace): verified (12 steps)
   one_count_foreach_login (all-traces): verified (210 steps)
   slightly_weaker_invariant (all-traces): verified (1241 steps)

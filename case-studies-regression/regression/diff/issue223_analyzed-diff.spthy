@@ -3245,8 +3245,8 @@ analyzing: examples/regression/diff/issue223.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/regression/diff/issue223.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 3.794911s
+  output:          examples/regression/diff/issue223.spthy.tmp
+  processing time: 4.269948s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ------------------------------------------------------------------------------
@@ -3256,8 +3256,8 @@ summary of summaries:
 
 analyzed: examples/regression/diff/issue223.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 3.794911s
+  output:          examples/regression/diff/issue223.spthy.tmp
+  processing time: 4.269948s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ==============================================================================

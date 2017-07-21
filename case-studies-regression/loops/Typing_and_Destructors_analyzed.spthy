@@ -287,8 +287,8 @@ analyzing: examples/loops/Typing_and_Destructors.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.236983s
+  output:          examples/loops/Typing_and_Destructors.spthy.tmp
+  processing time: 0.235312s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -303,8 +303,8 @@ summary of summaries:
 
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.236983s
+  output:          examples/loops/Typing_and_Destructors.spthy.tmp
+  processing time: 0.235312s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
