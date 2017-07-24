@@ -5,4 +5,4 @@
 # command below therefore refers to a symlink that you have to create.
 
 # ghci -no-user-package-conf -package-conf cabal-dev/packages.conf/ $*
-ghci -no-user-package-conf -package-conf cabal-dev/packages.conf/ $*
+ghci -no-user-package-db -package-db cabal-dev/packages.conf/ $*
