@@ -58,7 +58,7 @@ tmpdir = "/tmp/tamarin/"
 --      to obtain DNF of equations.
 --   4. Simplify rule.
 variantsProtoRule :: MaudeHandle -> ProtoRuleE -> ProtoRuleAC
-variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
+variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr) prems0 concs0 acts0) =
     -- rename rule to decrease variable indices
     (`Precise.evalFresh` Precise.nothingUsed) . renamePrecise  $ convertRule `evalFreshAvoiding` ru
   where
@@ -106,7 +106,7 @@ variantsProtoRule hnd ru@(Rule ri prems0 concs0 acts0) =
             getHint _                         = "z"
 
     makeRule (ps, cs, as) subst freshSubsts0 =
-        Rule (ProtoRuleACInfo ri (Disj freshSubsts) []) prems concs acts
+        Rule (ProtoRuleACInfo na attr (Disj freshSubsts) []) prems concs acts
       where prems = apply subst ps
             concs = apply subst cs
             acts  = apply subst as
