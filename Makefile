@@ -11,6 +11,8 @@ default: tamarin sapic
 # Default Tamarin installation via stack, multi-threaded
 .PHONY: tamarin
 tamarin:
+	# Uncomment the following if you use docker
+	#stack docker pull
 	stack setup
 	stack install --flag tamarin-prover:threaded
 	# Uncomment the following if you use docker
