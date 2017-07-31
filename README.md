@@ -25,6 +25,19 @@ usually be installed directly.
 The build process additionally depends on the `make` toolchain.
 
 
+## Contributing
+
+There are two main branches: `/master` and `/develop`. The intent is that they are 
+synchronised with Tamarin's corresponding [source code](https://github.com/tamarin-prover/tamarin-prover) branches.
+
+To suggest improvements/extensions for the [current manual](https://tamarin-prover.github.io/manual), 
+create a pull request for the `/master` branch.
+
+To add documentation for new features that have been accepted into the `/develop` 
+branch of Tamarin's source repository, create a pull request for the `/develop` 
+branch.
+
+
 ## Compiling the manual
 
 ### HTML
