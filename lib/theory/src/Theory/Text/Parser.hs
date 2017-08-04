@@ -298,8 +298,9 @@ protoRule = do
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps,as,cs) <- genericRule
-    return $ apply subst $ Rule (StandRule name) ps cs as
+    (ps0,as0,cs0) <- genericRule
+    let (ps,as,cs) = apply subst (ps0,as0,cs0)
+    return $ Rule (StandRule name) ps cs as (newVariables ps cs)
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst
@@ -314,7 +315,7 @@ intrRule :: Parser IntrRuleAC
 intrRule = do
     info <- try (symbol "rule" *> moduloAC *> intrInfo <* colon)
     (ps,as,cs) <- genericRule
-    return $ Rule info ps cs as
+    return $ Rule info ps cs as (newVariables ps cs)
   where
     intrInfo = do
         name     <- identifier
@@ -331,6 +332,13 @@ genericRule =
          <*> ((pure [] <* symbol "-->") <|>
               (symbol "--[" *> commaSep (fact llit) <* symbol "]->"))
          <*> list (fact llit)
+
+newVariables :: [LNFact] -> [LNFact] -> [LNTerm]
+newVariables prems concs = map varTerm $ S.toList newvars
+  where
+    newvars = S.difference concvars premvars
+    premvars = S.fromList $ concat $ map getFactVariables prems
+    concvars = S.fromList $ concat $ map getFactVariables concs
 
 {-
 -- | Add facts to a rule.

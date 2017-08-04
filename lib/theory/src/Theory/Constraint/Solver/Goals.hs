@@ -211,7 +211,7 @@ solveGoal goal = do
       SplitG i      -> solveSplit i
       DisjG disj    -> solveDisjunction disj
 
--- The follwoing functions are internal to 'solveGoal'. Use them with great
+-- The following functions are internal to 'solveGoal'. Use them with great
 -- care.
 
 -- | CR-rule *S_at*: solve an action goal.
@@ -248,7 +248,7 @@ solvePremise rules p faPrem
       let concLearn = kdFact mLearn
           premLearn = outFact mLearn
           -- !! Make sure that you construct the correct rule!
-          ruLearn = Rule (IntrInfo IRecvRule) [premLearn] [concLearn] []
+          ruLearn = Rule (IntrInfo IRecvRule) [premLearn] [concLearn] [] []
           cLearn = (iLearn, ConcIdx 0)
           pLearn = (iLearn, PremIdx 0)
       modM sNodes  (M.insert iLearn ruLearn)

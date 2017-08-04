@@ -196,7 +196,7 @@ insertFreshNodeConc rules = do
     return (ru, (i, v), fa)
 
 -- | Insert a fresh rule node labelled with a fresh instance of one of the rules
--- and solve it's 'Fr', 'In', and 'KU' premises immediatly.
+-- and solve it's 'Fr', 'In', and 'KU' premises immediately.
 -- If a parent node is given, updates the remaining rule applications.
 insertFreshNode :: [RuleAC] -> Maybe RuleACInst -> Reduction (NodeId, RuleACInst)
 insertFreshNode rules parent = do
@@ -204,7 +204,7 @@ insertFreshNode rules parent = do
     (,) i <$> labelNodeId i rules parent
 
 -- | Label a node-id with a fresh instance of one of the rules and
--- solve it's 'Fr', 'In', and 'KU' premises immediatly.
+-- solve it's 'Fr', 'In', and 'KU' premises immediately.
 -- If a parent node is given, updates the remaining rule applications.
 --
 -- PRE: Node must not yet be labelled with a rule.
@@ -224,11 +224,11 @@ labelNodeId = \i rules parent -> do
     importRule ru = someRuleACInst ru `evalBindT` noBindings
 
     mkISendRuleAC m = return $ Rule (IntrInfo (ISendRule))
-                                    [kuFact m] [inFact m] [kLogFact m]
+                                    [kuFact m] [inFact m] [kLogFact m] []
 
 
     mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule []))
-                           [] [freshFact m] []
+                           [] [freshFact m] [] [m]
 
     exploitPrems i ru = mapM_ (exploitPrem i ru) (enumPrems ru)
 
@@ -296,7 +296,7 @@ insertAction i fa parentXor = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_pair")) ([(Fact KUFact [m1]),(Fact KUFact [m2])]) ([fa]) ([fa])))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_pair")) ([(Fact KUFact [m1]),(Fact KUFact [m2])]) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "pair" goal
                                requiresKU m1 *> requiresKU m2 *> return Changed
@@ -315,7 +315,7 @@ insertAction i fa parentXor = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_inv")) ([(Fact KUFact [m])]) ([fa]) ([fa])))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_inv")) ([(Fact KUFact [m])]) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "inv" goal
                                requiresKU m *> return Changed
@@ -334,7 +334,7 @@ insertAction i fa parentXor = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "mult" goal
                                mapM_ requiresKU ms *> return Changed
@@ -359,7 +359,7 @@ insertAction i fa parentXor = do
                             -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                             if not nodePresent
                                 then do
-                                    modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map (\x -> Fact KUFact [x]) part) ([fa]) ([fa])))
+                                    modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map (\x -> Fact KUFact [x]) part) ([fa]) ([fa]) []))
                                     insertGoal goal False
                                     markGoalAsSolved "xor" goal
                                     mapM_ requiresKUXor part *> return Changed
@@ -375,7 +375,7 @@ insertAction i fa parentXor = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "union" goal
                                mapM_ requiresKU ms *> return Changed
@@ -699,7 +699,7 @@ data SplitStrategy = SplitNow | SplitLater
 -- The 'ChangeIndicator' indicates whether at least one non-trivial equality
 -- was solved.
 
--- | @noContradictoryEqStore@ suceeds iff the equation store is not
+-- | @noContradictoryEqStore@ succeeds iff the equation store is not
 -- contradictory.
 noContradictoryEqStore :: Reduction ()
 noContradictoryEqStore = (contradictoryIf . eqsIsFalse) =<< getM sEqStore
@@ -752,7 +752,7 @@ solveRuleEqs split eqs = do
     contradictoryIf (not $ all evalEqual $ map (fmap (get rInfo)) eqs)
     solveListEqs (solveFactEqs split) $
         map (fmap (get rConcs)) eqs ++ map (fmap (get rPrems)) eqs
-        ++ map (fmap (get rActs)) eqs
+        ++ map (fmap (get rActs)) eqs ++ map (fmap (map termFact . get rNewVars)) eqs
 
 -- | Solve a number of equalities between lists interpreted as free terms
 -- using the given solver for solving the entailed per-element equalities.

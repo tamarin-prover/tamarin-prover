@@ -43,6 +43,7 @@ module Theory.Model.Fact (
   , DirTag(..)
   , kuFact
   , kdFact
+  , termFact
   , kFactView
   , dedFactView
 
@@ -111,6 +112,8 @@ data FactTag = ProtoFact Multiplicity String Int
              | KDFact     -- ^ Down-knowledge fact in message deduction.
              | DedFact    -- ^ Log-fact denoting that the intruder deduced
                           -- a message using a construction rule.
+             | TermFact   -- ^ internal fact, only used to convert terms to facts 
+                          -- to simplify computations. should never occur in a graph.
     deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Facts.
@@ -153,9 +156,10 @@ instance Apply t => Apply (Fact t) where
 data DirTag = UpK | DnK
             deriving( Eq, Ord, Show )
 
-kdFact, kuFact :: t -> Fact t
+kdFact, kuFact, termFact :: t -> Fact t
 kdFact = Fact KDFact . return
 kuFact = Fact KUFact . return
+termFact = Fact TermFact . return
 
 -- | View a message-deduction fact.
 kFactView :: LNFact -> Maybe (DirTag, LNTerm)
@@ -255,6 +259,7 @@ factTagArity tag = case  tag of
     FreshFact       -> 1
     InFact          -> 1
     OutFact         -> 1
+    TermFact        -> 1
 
 -- | The arity of a 'Fact'.
 factArity :: Fact t -> Int
@@ -359,6 +364,7 @@ factTagName tag = case tag of
     OutFact           -> "Out"
     FreshFact         -> "Fr"
     (ProtoFact _ n _) -> n
+    TermFact          -> "Term"
 
 -- | Show a fact tag as a 'String'. This is the 'factTagName' prefixed with
 -- the multiplicity.

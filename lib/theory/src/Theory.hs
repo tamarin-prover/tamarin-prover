@@ -279,8 +279,8 @@ instance HasRuleName ClosedProtoRule where
 -- | All intruder rules of a set of classified rules.
 intruderRules :: ClassifiedRules -> [IntrRuleAC]
 intruderRules rules = do
-    Rule (IntrInfo i) ps cs as <- joinAllRules rules
-    return $ Rule i ps cs as
+    Rule (IntrInfo i) ps cs as nvs <- joinAllRules rules
+    return $ Rule i ps cs as nvs
 
 -- | Open a rule cache. Variants and precomputed case distinctions are dropped.
 openRuleCache :: ClosedRuleCache -> OpenRuleCache
@@ -297,13 +297,13 @@ closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications
 closeIntrRule :: MaudeHandle -> IntrRuleAC -> IntrRuleAC
-closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts)  =
+closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts nvs)  =
     (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
                               then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
                               -- We do not need to count t itself, hence - 1.
                               -- If t is a private function symbol we need to permit one more rule 
                               -- application as there is no associated constructor.
-                              else 0) subterm constant) prems concs acts)
+                              else 0) subterm constant) prems concs acts nvs)
         where
            runMaude = (`runReader` hnd)
 closeIntrRule _ ir  = ir
