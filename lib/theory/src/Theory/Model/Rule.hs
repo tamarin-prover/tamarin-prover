@@ -40,13 +40,19 @@ module Theory.Model.Rule (
   , ruleInfo
 
   -- * Protocol Rule Information
+  , RuleAttribute(..)
   , ProtoRuleName(..)
+  , ProtoRuleEInfo(..)
+  , preName
+  , preAttributes
   , ProtoRuleACInfo(..)
   , pracName
+  , pracAttributes
   , pracVariants
   , pracLoopBreakers
   , ProtoRuleACInstInfo(..)
   , praciName
+  , praciAttributes
   , praciLoopBreakers
   , RuleACConstrs
 
@@ -62,6 +68,7 @@ module Theory.Model.Rule (
 
   -- ** Queries
   , HasRuleName(..)
+  , HasRuleAttributes(..)
   , isIntruderRule
   , isDestrRule
   , isIEqualityRule
@@ -112,6 +119,7 @@ module Theory.Model.Rule (
   , showRuleCaseName
   , prettyProtoRuleName
   , prettyRuleName
+  , prettyRuleAttribute
   , prettyProtoRuleE
   , prettyProtoRuleAC
   , prettyIntrRuleAC
@@ -136,6 +144,7 @@ import           Data.List
 import qualified Data.Map              as M
 import           Data.Monoid
 -- import           Data.Maybe            (fromMaybe)
+import           Data.Color
 import           Safe
 
 -- import           Control.Basics
@@ -280,22 +289,36 @@ instance (Apply p, Apply i) => Apply (RuleInfo p i) where
 -- Protocol Rule Information
 ------------------------------------------------------------------------------
 
+-- | An attribute for a Rule, which does not affect the semantics.
+data RuleAttribute = RuleColor (RGB Rational)
+       deriving( Eq, Ord, Show, Data, Generic)
+instance NFData RuleAttribute
+instance Binary RuleAttribute
+
 -- | A name of a protocol rule is either one of the special reserved rules or
 -- some standard rule.
 data ProtoRuleName =
          FreshRule
        | StandRule String -- ^ Some standard protocol rule
        deriving( Eq, Ord, Show, Data, Typeable, Generic)
-
 instance NFData ProtoRuleName
 instance Binary ProtoRuleName
 
+-- | Information for protocol rules modulo E.
+data ProtoRuleEInfo = ProtoRuleEInfo
+       { _preName       :: ProtoRuleName
+       , _preAttributes :: [RuleAttribute]
+       }
+       deriving( Eq, Ord, Show, Data, Generic)
+instance NFData ProtoRuleEInfo
+instance Binary ProtoRuleEInfo
 
 -- | Information for protocol rules modulo AC. The variants list the possible
 -- instantiations of the free variables of the rule. The source is interpreted
 -- modulo AC; i.e., its variants were also built.
 data ProtoRuleACInfo = ProtoRuleACInfo
        { _pracName         :: ProtoRuleName
+       , _pracAttributes   :: [RuleAttribute]
        , _pracVariants     :: Disj (LNSubstVFresh)
        , _pracLoopBreakers :: [PremIdx]
        }
@@ -305,19 +328,27 @@ instance Binary ProtoRuleACInfo
 
 -- | Information for instances of protocol rules modulo AC.
 data ProtoRuleACInstInfo = ProtoRuleACInstInfo
-       { _praciName                 :: ProtoRuleName
-       , _praciLoopBreakers         :: [PremIdx]
+       { _praciName         :: ProtoRuleName
+       , _praciAttributes   :: [RuleAttribute]
+       , _praciLoopBreakers :: [PremIdx]
        }
        deriving(Eq, Ord, Show, Generic)
 instance NFData ProtoRuleACInstInfo
 instance Binary ProtoRuleACInstInfo
 
 
-$(mkLabels [''ProtoRuleACInfo, ''ProtoRuleACInstInfo])
+$(mkLabels [''ProtoRuleEInfo, ''ProtoRuleACInfo, ''ProtoRuleACInstInfo])
 
 
 -- Instances
 ------------
+instance Apply RuleAttribute where
+    apply _ = id
+
+instance HasFrees RuleAttribute where
+    foldFrees _ = const mempty
+    foldFreesOcc _ _ = const mempty
+    mapFrees  _ = pure
 
 instance Apply ProtoRuleName where
     apply _ = id
@@ -343,27 +374,41 @@ instance HasFrees ConcIdx where
     foldFreesOcc  _ _ = const mempty
     mapFrees   _ = pure
 
+instance HasFrees ProtoRuleEInfo where
+    foldFrees f (ProtoRuleEInfo na attr) =
+        foldFrees f na `mappend` foldFrees f attr
+    foldFreesOcc  _ _ = const mempty
+    mapFrees f (ProtoRuleEInfo na attr) =
+        ProtoRuleEInfo na <$> mapFrees f attr
+
+instance Apply ProtoRuleEInfo where
+    apply _ = id
+
 instance HasFrees ProtoRuleACInfo where
-    foldFrees f (ProtoRuleACInfo na vari breakers) =
-        foldFrees f na `mappend` foldFrees f vari
+    foldFrees f (ProtoRuleACInfo na attr vari breakers) =
+        foldFrees f na `mappend` foldFrees f attr
+                       `mappend` foldFrees f vari
                        `mappend` foldFrees f breakers
     foldFreesOcc  _ _ = const mempty
-    mapFrees f (ProtoRuleACInfo na vari breakers) =
-        ProtoRuleACInfo na <$> mapFrees f vari <*>
-            mapFrees f breakers
+
+    mapFrees f (ProtoRuleACInfo na attr vari breakers) =
+        ProtoRuleACInfo na <$> mapFrees f attr
+                           <*> mapFrees f vari
+                           <*> mapFrees f breakers
 
 instance Apply ProtoRuleACInstInfo where
-    apply subst (ProtoRuleACInstInfo na breakers) =
-        ProtoRuleACInstInfo (apply subst na) breakers
+    apply subst (ProtoRuleACInstInfo na attr breakers) =
+        ProtoRuleACInstInfo (apply subst na) attr breakers
 
 instance HasFrees ProtoRuleACInstInfo where
-    foldFrees f (ProtoRuleACInstInfo na breakers) =
-        foldFrees f na `mappend` foldFrees f breakers
+    foldFrees f (ProtoRuleACInstInfo na attr breakers) =
+        foldFrees f na `mappend` foldFrees f attr
+                       `mappend` foldFrees f breakers
 
     foldFreesOcc  _ _ = const mempty
 
-    mapFrees f (ProtoRuleACInstInfo na breakers) =
-        ProtoRuleACInstInfo na <$> mapFrees f breakers
+    mapFrees f (ProtoRuleACInstInfo na attr breakers) =
+        ProtoRuleACInstInfo na <$> mapFrees f attr <*> mapFrees f breakers
 
 
 ------------------------------------------------------------------------------
@@ -422,7 +467,7 @@ instance HasFrees IntrRuleACInfo where
 -- | A rule modulo E is always a protocol rule. Intruder rules are specified
 -- abstractly by their operations generating them and are only available once
 -- their variants are built.
-type ProtoRuleE  = Rule ProtoRuleName
+type ProtoRuleE  = Rule ProtoRuleEInfo
 
 -- | A protocol rule modulo AC.
 type ProtoRuleAC = Rule ProtoRuleACInfo
@@ -440,16 +485,16 @@ type RuleACInst  = Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo)
 
 -- | Types that have an associated name.
 class HasRuleName t where
-  ruleName :: t -> RuleInfo ProtoRuleName IntrRuleACInfo
+  ruleName       :: t -> RuleInfo ProtoRuleName IntrRuleACInfo
 
 instance HasRuleName ProtoRuleE where
-  ruleName = ProtoInfo . L.get rInfo
+  ruleName       = ProtoInfo . L.get (preName . rInfo)
 
 instance HasRuleName RuleAC where
   ruleName = ruleInfo (ProtoInfo . L.get pracName) IntrInfo . L.get rInfo
 
 instance HasRuleName ProtoRuleAC where
-  ruleName = ProtoInfo . L.get (pracName . rInfo)
+  ruleName  = ProtoInfo . L.get (pracName . rInfo)
 
 instance HasRuleName IntrRuleAC where
   ruleName = IntrInfo . L.get rInfo
@@ -457,6 +502,25 @@ instance HasRuleName IntrRuleAC where
 instance HasRuleName RuleACInst where
   ruleName = ruleInfo (ProtoInfo . L.get praciName) IntrInfo . L.get rInfo
 
+class HasRuleAttributes t where
+  ruleAttributes :: t -> [RuleAttribute]
+
+instance HasRuleAttributes ProtoRuleE where
+  ruleAttributes = L.get (preAttributes . rInfo)
+
+instance HasRuleAttributes RuleAC where
+  ruleAttributes (Rule (ProtoInfo ri) _ _ _ _) = L.get pracAttributes ri
+  ruleAttributes _                             = []
+
+instance HasRuleAttributes ProtoRuleAC where
+  ruleAttributes = L.get (pracAttributes . rInfo)
+
+instance HasRuleAttributes IntrRuleAC where
+  ruleAttributes _ = []
+
+instance HasRuleAttributes RuleACInst where
+  ruleAttributes (Rule (ProtoInfo ri) _ _ _ _) = L.get praciAttributes ri
+  ruleAttributes _                             = []
 
 -- Queries
 ----------
@@ -628,8 +692,8 @@ containsNewVars (Rule _ _ _ _ nvs) = nvs == []
 --   First parameter: original instance to mirror
 --   Second parameter: fresh instance
 getSubstitutionsFixingNewVars :: RuleACInst -> RuleACInst -> Maybe LNSubst
-getSubstitutionsFixingNewVars (Rule (ProtoInfo (ProtoRuleACInstInfo _ _)) _ _ _ instancesO)
-   (Rule (ProtoInfo (ProtoRuleACInstInfo _ _)) _ _ _ instancesF)
+getSubstitutionsFixingNewVars (Rule (ProtoInfo (ProtoRuleACInstInfo _ _ _)) _ _ _ instancesO)
+   (Rule (ProtoInfo (ProtoRuleACInstInfo _ _ _)) _ _ _ instancesF)
       | all (\(x, y) -> isPubVar x || x == y) $ zip instancesF instancesO
           = Just $ Subst $ M.fromList $ substList instancesF instancesO
       -- otherwise there is no substitution
@@ -698,7 +762,9 @@ someRuleACInst =
       , Just (L.get pracVariants i)
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo (L.get pracName i) 
+                                 (L.get pracAttributes i)
+                                 (L.get pracLoopBreakers i) 
     extractInsts (Rule (IntrInfo i) ps cs as nvs) =
       ( Rule (IntrInfo i) ps cs as nvs, Nothing )
 
@@ -716,7 +782,9 @@ someRuleACInstAvoiding r s =
       , Just (L.get pracVariants i)
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo (L.get pracName i) 
+                                 (L.get pracAttributes i)
+                                 (L.get pracLoopBreakers i)
     extractInsts (Rule (IntrInfo i) ps cs as nvs) =
       ( Rule (IntrInfo i) ps cs as nvs, Nothing )
 
@@ -734,10 +802,11 @@ someRuleACInstFixing r subst =
       , Just (L.get pracVariants i)
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo (L.get pracName i) 
+                                 (L.get pracAttributes i)
+                                 (L.get pracLoopBreakers i)
     extractInsts (Rule (IntrInfo i) ps cs as nvs) =
       ( apply subst (Rule (IntrInfo i) ps cs as nvs), Nothing )
-
       
 -- | Compute /some/ rule instance of a rule modulo AC. If the rule is a
 -- protocol rule, then the given source and variants also need to be handled.
@@ -754,10 +823,11 @@ someRuleACInstAvoidingFixing r s subst =
       , Just (L.get pracVariants i)
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i) (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo (L.get pracName i) 
+                                 (L.get pracAttributes i)
+                                 (L.get pracLoopBreakers i)
     extractInsts (Rule (IntrInfo i) ps cs as nvs) =
       ( apply subst (Rule (IntrInfo i) ps cs as nvs), Nothing )
-
       
 -- | Add the diff label to a rule
 addDiffLabel :: Rule a -> String -> Rule a
@@ -867,6 +937,10 @@ prettyProtoRuleName rn = text $ case rn of
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
+prettyRuleAttribute :: (HighlightDocument d) => RuleAttribute -> d
+prettyRuleAttribute attr = case attr of
+    RuleColor c -> text "color=" <> text (rgbToHex c)
+
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
 showRuleCaseName =
@@ -884,12 +958,12 @@ prettyIntrRuleACInfo rn = text $ case rn of
     DestrRule name _ _ _ -> prefixIfReserved ('d' : BC.unpack name)
 --     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
-prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i))
+prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i), HasRuleAttributes (Rule i))
                 => d           -- ^ Prefix.
                 -> (i -> d)    -- ^ Rule info pretty printing.
                 -> Rule i -> d
 prettyNamedRule prefix ppInfo ru =
-    prefix <-> prettyRuleName ru <> colon $-$
+    prefix <-> prettyRuleName ru <> ppAttributes <> colon $-$
     nest 2 (sep [ nest 1 $ ppFactsList rPrems
                 , if null acts
                     then operator_ "-->"
@@ -905,6 +979,9 @@ prettyNamedRule prefix ppInfo ru =
     ppFacts proj     = ppList prettyLNFact $ L.get proj ru
     ppFactsList proj = fsep [operator_ "[", ppFacts proj, operator_ "]"]
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factTerms = []})
+    ppAttributes = case ruleAttributes ru of
+        []    -> text ""
+        attrs -> hcat $ [text "[", hsep $ map prettyRuleAttribute attrs, text "]"]
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
 prettyProtoRuleACInfo i =

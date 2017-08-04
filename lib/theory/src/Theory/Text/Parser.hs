@@ -29,6 +29,7 @@ import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.List                  as L
+import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -289,18 +290,37 @@ typeAssertions = fmap TypingE $
     <|> pure []
 -}
 
+-- | Parse a 'RuleAttribute'.
+ruleAttribute :: Parser RuleAttribute
+ruleAttribute = asum
+    [ symbol "colour=" *> (RuleColor <$> parseColor)
+    , symbol "color="  *> (RuleColor <$> parseColor)
+    ]
+  where
+    parseColor = do
+        hc <- hexColor
+        case hexToRGB hc of
+            Just rgb  -> return rgb
+            Nothing -> fail $ "Color could not be parsed to RGB"
+
+-- | Parse RuleInfo
+protoRuleInfo :: Parser ProtoRuleEInfo
+protoRuleInfo = (ProtoRuleEInfo <$> (StandRule <$>
+                                        (symbol "rule" *> optional moduloE *> identifier))
+                               <*> (option [] $ list ruleAttribute)) <*  colon
+
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
 protoRule :: Parser (ProtoRuleE)
 protoRule = do
-    name  <- try (symbol "rule" *> optional moduloE *> identifier <* colon)
+    ri@(ProtoRuleEInfo (StandRule name) _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
     (ps0,as0,cs0) <- genericRule
     let (ps,as,cs) = apply subst (ps0,as0,cs0)
-    return $ Rule (StandRule name) ps cs as (newVariables ps cs)
+    return $ Rule ri ps cs as (newVariables ps cs)
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst

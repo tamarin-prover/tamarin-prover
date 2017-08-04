@@ -26,6 +26,7 @@ import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Monoid              (Any(..))
 import qualified Data.Set                 as S
+import           Data.Ratio
 import           Safe
 
 import           Extension.Data.Label
@@ -58,7 +59,7 @@ nonEmptyGraphDiff diffSys = not $
                         null (unsolvedChains sys) &&
                         S.null (get sEdges sys) && S.null (get sLessAtoms sys)
 
-type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (HSV Double)
+type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (RGB Rational)
 type SeDot = ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
 
 -- | State to avoid multiple drawing of the same entity.
@@ -85,10 +86,6 @@ singleEdges es =
     single []  = error "impossible"
     single [x] = return x
     single _   = mzero
-
--- | Get a lighter color.
-lighter :: HSV Double -> RGB Double
-lighter = hsvToRGB -- fmap (\c -> 1 - 0.3*(1-c)) . hsvToRGB
 
 -- | Ensure that a 'SeDot' action is only executed once by querying and
 -- updating the 'DotState' accordingly.
@@ -125,7 +122,7 @@ dotNode v = dotOnce dsNodes v $ do
       Just ru -> do
           let
               color     = M.lookup (get rInfo ru) colorMap
-              nodeColor = maybe "white" (rgbToHex . lighter) color
+              nodeColor = maybe "white" rgbToHex color
           dot (label ru) [("fillcolor", nodeColor),("style","filled")] $ \vId -> do
               premIds <- mapM dotPrem
                            [ (v,i) | (i,_) <- enumPrems ru ]
@@ -276,7 +273,9 @@ setDefaultAttributes = do
 nodeColorMap :: [RuleACInst] -> NodeColorMap
 nodeColorMap rules =
     M.fromList $
-      [ (get rInfo ru, getColor (gIdx, mIdx))
+      [ (get rInfo ru, case find colorAttr $ ruleAttributes ru of
+            Just (RuleColor c)  -> c
+            Nothing             -> hsvToRGB $ getColor (gIdx, mIdx))
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
     groupIdx ru | isDestrRule ru                   = 0
@@ -293,9 +292,15 @@ nodeColorMap rules =
     colors = M.fromList $ lightColorGroups intruderHue (map (length . snd) groups)
     getColor idx = fromMaybe (HSV 0 1 1) $ M.lookup idx colors
 
+-- Note: Currently RuleColors are the only Rule Attributes, so the second line is
+-- commented out to remove the redundant pattern compiler warning. If more are added,
+-- the second line can be uncommented.
+    colorAttr (RuleColor _) = True
+--    colorAttr _             = False
+
     -- The hue of the intruder rules
-    intruderHue :: Double
-    intruderHue = 18 / 360
+    intruderHue :: Rational
+    intruderHue = 18 % 360
 
 ------------------------------------------------------------------------------
 -- Record based dotting
@@ -322,8 +327,9 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
               in mkSimpleNode (render lbl) attrs
       Just ru -> do
           let color     = M.lookup (get rInfo ru) colorMap
-              nodeColor = maybe "white" (rgbToHex . lighter) color
-              attrs     = [("fillcolor", nodeColor),("style","filled")]
+              nodeColor = maybe "white" rgbToHex color
+              attrs     = [("fillcolor", nodeColor),("style","filled")
+                            , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")]
           ids <- mkNode ru attrs hasOutgoingEdge
           let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
               concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
@@ -331,6 +337,10 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
           modM dsConcs $ M.union $ M.fromList concs
           return $ fromJust $ lookup Nothing ids
   where
+    --True if there's a colour, and it's 'darker' than 0.5 in apparent luminosity
+    --This assumes a linear colourspace, which is what graphviz seems to use
+    colorUsesWhiteFont (Just (RGB r g b)) = (0.2126*r + 0.7152*g + 0.0722*b) < 0.5
+    colorUsesWhiteFont _                  = False
 
     mkSimpleNode lbl attrs =
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
@@ -358,7 +368,8 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
 
         ruleLabel =
             prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
-            (brackets $ vcat $ punctuate comma $ map prettyLNFact $ get rActs ru)
+            (brackets $ vcat $ punctuate comma $
+                map prettyLNFact $ get rActs ru)
 
         renderRow annDocs =
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
