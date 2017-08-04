@@ -171,8 +171,8 @@ analyzing: examples/loops/Minimal_Loop_Example.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.083678s
+  output:          examples/loops/Minimal_Loop_Example.spthy.tmp
+  processing time: 0.094496s
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)
@@ -186,8 +186,8 @@ summary of summaries:
 
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.083678s
+  output:          examples/loops/Minimal_Loop_Example.spthy.tmp
+  processing time: 0.094496s
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)

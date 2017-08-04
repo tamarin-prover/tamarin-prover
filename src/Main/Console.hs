@@ -78,7 +78,7 @@ versionStr = unlines
     [ programName
     , " "
     , showVersion version
-    , ", (C) Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich 2010-2017"
+    , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, ETH Zurich 2010-2017"
     ]
   , concat
     [ "Git revision: "

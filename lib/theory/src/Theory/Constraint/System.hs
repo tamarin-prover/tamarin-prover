@@ -864,7 +864,7 @@ getMirrorDG ctxt side sys = fmap (normDG $ eitherProofContext ctxt side) $ unify
     (freshAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
     (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)
     newNodes = (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) (return [freshAndPubConstrRules]) newProtoRules) otherRules)
-    
+
     -- We keep instantiations of fresh and public variables. Currently new public variables in protocol rule instances 
     -- are instantiated correctly in someRuleACInstAvoiding, but if this is changed we need to fix this part.
     transformRuleInstance :: MonadFresh m => NodeId -> RuleACInst -> m ([M.Map NodeId RuleACInst]) -> m ([M.Map NodeId RuleACInst])
@@ -872,7 +872,7 @@ getMirrorDG ctxt side sys = fmap (normDG $ eitherProofContext ctxt side) $ unify
       where
         genNodeMapsForAllRuleVariants :: [M.Map NodeId RuleACInst] -> [RuleACInst] -> [M.Map NodeId RuleACInst]
         genNodeMapsForAllRuleVariants nodes' rules = (\x y -> M.insert idx y x) <$> nodes' <*> rules
-        
+
         getOtherRulesAndVariants :: MonadFresh m => RuleACInst -> m ([RuleACInst])
         getOtherRulesAndVariants r = mapGetVariants r (getOppositeRules ctxt side r)
           where
@@ -997,9 +997,9 @@ getOpenNodePrems sys = getOpenIncoming (M.toList $ L.get sNodes sys)
   where
     getOpenIncoming :: [(NodeId, RuleACInst)] -> [NodePrem]
     getOpenIncoming []          = []
-    getOpenIncoming ((k, r):xs) = (filter (hasNoIncomingEdge sys) $ map (\(x, _) -> (k, x)) (enumPrems r)) ++ (getOpenIncoming xs)
+    getOpenIncoming ((k, r):xs) = (filter hasNoIncomingEdge $ map (\(x, _) -> (k, x)) (enumPrems r)) ++ (getOpenIncoming xs)
     
-    hasNoIncomingEdge sys' np = S.null (S.filter (\(Edge _ y) -> y == np) (L.get sEdges sys'))
+    hasNoIncomingEdge np = S.null (S.filter (\(Edge _ y) -> y == np) (L.get sEdges sys))
        
 -- | Returns a list of all open trivial facts of nodes in the current system, and the variable they need to be unified with
 getTrivialFacts :: M.Map NodeId RuleACInst -> System -> Maybe ([(LNFact, LVar, LVar)])
@@ -1031,9 +1031,10 @@ getFactAndVars nodes premid = (map (\x -> (fact, x))) <$> (isTrivialFact fact)
                 
 -- | Assumption: the goal is trivial. Returns true if it is independent wrt the rest of the system.                                                 
 checkIndependence :: System -> (Either NodePrem LVar, LNFact) -> Bool
-checkIndependence sys (eith, fact) = checkNodes $ case eith of
-                                          (Left premidx) -> checkIndependenceRec (L.get sNodes sys) premidx
-                                          (Right lvar)   -> foldl checkIndependenceRec (L.get sNodes sys) (identifyPremises lvar fact)
+checkIndependence sys (eith, fact) = not (D.cyclic (rawLessRel sys))
+    && (checkNodes $ case eith of
+                         (Left premidx) -> checkIndependenceRec (L.get sNodes sys) premidx
+                         (Right lvar)   -> foldl checkIndependenceRec (L.get sNodes sys) $ identifyPremises lvar fact)
   where
     edges = S.toList $ saturateEdgesWithLessRelation sys
     variables = fromMaybe (error $ "checkIndependence: This fact " ++ show fact ++ " should be trivial! System: " ++ show sys) (isTrivialFact fact)

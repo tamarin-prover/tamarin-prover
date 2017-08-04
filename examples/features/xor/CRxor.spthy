@@ -4,10 +4,6 @@ begin
 /*
 A&B:
 A->B: na
-B->A: <h(na, k,nb), nb>
-achieves recent aliveness
-
-A->B: na
 B->A: <h(na ⊕ k ⊕ nb), nb>
 should find attack:
 - after watching one run and storing data
@@ -51,7 +47,6 @@ restriction inequality:
   "not (Ex x #i. Neq(x,x)@i)"
 
 // FINDS PROOF AUTOMATICALLY (2017-03-23)
-// this lemma is not recent aliveness, just aliveness
 lemma alive:
   "All x y #i. Alive(x,y) @i ==> Ex #j. Response(y)@j"
 

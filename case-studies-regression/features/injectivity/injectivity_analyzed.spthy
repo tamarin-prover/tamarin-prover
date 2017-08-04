@@ -1,0 +1,96 @@
+theory injectivity begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+/* looping facts with injective instances: Inj/1 */
+
+rule (modulo E) Init:
+   [ Fr( ~i ) ] --[ Initiated( ~i ) ]-> [ Inj( ~i ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Copy:
+   [ Inj( i ) ] --[ Copied( i ) ]-> [ Inj( i ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Remove:
+   [ Inj( i ) ] --[ Removed( i ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma injectivity_check [use_induction]:
+  all-traces
+  "¬(∃ id #i #j #k.
+      ((((Initiated( id ) @ #i) ∧ (Removed( id ) @ #j)) ∧
+        (Copied( id ) @ #k)) ∧
+       (#i < #j)) ∧
+      (#j < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #k.
+  (Initiated( id ) @ #i) ∧ (Removed( id ) @ #j) ∧ (Copied( id ) @ #k)
+ ∧
+  (#i < #j) ∧ (#j < #k)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( Inj( ~i.1 ) ▶₀ #j )
+    case Copy
+    solve( Inj( ~i.1 ) ▶₀ #k )
+      case Copy
+      by contradiction /* non-injective facts (#vr.1,#j,#k) */
+    next
+      case Init
+      by contradiction /* non-injective facts (#i,#j,#k) */
+    qed
+  next
+    case Init
+    solve( Inj( ~i.1 ) ▶₀ #k )
+      case Copy
+      by contradiction /* non-injective facts (#vr,#j,#k) */
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
+
+
+analyzing: examples/features//injectivity/injectivity.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/features//injectivity/injectivity.spthy
+
+  output:          examples/features//injectivity/injectivity.spthy.tmp
+  processing time: 0.057379s
+  injectivity_check (all-traces): verified (9 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features//injectivity/injectivity.spthy
+
+  output:          examples/features//injectivity/injectivity.spthy.tmp
+  processing time: 0.057379s
+  injectivity_check (all-traces): verified (9 steps)
+
+==============================================================================
+*/

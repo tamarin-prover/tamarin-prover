@@ -213,8 +213,8 @@ analyzing: examples/post17/okamoto_eligibility.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/post17/okamoto_eligibility.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 8.928402s
+  output:          examples/post17/okamoto_eligibility.spthy.tmp
+  processing time: 6.859009s
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)
   eligibility (all-traces): verified (5 steps)
@@ -226,8 +226,8 @@ summary of summaries:
 
 analyzed: examples/post17/okamoto_eligibility.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 8.928402s
+  output:          examples/post17/okamoto_eligibility.spthy.tmp
+  processing time: 6.859009s
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)
   eligibility (all-traces): verified (5 steps)

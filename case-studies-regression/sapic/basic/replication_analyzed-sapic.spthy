@@ -80,8 +80,8 @@ analyzing: case-studies-sapic-regression/basic/replication.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/basic/replication.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.071389s
+  output:          case-studies-sapic-regression/basic/replication.spthy.tmp
+  processing time: 0.074914s
   onlyOneSecret (all-traces): falsified - found trace (4 steps)
 
 ------------------------------------------------------------------------------
@@ -91,8 +91,8 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/basic/replication.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.071389s
+  output:          case-studies-sapic-regression/basic/replication.spthy.tmp
+  processing time: 0.074914s
   onlyOneSecret (all-traces): falsified - found trace (4 steps)
 
 ==============================================================================

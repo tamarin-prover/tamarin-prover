@@ -2154,6 +2154,15 @@ unbound:
   
   rule `lookup_s_as_status_0_111112111' has unbound variables: 
     status
+
+restriction actions:
+  restriction `set_in' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
+  
+  restriction `set_notin' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
 */
 
 end
@@ -2170,9 +2179,9 @@ analyzing: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_righ
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 15.906526s
-  WARNING: 2 wellformedness check failed!
+  output:          case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy.tmp
+  processing time: 12.22144s
+  WARNING: 4 wellformedness check failed!
            The analysis results might be wrong!
   
   source (all-traces): verified (164 steps)
@@ -2187,9 +2196,9 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 15.906526s
-  WARNING: 2 wellformedness check failed!
+  output:          case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy.tmp
+  processing time: 12.22144s
+  WARNING: 4 wellformedness check failed!
            The analysis results might be wrong!
   
   source (all-traces): verified (164 steps)

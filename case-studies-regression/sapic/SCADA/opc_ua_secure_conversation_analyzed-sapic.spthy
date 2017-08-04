@@ -3390,8 +3390,8 @@ analyzing: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 22.130164s
+  output:          case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy.tmp
+  processing time: 20.114353s
   Executable (exists-trace): verified (52 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (156 steps)
@@ -3406,8 +3406,8 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 22.130164s
+  output:          case-studies-sapic-regression/SCADA/opc_ua_secure_conversation.spthy.tmp
+  processing time: 20.114353s
   Executable (exists-trace): verified (52 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (156 steps)

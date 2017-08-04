@@ -11374,8 +11374,8 @@ analyzing: examples/post17/okamoto_vote_privacy.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 97.630701s
+  output:          examples/post17/okamoto_vote_privacy.spthy.tmp
+  processing time: 88.201952s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (3701 steps)
@@ -11387,8 +11387,8 @@ summary of summaries:
 
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 97.630701s
+  output:          examples/post17/okamoto_vote_privacy.spthy.tmp
+  processing time: 88.201952s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (3701 steps)

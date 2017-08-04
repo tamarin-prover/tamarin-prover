@@ -1,3 +1,19 @@
+* 1.2.2
+  - "partial deconstructions" text added to cases with partial deconstructions, which makes them searchable.
+
+  - Improved visualization of mirrors/attacks in ObsEq diff-mode.
+
+  - Running "tamarin-prover --version" now shows more detail.
+
+  - Various performance improvements and bug fixes.
+
+  - Upgrade to stack lts-8.5.
+
+* 1.2.1
+  - Upgrade to GHC 8.0.2 and stack lts-8.2.
+
+  - Removed dependency from the derive package.
+
 * 1.2.0
   - Extension for non-subterm convergent equational theories with FVP,
     as documented in the POST 2017 publication: 

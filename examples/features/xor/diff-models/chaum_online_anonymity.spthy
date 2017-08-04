@@ -1,0 +1,84 @@
+theory Chaum_Online_Anonymity
+begin
+
+
+/*
+ * Protocol: Chaum's On-line Protocol
+ * Based on: Charles Duménil's July 2016 model 
+
+ * Modified to allow multiple spending, changed def of anonymity
+ * Status: in progress
+ */
+
+
+/*
+  Protocol Chaum {                          ( Seller and bank are considered corrupted )
+    Withdrawal phase
+     C -> B: blind(x,r)                                           " c1(x1) & c2(x2) "
+     B -> C: sign(blind(x,r),skB)    "Withdraw"
+    Payment and deposit phase
+     C -> S: <x, sign(x,skB)>        "Check signature"            " Out( diff( x1, x2 ) ) "
+     S -> B: <x, sign(x,skB)>        "Check signature" 
+     B -> S: Private(x)              "Check signature" + "Deposit"
+     S     :                         "Spend"
+  }
+*/
+
+
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2
+equations: checksign( sign(m,k),pk(k) ) = m,
+           unblind( blind(m,r),r ) = m,
+           unblind( sign(blind(m,r),k),r ) = sign(m,k)
+
+
+// Public key infrastructure
+
+rule Register_Corrupted_Bank_pk:
+  [ Fr(~ltkB) ]
+  --[ OnlyOnce() ]->
+  [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(~ltkB) ]
+
+
+// Withdrawal Phase
+
+rule C_1_1: // Everyone
+    [ Fr(~x), Fr(~r), Fr(~customer) ]
+  --[  ]->
+    [ Out( blind(~x,~r) ), !St_C_1(~customer, ~x, ~r )]
+
+rule C_1_2: // Test subjects
+    [ Fr(~x), Fr(~r), Fr(~customer) ]
+  --[ ]->
+    [ Out( blind(~x,~r) ), !St_C_1(diff(~customer,'customer'), ~x, ~r )]
+
+
+// Payment and deposit phase
+
+rule C_2:
+  let s = unblind(sign(blind(~x,~r), ~skB),~r)
+  in
+    [ !St_C_1(C, ~x, ~r ), In( sign(blind(~x,~r), ~skB) ), !Bank_Pk($B, pk(~skB)) ]
+  --[  ]->
+    [ St_C_2(C, ~x, s ) ]
+
+rule C_2fin:
+    [ St_C_2(C, ~x,  s ) ]
+  --[ Finish() ]->
+    [ Out(< ~x, s >) ]
+
+
+// Axioms
+
+restriction OnlyOnce:
+  " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j " 
+
+
+// Executability
+
+lemma exec:
+  exists-trace
+  " Ex #i. Finish()@i "
+
+
+end
+
