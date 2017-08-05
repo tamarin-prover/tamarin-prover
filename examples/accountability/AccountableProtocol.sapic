@@ -1,107 +1,95 @@
 theory AccountableProtocol
 begin
 
-functions: ZK/7, verZK/1, Pub/1, f/2,
-           commit/2, open/2,
-           channel/2, retrieve/2, check/2,
-           Initialize/1, Log/1, Final/0, readLog/1, isLog/1, readInit/1,
-           // follows the signature of the draft paper, not the builtins
-           true/0, pk/1, sign/2, verify/3, extract/1
+builtins: 
+  signing // verify(sign(m,sk),m,pk(sk)) = true
+
+functions: 
+  ZK/7, verZK/1, Pub/1, f/2,
+  commit/2, open/2,
+  channel/2, retrieve/2, check/2,
+  extract/1, sign/2, verify/3, true/0, pk/1,sk/1[private]
 
 equations: 
-           Pub(ZK(<commit(x,rx), commit(y,ry), commit(f(x,y),rz)>, x, y, f(x,y), rx, ry, rz)) = <commit(x,rx), commit(y,ry), commit(f(x,y),rz)>,
-           verZK(ZK(<commit(x,rx), commit(y,ry), commit(f(x,y),rz)>, x, y, f(x,y), rx, ry, rz)) = true,
-           open(commit(m, r), r) = m,
-           retrieve(x, channel(x, z)) = z,
-           check(x, channel(x, z)) = true,
-           readLog(Log(l)) = l,
-           readInit(Initialize(l)) = l,
-           isLog(Log(l)) = true,
-           extract(sign(x, y)) = y,
-           verify(pk(x), sign(x,y), y) = true
-
-// Adversary
-let E = (out (<pk(skA), pk(skS), pk(skL)>))
-
-let PA =
-  (
-    // Only with one `S` party
-    let x = fst(retrieve(cSA, m)) in
-    let sig = snd(retrieve(cSA, m)) in
-    let z = f(x, y) in
-    let Cx = commit(x, rx) in
-    let Cy = commit(y, ry) in
-    let Cz = commit(z, rz) in
-    let l = <Cx, Cy, ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)> in
-    in (m); new rx; new rz; 
-    if verify(pk(skS), sig, x) = true()
-       then event Log(<sig, l>);
-            out (channel(cAS, sign(skA, <z,rz,rx>)));
-            out (Log(l));
-            event Final()
-  )
-
-// Authority
-let A = 
-  (
-    new y; new ry; 
-    // It turns out `Init` is reserved
-    event Initialize(commit(y,ry)); out (commit(y,ry)); PA
-  )
-
-// Party `S`
-let S =
-  (
-    let r = retrieve(cAS, m1) in
-    let p = extract(r) in
-    let z = fst(p) in
-    let rz = fst(snd(p)) in
-    let rx = snd(snd(p)) in
-    let pc = readLog(m2) in
-    let Cx = fst(pc) in
-    let Cz = fst(snd(pc)) in
-    let Z = snd(snd(pc)) in
-    let Cy = readInit(init) in
-    in (init); new x; out (channel(cSA, sign(skS, x)));
-    in (m1); 
-    if check(cAS, m1) = true()
-       then if verify(pk(skA), r, p) = true()
-               then in (m2);
-                    if Cx = commit(x, rx)
-                       then if Cz = commit(z, rz)
-                            then if <Cx, Cy, Cz> = Pub(Z) 
-                                    then event Pair(x, z, r)
-  )
+  Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,
+  verZK(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = true,
+  extract(sign(x,y)) = x
 
 
-// Protocol itself
-// cAS: secure channel from A to S
-// cSA: secure channel from S to A
-new skA; new skS; new cAS; new cSA; new skL; (E || A || S)
+let E =
+(
+  out (<pk(sk('A')),pk(sk('S'))>)
+)
+
+let Log = 
+(
+  in ('r', Cy); // 'r' is the reliable receive channel 
+
+  // insert m at index i
+  new i; insert i, Cy;
+  out (Cy) // 'b' is the reliable broadcast channel
+)
+
+let A =
+(
+  // local vars
+  let z = f(x,y) in
+  let Cx = commit(x,rx) in
+  let Cy = commit(y,ry) in
+  let Cz = commit(z,rz) in
+  let log = <Cx,Cz,ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)> in
+
+  // sends commitment of y to Log 
+  new y; new ry; 
+  out ('r', Cy);
+
+  // gets x from S
+  in (<x, sig>);
+  if verify(sig, x, pk(sk('S'))) = true()
+  then new rz; new rx;
+       event Log(<sig,log>);
+       out (sign(<z,rz,rx>,sk('A')));
+       out ('r', log);
+       event Final()
+)
+
+let S = 
+(
+  // some local vars
+  let p = extract(sig) in
+  let z = fst(p) in
+  let rz = fst(snd(p)) in
+  let rx = snd(snd(p)) in
+  /*
+  let Cx = fst(log) in
+  let Cz = fst(snd(log)) in
+  let Z = snd(snd(log)) in
+  */
+
+  new x; out (<x, sign(x,pk(sk('S')))>);
+
+  in (Cy); in (sig);
+  if verify(sig, p, pk(sk('A'))) = true()
+  then in ('r', <Cx,Cz,Z>);
+       if Cx = commit(x, rx)
+       then if Cz = commit(z, rz)
+            then if <Cx,Cy,Cz> = Pub(Z)
+                then event Pair(x, z, p)
+)
 
 
-lemma sanity_0:
+A || S || Log || !( in ('c', <'corrupt',$x>);
+                      event Corrupted($x);
+                      out ('c', sk($x))
+                  )
+
+
+lemma sanity_exists_pair:
   exists-trace
-    "Ex a b x z r #i #j #k #l. 
-    Initialize(a)@i & Log(b)@j & Pair(x,z,r)@k & Final()@l"
+    "Ex #i a b c. Pair(a, b, c)@i"
 
-lemma sanity_1:
+lemma sanity_exists_final:
   exists-trace
-    "Ex x z r #i #j. Pair(x,z,r)@i & Final()@j & i < j"
+    "Ex #j. Final()@j"
 
-lemma sanity_2:
-  all-traces
-    "All x z r #i #j. Pair(x,z,r)@i & Final()@j ==> i < j"
-
-lemma sanity_3:
-  all-traces
-    "All #j. Final()@j ==> Ex m #i. Log(m)@i"
-
-lemma sanity_4:
-  all-traces
-    "All m #i #j. Log(m)@i & Final()@j ==> i < j"
-
-lemma sanity_5:
-  all-traces
-    "All #j. Final()@j ==> Ex x z r #i. Pair(x, z, r)@i"
 end
