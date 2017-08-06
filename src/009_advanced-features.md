@@ -133,8 +133,6 @@ We use the following oracle to generate an efficient proof.
 ```
 #!/usr/bin/python
 
-import re
-import os
 import sys
 
 lines = sys.stdin.readlines()
@@ -142,6 +140,7 @@ lines = sys.stdin.readlines()
 l1 = []
 l2 = []
 l3 = []
+l4 = []
 lemma = sys.argv[1]
 
 for line in lines:
@@ -154,17 +153,25 @@ for line in lines:
         l2.append(num)
       elif "KU( ~key" in line:
         l3.append(num)
+      else:
+        l4.append(num)
 
   else:
     exit(0)
 
-ranked = l1 + l2 + l3
+ranked = l1 + l2 + l3 + l4
 
 for i in ranked:
   print i
 ```
 
-Proving the lemma `unique` with the oracle generates a 10-step proof.
+Having saved the Tamarin theory in the file `SourceOfUniqueness.spthy`
+and the oracle in the file `oracle`, we can prove the lemma `unique`, using the following command.
+```
+tamarin-prover --prove=uniqueness --heuristic=o SourceOfUniqueness.spthy
+```
+
+The generated proof consists of only 10 steps.
 (162 steps with 'consecutive' ranking, non-termination with 'smart' ranking).
 
 
