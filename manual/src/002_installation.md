@@ -68,6 +68,13 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
 run Tamarin for the first time.
 
 
+### Automatic Installation for Arch Linux {#sec:ArchLinuxBinInstall}
+
+There is a package in the official repositories. To install it, simply type:
+
+  * `pacman -S tamarin-prover`
+
+
 Mac OS X {#sec:macosx}
 --------
 
