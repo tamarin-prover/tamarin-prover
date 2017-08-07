@@ -10,9 +10,9 @@ smoothing) to the 32x32 and 64x64 versions.
 
 The source file was also used as the basis for
 `tamarin-pixelart-large_grid.xcf` and
-`tamarin-pixelart-large_grid_details.xcf`. Both files are intended for
-the `gimp` editor.  The latter file has more subtle shading and
-highlights.
+`tamarin-pixelart-large_grid_details.xcf`. Both files are 420x420
+pixels, and are intended for the `gimp` editor.  The second file has
+more subtle shading and highlights.
 
 
 
