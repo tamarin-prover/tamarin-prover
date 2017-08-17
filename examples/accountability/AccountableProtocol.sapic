@@ -16,17 +16,13 @@ equations:
   extract(sign(x,y)) = x
 
 
-let E =
-(
-  out (<pk(sk('A')),pk(sk('S'))>)
-)
-
 let Log = 
 (
   in ('r', Cy); // 'r' is the reliable receive channel 
 
   // insert m at index i
-  new i; insert i, Cy;
+  new i; insert i, Cy; // ROBERT: Index could be chosen semantically, e.g., 
+                       // insert <Init,$A> Cy for Cy signed by $A
   out (Cy) // 'b' is the reliable broadcast channel
 )
 
@@ -68,7 +64,19 @@ let S =
 
   new x; out (<x, sign(x,pk(sk('S')))>);
 
-  in (Cy); in (sig);
+  in (Cy); in (sig); //ROBERT my suspicion is that accountability will break here if we insert replication,
+                    // as the attacker can insert an incorrect Cy at the log...
+                    // could go via reliable channel, from log
+                    // better: S explicitely requests from log
+                    // more practical:
+                    // log exists in the global store:
+                    // <$A, ..> is data $A can write to
+                    // <$Si, ..> is data $Si can write to
+                    // Use:
+                    // <$A,Init,Cy>  for initial log
+                    // <$A,Si,<sign,...> for later log
+                    // claims by Si are just events..
+                    // if $A is corrupted, give read and write access to cells <$A,*>
   if verify(sig, p, pk(sk('A'))) = true()
   then in ('r', <Cx,Cz,Z>);
        if Cx = commit(x, rx)
@@ -91,5 +99,16 @@ lemma sanity_exists_pair:
 lemma sanity_exists_final:
   exists-trace
     "Ex #j. Final()@j"
+
+/* Need to define verdict function */
+/* verdictfunction v1: */
+/*     "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> <'A','B'>, */
+/*     "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct())" -> <'A'>, */
+/*     otherwise -> <> */ 
+
+/* lemma acc: */
+/*     v1 accounts */ 
+/*     for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" */ 
+/*     for parties <'A','B'> */
 
 end
