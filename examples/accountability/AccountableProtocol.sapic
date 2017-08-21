@@ -2,13 +2,13 @@ theory AccountableProtocol
 begin
 
 builtins: 
-  signing // verify(sign(m,sk),m,pk(sk)) = true
+  signing  // verify(sign(m,sk),m,pk(sk)) = true
 
 functions: 
   ZK/7, verZK/1, Pub/1, f/2,
   commit/2, open/2,
   channel/2, retrieve/2, check/2,
-  extract/1, sign/2, verify/3, true/0, pk/1,sk/1[private]
+  extract/1, sk/1[private]  // sign, verify, pk, and true are from builtins
 
 equations: 
   Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,
@@ -18,12 +18,13 @@ equations:
 
 let Log = 
 (
-  in ('r', Cy); // 'r' is the reliable receive channel 
+  in ('r', m); // 'r' is the reliable receive channel 
 
-  // insert m at index i
-  new i; insert i, Cy; // ROBERT: Index could be chosen semantically, e.g., 
-                       // insert <Init,$A> Cy for Cy signed by $A
-  out (Cy) // 'b' is the reliable broadcast channel
+  // ROBERT: Index could be chosen semantically, e.g., 
+  // insert <Init,$A> Cy for Cy signed by $A
+  insert <Init,$A>, Cy; 
+                       
+  out (Cy)
 )
 
 let A =
@@ -37,6 +38,7 @@ let A =
 
   // sends commitment of y to Log 
   new y; new ry; 
+  event Initialize(Cy);
   out ('r', Cy);
 
   // gets x from S
@@ -86,10 +88,12 @@ let S =
 )
 
 
-A || S || Log || !( in ('c', <'corrupt',$x>);
-                      event Corrupted($x);
-                      out ('c', sk($x))
-                  )
+A || S || Log 
+|| 
+!(  in ('c', <'corrupt',$x>);
+    event Corrupted($x);
+    out ('c', sk($x))
+ )
 
 
 lemma sanity_exists_pair:
@@ -100,15 +104,60 @@ lemma sanity_exists_final:
   exists-trace
     "Ex #j. Final()@j"
 
-/* Need to define verdict function */
-/* verdictfunction v1: */
-/*     "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> <'A','B'>, */
-/*     "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct())" -> <'A'>, */
-/*     otherwise -> <> */ 
+/*lemma security_property:*/
+  /*exists-trace*/
+    /*"Ex #i #j #k Cy x z r ry. Initialize(Cy)@i & Final()@j ==> Pair(x, z, r)@k & z = f(x, open(Cy, ry)) & i < k & k < j"*/
 
-/* lemma acc: */
-/*     v1 accounts */ 
-/*     for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" */ 
-/*     for parties <'A','B'> */
+lemma honest_run:
+  "
+    ( All x z r #i. Pair(x, z, r) @ #i
+      ==>
+      ( Ex #j #k Cy ry. Initialize(Cy) @ #j & Final() @ #k 
+        & #j < #i & #i < #k
+        & z = f(x, open(Cy, ry))
+      )
+    )
+  "
+
+lemma honest_run_1:
+  exists-trace
+  "
+    ( Ex x z r #i #j #k Cy ry. Pair(x, z, r) @ #i 
+      & Initialize(Cy) @ #j & Final() @ #k 
+      & z = f(x, open(Cy, ry))
+    )
+  "
+/* Need to define verdict function */
+
+verdictfunction v1: 
+  " not 
+    ( Ex Cx Cy Cz rx Z sig #i #j #k. 
+      Initialize(Cy) @ #i & Log(<sig, <Cx, Cz, Z>>) @#j & Final() @ #k 
+    & <Cx, Cy, Cz> = Pub(Z)
+    & verZK(Z) = true()
+    & verify(sig, open(Cx, rx), pk(sk('S'))) = true()
+    )
+  " -> <'A'>,
+
+  " not
+    ( Ex r rz rx Cx Cz Z sig #i.
+      Log(<sig, <Cx, Cz, Z>>) @ #i
+    & verify(sig, open(Cx, rx), pk(sk('S'))) = true()
+    & verify(r, <open(Cz, rz), rz, rx>, pk(sk('A'))) = true()
+    )
+  " -> <'S'>,
+
+  otherwise -> <>
+
+ lemma acc: 
+   v1 accounts  
+   for "( All x z r #i. Pair(x, z, r) @ #i
+          ==> 
+          ( Ex #j #k Cy ry. Initialize(Cy) @ #j & Final() @ #k
+          & #j < #i & #i < #k
+          & z = f(x, open(Cy, ry))
+          )
+        )"
+   for parties <'A','S'> 
 
 end
