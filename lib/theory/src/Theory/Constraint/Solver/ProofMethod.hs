@@ -530,7 +530,7 @@ sapicRanking ctxt sys =
         [ 
         -- isNotInsertAction . fst 
         -- ,
-	isLastInsertAction . fst,
+        isLastInsertAction . fst,
         isLastProtoFact . fst ,
         isKnowsLastNameGoal . fst
         ]
