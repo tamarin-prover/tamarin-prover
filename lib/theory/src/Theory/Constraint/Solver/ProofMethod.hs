@@ -506,7 +506,7 @@ sapicRanking :: ProofContext
               -> System
               -> [AnnotatedGoal] -> [AnnotatedGoal]
 sapicRanking ctxt sys =
-    sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
+    sortOnUsefulness . unmark . sortDecisionTreeLast solveLast . sortDecisionTree solveFirst . goalNrRanking
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
@@ -530,9 +530,9 @@ sapicRanking ctxt sys =
         [ 
         -- isNotInsertAction . fst 
         -- ,
-        isNonLastProtoFact . fst ,
-        isNotKnowsLastNameGoal . fst,
-        isNotLastInsertAction . fst
+	isLastInsertAction . fst,
+        isLastProtoFact . fst ,
+        isKnowsLastNameGoal . fst
         ]
         -- move the Last proto facts (L_) to the end.
 
@@ -582,11 +582,11 @@ sapicRanking ctxt sys =
             _ -> False
     isFirstInsertAction _ = False
 
-    isNotLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
+    isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> not( isPrefixOf "L_" (show a))
-            _ -> True
-    isNotLastInsertAction _ = True
+            _ -> False
+    isLastInsertAction _ = False
 
     isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _)) = False
     isNotInsertAction  _                                 = True
@@ -595,8 +595,8 @@ sapicRanking ctxt sys =
        (isStandardActionGoal g) &&  (isNotInsertAction g)
 
 
-    isNonLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
-    isNonLastProtoFact _                                                 = True
+    isLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = True
+    isLastProtoFact _                                                 = False
 
     isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
     isFirstProtoFact _                                                 = False
@@ -616,7 +616,7 @@ sapicRanking ctxt sys =
 
     isFirstName lv = isPrefixOf "F_" (lvarName lv)
 
-    isNotKnowsLastNameGoal goal = case msgPremise goal of
+    isKnowsLastNameGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> False
         _                                                           -> True
 
@@ -653,6 +653,12 @@ sapicRanking ctxt sys =
     sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
       where (sat, nonsat) = partition p xs
 
+    -- | Same as sortDecisionTree, but adding the satisfied goals at the end of the list
+    sortDecisionTreeLast :: [a -> Bool] -> [a] -> [a]
+    sortDecisionTreeLast []     xs = xs
+    sortDecisionTreeLast (p:ps) xs = sortDecisionTreeLast ps nonsat ++ sat
+      where (sat, nonsat) = partition p xs
+
     
 -- | A ranking function tuned for the automatic verification of
 -- protocols with liveness properties generated with the Sapic tool
@@ -660,7 +666,7 @@ sapicLivenessRanking :: ProofContext
                      -> System
                      -> [AnnotatedGoal] -> [AnnotatedGoal]
 sapicLivenessRanking ctxt sys =
-    sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
+    sortOnUsefulness . unmark . sortDecisionTreeLast solveLast . sortDecisionTree solveFirst . goalNrRanking
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
@@ -684,9 +690,9 @@ sapicLivenessRanking ctxt sys =
         [ 
         -- isNotInsertAction . fst 
         -- ,
-        isNonLastProtoFact . fst ,
-        isNotKnowsLastNameGoal . fst,
-        isNotLastInsertAction . fst
+        isLastInsertAction . fst ,
+        isLastProtoFact . fst,
+        isKnowsLastNameGoal . fst
         ]
         -- move the Last proto facts (L_) to the end.
 
@@ -746,11 +752,11 @@ sapicLivenessRanking ctxt sys =
             _ -> False
     isFirstInsertAction _ = False
 
-    isNotLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
+    isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> not( isPrefixOf "L_" (show a))
-            _ -> True
-    isNotLastInsertAction _ = True
+            _ -> False
+    isLastInsertAction _ = False
 
     isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _)) = False
     isNotInsertAction  _                                 = True
@@ -762,8 +768,8 @@ sapicLivenessRanking ctxt sys =
        (isStandardActionGoal g) && (isNotInsertAction g) && (isNotReceiveAction g)
 
 
-    isNonLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
-    isNonLastProtoFact _                                                 = True
+    isLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = True
+    isLastProtoFact _                                                 = False
 
     isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
     isFirstProtoFact _                                                 = False
@@ -795,9 +801,9 @@ sapicLivenessRanking ctxt sys =
 
     isFirstName lv = isPrefixOf "F_" (lvarName lv)
 
-    isNotKnowsLastNameGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> False
-        _                                                           -> True
+    isKnowsLastNameGoal goal = case msgPremise goal of
+        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> True
+        _                                                           -> False
 
     isKnowsFirstNameGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isFirstName lv)-> True
@@ -832,6 +838,12 @@ sapicLivenessRanking ctxt sys =
     sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
       where (sat, nonsat) = partition p xs
 
+    -- | Same as sortDecisionTree, but adding the satisfied goals at the end of the list
+    sortDecisionTreeLast :: [a -> Bool] -> [a] -> [a]
+    sortDecisionTreeLast []     xs = xs
+    sortDecisionTreeLast (p:ps) xs = sortDecisionTreeLast ps nonsat ++ sat
+      where (sat, nonsat) = partition p xs
+
 
 -- | A ranking function tuned for a specific model of the
 -- PKCS#11 keymanagement API formulated in SAPIC's input language.
@@ -839,7 +851,7 @@ sapicPKCS11Ranking :: ProofContext
               -> System
               -> [AnnotatedGoal] -> [AnnotatedGoal]
 sapicPKCS11Ranking ctxt sys =
-    sortOnUsefulness . unmark . sortDecisionTree solveLast . sortDecisionTree solveFirst . goalNrRanking
+    sortOnUsefulness . unmark . sortDecisionTreeLast solveLast . sortDecisionTree solveFirst . goalNrRanking
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
@@ -862,9 +874,9 @@ sapicPKCS11Ranking ctxt sys =
     solveLast = 
         [ 
         -- isNotInsertAction . fst 
-        -- ,
-        isNonLastProtoFact . fst ,
-        isNotKnowsHandleGoal . fst
+        -- ,        
+        isKnowsHandleGoal . fst,
+        isLastProtoFact . fst
         ]
         -- move the Last proto facts (L_) to the end.
 
@@ -920,8 +932,8 @@ sapicPKCS11Ranking ctxt sys =
        (isStandardActionGoal g) &&  (isNotInsertAction g)
 
 
-    isNonLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = False
-    isNonLastProtoFact _                                                 = True
+    isLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = True
+    isLastProtoFact _                                                 = False
 
     isFirstProtoFact (PremiseG _ (Fact (ProtoFact _ ('F':'_':_) _) _)) = True
     isFirstProtoFact _                                                 = False
@@ -939,9 +951,9 @@ sapicPKCS11Ranking ctxt sys =
     -- we recognize any variable starting with h as a handle an deprioritize 
     isHandle lv = isPrefixOf "h" (lvarName lv)
 
-    isNotKnowsHandleGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isHandle lv)-> False
-        _                                                           -> True
+    isKnowsHandleGoal goal = case msgPremise goal of
+        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isHandle lv)-> True
+        _                                                           -> False
 
     isMsgOneCaseGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
@@ -969,6 +981,12 @@ sapicPKCS11Ranking ctxt sys =
     sortDecisionTree :: [a -> Bool] -> [a] -> [a]
     sortDecisionTree []     xs = xs
     sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
+      where (sat, nonsat) = partition p xs
+
+    -- | Same as sortDecisionTree, but adding the satisfied goals at the end of the list
+    sortDecisionTreeLast :: [a -> Bool] -> [a] -> [a]
+    sortDecisionTreeLast []     xs = xs
+    sortDecisionTreeLast (p:ps) xs = sortDecisionTreeLast ps nonsat ++ sat
       where (sat, nonsat) = partition p xs
 
 
@@ -1146,8 +1164,7 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
        -- move the Last proto facts (L_) to the end by sorting all other goals in front
 
     solveFirst =
-        [ isExistingKUGoal . fst
-        , isChainGoal . fst
+        [ isChainGoal . fst
         , isDisjGoal . fst
         , isFirstProtoFact . fst
         , isNonLoopBreakerProtoFactGoal
@@ -1197,12 +1214,6 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     isMsgOneCaseGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
         _                                                  -> False
-
-    isExistingKUGoal goal = case goal of
-        (ActionG i (kFactView -> Just (UpK, m)))
-            | (isMsgVar m) &&
-                 not (Nothing == M.lookup i (L.get sNodes sys)) -> True
-        _                                                       -> False
 
     isPrivateKnowsGoal goal = case msgPremise goal of
         Just t -> isPrivateFunction t
@@ -1254,7 +1265,7 @@ smartDiffRanking ctxt sys =
       where
         parts = partition (not . trivialKUGoal) agl
     
-    trivialKUGoal ((ActionG i fa), _) = isKUFact fa && (isTrivialMsgFact fa /= Nothing) && (Nothing == M.lookup i (L.get sNodes sys))
+    trivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialMsgFact fa /= Nothing)
     trivialKUGoal _                   = False
 
     -- | If all the fact terms are simple and different msg variables (i.e., not fresh or public), returns the list of all these variables. Otherwise returns Nothing. Currently identical to "isTrivialFact" from Model/Fact, but could eventually be relaxed there, but not here. 

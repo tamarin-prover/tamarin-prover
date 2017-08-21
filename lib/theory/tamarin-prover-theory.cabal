@@ -11,7 +11,7 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
 maintainer:         Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>
 copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2012
 
-synopsis:           Term manipulation library for the tamarin prover.
+synopsis:           Security protocol types and constraint solver library for the tamarin prover.
 
 description:        This is an internal library of the Tamarin prover for
                     security protocol verification
