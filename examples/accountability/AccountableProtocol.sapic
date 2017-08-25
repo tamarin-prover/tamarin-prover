@@ -7,7 +7,6 @@ builtins:
 functions: 
   ZK/7, verZK/1, Pub/1, f/2,
   commit/2, open/2,
-  channel/2, retrieve/2, check/2,
   extract/1, sk/1[private]  // sign, verify, pk, and true are from builtins
 
 equations: 
@@ -15,18 +14,22 @@ equations:
   verZK(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = true,
   extract(sign(x,y)) = x
 
+//option: progresss // it adds assumptions, needed for proving liveness properties, namely:
+  // 1. reliable channel 'r'
+  // 2. local progress: process reduces as long as it can. Every process can reduce, except !P, or in(m); P
+  // 3. NDC : A + B continues as either A' or B' 
+  // used as follows : out('ping'); (in('pong'); etc) + (out('r','help');in('r','helped'))
 
 let Log = 
 (
-  in ('r', m); // 'r' is the reliable receive channel 
-
-  // ROBERT: Index could be chosen semantically, e.g., 
-  // insert <Init,$A> Cy for Cy signed by $A
-  insert <Init,$A>, Cy; 
-                       
-  out (Cy)
+  in ('r', <'A','L',m>); // 'r' is the reliable channel 
+  event Log(m);                     
+  out ('r', <'L','S',m>)
 )
 
+// Try:
+// 1. rename `event Initialize(Cy)` as `Log(<'Initialize',Cy>)`
+// 
 let A =
 (
   // local vars
@@ -39,22 +42,28 @@ let A =
   // sends commitment of y to Log 
   new y; new ry; 
   event Initialize(Cy);
-  out ('r', Cy);
+  out ('r', <'A','L',<'Initialize',Cy>>);
 
   // gets x from S
   in (<x, sig>);
   if verify(sig, x, pk(sk('S'))) = true()
   then new rz; new rx;
-       event Log(<sig,log>);
+       out ('r',<'A','L',<'Log','S',sig,log>>); // TODO future: does it work without sig?
        out (sign(<z,rz,rx>,sk('A')));
-       out ('r', log);
        event Final()
 )
 
+//1. small changes
+//2. sanity
+//3. fnish verdict function
+//4. exclusiveness // exhaustiveness
+//5. add progress only if ctr-example points to it
 let S = 
 (
   // some local vars
-  let p = extract(sig) in
+  let p = extract(sig) in //TODO keep extract in function signature 
+                          // for adversary, but never use yourself,
+                          // attach message with signature where necessary
   let z = fst(p) in
   let rz = fst(snd(p)) in
   let rx = snd(snd(p)) in
@@ -63,25 +72,12 @@ let S =
   let Cz = fst(snd(log)) in
   let Z = snd(snd(log)) in
   */
-
   new x; out (<x, sign(x,pk(sk('S')))>);
-
-  in (Cy); in (sig); //ROBERT my suspicion is that accountability will break here if we insert replication,
-                    // as the attacker can insert an incorrect Cy at the log...
-                    // could go via reliable channel, from log
-                    // better: S explicitely requests from log
-                    // more practical:
-                    // log exists in the global store:
-                    // <$A, ..> is data $A can write to
-                    // <$Si, ..> is data $Si can write to
-                    // Use:
-                    // <$A,Init,Cy>  for initial log
-                    // <$A,Si,<sign,...> for later log
-                    // claims by Si are just events..
-                    // if $A is corrupted, give read and write access to cells <$A,*>
-  if verify(sig, p, pk(sk('A'))) = true()
-  then in ('r', <Cx,Cz,Z>);
-       if Cx = commit(x, rx)
+  //in (sig); 
+  in ('r',<'L','S',<'Initialize',Cy>>); 
+  in ('r',<'L','S',<'Log',<sig,<Cx,Cz,Z>>>>); 
+  if verify(sig, p, pk(sk('A'))) = true()  // idea: represent these checks as event e.g. if Cx = commit(x, rx) then emit some event
+  then if Cx = commit(x, rx)
        then if Cz = commit(z, rz)
             then if <Cx,Cy,Cz> = Pub(Z)
                 then event Pair(x, z, p)
@@ -119,7 +115,7 @@ lemma honest_run:
     )
   "
 
-lemma honest_run_1:
+lemma honest_run_1 [use_induction]:
   exists-trace
   "
     ( Ex x z r #i #j #k Cy ry. Pair(x, z, r) @ #i 
