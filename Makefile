@@ -268,9 +268,9 @@ features-case-studies:	$(FEATURES_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-REGRESSION_CASE_STUDIES=
+REGRESSION_CASE_STUDIES=issue216.spthy
 
-REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/regression/trace,$(REGRESSION_CASE_STUDIES)))
+REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
 # case studies
 regression-case-studies:	$(REGRESSION_TARGETS)
