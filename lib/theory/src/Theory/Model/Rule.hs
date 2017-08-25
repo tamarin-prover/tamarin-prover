@@ -110,6 +110,7 @@ module Theory.Model.Rule (
   -- ** Unification
   , unifyRuleACInstEqs
   , unifiableRuleACInsts
+  , equalRuleUpToRenaming
 
   -- * Pretty-Printing
   , reservedRuleNames
@@ -844,6 +845,17 @@ unifiableRuleACInsts :: RuleACInst -> RuleACInst -> WithMaude Bool
 unifiableRuleACInsts ru1 ru2 =
     (not . null) <$> unifyRuleACInstEqs [Equal ru1 ru2]
 
+-- | Are these two rule instances equal up to renaming of variables.
+equalRuleUpToRenaming :: (Show a, Eq a) => Rule a -> Rule a -> Bool
+equalRuleUpToRenaming (Rule rn1 pr1 co1 ac1) (Rule rn2 pr2 co2 ac2) =
+  case eqs of
+       Nothing   -> False
+       Just eqs' -> (rn1 == rn2) && (any isRenaming $ unifyLNTermNoAC eqs')
+    where
+      eqs = foldl matchFacts (Just []) $ zip (pr1++co1++ac1) (pr2++co2++ac2)
+      matchFacts Nothing  _                                    = Nothing
+      matchFacts (Just l) (Fact f1 t1, Fact f2 t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l) 
+      matchFacts (Just _) (Fact _  _ , Fact _  _)  | otherwise = Nothing
 
 ------------------------------------------------------------------------------
 -- Fact analysis
