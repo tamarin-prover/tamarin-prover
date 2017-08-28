@@ -206,6 +206,7 @@ import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
+import           Theory.Tools.IntruderRules
 -- import           Theory.Constraint.Solver.Types
 
 import           Term.Positions
@@ -295,10 +296,13 @@ openProtoRule = L.get cprRuleE
 closeProtoRule :: MaudeHandle -> OpenProtoRule -> ClosedProtoRule
 closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 
--- | Close an intruder rule; i.e., compute maximum number of consecutive applications
-closeIntrRule :: MaudeHandle -> IntrRuleAC -> IntrRuleAC
-closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts nvs)  =
-    (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
+-- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
+--   Should be parallelized like the variant computation for protocol rules (JD)
+closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
+closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts nvs) =
+  if subterm then [ru] else variantsIntruder hnd id False ru
+    where
+      ru = (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
                               then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
                               -- We do not need to count t itself, hence - 1.
                               -- If t is a private function symbol we need to permit one more rule 
@@ -306,7 +310,8 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
                               else 0) subterm constant) prems concs acts nvs)
         where
            runMaude = (`runReader` hnd)
-closeIntrRule _ ir  = ir
+closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _ _) = variantsIntruder hnd id False ir
+closeIntrRule _   ir                                        = [ir]
 
 
 -- | Close a rule cache. Hower, note that the
@@ -343,7 +348,7 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
     hnd = L.get sigmMaudeHandle sig
     
     -- close intruder rules
-    intrRulesAC = map (closeIntrRule hnd) intrRules
+    intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
     
     -- classifying the rules
     rulesAC = (fmap IntrInfo                      <$> intrRulesAC) <|>

@@ -341,6 +341,7 @@ intrRule = do
         name     <- identifier
         limit    <- option 0 natural
 -- FIXME: Parse whether we have a subterm rule or a constant rule
+--        Currently we (wrongly) always assume that we have a subterm rule, this prohibits recomputing variants
         case name of
           'c':cname -> return $ ConstrRule (BC.pack cname)
           'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit) True False

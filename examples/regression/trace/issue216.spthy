@@ -1,0 +1,123 @@
+theory CTA
+begin
+
+functions:
+	
+	/* Encryption */
+	enc/2, dec/2, pdec/2,
+	
+	/* Common terms */
+	transform/1, comb/2, plus/2, pk/1, h/1, split/2
+
+equations:
+
+	dec(enc(m,pk(sk)),sk) = m,
+	comb(pdec(c,sk1), pdec(c,sk2)) = dec(c,plus(sk1, sk2)),
+	transform(pdec(c,pk)) = dec(c,pk)
+
+rule Get_pk:
+    [ !Pk(Server, Auth, Sibling, pk) ]
+  -->
+    [ Out(pk) ]
+
+rule Register:
+	[ Fr(~x), Fr(~y) ]
+	--[ Register($Server, $Auth, $Sibling) ]->
+	[ !LtkAuth($Auth, $Server, ~x), !LtkSib($Sibling, $Server, ~y), !Pk($Server, $Auth, $Sibling, pk(plus(~x,~y))) ]
+
+rule Reveal_LtkA:
+	[ !LtkAuth($Auth, $Server, ~ltk) ]
+	--[ LtkRevealA($Auth, $Server) ]->
+	[ Out(~ltk) ]
+
+rule Reveal_LtkAs:
+	[ !LtkSib($Sibling, $Server, ~ltk) ]
+	--[ LtkRevealAs($Sibling, $Server) ]->
+	[ Out(~ltk) ]
+
+// The adversary can compromise the secret channel
+rule Compromise_Secret_Channel:
+	[ !Secret($Sibling, pdec(enc(~n, pk), y)) ]
+	--[ ReadSecret($Sibling, pdec(enc(~n, pk), y)) ]->
+	[ Out(pdec(enc(~n, pk), y)) ]
+
+// We need to explicitly define this capability
+/*rule Adversary:
+	[ In(pdec(enc(~n, pk), y)), In(x) ]
+	-->
+	[ Out(comb(pdec(enc(~n, pk), x), pdec(enc(~n, pk), y))) ]
+*/
+
+rule Client_1:
+	[ !Pk($Server, $Auth, $Sibling, pk) ]
+	--[ RequestAuth($Server, $Auth, $Sibling) ]->
+	[ Out(pk) ]
+
+rule Server_1:
+	[ In(pk), Fr(~n), !Pk($Server, $Auth, $Sibling, pk) ]
+	--[ InitAuth($Server, $Auth, $Sibling, enc(~n,pk)) ]->
+	[ Out(enc(~n, pk)), Server_1(pk, ~n) ]
+
+rule Authenticator_1:
+	[ In(enc(~n, pk)), !Pk($Server, $Auth, $Sibling, pk) ]
+	-->
+	[ Out(enc(~n, pk)), Authenticator_1($Auth, enc(~n, pk)) ]
+
+rule Sibling_1:
+	[ In(enc(~n, pk)), !LtkSib($Sibling, $Server, y), !Pk($Server, $Auth, $Sibling, pk) ]
+	--[ Sibling($Sibling, enc(~n, pk)) ]->
+	[ !Secret($Sibling, pdec(enc(~n, pk), y)) ]
+	//[ Out(pdec(enc(~n, pk), y)) ] //To check that lemma two fails if sent on open channel
+
+rule Authenticator_2:
+	[ !Secret($Sibling, pdec(enc(~n, pk), y)), Authenticator_1($Auth, enc(~n, pk)), !LtkAuth($Auth, $Server, x), !Pk($Server, $Auth, $Sibling, pk) ]
+	//[ In(pdec(enc(~n, pk), y)), Authenticator_1($Auth, enc(~n, pk)), !LtkAuth($Auth, $Server, x) ]
+	--[ Authenticator($Auth, enc(~n, pk)) ]->
+	[ Out(comb(pdec(enc(~n, pk), x), pdec(enc(~n, pk), y))) ]
+
+rule Server_2:
+	[ In(n), Server_1(pk, n), !Pk($Server, $Auth, $Sibling, pk)  ]
+	--[ Auth($Server, $Auth, $Sibling, enc(n, pk)) ]->
+	[ Out('ok') ]
+
+lemma ClientAuth:
+	exists-trace "
+		Ex Server Auth Sibling #i. Register(Server, Auth, Sibling) @i
+		& Ex #j. RequestAuth(Server, Auth, Sibling) @j
+		& Ex challenge #k. InitAuth(Server, Auth, Sibling, challenge) @k
+		& Ex #l. Sibling(Sibling, challenge) @l
+		& Ex #m. Authenticator(Auth, challenge) @m
+		& Ex #n. Auth(Server, Auth, Sibling, challenge) @n
+
+		// Without a LtkReveal
+		& not( Ex #r. LtkRevealA(Auth, Server) @ #r )
+		& not( Ex #t. LtkRevealAs(Sibling, Server) @ #t )
+	"
+
+// a private-key lookup for both devices.
+lemma Client_Auth_Both_Responds_Or_Either_Revealed:
+	"All S A As t #i. Auth(S,A,As,t) @ #i ==>
+		( ( Ex #j. Authenticator(A,t) @ #j & #j < #i ) | ( Ex #r. LtkRevealA(A,S) @ #r & #r < #i ) )
+		& ( ( Ex #k. Sibling(As,t) @ #k & #k < #i ) | ( Ex #t. LtkRevealAs(As,S) @ #t & #t < #i ) )
+	"
+
+lemma Client_Auth_Both_Responds_Or_Both_Revealed_Or_Communication_Compromised:
+	"All S A As n #i. Auth(S,A,As,n) @ #i ==>
+		( ( ( Ex #j. Authenticator(A,n) @ #j & #j < #i ) & ( Ex #k. Sibling(As,n) @ #k & #k < #i ) )
+		| ( ( Ex #r. LtkRevealA(A,S) @ #r & #r < #i ) & ( Ex #t. LtkRevealAs(As,S) @ #t & #t < #i ) )
+		) | ( Ex t #u. ReadSecret(As, t) @ #u )
+	"
+
+lemma Client_Auth_Both_Responds_Or_Both_Revealed:
+	"All S A As n #i. Auth(S,A,As,n) @ #i ==>
+		( ( ( Ex #j. Authenticator(A,n) @ #j & #j < #i ) & ( Ex #k. Sibling(As,n) @ #k & #k < #i ) )
+		| ( ( Ex #r. LtkRevealA(A,S) @ #r & #r < #i ) & ( Ex #t. LtkRevealAs(As,S) @ #t & #t < #i ) )
+		)
+	"
+
+lemma Client_Auth_Both_Always_Responds:
+	"All S A As n #i. Auth(S,A,As,n) @ #i ==>
+		( ( Ex #j. Authenticator(A,n) @ #j & #j < #i ) & ( Ex #k. Sibling(As,n) @ #k & #k < #i ) )
+	"
+
+end
