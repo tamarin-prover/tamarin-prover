@@ -259,7 +259,7 @@ variantsIntruder hnd minimizeVariants applyFilters ru = go [] $ reverse $ do
     go checked [] = checked
     go checked (r:unchecked) = go checked' unchecked
       where
-        checked' = if any (\r' -> equalRuleUpToRenaming r r')
+        checked' = if any (\r' -> equalRuleUpToRenaming r r' `runReader` hnd)
                           (checked++unchecked)
                    then checked
                    else r:checked
