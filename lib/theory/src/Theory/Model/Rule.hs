@@ -858,22 +858,25 @@ unifyRuleACInstEqs eqs
         zipWith Equal (L.get rPrems ru1) (L.get rPrems ru2) ++
         zipWith Equal (L.get rConcs ru1) (L.get rConcs ru2)
 
--- | Are these two rule instances unifiable.
+-- | Are these two rule instances unifiable?
 unifiableRuleACInsts :: RuleACInst -> RuleACInst -> WithMaude Bool
 unifiableRuleACInsts ru1 ru2 =
     (not . null) <$> unifyRuleACInstEqs [Equal ru1 ru2]
 
--- | Are these two rule instances equal up to renaming of variables.
-equalRuleUpToRenaming :: (Show a, Eq a) => Rule a -> Rule a -> Bool
-equalRuleUpToRenaming (Rule rn1 pr1 co1 ac1 nvs1) (Rule rn2 pr2 co2 ac2 nvs2) =
+-- | Are these two rule instances equal up to renaming of variables?
+equalRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
+equalRuleUpToRenaming r1@(Rule rn1 pr1 co1 ac1 nvs1) r2@(Rule rn2 pr2 co2 ac2 nvs2) = reader $ \hnd ->
   case eqs of
        Nothing   -> False
-       Just eqs' -> (rn1 == rn2) && (any isRenaming $ unifyLNTermNoAC eqs')
+       Just eqs' -> (rn1 == rn2) && (any isRenamingPerRule $ unifs eqs' hnd)
     where
-      eqs = foldl matchFacts (Just $ zipWith Equal nvs1 nvs2) $ zip (pr1++co1++ac1) (pr2++co2++ac2)
-      matchFacts Nothing  _                                    = Nothing
-      matchFacts (Just l) (Fact f1 t1, Fact f2 t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l) 
-      matchFacts (Just _) (Fact _  _ , Fact _  _)  | otherwise = Nothing
+       isRenamingPerRule subst = isRenaming (restrictVFresh (vars r1) subst) && isRenaming (restrictVFresh (vars r2) subst)
+       vars ru = map fst $ varOccurences ru
+       unifs eq hnd = unifyLNTerm eq `runReader` hnd
+       eqs = foldl matchFacts (Just $ zipWith Equal nvs1 nvs2) $ zip (pr1++co1++ac1) (pr2++co2++ac2)
+       matchFacts Nothing  _                                    = Nothing
+       matchFacts (Just l) (Fact f1 t1, Fact f2 t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l) 
+                                                    | otherwise = Nothing
 
 ------------------------------------------------------------------------------
 -- Fact analysis

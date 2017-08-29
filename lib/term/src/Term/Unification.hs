@@ -150,7 +150,7 @@ unifyLTermFactoredNoAC sortOf eqs = (\res -> trace (unlines $ ["unifyLTermFactor
     solve Nothing         = []
     solve (Just (m, []))  = [freeToFreshRaw (substFromMap m)]
     -- if delayed AC unifications occur, we fail
-    solve (Just _     )   = []
+    solve (Just _     )   = error "No AC unification, but AC symbol found."
 
 
 -- | @unifyLNTermFactoredNoAC sortOf eqs@ returns a complete set of unifiers for @eqs@ for terms without AC symbols.
