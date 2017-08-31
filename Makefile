@@ -251,7 +251,7 @@ AKE_BP_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/ake/bi
 
 # case studies
 ake-bp-case-studies:	$(AKE_BP_CS_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/ake/dh/*.spthy
+	grep "verified\|falsified\|processing time" case-studies/ake/bilinear/*.spthy
 
 
 ## Features
