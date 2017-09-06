@@ -88,7 +88,7 @@ the same key. The syntax for adding equations to the context is:
 
     equations: lhs1 = rhs1, ..., lhsn = rhsn
 
-Both `lhs` and `rhs` can contain variables, but all variables on the right hand
+Both `lhs` and `rhs` can contain variables, but no public constants, and all variables on the right hand
 side must also appear on the left hand side. The symbolic proof search
 used by Tamarin supports a certain class of user-defined equations, namely 
 *convergent* equational theories that have the *finite variant property*
