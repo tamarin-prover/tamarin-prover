@@ -67,30 +67,51 @@ let Judge =
   // the set AC
   // checks whether x = open(Cx,x)
   if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()
-    // checks whether Z is correct
     then 
       (
+      // checks whether Z is correct
       if verZK(Z) = true()
-      // and it contains the right thing
-      then if <Cx,Cy,Cz> = Pub(Z)
-        // then A's log is good
-        then event ConsistentLogA()
+        then 
+          (
+          // and it contains the right thing
+          if <Cx,Cy,Cz> = Pub(Z)
+            then 
+              (
+              // then A's log is good
+              event ConsistentLogA();
+              if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
+                 // then S is behaving honestly
+                 then event HonestS()
+                 else event NotHonestS()
+              )
+            else event NotConsistentLogA();
+                 if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
+                    // then S is behaving honestly
+                    then event HonestS()
+                    else event NotHonestS()
+          )
+        else event NotConsistentLogA();
+             if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
+                // then S is behaving honestly
+                then event HonestS()
+                else event NotHonestS()
       )
-    // otherwise A's log is bad
+    // otherwise A's log is bad and S is dishonest
     else event NotConsistentLogA();
+         event NotHonestS()
 
-  // the set SC
-  // checks whether x = open(Cx,x)
-  if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()
-    // checks whether z = open(Cz,z) is really the one that A computes
-    then 
-      (
-      if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
-      // then S is behaving honestly
-      then event HonestS()
-      )
-    // otherwise S is dishonest
-    else event NotHonestS()
+  /*// the set SC*/
+  /*// checks whether x = open(Cx,x)*/
+  /*if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()*/
+    /*// checks whether z = open(Cz,z) is really the one that A computes*/
+    /*then */
+      /*(*/
+      /*if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()*/
+      /*// then S is behaving honestly*/
+      /*then event HonestS()*/
+      /*)*/
+    /*// otherwise S is dishonest*/
+    /*else event NotHonestS()*/
 )
 
 /*
@@ -216,14 +237,14 @@ lemma honest_run_1:
   "
 
 verdictfunction v1: 
-  " Ex #i #j. NotHonestS()@#i & NotConsistentLogA()@#j
+  " Ex log #i #j #k. NotHonestS()@#i & NotConsistentLogA()@#j & Log(log)@#k
   " -> <'A','S'>,
 
-  " Ex #j. NotConsistentLogA()@#j
+  " Ex log #j #k. NotConsistentLogA()@#j & Log(log)@#k
   & (not Ex #i. NotHonestS()@#i) 
   " -> <'A'>,
 
-  " Ex #i. NotHonestS()@#i
+  " Ex log #i #k. NotHonestS()@#i & Log(log)@#k
   & (not Ex #j. NotConsistentLogA()@#j)
   " -> <'S'>,
 
