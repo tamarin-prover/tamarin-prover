@@ -69,112 +69,52 @@ let Judge =
 
   // or, directly implement the verdictfunction
   // the set AC
-  // checks whether x = open(Cx,x)
-  /*if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()*/
-    /*then */
-      /*(*/
-      /*// checks whether Z is correct*/
-      /*if verZK(Z) = true()*/
-        /*then */
-          /*(*/
-          /*// and it contains the right thing*/
-          /*if <Cx,Cy,Cz> = Pub(Z)*/
-            /*then */
-              /*(*/
-              /*// then A's log is good*/
-              /*event ConsistentLogA();*/
-              /*if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()*/
-                 /*// then S is behaving honestly*/
-                 /*then event HonestS()*/
-                 /*else event NotHonestS()*/
-              /*)*/
-            /*else event NotHonestA();*/
-                 /*if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()*/
-                    /*// then S is behaving honestly*/
-                    /*then event HonestS()*/
-                    /*else event NotHonestS()*/
-          /*)*/
-        /*else event NotHonestA();*/
-             /*if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()*/
-                /*// then S is behaving honestly*/
-                /*then event HonestS()*/
-                /*else event NotHonestS()*/
-      /*)*/
-    /*// otherwise A's log is bad and S is dishonest*/
-    /*else event NotHonestA();*/
-         /*event NotHonestS()*/
-    
-    if verZK(Z) = true()
-       then 
-        (
-          if <Cx,Cy,Cz> = Pub(Z)
-             then 
-              (
-                if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()
-                   then 
-                    (
-                      event HonestA();
-                      if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
-                         then event HonestS()
-                         else event NotHonestS()
-                    )
-                   else 
-                    (
-                      event NotHonestA();
-                      event NotHonestS()
-                    )
-              )
-             else
-              (
-                event NotHonestA();
-                if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()
-                   then 
-                    (
-                      if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
-                         then event HonestS()
-                         else event NotHonestS()
-                    )
-                   else event NotHonestS()
-              )
-        )
-       else 
-        (
-          event NotHonestA();
-          if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()
-             then 
-              (
-                if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
-                   then event HonestS()
-                   else event NotHonestS()
-              )
-             else event NotHonestS()
-        )
-
-  /*// the set SC*/
-  /*// checks whether x = open(Cx,x)*/
-  /*if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()*/
-    /*// checks whether z = open(Cz,z) is really the one that A computes*/
-    /*then */
-      /*(*/
-      /*if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()*/
-      /*// then S is behaving honestly*/
-      /*then event HonestS()*/
-      /*)*/
-    /*// otherwise S is dishonest*/
-    /*else event NotHonestS()*/
+  if verZK(Z) = true()
+     then 
+      (
+        if <Cx,Cy,Cz> = Pub(Z)
+           then 
+            (
+              if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()
+                 then 
+                  (
+                    event HonestA();
+                    if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
+                       then event HonestS()
+                       else event NotHonestS()
+                  )
+                 else 
+                  (
+                    event NotHonestA();
+                    event NotHonestS()
+                  )
+            )
+           else
+            (
+              event NotHonestA();
+              if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()
+                 then 
+                  (
+                    if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
+                       then event HonestS()
+                       else event NotHonestS()
+                  )
+                 else event NotHonestS()
+            )
+      )
+     else 
+      (
+        event NotHonestA();
+        if verify(sig2,open(Cx,rx),pk(sk('S'))) = true()
+           then 
+            (
+              if verify(s,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
+                 then event HonestS()
+                 else event NotHonestS()
+            )
+           else event NotHonestS()
+      )
 )
-
-/*
-let Log = 
-(
-  // 'r' is the reliable channel 
-  //in ('r', <'A','L',m>);
-  in (m);
-  //event Log(m);                     
-  //out ('r', <'L','S',m>)
-  out (m);
-)
-*/
 
 let A =
 (
@@ -216,7 +156,7 @@ let A =
 //5. add progress only if ctr-example points to it
 let S = 
 (
-  let sig = sign(x,pk(sk('S'))) in
+  let sig = sign(x,sk('S')) in
 
   let m   = fst(msg) in 
   let s   = snd(msg) in
