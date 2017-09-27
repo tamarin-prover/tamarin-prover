@@ -5,11 +5,6 @@ packages:
 - lib/term/
 - lib/utils/
 extra-deps: []
-resolver: lts-8.15
-
-# Uncomment the following if you use docker
-# docker:
-#   enable: true
-
+resolver: lts-9.2
 # for GHC 7.10 use:
-# lts-6.27
+# lts-6.35

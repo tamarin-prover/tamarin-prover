@@ -25,6 +25,8 @@ module Theory.Text.Parser.Token (
   , identifier
   , indexedIdentifier
 
+  , hexColor
+
   , freshName
   , pubName
 
@@ -248,6 +250,10 @@ indexedIdentifier :: Parser (String, Integer)
 indexedIdentifier = do
     (,) <$> identifier
         <*> option 0 (try (dot *> (fromIntegral <$> natural)))
+
+-- | Parse a hex RGB color code
+hexColor :: Parser String
+hexColor = optional (symbol "'") *> optional (symbol "#") *> identifier <* optional (symbol "'")
 
 -- | Parse a logical variable with the given sorts allowed.
 sortedLVar :: [LSort] -> Parser LVar

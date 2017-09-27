@@ -137,8 +137,8 @@ analyzing: examples/loops/Minimal_KeyRenegotiation.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.092227s
+  output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
+  processing time: 0.101173s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 
@@ -149,8 +149,8 @@ summary of summaries:
 
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.092227s
+  output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
+  processing time: 0.101173s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 

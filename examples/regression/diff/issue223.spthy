@@ -1,0 +1,29 @@
+theory issue223
+begin
+
+functions: pk/1,
+           open/3, commit/3, fake/4
+
+equations: open(commit(ni, r, pk(sk)), r, sk) = ni,
+           commit(ni2, fake(ni1, r, sk, ni2), pk(sk)) = commit(ni1, r, pk(sk)),
+           open(commit(ni1, r, pk(sk)), fake(ni1, r, sk, ni2), sk) = ni2,
+           fake(ni2, fake(ni1, r, sk, ni2), sk, ni3) = fake(ni1, r, sk, ni3)
+
+
+rule Attack3:
+  let
+    cmt1 = commit(~ni1, ~rnd1, pk(~ltkV1))
+  in
+  [
+    Fr(~ni1),
+    Fr(~rnd1),
+    Fr(~ltkV1)
+  ]
+  -->
+  [
+    Out(cmt1),
+    Out(fake(~ni1, ~rnd1, ~ltkV1, ~ni1)),
+    Out(~ltkV1)
+  ]
+
+end

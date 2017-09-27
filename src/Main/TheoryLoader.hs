@@ -85,7 +85,7 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|p|P|l|c|C|i)+"
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|p|P|l|c|C|i|I)+"
       "Sequence of goal rankings to use (default 's')"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
@@ -306,7 +306,8 @@ constructAutoProver as =
     ranking 'P' = SapicPKCS11Ranking
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
-    ranking 'i' = InjRanking
+    ranking 'i' = InjRanking False
+    ranking 'I' = InjRanking True
     ranking r   = error $ render $ fsep $ map text $ words $
       "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
       \ 's' for the smart ranking without loop breakers,\
@@ -315,7 +316,8 @@ constructAutoProver as =
       \ 'p' for the smart ranking optimized for translations coming from SAPIC (http://sapic.gforge.inria.fr),\
       \ 'l' for the smart ranking optimized for translations coming from SAPIC proving liveness properties,\
       \ 'P' for the smart ranking optimized for a specific model of PKCS11, translated using SAPIC,\
-      \ 'i' for the smart ranking modified for the proof of injective detection protocols,\
+      \ 'i' for the ranking modified for the proof of stateful injective protocols without loop breakers,\
+      \ 'I' for the ranking modified for the proof of stateful injective protocols with loop breakers,\
       \ 'c' for the creation order and useful goals first,\
       \ and 'C' for the creation order."
 

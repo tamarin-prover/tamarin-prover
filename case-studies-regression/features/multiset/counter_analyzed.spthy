@@ -526,8 +526,8 @@ analyzing: examples/features//multiset/counter.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/features//multiset/counter.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.901957s
+  output:          examples/features//multiset/counter.spthy.tmp
+  processing time: 1.353469s
   counters_linear_order (all-traces): verified (52 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)
@@ -540,8 +540,8 @@ summary of summaries:
 
 analyzed: examples/features//multiset/counter.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.901957s
+  output:          examples/features//multiset/counter.spthy.tmp
+  processing time: 1.353469s
   counters_linear_order (all-traces): verified (52 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)

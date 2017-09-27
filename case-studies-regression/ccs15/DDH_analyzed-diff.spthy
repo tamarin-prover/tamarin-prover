@@ -7565,8 +7565,8 @@ analyzing: examples/ccs15/DDH.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ccs15/DDH.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 15.323139s
+  output:          examples/ccs15/DDH.spthy.tmp
+  processing time: 9.255837s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ------------------------------------------------------------------------------
@@ -7576,8 +7576,8 @@ summary of summaries:
 
 analyzed: examples/ccs15/DDH.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 15.323139s
+  output:          examples/ccs15/DDH.spthy.tmp
+  processing time: 9.255837s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ==============================================================================

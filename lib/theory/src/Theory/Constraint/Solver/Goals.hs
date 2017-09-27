@@ -79,7 +79,7 @@ openGoals sys = do
     let solved = get gsSolved status
     -- check whether the goal is still open
     guard $ case goal of
-        ActionG _ (kFactView -> Just (UpK, m)) ->
+        ActionG i (kFactView -> Just (UpK, m)) ->
           if get sDiffSystem sys 
              -- In a diff proof, all action goals need to be solved.
              then not (solved)
@@ -88,7 +88,8 @@ openGoals sys = do
 --                       || isProduct m || isUnion m) 
              else
                not $    solved
-                    || isMsgVar m || sortOfLNTerm m == LSortPub
+                    -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
+                    || (isMsgVar m && Nothing == M.lookup i (get sNodes sys)) || sortOfLNTerm m == LSortPub
                     -- handled by 'insertAction'
                     || isPair m || isInverse m || isProduct m
                     || isUnion m || isNullaryPublicFunction m

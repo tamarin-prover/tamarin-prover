@@ -1502,8 +1502,8 @@ analyzing: examples/ccs15/rfid-feldhofer.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 3.965048s
+  output:          examples/ccs15/rfid-feldhofer.spthy.tmp
+  processing time: 2.704139s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)
@@ -1521,8 +1521,8 @@ summary of summaries:
 
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 3.965048s
+  output:          examples/ccs15/rfid-feldhofer.spthy.tmp
+  processing time: 2.704139s
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)
   RHS :  executable (exists-trace): verified (6 steps)
