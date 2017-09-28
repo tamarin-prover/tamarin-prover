@@ -1,0 +1,58 @@
+theory RunningExampleWithLet
+begin
+
+builtins: symmetric-encryption
+
+predicates:
+sencSucc (c,k) <=> Ex m . senc(m,k)=c
+
+!(
+	(  new h; new k; event NewKey(h,k); 
+		insert <'key',h>,k; 
+	 	insert <'att',h>, 'dec'; out(h) )
+  || //allow wrap
+	(  in(h);  insert <'att',h>, 'wrap' )
+  || //Dec
+	( in(<h,c>);
+	  lookup <'att',h> as a in if a='dec' then 
+            lookup <'key',h> as k in if encSucc(c,k) then
+                event DecUsing(k,sdec(c,k)); out(sdec(c,k)) 
+	)
+  || //Wrap
+	( 
+         let 
+         k = k1 
+         m2 = senc(k2,k) 
+         in
+         in(<h1,h2>); lookup <'att',h1> as a1 in 
+			if a1='wrap' then lookup <'key',h1> as k1 in
+			lookup <'key',h2> as k2 in
+				event Wrap(k1,k2);
+				out(m2)
+	)
+)
+
+lemma can_create_key: //sanity check
+	exists-trace
+	"Ex #t h k. NewKey(h,k)@t"
+
+lemma can_obtain_wrapping: //sanity check
+	exists-trace
+	"Ex #t k1 k2. Wrap(k1,k2)@t"
+
+lemma dec_limits[reuse,sources]: 
+	//a message that can be decrypted was
+	//either encrypted on the device, or some key leaked, or 
+	// not a valid enc
+	"All k m #t1. DecUsing(k,m)@t1 ==> 
+	( Ex h k2 #t2 #t3. NewKey(h, k2)@t2 & KU(k2)@t3 & t2<t1 & t3<t1)
+	"
+
+lemma cannot_obtain_key_ind[reuse,use_induction]:
+	"not (Ex #i #j  h k . NewKey(h,k)@i & KU(k) @j)"
+
+lemma cannot_obtain_key: 
+      // it is not possible to learn a key created on the device
+	"not (Ex #i #j  h k. NewKey(h,k)@i & K(k) @j)"
+
+end
